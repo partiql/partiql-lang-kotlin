@@ -21,5 +21,8 @@ import org.partiql.lang.eval.EvaluationSession
  * ```
  */
 public interface PartiQLTestCase {
+    /**
+     * Holds information such as globals and parameters to provide inputs to a [PartiQLTestCase].
+     */
     public val session: EvaluationSession
 }

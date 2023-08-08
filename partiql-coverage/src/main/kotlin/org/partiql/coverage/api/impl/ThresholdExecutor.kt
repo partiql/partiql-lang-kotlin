@@ -1,6 +1,5 @@
 package org.partiql.coverage.api.impl
 
-import org.partiql.coverage.api.MinimumThresholdException
 import java.io.File
 
 /**
@@ -8,10 +7,10 @@ import java.io.File
  */
 internal object ThresholdExecutor {
 
-    internal fun execute(minimum: Double, reportPath: String, type: MinimumThresholdException.ThresholdType) {
+    internal fun execute(minimum: Double, reportPath: String, type: ThresholdException.ThresholdType) {
         val coverage = computeBranchCoverage(reportPath)
         if (coverage < minimum) {
-            throw MinimumThresholdException(minimum, coverage, type)
+            throw ThresholdException(minimum, coverage, type)
         }
     }
 

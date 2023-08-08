@@ -12,7 +12,7 @@ import org.junit.platform.commons.util.ReflectionUtils
 import org.partiql.coverage.api.PartiQLTestCase
 import org.partiql.coverage.api.PartiQLTestProvider
 import org.partiql.coverage.api.PartiQLTest
-import org.partiql.lang.CompilerPipeline.Companion.standard
+import org.partiql.lang.CompilerPipeline.Companion.builder
 import org.partiql.lang.eval.PartiQLResult
 import java.util.concurrent.atomic.AtomicLong
 import java.util.stream.Stream
@@ -30,12 +30,7 @@ internal class PartiQLTestExtension : TestTemplateInvocationContextProvider {
 
         val methodContext = PartiQLTestMethodContext(testMethod)
         Preconditions.condition(methodContext.hasPotentiallyValidSignature()) {
-            String.format(
-                "@PartiQLTest method [%s] declares formal parameters in an invalid order: "
-                    + "argument aggregators must be declared after any indexed arguments "
-                    + "and before any arguments resolved by another ParameterResolver.",
-                testMethod.toGenericString()
-            )
+            "@PartiQLTest method [${testMethod.toGenericString()}] has an invalid signature."
         }
         getStore(context).put(METHOD_CONTEXT_KEY, methodContext)
         return true
@@ -56,8 +51,9 @@ internal class PartiQLTestExtension : TestTemplateInvocationContextProvider {
         val prov = instantiateArgumentsProvider(annotation.provider.java)
 
         // Create Pipeline and Compile
-        val pipeline = standard()
-        val expression = pipeline.compile(prov.query)
+        val pipelineBuilder = prov.getPipelineBuilder() ?: builder()
+        val pipeline = pipelineBuilder.withCoverageStatistics(true).build()
+        val expression = pipeline.compile(prov.statement)
 
         // Initialize Report
         val report: MutableMap<String, String> = HashMap()
@@ -80,7 +76,7 @@ internal class PartiQLTestExtension : TestTemplateInvocationContextProvider {
         report[ReportKey.BRANCH_CONDITION_COUNT] = conditionCount.toString()
 
         // Original Query
-        report[ReportKey.ORIGINAL_STATEMENT] = prov.query
+        report[ReportKey.ORIGINAL_STATEMENT] = prov.statement
 
         // Add Branch Information to Report
         coverageStructure.branches.entries.forEach { (key, value) ->

@@ -2,7 +2,6 @@ package org.partiql.coverage.api.impl
 
 import org.junit.platform.launcher.LauncherSession
 import org.junit.platform.launcher.LauncherSessionListener
-import org.partiql.coverage.api.MinimumThresholdException
 
 /**
  * This class is in charge of:
@@ -45,7 +44,7 @@ internal class PostProcessor : LauncherSessionListener {
                 ThresholdExecutor.execute(
                     minimum = lcovBranchConfig.minimum,
                     reportPath = lcovBranchConfig.reportPath,
-                    type = MinimumThresholdException.ThresholdType.BRANCH
+                    type = ThresholdException.ThresholdType.BRANCH
                 )
             }
         }
@@ -65,7 +64,7 @@ internal class PostProcessor : LauncherSessionListener {
                 ThresholdExecutor.execute(
                     minimum = lcovConditionConfig.minimum,
                     reportPath = lcovConditionConfig.reportPath,
-                    type = MinimumThresholdException.ThresholdType.CONDITION
+                    type = ThresholdException.ThresholdType.CONDITION
                 )
             }
         }

@@ -65,7 +65,7 @@ class RunnerTest {
     }
 
     object SuccessTestProvider : PartiQLTestProvider {
-        override val query: String = "x > 7 AND x < 15"
+        override val statement: String = "x > 7 AND x < 15"
 
         override fun getTestCases(): Iterable<ExampleTestCase> = List(1001) {
             ExampleTestCase(
@@ -83,6 +83,8 @@ class RunnerTest {
             )
         }
 
+        override fun getPipelineBuilder(): CompilerPipeline.Builder? = null
+
         class ExampleTestCase(
             val name: String,
             override val session: EvaluationSession,
@@ -91,7 +93,7 @@ class RunnerTest {
     }
 
     object ComplexTestProvider : PartiQLTestProvider {
-        override val query: String = """
+        override val statement: String = """
             SELECT
                 t.a AS a,
                 t.b AS b,
@@ -132,19 +134,23 @@ class RunnerTest {
                 )
             ),
         )
+
+        override fun getPipelineBuilder(): CompilerPipeline.Builder? = null
     }
 
     object InitializationFailureProvider : PartiQLTestProvider {
-        override val query: String = "x x x x x x"
+        override val statement: String = "x x x x x x"
         override fun getTestCases(): Iterable<PartiQLTestCase> = listOf(
             TestCase(EvaluationSession.standard())
         )
+
+        override fun getPipelineBuilder(): CompilerPipeline.Builder? = null
 
         class TestCase(override val session: EvaluationSession) : PartiQLTestCase
     }
 
     object TestInitializationFailureProvider : PartiQLTestProvider {
-        override val query: String = "TRIM(x)"
+        override val statement: String = "TRIM(x)"
         override fun getTestCases(): Iterable<PartiQLTestCase> = listOf(
             TestCase(
                 session = EvaluationSession.build {
@@ -169,6 +175,8 @@ class RunnerTest {
                 }
             )
         )
+
+        override fun getPipelineBuilder(): CompilerPipeline.Builder? = null
 
         class TestCase(override val session: EvaluationSession) : PartiQLTestCase
     }

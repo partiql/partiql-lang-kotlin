@@ -1,8 +1,9 @@
 package org.partiql.test.coverage.simple
 
+import org.partiql.coverage.api.PartiQLTest
 import org.partiql.coverage.api.PartiQLTestCase
 import org.partiql.coverage.api.PartiQLTestProvider
-import org.partiql.coverage.api.PartiQLTest
+import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
@@ -22,7 +23,9 @@ class SimpleTest {
 
     object SuccessTestProvider {
         object SuccessTestProvider : PartiQLTestProvider {
-            override val query: String = "x > 7 AND x < 15"
+            override val statement: String = "x > 7 AND x < 15"
+
+            override fun getPipelineBuilder(): CompilerPipeline.Builder? = null
 
             override fun getTestCases(): Iterable<ExampleTestCase> = listOf(
                 ExampleTestCase(
