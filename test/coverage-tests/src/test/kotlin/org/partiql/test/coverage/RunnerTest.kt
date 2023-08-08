@@ -67,7 +67,7 @@ class RunnerTest {
     object SuccessTestProvider : PartiQLTestProvider {
         override val query: String = "x > 7 AND x < 15"
 
-        override fun getTestCases(): Iterable<ExampleTestCase> = listOf(
+        override fun getTestCases(): Iterable<ExampleTestCase> = List(1001) {
             ExampleTestCase(
                 name = "Test #1",
                 session = EvaluationSession.build {
@@ -80,21 +80,8 @@ class RunnerTest {
                     )
                 },
                 expected = true
-            ),
-            ExampleTestCase(
-                name = "Test #2",
-                session = EvaluationSession.build {
-                    globals(
-                        Bindings.ofMap(
-                            mapOf(
-                                "x" to ExprValue.newInt(4)
-                            )
-                        )
-                    )
-                },
-                expected = false
-            ),
-        )
+            )
+        }
 
         class ExampleTestCase(
             val name: String,

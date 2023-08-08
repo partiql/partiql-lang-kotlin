@@ -13,7 +13,7 @@ import org.partiql.coverage.api.PartiQLTestCase
 import org.partiql.coverage.api.PartiQLTestProvider
 import org.partiql.coverage.api.PartiQLTest
 import org.partiql.lang.CompilerPipeline.Companion.standard
-import java.lang.reflect.Method
+import org.partiql.lang.eval.PartiQLResult
 import java.util.concurrent.atomic.AtomicLong
 import java.util.stream.Stream
 import java.util.stream.StreamSupport
@@ -45,13 +45,7 @@ internal class PartiQLTestExtension : TestTemplateInvocationContextProvider {
         extensionContext: ExtensionContext
     ): Stream<TestTemplateInvocationContext> {
         val templateMethod = extensionContext.requiredTestMethod
-        val displayName = extensionContext.displayName
         val methodContext = getStore(extensionContext)[METHOD_CONTEXT_KEY, PartiQLTestMethodContext::class.java]
-        val argumentMaxLength = extensionContext.getConfigurationParameter(
-            ARGUMENT_MAX_LENGTH_KEY
-        ) { s: String -> s.toInt() }.orElse(512)
-        val formatter =
-            createNameFormatter(extensionContext, templateMethod, methodContext, displayName, argumentMaxLength)
         val invocationCount = AtomicLong(0)
 
         // Get Test/Provider Information
@@ -83,7 +77,7 @@ internal class PartiQLTestExtension : TestTemplateInvocationContextProvider {
         val branchCount = coverageStructure.branches.size
         report[ReportKey.BRANCH_COUNT] = branchCount.toString()
         val conditionCount = coverageStructure.branchConditions.size
-        report[ReportKey.CONDITION_COUNT] = conditionCount.toString()
+        report[ReportKey.BRANCH_CONDITION_COUNT] = conditionCount.toString()
 
         // Original Query
         report[ReportKey.ORIGINAL_STATEMENT] = prov.query
@@ -105,9 +99,9 @@ internal class PartiQLTestExtension : TestTemplateInvocationContextProvider {
         }
 
         // Compute Coverage Metrics
-        val tests: Stream<Array<Any>> = Stream.of(prov)
+        val tests: Stream<Pair<PartiQLTestCase, PartiQLResult>> = Stream.of(prov)
             .map { provider: PartiQLTestProvider -> AnnotationConsumerInitializer.initialize(templateMethod, provider) }
-            .flatMap { provider: PartiQLTestProvider -> arguments(provider, extensionContext) }
+            .flatMap { provider: PartiQLTestProvider -> arguments(provider) }
             .map { testCase: PartiQLTestCase ->
                 val result = expression.evaluate(testCase.session)
                 val stats = result.coverageData ?: error("Expected to find CoverageData, however, none was provided.")
@@ -120,24 +114,17 @@ internal class PartiQLTestExtension : TestTemplateInvocationContextProvider {
                 stats.branchCount.forEach { (key, value) ->
                     report[ReportKey.TARGET_COUNT_PREFIX + ReportKey.DELIMITER + key] = value.toString()
                 }
-                arrayOf(testCase, result)
+                testCase to result
             }
 
         // Invoke Test Methods
-        return tests.map { arguments: Array<Any> ->
+        return tests.map { (tc, result) ->
             invocationCount.incrementAndGet()
-            createInvocationContext(
-                formatter,
-                methodContext,
-                arguments,
-                invocationCount.toInt()
-            )
+            createInvocationContext(methodContext, arrayOf(tc, result), invocationCount.toInt())
         }.onClose {
-            Preconditions.condition(
-                invocationCount.get() > 0,
-                "Config Error: At least one test case required for @PartiQLTest"
-            )
-        }.onClose { // Publish Coverage Metrics
+            Preconditions.condition(invocationCount.get() > 0, "Config Error: At least one test case required for @PartiQLTest")
+        }.onClose {
+            // Publish Coverage Metrics
             extensionContext.publishReportEntry(report)
         }
     }
@@ -160,7 +147,6 @@ internal class PartiQLTestExtension : TestTemplateInvocationContextProvider {
     }
 
     companion object {
-        const val ARGUMENT_MAX_LENGTH_KEY = "junit.jupiter.params.displayname.argument.maxlength"
         private const val METHOD_CONTEXT_KEY = "context"
         private fun getStore(context: ExtensionContext): ExtensionContext.Store {
             return context.getStore(
@@ -171,26 +157,13 @@ internal class PartiQLTestExtension : TestTemplateInvocationContextProvider {
         }
 
         private fun createInvocationContext(
-            formatter: PartiQLTestNameFormatter,
             methodContext: PartiQLTestMethodContext, arguments: Array<Any>, invocationIndex: Int
         ): TestTemplateInvocationContext {
-            return PartiQLTestInvocationContext(formatter, methodContext, arguments, invocationIndex)
-        }
-
-        private fun createNameFormatter(
-            extensionContext: ExtensionContext, templateMethod: Method,
-            methodContext: PartiQLTestMethodContext, displayName: String, argumentMaxLength: Int
-        ): PartiQLTestNameFormatter {
-            var pattern = "[{index}]"
-            pattern = Preconditions.notBlank(pattern.trim { it <= ' ' }) {
-                "Configuration error: @PartiQLTest on method [$templateMethod] must be declared with a non-empty name."
-            }
-            return PartiQLTestNameFormatter(pattern, displayName, methodContext, argumentMaxLength)
+            return PartiQLTestInvocationContext(methodContext, arguments, invocationIndex)
         }
 
         private fun arguments(
             provider: PartiQLTestProvider,
-            context: ExtensionContext?
         ): Stream<out PartiQLTestCase> {
             return try {
                 StreamSupport.stream(provider.getTestCases().spliterator(), false)

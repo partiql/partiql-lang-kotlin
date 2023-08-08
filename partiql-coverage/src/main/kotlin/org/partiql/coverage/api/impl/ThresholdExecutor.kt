@@ -31,7 +31,6 @@ internal object ThresholdExecutor {
             line = lineReader.readLine()
         }
         lineReader.close()
-        val branchCoverage = branchesHit.toDouble() / branchesFound
-        return branchCoverage
+        return branchesHit.toDouble() / branchesFound
     }
 }

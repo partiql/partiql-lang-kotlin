@@ -11,7 +11,7 @@ import kotlin.io.path.absolutePathString
  */
 internal object HtmlWriter {
 
-    public fun write(reportPath: String, htmlOutputDir: String, title: String) {
+    fun write(reportPath: String, htmlOutputDir: String, title: String) {
         val sourcePrefix = Path(reportPath).parent.resolve("source").absolutePathString()
         val args = arrayOf(
             "--title", title,

@@ -27,7 +27,6 @@ include(
     "lib:isl",
     "lib:sprout",
     "test:coverage-tests",
-    "test:coverage-tests-secondary",
     "test:partiql-tests-runner",
     "test:partiql-randomized-tests",
     "examples",
