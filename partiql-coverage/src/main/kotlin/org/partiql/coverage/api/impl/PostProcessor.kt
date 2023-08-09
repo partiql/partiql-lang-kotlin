@@ -28,49 +28,44 @@ internal class PostProcessor : LauncherSessionListener {
         val configParams = configurationParameterRetriever.getConfig()
             ?: error("Configuration Parameters should have been initialized.")
 
-        // Generate HTML Report
-        val lcovBranchConfig = configParams.lcovBranchConfig
-        if (lcovBranchConfig != null) {
-            if (lcovBranchConfig.htmlOutputDir != null) {
+        // Get Applicable Configurations
+        val configInfos = listOfNotNull(
+            configParams.lcovBranchConfig?.let {
+                ConfigInfo("PartiQL Code Coverage (Branch) Report", it, ThresholdException.ThresholdType.BRANCH)
+            },
+            configParams.lcovConditionConfig?.let {
+                ConfigInfo("PartiQL Code Coverage (Branch-Condition) Report", it, ThresholdException.ThresholdType.CONDITION)
+            }
+        )
+
+        // Generate HTML Report(s)
+        configInfos.map { configInfo ->
+            configInfo.config.htmlOutputDir?.let { htmlDir ->
                 HtmlWriter.write(
-                    reportPath = lcovBranchConfig.reportPath,
-                    htmlOutputDir = lcovBranchConfig.htmlOutputDir,
-                    title = "PartiQL Code Coverage (Branch) Report"
+                    reportPath = configInfo.config.reportPath,
+                    htmlOutputDir = htmlDir,
+                    title = configInfo.title
                 )
             }
 
-            // Assert Branch Coverage Threshold
-            if (lcovBranchConfig.minimum != null) {
+        }
+
+        // Check Threshold(s)
+        configInfos.map { configInfo ->
+            configInfo.config.minimum?.let { minimum ->
                 ThresholdExecutor.execute(
-                    minimum = lcovBranchConfig.minimum,
-                    reportPath = lcovBranchConfig.reportPath,
-                    type = ThresholdException.ThresholdType.BRANCH
+                    minimum = minimum,
+                    reportPath = configInfo.config.reportPath,
+                    type = configInfo.type
                 )
             }
         }
-
-        val lcovConditionConfig = configParams.lcovConditionConfig
-        if (lcovConditionConfig != null) {
-            if (lcovConditionConfig.htmlOutputDir != null) {
-                HtmlWriter.write(
-                    reportPath = lcovConditionConfig.reportPath,
-                    htmlOutputDir = lcovConditionConfig.htmlOutputDir,
-                    title = "PartiQL Code Coverage (Condition) Report"
-                )
-            }
-
-            // Assert Branch Coverage Threshold
-            if (lcovConditionConfig.minimum != null) {
-                ThresholdExecutor.execute(
-                    minimum = lcovConditionConfig.minimum,
-                    reportPath = lcovConditionConfig.reportPath,
-                    type = ThresholdException.ThresholdType.CONDITION
-                )
-            }
-        }
-
         super.launcherSessionClosed(session)
     }
 
-
+    private class ConfigInfo(
+        val title: String,
+        val config: ConfigurationParameterExtractor.LcovConfig,
+        val type: ThresholdException.ThresholdType
+    )
 }

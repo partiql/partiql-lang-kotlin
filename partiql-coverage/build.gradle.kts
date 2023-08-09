@@ -22,12 +22,16 @@ plugins {
 
 dependencies {
     api(project(":partiql-lang"))
-    implementation("org.junit.jupiter:junit-jupiter-api:5.9.3")
-    implementation("org.junit.jupiter:junit-jupiter-params:5.9.3")
-    implementation("org.junit.platform:junit-platform-launcher:1.9.3")
-    implementation("org.jacoco:org.jacoco.report:0.8.10")
-    implementation("com.googlecode.jgenhtml:jgenhtml:1.6")
-    implementation(kotlin("reflect"))
+    implementation(Deps.junitApi)
+    implementation(Deps.junitParams)
+    implementation(Deps.junitPlatformLauncher)
+    implementation(Deps.jgenhtml)
+}
+
+// Need to add this as we have both Java and Kotlin sources. Dokka already handles multi-language projects. If
+// Javadoc is enabled, we end up overwriting index.html (causing compilation errors).
+tasks.withType<Javadoc>() {
+    enabled = false
 }
 
 publish {

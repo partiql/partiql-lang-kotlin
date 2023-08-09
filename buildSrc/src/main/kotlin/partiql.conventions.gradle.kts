@@ -54,7 +54,6 @@ tasks.test {
     testLogging {
         events.add(TestLogEvent.FAILED)
         exceptionFormat = TestExceptionFormat.FULL
-        showStandardStreams = true
     }
     dependsOn(tasks.ktlintCheck) // check style before unit tests
     finalizedBy(tasks.jacocoTestReport)

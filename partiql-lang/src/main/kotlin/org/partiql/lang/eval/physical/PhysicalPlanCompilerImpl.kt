@@ -180,7 +180,7 @@ internal class PhysicalPlanCompilerImpl(
                     registers = Array(plan.locals.size) { ExprValue.missingValue }
                 )
                 val value = thunk(env)
-                return PartiQLResult.Value(value = value, coverageData = null)
+                return PartiQLResult.Value(value = value)
             }
         }
     }
@@ -212,7 +212,7 @@ internal class PhysicalPlanCompilerImpl(
                     registers = Array(localsSize) { ExprValue.missingValue }
                 )
                 val value = thunk(env)
-                return PartiQLResult.Value(value = value, coverageData = null)
+                return PartiQLResult.Value(value = value)
             }
         }
     }

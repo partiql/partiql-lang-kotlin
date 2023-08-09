@@ -3,7 +3,6 @@ package org.partiql.coverage.api.impl
 import com.googlecode.jgenhtml.JGenHtml
 import java.nio.file.Path
 import kotlin.io.path.Path
-import kotlin.io.path.absolute
 import kotlin.io.path.absolutePathString
 
 /**

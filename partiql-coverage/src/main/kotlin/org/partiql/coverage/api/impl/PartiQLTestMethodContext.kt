@@ -14,33 +14,16 @@ import org.junit.platform.commons.util.StringUtils
 import java.lang.Exception
 import java.lang.reflect.Method
 import java.lang.reflect.Parameter
-import java.util.Optional
 
 /**
  * Encapsulates access to the parameters of a parameterized test method and
- * caches the converters and aggregators used to resolve them.
- *
- * @since 5.3
+ * caches the converters used to resolve them.
  */
 internal class PartiQLTestMethodContext(testMethod: Method) {
     private val parameters: Array<Parameter> = testMethod.parameters
     private val resolvers: Array<Resolver?> = arrayOfNulls(parameters.size)
 
     /**
-     * Determine if the [Method] represented by this context has a
-     * *potentially* valid signature (i.e., formal parameter
-     * declarations) with regard to aggregators.
-     *
-     * This method takes a best-effort approach at enforcing the following
-     * policy for parameterized test methods that accept aggregators as arguments.
-     *
-     *
-     *  1. zero or more *indexed arguments* come first.
-     *  1. zero or more *aggregators* come next.
-     *  1. zero or more arguments supplied by other `ParameterResolver`
-     * implementations come last.
-     *
-     *
      * @return `true` if the method has a potentially valid signature
      */
     fun hasPotentiallyValidSignature(): Boolean {
@@ -120,12 +103,15 @@ internal class PartiQLTestMethodContext(testMethod: Method) {
          */
         @JvmStatic
         private fun isAggregator(parameter: Parameter): Boolean {
-            return (ArgumentsAccessor::class.java.isAssignableFrom(parameter.type)
-                || AnnotationUtils.isAnnotated(parameter, AggregateWith::class.java))
+            return (
+                ArgumentsAccessor::class.java.isAssignableFrom(parameter.type) ||
+                    AnnotationUtils.isAnnotated(parameter, AggregateWith::class.java)
+                )
         }
 
         private fun parameterResolutionException(
-            message: String, cause: Exception,
+            message: String,
+            cause: Exception,
             parameterContext: ParameterContext
         ): ParameterResolutionException {
             var fullMessage = message + " at index " + parameterContext.index

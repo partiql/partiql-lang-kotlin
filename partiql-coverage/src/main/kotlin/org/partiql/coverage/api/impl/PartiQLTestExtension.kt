@@ -9,11 +9,12 @@ import org.junit.platform.commons.util.AnnotationUtils
 import org.junit.platform.commons.util.ExceptionUtils
 import org.junit.platform.commons.util.Preconditions
 import org.junit.platform.commons.util.ReflectionUtils
+import org.partiql.coverage.api.PartiQLTest
 import org.partiql.coverage.api.PartiQLTestCase
 import org.partiql.coverage.api.PartiQLTestProvider
-import org.partiql.coverage.api.PartiQLTest
 import org.partiql.lang.CompilerPipeline.Companion.builder
 import org.partiql.lang.eval.PartiQLResult
+import org.partiql.lang.util.ConfigurableExprValueFormatter
 import java.util.concurrent.atomic.AtomicLong
 import java.util.stream.Stream
 import java.util.stream.StreamSupport
@@ -100,11 +101,22 @@ internal class PartiQLTestExtension : TestTemplateInvocationContextProvider {
             .flatMap { provider: PartiQLTestProvider -> arguments(provider) }
             .map { testCase: PartiQLTestCase ->
                 val result = expression.evaluate(testCase.session)
-                val stats = result.coverageData ?: error("Expected to find CoverageData, however, none was provided.")
+
+                // NOTE: This is a hack to materialize data, then retrieve CoverageData.
+                val str = when (result) {
+                    is PartiQLResult.Value -> ConfigurableExprValueFormatter.standard.format(result.value)
+                    is PartiQLResult.Delete -> TODO("@PartiQLTest does not yet support unit testing of Delete.")
+                    is PartiQLResult.Explain.Domain -> TODO("@PartiQLTest does not yet support unit testing of Explain.")
+                    is PartiQLResult.Insert -> TODO("@PartiQLTest does not yet support unit testing of Insert.")
+                    is PartiQLResult.Replace -> TODO("@PartiQLTest does not yet support unit testing of Replace.")
+                }
+                assert(str.length > -1)
+
+                val stats = result.getCoverageData() ?: error("Expected to find CoverageData, however, none was provided.")
 
                 // Add Executed Decisions (Size) to Coverage Report
                 // NOTE: This only works because we share the same CoverageCompiler. Therefore, we overwrite some things.
-                stats.conditionCount.forEach { (key, value) ->
+                stats.branchConditionCount.forEach { (key, value) ->
                     report[ReportKey.TARGET_COUNT_PREFIX + ReportKey.DELIMITER + key] = value.toString()
                 }
                 stats.branchCount.forEach { (key, value) ->
@@ -131,9 +143,9 @@ internal class PartiQLTestExtension : TestTemplateInvocationContextProvider {
         } catch (ex: Exception) {
             if (ex is NoSuchMethodException) {
                 val message = String.format(
-                    "Failed to find a no-argument constructor for PartiQLTestProvider [%s]. "
-                        + "Please ensure that a no-argument constructor exists and "
-                        + "that the class is either a top-level class or a static nested class",
+                    "Failed to find a no-argument constructor for PartiQLTestProvider [%s]. " +
+                        "Please ensure that a no-argument constructor exists and " +
+                        "that the class is either a top-level class or a static nested class",
                     clazz.name
                 )
                 throw JUnitException(message, ex)
@@ -153,7 +165,9 @@ internal class PartiQLTestExtension : TestTemplateInvocationContextProvider {
         }
 
         private fun createInvocationContext(
-            methodContext: PartiQLTestMethodContext, arguments: Array<Any>, invocationIndex: Int
+            methodContext: PartiQLTestMethodContext,
+            arguments: Array<Any>,
+            invocationIndex: Int
         ): TestTemplateInvocationContext {
             return PartiQLTestInvocationContext(methodContext, arguments, invocationIndex)
         }

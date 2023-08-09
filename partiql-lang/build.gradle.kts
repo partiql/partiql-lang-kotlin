@@ -45,10 +45,6 @@ dependencies {
     implementation(Deps.csv)
     implementation(Deps.kotlinReflect)
 
-    // Logging
-    implementation("org.apache.logging.log4j:log4j-api:2.20.0")
-    implementation("org.apache.logging.log4j:log4j-core:2.20.0")
-
     testImplementation(project(":plugins:partiql-mockdb"))
     testImplementation(project(":lib:isl"))
     testImplementation(Deps.assertj)

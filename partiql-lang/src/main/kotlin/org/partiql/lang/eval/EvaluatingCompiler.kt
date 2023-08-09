@@ -375,7 +375,7 @@ internal open class EvaluatingCompiler(
                     current = session.globals
                 )
                 val value = thunk(env)
-                return PartiQLResult.Value(value = value, coverageData = null)
+                return PartiQLResult.Value(value = value)
             }
         }
     }

@@ -22,7 +22,6 @@ import org.partiql.lang.eval.isNotUnknown
 import org.partiql.lang.eval.isUnknown
 import org.partiql.lang.eval.physical.sourceLocationMeta
 import org.partiql.lang.types.TypedOpParameter
-import org.partiql.lang.util.ConfigurableExprValueFormatter
 import java.util.Stack
 
 /**
@@ -65,11 +64,13 @@ internal class CoverageCompiler(
 
             override fun evaluate(session: EvaluationSession): PartiQLResult {
                 val result = (expression.evaluate(session) as PartiQLResult.Value).value
-                // TODO: This is a hack to materialize the ExprValue. Could be useful to use JMH's Blackhole.
-                val str = ConfigurableExprValueFormatter.standard.format(result)
                 return PartiQLResult.Value(
                     value = result,
-                    coverageData = CoverageData(conditionCounts, branchCount = branchCounts)
+                    coverageData = {
+                        // TODO: This is a hack to materialize the ExprValue. Could be useful to use JMH's Blackhole.
+                        // val str = ConfigurableExprValueFormatter.standard.format(result)
+                        CoverageData(conditionCounts, branchCount = branchCounts)
+                    }
                 )
             }
         }
@@ -154,7 +155,7 @@ internal class CoverageCompiler(
     override fun compileNe(expr: PartiqlAst.Expr.Ne, metas: MetaContainer): ThunkEnv = compileCondition(CoverageStructure.BranchCondition.Type.NEQ, metas) {
         super.compileNe(expr, metas)
     }
-    
+
     //
     //
     // BRANCHES
@@ -273,7 +274,7 @@ internal class CoverageCompiler(
         return super.compileSelect(selectExpr, metas).also { this.contextStack.pop() }
     }
 
-    private fun compileBranch(operand: CoverageStructure.Branch.Type, metas: MetaContainer = emptyMetaContainer(), compilation: () -> ThunkEnv) : ThunkEnv {
+    private fun compileBranch(operand: CoverageStructure.Branch.Type, metas: MetaContainer = emptyMetaContainer(), compilation: () -> ThunkEnv): ThunkEnv {
         val branchThunkEnv = compileBranchWithoutCheck(operand, metas, compilation)
 
         // Get Boolean Decision/Outcome
@@ -314,7 +315,7 @@ internal class CoverageCompiler(
             this.contextStack.pop()
         }
     }
-    
+
     private class BranchThunkEnv(
         val truthId: String,
         val falseId: String,
@@ -334,7 +335,7 @@ internal class CoverageCompiler(
         conditionCounts[nullId] = 0
 
         // Add Location Information
-        val lineNumber = metas.sourceLocationMeta?.lineNum ?: -1L
+        val lineNumber = metas.sourceLocationMeta?.lineNum ?: 1L
         conditions[truthId] = CoverageStructure.BranchCondition(truthId, operand, outcome = CoverageStructure.BranchCondition.Outcome.TRUE, lineNumber)
         conditions[falseId] = CoverageStructure.BranchCondition(falseId, operand, outcome = CoverageStructure.BranchCondition.Outcome.FALSE, lineNumber)
         conditions[nullId] = CoverageStructure.BranchCondition(nullId, operand, outcome = CoverageStructure.BranchCondition.Outcome.NULL, lineNumber)

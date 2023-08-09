@@ -17,13 +17,13 @@ internal object ConfigurationParameterExtractor {
 
     internal fun extract(testPlan: TestPlan): ConfigParams {
         val config = ConfigParamWrapper(testPlan.configurationParameters)
-        
+
         val lcovBranchConfig = config.getConfigParam(ConfigurationParameter.LCOV_BRANCH_ENABLED)?.let {
             when (it.toBoolean()) {
                 false -> null
                 true -> {
                     val reportPath = config.getConfigParam(ConfigurationParameter.LCOV_BRANCH_REPORT_LOCATION)
-                        ?: error("Expected to find a report path")
+                        ?: error("Expected to find a report path (specified by \"${ConfigurationParameter.LCOV_BRANCH_REPORT_LOCATION.key}\").")
                     val htmlOutputDir = config.getConfigParam(ConfigurationParameter.LCOV_BRANCH_HTML_DIR)
                     val branchMinimum = config.getConfigParam(ConfigurationParameter.LCOV_BRANCH_MINIMUM)?.toDouble()
                     LcovConfig(reportPath, htmlOutputDir, branchMinimum)
@@ -31,14 +31,14 @@ internal object ConfigurationParameterExtractor {
             }
         }
 
-        val lcovConditionConfig = config.getConfigParam(ConfigurationParameter.LCOV_CONDITION_ENABLED)?.let {
+        val lcovConditionConfig = config.getConfigParam(ConfigurationParameter.LCOV_BRANCH_CONDITION_ENABLED)?.let {
             when (it.toBoolean()) {
                 false -> null
                 true -> {
-                    val reportPath = config.getConfigParam(ConfigurationParameter.LCOV_CONDITION_REPORT_LOCATION)
-                        ?: error("Expected to find a report path")
-                    val htmlOutputDir = config.getConfigParam(ConfigurationParameter.LCOV_CONDITION_HTML_DIR)
-                    val branchMinimum = config.getConfigParam(ConfigurationParameter.LCOV_CONDITION_MINIMUM)?.toDouble()
+                    val reportPath = config.getConfigParam(ConfigurationParameter.LCOV_BRANCH_CONDITION_REPORT_LOCATION)
+                        ?: error("Expected to find a report path (specified by \"${ConfigurationParameter.LCOV_BRANCH_CONDITION_REPORT_LOCATION.key}\").")
+                    val htmlOutputDir = config.getConfigParam(ConfigurationParameter.LCOV_BRANCH_CONDITION_HTML_DIR)
+                    val branchMinimum = config.getConfigParam(ConfigurationParameter.LCOV_BRANCH_CONDITION_MINIMUM)?.toDouble()
                     LcovConfig(reportPath, htmlOutputDir, branchMinimum)
                 }
             }

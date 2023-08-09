@@ -12,7 +12,7 @@ internal abstract class LcovReportListener : TestExecutionListener {
     private lateinit var reportStream: OutputStream
     private lateinit var destinationFileName: String
     private lateinit var reportFile: File
-    
+
     abstract fun isLcovEnabled(): Boolean
     abstract fun getReportPath(): String
     abstract fun getTargetCountKey(): String
@@ -54,7 +54,7 @@ internal abstract class LcovReportListener : TestExecutionListener {
         val lcovLineData = mutableSetOf<LineData>()
         var executedCount = 0L
         targetIds.forEach { targetId ->
-            val lineNum = map[ReportKey.LINE_NUMBER_OF_TARGET_PREFIX + ReportKey.DELIMITER + targetId]?.toLong() ?: -1L
+            val lineNum = map[ReportKey.LINE_NUMBER_OF_TARGET_PREFIX + ReportKey.DELIMITER + targetId]?.toLong() ?: 1L
             val outcome = map[ReportKey.OUTCOME_OF_TARGET_PREFIX + ReportKey.DELIMITER + targetId] ?: "UNKNOWN_OUTCOME"
             val type = map[ReportKey.TYPE_OF_TARGET_PREFIX + ReportKey.DELIMITER + targetId] ?: "UNKNOWN_TYPE"
             val targetName = "$type${ReportKey.DELIMITER}$outcome${ReportKey.DELIMITER}$targetId"
@@ -170,7 +170,6 @@ internal abstract class LcovReportListener : TestExecutionListener {
         override fun getTargetCountKey(): String = ReportKey.BRANCH_CONDITION_COUNT
 
         override fun getCoverageTargetType(): ReportKey.CoverageTarget = ReportKey.CoverageTarget.BRANCH_CONDITION
-
 
         override fun testPlanExecutionStarted(testPlan: TestPlan?) {
             if (testPlan == null) { return super.testPlanExecutionStarted(testPlan) }

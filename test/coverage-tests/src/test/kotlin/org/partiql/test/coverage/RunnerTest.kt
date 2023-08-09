@@ -9,7 +9,6 @@ import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.PartiQLResult
-import org.partiql.lang.eval.booleanValue
 import kotlin.test.Ignore
 import kotlin.test.assertEquals
 
@@ -18,8 +17,11 @@ class RunnerTest {
     @PartiQLTest(provider = SuccessTestProvider::class)
     fun successTestExample(tc: SuccessTestProvider.ExampleTestCase, result: PartiQLResult.Value) {
         val value = result.value
-        assertEquals(ExprValueType.BOOL, value.type)
-        assertEquals(tc.expected, value.booleanValue())
+        // val str2 = ConfigurableExprValueFormatter.standard.format(value)
+        assertEquals(ExprValueType.BAG, value.type)
+        value.forEach { element ->
+            assertEquals(ExprValueType.STRUCT, element.type)
+        }
     }
 
     @PartiQLTest(provider = ComplexTestProvider::class)
@@ -65,7 +67,19 @@ class RunnerTest {
     }
 
     object SuccessTestProvider : PartiQLTestProvider {
-        override val statement: String = "x > 7 AND x < 15"
+        override val statement: String = """
+            SELECT *
+            FROM << x, x, x, x, x, x, x, x, x, x >> AS x
+            WHERE
+            x > 0
+            AND
+            EXISTS (
+                SELECT t AS t
+                FROM << x, x, x >> AS t
+                WHERE t > 7 AND t < 15
+            )
+
+        """
 
         override fun getTestCases(): Iterable<ExampleTestCase> = List(1001) {
             ExampleTestCase(

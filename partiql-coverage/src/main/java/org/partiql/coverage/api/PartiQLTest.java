@@ -11,13 +11,13 @@ import java.lang.annotation.RetentionPolicy;
 
 /**
  * Marks test methods as PartiQL Tests. Must use JUnit5 to run tests.<br><br>
- *
+ * <p>
  * The test method must have two parameters:<br>
- * 
+ *
  * <pre>1. The PartiQLTestCase representing a test case provided by the PartiQLTestProvider</pre>
  * <pre>2. The PartiQLResult (for performing assertions).</pre>
  * <br>
- *
+ * <p>
  * Example Kotlin Usage:<br>
  *
  * <pre>
@@ -28,11 +28,12 @@ import java.lang.annotation.RetentionPolicy;
  * </code>
  * </pre>
  */
-@Target({ ElementType.ANNOTATION_TYPE, ElementType.METHOD })
+@Target({ElementType.ANNOTATION_TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 @TestTemplate
 @ExtendWith(PartiQLTestExtension.class)
 public @interface PartiQLTest {
+    // NOTE: This is intentionally a Java annotation interface as we need to attach @TestTemplate.
 
     /**
      * @return a Java Class implementing PartiQLTestProvider. This must expose a no-argument constructor.
