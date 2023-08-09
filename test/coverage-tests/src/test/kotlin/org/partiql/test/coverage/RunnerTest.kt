@@ -95,8 +95,8 @@ class RunnerTest {
     object ComplexTestProvider : PartiQLTestProvider {
         override val statement: String = """
             SELECT
-                t.a AS a,
-                t.b AS b,
+                t.a > 2 AS gtA,
+                t.b < 3 AS ltB,
                 CASE
                     WHEN (t.a > 2 OR t.a = 0)
                     THEN TRUE
@@ -108,13 +108,23 @@ class RunnerTest {
                     WHEN 0
                     THEN 'isZero'
                     WHEN 1
-                    THEN 'is1'
+                    THEN 'is1' || CAST((t.a > t.b) AS STRING)
                     ELSE 'UNKNOWN'
                 END AS textualRepresentation
-            FROM <<
-                { 'a': globalA, 'b': globalB }
-            >> AS t
+            FROM (
+                SELECT x.c = TRUE
+                FROM <<
+                    { 'a': globalA, 'b': globalB, 'c': globalA > globalB }
+                >> AS x
+                WHERE x.c = TRUE AND x.c = TRUE
+            ) AS t
             WHERE
+                (
+                    SELECT t2.a = TRUE
+                    FROM << { 'a': TRUE } >> AS t2
+                    WHERE t2.a = TRUE
+                )
+                AND
                 t.b < 3 AND t.b > 0
         """.trimIndent()
 

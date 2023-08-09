@@ -23,6 +23,7 @@ import org.partiql.lang.eval.isUnknown
 import org.partiql.lang.eval.physical.sourceLocationMeta
 import org.partiql.lang.types.TypedOpParameter
 import org.partiql.lang.util.ConfigurableExprValueFormatter
+import java.util.Stack
 
 /**
  * This should only be used for a single query's compilation due to the attachment of unique ids to the nodes.
@@ -41,8 +42,15 @@ internal class CoverageCompiler(
     private val branchCounts = mutableMapOf<String, Int>()
     private val conditions: MutableMap<String, CoverageStructure.BranchCondition> = mutableMapOf()
     private val branches: MutableMap<String, CoverageStructure.Branch> = mutableMapOf()
+    private val contextStack: Stack<Context> = Stack()
+
+    private enum class Context {
+        IN_BRANCH,
+        NOT_IN_BRANCH
+    }
 
     override fun compile(originalAst: PartiqlAst.Statement): Expression {
+        contextStack.push(Context.NOT_IN_BRANCH)
         val expression = super.compile(originalAst)
         return object : Expression {
             override val coverageStructure: CoverageStructure = CoverageStructure(
@@ -259,7 +267,12 @@ internal class CoverageCompiler(
             }
         }
     }
-    
+
+    override fun compileSelect(selectExpr: PartiqlAst.Expr.Select, metas: MetaContainer): ThunkEnv {
+        this.contextStack.push(Context.NOT_IN_BRANCH)
+        return super.compileSelect(selectExpr, metas).also { this.contextStack.pop() }
+    }
+
     private fun compileBranch(operand: CoverageStructure.Branch.Type, metas: MetaContainer = emptyMetaContainer(), compilation: () -> ThunkEnv) : ThunkEnv {
         val branchThunkEnv = compileBranchWithoutCheck(operand, metas, compilation)
 
@@ -282,6 +295,7 @@ internal class CoverageCompiler(
     }
 
     private fun compileBranchWithoutCheck(operand: CoverageStructure.Branch.Type, metas: MetaContainer = emptyMetaContainer(), compilation: () -> ThunkEnv): BranchThunkEnv {
+        this.contextStack.push(Context.IN_BRANCH)
         val truthId = "B${++branchCount}"
         val falseId = "B${++branchCount}"
         branchCounts[truthId] = 0
@@ -296,7 +310,9 @@ internal class CoverageCompiler(
             truthId,
             falseId,
             compilation.invoke()
-        )
+        ).also {
+            this.contextStack.pop()
+        }
     }
     
     private class BranchThunkEnv(
@@ -306,6 +322,9 @@ internal class CoverageCompiler(
     )
 
     private fun compileCondition(operand: CoverageStructure.BranchCondition.Type, metas: MetaContainer = emptyMetaContainer(), compilation: () -> ThunkEnv): ThunkEnv {
+        // Make sure the condition is in a BRANCH
+        if (this.contextStack.peek() == Context.NOT_IN_BRANCH) { return compilation.invoke() }
+
         val truthId = "C${++conditionCount}"
         val falseId = "C${++conditionCount}"
         val nullId = "C${++conditionCount}"

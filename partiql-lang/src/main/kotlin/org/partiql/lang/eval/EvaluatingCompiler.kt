@@ -1804,7 +1804,7 @@ internal open class EvaluatingCompiler(
         return compileAstExpr(node)
     }
 
-    private fun compileSelect(selectExpr: PartiqlAst.Expr.Select, metas: MetaContainer): ThunkEnv {
+    internal open fun compileSelect(selectExpr: PartiqlAst.Expr.Select, metas: MetaContainer): ThunkEnv {
 
         // Get all the FROM source aliases and LET bindings for binding error checks
         val fold = object : PartiqlAst.VisitorFold<Set<String>>() {
