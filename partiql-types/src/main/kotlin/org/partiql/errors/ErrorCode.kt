@@ -370,7 +370,7 @@ public enum class ErrorCode(
      */
     EVALUATOR_CONCAT_FAILED_DUE_TO_INCOMPATIBLE_TYPE(
         ErrorCategory.EVALUATOR,
-        LOCATION + setOf(Property.ACTUAL_ARGUMENT_TYPES),
+        LOCATION + setOf(Property.ACTUAL_ARGUMENT_TYPES, Property.EXPECTED_ARGUMENT_TYPES),
         "Incorrect type of arguments for operator '||'",
         ErrorBehaviorInPermissiveMode.RETURN_MISSING
     ) {
