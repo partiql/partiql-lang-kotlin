@@ -296,7 +296,7 @@ internal object PartiQLPlanIonWriter_VERSION_0_1 : PartiQLPlanIonWriter {
         // Rel : nil -> schema
 
         override fun visitRel(node: Rel, nil: IonElement): IonElement {
-            val schema = ionSexpOf(node.schema.map { visitTypeRef(it.type, nil) })
+            val schema = ionSexpOf(node.type.schema.map { visitTypeRef(it.type, nil) })
             return visitRelOp(node.op, schema)
         }
 
