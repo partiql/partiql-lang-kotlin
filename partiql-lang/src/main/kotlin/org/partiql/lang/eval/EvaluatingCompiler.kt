@@ -25,7 +25,6 @@ import com.amazon.ionelement.api.toIonValue
 import org.partiql.errors.ErrorCode
 import org.partiql.errors.Property
 import org.partiql.errors.PropertyValueMap
-import org.partiql.errors.UNBOUND_QUOTED_IDENTIFIER_HINT
 import org.partiql.lang.ast.AggregateCallSiteListMeta
 import org.partiql.lang.ast.AggregateRegisterIdMeta
 import org.partiql.lang.ast.IsCountStarMeta
@@ -141,6 +140,10 @@ internal class EvaluatingCompiler(
     private val thunkFactory = compileOptions.typingMode.createThunkFactory<Environment>(compileOptions.thunkOptions)
 
     private val compilationContextStack = Stack<CompilationContext>()
+
+    private val UNBOUND_QUOTED_IDENTIFIER_HINT: String =
+        "Hint: did you intend to use single quotes (') here instead of double quotes (\")? " +
+            "Use single quotes (') for string literals and double quotes (\") for quoted identifiers."
 
     private val currentCompilationContext: CompilationContext
         get() = compilationContextStack.peek() ?: errNoContext(

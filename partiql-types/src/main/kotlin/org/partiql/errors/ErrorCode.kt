@@ -24,7 +24,7 @@ public enum class ErrorBehaviorInPermissiveMode {
     THROW_EXCEPTION, RETURN_MISSING
 }
 
-public const val UNBOUND_QUOTED_IDENTIFIER_HINT: String =
+private const val UNBOUND_QUOTED_IDENTIFIER_HINT: String =
     "Hint: did you intend to use single quotes (') here instead of double quotes (\")? " +
         "Use single quotes (') for string literals and double quotes (\") for quoted identifiers."
 

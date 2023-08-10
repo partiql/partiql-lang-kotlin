@@ -12,9 +12,12 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.errors
+package org.partiql.lang.errors
 
 import org.junit.Test
+import org.partiql.errors.ErrorCode
+import org.partiql.errors.Property
+import org.partiql.errors.PropertyValueMap
 import org.partiql.lang.SqlException
 import org.partiql.lang.TestBase
 

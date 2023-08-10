@@ -22,7 +22,6 @@ import org.partiql.lang.SqlException
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.util.propertyValueMapOf
-import org.partiql.lang.util.to
 
 /** Error for evaluation problems. */
 open class EvaluationException(
