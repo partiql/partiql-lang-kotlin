@@ -112,6 +112,8 @@ plugins {
 
 These plugins ensure that you have the required tasks to assemble a jar+distribution or a fatjar (a jar with distribution in it). The exact configuration may vary depending on your project's specifics and dependencies.
 
+3. If you're using Gradle, you can run `./gradlew build` to compile your module and generate a .jar file within the build/libs directory. This resulting .jar file will serve as a plugin for the PartiQL CLI.
+
 ## Step 6: Load the Functions into CLI
 
 Each of your .jar files should be stored in its own subdirectory under the `plugins` directory, which itself is inside the .partiql directory in your home directory. Here's what the directory structure should look like:
