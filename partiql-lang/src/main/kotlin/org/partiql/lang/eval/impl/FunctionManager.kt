@@ -13,9 +13,9 @@ import org.partiql.types.StaticType
  * Supports getting all functions and getting the function map by name
  */
 internal class FunctionManager(
-    val functions: List<ExprFunction>
+    private val functions: List<ExprFunction>
 ) {
-    val functionMap: Map<String, List<ExprFunction>> = functions.groupBy { it.signature.name }
+    private val functionMap: Map<String, List<ExprFunction>> = functions.groupBy { it.signature.name }
 
     /**
      * Get function from the list by name, arity, and argumentTypes(ExprValue)

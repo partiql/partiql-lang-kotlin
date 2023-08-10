@@ -8,8 +8,15 @@ import org.partiql.types.PartiQLValueType
  * of use.
  */
 public sealed class FunctionParameter {
+
+    /**
+     * Represents a value parameter.
+     *
+     * @property name A human-readable name to help clarify its use.
+     * @property type The parameter's PartiQL type.
+     */
     public class ValueParameter(
-        public val name: String, // A human-readable name to help clarify use
-        public val type: PartiQLValueType // The parameter's type
+        public val name: String,
+        public val type: PartiQLValueType
     ) : FunctionParameter()
 }

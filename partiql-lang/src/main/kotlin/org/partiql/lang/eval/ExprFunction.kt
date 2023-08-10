@@ -61,13 +61,13 @@ interface ExprFunction {
         errNoContext("Invalid implementation for ${signature.name}#call", ErrorCode.INTERNAL_ERROR, true)
     }
 
-    @Deprecated("As function overloading is now supported, please provide multiple implementations of ExprFunction and invoke callWithRequired() instead.", level = DeprecationLevel.ERROR)
+    @Deprecated("Please define overloaded functions by providing each alternative in required parameter as its own ExprFunction; each function is invoked by callWithRequired() rather than callWithOptional().", level = DeprecationLevel.ERROR)
     fun callWithOptional(session: EvaluationSession, required: List<ExprValue>, opt: ExprValue): ExprValue {
         // Deriving ExprFunctions must implement this if they have a valid call form including required parameters and optional
         errNoContext("Invalid implementation for ${signature.name}#call", ErrorCode.INTERNAL_ERROR, true)
     }
 
-    @Deprecated("As function overloading is now supported, please use the LIST ExprValue to represent variadic parameters and invoke callWithRequired() instead.", level = DeprecationLevel.ERROR)
+    @Deprecated("Please define overloaded functions by providing the LIST ExprValue in required parameter to represent variadic parameters as its own ExprFunction; each function is invoked by callWithRequired() rather than callWithVariadic().", level = DeprecationLevel.ERROR)
     fun callWithVariadic(session: EvaluationSession, required: List<ExprValue>, variadic: List<ExprValue>): ExprValue {
         // Deriving ExprFunctions must implement this if they have a valid call form including required parameters and variadic
         errNoContext("Invalid implementation for ${signature.name}#call", ErrorCode.INTERNAL_ERROR, true)
