@@ -47,7 +47,6 @@ internal class PostProcessor : LauncherSessionListener {
                     title = configInfo.title
                 )
             }
-
         }
 
         // Check Threshold(s)
