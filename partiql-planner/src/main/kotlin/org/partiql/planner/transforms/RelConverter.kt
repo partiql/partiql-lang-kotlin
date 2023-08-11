@@ -17,7 +17,7 @@ import org.partiql.plan.Rel
 import org.partiql.plan.Rex
 import org.partiql.plan.builder.PlanFactory
 import org.partiql.plan.builder.plan
-import org.partiql.planner.PartiQLPlannerContext
+import org.partiql.planner.Env
 import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.nullValue
@@ -43,7 +43,7 @@ internal object RelConverter {
     /**
      * Here we convert an SFW to composed [Rel]s, then apply the appropriate relation-value projection to get a [Rex].
      */
-    internal fun apply(sfw: Expr.SFW, context: PartiQLPlannerContext): Rex = with(factory) {
+    internal fun apply(sfw: Expr.SFW, context: Env): Rex = with(factory) {
         val rel = sfw.accept(ToRel(context), nil)
         val rex = when (val projection = sfw.select) {
             // PIVOT ... FROM
@@ -81,7 +81,7 @@ internal object RelConverter {
     /**
      * Syntax sugar for converting an [Expr] tree to a [Rex] tree.
      */
-    private fun Expr.toRex(env: PartiQLPlannerContext): Rex = RexConverter.apply(this, env)
+    private fun Expr.toRex(env: Env): Rex = RexConverter.apply(this, env)
 
     /**
      * Produces the default constructor to generalize a SQL SELECT to a SELECT VALUE.
@@ -89,7 +89,7 @@ internal object RelConverter {
      *  - See https://partiql.org/dql/select.html#sql-select
      */
     @OptIn(PartiQLValueExperimental::class)
-    private fun defaultConstructor(context: PartiQLPlannerContext, schema: List<Rel.Binding>): Rex = with(factory) {
+    private fun defaultConstructor(context: Env, schema: List<Rel.Binding>): Rex = with(factory) {
         val str = context.resolveType(StaticType.STRING)
         val type = context.resolveType(StaticType.STRUCT)
         val fields = schema.mapIndexed { i, b ->
@@ -102,7 +102,7 @@ internal object RelConverter {
     }
 
     @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE", "LocalVariableName")
-    private class ToRel(private val context: PartiQLPlannerContext) : AstBaseVisitor<Rel, Rel>() {
+    private class ToRel(private val context: Env) : AstBaseVisitor<Rel, Rel>() {
 
         private inline fun <T : PlanNode> transform(block: PlanFactory.() -> T): T = factory.block()
 

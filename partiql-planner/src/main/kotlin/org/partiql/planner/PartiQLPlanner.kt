@@ -2,18 +2,34 @@ package org.partiql.planner
 
 import com.amazon.ionelement.api.StructElement
 import org.partiql.ast.Statement
+import org.partiql.errors.Problem
+import org.partiql.errors.ProblemCallback
 import org.partiql.plan.PartiQLPlan
 import java.time.Instant
 
 /**
- * PartiQLPlanner is responsible for transforming an AST into a logical query plan.
+ * PartiQLPlanner is responsible for transforming an AST into PartiQL's logical query plan.
  */
 public interface PartiQLPlanner {
 
-    public fun plan(session: Session, statement: Statement): Result
+    /**
+     * Transform an AST to a [PartiQLPlan].
+     *
+     * @param statement
+     * @param session
+     * @param onProblem
+     * @return
+     */
+    public fun plan(statement: Statement, session: Session, onProblem: ProblemCallback): Result
 
+    /**
+     * Planner result along with any warnings.
+     *
+     * @property plan
+     */
     public class Result(
         val plan: PartiQLPlan,
+        val problems: List<Problem>,
     )
 
     /**
@@ -34,4 +50,10 @@ public interface PartiQLPlanner {
         public val catalogConfig: Map<String, StructElement> = emptyMap(),
         public val instant: Instant = Instant.now()
     )
+
+    companion object {
+
+        @JvmStatic
+        fun builder(): PartiQLPlannerBuilder = PartiQLPlannerBuilder()
+    }
 }

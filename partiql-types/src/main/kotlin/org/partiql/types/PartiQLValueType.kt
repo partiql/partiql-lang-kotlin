@@ -42,6 +42,7 @@ public enum class PartiQLValueType {
     LIST,
     SEXP,
     STRUCT,
+    GRAPH,
     NULL, // null.null
     MISSING, // missing
     NULLABLE_BOOL, // null.bool

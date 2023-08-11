@@ -1,6 +1,8 @@
 imports::{
   kotlin: [
     partiql_value::'org.partiql.value.PartiQLValue',
+    static_type::'org.partiql.types.StaticType',
+    function_signature::'org.partiql.types.function.FunctionSignature',
   ],
 }
 
@@ -10,63 +12,28 @@ parti_q_l_plan::{
   statement:  statement,            // (statement ...)
 }
 
-parti_q_l_header::{
-  types:     list::[type],    // (types ...)
-  functions: list::[fn],      // (fns ...)
-}
-
 parti_q_l_version::[
   VERSION_0_0,
   VERSION_0_1,  // CURRENT
-]
-
-// Types
-
-type::[
-  atomic::{
-    symbol: string,
-  },
-  _::[
-    ref::{
-      annotation: string,
-      ordinal:    int,
-    },
-  ],
 ]
 
 // Globals
 
 global::{
   path: '.identifier.qualified',
-  type: '.type.ref',
+  type: static_type,
 }
 
 // Functions
 
-fn::{
-  id:       string,
-  params:   list::[param],
-  returns:  '.type.ref',
-  _: [
-    param::[
-      value::{
-        type: '.type.ref',
-      },
-      type::{
-        type: '.type.ref',
-      },
-    ],
-    ref::[
-      resolved::{
-        annotation: string,
-        ordinal:    int,
-      },
-      unresolved::{
-        identifier: identifier,
-      },
-    ],
-  ],
-}
+fn::[
+  resolved::{
+    signature: function_signature,
+  },
+  unresolved::{
+    identifier: identifier,
+  },
+]
 
 // Statements
 
@@ -97,7 +64,7 @@ identifier::[
 
 // Rex
 rex::{
-  type: '.type.ref',
+  type: static_type,
   op:[
 
     lit::{
@@ -137,7 +104,7 @@ rex::{
     },
 
     call::{
-       fn:    '.fn.ref',
+       fn:    fn,
        args:  list::[arg],
        _: [
         arg::[
@@ -145,7 +112,7 @@ rex::{
             rex: rex,
           },
           type::{
-            type: '.type.ref',
+            type: static_type,
           },
         ],
       ],
@@ -185,7 +152,7 @@ rex::{
     coll_to_scalar::{
       subquery: {
         select: select,
-        type:   '.type.ref' // reify `select` type
+        type:   static_type // reify `select` type
       }
     },
 
@@ -306,7 +273,7 @@ rel::{
       groups:   list::[rex],
       _: [
         agg::{
-          fn:   '.fn.ref',
+          fn:   fn,
           args: list::['.rex.op.call.arg'],
         },
       ],
@@ -318,7 +285,7 @@ rel::{
     ],
     binding::{
       name: string,
-      type: '.type.ref',
+      type: static_type,
     },
   ]
 }

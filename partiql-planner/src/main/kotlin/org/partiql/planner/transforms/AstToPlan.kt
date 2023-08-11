@@ -6,7 +6,7 @@ import org.partiql.ast.visitor.AstBaseVisitor
 import org.partiql.plan.Plan
 import org.partiql.plan.PlanNode
 import org.partiql.plan.builder.PlanFactory
-import org.partiql.planner.PartiQLPlannerContext
+import org.partiql.planner.Env
 import org.partiql.ast.Identifier as AstIdentifier
 import org.partiql.ast.Statement as AstStatement
 import org.partiql.plan.Identifier as PlanIdentifier
@@ -19,18 +19,18 @@ internal object AstToPlan {
 
     // statement.toPlan()
     @JvmStatic
-    fun apply(statement: AstStatement, env: PartiQLPlannerContext): PlanStatement = statement.accept(ToPlanStatement, env)
+    fun apply(statement: AstStatement, env: Env): PlanStatement = statement.accept(ToPlanStatement, env)
 
     @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
-    private object ToPlanStatement : AstBaseVisitor<PlanStatement, PartiQLPlannerContext>() {
+    private object ToPlanStatement : AstBaseVisitor<PlanStatement, Env>() {
 
         private val factory = Plan
 
         private inline fun <T : PlanNode> transform(block: PlanFactory.() -> T): T = factory.block()
 
-        override fun defaultReturn(node: AstNode, env: PartiQLPlannerContext) = throw IllegalArgumentException("Unsupported statement")
+        override fun defaultReturn(node: AstNode, env: Env) = throw IllegalArgumentException("Unsupported statement")
 
-        override fun visitStatementQuery(node: AstStatement.Query, env: PartiQLPlannerContext) = transform {
+        override fun visitStatementQuery(node: AstStatement.Query, env: Env) = transform {
             val rex = when (val expr = node.expr) {
                 is Expr.SFW -> RelConverter.apply(expr, env)
                 else -> RexConverter.apply(expr, env)

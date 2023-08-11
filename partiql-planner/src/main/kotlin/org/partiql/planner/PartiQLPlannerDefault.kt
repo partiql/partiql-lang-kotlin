@@ -2,40 +2,49 @@ package org.partiql.planner
 
 import org.partiql.ast.Statement
 import org.partiql.ast.normalize.normalize
+import org.partiql.errors.ProblemCallback
 import org.partiql.plan.PartiQLVersion
 import org.partiql.plan.Plan
 import org.partiql.planner.transforms.AstToPlan
+import org.partiql.planner.typer.PlanTyper
+import org.partiql.spi.Plugin
 
 /**
- * Default logical planner.
+ * Default PartiQL logical query planner.
  */
-class PartiQLPlannerDefault : PartiQLPlanner {
+internal class PartiQLPlannerDefault(
+    private val plugins: List<Plugin>,
+    private val passes: List<PartiQLPlannerPass>
+) : PartiQLPlanner {
 
     private val version = PartiQLVersion.VERSION_0_1
 
-    override fun plan(session: PartiQLPlanner.Session, statement: Statement): PartiQLPlanner.Result {
-        // 0. Initialize the environment
-        val env = PartiQLPlannerContext(session)
+    // For now, only have the default header
+    private val header = Header.partiql()
+
+    override fun plan(statement: Statement, session: PartiQLPlanner.Session, onProblem: ProblemCallback): PartiQLPlanner.Result {
+        // 0. Initialize the planning environment
+        val ctx = Env(header, plugins, session)
 
         // 1. Normalize
         val ast = statement.normalize()
 
         // 2. AST to Rel/Rex
-        val root = AstToPlan.apply(ast, env)
+        val root = AstToPlan.apply(ast, ctx)
 
-        // 3. Resolve
-        // --
-
-        // 4. Apply planner passes
-        // --
-
-        // Wrap in PartiQLPlan struct
-        return PartiQLPlanner.Result(
-            plan = Plan.partiQLPlan(
-                version = version,
-                globals = env.globals(),
-                statement = root,
-            )
+        // 3. Resolve variables
+        val typer = PlanTyper(ctx, onProblem)
+        var plan = Plan.partiQLPlan(
+            version = version,
+            globals = ctx.globals,
+            statement = typer.resolve(root),
         )
+
+        // 4. Apply all passes
+        for (pass in passes) {
+            plan = pass.apply(plan, onProblem)
+        }
+
+        return PartiQLPlanner.Result(plan, emptyList())
     }
 }
