@@ -81,7 +81,7 @@ internal class PartiQLCompilerPipelineFactory() : PipelineFactory {
             compiler = PartiQLCompilerBuilder.standard()
                 .options(evaluatorOptions)
                 .customTypes(legacyPipeline.customDataTypes)
-                .customFunctions(legacyPipeline.functionList)
+                .customFunctions(legacyPipeline.functions.values.toList())
                 .customProcedures(legacyPipeline.procedures.values.toList())
                 .build()
         )

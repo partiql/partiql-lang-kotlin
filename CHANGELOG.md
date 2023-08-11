@@ -50,7 +50,6 @@ Thank you to all who have contributed!
 - Standardizes `org/partiql/cli/functions/QueryDDB` and other built-in functions in `org/partiql/lang/eval/builtins` by the new `ExprFunction` format.
 - **Breaking**: Redefines `org/partiql/lang/eval/ExprFunctionkt.call()` method by only invoking `callWithRequired` function.
 - **Breaking**: Redefines `org/partiql/lang/eval/builtins/DynamicLookupExprFunction` by merging `variadicParameter` into `requiredParameters` as a `StaticType.LIST`. `callWithVariadic` is now replaced by `callWithRequired`.
-- **Breaking**: Modifies `functions` property of `CompilerPipeline`, `StaticTypeInferencer` and  `StepContext` to be a `List` and not a `Map`.
 - Upgrades ion-java to 1.10.2.
 - **Breaking** (within experimental graph features): As part of extending
   the language of graph label patterns:
@@ -61,8 +60,6 @@ Thank you to all who have contributed!
     from `OneOf` to `Name`, and from `Whatever` to `Wildcard`.
 
 ### Deprecated
-- Deprecates Map<String, ExprFunction> representation of functions in the `CompilerPipeline`
-  and experimental `PartiQLCompilerPipeline`. Please use List<ExprFunction> to represent functions instead.
 - **Breaking**: Deprecates the `Arguments`, `RequiredArgs`, `RequiredWithOptional`, and `RequiredWithVariadic` classes, 
   along with the `callWithOptional()`, `callWithVariadic()`, and the overloaded `call()` methods in the `ExprFunction` class, 
   marking them with a Deprecation Level of ERROR. Now, it's recommended to use 
