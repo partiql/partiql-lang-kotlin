@@ -5,6 +5,7 @@ import org.junit.jupiter.api.extension.TestTemplateInvocationContext
 import org.junit.jupiter.api.extension.TestTemplateInvocationContextProvider
 import org.junit.jupiter.params.support.AnnotationConsumerInitializer
 import org.junit.platform.commons.JUnitException
+import org.junit.platform.commons.PreconditionViolationException
 import org.junit.platform.commons.util.AnnotationUtils
 import org.junit.platform.commons.util.ExceptionUtils
 import org.junit.platform.commons.util.Preconditions
@@ -18,11 +19,13 @@ import org.partiql.lang.util.ConfigurableExprValueFormatter
 import java.util.concurrent.atomic.AtomicLong
 import java.util.stream.Stream
 import java.util.stream.StreamSupport
+import kotlin.jvm.Throws
 
 /**
  * JUnit extension that is invoked on test methods annotated with [PartiQLTest].
  */
 internal class PartiQLTestExtension : TestTemplateInvocationContextProvider {
+    @Throws(PreconditionViolationException::class)
     override fun supportsTestTemplate(context: ExtensionContext): Boolean {
         if (!context.testMethod.isPresent) { return false }
 

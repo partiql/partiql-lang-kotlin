@@ -11,6 +11,8 @@ import org.junit.jupiter.params.support.AnnotationConsumerInitializer
 import org.junit.platform.commons.util.AnnotationUtils
 import org.junit.platform.commons.util.ReflectionUtils
 import org.junit.platform.commons.util.StringUtils
+import org.partiql.coverage.api.PartiQLTestCase
+import org.partiql.lang.eval.PartiQLResult
 import java.lang.Exception
 import java.lang.reflect.Method
 import java.lang.reflect.Parameter
@@ -28,6 +30,14 @@ internal class PartiQLTestMethodContext(testMethod: Method) {
      */
     fun hasPotentiallyValidSignature(): Boolean {
         if (parameters.size != 2) { return false }
+        if (PartiQLTestCase::class.java.isAssignableFrom(parameters[0].type).not()) {
+            println("NOT TEST CASE: ${parameters[0].type.simpleName}")
+            return false
+        }
+        if (PartiQLResult::class.java.isAssignableFrom(parameters[1].type).not()) {
+            println("NOT PQL RESULT!")
+            return false
+        }
         if (parameters.any { isAggregator(it) }) { return false }
         return true
     }
