@@ -3,8 +3,8 @@ package org.partiql.lang.eval.builtins.functions
 import org.junit.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
-import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.errors.Property
+import org.partiql.errors.ErrorCode
+import org.partiql.errors.Property
 import org.partiql.lang.eval.BAG_ANNOTATION
 import org.partiql.lang.eval.EvaluatorTestBase
 import org.partiql.lang.eval.builtins.ExprFunctionTestCase

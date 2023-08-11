@@ -7,11 +7,11 @@ import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.ionSymbol
 import com.amazon.ionelement.api.toIonValue
 import org.junit.Assert
+import org.partiql.errors.Problem
+import org.partiql.errors.ProblemDetails
+import org.partiql.errors.ProblemLocation
 import org.partiql.lang.ION
-import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.domains.PartiqlPhysical
-import org.partiql.lang.errors.Problem
-import org.partiql.lang.errors.ProblemDetails
 import org.partiql.lang.util.SexpAstPrettyPrinter
 
 /**
@@ -28,8 +28,8 @@ fun createFakeGlobalsResolver(vararg globalVariableNames: Pair<String, String>) 
         }
     }
 
-fun problem(line: Int, charOffset: Int, detail: ProblemDetails): Problem =
-    Problem(SourceLocationMeta(line.toLong(), charOffset.toLong()), detail)
+fun problem(line: Int, charOffset: Int, length: Int, detail: ProblemDetails): Problem =
+    Problem(ProblemLocation(line.toLong(), charOffset.toLong(), length.toLong()), detail)
 
 fun PartiqlPhysical.Builder.litTrue() = lit(ionBool(true))
 fun PartiqlPhysical.Builder.litInt(value: Int) = lit(ionInt(value.toLong()))
@@ -50,8 +50,8 @@ fun assertSexpEquals(
     }
 }
 
-fun unimplementedProblem(featureName: String, line: Int, col: Int) =
+fun unimplementedProblem(featureName: String, line: Int, col: Int, length: Int) =
     Problem(
-        SourceLocationMeta(line.toLong(), col.toLong()),
+        ProblemLocation(line.toLong(), col.toLong(), length.toLong()),
         PlanningProblemDetails.UnimplementedFeature(featureName)
     )

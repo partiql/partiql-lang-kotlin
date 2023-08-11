@@ -15,9 +15,9 @@
 package org.partiql.lang.eval.builtins
 
 import com.amazon.ion.Timestamp
-import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.errors.Property
-import org.partiql.lang.errors.PropertyValueMap
+import org.partiql.errors.ErrorCode
+import org.partiql.errors.Property
+import org.partiql.errors.PropertyValueMap
 import org.partiql.lang.eval.DEFAULT_COMPARATOR
 import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.EvaluationSession

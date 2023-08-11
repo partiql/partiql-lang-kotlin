@@ -1,8 +1,8 @@
 package org.partiql.lang.syntax
 
 import org.junit.Test
-import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.errors.Property
+import org.partiql.errors.ErrorCode
+import org.partiql.errors.Property
 import org.partiql.lang.util.getAntlrDisplayString
 import org.partiql.parser.antlr.PartiQLParser
 

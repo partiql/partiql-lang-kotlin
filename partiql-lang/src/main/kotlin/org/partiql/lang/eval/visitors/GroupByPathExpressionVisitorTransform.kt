@@ -15,10 +15,10 @@
 package org.partiql.lang.eval.visitors
 
 import com.amazon.ionelement.api.metaContainerOf
+import org.partiql.errors.ErrorCode
 import org.partiql.lang.ast.IsSyntheticNameMeta
 import org.partiql.lang.ast.UniqueNameMeta
 import org.partiql.lang.domains.PartiqlAst
-import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.errNoContext
 
 /**

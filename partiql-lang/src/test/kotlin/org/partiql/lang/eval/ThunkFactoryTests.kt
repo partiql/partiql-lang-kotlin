@@ -3,9 +3,9 @@ package org.partiql.lang.eval
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
+import org.partiql.errors.ErrorCode
 import org.partiql.lang.ast.StaticTypeMeta
 import org.partiql.lang.domains.metaContainerOf
-import org.partiql.lang.errors.ErrorCode
 import org.partiql.types.NumberConstraint
 import org.partiql.types.StaticType
 import org.partiql.types.StringType

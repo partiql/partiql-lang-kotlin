@@ -1,6 +1,6 @@
 package org.partiql.lang.eval.builtins
 
-import org.partiql.lang.errors.ErrorCode
+import org.partiql.errors.ErrorCode
 import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.EvaluationException

@@ -4,8 +4,8 @@ import junitparams.JUnitParamsRunner
 import junitparams.Parameters
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.errors.Property
+import org.partiql.errors.ErrorCode
+import org.partiql.errors.Property
 import org.partiql.lang.eval.EvaluatorTestBase
 import org.partiql.lang.util.propertyValueMapOf
 import org.partiql.lang.util.to

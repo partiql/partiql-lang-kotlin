@@ -1,7 +1,7 @@
 package org.partiql.lang.planner
 
-import org.partiql.lang.errors.ProblemDetails
-import org.partiql.lang.errors.ProblemSeverity
+import org.partiql.errors.ProblemDetails
+import org.partiql.errors.ProblemSeverity
 
 /**
  * Contains detailed information about errors that may occur during query planning.

@@ -3,12 +3,12 @@ package org.partiql.lang.syntax.impl
 import com.amazon.ion.system.IonSystemBuilder
 import com.amazon.ionelement.api.MetaContainer
 import org.partiql.ast.helpers.toLegacyAst
+import org.partiql.errors.ErrorCode
+import org.partiql.errors.Property
+import org.partiql.errors.PropertyValueMap
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.metaContainerOf
-import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.errors.Property
-import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.syntax.Parser
 import org.partiql.lang.syntax.ParserException
 import org.partiql.parser.PartiQLLexerException

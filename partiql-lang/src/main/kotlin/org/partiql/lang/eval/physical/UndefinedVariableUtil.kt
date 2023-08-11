@@ -1,14 +1,17 @@
 package org.partiql.lang.eval.physical
 
 import com.amazon.ionelement.api.MetaContainer
-import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.errors.Property
-import org.partiql.lang.errors.UNBOUND_QUOTED_IDENTIFIER_HINT
+import org.partiql.errors.ErrorCode
+import org.partiql.errors.Property
 import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.errorContextFrom
 import org.partiql.lang.util.propertyValueMapOf
+
+private const val UNBOUND_QUOTED_IDENTIFIER_HINT: String =
+    "Hint: did you intend to use single quotes (') here instead of double quotes (\")? " +
+        "Use single quotes (') for string literals and double quotes (\") for quoted identifiers."
 
 internal fun throwUndefinedVariableException(
     bindingName: BindingName,

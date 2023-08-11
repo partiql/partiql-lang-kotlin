@@ -12,10 +12,7 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.lang.errors
-
-import org.partiql.lang.eval.ExprValueType
-import org.partiql.lang.syntax.impl.DateTimePart
+package org.partiql.errors
 
 /** Property Set constants used in [ErrorCode] */
 private val LOCATION = setOf(Property.LINE_NUMBER, Property.COLUMN_NUMBER)
@@ -23,11 +20,11 @@ private val TOKEN_INFO = setOf(Property.TOKEN_DESCRIPTION, Property.TOKEN_VALUE)
 private val LOC_TOKEN = LOCATION + (TOKEN_INFO)
 private val LOC_TOKEN_STR = LOCATION + (setOf(Property.TOKEN_STRING))
 
-enum class ErrorBehaviorInPermissiveMode {
+public enum class ErrorBehaviorInPermissiveMode {
     THROW_EXCEPTION, RETURN_MISSING
 }
 
-internal const val UNBOUND_QUOTED_IDENTIFIER_HINT =
+private const val UNBOUND_QUOTED_IDENTIFIER_HINT: String =
     "Hint: did you intend to use single quotes (') here instead of double quotes (\")? " +
         "Use single quotes (') for string literals and double quotes (\") for quoted identifiers."
 
@@ -35,14 +32,14 @@ internal const val UNBOUND_QUOTED_IDENTIFIER_HINT =
  *  These are the properties used as keys in [PropertyValueMap] created at each error location.
  *  @property errorBehaviorInPermissiveMode This enum is used during evaluation to determine the behavior of the error.
  *  - If it is THROW_EXCEPTION, which is the default behavior, evaluator will throw an EvaluationException in the permissive mode.
- *  - If is is RETURN_MISSING, evaluator will return MISSING in the permissive mode.
+ *  - If it is RETURN_MISSING, evaluator will return MISSING in the permissive mode.
  *  - in the LEGACY mode, the evaluator always throws exception irrespective of this flag.
  */
-enum class ErrorCode(
-    internal val category: ErrorCategory,
+public enum class ErrorCode(
+    public val category: ErrorCategory,
     private val properties: Set<Property>,
     private val messagePrefix: String,
-    val errorBehaviorInPermissiveMode: ErrorBehaviorInPermissiveMode = ErrorBehaviorInPermissiveMode.THROW_EXCEPTION
+    public val errorBehaviorInPermissiveMode: ErrorBehaviorInPermissiveMode = ErrorBehaviorInPermissiveMode.THROW_EXCEPTION
 ) {
 
     INTERNAL_ERROR(
@@ -112,7 +109,7 @@ enum class ErrorCode(
     PARSE_EXPECTED_DATE_TIME_PART(
         ErrorCategory.PARSER,
         LOC_TOKEN,
-        "expected one of: [${DateTimePart.values().joinToString()}]"
+        "expected one of: [${ErrDateTimePart.values().joinToString()}]"
     ),
 
     PARSE_FAILED_STACK_OVERFLOW(
@@ -365,15 +362,21 @@ enum class ErrorCode(
                 "got: ${errorContext?.get(Property.ACTUAL_ARGUMENT_TYPES) ?: UNKNOWN}"
     },
 
+    /**
+     * NOTE: This is unused and may be removed!
+     *
+     * To remove the dep on ExprValue, we introduce the EXPECTED_ARGUMENT_TYPES argument
+     *  Property.EXPECTED_ARGUMENT_TYPES -> ExprValueType.values().filter { it.isText }
+     */
     EVALUATOR_CONCAT_FAILED_DUE_TO_INCOMPATIBLE_TYPE(
         ErrorCategory.EVALUATOR,
-        LOCATION + setOf(Property.ACTUAL_ARGUMENT_TYPES),
+        LOCATION + setOf(Property.ACTUAL_ARGUMENT_TYPES, Property.EXPECTED_ARGUMENT_TYPES),
         "Incorrect type of arguments for operator '||'",
         ErrorBehaviorInPermissiveMode.RETURN_MISSING
     ) {
         override fun getErrorMessage(errorContext: PropertyValueMap?): String =
             "Incorrect type of arguments for operator '||', " +
-                "expected one of ${ExprValueType.values().filter { it.isText }} " +
+                "expected: ${errorContext?.get(Property.EXPECTED_ARGUMENT_TYPES) ?: UNKNOWN} " +
                 "got ${errorContext?.get(Property.ACTUAL_ARGUMENT_TYPES)}"
     },
 
@@ -694,7 +697,7 @@ enum class ErrorCode(
         LOCATION + Property.EXPECTED_STATIC_TYPE,
         ""
     ) {
-        override fun getErrorMessage(errorContext: PropertyValueMap?) =
+        override fun getErrorMessage(errorContext: PropertyValueMap?): String =
             "Value was not an instance of the expected static type: ${errorContext.getProperty(Property.EXPECTED_STATIC_TYPE)}"
     },
 
@@ -831,11 +834,16 @@ enum class ErrorCode(
      * @param errorContext  that contains information about the error
      * @return detailed error message as a [String]
      */
-    open fun getErrorMessage(errorContext: PropertyValueMap?): String =
+    public open fun getErrorMessage(errorContext: PropertyValueMap?): String =
         "${detailMessagePrefix()}, ${detailMessageSuffix(errorContext)}"
 
-    fun getProperties(): Set<Property> = properties
+    public fun getProperties(): Set<Property> = properties
 }
 
 private fun PropertyValueMap?.getProperty(prop: Property): String =
     this?.get(prop)?.toString() ?: UNKNOWN
+
+// duplicated from internal org.partiql.lang.syntax.impl to remove circular dependency
+private enum class ErrDateTimePart {
+    YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, TIMEZONE_HOUR, TIMEZONE_MINUTE;
+}

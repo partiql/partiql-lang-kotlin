@@ -2,7 +2,7 @@ package org.partiql.lang.eval.builtins
 
 import com.amazon.ion.IonType
 import com.amazon.ionelement.api.emptyMetaContainer
-import org.partiql.lang.errors.ErrorCode
+import org.partiql.errors.ErrorCode
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue

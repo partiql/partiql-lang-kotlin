@@ -1,7 +1,7 @@
 package org.partiql.lang.eval.builtins
 
-import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.errors.Property
+import org.partiql.errors.ErrorCode
+import org.partiql.errors.Property
 import org.partiql.lang.eval.EvaluatorTestBase
 import org.partiql.lang.eval.expectedArgTypeErrorMsg
 import org.partiql.lang.types.StaticTypeUtils.getRuntimeType

@@ -15,14 +15,14 @@
 package org.partiql.lang.planner.transforms
 
 import org.partiql.annotations.ExperimentalPartiQLSchemaInferencer
+import org.partiql.errors.ErrorCode
+import org.partiql.errors.Problem
+import org.partiql.errors.ProblemHandler
+import org.partiql.errors.ProblemSeverity
+import org.partiql.errors.Property
+import org.partiql.errors.PropertyValueMap
+import org.partiql.errors.UNKNOWN_PROBLEM_LOCATION
 import org.partiql.lang.SqlException
-import org.partiql.lang.ast.UNKNOWN_SOURCE_LOCATION
-import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.errors.Problem
-import org.partiql.lang.errors.ProblemHandler
-import org.partiql.lang.errors.ProblemSeverity
-import org.partiql.lang.errors.Property
-import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.planner.PlanningProblemDetails
 import org.partiql.lang.planner.transforms.PartiQLSchemaInferencer.infer
 import org.partiql.lang.planner.transforms.impl.Metadata
@@ -80,7 +80,7 @@ public object PartiQLSchemaInferencer {
                 )
                 else -> InferenceException(
                     err = Problem(
-                        UNKNOWN_SOURCE_LOCATION,
+                        UNKNOWN_PROBLEM_LOCATION,
                         PlanningProblemDetails.CompileError("Unhandled exception occurred.")
                     ),
                     cause = t
@@ -155,7 +155,7 @@ public object PartiQLSchemaInferencer {
         // Convert Logical Plan to Static Type
         return typedPlan.grabType() ?: throw InferenceException(
             Problem(
-                UNKNOWN_SOURCE_LOCATION,
+                UNKNOWN_PROBLEM_LOCATION,
                 PlanningProblemDetails.CompileError("Unable to infer the output type of plan.")
             )
         )

@@ -1,8 +1,8 @@
 package org.partiql.lang.eval.physical.operators
 
+import org.partiql.errors.ErrorCode
+import org.partiql.errors.Property
 import org.partiql.lang.domains.PartiqlPhysical
-import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.errors.Property
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.err
 import org.partiql.lang.eval.errorContextFrom

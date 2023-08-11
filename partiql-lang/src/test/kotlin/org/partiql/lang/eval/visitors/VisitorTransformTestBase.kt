@@ -16,8 +16,8 @@ package org.partiql.lang.eval.visitors
 
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.fail
+import org.partiql.errors.ErrorCode
 import org.partiql.lang.domains.PartiqlAst
-import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestFailureReason
 import org.partiql.lang.eval.evaluatortestframework.assertThrowsSqlException
 import org.partiql.lang.syntax.PartiQLParserBuilder

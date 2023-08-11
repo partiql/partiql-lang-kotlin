@@ -16,6 +16,8 @@ package org.partiql.lang.errors
 
 import com.amazon.ion.Timestamp
 import org.junit.Test
+import org.partiql.errors.ErrorCode
+import org.partiql.errors.Property
 import org.partiql.lang.syntax.PartiQLParserTestBase
 import org.partiql.lang.util.getAntlrDisplayString
 import org.partiql.parser.antlr.PartiQLParser

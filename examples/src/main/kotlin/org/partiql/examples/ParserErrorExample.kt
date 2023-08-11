@@ -1,7 +1,7 @@
 package org.partiql.examples
 
+import org.partiql.errors.Property
 import org.partiql.examples.util.Example
-import org.partiql.lang.errors.Property
 import org.partiql.lang.syntax.Parser
 import org.partiql.lang.syntax.ParserException
 import org.partiql.lang.syntax.PartiQLParserBuilder
