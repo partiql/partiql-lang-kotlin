@@ -26,8 +26,6 @@ import org.partiql.lang.SqlException
 import org.partiql.lang.planner.PlanningProblemDetails
 import org.partiql.lang.planner.transforms.PartiQLSchemaInferencer.infer
 import org.partiql.lang.planner.transforms.impl.Metadata
-import org.partiql.lang.planner.transforms.plan.PlanTyper
-import org.partiql.lang.planner.transforms.plan.PlanUtils.grabType
 import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.lang.util.propertyValueMapOf
 import org.partiql.spi.Plugin
