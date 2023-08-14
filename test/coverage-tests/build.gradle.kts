@@ -23,16 +23,35 @@ dependencies {
     testImplementation(project(":partiql-coverage"))
 }
 
+// Placement of Coverage Report/HTML
+val branchReportPath = buildDir.resolve("partiql").resolve("coverage").resolve("branch").resolve("lcov.info")
+val branchHtmlDir = buildDir.resolve("reports").resolve("partiql").resolve("branch").resolve("test")
+val conditionReportPath = buildDir.resolve("partiql").resolve("coverage").resolve("condition").resolve("lcov.info")
+val conditionHtmlDir = buildDir.resolve("reports").resolve("partiql").resolve("condition").resolve("test")
+
+// Checks that the Report & HTML Dir are generated.
+val coverageReportCheck = tasks.register("coverageReportCheck") {
+    doLast {
+        if (branchReportPath.exists().not()) { throw Exception("$branchReportPath does not exist.") }
+        if (conditionReportPath.exists().not()) { throw Exception("$conditionReportPath does not exist.") }
+        if (branchHtmlDir.exists().not()) { throw Exception("$branchHtmlDir does not exist.") }
+        if (conditionHtmlDir.exists().not()) { throw Exception("$conditionHtmlDir does not exist.") }
+    }
+}
+
 tasks.test {
     // Branch Configurations
     systemProperty("partiql.coverage.lcov.branch.enabled", true)
-    systemProperty("partiql.coverage.lcov.branch.report.path", "$buildDir/partiql/coverage/branch/lcov.info")
-    systemProperty("partiql.coverage.lcov.branch.html.dir", "$buildDir/reports/partiql/branch/test")
+    systemProperty("partiql.coverage.lcov.branch.report.path", branchReportPath)
+    systemProperty("partiql.coverage.lcov.branch.html.dir", branchHtmlDir)
     systemProperty("partiql.coverage.lcov.branch.threshold.min", 0.2)
 
     // Branch Condition Configurations
     systemProperty("partiql.coverage.lcov.branch-condition.enabled", true)
-    systemProperty("partiql.coverage.lcov.branch-condition.report.path", "$buildDir/partiql/coverage/condition/lcov.info")
-    systemProperty("partiql.coverage.lcov.branch-condition.html.dir", "$buildDir/reports/partiql/condition/test")
+    systemProperty("partiql.coverage.lcov.branch-condition.report.path", conditionReportPath)
+    systemProperty("partiql.coverage.lcov.branch-condition.html.dir", conditionHtmlDir)
     systemProperty("partiql.coverage.lcov.branch-condition.threshold.min", 0.2)
+
+    // Checks that the Report & HTML Dir are generated.
+    finalizedBy(coverageReportCheck)
 }
