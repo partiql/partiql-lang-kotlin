@@ -20,7 +20,18 @@ package org.partiql.lang.eval
 interface Expression {
 
     /**
+     * Static Coverage Statistics
+     */
+    val coverageStructure: CoverageStructure?
+
+    /**
      * Evaluates the expression with the given Session
      */
+    @Deprecated("To be removed in the next release.", replaceWith = ReplaceWith("evaluate"))
     fun eval(session: EvaluationSession): ExprValue
+
+    /**
+     * Evaluates the expression with the given Session
+     */
+    fun evaluate(session: EvaluationSession): PartiQLResult
 }
