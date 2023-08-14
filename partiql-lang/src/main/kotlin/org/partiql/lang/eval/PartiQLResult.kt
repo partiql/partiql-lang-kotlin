@@ -24,44 +24,58 @@ sealed class PartiQLResult {
 
     /**
      * @return information relevant to which branches and branch conditions were executed. As [ExprValue]s
-     * are lazily created, please materialize any relevant [ExprValue]s before accessing [coverageData].
+     * are lazily created, please materialize any relevant [ExprValue]s before accessing [getCoverageData].
      */
     public abstract fun getCoverageData(): CoverageData?
 
+    /**
+     * @return static information relevant to what branches/branch conditions are present.
+     */
+    public abstract fun getCoverageStructure(): CoverageStructure?
+
     class Value(
         val value: ExprValue,
-        private val coverageData: () -> CoverageData? = { null }
+        private val coverageData: () -> CoverageData? = { null },
+        private val coverageStructure: () -> CoverageStructure? = { null }
     ) : PartiQLResult() {
         override fun getCoverageData(): CoverageData? = coverageData.invoke()
+        override fun getCoverageStructure(): CoverageStructure? = coverageStructure.invoke()
     }
 
     class Insert(
         val target: String,
         val rows: Iterable<ExprValue>,
-        private val coverageData: () -> CoverageData? = { null }
+        private val coverageData: () -> CoverageData? = { null },
+        private val coverageStructure: () -> CoverageStructure? = { null }
     ) : PartiQLResult() {
         override fun getCoverageData(): CoverageData? = coverageData.invoke()
+        override fun getCoverageStructure(): CoverageStructure? = coverageStructure.invoke()
     }
 
     class Delete(
         val target: String,
         val rows: Iterable<ExprValue>,
-        private val coverageData: () -> CoverageData? = { null }
+        private val coverageData: () -> CoverageData? = { null },
+        private val coverageStructure: () -> CoverageStructure? = { null }
     ) : PartiQLResult() {
         override fun getCoverageData(): CoverageData? = coverageData.invoke()
+        override fun getCoverageStructure(): CoverageStructure? = coverageStructure.invoke()
     }
 
     class Replace(
         val target: String,
         val rows: Iterable<ExprValue>,
-        private val coverageData: () -> CoverageData? = { null }
+        private val coverageData: () -> CoverageData? = { null },
+        private val coverageStructure: () -> CoverageStructure? = { null }
     ) : PartiQLResult() {
         override fun getCoverageData(): CoverageData? = coverageData.invoke()
+        override fun getCoverageStructure(): CoverageStructure? = coverageStructure.invoke()
     }
 
     sealed class Explain : PartiQLResult() {
         data class Domain(val value: DomainNode, val format: String?) : Explain() {
             override fun getCoverageData(): CoverageData? = null
+            override fun getCoverageStructure(): CoverageStructure? = null
         }
     }
 }

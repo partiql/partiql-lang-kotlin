@@ -31,7 +31,7 @@ package org.partiql.lang.eval
  * @param lineCount represents how many times (value) a particular line number (key) was executed.
  */
 public data class CoverageData(
-    val branchConditionCount: Map<String, Int> = emptyMap(),
+    val branchConditionCount: Map<String, Long> = emptyMap(),
     val lineCount: Map<Int, Int> = emptyMap(),
-    val branchCount: Map<String, Int> = emptyMap()
+    val branchCount: Map<String, Long> = emptyMap()
 )

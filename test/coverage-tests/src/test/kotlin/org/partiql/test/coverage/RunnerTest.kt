@@ -17,7 +17,6 @@ class RunnerTest {
     @PartiQLTest(provider = SuccessTestProvider::class)
     fun successTestExample(tc: SuccessTestProvider.ExampleTestCase, result: PartiQLResult.Value) {
         val value = result.value
-        // val str2 = ConfigurableExprValueFormatter.standard.format(value)
         assertEquals(ExprValueType.BAG, value.type)
         value.forEach { element ->
             assertEquals(ExprValueType.STRUCT, element.type)

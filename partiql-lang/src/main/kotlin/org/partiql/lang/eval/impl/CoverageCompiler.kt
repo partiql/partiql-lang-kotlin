@@ -6,12 +6,14 @@ import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.CoverageData
 import org.partiql.lang.eval.CoverageStructure
+import org.partiql.lang.eval.Environment
 import org.partiql.lang.eval.EvaluatingCompiler
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.Expression
+import org.partiql.lang.eval.ExpressionContext
 import org.partiql.lang.eval.PartiQLResult
 import org.partiql.lang.eval.ThunkEnv
 import org.partiql.lang.eval.TypingMode
@@ -21,6 +23,7 @@ import org.partiql.lang.eval.exprEquals
 import org.partiql.lang.eval.isNotUnknown
 import org.partiql.lang.eval.isUnknown
 import org.partiql.lang.eval.physical.sourceLocationMeta
+import org.partiql.lang.eval.visitors.PartiqlAstSanityValidator
 import org.partiql.lang.types.TypedOpParameter
 import java.util.Stack
 
@@ -37,8 +40,6 @@ internal class CoverageCompiler(
     // A unique identifier for each branch
     private var conditionCount: Int = 0
     private var branchCount: Int = 0
-    private val conditionCounts = mutableMapOf<String, Int>()
-    private val branchCounts = mutableMapOf<String, Int>()
     private val conditions: MutableMap<String, CoverageStructure.BranchCondition> = mutableMapOf()
     private val branches: MutableMap<String, CoverageStructure.Branch> = mutableMapOf()
     private val contextStack: Stack<Context> = Stack()
@@ -48,33 +49,93 @@ internal class CoverageCompiler(
         NOT_IN_BRANCH
     }
 
+    /**
+     * Compiles a [PartiqlAst.Statement] tree to an [Expression].
+     *
+     * Checks [Thread.interrupted] before every expression and sub-expression is compiled
+     * and throws [InterruptedException] if [Thread.interrupted] it has been set in the
+     * hope that long-running compilations may be aborted by the caller.
+     */
     override fun compile(originalAst: PartiqlAst.Statement): Expression {
         contextStack.push(Context.NOT_IN_BRANCH)
-        val expression = super.compile(originalAst)
+        val visitorTransform = compileOptions.visitorTransformMode.createVisitorTransform()
+        val transformedAst = visitorTransform.transformStatement(originalAst)
+        val partiqlAstSanityValidator = PartiqlAstSanityValidator()
+
+        partiqlAstSanityValidator.validate(transformedAst, compileOptions)
+
+        val thunk = nestCompilationContext(ExpressionContext.NORMAL, emptySet()) {
+            compileAstStatement(transformedAst)
+        }
+
         return object : Expression {
             override val coverageStructure: CoverageStructure = CoverageStructure(
                 branches = branches.toMap(),
                 branchConditions = conditions.toMap()
             )
 
-            @Suppress("DEPRECATION")
             override fun eval(session: EvaluationSession): ExprValue {
-                return expression.eval(session)
+                val env = Environment(
+                    session = session,
+                    locals = session.globals,
+                    current = session.globals,
+                    branchConditionCounts = mutableMapOf(),
+                    branchCounts = mutableMapOf()
+                )
+                return thunk(env)
             }
 
             override fun evaluate(session: EvaluationSession): PartiQLResult {
-                val result = (expression.evaluate(session) as PartiQLResult.Value).value
+                val env = Environment(
+                    session = session,
+                    locals = session.globals,
+                    current = session.globals,
+                    branchConditionCounts = mutableMapOf(),
+                    branchCounts = mutableMapOf()
+                )
+                val value = thunk(env)
                 return PartiQLResult.Value(
-                    value = result,
+                    value = value,
                     coverageData = {
-                        // TODO: This is a hack to materialize the ExprValue. Could be useful to use JMH's Blackhole.
-                        // val str = ConfigurableExprValueFormatter.standard.format(result)
-                        CoverageData(conditionCounts, branchCount = branchCounts)
-                    }
+                        CoverageData(branchCount = env.branchCounts!!.toMap(), branchConditionCount = env.branchConditionCounts!!.toMap())
+                    },
+                    coverageStructure = { coverageStructure }
                 )
             }
         }
     }
+/**
+     override fun compile(originalAst: PartiqlAst.Statement): Expression {
+     contextStack.push(Context.NOT_IN_BRANCH)
+     val expression = super.compile(originalAst)
+     return object : Expression {
+     override val coverageStructure: CoverageStructure = CoverageStructure(
+     branches = branches.toMap(),
+     branchConditions = conditions.toMap()
+     )
+
+     @Suppress("DEPRECATION")
+     override fun eval(session: EvaluationSession): ExprValue {
+     return expression.eval(session)
+     }
+
+     override fun evaluate(session: EvaluationSession): PartiQLResult {
+     val result = (expression.evaluate(session) as PartiQLResult.Value).value
+     return PartiQLResult.Value(
+     value = result,
+     coverageData = {
+     val returnedConditionCounts = conditionCounts.toMap()
+     val returnedBranchCounts = branchCounts.toMap()
+     // conditionCounts.replaceAll { _, _ -> 0 }
+     // branchCounts.replaceAll { _, _ -> 0 }
+     CoverageData(branchConditionCount = returnedConditionCounts, branchCount = returnedBranchCounts)
+     },
+     coverageStructure = { coverageStructure }
+     )
+     }
+     }
+     }
+     **/
 
     // TODO: Figure out how we can determine whether an ID should be a boolean.
     //  This will likely be addressed when we move towards static resolution in the successor to the EvaluatingCompiler
@@ -203,8 +264,8 @@ internal class CoverageCompiler(
                             else -> {
                                 val result = caseValue.exprEquals(branchValue)
                                 when (result) {
-                                    true -> branchCounts[compiledWhen.truthId] = branchCounts[compiledWhen.truthId]!! + 1
-                                    false -> branchCounts[compiledWhen.falseId] = branchCounts[compiledWhen.falseId]!! + 1
+                                    true -> incrementBranchCount(env, compiledWhen.truthId)
+                                    false -> incrementBranchCount(env, compiledWhen.falseId)
                                 }
                                 if (result) {
                                     return@thunk bt.second(env)
@@ -235,8 +296,8 @@ internal class CoverageCompiler(
                     if (conditionValue.isNotUnknown()) {
                         val result = conditionValue.booleanValue()
                         when (result) {
-                            true -> branchCounts[compiledWhen.truthId] = branchCounts[compiledWhen.truthId]!! + 1
-                            false -> branchCounts[compiledWhen.falseId] = branchCounts[compiledWhen.falseId]!! + 1
+                            true -> incrementBranchCount(env, compiledWhen.truthId)
+                            false -> incrementBranchCount(env, compiledWhen.falseId)
                         }
                         if (result) {
                             return@thunk bt.second(env)
@@ -256,8 +317,8 @@ internal class CoverageCompiler(
                     if (conditionValue.type == ExprValueType.BOOL) {
                         val result = conditionValue.booleanValue()
                         when (result) {
-                            true -> branchCounts[compiledWhen.truthId] = branchCounts[compiledWhen.truthId]!! + 1
-                            false -> branchCounts[compiledWhen.falseId] = branchCounts[compiledWhen.falseId]!! + 1
+                            true -> incrementBranchCount(env, compiledWhen.truthId)
+                            false -> incrementBranchCount(env, compiledWhen.falseId)
                         }
                         if (result) {
                             return@thunk bt.second(env)
@@ -284,11 +345,11 @@ internal class CoverageCompiler(
 
             when (resultExprValue.type) {
                 ExprValueType.BOOL -> when (resultExprValue.booleanValue()) {
-                    true -> branchCounts[branchThunkEnv.truthId] = branchCounts[branchThunkEnv.truthId]!! + 1
-                    false -> branchCounts[branchThunkEnv.falseId] = branchCounts[branchThunkEnv.falseId]!! + 1
+                    true -> incrementBranchCount(env, branchThunkEnv.truthId)
+                    false -> incrementBranchCount(env, branchThunkEnv.falseId)
                 }
-                ExprValueType.NULL -> branchCounts[branchThunkEnv.falseId] = branchCounts[branchThunkEnv.falseId]!! + 1
-                ExprValueType.MISSING -> branchCounts[branchThunkEnv.falseId] = branchCounts[branchThunkEnv.falseId]!! + 1
+                ExprValueType.NULL -> incrementBranchCount(env, branchThunkEnv.falseId)
+                ExprValueType.MISSING -> incrementBranchCount(env, branchThunkEnv.falseId)
                 else -> { /* Do nothing */ }
             }
             resultExprValue
@@ -299,8 +360,6 @@ internal class CoverageCompiler(
         this.contextStack.push(Context.IN_BRANCH)
         val truthId = "B${++branchCount}"
         val falseId = "B${++branchCount}"
-        branchCounts[truthId] = 0
-        branchCounts[falseId] = 0
 
         // Add Location Information
         val lineNumber = metas.sourceLocationMeta?.lineNum ?: -1L
@@ -330,9 +389,6 @@ internal class CoverageCompiler(
         val falseId = "C${++conditionCount}"
         val nullId = "C${++conditionCount}"
         val missingId = "C${++conditionCount}"
-        conditionCounts[truthId] = 0
-        conditionCounts[falseId] = 0
-        conditionCounts[nullId] = 0
 
         // Add Location Information
         val lineNumber = metas.sourceLocationMeta?.lineNum ?: 1L
@@ -342,7 +398,6 @@ internal class CoverageCompiler(
 
         // Handle Permissive Mode
         if (compileOptions.typingMode == TypingMode.PERMISSIVE) {
-            conditionCounts[missingId] = 0
             conditions[missingId] = CoverageStructure.BranchCondition(
                 missingId,
                 operand,
@@ -357,15 +412,23 @@ internal class CoverageCompiler(
             val resultExprValue = thunk.invoke(env)
             when (resultExprValue.type) {
                 ExprValueType.BOOL -> when (resultExprValue.booleanValue()) {
-                    true -> conditionCounts[truthId] = conditionCounts[truthId]!! + 1
-                    false -> conditionCounts[falseId] = conditionCounts[falseId]!! + 1
+                    true -> incrementConditionCount(env, truthId)
+                    false -> incrementConditionCount(env, falseId)
                 }
-                ExprValueType.NULL -> conditionCounts[nullId] = conditionCounts[nullId]!! + 1
+                ExprValueType.NULL -> incrementConditionCount(env, nullId)
                 // We should never receive MISSING unless in permissive mode
-                ExprValueType.MISSING -> conditionCounts[missingId] = (conditionCounts[missingId] ?: 0) + 1
+                ExprValueType.MISSING -> incrementConditionCount(env, missingId)
                 else -> { /* Do nothing */ }
             }
             resultExprValue
         }
+    }
+
+    private fun incrementConditionCount(env: Environment, id: String) {
+        env.branchConditionCounts?.let { it[id] = (it[id] ?: 0L) + 1L }
+    }
+
+    private fun incrementBranchCount(env: Environment, id: String) {
+        env.branchCounts?.let { it[id] = (it[id] ?: 0L) + 1L }
     }
 }

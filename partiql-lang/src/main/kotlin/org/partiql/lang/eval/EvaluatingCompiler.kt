@@ -149,7 +149,7 @@ internal open class EvaluatingCompiler(
 
     // Note: please don't make this inline -- it messes up [EvaluationException] stack traces and
     // isn't a huge benefit because this is only used at SQL-compile time anyway.
-    private fun <R> nestCompilationContext(
+    internal fun <R> nestCompilationContext(
         expressionContext: ExpressionContext,
         fromSourceNames: Set<String>,
         block: () -> R
@@ -363,7 +363,9 @@ internal open class EvaluatingCompiler(
                 val env = Environment(
                     session = session,
                     locals = session.globals,
-                    current = session.globals
+                    current = session.globals,
+                    branchConditionCounts = mutableMapOf(),
+                    branchCounts = mutableMapOf()
                 )
                 return thunk(env)
             }
@@ -390,7 +392,7 @@ internal open class EvaluatingCompiler(
      *
      * This function will [InterruptedException] if [Thread.interrupted] has been set.
      */
-    private fun compileAstStatement(ast: PartiqlAst.Statement): ThunkEnv {
+    internal open fun compileAstStatement(ast: PartiqlAst.Statement): ThunkEnv {
         checkThreadInterrupted()
         return when (ast) {
             is PartiqlAst.Statement.Query -> compileAstExpr(ast.expr)
@@ -3141,7 +3143,7 @@ private data class CompiledLetSource(
     val thunk: ThunkEnv
 )
 
-private enum class ExpressionContext {
+internal enum class ExpressionContext {
     /**
      * Indicates that the compiler is compiling a normal expression (i.e. not one of the other
      * contexts).
