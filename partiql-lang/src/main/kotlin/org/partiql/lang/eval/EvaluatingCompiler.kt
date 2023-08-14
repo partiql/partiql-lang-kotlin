@@ -363,9 +363,7 @@ internal open class EvaluatingCompiler(
                 val env = Environment(
                     session = session,
                     locals = session.globals,
-                    current = session.globals,
-                    branchConditionCounts = mutableMapOf(),
-                    branchCounts = mutableMapOf()
+                    current = session.globals
                 )
                 return thunk(env)
             }
