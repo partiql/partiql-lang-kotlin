@@ -243,7 +243,7 @@ internal class PlanTyper(
 
         @OptIn(PartiQLValueExperimental::class)
         override fun visitRexOpLit(node: Rex.Op.Lit, ctx: StaticType?): Rex = plan {
-            val type = this@PlanTyper.env.resolveType(node.value.type)
+            val type = node.value.type.toStaticType()
             rex(type, node)
         }
 

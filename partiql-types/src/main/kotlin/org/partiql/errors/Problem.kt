@@ -1,7 +1,7 @@
 package org.partiql.errors
 
 /**
- *
+ * Typeof `ProblemHandler.handleProblem`
  */
 public typealias ProblemCallback = (Problem) -> Unit
 

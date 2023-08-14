@@ -17,16 +17,16 @@ package org.partiql.cli
 
 import AstPrinter
 import com.amazon.ion.system.IonSystemBuilder
-import com.amazon.ion.system.IonTextWriterBuilder
-import org.partiql.ast.Statement
-import org.partiql.ast.normalize.normalize
+import com.amazon.ionelement.api.field
+import com.amazon.ionelement.api.ionString
+import com.amazon.ionelement.api.ionStructOf
 import org.partiql.cli.pico.PartiQLCommand
+import org.partiql.cli.shell.info
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.parser.PartiQLParserBuilder
-import org.partiql.plan.PartiQLVersion
-import org.partiql.plan.ion.PartiQLPlanIonWriter
+import org.partiql.plan.debug.PlanPrinter
 import org.partiql.planner.PartiQLPlanner
-import org.partiql.planner.PartiQLPlannerDefault
+import org.partiql.plugins.mockdb.LocalPlugin
 import picocli.CommandLine
 import java.io.PrintStream
 import java.util.UUID
@@ -50,9 +50,17 @@ fun main(args: Array<String>) {
  */
 object Debug {
 
+    private const val USER_ID = "DEBUG_USER_ID"
+
+    private val plugins = listOf(LocalPlugin())
+    private val catalogs = mapOf(
+        "local" to ionStructOf(
+            field("connector_name", ionString("localdb")),
+        )
+    )
+
+    private val planner = PartiQLPlanner.builder().plugins(plugins).build()
     private val parser = PartiQLParserBuilder.standard().build()
-    private val planner = PartiQLPlannerDefault()
-    private val writer = PartiQLPlanIonWriter.get(PartiQLVersion.VERSION_0_1)
 
     // !!
     // IMPLEMENT DEBUG BEHAVIOR HERE
@@ -61,24 +69,22 @@ object Debug {
     @Throws(Exception::class)
     fun action(input: String, session: EvaluationSession): String {
         val out = PrintStream(System.out)
-        val ast = parser.parse(input).root
-        if (ast !is Statement) {
-            error("Expect AST Statement, found $ast")
-        }
-        AstPrinter.append(out, ast)
-        val normalized = ast.normalize()
-        AstPrinter.append(out, normalized)
-        val session = PartiQLPlanner.Session(
+
+        // Parse
+        val statement = parser.parse(input).root
+        out.info("-- AST ----------")
+        AstPrinter.append(out, statement)
+
+        // Plan
+        val sess = PartiQLPlanner.Session(
             queryId = UUID.randomUUID().toString(),
             userId = "debug",
+            catalogConfig = catalogs,
         )
-        val plan = planner.plan(session, ast).plan
-        val ion = writer.toIonDebug(plan)
-        // Pretty print Ion
-        val sb = StringBuilder()
-        val formatter = IonTextWriterBuilder.standard().build(sb)
-        ion.writeTo(formatter)
-        out.println(sb)
+        val result = planner.plan(statement, sess).plan
+        out.info("-- Plan ----------")
+        PlanPrinter.append(out, result.statement)
+
         return "OK"
     }
 }

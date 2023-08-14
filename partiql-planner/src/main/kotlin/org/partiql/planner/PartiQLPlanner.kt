@@ -20,7 +20,7 @@ public interface PartiQLPlanner {
      * @param onProblem
      * @return
      */
-    public fun plan(statement: Statement, session: Session, onProblem: ProblemCallback): Result
+    public fun plan(statement: Statement, session: Session, onProblem: ProblemCallback = {}): Result
 
     /**
      * Planner result along with any warnings.
@@ -48,7 +48,7 @@ public interface PartiQLPlanner {
         public val currentCatalog: String? = null,
         public val currentDirectory: List<String> = emptyList(),
         public val catalogConfig: Map<String, StructElement> = emptyMap(),
-        public val instant: Instant = Instant.now()
+        public val instant: Instant = Instant.now(),
     )
 
     companion object {

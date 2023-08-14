@@ -46,40 +46,38 @@ internal class Header(
          * TODO: Define FLOAT32 vs FLOAT64
          * TODO: Define BIT, BINARY, BYTE
          * TODO: Define INTERVAL
-         *
-         * @param factory
          */
         public fun partiql() = Header(
             namespace = "partiql",
             types = listOf(
-                StaticType.ANY,             // 0
-                StaticType.NULL,            // 1
-                StaticType.MISSING,         // 2
-                StaticType.BOOL,            // 3
-                StaticType.INT2,            // 4
-                StaticType.INT2,            // 5
-                StaticType.INT4,            // 6
-                StaticType.INT8,            // 7
-                StaticType.INT,             // 8
-                StaticType.DECIMAL,         // 9
-                StaticType.FLOAT,           // 10
-                StaticType.FLOAT,           // 11
-                char(),                     // 12
-                StaticType.STRING,          // 13
-                StaticType.SYMBOL,          // 14
+                StaticType.ANY, // 0
+                StaticType.NULL, // 1
+                StaticType.MISSING, // 2
+                StaticType.BOOL, // 3
+                StaticType.INT2, // 4
+                StaticType.INT2, // 5
+                StaticType.INT4, // 6
+                StaticType.INT8, // 7
+                StaticType.INT, // 8
+                StaticType.DECIMAL, // 9
+                StaticType.FLOAT, // 10
+                StaticType.FLOAT, // 11
+                char(), // 12
+                StaticType.STRING, // 13
+                StaticType.SYMBOL, // 14
                 // typeAtomic("bit"),       // 15
                 // typeAtomic("binary"),    // 16
                 // typeAtomic("byte"),      // 17
-                StaticType.BLOB,            // 18
-                StaticType.CLOB,            // 19
-                StaticType.DATE,            // 20
-                StaticType.TIME,            // 21
-                StaticType.TIMESTAMP,       // 22
+                StaticType.BLOB, // 18
+                StaticType.CLOB, // 19
+                StaticType.DATE, // 20
+                StaticType.TIME, // 21
+                StaticType.TIMESTAMP, // 22
                 // typeAtomic("interval"),  // 23
-                StaticType.BAG,             // 24
-                StaticType.LIST,            // 25
-                StaticType.SEXP,            // 26
-                StaticType.STRUCT,          // 27
+                StaticType.BAG, // 24
+                StaticType.LIST, // 25
+                StaticType.SEXP, // 26
+                StaticType.STRUCT, // 27
             ),
             functions = emptyList(),
             // functions = listOf(

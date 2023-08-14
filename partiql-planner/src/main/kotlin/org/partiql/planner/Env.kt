@@ -3,6 +3,7 @@ package org.partiql.planner
 import org.partiql.plan.Fn
 import org.partiql.plan.Global
 import org.partiql.plan.Identifier
+import org.partiql.plan.Rel
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
@@ -10,15 +11,23 @@ import org.partiql.spi.Plugin
 import org.partiql.spi.connector.Connector
 import org.partiql.spi.connector.ConnectorMetadata
 import org.partiql.spi.connector.ConnectorObjectHandle
+import org.partiql.spi.connector.ConnectorObjectPath
 import org.partiql.spi.connector.ConnectorSession
 import org.partiql.spi.connector.Constants
 import org.partiql.types.StaticType
+import org.partiql.types.StructType
+import org.partiql.types.TupleConstraint
 import org.partiql.types.function.FunctionSignature
 
 /**
  * Handle for associating a catalog with the metadata; pair of catalog to data.
  */
 internal typealias Handle<T> = Pair<String, T>
+
+internal class ResolvedType(
+    val type: StaticType,
+    val levelsMatched: Int = 1,
+)
 
 /**
  * PartiQL Planner Environment of Catalogs backed by given plugins.
@@ -63,89 +72,12 @@ internal class Env(
         this.catalogs = catalogs.toMap()
     }
 
-    // TYPES
-
-    // /**
-    //  * Get a Type.Ref from a Type.Atomic
-    //  */
-    // internal fun resolveType(type: Type.Atomic): Type.Ref {
-    //     header.types.forEachIndexed { i, t ->
-    //         // need .equals() if we want to include more variants
-    //         if (t.symbol == type.symbol) {
-    //             return Plan.typeRef(t.symbol, i)
-    //         }
-    //     }
-    //     throw IllegalArgumentException("Catalog does not contain type ${type.symbol}")
-    // }
-    //
-    // /**
-    //  * Get a Plan [Type.Ref] from a simple PartiQLValueType
-    //  */
-    // internal fun resolveType(type: PartiQLValueType): Type.Ref {
-    //     val symbol = when (type) {
-    //         PartiQLValueType.BOOL -> "bool"
-    //         PartiQLValueType.INT8 -> "int8"
-    //         PartiQLValueType.INT16 -> "int16"
-    //         PartiQLValueType.INT32 -> "int32"
-    //         PartiQLValueType.INT64 -> "int64"
-    //         PartiQLValueType.INT -> "int"
-    //         PartiQLValueType.DECIMAL -> "decimal"
-    //         PartiQLValueType.FLOAT32 -> "float32"
-    //         PartiQLValueType.FLOAT64 -> "float64"
-    //         PartiQLValueType.CHAR -> "char"
-    //         PartiQLValueType.STRING -> "string"
-    //         PartiQLValueType.SYMBOL -> "symbol"
-    //         PartiQLValueType.BINARY -> "binary"
-    //         PartiQLValueType.BYTE -> "byte"
-    //         PartiQLValueType.BLOB -> "blob"
-    //         PartiQLValueType.CLOB -> "clob"
-    //         PartiQLValueType.DATE -> "date"
-    //         PartiQLValueType.TIME -> "time"
-    //         PartiQLValueType.TIMESTAMP -> "timestamp"
-    //         PartiQLValueType.INTERVAL -> "interval"
-    //         PartiQLValueType.BAG -> "bag"
-    //         PartiQLValueType.LIST -> "list"
-    //         PartiQLValueType.SEXP -> "sexp"
-    //         PartiQLValueType.STRUCT -> "struct"
-    //         PartiQLValueType.NULL -> "null"
-    //         PartiQLValueType.MISSING -> "missing"
-    //         PartiQLValueType.NULLABLE_BOOL -> "bool"
-    //         PartiQLValueType.NULLABLE_INT8 -> "int8"
-    //         PartiQLValueType.NULLABLE_INT16 -> "int16"
-    //         PartiQLValueType.NULLABLE_INT32 -> "int32"
-    //         PartiQLValueType.NULLABLE_INT64 -> "int64"
-    //         PartiQLValueType.NULLABLE_INT -> "int"
-    //         PartiQLValueType.NULLABLE_DECIMAL -> "decimal"
-    //         PartiQLValueType.NULLABLE_FLOAT32 -> "float32"
-    //         PartiQLValueType.NULLABLE_FLOAT64 -> "float64"
-    //         PartiQLValueType.NULLABLE_CHAR -> "char"
-    //         PartiQLValueType.NULLABLE_STRING -> "string"
-    //         PartiQLValueType.NULLABLE_SYMBOL -> "symbol"
-    //         PartiQLValueType.NULLABLE_BINARY -> "binary"
-    //         PartiQLValueType.NULLABLE_BYTE -> "byte"
-    //         PartiQLValueType.NULLABLE_BLOB -> "blob"
-    //         PartiQLValueType.NULLABLE_CLOB -> "clob"
-    //         PartiQLValueType.NULLABLE_DATE -> "date"
-    //         PartiQLValueType.NULLABLE_TIME -> "time"
-    //         PartiQLValueType.NULLABLE_TIMESTAMP -> "timestamp"
-    //         PartiQLValueType.NULLABLE_INTERVAL -> "interval"
-    //         PartiQLValueType.NULLABLE_BAG -> "bag"
-    //         PartiQLValueType.NULLABLE_LIST -> "list"
-    //         PartiQLValueType.NULLABLE_SEXP -> "sexp"
-    //         PartiQLValueType.NULLABLE_STRUCT -> "struct"
-    //     }
-    //     val t =  Plan.typeAtomic(symbol)
-    //     return resolveType(t)
-    // }
-
-    // FUNCTIONS
-
     /**
      * This will need to be greatly improved upon. We will need to return some kind of pair which has a list of
      * implicit casts to introduce.
      */
-    internal fun getFnSignatures(ref: Fn.Ref.Unresolved): List<FunctionSignature> {
-        return header.lookup(ref).map { it.second }
+    internal fun getFnSignatures(ref: Fn.Unresolved): List<FunctionSignature> {
+        return header.lookup(ref)
     }
 
     /**
@@ -189,5 +121,115 @@ internal class Env(
         val connector = catalogs[catalogKey] ?: return null
         val metadata = connector.getMetadata(connectorSession)
         return catalogKey to metadata
+    }
+
+    /**
+     * TODO
+     *
+     * @param catalog
+     * @param originalPath
+     * @param catalogPath
+     * @return
+     */
+    private fun getType(
+        catalog: BindingName?,
+        originalPath: BindingPath,
+        catalogPath: BindingPath,
+    ): ResolvedType? {
+        return catalog?.let { cat ->
+            getObjectHandle(cat, catalogPath)?.let { handle ->
+                getObjectDescriptor(handle).let {
+                    val matched = calculateMatched(originalPath, catalogPath, handle.second.absolutePath)
+                    ResolvedType(it, levelsMatched = matched)
+                }
+            }
+        }
+    }
+
+    /**
+     * Logic is as follows:
+     * 1. If Current Catalog and Schema are set, create a Path to the object and attempt to grab handle and schema.
+     *   a. If not found, just try to find the object in the catalog.
+     * 2. If Current Catalog is not set:
+     *   a. Loop through all catalogs and try to find the object.
+     *
+     * TODO: Add global bindings
+     * TODO: Replace paths with global variable references if found
+     */
+    internal fun resolveGlobalBind(path: BindingPath): ResolvedType? {
+        val currentCatalog = session.currentCatalog?.let { BindingName(it, BindingCase.SENSITIVE) }
+        val currentCatalogPath = BindingPath(session.currentDirectory.map { BindingName(it, BindingCase.SENSITIVE) })
+        val absoluteCatalogPath = BindingPath(currentCatalogPath.steps + path.steps)
+        return when (path.steps.size) {
+            0 -> null
+            1 -> getType(currentCatalog, path, absoluteCatalogPath)
+            2 -> getType(currentCatalog, path, path) ?: getType(currentCatalog, path, absoluteCatalogPath)
+            else -> {
+                val inferredCatalog = path.steps[0]
+                val newPath = BindingPath(path.steps.subList(1, path.steps.size))
+                getType(inferredCatalog, path, newPath)
+                    ?: getType(currentCatalog, path, path)
+                    ?: getType(currentCatalog, path, absoluteCatalogPath)
+            }
+        }
+    }
+
+    /**
+     * Logic is as follows:
+     * 1. Look through [input] to find the root of the [path]. If found, return. Else, go to step 2.
+     * 2. Look through [input] and grab all [StructType]s. Then, grab the fields of each Struct corresponding to the
+     *  root of [path].
+     *  - If the Struct if ordered, grab the first matching field.
+     *  - If unordered and if multiple fields found, merge the output type. If no structs contain a matching field, return null.
+     */
+    internal fun resolveLocalBind(path: BindingPath, input: List<Rel.Binding>): ResolvedType? {
+        if (path.steps.isEmpty()) {
+            return null
+        }
+        val root: StaticType = input.firstOrNull {
+            path.steps[0].isEquivalentTo(it.name)
+        }?.type ?: run {
+            input.map { it.type }.filterIsInstance<StructType>().mapNotNull { struct ->
+                inferStructLookup(struct, path.steps[0])
+            }.let { potentialTypes ->
+                when (potentialTypes.size) {
+                    1 -> potentialTypes.first()
+                    else -> null
+                }
+            }
+        } ?: return null
+        return ResolvedType(root)
+    }
+
+    /**
+     * Searches for the [key] in the [struct]. If not found, return null
+     */
+    internal fun inferStructLookup(
+        struct: StructType,
+        key: BindingName,
+    ): StaticType? = when (struct.constraints.contains(TupleConstraint.Ordered)) {
+        true -> struct.fields.firstOrNull { entry ->
+            key.isEquivalentTo(entry.key)
+        }?.value
+        false -> struct.fields.mapNotNull { entry ->
+            entry.value.takeIf { key.isEquivalentTo(entry.key) }
+        }.let { valueTypes ->
+            StaticType.unionOf(valueTypes.toSet()).flatten().takeIf { valueTypes.isNotEmpty() }
+        }
+    }
+
+    /**
+     * Logic for determining how many BindingNames were “matched” by the ConnectorMetadata
+     * 1. Matched = RelativePath - Not Found
+     * 2. Not Found = Input CatalogPath - Output CatalogPath
+     * 3. Matched = RelativePath - (Input CatalogPath - Output CatalogPath)
+     * 4. Matched = RelativePath + Output CatalogPath - Input CatalogPath
+     */
+    private fun calculateMatched(
+        originalPath: BindingPath,
+        inputCatalogPath: BindingPath,
+        outputCatalogPath: ConnectorObjectPath,
+    ): Int {
+        return originalPath.steps.size + outputCatalogPath.steps.size - inputCatalogPath.steps.size
     }
 }

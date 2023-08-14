@@ -12,15 +12,11 @@ import org.partiql.ast.builder.ast
 import org.partiql.ast.util.AstRewriter
 import org.partiql.ast.visitor.AstBaseVisitor
 import org.partiql.plan.Plan
-import org.partiql.plan.PlanNode
 import org.partiql.plan.Rel
 import org.partiql.plan.Rex
-import org.partiql.plan.builder.PlanFactory
-import org.partiql.plan.builder.plan
 import org.partiql.planner.Env
 import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.nullValue
 import org.partiql.value.stringValue
 
 /**
@@ -28,49 +24,45 @@ import org.partiql.value.stringValue
  */
 internal object RelConverter {
 
-    private val factory: PlanFactory = Plan
-
-    // IGNORE — so we don't have to non-null assert on operators
-    @OptIn(PartiQLValueExperimental::class)
-    private val nil = plan(factory) {
-        rel {
-            op = relOpScan {
-                rex = rex(typeRef("null", 0), rexOpLit(nullValue()))
-            }
-        }
+    // IGNORE — so we don't have to non-null assert on operator inputs
+    private val nil = Plan.create {
+        rel(
+            type = relType(emptyList(), emptySet()),
+            op = relOpScan(rex(StaticType.NULL, rexOpVarResolved(-1)))
+        )
     }
 
     /**
      * Here we convert an SFW to composed [Rel]s, then apply the appropriate relation-value projection to get a [Rex].
      */
-    internal fun apply(sfw: Expr.SFW, context: Env): Rex = with(factory) {
-        val rel = sfw.accept(ToRel(context), nil)
+    internal fun apply(sfw: Expr.SFW, env: Env): Rex = Plan.create {
+        val rel = sfw.accept(ToRel(env), nil)
         val rex = when (val projection = sfw.select) {
             // PIVOT ... FROM
             is Select.Pivot -> {
-                val key = projection.key.toRex(context)
-                val value = projection.value.toRex(context)
-                val type = context.resolveType(StaticType.STRUCT)
+                val key = projection.key.toRex(env)
+                val value = projection.value.toRex(env)
+                val type = (StaticType.STRUCT)
                 val op = rexOpPivot(key, value, rel)
                 rex(type, op)
             }
             // SELECT VALUE ... FROM
             is Select.Value -> {
-                val constructor = projection.constructor.toRex(context)
+                val constructor = projection.constructor.toRex(env)
                 val op = rexOpSelect(constructor, rel)
                 val type = when (rel.type.props.contains(Rel.Prop.ORDERED)) {
-                    true -> context.resolveType(StaticType.LIST)
-                    else -> context.resolveType(StaticType.BAG)
+                    true -> (StaticType.LIST)
+                    else -> (StaticType.BAG)
                 }
                 rex(type, op)
             }
             // SELECT ... FROM
             else -> {
-                val constructor = defaultConstructor(context, rel.type.schema)
+                val constructor = defaultConstructor(env, rel.type.schema)
                 val op = rexOpSelect(constructor, rel)
                 val type = when (rel.type.props.contains(Rel.Prop.ORDERED)) {
-                    true -> context.resolveType(StaticType.LIST)
-                    else -> context.resolveType(StaticType.BAG)
+                    true -> (StaticType.LIST)
+                    else -> (StaticType.BAG)
                 }
                 rex(type, op)
             }
@@ -89,9 +81,9 @@ internal object RelConverter {
      *  - See https://partiql.org/dql/select.html#sql-select
      */
     @OptIn(PartiQLValueExperimental::class)
-    private fun defaultConstructor(context: Env, schema: List<Rel.Binding>): Rex = with(factory) {
-        val str = context.resolveType(StaticType.STRING)
-        val type = context.resolveType(StaticType.STRUCT)
+    private fun defaultConstructor(env: Env, schema: List<Rel.Binding>): Rex = Plan.create {
+        val str = (StaticType.STRING)
+        val type = (StaticType.STRUCT)
         val fields = schema.mapIndexed { i, b ->
             val k = rex(str, rexOpLit(stringValue(b.name)))
             val v = rex(b.type, rexOpVarResolved(i))
@@ -102,9 +94,7 @@ internal object RelConverter {
     }
 
     @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE", "LocalVariableName")
-    private class ToRel(private val context: Env) : AstBaseVisitor<Rel, Rel>() {
-
-        private inline fun <T : PlanNode> transform(block: PlanFactory.() -> T): T = factory.block()
+    private class ToRel(private val env: Env) : AstBaseVisitor<Rel, Rel>() {
 
         override fun defaultReturn(node: AstNode, input: Rel): Rel =
             throw IllegalArgumentException("unsupported rel $node")
@@ -121,7 +111,7 @@ internal object RelConverter {
             val (_sel, _rel) = convertAgg(rel, sel, sel.groupBy)
             sel = _sel
             rel = _rel
-            // transform (possibly rewritten) sel node
+            // Plan.create (possibly rewritten) sel node
             rel = convertHaving(rel, sel.having)
             rel = convertSetOp(rel, sel.setOp)
             rel = convertOrderBy(rel, sel.orderBy)
@@ -136,7 +126,7 @@ internal object RelConverter {
             return rel
         }
 
-        override fun visitSelectProject(node: Select.Project, input: Rel) = transform {
+        override fun visitSelectProject(node: Select.Project, input: Rel) = Plan.create {
             // this ignores aggregations
             val schema = mutableListOf<Rel.Binding>()
             val props = emptySet<Rel.Prop>()
@@ -151,8 +141,8 @@ internal object RelConverter {
             rel(type, op)
         }
 
-        override fun visitFromValue(node: From.Value, nil: Rel) = transform {
-            val rex = RexConverter.apply(node.expr, context)
+        override fun visitFromValue(node: From.Value, nil: Rel) = Plan.create {
+            val rex = RexConverter.apply(node.expr, env)
             val binding = when (val a = node.asAlias) {
                 null -> error("AST not normalized, missing AS alias on $node")
                 else -> relBinding(
@@ -167,7 +157,7 @@ internal object RelConverter {
                         else -> {
                             val index = relBinding(
                                 name = i.symbol,
-                                type = context.resolveType(StaticType.INT)
+                                type = (StaticType.INT)
                             )
                             convertScanIndexed(rex, binding, index)
                         }
@@ -178,7 +168,7 @@ internal object RelConverter {
                         null -> error("AST not normalized, missing AT alias on UNPIVOT $node")
                         else -> relBinding(
                             name = at.symbol,
-                            type = context.resolveType(StaticType.STRING)
+                            type = (StaticType.STRING)
                         )
                     }
                     convertUnpivot(rex, k = atAlias, v = binding)
@@ -191,7 +181,7 @@ internal object RelConverter {
          *
          * TODO compute basic schema
          */
-        override fun visitFromJoin(node: From.Join, nil: Rel) = transform {
+        override fun visitFromJoin(node: From.Join, nil: Rel) = Plan.create {
             val lhs = visitFrom(node.lhs, nil)
             val rhs = visitFrom(node.rhs, nil)
             val schema = listOf<Rel.Binding>()
@@ -204,7 +194,7 @@ internal object RelConverter {
 
         // Helpers
 
-        private fun convertScan(rex: Rex, binding: Rel.Binding) = transform {
+        private fun convertScan(rex: Rex, binding: Rel.Binding) = Plan.create {
             val schema = listOf(binding)
             val props = emptySet<Rel.Prop>()
             val type = relType(schema, props)
@@ -212,7 +202,7 @@ internal object RelConverter {
             rel(type, op)
         }
 
-        private fun convertScanIndexed(rex: Rex, binding: Rel.Binding, index: Rel.Binding) = transform {
+        private fun convertScanIndexed(rex: Rex, binding: Rel.Binding, index: Rel.Binding) = Plan.create {
             val schema = listOf(binding, index)
             val props = setOf(Rel.Prop.ORDERED)
             val type = relType(schema, props)
@@ -220,7 +210,7 @@ internal object RelConverter {
             rel(type, op)
         }
 
-        private fun convertUnpivot(rex: Rex, k: Rel.Binding, v: Rel.Binding) = transform {
+        private fun convertUnpivot(rex: Rex, k: Rel.Binding, v: Rel.Binding) = Plan.create {
             val schema = listOf(k, v)
             val props = emptySet<Rel.Prop>()
             val type = relType(schema, props)
@@ -242,25 +232,25 @@ internal object RelConverter {
                 null -> error("AST not normalized, missing AS alias on projection item $item")
                 else -> a.symbol
             }
-            val rex = RexConverter.apply(item.expr, context)
-            val binding = factory.relBinding(name, rex.type)
+            val rex = RexConverter.apply(item.expr, env)
+            val binding = Plan.relBinding(name, rex.type)
             return binding to rex
         }
 
         /**
          * Append [Rel.Op.Filter] only if a WHERE condition exists
          */
-        private fun convertWhere(input: Rel, expr: Expr?): Rel = transform {
+        private fun convertWhere(input: Rel, expr: Expr?): Rel = Plan.create {
             if (expr == null) {
                 return input
             }
             val type = input.type
-            val predicate = expr.toRex(context)
+            val predicate = expr.toRex(env)
             val op = relOpFilter(input, predicate)
             rel(type, op)
         }
 
-        private fun convertJoinType(join: From.Join): Rel.Op.Join.Type = transform {
+        private fun convertJoinType(join: From.Join): Rel.Op.Join.Type = Plan.create {
             val capture = when (join.type) {
                 From.Join.Type.INNER -> Rel.Op.Join.Capture.INNER
                 From.Join.Type.LEFT -> Rel.Op.Join.Capture.LEFT
@@ -275,7 +265,7 @@ internal object RelConverter {
             }
             when (join.condition) {
                 null -> relOpJoinTypeEqui(capture)
-                else -> relOpJoinTypeTheta(capture, join.condition!!.toRex(context))
+                else -> relOpJoinTypeTheta(capture, join.condition!!.toRex(env))
             }
         }
 
@@ -311,15 +301,15 @@ internal object RelConverter {
             val aggs = aggregations.mapIndexed { i, agg ->
                 val binding = Plan.relBinding(
                     name = syntheticAgg(i),
-                    type = context.resolveType(StaticType.ANY),
+                    type = (StaticType.ANY),
                 )
                 schema.add(binding)
                 val args = agg.args.map { arg ->
-                    val rex = arg.toRex(context)
+                    val rex = arg.toRex(env)
                     Plan.rexOpCallArgValue(rex)
                 }
                 val id = AstToPlan.convert(agg.function)
-                val fn = Plan.fnRefUnresolved(id)
+                val fn = Plan.fnUnresolved(id)
                 Plan.relOpAggregateAgg(fn, args)
             }
             var groups = emptyList<Rex>()
@@ -330,10 +320,10 @@ internal object RelConverter {
                     }
                     val binding = Plan.relBinding(
                         name = it.asAlias!!.symbol,
-                        type = context.resolveType(StaticType.ANY)
+                        type = (StaticType.ANY)
                     )
                     schema.add(binding)
-                    it.expr.toRex(context)
+                    it.expr.toRex(env)
                 }
                 strategy = when (groupBy.strategy) {
                     GroupBy.Strategy.FULL -> Rel.Op.Aggregate.Strategy.FULL
@@ -352,12 +342,12 @@ internal object RelConverter {
          * Notes:
          *  - This currently does not support aggregation expressions in the WHERE condition
          */
-        private fun convertHaving(input: Rel, expr: Expr?): Rel = transform {
+        private fun convertHaving(input: Rel, expr: Expr?): Rel = Plan.create {
             if (expr == null) {
                 return input
             }
             val type = input.type
-            val predicate = expr.toRex(context)
+            val predicate = expr.toRex(env)
             val op = relOpFilter(input, predicate)
             rel(type, op)
         }
@@ -368,9 +358,9 @@ internal object RelConverter {
          * TODO combine/compare schemas
          * TODO set quantifier
          */
-        private fun convertSetOp(input: Rel, setOp: Expr.SFW.SetOp?): Rel = transform {
+        private fun convertSetOp(input: Rel, setOp: Expr.SFW.SetOp?): Rel = Plan.create {
             if (setOp == null) {
-                return@transform input
+                return input
             }
             val type = input.type.copy(props = emptySet())
             val lhs = input
@@ -386,13 +376,13 @@ internal object RelConverter {
         /**
          * Append [Rel.Op.Sort] only if an ORDER BY clause is present
          */
-        private fun convertOrderBy(input: Rel, orderBy: OrderBy?) = transform {
+        private fun convertOrderBy(input: Rel, orderBy: OrderBy?) = Plan.create {
             if (orderBy == null) {
-                return@transform input
+                return input
             }
             val type = input.type.copy(props = setOf(Rel.Prop.ORDERED))
             val specs = orderBy.sorts.map {
-                val rex = it.expr.toRex(context)
+                val rex = it.expr.toRex(env)
                 val order = when (it.dir) {
                     Sort.Dir.DESC -> when (it.nulls) {
                         Sort.Nulls.LAST -> Rel.Op.Sort.Order.DESC_NULLS_LAST
@@ -412,12 +402,12 @@ internal object RelConverter {
         /**
          * Append [Rel.Op.Limit] if there is a LIMIT
          */
-        private fun convertLimit(input: Rel, limit: Expr?): Rel = transform {
+        private fun convertLimit(input: Rel, limit: Expr?): Rel = Plan.create {
             if (limit == null) {
-                return@transform input
+                return input
             }
             val type = input.type
-            val rex = RexConverter.apply(limit, context)
+            val rex = RexConverter.apply(limit, env)
             val op = relOpLimit(input, rex)
             rel(type, op)
         }
@@ -425,12 +415,12 @@ internal object RelConverter {
         /**
          * Append [Rel.Op.Offset] if there is an OFFSET
          */
-        private fun convertOffset(input: Rel, offset: Expr?): Rel = transform {
+        private fun convertOffset(input: Rel, offset: Expr?): Rel = Plan.create {
             if (offset == null) {
-                return@transform input
+                return input
             }
             val type = input.type
-            val rex = RexConverter.apply(offset, context)
+            val rex = RexConverter.apply(offset, env)
             val op = relOpOffset(input, rex)
             rel(type, op)
         }
@@ -462,7 +452,6 @@ internal object RelConverter {
         //         )
         //     )
         // }
-
     }
 
     /**

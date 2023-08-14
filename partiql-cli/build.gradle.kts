@@ -25,6 +25,7 @@ dependencies {
     implementation(project(":partiql-plan"))
     implementation(project(":partiql-planner"))
     implementation(project(":partiql-types"))
+    implementation(project(":plugins:partiql-mockdb"))
     implementation(Deps.csv)
     implementation(Deps.awsSdkBom)
     implementation(Deps.awsSdkDynamodb)
