@@ -9,7 +9,6 @@ import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.PartiQLResult
-import org.partiql.lang.eval.booleanValue
 import kotlin.test.assertEquals
 
 /**
@@ -20,19 +19,22 @@ class SimpleTest {
     @PartiQLTest(provider = SuccessTestProvider.SuccessTestProvider::class)
     fun successTestExample(tc: SuccessTestProvider.SuccessTestProvider.ExampleTestCase, result: PartiQLResult.Value) {
         val value = result.value
-        assertEquals(ExprValueType.BOOL, value.type)
-        assertEquals(tc.expected, value.booleanValue())
+        assertEquals(ExprValueType.BAG, value.type)
+        assertEquals(tc.expectedSize, value.count())
     }
 
     object SuccessTestProvider {
         object SuccessTestProvider : PartiQLTestProvider {
-            override val statement: String = "x > 7 AND x < 15"
+            override val statement: String = """
+                SELECT VALUE t
+                FROM <<1, 2>> AS t
+                WHERE x > 7 AND x < 15
+            """
 
             override fun getPipelineBuilder(): CompilerPipeline.Builder? = null
 
             override fun getTestCases(): Iterable<ExampleTestCase> = listOf(
                 ExampleTestCase(
-                    name = "Test #1",
                     session = EvaluationSession.build {
                         globals(
                             Bindings.ofMap(
@@ -42,10 +44,9 @@ class SimpleTest {
                             )
                         )
                     },
-                    expected = true
+                    expectedSize = 2
                 ),
                 ExampleTestCase(
-                    name = "Test #2",
                     session = EvaluationSession.build {
                         globals(
                             Bindings.ofMap(
@@ -55,14 +56,13 @@ class SimpleTest {
                             )
                         )
                     },
-                    expected = false
+                    expectedSize = 0
                 ),
             )
 
             class ExampleTestCase(
-                val name: String,
                 override val session: EvaluationSession,
-                val expected: Boolean
+                val expectedSize: Int
             ) : PartiQLTestCase
         }
     }
