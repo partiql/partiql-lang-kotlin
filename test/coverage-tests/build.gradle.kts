@@ -29,6 +29,10 @@ val branchHtmlDir = buildDir.resolve("reports").resolve("partiql").resolve("bran
 val conditionReportPath = buildDir.resolve("partiql").resolve("coverage").resolve("condition").resolve("lcov.info")
 val conditionHtmlDir = buildDir.resolve("reports").resolve("partiql").resolve("condition").resolve("test")
 
+// Other files to check
+val nestedPackageDir = buildDir.resolve("reports").resolve("partiql").resolve("condition").resolve("test")
+    .resolve("html").resolve("org").resolve("partiql").resolve("test").resolve("coverage").resolve("nested")
+
 // Checks that the Report & HTML Dir are generated.
 val coverageReportCheck = tasks.register("coverageReportCheck") {
     doLast {
@@ -36,6 +40,7 @@ val coverageReportCheck = tasks.register("coverageReportCheck") {
         if (conditionReportPath.exists().not()) { throw Exception("$conditionReportPath does not exist.") }
         if (branchHtmlDir.exists().not()) { throw Exception("$branchHtmlDir does not exist.") }
         if (conditionHtmlDir.exists().not()) { throw Exception("$conditionHtmlDir does not exist.") }
+        if (nestedPackageDir.exists().not()) { throw Exception("$nestedPackageDir does not exist.") }
     }
 }
 

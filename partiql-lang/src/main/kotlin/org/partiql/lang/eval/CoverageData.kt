@@ -28,10 +28,8 @@ package org.partiql.lang.eval
  *
  * @param branchCount represents the branch name (String) and the corresponding number of times it was executed.
  * @param branchConditionCount represents the branch-condition name (String) and the corresponding number of times it was executed.
- * @param lineCount represents how many times (value) a particular line number (key) was executed.
  */
 public data class CoverageData(
     val branchConditionCount: Map<String, Long> = emptyMap(),
-    val lineCount: Map<Int, Int> = emptyMap(),
     val branchCount: Map<String, Long> = emptyMap()
 )

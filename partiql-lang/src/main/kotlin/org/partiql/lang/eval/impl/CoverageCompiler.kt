@@ -97,7 +97,10 @@ internal class CoverageCompiler(
                 return PartiQLResult.Value(
                     value = value,
                     coverageData = {
-                        CoverageData(branchCount = env.branchCounts!!.toMap(), branchConditionCount = env.branchConditionCounts!!.toMap())
+                        CoverageData(
+                            branchConditionCount = env.branchConditionCounts!!.toMap(),
+                            branchCount = env.branchCounts!!.toMap()
+                        )
                     },
                     coverageStructure = { coverageStructure }
                 )

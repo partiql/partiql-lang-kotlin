@@ -1,4 +1,4 @@
-package org.partiql.test.coverage.simple
+package org.partiql.test.coverage.nested
 
 import org.partiql.coverage.api.PartiQLTest
 import org.partiql.coverage.api.PartiQLTestCase
@@ -12,6 +12,9 @@ import org.partiql.lang.eval.PartiQLResult
 import org.partiql.lang.eval.booleanValue
 import kotlin.test.assertEquals
 
+/**
+ * This is a simple test to check that nested packages can work.
+ */
 class SimpleTest {
 
     @PartiQLTest(provider = SuccessTestProvider.SuccessTestProvider::class)
