@@ -26,10 +26,7 @@ internal object RelConverter {
 
     // IGNORE — so we don't have to non-null assert on operator inputs
     private val nil = Plan.create {
-        rel(
-            type = relType(emptyList(), emptySet()),
-            op = relOpScan(rex(StaticType.NULL, rexOpVarResolved(-1)))
-        )
+        rel(relType(emptyList(), emptySet()), relOpErr())
     }
 
     /**

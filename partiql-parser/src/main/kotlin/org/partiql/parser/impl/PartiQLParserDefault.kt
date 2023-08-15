@@ -68,7 +68,6 @@ import org.partiql.value.dateValue
 import org.partiql.value.datetime.DateTimeException
 import org.partiql.value.datetime.DateTimeValue
 import org.partiql.value.decimalValue
-import org.partiql.value.int64Value
 import org.partiql.value.intValue
 import org.partiql.value.missingValue
 import org.partiql.value.nullValue
@@ -1734,11 +1733,7 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitLiteralInteger(ctx: GeneratedParser.LiteralIntegerContext) = translate(ctx) {
             val n = ctx.LITERAL_INTEGER().text.toInt()
-            val v = try {
-                int64Value(n.toLong())
-            } catch (_: java.lang.NumberFormatException) {
-                intValue(n.toBigInteger())
-            }
+            val v = intValue(n.toBigInteger())
             exprLit(v)
         }
 

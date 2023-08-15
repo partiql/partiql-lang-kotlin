@@ -2,6 +2,7 @@ package org.partiql.planner
 
 import org.partiql.errors.ProblemDetails
 import org.partiql.errors.ProblemSeverity
+import org.partiql.types.StaticType
 
 /**
  * Contains detailed information about errors that may occur during query planning.
@@ -11,7 +12,7 @@ import org.partiql.errors.ProblemSeverity
  */
 internal sealed class PlanningProblemDetails(
     override val severity: ProblemSeverity,
-    val messageFormatter: () -> String
+    val messageFormatter: () -> String,
 ) : ProblemDetails {
 
     override fun toString() = message
@@ -77,6 +78,13 @@ internal sealed class PlanningProblemDetails(
                     "Please use the `INSERT INTO <table> << <expr>, ... >>` form instead."
             }
         )
+
+    data class UnexpectedType(
+        val actualType: StaticType,
+        val expectedTypes: Set<StaticType>,
+    ) : PlanningProblemDetails(ProblemSeverity.ERROR, {
+        "Unexpected type $actualType, expected one of ${expectedTypes.joinToString()}"
+    })
 }
 
 private fun quotationHint(caseSensitive: Boolean) =

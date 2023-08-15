@@ -8,6 +8,7 @@ import org.partiql.plan.Identifier
 import org.partiql.plan.Plan
 import org.partiql.plan.Rex
 import org.partiql.planner.Env
+import org.partiql.planner.typer.toStaticType
 import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.boolValue
@@ -28,7 +29,7 @@ internal object RexConverter {
             throw IllegalArgumentException("unsupported rex $node")
 
         override fun visitExprLit(node: Expr.Lit, context: Env) = Plan.create {
-            val type = (StaticType.ANY)
+            val type = node.value.type.toStaticType()
             val op = rexOpLit(node.value)
             rex(type, op)
         }
@@ -134,14 +135,13 @@ internal object RexConverter {
         }
 
         override fun visitExprCollection(node: Expr.Collection, context: Env) = Plan.create {
-            val t = when (node.type) {
+            val type = when (node.type) {
                 Expr.Collection.Type.BAG -> StaticType.BAG
                 Expr.Collection.Type.ARRAY -> StaticType.LIST
                 Expr.Collection.Type.VALUES -> StaticType.LIST
                 Expr.Collection.Type.LIST -> StaticType.LIST
                 Expr.Collection.Type.SEXP -> StaticType.SEXP
             }
-            val type = (t)
             val values = node.values.map { visitExpr(it, context) }
             val op = rexOpCollection(values)
             rex(type, op)

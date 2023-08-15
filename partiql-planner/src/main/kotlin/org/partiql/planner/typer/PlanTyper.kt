@@ -16,8 +16,12 @@ import org.partiql.planner.TypeEnv
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
+import org.partiql.types.AnyOfType
+import org.partiql.types.BagType
+import org.partiql.types.CollectionType
+import org.partiql.types.ListType
+import org.partiql.types.SexpType
 import org.partiql.types.StaticType
-import org.partiql.value.PartiQLValueExperimental
 
 internal class PlanTyper(
     private val env: Env,
@@ -191,16 +195,17 @@ internal class PlanTyper(
      * Types a PartiQL expression tree. For now, we ignore the pre-existing type. We assume all existing types
      * are simply the `any`, so we keep the new type. Ideally we can programmatically calculate the most specific type.
      *
+     * We should consider making the StaticType? parameter non-nullable.
+     *
      * @property locals TypeEnv in which this rex tree is evaluated.
      */
     private inner class RexTyper(private val locals: TypeEnv) : PlanRewriter<StaticType?>() {
 
         override fun visitRex(node: Rex, ctx: StaticType?): Rex = super.visitRexOp(node.op, node.type) as Rex
 
-        @OptIn(PartiQLValueExperimental::class)
         override fun visitRexOpLit(node: Rex.Op.Lit, ctx: StaticType?): Rex = Plan.create {
-            val type = node.value.type.toStaticType()
-            rex(type, node)
+            // type comes from RexConverter
+            rex(ctx!!, node)
         }
 
         override fun visitRexOpVarResolved(node: Rex.Op.Var.Resolved, ctx: StaticType?): Rex = Plan.create {
@@ -264,8 +269,26 @@ internal class PlanTyper(
             TODO("Type RexOp")
         }
 
-        override fun visitRexOpCollection(node: Rex.Op.Collection, ctx: StaticType?): Rex {
-            TODO("Type RexOp")
+        override fun visitRexOpCollection(node: Rex.Op.Collection, ctx: StaticType?): Rex = Plan.create {
+            val type: CollectionType = when (ctx) {
+                is CollectionType -> ctx
+                null -> {
+                    handleMissingType()
+                    return rex(StaticType.ANY, rexOpErr())
+                }
+                else -> {
+                    handleUnexpectedType(ctx, setOf(StaticType.LIST, StaticType.BAG, StaticType.SEXP))
+                    return rex(ctx , rexOpErr())
+                }
+            }
+            val newValues = node.values.map { visitRex(it, null) }
+            val newElementType = newValues.toUnionType()
+            val newType = when (type) {
+                is BagType -> BagType(newElementType)
+                is ListType -> ListType(newElementType)
+                is SexpType -> SexpType(newElementType)
+            }
+            rex(newType, rexOpCollection(newValues))
         }
 
         override fun visitRexOpStruct(node: Rex.Op.Struct, ctx: StaticType?): Rex {
@@ -293,7 +316,7 @@ internal class PlanTyper(
         }
     }
 
-    // Helpers
+    // HELPERS
 
     private fun Rel.type(typeEnv: TypeEnv): Rel = RelTyper(typeEnv).visitRel(this, null)
 
@@ -335,6 +358,9 @@ internal class PlanTyper(
         }
     )
 
+    // Produce a union type from all the
+    private fun List<Rex>.toUnionType(): StaticType = AnyOfType(map { it.type }.toSet()).flatten()
+
     // ERRORS
 
     private fun handleUndefinedVariable(name: BindingName) {
@@ -342,6 +368,24 @@ internal class PlanTyper(
             Problem(
                 sourceLocation = UNKNOWN_PROBLEM_LOCATION,
                 details = PlanningProblemDetails.UndefinedVariable(name.name, name.bindingCase == BindingCase.SENSITIVE)
+            )
+        )
+    }
+
+    private fun handleMissingType() {
+        onProblem(
+            Problem(
+                sourceLocation = UNKNOWN_PROBLEM_LOCATION,
+                details = PlanningProblemDetails.CompileError("Unable to determine type of node.")
+            )
+        )
+    }
+
+    private fun handleUnexpectedType(actual: StaticType, expected: Set<StaticType>) {
+        onProblem(
+            Problem(
+                sourceLocation = UNKNOWN_PROBLEM_LOCATION,
+                details = PlanningProblemDetails.UnexpectedType(actual, expected),
             )
         )
     }

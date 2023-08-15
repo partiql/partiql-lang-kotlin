@@ -160,6 +160,8 @@ rex::{
       constructor:  rex,
       rel:          rel,
     },
+
+    err::{},
   ],
 }
 
@@ -278,6 +280,8 @@ rel::{
         },
       ],
     },
+
+    err::{},
   ],
   _: [
     prop::[

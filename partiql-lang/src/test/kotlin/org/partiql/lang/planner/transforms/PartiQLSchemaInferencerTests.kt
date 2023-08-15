@@ -23,8 +23,10 @@ import org.partiql.types.AnyOfType
 import org.partiql.types.AnyType
 import org.partiql.types.BagType
 import org.partiql.types.ListType
+import org.partiql.types.SexpType
 import org.partiql.types.StaticType
 import org.partiql.types.StaticType.Companion.INT
+import org.partiql.types.StaticType.Companion.INT8
 import org.partiql.types.StaticType.Companion.STRING
 import org.partiql.types.StaticType.Companion.unionOf
 import org.partiql.types.StructType
@@ -55,7 +57,7 @@ class PartiQLSchemaInferencerTests {
         val DB_SCHEMA_MARKETS = listOf("markets")
 
         val TYPE_BOOL = StaticType.BOOL
-        private val TYPE_AWS_DDB_PETS_ID = StaticType.INT
+        private val TYPE_AWS_DDB_PETS_ID = INT
         private val TYPE_AWS_DDB_PETS_BREED = StaticType.STRING
         val TABLE_AWS_DDB_PETS = BagType(
             elementType = StructType(
@@ -64,31 +66,43 @@ class PartiQLSchemaInferencerTests {
                     "breed" to TYPE_AWS_DDB_PETS_BREED
                 ),
                 contentClosed = true,
-                constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                constraints = setOf(
+                    TupleConstraint.Open(false),
+                    TupleConstraint.UniqueAttrs(true),
+                    TupleConstraint.Ordered
+                )
             )
         )
         val TABLE_AWS_DDB_B = BagType(
             StructType(
                 fields = mapOf("identifier" to StaticType.STRING),
                 contentClosed = true,
-                constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                constraints = setOf(
+                    TupleConstraint.Open(false),
+                    TupleConstraint.UniqueAttrs(true),
+                    TupleConstraint.Ordered
+                )
             )
         )
         val TABLE_AWS_B_B = BagType(
             StructType(
-                fields = mapOf("identifier" to StaticType.INT),
+                fields = mapOf("identifier" to INT),
                 contentClosed = true,
-                constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                constraints = setOf(
+                    TupleConstraint.Open(false),
+                    TupleConstraint.UniqueAttrs(true),
+                    TupleConstraint.Ordered
+                )
             )
         )
-        val TYPE_B_B_B_B_B = StaticType.INT
+        val TYPE_B_B_B_B_B = INT
         private val TYPE_B_B_B_B = StructType(
             mapOf("b" to TYPE_B_B_B_B_B),
             contentClosed = true,
             constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
         )
-        val TYPE_B_B_B_C = StaticType.INT
-        val TYPE_B_B_C = StaticType.INT
+        val TYPE_B_B_B_C = INT
+        val TYPE_B_B_C = INT
         val TYPE_B_B_B =
             StructType(
                 fields = mapOf(
@@ -96,7 +110,11 @@ class PartiQLSchemaInferencerTests {
                     "c" to TYPE_B_B_B_C
                 ),
                 contentClosed = true,
-                constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                constraints = setOf(
+                    TupleConstraint.Open(false),
+                    TupleConstraint.UniqueAttrs(true),
+                    TupleConstraint.Ordered
+                )
             )
     }
 
@@ -110,7 +128,7 @@ class PartiQLSchemaInferencerTests {
             val query: String,
             val catalog: String? = null,
             val catalogPath: List<String> = emptyList(),
-            val expected: StaticType
+            val expected: StaticType,
         ) : TestCase() {
             override fun toString(): String = "$name : $query"
         }
@@ -122,7 +140,7 @@ class PartiQLSchemaInferencerTests {
             val catalogPath: List<String> = emptyList(),
             val note: String? = null,
             val expected: StaticType? = null,
-            val problemHandler: ProblemHandler? = null
+            val problemHandler: ProblemHandler? = null,
         ) : TestCase() {
             override fun toString(): String = "$name : $query"
         }
@@ -141,7 +159,11 @@ class PartiQLSchemaInferencerTests {
                     StructType(
                         fields = mapOf("pets" to StaticType.ANY),
                         contentClosed = true,
-                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
                     )
                 ),
                 problemHandler = assertProblemExists {
@@ -159,7 +181,11 @@ class PartiQLSchemaInferencerTests {
                     StructType(
                         fields = mapOf("pets" to StaticType.ANY),
                         contentClosed = true,
-                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
                     )
                 ),
                 problemHandler = assertProblemExists {
@@ -211,7 +237,11 @@ class PartiQLSchemaInferencerTests {
                     StructType(
                         fields = mapOf("pets" to StaticType.ANY),
                         contentClosed = true,
-                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
                     )
                 ),
                 problemHandler = assertProblemExists {
@@ -329,6 +359,26 @@ class PartiQLSchemaInferencerTests {
                 catalog = CATALOG_B,
                 query = "b.b.b.b.b",
                 expected = TYPE_B_B_B_B_B
+            ),
+            SuccessTestCase(
+                name = "Collection BAG<INT>",
+                query = "<< 1, 2, 3 >>",
+                expected = BagType(INT),
+            ),
+            SuccessTestCase(
+                name = "Collection LIST<INT>",
+                query = "[ 1, 2, 3 ]",
+                expected = ListType(INT),
+            ),
+            SuccessTestCase(
+                name = "Collection LIST<INT>",
+                query = "( 1, 2, 3 )",
+                expected = ListType(INT),
+            ),
+            SuccessTestCase(
+                name = "Collection SEXP<INT>",
+                query = "SEXP ( 1, 2, 3 )",
+                expected = SexpType(INT),
             ),
             SuccessTestCase(
                 name = "EQ",
@@ -556,7 +606,11 @@ class PartiQLSchemaInferencerTests {
                     StructType(
                         fields = mapOf("unknown_col" to AnyType()),
                         contentClosed = true,
-                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
                     )
                 ),
                 problemHandler = assertProblemExists {
@@ -634,9 +688,13 @@ class PartiQLSchemaInferencerTests {
                 query = "SELECT CAST(breed AS INT) AS cast_breed FROM pets",
                 expected = BagType(
                     StructType(
-                        fields = mapOf("cast_breed" to unionOf(StaticType.INT, StaticType.MISSING)),
+                        fields = mapOf("cast_breed" to unionOf(INT, StaticType.MISSING)),
                         contentClosed = true,
-                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
                     )
                 )
             ),
@@ -649,7 +707,11 @@ class PartiQLSchemaInferencerTests {
                     StructType(
                         fields = mapOf("upper_breed" to StaticType.STRING),
                         contentClosed = true,
-                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
                     )
                 )
             ),
@@ -658,9 +720,13 @@ class PartiQLSchemaInferencerTests {
                 query = "SELECT a FROM << [ 1, 1.0 ] >> AS a",
                 expected = BagType(
                     StructType(
-                        fields = mapOf("a" to ListType(unionOf(StaticType.INT, StaticType.DECIMAL))),
+                        fields = mapOf("a" to ListType(unionOf(INT, StaticType.DECIMAL))),
                         contentClosed = true,
-                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
                     )
                 )
             ),
@@ -668,19 +734,19 @@ class PartiQLSchemaInferencerTests {
                 name = "Non-tuples in SELECT VALUE",
                 query = "SELECT VALUE a FROM << [ 1, 1.0 ] >> AS a",
                 expected =
-                BagType(ListType(unionOf(StaticType.INT, StaticType.DECIMAL)))
+                BagType(ListType(unionOf(INT, StaticType.DECIMAL)))
             ),
             SuccessTestCase(
                 name = "SELECT VALUE",
                 query = "SELECT VALUE [1, 1.0] FROM <<>>",
                 expected =
-                BagType(ListType(unionOf(StaticType.INT, StaticType.DECIMAL)))
+                BagType(ListType(unionOf(INT, StaticType.DECIMAL)))
             ),
             SuccessTestCase(
                 name = "UNPIVOT",
                 query = "SELECT VALUE v FROM UNPIVOT { 'a': 2 } AS v AT attr WHERE attr = 'a'",
                 expected =
-                BagType(StaticType.INT)
+                BagType(INT)
 
             ),
             SuccessTestCase(
@@ -689,11 +755,15 @@ class PartiQLSchemaInferencerTests {
                 expected = BagType(
                     StructType(
                         fields = mapOf(
-                            "a" to StaticType.INT,
+                            "a" to INT,
                             "b" to StaticType.DECIMAL,
                         ),
                         contentClosed = true,
-                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
                     )
                 )
             ),
@@ -703,11 +773,15 @@ class PartiQLSchemaInferencerTests {
                 expected = BagType(
                     StructType(
                         fields = mapOf(
-                            "a" to StaticType.INT,
+                            "a" to INT,
                             "b" to StaticType.DECIMAL,
                         ),
                         contentClosed = true,
-                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
                     )
                 )
             ),
@@ -718,10 +792,14 @@ class PartiQLSchemaInferencerTests {
                     StructType(
                         fields = listOf(
                             StructType.Field("b", StaticType.DECIMAL),
-                            StructType.Field("a", StaticType.INT),
+                            StructType.Field("a", INT),
                         ),
                         contentClosed = true,
-                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
                     )
                 )
             ),
@@ -731,11 +809,15 @@ class PartiQLSchemaInferencerTests {
                 expected = BagType(
                     StructType(
                         fields = listOf(
-                            StructType.Field("a", StaticType.INT),
+                            StructType.Field("a", INT),
                             StructType.Field("a", StaticType.DECIMAL),
                         ),
                         contentClosed = true,
-                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
                     )
                 )
             ),
@@ -745,11 +827,15 @@ class PartiQLSchemaInferencerTests {
                 expected = BagType(
                     StructType(
                         fields = listOf(
-                            StructType.Field("a", StaticType.INT),
+                            StructType.Field("a", INT),
                             StructType.Field("a", StaticType.DECIMAL),
                         ),
                         contentClosed = true,
-                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
                     )
                 )
             ),
@@ -769,12 +855,16 @@ class PartiQLSchemaInferencerTests {
                 expected = BagType(
                     StructType(
                         fields = listOf(
-                            StructType.Field("a", StaticType.INT),
+                            StructType.Field("a", INT),
                             StructType.Field("a", StaticType.DECIMAL),
                             StructType.Field("a", StaticType.STRING),
                         ),
                         contentClosed = true,
-                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
                     )
                 )
             ),
@@ -792,7 +882,11 @@ class PartiQLSchemaInferencerTests {
                             StructType.Field("a", unionOf(INT, STRING))
                         ),
                         contentClosed = true,
-                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
                     )
                 )
             ),
@@ -808,7 +902,11 @@ class PartiQLSchemaInferencerTests {
                             StructType.Field("e", INT)
                         ),
                         contentClosed = true,
-                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
                     )
                 )
             ),
@@ -818,11 +916,15 @@ class PartiQLSchemaInferencerTests {
                 expected = BagType(
                     StructType(
                         fields = listOf(
-                            StructType.Field("a", StaticType.INT),
+                            StructType.Field("a", INT),
                             StructType.Field("a", StaticType.DECIMAL),
                         ),
                         contentClosed = true,
-                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
                     )
                 ),
                 problemHandler = assertProblemExists {
@@ -846,7 +948,11 @@ class PartiQLSchemaInferencerTests {
                             StructType.Field("a", unionOf(INT, STRING))
                         ),
                         contentClosed = true,
-                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
                     )
                 )
             ),
@@ -856,13 +962,17 @@ class PartiQLSchemaInferencerTests {
                 expected = BagType(
                     StructType(
                         fields = mapOf(
-                            "a" to StaticType.INT,
-                            "c" to StaticType.INT,
-                            "s" to StaticType.INT,
-                            "m" to StaticType.INT,
+                            "a" to INT,
+                            "c" to INT,
+                            "s" to INT,
+                            "m" to INT,
                         ),
                         contentClosed = true,
-                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
                     )
                 )
             ),
@@ -873,12 +983,16 @@ class PartiQLSchemaInferencerTests {
                     StructType(
                         fields = mapOf(
                             "a" to StaticType.DECIMAL,
-                            "c" to StaticType.INT,
+                            "c" to INT,
                             "s" to StaticType.DECIMAL,
                             "m" to StaticType.DECIMAL,
                         ),
                         contentClosed = true,
-                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
                     )
                 )
             ),
@@ -895,12 +1009,12 @@ class PartiQLSchemaInferencerTests {
             SuccessTestCase(
                 name = "Current User Concat in WHERE",
                 query = "SELECT VALUE a FROM [ 0 ] AS a WHERE CURRENT_USER = 'hello'",
-                expected = BagType(StaticType.INT)
+                expected = BagType(INT)
             ),
             ErrorTestCase(
                 name = "Current User Concat in WHERE",
                 query = "SELECT VALUE a FROM [ 0 ] AS a WHERE CURRENT_USER = 5",
-                expected = BagType(StaticType.INT),
+                expected = BagType(INT),
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,

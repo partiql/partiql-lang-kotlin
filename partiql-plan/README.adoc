@@ -1,9 +1,7 @@
 = PartiQL Plan
-DRAFT <howero@amazon.com>
 :toc:
 :toc-title: Page Contents
 :sectlinks:
-
 
 == About
 
@@ -528,7 +526,7 @@ Within statements are several expression nodes. The following section defines al
 |<<case-rex-node,case>>
 | Case expression, ex: SQL `CASE`
 
-|<<collection-rex-node,tuple>>
+|<<collection-rex-node,collection>>
 | Collection constructor expression
 
 |<<struct-rex-node,struct>>
@@ -925,7 +923,7 @@ rex.tuple ::= (tuple <type> (<rex> <rex>)*)
 ====
 
 [#collection-rex-node]
-=== `bag`
+=== `collection`
 
 ====
 
@@ -947,7 +945,7 @@ A collection expression produces a collection value from a list of expressions.
 |===
 | Type | Description
 
-| type | Expression type
+| type | Collection type
 
 | rex* | Zero or more expression elements
 
@@ -956,11 +954,11 @@ A collection expression produces a collection value from a list of expressions.
 .Examples
 [source,partiql]
 ----
-<< 1, 2, 3 >>
+<< 1, 2, 3 >>   -- Bag
 
-[ 1, 2, 3 ]
+[ 1, 2, 3 ]     -- Array
 
-( 1 2 3 )
+( 1 2 3 )       -- Sexp
 ----
 
 [source,ion]
@@ -2013,4 +2011,3 @@ my_project::(project ($0))            // ...
   (select ($constant 0))
 )
 ----
-
