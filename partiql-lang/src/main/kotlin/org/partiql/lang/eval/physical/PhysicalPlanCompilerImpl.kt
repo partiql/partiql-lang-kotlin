@@ -21,6 +21,9 @@ import com.amazon.ion.system.IonSystemBuilder
 import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.emptyMetaContainer
 import com.amazon.ionelement.api.toIonValue
+import org.partiql.errors.ErrorCode
+import org.partiql.errors.Property
+import org.partiql.errors.PropertyValueMap
 import org.partiql.lang.ast.IsOrderedMeta
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.UNKNOWN_SOURCE_LOCATION
@@ -28,9 +31,6 @@ import org.partiql.lang.ast.sourceLocation
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.domains.staticType
 import org.partiql.lang.domains.toBindingCase
-import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.errors.Property
-import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.eval.AnyOfCastTable
 import org.partiql.lang.eval.ArityMismatchException
 import org.partiql.lang.eval.BaseExprValue

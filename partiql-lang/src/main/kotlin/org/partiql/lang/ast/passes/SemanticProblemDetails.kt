@@ -1,8 +1,8 @@
 package org.partiql.lang.ast.passes
 
+import org.partiql.errors.ProblemDetails
+import org.partiql.errors.ProblemSeverity
 import org.partiql.lang.ast.passes.inference.stringWithoutNullMissing
-import org.partiql.lang.errors.ProblemDetails
-import org.partiql.lang.errors.ProblemSeverity
 import org.partiql.types.StaticType
 
 /**

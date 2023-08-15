@@ -8,14 +8,14 @@ import com.amazon.ion.IonSystem
 import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.metaContainerOf
 import com.amazon.ionelement.api.toIonElement
+import org.partiql.errors.ErrorCode
+import org.partiql.errors.Property
 import org.partiql.lang.ast.StaticTypeMeta
 import org.partiql.lang.ast.passes.SemanticException
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.addSourceLocation
 import org.partiql.lang.domains.extractSourceLocation
 import org.partiql.lang.domains.toBindingCase
-import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.errors.Property
 import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.Bindings

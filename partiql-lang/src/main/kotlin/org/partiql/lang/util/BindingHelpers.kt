@@ -14,8 +14,8 @@
 
 package org.partiql.lang.util
 
-import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.errors.Property
+import org.partiql.errors.ErrorCode
+import org.partiql.errors.Property
 import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.err
 

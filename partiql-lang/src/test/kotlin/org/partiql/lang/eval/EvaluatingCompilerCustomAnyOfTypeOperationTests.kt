@@ -2,8 +2,8 @@ package org.partiql.lang.eval
 
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
+import org.partiql.errors.ErrorCode
 import org.partiql.lang.anyOfType
-import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.esAny
 import org.partiql.lang.types.CustomType
 import org.partiql.lang.types.TypedOpParameter

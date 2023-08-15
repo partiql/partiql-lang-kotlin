@@ -1,7 +1,7 @@
 package org.partiql.lang.eval.builtins.aggfunctions
 
 import org.junit.Test
-import org.partiql.lang.errors.ErrorCode
+import org.partiql.errors.ErrorCode
 import org.partiql.lang.eval.EvaluatorTestBase
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
 

@@ -1,11 +1,11 @@
 package org.partiql.lang.eval
 
 import com.amazon.ionelement.api.MetaContainer
+import org.partiql.errors.ErrorBehaviorInPermissiveMode
+import org.partiql.errors.ErrorCode
+import org.partiql.errors.Property
+import org.partiql.errors.PropertyValueMap
 import org.partiql.lang.ast.SourceLocationMeta
-import org.partiql.lang.errors.ErrorBehaviorInPermissiveMode
-import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.errors.Property
-import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.util.propertyValueMapOf
 
 /** Provides a common interface controlling the evaluation-time error signaling of [CompileOptions.typingMode]. */

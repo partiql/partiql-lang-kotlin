@@ -23,8 +23,8 @@ import junitparams.Parameters
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.partiql.errors.ErrorCode
 import org.partiql.lang.ION
-import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.time.Time
 import org.partiql.lang.util.isBag
 import org.partiql.lang.util.isMissing

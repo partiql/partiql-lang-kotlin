@@ -12,17 +12,17 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.lang.errors
+package org.partiql.errors
 
 import com.amazon.ion.IonValue
 import java.util.EnumMap
 
-internal const val UNKNOWN: String = "<UNKNOWN>"
+public const val UNKNOWN: String = "<UNKNOWN>"
 
 /**
  * Categories for errors. Should map to stages in the Compiler and Evaluator.
  */
-enum class ErrorCategory(val message: String) {
+public enum class ErrorCategory(public val message: String) {
     LEXER("Lexer Error"),
     PARSER("Parser Error"),
     SEMANTIC("Semantic Error"),
@@ -40,7 +40,7 @@ enum class ErrorCategory(val message: String) {
  * @param propertyType [Class] of object's that this property can hold in a [PropertyValueMap]
  *
  */
-enum class Property(val propertyName: String, val propertyType: PropertyType) {
+public enum class Property(public val propertyName: String, public val propertyType: PropertyType) {
     LINE_NUMBER("line_no", PropertyType.LONG_CLASS),
     COLUMN_NUMBER("column_no", PropertyType.LONG_CLASS),
     TOKEN_STRING("token_string", PropertyType.STRING_CLASS),
@@ -78,14 +78,14 @@ enum class Property(val propertyName: String, val propertyType: PropertyType) {
  * For each type of value that can be a [Property] there is a method to allow clients to obtain the
  * correctly typed value.
  */
-abstract class PropertyValue(val type: PropertyType) {
-    open fun stringValue(): String = throw IllegalArgumentException("Property value is of type $type and not String")
-    open fun longValue(): Long = throw IllegalArgumentException("Property value is of type $type and not Long")
-    open fun tokenTypeValue(): String = throw IllegalArgumentException("Property value is of type $type and not String")
-    open fun integerValue(): Int = throw IllegalArgumentException("Property value is of type $type and not Integer")
-    open fun ionValue(): IonValue = throw IllegalArgumentException("Property value is of type $type and not IonValue")
+public abstract class PropertyValue(public val type: PropertyType) {
+    public open fun stringValue(): String = throw IllegalArgumentException("Property value is of type $type and not String")
+    public open fun longValue(): Long = throw IllegalArgumentException("Property value is of type $type and not Long")
+    public open fun tokenTypeValue(): String = throw IllegalArgumentException("Property value is of type $type and not String")
+    public open fun integerValue(): Int = throw IllegalArgumentException("Property value is of type $type and not Integer")
+    public open fun ionValue(): IonValue = throw IllegalArgumentException("Property value is of type $type and not IonValue")
 
-    val value: Any
+    public val value: Any
         get() = when (type) {
             PropertyType.LONG_CLASS -> longValue()
             PropertyType.STRING_CLASS -> stringValue()
@@ -119,14 +119,14 @@ abstract class PropertyValue(val type: PropertyType) {
  * Clients can access the type (as a `Class<*>`) of a property's value through [getType()].
  *
  */
-enum class PropertyType(private val type: Class<*>) {
+public enum class PropertyType(private val type: Class<*>) {
     LONG_CLASS(Long::class.javaObjectType),
     STRING_CLASS(String::class.javaObjectType),
     INTEGER_CLASS(Int::class.javaObjectType),
     TOKEN_CLASS(String::class.javaObjectType),
     ION_VALUE_CLASS(IonValue::class.javaObjectType);
 
-    fun getType() = type
+    public fun getType(): Class<*> = type
 }
 
 /**
@@ -143,7 +143,7 @@ enum class PropertyType(private val type: Class<*>) {
  *  Absence of a key means that there is no information. Clients **should** test a [Property] for membership in
  *  [PropertyValueMap].
  */
-class PropertyValueMap(private val map: EnumMap<Property, PropertyValue> = EnumMap(Property::class.java)) {
+public class PropertyValueMap(private val map: EnumMap<Property, PropertyValue> = EnumMap(Property::class.java)) {
 
     /**
      * Given a [Property] retrieve the value mapped to [key] in this map.
@@ -153,7 +153,7 @@ class PropertyValueMap(private val map: EnumMap<Property, PropertyValue> = EnumM
      * @return the value stored in this [PropertyValueMap] as a [PropertyValue], `null` if key is not present
      *
      */
-    operator fun get(key: Property): PropertyValue? = map[key]
+    public operator fun get(key: Property): PropertyValue? = map[key]
 
     private fun <T> verifyTypeAndSet(prop: Property, expectedType: PropertyType, value: T, pValue: PropertyValue) {
         if (prop.propertyType == expectedType) {
@@ -171,7 +171,7 @@ class PropertyValueMap(private val map: EnumMap<Property, PropertyValue> = EnumM
      *
      * @throws [IllegalArgumentException] if the [Property] used as `key` requires values of type **other than** [String]
      */
-    operator fun set(key: Property, strValue: String) {
+    public operator fun set(key: Property, strValue: String) {
         val o = object : PropertyValue(PropertyType.STRING_CLASS) {
             override fun stringValue(): String = strValue
         }
@@ -186,7 +186,7 @@ class PropertyValueMap(private val map: EnumMap<Property, PropertyValue> = EnumM
      *
      * @throws [IllegalArgumentException] if the [Property] used as `key` requires values of type **other than** [Long]
      */
-    operator fun set(key: Property, longValue: Long) {
+    public operator fun set(key: Property, longValue: Long) {
         val o = object : PropertyValue(PropertyType.LONG_CLASS) {
             override fun longValue(): Long = longValue
         }
@@ -201,7 +201,7 @@ class PropertyValueMap(private val map: EnumMap<Property, PropertyValue> = EnumM
      *
      * @throws [IllegalArgumentException] if the [Property] used as `key` requires values of type **other than** [Int]
      */
-    operator fun set(key: Property, intValue: Int) {
+    public operator fun set(key: Property, intValue: Int) {
         val o = object : PropertyValue(PropertyType.INTEGER_CLASS) {
             override fun integerValue(): Int = intValue
         }
@@ -216,7 +216,7 @@ class PropertyValueMap(private val map: EnumMap<Property, PropertyValue> = EnumM
      *
      * @throws [IllegalArgumentException] if the [Property] used as `key` requires values of type **other than** [IonValue]
      */
-    operator fun set(key: Property, ionValue: IonValue) {
+    public operator fun set(key: Property, ionValue: IonValue) {
         val o = object : PropertyValue(PropertyType.ION_VALUE_CLASS) {
             override fun ionValue(): IonValue = ionValue
         }
@@ -229,12 +229,12 @@ class PropertyValueMap(private val map: EnumMap<Property, PropertyValue> = EnumM
      * @param property to check for membership in this [PropertyValueMap]
      * @return `true` if `this` [PropertyValueMap] contains [property] as a key, `false` otherwise
      */
-    fun hasProperty(property: Property) = map.containsKey(property)
+    public fun hasProperty(property: Property): Boolean = map.containsKey(property)
 
     @Suppress("UNUSED")
-    fun getProperties() = this.map.keys
+    public fun getProperties(): Set<Property> = this.map.keys
 
-    /** Creates a human readable representation of this [PropertyValueMap].  For debugging only. */
+    /** Creates a human-readable representation of this [PropertyValueMap].  For debugging only. */
     override fun toString(): String =
         this.map.entries.sortedBy { it.key }.joinToString(", ", "propertyValueMapOf(", ")") {
             val value = when (it.value.value) {

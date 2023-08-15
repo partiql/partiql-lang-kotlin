@@ -1,9 +1,9 @@
 package org.partiql.lang.eval
 
 import com.amazon.ionelement.api.MetaContainer
+import org.partiql.errors.ErrorCode
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.PartiqlPhysical
-import org.partiql.lang.errors.ErrorCode
 import org.partiql.pig.runtime.DomainNode
 
 /**

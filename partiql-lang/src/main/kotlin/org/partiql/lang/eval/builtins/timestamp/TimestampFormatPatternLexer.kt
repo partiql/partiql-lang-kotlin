@@ -14,8 +14,8 @@
 
 package org.partiql.lang.eval.builtins.timestamp
 
-import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.errors.Property
+import org.partiql.errors.ErrorCode
+import org.partiql.errors.Property
 import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.util.codePointSequence
 import org.partiql.lang.util.propertyValueMapOf

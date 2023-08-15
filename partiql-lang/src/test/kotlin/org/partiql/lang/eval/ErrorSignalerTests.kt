@@ -1,10 +1,10 @@
 package org.partiql.lang.eval
 
 import org.junit.Test
+import org.partiql.errors.ErrorCode
+import org.partiql.errors.Property
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.domains.metaContainerOf
-import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.errors.Property
 import kotlin.test.assertEquals
 import kotlin.test.fail
 

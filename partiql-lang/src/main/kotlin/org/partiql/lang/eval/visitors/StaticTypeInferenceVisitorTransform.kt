@@ -8,6 +8,9 @@ import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.StringElement
 import com.amazon.ionelement.api.TextElement
 import com.amazon.ionelement.api.ionBool
+import org.partiql.errors.Problem
+import org.partiql.errors.ProblemHandler
+import org.partiql.errors.ProblemSeverity
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.StaticTypeMeta
 import org.partiql.lang.ast.passes.SemanticException
@@ -22,9 +25,6 @@ import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.domains.staticType
 import org.partiql.lang.domains.toBindingCase
-import org.partiql.lang.errors.Problem
-import org.partiql.lang.errors.ProblemHandler
-import org.partiql.lang.errors.ProblemSeverity
 import org.partiql.lang.errors.ProblemThrower
 import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.BindingName
@@ -140,7 +140,7 @@ internal class StaticTypeInferenceVisitorTransform(
         private fun handleDuplicateAliasesError(sourceLocationMeta: SourceLocationMeta) {
             problemHandler.handleProblem(
                 Problem(
-                    sourceLocation = sourceLocationMeta,
+                    sourceLocation = sourceLocationMeta.toProblemLocation(),
                     details = SemanticProblemDetails.DuplicateAliasesInSelectListItem
                 )
             )
@@ -149,7 +149,7 @@ internal class StaticTypeInferenceVisitorTransform(
         private fun handleNoSuchFunctionError(functionName: String, sourceLocationMeta: SourceLocationMeta) {
             problemHandler.handleProblem(
                 Problem(
-                    sourceLocation = sourceLocationMeta,
+                    sourceLocation = sourceLocationMeta.toProblemLocation(),
                     details = SemanticProblemDetails.NoSuchFunction(functionName)
                 )
             )
@@ -163,7 +163,7 @@ internal class StaticTypeInferenceVisitorTransform(
         ) {
             problemHandler.handleProblem(
                 Problem(
-                    sourceLocation = sourceLocationMeta,
+                    sourceLocation = sourceLocationMeta.toProblemLocation(),
                     details = SemanticProblemDetails.IncorrectNumberOfArgumentsToFunctionCall(
                         functionName,
                         expectedArity,
@@ -177,7 +177,7 @@ internal class StaticTypeInferenceVisitorTransform(
         private fun handleIncompatibleDataTypesForOpError(actualTypes: List<StaticType>, op: String, sourceLocationMeta: SourceLocationMeta) {
             problemHandler.handleProblem(
                 Problem(
-                    sourceLocation = sourceLocationMeta,
+                    sourceLocation = sourceLocationMeta.toProblemLocation(),
                     details = SemanticProblemDetails.IncompatibleDatatypesForOp(
                         actualTypes,
                         op
@@ -189,7 +189,7 @@ internal class StaticTypeInferenceVisitorTransform(
         private fun handleIncompatibleDataTypeForExprError(expectedType: StaticType, actualType: StaticType, sourceLocationMeta: SourceLocationMeta) {
             problemHandler.handleProblem(
                 Problem(
-                    sourceLocation = sourceLocationMeta,
+                    sourceLocation = sourceLocationMeta.toProblemLocation(),
                     details = SemanticProblemDetails.IncompatibleDataTypeForExpr(expectedType, actualType)
                 )
             )
@@ -198,7 +198,7 @@ internal class StaticTypeInferenceVisitorTransform(
         private fun handleExpressionAlwaysReturnsNullOrMissingError(sourceLocationMeta: SourceLocationMeta) {
             problemHandler.handleProblem(
                 Problem(
-                    sourceLocation = sourceLocationMeta,
+                    sourceLocation = sourceLocationMeta.toProblemLocation(),
                     details = SemanticProblemDetails.ExpressionAlwaysReturnsNullOrMissing
                 )
             )
@@ -207,7 +207,7 @@ internal class StaticTypeInferenceVisitorTransform(
         private fun handleNullOrMissingFunctionArgument(functionName: String, sourceLocationMeta: SourceLocationMeta) {
             problemHandler.handleProblem(
                 Problem(
-                    sourceLocation = sourceLocationMeta,
+                    sourceLocation = sourceLocationMeta.toProblemLocation(),
                     details = SemanticProblemDetails.NullOrMissingFunctionArgument(
                         functionName = functionName
                     )
@@ -218,7 +218,7 @@ internal class StaticTypeInferenceVisitorTransform(
         private fun handleInvalidArgumentTypeForFunction(functionName: String, expectedType: StaticType, actualType: StaticType, sourceLocationMeta: SourceLocationMeta) {
             problemHandler.handleProblem(
                 Problem(
-                    sourceLocation = sourceLocationMeta,
+                    sourceLocation = sourceLocationMeta.toProblemLocation(),
                     details = SemanticProblemDetails.InvalidArgumentTypeForFunction(
                         functionName = functionName,
                         expectedType = expectedType,
@@ -850,7 +850,7 @@ internal class StaticTypeInferenceVisitorTransform(
         private fun handleInvalidInputTypeForAggFun(sourceLocation: SourceLocationMeta, funcName: String, actualType: StaticType, expectedType: StaticType) {
             problemHandler.handleProblem(
                 Problem(
-                    sourceLocation = sourceLocation,
+                    sourceLocation = sourceLocation.toProblemLocation(),
                     details = SemanticProblemDetails.InvalidArgumentTypeForFunction(
                         functionName = funcName,
                         expectedType = expectedType,

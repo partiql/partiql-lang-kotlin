@@ -58,6 +58,18 @@ Thank you to all who have contributed!
     from `SymbolPrimitive` to new `GraphLabelSpec`.
   - Changed the names of subclasses of ` org.partiql.lang.graph.LabelSpec`,
     from `OneOf` to `Name`, and from `Whatever` to `Wildcard`.
+- **Breaking** the package `org.partiql.lang.errors` has been moved to `org.partiql.errors`, moved classes include
+  - `org.partiql.lang.errors.ErrorCategory` -> `org.partiql.errors.ErrorCategory`
+  - `org.partiql.lang.errors.Property` -> `org.partiql.errors.Property`
+  - `org.partiql.lang.errors.PropertyValue` -> `org.partiql.errors.PropertyValue`
+  - `org.partiql.lang.errors.PropertyType` -> `org.partiql.errors.PropertyType`
+  - `org.partiql.lang.errors.PropertyValueMap` -> `org.partiql.errors.PropertyValueMap`
+  - `org.partiql.lang.errors.ErrorCode` -> `org.partiql.errors.ErrorCode`
+  - `org.partiql.lang.errors.Problem` -> `org.partiql.errors.Problem`
+  - `org.partiql.lang.errors.ProblemDetails` -> `org.partiql.errors.ProblemDetails`
+  - `org.partiql.lang.errors.ProblemSeverity` -> `org.partiql.errors.ProblemSeverity`
+  - `org.partiql.lang.errors.ProblemHandler` -> `org.partiql.errors.ProblemHandler`
+- **Breaking** the `sourceLocation` field of `org.partiql.errors.Problem` was changed from `org.partiql.lang.ast.SoureceLocationMeta` to `org.partiql.errors.ProblemLocation`.
 
 ### Deprecated
 - **Breaking**: Deprecates the `Arguments`, `RequiredArgs`, `RequiredWithOptional`, and `RequiredWithVariadic` classes, 

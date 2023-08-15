@@ -1,10 +1,10 @@
 package org.partiql.lang.planner.transforms
 
 import com.amazon.ionelement.api.ionSymbol
+import org.partiql.errors.ProblemHandler
 import org.partiql.lang.domains.PartiqlLogicalResolved
 import org.partiql.lang.domains.PartiqlLogicalResolvedToPartiqlPhysicalVisitorTransform
 import org.partiql.lang.domains.PartiqlPhysical
-import org.partiql.lang.errors.ProblemHandler
 
 /**
  * Transforms an instance of [PartiqlLogicalResolved.Statement] to [PartiqlPhysical.Statement],

@@ -14,8 +14,8 @@
 
 package org.partiql.lang.eval.physical.operators
 
+import org.partiql.errors.ErrorCode
 import org.partiql.lang.domains.PartiqlPhysical
-import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.ExprAggregator
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType

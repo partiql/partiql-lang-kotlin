@@ -1,11 +1,11 @@
 package org.partiql.examples
 
 import com.amazon.ion.system.IonSystemBuilder
+import org.partiql.errors.ErrorCode
+import org.partiql.errors.Property
+import org.partiql.errors.PropertyValueMap
 import org.partiql.examples.util.Example
 import org.partiql.lang.CompilerPipeline
-import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.errors.Property
-import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.Bindings

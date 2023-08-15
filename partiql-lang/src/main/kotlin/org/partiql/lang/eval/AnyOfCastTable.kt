@@ -1,10 +1,10 @@
 package org.partiql.lang.eval
 
 import com.amazon.ionelement.api.MetaContainer
+import org.partiql.errors.ErrorCode
+import org.partiql.errors.Property
+import org.partiql.errors.PropertyValueMap
 import org.partiql.lang.ast.sourceLocation
-import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.errors.Property
-import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.types.StaticTypeUtils.getRuntimeType
 import org.partiql.types.AnyOfType
 import org.partiql.types.AnyType

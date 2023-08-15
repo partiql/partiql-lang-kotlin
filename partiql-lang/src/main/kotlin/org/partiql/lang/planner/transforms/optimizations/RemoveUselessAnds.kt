@@ -1,8 +1,8 @@
 package org.partiql.lang.planner.transforms.optimizations
 
 import com.amazon.ionelement.api.ionBool
+import org.partiql.errors.ProblemHandler
 import org.partiql.lang.domains.PartiqlPhysical
-import org.partiql.lang.errors.ProblemHandler
 import org.partiql.lang.planner.PartiQLPhysicalPass
 import org.partiql.lang.planner.transforms.isLitTrue
 

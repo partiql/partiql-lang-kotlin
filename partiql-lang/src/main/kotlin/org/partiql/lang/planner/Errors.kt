@@ -1,8 +1,8 @@
 package org.partiql.lang.planner
 
-import org.partiql.lang.ast.UNKNOWN_SOURCE_LOCATION
-import org.partiql.lang.errors.Problem
-import org.partiql.lang.errors.ProblemHandler
+import org.partiql.errors.Problem
+import org.partiql.errors.ProblemHandler
+import org.partiql.errors.UNKNOWN_PROBLEM_LOCATION
 import org.partiql.lang.eval.physical.sourceLocationMeta
 import org.partiql.pig.runtime.DomainNode
 
@@ -16,6 +16,6 @@ fun ProblemHandler.handleUnimplementedFeature(blame: DomainNode, featureName: St
 
 private fun createUnimplementedFeatureProblem(blame: DomainNode, featureName: String) =
     Problem(
-        blame.metas.sourceLocationMeta ?: UNKNOWN_SOURCE_LOCATION,
+        (blame.metas.sourceLocationMeta?.toProblemLocation() ?: UNKNOWN_PROBLEM_LOCATION),
         PlanningProblemDetails.UnimplementedFeature(featureName)
     )

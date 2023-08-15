@@ -14,7 +14,7 @@
 
 package org.partiql.lang.eval.physical.operators
 
-import org.partiql.lang.errors.ErrorCode
+import org.partiql.errors.ErrorCode
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.errNoContext
 import org.partiql.lang.eval.physical.EvaluatorState

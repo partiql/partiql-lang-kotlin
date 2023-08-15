@@ -17,7 +17,7 @@ package org.partiql.lang.util
 import com.amazon.ion.Decimal
 import com.amazon.ion.IonSystem
 import com.amazon.ion.IonValue
-import org.partiql.lang.errors.ErrorCode
+import org.partiql.errors.ErrorCode
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.errIntOverflow
 import org.partiql.lang.eval.errNoContext

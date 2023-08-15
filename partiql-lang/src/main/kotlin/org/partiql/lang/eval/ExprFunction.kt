@@ -14,7 +14,7 @@
 
 package org.partiql.lang.eval
 
-import org.partiql.lang.errors.ErrorCode
+import org.partiql.errors.ErrorCode
 import org.partiql.lang.types.FunctionSignature
 
 @Deprecated("As function overloading is now supported, this class is deprecated.", level = DeprecationLevel.ERROR)

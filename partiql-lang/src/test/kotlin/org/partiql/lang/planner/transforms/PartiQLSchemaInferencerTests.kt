@@ -9,9 +9,9 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.ArgumentsProvider
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.annotations.ExperimentalPartiQLSchemaInferencer
-import org.partiql.lang.ast.UNKNOWN_SOURCE_LOCATION
+import org.partiql.errors.Problem
+import org.partiql.errors.UNKNOWN_PROBLEM_LOCATION
 import org.partiql.lang.ast.passes.SemanticProblemDetails
-import org.partiql.lang.errors.Problem
 import org.partiql.lang.errors.ProblemCollector
 import org.partiql.lang.planner.PlanningProblemDetails
 import org.partiql.lang.planner.transforms.PartiQLSchemaInferencerTests.ProblemHandler
@@ -146,7 +146,7 @@ class PartiQLSchemaInferencerTests {
                 ),
                 problemHandler = assertProblemExists {
                     Problem(
-                        UNKNOWN_SOURCE_LOCATION,
+                        UNKNOWN_PROBLEM_LOCATION,
                         PlanningProblemDetails.UndefinedVariable("pets", false)
                     )
                 }
@@ -164,7 +164,7 @@ class PartiQLSchemaInferencerTests {
                 ),
                 problemHandler = assertProblemExists {
                     Problem(
-                        UNKNOWN_SOURCE_LOCATION,
+                        UNKNOWN_PROBLEM_LOCATION,
                         PlanningProblemDetails.UndefinedVariable("pets", false)
                     )
                 }
@@ -216,7 +216,7 @@ class PartiQLSchemaInferencerTests {
                 ),
                 problemHandler = assertProblemExists {
                     Problem(
-                        UNKNOWN_SOURCE_LOCATION,
+                        UNKNOWN_PROBLEM_LOCATION,
                         PlanningProblemDetails.UndefinedVariable("pets", false)
                     )
                 }
@@ -387,9 +387,9 @@ class PartiQLSchemaInferencerTests {
                 expected = TYPE_BOOL,
                 problemHandler = assertProblemExists {
                     Problem(
-                        UNKNOWN_SOURCE_LOCATION,
+                        UNKNOWN_PROBLEM_LOCATION,
                         SemanticProblemDetails.IncompatibleDatatypesForOp(
-                            listOf(StaticType.INT, StaticType.STRING),
+                            listOf(INT, STRING),
                             "IN"
                         )
                     )
@@ -410,12 +410,12 @@ class PartiQLSchemaInferencerTests {
                 expected = TYPE_BOOL,
                 problemHandler = assertProblemExists {
                     Problem(
-                        UNKNOWN_SOURCE_LOCATION,
+                        UNKNOWN_PROBLEM_LOCATION,
                         SemanticProblemDetails.IncompatibleDatatypesForOp(
                             listOf(
-                                StaticType.INT,
-                                StaticType.INT,
-                                StaticType.STRING
+                                INT,
+                                INT,
+                                STRING
                             ),
                             "between"
                         )
@@ -437,9 +437,9 @@ class PartiQLSchemaInferencerTests {
                 expected = StaticType.MISSING,
                 problemHandler = assertProblemExists {
                     Problem(
-                        UNKNOWN_SOURCE_LOCATION,
+                        UNKNOWN_PROBLEM_LOCATION,
                         SemanticProblemDetails.IncompatibleDatatypesForOp(
-                            listOf(StaticType.STRING, StaticType.INT),
+                            listOf(STRING, INT),
                             "LIKE"
                         )
                     )
@@ -488,9 +488,9 @@ class PartiQLSchemaInferencerTests {
                 expected = TYPE_BOOL,
                 problemHandler = assertProblemExists {
                     Problem(
-                        UNKNOWN_SOURCE_LOCATION,
+                        UNKNOWN_PROBLEM_LOCATION,
                         SemanticProblemDetails.IncompatibleDatatypesForOp(
-                            listOf(StaticType.INT, StaticType.STRING),
+                            listOf(INT, STRING),
                             "EQ"
                         )
                     )
@@ -510,7 +510,7 @@ class PartiQLSchemaInferencerTests {
                 ),
                 problemHandler = assertProblemExists {
                     Problem(
-                        UNKNOWN_SOURCE_LOCATION,
+                        UNKNOWN_PROBLEM_LOCATION,
                         PlanningProblemDetails.UndefinedVariable("non_existing_column", false)
                     )
                 }
@@ -523,9 +523,9 @@ class PartiQLSchemaInferencerTests {
                 expected = StaticType.MISSING,
                 problemHandler = assertProblemExists {
                     Problem(
-                        UNKNOWN_SOURCE_LOCATION,
+                        UNKNOWN_PROBLEM_LOCATION,
                         SemanticProblemDetails.IncompatibleDatatypesForOp(
-                            listOf(StaticType.BOOL, StaticType.INT),
+                            listOf(StaticType.BOOL, INT),
                             "AND"
                         )
                     )
@@ -539,9 +539,9 @@ class PartiQLSchemaInferencerTests {
                 expected = StaticType.MISSING,
                 problemHandler = assertProblemExists {
                     Problem(
-                        UNKNOWN_SOURCE_LOCATION,
+                        UNKNOWN_PROBLEM_LOCATION,
                         SemanticProblemDetails.IncompatibleDatatypesForOp(
-                            listOf(StaticType.INT, StaticType.BOOL),
+                            listOf(INT, StaticType.BOOL),
                             "AND"
                         )
                     )
@@ -561,7 +561,7 @@ class PartiQLSchemaInferencerTests {
                 ),
                 problemHandler = assertProblemExists {
                     Problem(
-                        UNKNOWN_SOURCE_LOCATION,
+                        UNKNOWN_PROBLEM_LOCATION,
                         PlanningProblemDetails.UndefinedVariable("unknown_col", false)
                     )
                 }
@@ -602,8 +602,8 @@ class PartiQLSchemaInferencerTests {
                 expected = TABLE_AWS_DDB_PETS,
                 problemHandler = assertProblemExists {
                     Problem(
-                        UNKNOWN_SOURCE_LOCATION,
-                        SemanticProblemDetails.IncompatibleDataTypeForExpr(StaticType.INT, StaticType.STRING)
+                        UNKNOWN_PROBLEM_LOCATION,
+                        SemanticProblemDetails.IncompatibleDataTypeForExpr(INT, STRING)
                     )
                 }
             ),
@@ -622,8 +622,8 @@ class PartiQLSchemaInferencerTests {
                 expected = TABLE_AWS_DDB_PETS,
                 problemHandler = assertProblemExists {
                     Problem(
-                        UNKNOWN_SOURCE_LOCATION,
-                        SemanticProblemDetails.IncompatibleDataTypeForExpr(StaticType.INT, StaticType.STRING)
+                        UNKNOWN_PROBLEM_LOCATION,
+                        SemanticProblemDetails.IncompatibleDataTypeForExpr(INT, STRING)
                     )
                 }
             ),
@@ -827,7 +827,7 @@ class PartiQLSchemaInferencerTests {
                 ),
                 problemHandler = assertProblemExists {
                     Problem(
-                        UNKNOWN_SOURCE_LOCATION,
+                        UNKNOWN_PROBLEM_LOCATION,
                         PlanningProblemDetails.UndefinedVariable("a", false)
                     )
                 }
@@ -938,11 +938,11 @@ class PartiQLSchemaInferencerTests {
                 expected = BagType(StaticType.INT),
                 problemHandler = assertProblemExists {
                     Problem(
-                        UNKNOWN_SOURCE_LOCATION,
+                        UNKNOWN_PROBLEM_LOCATION,
                         SemanticProblemDetails.IncompatibleDatatypesForOp(
                             listOf(
-                                unionOf(StaticType.STRING, StaticType.NULL),
-                                StaticType.INT,
+                                unionOf(STRING, StaticType.NULL),
+                                INT,
                             ),
                             Rex.Binary.Op.EQ.name
                         )
@@ -955,11 +955,11 @@ class PartiQLSchemaInferencerTests {
                 expected = unionOf(StaticType.MISSING, StaticType.NULL),
                 problemHandler = assertProblemExists {
                     Problem(
-                        UNKNOWN_SOURCE_LOCATION,
+                        UNKNOWN_PROBLEM_LOCATION,
                         SemanticProblemDetails.IncompatibleDatatypesForOp(
                             listOf(
-                                unionOf(StaticType.STRING, StaticType.NULL),
-                                StaticType.STRING,
+                                unionOf(STRING, StaticType.NULL),
+                                STRING,
                             ),
                             Rex.Binary.Op.PLUS.name
                         )

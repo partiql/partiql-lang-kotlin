@@ -10,15 +10,15 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
-import org.partiql.lang.ast.SourceLocationMeta
+import org.partiql.errors.Problem
+import org.partiql.errors.ProblemHandler
+import org.partiql.errors.ProblemLocation
+import org.partiql.errors.ProblemSeverity
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.PartiqlLogical
 import org.partiql.lang.domains.id
 import org.partiql.lang.domains.pathExpr
-import org.partiql.lang.errors.Problem
 import org.partiql.lang.errors.ProblemCollector
-import org.partiql.lang.errors.ProblemHandler
-import org.partiql.lang.errors.ProblemSeverity
 import org.partiql.lang.eval.builtins.ExprFunctionCurrentUser
 import org.partiql.lang.planner.PlanningProblemDetails
 import org.partiql.lang.planner.unimplementedProblem
@@ -1110,29 +1110,29 @@ class AstToLogicalVisitorTransformTests {
 
         override fun getParameters() = listOf(
             // DDL is  not implemented
-            ProblemTestCase(100, "CREATE TABLE foo (boo string)", unimplementedProblem("CREATE TABLE", 1, 1)),
-            ProblemTestCase(101, "DROP TABLE foo", unimplementedProblem("DROP TABLE", 1, 1)),
-            ProblemTestCase(102, "CREATE INDEX ON foo (x)", unimplementedProblem("CREATE INDEX", 1, 1)),
-            ProblemTestCase(103, "DROP INDEX bar ON foo", unimplementedProblem("DROP INDEX", 1, 1)),
+            ProblemTestCase(100, "CREATE TABLE foo (boo string)", unimplementedProblem("CREATE TABLE", 1, 1, 6)),
+            ProblemTestCase(101, "DROP TABLE foo", unimplementedProblem("DROP TABLE", 1, 1, 4)),
+            ProblemTestCase(102, "CREATE INDEX ON foo (x)", unimplementedProblem("CREATE INDEX", 1, 1, 6)),
+            ProblemTestCase(103, "DROP INDEX bar ON foo", unimplementedProblem("DROP INDEX", 1, 1, 4)),
 
             // Unimplemented parts of DML
-            ProblemTestCase(200, "FROM x AS xx INSERT INTO foo VALUES (1, 2)", unimplementedProblem("UPDATE / INSERT", 1, 14)),
-            ProblemTestCase(201, "FROM x AS xx SET k = 5", unimplementedProblem("SET", 1, 14)),
-            ProblemTestCase(202, "UPDATE x SET k = 5", unimplementedProblem("SET", 1, 10)),
-            ProblemTestCase(203, "UPDATE x REMOVE k", unimplementedProblem("REMOVE", 1, 10)),
-            ProblemTestCase(204, "UPDATE x INSERT INTO k << 1 >>", unimplementedProblem("UPDATE / INSERT", 1, 10)),
+            ProblemTestCase(200, "FROM x AS xx INSERT INTO foo VALUES (1, 2)", unimplementedProblem("UPDATE / INSERT", 1, 14, 6)),
+            ProblemTestCase(201, "FROM x AS xx SET k = 5", unimplementedProblem("SET", 1, 14, 3)),
+            ProblemTestCase(202, "UPDATE x SET k = 5", unimplementedProblem("SET", 1, 10, 3)),
+            ProblemTestCase(203, "UPDATE x REMOVE k", unimplementedProblem("REMOVE", 1, 10, 6)),
+            ProblemTestCase(204, "UPDATE x INSERT INTO k << 1 >>", unimplementedProblem("UPDATE / INSERT", 1, 10, 6)),
 
             // INSERT INTO ... VALUE ... is not supported because it is redundant with INSERT INTO ... << <expr> >>
             ProblemTestCase(
                 300,
                 "INSERT INTO x VALUE 1",
-                Problem(SourceLocationMeta(1, 1), PlanningProblemDetails.InsertValueDisallowed)
+                Problem(ProblemLocation(1, 1, 6), PlanningProblemDetails.InsertValueDisallowed)
             ),
             // We need schema to support using INSERT INTO without an explicit list of fields.
             ProblemTestCase(
                 301,
                 "INSERT INTO x VALUES (1, 2, 3)",
-                Problem(SourceLocationMeta(1, 1), PlanningProblemDetails.InsertValuesDisallowed)
+                Problem(ProblemLocation(1, 1, 6), PlanningProblemDetails.InsertValuesDisallowed)
             )
         )
     }

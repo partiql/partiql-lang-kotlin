@@ -15,14 +15,14 @@
 package org.partiql.lang.eval.visitors
 
 import com.amazon.ionelement.api.emptyMetaContainer
-import org.partiql.lang.ast.UNKNOWN_SOURCE_LOCATION
+import org.partiql.errors.ErrorCode
+import org.partiql.errors.Problem
+import org.partiql.errors.Property
+import org.partiql.errors.UNKNOWN_PROBLEM_LOCATION
 import org.partiql.lang.ast.passes.SemanticException
 import org.partiql.lang.ast.passes.SemanticProblemDetails
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.toBindingCase
-import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.errors.Problem
-import org.partiql.lang.errors.Property
 import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.errorContextFrom
@@ -181,7 +181,7 @@ internal class AggregationVisitorTransform(
                         is PartiqlAst.ProjectItem.ProjectExpr -> {
                             val projectionAlias = item.asAlias ?: throw SemanticException(
                                 err = Problem(
-                                    item.metas.sourceLocationMeta ?: UNKNOWN_SOURCE_LOCATION,
+                                    (item.metas.sourceLocationMeta?.toProblemLocation() ?: UNKNOWN_PROBLEM_LOCATION),
                                     details = SemanticProblemDetails.MissingAlias
                                 )
                             )

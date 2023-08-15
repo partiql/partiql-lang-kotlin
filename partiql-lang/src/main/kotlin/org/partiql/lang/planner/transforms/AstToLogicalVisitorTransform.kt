@@ -3,15 +3,15 @@ package org.partiql.lang.planner.transforms
 import com.amazon.ionelement.api.emptyMetaContainer
 import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.ionSymbol
+import org.partiql.errors.ErrorCode
+import org.partiql.errors.Problem
+import org.partiql.errors.ProblemHandler
+import org.partiql.errors.UNKNOWN_PROBLEM_LOCATION
 import org.partiql.lang.ast.IsOrderedMeta
-import org.partiql.lang.ast.UNKNOWN_SOURCE_LOCATION
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.PartiqlAstToPartiqlLogicalVisitorTransform
 import org.partiql.lang.domains.PartiqlLogical
 import org.partiql.lang.domains.metaContainerOf
-import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.errors.Problem
-import org.partiql.lang.errors.ProblemHandler
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.builtins.CollectionAggregationFunction
 import org.partiql.lang.eval.builtins.ExprFunctionCurrentUser
@@ -361,7 +361,7 @@ internal class AstToLogicalVisitorTransform(
                     (dmlOp.values as PartiqlAst.Expr.Bag).values.firstOrNull { it is PartiqlAst.Expr.List }?.let {
                         problemHandler.handleProblem(
                             Problem(
-                                node.metas.sourceLocationMetaOrUnknown,
+                                node.metas.sourceLocationMetaOrUnknown.toProblemLocation(),
                                 PlanningProblemDetails.InsertValuesDisallowed
                             )
                         )
@@ -404,7 +404,7 @@ internal class AstToLogicalVisitorTransform(
             is PartiqlAst.DmlOp.InsertValue -> {
                 problemHandler.handleProblem(
                     Problem(
-                        node.metas.sourceLocationMetaOrUnknown,
+                        node.metas.sourceLocationMetaOrUnknown.toProblemLocation(),
                         PlanningProblemDetails.InsertValueDisallowed
                     )
                 )
@@ -445,7 +445,7 @@ internal class AstToLogicalVisitorTransform(
                         else -> {
                             problemHandler.handleProblem(
                                 Problem(
-                                    from?.metas?.sourceLocationMetaOrUnknown ?: UNKNOWN_SOURCE_LOCATION,
+                                    (from?.metas?.sourceLocationMetaOrUnknown?.toProblemLocation() ?: UNKNOWN_PROBLEM_LOCATION),
                                     PlanningProblemDetails.InvalidDmlTarget
                                 )
                             )
@@ -456,13 +456,13 @@ internal class AstToLogicalVisitorTransform(
             }
             is PartiqlAst.DmlOp.Remove -> {
                 problemHandler.handleProblem(
-                    Problem(dmlOp.metas.sourceLocationMetaOrUnknown, PlanningProblemDetails.UnimplementedFeature("REMOVE"))
+                    Problem(dmlOp.metas.sourceLocationMetaOrUnknown.toProblemLocation(), PlanningProblemDetails.UnimplementedFeature("REMOVE"))
                 )
                 INVALID_STATEMENT
             }
             is PartiqlAst.DmlOp.Set -> {
                 problemHandler.handleProblem(
-                    Problem(dmlOp.metas.sourceLocationMetaOrUnknown, PlanningProblemDetails.UnimplementedFeature("SET"))
+                    Problem(dmlOp.metas.sourceLocationMetaOrUnknown.toProblemLocation(), PlanningProblemDetails.UnimplementedFeature("SET"))
                 )
                 INVALID_STATEMENT
             }
@@ -477,7 +477,7 @@ internal class AstToLogicalVisitorTransform(
             else -> {
                 problemHandler.handleProblem(
                     Problem(
-                        metas.sourceLocationMetaOrUnknown,
+                        metas.sourceLocationMetaOrUnknown.toProblemLocation(),
                         PlanningProblemDetails.InvalidDmlTarget
                     )
                 )
@@ -493,7 +493,7 @@ internal class AstToLogicalVisitorTransform(
         // are not implemented.
         problemHandler.handleProblem(
             Problem(
-                node.metas.sourceLocationMetaOrUnknown,
+                node.metas.sourceLocationMetaOrUnknown.toProblemLocation(),
                 PlanningProblemDetails.UnimplementedFeature(
                     when (node.op) {
                         is PartiqlAst.DdlOp.CreateIndex -> "CREATE INDEX"

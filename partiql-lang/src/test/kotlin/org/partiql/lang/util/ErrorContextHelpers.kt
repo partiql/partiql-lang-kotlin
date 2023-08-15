@@ -1,6 +1,6 @@
 package org.partiql.lang.util
 
-import org.partiql.lang.errors.Property
+import org.partiql.errors.Property
 
 /** Returns a Map<Property, Any> with the specified line & column number. */
 internal fun sourceLocationProperties(lineNum: Long, colNum: Long): Map<Property, Any> =

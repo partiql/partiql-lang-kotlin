@@ -5,11 +5,11 @@ import com.amazon.ion.IonValue
 import com.amazon.ionelement.api.ionDecimal
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
+import org.partiql.errors.ErrorCode
+import org.partiql.errors.Property
 import org.partiql.lang.ION
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.id
-import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.errors.Property
 import org.partiql.lang.util.getAntlrDisplayString
 import org.partiql.lang.util.to
 import org.partiql.parser.antlr.PartiQLParser

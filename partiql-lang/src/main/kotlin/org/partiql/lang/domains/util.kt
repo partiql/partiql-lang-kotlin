@@ -3,11 +3,11 @@ package org.partiql.lang.domains
 import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.emptyMetaContainer
 import com.amazon.ionelement.api.metaContainerOf
+import org.partiql.errors.Property
+import org.partiql.errors.PropertyValueMap
 import org.partiql.lang.ast.Meta
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.StaticTypeMeta
-import org.partiql.lang.errors.Property
-import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.eval.BindingCase
 
 // TODO:  once https://github.com/partiql/partiql-ir-generator/issues/6 has been completed, we can delete this.

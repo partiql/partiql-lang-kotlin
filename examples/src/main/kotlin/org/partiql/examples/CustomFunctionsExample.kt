@@ -1,8 +1,8 @@
 package org.partiql.examples
 
+import org.partiql.errors.ErrorCode
 import org.partiql.examples.util.Example
 import org.partiql.lang.CompilerPipeline
-import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
