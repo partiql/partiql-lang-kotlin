@@ -129,7 +129,7 @@ interface CompilerPipeline {
         private val ion = IonSystemBuilder.standard().build()
         private var parser: Parser? = null
         private var compileOptions: CompileOptions? = null
-        private val customFunctions: MutableMap<String, ExprFunction> = HashMap()
+        private val customFunctions: MutableList<ExprFunction> = ArrayList()
         private var customDataTypes: List<CustomType> = listOf()
         private val customProcedures: MutableMap<String, StoredProcedure> = HashMap()
         private val preProcessingSteps: MutableList<ProcessingStep> = ArrayList()
@@ -161,7 +161,7 @@ interface CompilerPipeline {
          *
          * Functions added here will replace any built-in function with the same name.
          */
-        fun addFunction(function: ExprFunction): Builder = this.apply { customFunctions[function.signature.name] = function }
+        fun addFunction(function: ExprFunction): Builder = this.apply { customFunctions.add(function) }
 
         /**
          * Add custom types to CAST/IS operators to.
@@ -198,12 +198,8 @@ interface CompilerPipeline {
                 }
             }
 
-            val definitionalBuiltins = definitionalBuiltins(compileOptionsToUse.typingMode).associateBy {
-                it.signature.name
-            }
-            val builtinFunctions = SCALAR_BUILTINS_DEFAULT.associateBy {
-                it.signature.name
-            }
+            val definitionalBuiltins = definitionalBuiltins(compileOptionsToUse.typingMode)
+            val builtinFunctions = SCALAR_BUILTINS_DEFAULT
 
             // customFunctions must be on the right side of + here to ensure that they overwrite any
             // built-in functions with the same name.
@@ -213,7 +209,7 @@ interface CompilerPipeline {
                 ion = ion,
                 parser = parser ?: PartiQLParserBuilder().customTypes(customDataTypes).build(),
                 compileOptions = compileOptionsToUse,
-                functions = allFunctions,
+                functions = allFunctions.mapIndexed { idx, func -> idx to func }.associate { it.first.toString() to it.second },
                 customDataTypes = customDataTypes,
                 procedures = customProcedures,
                 preProcessingSteps = preProcessingSteps,
@@ -233,8 +229,9 @@ internal class CompilerPipelineImpl(
     private val preProcessingSteps: List<ProcessingStep>,
     override val globalTypeBindings: Bindings<StaticType>?
 ) : CompilerPipeline {
+
     private val compiler = EvaluatingCompiler(
-        functions,
+        functions.values.toList(),
         customDataTypes.map { customType ->
             (customType.aliases + customType.name).map { alias ->
                 Pair(alias.lowercase(), customType.typedOpParameter)

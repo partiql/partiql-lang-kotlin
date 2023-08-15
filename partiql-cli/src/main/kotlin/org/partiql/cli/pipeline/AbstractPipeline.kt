@@ -23,8 +23,11 @@ import com.amazon.ionelement.api.toIonValue
 import org.partiql.annotations.ExperimentalPartiQLCompilerPipeline
 import org.partiql.cli.Debug
 import org.partiql.cli.functions.QueryDDB
-import org.partiql.cli.functions.ReadFile
-import org.partiql.cli.functions.WriteFile
+import org.partiql.cli.functions.ReadFile_1
+import org.partiql.cli.functions.ReadFile_2
+import org.partiql.cli.functions.WriteFile_1
+import org.partiql.cli.functions.WriteFile_2
+import org.partiql.cli.utils.ServiceLoaderUtil
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.compiler.PartiQLCompilerBuilder
 import org.partiql.lang.compiler.PartiQLCompilerPipeline
@@ -43,6 +46,7 @@ import org.partiql.lang.planner.GlobalVariableResolver
 import org.partiql.lang.planner.PartiQLPlannerBuilder
 import org.partiql.lang.syntax.Parser
 import org.partiql.lang.syntax.PartiQLParserBuilder
+import java.nio.file.Path
 import java.time.ZoneOffset
 
 /**
@@ -70,14 +74,17 @@ internal sealed class AbstractPipeline(open val options: PipelineOptions) {
             typedOpBehavior: TypedOpBehavior,
             projectionIteration: ProjectionIterationBehavior,
             undefinedVariable: UndefinedVariableBehavior,
-            permissiveMode: TypingMode
+            permissiveMode: TypingMode,
+            pluginPath: Path
         ): PipelineOptions {
             val ion = IonSystemBuilder.standard().build()
             val functions: List<ExprFunction> = listOf(
-                ReadFile(ion),
-                WriteFile(ion),
+                ReadFile_1(ion),
+                ReadFile_2(ion),
+                WriteFile_1(ion),
+                WriteFile_2(ion),
                 QueryDDB(ion)
-            )
+            ) + ServiceLoaderUtil.loadFunctions(pluginPath)
             val parser = PartiQLParserBuilder().build()
             return PipelineOptions(
                 pipeline,

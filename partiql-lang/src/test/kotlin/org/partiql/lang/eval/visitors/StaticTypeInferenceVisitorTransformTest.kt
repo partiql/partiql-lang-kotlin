@@ -21,7 +21,6 @@ import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.numberValue
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.TypedOpParameter
-import org.partiql.lang.types.VarargFormalParameter
 import org.partiql.lang.util.cartesianProduct
 import org.partiql.lang.util.compareTo
 import org.partiql.lang.util.countMatchingSubstrings
@@ -7192,7 +7191,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
             ),
             TestCase(
                 "custom function",
-                "format('test %d %s', 1, 'a')",
+                "format('test %d %s', [1, 'a'])",
                 customFunctionSignatures = listOf(formatFunc.signature),
                 handler = expectQueryOutputType(StaticType.STRING)
             ),
@@ -7624,8 +7623,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
 
             override val signature = FunctionSignature(
                 name = "format",
-                requiredParameters = listOf(StaticType.STRING),
-                variadicParameter = VarargFormalParameter(StaticType.ANY, 0),
+                requiredParameters = listOf(StaticType.STRING, StaticType.LIST),
                 returnType = StaticType.STRING
             )
         }

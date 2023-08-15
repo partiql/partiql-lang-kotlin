@@ -65,7 +65,7 @@ may then be further optimized by selecting better implementations of each operat
             // Explain Statement
             (explain target::explain_target)
         )
-        
+
         (sum explain_target
              (domain
                  statement::statement

@@ -29,24 +29,34 @@ Thank you to all who have contributed!
 ## [Unreleased]
 
 ### Added
-- Adds `org.partiql.value` (experimental) package for reading/writing PartiQL values.
+- Adds `org.partiql.value` (experimental) package for reading/writing PartiQL values
+- Adds function overloading to the `CompilerPipeline` and experimental `PartiQLCompilerPipeline`.
+- Adds new method `getFunctions()` to `org.partiql.spi.Plugin`.
+- Adds `PartiQLFunction` interface.
+- Adds `FunctionSignature` and `FunctionParameter` class to `org/partiql/types/function`.
+- Adds a new flag `--plugins` to PartiQL CLI to allow users to specify the root of their plugins directory.
+  The default is `~/.partiql/plugins` . Each implementer of a plugin should place a directory under the
+  plugins root containing the JAR corresponding with their plugin implementation.
+  Example: `~/.partiql/plugins/customPlugin/customPlugin.jar`
 - Adds serialization and deserialization between IonValue and `org.partiql.value`.
 - Adds `org.partiql.ast` package and usage documentation
 - Adds `org.partiql.parser` package and usage documentation
-- Adds PartiQL's Timestamp Data Model. 
-- Adds support for Timestamp constructor call in Parser. 
-- Parsing of label patterns within node and edge graph patterns now supports 
+- Adds PartiQL's Timestamp Data Model.
+- Adds support for Timestamp constructor call in Parser.
+- Parsing of label patterns within node and edge graph patterns now supports
   disjunction `|`, conjunction `&`, negation `!`, and grouping.
 
 ### Changed
-
+- Standardizes `org/partiql/cli/functions/QueryDDB` and other built-in functions in `org/partiql/lang/eval/builtins` by the new `ExprFunction` format.
+- **Breaking**: Redefines `org/partiql/lang/eval/ExprFunctionkt.call()` method by only invoking `callWithRequired` function.
+- **Breaking**: Redefines `org/partiql/lang/eval/builtins/DynamicLookupExprFunction` by merging `variadicParameter` into `requiredParameters` as a `StaticType.LIST`. `callWithVariadic` is now replaced by `callWithRequired`.
 - Upgrades ion-java to 1.10.2.
-- **Breaking** (within experimental graph features): As part of extending 
-  the language of graph label patterns: 
-  - Changed the type of the field `label` in AST nodes 
-    `org.partiql.lang.domains.PartiqlAst.GraphMatchPatternPart.{Node,Edge}`, 
+- **Breaking** (within experimental graph features): As part of extending
+  the language of graph label patterns:
+  - Changed the type of the field `label` in AST nodes
+    `org.partiql.lang.domains.PartiqlAst.GraphMatchPatternPart.{Node,Edge}`,
     from `SymbolPrimitive` to new `GraphLabelSpec`.
-  - Changed the names of subclasses of ` org.partiql.lang.graph.LabelSpec`, 
+  - Changed the names of subclasses of ` org.partiql.lang.graph.LabelSpec`,
     from `OneOf` to `Name`, and from `Whatever` to `Wildcard`.
 - **Breaking** the package `org.partiql.lang.errors` has been moved to `org.partiql.errors`, moved classes include
   - `org.partiql.lang.errors.ErrorCategory` -> `org.partiql.errors.ErrorCategory`
@@ -62,16 +72,28 @@ Thank you to all who have contributed!
 - **Breaking** the `sourceLocation` field of `org.partiql.errors.Problem` was changed from `org.partiql.lang.ast.SoureceLocationMeta` to `org.partiql.errors.ProblemLocation`.
 
 ### Deprecated
+- **Breaking**: Deprecates the `Arguments`, `RequiredArgs`, `RequiredWithOptional`, and `RequiredWithVariadic` classes, 
+  along with the `callWithOptional()`, `callWithVariadic()`, and the overloaded `call()` methods in the `ExprFunction` class, 
+  marking them with a Deprecation Level of ERROR. Now, it's recommended to use 
+  `call(session: EvaluationSession, args: List<ExprValue>)` and `callWithRequired()` instead.
+- **Breaking**: Deprecates `optionalParameter` and `variadicParameter` in the `FunctionSignature` with a Deprecation
+  Level of ERROR. Please use multiple implementations of ExprFunction and use the LIST ExprValue to
+  represent variadic parameters instead.
 
 ### Fixed
 
 ### Removed
+- **Breaking**: Removes `optionalParameter` and `variadicParameter` from `org.partiql.lang.types.FunctionSignature`. To continue support for evaluation of `optionalParameters`, please create another same-named function. To continue support for evaluation of `variadicParameter`, please use a `StaticType.LIST` to hold all previously variadic parameters.
+  As this changes coincides with the addition of function overloading, only `callWithRequired` will be invoked upon execution of an `ExprFunction`. Note: Function overloading is now allowed, which is the reason for the removal of `optionalParameter` and `variadicParameter`.
+- **Breaking**: Removes unused class `Arguments` from `org.partiql.lang.eval`.
+- **Breaking**: Removes unused parameter `args: Arguments` from `org.partiql.lang.eval.ExprFunctionkt.call()` method.
 
 ### Security
 
 ### Contributors
 Thank you to all who have contributed!
 - @howero
+- @yuxtang-amazon
 - @yliuuuu
 - @<your-username>
 

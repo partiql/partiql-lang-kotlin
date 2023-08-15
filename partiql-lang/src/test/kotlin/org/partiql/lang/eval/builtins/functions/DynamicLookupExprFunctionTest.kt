@@ -50,28 +50,28 @@ class DynamicLookupExprFunctionTest : EvaluatorTestBase() {
             // locals_then_globals
 
             // `foo` should be found in the variable f, which is a struct
-            ExprFunctionTestCase("\"$DYNAMIC_LOOKUP_FUNCTION_NAME\"(`foo`, `case_insensitive`, `locals_then_globals`, f, b)", "42"),
-            ExprFunctionTestCase("\"$DYNAMIC_LOOKUP_FUNCTION_NAME\"(`fOo`, `case_insensitive`, `locals_then_globals`, f, b)", "42"),
-            ExprFunctionTestCase("\"$DYNAMIC_LOOKUP_FUNCTION_NAME\"(`FoO`, `case_insensitive`, `locals_then_globals`, f, b)", "42"),
-            ExprFunctionTestCase("\"$DYNAMIC_LOOKUP_FUNCTION_NAME\"(`foo`, `case_sensitive`, `locals_then_globals`, f, b)", "42"),
+            ExprFunctionTestCase("\"$DYNAMIC_LOOKUP_FUNCTION_NAME\"(`foo`, `case_insensitive`, `locals_then_globals`, [f, b])", "42"),
+            ExprFunctionTestCase("\"$DYNAMIC_LOOKUP_FUNCTION_NAME\"(`fOo`, `case_insensitive`, `locals_then_globals`, [f, b])", "42"),
+            ExprFunctionTestCase("\"$DYNAMIC_LOOKUP_FUNCTION_NAME\"(`FoO`, `case_insensitive`, `locals_then_globals`, [f, b])", "42"),
+            ExprFunctionTestCase("\"$DYNAMIC_LOOKUP_FUNCTION_NAME\"(`foo`, `case_sensitive`, `locals_then_globals`, [f, b])", "42"),
             // `bar` should be found in the variable b, which is also a struct
-            ExprFunctionTestCase("\"$DYNAMIC_LOOKUP_FUNCTION_NAME\"(`bar`, `case_insensitive`, `locals_then_globals`, f, b)", "43"),
-            ExprFunctionTestCase("\"$DYNAMIC_LOOKUP_FUNCTION_NAME\"(`BaR`, `case_insensitive`, `locals_then_globals`, f, b)", "43"),
-            ExprFunctionTestCase("\"$DYNAMIC_LOOKUP_FUNCTION_NAME\"(`bAr`, `case_insensitive`, `locals_then_globals`, f, b)", "43"),
-            ExprFunctionTestCase("\"$DYNAMIC_LOOKUP_FUNCTION_NAME\"(`bar`, `case_sensitive`, `locals_then_globals`, f, b)", "43"),
+            ExprFunctionTestCase("\"$DYNAMIC_LOOKUP_FUNCTION_NAME\"(`bar`, `case_insensitive`, `locals_then_globals`, [f, b])", "43"),
+            ExprFunctionTestCase("\"$DYNAMIC_LOOKUP_FUNCTION_NAME\"(`BaR`, `case_insensitive`, `locals_then_globals`, [f, b])", "43"),
+            ExprFunctionTestCase("\"$DYNAMIC_LOOKUP_FUNCTION_NAME\"(`bAr`, `case_insensitive`, `locals_then_globals`, [f, b])", "43"),
+            ExprFunctionTestCase("\"$DYNAMIC_LOOKUP_FUNCTION_NAME\"(`bar`, `case_sensitive`, `locals_then_globals`, [f, b])", "43"),
 
             // globals_then_locals
 
             // The global variable `foo` should be found first, ignoring the `f.foo`, unlike the similar cases above`
-            ExprFunctionTestCase("\"$DYNAMIC_LOOKUP_FUNCTION_NAME\"(`foo`, `case_insensitive`, `globals_then_locals`, f, b)", "44"),
-            ExprFunctionTestCase("\"$DYNAMIC_LOOKUP_FUNCTION_NAME\"(`fOo`, `case_insensitive`, `globals_then_locals`, f, b)", "44"),
-            ExprFunctionTestCase("\"$DYNAMIC_LOOKUP_FUNCTION_NAME\"(`FoO`, `case_insensitive`, `globals_then_locals`, f, b)", "44"),
-            ExprFunctionTestCase("\"$DYNAMIC_LOOKUP_FUNCTION_NAME\"(`foo`, `case_sensitive`, `globals_then_locals`, f, b)", "44"),
+            ExprFunctionTestCase("\"$DYNAMIC_LOOKUP_FUNCTION_NAME\"(`foo`, `case_insensitive`, `globals_then_locals`, [f, b])", "44"),
+            ExprFunctionTestCase("\"$DYNAMIC_LOOKUP_FUNCTION_NAME\"(`fOo`, `case_insensitive`, `globals_then_locals`, [f, b])", "44"),
+            ExprFunctionTestCase("\"$DYNAMIC_LOOKUP_FUNCTION_NAME\"(`FoO`, `case_insensitive`, `globals_then_locals`, [f, b])", "44"),
+            ExprFunctionTestCase("\"$DYNAMIC_LOOKUP_FUNCTION_NAME\"(`foo`, `case_sensitive`, `globals_then_locals`, [f, b])", "44"),
             // `bar` should still be found in the variable b, which is also a struct, since there is no global named `bar`.
-            ExprFunctionTestCase("\"$DYNAMIC_LOOKUP_FUNCTION_NAME\"(`bar`, `case_insensitive`, `globals_then_locals`, f, b)", "43"),
-            ExprFunctionTestCase("\"$DYNAMIC_LOOKUP_FUNCTION_NAME\"(`BaR`, `case_insensitive`, `globals_then_locals`, f, b)", "43"),
-            ExprFunctionTestCase("\"$DYNAMIC_LOOKUP_FUNCTION_NAME\"(`bAr`, `case_insensitive`, `globals_then_locals`, f, b)", "43"),
-            ExprFunctionTestCase("\"$DYNAMIC_LOOKUP_FUNCTION_NAME\"(`bar`, `case_sensitive`, `globals_then_locals`, f, b)", "43")
+            ExprFunctionTestCase("\"$DYNAMIC_LOOKUP_FUNCTION_NAME\"(`bar`, `case_insensitive`, `globals_then_locals`, [f, b])", "43"),
+            ExprFunctionTestCase("\"$DYNAMIC_LOOKUP_FUNCTION_NAME\"(`BaR`, `case_insensitive`, `globals_then_locals`, [f, b])", "43"),
+            ExprFunctionTestCase("\"$DYNAMIC_LOOKUP_FUNCTION_NAME\"(`bAr`, `case_insensitive`, `globals_then_locals`, [f, b])", "43"),
+            ExprFunctionTestCase("\"$DYNAMIC_LOOKUP_FUNCTION_NAME\"(`bar`, `case_sensitive`, `globals_then_locals`, [f, b])", "43")
         )
     }
 
@@ -90,22 +90,22 @@ class DynamicLookupExprFunctionTest : EvaluatorTestBase() {
         override fun getParameters(): List<Any> = listOf(
             // Can't find these variables due to case mismatch when perform case sensitive lookup
             EvaluatorErrorTestCase(
-                query = "\"$DYNAMIC_LOOKUP_FUNCTION_NAME\"(`fOo`, `case_sensitive`, `locals_then_globals`, f, b)",
+                query = "\"$DYNAMIC_LOOKUP_FUNCTION_NAME\"(`fOo`, `case_sensitive`, `locals_then_globals`, [f, b])",
                 expectedErrorCode = ErrorCode.EVALUATOR_QUOTED_BINDING_DOES_NOT_EXIST,
                 expectedErrorContext = propertyValueMapOf(1, 1, Property.BINDING_NAME to "fOo")
             ),
             EvaluatorErrorTestCase(
-                query = "\"$DYNAMIC_LOOKUP_FUNCTION_NAME\"(`FoO`, `case_sensitive`, `locals_then_globals`, f, b)",
+                query = "\"$DYNAMIC_LOOKUP_FUNCTION_NAME\"(`FoO`, `case_sensitive`, `locals_then_globals`, [f, b])",
                 expectedErrorCode = ErrorCode.EVALUATOR_QUOTED_BINDING_DOES_NOT_EXIST,
                 expectedErrorContext = propertyValueMapOf(1, 1, Property.BINDING_NAME to "FoO")
             ),
             EvaluatorErrorTestCase(
-                query = "\"$DYNAMIC_LOOKUP_FUNCTION_NAME\"(`BaR`, `case_sensitive`, `locals_then_globals`, f, b)",
+                query = "\"$DYNAMIC_LOOKUP_FUNCTION_NAME\"(`BaR`, `case_sensitive`, `locals_then_globals`, [f, b])",
                 expectedErrorCode = ErrorCode.EVALUATOR_QUOTED_BINDING_DOES_NOT_EXIST,
                 expectedErrorContext = propertyValueMapOf(1, 1, Property.BINDING_NAME to "BaR")
             ),
             EvaluatorErrorTestCase(
-                query = "\"$DYNAMIC_LOOKUP_FUNCTION_NAME\"(`bAr`, `case_sensitive`, `locals_then_globals`, f, b)",
+                query = "\"$DYNAMIC_LOOKUP_FUNCTION_NAME\"(`bAr`, `case_sensitive`, `locals_then_globals`, [f, b])",
                 expectedErrorCode = ErrorCode.EVALUATOR_QUOTED_BINDING_DOES_NOT_EXIST,
                 expectedErrorContext = propertyValueMapOf(1, 1, Property.BINDING_NAME to "bAr")
             )
@@ -137,9 +137,9 @@ class DynamicLookupExprFunctionTest : EvaluatorTestBase() {
 
     class InvalidArgCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
-            InvalidArgTestCase("\"$DYNAMIC_LOOKUP_FUNCTION_NAME\"(1, `case_insensitive`, `locals_then_globals`)", 1, "INT"),
-            InvalidArgTestCase("\"$DYNAMIC_LOOKUP_FUNCTION_NAME\"(`foo`, 1, `locals_then_globals`)", 2, "INT"),
-            InvalidArgTestCase("\"$DYNAMIC_LOOKUP_FUNCTION_NAME\"(`foo`, `case_insensitive`, 1)", 3, "INT")
+            InvalidArgTestCase("\"$DYNAMIC_LOOKUP_FUNCTION_NAME\"(1, `case_insensitive`, `locals_then_globals`, [])", 1, "INT"),
+            InvalidArgTestCase("\"$DYNAMIC_LOOKUP_FUNCTION_NAME\"(`foo`, 1, `locals_then_globals`, [])", 2, "INT"),
+            InvalidArgTestCase("\"$DYNAMIC_LOOKUP_FUNCTION_NAME\"(`foo`, `case_insensitive`, 1, [])", 3, "INT")
         )
     }
 
