@@ -4,10 +4,13 @@ import com.amazon.ionelement.api.field
 import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.ionStructOf
 import org.junit.jupiter.api.extension.ExtensionContext
+import org.junit.jupiter.api.parallel.Execution
+import org.junit.jupiter.api.parallel.ExecutionMode
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.ArgumentsProvider
 import org.junit.jupiter.params.provider.ArgumentsSource
+import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.annotations.ExperimentalPartiQLSchemaInferencer
 import org.partiql.errors.Problem
 import org.partiql.errors.UNKNOWN_PROBLEM_LOCATION
@@ -17,6 +20,7 @@ import org.partiql.lang.planner.PlanningProblemDetails
 import org.partiql.lang.planner.transforms.PartiQLSchemaInferencerTests.ProblemHandler
 import org.partiql.lang.planner.transforms.PartiQLSchemaInferencerTests.TestCase.ErrorTestCase
 import org.partiql.lang.planner.transforms.PartiQLSchemaInferencerTests.TestCase.SuccessTestCase
+import org.partiql.plan.debug.PlanPrinter
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.plugins.mockdb.LocalPlugin
 import org.partiql.types.AnyOfType
@@ -26,7 +30,6 @@ import org.partiql.types.ListType
 import org.partiql.types.SexpType
 import org.partiql.types.StaticType
 import org.partiql.types.StaticType.Companion.INT
-import org.partiql.types.StaticType.Companion.INT8
 import org.partiql.types.StaticType.Companion.STRING
 import org.partiql.types.StaticType.Companion.unionOf
 import org.partiql.types.StructType
@@ -38,7 +41,17 @@ import kotlin.test.assertTrue
 
 class PartiQLSchemaInferencerTests {
 
+    @ParameterizedTest
+    @ArgumentsSource(TestProvider::class)
+    fun test(tc: TestCase) = runTest(tc)
+
+    @ParameterizedTest
+    @MethodSource("collections")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun testCollections(tc: TestCase) = runTest(tc)
+
     companion object {
+
         private val PLUGINS = listOf(LocalPlugin())
 
         private const val USER_ID = "TEST_USER"
@@ -116,11 +129,36 @@ class PartiQLSchemaInferencerTests {
                     TupleConstraint.Ordered
                 )
             )
-    }
 
-    @ParameterizedTest
-    @ArgumentsSource(TestProvider::class)
-    fun test(tc: TestCase) = runTest(tc)
+        // Tests
+
+        @JvmStatic
+        fun collections() = listOf<TestCase>(
+            SuccessTestCase(
+                name = "Collection BAG<INT>",
+                query = "<< 1, 2, 3 >>",
+                expected = BagType(INT),
+            ),
+            SuccessTestCase(
+                name = "Collection LIST<INT>",
+                query = "[ 1, 2, 3 ]",
+                expected = ListType(INT),
+            ),
+            SuccessTestCase(
+                name = "Collection LIST<INT>",
+                query = "( 1, 2, 3 )",
+                expected = ListType(INT),
+            ),
+            SuccessTestCase(
+                name = "Collection SEXP<INT>",
+                query = "SEXP ( 1, 2, 3 )",
+                expected = SexpType(INT),
+            ),
+        )
+
+        @JvmStatic
+        fun structs() = listOf<TestCase>()
+    }
 
     sealed class TestCase {
         class SuccessTestCase(
@@ -359,26 +397,6 @@ class PartiQLSchemaInferencerTests {
                 catalog = CATALOG_B,
                 query = "b.b.b.b.b",
                 expected = TYPE_B_B_B_B_B
-            ),
-            SuccessTestCase(
-                name = "Collection BAG<INT>",
-                query = "<< 1, 2, 3 >>",
-                expected = BagType(INT),
-            ),
-            SuccessTestCase(
-                name = "Collection LIST<INT>",
-                query = "[ 1, 2, 3 ]",
-                expected = ListType(INT),
-            ),
-            SuccessTestCase(
-                name = "Collection LIST<INT>",
-                query = "( 1, 2, 3 )",
-                expected = ListType(INT),
-            ),
-            SuccessTestCase(
-                name = "Collection SEXP<INT>",
-                query = "SEXP ( 1, 2, 3 )",
-                expected = SexpType(INT),
             ),
             SuccessTestCase(
                 name = "EQ",
@@ -1072,15 +1090,17 @@ class PartiQLSchemaInferencerTests {
         )
         val collector = ProblemCollector()
         val ctx = PartiQLSchemaInferencer.Context(session, PLUGINS, collector)
-        val result = PartiQLSchemaInferencer.infer(tc.query, ctx)
+        val result = PartiQLSchemaInferencer.inferInternal(tc.query, ctx)
         assert(collector.problems.isEmpty()) {
             collector.problems.toString()
         }
-
-        assert(tc.expected == result) {
+        val actual = result.second
+        assert(tc.expected == actual) {
             buildString {
                 appendLine("Expected: ${tc.expected}")
-                appendLine("Actual: $result")
+                appendLine("Actual: $actual")
+                appendLine()
+                PlanPrinter.append(this, result.first)
             }
         }
     }

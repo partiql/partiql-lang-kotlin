@@ -8,7 +8,7 @@ import org.partiql.plan.builder.PlanFactoryImpl
  */
 object Plan : PlanBaseFactory() {
 
-    public inline fun <T : PlanNode> create(block: PlanFactory.() -> T) = PlanFactory.DEFAULT.block()
+    public inline fun <T : PlanNode> create(block: PlanFactory.() -> T) = this.block()
 }
 
 /**

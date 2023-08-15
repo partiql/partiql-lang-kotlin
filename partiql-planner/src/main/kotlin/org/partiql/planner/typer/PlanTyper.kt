@@ -12,16 +12,23 @@ import org.partiql.plan.util.PlanRewriter
 import org.partiql.planner.Env
 import org.partiql.planner.PlanningProblemDetails
 import org.partiql.planner.ResolutionStrategy
+import org.partiql.planner.ResolvedVar
 import org.partiql.planner.TypeEnv
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
 import org.partiql.types.AnyOfType
+import org.partiql.types.AnyType
 import org.partiql.types.BagType
 import org.partiql.types.CollectionType
+import org.partiql.types.IntType
 import org.partiql.types.ListType
 import org.partiql.types.SexpType
 import org.partiql.types.StaticType
+import org.partiql.types.StructType
+import org.partiql.types.TupleConstraint
+import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.TextValue
 
 internal class PlanTyper(
     private val env: Env,
@@ -45,6 +52,13 @@ internal class PlanTyper(
     }
 
     /**
+     * Use default factory for rewrites
+     */
+    private val factory = Plan
+
+    private inline fun <T> rewrite(block: Plan.() -> T): T = block.invoke(factory)
+
+    /**
      * Types the relational operators of a query expression.
      *
      * @property outer represents the outer TypeEnv of a query expression — only used by scan variable resolution.
@@ -56,7 +70,7 @@ internal class PlanTyper(
         /**
          * The output schema of a `rel.op.scan` is the single value binding.
          */
-        override fun visitRelOpScan(node: Rel.Op.Scan, ctx: Rel.Type?): Rel = Plan.create {
+        override fun visitRelOpScan(node: Rel.Op.Scan, ctx: Rel.Type?): Rel = rewrite {
             // descend, with GLOBAL resolution strategy
             val rex = node.rex.type(outer.global())
             // compute rel type
@@ -69,7 +83,7 @@ internal class PlanTyper(
         /**
          * The output schema of a `rel.op.scan_index` is the value binding and index binding.
          */
-        override fun visitRelOpScanIndexed(node: Rel.Op.ScanIndexed, ctx: Rel.Type?): Rel = Plan.create {
+        override fun visitRelOpScanIndexed(node: Rel.Op.ScanIndexed, ctx: Rel.Type?): Rel = rewrite {
             // descend, with GLOBAL resolution strategy
             val rex = node.rex.type(outer.global())
             // compute rel type
@@ -89,7 +103,7 @@ internal class PlanTyper(
             TODO("Type RelOp Distinct")
         }
 
-        override fun visitRelOpFilter(node: Rel.Op.Filter, ctx: Rel.Type?): Rel = Plan.create {
+        override fun visitRelOpFilter(node: Rel.Op.Filter, ctx: Rel.Type?): Rel = rewrite {
             // compute input schema
             val input = visitRel(node.input, ctx)
             // type sub-nodes
@@ -122,7 +136,7 @@ internal class PlanTyper(
             TODO("Type RelOp Except")
         }
 
-        override fun visitRelOpLimit(node: Rel.Op.Limit, ctx: Rel.Type?) = Plan.create {
+        override fun visitRelOpLimit(node: Rel.Op.Limit, ctx: Rel.Type?) = rewrite {
             // compute input schema
             val input = visitRel(node.input, ctx)
             // type limit expression using outer scope with global resolution
@@ -135,7 +149,7 @@ internal class PlanTyper(
             rel(type, op)
         }
 
-        override fun visitRelOpOffset(node: Rel.Op.Offset, ctx: Rel.Type?) = Plan.create {
+        override fun visitRelOpOffset(node: Rel.Op.Offset, ctx: Rel.Type?) = rewrite {
             // compute input schema
             val input = visitRel(node.input, ctx)
             // type offset expression using outer scope with global resolution
@@ -148,7 +162,7 @@ internal class PlanTyper(
             rel(type, op)
         }
 
-        override fun visitRelOpProject(node: Rel.Op.Project, ctx: Rel.Type?): Rel = Plan.create {
+        override fun visitRelOpProject(node: Rel.Op.Project, ctx: Rel.Type?): Rel = rewrite {
             // compute input schema
             val input = visitRel(node.input, ctx)
             // type sub-nodes
@@ -203,117 +217,246 @@ internal class PlanTyper(
 
         override fun visitRex(node: Rex, ctx: StaticType?): Rex = super.visitRexOp(node.op, node.type) as Rex
 
-        override fun visitRexOpLit(node: Rex.Op.Lit, ctx: StaticType?): Rex = Plan.create {
+        override fun visitRexOpLit(node: Rex.Op.Lit, ctx: StaticType?): Rex = rewrite {
             // type comes from RexConverter
             rex(ctx!!, node)
         }
 
-        override fun visitRexOpVarResolved(node: Rex.Op.Var.Resolved, ctx: StaticType?): Rex = Plan.create {
+        override fun visitRexOpVarResolved(node: Rex.Op.Var.Resolved, ctx: StaticType?): Rex = rewrite {
             assert(node.ref < locals.schema.size) { "Invalid resolved variable (var ${node.ref}) for $locals" }
             val type = locals.schema[node.ref].type
             rex(type, node)
         }
 
-        override fun visitRexOpVarUnresolved(node: Rex.Op.Var.Unresolved, ctx: StaticType?): Rex = Plan.create {
+        override fun visitRexOpVarUnresolved(node: Rex.Op.Var.Unresolved, ctx: StaticType?): Rex = rewrite {
             val path = node.identifier.toBindingPath()
-            val resolvedType = env.resolve(path, locals, node.scope)
-            if (resolvedType == null) {
+            val resolvedVar = env.resolve(path, locals, node.scope)
+            if (resolvedVar == null) {
                 handleUndefinedVariable(path.steps.last())
                 return rex(StaticType.ANY, node)
             }
-            val type = resolvedType.type
-            val op = when (resolvedType.scope) {
-                ResolutionStrategy.LOCAL -> rexOpVarResolved(resolvedType.ordinal)
-                ResolutionStrategy.GLOBAL -> rexOpGlobal(resolvedType.ordinal)
+            val type = resolvedVar.type
+            val op = when (resolvedVar) {
+                is ResolvedVar.Global -> rexOpGlobal(resolvedVar.ordinal)
+                is ResolvedVar.Local -> rexOpVarResolved(resolvedVar.ordinal)
             }
             rex(type, op)
         }
 
-        override fun visitRexOpGlobal(node: Rex.Op.Global, ctx: StaticType?): Rex {
-            TODO("Type RexOp")
+        override fun visitRexOpGlobal(node: Rex.Op.Global, ctx: StaticType?): Rex = rewrite {
+            val global = env.globals[node.ref]
+            val type = global.type
+            rex(type, node)
         }
 
-        override fun visitRexOpPath(node: Rex.Op.Path, ctx: StaticType?): Rex {
-            TODO("Type RexOp")
-        }
-
-        override fun visitRexOpPathStepIndex(node: Rex.Op.Path.Step.Index, ctx: StaticType?): Rex {
-            TODO("Type RexOp")
-        }
-
-        override fun visitRexOpPathStepWildcard(node: Rex.Op.Path.Step.Wildcard, ctx: StaticType?): Rex {
-            TODO("Type RexOp")
-        }
-
-        override fun visitRexOpPathStepUnpivot(node: Rex.Op.Path.Step.Unpivot, ctx: StaticType?): Rex {
-            TODO("Type RexOp")
+        /**
+         * Match path as far as possible (rewriting the steps), then infer based on resolved root and rewritten steps.
+         */
+        override fun visitRexOpPath(node: Rex.Op.Path, ctx: StaticType?): Rex = rewrite {
+            // 1. Resolve path prefix
+            val (root, steps) = when (val rootOp = node.root.op) {
+                is Rex.Op.Var.Unresolved -> {
+                    // Rewrite the root
+                    val path = rexPathToBindingPath(rootOp, node.steps)
+                    val resolvedVar = env.resolve(path, locals, rootOp.scope)
+                    if (resolvedVar == null) {
+                        handleUndefinedVariable(path.steps.last())
+                        return rex(StaticType.ANY, node)
+                    }
+                    val type = resolvedVar.type
+                    val (op, steps) = when (resolvedVar) {
+                        is ResolvedVar.Local -> {
+                            // Root was a local; replace just the root
+                            rexOpVarResolved(resolvedVar.ordinal) to node.steps
+                        }
+                        is ResolvedVar.Global -> {
+                            // Root (and some steps) was a global; replace root and re-calculate remaining steps.
+                            val remainingFirstIndex = resolvedVar.depth - 1
+                            val remaining = when (remainingFirstIndex > node.steps.lastIndex) {
+                                true -> emptyList()
+                                false -> node.steps.subList(remainingFirstIndex, node.steps.size)
+                            }
+                            rexOpGlobal(resolvedVar.ordinal) to remaining
+                        }
+                    }
+                    // rewrite root
+                    rex(type, op) to steps
+                }
+                else -> node.root to node.steps
+            }
+            // 2. Evaluate remaining path steps
+            val type = steps.fold(root.type) { type, step ->
+                when (step) {
+                    is Rex.Op.Path.Step.Index -> inferPathStepType(type, step)
+                    is Rex.Op.Path.Step.Unpivot -> type
+                    is Rex.Op.Path.Step.Wildcard -> error("Wildcard path type inference implemented")
+                }
+            }
+            rex(type, rexOpPath(root, steps))
         }
 
         override fun visitRexOpCall(node: Rex.Op.Call, ctx: StaticType?): Rex {
-            TODO("Type RexOp")
+            TODO("Type RexOpCall")
         }
 
         override fun visitRexOpCallArgValue(node: Rex.Op.Call.Arg.Value, ctx: StaticType?): Rex {
-            TODO("Type RexOp")
+            TODO("Type RexOpCallArgValue")
         }
 
         override fun visitRexOpCallArgType(node: Rex.Op.Call.Arg.Type, ctx: StaticType?): Rex {
-            TODO("Type RexOp")
+            TODO("Type RexOpCallArgType")
         }
 
         override fun visitRexOpCase(node: Rex.Op.Case, ctx: StaticType?): Rex {
-            TODO("Type RexOp")
+            TODO("Type RexOpCase")
         }
 
         override fun visitRexOpCaseBranch(node: Rex.Op.Case.Branch, ctx: StaticType?): Rex {
-            TODO("Type RexOp")
+            TODO("Type RexOpCaseBranch")
         }
 
-        override fun visitRexOpCollection(node: Rex.Op.Collection, ctx: StaticType?): Rex = Plan.create {
-            val type: CollectionType = when (ctx) {
-                is CollectionType -> ctx
-                null -> {
-                    handleMissingType()
-                    return rex(StaticType.ANY, rexOpErr())
-                }
-                else -> {
-                    handleUnexpectedType(ctx, setOf(StaticType.LIST, StaticType.BAG, StaticType.SEXP))
-                    return rex(ctx , rexOpErr())
+        override fun visitRexOpCollection(node: Rex.Op.Collection, ctx: StaticType?): Rex = rewrite {
+            if (ctx!! !is CollectionType) {
+                handleUnexpectedType(ctx, setOf(StaticType.LIST, StaticType.BAG, StaticType.SEXP))
+                return rex(ctx, rexOpErr())
+            }
+            val values = node.values.map { visitRex(it, null) }
+            val t = values.toUnionType()
+            val type = when (ctx as CollectionType) {
+                is BagType -> BagType(t)
+                is ListType -> ListType(t)
+                is SexpType -> SexpType(t)
+            }
+            rex(type, rexOpCollection(values))
+        }
+
+        @OptIn(PartiQLValueExperimental::class)
+        override fun visitRexOpStruct(node: Rex.Op.Struct, ctx: StaticType?): Rex = rewrite {
+            val fields = node.fields.map {
+                val k = visitRex(it.k, null)
+                val v = visitRex(it.v, null)
+                rexOpStructField(k, v)
+            }
+            var structIsClosed = true
+            val structTypeFields = mutableListOf<StructType.Field>()
+            val structKeysSeent = mutableSetOf<String>()
+            for (field in fields) {
+                when (field.k.op) {
+                    is Rex.Op.Lit -> {
+                        // A field is only included in the StructType if its key is a text literal
+                        val key = field.k.op as Rex.Op.Lit
+                        if (key.value is TextValue<*>) {
+                            val name = (key.value as TextValue<*>).string
+                            val type = field.v.type
+                            structKeysSeent.add(name)
+                            structTypeFields.add(StructType.Field(name, type))
+                        }
+                    }
+                    else -> {
+                        if (field.k.type.allTypes.any { it.isText() }) {
+                            // If the non-literal could be text, StructType will have open content.
+                            structIsClosed = false
+                        } else {
+                            // A field with a non-literal key name is not included in the StructType.
+                        }
+                    }
                 }
             }
-            val newValues = node.values.map { visitRex(it, null) }
-            val newElementType = newValues.toUnionType()
-            val newType = when (type) {
-                is BagType -> BagType(newElementType)
-                is ListType -> ListType(newElementType)
-                is SexpType -> SexpType(newElementType)
-            }
-            rex(newType, rexOpCollection(newValues))
-        }
-
-        override fun visitRexOpStruct(node: Rex.Op.Struct, ctx: StaticType?): Rex {
-            TODO("Type RexOp")
-        }
-
-        override fun visitRexOpStructField(node: Rex.Op.Struct.Field, ctx: StaticType?): Rex {
-            TODO("Type RexOp")
+            val type = StructType(
+                fields = structTypeFields,
+                contentClosed = structIsClosed,
+                constraints = setOf(
+                    TupleConstraint.Open(!structIsClosed),
+                    TupleConstraint.UniqueAttrs(structKeysSeent.size == fields.size)
+                ),
+            )
+            rex(type, rexOpStruct(fields))
         }
 
         override fun visitRexOpPivot(node: Rex.Op.Pivot, ctx: StaticType?): Rex {
-            TODO("Type RexOp")
+            TODO("Type RexOpPivot")
         }
 
         override fun visitRexOpCollToScalar(node: Rex.Op.CollToScalar, ctx: StaticType?): Rex {
-            TODO("Type RexOp")
+            TODO("Type RexOpCollToScalar")
         }
 
         override fun visitRexOpCollToScalarSubquery(node: Rex.Op.CollToScalar.Subquery, ctx: StaticType?): Rex {
-            TODO("Type RexOp")
+            TODO("Type RexOpCollToScalarSubquery")
         }
 
-        override fun visitRexOpSelect(node: Rex.Op.Select, ctx: StaticType?): Rex {
-            TODO("Type RexOp")
+        override fun visitRexOpSelect(node: Rex.Op.Select, ctx: StaticType?): Rex = rewrite {
+            val rel = node.rel.type(locals)
+            val typeEnv = TypeEnv(rel.type.schema, ResolutionStrategy.LOCAL)
+            val constructor = node.constructor.type(typeEnv)
+            val type = when (rel.isOrdered()) {
+                true -> ListType(constructor.type)
+                else -> BagType(constructor.type)
+            }
+            rex(type, rexOpSelect(constructor, rel))
         }
+
+        override fun visitRexOpTupleUnion(node: Rex.Op.TupleUnion, ctx: StaticType?): Rex = rewrite {
+            rex(StaticType.STRUCT, node)
+        }
+
+        // Helpers
+
+        // TODO remove env
+        private fun inferPathStepType(type: StaticType, step: Rex.Op.Path.Step.Index): StaticType = when (type) {
+            is AnyType -> StaticType.ANY
+            is StructType -> inferStructLookupType(type, step).flatten()
+            is ListType,
+            is SexpType,
+            -> {
+                val previous = type as CollectionType
+                val key = visitRex(step.key, null)
+                if (key.type is IntType) {
+                    previous.elementType
+                } else {
+                    StaticType.MISSING
+                }
+            }
+            is AnyOfType -> {
+                when (type.types.size) {
+                    0 -> throw IllegalStateException("Cannot path on an empty StaticType union")
+                    else -> {
+                        val prevTypes = type.allTypes
+                        if (prevTypes.any { it is AnyType }) {
+                            StaticType.ANY
+                        } else {
+                            val staticTypes = prevTypes.map { inferPathStepType(it, step) }
+                            AnyOfType(staticTypes.toSet()).flatten()
+                        }
+                    }
+                }
+            }
+            else -> StaticType.MISSING
+        }
+
+        // TODO remove env
+        @OptIn(PartiQLValueExperimental::class)
+        private fun inferStructLookupType(struct: StructType, step: Rex.Op.Path.Step.Index): StaticType =
+            when (val key = step.key.op) {
+                is Rex.Op.Lit -> {
+                    if (key.value is TextValue<*>) {
+                        val name = (key.value as TextValue<*>).string
+                        val case = BindingCase.SENSITIVE
+                        val binding = BindingName(name, case)
+                        env.inferStructLookup(struct, binding)
+                            ?: when (struct.contentClosed) {
+                                true -> StaticType.MISSING
+                                false -> StaticType.ANY
+                            }
+                    } else {
+                        // Should this branch result in an error?
+                        StaticType.MISSING
+                    }
+                }
+                else -> {
+                    StaticType.MISSING
+                }
+            }
     }
 
     // HELPERS
@@ -358,8 +501,40 @@ internal class PlanTyper(
         }
     )
 
-    // Produce a union type from all the
+    private fun Rel.isOrdered(): Boolean = type.props.contains(Rel.Prop.ORDERED)
+
+    /**
+     * Produce a union type from all the
+     */
     private fun List<Rex>.toUnionType(): StaticType = AnyOfType(map { it.type }.toSet()).flatten()
+
+    /**
+     * Helper function which returns the literal string/symbol steps of a path expression as a [BindingPath].
+     */
+    @OptIn(PartiQLValueExperimental::class)
+    private fun rexPathToBindingPath(rootOp: Rex.Op.Var.Unresolved, steps: List<Rex.Op.Path.Step>): BindingPath {
+        if (rootOp.identifier !is Identifier.Symbol) {
+            throw IllegalArgumentException("Expected identifier symbol")
+        }
+        val bindingRoot = (rootOp.identifier as Identifier.Symbol).toBindingName()
+        val bindingSteps = mutableListOf(bindingRoot)
+        for (step in steps) {
+            if (step is Rex.Op.Path.Step.Index && step.key.op is Rex.Op.Lit) {
+                val v = (step.key.op as Rex.Op.Lit).value
+                if (v is TextValue<*>) {
+                    // add to prefix
+                    bindingSteps.add(BindingName(v.string, BindingCase.SENSITIVE))
+                } else {
+                    // short-circuit
+                    break
+                }
+            } else {
+                // short-circuit
+                break
+            }
+        }
+        return BindingPath(bindingSteps)
+    }
 
     // ERRORS
 
@@ -368,15 +543,6 @@ internal class PlanTyper(
             Problem(
                 sourceLocation = UNKNOWN_PROBLEM_LOCATION,
                 details = PlanningProblemDetails.UndefinedVariable(name.name, name.bindingCase == BindingCase.SENSITIVE)
-            )
-        )
-    }
-
-    private fun handleMissingType() {
-        onProblem(
-            Problem(
-                sourceLocation = UNKNOWN_PROBLEM_LOCATION,
-                details = PlanningProblemDetails.CompileError("Unable to determine type of node.")
             )
         )
     }

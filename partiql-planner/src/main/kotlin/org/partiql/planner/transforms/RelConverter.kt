@@ -33,7 +33,7 @@ internal object RelConverter {
      * Here we convert an SFW to composed [Rel]s, then apply the appropriate relation-value projection to get a [Rex].
      */
     internal fun apply(sfw: Expr.SFW, env: Env): Rex = Plan.create {
-        val rel = sfw.accept(ToRel(env), nil)
+        var rel = sfw.accept(ToRel(env), nil)
         val rex = when (val projection = sfw.select) {
             // PIVOT ... FROM
             is Select.Pivot -> {
@@ -53,9 +53,14 @@ internal object RelConverter {
                 }
                 rex(type, op)
             }
+            // SELECT * FROM
+            is Select.Star -> {
+                throw IllegalArgumentException("AST not normalized")
+            }
             // SELECT ... FROM
-            else -> {
-                val constructor = defaultConstructor(env, rel.type.schema)
+            is Select.Project -> {
+                val (constructor, newRel) = deriveConstructor(rel)
+                rel = newRel
                 val op = rexOpSelect(constructor, rel)
                 val type = when (rel.type.props.contains(Rel.Prop.ORDERED)) {
                     true -> (StaticType.LIST)
@@ -73,21 +78,84 @@ internal object RelConverter {
     private fun Expr.toRex(env: Env): Rex = RexConverter.apply(this, env)
 
     /**
+     * Derives the appropriate SELECT VALUE constructor given the Rel projection - removing any UNPIVOT path steps.
+     */
+    private fun deriveConstructor(rel: Rel): Pair<Rex, Rel> {
+        val op = rel.op
+        if (op !is Rel.Op.Project) {
+            return defaultConstructor(rel.type.schema) to rel
+        }
+        val hasProjectAll = op.projections.any { it.isProjectAll() }
+        return when (hasProjectAll) {
+            true -> tupleUnionConstructor(op, rel.type)
+            else -> defaultConstructor(rel.type.schema) to rel
+        }
+    }
+
+    /**
      * Produces the default constructor to generalize a SQL SELECT to a SELECT VALUE.
      *
-     *  - See https://partiql.org/dql/select.html#sql-select
+     * See https://partiql.org/dql/select.html#sql-select
      */
     @OptIn(PartiQLValueExperimental::class)
-    private fun defaultConstructor(env: Env, schema: List<Rel.Binding>): Rex = Plan.create {
-        val str = (StaticType.STRING)
-        val type = (StaticType.STRUCT)
+    private fun defaultConstructor(schema: List<Rel.Binding>): Rex = Plan.create {
         val fields = schema.mapIndexed { i, b ->
-            val k = rex(str, rexOpLit(stringValue(b.name)))
+            val k = rex(StaticType.STRING, rexOpLit(stringValue(b.name)))
             val v = rex(b.type, rexOpVarResolved(i))
             rexOpStructField(k, v)
         }
         val op = rexOpStruct(fields)
-        rex(type, op)
+        rex(StaticType.STRUCT, op)
+    }
+
+    /**
+     * Produces the `TUPLEUNION` constructor defined in Section 6.3.2 `SQL's SELECT *`.
+     *
+     * See https://partiql.org/assets/PartiQL-Specification.pdf#page=28
+     */
+    private fun tupleUnionConstructor(project: Rel.Op.Project, relType: Rel.Type): Pair<Rex, Rel> = with(Plan) {
+        val projections = mutableListOf<Rex>()
+        val args = mutableListOf<Rex.Op.TupleUnion.Arg>()
+        project.projections.forEachIndexed { i, item ->
+            val binding = relType.schema[i]
+            val k = binding.name
+            val v = rex(binding.type, rexOpVarResolved(i))
+            when (item.isProjectAll()) {
+                true -> {
+                    projections.add(item.removeUnpivot())
+                    rexOpTupleUnionArgSpread(k, v)
+                }
+                else -> {
+                    projections.add(item)
+                    rexOpTupleUnionArgStruct(k, v)
+                }
+            }
+
+        }
+        val constructor = rex(StaticType.STRUCT, rexOpTupleUnion(args))
+        val rel = rel(relType, relOpProject(project.input, projections))
+        constructor to rel
+    }
+
+    private fun Rex.isProjectAll(): Boolean {
+        return (op is Rex.Op.Path && (op as Rex.Op.Path).steps.last() is Rex.Op.Path.Step.Unpivot)
+    }
+
+    private fun Rex.removeUnpivot(): Rex = Plan.create {
+        val rex = this@removeUnpivot
+        val path = op
+        if (path is Rex.Op.Path) {
+            if (path.steps.last() is Rex.Op.Path.Step.Unpivot) {
+                val newRoot = path.root
+                val newSteps = path.steps.dropLast(1)
+                return when (newSteps.isEmpty()) {
+                    true -> newRoot
+                    else -> rex(rex.type, rexOpPath(newRoot, newSteps))
+                }
+            }
+        }
+        // skip, should be unreachable
+        rex
     }
 
     @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE", "LocalVariableName")
@@ -221,7 +289,7 @@ internal object RelConverter {
         }
 
         private fun convertProjectItemAll(item: Select.Project.Item.All): Pair<Rel.Binding, Rex> {
-            TODO("Remove Project All in favor of project unpivot")
+            throw IllegalArgumentException("AST not normalized")
         }
 
         private fun convertProjectItemRex(item: Select.Project.Item.Expression): Pair<Rel.Binding, Rex> {

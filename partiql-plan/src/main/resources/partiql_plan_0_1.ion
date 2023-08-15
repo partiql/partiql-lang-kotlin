@@ -161,6 +161,22 @@ rex::{
       rel:          rel,
     },
 
+    tuple_union::{
+      args: list::[arg],
+      _: [
+        arg::[
+          struct::{
+            k: string,
+            v: rex,
+          },
+          spread::{
+            k: string,
+            v: rex,
+          },
+        ],
+      ],
+    },
+
     err::{},
   ],
 }

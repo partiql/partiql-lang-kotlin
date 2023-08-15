@@ -117,7 +117,7 @@ internal object RexConverter {
         override fun visitExprCase(node: Expr.Case, context: Env) = Plan.create {
             val type = (StaticType.ANY)
             val rex = when (node.expr) {
-                null -> context.bool(true) // match `true`
+                null -> bool(true) // match `true`
                 else -> visitExpr(node.expr!!, context) // match `rex
             }
             val branches = node.branches.map {
@@ -126,7 +126,7 @@ internal object RexConverter {
                 rexOpCaseBranch(branchCondition, branchRex)
             }.toMutableList()
             if (node.default != null) {
-                val defaultCondition = context.bool(true)
+                val defaultCondition = bool(true)
                 val defaultRex = visitExpr(node.default!!, context)
                 branches += rexOpCaseBranch(defaultCondition, defaultRex)
             }
@@ -158,7 +158,7 @@ internal object RexConverter {
             rex(type, op)
         }
 
-        // TODO SPECIAL FORMS ONCE WE HAVE THE CATALOG !!
+        // TODO SPECIAL FORMS !!
 
         /**
          * This indicates we've hit a SQL `SELECT` subquery in the context of an expression tree.
@@ -188,7 +188,7 @@ internal object RexConverter {
 
         // Helpers
 
-        private fun Env.bool(v: Boolean): Rex {
+        private fun bool(v: Boolean): Rex {
             val type = StaticType.BOOL
             val op = Plan.rexOpLit(boolValue(v))
             return Plan.rex(type, op)

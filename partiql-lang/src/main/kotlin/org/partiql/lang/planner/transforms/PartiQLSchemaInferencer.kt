@@ -27,6 +27,7 @@ import org.partiql.lang.planner.PlanningProblemDetails
 import org.partiql.lang.planner.transforms.PartiQLSchemaInferencer.infer
 import org.partiql.lang.util.propertyValueMapOf
 import org.partiql.parser.PartiQLParserBuilder
+import org.partiql.plan.PartiQLPlan
 import org.partiql.plan.Statement
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.spi.Plugin
@@ -68,7 +69,7 @@ public object PartiQLSchemaInferencer {
         ctx: Context
     ): StaticType {
         return try {
-            inferInternal(query, ctx)
+            inferInternal(query, ctx).second
         } catch (t: Throwable) {
             throw when (t) {
                 is SqlException -> InferenceException(
@@ -131,7 +132,7 @@ public object PartiQLSchemaInferencer {
         }
     }
 
-    private fun inferInternal(query: String, ctx: Context): StaticType {
+    internal fun inferInternal(query: String, ctx: Context): Pair<PartiQLPlan, StaticType> {
         val parser = PartiQLParserBuilder.standard().build()
         val planner = PartiQLPlanner.builder()
             .plugins(ctx.plugins)
@@ -146,6 +147,6 @@ public object PartiQLSchemaInferencer {
                 )
             )
         }
-        return (plan.statement as Statement.Query).root.type
+        return plan to (plan.statement as Statement.Query).root.type
     }
 }

@@ -616,7 +616,10 @@ public sealed class TupleConstraint {
      * The presence of the [Ordered] on a [StructType] represents that the [StructType] is ORDERED. The absence of
      * this constrain represents the opposite -- AKA that the [StructType] is UNORDERED
      */
-    public object Ordered : TupleConstraint()
+    public object Ordered : TupleConstraint() {
+
+        override fun toString(): String = "Ordered"
+    }
 }
 
 /**

@@ -62,16 +62,36 @@ internal class TypeEnv(
 
 /**
  * Metadata regarding a resolved variable.
- *
- * @property type       Resolved StaticType
- * @property scope      Re-using ResolutionStrategy to indicate if this was a local or global
- * @property ordinal    Reference index
  */
-internal class ResolvedVar(
-    val type: StaticType,
-    val scope: ResolutionStrategy,
-    val ordinal: Int,
-)
+internal sealed interface ResolvedVar {
+
+    public val type: StaticType
+    public val ordinal: Int
+
+    /**
+     * Metadata for a resolved local variable.
+     *
+     * @property type       Resolved StaticType
+     * @property ordinal    Index offset in [TypeEnv]
+     */
+    class Local(
+        override val type: StaticType,
+        override val ordinal: Int,
+    ) : ResolvedVar
+
+    /**
+     * Metadata for a resolved global variable
+     *
+     * @property type       Resolved StaticType
+     * @property ordinal    Index offset in the environment `globals` list
+     * @property depth      The depth/level of the path match.
+     */
+    class Global(
+        override val type: StaticType,
+        override val ordinal: Int,
+        val depth: Int,
+    ) : ResolvedVar
+}
 
 /**
  * Variable resolution strategies — https://partiql.org/assets/PartiQL-Specification.pdf#page=35
@@ -196,13 +216,13 @@ internal class Env(
         return catalog?.let { cat ->
             getObjectHandle(cat, catalogPath)?.let { handle ->
                 getObjectDescriptor(handle).let { type ->
-                    val level = calculateMatched(originalPath, catalogPath, handle.second.absolutePath)
+                    val depth = calculateMatched(originalPath, catalogPath, handle.second.absolutePath)
                     // TODO check known globals before calling out to connector again
                     // Append this to the global list
                     val global = Plan.global(originalPath.toIdentifier(), type)
                     globals.add(global)
                     // Return resolution metadata
-                    ResolvedVar(type, ResolutionStrategy.GLOBAL, globals.size - 1)
+                    ResolvedVar.Global(type, globals.size - 1, depth)
                 }
             }
         }
@@ -276,7 +296,7 @@ internal class Env(
         val root = path.steps[0]
         locals.forEachIndexed { i, binding ->
             if (root.isEquivalentTo(binding.name)) {
-                return ResolvedVar(binding.type, ResolutionStrategy.LOCAL, i)
+                return ResolvedVar.Local(binding.type, i)
             }
         }
         return null
@@ -294,6 +314,8 @@ internal class Env(
 
     /**
      * Searches for the [key] in the [struct]. If not found, return null
+     *
+     * TODO move into typer
      */
     internal fun inferStructLookup(struct: StructType, key: BindingName): StaticType? =
         when (struct.constraints.contains(TupleConstraint.Ordered)) {
