@@ -923,7 +923,7 @@ class PartiQLSchemaInferencerTests {
                 expected = StaticType.STRING,
                 problemHandler = assertProblemExists {
                     Problem(
-                        UNKNOWN_SOURCE_LOCATION,
+                        UNKNOWN_PROBLEM_LOCATION,
                         SemanticProblemDetails.InvalidArgumentTypeForFunction(
                             "trim",
                             unionOf(StaticType.STRING, StaticType.SYMBOL),
