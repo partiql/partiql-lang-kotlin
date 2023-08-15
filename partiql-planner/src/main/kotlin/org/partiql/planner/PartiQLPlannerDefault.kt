@@ -24,19 +24,19 @@ internal class PartiQLPlannerDefault(
 
     override fun plan(statement: Statement, session: PartiQLPlanner.Session, onProblem: ProblemCallback): PartiQLPlanner.Result {
         // 0. Initialize the planning environment
-        val ctx = Env(header, plugins, session)
+        val env = Env(header, plugins, session)
 
         // 1. Normalize
         val ast = statement.normalize()
 
         // 2. AST to Rel/Rex
-        val root = AstToPlan.apply(ast, ctx)
+        val root = AstToPlan.apply(ast, env)
 
         // 3. Resolve variables
-        val typer = PlanTyper(ctx, onProblem)
+        val typer = PlanTyper(env, onProblem)
         var plan = Plan.partiQLPlan(
             version = version,
-            globals = ctx.globals,
+            globals = env.globals,
             statement = typer.resolve(root),
         )
 

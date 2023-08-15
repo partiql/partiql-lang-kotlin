@@ -1,14 +1,21 @@
 package org.partiql.planner.typer
 
+import org.partiql.errors.Problem
 import org.partiql.errors.ProblemCallback
+import org.partiql.errors.UNKNOWN_PROBLEM_LOCATION
+import org.partiql.plan.Identifier
 import org.partiql.plan.Plan
-import org.partiql.plan.PlanNode
 import org.partiql.plan.Rel
 import org.partiql.plan.Rex
 import org.partiql.plan.Statement
-import org.partiql.plan.builder.PlanFactory
 import org.partiql.plan.util.PlanRewriter
 import org.partiql.planner.Env
+import org.partiql.planner.PlanningProblemDetails
+import org.partiql.planner.ResolutionStrategy
+import org.partiql.planner.TypeEnv
+import org.partiql.spi.BindingCase
+import org.partiql.spi.BindingName
+import org.partiql.spi.BindingPath
 import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValueExperimental
 
@@ -30,58 +37,7 @@ internal class PlanTyper(
             strategy = ResolutionStrategy.GLOBAL,
         )
         val root = statement.root.type(typeEnv)
-        return factory.statementQuery(root)
-    }
-
-    private val factory: PlanFactory = Plan
-
-    private inline fun <T : PlanNode> plan(block: PlanFactory.() -> T): T = factory.block()
-
-    /**
-     * TypeEnv represents the environment in which we type expressions and resolve variables while planning.
-     *
-     * @property schema
-     * @property strategy
-     */
-    private class TypeEnv(
-        val schema: List<Rel.Binding>,
-        val strategy: ResolutionStrategy,
-    ) {
-
-        /**
-         * Return a copy with GLOBAL lookup strategy
-         */
-        fun global() = TypeEnv(schema, ResolutionStrategy.GLOBAL)
-
-        /**
-         * Return a copy with LOCAL lookup strategy
-         */
-        fun local() = TypeEnv(schema, ResolutionStrategy.LOCAL)
-
-        /**
-         * Debug string
-         */
-        override fun toString() = buildString {
-            append("(")
-            append("strategy=$strategy")
-            append(", ")
-            val bindings = "< " + schema.joinToString { "${it.name}: ${it.type}" } + " >"
-            append("bindings=$bindings")
-            append(")")
-        }
-    }
-
-    /**
-     * Variable resolution strategies — https://partiql.org/assets/PartiQL-Specification.pdf#page=35
-     *
-     * | Value      | Strategy              | Scoping Rules |
-     * |------------+-----------------------+---------------|
-     * | LOCAL      | local-first lookup    | Rules 1, 2    |
-     * | GLOBAL     | global-first lookup   | Rule 3        |
-     */
-    private enum class ResolutionStrategy {
-        LOCAL,
-        GLOBAL,
+        return Plan.statementQuery(root)
     }
 
     /**
@@ -96,7 +52,7 @@ internal class PlanTyper(
         /**
          * The output schema of a `rel.op.scan` is the single value binding.
          */
-        override fun visitRelOpScan(node: Rel.Op.Scan, ctx: Rel.Type?): Rel = plan {
+        override fun visitRelOpScan(node: Rel.Op.Scan, ctx: Rel.Type?): Rel = Plan.create {
             // descend, with GLOBAL resolution strategy
             val rex = node.rex.type(outer.global())
             // compute rel type
@@ -109,7 +65,7 @@ internal class PlanTyper(
         /**
          * The output schema of a `rel.op.scan_index` is the value binding and index binding.
          */
-        override fun visitRelOpScanIndexed(node: Rel.Op.ScanIndexed, ctx: Rel.Type?): Rel = plan {
+        override fun visitRelOpScanIndexed(node: Rel.Op.ScanIndexed, ctx: Rel.Type?): Rel = Plan.create {
             // descend, with GLOBAL resolution strategy
             val rex = node.rex.type(outer.global())
             // compute rel type
@@ -129,7 +85,7 @@ internal class PlanTyper(
             TODO("Type RelOp Distinct")
         }
 
-        override fun visitRelOpFilter(node: Rel.Op.Filter, ctx: Rel.Type?): Rel = plan {
+        override fun visitRelOpFilter(node: Rel.Op.Filter, ctx: Rel.Type?): Rel = Plan.create {
             // compute input schema
             val input = visitRel(node.input, ctx)
             // type sub-nodes
@@ -162,7 +118,7 @@ internal class PlanTyper(
             TODO("Type RelOp Except")
         }
 
-        override fun visitRelOpLimit(node: Rel.Op.Limit, ctx: Rel.Type?) = plan {
+        override fun visitRelOpLimit(node: Rel.Op.Limit, ctx: Rel.Type?) = Plan.create {
             // compute input schema
             val input = visitRel(node.input, ctx)
             // type limit expression using outer scope with global resolution
@@ -175,7 +131,7 @@ internal class PlanTyper(
             rel(type, op)
         }
 
-        override fun visitRelOpOffset(node: Rel.Op.Offset, ctx: Rel.Type?) = plan {
+        override fun visitRelOpOffset(node: Rel.Op.Offset, ctx: Rel.Type?) = Plan.create {
             // compute input schema
             val input = visitRel(node.input, ctx)
             // type offset expression using outer scope with global resolution
@@ -188,7 +144,7 @@ internal class PlanTyper(
             rel(type, op)
         }
 
-        override fun visitRelOpProject(node: Rel.Op.Project, ctx: Rel.Type?): Rel = plan {
+        override fun visitRelOpProject(node: Rel.Op.Project, ctx: Rel.Type?): Rel = Plan.create {
             // compute input schema
             val input = visitRel(node.input, ctx)
             // type sub-nodes
@@ -235,27 +191,37 @@ internal class PlanTyper(
      * Types a PartiQL expression tree. For now, we ignore the pre-existing type. We assume all existing types
      * are simply the `any`, so we keep the new type. Ideally we can programmatically calculate the most specific type.
      *
-     * @property env TypeEnv in which this rex tree is evaluated.
+     * @property locals TypeEnv in which this rex tree is evaluated.
      */
-    private inner class RexTyper(private val env: TypeEnv) : PlanRewriter<StaticType?>() {
+    private inner class RexTyper(private val locals: TypeEnv) : PlanRewriter<StaticType?>() {
 
-        override fun visitRex(node: Rex, ctx: StaticType?): Rex = super.visitRex(node, node.type) as Rex
+        override fun visitRex(node: Rex, ctx: StaticType?): Rex = super.visitRexOp(node.op, node.type) as Rex
 
         @OptIn(PartiQLValueExperimental::class)
-        override fun visitRexOpLit(node: Rex.Op.Lit, ctx: StaticType?): Rex = plan {
+        override fun visitRexOpLit(node: Rex.Op.Lit, ctx: StaticType?): Rex = Plan.create {
             val type = node.value.type.toStaticType()
             rex(type, node)
         }
 
-        override fun visitRexOpVarResolved(node: Rex.Op.Var.Resolved, ctx: StaticType?): Rex = plan {
-            assert(node.ref < env.schema.size) { "Invalid resolved variable (var ${node.ref}) for $env" }
-            val type = env.schema[node.ref].type
+        override fun visitRexOpVarResolved(node: Rex.Op.Var.Resolved, ctx: StaticType?): Rex = Plan.create {
+            assert(node.ref < locals.schema.size) { "Invalid resolved variable (var ${node.ref}) for $locals" }
+            val type = locals.schema[node.ref].type
             rex(type, node)
         }
 
-        override fun visitRexOpVarUnresolved(node: Rex.Op.Var.Unresolved, ctx: StaticType?): Rex {
-
-            TODO("Type RexOp")
+        override fun visitRexOpVarUnresolved(node: Rex.Op.Var.Unresolved, ctx: StaticType?): Rex = Plan.create {
+            val path = node.identifier.toBindingPath()
+            val resolvedType = env.resolve(path, locals, node.scope)
+            if (resolvedType == null) {
+                handleUndefinedVariable(path.steps.last())
+                return rex(StaticType.ANY, node)
+            }
+            val type = resolvedType.type
+            val op = when (resolvedType.scope) {
+                ResolutionStrategy.LOCAL -> rexOpVarResolved(resolvedType.ordinal)
+                ResolutionStrategy.GLOBAL -> rexOpGlobal(resolvedType.ordinal)
+            }
+            rex(type, op)
         }
 
         override fun visitRexOpGlobal(node: Rex.Op.Global, ctx: StaticType?): Rex {
@@ -349,6 +315,34 @@ internal class PlanTyper(
         assert(types.size == schema.size) { "Illegal copy, types size does not matching bindings list size" }
         return this.copy(
             schema = schema.mapIndexed { i, binding -> binding.copy(type = types[i]) }
+        )
+    }
+
+    private fun Identifier.toBindingPath() = when (this) {
+        is Identifier.Qualified -> this.toBindingPath()
+        is Identifier.Symbol -> BindingPath(listOf(this.toBindingName()))
+    }
+
+    private fun Identifier.Qualified.toBindingPath() = BindingPath(
+        steps = steps.map { it.toBindingName() }
+    )
+
+    private fun Identifier.Symbol.toBindingName() = BindingName(
+        name = symbol,
+        bindingCase = when (caseSensitivity) {
+            Identifier.CaseSensitivity.SENSITIVE -> BindingCase.SENSITIVE
+            Identifier.CaseSensitivity.INSENSITIVE -> BindingCase.INSENSITIVE
+        }
+    )
+
+    // ERRORS
+
+    private fun handleUndefinedVariable(name: BindingName) {
+        onProblem(
+            Problem(
+                sourceLocation = UNKNOWN_PROBLEM_LOCATION,
+                details = PlanningProblemDetails.UndefinedVariable(name.name, name.bindingCase == BindingCase.SENSITIVE)
+            )
         )
     }
 }

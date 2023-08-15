@@ -17,7 +17,7 @@ import org.partiql.lang.planner.PlanningProblemDetails
 import org.partiql.lang.planner.transforms.PartiQLSchemaInferencerTests.ProblemHandler
 import org.partiql.lang.planner.transforms.PartiQLSchemaInferencerTests.TestCase.ErrorTestCase
 import org.partiql.lang.planner.transforms.PartiQLSchemaInferencerTests.TestCase.SuccessTestCase
-import org.partiql.plan.Rex
+import org.partiql.planner.PartiQLPlanner
 import org.partiql.plugins.mockdb.LocalPlugin
 import org.partiql.types.AnyOfType
 import org.partiql.types.AnyType
@@ -909,7 +909,7 @@ class PartiQLSchemaInferencerTests {
                                 unionOf(STRING, StaticType.NULL),
                                 INT,
                             ),
-                            Rex.Binary.Op.EQ.name
+                            "EQ"
                         )
                     )
                 }
@@ -926,7 +926,7 @@ class PartiQLSchemaInferencerTests {
                                 unionOf(STRING, StaticType.NULL),
                                 STRING,
                             ),
-                            Rex.Binary.Op.PLUS.name
+                            "PLUS"
                         )
                     )
                 }
@@ -948,7 +948,7 @@ class PartiQLSchemaInferencerTests {
 
     @OptIn(ExperimentalPartiQLSchemaInferencer::class)
     private fun runTest(tc: SuccessTestCase) {
-        val session = PlannerSession(
+        val session = PartiQLPlanner.Session(
             tc.query.hashCode().toString(),
             USER_ID,
             tc.catalog,
@@ -973,7 +973,7 @@ class PartiQLSchemaInferencerTests {
 
     @OptIn(ExperimentalPartiQLSchemaInferencer::class)
     private fun runTest(tc: ErrorTestCase) {
-        val session = PlannerSession(
+        val session = PartiQLPlanner.Session(
             tc.query.hashCode().toString(),
             USER_ID,
             tc.catalog,

@@ -3,7 +3,9 @@ package org.partiql.planner
 import org.partiql.plan.Fn
 import org.partiql.plan.Global
 import org.partiql.plan.Identifier
+import org.partiql.plan.Plan
 import org.partiql.plan.Rel
+import org.partiql.plan.Rex
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
@@ -24,13 +26,68 @@ import org.partiql.types.function.FunctionSignature
  */
 internal typealias Handle<T> = Pair<String, T>
 
-internal class ResolvedType(
+/**
+ * TypeEnv represents the environment in which we type expressions and resolve variables while planning.
+ *
+ * @property schema
+ * @property strategy
+ */
+internal class TypeEnv(
+    val schema: List<Rel.Binding>,
+    val strategy: ResolutionStrategy,
+) {
+
+    /**
+     * Return a copy with GLOBAL lookup strategy
+     */
+    fun global() = TypeEnv(schema, ResolutionStrategy.GLOBAL)
+
+    /**
+     * Return a copy with LOCAL lookup strategy
+     */
+    fun local() = TypeEnv(schema, ResolutionStrategy.LOCAL)
+
+    /**
+     * Debug string
+     */
+    override fun toString() = buildString {
+        append("(")
+        append("strategy=$strategy")
+        append(", ")
+        val bindings = "< " + schema.joinToString { "${it.name}: ${it.type}" } + " >"
+        append("bindings=$bindings")
+        append(")")
+    }
+}
+
+/**
+ * Metadata regarding a resolved variable.
+ *
+ * @property type       Resolved StaticType
+ * @property scope      Re-using ResolutionStrategy to indicate if this was a local or global
+ * @property ordinal    Reference index
+ */
+internal class ResolvedVar(
     val type: StaticType,
-    val levelsMatched: Int = 1,
+    val scope: ResolutionStrategy,
+    val ordinal: Int,
 )
 
 /**
- * PartiQL Planner Environment of Catalogs backed by given plugins.
+ * Variable resolution strategies — https://partiql.org/assets/PartiQL-Specification.pdf#page=35
+ *
+ * | Value      | Strategy              | Scoping Rules |
+ * |------------+-----------------------+---------------|
+ * | LOCAL      | local-first lookup    | Rules 1, 2    |
+ * | GLOBAL     | global-first lookup   | Rule 3        |
+ */
+internal enum class ResolutionStrategy {
+    LOCAL,
+    GLOBAL,
+}
+
+/**
+ * PartiQL Planner Global Environment of Catalogs backed by given plugins.
  *
  * @property header         List of namespaced definitions
  * @property plugins        List of plugins for global resolution
@@ -131,17 +188,46 @@ internal class Env(
      * @param catalogPath
      * @return
      */
-    private fun getType(
+    private fun getGlobalType(
         catalog: BindingName?,
         originalPath: BindingPath,
         catalogPath: BindingPath,
-    ): ResolvedType? {
+    ): ResolvedVar? {
         return catalog?.let { cat ->
             getObjectHandle(cat, catalogPath)?.let { handle ->
-                getObjectDescriptor(handle).let {
-                    val matched = calculateMatched(originalPath, catalogPath, handle.second.absolutePath)
-                    ResolvedType(it, levelsMatched = matched)
+                getObjectDescriptor(handle).let { type ->
+                    val level = calculateMatched(originalPath, catalogPath, handle.second.absolutePath)
+                    // TODO check known globals before calling out to connector again
+                    // Append this to the global list
+                    val global = Plan.global(originalPath.toIdentifier(), type)
+                    globals.add(global)
+                    // Return resolution metadata
+                    ResolvedVar(type, ResolutionStrategy.GLOBAL, globals.size - 1)
                 }
+            }
+        }
+    }
+
+    /**
+     * Attempt to resolve a [BindingPath] in the global + local type environments.
+     */
+    fun resolve(path: BindingPath, locals: TypeEnv, scope: Rex.Op.Var.Scope): ResolvedVar? {
+        val strategy = when (scope) {
+            Rex.Op.Var.Scope.DEFAULT -> locals.strategy
+            Rex.Op.Var.Scope.LOCAL -> ResolutionStrategy.LOCAL
+        }
+        return when (strategy) {
+            ResolutionStrategy.LOCAL -> {
+                var type: ResolvedVar? = null
+                type = type ?: resolveLocalBind(path, locals.schema)
+                type = type ?: resolveGlobalBind(path)
+                type
+            }
+            ResolutionStrategy.GLOBAL -> {
+                var type: ResolvedVar? = null
+                type = type ?: resolveGlobalBind(path)
+                type = type ?: resolveLocalBind(path, locals.schema)
+                type
             }
         }
     }
@@ -156,67 +242,70 @@ internal class Env(
      * TODO: Add global bindings
      * TODO: Replace paths with global variable references if found
      */
-    internal fun resolveGlobalBind(path: BindingPath): ResolvedType? {
+    private fun resolveGlobalBind(path: BindingPath): ResolvedVar? {
         val currentCatalog = session.currentCatalog?.let { BindingName(it, BindingCase.SENSITIVE) }
         val currentCatalogPath = BindingPath(session.currentDirectory.map { BindingName(it, BindingCase.SENSITIVE) })
         val absoluteCatalogPath = BindingPath(currentCatalogPath.steps + path.steps)
-        return when (path.steps.size) {
+        val resolvedVar = when (path.steps.size) {
             0 -> null
-            1 -> getType(currentCatalog, path, absoluteCatalogPath)
-            2 -> getType(currentCatalog, path, path) ?: getType(currentCatalog, path, absoluteCatalogPath)
+            1 -> getGlobalType(currentCatalog, path, absoluteCatalogPath)
+            2 -> getGlobalType(currentCatalog, path, path) ?: getGlobalType(currentCatalog, path, absoluteCatalogPath)
             else -> {
                 val inferredCatalog = path.steps[0]
                 val newPath = BindingPath(path.steps.subList(1, path.steps.size))
-                getType(inferredCatalog, path, newPath)
-                    ?: getType(currentCatalog, path, path)
-                    ?: getType(currentCatalog, path, absoluteCatalogPath)
+                getGlobalType(inferredCatalog, path, newPath)
+                    ?: getGlobalType(currentCatalog, path, path)
+                    ?: getGlobalType(currentCatalog, path, absoluteCatalogPath)
             }
         }
+        return resolvedVar
     }
 
     /**
      * Logic is as follows:
-     * 1. Look through [input] to find the root of the [path]. If found, return. Else, go to step 2.
-     * 2. Look through [input] and grab all [StructType]s. Then, grab the fields of each Struct corresponding to the
+     * 1. Look through [locals] to find the root of the [path]. If found, return. Else, go to step 2.
+     * 2. Look through [locals] and grab all [StructType]s. Then, grab the fields of each Struct corresponding to the
      *  root of [path].
      *  - If the Struct if ordered, grab the first matching field.
      *  - If unordered and if multiple fields found, merge the output type. If no structs contain a matching field, return null.
      */
-    internal fun resolveLocalBind(path: BindingPath, input: List<Rel.Binding>): ResolvedType? {
+    private fun resolveLocalBind(path: BindingPath, locals: List<Rel.Binding>): ResolvedVar? {
         if (path.steps.isEmpty()) {
             return null
         }
-        val root: StaticType = input.firstOrNull {
-            path.steps[0].isEquivalentTo(it.name)
-        }?.type ?: run {
-            input.map { it.type }.filterIsInstance<StructType>().mapNotNull { struct ->
-                inferStructLookup(struct, path.steps[0])
-            }.let { potentialTypes ->
-                when (potentialTypes.size) {
-                    1 -> potentialTypes.first()
-                    else -> null
-                }
+        val root = path.steps[0]
+        locals.forEachIndexed { i, binding ->
+            if (root.isEquivalentTo(binding.name)) {
+                return ResolvedVar(binding.type, ResolutionStrategy.LOCAL, i)
             }
-        } ?: return null
-        return ResolvedType(root)
+        }
+        return null
+        // 2.
+        // locals.map { it.type }.filterIsInstance<StructType>().mapNotNull { struct ->
+        //     inferStructLookup(struct, path.steps[0])
+        // }.let { potentialTypes ->
+        //     when (potentialTypes.size) {
+        //         1 -> potentialTypes.first()
+        //         else -> null
+        //     }
+        // }
+        // return ResolvedType(root)
     }
 
     /**
      * Searches for the [key] in the [struct]. If not found, return null
      */
-    internal fun inferStructLookup(
-        struct: StructType,
-        key: BindingName,
-    ): StaticType? = when (struct.constraints.contains(TupleConstraint.Ordered)) {
-        true -> struct.fields.firstOrNull { entry ->
-            key.isEquivalentTo(entry.key)
-        }?.value
-        false -> struct.fields.mapNotNull { entry ->
-            entry.value.takeIf { key.isEquivalentTo(entry.key) }
-        }.let { valueTypes ->
-            StaticType.unionOf(valueTypes.toSet()).flatten().takeIf { valueTypes.isNotEmpty() }
+    internal fun inferStructLookup(struct: StructType, key: BindingName): StaticType? =
+        when (struct.constraints.contains(TupleConstraint.Ordered)) {
+            true -> struct.fields.firstOrNull { entry ->
+                key.isEquivalentTo(entry.key)
+            }?.value
+            false -> struct.fields.mapNotNull { entry ->
+                entry.value.takeIf { key.isEquivalentTo(entry.key) }
+            }.let { valueTypes ->
+                StaticType.unionOf(valueTypes.toSet()).flatten().takeIf { valueTypes.isNotEmpty() }
+            }
         }
-    }
 
     /**
      * Logic for determining how many BindingNames were “matched” by the ConnectorMetadata
@@ -232,4 +321,17 @@ internal class Env(
     ): Int {
         return originalPath.steps.size + outputCatalogPath.steps.size - inputCatalogPath.steps.size
     }
+
+    private fun BindingPath.toIdentifier() = Plan.identifierQualified(
+        root = steps[0].toIdentifier(),
+        steps = steps.subList(1, steps.size).map { it.toIdentifier() }
+    )
+
+    private fun BindingName.toIdentifier() = Plan.identifierSymbol(
+        symbol = name,
+        caseSensitivity = when (bindingCase) {
+            BindingCase.SENSITIVE -> Identifier.CaseSensitivity.SENSITIVE
+            BindingCase.INSENSITIVE -> Identifier.CaseSensitivity.INSENSITIVE
+        }
+    )
 }
