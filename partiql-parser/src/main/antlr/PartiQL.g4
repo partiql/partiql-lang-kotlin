@@ -19,7 +19,152 @@ statement
     | dml COLON_SEMI? EOF          # QueryDml
     | ddl COLON_SEMI? EOF          # QueryDdl
     | execCommand COLON_SEMI? EOF  # QueryExec
+    | sqlInvokedRoutine            # CreateRoutineStatement
     ;
+
+// SQL:1999
+// <SQL-invoked routine> ::= <schema routine>
+sqlInvokedRoutine
+    : schemaRoutine
+    ;
+
+// SQL:1999
+// <schema routine> ::=
+//     <schema procedure>
+//     | <schema function>
+schemaRoutine
+    : schemaFunction
+    ;
+
+// SQL:1999
+// <schema function> ::=
+//     CREATE <SQL-invoked function>
+schemaFunction
+    : CREATE sqlInvokedFunction
+    ;
+
+// SQL:1999
+// <SQL-invoked function> ::=
+//     { <function specification> | <method specification designator> }
+//     <routine body>
+sqlInvokedFunction
+    :
+        (
+            functionSpecification
+        ) routineBody
+    ;
+
+// SQL:1999
+// <function specification> ::=
+//    FUNCTION <schema qualified routine name>
+//        <SQL parameter declaration list>
+//        <returns clause>
+//        <routine characteristics>
+//        [ <dispatch clause> ]
+functionSpecification
+    : FUNCTION name=symbolPrimitive // FIXME: Should be schemaQualifiedRoutineName
+        sqlParameterDeclarationList
+        returnsClause
+        routineCharacteristic*
+    ;
+
+// SQL:1999
+// <routine characteristic> ::=
+//     SPECIFIC <specific name>
+//     | and many more...
+routineCharacteristic
+    : SPECIFIC specificName
+    ;
+
+// SQL:1999
+// <specific name> ::= <schema qualified name>
+specificName
+    : name=symbolPrimitive // FIXME: should be ```schemaQualifiedName```
+    ;
+
+// SQL:1999
+// <returns clause> ::= RETURNS <returns data type> [ <result cast> ]
+returnsClause
+    : RETURNS returnsDataType
+    ;
+
+// SQL:1999
+// <returns data type> ::= <data type> [ <locator indication> ]
+returnsDataType
+    : type
+    ;
+
+// SQL:1999
+// <routine body> ::=
+//     <SQL routine body>
+//     | <external body reference>
+routineBody
+    : sqlRoutineBody
+    ;
+
+// SQL:1999
+// <SQL parameter declaration list> ::=
+//     <left paren>
+//     [ <SQL parameter declaration> [ { <comma> <SQL parameter declaration> }... ] ]
+//     <right paren>
+sqlParameterDeclarationList
+    : PAREN_LEFT (sqlParameterDeclaration (COMMA sqlParameterDeclaration)* )? PAREN_RIGHT
+    ;
+
+// SQL:1999
+// <SQL parameter declaration> ::=
+//     [ <parameter mode> ] [ <SQL parameter name> ]
+//     <parameter type>
+//     [ RESULT ]
+sqlParameterDeclaration
+    : sqlParameterName? parameterType
+    ;
+
+// SQL:1999
+// <SQL parameter name> ::= <identifier>
+sqlParameterName
+    : symbolPrimitive
+    ;
+
+// SQL:1999
+// <parameter type> ::=
+//     <data type> [ <locator indication> ]
+parameterType
+    : type
+    ;
+
+// SQL:1999
+// <SQL routine body> ::= <SQL procedure statement>
+sqlRoutineBody: sqlProcedureStatement;
+
+// SQL:1999
+// <SQL procedure statement> ::= <SQL executable statement>
+sqlProcedureStatement: sqlExecutableStatement;
+
+// SQL:1999
+// <SQL executable statement> ::=
+//     <SQL control statement>
+//     | many more alternatives...
+sqlExecutableStatement
+    : sqlControlStatement
+    ;
+
+// SQL:1999
+// <SQL control statement> ::=
+//     <call statement>
+//     | <return statement>
+sqlControlStatement
+    : returnStatement
+    ;
+
+// SQL:1999
+// <return statement> ::=
+//     RETURN <return value>
+// <return value> ::=
+//     <value expression>
+//     | NULL
+returnStatement
+    : RETURN expr;
 
 /**
  *

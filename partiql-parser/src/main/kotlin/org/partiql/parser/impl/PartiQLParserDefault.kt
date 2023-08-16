@@ -508,6 +508,82 @@ internal class PartiQLParserDefault : PartiQLParser {
             statementExec(procedure, args)
         }
 
+        // FUNCTION
+
+        override fun visitSqlInvokedRoutine(ctx: org.partiql.parser.antlr.PartiQLParser.SqlInvokedRoutineContext?): AstNode {
+            return super.visitSqlInvokedRoutine(ctx)
+        }
+
+        override fun visitSchemaRoutine(ctx: org.partiql.parser.antlr.PartiQLParser.SchemaRoutineContext?): AstNode {
+            return super.visitSchemaRoutine(ctx)
+        }
+
+        override fun visitSchemaFunction(ctx: org.partiql.parser.antlr.PartiQLParser.SchemaFunctionContext?): AstNode {
+            return super.visitSchemaFunction(ctx)
+        }
+
+        override fun visitSqlInvokedFunction(ctx: org.partiql.parser.antlr.PartiQLParser.SqlInvokedFunctionContext) = translate(ctx) {
+            val specification = visitFunctionSpecification(ctx.functionSpecification())
+            val body = visitRoutineBody(ctx.routineBody())
+            statementDDLCreateFunction(specification, body)
+        }
+
+        override fun visitFunctionSpecification(ctx: org.partiql.parser.antlr.PartiQLParser.FunctionSpecificationContext) = translate(ctx) {
+            val root = visitSymbolPrimitive(ctx.name)
+            val name = identifierQualified(root, emptyList())
+            val parameters = ctx.sqlParameterDeclarationList().sqlParameterDeclaration().map { decl ->
+                visitSqlParameterDeclaration(decl)
+            }
+            val returns = visitReturnsClause(ctx.returnsClause())
+            val characteristics = ctx.routineCharacteristic().map { characteristic ->
+                visitRoutineCharacteristic(characteristic)
+            }
+            statementDDLCreateFunctionSpecification(name, parameters, returns, characteristics)
+        }
+
+        override fun visitSqlParameterDeclaration(ctx: org.partiql.parser.antlr.PartiQLParser.SqlParameterDeclarationContext) = translate(ctx) {
+            val name = ctx.sqlParameterName()?.let { visitSymbolPrimitive(it.symbolPrimitive()) }
+            val type = visit(ctx.parameterType().type()) as Type
+            statementDDLCreateFunctionParameterDeclaration(name, type)
+        }
+
+        override fun visitReturnsClause(ctx: org.partiql.parser.antlr.PartiQLParser.ReturnsClauseContext) = translate(ctx) {
+            val type = visit(ctx.returnsDataType().type()) as Type
+            statementDDLCreateFunctionReturns(type)
+        }
+
+        override fun visitRoutineCharacteristic(ctx: org.partiql.parser.antlr.PartiQLParser.RoutineCharacteristicContext) = translate(ctx) {
+            val name = visitSymbolPrimitive(ctx.specificName().name)
+            val specificName = identifierQualified(name, emptyList())
+            statementRoutineCharacteristicSpecific(specificName)
+        }
+
+        override fun visitReturnStatement(ctx: org.partiql.parser.antlr.PartiQLParser.ReturnStatementContext) = translate(ctx) {
+            val expr = visitExpr(ctx.expr())
+            statementReturn(expr)
+        }
+
+        override fun visitSqlProcedureStatement(ctx: org.partiql.parser.antlr.PartiQLParser.SqlProcedureStatementContext?): AstNode {
+            return super.visitSqlProcedureStatement(ctx)
+        }
+
+        override fun visitSqlExecutableStatement(ctx: org.partiql.parser.antlr.PartiQLParser.SqlExecutableStatementContext?): AstNode {
+            return super.visitSqlExecutableStatement(ctx)
+        }
+
+        override fun visitRoutineBody(ctx: org.partiql.parser.antlr.PartiQLParser.RoutineBodyContext) = translate(ctx) {
+            visitSqlRoutineBody(ctx.sqlRoutineBody())
+        }
+
+        override fun visitSqlRoutineBody(ctx: org.partiql.parser.antlr.PartiQLParser.SqlRoutineBodyContext) = translate(ctx) {
+            val stmt = visitSqlProcedureStatement(ctx.sqlProcedureStatement()) as Statement
+            statementRoutineBodyInternal(stmt)
+        }
+
+        override fun visitSqlControlStatement(ctx: org.partiql.parser.antlr.PartiQLParser.SqlControlStatementContext?): AstNode {
+            return super.visitSqlControlStatement(ctx)
+        }
+
         /**
          *
          * DATA MANIPULATION LANGUAGE (DML)
@@ -1835,6 +1911,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             val n = ctx.arg0?.text?.toInt()
             when (ctx.datatype.type) {
                 GeneratedParser.FLOAT -> when (n) {
+                    null -> typeFloat64()
                     32 -> typeFloat32()
                     64 -> typeFloat64()
                     else -> throw error(ctx.datatype, "Invalid FLOAT precision. Expected 32 or 64")

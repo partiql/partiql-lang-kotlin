@@ -114,6 +114,33 @@ statement::[
       definition: optional::table_definition,
     },
 
+    // CREATE FUNCTION
+    create_function::{
+      specification: specification,
+      body: routine_body,
+      _: [
+        specification::{
+          name: '.identifier.qualified',
+          parameters: list::[parameter_declaration],
+          returns: returns,
+          characteristics: list::[routine_characteristic],
+        },
+        parameter_declaration::{
+          name: optional::'.identifier.symbol',
+          type: '.type'
+        },
+        // SQL:1999
+        // <returns clause> ::= RETURNS <returns data type> [ <result cast> ]
+        // <returns data type> ::= <data type> [ <locator indication> ]
+        // <result cast> ::= CAST FROM <result cast from type>
+        // <result cast from type> ::= <data type> [ <locator indication> ]
+        // TODO: Eventually add other grammatical rules here
+        returns::{
+          type: '.type'
+        }
+      ]
+    },
+
     // CREATE INDEX [<identifier>] ON <identifier> (<path> [, <path>]...)
     create_index::{
       index:  optional::identifier,
@@ -133,6 +160,19 @@ statement::[
     },
   ],
 
+  // SQL:1999
+  // <SQL control statement> ::=
+  //     <call statement>
+  //     | <return statement>
+  // <return statement> ::=
+  //     RETURN <return value>
+  // <return value> ::=
+  //     <value expression>
+  //     | NULL
+  return::{
+    value: expr
+  },
+
   // EXEC <symbol> [<expr>.*]
   exec::{
     procedure: string,
@@ -149,6 +189,26 @@ statement::[
       },
     ],
   },
+
+  _::[
+    // SQL:1999
+    // <routine body> ::=
+    //     <SQL routine body>            <-- nicknaming this `internal`
+    //     | <external body reference>   <-- nicknaming this `external`
+    routine_body::[
+      // SQL:1999
+      // <SQL routine body> (nicknamed `internal`) ::= <SQL procedure statement>
+      // Note: Semantic pass should ensure the statement is a procedure statement.
+      internal::{
+        procedure_statement: statement
+      }
+    ],
+    routine_characteristic::[
+      specific::{
+        name: '.identifier.qualified'
+      }
+    ]
+  ]
 ]
 
 // PartiQL Type AST nodes
