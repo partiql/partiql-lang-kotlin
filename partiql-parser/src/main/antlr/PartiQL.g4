@@ -37,18 +37,18 @@ localKeyword
 
 // A lexical identifier captures the exact appearance of an idenfifier in the query text,
 // without any additional semantics (such as case sensitivity).
-lexid
+identifier
     : ident=( REGULAR_IDENTIFIER | DELIMITED_IDENTIFIER )
     ;
 
 asIdent
-    : AS lexid;
+    : AS identifier;
 
 atIdent
-    : AT lexid;
+    : AT identifier;
 
 byIdent
-    : BY lexid;
+    : BY identifier;
 
 /**
  *
@@ -78,10 +78,10 @@ execCommand
  * Currently, this is a small subset of SQL DDL that is likely to make sense for PartiQL as well.
  */
 
-tableName : lexid;
-tableConstraintName : lexid;
-columnName : lexid;
-columnConstraintName : lexid;
+tableName : identifier;
+tableConstraintName : identifier;
+columnName : identifier;
+columnConstraintName : identifier;
 
 ddl
     : createCommand
@@ -90,12 +90,12 @@ ddl
 
 createCommand
     : CREATE TABLE tableName ( PAREN_LEFT tableDef PAREN_RIGHT )?                               # CreateTable
-    | CREATE INDEX ON lexid PAREN_LEFT pathSimple ( COMMA pathSimple )* PAREN_RIGHT             # CreateIndex
+    | CREATE INDEX ON identifier PAREN_LEFT pathSimple ( COMMA pathSimple )* PAREN_RIGHT        # CreateIndex
     ;
 
 dropCommand
     : DROP TABLE target=tableName                               # DropTable
-    | DROP INDEX target=lexid ON on=lexid                       # DropIndex
+    | DROP INDEX target=identifier ON on=identifier             # DropIndex
     ;
 
 tableDef
@@ -139,23 +139,23 @@ dmlBaseCommand
     ;
 
 pathSimple
-    : lexid pathSimpleSteps*;
+    : identifier pathSimpleSteps*;
 
 pathSimpleSteps
     : BRACKET_LEFT key=literal BRACKET_RIGHT             # PathSimpleLiteral
-    | BRACKET_LEFT key=lexid BRACKET_RIGHT               # PathSimpleSymbol
-    | PERIOD key=lexid                                   # PathSimpleDotSymbol
+    | BRACKET_LEFT key=identifier BRACKET_RIGHT          # PathSimpleSymbol
+    | PERIOD key=identifier                              # PathSimpleDotSymbol
     ;
 
 // Based on https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md
 // TODO add parsing of target attributes: https://github.com/partiql/partiql-lang-kotlin/issues/841
 replaceCommand
-    : REPLACE INTO lexid asIdent? value=expr;
+    : REPLACE INTO identifier asIdent? value=expr;
 
 // Based on https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md
 // TODO add parsing of target attributes: https://github.com/partiql/partiql-lang-kotlin/issues/841
 upsertCommand
-    : UPSERT INTO lexid asIdent? value=expr;
+    : UPSERT INTO identifier asIdent? value=expr;
 
 removeCommand
     : REMOVE pathSimple;
@@ -171,7 +171,7 @@ insertCommandReturning
 
 // See the Grammar at https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md#2-proposed-grammar-and-semantics
 insertStatement
-    : INSERT INTO lexid asIdent? value=expr onConflict?
+    : INSERT INTO identifier asIdent? value=expr onConflict?
     ;
 
 onConflict
@@ -193,11 +193,11 @@ onConflictLegacy
         | ON CONSTRAINT <constraint name>
 */
 conflictTarget
-    : PAREN_LEFT lexid (COMMA lexid)* PAREN_RIGHT
+    : PAREN_LEFT identifier (COMMA identifier)* PAREN_RIGHT
     | ON CONSTRAINT constraintName;
 
 constraintName
-    : lexid;
+    : identifier;
 
 conflictAction
     : DO NOTHING
@@ -246,7 +246,7 @@ returningColumn
 
 fromClauseSimple
     : FROM pathSimple asIdent? atIdent? byIdent?   # FromClauseSimpleExplicit
-    | FROM pathSimple lexid                        # FromClauseSimpleImplicit
+    | FROM pathSimple identifier                   # FromClauseSimpleImplicit
     ;
 
 whereClause
@@ -269,7 +269,7 @@ projectionItems
     : projectionItem ( COMMA projectionItem )* ;
 
 projectionItem
-    : expr ( AS? lexid )? ;
+    : expr ( AS? identifier )? ;
 
 setQuantifierStrategy
     : DISTINCT
@@ -284,7 +284,7 @@ letClause
     : LET letBinding ( COMMA letBinding )*;
 
 letBinding
-    : expr AS lexid;
+    : expr AS identifier;
 
 /**
  *
@@ -308,10 +308,10 @@ groupClause
     : GROUP PARTIAL? BY groupKey ( COMMA groupKey )* groupAlias?;
 
 groupAlias
-    : GROUP AS lexid;
+    : GROUP AS identifier;
 
 groupKey
-    : key=exprSelect (AS lexid)?;
+    : key=exprSelect (AS identifier)?;
 
 /**
  *
@@ -381,13 +381,13 @@ matchSelector
     ;
 
 patternPathVariable
-    : lexid EQ;
+    : identifier EQ;
 
 // Must be one of: TRAIL / ACYCLIC / SIMPLE
 pathRestrictor : localKeyword ;
 
 node
-    : PAREN_LEFT lexid? ( COLON labelSpec )? whereClause? PAREN_RIGHT;
+    : PAREN_LEFT identifier? ( COLON labelSpec )? whereClause? PAREN_RIGHT;
 
 edge
     : edgeWSpec quantifier=patternQuantifier?    # EdgeWithSpec
@@ -415,7 +415,7 @@ edgeWSpec
     ;
 
 edgeSpec
-    : BRACKET_LEFT lexid? ( COLON labelSpec )? whereClause? BRACKET_RIGHT;
+    : BRACKET_LEFT identifier? ( COLON labelSpec )? whereClause? BRACKET_RIGHT;
 
 labelSpec
     : labelSpec VERTBAR labelTerm        # LabelSpecOr
@@ -433,7 +433,7 @@ labelFactor
     ;
 
 labelPrimary
-    : lexid                              # LabelPrimaryName
+    : identifier                         # LabelPrimaryName
     | PERCENT                            # LabelPrimaryWild
     | PAREN_LEFT labelSpec PAREN_RIGHT   # LabelPrimaryParen
     ;
@@ -465,7 +465,7 @@ tableNonJoin
     ;
 
 tableBaseReference
-    : source=exprSelect lexid                               # TableBaseRefSymbol
+    : source=exprSelect identifier                          # TableBaseRefSymbol
     | source=exprSelect asIdent? atIdent? byIdent?          # TableBaseRefClauses
     | source=exprGraphMatchOne asIdent? atIdent? byIdent?   # TableBaseRefMatch
     ;
@@ -702,13 +702,13 @@ functionCall
     : name=( CHAR_LENGTH | CHARACTER_LENGTH | OCTET_LENGTH |
         BIT_LENGTH | UPPER | LOWER | SIZE | EXISTS | COUNT )
         PAREN_LEFT ( expr ( COMMA expr )* )? PAREN_RIGHT                         # FunctionCallReserved
-    | name=lexid PAREN_LEFT ( expr ( COMMA expr )* )? PAREN_RIGHT      # FunctionCallIdent
+    | name=identifier PAREN_LEFT ( expr ( COMMA expr )* )? PAREN_RIGHT           # FunctionCallIdent
     ;
 
 pathStep
     : BRACKET_LEFT key=expr BRACKET_RIGHT        # PathStepIndexExpr
     | BRACKET_LEFT all=ASTERISK BRACKET_RIGHT    # PathStepIndexAll
-    | PERIOD key=lexid                           # PathStepDotExpr
+    | PERIOD key=identifier                      # PathStepDotExpr
     | PERIOD all=ASTERISK                        # PathStepDotAll
     ;
 
@@ -723,7 +723,7 @@ parameter
     : QUESTION_MARK;
 
 varRefExpr
-    : qualifier=AT_SIGN? ident=lexid                            # VariableIdentifier
+    : qualifier=AT_SIGN? ident=identifier                       # VariableIdentifier
     | qualifier=AT_SIGN? key=nonReservedKeywords                # VariableKeyword
     ;
 
@@ -779,5 +779,5 @@ type
     | CHARACTER VARYING ( PAREN_LEFT arg0=LITERAL_INTEGER PAREN_RIGHT )?                                               # TypeVarChar
     | datatype=(DECIMAL|DEC|NUMERIC) ( PAREN_LEFT arg0=LITERAL_INTEGER ( COMMA arg1=LITERAL_INTEGER )? PAREN_RIGHT )?  # TypeArgDouble
     | datatype=(TIME|TIMESTAMP) ( PAREN_LEFT precision=LITERAL_INTEGER PAREN_RIGHT )? (WITH TIME ZONE)?                # TypeTimeZone
-    | lexid                                                                                                            # TypeCustom
+    | identifier                                                                                                       # TypeCustom
     ;
