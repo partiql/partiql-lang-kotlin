@@ -408,17 +408,6 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitByIdent(ctx: GeneratedParser.ByIdentContext) = visitIdentifier(ctx.identifier())
 
-        /** Interpret an ANTLR-parsed regular identifier as one of expected local keywords. */
-        private fun readLocalKeyword(
-            ctx: GeneratedParser.LocalKeywordContext,
-            expected: List<String>
-        ): String {
-            val terminal = ctx.REGULAR_IDENTIFIER()
-            val keyword = terminal.text.uppercase()
-            if (expected.contains(keyword))
-                return keyword
-            else throw error(ctx, "Expected one of: ${expected.joinToString(", ")}.")
-        }
         override fun visitIdentifier(ctx: GeneratedParser.IdentifierContext) = translate(ctx) {
             when (ctx.ident.type) {
                 GeneratedParser.REGULAR_IDENTIFIER -> identifierSymbol(
@@ -431,6 +420,18 @@ internal class PartiQLParserDefault : PartiQLParser {
                 )
                 else -> throw error(ctx, "Invalid symbol reference.")
             }
+        }
+
+        /** Interpret an ANTLR-parsed regular identifier as one of expected local keywords. */
+        private fun readLocalKeyword(
+            ctx: GeneratedParser.LocalKeywordContext,
+            expected: List<String>
+        ): String {
+            val terminal = ctx.REGULAR_IDENTIFIER()
+            val keyword = terminal.text.uppercase()
+            if (expected.contains(keyword))
+                return keyword
+            else throw error(ctx, "Expected one of: ${expected.joinToString(", ")}.")
         }
 
         /**
@@ -475,7 +476,7 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitColumnDeclaration(ctx: GeneratedParser.ColumnDeclarationContext) = translate(ctx) {
-            val name = symbolToString(ctx.columnName().identifier())
+            val name = visitIdentifier(ctx.columnName().identifier()).symbol
             val type = visit(ctx.type()) as Type
             val constraints = ctx.columnConstraint().map {
                 visitColumnConstraint(it)
@@ -484,7 +485,7 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitColumnConstraint(ctx: GeneratedParser.ColumnConstraintContext) = translate(ctx) {
-            val identifier = ctx.columnConstraintName()?.let { symbolToString(it.identifier()) }
+            val identifier = ctx.columnConstraintName()?.let { visitIdentifier(it.identifier()).symbol }
             val body = visit(ctx.columnConstraintDef()) as TableDefinition.Column.Constraint.Body
             tableDefinitionColumnConstraint(identifier, body)
         }
@@ -1719,7 +1720,7 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitLiteralIon(ctx: GeneratedParser.LiteralIonContext) = translate(ctx) {
             val value = try {
-                loadSingleElement(ctx.ION_CLOSURE().getStringValue())
+                loadSingleElement(ctx.ION_CLOSURE().text.trim('`'))
             } catch (e: IonElementException) {
                 throw error(ctx, "Unable to parse Ion value.", e)
             }
@@ -1727,7 +1728,7 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitLiteralString(ctx: GeneratedParser.LiteralStringContext) = translate(ctx) {
-            val value = ctx.LITERAL_STRING().getStringValue()
+            val value = ctx.LITERAL_STRING().getLiteralStringContent()
             exprLit(stringValue(value))
         }
 
@@ -1743,7 +1744,7 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitLiteralDate(ctx: GeneratedParser.LiteralDateContext) = translate(ctx) {
             val pattern = ctx.LITERAL_STRING().symbol
-            val dateString = ctx.LITERAL_STRING().getStringValue()
+            val dateString = ctx.LITERAL_STRING().getLiteralStringContent()
             if (DATE_PATTERN_REGEX.matches(dateString).not()) {
                 throw error(pattern, "Expected DATE string to be of the format yyyy-MM-dd")
             }
@@ -1880,15 +1881,6 @@ internal class PartiQLParserDefault : PartiQLParser {
         private inline fun <reified T : AstNode> visitAs(ctx: ParserRuleContext): T = visit(ctx) as T
 
         /**
-         * Visiting a symbol to get a string, skip the wrapping, unwrapping, and location tracking.
-         */
-        private fun symbolToString(ctx: GeneratedParser.IdentifierContext) = when (ctx.ident.type) {
-            GeneratedParser.DELIMITED_IDENTIFIER -> ctx.DELIMITED_IDENTIFIER().getStringValue()
-            GeneratedParser.REGULAR_IDENTIFIER -> ctx.REGULAR_IDENTIFIER().getStringValue()
-            else -> throw error(ctx, "Invalid symbol reference.")
-        }
-
-        /**
          * Convert [ALL|DISTINCT] to SetQuantifier Enum
          */
         private fun convertSetQuantifier(ctx: GeneratedParser.SetQuantifierStrategyContext?): SetQuantifier? = when {
@@ -1906,7 +1898,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             stringNode: TerminalNode,
             integerNode: TerminalNode?
         ): Pair<String, Int> {
-            val timeString = stringNode.getStringValue()
+            val timeString = stringNode.getLiteralStringContent()
             val precision = when (integerNode) {
                 null -> {
                     try {
@@ -1993,17 +1985,12 @@ internal class PartiQLParserDefault : PartiQLParser {
                 }
             }
 
-        private fun TerminalNode.getStringValue(): String = this.symbol.getStringValue()
-
-        // wVG-TODO It is doubtful it is useful to have these extractions gathered here.
-        // The part for identifiers is now in visitLexid.  Move others to better places as well?
-        private fun Token.getStringValue(): String = when (this.type) {
-            GeneratedParser.REGULAR_IDENTIFIER -> this.text
-            GeneratedParser.DELIMITED_IDENTIFIER -> this.text.removePrefix("\"").removeSuffix("\"").replace("\"\"", "\"")
-            GeneratedParser.LITERAL_STRING -> this.text.removePrefix("'").removeSuffix("'").replace("''", "'")
-            GeneratedParser.ION_CLOSURE -> this.text.removePrefix("`").removeSuffix("`")
-            else -> throw error(this, "Unsupported token for grabbing string value.")
-        }
+        private fun TerminalNode.getLiteralStringContent(): String =
+            when (this.symbol.type) {
+                org.partiql.parser.antlr.PartiQLParser.LITERAL_STRING ->
+                    this.symbol.text.removePrefix("'").removeSuffix("'").replace("''", "'")
+                else -> throw error(this.symbol, "Bug: should have only been called on a LITERAL_STRING token")
+            }
 
         private fun String.toIdentifier(): Identifier.Symbol = factory.identifierSymbol(
             symbol = this,
