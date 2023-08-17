@@ -50,6 +50,11 @@ class PartiQLSchemaInferencerTests {
     @Execution(ExecutionMode.CONCURRENT)
     fun testCollections(tc: TestCase) = runTest(tc)
 
+    @ParameterizedTest
+    @MethodSource("selectStar")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun testSelectStar(tc: TestCase) = runTest(tc)
+
     companion object {
 
         private val PLUGINS = listOf(LocalPlugin())
@@ -158,6 +163,22 @@ class PartiQLSchemaInferencerTests {
 
         @JvmStatic
         fun structs() = listOf<TestCase>()
+
+        @JvmStatic
+        fun selectStar() = listOf<TestCase>(
+            SuccessTestCase(
+                name = "Test #8",
+                catalog = CATALOG_AWS,
+                query = "SELECT * FROM ddb.pets",
+                expected = TABLE_AWS_DDB_PETS
+            ),
+            SuccessTestCase(
+                name = "Test #9",
+                catalog = CATALOG_AWS,
+                query = "SELECT * FROM b.b",
+                expected = TABLE_AWS_B_B
+            ),
+        )
     }
 
     sealed class TestCase {
@@ -195,8 +216,8 @@ class PartiQLSchemaInferencerTests {
                 query = "SELECT * FROM pets",
                 expected = BagType(
                     StructType(
-                        fields = mapOf("pets" to StaticType.ANY),
-                        contentClosed = true,
+                        fields = emptyMap(),
+                        contentClosed = false,
                         constraints = setOf(
                             TupleConstraint.Open(false),
                             TupleConstraint.UniqueAttrs(true),
@@ -217,8 +238,8 @@ class PartiQLSchemaInferencerTests {
                 query = "SELECT * FROM pets",
                 expected = BagType(
                     StructType(
-                        fields = mapOf("pets" to StaticType.ANY),
-                        contentClosed = true,
+                        fields = emptyMap(),
+                        contentClosed = false,
                         constraints = setOf(
                             TupleConstraint.Open(false),
                             TupleConstraint.UniqueAttrs(true),
@@ -288,18 +309,6 @@ class PartiQLSchemaInferencerTests {
                         PlanningProblemDetails.UndefinedVariable("pets", false)
                     )
                 }
-            ),
-            SuccessTestCase(
-                name = "Test #8",
-                catalog = CATALOG_AWS,
-                query = "SELECT * FROM ddb.pets",
-                expected = TABLE_AWS_DDB_PETS
-            ),
-            SuccessTestCase(
-                name = "Test #9",
-                catalog = CATALOG_AWS,
-                query = "SELECT * FROM b.b",
-                expected = TABLE_AWS_B_B
             ),
             SuccessTestCase(
                 name = "Test #10",
@@ -1091,6 +1100,7 @@ class PartiQLSchemaInferencerTests {
         val collector = ProblemCollector()
         val ctx = PartiQLSchemaInferencer.Context(session, PLUGINS, collector)
         val result = PartiQLSchemaInferencer.inferInternal(tc.query, ctx)
+
         assert(collector.problems.isEmpty()) {
             collector.problems.toString()
         }

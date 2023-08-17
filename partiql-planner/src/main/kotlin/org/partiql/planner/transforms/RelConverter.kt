@@ -113,11 +113,10 @@ internal object RelConverter {
      *
      * See https://partiql.org/assets/PartiQL-Specification.pdf#page=28
      */
-    private fun tupleUnionConstructor(project: Rel.Op.Project, relType: Rel.Type): Pair<Rex, Rel> = with(Plan) {
+    private fun tupleUnionConstructor(op: Rel.Op.Project, type: Rel.Type): Pair<Rex, Rel> = with(Plan) {
         val projections = mutableListOf<Rex>()
-        val args = mutableListOf<Rex.Op.TupleUnion.Arg>()
-        project.projections.forEachIndexed { i, item ->
-            val binding = relType.schema[i]
+        val args = op.projections.mapIndexed { i, item ->
+            val binding = type.schema[i]
             val k = binding.name
             val v = rex(binding.type, rexOpVarResolved(i))
             when (item.isProjectAll()) {
@@ -130,10 +129,9 @@ internal object RelConverter {
                     rexOpTupleUnionArgStruct(k, v)
                 }
             }
-
         }
         val constructor = rex(StaticType.STRUCT, rexOpTupleUnion(args))
-        val rel = rel(relType, relOpProject(project.input, projections))
+        val rel = rel(type, relOpProject(op.input, projections))
         constructor to rel
     }
 

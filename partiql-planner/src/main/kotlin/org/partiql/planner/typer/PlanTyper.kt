@@ -3,6 +3,7 @@ package org.partiql.planner.typer
 import org.partiql.errors.Problem
 import org.partiql.errors.ProblemCallback
 import org.partiql.errors.UNKNOWN_PROBLEM_LOCATION
+import org.partiql.plan.Fn
 import org.partiql.plan.Identifier
 import org.partiql.plan.Plan
 import org.partiql.plan.Rel
@@ -27,9 +28,21 @@ import org.partiql.types.SexpType
 import org.partiql.types.StaticType
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
+import org.partiql.types.function.FunctionSignature
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.TextValue
 
+/**
+ * Function signature match with (possibly) implicitly cast(ed) arguments.
+ */
+private typealias Match = Pair<FunctionSignature, List<Rex.Op.Call.Arg>>
+
+/**
+ * Rewrites an untyped algebraic translation of the query to be both typed and have resolved variables.
+ *
+ * @property env
+ * @property onProblem
+ */
 internal class PlanTyper(
     private val env: Env,
     private val onProblem: ProblemCallback,
@@ -74,7 +87,8 @@ internal class PlanTyper(
             // descend, with GLOBAL resolution strategy
             val rex = node.rex.type(outer.global())
             // compute rel type
-            val type = ctx!!.copyWithSchema(listOf(rex.type))
+            val valueT = getElementTypeForFromSource(rex.type)
+            val type = ctx!!.copyWithSchema(listOf(valueT))
             // rewrite
             val op = relOpScan(rex)
             rel(type, op)
@@ -87,7 +101,7 @@ internal class PlanTyper(
             // descend, with GLOBAL resolution strategy
             val rex = node.rex.type(outer.global())
             // compute rel type
-            val valueT = rex.type
+            val valueT = getElementTypeForFromSource(rex.type)
             val indexT = StaticType.INT
             val type = ctx!!.copyWithSchema(listOf(valueT, indexT))
             // rewrite
@@ -295,16 +309,25 @@ internal class PlanTyper(
             rex(type, rexOpPath(root, steps))
         }
 
-        override fun visitRexOpCall(node: Rex.Op.Call, ctx: StaticType?): Rex {
-            TODO("Type RexOpCall")
+        override fun visitRexOpCall(node: Rex.Op.Call, ctx: StaticType?): Rex = rewrite {
+            val fn = node.fn
+            val args = node.args.map { visitCallArg(it) }
+            // Already resolved; unreachable but handle gracefully.
+            if (fn is Fn.Resolved) {
+                val type = fn.signature.returns.toStaticType()
+                return rex(type, rexOpCall(fn, args))
+            }
+            val signatures = env.getFnSignatures(fn as Fn.Unresolved)
+            val match = match(signatures, args)
+            // TODO!
+            handleUnknownFunction(signatures, args)
+            rex(StaticType.ANY, rexOpErr())
         }
 
-        override fun visitRexOpCallArgValue(node: Rex.Op.Call.Arg.Value, ctx: StaticType?): Rex {
-            TODO("Type RexOpCallArgValue")
-        }
-
-        override fun visitRexOpCallArgType(node: Rex.Op.Call.Arg.Type, ctx: StaticType?): Rex {
-            TODO("Type RexOpCallArgType")
+        // TODO https://github.com/partiql/partiql-lang-kotlin/issues/1179
+        private fun visitCallArg(node: Rex.Op.Call.Arg): Rex.Op.Call.Arg = when (node) {
+            is Rex.Op.Call.Arg.Type -> visitRexOpCallArgType(node, null) as Rex.Op.Call.Arg
+            is Rex.Op.Call.Arg.Value -> visitRexOpCallArgValue(node, null) as Rex.Op.Call.Arg
         }
 
         override fun visitRexOpCase(node: Rex.Op.Case, ctx: StaticType?): Rex {
@@ -397,8 +420,59 @@ internal class PlanTyper(
         }
 
         override fun visitRexOpTupleUnion(node: Rex.Op.TupleUnion, ctx: StaticType?): Rex = rewrite {
-            rex(StaticType.STRUCT, node)
+            val args = node.args.map { visitTupleUnionArg(it) }
+            val structFields = mutableListOf<StructType.Field>()
+            var structIsClosed = true
+            for (arg in args) {
+                when (arg) {
+                    is Rex.Op.TupleUnion.Arg.Spread -> {
+                        val t = arg.v.type
+                        if (t is StructType) {
+                            // arg is definitely a struct
+                            structFields.addAll(t.fields)
+                            structIsClosed = structIsClosed && t.contentClosed
+                        } else if (t.allTypes.filterIsInstance<StructType>().isNotEmpty()) {
+                            // arg is possibly a struct, just declare OPEN content
+                            structIsClosed = false
+                        } else {
+                            // arg is definitely NOT a struct
+                            val field = StructType.Field(arg.k, arg.v.type)
+                            structFields.add(field)
+                        }
+                    }
+                    is Rex.Op.TupleUnion.Arg.Struct -> {
+                        val field = StructType.Field(arg.k, arg.v.type)
+                        structFields.add(field)
+                    }
+                }
+            }
+            val type = StructType(
+                fields = structFields,
+                contentClosed = structIsClosed,
+                constraints = setOf(
+                    TupleConstraint.Open(!structIsClosed),
+                    TupleConstraint.UniqueAttrs(structFields.size == structFields.map { it.key }.distinct().size),
+                    TupleConstraint.Ordered,
+                ),
+            )
+            val op = rexOpTupleUnion(args)
+            rex(type, op)
         }
+
+        private fun visitTupleUnionArg(node: Rex.Op.TupleUnion.Arg) = when (node) {
+            is Rex.Op.TupleUnion.Arg.Spread -> visitRexOpTupleUnionArgSpread(node, null)
+            is Rex.Op.TupleUnion.Arg.Struct -> visitRexOpTupleUnionArgStruct(node, null)
+        }
+
+        override fun visitRexOpTupleUnionArgStruct(
+            node: Rex.Op.TupleUnion.Arg.Struct,
+            ctx: StaticType?,
+        ) = super.visitRexOpTupleUnionArgStruct(node, ctx) as Rex.Op.TupleUnion.Arg
+
+        override fun visitRexOpTupleUnionArgSpread(
+            node: Rex.Op.TupleUnion.Arg.Spread,
+            ctx: StaticType?,
+        ) = super.visitRexOpTupleUnionArgSpread(node, ctx) as Rex.Op.TupleUnion.Arg
 
         // Helpers
 
@@ -536,6 +610,31 @@ internal class PlanTyper(
         return BindingPath(bindingSteps)
     }
 
+    private fun getElementTypeForFromSource(fromSourceType: StaticType): StaticType =
+        when (fromSourceType) {
+            is BagType -> fromSourceType.elementType
+            is ListType -> fromSourceType.elementType
+            is AnyType -> StaticType.ANY
+            is AnyOfType -> AnyOfType(fromSourceType.types.map { getElementTypeForFromSource(it) }.toSet())
+            // All the other types coerce into a bag of themselves (including null/missing/sexp).
+            else -> fromSourceType
+        }
+
+    private fun match(signatures: List<FunctionSignature>, args: List<Rex.Op.Call.Arg>): Match? {
+        for (s in signatures) {
+            val a = s.match(args)
+            if (a != null) {
+                return s to a
+            }
+        }
+        return null
+    }
+
+    private fun FunctionSignature.match(args: List<Rex.Op.Call.Arg>): List<Rex.Op.Call.Arg>? {
+        // TODO!
+        return null
+    }
+
     // ERRORS
 
     private fun handleUndefinedVariable(name: BindingName) {
@@ -552,6 +651,23 @@ internal class PlanTyper(
             Problem(
                 sourceLocation = UNKNOWN_PROBLEM_LOCATION,
                 details = PlanningProblemDetails.UnexpectedType(actual, expected),
+            )
+        )
+    }
+
+    private fun handleUnknownFunction(signatures: List<FunctionSignature>, args: List<Rex.Op.Call.Arg>) {
+        onProblem(
+            Problem(
+                sourceLocation = UNKNOWN_PROBLEM_LOCATION,
+                details = PlanningProblemDetails.UnknownFunction(
+                    signatures,
+                    args.map { a ->
+                        when (a) {
+                            is Rex.Op.Call.Arg.Type -> a.type
+                            is Rex.Op.Call.Arg.Value -> a.rex.type
+                        }
+                    }
+                )
             )
         )
     }

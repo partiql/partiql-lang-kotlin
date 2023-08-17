@@ -1,0 +1,40 @@
+== Binary Operators
+
+=== Numeric
+
+* plus
+* minus
+* mult
+* div
+
+==== Rules
+
+----
+<LHS> <OP> <RHS>
+----
+
+> See SQL-99 Section 6.3
+
+Let T~L~ and T~R~ be the types of the LHS and RHS respectively, and let S~L~ and S~R~ be their scales.
+
+
+. If both T~L~ and T~R~ are exact numeric, the result is exact numeric.
+.. For addition and subtraction, the scale of the result is MAX(S~L~, S~R~).
+.. For multiplication, the scale of the result is S~L~ + S~R~.
+.. For division, the scale is implementation defined.
+.. For all operators, the precision is implementation-defined.
+
+. If one of either T~L~ or T~R~ is approximate numeric, the result is approximate numeric.
+. If one of the args is NULL, the result is NULL.
+. Dividing by zero throws an exception.
+
+
+|===
+
+| TYPES | EXACT | APPROX
+
+| EXACT | .. | ..
+
+| APPROX | .. | ..
+
+|===

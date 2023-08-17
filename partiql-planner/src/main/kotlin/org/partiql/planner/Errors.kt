@@ -3,6 +3,7 @@ package org.partiql.planner
 import org.partiql.errors.ProblemDetails
 import org.partiql.errors.ProblemSeverity
 import org.partiql.types.StaticType
+import org.partiql.types.function.FunctionSignature
 
 /**
  * Contains detailed information about errors that may occur during query planning.
@@ -84,6 +85,16 @@ internal sealed class PlanningProblemDetails(
         val expectedTypes: Set<StaticType>,
     ) : PlanningProblemDetails(ProblemSeverity.ERROR, {
         "Unexpected type $actualType, expected one of ${expectedTypes.joinToString()}"
+    })
+
+    data class UnknownFunction(
+        val signatures: List<FunctionSignature>,
+        val args: List<StaticType>,
+    ) : PlanningProblemDetails(ProblemSeverity.ERROR, {
+        val name = signatures.first().name
+        val types = args.joinToString { "<${it.toString().lowercase()}>" }
+        val candidates = signatures.joinToString("\n")
+        "Unknown function `$name($types), found: $candidates"
     })
 }
 

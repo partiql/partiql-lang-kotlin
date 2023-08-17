@@ -52,6 +52,7 @@ public sealed class StaticType {
         @JvmField public val SYMBOL: SymbolType = SymbolType()
         @JvmField public val STRING: StringType = StringType()
         @JvmField public val TEXT: StaticType = unionOf(SYMBOL, STRING)
+        @JvmField public val CHAR: StaticType = StringType(StringType.StringLengthConstraint.Constrained(NumberConstraint.Equals(1)))
         @JvmField public val CLOB: ClobType = ClobType()
         @JvmField public val BLOB: BlobType = BlobType()
         @JvmField public val LIST: ListType = ListType()
