@@ -87,8 +87,6 @@ may then be further optimized by selecting better implementations of each operat
             (lit value::ion)
 
             // A variable reference
-            // wVG-TODO: In Phase 2, this will change to (varref id::lexid),
-            //   similar to what Sprout's partiql_ast.ion does in expr.var
             (id name::symbol case::case_sensitivity qualifier::scope_qualifier)
 
             // A parameter, i.e. `?`

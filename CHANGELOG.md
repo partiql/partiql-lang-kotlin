@@ -60,6 +60,14 @@ Thank you to all who have contributed!
   - `org.partiql.lang.errors.ProblemSeverity` -> `org.partiql.errors.ProblemSeverity`
   - `org.partiql.lang.errors.ProblemHandler` -> `org.partiql.errors.ProblemHandler`
 - **Breaking** the `sourceLocation` field of `org.partiql.errors.Problem` was changed from `org.partiql.lang.ast.SoureceLocationMeta` to `org.partiql.errors.ProblemLocation`.
+- **Breaking** changes around parsing of identifiers: 
+  - Renamed grammar terminals: `IDENTIFIER` to `REGULAR_IDENTIFIER`, `IDENTIFIER_QUOTED` to `DELIMITED_IDENTIFIER`.
+  - Renamed grammar non-terminals: `symbolPrimitive` to `identifier`, `patternRestrictor` to `pathRestrictor`.
+  - The rule for `varRefExpr` now refers to `identifier` non-terminal (formerly `symbolPrimitive`), 
+    instead of its in-lined definition. 
+  - Introduced a new non-terminal `localKeyword` and its aliases.  They are now used instead 
+    of `REGULAR_IDENTIFIER` (formerly `IDENTIFIER`) in the rules for `extract`, `dateFunction`, 
+    and `pathRestrictor` (formerly `patternRestrictor`).
 
 ### Deprecated
 

@@ -198,19 +198,6 @@ internal class PartiQLPigVisitor(
 
     override fun visitByIdent(ctx: PartiQLParser.ByIdentContext) = visitIdentifier(ctx.identifier())
 
-    /** Interpret an ANTLR-parsed regular identifier as one of expected local keywords. */
-    fun readLocalKeyword(
-        ctx: PartiQLParser.LocalKeywordContext,
-        expected: List<String>,
-        code: ErrorCode
-    ): Pair<String, MetaContainer> { // TODO?: Does the return type suggest introducing an AST node?
-        val terminal = ctx.REGULAR_IDENTIFIER()
-        val meta = terminal.getSourceMetaContainer()
-        val keyword = terminal.text.uppercase()
-        if (expected.contains(keyword))
-            return Pair(keyword, meta)
-        else throw terminal.err("Expected one of: ${expected.joinToString(", ")}.", code)
-    }
     override fun visitIdentifier(ctx: PartiQLParser.IdentifierContext): PartiqlAst.Identifier = PartiqlAst.build {
         val metas = ctx.ident.getSourceMetaContainer()
         when (ctx.ident.type) {
@@ -228,11 +215,23 @@ internal class PartiQLPigVisitor(
         }
     }
 
-    // PR-COMMENT This method is functionally equivalent to the legacy visitLexid(),
-    // but it is only called in places where returned Expr.Id is actually needed.
-    fun readLexidAsExprId(ctx: PartiQLParser.IdentifierContext): PartiqlAst.Expr.Id = PartiqlAst.build {
+    fun readIdentifierAsExprId(ctx: PartiQLParser.IdentifierContext): PartiqlAst.Expr.Id = PartiqlAst.build {
         val ident = visitIdentifier(ctx)
         id(ident.name.text, ident.case, unqualified(), ident.metas)
+    }
+
+    /** Interpret an ANTLR-parsed regular identifier as one of expected local keywords. */
+    fun readLocalKeyword(
+        ctx: PartiQLParser.LocalKeywordContext,
+        expected: List<String>,
+        code: ErrorCode
+    ): Pair<String, MetaContainer> { // TODO?: Does the return type suggest introducing an AST node?
+        val terminal = ctx.REGULAR_IDENTIFIER()
+        val meta = terminal.getSourceMetaContainer()
+        val keyword = terminal.text.uppercase()
+        if (expected.contains(keyword))
+            return Pair(keyword, meta)
+        else throw terminal.err("Expected one of: ${expected.joinToString(", ")}.", code)
     }
 
     /**
@@ -374,7 +373,7 @@ internal class PartiQLPigVisitor(
 
     override fun visitInsertStatement(ctx: PartiQLParser.InsertStatementContext) = PartiqlAst.build {
         insert_(
-            target = readLexidAsExprId(ctx.identifier()),
+            target = readIdentifierAsExprId(ctx.identifier()),
             asAlias = ctx.asIdent()?.let { visitAsIdent(it).name },
             values = visitExpr(ctx.value),
             conflictAction = ctx.onConflict()?.let { visitOnConflict(it) },
@@ -384,7 +383,7 @@ internal class PartiQLPigVisitor(
 
     override fun visitReplaceCommand(ctx: PartiQLParser.ReplaceCommandContext) = PartiqlAst.build {
         insert_(
-            target = readLexidAsExprId(ctx.identifier()),
+            target = readIdentifierAsExprId(ctx.identifier()),
             asAlias = ctx.asIdent()?.let { visitAsIdent(it).name },
             values = visitExpr(ctx.value),
             conflictAction = doReplace(excluded()),
@@ -395,7 +394,7 @@ internal class PartiQLPigVisitor(
     // Based on https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md
     override fun visitUpsertCommand(ctx: PartiQLParser.UpsertCommandContext) = PartiqlAst.build {
         insert_(
-            target = readLexidAsExprId(ctx.identifier()),
+            target = readIdentifierAsExprId(ctx.identifier()),
             asAlias = ctx.asIdent()?.let { visitAsIdent(it).name },
             values = visitExpr(ctx.value),
             conflictAction = doUpdate(excluded()),
@@ -489,7 +488,7 @@ internal class PartiQLPigVisitor(
     }
 
     override fun visitPathSimple(ctx: PartiQLParser.PathSimpleContext) = PartiqlAst.build {
-        val root = readLexidAsExprId(ctx.identifier())
+        val root = readIdentifierAsExprId(ctx.identifier())
         if (ctx.pathSimpleSteps().isEmpty()) return@build root
         val steps = ctx.pathSimpleSteps().map { visit(it) as PartiqlAst.PathStep }
         path(root, steps, root.metas)
@@ -500,7 +499,7 @@ internal class PartiQLPigVisitor(
     }
 
     override fun visitPathSimpleSymbol(ctx: PartiQLParser.PathSimpleSymbolContext) = PartiqlAst.build {
-        pathExpr(readLexidAsExprId(ctx.identifier()), caseSensitive())
+        pathExpr(readIdentifierAsExprId(ctx.identifier()), caseSensitive())
     }
 
     override fun visitPathSimpleDotSymbol(ctx: PartiQLParser.PathSimpleDotSymbolContext) =
@@ -1269,8 +1268,8 @@ internal class PartiQLPigVisitor(
     }
 
     override fun visitFunctionCallIdent(ctx: PartiQLParser.FunctionCallIdentContext) = PartiqlAst.build {
-        // wVG Even under the "legacy" identifiers, the lower-case conversion here looks suspicious;
-        //     this probably should have done "case insensitive"; but this will become mute in Phase 2.
+        // Even under the "legacy" identifiers, the lower-case conversion here looks suspicious;
+        // this probably should do "case-insensitive". However, this will become mute with SQL-conforming ids.
         val funIdent = visitIdentifier(ctx.name)
         val funName = funIdent.name.text.lowercase()
         val args = ctx.expr().map { visitExpr(it) }

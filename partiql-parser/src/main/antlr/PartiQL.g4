@@ -30,8 +30,8 @@ statement
  *
  */
 
-// A local keyword is treated as a keyword only in a limited context (such as DAY, HOUR within a call to a date-time function),
-// while being available as a regular identifier in other contexts.
+// A local keyword is treated as a keyword (in post-ANTLR processing) only in a limited context (such as DAY, HOUR
+// within a call to a date-time function), while being available as a regular identifier in other contexts.
 localKeyword
     : REGULAR_IDENTIFIER ;
 
