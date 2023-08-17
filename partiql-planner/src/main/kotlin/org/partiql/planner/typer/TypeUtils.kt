@@ -2,15 +2,26 @@ package org.partiql.planner.typer
 
 import org.partiql.types.AnyOfType
 import org.partiql.types.AnyType
+import org.partiql.types.BagType
+import org.partiql.types.BlobType
+import org.partiql.types.BoolType
+import org.partiql.types.ClobType
+import org.partiql.types.DateType
 import org.partiql.types.DecimalType
 import org.partiql.types.FloatType
+import org.partiql.types.GraphType
 import org.partiql.types.IntType
+import org.partiql.types.ListType
 import org.partiql.types.MissingType
 import org.partiql.types.NullType
 import org.partiql.types.PartiQLValueType
+import org.partiql.types.SexpType
 import org.partiql.types.StaticType
 import org.partiql.types.StringType
+import org.partiql.types.StructType
 import org.partiql.types.SymbolType
+import org.partiql.types.TimeType
+import org.partiql.types.TimestampType
 
 internal fun StaticType.isNullOrMissing(): Boolean = (this is NullType || this is MissingType)
 
@@ -82,4 +93,27 @@ internal fun PartiQLValueType.toStaticType(): StaticType = when (this) {
     PartiQLValueType.NULLABLE_LIST -> StaticType.unionOf(StaticType.LIST, StaticType.NULL)
     PartiQLValueType.NULLABLE_SEXP -> StaticType.unionOf(StaticType.SEXP, StaticType.NULL)
     PartiQLValueType.NULLABLE_STRUCT -> StaticType.unionOf(StaticType.STRUCT, StaticType.NULL)
+}
+
+internal fun StaticType.toRuntimeType(): PartiQLValueType = when (this) {
+    is AnyOfType -> TODO()
+    is AnyType -> TODO()
+    is BlobType -> TODO()
+    is BoolType -> TODO()
+    is ClobType -> TODO()
+    is BagType -> TODO()
+    is ListType -> TODO()
+    is SexpType -> TODO()
+    is DateType -> TODO()
+    is DecimalType -> TODO()
+    is FloatType -> TODO()
+    is GraphType -> TODO()
+    is IntType -> TODO()
+    MissingType -> TODO()
+    is NullType -> TODO()
+    is StringType -> TODO()
+    is StructType -> TODO()
+    is SymbolType -> TODO()
+    is TimeType -> TODO()
+    is TimestampType -> TODO()
 }

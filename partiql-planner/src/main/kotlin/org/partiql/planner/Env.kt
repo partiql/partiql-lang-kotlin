@@ -6,6 +6,7 @@ import org.partiql.plan.Identifier
 import org.partiql.plan.Plan
 import org.partiql.plan.Rel
 import org.partiql.plan.Rex
+import org.partiql.planner.typer.FunctionResolver
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
@@ -58,6 +59,22 @@ internal class TypeEnv(
         append("bindings=$bindings")
         append(")")
     }
+}
+
+/**
+ * Result of attempting to match an unresolved function.
+ */
+internal sealed class FnMatch {
+    public class Ok(
+        public val signature: FunctionSignature,
+        public val args: List<Rex.Op.Call.Arg>,
+    ) : FnMatch()
+
+    public class Error(
+        public val fn: Fn.Unresolved,
+        public val args: List<Rex.Op.Call.Arg>,
+        public val candidates: List<FunctionSignature>,
+    ) : FnMatch()
 }
 
 /**
@@ -124,6 +141,11 @@ internal class Env(
      */
     public val globals = mutableListOf<Global>()
 
+    /**
+     * Encapsulate function matching logic in
+     */
+    public val functionResolver = FunctionResolver(header)
+
     private val connectorSession = object : ConnectorSession {
         override fun getQueryId(): String = session.queryId
         override fun getUserId(): String = session.userId
@@ -150,11 +172,15 @@ internal class Env(
     }
 
     /**
-     * This will need to be greatly improved upon. We will need to return some kind of pair which has a list of
-     * implicit casts to introduce.
+     * Leverages a [FunctionResolver] to find a matching function defined in the [Header].
      */
-    internal fun getFnSignatures(ref: Fn.Unresolved): List<FunctionSignature> {
-        return header.lookup(ref)
+    internal fun resolveFn(fn: Fn.Unresolved, args: List<Rex.Op.Call.Arg>): FnMatch {
+        val candidates = header.lookup(fn)
+        val match = functionResolver.match(candidates, args)
+        return when (match) {
+            null -> FnMatch.Error(fn, args, candidates)
+            else -> FnMatch.Ok(match.first, match.second)
+        }
     }
 
     /**

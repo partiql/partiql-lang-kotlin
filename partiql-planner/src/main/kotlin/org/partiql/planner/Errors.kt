@@ -2,6 +2,7 @@ package org.partiql.planner
 
 import org.partiql.errors.ProblemDetails
 import org.partiql.errors.ProblemSeverity
+import org.partiql.plan.Identifier
 import org.partiql.types.StaticType
 import org.partiql.types.function.FunctionSignature
 
@@ -88,14 +89,26 @@ internal sealed class PlanningProblemDetails(
     })
 
     data class UnknownFunction(
+        val identifier: Identifier,
         val signatures: List<FunctionSignature>,
         val args: List<StaticType>,
     ) : PlanningProblemDetails(ProblemSeverity.ERROR, {
-        val name = signatures.first().name
+        val name = identifier.sql()
         val types = args.joinToString { "<${it.toString().lowercase()}>" }
-        val candidates = signatures.joinToString("\n")
+        val candidates = when (signatures.isEmpty()) {
+            true -> "No functions defined with name `$name`"
+            else -> signatures.joinToString("\n")
+        }
         "Unknown function `$name($types), found: $candidates"
     })
+}
+
+private fun Identifier.sql(): String = when (this) {
+    is Identifier.Qualified -> (listOf(root.sql()) + steps.map { it.sql() }).joinToString(".")
+    is Identifier.Symbol -> when (caseSensitivity) {
+        Identifier.CaseSensitivity.SENSITIVE -> "\"${symbol}\""
+        Identifier.CaseSensitivity.INSENSITIVE -> symbol
+    }
 }
 
 private fun quotationHint(caseSensitive: Boolean) =

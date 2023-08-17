@@ -11,6 +11,7 @@ import org.partiql.plan.Rex
 import org.partiql.plan.Statement
 import org.partiql.plan.util.PlanRewriter
 import org.partiql.planner.Env
+import org.partiql.planner.FnMatch
 import org.partiql.planner.PlanningProblemDetails
 import org.partiql.planner.ResolutionStrategy
 import org.partiql.planner.ResolvedVar
@@ -28,14 +29,8 @@ import org.partiql.types.SexpType
 import org.partiql.types.StaticType
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
-import org.partiql.types.function.FunctionSignature
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.TextValue
-
-/**
- * Function signature match with (possibly) implicitly cast(ed) arguments.
- */
-private typealias Match = Pair<FunctionSignature, List<Rex.Op.Call.Arg>>
 
 /**
  * Rewrites an untyped algebraic translation of the query to be both typed and have resolved variables.
@@ -317,11 +312,19 @@ internal class PlanTyper(
                 val type = fn.signature.returns.toStaticType()
                 return rex(type, rexOpCall(fn, args))
             }
-            val signatures = env.getFnSignatures(fn as Fn.Unresolved)
-            val match = match(signatures, args)
-            // TODO!
-            handleUnknownFunction(signatures, args)
-            rex(StaticType.ANY, rexOpErr())
+            when (val match = env.resolveFn(fn as Fn.Unresolved, args)) {
+                is FnMatch.Ok -> {
+                    val newFn = fnResolved(match.signature)
+                    val newArgs = match.args
+                    val type = match.signature.returns.toStaticType()
+                    val op = rexOpCall(newFn, newArgs)
+                    rex(type, op)
+                }
+                is FnMatch.Error -> {
+                    handleUnknownFunction(match)
+                    rex(StaticType.ANY, rexOpErr())
+                }
+            }
         }
 
         // TODO https://github.com/partiql/partiql-lang-kotlin/issues/1179
@@ -620,21 +623,6 @@ internal class PlanTyper(
             else -> fromSourceType
         }
 
-    private fun match(signatures: List<FunctionSignature>, args: List<Rex.Op.Call.Arg>): Match? {
-        for (s in signatures) {
-            val a = s.match(args)
-            if (a != null) {
-                return s to a
-            }
-        }
-        return null
-    }
-
-    private fun FunctionSignature.match(args: List<Rex.Op.Call.Arg>): List<Rex.Op.Call.Arg>? {
-        // TODO!
-        return null
-    }
-
     // ERRORS
 
     private fun handleUndefinedVariable(name: BindingName) {
@@ -655,13 +643,14 @@ internal class PlanTyper(
         )
     }
 
-    private fun handleUnknownFunction(signatures: List<FunctionSignature>, args: List<Rex.Op.Call.Arg>) {
+    private fun handleUnknownFunction(match: FnMatch.Error) {
         onProblem(
             Problem(
                 sourceLocation = UNKNOWN_PROBLEM_LOCATION,
                 details = PlanningProblemDetails.UnknownFunction(
-                    signatures,
-                    args.map { a ->
+                    match.fn.identifier,
+                    match.candidates,
+                    match.args.map { a ->
                         when (a) {
                             is Rex.Op.Call.Arg.Type -> a.type
                             is Rex.Op.Call.Arg.Value -> a.rex.type

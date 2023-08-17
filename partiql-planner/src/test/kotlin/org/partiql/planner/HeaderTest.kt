@@ -1,15 +1,17 @@
 package org.partiql.planner
 
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
 class HeaderTest {
 
     @Test
-    @Disabled
+    // @Disabled
     fun print() {
-        Header.Functions.all().forEach {
-            println(it)
+        Header.Functions.operators().forEach {
+            println("--- [${it.key}] ---------")
+            println()
+            it.value.forEach { fn -> println(fn) }
+            println()
         }
     }
 }

@@ -15,7 +15,7 @@
 package org.partiql.types
 
 /**
- * PartiQL Type Names
+ * PartiQL runtime value types.
  */
 public enum class PartiQLValueType {
     BOOL,
