@@ -4,19 +4,18 @@ import org.partiql.plan.Plan
 import org.partiql.plan.Rex
 import org.partiql.planner.Header
 import org.partiql.types.PartiQLValueType
-import org.partiql.types.StaticType
 import org.partiql.types.function.FunctionParameter
 import org.partiql.types.function.FunctionSignature
 
 /**
  * Function arguments list.
  */
-private typealias Args = List<Rex.Op.Call.Arg>
+internal typealias Args = List<Rex.Op.Call.Arg>
 
 /**
  * Function signature match with (possibly) implicitly cast(ed) arguments.
  */
-private typealias Match = Pair<FunctionSignature, Args>
+internal typealias Match = Pair<FunctionSignature, Args>
 
 /**
  * Logic for matching signatures to arguments.
@@ -73,17 +72,30 @@ internal class FunctionResolver(private val header: Header) {
         if (t1 == t2) {
             return this
         }
-        return when (header.canSafelyCast(t1, t2)) {
-            true -> this.cast(t2)
-            else -> null
+        val cast = header.lookupCast(t1, t2)
+        if (cast == null) {
+            return null
         }
+        return castArg(this, cast)
     }
 
-    /**
-     * Rewrite this node with the desired CAST.
-     */
-    private fun Rex.Op.Call.Arg.Value.cast(t2: PartiQLValueType) = Plan.create {
-        // TODO!!
-        rexOpCallArgValue(rex(StaticType.ANY, rexOpErr()))
+    internal companion object {
+
+        /**
+         * Rewrite this node with the desired CAST.
+         */
+        public fun castArg(arg: Rex.Op.Call.Arg.Value, cast: FunctionSignature) = Plan.create {
+            val type = cast.returns.toStaticType()
+            val value = arg.rex
+            rexOpCallArgValue(
+                rex(
+                    type = type,
+                    op = rexOpCall(
+                        fn = fnResolved(cast),
+                        args = listOf(rexOpCallArgValue(value), rexOpCallArgType(type))
+                    )
+                )
+            )
+        }
     }
 }

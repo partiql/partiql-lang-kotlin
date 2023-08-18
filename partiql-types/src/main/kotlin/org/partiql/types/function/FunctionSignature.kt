@@ -36,4 +36,32 @@ public class FunctionSignature(
         append(indent).appendLine("SPECIFIC -")
         append(indent).appendLine("RETURN $fn ( ${parameters.joinToString { it.name.uppercase() }} ) ;")
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (other !is FunctionSignature) return false
+        if (
+            other.name != name ||
+            other.returns != returns ||
+            other.isDeterministic != isDeterministic ||
+            other.parameters.size != parameters.size
+        ) {
+            return false
+        }
+        // all other parts equal, compare parameters (ignore names)
+        for (i in parameters.indices) {
+            val p1 = parameters[i]
+            val p2 = other.parameters[i]
+            if (p1.type != p2.type) return false
+        }
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = name.hashCode()
+        result = 31 * result + returns.hashCode()
+        result = 31 * result + parameters.hashCode()
+        result = 31 * result + isDeterministic.hashCode()
+        result = 31 * result + (description?.hashCode() ?: 0)
+        return result
+    }
 }

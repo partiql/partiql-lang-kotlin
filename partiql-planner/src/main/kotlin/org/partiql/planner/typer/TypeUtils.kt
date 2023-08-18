@@ -95,25 +95,63 @@ internal fun PartiQLValueType.toStaticType(): StaticType = when (this) {
     PartiQLValueType.NULLABLE_STRUCT -> StaticType.unionOf(StaticType.STRUCT, StaticType.NULL)
 }
 
-internal fun StaticType.toRuntimeType(): PartiQLValueType = when (this) {
-    is AnyOfType -> TODO()
-    is AnyType -> TODO()
-    is BlobType -> TODO()
-    is BoolType -> TODO()
-    is ClobType -> TODO()
-    is BagType -> TODO()
-    is ListType -> TODO()
-    is SexpType -> TODO()
-    is DateType -> TODO()
-    is DecimalType -> TODO()
-    is FloatType -> TODO()
-    is GraphType -> TODO()
-    is IntType -> TODO()
-    MissingType -> TODO()
-    is NullType -> TODO()
-    is StringType -> TODO()
-    is StructType -> TODO()
-    is SymbolType -> TODO()
-    is TimeType -> TODO()
-    is TimestampType -> TODO()
+internal fun StaticType.toRuntimeType(): PartiQLValueType = when (this.isNullable()) {
+    true -> toNullableRuntimeType()
+    else -> toNonNullRuntimeType()
+}
+
+internal fun StaticType.toNonNullRuntimeType(): PartiQLValueType = when (this) {
+    is AnyOfType -> error("ANY_OF is not a runtime type")
+    is AnyType -> error("ANY is not a runtime type")
+    is BlobType -> PartiQLValueType.BLOB
+    is BoolType -> PartiQLValueType.BOOL
+    is ClobType -> PartiQLValueType.CLOB
+    is BagType -> PartiQLValueType.BAG
+    is ListType -> PartiQLValueType.LIST
+    is SexpType -> PartiQLValueType.SEXP
+    is DateType -> PartiQLValueType.DATE
+    is DecimalType -> PartiQLValueType.DECIMAL
+    is FloatType -> PartiQLValueType.FLOAT64
+    is GraphType -> PartiQLValueType.GRAPH
+    is IntType -> when (this.rangeConstraint) {
+        IntType.IntRangeConstraint.SHORT -> PartiQLValueType.INT16
+        IntType.IntRangeConstraint.INT4 -> PartiQLValueType.INT32
+        IntType.IntRangeConstraint.LONG -> PartiQLValueType.INT64
+        IntType.IntRangeConstraint.UNCONSTRAINED -> PartiQLValueType.INT
+    }
+    MissingType -> PartiQLValueType.MISSING
+    is NullType -> PartiQLValueType.NULL
+    is StringType -> PartiQLValueType.STRING
+    is StructType -> PartiQLValueType.STRUCT
+    is SymbolType -> PartiQLValueType.SYMBOL
+    is TimeType -> PartiQLValueType.TIME
+    is TimestampType -> PartiQLValueType.TIMESTAMP
+}
+
+internal fun StaticType.toNullableRuntimeType(): PartiQLValueType = when (this) {
+    is AnyOfType -> error("ANY_OF is not a runtime type")
+    is AnyType -> error("ANY is not a runtime type")
+    is BlobType -> PartiQLValueType.NULLABLE_BLOB
+    is BoolType -> PartiQLValueType.NULLABLE_BOOL
+    is ClobType -> PartiQLValueType.NULLABLE_CLOB
+    is BagType -> PartiQLValueType.NULLABLE_BAG
+    is ListType -> PartiQLValueType.NULLABLE_LIST
+    is SexpType -> PartiQLValueType.NULLABLE_SEXP
+    is DateType -> PartiQLValueType.NULLABLE_DATE
+    is DecimalType -> PartiQLValueType.NULLABLE_DECIMAL
+    is FloatType -> PartiQLValueType.NULLABLE_FLOAT64
+    is GraphType -> PartiQLValueType.GRAPH
+    is IntType -> when (this.rangeConstraint) {
+        IntType.IntRangeConstraint.SHORT -> PartiQLValueType.NULLABLE_INT16
+        IntType.IntRangeConstraint.INT4 -> PartiQLValueType.NULLABLE_INT32
+        IntType.IntRangeConstraint.LONG -> PartiQLValueType.NULLABLE_INT64
+        IntType.IntRangeConstraint.UNCONSTRAINED -> PartiQLValueType.NULLABLE_INT
+    }
+    MissingType -> PartiQLValueType.MISSING
+    is NullType -> PartiQLValueType.NULL
+    is StringType -> PartiQLValueType.NULLABLE_STRING
+    is StructType -> PartiQLValueType.NULLABLE_STRUCT
+    is SymbolType -> PartiQLValueType.NULLABLE_SYMBOL
+    is TimeType -> PartiQLValueType.NULLABLE_TIME
+    is TimestampType -> PartiQLValueType.NULLABLE_TIMESTAMP
 }

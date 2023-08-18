@@ -84,7 +84,25 @@ internal class Header(
         return functions.getOrDefault(name, emptyList())
     }
 
-    public fun canSafelyCast(t1: PartiQLValueType, t2: PartiQLValueType): Boolean = types.canSafelyCast(t1, t2)
+    /**
+     * Returns the CAST function if exists, else null.
+     */
+    public fun lookupCast(t1: PartiQLValueType, t2: PartiQLValueType): FunctionSignature? {
+        val casts = functions.getOrDefault("cast", emptyList())
+        for (cast in casts) {
+            if (cast.parameters.size != 2) {
+                break // should be unreachable
+            }
+            val p1 = cast.parameters[0]
+            val p2 = cast.parameters[1]
+            if (p1 is FunctionParameter.V || p2 is FunctionParameter.T) {
+                if (t1 == p1.type && t2 == p2.type) {
+                    return cast
+                }
+            }
+        }
+        return null
+    }
 
     /**
      * Return a normalized function identifier for lookup in our list of function definitions.
@@ -94,16 +112,24 @@ internal class Header(
         is Identifier.Symbol -> identifier.symbol.lowercase()
     }
 
+    /**
+     * Dump the Header as SQL commands
+     *
+     * For functions, output CREATE FUNCTION statements.
+     */
+    override fun toString(): String = buildString {
+        functions.forEach {
+            appendLine("-- [${it.key}] ---------")
+            appendLine()
+            it.value.forEach { fn -> appendLine(fn) }
+            appendLine()
+        }
+    }
+
     companion object {
 
         /**
          * TEMPORARY — Hardcoded PartiQL Global Catalog
-         *
-         * TODO: Define non-atomic types
-         * TODO: Define INT8
-         * TODO: Define FLOAT32 vs FLOAT64
-         * TODO: Define BIT, BINARY, BYTE
-         * TODO: Define INTERVAL
          */
         public fun partiql(): Header {
             val namespace = "partiql"
@@ -116,18 +142,29 @@ internal class Header(
         }
     }
 
+    /**
+     * Utilities for building function signatures for the header / symbol table.
+     */
     internal object Functions {
 
-        fun combine(vararg functions: List<FunctionSignature>): FunctionMap {
+        /**
+         * Produce a function map (grouping by name) from a list of signatures.
+         */
+        public fun combine(vararg functions: List<FunctionSignature>): FunctionMap {
             return functions.flatMap { it.sortedWith(functionPrecedence) }.groupBy { it.name }
         }
 
-        // TODO! Generate a list of CAST functions from the relationships in the lattice
-        fun casts(type: TypeLattice): List<FunctionSignature> {
-            TODO()
+        /**
+         * Generate all "safe" CAST functions from the given lattice.
+         */
+        public fun casts(lattice: TypeLattice): List<FunctionSignature> = lattice.implicitCasts().map {
+            cast(it.first, it.second)
         }
 
-        fun operators(): List<FunctionSignature> = listOf(
+        /**
+         * Generate all unary and binary operator signatures.
+         */
+        public fun operators(): List<FunctionSignature> = listOf(
             not(),
             pos(),
             neg(),
@@ -175,18 +212,28 @@ internal class Header(
             NULLABLE_SYMBOL,
         )
 
-        private fun unary(name: String, returns: PartiQLValueType, value: PartiQLValueType) =
+        public fun unary(name: String, returns: PartiQLValueType, value: PartiQLValueType) =
             FunctionSignature(
                 name = name,
                 returns = returns,
                 parameters = listOf(FunctionParameter.V("value", value))
             )
 
-        private fun binary(name: String, returns: PartiQLValueType, lhs: PartiQLValueType, rhs: PartiQLValueType) =
+        public fun binary(name: String, returns: PartiQLValueType, lhs: PartiQLValueType, rhs: PartiQLValueType) =
             FunctionSignature(
                 name = name,
                 returns = returns,
                 parameters = listOf(FunctionParameter.V("lhs", lhs), FunctionParameter.V("rhs", rhs))
+            )
+
+        public fun cast(value: PartiQLValueType, type: PartiQLValueType) =
+            FunctionSignature(
+                name = "cast",
+                returns = type,
+                parameters = listOf(
+                    FunctionParameter.V("value", value),
+                    FunctionParameter.T("type", type),
+                )
             )
 
         private fun not(): List<FunctionSignature> = listOf(BOOL, NULLABLE_BOOL).map { t ->
@@ -256,8 +303,6 @@ internal class Header(
         private fun concat(): List<FunctionSignature> = textTypes.map { t ->
             binary("concat", t, t, t)
         }
-
-        // TODO move these helpers?
 
         // Function precedence comparator
         // 1. Fewest args first

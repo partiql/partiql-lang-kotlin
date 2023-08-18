@@ -7,11 +7,6 @@ class HeaderTest {
     @Test
     // @Disabled
     fun print() {
-        Header.Functions.operators().forEach {
-            println("--- [${it.key}] ---------")
-            println()
-            it.value.forEach { fn -> println(fn) }
-            println()
-        }
+        println(Header.partiql())
     }
 }
