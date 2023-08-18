@@ -60,15 +60,12 @@ private typealias TypeGraph = Array<Array<Relationship?>>
 /**
  * Each edge represents a type relationship
  */
-private class Relationship(val castSafety: CastSafety)
+private data class Relationship(val type: CastType)
 
 /**
- * A CAST is safe iff it's lossless and never errs.
- *
- * SAFE     <-> IMPLICIT CAST
- * UNSAFE   <-> EXPLICIT CAST
+ * An IMPLICIT CAST will be inserted by the compiler during function resolution, an EXPLICIT CAST cannot be inserted.
  */
-private enum class CastSafety { SAFE, UNSAFE }
+private enum class CastType { IMPLICIT, EXPLICIT_LOSSLESS, EXPLICIT_LOSSY }
 
 /**
  * A place to model type relationships (for now this is to answer CAST inquiries).
@@ -81,14 +78,14 @@ internal class TypeLattice private constructor(
 ) {
 
     /**
-     * Returns a list of all implicit (safe) CAST pairs.
+     * Returns a list of all implicit CAST pairs.
      */
     public fun implicitCasts(): List<Pair<PartiQLValueType, PartiQLValueType>> {
         val casts = mutableListOf<Pair<PartiQLValueType, PartiQLValueType>>()
         for (t1 in types) {
             for (t2 in types) {
                 val r = graph[t1][t2]
-                if (r != null && r.castSafety == CastSafety.SAFE) {
+                if (r != null && r.type == CastType.IMPLICIT) {
                     casts.add(t1 to t2)
                 }
             }
@@ -110,10 +107,7 @@ internal class TypeLattice private constructor(
             for (t2 in types) {
                 val symbol = when (val r = graph[t1][t2]) {
                     null -> "-"
-                    else -> when (r.castSafety) {
-                        CastSafety.SAFE -> "⬤"
-                        CastSafety.UNSAFE -> "✕"
-                    }
+                    else -> r.toString()
                 }
                 append("| $symbol ")
             }
@@ -137,16 +131,18 @@ internal class TypeLattice private constructor(
             return arr
         }
 
-        private fun safe(): Relationship = Relationship(CastSafety.SAFE)
+        private fun implicit(): Relationship = Relationship(CastType.IMPLICIT)
 
-        private fun unsafe(): Relationship = Relationship(CastSafety.UNSAFE)
+        private fun lossless(): Relationship = Relationship(CastType.EXPLICIT_LOSSLESS)
+        
+        private fun lossy(): Relationship = Relationship(CastType.EXPLICIT_LOSSY)
 
         private operator fun <T> Array<T>.set(t: PartiQLValueType, value: T): Unit = this.set(t.ordinal, value)
 
         /**
          * Build the PartiQL type lattice.
          *
-         * TODO define the unsafe / lossy / explicit CAST relationships.
+         * TODO this is incomplete.
          */
         public fun partiql(): TypeLattice {
             val types = PartiQLValueType.values()
@@ -158,168 +154,200 @@ internal class TypeLattice private constructor(
             graph[NULL] = arrayOfNulls(N)
             graph[MISSING] = arrayOfNulls(N)
             graph[BOOL] = relationships(
-                BOOL to safe(),
-                INT8 to safe(),
-                INT16 to safe(),
-                INT32 to safe(),
-                INT64 to safe(),
-                INT to safe(),
-                DECIMAL to safe(),
-                FLOAT32 to safe(),
-                FLOAT64 to safe(),
-                CHAR to safe(),
-                STRING to safe(),
-                SYMBOL to safe(),
-                NULLABLE_CHAR to safe(),
-                NULLABLE_BOOL to safe(),
-                NULLABLE_INT8 to safe(),
-                NULLABLE_INT16 to safe(),
-                NULLABLE_INT32 to safe(),
-                NULLABLE_INT64 to safe(),
-                NULLABLE_INT to safe(),
-                NULLABLE_DECIMAL to safe(),
-                NULLABLE_FLOAT32 to safe(),
-                NULLABLE_FLOAT64 to safe(),
-                NULLABLE_STRING to safe(),
-                NULLABLE_SYMBOL to safe(),
+                BOOL to implicit(),
+                INT8 to implicit(),
+                INT16 to implicit(),
+                INT32 to implicit(),
+                INT64 to implicit(),
+                INT to implicit(),
+                DECIMAL to implicit(),
+                FLOAT32 to implicit(),
+                FLOAT64 to implicit(),
+                CHAR to implicit(),
+                STRING to implicit(),
+                SYMBOL to implicit(),
+                NULLABLE_CHAR to implicit(),
+                NULLABLE_BOOL to lossless(),
+                NULLABLE_INT8 to implicit(),
+                NULLABLE_INT16 to implicit(),
+                NULLABLE_INT32 to implicit(),
+                NULLABLE_INT64 to implicit(),
+                NULLABLE_INT to implicit(),
+                NULLABLE_DECIMAL to implicit(),
+                NULLABLE_FLOAT32 to implicit(),
+                NULLABLE_FLOAT64 to implicit(),
+                NULLABLE_STRING to implicit(),
+                NULLABLE_SYMBOL to implicit(),
             )
             graph[INT8] = relationships(
-                BOOL to safe(),
-                INT8 to safe(),
-                INT16 to safe(),
-                INT32 to safe(),
-                INT64 to safe(),
-                INT to safe(),
-                DECIMAL to safe(),
-                FLOAT32 to safe(),
-                FLOAT64 to safe(),
-                NULLABLE_BOOL to safe(),
-                NULLABLE_INT8 to safe(),
-                NULLABLE_INT16 to safe(),
-                NULLABLE_INT32 to safe(),
-                NULLABLE_INT64 to safe(),
-                NULLABLE_INT to safe(),
-                NULLABLE_DECIMAL to safe(),
-                NULLABLE_FLOAT32 to safe(),
-                NULLABLE_FLOAT64 to safe(),
+                BOOL to lossless(),
+                INT8 to implicit(),
+                INT16 to implicit(),
+                INT32 to implicit(),
+                INT64 to implicit(),
+                INT to implicit(),
+                DECIMAL to implicit(),
+                FLOAT32 to implicit(),
+                FLOAT64 to implicit(),
+                STRING to lossless(),
+                SYMBOL to lossless(),
+                NULLABLE_BOOL to lossless(),
+                NULLABLE_INT8 to implicit(),
+                NULLABLE_INT16 to implicit(),
+                NULLABLE_INT32 to implicit(),
+                NULLABLE_INT64 to implicit(),
+                NULLABLE_INT to implicit(),
+                NULLABLE_DECIMAL to implicit(),
+                NULLABLE_FLOAT32 to implicit(),
+                NULLABLE_FLOAT64 to implicit(),
+                NULLABLE_STRING to lossless(),
+                NULLABLE_SYMBOL to lossless(),
             )
             graph[INT16] = relationships(
-                BOOL to safe(),
-                INT16 to safe(),
-                INT32 to safe(),
-                INT64 to safe(),
-                INT to safe(),
-                DECIMAL to safe(),
-                FLOAT32 to safe(),
-                FLOAT64 to safe(),
-                NULLABLE_BOOL to safe(),
-                NULLABLE_INT16 to safe(),
-                NULLABLE_INT32 to safe(),
-                NULLABLE_INT64 to safe(),
-                NULLABLE_INT to safe(),
-                NULLABLE_DECIMAL to safe(),
-                NULLABLE_FLOAT32 to safe(),
-                NULLABLE_FLOAT64 to safe(),
+                BOOL to lossless(),
+                INT16 to implicit(),
+                INT32 to implicit(),
+                INT64 to implicit(),
+                INT to implicit(),
+                DECIMAL to implicit(),
+                FLOAT32 to implicit(),
+                FLOAT64 to implicit(),
+                STRING to lossless(),
+                SYMBOL to lossless(),
+                NULLABLE_BOOL to lossless(),
+                NULLABLE_INT16 to implicit(),
+                NULLABLE_INT32 to implicit(),
+                NULLABLE_INT64 to implicit(),
+                NULLABLE_INT to implicit(),
+                NULLABLE_DECIMAL to implicit(),
+                NULLABLE_FLOAT32 to implicit(),
+                NULLABLE_FLOAT64 to implicit(),
+                NULLABLE_STRING to lossless(),
+                NULLABLE_SYMBOL to lossless(),
             )
             graph[INT32] = relationships(
-                BOOL to safe(),
-                INT32 to safe(),
-                INT64 to safe(),
-                INT to safe(),
-                DECIMAL to safe(),
-                FLOAT32 to safe(),
-                FLOAT64 to safe(),
-                NULLABLE_BOOL to safe(),
-                NULLABLE_INT32 to safe(),
-                NULLABLE_INT64 to safe(),
-                NULLABLE_INT to safe(),
-                NULLABLE_DECIMAL to safe(),
-                NULLABLE_FLOAT32 to safe(),
-                NULLABLE_FLOAT64 to safe(),
+                BOOL to lossless(),
+                INT32 to implicit(),
+                INT64 to implicit(),
+                INT to implicit(),
+                DECIMAL to implicit(),
+                FLOAT32 to implicit(),
+                FLOAT64 to implicit(),
+                STRING to lossless(),
+                SYMBOL to lossless(),
+                NULLABLE_BOOL to lossless(),
+                NULLABLE_INT32 to implicit(),
+                NULLABLE_INT64 to implicit(),
+                NULLABLE_INT to implicit(),
+                NULLABLE_DECIMAL to implicit(),
+                NULLABLE_FLOAT32 to implicit(),
+                NULLABLE_FLOAT64 to implicit(),
+                NULLABLE_STRING to lossless(),
+                NULLABLE_SYMBOL to lossless(),
             )
             graph[INT64] = relationships(
-                BOOL to safe(),
-                INT64 to safe(),
-                INT to safe(),
-                DECIMAL to safe(),
-                FLOAT32 to safe(),
-                FLOAT64 to safe(),
-                NULLABLE_BOOL to safe(),
-                NULLABLE_INT64 to safe(),
-                NULLABLE_INT to safe(),
-                NULLABLE_DECIMAL to safe(),
-                NULLABLE_FLOAT32 to safe(),
-                NULLABLE_FLOAT64 to safe(),
+                BOOL to lossless(),
+                INT64 to implicit(),
+                INT to implicit(),
+                DECIMAL to implicit(),
+                FLOAT32 to implicit(),
+                FLOAT64 to implicit(),
+                STRING to lossless(),
+                SYMBOL to lossless(),
+                NULLABLE_BOOL to lossless(),
+                NULLABLE_INT64 to implicit(),
+                NULLABLE_INT to implicit(),
+                NULLABLE_DECIMAL to implicit(),
+                NULLABLE_FLOAT32 to implicit(),
+                NULLABLE_FLOAT64 to implicit(),
+                NULLABLE_STRING to lossless(),
+                NULLABLE_SYMBOL to lossless(),
             )
             graph[INT] = relationships(
-                BOOL to safe(),
-                INT to safe(),
-                DECIMAL to safe(),
-                FLOAT32 to safe(),
-                FLOAT64 to safe(),
-                NULLABLE_BOOL to safe(),
-                NULLABLE_INT to safe(),
-                NULLABLE_DECIMAL to safe(),
-                NULLABLE_FLOAT32 to safe(),
-                NULLABLE_FLOAT64 to safe(),
+                BOOL to lossless(),
+                INT to implicit(),
+                DECIMAL to implicit(),
+                FLOAT32 to implicit(),
+                FLOAT64 to implicit(),
+                STRING to lossless(),
+                SYMBOL to lossless(),
+                NULLABLE_BOOL to lossless(),
+                NULLABLE_INT to implicit(),
+                NULLABLE_DECIMAL to implicit(),
+                NULLABLE_FLOAT32 to implicit(),
+                NULLABLE_FLOAT64 to implicit(),
+                NULLABLE_STRING to lossless(),
+                NULLABLE_SYMBOL to lossless(),
             )
             graph[DECIMAL] = relationships(
-                BOOL to safe(),
-                DECIMAL to safe(),
-                FLOAT32 to safe(),
-                FLOAT64 to safe(),
-                NULLABLE_BOOL to safe(),
-                NULLABLE_DECIMAL to safe(),
-                NULLABLE_FLOAT32 to safe(),
-                NULLABLE_FLOAT64 to safe(),
+                BOOL to lossless(),
+                DECIMAL to implicit(),
+                FLOAT32 to implicit(),
+                FLOAT64 to implicit(),
+                STRING to lossless(),
+                SYMBOL to lossless(),
+                NULLABLE_BOOL to lossless(),
+                NULLABLE_DECIMAL to implicit(),
+                NULLABLE_FLOAT32 to implicit(),
+                NULLABLE_FLOAT64 to implicit(),
+                NULLABLE_STRING to lossless(),
+                NULLABLE_SYMBOL to lossless(),
             )
             graph[FLOAT32] = relationships(
-                BOOL to safe(),
-                FLOAT32 to safe(),
-                FLOAT64 to safe(),
-                NULLABLE_BOOL to safe(),
-                NULLABLE_FLOAT32 to safe(),
-                NULLABLE_FLOAT64 to safe(),
+                BOOL to lossless(),
+                FLOAT32 to implicit(),
+                FLOAT64 to implicit(),
+                STRING to lossless(),
+                SYMBOL to lossless(),
+                NULLABLE_BOOL to lossless(),
+                NULLABLE_FLOAT32 to implicit(),
+                NULLABLE_FLOAT64 to implicit(),
+                NULLABLE_STRING to lossless(),
+                NULLABLE_SYMBOL to lossless(),
             )
             graph[FLOAT64] = relationships(
-                BOOL to safe(),
-                FLOAT64 to safe(),
-                NULLABLE_BOOL to safe(),
-                NULLABLE_FLOAT64 to safe(),
+                BOOL to lossless(),
+                FLOAT64 to implicit(),
+                STRING to lossless(),
+                SYMBOL to lossless(),
+                NULLABLE_BOOL to lossless(),
+                NULLABLE_FLOAT64 to implicit(),
+                NULLABLE_STRING to lossless(),
+                NULLABLE_SYMBOL to lossless(),
             )
             graph[CHAR] = relationships(
-                BOOL to safe(),
-                CHAR to safe(),
-                STRING to safe(),
-                SYMBOL to safe(),
-                NULLABLE_BOOL to safe(),
-                NULLABLE_CHAR to safe(),
-                NULLABLE_STRING to safe(),
-                NULLABLE_SYMBOL to safe(),
+                BOOL to lossless(),
+                CHAR to implicit(),
+                STRING to implicit(),
+                SYMBOL to implicit(),
+                NULLABLE_BOOL to lossless(),
+                NULLABLE_CHAR to implicit(),
+                NULLABLE_STRING to implicit(),
+                NULLABLE_SYMBOL to implicit(),
             )
             graph[STRING] = relationships(
-                BOOL to safe(),
-                STRING to safe(),
-                SYMBOL to safe(),
-                CLOB to safe(),
-                NULLABLE_BOOL to safe(),
-                NULLABLE_STRING to safe(),
-                NULLABLE_SYMBOL to safe(),
-                NULLABLE_CLOB to safe(),
+                BOOL to lossless(),
+                STRING to implicit(),
+                SYMBOL to implicit(),
+                CLOB to implicit(),
+                NULLABLE_BOOL to lossless(),
+                NULLABLE_STRING to implicit(),
+                NULLABLE_SYMBOL to implicit(),
+                NULLABLE_CLOB to implicit(),
             )
             graph[SYMBOL] = relationships(
-                BOOL to safe(),
-                STRING to safe(),
-                SYMBOL to safe(),
-                CLOB to safe(),
-                NULLABLE_BOOL to safe(),
-                NULLABLE_STRING to safe(),
-                NULLABLE_SYMBOL to safe(),
-                NULLABLE_CLOB to safe(),
+                BOOL to lossless(),
+                STRING to implicit(),
+                SYMBOL to implicit(),
+                CLOB to implicit(),
+                NULLABLE_BOOL to lossless(),
+                NULLABLE_STRING to implicit(),
+                NULLABLE_SYMBOL to implicit(),
+                NULLABLE_CLOB to implicit(),
             )
             graph[CLOB] = relationships(
-                CLOB to safe(),
-                NULLABLE_CLOB to safe(),
+                CLOB to implicit(),
+                NULLABLE_CLOB to implicit(),
             )
             graph[BINARY] = arrayOfNulls(N)
             graph[BYTE] = arrayOfNulls(N)
@@ -329,123 +357,139 @@ internal class TypeLattice private constructor(
             graph[TIMESTAMP] = arrayOfNulls(N)
             graph[INTERVAL] = arrayOfNulls(N)
             graph[BAG] = relationships(
-                BAG to safe(),
-                NULLABLE_BAG to safe(),
+                BAG to implicit(),
+                NULLABLE_BAG to implicit(),
             )
             graph[LIST] = relationships(
-                BAG to safe(),
-                SEXP to safe(),
-                LIST to safe(),
-                NULLABLE_BAG to safe(),
-                NULLABLE_SEXP to safe(),
-                NULLABLE_LIST to safe(),
+                BAG to implicit(),
+                SEXP to implicit(),
+                LIST to implicit(),
+                NULLABLE_BAG to implicit(),
+                NULLABLE_SEXP to implicit(),
+                NULLABLE_LIST to implicit(),
             )
             graph[SEXP] = relationships(
-                BAG to safe(),
-                SEXP to safe(),
-                LIST to safe(),
-                NULLABLE_BAG to safe(),
-                NULLABLE_SEXP to safe(),
-                NULLABLE_LIST to safe(),
+                BAG to implicit(),
+                SEXP to implicit(),
+                LIST to implicit(),
+                NULLABLE_BAG to implicit(),
+                NULLABLE_SEXP to implicit(),
+                NULLABLE_LIST to implicit(),
             )
             graph[STRUCT] = relationships(
-                STRUCT to safe(),
-                NULLABLE_STRUCT to safe(),
+                STRUCT to implicit(),
+                NULLABLE_STRUCT to implicit(),
             )
             graph[NULLABLE_BOOL] = relationships(
-                NULLABLE_CHAR to safe(),
-                NULLABLE_BOOL to safe(),
-                NULLABLE_INT8 to safe(),
-                NULLABLE_INT16 to safe(),
-                NULLABLE_INT32 to safe(),
-                NULLABLE_INT64 to safe(),
-                NULLABLE_INT to safe(),
-                NULLABLE_DECIMAL to safe(),
-                NULLABLE_FLOAT32 to safe(),
-                NULLABLE_FLOAT64 to safe(),
-                NULLABLE_STRING to safe(),
-                NULLABLE_SYMBOL to safe(),
+                NULLABLE_CHAR to implicit(),
+                NULLABLE_BOOL to lossless(),
+                NULLABLE_INT8 to implicit(),
+                NULLABLE_INT16 to implicit(),
+                NULLABLE_INT32 to implicit(),
+                NULLABLE_INT64 to implicit(),
+                NULLABLE_INT to implicit(),
+                NULLABLE_DECIMAL to implicit(),
+                NULLABLE_FLOAT32 to implicit(),
+                NULLABLE_FLOAT64 to implicit(),
+                NULLABLE_STRING to implicit(),
+                NULLABLE_SYMBOL to implicit(),
             )
             graph[NULLABLE_INT8] = relationships(
-                NULLABLE_BOOL to safe(),
-                NULLABLE_INT8 to safe(),
-                NULLABLE_INT16 to safe(),
-                NULLABLE_INT32 to safe(),
-                NULLABLE_INT64 to safe(),
-                NULLABLE_INT to safe(),
-                NULLABLE_DECIMAL to safe(),
-                NULLABLE_FLOAT32 to safe(),
-                NULLABLE_FLOAT64 to safe(),
+                NULLABLE_BOOL to lossless(),
+                NULLABLE_INT8 to implicit(),
+                NULLABLE_INT16 to implicit(),
+                NULLABLE_INT32 to implicit(),
+                NULLABLE_INT64 to implicit(),
+                NULLABLE_INT to implicit(),
+                NULLABLE_DECIMAL to implicit(),
+                NULLABLE_FLOAT32 to implicit(),
+                NULLABLE_FLOAT64 to implicit(),
+                NULLABLE_STRING to lossless(),
+                NULLABLE_SYMBOL to lossless(),
             )
             graph[NULLABLE_INT16] = relationships(
-                NULLABLE_BOOL to safe(),
-                NULLABLE_INT16 to safe(),
-                NULLABLE_INT32 to safe(),
-                NULLABLE_INT64 to safe(),
-                NULLABLE_INT to safe(),
-                NULLABLE_DECIMAL to safe(),
-                NULLABLE_FLOAT32 to safe(),
-                NULLABLE_FLOAT64 to safe(),
+                NULLABLE_BOOL to lossless(),
+                NULLABLE_INT16 to implicit(),
+                NULLABLE_INT32 to implicit(),
+                NULLABLE_INT64 to implicit(),
+                NULLABLE_INT to implicit(),
+                NULLABLE_DECIMAL to implicit(),
+                NULLABLE_FLOAT32 to implicit(),
+                NULLABLE_FLOAT64 to implicit(),
+                NULLABLE_STRING to lossless(),
+                NULLABLE_SYMBOL to lossless(),
             )
             graph[NULLABLE_INT32] = relationships(
-                NULLABLE_BOOL to safe(),
-                NULLABLE_INT32 to safe(),
-                NULLABLE_INT64 to safe(),
-                NULLABLE_INT to safe(),
-                NULLABLE_DECIMAL to safe(),
-                NULLABLE_FLOAT32 to safe(),
-                NULLABLE_FLOAT64 to safe(),
+                NULLABLE_BOOL to lossless(),
+                NULLABLE_INT32 to implicit(),
+                NULLABLE_INT64 to implicit(),
+                NULLABLE_INT to implicit(),
+                NULLABLE_DECIMAL to implicit(),
+                NULLABLE_FLOAT32 to implicit(),
+                NULLABLE_FLOAT64 to implicit(),
+                NULLABLE_STRING to lossless(),
+                NULLABLE_SYMBOL to lossless(),
             )
             graph[NULLABLE_INT64] = relationships(
-                NULLABLE_BOOL to safe(),
-                NULLABLE_INT64 to safe(),
-                NULLABLE_INT to safe(),
-                NULLABLE_DECIMAL to safe(),
-                NULLABLE_FLOAT32 to safe(),
-                NULLABLE_FLOAT64 to safe(),
+                NULLABLE_BOOL to lossless(),
+                NULLABLE_INT64 to implicit(),
+                NULLABLE_INT to implicit(),
+                NULLABLE_DECIMAL to implicit(),
+                NULLABLE_FLOAT32 to implicit(),
+                NULLABLE_FLOAT64 to implicit(),
+                NULLABLE_STRING to lossless(),
+                NULLABLE_SYMBOL to lossless(),
             )
             graph[NULLABLE_INT] = relationships(
-                NULLABLE_BOOL to safe(),
-                NULLABLE_INT to safe(),
-                NULLABLE_DECIMAL to safe(),
-                NULLABLE_FLOAT32 to safe(),
-                NULLABLE_FLOAT64 to safe(),
+                NULLABLE_BOOL to lossless(),
+                NULLABLE_INT to implicit(),
+                NULLABLE_DECIMAL to implicit(),
+                NULLABLE_FLOAT32 to implicit(),
+                NULLABLE_FLOAT64 to implicit(),
+                NULLABLE_STRING to lossless(),
+                NULLABLE_SYMBOL to lossless(),
             )
             graph[NULLABLE_DECIMAL] = relationships(
-                NULLABLE_BOOL to safe(),
-                NULLABLE_DECIMAL to safe(),
-                NULLABLE_FLOAT32 to safe(),
-                NULLABLE_FLOAT64 to safe(),
+                NULLABLE_BOOL to lossless(),
+                NULLABLE_DECIMAL to implicit(),
+                NULLABLE_FLOAT32 to implicit(),
+                NULLABLE_FLOAT64 to implicit(),
+                NULLABLE_STRING to lossless(),
+                NULLABLE_SYMBOL to lossless(),
             )
             graph[NULLABLE_FLOAT32] = relationships(
-                NULLABLE_BOOL to safe(),
-                NULLABLE_FLOAT32 to safe(),
-                NULLABLE_FLOAT64 to safe(),
+                NULLABLE_BOOL to lossless(),
+                NULLABLE_FLOAT32 to implicit(),
+                NULLABLE_FLOAT64 to implicit(),
+                NULLABLE_STRING to lossless(),
+                NULLABLE_SYMBOL to lossless(),
             )
             graph[NULLABLE_FLOAT64] = relationships(
-                NULLABLE_BOOL to safe(),
-                NULLABLE_FLOAT64 to safe(),
+                NULLABLE_BOOL to lossless(),
+                NULLABLE_FLOAT64 to implicit(),
+                NULLABLE_STRING to lossless(),
+                NULLABLE_SYMBOL to lossless(),
             )
             graph[NULLABLE_CHAR] = relationships(
-                NULLABLE_BOOL to safe(),
-                NULLABLE_CHAR to safe(),
-                NULLABLE_STRING to safe(),
-                NULLABLE_SYMBOL to safe(),
+                NULLABLE_BOOL to lossless(),
+                NULLABLE_CHAR to implicit(),
+                NULLABLE_STRING to implicit(),
+                NULLABLE_SYMBOL to implicit(),
             )
             graph[NULLABLE_STRING] = relationships(
-                NULLABLE_BOOL to safe(),
-                NULLABLE_STRING to safe(),
-                NULLABLE_SYMBOL to safe(),
-                NULLABLE_CLOB to safe(),
+                NULLABLE_BOOL to lossless(),
+                NULLABLE_STRING to implicit(),
+                NULLABLE_SYMBOL to implicit(),
+                NULLABLE_CLOB to implicit(),
             )
             graph[NULLABLE_SYMBOL] = relationships(
-                NULLABLE_BOOL to safe(),
-                NULLABLE_STRING to safe(),
-                NULLABLE_SYMBOL to safe(),
-                NULLABLE_CLOB to safe(),
+                NULLABLE_BOOL to lossless(),
+                NULLABLE_STRING to implicit(),
+                NULLABLE_SYMBOL to implicit(),
+                NULLABLE_CLOB to implicit(),
             )
             graph[NULLABLE_CLOB] = relationships(
-                NULLABLE_CLOB to safe(),
+                NULLABLE_CLOB to implicit(),
             )
             graph[NULLABLE_BINARY] = arrayOfNulls(N)
             graph[NULLABLE_BYTE] = arrayOfNulls(N)
@@ -455,20 +499,20 @@ internal class TypeLattice private constructor(
             graph[NULLABLE_TIMESTAMP] = arrayOfNulls(N)
             graph[NULLABLE_INTERVAL] = arrayOfNulls(N)
             graph[NULLABLE_BAG] = relationships(
-                NULLABLE_BAG to safe(),
+                NULLABLE_BAG to implicit(),
             )
             graph[NULLABLE_LIST] = relationships(
-                NULLABLE_BAG to safe(),
-                NULLABLE_SEXP to safe(),
-                NULLABLE_LIST to safe(),
+                NULLABLE_BAG to implicit(),
+                NULLABLE_SEXP to implicit(),
+                NULLABLE_LIST to implicit(),
             )
             graph[NULLABLE_SEXP] = relationships(
-                NULLABLE_BAG to safe(),
-                NULLABLE_SEXP to safe(),
-                NULLABLE_LIST to safe(),
+                NULLABLE_BAG to implicit(),
+                NULLABLE_SEXP to implicit(),
+                NULLABLE_LIST to implicit(),
             )
             graph[NULLABLE_STRUCT] = relationships(
-                NULLABLE_STRUCT to safe(),
+                NULLABLE_STRUCT to implicit(),
             )
             return TypeLattice(types, graph.requireNoNulls())
         }
