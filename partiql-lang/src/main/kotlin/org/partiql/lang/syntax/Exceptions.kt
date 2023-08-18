@@ -16,7 +16,7 @@ package org.partiql.lang.syntax
 
 import org.partiql.errors.ErrorCode
 import org.partiql.errors.PropertyValueMap
-import org.partiql.lang.SqlException
+import org.partiql.errors.SqlException
 
 /** Root exception type for syntactic problems. */
 open class SyntaxException(

@@ -1,6 +1,14 @@
 package org.partiql.lang.eval.visitors
 
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.planner.ExperimentalPartiQLPlanner
+import org.partiql.planner.transforms.FromSourceAliasVisitorTransform
+import org.partiql.planner.transforms.OrderBySortSpecVisitorTransform
+import org.partiql.planner.transforms.PipelinedVisitorTransform
+import org.partiql.planner.transforms.SelectListItemAliasVisitorTransform
+import org.partiql.planner.transforms.SelectStarVisitorTransform
+import org.partiql.planner.transforms.SubqueryCoercionVisitorTransform
+import org.partiql.planner.transforms.VisitorTransformBase
 
 /** AST Normalization Passes.
  *
@@ -9,6 +17,7 @@ import org.partiql.lang.domains.PartiqlAst
  *
  * Note that this is a function because some of the underlying visitor transforms are stateful.
  */
+@OptIn(ExperimentalPartiQLPlanner::class)
 fun basicVisitorTransforms() = PipelinedVisitorTransform(
     // These visitor transforms do not depend on each other and can be executed in any order.
     SelectListItemAliasVisitorTransform(),

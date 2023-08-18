@@ -7,18 +7,24 @@ import org.junit.jupiter.api.fail
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.errors.Problem
+import org.partiql.errors.ProblemHandler
+import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.PartiqlLogical
 import org.partiql.lang.domains.PartiqlLogicalResolved
 import org.partiql.lang.errors.ProblemCollector
 import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.builtins.DYNAMIC_LOOKUP_FUNCTION_NAME
 import org.partiql.lang.eval.sourceLocationMeta
-import org.partiql.lang.planner.PlanningProblemDetails
 import org.partiql.lang.planner.createFakeGlobalsResolver
 import org.partiql.lang.planner.problem
 import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.lang.util.toIntExact
+import org.partiql.planner.ExperimentalPartiQLPlanner
+import org.partiql.planner.PlanningProblemDetails
+import org.partiql.planner.transforms.AstToLogicalVisitorTransform
+import org.partiql.planner.transforms.AstToLogicalVisitorTransformTests.Companion.EXCLUDED
+import org.partiql.planner.transforms.LogicalToLogicalResolvedVisitorTransformTests.Companion.toResolvedPlan
 
 private fun localVariable(name: String, index: Int) =
     PartiqlLogicalResolved.build { localVariable(name, index.toLong()) }
@@ -106,6 +112,15 @@ class LogicalToLogicalResolvedVisitorTransformTests {
     )
 
     private val parser = PartiQLParserBuilder.standard().build()
+
+    @OptIn(ExperimentalPartiQLPlanner::class)
+    private fun PartiqlAst.Statement.toLogicalPlan(problemHandler: ProblemHandler): PartiqlLogical.Plan =
+        PartiqlLogical.build {
+            plan(
+                AstToLogicalVisitorTransform(problemHandler).transformStatement(this@toLogicalPlan),
+                version = PLAN_VERSION_NUMBER
+            )
+        }
 
     private fun runTestCase(tc: TestCase) {
         val problemHandler = ProblemCollector()
@@ -876,7 +891,6 @@ class LogicalToLogicalResolvedVisitorTransformTests {
     @ArgumentsSource(DmlStatements::class)
     fun `dml statements`(tc: TestCase) = runTestCase(tc)
     class DmlStatements : ArgumentsProviderBase() {
-        val EXCLUDED = AstToLogicalVisitorTransform.EXCLUDED
         override fun getParameters() = listOf(
             TestCase(
                 "INSERT INTO foo << {'a': 1} >> ON CONFLICT DO REPLACE EXCLUDED WHERE foo.id > 2",

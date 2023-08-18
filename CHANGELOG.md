@@ -45,6 +45,7 @@ Thank you to all who have contributed!
 - Adds support for Timestamp constructor call in Parser.
 - Parsing of label patterns within node and edge graph patterns now supports
   disjunction `|`, conjunction `&`, negation `!`, and grouping.
+- Added methods `org.partiql.eval.BindingName.fromSpiBindingName` and `org.partiql.eval.BindingCase.fromSpiBindingCase`.
 
 ### Changed
 - Standardizes `org/partiql/cli/functions/QueryDDB` and other built-in functions in `org/partiql/lang/eval/builtins` by the new `ExprFunction` format.
@@ -70,6 +71,30 @@ Thank you to all who have contributed!
   - `org.partiql.lang.errors.ProblemSeverity` -> `org.partiql.errors.ProblemSeverity`
   - `org.partiql.lang.errors.ProblemHandler` -> `org.partiql.errors.ProblemHandler`
 - **Breaking** the `sourceLocation` field of `org.partiql.errors.Problem` was changed from `org.partiql.lang.ast.SoureceLocationMeta` to `org.partiql.errors.ProblemLocation`.
+- **Breaking**: Renamed the experimental `org.partiql.lang.planner.PartiQLPlanner` to `org.partiql.lang.planner.PartiQLPhysicalPlanner`.
+- **Breaking**: Renamed the experimental `org.partiql.lang.planner.PartiQLPlannerBuilder` to `org.partiql.lang.planner.PartiQLPhysicalPlannerBuilder`.
+- **Breaking**: Moved `org.partiql.lang.eval.visitors.PartiqlAstSanityValidator` to `org.partiql.planner.validators.PartiqlAstSanityValidator`.
+  Removed the `CompileOptions` parameter for the constructor of `PartiqlAstSanityValidator.validate`.
+- **Breaking**: Moved several classes from `org.partiql.lang.eval.visitors` to `org.partiql.planner.transforms` including:
+  - `AggregationVisitorTransform` (internal -> public & experimental)
+  - `AstToLogicalVisitorTransform` (internal -> public & experimental)
+  - `FromSourceAliasVisitorTransform`
+  - `OrderBySortSpecVisitorTransform` (internal -> public & experimental)
+  - `PipelinedVisitorTransform`
+  - `SelectListItemAliasVisitorTransform`
+  - `SelectStarVisitorTransform`
+  - `SubqueryCoercionVisitorTransform`
+  - `VisitorTransformBase`
+- **Breaking**: Moved `org.partiql.lang.planner.validators.PartiqlLogicalResolvedValidator` to package `org.partiql.planner.validators`
+- **Breaking**: Moved `org.partiql.lang.planner.validators.PartiqlLogicalValidator` to package `org.partiql.planner.validators`. Modified its
+  constructor by removing `typedOpBehavior`.
+- **Breaking**: Moved experimental `org.partiql.lang.planner.GlobalVariableResolver` to `org.partiql.planner.GlobalVariableResolver`. Also,
+`org.partiql.planner.GlobalVariableResolver.resolveGlobal` now takes in a `org.partiql.spi.BindingName` instead of a `org.partiql.eval.BindingName`.
+- **Breaking**: Moved experimental `org.partiql.lang.planner.PlannerEventCallback` to `org.partiql.planner.PlannerEventCallback`
+- **Breaking**: Moved `org.partiql.lang.planner.PlanningProblemDetails` to package `org.partiql.planner`
+- **Breaking**: Moved `org.partiql.lang.ast.passed.SemanticException` to package `org.partiql.planner`
+- **Breaking**: Moved `org.partiql.lang.SqlException` to package `org.partiql.errors`
+- **Breaking**: All APIs in `org.partiql.planner` do not throw `EvaluationExceptions`. They now throw `PlannerExceptions` and `SemanticExceptions`.
 
 ### Deprecated
 - **Breaking**: Deprecates the `Arguments`, `RequiredArgs`, `RequiredWithOptional`, and `RequiredWithVariadic` classes, 
@@ -87,6 +112,8 @@ Thank you to all who have contributed!
   As this changes coincides with the addition of function overloading, only `callWithRequired` will be invoked upon execution of an `ExprFunction`. Note: Function overloading is now allowed, which is the reason for the removal of `optionalParameter` and `variadicParameter`.
 - **Breaking**: Removes unused class `Arguments` from `org.partiql.lang.eval`.
 - **Breaking**: Removes unused parameter `args: Arguments` from `org.partiql.lang.eval.ExprFunctionkt.call()` method.
+- **Breaking**: Removes `org.partiql.lang.planner.handleUnimplementedFeature` method.
+- **Breaking**: Removed property and constructor parameter `typedOpBehavior` of `PartiQLPhysicalPlanner.Options`.
 
 ### Security
 

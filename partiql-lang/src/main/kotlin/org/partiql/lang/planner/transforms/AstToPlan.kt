@@ -1,20 +1,19 @@
 package org.partiql.lang.planner.transforms
 
 import org.partiql.lang.domains.PartiqlAst
-import org.partiql.lang.eval.CompileOptions
-import org.partiql.lang.eval.TypedOpBehavior
-import org.partiql.lang.eval.visitors.AggregationVisitorTransform
-import org.partiql.lang.eval.visitors.FromSourceAliasVisitorTransform
-import org.partiql.lang.eval.visitors.OrderBySortSpecVisitorTransform
-import org.partiql.lang.eval.visitors.PartiqlAstSanityValidator
-import org.partiql.lang.eval.visitors.PipelinedVisitorTransform
-import org.partiql.lang.eval.visitors.SelectListItemAliasVisitorTransform
-import org.partiql.lang.eval.visitors.SelectStarVisitorTransform
 import org.partiql.lang.planner.transforms.plan.RelConverter
 import org.partiql.lang.planner.transforms.plan.RexConverter
 import org.partiql.plan.PartiQLPlan
 import org.partiql.plan.Plan
 import org.partiql.plan.Rex
+import org.partiql.planner.ExperimentalPartiQLPlanner
+import org.partiql.planner.transforms.AggregationVisitorTransform
+import org.partiql.planner.transforms.FromSourceAliasVisitorTransform
+import org.partiql.planner.transforms.OrderBySortSpecVisitorTransform
+import org.partiql.planner.transforms.PipelinedVisitorTransform
+import org.partiql.planner.transforms.SelectListItemAliasVisitorTransform
+import org.partiql.planner.transforms.SelectStarVisitorTransform
+import org.partiql.planner.validators.PartiqlAstSanityValidator
 
 /**
  * Translate the PIG AST to an implementation of the PartiQL Plan Representation.
@@ -55,6 +54,7 @@ object AstToPlan {
      *    `transformStatement` or nothing happens. I initially had `transformQuery` but that doesn't work because
      *    the pipelinedVisitorTransform traversal can only be entered on statement.
      */
+    @OptIn(ExperimentalPartiQLPlanner::class)
     private fun PartiqlAst.Statement.normalize(): PartiqlAst.Statement {
         val transform = PipelinedVisitorTransform(
             SelectListItemAliasVisitorTransform(),
@@ -66,8 +66,7 @@ object AstToPlan {
         // normalize
         val ast = transform.transformStatement(this)
         // validate
-        val validatorCompileOptions = CompileOptions.build { typedOpBehavior(TypedOpBehavior.HONOR_PARAMETERS) }
-        PartiqlAstSanityValidator().validate(this, validatorCompileOptions)
+        PartiqlAstSanityValidator().validate(this)
         return ast
     }
 

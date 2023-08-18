@@ -3,7 +3,7 @@ package org.partiql.lang.errors
 import org.partiql.errors.Problem
 import org.partiql.errors.ProblemHandler
 import org.partiql.errors.ProblemSeverity
-import org.partiql.lang.ast.passes.SemanticException
+import org.partiql.planner.SemanticException
 
 /**
  * A [ProblemHandler] that collects all of the encountered [Problem]s without throwing.

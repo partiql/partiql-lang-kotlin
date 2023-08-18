@@ -18,7 +18,7 @@ import org.junit.Test
 import org.partiql.errors.ErrorCode
 import org.partiql.errors.Property
 import org.partiql.errors.PropertyValueMap
-import org.partiql.lang.SqlException
+import org.partiql.errors.SqlException
 import org.partiql.lang.TestBase
 
 class SqlExceptionTest : TestBase() {

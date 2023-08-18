@@ -15,7 +15,6 @@
 package org.partiql.lang.planner
 
 import org.partiql.errors.ProblemHandler
-import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.pig.runtime.DomainNode
 
 /**
@@ -26,5 +25,3 @@ import org.partiql.pig.runtime.DomainNode
 fun interface PartiQLPlannerPass<T : DomainNode> {
     fun apply(plan: T, problemHandler: ProblemHandler): T
 }
-
-fun interface PartiQLPhysicalPass : PartiQLPlannerPass<PartiqlPhysical.Plan>

@@ -37,6 +37,15 @@ enum class BindingCase {
                     internal = true
                 )
             }
+
+        /**
+         * Converts the input [case] to a [BindingCase].
+         */
+        @JvmStatic
+        fun fromSpiBindingCase(case: org.partiql.spi.BindingCase): BindingCase = when (case) {
+            org.partiql.spi.BindingCase.SENSITIVE -> SENSITIVE
+            org.partiql.spi.BindingCase.INSENSITIVE -> INSENSITIVE
+        }
     }
 
     fun toSymbol(ions: IonSystem) =
@@ -61,6 +70,16 @@ fun PartiqlAst.CaseSensitivity.toBindingCase(): BindingCase = when (this) {
  */
 data class BindingName(val name: String, val bindingCase: BindingCase) {
     val loweredName: String by lazy(LazyThreadSafetyMode.PUBLICATION) { name.lowercase() }
+    companion object {
+        /**
+         * Converts the input [name] to a [BindingName].
+         */
+        @JvmStatic
+        fun fromSpiBindingName(name: org.partiql.spi.BindingName): BindingName = BindingName(
+            name = name.name,
+            bindingCase = BindingCase.fromSpiBindingCase(name.bindingCase)
+        )
+    }
     /**
      * Compares [name] to [otherName] using the rules specified by [bindingCase].
      */

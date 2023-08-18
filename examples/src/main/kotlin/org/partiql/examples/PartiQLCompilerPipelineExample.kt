@@ -4,14 +4,15 @@ import com.amazon.ion.system.IonSystemBuilder
 import org.partiql.annotations.ExperimentalPartiQLCompilerPipeline
 import org.partiql.examples.util.Example
 import org.partiql.lang.compiler.PartiQLCompilerPipeline
+import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.PartiQLResult
 import org.partiql.lang.eval.ProjectionIterationBehavior
 import org.partiql.lang.planner.EvaluatorOptions
-import org.partiql.lang.planner.GlobalResolutionResult
-import org.partiql.lang.planner.GlobalVariableResolver
+import org.partiql.planner.GlobalResolutionResult
+import org.partiql.planner.GlobalVariableResolver
 import java.io.PrintStream
 
 /**
@@ -46,7 +47,7 @@ class PartiQLCompilerPipelineExample(out: PrintStream) : Example(out) {
         .build()
 
     private val globalVariableResolver = GlobalVariableResolver {
-        val value = session.globals[it]
+        val value = session.globals[BindingName.fromSpiBindingName(it)]
         if (value != null) {
             GlobalResolutionResult.GlobalVariable(it.name)
         } else {

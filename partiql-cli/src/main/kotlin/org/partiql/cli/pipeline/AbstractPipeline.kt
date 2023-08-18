@@ -31,6 +31,7 @@ import org.partiql.cli.utils.ServiceLoaderUtil
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.compiler.PartiQLCompilerBuilder
 import org.partiql.lang.compiler.PartiQLCompilerPipeline
+import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
@@ -41,11 +42,12 @@ import org.partiql.lang.eval.ThunkOptions
 import org.partiql.lang.eval.TypedOpBehavior
 import org.partiql.lang.eval.TypingMode
 import org.partiql.lang.eval.UndefinedVariableBehavior
-import org.partiql.lang.planner.GlobalResolutionResult
-import org.partiql.lang.planner.GlobalVariableResolver
-import org.partiql.lang.planner.PartiQLPlannerBuilder
+import org.partiql.lang.planner.PartiQLPhysicalPlanner
+import org.partiql.lang.planner.PartiQLPhysicalPlannerBuilder
 import org.partiql.lang.syntax.Parser
 import org.partiql.lang.syntax.PartiQLParserBuilder
+import org.partiql.planner.GlobalResolutionResult
+import org.partiql.planner.GlobalVariableResolver
 import java.nio.file.Path
 import java.time.ZoneOffset
 
@@ -175,16 +177,15 @@ internal sealed class AbstractPipeline(open val options: PipelineOptions) {
             .typedOpBehavior(options.typedOpBehavior)
             .build()
 
-        private val plannerOptions = org.partiql.lang.planner.PartiQLPlanner.Options(
-            allowedUndefinedVariables = true,
-            typedOpBehavior = options.typedOpBehavior
+        private val plannerOptions = PartiQLPhysicalPlanner.Options(
+            allowedUndefinedVariables = true
         )
 
         override fun compile(input: String, session: EvaluationSession): PartiQLResult {
             val globalVariableResolver = createGlobalVariableResolver(session)
             val pipeline = PartiQLCompilerPipeline(
                 parser = options.parser,
-                planner = PartiQLPlannerBuilder.standard()
+                planner = PartiQLPhysicalPlannerBuilder.standard()
                     .options(plannerOptions)
                     .globalVariableResolver(globalVariableResolver)
                     .build(),
@@ -196,7 +197,7 @@ internal sealed class AbstractPipeline(open val options: PipelineOptions) {
         }
 
         private fun createGlobalVariableResolver(session: EvaluationSession) = GlobalVariableResolver {
-            val value = session.globals[it]
+            val value = session.globals[BindingName.fromSpiBindingName(it)]
             if (value != null) {
                 GlobalResolutionResult.GlobalVariable(it.name)
             } else {

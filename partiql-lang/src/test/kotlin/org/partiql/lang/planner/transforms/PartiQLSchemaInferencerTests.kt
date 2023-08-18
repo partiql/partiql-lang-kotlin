@@ -11,13 +11,13 @@ import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.annotations.ExperimentalPartiQLSchemaInferencer
 import org.partiql.errors.Problem
 import org.partiql.errors.UNKNOWN_PROBLEM_LOCATION
-import org.partiql.lang.ast.passes.SemanticProblemDetails
 import org.partiql.lang.errors.ProblemCollector
-import org.partiql.lang.planner.PlanningProblemDetails
 import org.partiql.lang.planner.transforms.PartiQLSchemaInferencerTests.ProblemHandler
 import org.partiql.lang.planner.transforms.PartiQLSchemaInferencerTests.TestCase.ErrorTestCase
 import org.partiql.lang.planner.transforms.PartiQLSchemaInferencerTests.TestCase.SuccessTestCase
 import org.partiql.plan.Rex
+import org.partiql.planner.PlanningProblemDetails
+import org.partiql.planner.SemanticProblemDetails
 import org.partiql.plugins.mockdb.LocalPlugin
 import org.partiql.types.AnyOfType
 import org.partiql.types.AnyType

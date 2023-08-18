@@ -8,10 +8,8 @@ import org.partiql.annotations.ExperimentalPartiQLCompilerPipeline
 import org.partiql.errors.Problem
 import org.partiql.errors.ProblemHandler
 import org.partiql.lang.domains.PartiqlPhysical
-import org.partiql.lang.planner.GlobalResolutionResult
-import org.partiql.lang.planner.GlobalVariableResolver
-import org.partiql.lang.planner.PartiQLPlanner
-import org.partiql.lang.planner.PartiQLPlannerBuilder
+import org.partiql.lang.planner.PartiQLPhysicalPlanner
+import org.partiql.lang.planner.PartiQLPhysicalPlannerBuilder
 import org.partiql.lang.planner.assertSexpEquals
 import org.partiql.lang.planner.litInt
 import org.partiql.lang.planner.litTrue
@@ -19,6 +17,8 @@ import org.partiql.lang.planner.transforms.DEFAULT_IMPL
 import org.partiql.lang.planner.transforms.PLAN_VERSION_NUMBER
 import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.lang.util.ArgumentsProviderBase
+import org.partiql.planner.GlobalResolutionResult
+import org.partiql.planner.GlobalVariableResolver
 import org.partiql.types.BagType
 import org.partiql.types.StaticType
 import org.partiql.types.StructType
@@ -53,8 +53,8 @@ class FilterScanToKeyLookupTests {
         val statement = parser.parseAstStatement(tc.inputSql)
 
         val physicalPlan = when (val planningResult = pipeline.plan(statement)) {
-            is PartiQLPlanner.Result.Success -> planningResult.plan
-            is PartiQLPlanner.Result.Error -> fail("Expected no errors but found ${planningResult.problems}")
+            is PartiQLPhysicalPlanner.Result.Success -> planningResult.plan
+            is PartiQLPhysicalPlanner.Result.Error -> fail("Expected no errors but found ${planningResult.problems}")
         }
 
         val fakeProblemHandler = object : ProblemHandler {
@@ -297,7 +297,7 @@ class FilterScanToKeyLookupTests {
      * We need a minimal PlannerPipeline to go from [TestCase.inputSql] to a physical plan, without the
      * pass under test applied.  We will invoke the pass separately.
      */
-    private val pipeline = PartiQLPlannerBuilder
+    private val pipeline = PartiQLPhysicalPlannerBuilder
         .standard()
         .globalVariableResolver(globalVariableResolver)
         .build()

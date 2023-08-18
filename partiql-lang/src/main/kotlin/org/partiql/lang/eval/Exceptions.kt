@@ -18,7 +18,7 @@ import com.amazon.ionelement.api.MetaContainer
 import org.partiql.errors.ErrorCode
 import org.partiql.errors.Property
 import org.partiql.errors.PropertyValueMap
-import org.partiql.lang.SqlException
+import org.partiql.errors.SqlException
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.StaticTypeUtils

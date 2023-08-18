@@ -16,10 +16,10 @@ import org.partiql.errors.Property.FEATURE_NAME
 import org.partiql.errors.Property.LINE_NUMBER
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.StaticTypeMeta
-import org.partiql.lang.ast.passes.SemanticException
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.metaContainerOf
 import org.partiql.lang.eval.Bindings
+import org.partiql.planner.SemanticException
 import org.partiql.types.ListType
 import org.partiql.types.StaticType
 import java.io.PrintWriter

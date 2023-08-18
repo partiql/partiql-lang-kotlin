@@ -17,6 +17,7 @@ package org.partiql.lang.eval.visitors
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.extractSourceLocation
+import org.partiql.planner.transforms.VisitorTransformBase
 
 /**
  * Specifies an individual substitution to be performed by [SubstitutionVisitorTransform].

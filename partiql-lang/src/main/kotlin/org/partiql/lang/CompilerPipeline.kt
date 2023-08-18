@@ -26,13 +26,13 @@ import org.partiql.lang.eval.ThunkReturnTypeAssertions
 import org.partiql.lang.eval.builtins.SCALAR_BUILTINS_DEFAULT
 import org.partiql.lang.eval.builtins.definitionalBuiltins
 import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
-import org.partiql.lang.eval.visitors.PipelinedVisitorTransform
 import org.partiql.lang.eval.visitors.StaticTypeInferenceVisitorTransform
 import org.partiql.lang.eval.visitors.StaticTypeVisitorTransform
 import org.partiql.lang.syntax.Parser
 import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.lang.types.CustomType
 import org.partiql.lang.util.interruptibleFold
+import org.partiql.planner.transforms.PipelinedVisitorTransform
 import org.partiql.types.StaticType
 
 /**

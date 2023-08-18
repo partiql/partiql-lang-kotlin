@@ -3,8 +3,8 @@ package org.partiql.lang.ast.passes
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.eval.EvaluatorTestCasesAsStatementTestCases
-import org.partiql.lang.eval.visitors.VisitorTransformBase
 import org.partiql.lang.util.testdsl.StatementTestCase
+import org.partiql.planner.transforms.VisitorTransformBase
 
 /**
  * This makes sure that the VisitorTransformBase returns an exact copy as the original Statement

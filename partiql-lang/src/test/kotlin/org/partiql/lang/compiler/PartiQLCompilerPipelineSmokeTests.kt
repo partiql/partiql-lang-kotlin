@@ -19,12 +19,12 @@ import org.partiql.lang.eval.physical.operators.ScanRelationalOperatorFactory
 import org.partiql.lang.eval.physical.operators.ValueExpression
 import org.partiql.lang.eval.physical.sourceLocationMetaOrUnknown
 import org.partiql.lang.planner.PartiQLPhysicalPass
-import org.partiql.lang.planner.PartiQLPlanner
-import org.partiql.lang.planner.PlannerEventCallback
-import org.partiql.lang.planner.PlanningProblemDetails
+import org.partiql.lang.planner.PartiQLPhysicalPlanner
 import org.partiql.lang.planner.createFakeGlobalsResolver
 import org.partiql.lang.planner.transforms.DEFAULT_IMPL_NAME
 import org.partiql.lang.planner.transforms.PLAN_VERSION_NUMBER
+import org.partiql.planner.PlannerEventCallback
+import org.partiql.planner.PlanningProblemDetails
 
 @OptIn(ExperimentalPartiQLCompilerPipeline::class)
 class PartiQLCompilerPipelineSmokeTests {
@@ -35,7 +35,7 @@ class PartiQLCompilerPipelineSmokeTests {
         block: PartiQLCompilerPipeline.Builder.() -> Unit = { }
     ) = PartiQLCompilerPipeline.build {
         planner.options(
-            PartiQLPlanner.Options(
+            PartiQLPhysicalPlanner.Options(
                 allowedUndefinedVariables = allowUndefinedVariables,
             )
         ).callback {

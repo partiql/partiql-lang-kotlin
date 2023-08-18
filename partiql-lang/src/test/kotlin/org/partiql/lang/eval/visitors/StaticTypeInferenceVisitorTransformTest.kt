@@ -7,7 +7,6 @@ import org.partiql.errors.Problem
 import org.partiql.errors.ProblemLocation
 import org.partiql.errors.ProblemSeverity
 import org.partiql.lang.ast.SourceLocationMeta
-import org.partiql.lang.ast.passes.SemanticProblemDetails
 import org.partiql.lang.ast.passes.inference.StaticTypeInferencer
 import org.partiql.lang.ast.passes.inference.StaticTypeInferencer.InferenceResult
 import org.partiql.lang.ast.passes.inference.isLob
@@ -24,6 +23,7 @@ import org.partiql.lang.types.TypedOpParameter
 import org.partiql.lang.util.cartesianProduct
 import org.partiql.lang.util.compareTo
 import org.partiql.lang.util.countMatchingSubstrings
+import org.partiql.planner.SemanticProblemDetails
 import org.partiql.types.AnyOfType
 import org.partiql.types.BagType
 import org.partiql.types.BoolType

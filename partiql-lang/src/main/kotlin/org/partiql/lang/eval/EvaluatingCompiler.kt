@@ -42,7 +42,6 @@ import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
 import org.partiql.lang.eval.impl.FunctionManager
 import org.partiql.lang.eval.like.parsePattern
 import org.partiql.lang.eval.time.Time
-import org.partiql.lang.eval.visitors.PartiqlAstSanityValidator
 import org.partiql.lang.graph.EdgeSpec
 import org.partiql.lang.graph.GpmlTranslator
 import org.partiql.lang.graph.Graph
@@ -74,6 +73,7 @@ import org.partiql.lang.util.times
 import org.partiql.lang.util.totalMinutes
 import org.partiql.lang.util.unaryMinus
 import org.partiql.pig.runtime.SymbolPrimitive
+import org.partiql.planner.validators.PartiqlAstSanityValidator
 import org.partiql.types.AnyOfType
 import org.partiql.types.AnyType
 import org.partiql.types.IntType
@@ -353,7 +353,7 @@ internal class EvaluatingCompiler(
         val transformedAst = visitorTransform.transformStatement(originalAst)
         val partiqlAstSanityValidator = PartiqlAstSanityValidator()
 
-        partiqlAstSanityValidator.validate(transformedAst, compileOptions)
+        partiqlAstSanityValidator.validate(transformedAst)
 
         val thunk = nestCompilationContext(ExpressionContext.NORMAL, emptySet()) {
             compileAstStatement(transformedAst)

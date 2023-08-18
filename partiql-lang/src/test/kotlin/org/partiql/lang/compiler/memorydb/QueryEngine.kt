@@ -14,8 +14,6 @@ import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.PartiQLResult
 import org.partiql.lang.eval.StructOrdering
 import org.partiql.lang.eval.namedValue
-import org.partiql.lang.planner.GlobalResolutionResult
-import org.partiql.lang.planner.GlobalVariableResolver
 import org.partiql.lang.planner.PartiQLPhysicalPass
 import org.partiql.lang.planner.StaticTypeResolver
 import org.partiql.lang.planner.transforms.optimizations.createConcatWindowFunctionPass
@@ -24,6 +22,8 @@ import org.partiql.lang.planner.transforms.optimizations.createRemoveUselessAnds
 import org.partiql.lang.planner.transforms.optimizations.createRemoveUselessFiltersPass
 import org.partiql.lang.util.SexpAstPrettyPrinter
 import org.partiql.pig.runtime.DomainNode
+import org.partiql.planner.GlobalResolutionResult
+import org.partiql.planner.GlobalVariableResolver
 import org.partiql.types.BagType
 import org.partiql.types.StructType
 import java.util.UUID
@@ -43,7 +43,7 @@ class QueryEngine(val db: MemoryDatabase) {
         // The planner has asked us to resolve a global variable named [bindingName]. let's do so and return the
         // UUID of the table.  This will get packaged into a (global_id <uuid>) node (a reference to an
         // unambiguously global variable).
-        db.findTableMetadata(bindingName)?.let { tableMetadata ->
+        db.findTableMetadata(BindingName.fromSpiBindingName(bindingName))?.let { tableMetadata ->
             GlobalResolutionResult.GlobalVariable(tableMetadata.tableId.toString())
         } ?: GlobalResolutionResult.Undefined
     }

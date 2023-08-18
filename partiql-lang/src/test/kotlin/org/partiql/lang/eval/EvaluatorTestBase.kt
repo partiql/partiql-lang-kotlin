@@ -18,9 +18,9 @@ import com.amazon.ion.IonType
 import com.amazon.ion.IonValue
 import org.partiql.errors.ErrorCode
 import org.partiql.errors.PropertyValueMap
+import org.partiql.errors.SqlException
 import org.partiql.lang.CUSTOM_TEST_TYPES
 import org.partiql.lang.CompilerPipeline
-import org.partiql.lang.SqlException
 import org.partiql.lang.TestBase
 import org.partiql.lang.eval.evaluatortestframework.CompilerPipelineFactory
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorErrorTestCase

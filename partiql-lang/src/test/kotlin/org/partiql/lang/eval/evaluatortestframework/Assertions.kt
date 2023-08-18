@@ -1,6 +1,6 @@
 package org.partiql.lang.eval.evaluatortestframework
 
-import org.partiql.lang.SqlException
+import org.partiql.errors.SqlException
 
 internal fun assertEquals(
     expected: Any?,

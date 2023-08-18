@@ -17,9 +17,11 @@ package org.partiql.lang.eval.visitors
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.errors.ErrorCode
-import org.partiql.lang.eval.visitors.AggregationVisitorTransform.Companion.GROUP_DELIMITER
-import org.partiql.lang.eval.visitors.AggregationVisitorTransform.Companion.GROUP_PREFIX
 import org.partiql.lang.util.ArgumentsProviderBase
+import org.partiql.planner.ExperimentalPartiQLPlanner
+import org.partiql.planner.transforms.AggregationVisitorTransform
+import org.partiql.planner.transforms.AggregationVisitorTransformTests.Companion.GROUP_DELIMITER
+import org.partiql.planner.transforms.AggregationVisitorTransformTests.Companion.GROUP_PREFIX
 
 internal class AggregationVisitorTransformTests : VisitorTransformTestBase() {
 
@@ -27,10 +29,12 @@ internal class AggregationVisitorTransformTests : VisitorTransformTestBase() {
         private fun uniqueId(level: Int, index: Int): String = "\"$GROUP_PREFIX$level$GROUP_DELIMITER$index\""
     }
 
+    @OptIn(ExperimentalPartiQLPlanner::class)
     @ParameterizedTest
     @ArgumentsSource(ValidArgumentsProvider::class)
     internal fun validTests(tc: TransformTestCase) = runTestForIdempotentTransform(tc, AggregationVisitorTransform())
 
+    @OptIn(ExperimentalPartiQLPlanner::class)
     @ParameterizedTest
     @ArgumentsSource(ErrorArgumentsProvider::class)
     internal fun errorTests(tc: TransformErrorTestCase) = runErrorTest(tc, AggregationVisitorTransform())

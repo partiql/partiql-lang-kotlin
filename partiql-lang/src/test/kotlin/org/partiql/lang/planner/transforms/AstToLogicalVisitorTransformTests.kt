@@ -20,10 +20,13 @@ import org.partiql.lang.domains.id
 import org.partiql.lang.domains.pathExpr
 import org.partiql.lang.errors.ProblemCollector
 import org.partiql.lang.eval.builtins.ExprFunctionCurrentUser
-import org.partiql.lang.planner.PlanningProblemDetails
 import org.partiql.lang.planner.unimplementedProblem
 import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.lang.util.ArgumentsProviderBase
+import org.partiql.planner.ExperimentalPartiQLPlanner
+import org.partiql.planner.PlanningProblemDetails
+import org.partiql.planner.transforms.AstToLogicalVisitorTransform
+import org.partiql.planner.transforms.AstToLogicalVisitorTransformTests.Companion.EXCLUDED
 
 /**
  * Test cases in this class might seem a little light--that's because [AstToLogicalVisitorTransform] is getting
@@ -37,11 +40,24 @@ class AstToLogicalVisitorTransformTests {
         return parseAstStatement.toLogicalPlan(problemHandler).stmt
     }
 
+    @OptIn(ExperimentalPartiQLPlanner::class)
+    private fun PartiqlAst.Statement.toLogicalPlan(problemHandler: ProblemHandler): PartiqlLogical.Plan =
+        PartiqlLogical.build {
+            plan(
+                AstToLogicalVisitorTransform(problemHandler).transformStatement(this@toLogicalPlan),
+                version = PLAN_VERSION_NUMBER
+            )
+        }
+
     private fun transform(input: PartiqlAst.Statement, problemHandler: ProblemHandler): PartiqlLogical.Statement {
         return input.toLogicalPlan(problemHandler).stmt
     }
 
-    data class TestCase(val original: PartiqlAst.Statement, val expected: PartiqlLogical.Statement, val originalSql: String? = null) {
+    data class TestCase(
+        val original: PartiqlAst.Statement,
+        val expected: PartiqlLogical.Statement,
+        val originalSql: String? = null
+    ) {
         constructor(sql: String, expected: PartiqlLogical.Statement) : this(
             assertDoesNotThrow("Parsing TestCase.sql should not throw") {
                 AstToLogicalVisitorTransformTests().parser.parseAstStatement(sql)
@@ -628,7 +644,10 @@ class AstToLogicalVisitorTransformTests {
                 """,
                 PartiqlLogical.build {
                     val scan = scan(id("t"), varDecl("t"))
-                    val let = let(scan, letBinding(call("coll_sum", listOf(lit(ionString("all")), id("c"))), varDecl("sum_c")))
+                    val let = let(
+                        scan,
+                        letBinding(call("coll_sum", listOf(lit(ionString("all")), id("c"))), varDecl("sum_c"))
+                    )
                     val where = filter(call("coll_sum", listOf(lit(ionString("all")), id("b"))), let)
                     val agg = aggregate(
                         where,
@@ -643,7 +662,10 @@ class AstToLogicalVisitorTransformTests {
                     val having = filter(id("\$__partiql_aggregation_1"), agg)
                     val order = sort(having, sortSpec(id("\$__partiql_aggregation_2")))
                     val limit = limit(call("coll_sum", listOf(lit(ionString("distinct")), lit(ionInt(2)))), order)
-                    val projection = bindingsToValues(struct(structField(lit(ionSymbol("sum_a")), id("\$__partiql_aggregation_0"))), limit)
+                    val projection = bindingsToValues(
+                        struct(structField(lit(ionSymbol("sum_a")), id("\$__partiql_aggregation_0"))),
+                        limit
+                    )
                     query(projection)
                 }
             ),
@@ -696,7 +718,8 @@ class AstToLogicalVisitorTransformTests {
                         id("\$__partiql_aggregation_0"),
                         call("coll_count", listOf(lit(ionString("distinct")), id("b")))
                     )
-                    val bindingsProj = bindingsToValues(struct(structField(lit(ionSymbol("agg_proj")), exprProj)), aggProj)
+                    val bindingsProj =
+                        bindingsToValues(struct(structField(lit(ionSymbol("agg_proj")), exprProj)), aggProj)
 
                     // Create Sub-Query in FROM
                     val scanFrom = scan(id("t2"), varDecl("t2"))
@@ -712,11 +735,13 @@ class AstToLogicalVisitorTransformTests {
                         id("\$__partiql_aggregation_0"),
                         call("coll_max", listOf(lit(ionString("all")), id("d")))
                     )
-                    val bindingsFrom = bindingsToValues(struct(structField(lit(ionSymbol("agg_from")), exprFrom)), aggFrom)
+                    val bindingsFrom =
+                        bindingsToValues(struct(structField(lit(ionSymbol("agg_from")), exprFrom)), aggFrom)
 
                     // Create Full Query
                     val scanOuter = scan(bindingsFrom, varDecl("src"))
-                    val projection = bindingsToValues(struct(structField(lit(ionSymbol("inner_query")), bindingsProj)), scanOuter)
+                    val projection =
+                        bindingsToValues(struct(structField(lit(ionSymbol("inner_query")), bindingsProj)), scanOuter)
                     query(projection)
                 }
             ),
@@ -781,7 +806,7 @@ class AstToLogicalVisitorTransformTests {
                                     lit(ionInt(2))
                                 )
                             ),
-                            rowAlias = varDecl(AstToLogicalVisitorTransform.EXCLUDED)
+                            rowAlias = varDecl(EXCLUDED)
                         ),
                         bindingsToValues(
                             struct(structFields(id("x", caseInsensitive(), unqualified()))),
@@ -824,7 +849,7 @@ class AstToLogicalVisitorTransformTests {
                                         lit(ionInt(2))
                                     )
                                 ),
-                                rowAlias = varDecl(AstToLogicalVisitorTransform.EXCLUDED)
+                                rowAlias = varDecl(EXCLUDED)
                             ),
                             bag(
                                 struct(
@@ -855,7 +880,7 @@ class AstToLogicalVisitorTransformTests {
                                         lit(ionInt(2))
                                     )
                                 ),
-                                rowAlias = varDecl(AstToLogicalVisitorTransform.EXCLUDED)
+                                rowAlias = varDecl(EXCLUDED)
                             ),
                             bag(
                                 struct(
@@ -889,7 +914,7 @@ class AstToLogicalVisitorTransformTests {
                                         lit(ionInt(2))
                                     )
                                 ),
-                                rowAlias = varDecl(AstToLogicalVisitorTransform.EXCLUDED)
+                                rowAlias = varDecl(EXCLUDED)
                             ),
                             bag(
                                 struct(
@@ -948,7 +973,7 @@ class AstToLogicalVisitorTransformTests {
                                         lit(ionInt(2))
                                     )
                                 ),
-                                rowAlias = varDecl(AstToLogicalVisitorTransform.EXCLUDED)
+                                rowAlias = varDecl(EXCLUDED)
                             ),
                             bag(
                                 struct(
@@ -978,7 +1003,7 @@ class AstToLogicalVisitorTransformTests {
                                         lit(ionInt(2))
                                     )
                                 ),
-                                rowAlias = varDecl(AstToLogicalVisitorTransform.EXCLUDED)
+                                rowAlias = varDecl(EXCLUDED)
                             ),
                             bag(
                                 struct(
@@ -1116,7 +1141,11 @@ class AstToLogicalVisitorTransformTests {
             ProblemTestCase(103, "DROP INDEX bar ON foo", unimplementedProblem("DROP INDEX", 1, 1, 4)),
 
             // Unimplemented parts of DML
-            ProblemTestCase(200, "FROM x AS xx INSERT INTO foo VALUES (1, 2)", unimplementedProblem("UPDATE / INSERT", 1, 14, 6)),
+            ProblemTestCase(
+                200,
+                "FROM x AS xx INSERT INTO foo VALUES (1, 2)",
+                unimplementedProblem("UPDATE / INSERT", 1, 14, 6)
+            ),
             ProblemTestCase(201, "FROM x AS xx SET k = 5", unimplementedProblem("SET", 1, 14, 3)),
             ProblemTestCase(202, "UPDATE x SET k = 5", unimplementedProblem("SET", 1, 10, 3)),
             ProblemTestCase(203, "UPDATE x REMOVE k", unimplementedProblem("REMOVE", 1, 10, 6)),

@@ -224,10 +224,3 @@ internal fun StaticType.filterNullMissing(): StaticType =
         is AnyOfType -> AnyOfType(this.types.filter { !it.isNullOrMissing() }.toSet()).flatten()
         else -> this
     }
-
-/**
- * Returns a human-readable string of [argTypes]. Additionally, for each [AnyOfType], [NullType] and [MissingType] will
- * be filtered.
- */
-internal fun stringWithoutNullMissing(argTypes: List<StaticType>): String =
-    argTypes.joinToString { it.filterNullMissing().toString() }

@@ -19,6 +19,7 @@ import com.amazon.ionelement.api.metaContainerOf
 import org.partiql.lang.ast.AggregateCallSiteListMeta
 import org.partiql.lang.ast.AggregateRegisterIdMeta
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.planner.transforms.VisitorTransformBase
 
 /**
  * Allocates registerIds to all aggregate call-sites, storing the allocated registerId in an instance of

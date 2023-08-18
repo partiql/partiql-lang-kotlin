@@ -2,8 +2,8 @@ package org.partiql.lang.eval.evaluatortestframework
 
 import org.partiql.errors.ErrorCode
 import org.partiql.errors.PropertyValueMap
+import org.partiql.errors.SqlException
 import org.partiql.lang.CompilerPipeline
-import org.partiql.lang.SqlException
 import org.partiql.lang.compiler.PartiQLCompilerPipeline
 import org.partiql.lang.eval.CompileOptions
 

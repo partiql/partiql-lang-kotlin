@@ -20,6 +20,7 @@ import org.partiql.lang.ast.UniqueNameMeta
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.eval.extractColumnAlias
 import org.partiql.pig.runtime.SymbolPrimitive
+import org.partiql.planner.transforms.VisitorTransformBase
 
 /**
  * Pre-calculates [PartiqlAst.GroupBy] aliases, while not changing any that were previously specified, for example:

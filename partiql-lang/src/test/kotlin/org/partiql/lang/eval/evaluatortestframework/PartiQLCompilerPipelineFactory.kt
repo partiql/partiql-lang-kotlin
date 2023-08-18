@@ -3,17 +3,18 @@ package org.partiql.lang.eval.evaluatortestframework
 import org.partiql.annotations.ExperimentalPartiQLCompilerPipeline
 import org.partiql.lang.compiler.PartiQLCompilerBuilder
 import org.partiql.lang.compiler.PartiQLCompilerPipeline
+import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.PartiQLResult
 import org.partiql.lang.eval.TypingMode
 import org.partiql.lang.eval.UndefinedVariableBehavior
 import org.partiql.lang.planner.EvaluatorOptions
-import org.partiql.lang.planner.GlobalResolutionResult
-import org.partiql.lang.planner.GlobalVariableResolver
-import org.partiql.lang.planner.PartiQLPlanner
-import org.partiql.lang.planner.PartiQLPlannerBuilder
+import org.partiql.lang.planner.PartiQLPhysicalPlanner
+import org.partiql.lang.planner.PartiQLPhysicalPlannerBuilder
 import org.partiql.lang.syntax.PartiQLParserBuilder
+import org.partiql.planner.GlobalResolutionResult
+import org.partiql.planner.GlobalVariableResolver
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
 
@@ -21,7 +22,7 @@ import kotlin.test.assertNull
  * TODO delete this once evaluator tests are replaced by `partiql-tests`
  */
 @OptIn(ExperimentalPartiQLCompilerPipeline::class)
-internal class PartiQLCompilerPipelineFactory() : PipelineFactory {
+internal class PartiQLCompilerPipelineFactory : PipelineFactory {
 
     override val pipelineName: String = "PartiQLCompilerPipeline"
 
@@ -59,7 +60,7 @@ internal class PartiQLCompilerPipelineFactory() : PipelineFactory {
         }
 
         val globalVariableResolver = GlobalVariableResolver {
-            val value = session.globals[it]
+            val value = session.globals[BindingName.fromSpiBindingName(it)]
             if (value != null) {
                 GlobalResolutionResult.GlobalVariable(it.name)
             } else {
@@ -67,14 +68,13 @@ internal class PartiQLCompilerPipelineFactory() : PipelineFactory {
             }
         }
 
-        val plannerOptions = PartiQLPlanner.Options(
-            allowedUndefinedVariables = true,
-            typedOpBehavior = evaluatorOptions.typedOpBehavior
+        val plannerOptions = PartiQLPhysicalPlanner.Options(
+            allowedUndefinedVariables = true
         )
 
         val pipeline = PartiQLCompilerPipeline(
             parser = PartiQLParserBuilder().customTypes(legacyPipeline.customDataTypes).build(),
-            planner = PartiQLPlannerBuilder.standard()
+            planner = PartiQLPhysicalPlannerBuilder.standard()
                 .options(plannerOptions)
                 .globalVariableResolver(globalVariableResolver)
                 .build(),

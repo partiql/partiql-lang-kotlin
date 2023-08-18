@@ -6,7 +6,7 @@ import org.partiql.errors.Property
 import org.partiql.errors.PropertyType
 import org.partiql.errors.PropertyValue
 import org.partiql.errors.PropertyValueMap
-import org.partiql.lang.SqlException
+import org.partiql.errors.SqlException
 
 /**
  * Validates [errorCode] and [expectedValues] for given exception [ex].

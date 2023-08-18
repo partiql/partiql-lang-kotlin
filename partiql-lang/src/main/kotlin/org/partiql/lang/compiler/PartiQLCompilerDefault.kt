@@ -32,7 +32,7 @@ import org.partiql.lang.eval.physical.PhysicalPlanThunk
 import org.partiql.lang.eval.physical.operators.RelationalOperatorFactory
 import org.partiql.lang.eval.physical.operators.RelationalOperatorFactoryKey
 import org.partiql.lang.planner.EvaluatorOptions
-import org.partiql.lang.planner.PartiQLPlanner
+import org.partiql.lang.planner.PartiQLPhysicalPlanner
 import org.partiql.lang.types.TypedOpParameter
 
 @ExperimentalPartiQLCompilerPipeline
@@ -74,7 +74,7 @@ internal class PartiQLCompilerDefault(
         }
     }
 
-    override fun compile(statement: PartiqlPhysical.Plan, details: PartiQLPlanner.PlanningDetails): PartiQLStatement {
+    override fun compile(statement: PartiqlPhysical.Plan, details: PartiQLPhysicalPlanner.PlanningDetails): PartiQLStatement {
         return when (val stmt = statement.stmt) {
             is PartiqlPhysical.Statement.Dml -> compileDml(stmt, statement.locals.size)
             is PartiqlPhysical.Statement.Exec,
@@ -106,13 +106,13 @@ internal class PartiQLCompilerDefault(
         }
     }
 
-    private fun compileExplain(statement: PartiqlPhysical.Statement.Explain, details: PartiQLPlanner.PlanningDetails): PartiQLResult.Explain.Domain {
+    private fun compileExplain(statement: PartiqlPhysical.Statement.Explain, details: PartiQLPhysicalPlanner.PlanningDetails): PartiQLResult.Explain.Domain {
         return when (val target = statement.target) {
             is PartiqlPhysical.ExplainTarget.Domain -> compileExplainDomain(target, details)
         }
     }
 
-    private fun compileExplainDomain(statement: PartiqlPhysical.ExplainTarget.Domain, details: PartiQLPlanner.PlanningDetails): PartiQLResult.Explain.Domain {
+    private fun compileExplainDomain(statement: PartiqlPhysical.ExplainTarget.Domain, details: PartiQLPhysicalPlanner.PlanningDetails): PartiQLResult.Explain.Domain {
         val format = statement.format?.text
         val type = statement.type?.text?.toUpperCase() ?: ExplainDomains.AST.name
         val domain = try {

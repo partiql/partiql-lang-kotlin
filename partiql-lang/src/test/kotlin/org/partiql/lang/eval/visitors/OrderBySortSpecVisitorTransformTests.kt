@@ -17,6 +17,8 @@ package org.partiql.lang.eval.visitors
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.util.ArgumentsProviderBase
+import org.partiql.planner.ExperimentalPartiQLPlanner
+import org.partiql.planner.transforms.OrderBySortSpecVisitorTransform
 
 class OrderBySortSpecVisitorTransformTests : VisitorTransformTestBase() {
 
@@ -218,6 +220,7 @@ class OrderBySortSpecVisitorTransformTests : VisitorTransformTestBase() {
         )
     }
 
+    @OptIn(ExperimentalPartiQLPlanner::class)
     @ParameterizedTest
     @ArgumentsSource(ArgsProvider::class)
     fun test(tc: TransformTestCase) = runTestForIdempotentTransform(tc, OrderBySortSpecVisitorTransform())

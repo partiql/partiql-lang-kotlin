@@ -6,7 +6,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.partiql.errors.ErrorCode
 import org.partiql.errors.Property
-import org.partiql.lang.SqlException
+import org.partiql.errors.SqlException
 
 /** Integration tests showing the how [TypingMode.LEGACY] differs from [TypingMode.PERMISSIVE]. */
 @RunWith(JUnitParamsRunner::class)

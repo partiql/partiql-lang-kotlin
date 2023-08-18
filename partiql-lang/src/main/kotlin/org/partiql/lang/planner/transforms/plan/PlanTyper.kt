@@ -20,11 +20,9 @@ import com.amazon.ionelement.api.TextElement
 import org.partiql.errors.Problem
 import org.partiql.errors.ProblemHandler
 import org.partiql.errors.UNKNOWN_PROBLEM_LOCATION
-import org.partiql.lang.ast.passes.SemanticProblemDetails
 import org.partiql.lang.ast.passes.inference.cast
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.builtins.SCALAR_BUILTINS_DEFAULT
-import org.partiql.lang.planner.PlanningProblemDetails
 import org.partiql.lang.planner.transforms.PlannerSession
 import org.partiql.lang.planner.transforms.impl.Metadata
 import org.partiql.lang.planner.transforms.plan.PlanTyper.MinimumTolerance.FULL
@@ -46,6 +44,8 @@ import org.partiql.plan.Rel
 import org.partiql.plan.Rex
 import org.partiql.plan.Step
 import org.partiql.plan.util.PlanRewriter
+import org.partiql.planner.PlanningProblemDetails
+import org.partiql.planner.SemanticProblemDetails
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath

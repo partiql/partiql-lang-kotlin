@@ -13,6 +13,9 @@ import org.partiql.errors.ProblemLocation
 import org.partiql.lang.ION
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.util.SexpAstPrettyPrinter
+import org.partiql.planner.GlobalResolutionResult
+import org.partiql.planner.GlobalVariableResolver
+import org.partiql.planner.PlanningProblemDetails
 
 /**
  * Creates a fake implementation of [GlobalVariableResolver] with the specified [globalVariableNames].

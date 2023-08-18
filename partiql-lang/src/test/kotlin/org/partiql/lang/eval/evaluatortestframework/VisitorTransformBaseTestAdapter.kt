@@ -2,8 +2,8 @@ package org.partiql.lang.eval.evaluatortestframework
 
 import org.partiql.lang.CUSTOM_TEST_TYPES
 import org.partiql.lang.eval.EvaluationSession
-import org.partiql.lang.eval.visitors.VisitorTransformBase
 import org.partiql.lang.syntax.PartiQLParserBuilder
+import org.partiql.planner.transforms.VisitorTransformBase
 import kotlin.test.assertEquals
 
 /** Test that the default visitor transformer returns an exact copy as the original ast */

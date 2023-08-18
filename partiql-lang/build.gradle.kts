@@ -34,6 +34,7 @@ kotlin {
 dependencies {
     api(project(":partiql-ast"))
     api(project(":partiql-parser"))
+    api(project(":partiql-planner"))
     api(project(":partiql-spi"))
     api(project(":partiql-types"))
     api(Deps.ionElement)
@@ -47,6 +48,7 @@ dependencies {
 
     testImplementation(project(":plugins:partiql-mockdb"))
     testImplementation(project(":lib:isl"))
+    testImplementation(project(":partiql-planner", configuration = "testArtifacts"))
     testImplementation(Deps.assertj)
     testImplementation(Deps.junit4)
     testImplementation(Deps.junit4Params)

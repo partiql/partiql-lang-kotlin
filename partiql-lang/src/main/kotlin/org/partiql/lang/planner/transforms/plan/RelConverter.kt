@@ -3,13 +3,13 @@ package org.partiql.lang.planner.transforms.plan
 import com.amazon.ionelement.api.ionInt
 import com.amazon.ionelement.api.ionString
 import org.partiql.lang.domains.PartiqlAst
-import org.partiql.lang.eval.visitors.VisitorTransformBase
 import org.partiql.plan.Binding
 import org.partiql.plan.Case
 import org.partiql.plan.Plan
 import org.partiql.plan.Rel
 import org.partiql.plan.Rex
 import org.partiql.plan.SortSpec
+import org.partiql.planner.transforms.VisitorTransformBase
 import org.partiql.types.StaticType
 
 /**

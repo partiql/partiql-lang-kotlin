@@ -13,8 +13,6 @@ import org.partiql.errors.ProblemHandler
 import org.partiql.errors.ProblemSeverity
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.StaticTypeMeta
-import org.partiql.lang.ast.passes.SemanticException
-import org.partiql.lang.ast.passes.SemanticProblemDetails
 import org.partiql.lang.ast.passes.inference.cast
 import org.partiql.lang.ast.passes.inference.filterNullMissing
 import org.partiql.lang.ast.passes.inference.isNullOrMissing
@@ -42,6 +40,9 @@ import org.partiql.lang.types.TypedOpParameter
 import org.partiql.lang.types.UnknownArguments
 import org.partiql.lang.types.toTypedOpParameter
 import org.partiql.lang.util.cartesianProduct
+import org.partiql.planner.SemanticException
+import org.partiql.planner.SemanticProblemDetails
+import org.partiql.planner.transforms.VisitorTransformBase
 import org.partiql.types.AnyOfType
 import org.partiql.types.AnyType
 import org.partiql.types.BagType

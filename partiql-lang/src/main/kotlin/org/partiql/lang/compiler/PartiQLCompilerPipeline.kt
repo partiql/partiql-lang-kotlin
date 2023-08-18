@@ -19,8 +19,8 @@ import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.errors.PartiQLException
 import org.partiql.lang.eval.PartiQLStatement
-import org.partiql.lang.planner.PartiQLPlanner
-import org.partiql.lang.planner.PartiQLPlannerBuilder
+import org.partiql.lang.planner.PartiQLPhysicalPlanner
+import org.partiql.lang.planner.PartiQLPhysicalPlannerBuilder
 import org.partiql.lang.syntax.Parser
 import org.partiql.lang.syntax.PartiQLParserBuilder
 
@@ -44,7 +44,7 @@ import org.partiql.lang.syntax.PartiQLParserBuilder
 @ExperimentalPartiQLCompilerPipeline
 class PartiQLCompilerPipeline(
     private val parser: Parser,
-    private val planner: PartiQLPlanner,
+    private val planner: PartiQLPhysicalPlanner,
     private val compiler: PartiQLCompiler
 ) {
 
@@ -56,7 +56,7 @@ class PartiQLCompilerPipeline(
         @JvmStatic
         fun standard() = PartiQLCompilerPipeline(
             parser = PartiQLParserBuilder.standard().build(),
-            planner = PartiQLPlannerBuilder.standard().build(),
+            planner = PartiQLPhysicalPlannerBuilder.standard().build(),
             compiler = PartiQLCompilerBuilder.standard().build()
         )
 
@@ -99,10 +99,10 @@ class PartiQLCompilerPipeline(
      */
     fun compile(statement: PartiqlAst.Statement): PartiQLStatement {
         val result = planner.plan(statement)
-        if (result is PartiQLPlanner.Result.Error) {
+        if (result is PartiQLPhysicalPlanner.Result.Error) {
             throw PartiQLException(result.problems.toString())
         }
-        val plan = (result as PartiQLPlanner.Result.Success).plan
+        val plan = (result as PartiQLPhysicalPlanner.Result.Success).plan
         return compile(plan, result.details)
     }
 
@@ -110,13 +110,13 @@ class PartiQLCompilerPipeline(
      * Compiles a [PartiqlPhysical.Plan] representation of a query into an executable [PartiQLStatement].
      */
     @JvmOverloads
-    fun compile(statement: PartiqlPhysical.Plan, details: PartiQLPlanner.PlanningDetails = PartiQLPlanner.PlanningDetails()): PartiQLStatement {
+    fun compile(statement: PartiqlPhysical.Plan, details: PartiQLPhysicalPlanner.PlanningDetails = PartiQLPhysicalPlanner.PlanningDetails()): PartiQLStatement {
         return compiler.compile(statement, details)
     }
 
     class Builder internal constructor() {
         var parser = PartiQLParserBuilder.standard()
-        var planner = PartiQLPlannerBuilder.standard()
+        var planner = PartiQLPhysicalPlannerBuilder.standard()
         var compiler = PartiQLCompilerBuilder.standard()
     }
 }
