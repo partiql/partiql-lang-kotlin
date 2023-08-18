@@ -95,13 +95,24 @@ internal fun PartiQLValueType.toStaticType(): StaticType = when (this) {
     PartiQLValueType.NULLABLE_STRUCT -> StaticType.unionOf(StaticType.STRUCT, StaticType.NULL)
 }
 
-internal fun StaticType.toRuntimeType(): PartiQLValueType = when (this.isNullable()) {
-    true -> toNullableRuntimeType()
-    else -> toNonNullRuntimeType()
+internal fun StaticType.toRuntimeType(): PartiQLValueType {
+    // handle anyOf(null, T) cases
+    if (this is AnyOfType) {
+        val t = types.filter { it !is NullType }
+        return if (t.size != 1) {
+            error("ANY_OF is not a runtime type: $this")
+        } else {
+            t.first().toNullableRuntimeType()
+        }
+    }
+    return when (this.isNullable()) {
+        true -> toNullableRuntimeType()
+        else -> toNonNullRuntimeType()
+    }
 }
 
 internal fun StaticType.toNonNullRuntimeType(): PartiQLValueType = when (this) {
-    is AnyOfType -> error("ANY_OF is not a runtime type")
+    is AnyOfType -> error("ANY_OF is not a runtime type, $this")
     is AnyType -> error("ANY is not a runtime type")
     is BlobType -> PartiQLValueType.BLOB
     is BoolType -> PartiQLValueType.BOOL
@@ -129,7 +140,7 @@ internal fun StaticType.toNonNullRuntimeType(): PartiQLValueType = when (this) {
 }
 
 internal fun StaticType.toNullableRuntimeType(): PartiQLValueType = when (this) {
-    is AnyOfType -> error("ANY_OF is not a runtime type")
+    is AnyOfType -> error("ANY_OF is not a runtime type, $this")
     is AnyType -> error("ANY is not a runtime type")
     is BlobType -> PartiQLValueType.NULLABLE_BLOB
     is BoolType -> PartiQLValueType.NULLABLE_BOOL

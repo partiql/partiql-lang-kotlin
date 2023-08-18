@@ -193,8 +193,6 @@ internal class TypeLattice private constructor(
                 DECIMAL to safe(),
                 FLOAT32 to safe(),
                 FLOAT64 to safe(),
-                STRING to safe(),
-                SYMBOL to safe(),
                 NULLABLE_BOOL to safe(),
                 NULLABLE_INT8 to safe(),
                 NULLABLE_INT16 to safe(),
@@ -204,8 +202,6 @@ internal class TypeLattice private constructor(
                 NULLABLE_DECIMAL to safe(),
                 NULLABLE_FLOAT32 to safe(),
                 NULLABLE_FLOAT64 to safe(),
-                NULLABLE_STRING to safe(),
-                NULLABLE_SYMBOL to safe(),
             )
             graph[INT16] = relationships(
                 BOOL to safe(),
@@ -216,8 +212,6 @@ internal class TypeLattice private constructor(
                 DECIMAL to safe(),
                 FLOAT32 to safe(),
                 FLOAT64 to safe(),
-                STRING to safe(),
-                SYMBOL to safe(),
                 NULLABLE_BOOL to safe(),
                 NULLABLE_INT16 to safe(),
                 NULLABLE_INT32 to safe(),
@@ -226,8 +220,6 @@ internal class TypeLattice private constructor(
                 NULLABLE_DECIMAL to safe(),
                 NULLABLE_FLOAT32 to safe(),
                 NULLABLE_FLOAT64 to safe(),
-                NULLABLE_STRING to safe(),
-                NULLABLE_SYMBOL to safe(),
             )
             graph[INT32] = relationships(
                 BOOL to safe(),
@@ -237,8 +229,6 @@ internal class TypeLattice private constructor(
                 DECIMAL to safe(),
                 FLOAT32 to safe(),
                 FLOAT64 to safe(),
-                STRING to safe(),
-                SYMBOL to safe(),
                 NULLABLE_BOOL to safe(),
                 NULLABLE_INT32 to safe(),
                 NULLABLE_INT64 to safe(),
@@ -246,8 +236,6 @@ internal class TypeLattice private constructor(
                 NULLABLE_DECIMAL to safe(),
                 NULLABLE_FLOAT32 to safe(),
                 NULLABLE_FLOAT64 to safe(),
-                NULLABLE_STRING to safe(),
-                NULLABLE_SYMBOL to safe(),
             )
             graph[INT64] = relationships(
                 BOOL to safe(),
@@ -256,16 +244,12 @@ internal class TypeLattice private constructor(
                 DECIMAL to safe(),
                 FLOAT32 to safe(),
                 FLOAT64 to safe(),
-                STRING to safe(),
-                SYMBOL to safe(),
                 NULLABLE_BOOL to safe(),
                 NULLABLE_INT64 to safe(),
                 NULLABLE_INT to safe(),
                 NULLABLE_DECIMAL to safe(),
                 NULLABLE_FLOAT32 to safe(),
                 NULLABLE_FLOAT64 to safe(),
-                NULLABLE_STRING to safe(),
-                NULLABLE_SYMBOL to safe(),
             )
             graph[INT] = relationships(
                 BOOL to safe(),
@@ -273,51 +257,35 @@ internal class TypeLattice private constructor(
                 DECIMAL to safe(),
                 FLOAT32 to safe(),
                 FLOAT64 to safe(),
-                STRING to safe(),
-                SYMBOL to safe(),
                 NULLABLE_BOOL to safe(),
                 NULLABLE_INT to safe(),
                 NULLABLE_DECIMAL to safe(),
                 NULLABLE_FLOAT32 to safe(),
                 NULLABLE_FLOAT64 to safe(),
-                NULLABLE_STRING to safe(),
-                NULLABLE_SYMBOL to safe(),
             )
             graph[DECIMAL] = relationships(
                 BOOL to safe(),
                 DECIMAL to safe(),
                 FLOAT32 to safe(),
                 FLOAT64 to safe(),
-                STRING to safe(),
-                SYMBOL to safe(),
                 NULLABLE_BOOL to safe(),
                 NULLABLE_DECIMAL to safe(),
                 NULLABLE_FLOAT32 to safe(),
                 NULLABLE_FLOAT64 to safe(),
-                NULLABLE_STRING to safe(),
-                NULLABLE_SYMBOL to safe(),
             )
             graph[FLOAT32] = relationships(
                 BOOL to safe(),
                 FLOAT32 to safe(),
                 FLOAT64 to safe(),
-                STRING to safe(),
-                SYMBOL to safe(),
                 NULLABLE_BOOL to safe(),
                 NULLABLE_FLOAT32 to safe(),
                 NULLABLE_FLOAT64 to safe(),
-                NULLABLE_STRING to safe(),
-                NULLABLE_SYMBOL to safe(),
             )
             graph[FLOAT64] = relationships(
                 BOOL to safe(),
                 FLOAT64 to safe(),
-                STRING to safe(),
-                SYMBOL to safe(),
                 NULLABLE_BOOL to safe(),
                 NULLABLE_FLOAT64 to safe(),
-                NULLABLE_STRING to safe(),
-                NULLABLE_SYMBOL to safe(),
             )
             graph[CHAR] = relationships(
                 BOOL to safe(),
@@ -408,8 +376,6 @@ internal class TypeLattice private constructor(
                 NULLABLE_DECIMAL to safe(),
                 NULLABLE_FLOAT32 to safe(),
                 NULLABLE_FLOAT64 to safe(),
-                NULLABLE_STRING to safe(),
-                NULLABLE_SYMBOL to safe(),
             )
             graph[NULLABLE_INT16] = relationships(
                 NULLABLE_BOOL to safe(),
@@ -420,8 +386,6 @@ internal class TypeLattice private constructor(
                 NULLABLE_DECIMAL to safe(),
                 NULLABLE_FLOAT32 to safe(),
                 NULLABLE_FLOAT64 to safe(),
-                NULLABLE_STRING to safe(),
-                NULLABLE_SYMBOL to safe(),
             )
             graph[NULLABLE_INT32] = relationships(
                 NULLABLE_BOOL to safe(),
@@ -431,8 +395,6 @@ internal class TypeLattice private constructor(
                 NULLABLE_DECIMAL to safe(),
                 NULLABLE_FLOAT32 to safe(),
                 NULLABLE_FLOAT64 to safe(),
-                NULLABLE_STRING to safe(),
-                NULLABLE_SYMBOL to safe(),
             )
             graph[NULLABLE_INT64] = relationships(
                 NULLABLE_BOOL to safe(),
@@ -441,8 +403,6 @@ internal class TypeLattice private constructor(
                 NULLABLE_DECIMAL to safe(),
                 NULLABLE_FLOAT32 to safe(),
                 NULLABLE_FLOAT64 to safe(),
-                NULLABLE_STRING to safe(),
-                NULLABLE_SYMBOL to safe(),
             )
             graph[NULLABLE_INT] = relationships(
                 NULLABLE_BOOL to safe(),
@@ -450,29 +410,21 @@ internal class TypeLattice private constructor(
                 NULLABLE_DECIMAL to safe(),
                 NULLABLE_FLOAT32 to safe(),
                 NULLABLE_FLOAT64 to safe(),
-                NULLABLE_STRING to safe(),
-                NULLABLE_SYMBOL to safe(),
             )
             graph[NULLABLE_DECIMAL] = relationships(
                 NULLABLE_BOOL to safe(),
                 NULLABLE_DECIMAL to safe(),
                 NULLABLE_FLOAT32 to safe(),
                 NULLABLE_FLOAT64 to safe(),
-                NULLABLE_STRING to safe(),
-                NULLABLE_SYMBOL to safe(),
             )
             graph[NULLABLE_FLOAT32] = relationships(
                 NULLABLE_BOOL to safe(),
                 NULLABLE_FLOAT32 to safe(),
                 NULLABLE_FLOAT64 to safe(),
-                NULLABLE_STRING to safe(),
-                NULLABLE_SYMBOL to safe(),
             )
             graph[NULLABLE_FLOAT64] = relationships(
                 NULLABLE_BOOL to safe(),
                 NULLABLE_FLOAT64 to safe(),
-                NULLABLE_STRING to safe(),
-                NULLABLE_SYMBOL to safe(),
             )
             graph[NULLABLE_CHAR] = relationships(
                 NULLABLE_BOOL to safe(),
@@ -481,10 +433,6 @@ internal class TypeLattice private constructor(
                 NULLABLE_SYMBOL to safe(),
             )
             graph[NULLABLE_STRING] = relationships(
-                BOOL to safe(),
-                STRING to safe(),
-                SYMBOL to safe(),
-                CLOB to safe(),
                 NULLABLE_BOOL to safe(),
                 NULLABLE_STRING to safe(),
                 NULLABLE_SYMBOL to safe(),

@@ -64,6 +64,13 @@ import org.partiql.types.function.FunctionSignature
 private typealias FunctionMap = Map<String, List<FunctionSignature>>
 
 /**
+ * Map session attributes to underlying function name.
+ */
+internal val ATTRIBUTES: Map<String, String> = mapOf(
+    "CURRENT_USER" to "\$__current_user"
+)
+
+/**
  * A place for type and function definitions. Eventually these will be read from Ion files.
  *
  * @property namespace      Definition namespace e.g. partiql, spark, redshift, ...
@@ -137,6 +144,8 @@ internal class Header(
             val functions = Functions.combine(
                 Functions.casts(types),
                 Functions.operators(),
+                Functions.special(),
+                Functions.system(),
             )
             return Header(namespace, types, functions)
         }
@@ -169,7 +178,7 @@ internal class Header(
             pos(),
             neg(),
             eq(),
-            neq(),
+            ne(),
             and(),
             or(),
             lt(),
@@ -184,7 +193,59 @@ internal class Header(
             concat(),
         ).flatten()
 
+        /**
+         * SQL and PartiQL special forms
+         */
+        public fun special(): List<FunctionSignature> = listOf(
+            like(),
+            between(),
+            inCollection(),
+            isType(),
+            coalesce(),
+            nullIf(),
+            substring(),
+            position(),
+            trim(),
+            overlay(),
+            extract(),
+            dateAdd(),
+            dateDiff(),
+        ).flatten()
+
+        public fun system(): List<FunctionSignature> = listOf(
+            currentUser(),
+        )
+
         private val allTypes = PartiQLValueType.values()
+
+        private val nullableTypes = listOf(
+            NULL, // null.null
+            MISSING, // missing
+            NULLABLE_BOOL, // null.bool
+            NULLABLE_INT8, // null.int8
+            NULLABLE_INT16, // null.int16
+            NULLABLE_INT32, // null.int32
+            NULLABLE_INT64, // null.int64
+            NULLABLE_INT, // null.int
+            NULLABLE_DECIMAL, // null.decimal
+            NULLABLE_FLOAT32, // null.float32
+            NULLABLE_FLOAT64, // null.float64
+            NULLABLE_CHAR, // null.char
+            NULLABLE_STRING, // null.string
+            NULLABLE_SYMBOL, // null.symbol
+            NULLABLE_BINARY, // null.binary
+            NULLABLE_BYTE, // null.byte
+            NULLABLE_BLOB, // null.blob
+            NULLABLE_CLOB, // null.clob
+            NULLABLE_DATE, // null.date
+            NULLABLE_TIME, // null.time
+            NULLABLE_TIMESTAMP, // null.timestamp
+            NULLABLE_INTERVAL, // null.interval
+            NULLABLE_BAG, // null.bag
+            NULLABLE_LIST, // null.list
+            NULLABLE_SEXP, // null.sexp
+            NULLABLE_STRUCT, // null.struct
+        )
 
         private val numericTypes = listOf(
             INT8,
@@ -205,11 +266,18 @@ internal class Header(
             NULLABLE_FLOAT64, // null.float64
         )
 
+        // CLOB?
         private val textTypes = listOf(
             STRING,
             SYMBOL,
             NULLABLE_STRING,
             NULLABLE_SYMBOL,
+        )
+
+        private val collectionTypes = listOf(
+            BAG,
+            LIST,
+            SEXP,
         )
 
         public fun unary(name: String, returns: PartiQLValueType, value: PartiQLValueType) =
@@ -236,6 +304,8 @@ internal class Header(
                 )
             )
 
+        // OPERATORS
+
         private fun not(): List<FunctionSignature> = listOf(BOOL, NULLABLE_BOOL).map { t ->
             unary("not", BOOL, BOOL)
         }
@@ -252,8 +322,8 @@ internal class Header(
             binary("eq", BOOL, t, t)
         }
 
-        private fun neq(): List<FunctionSignature> = allTypes.map { t ->
-            binary("neq", BOOL, t, t)
+        private fun ne(): List<FunctionSignature> = allTypes.map { t ->
+            binary("ne", BOOL, t, t)
         }
 
         private fun and(): List<FunctionSignature> = listOf(BOOL, NULLABLE_BOOL).map { t ->
@@ -303,6 +373,171 @@ internal class Header(
         private fun concat(): List<FunctionSignature> = textTypes.map { t ->
             binary("concat", t, t, t)
         }
+
+        // SPECIAL FORMS
+
+        private fun like(): List<FunctionSignature> = listOf(
+            FunctionSignature(
+                name = "like",
+                returns = BOOL,
+                parameters = listOf(
+                    FunctionParameter.V("value", STRING),
+                    FunctionParameter.V("pattern", STRING),
+                )
+            ),
+            FunctionSignature(
+                name = "like_escape",
+                returns = BOOL,
+                parameters = listOf(
+                    FunctionParameter.V("value", STRING),
+                    FunctionParameter.V("pattern", STRING),
+                    FunctionParameter.V("escape", STRING),
+                )
+            ),
+        )
+
+        private fun between(): List<FunctionSignature> = numericTypes.map { t ->
+            FunctionSignature(
+                name = "between",
+                returns = BOOL,
+                parameters = listOf(
+                    FunctionParameter.V("value", t),
+                    FunctionParameter.V("lower", t),
+                    FunctionParameter.V("upper", t),
+                )
+            )
+        }
+
+        private fun inCollection(): List<FunctionSignature> = allTypes.map { element ->
+            collectionTypes.map { collection ->
+                FunctionSignature(
+                    name = "in_collection",
+                    returns = BOOL,
+                    parameters = listOf(
+                        FunctionParameter.V("value", element),
+                        FunctionParameter.V("collection", collection),
+                    )
+                )
+            }
+        }.flatten()
+
+        // TODO
+        private fun isType(): List<FunctionSignature> = emptyList()
+
+        // TODO
+        private fun coalesce(): List<FunctionSignature> = emptyList()
+
+        private fun nullIf(): List<FunctionSignature> = nullableTypes.map { t ->
+            FunctionSignature(
+                name = "null_if",
+                returns = t,
+                parameters = listOf(
+                    FunctionParameter.V("value", t),
+                    FunctionParameter.V("nullifier", BOOL),
+                )
+            )
+        }
+
+        private fun substring(): List<FunctionSignature> = textTypes.map { t ->
+            listOf(
+                FunctionSignature(
+                    name = "substring",
+                    returns = t,
+                    parameters = listOf(
+                        FunctionParameter.V("value", t),
+                        FunctionParameter.V("start", INT64),
+                    )
+                ),
+                FunctionSignature(
+                    name = "substring_length",
+                    returns = t,
+                    parameters = listOf(
+                        FunctionParameter.V("value", t),
+                        FunctionParameter.V("start", INT64),
+                        FunctionParameter.V("end", INT64),
+                    )
+                )
+            )
+        }.flatten()
+
+        private fun position(): List<FunctionSignature> = textTypes.map { t ->
+            FunctionSignature(
+                name = "position",
+                returns = INT64,
+                parameters = listOf(
+                    FunctionParameter.V("probe", t),
+                    FunctionParameter.V("value", t),
+                )
+            )
+        }
+
+        private fun trim(): List<FunctionSignature> = textTypes.map { t ->
+            listOf(
+                FunctionSignature(
+                    name = "trim",
+                    returns = t,
+                    parameters = listOf(
+                        FunctionParameter.V("value", t),
+                    )
+                ),
+                FunctionSignature(
+                    name = "trim_chars",
+                    returns = t,
+                    parameters = listOf(
+                        FunctionParameter.V("value", t),
+                        FunctionParameter.V("chars", t),
+                    )
+                ),
+                FunctionSignature(
+                    name = "trim_leading",
+                    returns = t,
+                    parameters = listOf(
+                        FunctionParameter.V("value", t),
+                    )
+                ),
+                FunctionSignature(
+                    name = "trim_leading_chars",
+                    returns = t,
+                    parameters = listOf(
+                        FunctionParameter.V("value", t),
+                        FunctionParameter.V("chars", t),
+                    )
+                ),
+                FunctionSignature(
+                    name = "trim_trailing",
+                    returns = t,
+                    parameters = listOf(
+                        FunctionParameter.V("value", t),
+                    )
+                ),
+                FunctionSignature(
+                    name = "trim_trailing_chars",
+                    returns = t,
+                    parameters = listOf(
+                        FunctionParameter.V("value", t),
+                        FunctionParameter.V("chars", t),
+                    )
+                ),
+            )
+        }.flatten()
+
+        // TODO
+        private fun overlay(): List<FunctionSignature> = emptyList()
+
+        // TODO
+        private fun extract(): List<FunctionSignature> = emptyList()
+
+        // TODO
+        private fun dateAdd(): List<FunctionSignature> = emptyList()
+
+        // TODO
+        private fun dateDiff(): List<FunctionSignature> = emptyList()
+
+        private fun currentUser() = FunctionSignature(
+            name = "\$__current_user",
+            returns = NULLABLE_STRING,
+            parameters = emptyList(),
+        )
 
         // Function precedence comparator
         // 1. Fewest args first

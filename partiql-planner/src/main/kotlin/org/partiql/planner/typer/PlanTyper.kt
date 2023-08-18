@@ -152,6 +152,8 @@ internal class PlanTyper(
             // type limit expression using outer scope with global resolution
             val typeEnv = outer.global()
             val limit = node.limit.type(typeEnv)
+            // check types
+            assertAsInt(limit.type)
             // compute output schema
             val type = input.type
             // rewrite
@@ -165,6 +167,8 @@ internal class PlanTyper(
             // type offset expression using outer scope with global resolution
             val typeEnv = outer.global()
             val offset = node.offset.type(typeEnv)
+            // check types
+            assertAsInt(offset.type)
             // compute output schema
             val type = input.type
             // rewrite
@@ -322,8 +326,9 @@ internal class PlanTyper(
                     rex(type, op)
                 }
                 is FnMatch.Error -> {
+
                     handleUnknownFunction(match)
-                    rex(StaticType.ANY, rexOpErr())
+                    rex(StaticType.NULL_OR_MISSING, rexOpErr())
                 }
             }
         }
@@ -345,7 +350,7 @@ internal class PlanTyper(
         override fun visitRexOpCollection(node: Rex.Op.Collection, ctx: StaticType?): Rex = rewrite {
             if (ctx!! !is CollectionType) {
                 handleUnexpectedType(ctx, setOf(StaticType.LIST, StaticType.BAG, StaticType.SEXP))
-                return rex(ctx, rexOpErr())
+                return rex(StaticType.NULL_OR_MISSING, rexOpErr())
             }
             val values = node.values.map { visitRex(it, null) }
             val t = values.toUnionType()
@@ -415,7 +420,15 @@ internal class PlanTyper(
         override fun visitRexOpSelect(node: Rex.Op.Select, ctx: StaticType?): Rex = rewrite {
             val rel = node.rel.type(locals)
             val typeEnv = TypeEnv(rel.type.schema, ResolutionStrategy.LOCAL)
-            val constructor = node.constructor.type(typeEnv)
+            var constructor = node.constructor.type(typeEnv)
+            var constructorType = constructor.type
+            // add the ordered property to the constructor
+            if (constructorType is StructType) {
+                constructorType = constructorType.copy(
+                    constraints = constructorType.constraints + setOf(TupleConstraint.Ordered)
+                )
+                constructor = rex(constructorType, constructor.op)
+            }
             val type = when (rel.isOrdered()) {
                 true -> ListType(constructor.type)
                 else -> BagType(constructor.type)
@@ -654,6 +667,12 @@ internal class PlanTyper(
         return newArgs
     }
 
+    private fun assertAsInt(type: StaticType) {
+        if (type.flatten().allTypes.any { variant -> variant is IntType }.not()) {
+            handleUnexpectedType(type, setOf(StaticType.INT))
+        }
+    }
+
     // ERRORS
 
     private fun handleUndefinedVariable(name: BindingName) {
@@ -679,8 +698,7 @@ internal class PlanTyper(
             Problem(
                 sourceLocation = UNKNOWN_PROBLEM_LOCATION,
                 details = PlanningProblemDetails.UnknownFunction(
-                    match.fn.identifier,
-                    match.candidates,
+                    match.fn.identifier.normalize(),
                     match.args.map { a ->
                         when (a) {
                             is Rex.Op.Call.Arg.Type -> a.type
@@ -690,5 +708,13 @@ internal class PlanTyper(
                 )
             )
         )
+    }
+
+    private fun Identifier.normalize(): String = when (this) {
+        is Identifier.Qualified -> (listOf(root.normalize()) + steps.map { it.normalize() }).joinToString(".")
+        is Identifier.Symbol -> when (caseSensitivity) {
+            Identifier.CaseSensitivity.SENSITIVE -> symbol
+            Identifier.CaseSensitivity.INSENSITIVE -> symbol.lowercase()
+        }
     }
 }

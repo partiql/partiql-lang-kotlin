@@ -2,9 +2,7 @@ package org.partiql.planner
 
 import org.partiql.errors.ProblemDetails
 import org.partiql.errors.ProblemSeverity
-import org.partiql.plan.Identifier
 import org.partiql.types.StaticType
-import org.partiql.types.function.FunctionSignature
 
 /**
  * Contains detailed information about errors that may occur during query planning.
@@ -12,7 +10,7 @@ import org.partiql.types.function.FunctionSignature
  * This information can be used to generate end-user readable error messages and is also easy to assert
  * equivalence in unit tests.
  */
-internal sealed class PlanningProblemDetails(
+sealed class PlanningProblemDetails(
     override val severity: ProblemSeverity,
     val messageFormatter: () -> String,
 ) : ProblemDetails {
@@ -89,26 +87,12 @@ internal sealed class PlanningProblemDetails(
     })
 
     data class UnknownFunction(
-        val identifier: Identifier,
-        val signatures: List<FunctionSignature>,
+        val identifier: String,
         val args: List<StaticType>,
     ) : PlanningProblemDetails(ProblemSeverity.ERROR, {
-        val name = identifier.sql()
         val types = args.joinToString { "<${it.toString().lowercase()}>" }
-        val candidates = when (signatures.isEmpty()) {
-            true -> "No functions defined with name `$name`"
-            else -> signatures.joinToString("\n")
-        }
-        "Unknown function `$name($types), found: $candidates"
+        "Unknown function `$identifier($types)"
     })
-}
-
-private fun Identifier.sql(): String = when (this) {
-    is Identifier.Qualified -> (listOf(root.sql()) + steps.map { it.sql() }).joinToString(".")
-    is Identifier.Symbol -> when (caseSensitivity) {
-        Identifier.CaseSensitivity.SENSITIVE -> "\"${symbol}\""
-        Identifier.CaseSensitivity.INSENSITIVE -> symbol
-    }
 }
 
 private fun quotationHint(caseSensitive: Boolean) =

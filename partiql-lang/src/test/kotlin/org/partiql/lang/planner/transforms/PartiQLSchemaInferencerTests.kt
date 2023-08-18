@@ -14,14 +14,13 @@ import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.annotations.ExperimentalPartiQLSchemaInferencer
 import org.partiql.errors.Problem
 import org.partiql.errors.UNKNOWN_PROBLEM_LOCATION
-import org.partiql.lang.ast.passes.SemanticProblemDetails
 import org.partiql.lang.errors.ProblemCollector
-import org.partiql.lang.planner.PlanningProblemDetails
 import org.partiql.lang.planner.transforms.PartiQLSchemaInferencerTests.ProblemHandler
 import org.partiql.lang.planner.transforms.PartiQLSchemaInferencerTests.TestCase.ErrorTestCase
 import org.partiql.lang.planner.transforms.PartiQLSchemaInferencerTests.TestCase.SuccessTestCase
 import org.partiql.plan.debug.PlanPrinter
 import org.partiql.planner.PartiQLPlanner
+import org.partiql.planner.PlanningProblemDetails
 import org.partiql.plugins.mockdb.LocalPlugin
 import org.partiql.types.AnyOfType
 import org.partiql.types.AnyType
@@ -54,6 +53,11 @@ class PartiQLSchemaInferencerTests {
     @MethodSource("selectStar")
     @Execution(ExecutionMode.CONCURRENT)
     fun testSelectStar(tc: TestCase) = runTest(tc)
+
+    @ParameterizedTest
+    @MethodSource("sessionVariables")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun testSessionVariables(tc: TestCase) = runTest(tc)
 
     companion object {
 
@@ -135,6 +139,13 @@ class PartiQLSchemaInferencerTests {
                 )
             )
 
+        private fun assertProblemExists(problem: () -> Problem) = ProblemHandler { problems, ignoreSourceLocation ->
+            when (ignoreSourceLocation) {
+                true -> assertTrue("Expected to find ${problem.invoke()} in $problems") { problems.any { it.details == problem.invoke().details } }
+                false -> assertTrue("Expected to find ${problem.invoke()} in $problems") { problems.any { it == problem.invoke() } }
+            }
+        }
+
         // Tests
 
         @JvmStatic
@@ -179,6 +190,60 @@ class PartiQLSchemaInferencerTests {
                 expected = TABLE_AWS_B_B
             ),
         )
+
+        @JvmStatic
+        fun sessionVariables() = listOf<TestCase>(
+            SuccessTestCase(
+                name = "Current User",
+                query = "CURRENT_USER",
+                expected = unionOf(STRING, StaticType.NULL)
+            ),
+            SuccessTestCase(
+                name = "Current User Concat",
+                query = "CURRENT_USER || 'hello'",
+                expected = unionOf(STRING, StaticType.NULL)
+            ),
+            SuccessTestCase(
+                name = "Current User in WHERE",
+                query = "SELECT VALUE a FROM [ 0 ] AS a WHERE CURRENT_USER = 'hello'",
+                expected = BagType(INT)
+            ),
+            ErrorTestCase(
+                name = "Current User in WHERE",
+                query = "SELECT VALUE a FROM [ 0 ] AS a WHERE CURRENT_USER = 5",
+                expected = BagType(INT),
+                problemHandler = assertProblemExists {
+                    Problem(
+                        UNKNOWN_PROBLEM_LOCATION,
+                        PlanningProblemDetails.UnknownFunction(
+                            "eq",
+                            listOf(
+                                unionOf(STRING, StaticType.NULL),
+                                INT,
+                            ),
+                        )
+                    )
+                }
+            ),
+            ErrorTestCase(
+                name = "Current User (String) PLUS String",
+                query = "CURRENT_USER + 'hello'",
+                expected = unionOf(StaticType.MISSING, StaticType.NULL),
+                problemHandler = assertProblemExists {
+                    Problem(
+                        UNKNOWN_PROBLEM_LOCATION,
+                        PlanningProblemDetails.UnknownFunction(
+                            "plus",
+                            listOf(
+                                unionOf(STRING, StaticType.NULL),
+                                STRING,
+                            ),
+                        )
+                    )
+                }
+            ),
+
+        )
     }
 
     sealed class TestCase {
@@ -219,7 +284,7 @@ class PartiQLSchemaInferencerTests {
                         fields = emptyMap(),
                         contentClosed = false,
                         constraints = setOf(
-                            TupleConstraint.Open(false),
+                            TupleConstraint.Open(true),
                             TupleConstraint.UniqueAttrs(true),
                             TupleConstraint.Ordered
                         )
@@ -241,7 +306,7 @@ class PartiQLSchemaInferencerTests {
                         fields = emptyMap(),
                         contentClosed = false,
                         constraints = setOf(
-                            TupleConstraint.Open(false),
+                            TupleConstraint.Open(true),
                             TupleConstraint.UniqueAttrs(true),
                             TupleConstraint.Ordered
                         )
@@ -294,10 +359,10 @@ class PartiQLSchemaInferencerTests {
                 query = "SELECT * FROM ddb.pets",
                 expected = BagType(
                     StructType(
-                        fields = mapOf("pets" to StaticType.ANY),
-                        contentClosed = true,
+                        fields = emptyMap(),
+                        contentClosed = false,
                         constraints = setOf(
-                            TupleConstraint.Open(false),
+                            TupleConstraint.Open(true),
                             TupleConstraint.UniqueAttrs(true),
                             TupleConstraint.Ordered
                         )
@@ -465,9 +530,9 @@ class PartiQLSchemaInferencerTests {
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
-                        SemanticProblemDetails.IncompatibleDatatypesForOp(
+                        PlanningProblemDetails.UnknownFunction(
+                            "in",
                             listOf(INT, STRING),
-                            "IN"
                         )
                     )
                 }
@@ -488,13 +553,13 @@ class PartiQLSchemaInferencerTests {
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
-                        SemanticProblemDetails.IncompatibleDatatypesForOp(
+                        PlanningProblemDetails.UnknownFunction(
+                            "between",
                             listOf(
                                 INT,
                                 INT,
                                 STRING
                             ),
-                            "between"
                         )
                     )
                 }
@@ -515,9 +580,9 @@ class PartiQLSchemaInferencerTests {
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
-                        SemanticProblemDetails.IncompatibleDatatypesForOp(
+                        PlanningProblemDetails.UnknownFunction(
+                            "like",
                             listOf(STRING, INT),
-                            "LIKE"
                         )
                     )
                 }
@@ -566,9 +631,9 @@ class PartiQLSchemaInferencerTests {
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
-                        SemanticProblemDetails.IncompatibleDatatypesForOp(
+                        PlanningProblemDetails.UnknownFunction(
+                            "eq",
                             listOf(INT, STRING),
-                            "EQ"
                         )
                     )
                 }
@@ -601,9 +666,9 @@ class PartiQLSchemaInferencerTests {
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
-                        SemanticProblemDetails.IncompatibleDatatypesForOp(
+                        PlanningProblemDetails.UnknownFunction(
+                            "and",
                             listOf(StaticType.BOOL, INT),
-                            "AND"
                         )
                     )
                 }
@@ -617,9 +682,9 @@ class PartiQLSchemaInferencerTests {
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
-                        SemanticProblemDetails.IncompatibleDatatypesForOp(
+                        PlanningProblemDetails.UnknownFunction(
+                            "and",
                             listOf(INT, StaticType.BOOL),
-                            "AND"
                         )
                     )
                 }
@@ -684,7 +749,7 @@ class PartiQLSchemaInferencerTests {
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
-                        SemanticProblemDetails.IncompatibleDataTypeForExpr(INT, STRING)
+                        PlanningProblemDetails.UnexpectedType(STRING, setOf(INT))
                     )
                 }
             ),
@@ -704,7 +769,7 @@ class PartiQLSchemaInferencerTests {
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
-                        SemanticProblemDetails.IncompatibleDataTypeForExpr(INT, STRING)
+                        PlanningProblemDetails.UnexpectedType(STRING, setOf(INT))
                     )
                 }
             ),
@@ -1023,63 +1088,7 @@ class PartiQLSchemaInferencerTests {
                     )
                 )
             ),
-            SuccessTestCase(
-                name = "Current User",
-                query = "CURRENT_USER",
-                expected = unionOf(STRING, StaticType.NULL)
-            ),
-            SuccessTestCase(
-                name = "Current User Concat",
-                query = "CURRENT_USER || 'hello'",
-                expected = unionOf(STRING, StaticType.NULL)
-            ),
-            SuccessTestCase(
-                name = "Current User Concat in WHERE",
-                query = "SELECT VALUE a FROM [ 0 ] AS a WHERE CURRENT_USER = 'hello'",
-                expected = BagType(INT)
-            ),
-            ErrorTestCase(
-                name = "Current User Concat in WHERE",
-                query = "SELECT VALUE a FROM [ 0 ] AS a WHERE CURRENT_USER = 5",
-                expected = BagType(INT),
-                problemHandler = assertProblemExists {
-                    Problem(
-                        UNKNOWN_PROBLEM_LOCATION,
-                        SemanticProblemDetails.IncompatibleDatatypesForOp(
-                            listOf(
-                                unionOf(STRING, StaticType.NULL),
-                                INT,
-                            ),
-                            "EQ"
-                        )
-                    )
-                }
-            ),
-            ErrorTestCase(
-                name = "Current User (String) PLUS String",
-                query = "CURRENT_USER + 'hello'",
-                expected = unionOf(StaticType.MISSING, StaticType.NULL),
-                problemHandler = assertProblemExists {
-                    Problem(
-                        UNKNOWN_PROBLEM_LOCATION,
-                        SemanticProblemDetails.IncompatibleDatatypesForOp(
-                            listOf(
-                                unionOf(STRING, StaticType.NULL),
-                                STRING,
-                            ),
-                            "PLUS"
-                        )
-                    )
-                }
-            ),
         )
-
-        private fun assertProblemExists(problem: () -> Problem) = ProblemHandler { problems, ignoreSourceLocation ->
-            when (ignoreSourceLocation) {
-                true -> assertTrue("Expected to find ${problem.invoke()} in $problems") { problems.any { it.details == problem.invoke().details } }
-                false -> assertTrue("Expected to find ${problem.invoke()} in $problems") { problems.any { it == problem.invoke() } }
-            }
-        }
     }
 
     private fun runTest(tc: TestCase) = when (tc) {
@@ -1127,15 +1136,21 @@ class PartiQLSchemaInferencerTests {
         )
         val collector = ProblemCollector()
         val ctx = PartiQLSchemaInferencer.Context(session, PLUGINS, collector)
-        val result = PartiQLSchemaInferencer.infer(tc.query, ctx)
+        val result = PartiQLSchemaInferencer.inferInternal(tc.query, ctx)
         assert(collector.problems.isNotEmpty()) {
-            "Expected to find problems, but none were found."
+            buildString {
+                appendLine("Expected to find problems, but none were found.")
+                appendLine()
+                PlanPrinter.append(this, result.first)
+            }
         }
         if (tc.expected != null) {
-            assert(tc.expected == result) {
+            assert(tc.expected == result.second) {
                 buildString {
                     appendLine("Expected: ${tc.expected}")
-                    appendLine("Actual: $result")
+                    appendLine("Actual: ${result.second}")
+                    appendLine()
+                    PlanPrinter.append(this, result.first)
                 }
             }
         }
