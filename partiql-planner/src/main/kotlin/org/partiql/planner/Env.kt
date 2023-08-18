@@ -7,6 +7,8 @@ import org.partiql.plan.Plan
 import org.partiql.plan.Rel
 import org.partiql.plan.Rex
 import org.partiql.planner.typer.FunctionResolver
+import org.partiql.planner.typer.Mapping
+import org.partiql.planner.typer.toRuntimeType
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
@@ -20,6 +22,7 @@ import org.partiql.spi.connector.Constants
 import org.partiql.types.StaticType
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
+import org.partiql.types.function.FunctionParameter
 import org.partiql.types.function.FunctionSignature
 
 /**
@@ -67,7 +70,7 @@ internal class TypeEnv(
 internal sealed class FnMatch {
     public class Ok(
         public val signature: FunctionSignature,
-        public val args: List<Rex.Op.Call.Arg>,
+        public val mapping: Mapping,
     ) : FnMatch()
 
     public class Error(
@@ -176,10 +179,17 @@ internal class Env(
      */
     internal fun resolveFn(fn: Fn.Unresolved, args: List<Rex.Op.Call.Arg>): FnMatch {
         val candidates = header.lookup(fn)
-        val match = functionResolver.match(candidates, args)
+        val parameters = args.mapIndexed { i, arg ->
+            val name = "arg-$i"
+            when (arg) {
+                is Rex.Op.Call.Arg.Type -> FunctionParameter.T(name, arg.type.toRuntimeType())
+                is Rex.Op.Call.Arg.Value -> FunctionParameter.V(name, arg.rex.type.toRuntimeType())
+            }
+        }
+        val match = functionResolver.match(candidates, parameters)
         return when (match) {
             null -> FnMatch.Error(fn, args, candidates)
-            else -> FnMatch.Ok(match.first, match.second)
+            else -> FnMatch.Ok(match.signature, match.mapping)
         }
     }
 

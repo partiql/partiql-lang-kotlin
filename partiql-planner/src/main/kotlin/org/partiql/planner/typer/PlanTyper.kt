@@ -29,6 +29,7 @@ import org.partiql.types.SexpType
 import org.partiql.types.StaticType
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
+import org.partiql.types.function.FunctionSignature
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.TextValue
 
@@ -315,7 +316,7 @@ internal class PlanTyper(
             when (val match = env.resolveFn(fn as Fn.Unresolved, args)) {
                 is FnMatch.Ok -> {
                     val newFn = fnResolved(match.signature)
-                    val newArgs = match.args
+                    val newArgs = rewriteFnArgs(match.mapping, args)
                     val type = match.signature.returns.toStaticType()
                     val op = rexOpCall(newFn, newArgs)
                     rex(type, op)
@@ -622,6 +623,36 @@ internal class PlanTyper(
             // All the other types coerce into a bag of themselves (including null/missing/sexp).
             else -> fromSourceType
         }
+
+    /**
+     * Rewrites function arguments, wrapping in the given function if exists.
+     */
+    private fun Plan.rewriteFnArgs(
+        mapping: List<FunctionSignature?>,
+        args: List<Rex.Op.Call.Arg>,
+    ): List<Rex.Op.Call.Arg> {
+        if (mapping.size != args.size) {
+            error("Fatal, malformed function mapping") // should be unreachable given how a mapping is generated.
+        }
+        val newArgs = mutableListOf<Rex.Op.Call.Arg>()
+        for (i in mapping.indices) {
+            val a = args[i]
+            val m = mapping[i]
+            if (m == null || a is Rex.Op.Call.Arg.Type) {
+                newArgs.add(a)
+            } else {
+                val vArg = (a as Rex.Op.Call.Arg.Value).rex
+                val tArg = m.returns.toStaticType()
+                val cast = rexOpCall(
+                    fn = fnResolved(m),
+                    args = listOf(rexOpCallArgValue(vArg), rexOpCallArgType(tArg)),
+                )
+                val rex = rex(tArg, cast)
+                rexOpCallArgValue(rex)
+            }
+        }
+        return newArgs
+    }
 
     // ERRORS
 

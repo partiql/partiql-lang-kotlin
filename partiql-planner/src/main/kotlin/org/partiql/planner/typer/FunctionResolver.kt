@@ -1,21 +1,26 @@
 package org.partiql.planner.typer
 
-import org.partiql.plan.Plan
-import org.partiql.plan.Rex
 import org.partiql.planner.Header
-import org.partiql.types.PartiQLValueType
 import org.partiql.types.function.FunctionParameter
 import org.partiql.types.function.FunctionSignature
 
 /**
- * Function arguments list.
+ * Function arguments list. The planner is responsible for mapping arguments to parameters.
  */
-internal typealias Args = List<Rex.Op.Call.Arg>
+internal typealias Args = List<FunctionParameter>
 
 /**
- * Function signature match with (possibly) implicitly cast(ed) arguments.
+ * Parameter mapping list tells the planner where to insert implicit casts. Null is the identity.
  */
-internal typealias Match = Pair<FunctionSignature, Args>
+internal typealias Mapping = List<FunctionSignature?>
+
+/**
+ * Tells us which function matched, and how the arguments are mapped.
+ */
+internal class Match(
+    public val signature: FunctionSignature,
+    public val mapping: Mapping,
+)
 
 /**
  * Logic for matching signatures to arguments.
@@ -27,75 +32,43 @@ internal class FunctionResolver(private val header: Header) {
      */
     public fun match(signatures: List<FunctionSignature>, args: Args): Match? {
         for (signature in signatures) {
-            val arguments = match(signature, args)
-            if (arguments != null) {
-                return signature to arguments
+            val mapping = match(signature, args)
+            if (mapping != null) {
+                return Match(signature, mapping)
             }
         }
         return null
     }
 
     /**
-     * Attempt to match arguments to the parameters; inserting the implicit casts if necessary.
+     * Attempt to match arguments to the parameters; return the implicit casts if necessary.
      */
-    public fun match(signature: FunctionSignature, args: Args): Args? {
+    public fun match(signature: FunctionSignature, args: Args): Mapping? {
         if (signature.parameters.size != args.size) {
             return null
         }
-        val newArgs = mutableListOf<Rex.Op.Call.Arg>()
+        val mapping = ArrayList<FunctionSignature?>(args.size)
         for (i in args.indices) {
             val a = args[i]
             val p = signature.parameters[i]
             when {
-                (a is Rex.Op.Call.Arg.Type && p is FunctionParameter.V) -> return null
-                (a is Rex.Op.Call.Arg.Value && p is FunctionParameter.T) -> return null
-                (a is Rex.Op.Call.Arg.Type && p is FunctionParameter.T) -> newArgs.add(a)
-                (a is Rex.Op.Call.Arg.Value && p is FunctionParameter.V) -> {
-                    val newArg = a.match(p.type)
-                    if (newArg != null) {
-                        newArgs.add(newArg)
-                    } else {
-                        return null
+                // 1. Different parameter types
+                a::class != p::class -> return null
+                // 2. Exact match
+                a.type == p.type -> mapping.add(null)
+                // 3. Type parameter mismatch
+                (a is FunctionParameter.T && p is FunctionParameter.T) -> return null
+                // 4. Check for an implicit CAST
+                (a is FunctionParameter.V && p is FunctionParameter.V) -> {
+                    val cast = header.lookupCast(a.type, p.type)
+                    when (cast) {
+                        null -> return null // short-circuit
+                        else -> mapping.add(cast)
                     }
                 }
             }
         }
         // we made a match
-        return newArgs
-    }
-
-    /**
-     * Match the argument to the type; returning null if no match.
-     */
-    private fun Rex.Op.Call.Arg.Value.match(t2: PartiQLValueType): Rex.Op.Call.Arg.Value? {
-        val t1 = this.rex.type.toRuntimeType()
-        if (t1 == t2) {
-            return this
-        }
-        val cast = header.lookupCast(t1, t2)
-        if (cast == null) {
-            return null
-        }
-        return castArg(this, cast)
-    }
-
-    internal companion object {
-
-        /**
-         * Rewrite this node with the desired CAST.
-         */
-        public fun castArg(arg: Rex.Op.Call.Arg.Value, cast: FunctionSignature) = Plan.create {
-            val type = cast.returns.toStaticType()
-            val value = arg.rex
-            rexOpCallArgValue(
-                rex(
-                    type = type,
-                    op = rexOpCall(
-                        fn = fnResolved(cast),
-                        args = listOf(rexOpCallArgValue(value), rexOpCallArgType(type))
-                    )
-                )
-            )
-        }
+        return mapping
     }
 }

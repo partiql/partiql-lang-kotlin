@@ -7,7 +7,12 @@ public sealed class FunctionParameter(
     public val type: PartiQLValueType,
 ) {
 
-    public class V(name: String, type: PartiQLValueType) : FunctionParameter(name, type)
+    public class V(name: String, type: PartiQLValueType) : FunctionParameter(name, type) {
+        override fun toString(): String = "V<$type>"
+    }
 
-    public class T(name: String, type: PartiQLValueType) : FunctionParameter(name, type)
+    public class T(name: String, type: PartiQLValueType) : FunctionParameter(name, type) {
+
+        override fun toString(): String = "T<$type>"
+    }
 }
