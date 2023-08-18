@@ -45,8 +45,13 @@ Thank you to all who have contributed!
 - Adds support for Timestamp constructor call in Parser.
 - Parsing of label patterns within node and edge graph patterns now supports
   disjunction `|`, conjunction `&`, negation `!`, and grouping.
+- Adds default `equals` and `hashCode` methods for each generated abstract class of Sprout. This affects the generated
+classes in `:partiql-ast` and `:partiql-plan`.
 
 ### Changed
+- **Breaking**: all product types defined by the internal Sprout tool no longer generate interfaces. They are now abstract
+  classes due to the generation of `equals` and `hashCode` methods. This change impacts many generated interfaces exposed
+  in `:partiql-ast` and `:partiql-plan`.
 - Standardizes `org/partiql/cli/functions/QueryDDB` and other built-in functions in `org/partiql/lang/eval/builtins` by the new `ExprFunction` format.
 - **Breaking**: Redefines `org/partiql/lang/eval/ExprFunctionkt.call()` method by only invoking `callWithRequired` function.
 - **Breaking**: Redefines `org/partiql/lang/eval/builtins/DynamicLookupExprFunction` by merging `variadicParameter` into `requiredParameters` as a `StaticType.LIST`. `callWithVariadic` is now replaced by `callWithRequired`.
