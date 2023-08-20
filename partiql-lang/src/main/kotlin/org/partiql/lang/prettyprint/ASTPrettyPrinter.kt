@@ -134,6 +134,13 @@ class ASTPrettyPrinter {
             attrOfParent = attrOfParent
         )
 
+    private fun toRecursionTree(node: PartiqlAst.Defnid, attrOfParent: String? = null): RecursionTree =
+        RecursionTree(
+            astType = "Defnid",
+            value = node.symb.text,
+            attrOfParent = attrOfParent
+        )
+
     // *******
     // * DML *
     // *******
@@ -481,13 +488,13 @@ class ASTPrettyPrinter {
             )
             is PartiqlAst.Expr.Call -> RecursionTree(
                 astType = "Call",
-                value = node.funcName.text,
+                value = node.funcName.symb.text,
                 attrOfParent = attrOfParent,
                 children = toRecursionTreeList(node.args, "arg")
             )
             is PartiqlAst.Expr.CallAgg -> RecursionTree(
                 astType = "CallAgg",
-                value = node.funcName.text,
+                value = node.funcName.symb.text,
                 attrOfParent = attrOfParent,
                 children = listOf(toRecursionTree(node.arg, "arg"))
             )

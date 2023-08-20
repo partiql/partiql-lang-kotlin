@@ -248,26 +248,26 @@ class ToLegacyAstTest {
 
         @JvmStatic
         fun calls() = listOf(
-            expect("(call 'a' (lit null))") {
+            expect("(call (defnid 'a') (lit null))") {
                 exprCall {
                     function = id("a")
                     args += NULL
                 }
             },
-            expect("(call_agg (all) 'a' (lit null))") {
+            expect("(call_agg (all) (defnid 'a') (lit null))") {
                 exprAgg {
                     function = id("a")
                     args += NULL
                 }
             },
-            expect("(call_agg (all) 'a' (lit null))") {
+            expect("(call_agg (all) (defnid 'a') (lit null))") {
                 exprAgg {
                     setq = SetQuantifier.ALL
                     function = id("a")
                     args += NULL
                 }
             },
-            expect("(call_agg (distinct) 'a' (lit null))") {
+            expect("(call_agg (distinct) (defnid 'a') (lit null))") {
                 exprAgg {
                     setq = SetQuantifier.DISTINCT
                     function = id("a")
@@ -413,7 +413,7 @@ class ToLegacyAstTest {
             // Other (??)
             expect("(integer4_type)") { typeInt4() },
             expect("(integer8_type)") { typeInt8() },
-            expect("(custom_type dog)") { typeCustom("dog") }
+            expect("(custom_type (defnid 'dog'))") { typeCustom("dog") }
             // LEGACY AST does not have TIMESTAMP or INTERVAL
             // LEGACY AST does not have parameterized blob/clob
         )
@@ -487,17 +487,17 @@ class ToLegacyAstTest {
             // TODO nullif
             // TODO substring
             // TODO position
-            expect("""(call 'trim' (lit "xyz"))""") {
+            expect("""(call (defnid 'trim') (lit "xyz"))""") {
                 exprTrim {
                     value = exprLit(stringValue("xyz"))
                 }
             },
-            expect("""(call 'trim' (lit "xyz"))""") {
+            expect("""(call (defnid 'trim') (lit "xyz"))""") {
                 exprTrim {
                     value = exprLit(stringValue("xyz"))
                 }
             },
-            expect("""(call 'trim' (lit "xyz"))""") {
+            expect("""(call (defnid 'trim') (lit "xyz"))""") {
                 exprTrim {
                     value = exprLit(stringValue("xyz"))
                 }
@@ -521,7 +521,7 @@ class ToLegacyAstTest {
                 """
                 (project_list
                     (project_all (id 'a' (case_sensitive) (unqualified)))
-                    (project_expr (lit 1) 'x')
+                    (project_expr (lit 1) (defnid 'x'))
                 )
              """
             ) {
@@ -554,7 +554,13 @@ class ToLegacyAstTest {
                     type = From.Value.Type.SCAN
                 }
             },
-            expect("(scan (lit null) 'a' 'b' 'c')") {
+            expect(
+                """(scan (lit null) 
+                |          (defnid 'a') 
+                |          (defnid 'b') 
+                |          (defnid 'c')
+                |      )""".trimMargin()
+            ) {
                 fromValue {
                     expr = NULL
                     type = From.Value.Type.SCAN
@@ -569,7 +575,13 @@ class ToLegacyAstTest {
                     type = From.Value.Type.UNPIVOT
                 }
             },
-            expect("(unpivot (lit null) 'a' 'b' 'c')") {
+            expect(
+                """(unpivot (lit null) 
+                |          (defnid 'a') 
+                |          (defnid 'b') 
+                |          (defnid 'c')
+                   )""".trimMargin()
+            ) {
                 fromValue {
                     expr = NULL
                     type = From.Value.Type.UNPIVOT
@@ -622,7 +634,7 @@ class ToLegacyAstTest {
                     condition = exprLit(boolValue(true))
                 }
             },
-            expect("(let (let_binding (lit null) 'x'))") {
+            expect("(let (let_binding (lit null) (defnid 'x')))") {
                 let {
                     bindings += letBinding {
                         expr = NULL
@@ -635,7 +647,7 @@ class ToLegacyAstTest {
                (group_by (group_full)
                     (group_key_list
                         (group_key (lit "a") null)
-                        (group_key (lit "b") 'x')
+                        (group_key (lit "b") (defnid 'x'))
                     )
                     null
                )
@@ -652,9 +664,9 @@ class ToLegacyAstTest {
                (group_by (group_partial)
                     (group_key_list
                         (group_key (lit "a") null)
-                        (group_key (lit "b") 'x')
+                        (group_key (lit "b") (defnid 'x'))
                     )
-                    'as'
+                    (defnid 'as')
                )
             """
             ) {

@@ -115,6 +115,10 @@ class QueryPrettyPrinter {
         }
     }
 
+    private fun writeAstNode(node: PartiqlAst.Defnid, sb: StringBuilder) {
+        sb.append(node.symb.text)
+    }
+
     private fun writeAstNode(node: PartiqlAst.DdlOp.CreateTable, sb: StringBuilder) {
         sb.append("CREATE TABLE ")
         writeAstNode(node.tableName, sb)
@@ -133,11 +137,17 @@ class QueryPrettyPrinter {
     }
 
     private fun writeAstNode(node: PartiqlAst.TableDefPart.ColumnDeclaration, sb: StringBuilder) {
-        sb.append("${node.name.text} ")
+        // sb.append("${node.name.text} ")
+        writeAstNode(node.name, sb); sb.append(" ")
         writeType(node.type, sb)
         for (c in node.constraints) {
             sb.append(" ")
-            c.name?.let { sb.append("CONSTRAINT ${it.text} ") }
+            c.name?.let {
+                // sb.append("CONSTRAINT ${it.text} ")
+                sb.append("CONSTRAINT ")
+                writeAstNode(it, sb)
+                sb.append(" ")
+            }
             when (c.def) {
                 is PartiqlAst.ColumnConstraintDef.ColumnNull -> sb.append("NULL")
                 is PartiqlAst.ColumnConstraintDef.ColumnNotnull -> sb.append("NOT NULL")
@@ -482,7 +492,9 @@ class QueryPrettyPrinter {
 
     @Suppress("UNUSED_PARAMETER")
     private fun writeAstNode(node: PartiqlAst.Expr.Call, sb: StringBuilder, level: Int) {
-        sb.append("${node.funcName.text}(")
+        // sb.append("${node.funcName.text}(")
+        writeAstNode(node.funcName, sb)
+        sb.append('(')
         node.args.forEach { arg ->
             // Print anything as one line inside a function call
             writeAstNodeCheckSubQuery(arg, sb, -1)
@@ -496,7 +508,9 @@ class QueryPrettyPrinter {
 
     @Suppress("UNUSED_PARAMETER")
     private fun writeAstNode(node: PartiqlAst.Expr.CallAgg, sb: StringBuilder, level: Int) {
-        sb.append("${node.funcName.text}(")
+        // sb.append("${node.funcName.text}(")
+        writeAstNode(node.funcName, sb)
+        sb.append('(')
         if (node.setq is PartiqlAst.SetQuantifier.Distinct) {
             sb.append("DISTINCT ")
         }
@@ -663,12 +677,20 @@ class QueryPrettyPrinter {
         sb.removeLast(2)
         val sqLevel = getSubQueryLevel(level)
         val separator = getSeparator(sqLevel)
-        group.groupAsAlias?.let { sb.append("${separator}GROUP AS ${it.text}") }
+        group.groupAsAlias?.let {
+            // sb.append("${separator}GROUP AS ${it.text}")
+            sb.append("${separator}GROUP AS ")
+            writeAstNode(it, sb)
+        }
     }
 
     private fun writeGroupKey(key: PartiqlAst.GroupKey, sb: StringBuilder, level: Int) {
         writeAstNodeCheckSubQuery(key.expr, sb, level)
-        key.asAlias?.let { sb.append(" AS ${it.text}") }
+        key.asAlias?.let {
+            // sb.append(" AS ${it.text}")
+            sb.append(" AS ")
+            writeAstNode(it, sb)
+        }
     }
 
     private fun writeFromLet(fromLet: PartiqlAst.Let, sb: StringBuilder, level: Int) {
@@ -681,16 +703,18 @@ class QueryPrettyPrinter {
 
     private fun writeLetBinding(letBinding: PartiqlAst.LetBinding, sb: StringBuilder, level: Int) {
         writeAstNodeCheckSubQuery(letBinding.expr, sb, level)
-        sb.append(" AS ${letBinding.name.text}")
+        // sb.append(" AS ${letBinding.name.text}")
+        sb.append(" AS ")
+        writeAstNode(letBinding.name, sb)
     }
 
     private fun writeFromSource(from: PartiqlAst.FromSource, sb: StringBuilder, level: Int) {
         when (from) {
             is PartiqlAst.FromSource.Scan -> {
                 writeAstNodeCheckSubQuery(from.expr, sb, level)
-                from.asAlias?.let { sb.append(" AS ${it.text}") }
-                from.atAlias?.let { sb.append(" AT ${it.text}") }
-                from.byAlias?.let { sb.append(" BY ${it.text}") }
+                from.asAlias?.let { sb.append(" AS "); writeAstNode(it, sb) }
+                from.atAlias?.let { sb.append(" AT "); writeAstNode(it, sb) }
+                from.byAlias?.let { sb.append(" BY "); writeAstNode(it, sb) }
             }
             is PartiqlAst.FromSource.Join -> when {
                 (from.type is PartiqlAst.JoinType.Inner && from.predicate == null) -> {
@@ -720,9 +744,9 @@ class QueryPrettyPrinter {
             is PartiqlAst.FromSource.Unpivot -> {
                 sb.append("UNPIVOT ")
                 writeAstNodeCheckSubQuery(from.expr, sb, level)
-                from.asAlias?.let { sb.append(" AS ${it.text}") }
-                from.atAlias?.let { sb.append(" AT ${it.text}") }
-                from.byAlias?.let { sb.append(" BY ${it.text}") }
+                from.asAlias?.let { sb.append(" AS "); writeAstNode(it, sb) }
+                from.atAlias?.let { sb.append(" AT "); writeAstNode(it, sb) }
+                from.byAlias?.let { sb.append(" BY "); writeAstNode(it, sb) }
             }
         }
     }
@@ -760,7 +784,7 @@ class QueryPrettyPrinter {
                 writeAstNodeCheckSubQuery(item.expr, sb, level)
                 item.asAlias?.let {
                     sb.append(" AS ")
-                    sb.append(it.text)
+                    writeAstNode(it, sb)
                 }
             }
         }
