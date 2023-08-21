@@ -15,28 +15,21 @@
 
 package org.partiql.cli
 
+import AstPrinter
 import com.amazon.ion.system.IonSystemBuilder
 import com.amazon.ionelement.api.field
 import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.ionStructOf
-import org.partiql.annotations.ExperimentalPartiQLSchemaInferencer
 import org.partiql.cli.pico.PartiQLCommand
-import org.partiql.cli.shell.error
 import org.partiql.cli.shell.info
-import org.partiql.cli.shell.warn
-import org.partiql.lang.errors.ProblemCollector
 import org.partiql.lang.eval.EvaluationSession
-import org.partiql.lang.planner.transforms.PartiQLSchemaInferencer
-import org.partiql.lang.planner.transforms.PlannerSession
+import org.partiql.parser.PartiQLParserBuilder
 import org.partiql.plan.debug.PlanPrinter
+import org.partiql.planner.PartiQLPlanner
 import org.partiql.plugins.mockdb.LocalPlugin
-import org.partiql.transpiler.Transpiler
-import org.partiql.transpiler.TranspilerProblem
-import org.partiql.transpiler.targets.PartiQLTarget
-import org.partiql.transpiler.targets.RedshiftTarget
 import picocli.CommandLine
 import java.io.PrintStream
-import java.time.Instant
+import java.util.UUID
 import kotlin.system.exitProcess
 
 /**
@@ -55,71 +48,81 @@ fun main(args: Array<String>) {
  * Consider giving this access to the print stream in Shell.
  * It would have been too hacky without a slight refactor, so now let's just assume System.out for debugging
  */
-@OptIn(ExperimentalPartiQLSchemaInferencer::class)
 object Debug {
 
-    private val PLUGINS = listOf(LocalPlugin())
-
     private const val USER_ID = "DEBUG_USER_ID"
-    private val CATALOG_MAP = mapOf(
+
+    private val plugins = listOf(LocalPlugin())
+    private val catalogs = mapOf(
         "local" to ionStructOf(
             field("connector_name", ionString("localdb")),
         )
     )
 
-    private fun ctx(queryId: String, catalog: String, path: List<String> = emptyList()): PartiQLSchemaInferencer.Context {
-        val session = PlannerSession(
-            queryId,
-            USER_ID,
-            catalog,
-            path,
-            CATALOG_MAP,
-            Instant.now(),
-        )
-        val collector = ProblemCollector()
-        return PartiQLSchemaInferencer.Context(session, PLUGINS, collector)
-    }
+    private val planner = PartiQLPlanner.builder().plugins(plugins).build()
+    private val parser = PartiQLParserBuilder.standard().build()
 
+    // !!
+    // IMPLEMENT DEBUG BEHAVIOR HERE
+    // !!
     @Suppress("UNUSED_PARAMETER")
     @Throws(Exception::class)
     fun action(input: String, session: EvaluationSession): String {
-        session.context.forEach {
-            println("${it.key}: ${it.value}")
-        }
-        // IMPLEMENT DEBUG BEHAVIOR HERE
-        val target = when (val t = session.context["target"]) {
-            "partiql" -> PartiQLTarget
-            "redshift" -> RedshiftTarget
-            else -> throw IllegalArgumentException("Unknown target $t")
-        }
-        val context = ctx("test-query", "local", listOf("babel"))
-        val transpiler = Transpiler(target, context)
-        val result = transpiler.transpile(input)
+        // session.context.forEach {
+        //     println("${it.key}: ${it.value}")
+        // }
+        // // IMPLEMENT DEBUG BEHAVIOR HERE
+        // val target = when (val t = session.context["target"]) {
+        //     "partiql" -> PartiQLTarget
+        //     "redshift" -> RedshiftTarget
+        //     else -> throw IllegalArgumentException("Unknown target $t")
+        // }
+        // val context = ctx("test-query", "local", listOf("babel"))
+        // val transpiler = Transpiler(target, context)
+        // val result = transpiler.transpile(input)
+        // val out = PrintStream(System.out)
+        //
+        // val hadProblems = result.problems.isNotEmpty()
+        // if (hadProblems) {
+        //     out.println()
+        //     for (p in result.problems) {
+        //         val message = p.toString()
+        //         when (p.level) {
+        //             TranspilerProblem.Level.INFO -> out.info(message)
+        //             TranspilerProblem.Level.WARNING -> out.warn(message)
+        //             TranspilerProblem.Level.ERROR -> out.error(message)
+        //         }
+        //     }
+        //     out.println()
+        //     out.info("-- Plan Dump ----------")
+        //     out.println()
+        //     // Inspect plan
+        //     PlanPrinter.append(out, result.plan)
+        // }
+        // // Dump SQL
+        // out.println()
+        // out.info("-- Generated [${target.target}] SQL ----------")
+        // out.println()
+        // println(result.sql)
+        // out.println()
+        // return if (result.problems.isEmpty()) "OK" else "ERROR"
         val out = PrintStream(System.out)
 
-        val hadProblems = result.problems.isNotEmpty()
-        if (hadProblems) {
-            out.println()
-            for (p in result.problems) {
-                val message = p.toString()
-                when (p.level) {
-                    TranspilerProblem.Level.INFO -> out.info(message)
-                    TranspilerProblem.Level.WARNING -> out.warn(message)
-                    TranspilerProblem.Level.ERROR -> out.error(message)
-                }
-            }
-            out.println()
-            out.info("-- Plan Dump ----------")
-            out.println()
-            // Inspect plan
-            PlanPrinter.append(out, result.plan)
-        }
-        // Dump SQL
-        out.println()
-        out.info("-- Generated [${target.target}] SQL ----------")
-        out.println()
-        println(result.sql)
-        out.println()
-        return if (result.problems.isEmpty()) "OK" else "ERROR"
+        // Parse
+        val statement = parser.parse(input).root
+        out.info("-- AST ----------")
+        AstPrinter.append(out, statement)
+
+        // Plan
+        val sess = PartiQLPlanner.Session(
+            queryId = UUID.randomUUID().toString(),
+            userId = "debug",
+            catalogConfig = catalogs,
+        )
+        val result = planner.plan(statement, sess).plan
+        out.info("-- Plan ----------")
+        PlanPrinter.append(out, result.statement)
+
+        return "OK"
     }
 }

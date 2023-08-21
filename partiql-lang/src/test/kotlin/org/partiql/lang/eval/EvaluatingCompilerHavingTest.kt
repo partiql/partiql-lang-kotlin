@@ -16,7 +16,7 @@ package org.partiql.lang.eval
 
 import junitparams.Parameters
 import org.junit.Test
-import org.partiql.lang.errors.ErrorCode
+import org.partiql.errors.ErrorCode
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestCase
 import org.partiql.lang.util.propertyValueMapOf
 

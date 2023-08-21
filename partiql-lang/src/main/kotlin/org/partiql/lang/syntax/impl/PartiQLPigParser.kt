@@ -27,11 +27,11 @@ import org.antlr.v4.runtime.TokenStream
 import org.antlr.v4.runtime.atn.PredictionMode
 import org.antlr.v4.runtime.misc.ParseCancellationException
 import org.antlr.v4.runtime.tree.ParseTree
+import org.partiql.errors.ErrorCode
+import org.partiql.errors.Property
+import org.partiql.errors.PropertyValueMap
 import org.partiql.lang.SqlException
 import org.partiql.lang.domains.PartiqlAst
-import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.errors.Property
-import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.syntax.LexerException
 import org.partiql.lang.syntax.Parser
 import org.partiql.lang.syntax.ParserException

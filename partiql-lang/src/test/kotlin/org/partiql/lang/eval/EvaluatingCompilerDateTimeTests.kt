@@ -4,8 +4,8 @@ import com.amazon.ion.IonStruct
 import org.junit.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
+import org.partiql.errors.ErrorCode
 import org.partiql.lang.ION
-import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
 import org.partiql.lang.eval.time.MINUTES_PER_HOUR
 import org.partiql.lang.eval.time.NANOS_PER_SECOND

@@ -1,13 +1,13 @@
 package org.partiql.lang.planner.transforms
 
 import com.amazon.ionelement.api.ionSymbol
+import org.partiql.errors.Problem
+import org.partiql.errors.ProblemHandler
 import org.partiql.lang.ast.sourceLocation
 import org.partiql.lang.domains.PartiqlLogical
 import org.partiql.lang.domains.PartiqlLogicalResolved
 import org.partiql.lang.domains.PartiqlLogicalToPartiqlLogicalResolvedVisitorTransform
 import org.partiql.lang.domains.toBindingCase
-import org.partiql.lang.errors.Problem
-import org.partiql.lang.errors.ProblemHandler
 import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.builtins.DYNAMIC_LOOKUP_FUNCTION_NAME
 import org.partiql.lang.eval.physical.sourceLocationMetaOrUnknown
@@ -36,7 +36,7 @@ import org.partiql.pig.runtime.asPrimitive
  * variables are detected, in order to allow traversal to continue, a fake index value (-1) is used in place of a real
  * one and the resolved logical plan returned by this function is guaranteed to be invalid.** **Therefore, it is the
  * responsibility of callers to check if any problems have been logged with
- * [org.partiql.lang.errors.ProblemSeverity.ERROR] and to abort further query planning if so.**
+ * [org.partiql.errors.ProblemSeverity.ERROR] and to abort further query planning if so.**
  *
  * When [allowUndefinedVariables] is `true`, undefined variables are transformed into a dynamic lookup call site, which
  * is semantically equivalent to the behavior of the AST evaluator in the same scenario.  For example, `name` in the
@@ -337,7 +337,7 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
                     node.asErrorId().also {
                         problemHandler.handleProblem(
                             Problem(
-                                node.metas.sourceLocation ?: error("MetaContainer is missing SourceLocationMeta"),
+                                (node.metas.sourceLocation ?: error("MetaContainer is missing SourceLocationMeta")).toProblemLocation(),
                                 PlanningProblemDetails.UndefinedVariable(
                                     node.name.text,
                                     node.case is PartiqlLogical.CaseSensitivity.CaseSensitive
@@ -358,7 +358,7 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
             GlobalResolutionResult.Undefined -> {
                 problemHandler.handleProblem(
                     Problem(
-                        node.metas.sourceLocationMetaOrUnknown,
+                        node.metas.sourceLocationMetaOrUnknown.toProblemLocation(),
                         PlanningProblemDetails.UndefinedDmlTarget(
                             node.target.name.text,
                             node.target.case is PartiqlLogical.CaseSensitivity.CaseSensitive
@@ -483,7 +483,7 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
             if (usedVariableNames.contains(loweredVariableName)) {
                 this.problemHandler.handleProblem(
                     Problem(
-                        varDecl.metas.sourceLocation ?: error("VarDecl was missing source location meta"),
+                        varDecl.metas.sourceLocation?.toProblemLocation() ?: error("VarDecl was missing source location meta"),
                         PlanningProblemDetails.VariablePreviouslyDefined(varDecl.name.text)
                     )
                 )

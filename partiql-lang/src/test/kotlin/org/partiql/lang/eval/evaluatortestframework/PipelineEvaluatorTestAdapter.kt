@@ -3,8 +3,8 @@ package org.partiql.lang.eval.evaluatortestframework
 import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
+import org.partiql.errors.ErrorBehaviorInPermissiveMode
 import org.partiql.lang.ION
-import org.partiql.lang.errors.ErrorBehaviorInPermissiveMode
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.TypingMode

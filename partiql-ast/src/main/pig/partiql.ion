@@ -271,13 +271,22 @@ may then be further optimized by selecting better implementations of each operat
              (edge_left_or_right)
              (edge_left_or_undirected_or_right))
 
+        // A label spec in a node pattern like `MATCH (x : <lab>)` or in an edge pattern like `MATCH −[t : <lab>]−>`
+        (sum graph_label_spec
+            (graph_label_name name::symbol)                   // as in `MATCH (x:Account)` or `MATCH -[x:Transfer]->`
+            (graph_label_wildcard)                            // as in `MATCH (x: %)`
+            (graph_label_negation arg::graph_label_spec)      // as in `MATCH (x: !Account)`
+            (graph_label_conj lhs::graph_label_spec rhs::graph_label_spec)   // as in `MATCH (x: City&Country)` - Monaco can do
+            (graph_label_disj lhs::graph_label_spec rhs::graph_label_spec)   // as in `MATCH (x: City|Country)` - either Paris or Germany will do
+        )
+
         // A part of a graph pattern
         (sum graph_match_pattern_part
              // A single node in a graph pattern.
              (node
                  prefilter::(? expr)   // an optional node pre-filter, e.g.: `WHERE c.name='Alarm'` in `MATCH (c WHERE c.name='Alarm')`
                  variable::(? symbol)  // the optional element variable of the node match, e.g.: `x` in `MATCH (x)`
-                 label::(* symbol 0))  // the optional label(s) to match for the node, e.g.: `Entity` in `MATCH (x:Entity)`
+                 label::(? graph_label_spec))  // the optional label spec to match for the node, e.g.: `Entity` in `MATCH (x:Entity)`
 
              // A single edge in a graph pattern.
              (edge
@@ -285,7 +294,8 @@ may then be further optimized by selecting better implementations of each operat
                  quantifier::(? graph_match_quantifier) // an optional quantifier for the entire pattern match, e.g. `{2,5}` in `MATCH (a:Account)−[:Transfer]−>{2,5}(b:Account)`
                  prefilter::(? expr)   // an optional edge pre-filter, e.g.: `WHERE t.capacity>100` in `MATCH −[t:hasSupply WHERE t.capacity>100]−>`
                  variable::(? symbol)  // the optional element variable of the edge match, e.g.: `t` in `MATCH −[t]−>`
-                 label::(* symbol 0))  // the optional label(s) to match for the edge. e.g.: `Target` in `MATCH −[t:Target]−>`
+                 label::(? graph_label_spec))  // the optional label spec to match for the edge. e.g.: `Target` in `MATCH −[t:Target]−>`
+
              // A sub-pattern.
              (pattern pattern::graph_match_pattern))
 

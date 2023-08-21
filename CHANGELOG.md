@@ -29,18 +29,37 @@ Thank you to all who have contributed!
 ## [Unreleased]
 
 ### Added
-- Adds `org.partiql.value` (experimental) package for reading/writing PartiQL
-  values
+- Adds `org.partiql.value` (experimental) package for reading/writing PartiQL values.
 - Adds serialization and deserialization between IonValue and `org.partiql.value`.
 - Adds `org.partiql.ast` package and usage documentation
 - Adds `org.partiql.parser` package and usage documentation
 - Adds PartiQL's Timestamp Data Model. 
 - Adds support for Timestamp constructor call in Parser. 
-
+- Parsing of label patterns within node and edge graph patterns now supports 
+  disjunction `|`, conjunction `&`, negation `!`, and grouping.
 
 ### Changed
 
 - Upgrades ion-java to 1.10.2.
+- **Breaking** (within experimental graph features): As part of extending 
+  the language of graph label patterns: 
+  - Changed the type of the field `label` in AST nodes 
+    `org.partiql.lang.domains.PartiqlAst.GraphMatchPatternPart.{Node,Edge}`, 
+    from `SymbolPrimitive` to new `GraphLabelSpec`.
+  - Changed the names of subclasses of ` org.partiql.lang.graph.LabelSpec`, 
+    from `OneOf` to `Name`, and from `Whatever` to `Wildcard`.
+- **Breaking** the package `org.partiql.lang.errors` has been moved to `org.partiql.errors`, moved classes include
+  - `org.partiql.lang.errors.ErrorCategory` -> `org.partiql.errors.ErrorCategory`
+  - `org.partiql.lang.errors.Property` -> `org.partiql.errors.Property`
+  - `org.partiql.lang.errors.PropertyValue` -> `org.partiql.errors.PropertyValue`
+  - `org.partiql.lang.errors.PropertyType` -> `org.partiql.errors.PropertyType`
+  - `org.partiql.lang.errors.PropertyValueMap` -> `org.partiql.errors.PropertyValueMap`
+  - `org.partiql.lang.errors.ErrorCode` -> `org.partiql.errors.ErrorCode`
+  - `org.partiql.lang.errors.Problem` -> `org.partiql.errors.Problem`
+  - `org.partiql.lang.errors.ProblemDetails` -> `org.partiql.errors.ProblemDetails`
+  - `org.partiql.lang.errors.ProblemSeverity` -> `org.partiql.errors.ProblemSeverity`
+  - `org.partiql.lang.errors.ProblemHandler` -> `org.partiql.errors.ProblemHandler`
+- **Breaking** the `sourceLocation` field of `org.partiql.errors.Problem` was changed from `org.partiql.lang.ast.SoureceLocationMeta` to `org.partiql.errors.ProblemLocation`.
 
 ### Deprecated
 

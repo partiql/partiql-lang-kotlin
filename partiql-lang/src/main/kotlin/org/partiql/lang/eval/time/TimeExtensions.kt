@@ -1,6 +1,6 @@
 package org.partiql.lang.util
 
-import org.partiql.lang.errors.ErrorCode
+import org.partiql.errors.ErrorCode
 import org.partiql.lang.eval.time.SECONDS_PER_HOUR
 import org.partiql.lang.eval.time.SECONDS_PER_MINUTE
 import java.time.ZoneOffset

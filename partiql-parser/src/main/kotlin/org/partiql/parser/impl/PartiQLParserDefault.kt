@@ -68,7 +68,6 @@ import org.partiql.value.dateValue
 import org.partiql.value.datetime.DateTimeException
 import org.partiql.value.datetime.DateTimeValue
 import org.partiql.value.decimalValue
-import org.partiql.value.int64Value
 import org.partiql.value.intValue
 import org.partiql.value.missingValue
 import org.partiql.value.nullValue
@@ -1002,8 +1001,34 @@ internal class PartiQLParserDefault : PartiQLParser {
             }
         }
 
-        override fun visitPatternPartLabel(ctx: GeneratedParser.PatternPartLabelContext) =
-            visitSymbolPrimitive(ctx.symbolPrimitive())
+        override fun visitLabelSpecOr(ctx: GeneratedParser.LabelSpecOrContext) = translate(ctx) {
+            val lhs = visit(ctx.labelSpec()) as GraphMatch.Label
+            val rhs = visit(ctx.labelTerm()) as GraphMatch.Label
+            graphMatchLabelDisj(lhs, rhs)
+        }
+
+        override fun visitLabelTermAnd(ctx: GeneratedParser.LabelTermAndContext) = translate(ctx) {
+            val lhs = visit(ctx.labelTerm()) as GraphMatch.Label
+            val rhs = visit(ctx.labelFactor()) as GraphMatch.Label
+            graphMatchLabelConj(lhs, rhs)
+        }
+
+        override fun visitLabelFactorNot(ctx: GeneratedParser.LabelFactorNotContext) = translate(ctx) {
+            val arg = visit(ctx.labelPrimary()) as GraphMatch.Label
+            graphMatchLabelNegation(arg)
+        }
+
+        override fun visitLabelPrimaryName(ctx: GeneratedParser.LabelPrimaryNameContext) = translate(ctx) {
+            val x = visitSymbolPrimitive(ctx.symbolPrimitive())
+            graphMatchLabelName(x.symbol)
+        }
+
+        override fun visitLabelPrimaryWild(ctx: GeneratedParser.LabelPrimaryWildContext) = translate(ctx) {
+            graphMatchLabelWildcard()
+        }
+
+        override fun visitLabelPrimaryParen(ctx: GeneratedParser.LabelPrimaryParenContext) =
+            visit(ctx.labelSpec()) as GraphMatch.Label
 
         override fun visitPattern(ctx: GeneratedParser.PatternContext) = translate(ctx) {
             val restrictor = visitRestrictor(ctx.restrictor)
@@ -1017,7 +1042,7 @@ internal class PartiQLParserDefault : PartiQLParser {
         override fun visitEdgeAbbreviated(ctx: GeneratedParser.EdgeAbbreviatedContext) = translate(ctx) {
             val direction = visitEdge(ctx.edgeAbbrev())
             val quantifier = visitOrNull<GraphMatch.Quantifier>(ctx.quantifier)
-            graphMatchPatternPartEdge(direction, quantifier, null, null, emptyList())
+            graphMatchPatternPartEdge(direction, quantifier, null, null, null)
         }
 
         override fun visitEdgeWithSpec(ctx: GeneratedParser.EdgeWithSpecContext) = translate(ctx) {
@@ -1030,8 +1055,8 @@ internal class PartiQLParserDefault : PartiQLParser {
             val placeholderDirection = GraphMatch.Direction.RIGHT
             val variable = visitOrNull<Identifier.Symbol>(ctx.symbolPrimitive())?.symbol
             val prefilter = ctx.whereClause()?.let { visitExpr(it.expr()) }
-            val label = visitOrNull<Identifier.Symbol>(ctx.patternPartLabel())?.symbol
-            graphMatchPatternPartEdge(placeholderDirection, null, prefilter, variable, listOfNotNull(label))
+            val label = visitOrNull<GraphMatch.Label>(ctx.labelSpec())
+            graphMatchPatternPartEdge(placeholderDirection, null, prefilter, variable, label)
         }
 
         override fun visitEdgeSpecLeft(ctx: GeneratedParser.EdgeSpecLeftContext): AstNode {
@@ -1100,8 +1125,8 @@ internal class PartiQLParserDefault : PartiQLParser {
         override fun visitNode(ctx: GeneratedParser.NodeContext) = translate(ctx) {
             val variable = visitOrNull<Identifier.Symbol>(ctx.symbolPrimitive())?.symbol
             val prefilter = ctx.whereClause()?.let { visitExpr(it.expr()) }
-            val label = visitOrNull<Identifier.Symbol>(ctx.patternPartLabel())?.symbol
-            graphMatchPatternPartNode(prefilter, variable, listOfNotNull(label))
+            val label = visitOrNull<GraphMatch.Label>(ctx.labelSpec())
+            graphMatchPatternPartNode(prefilter, variable, label)
         }
 
         private fun visitRestrictor(ctx: GeneratedParser.PatternRestrictorContext?): GraphMatch.Restrictor? {
@@ -1708,11 +1733,7 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitLiteralInteger(ctx: GeneratedParser.LiteralIntegerContext) = translate(ctx) {
             val n = ctx.LITERAL_INTEGER().text.toInt()
-            val v = try {
-                int64Value(n.toLong())
-            } catch (_: java.lang.NumberFormatException) {
-                intValue(n.toBigInteger())
-            }
+            val v = intValue(n.toBigInteger())
             exprLit(v)
         }
 

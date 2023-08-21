@@ -15,11 +15,11 @@
 package org.partiql.lang.planner
 
 import org.partiql.annotations.ExperimentalPartiQLCompilerPipeline
+import org.partiql.errors.Problem
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.PartiqlLogical
 import org.partiql.lang.domains.PartiqlLogicalResolved
 import org.partiql.lang.domains.PartiqlPhysical
-import org.partiql.lang.errors.Problem
 import org.partiql.lang.eval.TypedOpBehavior
 
 /**

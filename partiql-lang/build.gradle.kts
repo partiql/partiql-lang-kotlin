@@ -41,6 +41,7 @@ dependencies {
     api(Deps.ionSchema)
     // libs are included in partiql-lang-kotlin JAR, but are not published independently yet.
     libs(project(":partiql-plan"))
+    libs(project(":partiql-planner"))
     implementation(Deps.antlrRuntime)
     implementation(Deps.csv)
     implementation(Deps.kotlinReflect)

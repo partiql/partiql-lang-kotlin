@@ -15,23 +15,22 @@
 package org.partiql.lang.planner.transforms
 
 import org.partiql.annotations.ExperimentalPartiQLSchemaInferencer
+import org.partiql.errors.ErrorCode
+import org.partiql.errors.Problem
+import org.partiql.errors.ProblemHandler
+import org.partiql.errors.ProblemSeverity
+import org.partiql.errors.Property
+import org.partiql.errors.PropertyValueMap
+import org.partiql.errors.UNKNOWN_PROBLEM_LOCATION
 import org.partiql.lang.SqlException
-import org.partiql.lang.ast.UNKNOWN_SOURCE_LOCATION
-import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.errors.Problem
-import org.partiql.lang.errors.ProblemHandler
-import org.partiql.lang.errors.ProblemSeverity
-import org.partiql.lang.errors.Property
-import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.planner.PlanningProblemDetails
 import org.partiql.lang.planner.transforms.PartiQLSchemaInferencer.infer
-import org.partiql.lang.planner.transforms.impl.Metadata
-import org.partiql.lang.planner.transforms.plan.PlanTyper
-import org.partiql.lang.planner.transforms.plan.PlanUtils.grabType
-import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.lang.util.propertyValueMapOf
+import org.partiql.parser.PartiQLParserBuilder
 import org.partiql.plan.PartiQLPlan
 import org.partiql.plan.Plan
+import org.partiql.plan.Statement
+import org.partiql.planner.PartiQLPlanner
 import org.partiql.spi.Plugin
 import org.partiql.types.StaticType
 
@@ -71,7 +70,7 @@ public object PartiQLSchemaInferencer {
         ctx: Context
     ): StaticType {
         return try {
-            inferInternal(query, ctx)
+            inferInternal(query, ctx).second
         } catch (t: Throwable) {
             throw when (t) {
                 is SqlException -> InferenceException(
@@ -82,7 +81,7 @@ public object PartiQLSchemaInferencer {
                 )
                 else -> InferenceException(
                     err = Problem(
-                        UNKNOWN_SOURCE_LOCATION,
+                        UNKNOWN_PROBLEM_LOCATION,
                         PlanningProblemDetails.CompileError("Unhandled exception occurred.")
                     ),
                     cause = t
@@ -95,12 +94,10 @@ public object PartiQLSchemaInferencer {
      * Context object required for performing schema inference.
      */
     public class Context(
-        public val session: PlannerSession,
-        plugins: List<Plugin>,
+        public val session: PartiQLPlanner.Session,
+        public val plugins: List<Plugin>,
         public val problemHandler: ProblemHandler = ProblemThrower()
-    ) {
-        internal val metadata = Metadata(plugins, session.catalogConfig)
-    }
+    )
 
     public class InferenceException(
         message: String = "",
@@ -122,24 +119,6 @@ public object PartiQLSchemaInferencer {
             )
     }
 
-    // !!! DON'T MERGE ME !!!
-    // !!! TRANSPILER HACK !!!
-    // !!! DON'T MERGE ME !!!
-    public fun type(plan: PartiQLPlan, context: Context): PartiQLPlan {
-        val root = PlanTyper.type(
-            plan.root,
-            PlanTyper.Context(
-                input = null,
-                session = context.session,
-                metadata = context.metadata,
-                scopingOrder = PlanTyper.ScopingOrder.LEXICAL_THEN_GLOBALS,
-                customFunctionSignatures = emptyList(),
-                problemHandler = context.problemHandler
-            )
-        )
-        return Plan.partiQLPlan(PartiQLPlan.Version.PARTIQL_V0, root)
-    }
-
     //
     //
     // INTERNAL
@@ -154,30 +133,21 @@ public object PartiQLSchemaInferencer {
         }
     }
 
-    private fun inferInternal(query: String, ctx: Context): StaticType {
+    internal fun inferInternal(query: String, ctx: Context): Pair<PartiQLPlan, StaticType> {
         val parser = PartiQLParserBuilder.standard().build()
-        val ast = parser.parseAstStatement(query)
-
-        // Transform to Plan
-        val plan = AstToPlan.transform(ast)
-        val typedPlan = PlanTyper.type(
-            plan.root,
-            PlanTyper.Context(
-                input = null,
-                session = ctx.session,
-                metadata = ctx.metadata,
-                scopingOrder = PlanTyper.ScopingOrder.LEXICAL_THEN_GLOBALS,
-                customFunctionSignatures = emptyList(),
-                problemHandler = ctx.problemHandler
+        val planner = PartiQLPlanner.builder()
+            .plugins(ctx.plugins)
+            .build()
+        val ast = parser.parse(query).root
+        val plan = planner.plan(ast, ctx.session, ctx.problemHandler::handleProblem).plan
+        if (plan.statement !is Statement.Query) {
+            throw InferenceException(
+                Problem(
+                    UNKNOWN_PROBLEM_LOCATION,
+                    PlanningProblemDetails.CompileError("Invalid statement, only `Statement.Query` supported for schema inference")
+                )
             )
-        )
-
-        // Convert Logical Plan to Static Type
-        return typedPlan.grabType() ?: throw InferenceException(
-            Problem(
-                UNKNOWN_SOURCE_LOCATION,
-                PlanningProblemDetails.CompileError("Unable to infer the output type of plan.")
-            )
-        )
+        }
+        return plan to (plan.statement as Statement.Query).root.type
     }
 }

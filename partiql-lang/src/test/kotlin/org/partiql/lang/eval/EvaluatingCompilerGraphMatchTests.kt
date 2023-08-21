@@ -3,7 +3,7 @@ package org.partiql.lang.eval
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
-import org.partiql.lang.errors.ErrorCode
+import org.partiql.errors.ErrorCode
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorErrorTestCase
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestCase
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget

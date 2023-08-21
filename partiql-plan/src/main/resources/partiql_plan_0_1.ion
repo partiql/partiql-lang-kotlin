@@ -1,0 +1,327 @@
+imports::{
+  kotlin: [
+    partiql_value::'org.partiql.value.PartiQLValue',
+    static_type::'org.partiql.types.StaticType',
+    function_signature::'org.partiql.types.function.FunctionSignature',
+  ],
+}
+
+parti_q_l_plan::{
+  version:    parti_q_l_version,    // version :: (major minor)
+  globals:    list::[global],       // (globals ...)
+  statement:  statement,            // (statement ...)
+}
+
+parti_q_l_version::[
+  VERSION_0_0,
+  VERSION_0_1,  // CURRENT
+]
+
+// Globals
+
+global::{
+  path: '.identifier.qualified',
+  type: static_type,
+}
+
+// Functions
+
+fn::[
+  resolved::{
+    signature: function_signature,
+  },
+  unresolved::{
+    identifier: identifier,
+  },
+]
+
+// Statements
+
+statement::[
+  query::{
+    root: rex,
+  },
+]
+
+// Identifiers
+
+identifier::[
+  symbol::{
+    symbol:           string,
+    case_sensitivity: case_sensitivity,
+  },
+  qualified::{
+    root:   symbol,
+    steps:  list::[symbol],
+  },
+  _::[
+    case_sensitivity::[
+      SENSITIVE,
+      INSENSITIVE,
+    ],
+  ],
+]
+
+// Rex
+rex::{
+  type: static_type,
+  op:[
+
+    lit::{
+      value: partiql_value,
+    },
+
+    var::[
+      resolved::{
+        ref: int,
+      },
+      unresolved::{
+        identifier: identifier,
+        scope:      scope,
+      },
+      _::[
+        scope::[
+          DEFAULT,  //  x.y.z
+          LOCAL,    // @x.y.z
+        ],
+      ],
+    ],
+
+    global::{
+      ref: int,
+    },
+
+    path::{
+      root:   rex,
+      steps:  list::[step],
+      _: [
+        step::[
+          index::{ key: rex },
+          wildcard::{},
+          unpivot::{},
+        ],
+      ],
+    },
+
+    call::{
+       fn:    fn,
+       args:  list::[arg],
+       _: [
+        arg::[
+          value::{
+            rex: rex,
+          },
+          type::{
+            type: static_type,
+          },
+        ],
+      ],
+    },
+
+    case::{
+      rex:      rex,
+      branches: list::[branch],
+      _: [
+        branch::{
+          condition:  rex,
+          rex:        rex,
+        },
+      ],
+    },
+
+    collection::{
+      values: list::[rex],
+    },
+
+    struct::{
+      fields: list::[field],
+      _: [
+        field::{
+          k: rex,
+          v: rex,
+        },
+      ],
+    },
+
+    pivot::{
+      key:    rex,
+      value:  rex,
+      rel:    rel,
+    },
+
+    coll_to_scalar::{
+      subquery: {
+        select: select,
+        type:   static_type // reify `select` type
+      }
+    },
+
+    select::{
+      constructor:  rex,
+      rel:          rel,
+    },
+
+    // SELECT v1.*, e2 AS a, v3.*
+    //
+    // SELECT VALUE TUPLEUNION(
+    //   CASE WHEN v1 IS TUPLE THEN v1 ELSE {'_1': v1} END,
+    //   {'a':e2 },
+    //   CASE WHEN v3 IS TUPLE THEN v3 ELSE {'_2': v3} END
+    // )
+    //
+    // tuple_union::{
+    //   args: [
+    //     spread('_1', v1),
+    //     struct('a', e2),
+    //     spread('_2', v3),
+    //   ]
+    // }
+    //
+    tuple_union::{
+      args: list::[arg],
+      _: [
+        arg::[
+          struct::{
+            k: string,
+            v: rex,
+          },
+          spread::{
+            k: string,
+            v: rex,
+          },
+        ],
+      ],
+    },
+
+    err::{},
+  ],
+}
+
+// Rel
+
+rel::{
+  type: {
+    schema: list::[binding],
+    props:  set::[prop],
+  },
+  op: [
+
+    scan::{
+      rex: rex,
+    },
+
+    scan_indexed::{
+      rex: rex,
+    },
+
+    unpivot::{
+      rex:  rex,
+    },
+
+    distinct::{
+      input: rel,
+    },
+
+    filter::{
+      input:      rel,
+      predicate:  rex,
+    },
+
+    sort::{
+      input: rel,
+      specs: list::[spec],
+      _: [
+        spec::{
+          rex: rex,
+          order: order,
+        },
+        order::[
+          ASC_NULLS_LAST,
+          ASC_NULLS_FIRST,
+          DESC_NULLS_LAST,
+          DESC_NULLS_FIRST,
+        ],
+      ],
+    },
+
+    union::{
+      lhs: rel,
+      rhs: rel,
+    },
+
+    intersect::{
+      lhs: rel,
+      rhs: rel,
+    },
+
+    except::{
+      lhs: rel,
+      rhs: rel,
+    },
+
+    limit::{
+      input:  rel,
+      limit:  rex,
+    },
+
+    offset::{
+      input:  rel,
+      offset: rex,
+    },
+
+    project::{
+      input:        rel,
+      projections:  list::[rex],
+    },
+
+    join::{
+      lhs: rel,
+      rhs: rel,
+      type: [
+        cross::{},
+        equi::{
+          capture: capture,
+        },
+        theta::{
+          capture: capture,
+          rex: rex,
+        },
+      ],
+      _: [
+        capture::[
+          INNER,
+          LEFT,
+          LEFT_OUTER,
+          RIGHT,
+          RIGHT_OUTER,
+          FULL,
+          FULL_OUTER,
+        ],
+      ],
+    },
+
+    aggregate::{
+      input:    rel,
+      strategy: [ FULL, PARTIAL ],
+      aggs:     list::[agg],
+      groups:   list::[rex],
+      _: [
+        agg::{
+          fn:   fn,
+          args: list::['.rex.op.call.arg'],
+        },
+      ],
+    },
+
+    err::{},
+  ],
+  _: [
+    prop::[
+      ORDERED,
+    ],
+    binding::{
+      name: string,
+      type: static_type,
+    },
+  ]
+}

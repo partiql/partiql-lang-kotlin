@@ -17,10 +17,10 @@ package org.partiql.lang.eval.visitors
 import com.amazon.ionelement.api.ionTimestamp
 import com.amazon.ionelement.api.toIonElement
 import org.junit.Test
+import org.partiql.errors.ErrorCode
 import org.partiql.lang.SqlException
 import org.partiql.lang.TestBase
 import org.partiql.lang.domains.PartiqlAst
-import org.partiql.lang.errors.ErrorCode
 
 class PartiqlAstSanityValidatorTests : TestBase() {
     private fun litInt(value: Int) = PartiqlAst.build { lit(ion.newInt(value).toIonElement()) }

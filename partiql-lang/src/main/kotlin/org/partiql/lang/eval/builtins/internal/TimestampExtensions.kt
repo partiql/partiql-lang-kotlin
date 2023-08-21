@@ -1,7 +1,7 @@
 package org.partiql.lang.eval.builtins.internal
 
 import com.amazon.ion.Timestamp
-import org.partiql.lang.errors.ErrorCode
+import org.partiql.errors.ErrorCode
 import org.partiql.lang.eval.errNoContext
 import org.partiql.lang.eval.time.SECONDS_PER_MINUTE
 import org.partiql.lang.eval.time.Time

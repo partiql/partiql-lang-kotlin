@@ -5,9 +5,9 @@ import org.junit.jupiter.api.fail
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.annotations.ExperimentalPartiQLCompilerPipeline
+import org.partiql.errors.Problem
+import org.partiql.errors.ProblemHandler
 import org.partiql.lang.domains.PartiqlPhysical
-import org.partiql.lang.errors.Problem
-import org.partiql.lang.errors.ProblemHandler
 import org.partiql.lang.planner.GlobalResolutionResult
 import org.partiql.lang.planner.GlobalVariableResolver
 import org.partiql.lang.planner.PartiQLPlanner

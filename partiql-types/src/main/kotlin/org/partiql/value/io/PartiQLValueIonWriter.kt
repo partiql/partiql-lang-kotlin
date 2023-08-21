@@ -94,7 +94,6 @@ import org.partiql.value.int32Value
 import org.partiql.value.int64Value
 import org.partiql.value.int8Value
 import org.partiql.value.intValue
-import org.partiql.value.io.PartiQLValueIonWriter.ToIon.toIon
 import org.partiql.value.stringValue
 import org.partiql.value.symbolValue
 import org.partiql.value.timeValue
@@ -103,22 +102,25 @@ import org.partiql.value.util.PartiQLValueBaseVisitor
 import java.io.OutputStream
 
 @OptIn(PartiQLValueExperimental::class)
-internal class PartiQLValueIonWriter(
+public class PartiQLValueIonWriter internal constructor(
     private val ionWriter: IonWriter,
 ) : PartiQLValueWriter {
 
-    companion object {
-        const val MISSING_ANNOTATION = "\$missing"
-        const val BAG_ANNOTATION = "\$bag"
-        const val DATE_ANNOTATION = "\$date"
-        const val TIME_ANNOTATION = "\$time"
+    public companion object {
+        private const val MISSING_ANNOTATION = "\$missing"
+        private const val BAG_ANNOTATION = "\$bag"
+        private const val DATE_ANNOTATION = "\$date"
+        private const val TIME_ANNOTATION = "\$time"
         // PartiQL's timestamp without time zone does not fit in ion generic timestamp
-        const val TIMESTAMP_ANNOTATION = "\$timestamp"
-        const val GRAPH_ANNOTATION = "\$graph"
+        private const val TIMESTAMP_ANNOTATION = "\$timestamp"
+        private const val GRAPH_ANNOTATION = "\$graph"
+
+        @JvmStatic
+        public fun toIon(value: PartiQLValue): IonElement = value.accept(ToIon, Unit)
     }
 
     override fun append(value: PartiQLValue): PartiQLValueWriter {
-        ToIon.visit(value, Unit).writeTo(ionWriter)
+        value.accept(ToIon, Unit).writeTo(ionWriter)
         return this
     }
 

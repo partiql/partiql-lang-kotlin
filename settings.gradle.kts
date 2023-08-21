@@ -20,6 +20,7 @@ include(
     "partiql-lang",
     "partiql-parser",
     "partiql-plan",
+    "partiql-planner",
     "partiql-spi",
     "partiql-types",
     "plugins:partiql-mockdb",

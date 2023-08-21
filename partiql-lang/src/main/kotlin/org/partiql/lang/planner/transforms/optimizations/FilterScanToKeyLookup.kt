@@ -3,10 +3,10 @@ package org.partiql.lang.planner.transforms.optimizations
 import com.amazon.ionelement.api.TextElement
 import com.amazon.ionelement.api.ionBool
 import com.amazon.ionelement.api.ionSymbol
+import org.partiql.errors.ProblemHandler
 import org.partiql.lang.compiler.PartiQLCompilerBuilder
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.domains.toBindingCase
-import org.partiql.lang.errors.ProblemHandler
 import org.partiql.lang.eval.BindingName
 import org.partiql.lang.planner.PartiQLPhysicalPass
 import org.partiql.lang.planner.StaticTypeResolver

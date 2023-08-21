@@ -6,7 +6,7 @@ import org.junit.Assert
 import org.junit.Test
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.runner.RunWith
-import org.partiql.lang.errors.ErrorCode
+import org.partiql.errors.ErrorCode
 import org.partiql.lang.eval.EvaluationException
 import java.time.LocalTime
 import java.time.ZoneOffset

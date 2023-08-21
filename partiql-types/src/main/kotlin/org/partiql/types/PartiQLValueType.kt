@@ -15,7 +15,7 @@
 package org.partiql.types
 
 /**
- * PartiQL Type Names
+ * PartiQL runtime value types.
  */
 public enum class PartiQLValueType {
     BOOL,
@@ -42,6 +42,7 @@ public enum class PartiQLValueType {
     LIST,
     SEXP,
     STRUCT,
+    GRAPH,
     NULL, // null.null
     MISSING, // missing
     NULLABLE_BOOL, // null.bool

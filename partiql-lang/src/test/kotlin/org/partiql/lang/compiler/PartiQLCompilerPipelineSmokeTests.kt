@@ -6,12 +6,13 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
 import org.partiql.annotations.ExperimentalPartiQLCompilerPipeline
+import org.partiql.errors.Problem
+import org.partiql.errors.ProblemDetails
+import org.partiql.errors.ProblemLocation
+import org.partiql.errors.ProblemSeverity
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.errors.PartiQLException
-import org.partiql.lang.errors.Problem
-import org.partiql.lang.errors.ProblemDetails
-import org.partiql.lang.errors.ProblemSeverity
 import org.partiql.lang.eval.physical.SetVariableFunc
 import org.partiql.lang.eval.physical.operators.RelationExpression
 import org.partiql.lang.eval.physical.operators.ScanRelationalOperatorFactory
@@ -75,7 +76,7 @@ class PartiQLCompilerPipelineSmokeTests {
 
         // TODO: We use string comparison until we finalized the error reporting mechanism for PartiQLCompilerPipeline
         assertEquals(
-            listOf(Problem(SourceLocationMeta(1, 8, 9), PlanningProblemDetails.UndefinedVariable("undefined", caseSensitive = false))).toString(),
+            listOf(Problem(ProblemLocation(1, 8, 9), PlanningProblemDetails.UndefinedVariable("undefined", caseSensitive = false))).toString(),
             error.message
         )
     }
@@ -158,7 +159,7 @@ class PartiQLCompilerPipelineSmokeTests {
         ) : ProblemDetails
 
         return Problem(
-            sourceLocationMeta,
+            sourceLocationMeta.toProblemLocation(),
             FakeProblemDetails()
         )
     }

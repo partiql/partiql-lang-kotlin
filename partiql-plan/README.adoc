@@ -1,0 +1,2013 @@
+= PartiQL Plan
+:toc:
+:toc-title: Page Contents
+:sectlinks:
+
+== About
+
+This package contains an early implementation of the PartiQL Plan data structures. Specification work is ongoing, and
+this package should be considered experimental. Additionally, this documents defines a representation of PartiQL Plans
+as an Ion document.
+
+== Package
+
+=== Testing
+
+You can experiment with the current implementation via the shell.
+
+IMPORTANT: At the moment, I have not rewritten the AST normalization pass — so the planner will often yell at you unless
+you write a normal-form query (ie always provide aliases, no select *).
+
+[source,shell]
+----
+# Assemble distribution
+./gradlew :partiql-cli:install
+
+# Start
+./partiql-cli/build/install/partiql-cli/bin/partiql --pipeline DEBUG
+
+# Start with debug server
+JAVA_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=localhost:5050 ./partiql-cli/build/install/partiql-cli/bin/partiql --pipeline DEBUG
+
+# If `partiql` on path
+
+partiql --pipeline DEBUG
+
+JAVA_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=localhost:5050 partiql --pipeline DEBUG
+----
+
+=== Usage
+
+The data structures in `org.partiql.plan` can be used via the latest [partiql-lang-kotlin](https://central.sonatype.com/artifact/org.partiql/partiql-lang-kotlin/0.9.3) JAR and using the AstToRel translator (`org.partiql.lang.planner.transforms.AstToRel`).
+
+For example,
+
+[source,kotlin]
+----
+val parser = PartiQLParserBuilder.standard().build()
+val ast = parser.parseAstStatement(input)
+val plan = AstToPlan.transform(ast)
+
+println(PlanPrinter.toString(plan))
+----
+
+=== Examples
+
+NOTE: The default Ion pretty printer adds a lot of whitespace which makes the plan hard to grok. I've manually removed
+some whitespace.
+
+[source,ion]
+----
+PartiQL> SELECT t.a as a, t.b as b FROM T as t
+   |
+
+(
+    partiql :: plan
+    version :: (0 1)
+    (statement
+        (query
+            (select
+                ($type 10)
+                (struct ($type 14) (
+                    ((lit ($type 6) "a") (var ($type 0) 0))
+                    ((lit ($type 6) "b") (var ($type 0) 1))
+                ))
+                (project (($type 0) ($type 0)) (
+                        (path ($type 0) (var t::?) (
+                            (step (lit ($type 7) a))
+                        ))
+                        (path ($type 0) (var t::?) (
+                            (step (lit ($type 7) b))
+                        ))
+                    )
+                    (scan (($type 0)) (var T::?))
+)))))
+----
+
+[#partiql-plan-structure]
+== Plan File Basics
+
+=== Structure
+
+A PartiQL Plan file is a top-level Ion xref:https://amazon-ion.github.io/ion-docs/docs/spec.html#sexp[s-expression] with the following structure:
+
+[source,ion]
+----
+(
+  partiql :: plan                // PartiQL Plan marker
+
+  version :: (0 1)               // PartiQL Plan version
+
+  (import ...)                   // Import
+
+  (globals ...)                  // Global bindings
+
+  (statement ...)                // Statement to execute, `main`
+)
+----
+
+NOTE: For version `version::(0 1)`, the import is always `(import (partiql))` which imports PartiQL builtin types and functions.
+
+// Each Ion value (respectively) represents:
+//
+// * The `partiql::(MAJOR MINOR)` version pair,
+// * Included header files containing types, constants, and node definitions
+// ** More on this later
+// * A container of constant values
+// * A container of node type annotations demarcated within an s-expr `(types ...)`
+// * A container of labeled nodes demarcated within an s-expr `(define ...)`
+// * The _statement_ s-expression
+//
+// Nodes represent statements, expressions (`rex`), relational operators (`rel`), and types. A node begins with a `snake_case` Ion symbol as the head element followed by parameters. This symbol uniquely identifies which node the s-expression represents and is called a _tag_.
+//
+// === Example
+//
+// Here is an example query and plan
+//
+// .Basic Query
+// [source,partiql]
+// ----
+// SELECT t.a as a, t.b as b FROM T as t WHERE t.c > 0
+// ----
+//
+// .Basic Example Environment
+// [source,ion]
+// ----
+// // Ion Schema
+// type::{
+//   name: envirnoment,
+//   type: struct,
+//   fields: {
+//     T: type::{
+//       name: my_table,
+//       type: list,
+//       element: type::{
+//         type: struct,
+//         fields: {
+//           a: int,
+//           b: int
+//         }
+//       }
+//     }
+//   }
+// }
+//
+// // Values
+// // {
+// //   T: [
+// //     { "a": 0, "b": 1 },
+// //     { "a": 2, "b": 3 },
+// //   ]
+// // }
+// ----
+//
+// .Basic Plan Example
+// [source,ion]
+// ----
+// (
+//   partiql :: plan
+//
+//   version :: (0 1)
+//
+//   (include
+//     (partiql '**' '*')   // Include partiql header, read as `import partiql::**::*`
+//   )
+//
+//   type::{
+//     name: envirnoment,
+//     type: struct,
+//     fields: {
+//       T: type::{
+//         name: my_table,
+//         type: list,
+//         element: type::{
+//           type: struct,
+//           fields: {
+//             a: int,
+//             b: int
+//           }
+//         }
+//       }
+//     }
+//   }
+//
+//   // global names to type definitions map
+//
+//   (env
+//     T::(array                                     // "T" is array of tuples with open schema
+//       (a ($namespace partiql::0 ($type int::5)))  // known element a, type PartiQL Int
+//       (b ($namespace partiql::0 ($type int::5)))  // known element b, type PartiQL Int
+//       |
+//       t                                           // open element container
+//     )
+//   )
+//
+//   (constants
+//     (lit ($namespace partiql::0 ($type string::13)) "T")
+//   )
+//
+//   (statement
+//     (query
+//       (select { a: ($var 0), b: ($var 1) }      // Rex: sfw, construct bag of { a: $0, b: $1 }
+//
+//         (project (($var 0) ($var 1))            // Rel: relation projection of resolved variables in registers 0 and 1
+//
+//           (filter (call ())                     // Rel: filter on call `partiql.gt(t.c, 0)`
+//
+//             (scan ($env 0))                     // Rel: scan resolved global variable "T"
+//   )))))
+//
+//   (query                            // Statement: QUERY
+//     (select ('a' 'b')               // Rex:
+//       (project ($1 $2)              // Rel: project vars 1, 2 to slots 0, 1 respectively (could be pushed into filter)
+//         (filter (call ($namespace 0 ($fn 0))                // Rel: filter on the expression labeled by gt0
+//           (scan (global case_sensitive "T"))                // Rel: "T"
+//   ))))
+// )
+// ----
+
+// === Labels and References
+//
+// For example,
+//
+// [source,ion]
+// ----
+// (plan version::'0.0'
+//
+//   // Label 'gt0' assigned to `$0 > 1` call expression node
+//   gt0 :: (call gt $0 (lit (int) 0))
+//
+//   // Label 'my_table' assigned to Ion string "X"
+//   my_table :: "X"
+//
+//   // SELECT a FROM X WHERE a > 0
+//   (query                                          // Statement: QUERY
+//     (select                                       // Exp: Relation-Value Projection, No Constructor
+//       (project ($0)                               // Rel: PROJECT
+//         (filter $gt0                              // Rel: FILTER
+//           (scan_collection (global $my_table))    // Rel: SCAN
+//   ))))
+// )
+// ----
+//
+// NOTE: The labels `$n` for integers n corresponds to the expression node `(var n)` — ie `$1` is equivalent to `(var 1)`
+//
+// Also note that labeling nodes is different than the optional annotations for positional parameters. Positional parameters have optional annotations simply for readability; those
+// annotations are not labels.
+
+// [#types]
+// == TODO Types
+//
+// The plan `(type ...)` container is where types used within a plan are defined. The plan supports defining atomic, product, and union types footnote:[As presented, you cannot define an atomic type named "union" or "product".]. Here is a basic set of types which defines an integer, float, number union, and number pair.
+//
+// Additionally, you can define open-schema and closed-schema collections of type:
+// * array — ordered collection
+// * bag — unordered collection
+// * tuple — key-value pairs
+//
+// .Types Example
+// [source,ion]
+// ----
+// (
+//   partiql::(0 1)
+//
+//   // Syntax (annotations optional)
+//   //
+//   // def ::= ( [product|union] <symbol> <ref>+ )
+//   // ref ::= <int>
+//
+//   (types
+//     (int)                   // atomic type "int"
+//     (float)                 // atomic type "float"
+//     (decimal 0 0)           // atomic type "decimal" with two int parameters
+//     (union number           // union type "number"
+//       (
+//        int::0
+//        float::1
+//        decimal::2
+//       )
+//     )
+//     (product pair           // product type "pair"
+//       (number::3 number::3) // operands: type 3 (number), type 3 (number)
+//     )
+//     (array closed 3)        // array of numbers
+//   )
+// )
+// ----
+//
+// .Normalized Example
+// [source,ion]
+// ----
+// (
+//   partiql :: (0 1)
+//
+//   (type)
+//
+//   (define
+//     gtints  :: (fn 'gt' (int int) (bool))              // `fn` definition node
+//     gt0     :: (call (@ 0) (var 0) (lit (int) 0))      // `call` rex node
+//   )
+//
+//   // INPUT      | SELECT a, b FROM T as t WHERE c > 0
+//   // NORMALIZED | SELECT _0.a as a, _0.b as b FROM T as _0 WHERE _0.c > 0
+//
+//   (query                            // Statement: QUERY
+//     (select ('a' 'b')               // Rex: sfw, construct bag of { a: $0, b: $1 }
+//       (project ($1 $2)              // Rel: project vars 1, 2 to slots 0, 1 respectively (could be pushed into filter)
+//         (filter $gt0                // Rel: filter on the expression labeled by gt0
+//           (scan 'T' ('a' 'b' 'c')   // Rel: scan 'T', assigning c, a, b to slots 0, 1, 2 respectively
+//   ))))
+//
+// )
+// ----
+
+// == Plan Header
+
+// == Plan Part
+
+== Statements
+
+A plan contains a single _statement_. A statement may be a query, or other database operations such as creating views, creating tables, or inserting data as shown in <<partiql-plan-structure,PartiQL Plan Structure>>.
+
+.Statement Node Types
+[cols="1,5a",grid=rows,frame=all]
+|===
+| Variant | Description
+
+| <<query-statement-node,query>>
+| Query such as a value expression or SELECT-FROM-WHERE (query) expression
+
+// | insert | DML INSERT
+//
+// | insert_value | DML INSERT VALUE
+//
+// | upsert | DML UPSERT
+//
+// | replace | DML REPLACE
+//
+// | update | DML UPDATE
+//
+// | remove | DML REMOVE
+//
+// | delete | DML DELETE
+//
+// | create_table | DDL CREATE TABLE
+//
+// | create_index | DDL CREATE INDEX
+
+| <<create-view-statement-node,create_view>>
+| DDL `CREATE VIEW` statement
+
+// | drop_table | DDL DROP TABLE
+//
+// | drop_index | DLL DROP INDEX
+
+2+a|
+
+NOTE: This document's scope is limited to `query` and `create_view` statements, see scope.
+
+|===
+
+=== `query`
+
+[#query-statement-node]
+====
+
+[discrete.text-center]
+=== Query Statement Node
+
+[.text-center]
+_variant of statement_
+
+'''
+
+This statement represents a simple PartiQL Query.
+
+.Form
+[source,ion]
+----
+(query <rex>)
+----
+
+.Parameters
+[cols="1m,5",grid=rows,frame=all]
+|===
+| Type | Description
+
+| rex | The root expression node of a query.
+
+|===
+
+.Example
+[source,partiql]
+----
+SELECT a, b FROM T
+----
+
+[source,ion]
+----
+(
+    partiql :: plan
+    version :: (0 1)
+
+    (import (partiql))
+
+    (globals
+        ((mycatalog myschema 'T') ($ype 0))
+    )
+
+    // ($type 0) is `any`
+
+    (statement
+        (query
+            (select
+                ($type 10)
+                (struct ($type 14) (
+                    ((lit ($type 6) "a") (var ($type 0) 0))
+                    ((lit ($type 6) "b") (var ($type 0) 1))
+                ))
+                (project (($type 0) ($type 0)) (
+                        (path ($type 0) (var 0) (
+                            (step (lit ($type 7) a))
+                        ))
+                        (path ($type 0) (var 0) (
+                            (step (lit ($type 7) b))
+                        ))
+                    )
+                    (scan (($type 0)) ($global 0))
+)))))
+----
+
+====
+
+=== `create_view`
+
+[#create-view-statement-node]
+====
+[discrete.text-center]
+_variant of statement_
+
+'''
+
+This statement represents `CREATE VIEW` (SQL-Statement 84) in a PartiQL Plan. Its specification in PartiQL is pending an RFC.
+
+.Form
+[source,ion]
+----
+(create_view name::<string> (columns <symbol>*) query::<rex>)
+----
+
+.Parameters
+[cols="1m,3",grid=rows,frame=all]
+|===
+| Type | Description
+
+| name::string | The view's name
+
+| (columns string*) | Optional parameter for the view's columns — to be defined for PartiQL
+
+| query::rex | The view's query expression
+
+|===
+
+.Example
+[source,ion]
+----
+CREATE VIEW example AS SELECT * FROM T
+----
+
+[source,ion]
+----
+(create_view "example"
+  (select
+    (project ((path (star))))
+      (scan
+        (global "T" collection)
+      )
+    )
+  )
+)
+----
+
+====
+
+// == DML
+
+// == GPML
+
+// == DCL
+
+// == TCL
+
+== Rex Nodes
+
+Within statements are several expression nodes. The following section defines all _expression_ variants. For more details, see the specification PartiQL Value Expressions.
+
+.Rex Node Summary
+[cols="1,3a",grid=rows,frame=all]
+|===
+| Variant | Description
+
+|<<literal-rex-node,lit>>
+| Literal value expressions
+
+|<<var-rex-node,var>>
+| Reference to a binding in the variable tuple environment
+
+|<<global-rex-node,global>>
+| Reference to a binding in the global environment
+
+|<<path-rex-node,path>>
+| Path expression
+
+|<<call-rex-node,call>>
+| Function call
+
+|<<case-rex-node,case>>
+| Case expression, ex: SQL `CASE`
+
+|<<collection-rex-node,collection>>
+| Collection constructor expression
+
+|<<struct-rex-node,struct>>
+| Struct constructor expression
+
+|<<pivot-rex-node,pivot>>
+| Pivot expression to produce a single tuple from a binding collection
+
+|<<coll-to-scalar-rex-node,coll_to_scalar>>
+| Scalar subquery coercion node
+
+|<<select-rex-node,select>>
+| SELECT-FROM-WHERE expression
+
+|===
+
+[#literal-rex-node]
+=== `lit`
+
+====
+
+[.text-center]
+_variant of rex_
+
+'''
+
+Literal expressions are _PartiQL Values_ represented with Ion literals. We necessarily include the PartiQL Type in the node value.
+
+.Form
+[source,ion]
+----
+rex.lit ::= (lit <type> <ion>)
+----
+
+.Parameters
+[cols="1m,4",grid=rows,frame=all]
+|===
+| Type | Description
+
+| type | PartiQL type
+
+| ion | Ion representation of the PartiQL valuefootnote:[There should be an appendix to explain this]
+
+|===
+
+.Examples
+[source,ion]
+----
+// annotations are simply for readability
+
+(lit ($type bool::0) false)
+
+(lit ($type decimal::3) 1.50)
+
+(lit ($type bag::17) [ "x", "y", "z" ])
+
+(lit ($type array::18) [ 0, 1, 2 ])
+
+(lit ($type struct::19) {
+  "x": 0,
+  "y": 1,
+  "z": 2,
+})
+
+(lit ($type string::9) "abc")
+
+(lit ($type missing::1) null)
+
+(lit ($type null::2) null)
+----
+
+====
+
+[#global-rex-node]
+=== `global`
+
+====
+
+[.text-center]
+_variant of rex_
+
+'''
+
+Global references are expressions which reference a global binding. That is, they reference a binding name in the database environment.
+
+.Form
+[source,ion]
+----
+rex.global ::= (global <type> <int>)
+----
+
+.Parameters
+[cols="1m,4",grid=rows,frame=all]
+|===
+| Type | Description
+
+| <type> | PartiQL Type
+
+| <int> | Global resolved reference ordinal
+
+Default `INSENSITIVE`
+
+|===
+
+.Examples
+[source,ion]
+----
+// TODO
+----
+
+====
+
+[#var-rex-node]
+=== `var`
+
+====
+
+[.text-center]
+_variant of rex_
+
+'''
+
+Recall the global and variable binding environments. Variable references are expressions which reference a binding in the variable binding environment. This means that variable binding expressions are only valid within a query subtree. For example, the query `1 + a` where `a` is a _variable reference_
+
+.Form
+[source,ion]
+----
+rex.var ::= (var <type> <int>)
+----
+
+.Parameters
+[cols="1m,4",grid=rows,frame=all]
+|===
+| Type | Description
+
+| type | The variable's PartiQL Type.
+
+| int
+a| Ordinal in the current variable binding environment
+
+|===
+
+.Example Variable Env
+[source,partiql]
+----
+< 0: 'hello', 1: << 1.0, 1.1 >> >
+----
+
+.Example Nodes
+[source,ion]
+----
+(var ($type string::9) 0)   // 'hello'
+
+(var ($type bag::11) 1)     // << 1.0, 1.1 >>
+----
+
+====
+
+[#path-rex-node]
+=== `path`
+
+====
+
+[.text-center]
+_variant of rex_
+
+'''
+
+A path expression is composed of a root and one or more path steps. We represent this in the Ion model as a tagged and type annotated s-exression of the path steps.
+
+.Form
+[source,ion]
+----
+rex.path ::= (path <type> root::<rex> steps::(<step>+))
+
+step ::= <step.key> | <step.wildcard> | <step.unpivot>
+
+step.key ::= (step <rex>)
+
+step.wildcard ::= (step wildcard)
+
+step.unpivot ::= (step unpivot)
+----
+
+.Parameters
+[cols="1m,4",grid=rows,frame=all]
+|===
+| Type | Description
+
+| type | Rex type reference
+
+| (step+) | Non-empty list of steps. A step node is either an index, the symbol `wildcard`, or the symbol `unpivot`
+
+|===
+
+.Examples
+[source,ion]
+----
+// Types
+(types
+  (symbol) // type 0
+)
+
+// Let `a` be resolved to (var ($type x) 0).
+
+// `a.b.c`
+(path ($type ?)
+  (var ($type x) 0) (
+    (step (lit ($type 0) b))
+    (step (lit ($type 0) c))
+))
+
+// `a.b[*]`
+(path ($type ?)
+  (var ($type x) 0) (
+    (step (lit ($type 0) b))
+    (step wildcard)
+))
+
+// `a.*`
+(path ($type ?)
+  (var ($type x) 0) (
+    (step unpivot)
+))
+----
+
+====
+
+[#call-rex-node]
+=== `call`
+
+====
+
+[.text-center]
+_variant of rex_
+
+'''
+
+A call expression represents invocation of the function `fn` with the arguments `args`. The `fn` node is a reference to a function type that is either included or defined in the header.
+
+.Form
+[source,ion]
+----
+fns ::= (fns <fn>*)                 // Function definitions
+
+fn ::= (fn <symbol> <opts> (param*) returns::<type>)
+
+param ::= <param-value | param-type>
+
+param-value ::= (v <type>)
+
+param-type ::= (t <type>)
+
+call ::= (call <fn> (<arg>*))       // Rex call
+
+arg ::= <arg-value> | <arg-type>    // Rex call argument
+
+arg-value ::= (v <rex>)             // Rex call value arg
+
+arg-type  ::= (t <type>)            // Rex call type arg
+----
+
+.Parameters
+[cols="1m,4",grid=rows,frame=all]
+|===
+| Type | Description
+
+| fn | Function signature reference (symbol) or inline definition
+
+| (args rex*) | Tail param is a list of expressions
+
+|===
+
+.Examples
+[source,ion]
+----
+(types
+  (int)     // ($type 0)
+  (float)   // ($type 1)
+)
+
+(fns
+  (fn plus ((v ($type 0)) (v ($type 0))) returns::($type 0)) // ($fn 0) <int> + <int>
+  (fn plus ((v ($type 1)) (v ($type 1))) returns::($type 1)) // ($fn 1) <float> + <float>
+  // casts
+  (fn cast ((v ($type 0)) (t ($type 1))) returns::($type 1)) // ($fn 3) CAST(<int> AS <float>)
+)
+----
+
+NOTE: I have left this out, but we should consider a bit flag for whether or not to add implicit casts as well as null/missing propagation.
+
+[source,ion]
+----
+// 0x00 -> explicit cast
+// 0x01 -> implicit cast
+// 0x0_ -> do not propagate null + missing
+// 0x1_ -> propagate null + missing
+
+(fn plus 0x11 ...)
+
+// function would resolve with implicit casts
+----
+
+====
+
+[#case-rex-node]
+=== `case`
+
+====
+
+[.text-center]
+_variant of rex_
+
+'''
+
+The case expression corresponds to a SQL CASE or SEARCHED CASE.
+
+.Form
+[source,ion]
+----
+rex.case ::= (case <type> <rex> (<branch>+))
+
+branch ::= (<rex> <rex>)
+----
+
+.Parameters
+[cols="1m,2",grid=rows,frame=all]
+|===
+| Type | Description
+
+| type | The case expressions output type
+
+| rex | The CASE value to match on.
+
+| (branch+) | One or more CASE branches.
+
+| branch | `(<rex> <rex>)` condition-value pair
+
+|===
+
+.Example
+[source,partiql]
+----
+PIVOT v AT k FROM ...
+
+(pivot (var ($type i) k::0) (var ($type j) v::1)
+  (scan ...)
+)
+----
+
+====
+
+[#struct-rex-node]
+=== `struct`
+
+====
+
+[.text-center]
+_variant of rex_
+
+'''
+
+A struct constructor differs from a struct literal because expressions may be used to _construct_ the tuple value.
+Struct key expressions must evaluate to a value with a character string type.
+
+.Form
+[source,ion]
+----
+rex.tuple ::= (tuple <type> (<rex> <rex>)*)
+----
+
+.Parameters
+[cols="1m,2",grid=rows,frame=all]
+|===
+| Type | Description
+
+| (<rex> <rex>)* | Zero or more key-value expression pairs
+
+|===
+
+.Examples
+[source,partiql]
+----
+{ 'a': 1 }
+
+{ 'b': 2, 'c': x }
+----
+
+[source,ion]
+----
+// TODO
+----
+
+====
+
+[#collection-rex-node]
+=== `collection`
+
+====
+
+[.text-center]
+_variant of rex_
+
+'''
+
+A collection expression produces a collection value from a list of expressions.
+
+.Form
+[source,ion]
+----
+(collection <type> (<rex>*))
+----
+
+.Parameters
+[cols="1m,4",grid=rows,frame=all]
+|===
+| Type | Description
+
+| type | Collection type
+
+| rex* | Zero or more expression elements
+
+|===
+
+.Examples
+[source,partiql]
+----
+<< 1, 2, 3 >>   -- Bag
+
+[ 1, 2, 3 ]     -- Array
+
+( 1 2 3 )       -- Sexp
+----
+
+[source,ion]
+----
+// TODO
+----
+
+====
+
+
+[#pivot-rex-node]
+=== `pivot`
+
+====
+
+[.text-center]
+_variant of rex_
+
+'''
+
+The pivot expression produces a single tuple from a query. Each key-value pair in the output tuple is produced by evaluating the given key and value expressions from its relational operator.
+
+.Form
+[source,ion]
+----
+rex.pivot ::= (pivot <type> key::<rex> val::<rex> <rel>)
+----
+
+.Parameters
+[cols="1m,2",grid=rows,frame=all]
+|===
+| Type | Description
+
+| type | The pivot expressions output type
+
+| key::rex | Pivot key expression
+
+| val::rex | Pivot value expression
+
+| rel | Relational operator node which represents the PIVOT-FROM-WHERE.
+
+|===
+
+.Example
+[source,partiql]
+----
+PIVOT v AT k FROM ...
+
+(pivot (var ($type i) k::0) (var ($type j) v::1)
+  (scan ...)
+)
+----
+
+====
+
+[#coll-to-scalar-rex-node]
+=== `coll_to_scalar`
+
+====
+
+[.text-center]
+_variant of rex_
+
+'''
+
+The `coll_to_scalar` expression represents PartiQL's scalar subquery coercion function described here https://partiql.org/dql/subqueries.html.
+
+.Form
+[source,ion]
+----
+(coll_to_scalar <rex.select>)
+----
+
+.Parameters
+[cols="1m,2",grid=rows,frame=all]
+|===
+| Type | Description
+| rex.select | Query expression to coerce.
+
+|===
+
+.Examples
+[source,ion]
+----
+// todo
+----
+
+====
+
+[#select-rex-node]
+=== `select`
+
+====
+
+[.text-center]
+_variant of rex_
+
+'''
+
+The `select expression represents a SELECT-FROM-WHERE query expression. See https://partiql.org/dql/overview.html#_select_value for details.
+The constructor defines the value-relation projection.
+
+.Form
+[source,ion]
+----
+(select <rex> <rel>)
+----
+
+.Parameters
+[cols="1m,2",grid=rows,frame=all]
+|===
+| Type | Description
+| rex | Constructor expression
+| rel | Relational operator node
+
+|===
+
+.Examples
+[source,ion]
+----
+// todo
+----
+
+====
+
+== Rel Nodes
+
+Rel nodes represent the relational expressions from the PartiQL Plan Specification.
+
+.Rel Nodes Summary
+[cols="1,5a",grid=rows,frame=all]
+|===
+| Variant | Description
+
+| <<scan-rel-node,scan>>
+| Produce a collection of bindings from a value expression
+
+| <<scan-indexed-rel-node,scan_indexed>>
+| Produce a collection of bindings from a value expression, with index
+
+| <<unpivot-rel-node,unpivot>>
+| Produce a collection of bindings from key-value pairs of tuples
+
+| <<project-rel-node,project>>
+| Apply the projection expressions to the input binding tuples
+
+| <<filter-rel-node,filter>>
+| Filters the input relation on a given predicate expression
+
+| <<sort-rel-node,sort>>
+| Sorts the given relation
+
+| <<aggregate-rel-node,aggregate>>
+| Applies the aggregate calls to the given relation
+
+| <<set-rel-nodes,union>>
+| SQL multiset union
+
+| <<set-rel-nodes,intersect>>
+| SQL multiset intersection
+
+| <<set-rel-nodes,except>>
+| SQL multiset difference
+
+| <<fetch-rel-nodes,limit>>
+| LIMIT
+
+| <<fetch-rel-nodes,offset>>
+| OFFSET
+
+| <<join-rel-node,join>>
+| Relation join
+//
+// | <<user-defined-rel-node,op>>
+// | User-defined relation operator
+
+|===
+
+Each `rel` node has a `schema` node as its first element. The `schema` node is an sexp of type references
+which describe each output tuple's schema.
+
+[source,ion]
+----
+schema ::= (<type>+)
+----
+
+[#scan-rel-node]
+=== `scan`
+
+====
+
+[.text-center]
+_variant of rel_
+
+'''
+
+.Form
+[source,ion]
+----
+rel.scan ::= (scan <schema> <rex>)
+----
+
+.Parameters
+[cols="1m,4",grid=rows,frame=all]
+|===
+| Type | Description
+
+| schema | Output schema of this operator.
+
+| rex | Expression to scan.
+
+|===
+
+
+.Examples
+[source,ion]
+----
+// TODO
+----
+
+====
+// END scan-rel-node
+
+// BEGIN scan-indexed-rel-node
+[#scan-indexed-rel-node]
+=== `scan_indexed`
+
+====
+
+[.text-center]
+_variant of rel_
+
+'''
+
+The `scan_indexed` node is much like the `scan` node, but its output tuples contain an additional index field.
+
+.Form
+[source,ion]
+----
+rel.scan_indexed ::= (scan_indexed <schema> <rex>)
+----
+
+.Parameters
+[cols="1m,4",grid=rows,frame=all]
+|===
+| Type | Description
+
+| schema | Output schema of this operator.
+
+| rex | Expression to scan.
+
+|===
+
+
+.Examples
+[source,ion]
+----
+// TODO
+----
+
+====
+// END scan-indexed-rel-node
+
+// BEGIN unpivot-rel-node
+[#unpivot-rel-node]
+=== `unpivot`
+
+====
+
+[.text-center]
+_variant of rel_
+
+'''
+
+.Form
+[source,ion]
+----
+(unpivot <schema> <rex>)
+----
+
+.Parameters
+[cols="1m,4",grid=rows,frame=all]
+|===
+| Type | Description
+
+| schema | Output key-value types — (($type k) ($type v))
+
+| rex | Collection to unpivot
+
+|===
+
+If an `(at expression)` is specified, then the output binding 0 takes on the value of that expression, and binding 1 is the corresponding
+
+.Unpivot Example
+[source,partiql,subs=quotes]
+----
+FROM UNPIVOT { k~0~: v~0~ , ... , k~n~: v~n~ } AS v AT k
+
+-- Result
+<<
+  { k: k~0~, v: v~0~ },
+  ...
+  { k: k~n~, v: v~n~ }
+>>
+----
+
+.Examples
+[source,ion,subs=normal]
+----
+(unpivot (at (var 0 string))
+  (lit tuple { k~0~: v~0~, ... , k~n~: v~n~ })
+)
+
+// <<
+//    < 0: k~0~, 1: v~0~ >,
+//     ...
+//    < 0: k~n~, 1: v~n~ >
+// >>
+----
+====
+// END unpivot-rel-node
+
+
+[#project-rel-node]
+=== `project`
+
+====
+
+[.text-center]
+_variant of rel_
+
+'''
+
+The _project_ node represents a relation-to-relation projection function.
+
+.Form
+[source,ion]
+----
+(project <schema> (<rex*>) <rel>)
+----
+
+.Parameters
+[cols="1m,4",grid=rows,frame=all]
+|===
+| Type | Description
+
+| schema | Output projection list types
+
+| (rex*) | Expression list of projections
+
+| op::operator | Input relation operator
+
+|===
+
+.Examples
+[source,ion]
+----
+// TODO example out-of-date
+
+(project ( (var 1) )
+  (scan (lit bag [
+    { "a": 10, "b": 20 },
+    { "a": 30, "b": 40 },
+  ]))
+)
+// <<
+//   < 0: 20 >,
+//   < 0: 40 >,
+// >>
+----
+
+====
+
+[#filter-rel-node]
+=== `filter`
+
+====
+
+[.text-center]
+_variant of rel_
+
+'''
+
+Filters the input relation on the given predicate.
+
+.Form
+[source,ion]
+----
+(filter <schema> <rex> <rel>)
+----
+
+.Parameters
+[cols="1m,4",grid=rows,frame=all]
+|===
+| Type | Description
+
+| schema | Output relation schema
+
+| rex | Filter condition
+
+| rel | Input relation to filter
+
+|===
+
+.Examples
+[source,ion]
+----
+(filter (call gte (args (var 0) (var 1)))
+  (scan (lit bag [
+    { "x": 0, "y": 1 },
+    { "x": 1, "y": 1 },
+    { "x": 2, "y": 1 },
+  ]))
+)
+// <<
+//   < 0: 2, 1: 1 >,
+//   < 0: 2, 1: 1 >
+// >>
+----
+
+====
+
+
+[#sort-rel-node]
+=== `sort`
+
+====
+
+[.text-center]
+_variant of rel_
+
+'''
+
+.Form
+[source,ion]
+----
+rel.sort ::= (sort <schema> (sort_spec+) <rel>)
+
+sort_spec ::= (<rex> <int>)
+----
+
+.Parameters
+[cols="1m,4",grid=rows,frame=all]
+|===
+| Type | Description
+
+| schema | Output relation schema
+
+| sort_spec+ | One or more sort specifications
+
+| rel | Input relation
+
+2+s| sort_spec
+
+| rex | Sort key
+
+| int
+a| Sort order
+
+----
+0 ASC_NULLS_LAST      00
+1 ASC_NULLS_FIRST     01
+2 DESC_NULLS_LAST     10
+3 DESC_NULLS_FIRST    11
+----
+
+|===
+
+.Examples
+[source,ion]
+----
+// TODO
+----
+
+====
+
+[#aggregate-rel-node]
+=== `aggregate`
+
+====
+
+[.text-center]
+_variant of rel_
+
+'''
+
+.Form
+[source,ion]
+----
+(aggregate <schema> strategy::<int> (<agg>+) (<rex>*) <rel>)
+
+agg ::= (agg <fn> (<arg>*))
+
+arg ::= <arg-value> | <arg-type>
+
+arg-value ::= (v <rex>)
+
+arg-type  ::= (t <type>)
+----
+
+.Parameters
+[cols="1m,4",grid=rows,frame=all]
+|===
+| Type | Description
+
+| schema | Output relation schema
+
+| strategy::int a|
+----
+0 FULL
+1 PARTIAL
+----
+
+| (agg+) | Aggregation functions
+
+| (rex*) | Group keys
+
+| rel | Input relation
+
+|===
+
+.Examples
+[source,ion]
+----
+// TODO
+----
+
+====
+
+[#set-rel-nodes]
+====
+[discrete.text-center]
+=== Set Operator Nodes
+
+[.text-center]
+_variants of operator_
+
+'''
+
+SQL multiset operators as defined in xref:https://github.com/partiql/partiql-docs/blob/main/RFCs/0007-rfc-bag-operators.md[RFC-0007].
+
+.Form
+[source,ion]
+----
+(union <schema> <rel> <rel>)
+
+(intersect <schema> <rel> <rel>)
+
+(except <schema> <rel> <rel>)
+----
+
+.Parameters
+[cols="1m,4",grid=rows,frame=all]
+|===
+| Type | Description
+
+| schema | Output relation schema
+
+| rex~0~ | Left-hand-side relation
+
+| rex~1~ | Right-hand-side relation
+
+|===
+
+
+.Examples
+[source,ion,subs=normal]
+----
+// TODO
+----
+
+====
+
+[#fetch-rel-nodes]
+=== `limit / offset`
+
+====
+
+[.text-center]
+_variants of rel_
+
+'''
+
+.Form
+[source,ion]
+----
+(limit <schema> <rex> <rel>)
+
+(offset <schema> <rex> <rel>)
+----
+
+.Parameters
+[cols="1m,4",grid=rows,frame=all]
+|===
+| Type | Description
+
+| schema | Output relation schema
+
+| rex | Expression to LIMIT or OFFSET by
+
+| rel | Input relation
+
+|===
+
+.Examples
+[source,ion]
+----
+// TODO examples
+----
+
+====
+
+[#join-rel-node]
+=== `join`
+
+====
+
+[.text-center]
+_variant of rel_
+
+'''
+
+.Form
+[source,ion]
+----
+rel.join ::= (join <schema> <rel.join.type> <rel> <rel>)
+
+rel.join.type ::= (cross)
+                | (equi capture::<int>)
+                | (theta capture::<int> <rex>)
+----
+
+.Parameters
+[cols="1m,3",grid=rows,frame=all]
+|===
+| Type | Description
+
+| schema | Output relation schema
+
+| type | Join Type
+
+| rel~0~ | Left-hand-side relation
+
+| rel~1~ | Right-hand-side relation
+
+2+s| Join Type
+
+| (cross)      | Cross-join
+| (equi <int>) | Equi-join
+| (theta <int> <rex>) | Theta-join, where rex is the join condition
+
+2+a|Capture
+
+----
+1 INNER
+2 LEFT
+3 LEFT_OUTER
+4 RIGHT
+5 RIGHT_OUTER
+6 FULL
+7 FULL_OUTER
+----
+
+|===
+
+Let _rel~L~_ and _rel~R~_ be two relation operator nodes.
+
+.Examples
+[source,ion,subs=normal]
+----
+// TODO
+----
+
+====
+
+
+// [#user-defined-rel-node]
+// === `u`
+// [discrete.text-center]
+// === User-Defined Operator Node
+
+// [.text-center]
+// _variant of rel_
+
+// '''
+
+// This operator is similar to the value expression <<call-rex-node,call>> node, but the provided function returns a collection of binding tuples rather than a PartiQL value. It's argument list can be comprised of both value expressions and relation expressions.
+
+// .Form
+// [source,ion]
+// ----
+// (op
+//   (symbol+)
+//   (args (expression|operator)*)
+// )
+// ----
+
+// .Parameters
+// [cols="1m,1",grid=rows,frame=all]
+// |===
+// | Type | Description
+
+// | symbol+ | One or more function identifier symbols
+
+// | (args (expression\|operator)*)
+// | Zero or more function arguments
+
+// |===
+
+// .Examples
+// [source,ion,subs=normal]
+// ----
+// (op (redis get) (args (lit string "my-key")))
+// ----
+
+// ====
+
+
+== Appendices
+
+[#metasyntax]
+=== I — Plan Node Metasyntax
+
+==== Node Forms
+
+Throughout this section we'll use a metasyntax to describe valid forms of s-expressions nodes. It is important to remember we are using this metasyntax to describe Ion values, not PartiQL values. We call the metasyntax for a node it's _form_, and it has the general structure:
+
+.Node Form
+[source,subs="normal"]
+----
+(symbol name~p~::type~p~* (name~n~ type~n~)* | name~t~::type~t~*)
+
+        └─────┬─────┘└─────┬──────┘   └─────┬─────┘
+          positional     named             tail
+
+* indicates 0 or more
++ indicates 1 or more
+? indicates 0 or 1
+----
+
+[admonition,caption="TYPES"]
+====
+When we define the _type_ for parameters of a node, we are describing the Ion value's type. Which means valid type values are symbols for the xref:https://amazon-ion.github.io/ion-docs/docs/spec.html#the-ion-data-model[Ion types] *or* a plan node tag. Additionally, we will define xref:https://en.wikipedia.org/wiki/Tagged_union[union types] for node types which have several variants — for example, the node type `exp` represents any of the expression nodes.
+
+The symbol `any` in the metasyntax is used to denote any Ion type — not to be confused with a reference to the PartiQL _<<any-type,any>>_ type.
+====
+
+A node begins with a snake_case Ion symbol as the head element followed by parameters. This symbol uniquely identifies which plan node the s-expression represents and is called a _tag_. After the tag there are three groups of parameters: positional, named, and tail parameters. See <<parameter-motivation, motivation for parameter types>>.
+
+==== Positional Parameters
+
+Positional parameters take the form `name~p~::type~p~` and are both *required* and *non-variadic*. When defining a node, we give an optional name annotation `name~p~` and the parameter type `type~p~`.
+
+For example, the form `(foo a::int b::int)` defines a node `foo` with two positional arguments of type Ion int. Positional argument name annotations are optional, so all three examples are equivalent,
+
+.Example Values
+[source,ion]
+----
+(foo 1 2)
+(foo a::1 2)
+(foo a::1 b::2)
+----
+
+==== Named Parameters
+
+Named parameters follow positional parameters and take the form `(name~n~ type~n~)` — they are *optional* and *non-variadic*. The order of named parameters does not matter, only that they appear after all positional arguments and before any tail parameters.
+
+For example, the form `(bar x::int (y int) (z int))` defines a node `bar` with one positional argument and two named arguments. The following values are all valid `bar` nodes.
+
+.Example Values
+[source,ion]
+----
+(bar 1)
+(bar 1 (y 2))
+(bar 1 (z 3))
+(bar 1 (y 2) (z 3))
+(bar 1 (z 3) (y 2))
+----
+
+==== Tail Parameters
+
+The symbol `|` in the metasyntax is an indicator that all following parameters are tail parameters. This symbol does _not_ appear in values and is simply an indicator in the metasyntax. Tail parameters are *required* and *the final parameter may be variadic* (denoted using the `*`, `?`, and `+` operators).
+
+For example, the form `(box width::int height::int (color int) | child::element?)` defines a node `box` with required width and height, optional named parameter color, and an optional child of type element. Let `(p text::string)` be a variant of the element type, then some valid box node values are:
+
+.Example Values
+[source,ion]
+----
+(box 256 256
+  (p "Hello")
+)
+
+(box width::256 height::256 (color 0x00_FF_00))
+
+(box 960 720 (color 0x00_00_FF)
+  (p "Your PC ran into a problem")
+)
+----
+
+[example,#parameter-motivation]
+====
+
+[discrete]
+==== Parameter Motivation
+
+How do we represent required, optional, and variadic elements while maintaining tree aesthetics? We don't want plan representations to be debug dumps, rather we want them to be concise with elegance.
+
+A common technique for nicely formatted trees is placing children last. In doing so, a node's non-child parameters are grouped with its identifier and the tree continues downwardfootnote:[Upward if you're in Australia].
+
+To achieve aesthetic goals, we split parameters into three categories: positional, named, and tail parameters.
+====
+
+=== II — Graphs in Ion Brainstorming
+
+Describing nodes with the s-expressions is fine, but the optional and tail parameters can be odd.
+
+I'm also going to present two syntaxes. One is a PartiQL Plan DSL that's a variation of DOT. The other is an attempt to recreate this as valid Ion.
+
+Also, no ambiguity ie no optional values ??
+
+.Defining Nodes
+[source,subs="normal"]
+----
+(symbol name~p~::type~p~* (name~n~ type~n~)* | name~t~::type~t~*)
+
+        └─────┬─────┘└─────┬──────┘   └─────┬─────┘
+          positional     named             tail
+
+* indicates 0 or more
++ indicates 1 or more
+? indicates 0 or 1
+----
+
+
+.Requirements
+* Define a node
+* Node property inheritance / definitions? aka node taxonomy
+* Assign labels
+* Assign label to an inline definition
+* Designate a statment
+** A statement is specified with the `statement` keyword followed by the statement type.
+
+[source,plan]
+----
+-- CREATE TABLE test (
+--  id INT
+-- );
+-- INSERT INTO test (id) VALUES (1);
+-- INSERT INTO test (id) VALUES (2);
+-- SELECT t.id FROM test AS t WHERE t.id > 0;
+-- SELECT t.id FROM test AS t WHERE t.id > 1;
+
+my_table := 'test'
+my_pk := 'id'
+
+(create_table my_table (
+  (my_pk int)
+))
+
+(insert my_table (lit (int) 1))
+(insert my_table (lit (int) 2))
+
+(scan my_table) # my_scan
+(project $0)    # my_project
+
+(filter (call gt $0 (lit (int) 0))) # gt0 -- $0 > 0
+(filter (call gt $0 (lit (int) 1))) # gt1 -- $0 > 0
+
+(query
+  (select
+    (flow
+      my_scan -> gt0 -> my_project
+    )
+  )
+)
+
+(query
+  (select
+    (flow
+      #gt0 -> #my_project # in
+      #my-scan -> #in
+    )
+  )
+)
+
+statement dql.query {
+  this_filter := (filter (call gt $0 (lit (int) 0))) -- $0 > 0
+  expr = my_scan -> this_filter -> project
+}
+
+statement dql.query {
+  this_filter := (filter (call gt $0 (lit (int) 1))) -- $0 > 1
+  expr = my_scan -> this_filter -> project
+}
+----
+
+==== PartiQL Plan Language as Ion (?? .ion)
+
+NOTE: The labels `$n` for integers n corresponds to the expression node `(var n)` — ie `$1` is equivalent to `(var 1)`
+
+[source,ion]
+----
+
+// Recreating these statements
+// ----------------------------
+// CREATE TABLE test (
+//  id INT
+// );
+// INSERT INTO test (id) VALUES (1);
+// INSERT INTO test (id) VALUES (2);
+// SELECT t.id FROM test AS t WHERE t.id > 0;
+// SELECT t.id FROM test AS t WHERE t.id > 1;
+
+
+my_table::'test'                      // assign label 'my_table' to Ion string literal 'test'
+my_pk::'id'                           // ...
+
+// CREATE TABLE test (id INT);
+(create_table $my_table (
+  ($my_pk int)
+))
+
+// INSERT INTO test (id) VALUES (1);
+(insert $my_table (lit (int) 1))
+
+// INSERT INTO test (id) VALUES (2);
+(insert $my_table (lit (int) 2))
+
+gt0::(call gt $0 (lit (int) 0))       // assign label 'gt0' to ($0 > 1) call expression node
+gt1::(call gt $0 (lit (int) 1))       // ...
+
+my_scan::(scan $my_table)             // assign label 'my_scan'
+my_project::(project ($0))            // ...
+
+// SELECT t.id FROM test AS t
+// WHERE t.id > 0;
+(query
+  (select
+    (flow
+      ($my_scan '->' (filter $gt0) '->' $my_project)
+    )
+  )
+)
+
+// SELECT t.id FROM test AS t
+// WHERE t.id > 1;
+(query
+  (select
+    ($my_project
+      (filter $gt1 $my_scan)
+    )
+  )
+)
+----
+
+== Appendices
+
+=== I — PartiQL Header
+
+.PartiQL Header
+[source,ion]
+----
+(
+  partiql :: header                       // DOCUMENT TYPE
+
+  version :: (0 1)                        // MAJOR MINOR
+
+  namespace :: partiql                    // NAMESPACE
+
+  (types
+    (bool)
+
+    (int8)                                // Signed integer that can be stored in one byte
+    (int16)                               // Signed integer that can be stored in two bytes
+    (int32)                               // Signed integer that can be stored in four bytes
+    (int64)                               // Signed integer that can be stored in eight bytes
+    (int)                                 // Signed integer of arbitrary size
+
+    (decimal)                             // Exact numeric type with arbitrary precision
+    (decimal                              // Exact numeric with specified precision and scale
+      precision :: ($type int::3)
+      scale     :: ($type int::3)
+    )
+
+    (decimal ($type 3) ($type 3))
+
+    (float32)                             // Single-precision floating point (IEEE 754 32-bit)
+    (float64)                             // Double-precision floating point (IEEE 754 64-bit)
+
+    (char)                                // Unicode codepoint sequence of fixed length 1
+    (char                                 // Unicode codepoint sequence of fixed length n
+      length :: ($type int::3)
+    )
+    (string)                              // Unicode codepoint sequence of variable length
+    (string                               // Unicode codepoint sequence of variable length up to n
+      extent :: ($type int::3)
+    )
+
+    (bit)                                 // Bit string of fixed length 1
+    (bit                                  // Bit string of fixed length n
+      length :: ($type int::3)
+    )
+    (binary)                              // Bit string of variable length
+    (binary                               // Bit string of variable length up to n
+      extent :: ($type int::3)
+    )
+
+    (byte)                                // Octet string of fixed length 1
+    (byte                                 // Octet string of fixed length n
+      length :: ($type int::3)
+    )
+    (blob)                                // Octet string of variable length
+    (blob                                 // Octet string of variable length up to n
+      extent :: ($type int::3)
+    )
+
+    (date)                                // A date with no time
+    (time                                 // A date-less time with seconds precision p and no time zone
+      precision :: ($type int::3)
+    )
+    (time
+      precision :: ($type int::3)
+      timezone  :: ($type ??)
+    )
+    (timestamp $_0)                       // A date and time with seconds precision p and no time zone
+    (timestamp $_0 $_1)                   // A date and time with seconds precision p and time zone z
+    (interval)                            //
+
+    (bag)
+    (array)
+    (tuple)
+    (null)
+    (missing)
+
+    (union any *) // special "all" types in this (types ...) block
+    (union numeric int8::1 int16::2 int::3 decimal::4 float32::5 float64::6)
+    (union text char::7 char_n::9 string::8 string_)
+  )
+
+  (constants
+
+    pi :: 3.14159265 // ($constant 0)
+  )
+
+  (define
+
+
+  )
+
+  (select ($constant 0))
+)
+----

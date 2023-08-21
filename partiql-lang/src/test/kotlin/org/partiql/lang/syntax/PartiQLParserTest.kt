@@ -21,13 +21,13 @@ import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.loadSingleElement
 import org.junit.Ignore
 import org.junit.Test
+import org.partiql.errors.ErrorCode
+import org.partiql.errors.Property
 import org.partiql.lang.ION
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.sourceLocation
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.id
-import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.errors.Property
 import org.partiql.lang.util.getAntlrDisplayString
 import org.partiql.parser.antlr.PartiQLParser
 import kotlin.concurrent.thread

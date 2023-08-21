@@ -3,7 +3,7 @@ package org.partiql.lang.eval.builtins.functions
 import org.junit.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
-import org.partiql.lang.errors.ErrorCode
+import org.partiql.errors.ErrorCode
 import org.partiql.lang.eval.EvaluatorTestBase
 import org.partiql.lang.eval.MISSING_ANNOTATION
 import org.partiql.lang.eval.builtins.Argument
@@ -15,7 +15,7 @@ import org.partiql.lang.util.propertyValueMapOf
 import org.partiql.types.StaticType
 
 /**
- * Parsing related tests in [org.partiql.lang.syntax.PartiQLParserTest] and [org.partiql.lang.errors.ParserErrorsTest].
+ * Parsing related tests in [org.partiql.lang.syntax.PartiQLParserTest] and [org.partiql.errors.ParserErrorsTest].
  */
 class ExtractEvaluationTest : EvaluatorTestBase() {
     // Pass test cases

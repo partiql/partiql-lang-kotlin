@@ -19,6 +19,8 @@ import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.ionInt
 import com.amazon.ionelement.api.ionStructOf
 import com.amazon.ionelement.api.metaOrNull
+import org.partiql.errors.ProblemLocation
+import org.partiql.errors.UNKNOWN_PROBLEM_LOCATION
 
 /**
  * Represents a specific location within a source file.
@@ -62,6 +64,14 @@ data class SourceLocationMeta(val lineNum: Long, val charOffset: Long, val lengt
 
     companion object {
         const val TAG = "\$source_location"
+    }
+
+    fun toProblemLocation(): ProblemLocation {
+        return if (this == UNKNOWN_SOURCE_LOCATION) {
+            UNKNOWN_PROBLEM_LOCATION
+        } else {
+            ProblemLocation(lineNum, charOffset, length)
+        }
     }
 }
 
