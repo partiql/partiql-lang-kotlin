@@ -1,4 +1,4 @@
-package org.partiql.transpiler.dialects
+package org.partiql.ast.sql
 
 import com.amazon.ion.Decimal
 import com.amazon.ionelement.api.ionBool
@@ -26,8 +26,7 @@ import org.partiql.ast.Sort
 import org.partiql.ast.builder.AstBuilder
 import org.partiql.ast.builder.AstFactory
 import org.partiql.ast.builder.ast
-import org.partiql.transpiler.block.Block
-import org.partiql.transpiler.block.BlockWriter
+import org.partiql.ast.sql
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.boolValue
 import org.partiql.value.decimalValue
@@ -47,12 +46,12 @@ import java.math.BigInteger
 import kotlin.test.assertFails
 
 /**
- * This tests the Ast to test via the PartiQL dialect.
+ * This tests the Ast to test via the base SqlDialect.
  *
- * It does NOT test formatted output; that is the responsibility of the [Unparse].
+ * It does NOT test formatted output.
  */
 @OptIn(PartiQLValueExperimental::class)
-class PartiQLDialectTest {
+class SqlDialectTest {
 
     // Identifiers & Paths
 
@@ -964,7 +963,7 @@ class PartiQLDialectTest {
                 exprSFW {
                     select = selectProject {
                         items += selectProjectItemExpression(v("a"), id("x"))
-                        items += selectProjectItemExpression(v("b"), id("v"))
+                        items += selectProjectItemExpression(v("b"), id("y"))
                     }
                     from = table("T")
                 }
@@ -1041,7 +1040,7 @@ class PartiQLDialectTest {
             },
             expect("PIVOT a AT b FROM T") {
                 exprSFW {
-                    select = selectPivot(v("b"), v("a"))
+                    select = selectPivot(v("a"), v("b"))
                     from = table("T")
                 }
             },
@@ -1637,7 +1636,7 @@ class PartiQLDialectTest {
         ) : Case() {
 
             override fun assert() {
-                val actual = BlockWriter.write(input.accept(PartiQLDialect.INSTANCE, Block.Nil))
+                val actual = input.sql(SqlLayout.ONELINE)
                 Assertions.assertEquals(expected, actual)
             }
         }
@@ -1649,7 +1648,7 @@ class PartiQLDialectTest {
 
             override fun assert() {
                 assertFails(message) {
-                    BlockWriter.write(input.accept(PartiQLDialect.INSTANCE, Block.Nil))
+                    input.sql(SqlLayout.ONELINE)
                 }
             }
         }

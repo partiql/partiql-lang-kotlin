@@ -1,4 +1,4 @@
-package org.partiql.transpiler.block
+package org.partiql.ast.sql
 
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.parallel.Execution
@@ -6,7 +6,7 @@ import org.junit.jupiter.api.parallel.ExecutionMode
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 
-class BlockWriterTest {
+class SqlBlockWriterTest {
 
     @ParameterizedTest(name = "write #{index}")
     @MethodSource("writeCases")
@@ -20,7 +20,7 @@ class BlockWriterTest {
 
     companion object {
 
-        private fun block(): Block {
+        private fun block(): SqlBlock {
 
             return NIL + "aaa[" + NL + nest {
                 NIL + "bbbbb[" + NL + nest {
@@ -56,17 +56,17 @@ class BlockWriterTest {
             ) { block() }
         )
 
-        private fun format(expected: String, block: () -> Block) = Case(block(), expected, BlockWriter::format)
+        private fun format(expected: String, block: () -> SqlBlock) = Case(block(), expected, SqlWriter::format)
 
-        private fun write(expected: String, block: () -> Block) = Case(block(), expected, BlockWriter::write)
+        private fun write(expected: String, block: () -> SqlBlock) = Case(block(), expected, SqlWriter::write)
 
-        private fun r(text: String) = Block.Text(text)
+        private fun r(text: String) = SqlBlock.Text(text)
     }
 
     class Case(
-        private val input: Block,
+        private val input: SqlBlock,
         private val expected: String,
-        private val action: (Block) -> String,
+        private val action: (SqlBlock) -> String,
     ) {
 
         fun assert() {

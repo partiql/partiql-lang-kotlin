@@ -1,4 +1,4 @@
-package org.partiql.transpiler.dialects
+package org.partiql.ast.sql
 
 import org.partiql.ast.AstNode
 import org.partiql.ast.Expr
@@ -14,9 +14,7 @@ import org.partiql.ast.SetQuantifier
 import org.partiql.ast.Sort
 import org.partiql.ast.Statement
 import org.partiql.ast.Type
-import org.partiql.transpiler.Dialect
-import org.partiql.transpiler.block.Block
-import org.partiql.transpiler.block.concat
+import org.partiql.ast.visitor.AstBaseVisitor
 import org.partiql.value.MissingValue
 import org.partiql.value.NullValue
 import org.partiql.value.PartiQLValueExperimental
@@ -24,31 +22,34 @@ import org.partiql.value.io.PartiQLValueTextWriter
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
 
+/**
+ * SqlDialect represents the base behavior for transforming an [AstNode] tree into a [SqlBlock] tree.
+ */
 @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
-abstract class PartiQLDialect : Dialect() {
+public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
 
     companion object {
 
         @JvmStatic
-        val INSTANCE = object : PartiQLDialect() {}
+        public val PARTIQL = object : SqlDialect() {}
     }
 
-    override fun defaultReturn(node: AstNode, head: Block) = throw UnsupportedOperationException("Cannot print $node")
+    override fun defaultReturn(node: AstNode, head: SqlBlock) = throw UnsupportedOperationException("Cannot print $node")
 
     // STATEMENTS
 
-    override fun visitStatementQuery(node: Statement.Query, head: Block) = visitExpr(node.expr, head)
+    override fun visitStatementQuery(node: Statement.Query, head: SqlBlock) = visitExpr(node.expr, head)
 
     // IDENTIFIERS & PATHS
 
-    override fun visitIdentifierSymbol(node: Identifier.Symbol, head: Block) = head concat r(node.sql())
+    override fun visitIdentifierSymbol(node: Identifier.Symbol, head: SqlBlock) = head concat r(node.sql())
 
-    override fun visitIdentifierQualified(node: Identifier.Qualified, head: Block): Block {
+    override fun visitIdentifierQualified(node: Identifier.Qualified, head: SqlBlock): SqlBlock {
         val path = node.steps.fold(node.root.sql()) { p, step -> p + "." + step.sql() }
         return head concat r(path)
     }
 
-    override fun visitPath(node: Path, head: Block): Block {
+    override fun visitPath(node: Path, head: SqlBlock): SqlBlock {
         val path = node.steps.fold(node.root.sql()) { p, step ->
             when (step) {
                 is Path.Step.Index -> p + "[${step.index}]"
@@ -59,97 +60,97 @@ abstract class PartiQLDialect : Dialect() {
     }
 
     // cannot write path step outside the context of a path as we don't want it to reflow
-    override fun visitPathStep(node: Path.Step, head: Block) = error("path step cannot be written directly")
+    override fun visitPathStep(node: Path.Step, head: SqlBlock) = error("path step cannot be written directly")
 
-    override fun visitPathStepSymbol(node: Path.Step.Symbol, head: Block) = visitPathStep(node, head)
+    override fun visitPathStepSymbol(node: Path.Step.Symbol, head: SqlBlock) = visitPathStep(node, head)
 
-    override fun visitPathStepIndex(node: Path.Step.Index, head: Block) = visitPathStep(node, head)
+    override fun visitPathStepIndex(node: Path.Step.Index, head: SqlBlock) = visitPathStep(node, head)
 
     // TYPES
 
-    override fun visitTypeNullType(node: Type.NullType, head: Block) = head concat r("NULL")
+    override fun visitTypeNullType(node: Type.NullType, head: SqlBlock) = head concat r("NULL")
 
-    override fun visitTypeMissing(node: Type.Missing, head: Block) = head concat r("MISSING")
+    override fun visitTypeMissing(node: Type.Missing, head: SqlBlock) = head concat r("MISSING")
 
-    override fun visitTypeBool(node: Type.Bool, head: Block) = head concat r("BOOL")
+    override fun visitTypeBool(node: Type.Bool, head: SqlBlock) = head concat r("BOOL")
 
-    override fun visitTypeTinyint(node: Type.Tinyint, head: Block) = head concat r("TINYINT")
+    override fun visitTypeTinyint(node: Type.Tinyint, head: SqlBlock) = head concat r("TINYINT")
 
-    override fun visitTypeSmallint(node: Type.Smallint, head: Block) = head concat r("SMALLINT")
+    override fun visitTypeSmallint(node: Type.Smallint, head: SqlBlock) = head concat r("SMALLINT")
 
-    override fun visitTypeInt2(node: Type.Int2, head: Block) = head concat r("INT2")
+    override fun visitTypeInt2(node: Type.Int2, head: SqlBlock) = head concat r("INT2")
 
-    override fun visitTypeInt4(node: Type.Int4, head: Block) = head concat r("INT4")
+    override fun visitTypeInt4(node: Type.Int4, head: SqlBlock) = head concat r("INT4")
 
-    override fun visitTypeBigint(node: Type.Bigint, head: Block) = head concat r("BIGINT")
+    override fun visitTypeBigint(node: Type.Bigint, head: SqlBlock) = head concat r("BIGINT")
 
-    override fun visitTypeInt8(node: Type.Int8, head: Block) = head concat r("INT8")
+    override fun visitTypeInt8(node: Type.Int8, head: SqlBlock) = head concat r("INT8")
 
-    override fun visitTypeInt(node: Type.Int, head: Block) = head concat r("INT")
+    override fun visitTypeInt(node: Type.Int, head: SqlBlock) = head concat r("INT")
 
-    override fun visitTypeReal(node: Type.Real, head: Block) = head concat r("REAL")
+    override fun visitTypeReal(node: Type.Real, head: SqlBlock) = head concat r("REAL")
 
-    override fun visitTypeFloat32(node: Type.Float32, head: Block) = head concat r("FLOAT32")
+    override fun visitTypeFloat32(node: Type.Float32, head: SqlBlock) = head concat r("FLOAT32")
 
-    override fun visitTypeFloat64(node: Type.Float64, head: Block) = head concat r("DOUBLE PRECISION")
+    override fun visitTypeFloat64(node: Type.Float64, head: SqlBlock) = head concat r("DOUBLE PRECISION")
 
-    override fun visitTypeDecimal(node: Type.Decimal, head: Block) =
+    override fun visitTypeDecimal(node: Type.Decimal, head: SqlBlock) =
         head concat type("DECIMAL", node.precision, node.scale)
 
-    override fun visitTypeNumeric(node: Type.Numeric, head: Block) =
+    override fun visitTypeNumeric(node: Type.Numeric, head: SqlBlock) =
         head concat type("NUMERIC", node.precision, node.scale)
 
-    override fun visitTypeChar(node: Type.Char, head: Block) = head concat type("CHAR", node.length)
+    override fun visitTypeChar(node: Type.Char, head: SqlBlock) = head concat type("CHAR", node.length)
 
-    override fun visitTypeVarchar(node: Type.Varchar, head: Block) = head concat type("VARCHAR", node.length)
+    override fun visitTypeVarchar(node: Type.Varchar, head: SqlBlock) = head concat type("VARCHAR", node.length)
 
-    override fun visitTypeString(node: Type.String, head: Block) = head concat r("STRING")
+    override fun visitTypeString(node: Type.String, head: SqlBlock) = head concat r("STRING")
 
-    override fun visitTypeSymbol(node: Type.Symbol, head: Block) = head concat r("SYMBOL")
+    override fun visitTypeSymbol(node: Type.Symbol, head: SqlBlock) = head concat r("SYMBOL")
 
-    override fun visitTypeBit(node: Type.Bit, head: Block) = head concat type("BIT", node.length)
+    override fun visitTypeBit(node: Type.Bit, head: SqlBlock) = head concat type("BIT", node.length)
 
-    override fun visitTypeBitVarying(node: Type.BitVarying, head: Block) = head concat type("BINARY", node.length)
+    override fun visitTypeBitVarying(node: Type.BitVarying, head: SqlBlock) = head concat type("BINARY", node.length)
 
-    override fun visitTypeByteString(node: Type.ByteString, head: Block) = head concat type("BYTE", node.length)
+    override fun visitTypeByteString(node: Type.ByteString, head: SqlBlock) = head concat type("BYTE", node.length)
 
-    override fun visitTypeBlob(node: Type.Blob, head: Block) = head concat type("BLOB", node.length)
+    override fun visitTypeBlob(node: Type.Blob, head: SqlBlock) = head concat type("BLOB", node.length)
 
-    override fun visitTypeClob(node: Type.Clob, head: Block) = head concat type("CLOB", node.length)
+    override fun visitTypeClob(node: Type.Clob, head: SqlBlock) = head concat type("CLOB", node.length)
 
-    override fun visitTypeBag(node: Type.Bag, head: Block) = head concat r("BAG")
+    override fun visitTypeBag(node: Type.Bag, head: SqlBlock) = head concat r("BAG")
 
-    override fun visitTypeList(node: Type.List, head: Block) = head concat r("LIST")
+    override fun visitTypeList(node: Type.List, head: SqlBlock) = head concat r("LIST")
 
-    override fun visitTypeSexp(node: Type.Sexp, head: Block) = head concat r("SEXP")
+    override fun visitTypeSexp(node: Type.Sexp, head: SqlBlock) = head concat r("SEXP")
 
-    override fun visitTypeTuple(node: Type.Tuple, head: Block) = head concat r("TUPLE")
+    override fun visitTypeTuple(node: Type.Tuple, head: SqlBlock) = head concat r("TUPLE")
 
-    override fun visitTypeStruct(node: Type.Struct, head: Block) = head concat r("STRUCT")
+    override fun visitTypeStruct(node: Type.Struct, head: SqlBlock) = head concat r("STRUCT")
 
-    override fun visitTypeAny(node: Type.Any, head: Block) = head concat r("ANY")
+    override fun visitTypeAny(node: Type.Any, head: SqlBlock) = head concat r("ANY")
 
-    override fun visitTypeDate(node: Type.Date, head: Block) = head concat r("DATE")
+    override fun visitTypeDate(node: Type.Date, head: SqlBlock) = head concat r("DATE")
 
-    override fun visitTypeTime(node: Type.Time, head: Block): Block = head concat type("TIME", node.precision)
+    override fun visitTypeTime(node: Type.Time, head: SqlBlock): SqlBlock = head concat type("TIME", node.precision)
 
-    override fun visitTypeTimeWithTz(node: Type.TimeWithTz, head: Block) =
+    override fun visitTypeTimeWithTz(node: Type.TimeWithTz, head: SqlBlock) =
         head concat type("TIME WITH TIMEZONE", node.precision, gap = true)
 
-    override fun visitTypeTimestamp(node: Type.Timestamp, head: Block) = head concat type("TIMESTAMP", node.precision)
+    override fun visitTypeTimestamp(node: Type.Timestamp, head: SqlBlock) = head concat type("TIMESTAMP", node.precision)
 
-    override fun visitTypeTimestampWithTz(node: Type.TimestampWithTz, head: Block) =
+    override fun visitTypeTimestampWithTz(node: Type.TimestampWithTz, head: SqlBlock) =
         head concat type("TIMESTAMP WITH TIMEZONE", node.precision, gap = true)
 
-    override fun visitTypeInterval(node: Type.Interval, head: Block) = head concat type("INTERVAL", node.precision)
+    override fun visitTypeInterval(node: Type.Interval, head: SqlBlock) = head concat type("INTERVAL", node.precision)
 
     // unsupported
-    override fun visitTypeCustom(node: Type.Custom, head: Block) = defaultReturn(node, head)
+    override fun visitTypeCustom(node: Type.Custom, head: SqlBlock) = defaultReturn(node, head)
 
     // Expressions
 
     @OptIn(PartiQLValueExperimental::class)
-    override fun visitExprLit(node: Expr.Lit, head: Block): Block {
+    override fun visitExprLit(node: Expr.Lit, head: SqlBlock): SqlBlock {
         // Simplified PartiQL Value writing, as this intentionally omits formatting
         val value = when (node.value) {
             is MissingValue -> "MISSING" // force uppercase
@@ -164,13 +165,13 @@ abstract class PartiQLDialect : Dialect() {
         return head concat r(value)
     }
 
-    override fun visitExprIon(node: Expr.Ion, head: Block): Block {
+    override fun visitExprIon(node: Expr.Ion, head: SqlBlock): SqlBlock {
         // simplified Ion value writing, as this intentionally omits formatting
         val value = node.value.toString()
         return head concat r("`$value`")
     }
 
-    override fun visitExprUnary(node: Expr.Unary, head: Block): Block {
+    override fun visitExprUnary(node: Expr.Unary, head: SqlBlock): SqlBlock {
         val op = when (node.op) {
             Expr.Unary.Op.NOT -> "NOT "
             Expr.Unary.Op.POS -> "+"
@@ -181,7 +182,7 @@ abstract class PartiQLDialect : Dialect() {
         return visitExpr(node.expr, h)
     }
 
-    override fun visitExprBinary(node: Expr.Binary, head: Block): Block {
+    override fun visitExprBinary(node: Expr.Binary, head: SqlBlock): SqlBlock {
         val op = when (node.op) {
             Expr.Binary.Op.PLUS -> "+"
             Expr.Binary.Op.MINUS -> "-"
@@ -205,7 +206,7 @@ abstract class PartiQLDialect : Dialect() {
         return h
     }
 
-    override fun visitExprVar(node: Expr.Var, head: Block): Block {
+    override fun visitExprVar(node: Expr.Var, head: SqlBlock): SqlBlock {
         var h = head
         // Prepend @
         if (node.scope == Expr.Var.Scope.LOCAL) {
@@ -215,19 +216,19 @@ abstract class PartiQLDialect : Dialect() {
         return h
     }
 
-    override fun visitExprSessionAttribute(node: Expr.SessionAttribute, head: Block) =
+    override fun visitExprSessionAttribute(node: Expr.SessionAttribute, head: SqlBlock) =
         head concat r(node.attribute.name)
 
-    override fun visitExprPath(node: Expr.Path, head: Block): Block {
+    override fun visitExprPath(node: Expr.Path, head: SqlBlock): SqlBlock {
         var h = visitExpr(node.root, head)
         h = node.steps.fold(h) { b, step -> visitExprPathStep(step, b) }
         return h
     }
 
-    override fun visitExprPathStepSymbol(node: Expr.Path.Step.Symbol, head: Block) =
+    override fun visitExprPathStepSymbol(node: Expr.Path.Step.Symbol, head: SqlBlock) =
         head concat r(".${node.symbol.sql()}")
 
-    override fun visitExprPathStepIndex(node: Expr.Path.Step.Index, head: Block): Block {
+    override fun visitExprPathStepIndex(node: Expr.Path.Step.Index, head: SqlBlock): SqlBlock {
         var h = head
         h = head concat r("[")
         h = visitExpr(node.key, h)
@@ -235,18 +236,18 @@ abstract class PartiQLDialect : Dialect() {
         return h
     }
 
-    override fun visitExprPathStepWildcard(node: Expr.Path.Step.Wildcard, head: Block) = head concat r("[*]")
+    override fun visitExprPathStepWildcard(node: Expr.Path.Step.Wildcard, head: SqlBlock) = head concat r("[*]")
 
-    override fun visitExprPathStepUnpivot(node: Expr.Path.Step.Unpivot, head: Block) = head concat r(".*")
+    override fun visitExprPathStepUnpivot(node: Expr.Path.Step.Unpivot, head: SqlBlock) = head concat r(".*")
 
-    override fun visitExprCall(node: Expr.Call, head: Block): Block {
+    override fun visitExprCall(node: Expr.Call, head: SqlBlock): SqlBlock {
         var h = head
         h = visitIdentifier(node.function, h)
         h = h concat list { node.args }
         return h
     }
 
-    override fun visitExprAgg(node: Expr.Agg, head: Block): Block {
+    override fun visitExprAgg(node: Expr.Agg, head: SqlBlock): SqlBlock {
         var h = head
         val f = node.function
         // Special case
@@ -259,13 +260,13 @@ abstract class PartiQLDialect : Dialect() {
         return h
     }
 
-    override fun visitExprParameter(node: Expr.Parameter, head: Block) = head concat r("?")
+    override fun visitExprParameter(node: Expr.Parameter, head: SqlBlock) = head concat r("?")
 
-    override fun visitExprValues(node: Expr.Values, head: Block) = head concat list("VALUES (") { node.rows }
+    override fun visitExprValues(node: Expr.Values, head: SqlBlock) = head concat list("VALUES (") { node.rows }
 
-    override fun visitExprValuesRow(node: Expr.Values.Row, head: Block) = head concat list { node.items }
+    override fun visitExprValuesRow(node: Expr.Values.Row, head: SqlBlock) = head concat list { node.items }
 
-    override fun visitExprCollection(node: Expr.Collection, head: Block): Block {
+    override fun visitExprCollection(node: Expr.Collection, head: SqlBlock): SqlBlock {
         val (start, end) = when (node.type) {
             Expr.Collection.Type.BAG -> "<<" to ">>"
             Expr.Collection.Type.ARRAY -> "[" to "]"
@@ -276,9 +277,9 @@ abstract class PartiQLDialect : Dialect() {
         return head concat list(start, end) { node.values }
     }
 
-    override fun visitExprStruct(node: Expr.Struct, head: Block) = head concat list("{", "}") { node.fields }
+    override fun visitExprStruct(node: Expr.Struct, head: SqlBlock) = head concat list("{", "}") { node.fields }
 
-    override fun visitExprStructField(node: Expr.Struct.Field, head: Block): Block {
+    override fun visitExprStructField(node: Expr.Struct.Field, head: SqlBlock): SqlBlock {
         var h = head
         h = visitExpr(node.name, h)
         h = h concat r(": ")
@@ -286,7 +287,7 @@ abstract class PartiQLDialect : Dialect() {
         return h
     }
 
-    override fun visitExprLike(node: Expr.Like, head: Block): Block {
+    override fun visitExprLike(node: Expr.Like, head: SqlBlock): SqlBlock {
         var h = head
         h = visitExpr(node.value, h)
         h = h concat if (node.not == true) r(" NOT LIKE ") else r(" LIKE ")
@@ -298,7 +299,7 @@ abstract class PartiQLDialect : Dialect() {
         return h
     }
 
-    override fun visitExprBetween(node: Expr.Between, head: Block): Block {
+    override fun visitExprBetween(node: Expr.Between, head: SqlBlock): SqlBlock {
         var h = head
         h = visitExpr(node.value, h)
         h = h concat if (node.not == true) r(" NOT BETWEEN ") else r(" BETWEEN ")
@@ -308,7 +309,7 @@ abstract class PartiQLDialect : Dialect() {
         return h
     }
 
-    override fun visitExprInCollection(node: Expr.InCollection, head: Block): Block {
+    override fun visitExprInCollection(node: Expr.InCollection, head: SqlBlock): SqlBlock {
         var h = head
         h = visitExpr(node.lhs, h)
         h = h concat if (node.not == true) r(" NOT IN ") else r(" IN ")
@@ -316,7 +317,7 @@ abstract class PartiQLDialect : Dialect() {
         return h
     }
 
-    override fun visitExprIsType(node: Expr.IsType, head: Block): Block {
+    override fun visitExprIsType(node: Expr.IsType, head: SqlBlock): SqlBlock {
         var h = head
         h = visitExpr(node.value, h)
         h = h concat if (node.not == true) r(" IS NOT ") else r(" IS ")
@@ -324,7 +325,7 @@ abstract class PartiQLDialect : Dialect() {
         return h
     }
 
-    override fun visitExprCase(node: Expr.Case, head: Block): Block {
+    override fun visitExprCase(node: Expr.Case, head: SqlBlock): SqlBlock {
         var h = head
         h = h concat r("CASE")
         h = when (node.expr) {
@@ -345,7 +346,7 @@ abstract class PartiQLDialect : Dialect() {
         return h
     }
 
-    override fun visitExprCaseBranch(node: Expr.Case.Branch, head: Block): Block {
+    override fun visitExprCaseBranch(node: Expr.Case.Branch, head: SqlBlock): SqlBlock {
         var h = head
         h = h concat r(" WHEN ")
         h = visitExpr(node.condition, h)
@@ -354,14 +355,14 @@ abstract class PartiQLDialect : Dialect() {
         return h
     }
 
-    override fun visitExprCoalesce(node: Expr.Coalesce, head: Block): Block {
+    override fun visitExprCoalesce(node: Expr.Coalesce, head: SqlBlock): SqlBlock {
         var h = head
         h = h concat r("COALESCE")
         h = h concat list { node.args }
         return h
     }
 
-    override fun visitExprNullIf(node: Expr.NullIf, head: Block): Block {
+    override fun visitExprNullIf(node: Expr.NullIf, head: SqlBlock): SqlBlock {
         val args = listOf(node.value, node.nullifier)
         var h = head
         h = h concat r("NULLIF")
@@ -369,7 +370,7 @@ abstract class PartiQLDialect : Dialect() {
         return h
     }
 
-    override fun visitExprSubstring(node: Expr.Substring, head: Block): Block {
+    override fun visitExprSubstring(node: Expr.Substring, head: SqlBlock): SqlBlock {
         var h = head
         h = h concat r("SUBSTRING(")
         h = visitExpr(node.value, h)
@@ -385,7 +386,7 @@ abstract class PartiQLDialect : Dialect() {
         return h
     }
 
-    override fun visitExprPosition(node: Expr.Position, head: Block): Block {
+    override fun visitExprPosition(node: Expr.Position, head: SqlBlock): SqlBlock {
         var h = head
         h = h concat r("POSITION(")
         h = visitExpr(node.lhs, h)
@@ -395,7 +396,7 @@ abstract class PartiQLDialect : Dialect() {
         return h
     }
 
-    override fun visitExprTrim(node: Expr.Trim, head: Block): Block {
+    override fun visitExprTrim(node: Expr.Trim, head: SqlBlock): SqlBlock {
         var h = head
         h = h concat r("TRIM(")
         // [LEADING|TRAILING|BOTH]
@@ -412,7 +413,7 @@ abstract class PartiQLDialect : Dialect() {
         return h
     }
 
-    override fun visitExprOverlay(node: Expr.Overlay, head: Block): Block {
+    override fun visitExprOverlay(node: Expr.Overlay, head: SqlBlock): SqlBlock {
         var h = head
         h = h concat r("OVERLAY(")
         h = visitExpr(node.value, h)
@@ -428,7 +429,7 @@ abstract class PartiQLDialect : Dialect() {
         return h
     }
 
-    override fun visitExprExtract(node: Expr.Extract, head: Block): Block {
+    override fun visitExprExtract(node: Expr.Extract, head: SqlBlock): SqlBlock {
         var h = head
         h = h concat r("EXTRACT(")
         h = h concat r(node.field.name)
@@ -438,7 +439,7 @@ abstract class PartiQLDialect : Dialect() {
         return h
     }
 
-    override fun visitExprCast(node: Expr.Cast, head: Block): Block {
+    override fun visitExprCast(node: Expr.Cast, head: SqlBlock): SqlBlock {
         var h = head
         h = h concat r("CAST(")
         h = visitExpr(node.value, h)
@@ -448,7 +449,7 @@ abstract class PartiQLDialect : Dialect() {
         return h
     }
 
-    override fun visitExprCanCast(node: Expr.CanCast, head: Block): Block {
+    override fun visitExprCanCast(node: Expr.CanCast, head: SqlBlock): SqlBlock {
         var h = head
         h = h concat r("CAN_CAST(")
         h = visitExpr(node.value, h)
@@ -458,7 +459,7 @@ abstract class PartiQLDialect : Dialect() {
         return h
     }
 
-    override fun visitExprCanLosslessCast(node: Expr.CanLosslessCast, head: Block): Block {
+    override fun visitExprCanLosslessCast(node: Expr.CanLosslessCast, head: SqlBlock): SqlBlock {
         var h = head
         h = h concat r("CAN_LOSSLESS_CAST(")
         h = visitExpr(node.value, h)
@@ -468,7 +469,7 @@ abstract class PartiQLDialect : Dialect() {
         return h
     }
 
-    override fun visitExprDateAdd(node: Expr.DateAdd, head: Block): Block {
+    override fun visitExprDateAdd(node: Expr.DateAdd, head: SqlBlock): SqlBlock {
         var h = head
         h = h concat r("DATE_ADD(")
         h = h concat r(node.field.name)
@@ -480,7 +481,7 @@ abstract class PartiQLDialect : Dialect() {
         return h
     }
 
-    override fun visitExprDateDiff(node: Expr.DateDiff, head: Block): Block {
+    override fun visitExprDateDiff(node: Expr.DateDiff, head: SqlBlock): SqlBlock {
         var h = head
         h = h concat r("DATE_DIFF(")
         h = h concat r(node.field.name)
@@ -492,7 +493,7 @@ abstract class PartiQLDialect : Dialect() {
         return h
     }
 
-    override fun visitExprBagOp(node: Expr.BagOp, head: Block): Block {
+    override fun visitExprBagOp(node: Expr.BagOp, head: SqlBlock): SqlBlock {
         // [OUTER] [UNION|INTERSECT|EXCEPT] [ALL|DISTINCT]
         val op = mutableListOf<String>()
         when (node.outer) {
@@ -518,7 +519,7 @@ abstract class PartiQLDialect : Dialect() {
 
     // SELECT-FROM-WHERE
 
-    override fun visitExprSFW(node: Expr.SFW, head: Block): Block {
+    override fun visitExprSFW(node: Expr.SFW, head: SqlBlock): SqlBlock {
         var h = head
         // SELECT
         h = visit(node.select, h)
@@ -545,7 +546,7 @@ abstract class PartiQLDialect : Dialect() {
 
     // SELECT
 
-    override fun visitSelectStar(node: Select.Star, head: Block): Block {
+    override fun visitSelectStar(node: Select.Star, head: SqlBlock): SqlBlock {
         val select = when (node.setq) {
             SetQuantifier.ALL -> "SELECT ALL *"
             SetQuantifier.DISTINCT -> "SELECT DISTINCT *"
@@ -554,7 +555,7 @@ abstract class PartiQLDialect : Dialect() {
         return head concat r(select)
     }
 
-    override fun visitSelectProject(node: Select.Project, head: Block): Block {
+    override fun visitSelectProject(node: Select.Project, head: SqlBlock): SqlBlock {
         val select = when (node.setq) {
             SetQuantifier.ALL -> "SELECT ALL "
             SetQuantifier.DISTINCT -> "SELECT DISTINCT "
@@ -563,21 +564,21 @@ abstract class PartiQLDialect : Dialect() {
         return head concat list(select, "") { node.items }
     }
 
-    override fun visitSelectProjectItemAll(node: Select.Project.Item.All, head: Block): Block {
+    override fun visitSelectProjectItemAll(node: Select.Project.Item.All, head: SqlBlock): SqlBlock {
         var h = head
         h = visitExpr(node.expr, h)
         h = h concat r(".*")
         return h
     }
 
-    override fun visitSelectProjectItemExpression(node: Select.Project.Item.Expression, head: Block): Block {
+    override fun visitSelectProjectItemExpression(node: Select.Project.Item.Expression, head: SqlBlock): SqlBlock {
         var h = head
         h = visitExpr(node.expr, h)
         h = if (node.asAlias != null) h concat r(" AS ${node.asAlias!!.sql()}") else h
         return h
     }
 
-    override fun visitSelectPivot(node: Select.Pivot, head: Block): Block {
+    override fun visitSelectPivot(node: Select.Pivot, head: SqlBlock): SqlBlock {
         var h = head
         h = h concat r("PIVOT ")
         h = visitExpr(node.key, h)
@@ -586,7 +587,7 @@ abstract class PartiQLDialect : Dialect() {
         return h
     }
 
-    override fun visitSelectValue(node: Select.Value, head: Block): Block {
+    override fun visitSelectValue(node: Select.Value, head: SqlBlock): SqlBlock {
         val select = when (node.setq) {
             SetQuantifier.ALL -> "SELECT ALL VALUE "
             SetQuantifier.DISTINCT -> "SELECT DISTINCT VALUE "
@@ -600,7 +601,7 @@ abstract class PartiQLDialect : Dialect() {
 
     // FROM
 
-    override fun visitFromValue(node: From.Value, head: Block): Block {
+    override fun visitFromValue(node: From.Value, head: SqlBlock): SqlBlock {
         var h = head
         h = when (node.type) {
             From.Value.Type.SCAN -> h
@@ -613,7 +614,7 @@ abstract class PartiQLDialect : Dialect() {
         return h
     }
 
-    override fun visitFromJoin(node: From.Join, head: Block): Block {
+    override fun visitFromJoin(node: From.Join, head: SqlBlock): SqlBlock {
         var h = head
         h = visitFrom(node.lhs, h)
         h = h concat when (node.type) {
@@ -635,9 +636,9 @@ abstract class PartiQLDialect : Dialect() {
 
     // LET
 
-    override fun visitLet(node: Let, head: Block) = head concat list("LET ", "") { node.bindings }
+    override fun visitLet(node: Let, head: SqlBlock) = head concat list("LET ", "") { node.bindings }
 
-    override fun visitLetBinding(node: Let.Binding, head: Block): Block {
+    override fun visitLetBinding(node: Let.Binding, head: SqlBlock): SqlBlock {
         var h = head
         h = visitExpr(node.expr, h)
         h = h concat r(" AS ${node.asAlias.sql()}")
@@ -646,7 +647,7 @@ abstract class PartiQLDialect : Dialect() {
 
     // GROUP BY
 
-    override fun visitGroupBy(node: GroupBy, head: Block): Block {
+    override fun visitGroupBy(node: GroupBy, head: SqlBlock): SqlBlock {
         var h = head
         h = h concat when (node.strategy) {
             GroupBy.Strategy.FULL -> r("GROUP BY ")
@@ -657,7 +658,7 @@ abstract class PartiQLDialect : Dialect() {
         return h
     }
 
-    override fun visitGroupByKey(node: GroupBy.Key, head: Block): Block {
+    override fun visitGroupByKey(node: GroupBy.Key, head: SqlBlock): SqlBlock {
         var h = head
         h = visitExpr(node.expr, h)
         h = if (node.asAlias != null) h concat r(" AS ${node.asAlias!!.sql()}") else h
@@ -666,7 +667,7 @@ abstract class PartiQLDialect : Dialect() {
 
     // SET OPERATORS
 
-    override fun visitSetOp(node: SetOp, head: Block): Block {
+    override fun visitSetOp(node: SetOp, head: SqlBlock): SqlBlock {
         val op = when (node.setq) {
             null -> node.type.name
             else -> "${node.type.name} ${node.setq!!.name}"
@@ -674,22 +675,22 @@ abstract class PartiQLDialect : Dialect() {
         return head concat r(op)
     }
 
-    override fun visitExprSFWSetOp(node: Expr.SFW.SetOp, head: Block): Block {
+    override fun visitExprSFWSetOp(node: Expr.SFW.SetOp, head: SqlBlock): SqlBlock {
         var h = head
         h = visitSetOp(node.type, h)
         h = h concat r(" ")
         h = h concat r("(")
-        val subquery = visitExprSFW(node.operand, Block.Nil)
-        h = h concat Block.Nest(subquery)
+        val subquery = visitExprSFW(node.operand, SqlBlock.Nil)
+        h = h concat SqlBlock.Nest(subquery)
         h = h concat r(")")
         return h
     }
 
     // ORDER BY
 
-    override fun visitOrderBy(node: OrderBy, head: Block) = head concat list("ORDER BY ", "") { node.sorts }
+    override fun visitOrderBy(node: OrderBy, head: SqlBlock) = head concat list("ORDER BY ", "") { node.sorts }
 
-    override fun visitSort(node: Sort, head: Block): Block {
+    override fun visitSort(node: Sort, head: SqlBlock): SqlBlock {
         var h = head
         h = visitExpr(node.expr, h)
         h = when (node.dir) {
@@ -707,7 +708,7 @@ abstract class PartiQLDialect : Dialect() {
 
     // --- Block Constructor Helpers
 
-    private fun type(symbol: String, vararg args: Int?, gap: Boolean = false): Block {
+    private fun type(symbol: String, vararg args: Int?, gap: Boolean = false): SqlBlock {
         val p = args.filterNotNull()
         val t = when {
             p.isEmpty() -> symbol
@@ -723,18 +724,18 @@ abstract class PartiQLDialect : Dialect() {
         return r(t)
     }
 
-    //  > infix fun Block.concat(rhs: String): Block.Link = Block.Link(this, Block.Raw(rhs))
+    //  > infix fun Block.concat(rhs: String): SqlBlock.Link = Block.Link(this, Block.Raw(rhs))
     //  > head concat "foo"
-    private fun r(text: String): Block = Block.Text(text)
+    private fun r(text: String): SqlBlock = SqlBlock.Text(text)
 
     private fun list(
         start: String? = "(",
         end: String? = ")",
         delimiter: String? = ", ",
         children: () -> List<AstNode>,
-    ): Block {
+    ): SqlBlock {
         val kids = children()
-        var h = start?.let { r(it) } ?: Block.Nil
+        var h = start?.let { r(it) } ?: SqlBlock.Nil
         kids.forEachIndexed { i, child ->
             h = child.accept(this, h)
             h = if (delimiter != null && (i + 1) < kids.size) h concat r(delimiter) else h
