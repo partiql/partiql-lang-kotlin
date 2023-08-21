@@ -28,6 +28,11 @@ import java.io.PrintStream
 @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
 public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
 
+    /**
+     * Default entry-point, can also be us.
+     */
+    public fun apply(node: AstNode): SqlBlock = node.accept(this, SqlBlock.Nil)
+
     companion object {
 
         @JvmStatic

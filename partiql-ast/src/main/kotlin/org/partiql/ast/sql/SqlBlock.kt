@@ -1,6 +1,14 @@
 package org.partiql.ast.sql
 
 /**
+ * Write this [SqlBlock] tree as SQL text with the given [SqlLayout].
+ *
+ * @param layout    SQL formatting ruleset
+ * @return          SQL text
+ */
+public fun SqlBlock.sql(layout: SqlLayout = SqlLayout.DEFAULT): String = SqlWriter.format(this, layout)
+
+/**
  * Representation of some textual corpus; akin to Wadler's "A prettier printer" Document type.
  */
 sealed interface SqlBlock {

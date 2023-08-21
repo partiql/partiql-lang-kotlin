@@ -53,7 +53,7 @@ class TranspilerTest {
         val query = "SELECT id, breed FROM pets"
         val target = PartiQLTarget
         val context = ctx("test-query", "aws", listOf("ddb"))
-        val transpiler = Transpiler(target, context)
+        val transpiler = PartiQLTranspiler(target, context)
         //
         val result = transpiler.transpile(query)
         for (p in result.problems) {

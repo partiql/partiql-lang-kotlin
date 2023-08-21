@@ -3,9 +3,9 @@ package org.partiql.planner
 import org.partiql.spi.Plugin
 
 /**
- * PartiQLPlannerBuilder — instantiate via PartiQLPlanner.builder()
+ * PartiQLPlannerBuilder
  */
-class PartiQLPlannerBuilder internal constructor() {
+class PartiQLPlannerBuilder {
 
     private var plugins: List<Plugin> = emptyList()
     private var passes: List<PartiQLPlannerPass> = emptyList()
