@@ -81,6 +81,85 @@ class EqualityTests {
             TestCase(
                 factory.statementQuery(factory.exprEmpty()),
                 factory.statementQuery(factory.exprEmpty())
+            ),
+            // Tests deep equality of LISTS
+            TestCase(
+                factory.exprNested(
+                    itemsList = listOf(
+                        listOf(
+                            factory.exprEmpty(),
+                            factory.exprIon(ionInt(1))
+                        ),
+                        listOf(
+                            factory.exprIon(ionInt(3))
+                        )
+                    ),
+                    itemsSet = emptySet(),
+                    itemsMap = emptyMap()
+                ),
+                factory.exprNested(
+                    itemsList = listOf(
+                        listOf(
+                            factory.exprEmpty(),
+                            factory.exprIon(ionInt(1))
+                        ),
+                        listOf(
+                            factory.exprIon(ionInt(3))
+                        )
+                    ),
+                    itemsSet = emptySet(),
+                    itemsMap = emptyMap()
+                ),
+            ),
+            // Tests deep equality of SETS
+            TestCase(
+                first = factory.exprNested(
+                    itemsList = emptyList(),
+                    itemsSet = setOf(
+                        setOf(),
+                        setOf(factory.exprEmpty()),
+                        setOf(factory.exprIon(ionInt(1)), factory.exprIon(ionInt(2)))
+                    ),
+                    itemsMap = emptyMap()
+                ),
+                second = factory.exprNested(
+                    itemsList = emptyList(),
+                    itemsSet = setOf(
+                        setOf(),
+                        setOf(factory.exprEmpty()),
+                        setOf(factory.exprIon(ionInt(1)), factory.exprIon(ionInt(2)))
+                    ),
+                    itemsMap = emptyMap()
+                ),
+            ),
+            // Tests deep equality of MAPS
+            TestCase(
+                first = factory.exprNested(
+                    itemsList = emptyList(),
+                    itemsSet = emptySet(),
+                    itemsMap = mapOf(
+                        "hello" to mapOf(
+                            "world" to factory.exprEmpty(),
+                            "!" to factory.exprIon(ionInt(1))
+                        ),
+                        "goodbye" to mapOf(
+                            "friend" to factory.exprIon(ionInt(2))
+                        )
+                    )
+                ),
+                second = factory.exprNested(
+                    itemsList = emptyList(),
+                    itemsSet = emptySet(),
+                    itemsMap = mapOf(
+                        "hello" to mapOf(
+                            "world" to factory.exprEmpty(),
+                            "!" to factory.exprIon(ionInt(1))
+                        ),
+                        "goodbye" to mapOf(
+                            "friend" to factory.exprIon(ionInt(2))
+                        )
+                    )
+                ),
             )
         )
 
@@ -116,6 +195,85 @@ class EqualityTests {
                         factory.identifierSymbol("foliage", Identifier.CaseSensitivity.INSENSITIVE),
                     )
                 )
+            ),
+            // Tests deep equality of LISTS
+            TestCase(
+                factory.exprNested(
+                    itemsList = listOf(
+                        listOf(
+                            factory.exprEmpty(),
+                            factory.exprIon(ionInt(1))
+                        ),
+                        listOf(
+                            factory.exprIon(ionInt(3))
+                        )
+                    ),
+                    itemsSet = emptySet(),
+                    itemsMap = emptyMap()
+                ),
+                factory.exprNested(
+                    itemsList = listOf(
+                        listOf(
+                            factory.exprEmpty(),
+                            factory.exprIon(ionInt(2))
+                        ),
+                        listOf(
+                            factory.exprIon(ionInt(3))
+                        )
+                    ),
+                    itemsSet = emptySet(),
+                    itemsMap = emptyMap()
+                ),
+            ),
+            // Tests deep equality of SETS
+            TestCase(
+                first = factory.exprNested(
+                    itemsList = emptyList(),
+                    itemsSet = setOf(
+                        setOf(),
+                        setOf(factory.exprEmpty()),
+                        setOf(factory.exprIon(ionInt(1)), factory.exprIon(ionInt(2)))
+                    ),
+                    itemsMap = emptyMap()
+                ),
+                second = factory.exprNested(
+                    itemsList = emptyList(),
+                    itemsSet = setOf(
+                        setOf(),
+                        setOf(factory.exprEmpty()),
+                        setOf(factory.exprIon(ionInt(1)), factory.exprIon(ionInt(3)))
+                    ),
+                    itemsMap = emptyMap()
+                ),
+            ),
+            // Tests deep equality of MAPS
+            TestCase(
+                first = factory.exprNested(
+                    itemsList = emptyList(),
+                    itemsSet = emptySet(),
+                    itemsMap = mapOf(
+                        "hello" to mapOf(
+                            "world" to factory.exprEmpty(),
+                            "!" to factory.exprIon(ionInt(1))
+                        ),
+                        "goodbye" to mapOf(
+                            "friend" to factory.exprIon(ionInt(2))
+                        )
+                    )
+                ),
+                second = factory.exprNested(
+                    itemsList = emptyList(),
+                    itemsSet = emptySet(),
+                    itemsMap = mapOf(
+                        "hello" to mapOf(
+                            "world" to factory.exprEmpty(),
+                            "!" to factory.exprIon(ionInt(1))
+                        ),
+                        "goodbye" to mapOf(
+                            "friend" to factory.exprIon(ionInt(3))
+                        )
+                    )
+                ),
             )
         )
 

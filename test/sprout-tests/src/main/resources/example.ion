@@ -24,11 +24,16 @@ expr::[
     identifier: identifier,
     scope: [
       DEFAULT,
-      //  x.y.z
       LOCAL,
-      // @x.y.z
     ],
   },
+
+  nested::{
+    itemsList: list::[list::[expr]],
+    itemsSet: set::[set::[expr]],
+    itemsMap: map::[string, map::[string, expr]]
+  },
+
   empty::{}
 ]
 // Identifiers and Qualified Identifiers
