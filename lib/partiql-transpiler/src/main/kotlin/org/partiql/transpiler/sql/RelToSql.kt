@@ -105,7 +105,7 @@ open class RelToSql(
         val sfw = visitRel(node.input, null)
         val rexToSql = RexToSql(transform, node.input.type.schema)
         val type = ctx!!
-        assert(type.schema.size == node.projections.size) { "Malformed plan, output type does not match projections" }
+        assert(type.schema.size == node.projections.size) { "Malformed plan, relation output type does not match projections" }
         sfw.select = Ast.create {
             selectProject(
                 items = node.projections.mapIndexed { i, rex ->

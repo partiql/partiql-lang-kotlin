@@ -1,6 +1,7 @@
 package org.partiql.transpiler.sql
 
 import org.partiql.ast.Ast
+import org.partiql.ast.Expr
 import org.partiql.ast.builder.AstFactory
 import org.partiql.plan.Global
 import org.partiql.plan.Identifier
@@ -16,6 +17,7 @@ import org.partiql.plan.Statement as PlanStatement
  */
 public open class SqlTransform(
     private val globals: List<Global>,
+    private val calls: SqlCalls,
     private val onProblem: ProblemCallback,
 ) {
 
@@ -32,6 +34,8 @@ public open class SqlTransform(
         val g = globals.getOrNull(ref) ?: return null
         return Ast.translate(g.path)
     }
+
+    public fun getFunction(name: String, args: SqlArgs): Expr = calls.retarget(name, args)
 
     public fun handleProblem(problem: TranspilerProblem) = onProblem(problem)
 

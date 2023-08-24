@@ -24,6 +24,11 @@ public abstract class SqlTarget : PartiQLTranspilerTarget<String> {
     open val layout: SqlLayout = SqlLayout.DEFAULT
 
     /**
+     * Default SQL call transformation logic.
+     */
+    open val calls: SqlCalls = SqlCalls.DEFAULT
+
+    /**
      * Entry-point for manipulations of the [PartiQLPlan] tree.
      */
     abstract fun rewrite(plan: PartiQLPlan, onProblem: ProblemCallback): PartiQLPlan
@@ -42,7 +47,7 @@ public abstract class SqlTarget : PartiQLTranspilerTarget<String> {
      * Default Plan to AST translation. This method is only for potential edge cases
      */
     open fun unplan(plan: PartiQLPlan, onProblem: ProblemCallback): Statement {
-        val transform = SqlTransform(plan.globals, onProblem)
+        val transform = SqlTransform(plan.globals, calls, onProblem)
         val statement = transform.apply(plan.statement)
         return statement
     }

@@ -3,6 +3,7 @@ package org.partiql.transpiler.sql
 import org.partiql.ast.Ast
 import org.partiql.ast.Expr
 import org.partiql.ast.Identifier
+import org.partiql.plan.Fn
 import org.partiql.plan.PlanNode
 import org.partiql.plan.Rel
 import org.partiql.plan.Rex
@@ -100,6 +101,40 @@ public open class RexToSql(
         return Ast.exprPathStepIndex(k)
     }
 
+    override fun visitRexOpStruct(node: Rex.Op.Struct, ctx: StaticType): Expr {
+        val fields = node.fields.map {
+            Ast.exprStructField(
+                name = visitRex(it.k, StaticType.ANY),
+                value = visitRex(it.v, StaticType.ANY),
+            )
+        }
+        return Ast.exprStruct(fields)
+    }
+
+    override fun visitRexOpCall(node: Rex.Op.Call, ctx: StaticType): Expr {
+        val name = when (val f = node.fn) {
+            is Fn.Resolved -> f.signature.name
+            is Fn.Unresolved -> {
+                val id = Ast.translate(f.identifier)
+                assert(id is Identifier.Symbol) { "Functions with qualified identifers are currently not supported" }
+                transform.handleProblem(
+                    TranspilerProblem(
+                        level = TranspilerProblem.Level.ERROR,
+                        message = "Could not resolve function $"
+                    )
+                )
+                (id as Identifier.Symbol).symbol
+            }
+        }
+        val args = node.args.map {
+            when (it) {
+                is Rex.Op.Call.Arg.Type -> throw UnsupportedOperationException("type parameters not supported in translation")
+                is Rex.Op.Call.Arg.Value -> SqlArg.V(visitRex(it.rex, it.rex.type), it.rex.type)
+            }
+        }
+        return transform.getFunction(name, args)
+    }
+
     override fun visitRexOpSelect(node: Rex.Op.Select, ctx: StaticType): Expr {
         // val typeEnv = node.rel.type.schema
         val relToSql = RelToSql(transform)
@@ -114,16 +149,6 @@ public open class RexToSql(
             // TODO rewrite the constructor replacing variable references with the projected expressions
             throw UnsupportedOperationException("SELECT VALUE is not supported")
         }
-    }
-
-    override fun visitRexOpStruct(node: Rex.Op.Struct, ctx: StaticType): Expr {
-        val fields = node.fields.map {
-            Ast.exprStructField(
-                name = visitRex(it.k, StaticType.ANY),
-                value = visitRex(it.v, StaticType.ANY),
-            )
-        }
-        return Ast.exprStruct(fields)
     }
 
     private fun id(symbol: String): Identifier.Symbol = Ast.identifierSymbol(
