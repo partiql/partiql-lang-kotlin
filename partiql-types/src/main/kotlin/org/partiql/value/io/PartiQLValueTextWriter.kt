@@ -74,7 +74,7 @@ import java.io.PrintStream
  * @property indent     Indent prefix, default is 2-spaces
  */
 @PartiQLValueExperimental
-internal class PartiQLValueTextWriter(
+public class PartiQLValueTextWriter(
     private val out: PrintStream,
     private val formatted: Boolean = true,
     private val indent: String = "  ",
