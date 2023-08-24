@@ -47,6 +47,7 @@ Thank you to all who have contributed!
   disjunction `|`, conjunction `&`, negation `!`, and grouping.
 - Adds default `equals` and `hashCode` methods for each generated abstract class of Sprout. This affects the generated
 classes in `:partiql-ast` and `:partiql-plan`.
+- Adds configurable AST to SQL pretty printer. Usage in Java `AstKt.sql(ast)` or in Kotlin `ast.sql()`.
 
 ### Changed
 - **Breaking**: all product types defined by the internal Sprout tool no longer generate interfaces. They are now abstract
