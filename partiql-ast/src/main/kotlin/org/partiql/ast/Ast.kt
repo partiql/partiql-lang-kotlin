@@ -1,5 +1,6 @@
 package org.partiql.ast
 
+import org.partiql.ast.builder.AstFactory
 import org.partiql.ast.builder.AstFactoryImpl
 import org.partiql.ast.sql.SqlBlock
 import org.partiql.ast.sql.SqlDialect
@@ -9,7 +10,10 @@ import org.partiql.ast.sql.SqlWriter
 /**
  * Singleton instance of the default factory; also accessible via `AstFactory.DEFAULT`.
  */
-object Ast : AstBaseFactory()
+object Ast : AstBaseFactory() {
+
+    public inline fun <T : AstNode> create(block: AstFactory.() -> T) = this.block()
+}
 
 /**
  * AstBaseFactory can be used to create a factory which extends from the factory provided by AstFactory.DEFAULT.

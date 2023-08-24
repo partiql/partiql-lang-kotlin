@@ -134,7 +134,7 @@ internal class TypeLattice private constructor(
         private fun implicit(): Relationship = Relationship(CastType.IMPLICIT)
 
         private fun lossless(): Relationship = Relationship(CastType.EXPLICIT_LOSSLESS)
-        
+
         private fun lossy(): Relationship = Relationship(CastType.EXPLICIT_LOSSY)
 
         private operator fun <T> Array<T>.set(t: PartiQLValueType, value: T): Unit = this.set(t.ordinal, value)

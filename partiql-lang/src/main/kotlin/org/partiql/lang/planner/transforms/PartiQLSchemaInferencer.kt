@@ -28,9 +28,9 @@ import org.partiql.lang.planner.transforms.PartiQLSchemaInferencer.infer
 import org.partiql.lang.util.propertyValueMapOf
 import org.partiql.parser.PartiQLParserBuilder
 import org.partiql.plan.PartiQLPlan
-import org.partiql.plan.Plan
 import org.partiql.plan.Statement
 import org.partiql.planner.PartiQLPlanner
+import org.partiql.planner.PartiQLPlannerBuilder
 import org.partiql.spi.Plugin
 import org.partiql.types.StaticType
 
@@ -135,7 +135,7 @@ public object PartiQLSchemaInferencer {
 
     internal fun inferInternal(query: String, ctx: Context): Pair<PartiQLPlan, StaticType> {
         val parser = PartiQLParserBuilder.standard().build()
-        val planner = PartiQLPlanner.builder()
+        val planner = PartiQLPlannerBuilder()
             .plugins(ctx.plugins)
             .build()
         val ast = parser.parse(query).root

@@ -4,7 +4,7 @@ package org.partiql.ast.sql
  * Write this [SqlBlock] tree as SQL text with the given [SqlLayout].
  *
  * @param layout    SQL formatting ruleset
- * @return          SQL text
+ * @return SQL text
  */
 public fun SqlBlock.sql(layout: SqlLayout = SqlLayout.DEFAULT): String = SqlWriter.format(this, layout)
 

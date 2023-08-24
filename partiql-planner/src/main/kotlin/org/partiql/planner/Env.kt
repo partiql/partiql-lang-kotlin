@@ -33,6 +33,9 @@ internal typealias Handle<T> = Pair<String, T>
 /**
  * TypeEnv represents the environment in which we type expressions and resolve variables while planning.
  *
+ * TODO remove strategy
+ * TODO build scope stack of TypeEnvs for correlated subqueries.
+ *
  * @property schema
  * @property strategy
  */
