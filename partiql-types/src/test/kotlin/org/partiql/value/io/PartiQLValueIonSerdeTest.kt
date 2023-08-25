@@ -147,7 +147,7 @@ class PartiQLValueIonSerdeTest {
             ),
             // struct.null
             roundTrip(
-                structValue<PartiQLValue>(null as Sequence<Pair<String, PartiQLValue>>?),
+                structValue<PartiQLValue>(null),
                 ION.newNullStruct()
             ),
             // $bag::list.null

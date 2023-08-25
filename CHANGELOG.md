@@ -47,6 +47,7 @@ Thank you to all who have contributed!
   disjunction `|`, conjunction `&`, negation `!`, and grouping.
 - Adds default `equals` and `hashCode` methods for each generated abstract class of Sprout. This affects the generated
 classes in `:partiql-ast` and `:partiql-plan`.
+- Adds README to `partiql-types` package.
 
 ### Changed
 - **Breaking**: all product types defined by the internal Sprout tool no longer generate interfaces. They are now abstract
@@ -75,6 +76,8 @@ classes in `:partiql-ast` and `:partiql-plan`.
   - `org.partiql.lang.errors.ProblemSeverity` -> `org.partiql.errors.ProblemSeverity`
   - `org.partiql.lang.errors.ProblemHandler` -> `org.partiql.errors.ProblemHandler`
 - **Breaking** the `sourceLocation` field of `org.partiql.errors.Problem` was changed from `org.partiql.lang.ast.SoureceLocationMeta` to `org.partiql.errors.ProblemLocation`.
+- Removed `Nullable<Value` implementations of PartiQLValue and made the standard implementations nullable.
+- Using PartiQLValueType requires optin; this was a miss from an earlier commit.
 
 ### Deprecated
 - **Breaking**: Deprecates the `Arguments`, `RequiredArgs`, `RequiredWithOptional`, and `RequiredWithVariadic` classes, 

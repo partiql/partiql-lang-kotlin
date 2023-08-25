@@ -10,7 +10,8 @@ import org.partiql.value.PartiQLValueType
  * the return type, a list of parameters, a flag indicating whether the function is deterministic
  * (i.e., always produces the same output given the same input), and an optional description.
  */
-public class FunctionSignature @OptIn(PartiQLValueExperimental::class) constructor(
+@OptIn(PartiQLValueExperimental::class)
+public class FunctionSignature(
     public val name: String,
     public val returns: PartiQLValueType,
     public val parameters: List<FunctionParameter> = emptyList(),

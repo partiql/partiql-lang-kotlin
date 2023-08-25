@@ -36,6 +36,7 @@ import org.partiql.value.StringValue
 import org.partiql.value.StructValue
 import org.partiql.value.SymbolValue
 import org.partiql.value.util.PartiQLValueBaseVisitor
+import java.io.OutputStream
 import java.io.PrintStream
 
 /**
@@ -264,4 +265,24 @@ internal class PartiQLValueTextWriter(
             append(terminals.second)
         }
     }
+}
+
+@OptIn(PartiQLValueExperimental::class)
+public class PartiQLValueWriterBuilder private constructor() {
+
+    private var formatted: Boolean = true
+
+    public companion object {
+        @JvmStatic
+        public fun standard(): PartiQLValueWriterBuilder = PartiQLValueWriterBuilder()
+    }
+
+    public fun build(outputStream: OutputStream): PartiQLValueWriter =
+        PartiQLValueTextWriter(
+            out = PrintStream(outputStream),
+            formatted = formatted,
+        )
+
+    public fun formatted(formatted: Boolean = true): PartiQLValueWriterBuilder =
+        this.apply { this.formatted = formatted }
 }

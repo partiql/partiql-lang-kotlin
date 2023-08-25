@@ -14,9 +14,11 @@
 
 package org.partiql.value
 
+import com.amazon.ionelement.api.IonElement
 import org.partiql.value.datetime.Date
 import org.partiql.value.datetime.Time
 import org.partiql.value.datetime.Timestamp
+import org.partiql.value.helpers.ToIon
 import org.partiql.value.util.PartiQLValueVisitor
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -380,10 +382,18 @@ public abstract class BagValue<T : PartiQLValue> : CollectionValue<T> {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
         other as BagValue<*>
-        if (other.isNull && this.isNull) return true
+        if (other.annotations != this.annotations) {
+            return false
+        }
+        // both null.bag
+        if (other.isNull && this.isNull) {
+            return true
+        }
+        // compare values
         val lhs = this.elements!!.toList()
         val rhs = other.elements!!.toList()
-        return lhs == rhs && this.annotations == other.annotations
+        // this is incorrect as it assumes ordered-ness, but we don't have a sort or hash yet
+        return lhs == rhs
     }
 
     override fun hashCode(): Int {
@@ -407,10 +417,17 @@ public abstract class ListValue<T : PartiQLValue> : CollectionValue<T> {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
         other as ListValue<*>
-        if (other.isNull && this.isNull) return true
+        if (other.annotations != this.annotations) {
+            return false
+        }
+        // both null.list
+        if (other.isNull && this.isNull) {
+            return true
+        }
+        // compare values
         val lhs = this.elements!!.toList()
         val rhs = other.elements!!.toList()
-        return lhs == rhs && this.annotations == other.annotations
+        return lhs == rhs
     }
 
     override fun hashCode(): Int {
@@ -432,12 +449,16 @@ public abstract class SexpValue<T : PartiQLValue> : CollectionValue<T> {
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-        other as SexpValue<*>
+        if (other !is SexpValue<*>) return false
+        if (other.annotations != this.annotations) return false
+
+        // both null.sexp
         if (other.isNull && this.isNull) return true
+
+        // compare values
         val lhs = this.elements!!.toList()
         val rhs = other.elements!!.toList()
-        return lhs == rhs && this.annotations == other.annotations
+        return lhs == rhs
     }
 
     override fun hashCode(): Int {
@@ -454,11 +475,11 @@ public abstract class StructValue<T : PartiQLValue> : PartiQLValue, Sequence<Pai
     public abstract val fields: Sequence<Pair<String, T>>?
 
     override val isNull: Boolean
-        get() = fields != null
+        get() = fields == null
 
     override fun iterator(): Iterator<Pair<String, T>> = fields!!.iterator()
 
-    public abstract fun get(key: String): T?
+    public abstract operator fun get(key: String): T?
 
     public abstract fun getAll(key: String): Iterable<T>
 
@@ -468,15 +489,37 @@ public abstract class StructValue<T : PartiQLValue> : PartiQLValue, Sequence<Pai
 
     abstract override fun withoutAnnotations(): StructValue<T>
 
+    /**
+     * See equality of IonElement StructElementImpl
+     *
+     * https://github.com/amazon-ion/ion-element-kotlin/blob/master/src/com/amazon/ionelement/impl/StructElementImpl.kt
+     *
+     * @param other
+     * @return
+     */
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-        other as StructValue<*>
+        if (other !is StructValue<*>) return false
+        if (other.annotations != this.annotations) return false
+
+        // both null.struct
         if (other.isNull && this.isNull) return true
-        val lhs = this.fields!!.toSet()
-        val rhs = other.fields!!.toSet()
-        // TODO this is wrong
-        return lhs == rhs
+
+        // compare contents
+        val lhs = this.fields!!.groupBy({ it.first }, { it.second })
+        val rhs = other.fields!!.groupBy({ it.first }, { it.second })
+
+        // check size
+        if (lhs.size != rhs.size) return false
+        if (lhs.keys != rhs.keys) return false
+
+        // check values
+        lhs.forEach { (key, values) ->
+            val lGroup: Map<PartiQLValue, Int> = values.groupingBy { it }.eachCount()
+            val rGroup: Map<PartiQLValue, Int> = rhs[key]!!.groupingBy { it }.eachCount()
+            if (lGroup != rGroup) return false
+        }
+        return true
     }
 
     override fun hashCode(): Int {
@@ -512,3 +555,6 @@ public abstract class MissingValue : PartiQLValue {
 
     abstract override fun withoutAnnotations(): MissingValue
 }
+
+@PartiQLValueExperimental
+public fun PartiQLValue.toIon(): IonElement = accept(ToIon, Unit)
