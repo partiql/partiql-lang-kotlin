@@ -35,34 +35,6 @@ import org.partiql.value.IntervalValue
 import org.partiql.value.ListValue
 import org.partiql.value.MissingValue
 import org.partiql.value.NullValue
-import org.partiql.value.NullableBagValue
-import org.partiql.value.NullableBinaryValue
-import org.partiql.value.NullableBlobValue
-import org.partiql.value.NullableBoolValue
-import org.partiql.value.NullableByteValue
-import org.partiql.value.NullableCharValue
-import org.partiql.value.NullableClobValue
-import org.partiql.value.NullableCollectionValue
-import org.partiql.value.NullableDateValue
-import org.partiql.value.NullableDecimalValue
-import org.partiql.value.NullableFloat32Value
-import org.partiql.value.NullableFloat64Value
-import org.partiql.value.NullableInt16Value
-import org.partiql.value.NullableInt32Value
-import org.partiql.value.NullableInt64Value
-import org.partiql.value.NullableInt8Value
-import org.partiql.value.NullableIntValue
-import org.partiql.value.NullableIntervalValue
-import org.partiql.value.NullableListValue
-import org.partiql.value.NullableNumericValue
-import org.partiql.value.NullableScalarValue
-import org.partiql.value.NullableSexpValue
-import org.partiql.value.NullableStringValue
-import org.partiql.value.NullableStructValue
-import org.partiql.value.NullableSymbolValue
-import org.partiql.value.NullableTextValue
-import org.partiql.value.NullableTimeValue
-import org.partiql.value.NullableTimestampValue
 import org.partiql.value.NumericValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
@@ -139,60 +111,4 @@ public interface PartiQLValueVisitor<R, C> {
     public fun visitNull(v: NullValue, ctx: C): R
 
     public fun visitMissing(v: MissingValue, ctx: C): R
-
-    public fun visitNullableScalar(v: NullableScalarValue<*>, ctx: C): R
-
-    public fun visitNullableCollection(v: NullableCollectionValue<*>, ctx: C): R
-
-    public fun visitNullableBool(v: NullableBoolValue, ctx: C): R
-
-    public fun visitNullableNumeric(v: NullableNumericValue<*>, ctx: C): R
-
-    public fun visitNullableInt8(v: NullableInt8Value, ctx: C): R
-
-    public fun visitNullableInt16(v: NullableInt16Value, ctx: C): R
-
-    public fun visitNullableInt32(v: NullableInt32Value, ctx: C): R
-
-    public fun visitNullableInt64(v: NullableInt64Value, ctx: C): R
-
-    public fun visitNullableInt(v: NullableIntValue, ctx: C): R
-
-    public fun visitNullableDecimal(v: NullableDecimalValue, ctx: C): R
-
-    public fun visitNullableFloat32(v: NullableFloat32Value, ctx: C): R
-
-    public fun visitNullableFloat64(v: NullableFloat64Value, ctx: C): R
-
-    public fun visitNullableText(v: NullableTextValue<*>, ctx: C): R
-
-    public fun visitNullableChar(v: NullableCharValue, ctx: C): R
-
-    public fun visitNullableString(v: NullableStringValue, ctx: C): R
-
-    public fun visitNullableSymbol(v: NullableSymbolValue, ctx: C): R
-
-    public fun visitNullableClob(v: NullableClobValue, ctx: C): R
-
-    public fun visitNullableBinary(v: NullableBinaryValue, ctx: C): R
-
-    public fun visitNullableByte(v: NullableByteValue, ctx: C): R
-
-    public fun visitNullableBlob(v: NullableBlobValue, ctx: C): R
-
-    public fun visitNullableDate(v: NullableDateValue, ctx: C): R
-
-    public fun visitNullableTime(v: NullableTimeValue, ctx: C): R
-
-    public fun visitNullableTimestamp(v: NullableTimestampValue, ctx: C): R
-
-    public fun visitNullableInterval(v: NullableIntervalValue, ctx: C): R
-
-    public fun visitNullableBag(v: NullableBagValue<*>, ctx: C): R
-
-    public fun visitNullableList(v: NullableListValue<*>, ctx: C): R
-
-    public fun visitNullableSexp(v: NullableSexpValue<*>, ctx: C): R
-
-    public fun visitNullableStruct(v: NullableStructValue<*>, ctx: C): R
 }

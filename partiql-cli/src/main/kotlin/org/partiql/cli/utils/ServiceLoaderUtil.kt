@@ -32,7 +32,7 @@ import org.partiql.lang.types.FunctionSignature
 import org.partiql.spi.Plugin
 import org.partiql.spi.function.PartiQLFunction
 import org.partiql.spi.function.PartiQLFunctionExperimental
-import org.partiql.types.PartiQLValueType
+import org.partiql.value.PartiQLValueType
 import org.partiql.types.StaticType
 import org.partiql.types.function.FunctionParameter
 import org.partiql.value.BagValue

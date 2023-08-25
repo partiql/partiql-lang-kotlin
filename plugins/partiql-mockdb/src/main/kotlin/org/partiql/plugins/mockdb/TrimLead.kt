@@ -4,7 +4,7 @@ package org.partiql.plugins.mockdb
 import org.partiql.spi.connector.ConnectorSession
 import org.partiql.spi.function.PartiQLFunction
 import org.partiql.spi.function.PartiQLFunctionExperimental
-import org.partiql.types.PartiQLValueType
+import org.partiql.value.PartiQLValueType
 import org.partiql.types.function.FunctionParameter
 import org.partiql.types.function.FunctionSignature
 import org.partiql.value.PartiQLValue

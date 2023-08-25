@@ -28,7 +28,6 @@ import org.partiql.value.BoolValue
 import org.partiql.value.ByteValue
 import org.partiql.value.CharValue
 import org.partiql.value.ClobValue
-import org.partiql.value.CollectionValue
 import org.partiql.value.DateValue
 import org.partiql.value.DecimalValue
 import org.partiql.value.Float32Value
@@ -42,63 +41,17 @@ import org.partiql.value.IntervalValue
 import org.partiql.value.ListValue
 import org.partiql.value.MissingValue
 import org.partiql.value.NullValue
-import org.partiql.value.NullableBagValue
-import org.partiql.value.NullableBinaryValue
-import org.partiql.value.NullableBlobValue
-import org.partiql.value.NullableBoolValue
-import org.partiql.value.NullableByteValue
-import org.partiql.value.NullableCharValue
-import org.partiql.value.NullableClobValue
-import org.partiql.value.NullableDateValue
-import org.partiql.value.NullableDecimalValue
-import org.partiql.value.NullableFloat32Value
-import org.partiql.value.NullableFloat64Value
-import org.partiql.value.NullableInt16Value
-import org.partiql.value.NullableInt32Value
-import org.partiql.value.NullableInt64Value
-import org.partiql.value.NullableInt8Value
-import org.partiql.value.NullableIntValue
-import org.partiql.value.NullableIntervalValue
-import org.partiql.value.NullableListValue
-import org.partiql.value.NullableScalarValue
-import org.partiql.value.NullableSexpValue
-import org.partiql.value.NullableStringValue
-import org.partiql.value.NullableStructValue
-import org.partiql.value.NullableSymbolValue
-import org.partiql.value.NullableTimeValue
-import org.partiql.value.NullableTimestampValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.ScalarValue
 import org.partiql.value.SexpValue
 import org.partiql.value.StringValue
 import org.partiql.value.StructValue
 import org.partiql.value.SymbolValue
 import org.partiql.value.TimeValue
 import org.partiql.value.TimestampValue
-import org.partiql.value.binaryValue
-import org.partiql.value.blobValue
-import org.partiql.value.boolValue
-import org.partiql.value.byteValue
-import org.partiql.value.charValue
-import org.partiql.value.clobValue
-import org.partiql.value.dateValue
 import org.partiql.value.datetime.TimeZone
 import org.partiql.value.datetime.TimestampWithTimeZone
 import org.partiql.value.datetime.TimestampWithoutTimeZone
-import org.partiql.value.decimalValue
-import org.partiql.value.float32Value
-import org.partiql.value.float64Value
-import org.partiql.value.int16Value
-import org.partiql.value.int32Value
-import org.partiql.value.int64Value
-import org.partiql.value.int8Value
-import org.partiql.value.intValue
-import org.partiql.value.io.PartiQLValueIonWriter.ToIon.toIon
-import org.partiql.value.stringValue
-import org.partiql.value.symbolValue
-import org.partiql.value.timeValue
-import org.partiql.value.timestampValue
 import org.partiql.value.util.PartiQLValueBaseVisitor
 import java.io.OutputStream
 
@@ -112,6 +65,7 @@ internal class PartiQLValueIonWriter(
         const val BAG_ANNOTATION = "\$bag"
         const val DATE_ANNOTATION = "\$date"
         const val TIME_ANNOTATION = "\$time"
+
         // PartiQL's timestamp without time zone does not fit in ion generic timestamp
         const val TIMESTAMP_ANNOTATION = "\$timestamp"
         const val GRAPH_ANNOTATION = "\$graph"
@@ -133,19 +87,8 @@ internal class PartiQLValueIonWriter(
         override fun defaultReturn(v: PartiQLValue, ctx: Unit): Nothing =
             throw IllegalArgumentException("Cannot represent $v as Ion")
 
-        private inline fun <T> ScalarValue<T>.toIon(block: ScalarValue<T>.() -> IonElement): IonElement {
+        private inline fun <T : PartiQLValue> T.annotate(block: T.() -> IonElement): IonElement {
             val e = this.block()
-            return e.withAnnotations(this.annotations)
-        }
-
-        private inline fun <T> NullableScalarValue<T>.toIon(block: NullableScalarValue<T>.() -> IonElement): IonElement {
-            val e = this.block()
-            return e.withAnnotations(this.annotations)
-        }
-
-        private inline fun CollectionValue<*>.toIon(block: CollectionValue<*>.(elements: List<IonElement>) -> IonElement): IonElement {
-            val elements = this.elements.map { it.accept(ToIon, Unit) }
-            val e = this.block(elements)
             return e.withAnnotations(this.annotations)
         }
 
@@ -157,174 +100,172 @@ internal class PartiQLValueIonWriter(
             )
         )
 
-        override fun visitBool(v: BoolValue, ctx: Unit): IonElement = v.toIon { ionBool(value) }
-
-        override fun visitNullableBool(v: NullableBoolValue, ctx: Unit) = when (v.value) {
-            null -> v.toIon { ionNull(ElementType.BOOL) }
-            else -> visitBool(boolValue(v.value!!, v.annotations), ctx)
+        override fun visitBool(v: BoolValue, ctx: Unit): IonElement = v.annotate {
+            when (val value = v.value) {
+                null -> ionNull(ElementType.BOOL)
+                else -> ionBool(value)
+            }
         }
 
-        override fun visitInt8(v: Int8Value, ctx: Unit): IonElement = v.toIon { ionInt(value.toLong()) }
-
-        override fun visitNullableInt8(v: NullableInt8Value, ctx: Unit): IonElement = when (v.value) {
-            null -> v.toIon { ionNull(ElementType.INT) }
-            else -> visitInt8(int8Value(v.value!!, v.annotations), ctx)
+        override fun visitInt8(v: Int8Value, ctx: Unit): IonElement = v.annotate {
+            when (val value = v.value) {
+                null -> ionNull(ElementType.INT)
+                else -> ionInt(value.toLong())
+            }
         }
 
-        override fun visitInt16(v: Int16Value, ctx: Unit): IonElement = v.toIon { ionInt(value.toLong()) }
-
-        override fun visitNullableInt16(v: NullableInt16Value, ctx: Unit): IonElement = when (v.value) {
-            null -> v.toIon { ionNull(ElementType.INT) }
-            else -> visitInt16(int16Value(v.value!!, v.annotations), ctx)
+        override fun visitInt16(v: Int16Value, ctx: Unit): IonElement = v.annotate {
+            when (val value = v.value) {
+                null -> ionNull(ElementType.INT)
+                else -> ionInt(value.toLong())
+            }
         }
 
-        override fun visitInt32(v: Int32Value, ctx: Unit): IonElement = v.toIon { ionInt(value.toLong()) }
-
-        override fun visitNullableInt32(v: NullableInt32Value, ctx: Unit): IonElement = when (v.value) {
-            null -> v.toIon { ionNull(ElementType.INT) }
-            else -> visitInt32(int32Value(v.value!!, v.annotations), ctx)
+        override fun visitInt32(v: Int32Value, ctx: Unit): IonElement = v.annotate {
+            when (val value = v.value) {
+                null -> ionNull(ElementType.INT)
+                else -> ionInt(value.toLong())
+            }
         }
 
-        override fun visitInt64(v: Int64Value, ctx: Unit): IonElement = v.toIon { ionInt(value) }
-
-        override fun visitNullableInt64(v: NullableInt64Value, ctx: Unit): IonElement = when (v.value) {
-            null -> v.toIon { ionNull(ElementType.INT) }
-            else -> visitInt64(int64Value(v.value!!, v.annotations), ctx)
+        override fun visitInt64(v: Int64Value, ctx: Unit): IonElement = v.annotate {
+            when (val value = v.value) {
+                null -> ionNull(ElementType.INT)
+                else -> ionInt(value)
+            }
         }
 
-        override fun visitInt(v: IntValue, ctx: Unit): IonElement = v.toIon { ionInt(value.toLong()) }
-
-        override fun visitNullableInt(v: NullableIntValue, ctx: Unit): IonElement = when (v.value) {
-            null -> v.toIon { ionNull(ElementType.INT) }
-            else -> visitInt(intValue(v.value!!, v.annotations), ctx)
+        override fun visitInt(v: IntValue, ctx: Unit): IonElement = v.annotate {
+            when (val value = v.value) {
+                null -> ionNull(ElementType.INT)
+                else -> ionInt(value)
+            }
         }
 
-        override fun visitDecimal(v: DecimalValue, ctx: Unit): IonElement =
-            v.toIon { ionDecimal(Decimal.valueOf(value)) }
-
-        override fun visitNullableDecimal(v: NullableDecimalValue, ctx: Unit): IonElement = when (v.value) {
-            null -> v.toIon { ionNull(ElementType.DECIMAL) }
-            else -> visitDecimal(decimalValue(v.value!!, v.annotations), ctx)
+        override fun visitDecimal(v: DecimalValue, ctx: Unit): IonElement = v.annotate {
+            when (val value = v.value) {
+                null -> ionNull(ElementType.DECIMAL)
+                else -> ionDecimal(Decimal.valueOf(value))
+            }
         }
 
         // TODO : This is wrong. Ion float is 64 bit, when we cast the 32 bit float to double, we deliver false promise
-        override fun visitFloat32(v: Float32Value, ctx: Unit): IonElement =
-            v.toIon { ionFloat(value.toString().toDouble()) }
-
-        override fun visitNullableFloat32(v: NullableFloat32Value, ctx: Unit): IonElement = when (v.value) {
-            null -> v.toIon { ionNull(ElementType.FLOAT) }
-
-            else -> visitFloat32(float32Value(v.value!!, v.annotations), ctx)
+        override fun visitFloat32(v: Float32Value, ctx: Unit): IonElement = v.annotate {
+            when (val value = v.value) {
+                null -> ionNull(ElementType.FLOAT)
+                else -> ionFloat(value.toString().toDouble())
+            }
         }
 
-        override fun visitFloat64(v: Float64Value, ctx: Unit): IonElement = v.toIon { ionFloat(value) }
-
-        override fun visitNullableFloat64(v: NullableFloat64Value, ctx: Unit): IonElement = when (v.value) {
-            null -> v.toIon { ionNull(ElementType.FLOAT) }
-            else -> visitFloat64(float64Value(v.value!!, v.annotations), ctx)
-        }
-
-        // TODO: Revisit
-        override fun visitChar(v: CharValue, ctx: Unit): IonElement = v.toIon { ionString(value.toString()) }
-
-        override fun visitNullableChar(v: NullableCharValue, ctx: Unit) = when (v.value) {
-            null -> v.toIon { ionNull(ElementType.STRING) }
-            else -> visitChar(charValue(v.value!!, v.annotations), ctx)
-        }
-
-        override fun visitString(v: StringValue, ctx: Unit): IonElement = v.toIon { ionString(value) }
-
-        override fun visitNullableString(v: NullableStringValue, ctx: Unit) = when (v.value) {
-            null -> v.toIon { ionNull(ElementType.STRING) }
-            else -> visitString(stringValue(v.value!!, v.annotations), ctx)
-        }
-
-        override fun visitSymbol(v: SymbolValue, ctx: Unit): IonElement = v.toIon { ionSymbol(value) }
-
-        override fun visitNullableSymbol(v: NullableSymbolValue, ctx: Unit) = when (v.value) {
-            null -> v.toIon { ionNull(ElementType.SYMBOL) }
-            else -> visitSymbol(symbolValue(v.value!!, v.annotations), ctx)
-        }
-
-        override fun visitClob(v: ClobValue, ctx: Unit): IonElement = v.toIon { ionClob(value) }
-
-        override fun visitNullableClob(v: NullableClobValue, ctx: Unit) = when (v.value) {
-            null -> v.toIon { ionNull(ElementType.CLOB) }
-            else -> visitClob(clobValue(v.value!!, v.annotations), ctx)
+        override fun visitFloat64(v: Float64Value, ctx: Unit): IonElement = v.annotate {
+            when (val value = v.value) {
+                null -> ionNull(ElementType.FLOAT)
+                else -> ionFloat(value.toString().toDouble())
+            }
         }
 
         // TODO: Revisit
-        override fun visitBinary(v: BinaryValue, ctx: Unit): IonElement = v.toIon { ionBlob(value.toByteArray()) }
+        override fun visitChar(v: CharValue, ctx: Unit): IonElement = v.annotate {
+            when (val value = v.value) {
+                null -> ionNull(ElementType.STRING)
+                else -> ionString(value.toString())
+            }
+        }
 
-        override fun visitNullableBinary(v: NullableBinaryValue, ctx: Unit) = when (v.value) {
-            null -> v.toIon { ionNull(ElementType.BLOB) }
-            else -> visitBinary(binaryValue(v.value!!, v.annotations), ctx)
+        override fun visitString(v: StringValue, ctx: Unit): IonElement = v.annotate {
+            when (val value = v.value) {
+                null -> ionNull(ElementType.STRING)
+                else -> ionString(value)
+            }
+        }
+
+        override fun visitSymbol(v: SymbolValue, ctx: Unit): IonElement = v.annotate {
+            when (val value = v.value) {
+                null -> ionNull(ElementType.SYMBOL)
+                else -> ionSymbol(value)
+            }
+        }
+
+        override fun visitClob(v: ClobValue, ctx: Unit): IonElement = v.annotate {
+            when (val value = v.value) {
+                null -> ionNull(ElementType.CLOB)
+                else -> ionClob(value)
+            }
         }
 
         // TODO: Revisit
-        override fun visitByte(v: ByteValue, ctx: Unit): IonElement = v.toIon { ionBlob(ByteArray(1) { value }) }
-
-        override fun visitNullableByte(v: NullableByteValue, ctx: Unit) = when (v.value) {
-            null -> v.toIon { ionNull(ElementType.BLOB) }
-            else -> visitByte(byteValue(v.value!!, v.annotations), ctx)
+        override fun visitBinary(v: BinaryValue, ctx: Unit): IonElement = v.annotate {
+            when (val value = v.value) {
+                null -> ionNull(ElementType.BLOB)
+                else -> ionBlob(value.toByteArray())
+            }
         }
 
-        override fun visitBlob(v: BlobValue, ctx: Unit): IonElement = v.toIon { ionBlob(v.value) }
-
-        override fun visitNullableBlob(v: NullableBlobValue, ctx: Unit) = when (v.value) {
-            null -> v.toIon { ionNull(ElementType.BLOB) }
-            else -> visitBlob(blobValue(v.value!!, v.annotations), ctx)
+        // TODO: Revisit
+        override fun visitByte(v: ByteValue, ctx: Unit): IonElement = v.annotate {
+            when (val value = v.value) {
+                null -> ionNull(ElementType.BLOB)
+                else -> ionBlob(ByteArray(1) { value })
+            }
         }
 
-        override fun visitDate(v: DateValue, ctx: Unit): IonElement = v.toIon {
-            val date = v.value
-            ionStructOf(
-                field("year", ionInt(date.year.toLong())),
-                field("month", ionInt(date.month.toLong())),
-                field("day", ionInt(date.day.toLong()))
-            )
+        override fun visitBlob(v: BlobValue, ctx: Unit): IonElement = v.annotate {
+            when (val value = v.value) {
+                null -> ionNull(ElementType.BLOB)
+                else -> ionBlob(value)
+            }
+        }
+
+        override fun visitDate(v: DateValue, ctx: Unit): IonElement = v.annotate {
+            when (val value = v.value) {
+                null -> ionNull(ElementType.STRUCT)
+                else -> {
+                    ionStructOf(
+                        field("year", ionInt(value.year.toLong())),
+                        field("month", ionInt(value.month.toLong())),
+                        field("day", ionInt(value.day.toLong()))
+                    )
+                }
+            }
         }.withAnnotations(DATE_ANNOTATION)
 
-        override fun visitNullableDate(v: NullableDateValue, ctx: Unit) = when (v.value) {
-            null -> v.toIon { ionNull(ElementType.STRUCT) }.withAnnotations(DATE_ANNOTATION)
-            else -> visitDate(dateValue(v.value!!, v.annotations), ctx)
-        }
-
-        override fun visitTime(v: TimeValue, ctx: Unit): IonElement =
-            v.toIon {
-                when (val timeZone = v.value.timeZone) {
-                    TimeZone.UnknownTimeZone ->
-                        ionStructOf(
-                            field("hour", ionInt(v.value.hour.toLong())),
-                            field("minute", ionInt(v.value.minute.toLong())),
-                            field("second", ionDecimal(Decimal.valueOf(v.value.decimalSecond))),
-                            field("offset", ionNull(ElementType.INT)),
-                        )
-                    is TimeZone.UtcOffset ->
-                        ionStructOf(
-                            field("hour", ionInt(v.value.hour.toLong())),
-                            field("minute", ionInt(v.value.minute.toLong())),
-                            field("second", ionDecimal(Decimal.valueOf(v.value.decimalSecond))),
-                            field("offset", ionInt(timeZone.totalOffsetMinutes.toLong()))
-                        )
-                    null ->
-                        ionStructOf(
-                            field("hour", ionInt(v.value.hour.toLong())),
-                            field("minute", ionInt(v.value.minute.toLong())),
-                            field("second", ionDecimal(Decimal.valueOf(v.value.decimalSecond)))
-                        )
+        override fun visitTime(v: TimeValue, ctx: Unit): IonElement = v.annotate {
+            when (val value = v.value) {
+                null -> ionNull(ElementType.STRUCT)
+                else -> {
+                    when (val timeZone = value.timeZone) {
+                        TimeZone.UnknownTimeZone ->
+                            ionStructOf(
+                                field("hour", ionInt(value.hour.toLong())),
+                                field("minute", ionInt(value.minute.toLong())),
+                                field("second", ionDecimal(Decimal.valueOf(value.decimalSecond))),
+                                field("offset", ionNull(ElementType.INT)),
+                            )
+                        is TimeZone.UtcOffset ->
+                            ionStructOf(
+                                field("hour", ionInt(value.hour.toLong())),
+                                field("minute", ionInt(value.minute.toLong())),
+                                field("second", ionDecimal(Decimal.valueOf(value.decimalSecond))),
+                                field("offset", ionInt(timeZone.totalOffsetMinutes.toLong()))
+                            )
+                        null ->
+                            ionStructOf(
+                                field("hour", ionInt(value.hour.toLong())),
+                                field("minute", ionInt(value.minute.toLong())),
+                                field("second", ionDecimal(Decimal.valueOf(value.decimalSecond)))
+                            )
+                    }
                 }
-            }.withAnnotations(TIME_ANNOTATION)
+            }
+        }.withAnnotations(TIME_ANNOTATION)
 
-        override fun visitNullableTime(v: NullableTimeValue, ctx: Unit) = when (v.value) {
-            null -> v.toIon { ionNull(ElementType.STRUCT) }.withAnnotations(TIME_ANNOTATION)
-            else -> visitTime(timeValue(v.value!!, v.annotations), ctx)
-        }
-
-        override fun visitTimestamp(v: TimestampValue, ctx: Unit): IonElement =
-            when (val timestamp = v.value) {
-                is TimestampWithTimeZone -> v.toIon { ionTimestamp(timestamp.ionTimestampValue) }
-                is TimestampWithoutTimeZone -> v.toIon {
+        override fun visitTimestamp(v: TimestampValue, ctx: Unit): IonElement {
+            return when (val timestamp = v.value) {
+                // TODO: we actually don't know if this is a timestamp with timezone or timestamp without timezone
+                //  Should we care?
+                null -> v.annotate { ionNull(ElementType.TIMESTAMP) }
+                is TimestampWithTimeZone -> v.annotate { ionTimestamp(timestamp.ionTimestampValue) }
+                is TimestampWithoutTimeZone -> v.annotate {
                     ionStructOf(
                         field("year", ionInt(timestamp.year.toLong())),
                         field("month", ionInt(timestamp.month.toLong())),
@@ -335,53 +276,43 @@ internal class PartiQLValueIonWriter(
                     )
                 }.withAnnotations(TIMESTAMP_ANNOTATION)
             }
-
-        override fun visitNullableTimestamp(v: NullableTimestampValue, ctx: Unit) = when (v.value) {
-            // TODO: we actually don't know if this is a timestamp with timezone or timestamp without timezone
-            //  Should we care?
-            null -> v.toIon { ionNull(ElementType.TIMESTAMP) }
-            else -> visitTimestamp(timestampValue(v.value!!, v.annotations), ctx)
         }
 
         override fun visitInterval(v: IntervalValue, ctx: Unit): IonElement = TODO("Not Yet supported")
 
-        override fun visitNullableInterval(v: NullableIntervalValue, ctx: Unit) = TODO("Not yet supported")
-
-        override fun visitBag(v: BagValue<*>, ctx: Unit): IonElement =
-            v.toIon { elements -> ionListOf(elements) }.withAnnotations(BAG_ANNOTATION)
-
-        override fun visitNullableBag(v: NullableBagValue<*>, ctx: Unit) = when (v.isNull()) {
-            true -> ionNull(ElementType.LIST).withAnnotations(v.annotations).withAnnotations(BAG_ANNOTATION)
-            false -> visitBag(v.promote(), ctx)
-        }
-
-        override fun visitList(v: ListValue<*>, ctx: Unit): IonElement = v.toIon { elements -> ionListOf(elements) }
-
-        override fun visitNullableList(v: NullableListValue<*>, ctx: Unit) = when (v.isNull()) {
-            true -> ionNull(ElementType.LIST).withAnnotations(v.annotations)
-            false -> visitList(v.promote(), ctx)
-        }
-
-        override fun visitSexp(v: SexpValue<*>, ctx: Unit): IonElement = v.toIon { elements -> ionSexpOf(elements) }
-
-        override fun visitNullableSexp(v: NullableSexpValue<*>, ctx: Unit) =
-            when (v.isNull()) {
-                true -> ionNull(ElementType.SEXP).withAnnotations(v.annotations)
-                false -> visitSexp(v.promote(), ctx)
+        override fun visitBag(v: BagValue<*>, ctx: Unit): IonElement = v.annotate {
+            when (val elements = v.elements) {
+                null -> ionNull(ElementType.LIST)
+                else -> ionListOf(elements.map { it.accept(ToIon, Unit) }.toList())
             }
+        }.withAnnotations(BAG_ANNOTATION)
 
-        override fun visitStruct(v: StructValue<*>, ctx: Unit): IonElement {
-            val fields = v.fields.map {
-                val k = it.first
-                val v = it.second.accept(this, ctx)
-                field(k, v)
+        override fun visitList(v: ListValue<*>, ctx: Unit): IonElement = v.annotate {
+            when (val elements = v.elements) {
+                null -> ionNull(ElementType.LIST)
+                else -> ionListOf(elements.map { it.accept(ToIon, Unit) }.toList())
             }
-            return ionStructOf(fields, v.annotations)
         }
 
-        override fun visitNullableStruct(v: NullableStructValue<*>, ctx: Unit): IonElement = when (v.isNull()) {
-            true -> ionNull(ElementType.STRUCT, v.annotations)
-            false -> visitStruct(v.promote(), ctx)
+        override fun visitSexp(v: SexpValue<*>, ctx: Unit): IonElement = v.annotate {
+            when (val elements = v.elements) {
+                null -> ionNull(ElementType.SEXP)
+                else -> ionSexpOf(elements.map { it.accept(ToIon, Unit) }.toList())
+            }
+        }
+
+        override fun visitStruct(v: StructValue<*>, ctx: Unit): IonElement = v.annotate {
+            when (val fields = v.fields) {
+                null -> ionNull(ElementType.STRUCT)
+                else -> {
+                    val ionFields = fields.map {
+                        val fk = it.first
+                        val fv = it.second.accept(ToIon, ctx)
+                        field(fk, fv)
+                    }.toList()
+                    ionStructOf(ionFields)
+                }
+            }
         }
     }
 }

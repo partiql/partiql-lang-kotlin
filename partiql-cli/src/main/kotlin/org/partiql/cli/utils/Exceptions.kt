@@ -1,6 +1,6 @@
 package org.partiql.cli.utils
 
-import org.partiql.types.PartiQLValueType
+import org.partiql.value.PartiQLValueType
 
 /** Throw an error when the there's a type mismatch when converting PartiQLValue to ExprValue */
 internal class PartiQLtoExprValueTypeMismatchException(expectedType: String, actualType: PartiQLValueType) :
