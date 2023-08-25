@@ -26,6 +26,7 @@ dependencies {
     implementation(project(":partiql-planner"))
     implementation(project(":partiql-types"))
     implementation(project(":plugins:partiql-mockdb"))
+    implementation(project(":partiql-spi"))
     implementation(Deps.csv)
     implementation(Deps.awsSdkBom)
     implementation(Deps.awsSdkDynamodb)
@@ -62,6 +63,24 @@ tasks.named<JavaExec>("run") {
 
 tasks.register<GradleBuild>("install") {
     tasks = listOf("assembleDist", "distZip", "installDist")
+}
+
+val testingPluginDirectory = "$buildDir/tmp/plugins"
+val mockDBPluginDirectory = "$testingPluginDirectory/mockdb"
+
+tasks.register<Copy>("generateMockDBJAR") {
+    dependsOn(":plugins:partiql-mockdb:assemble")
+    from("${rootProject.projectDir}/plugins/partiql-mockdb/build/libs")
+    into(mockDBPluginDirectory)
+    include("partiql-mockdb-*.jar")
+}
+
+tasks.test.configure {
+    dependsOn(tasks.findByName("generateMockDBJAR"))
+}
+
+tasks.withType<Test>().configureEach {
+    systemProperty("testingPluginDirectory", testingPluginDirectory)
 }
 
 // Version 1.7+ removes the requirement for such compiler option.

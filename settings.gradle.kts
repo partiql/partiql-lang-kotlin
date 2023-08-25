@@ -28,5 +28,6 @@ include(
     "lib:sprout",
     "test:partiql-tests-runner",
     "test:partiql-randomized-tests",
+    "test:sprout-tests",
     "examples",
 )

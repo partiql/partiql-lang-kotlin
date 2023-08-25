@@ -1,6 +1,7 @@
 package org.partiql.types.function
 
-import org.partiql.types.PartiQLValueType
+import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.PartiQLValueType
 
 /**
  * Represents the signature of a PartiQL function.
@@ -9,6 +10,7 @@ import org.partiql.types.PartiQLValueType
  * the return type, a list of parameters, a flag indicating whether the function is deterministic
  * (i.e., always produces the same output given the same input), and an optional description.
  */
+@OptIn(PartiQLValueExperimental::class)
 public class FunctionSignature(
     public val name: String,
     public val returns: PartiQLValueType,
@@ -17,6 +19,19 @@ public class FunctionSignature(
     public val description: String? = null,
 ) {
 
+    /**
+     * String mangling of a function signature to generate a specific identifier.
+     *
+     * Format NAME__INPUTS__RETURNS
+     */
+    private val specific = buildString {
+        append(name.uppercase())
+        append("__")
+        append(parameters.joinToString("_") { it.type.name })
+        append("__")
+        append(returns.name)
+    }
+
     override fun toString(): String = buildString {
         val fn = name.uppercase()
         val indent = "  "
@@ -24,16 +39,12 @@ public class FunctionSignature(
         append("CREATE FUNCTION \"$fn\" (")
         for (p in parameters) {
             val ws = (extent - p.name.length) + 1
-            val type = when (p) {
-                is FunctionParameter.T -> "TYPE (${p.type})"
-                is FunctionParameter.V -> p.type.name
-            }
             appendLine()
-            append(indent).append(p.name.uppercase()).append(" ".repeat(ws)).append(type)
+            append(indent).append(p.name.uppercase()).append(" ".repeat(ws)).append(p.type.name)
         }
         appendLine(" )")
         append(indent).appendLine("RETURNS $returns")
-        append(indent).appendLine("SPECIFIC -")
+        append(indent).appendLine("SPECIFIC $specific")
         append(indent).appendLine("RETURN $fn ( ${parameters.joinToString { it.name.uppercase() }} ) ;")
     }
 

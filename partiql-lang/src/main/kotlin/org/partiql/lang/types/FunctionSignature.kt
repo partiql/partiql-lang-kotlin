@@ -13,53 +13,41 @@ import org.partiql.types.StaticType
  * either an optional parameter or a variadic parameter.
  * A function cannot contain both optional and variadic parameters.
  */
-class FunctionSignature private constructor (
+class FunctionSignature(
     val name: String,
     val requiredParameters: List<StaticType>,
-    val optionalParameter: StaticType? = null,
-    val variadicParameter: VarargFormalParameter? = null,
     val returnType: StaticType,
     val unknownArguments: UnknownArguments = UnknownArguments.PROPAGATE
 ) {
-
-    init {
-        check(!(optionalParameter != null && variadicParameter != null)) {
-            "Function '$name' contains both optional and variadic parameters."
-        }
-    }
+    @Deprecated("To continue support for evaluation of `optionalParameters`, please create another same-named function.", level = DeprecationLevel.ERROR)
     constructor(
         name: String,
         requiredParameters: List<StaticType>,
         optionalParameter: StaticType,
         returnType: StaticType,
         unknownArguments: UnknownArguments = UnknownArguments.PROPAGATE
-    ) : this(name, requiredParameters, optionalParameter, null, returnType, unknownArguments)
+    ) : this(name, requiredParameters, returnType, unknownArguments)
 
+    @Deprecated("To continue support for evaluation of `variadicParameter`, please use a `StaticType.LIST` to hold all previously variadic parameters.", level = DeprecationLevel.ERROR)
     constructor(
         name: String,
         requiredParameters: List<StaticType>,
         variadicParameter: VarargFormalParameter,
         returnType: StaticType,
         unknownArguments: UnknownArguments = UnknownArguments.PROPAGATE
-    ) : this(name, requiredParameters, null, variadicParameter, returnType, unknownArguments)
+    ) : this(name, requiredParameters, returnType, unknownArguments)
 
+    @Deprecated("To continue support for evaluation of `optionalParameters`, please create another same-named function. To continue support for evaluation of `variadicParameter`, please use a `StaticType.LIST` to hold all previously variadic parameters.", level = DeprecationLevel.ERROR)
     constructor(
         name: String,
         requiredParameters: List<StaticType>,
+        optionalParameter: StaticType,
+        variadicParameter: VarargFormalParameter,
         returnType: StaticType,
         unknownArguments: UnknownArguments = UnknownArguments.PROPAGATE
-    ) : this(name, requiredParameters, null, null, returnType, unknownArguments)
+    ) : this(name, requiredParameters, returnType, unknownArguments)
 
-    val arity: IntRange = let {
-        val r = requiredParameters.size..requiredParameters.size
-        val o = if (optionalParameter != null) 0..1 else 0..0
-        val v = variadicParameter?.arityRange ?: 0..0
-
-        (r.first + o.first + v.first)..when (v.last) {
-            Int.MAX_VALUE -> Int.MAX_VALUE
-            else -> (r.last + o.last + v.last)
-        }
-    }
+    val arity: IntRange = requiredParameters.size..requiredParameters.size
 }
 
 /**

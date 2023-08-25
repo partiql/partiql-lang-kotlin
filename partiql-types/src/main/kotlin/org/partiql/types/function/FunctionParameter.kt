@@ -1,18 +1,16 @@
 package org.partiql.types.function
 
-import org.partiql.types.PartiQLValueType
+import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.PartiQLValueType
 
-public sealed class FunctionParameter(
+/**
+ * Parameter of a FunctionSignature.
+ *
+ * @property name A human-readable name to help clarify its use.
+ * @property type The parameter's PartiQL type.
+ */
+@OptIn(PartiQLValueExperimental::class)
+public data class FunctionParameter(
     public val name: String,
     public val type: PartiQLValueType,
-) {
-
-    public class V(name: String, type: PartiQLValueType) : FunctionParameter(name, type) {
-        override fun toString(): String = "V<$type>"
-    }
-
-    public class T(name: String, type: PartiQLValueType) : FunctionParameter(name, type) {
-
-        override fun toString(): String = "T<$type>"
-    }
-}
+)

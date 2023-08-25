@@ -39,7 +39,7 @@ import org.partiql.lang.types.TypedOpParameter
 internal class PartiQLCompilerDefault(
     private val evaluatorOptions: EvaluatorOptions,
     private val customTypedOpParameters: Map<String, TypedOpParameter>,
-    private val functions: Map<String, ExprFunction>,
+    private val functions: List<ExprFunction>,
     private val procedures: Map<String, StoredProcedure>,
     private val operatorFactories: Map<RelationalOperatorFactoryKey, RelationalOperatorFactory>
 ) : PartiQLCompiler {
