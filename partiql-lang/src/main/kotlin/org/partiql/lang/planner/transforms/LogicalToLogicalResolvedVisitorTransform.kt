@@ -578,7 +578,7 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
         }.toString().lowercase()
         return PartiqlLogicalResolved.build {
             call(
-                funcName = DYNAMIC_LOOKUP_FUNCTION_NAME,
+                funcName = defnid(DYNAMIC_LOOKUP_FUNCTION_NAME),
                 args = listOf(
                     lit(name.toIonElement()),
                     lit(ionSymbol(caseSensitivityString)),

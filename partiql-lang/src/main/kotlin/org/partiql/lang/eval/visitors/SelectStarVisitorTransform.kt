@@ -20,6 +20,7 @@ import org.partiql.lang.ast.IsGroupAttributeReferenceMeta
 import org.partiql.lang.ast.UniqueNameMeta
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.metaContainerOf
+import org.partiql.lang.domains.string
 import org.partiql.lang.eval.errNoContext
 
 /** Desugars `SELECT *` by, for example,
@@ -73,13 +74,13 @@ class SelectStarVisitorTransform : VisitorTransformBase() {
                             ?: error("UniqueNameMeta not found--normally, this is added by GroupByItemAliasVisitorTransform")
 
                         val metas = it.metas + metaContainerOf(IsGroupAttributeReferenceMeta.instance)
-                        createProjectExpr(uniqueNameMeta.uniqueName, asName.text, metas)
+                        createProjectExpr(uniqueNameMeta.uniqueName, asName.string(), metas)
                     }
 
                     val groupNameItem = transformedExpr.group!!.groupAsAlias.let {
                         if (it != null) {
                             val metas = it.metas + metaContainerOf(IsGroupAttributeReferenceMeta.instance)
-                            listOf(createProjectExpr(it.text, metas = metas))
+                            listOf(createProjectExpr(it.string(), metas = metas))
                         } else emptyList()
                     }
 
@@ -99,7 +100,7 @@ class SelectStarVisitorTransform : VisitorTransformBase() {
 
     private fun createProjectExpr(variableName: String, asAlias: String = variableName, metas: MetaContainer = emptyMetaContainer()) =
         PartiqlAst.build {
-            projectExpr(id(variableName, caseSensitive(), unqualified(), metas), asAlias)
+            projectExpr(id(variableName, caseSensitive(), unqualified(), metas), defnid(asAlias))
         }
 
     private class FromSourceAliases(val asAlias: String, val atAlias: String?, val byAlias: String?)
@@ -111,10 +112,10 @@ class SelectStarVisitorTransform : VisitorTransformBase() {
             override fun visitFromSourceScan(node: PartiqlAst.FromSource.Scan) {
                 aliases.add(
                     FromSourceAliases(
-                        node.asAlias?.text
+                        node.asAlias?.string()
                             ?: error("FromSourceAliasVisitorTransform must be executed before SelectStarVisitorTransform"),
-                        node.atAlias?.text,
-                        node.byAlias?.text
+                        node.atAlias?.string(),
+                        node.byAlias?.string()
                     )
                 )
             }
@@ -122,10 +123,10 @@ class SelectStarVisitorTransform : VisitorTransformBase() {
             override fun visitFromSourceUnpivot(node: PartiqlAst.FromSource.Unpivot) {
                 aliases.add(
                     FromSourceAliases(
-                        node.asAlias?.text
+                        node.asAlias?.string()
                             ?: error("FromSourceAliasVisitorTransform must be executed before SelectStarVisitorTransform"),
-                        node.atAlias?.text,
-                        node.byAlias?.text
+                        node.atAlias?.string(),
+                        node.byAlias?.string()
                     )
                 )
             }

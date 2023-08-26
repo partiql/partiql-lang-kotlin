@@ -1,9 +1,11 @@
 package org.partiql.lang.ast.passes
 
 import com.amazon.ionelement.api.StringElement
+import org.partiql.lang.Ident
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.sourceLocation
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.domains.toIdent
 import org.partiql.lang.syntax.PartiQLParserBuilder
 
 /**
@@ -67,7 +69,7 @@ fun skipRedaction(node: PartiqlAst.Expr, safeFieldNames: Set<String>): Boolean {
 fun redact(
     statement: String,
     providedSafeFieldNames: Set<String> = emptySet(),
-    userDefinedFunctionRedactionConfig: Map<String, UserDefinedFunctionRedactionLambda> = emptyMap()
+    userDefinedFunctionRedactionConfig: Map<Ident, UserDefinedFunctionRedactionLambda> = emptyMap()
 ): String {
     return redact(statement, parser.parseAstStatement(statement), providedSafeFieldNames, userDefinedFunctionRedactionConfig)
 }
@@ -89,7 +91,7 @@ fun redact(
     statement: String,
     partiqlAst: PartiqlAst.Statement,
     providedSafeFieldNames: Set<String> = emptySet(),
-    userDefinedFunctionRedactionConfig: Map<String, UserDefinedFunctionRedactionLambda> = emptyMap()
+    userDefinedFunctionRedactionConfig: Map<Ident, UserDefinedFunctionRedactionLambda> = emptyMap()
 ): String {
 
     val statementRedactionVisitor = StatementRedactionVisitor(statement, providedSafeFieldNames, userDefinedFunctionRedactionConfig)
@@ -104,7 +106,7 @@ fun redact(
 private class StatementRedactionVisitor(
     private val statement: String,
     private val safeFieldNames: Set<String>,
-    private val userDefinedFunctionRedactionConfig: Map<String, UserDefinedFunctionRedactionLambda>
+    private val userDefinedFunctionRedactionConfig: Map<Ident, UserDefinedFunctionRedactionLambda>
 ) : PartiqlAst.Visitor() {
     private val sourceLocationMetaForRedaction = arrayListOf<SourceLocationMeta>()
 
@@ -270,7 +272,7 @@ private class StatementRedactionVisitor(
     }
 
     private fun redactCall(node: PartiqlAst.Expr.Call) {
-        val funcName = node.funcName.text
+        val funcName = node.funcName.toIdent()
         when (val redactionLambda = userDefinedFunctionRedactionConfig[funcName]) {
             null -> node.args.map { redactExpr(it) }
             else -> {

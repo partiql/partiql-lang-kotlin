@@ -21,8 +21,8 @@ class PartiQLParserJoinTest : PartiQLParserTestBase() {
             project = projectX,
             from = join(
                 joinType,
-                scan(id("stuff"), "s"),
-                scan(id("foo"), "f"),
+                scan(id("stuff"), defnid("s")),
+                scan(id("foo"), defnid("f")),
                 joinPredicate
             ),
             where = wherePredicate

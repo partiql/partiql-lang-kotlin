@@ -1,9 +1,7 @@
 package org.partiql.lang.eval.visitors
 
 import org.partiql.lang.domains.PartiqlAst
-import org.partiql.lang.domains.extractSourceLocation
 import org.partiql.lang.eval.extractColumnAlias
-import org.partiql.pig.runtime.SymbolPrimitive
 
 /**
  * Assigns aliases to any unspecified [PartiqlAst.FromSource.Scan]/[PartiqlAst.FromSource.Unpivot] that does not
@@ -40,16 +38,18 @@ class FromSourceAliasVisitorTransform : VisitorTransformBase() {
     private class InnerFromSourceAliasVisitorTransform : VisitorTransformBase() {
         private var fromSourceCounter = 0
 
-        override fun transformFromSourceScan_asAlias(node: PartiqlAst.FromSource.Scan): SymbolPrimitive {
+        override fun transformFromSourceScan_asAlias(node: PartiqlAst.FromSource.Scan): PartiqlAst.Defnid {
             val thisFromSourceIndex = fromSourceCounter++
             return node.asAlias
-                ?: SymbolPrimitive(node.expr.extractColumnAlias(thisFromSourceIndex), node.extractSourceLocation())
+                ?: PartiqlAst.build { defnid(node.expr.extractColumnAlias(thisFromSourceIndex)) }
+            // wVG: No longer adding node.extractSourceLocation() to the synthesized id, because that's bogus.
         }
 
-        override fun transformFromSourceUnpivot_asAlias(node: PartiqlAst.FromSource.Unpivot): SymbolPrimitive {
+        override fun transformFromSourceUnpivot_asAlias(node: PartiqlAst.FromSource.Unpivot): PartiqlAst.Defnid {
             val thisFromSourceIndex = fromSourceCounter++
             return node.asAlias
-                ?: SymbolPrimitive(node.expr.extractColumnAlias(thisFromSourceIndex), node.extractSourceLocation())
+                ?: PartiqlAst.build { defnid(node.expr.extractColumnAlias(thisFromSourceIndex)) }
+            // wVG: No longer adding node.extractSourceLocation() to the synthesized id, because that's bogus.
         }
 
         // Do not traverse into subexpressions of a [FromSource].

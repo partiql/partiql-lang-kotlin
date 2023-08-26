@@ -3,6 +3,7 @@ package org.partiql.lang.ast.passes
 import com.amazon.ionelement.api.StringElement
 import junitparams.Parameters
 import org.junit.Test
+import org.partiql.lang.Ident
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.syntax.PartiQLParserTestBase
 
@@ -54,7 +55,10 @@ class StatementRedactorTest : PartiQLParserTestBase() {
     @Test
     @Parameters
     fun testRedactOnPositiveCases(tc: RedactionTestCase) {
-        val testConfig = mapOf("contains" to ::validateFuncContainsAndBeginsWith, "begins_with" to ::validateFuncContainsAndBeginsWith)
+        val testConfig = mapOf(
+            Ident.createAsIs("contains") to ::validateFuncContainsAndBeginsWith,
+            Ident.createAsIs("begins_with") to ::validateFuncContainsAndBeginsWith
+        )
         val redactedStatement = redact(tc.originalStatement, testSafeFieldNames, testConfig)
 
         assertEquals(tc.redactedStatement, redactedStatement)

@@ -1,6 +1,7 @@
 package org.partiql.lang.graph
 
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.domains.string
 import org.partiql.lang.graph.GpmlTranslator.normalizeElemList
 
 /** Translate an AST graph pattern into a "plan spec" to be executed by the graph engine.
@@ -36,7 +37,7 @@ object GpmlTranslator {
     fun translateNodePat(node: PartiqlAst.GraphMatchPatternPart.Node): NodeSpec {
         if (node.prefilter != null) TODO("Not yet supported in evaluating a GPML node pattern: prefilter.")
         return NodeSpec(
-            binder = node.variable?.text,
+            binder = node.variable?.string(),
             label = translateLabels(node.label)
         )
     }
@@ -45,7 +46,7 @@ object GpmlTranslator {
         if (edge.prefilter != null || edge.quantifier != null)
             TODO("Not yet supported in evaluating a GPML edge pattern: prefilter, quantifier.")
         return EdgeSpec(
-            binder = edge.variable?.text,
+            binder = edge.variable?.string(),
             label = translateLabels(edge.label),
             dir = translateDirection(edge.direction)
         )
@@ -54,7 +55,7 @@ object GpmlTranslator {
     fun translateLabels(labelSpec: PartiqlAst.GraphLabelSpec?): LabelSpec {
         return when (labelSpec) {
             null -> LabelSpec.Wildcard
-            is PartiqlAst.GraphLabelSpec.GraphLabelName -> LabelSpec.Name(labelSpec.name.text)
+            is PartiqlAst.GraphLabelSpec.GraphLabelName -> LabelSpec.Name(labelSpec.name.string())
             is PartiqlAst.GraphLabelSpec.GraphLabelWildcard -> LabelSpec.Wildcard
             else -> TODO("Not yet supported graph label pattern: $labelSpec")
         }

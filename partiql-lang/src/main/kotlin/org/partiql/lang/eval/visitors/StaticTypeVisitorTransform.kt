@@ -15,6 +15,7 @@ import org.partiql.lang.ast.passes.SemanticException
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.addSourceLocation
 import org.partiql.lang.domains.extractSourceLocation
+import org.partiql.lang.domains.string
 import org.partiql.lang.domains.toBindingCase
 import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.BindingName
@@ -211,7 +212,7 @@ class StaticTypeVisitorTransform(
 
         override fun transformExprCallAgg(node: PartiqlAst.Expr.CallAgg): PartiqlAst.Expr {
             return PartiqlAst.build {
-                callAgg_(
+                callAgg(
                     // do not transform the funcExpr--as this is a symbolic name in another namespace (AST is over generalized here)
                     node.setq,
                     node.funcName,
@@ -355,11 +356,11 @@ class StaticTypeVisitorTransform(
             val from = super.transformFromSourceScan(node)
 
             node.atAlias?.let {
-                addLocal(it.text, StaticType.ANY, it.metas)
+                addLocal(it.string(), StaticType.ANY, it.metas)
             }
 
             node.byAlias?.let {
-                addLocal(it.text, StaticType.ANY, it.metas)
+                addLocal(it.string(), StaticType.ANY, it.metas)
             }
 
             val asSymbolicName = node.asAlias
@@ -368,12 +369,12 @@ class StaticTypeVisitorTransform(
                         "FromSourceAliasVisitorTransform was executed first."
                 )
 
-            addLocal(asSymbolicName.text, StaticType.ANY, asSymbolicName.metas)
+            addLocal(asSymbolicName.string(), StaticType.ANY, asSymbolicName.metas)
 
             if (!containsJoin) {
                 fromVisited = true
                 if (currentScopeDepth == 1) {
-                    singleFromSourceName = asSymbolicName.text
+                    singleFromSourceName = asSymbolicName.string()
                 }
             }
             return from
@@ -384,11 +385,11 @@ class StaticTypeVisitorTransform(
             val from = super.transformFromSourceUnpivot(node)
 
             node.atAlias?.let {
-                addLocal(it.text, StaticType.ANY, it.metas)
+                addLocal(it.string(), StaticType.ANY, it.metas)
             }
 
             node.byAlias?.let {
-                addLocal(it.text, StaticType.ANY, it.metas)
+                addLocal(it.string(), StaticType.ANY, it.metas)
             }
 
             val asSymbolicName = node.asAlias
@@ -397,12 +398,12 @@ class StaticTypeVisitorTransform(
                         "FromSourceAliasVisitorTransform was executed first."
                 )
 
-            addLocal(asSymbolicName.text, StaticType.ANY, asSymbolicName.metas)
+            addLocal(asSymbolicName.string(), StaticType.ANY, asSymbolicName.metas)
 
             if (!containsJoin) {
                 fromVisited = true
                 if (currentScopeDepth == 1) {
-                    singleFromSourceName = asSymbolicName.text
+                    singleFromSourceName = asSymbolicName.string()
                 }
             }
             return from
@@ -410,7 +411,7 @@ class StaticTypeVisitorTransform(
 
         override fun transformLetBinding(node: PartiqlAst.LetBinding): PartiqlAst.LetBinding {
             val binding = super.transformLetBinding(node)
-            addLocal(binding.name.text, StaticType.ANY, binding.name.metas)
+            addLocal(binding.name.string(), StaticType.ANY, binding.name.metas)
             return binding
         }
 

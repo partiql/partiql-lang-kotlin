@@ -12,6 +12,7 @@ import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.PartiqlAstToPartiqlLogicalVisitorTransform
 import org.partiql.lang.domains.PartiqlLogical
 import org.partiql.lang.domains.metaContainerOf
+import org.partiql.lang.domains.string
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.builtins.CollectionAggregationFunction
 import org.partiql.lang.eval.builtins.ExprFunctionCurrentUser
@@ -86,7 +87,7 @@ internal class AstToLogicalVisitorTransform(
 
         val expr = transformProjection(select, algebra)
         when (node.setq) {
-            is PartiqlAst.SetQuantifier.Distinct -> call("filter_distinct", expr)
+            is PartiqlAst.SetQuantifier.Distinct -> call(defnid("filter_distinct"), expr)
             else -> expr
         }
     }
@@ -102,7 +103,7 @@ internal class AstToLogicalVisitorTransform(
             )
         }
         call(
-            funcName = functionName,
+            funcName = defnid(functionName),
             args = emptyList()
         )
     }
@@ -111,7 +112,7 @@ internal class AstToLogicalVisitorTransform(
     //  `aggregation` relational algebra operator.
     override fun transformExprCallAgg(node: PartiqlAst.Expr.CallAgg): PartiqlLogical.Expr = PartiqlLogical.build {
         call(
-            "${CollectionAggregationFunction.PREFIX}${node.funcName.text}",
+            defnid("${CollectionAggregationFunction.PREFIX}${node.funcName.string()}"),
             listOf(
                 lit(ionString(node.setq.javaClass.simpleName.lowercase())),
                 transformExpr(node.arg)
@@ -159,7 +160,7 @@ internal class AstToLogicalVisitorTransform(
         }
 
         return transformedNode to PartiqlLogical.build {
-            val groupAsFunction = node.group?.groupAsAlias?.let { convertGroupAsAlias(it, node.from) }
+            val groupAsFunction = node.group?.groupAsAlias?.let { convertGroupAsAlias(it.symb, node.from) }
             val aggFunctions = aggregationReplacer.getAggregations().map { (name, callAgg) -> convertCallAgg(callAgg, name) }
             aggregate(
                 source = source,
@@ -177,7 +178,7 @@ internal class AstToLogicalVisitorTransform(
             groupKey(
                 expr = thiz.transformExpr(node.expr),
                 asVar = varDecl(
-                    name = node.asAlias?.text ?: errAstNotNormalized(
+                    name = node.asAlias?.string() ?: errAstNotNormalized(
                         "The group key should have encountered a unique name. This is typically added by the GroupByItemAliasVisitorTransform."
                     ),
                     metas = node.asAlias!!.metas
@@ -205,15 +206,15 @@ internal class AstToLogicalVisitorTransform(
     }
 
     private fun getSourceAliases(node: PartiqlAst.FromSource): List<SymbolPrimitive?> = when (node) {
-        is PartiqlAst.FromSource.Scan -> listOf(node.asAlias ?: errAstNotNormalized("Scan should have alias initialized."))
+        is PartiqlAst.FromSource.Scan -> listOf(node.asAlias?.symb ?: errAstNotNormalized("Scan should have alias initialized."))
         is PartiqlAst.FromSource.Join -> getSourceAliases(node.left).plus(getSourceAliases(node.right))
-        is PartiqlAst.FromSource.Unpivot -> listOf(node.asAlias ?: errAstNotNormalized("Unpivot should have alias initialized."))
+        is PartiqlAst.FromSource.Unpivot -> listOf(node.asAlias?.symb ?: errAstNotNormalized("Unpivot should have alias initialized."))
     }
 
     private fun convertCallAgg(node: PartiqlAst.Expr.CallAgg, name: String): PartiqlLogical.AggregateFunction = PartiqlLogical.build {
         aggregateFunction(
             quantifier = transformSetQuantifier(node.setq),
-            name = node.funcName.text,
+            name = node.funcName.string(),
             arg = transformExpr(node.arg),
             asVar = varDecl(name, node.metas),
             metas = node.metas
@@ -277,7 +278,7 @@ internal class AstToLogicalVisitorTransform(
                         PartiqlLogical.build {
                             windowExpression(
                                 varDecl(windowFuncGeneratedName),
-                                callWindowNode.funcName.text,
+                                callWindowNode.funcName.string(),
                                 callWindowNode.args.map { arg ->
                                     transformExpr(arg)
                                 },
@@ -333,7 +334,7 @@ internal class AstToLogicalVisitorTransform(
         PartiqlLogical.build {
             letBinding(
                 transformExpr(node.expr),
-                varDecl_(node.name, node.name.metas),
+                varDecl_(node.name.symb, node.name.metas),
                 node.metas
             )
         }
@@ -370,7 +371,7 @@ internal class AstToLogicalVisitorTransform(
 
                 val target = dmlOp.target.toDmlTargetId()
                 val alias = dmlOp.asAlias?.let {
-                    PartiqlLogical.VarDecl(it)
+                    PartiqlLogical.VarDecl(it.symb)
                 } ?: PartiqlLogical.VarDecl(target.name)
 
                 val operation = when (val conflictAction = dmlOp.conflictAction) {
@@ -558,9 +559,9 @@ private class FromSourceToBexpr(
         return PartiqlLogical.build {
             scan(
                 toLogicalTransform.transformExpr(node.expr),
-                varDecl_(asAlias, asAlias.metas),
-                node.atAlias?.let { varDecl_(it, it.metas) },
-                node.byAlias?.let { varDecl_(it, it.metas) },
+                varDecl_(asAlias.symb, asAlias.metas),
+                node.atAlias?.let { varDecl_(it.symb, it.metas) },
+                node.byAlias?.let { varDecl_(it.symb, it.metas) },
                 node.metas
             )
         }
@@ -571,9 +572,9 @@ private class FromSourceToBexpr(
         return PartiqlLogical.build {
             unpivot(
                 toLogicalTransform.transformExpr(node.expr),
-                varDecl_(asAlias, asAlias.metas),
-                node.atAlias?.let { varDecl_(it, it.metas) },
-                node.byAlias?.let { varDecl_(it, it.metas) },
+                varDecl_(asAlias.symb, asAlias.metas),
+                node.atAlias?.let { varDecl_(it.symb, it.metas) },
+                node.byAlias?.let { varDecl_(it.symb, it.metas) },
                 node.metas
             )
         }

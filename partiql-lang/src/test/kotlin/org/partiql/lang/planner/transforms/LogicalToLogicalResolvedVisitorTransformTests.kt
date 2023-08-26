@@ -9,6 +9,7 @@ import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.errors.Problem
 import org.partiql.lang.domains.PartiqlLogical
 import org.partiql.lang.domains.PartiqlLogicalResolved
+import org.partiql.lang.domains.string
 import org.partiql.lang.errors.ProblemCollector
 import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.builtins.DYNAMIC_LOOKUP_FUNCTION_NAME
@@ -31,7 +32,7 @@ private fun PartiqlLogicalResolved.Builder.dynamicLookup(
     vararg searchTargets: PartiqlLogicalResolved.Expr
 ) =
     call(
-        DYNAMIC_LOOKUP_FUNCTION_NAME,
+        defnid(DYNAMIC_LOOKUP_FUNCTION_NAME),
         listOf(
             lit(ionSymbol(name)),
             lit(
@@ -128,7 +129,7 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                                 is PartiqlLogicalResolved.Expr.GlobalId,
                                 is PartiqlLogicalResolved.Expr.LocalId -> accumulator + node
                                 is PartiqlLogicalResolved.Expr.Call -> {
-                                    if (node.funcName.text == DYNAMIC_LOOKUP_FUNCTION_NAME) {
+                                    if (node.funcName.string() == DYNAMIC_LOOKUP_FUNCTION_NAME) {
                                         accumulator + node
                                     } else {
                                         accumulator
@@ -142,7 +143,7 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                             node: PartiqlLogicalResolved.Expr.Call,
                             accumulator: List<PartiqlLogicalResolved.Expr>
                         ): List<PartiqlLogicalResolved.Expr> {
-                            return if (node.funcName.text == DYNAMIC_LOOKUP_FUNCTION_NAME) {
+                            return if (node.funcName.string() == DYNAMIC_LOOKUP_FUNCTION_NAME) {
                                 accumulator
                             } else {
                                 super.walkExprCall(node, accumulator)

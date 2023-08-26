@@ -137,21 +137,21 @@ class AstToLogicalVisitorTransformTests {
         private fun PartiqlAst.Builder.simpleGroup(
             projections: List<PartiqlAst.ProjectItem>,
             keys: List<PartiqlAst.GroupKey>,
-            groupAsAlias: String? = null,
+            groupAsAlias: PartiqlAst.Defnid? = null,
             fromSource: PartiqlAst.FromSource? = null
         ): PartiqlAst.Statement = query(simpleGroupExpr(projections, keys, groupAsAlias, fromSource))
 
         private fun PartiqlAst.Builder.simpleGroupExpr(
             projections: List<PartiqlAst.ProjectItem>,
             keys: List<PartiqlAst.GroupKey>,
-            groupAsAlias: String? = null,
+            groupAsAlias: PartiqlAst.Defnid? = null,
             fromSource: PartiqlAst.FromSource? = null
         ): PartiqlAst.Expr {
             val from = when (fromSource) {
                 null -> {
                     scan(
                         id("bar", caseInsensitive(), unqualified()),
-                        asAlias = "b"
+                        asAlias = defnid("b")
                     )
                 }
                 else -> fromSource
@@ -202,7 +202,7 @@ class AstToLogicalVisitorTransformTests {
         private fun PartiqlAst.Builder.simpleHaving(
             projections: List<PartiqlAst.ProjectItem>,
             keys: List<PartiqlAst.GroupKey>,
-            groupAsAlias: String? = null,
+            groupAsAlias: PartiqlAst.Defnid? = null,
             fromSource: PartiqlAst.FromSource? = null,
             having: PartiqlAst.Expr
         ): PartiqlAst.Statement = query(simpleHavingExpr(projections, keys, groupAsAlias, fromSource, having))
@@ -210,7 +210,7 @@ class AstToLogicalVisitorTransformTests {
         private fun PartiqlAst.Builder.simpleHavingExpr(
             projections: List<PartiqlAst.ProjectItem>,
             keys: List<PartiqlAst.GroupKey>,
-            groupAsAlias: String? = null,
+            groupAsAlias: PartiqlAst.Defnid? = null,
             fromSource: PartiqlAst.FromSource? = null,
             having: PartiqlAst.Expr
         ): PartiqlAst.Expr {
@@ -218,7 +218,7 @@ class AstToLogicalVisitorTransformTests {
                 null -> {
                     scan(
                         id("bar", caseInsensitive(), unqualified()),
-                        asAlias = "b"
+                        asAlias = defnid("b")
                     )
                 }
                 else -> fromSource
@@ -278,7 +278,7 @@ class AstToLogicalVisitorTransformTests {
                 PartiqlLogical.build {
                     query(
                         call(
-                            ExprFunctionCurrentUser.FUNCTION_NAME,
+                            defnid(ExprFunctionCurrentUser.FUNCTION_NAME),
                             emptyList()
                         )
                     )
@@ -291,7 +291,7 @@ class AstToLogicalVisitorTransformTests {
                         concat(
                             listOf(
                                 call(
-                                    ExprFunctionCurrentUser.FUNCTION_NAME,
+                                    defnid(ExprFunctionCurrentUser.FUNCTION_NAME),
                                     emptyList()
                                 ),
                                 lit(
@@ -351,7 +351,7 @@ class AstToLogicalVisitorTransformTests {
                 PartiqlLogical.build {
                     query(
                         call(
-                            "filter_distinct",
+                            defnid("filter_distinct"),
                             bindingsToValues(
                                 struct(structFields(id("b"))),
                                 scan(id("bar"), varDecl("b"))
@@ -590,7 +590,7 @@ class AstToLogicalVisitorTransformTests {
                 PartiqlLogical.build {
                     query(
                         call(
-                            "coll_sum",
+                            defnid("coll_sum"),
                             listOf(
                                 lit(ionString("all")),
                                 lit(ionInt(1))
@@ -606,7 +606,7 @@ class AstToLogicalVisitorTransformTests {
                 PartiqlLogical.build {
                     query(
                         call(
-                            "coll_sum",
+                            defnid("coll_sum"),
                             listOf(
                                 lit(ionString("distinct")),
                                 lit(ionInt(1))
@@ -628,8 +628,8 @@ class AstToLogicalVisitorTransformTests {
                 """,
                 PartiqlLogical.build {
                     val scan = scan(id("t"), varDecl("t"))
-                    val let = let(scan, letBinding(call("coll_sum", listOf(lit(ionString("all")), id("c"))), varDecl("sum_c")))
-                    val where = filter(call("coll_sum", listOf(lit(ionString("all")), id("b"))), let)
+                    val let = let(scan, letBinding(call(defnid("coll_sum"), listOf(lit(ionString("all")), id("c"))), varDecl("sum_c")))
+                    val where = filter(call(defnid("coll_sum"), listOf(lit(ionString("all")), id("b"))), let)
                     val agg = aggregate(
                         where,
                         groupFull(),
@@ -642,7 +642,7 @@ class AstToLogicalVisitorTransformTests {
                     )
                     val having = filter(id("\$__partiql_aggregation_1"), agg)
                     val order = sort(having, sortSpec(id("\$__partiql_aggregation_2")))
-                    val limit = limit(call("coll_sum", listOf(lit(ionString("distinct")), lit(ionInt(2)))), order)
+                    val limit = limit(call(defnid("coll_sum"), listOf(lit(ionString("distinct")), lit(ionInt(2)))), order)
                     val projection = bindingsToValues(struct(structField(lit(ionSymbol("sum_a")), id("\$__partiql_aggregation_0"))), limit)
                     query(projection)
                 }
@@ -664,7 +664,7 @@ class AstToLogicalVisitorTransformTests {
                     )
                     val expression = plus(
                         id("\$__partiql_aggregation_0"),
-                        call("coll_count", listOf(lit(ionString("distinct")), id("a")))
+                        call(defnid("coll_count"), listOf(lit(ionString("distinct")), id("a")))
                     )
                     val projection = bindingsToValues(struct(structField(lit(ionSymbol("sum_a")), expression)), agg)
                     query(projection)
@@ -694,7 +694,7 @@ class AstToLogicalVisitorTransformTests {
                     )
                     val exprProj = plus(
                         id("\$__partiql_aggregation_0"),
-                        call("coll_count", listOf(lit(ionString("distinct")), id("b")))
+                        call(defnid("coll_count"), listOf(lit(ionString("distinct")), id("b")))
                     )
                     val bindingsProj = bindingsToValues(struct(structField(lit(ionSymbol("agg_proj")), exprProj)), aggProj)
 
@@ -710,7 +710,7 @@ class AstToLogicalVisitorTransformTests {
                     )
                     val exprFrom = plus(
                         id("\$__partiql_aggregation_0"),
-                        call("coll_max", listOf(lit(ionString("all")), id("d")))
+                        call(defnid("coll_max"), listOf(lit(ionString("all")), id("d")))
                     )
                     val bindingsFrom = bindingsToValues(struct(structField(lit(ionSymbol("agg_from")), exprFrom)), aggFrom)
 

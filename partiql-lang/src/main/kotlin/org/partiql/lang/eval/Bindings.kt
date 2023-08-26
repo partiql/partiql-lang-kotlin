@@ -17,6 +17,7 @@ import com.amazon.ion.IonStruct
 import com.amazon.ion.IonSystem
 import com.amazon.ion.IonValue
 import org.partiql.errors.ErrorCode
+import org.partiql.lang.Ident
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.util.errAmbiguousBinding
 import org.partiql.lang.util.isBindingNameEquivalent
@@ -144,6 +145,10 @@ interface Bindings<T> {
 
         fun addBinding(name: String, getter: () -> T): LazyBindingBuilder<T> =
             this.apply { bindings[name] = lazy(getter) }
+
+        /** wVG-TODO: switch to HashMap<Defnid, _>, so that this addBinding is primary. */
+        fun addBinding(name: Ident, getter: () -> T): LazyBindingBuilder<T> =
+            addBinding(name.underlyingString(), getter)
 
         fun build(): Bindings<T> =
             LazyBindings<T>(bindings)

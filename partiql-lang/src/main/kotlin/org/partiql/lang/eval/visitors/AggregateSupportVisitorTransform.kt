@@ -41,7 +41,7 @@ class AggregateSupportVisitorTransform : VisitorTransformBase() {
 
     override fun transformExprCallAgg(node: PartiqlAst.Expr.CallAgg): PartiqlAst.Expr {
         val transformedCallAgg = PartiqlAst.build {
-            callAgg_(
+            callAgg(
                 setq = node.setq,
                 funcName = node.funcName,
                 arg = transformExpr(node.arg),

@@ -22,6 +22,7 @@ import org.partiql.errors.UNKNOWN_PROBLEM_LOCATION
 import org.partiql.lang.ast.passes.SemanticException
 import org.partiql.lang.ast.passes.SemanticProblemDetails
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.domains.string
 import org.partiql.lang.domains.toBindingCase
 import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.EvaluationException
@@ -113,13 +114,13 @@ internal class AggregationVisitorTransform(
         }
 
         // Add Unique Aliases to Keys and Create GroupKeyInformation
-        val groupAsAlias = node.group!!.groupAsAlias?.text
+        val groupAsAlias = node.group!!.groupAsAlias?.string()
         val transformedKeys = mutableListOf<PartiqlAst.GroupKey>()
         val groupKeyInformation = node.group!!.keyList.keys.mapIndexed { index, key ->
-            val publicAlias = key.asAlias?.text ?: key.expr.extractColumnAlias(index)
+            val publicAlias = key.asAlias?.string() ?: key.expr.extractColumnAlias(index)
             val uniqueAlias = uniqueAlias(this.contextStack.size, index)
             val represents = key.expr
-            val transformedKey = PartiqlAst.build { groupKey(transformExpr(key.expr), uniqueAlias, key.metas) }
+            val transformedKey = PartiqlAst.build { groupKey(transformExpr(key.expr), defnid(uniqueAlias), key.metas) }
             transformedKeys.add(transformedKey)
             val isPublicAliasUserDefined = key.asAlias != null
             GroupKeyInformation(groupKey = key, publicAlias = publicAlias, uniqueAlias = uniqueAlias, represents = represents, isPublicAliasUserDefined = isPublicAliasUserDefined)
@@ -133,7 +134,7 @@ internal class AggregationVisitorTransform(
             groupBy(
                 strategy = transformGroupBy_strategy(node.group!!),
                 keyList = groupKeyList(transformedKeys),
-                groupAsAlias = groupAsAlias,
+                groupAsAlias = groupAsAlias?.let { defnid(it) },
                 metas = node.group!!.metas
             )
         }
@@ -152,11 +153,11 @@ internal class AggregationVisitorTransform(
         if (contextStack.last().groupKeys.isNotEmpty() || contextStack.last().groupAsAlias != null) {
             return PartiqlAst.build {
                 val projectionItems = contextStack.last().groupKeys.map { key ->
-                    projectExpr(id(key.uniqueAlias, caseSensitive(), unqualified()), key.publicAlias)
+                    projectExpr(id(key.uniqueAlias, caseSensitive(), unqualified()), defnid(key.publicAlias))
                 }.toMutableList()
 
                 contextStack.last().groupAsAlias?.let { alias ->
-                    val item = projectExpr(id(alias, caseSensitive(), unqualified()), alias)
+                    val item = projectExpr(id(alias, caseSensitive(), unqualified()), defnid(alias))
                     projectionItems.add(item)
                 }
                 projectList(projectionItems)
@@ -186,7 +187,7 @@ internal class AggregationVisitorTransform(
                                 )
                             )
 
-                            projectExpr_(
+                            projectExpr(
                                 expr = itemTransform.transformExpr(item.expr),
                                 asAlias = projectionAlias
                             )
@@ -243,7 +244,7 @@ internal class AggregationVisitorTransform(
 
         override fun transformExprCallAgg(node: PartiqlAst.Expr.CallAgg): PartiqlAst.Expr = PartiqlAst.build {
             val functionArgTransformer = GroupKeyReferenceTransformer(ctxStack, true)
-            callAgg_(
+            callAgg(
                 setq = transformSetQuantifier(node.setq),
                 funcName = node.funcName,
                 arg = functionArgTransformer.transformExprCallAgg_arg(node),

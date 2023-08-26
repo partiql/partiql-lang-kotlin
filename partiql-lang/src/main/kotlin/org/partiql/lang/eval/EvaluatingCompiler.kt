@@ -25,6 +25,7 @@ import com.amazon.ionelement.api.toIonValue
 import org.partiql.errors.ErrorCode
 import org.partiql.errors.Property
 import org.partiql.errors.PropertyValueMap
+import org.partiql.lang.Ident
 import org.partiql.lang.ast.AggregateCallSiteListMeta
 import org.partiql.lang.ast.AggregateRegisterIdMeta
 import org.partiql.lang.ast.IsCountStarMeta
@@ -35,7 +36,9 @@ import org.partiql.lang.ast.sourceLocation
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.domains.staticType
+import org.partiql.lang.domains.string
 import org.partiql.lang.domains.toBindingCase
+import org.partiql.lang.domains.toIdent
 import org.partiql.lang.eval.binding.Alias
 import org.partiql.lang.eval.binding.localsBinder
 import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
@@ -75,7 +78,6 @@ import org.partiql.lang.util.take
 import org.partiql.lang.util.times
 import org.partiql.lang.util.totalMinutes
 import org.partiql.lang.util.unaryMinus
-import org.partiql.pig.runtime.SymbolPrimitive
 import org.partiql.types.AnyOfType
 import org.partiql.types.AnyType
 import org.partiql.types.IntType
@@ -154,7 +156,7 @@ internal class EvaluatingCompiler(
     // isn't a huge benefit because this is only used at SQL-compile time anyway.
     private fun <R> nestCompilationContext(
         expressionContext: ExpressionContext,
-        fromSourceNames: Set<String>,
+        fromSourceNames: Set<Ident>,
         block: () -> R
     ): R {
         compilationContextStack.push(
@@ -217,7 +219,7 @@ internal class EvaluatingCompiler(
         }
 
     /** Dispatch table for built-in aggregate functions. */
-    private val builtinAggregates: Map<Pair<String, PartiqlAst.SetQuantifier>, ExprAggregatorFactory> =
+    private val builtinAggregates: Map<Pair<Ident, PartiqlAst.SetQuantifier>, ExprAggregatorFactory> =
         run {
             fun checkIsNumberType(funcName: String, value: ExprValue) {
                 if (!value.type.isNumber) {
@@ -264,6 +266,9 @@ internal class EvaluatingCompiler(
                             ?: ExprValue.nullValue
                 }
             }
+            // TODO: The "EVERY" and "ANY/SOME" names in these checkers should derive from the identifierts
+            //  in the following list (in order to guarantee case consistency),
+            //  but that seems to entail a redesign to this construction of "built-ins database".
             val everyAccFunc: (ExprValue?, ExprValue) -> ExprValue = { accumulated, nextItem ->
                 checkIsBooleanType("EVERY", nextItem)
                 accumulated?.let { ExprValue.newBoolean(it.booleanValue() && nextItem.booleanValue()) } ?: nextItem
@@ -274,7 +279,7 @@ internal class EvaluatingCompiler(
             }
             val allFilter: (ExprValue) -> Boolean = { _ -> true }
             // each distinct ExprAggregator must get its own createUniqueExprValueFilter()
-            mapOf(
+            listOf(
                 Pair("count", PartiqlAst.SetQuantifier.All()) to ExprAggregatorFactory.over {
                     Accumulator((0L).exprValue(), countAccFunc, allFilter)
                 },
@@ -338,7 +343,7 @@ internal class EvaluatingCompiler(
                 Pair("some", PartiqlAst.SetQuantifier.Distinct()) to ExprAggregatorFactory.over {
                     Accumulator(null, anySomeAccFunc, createUniqueExprValueFilter())
                 },
-            )
+            ).map { (p, a) -> Pair(Ident.createRegular(p.first), p.second) to a }.toMap()
         }
 
     /**
@@ -994,11 +999,11 @@ internal class EvaluatingCompiler(
 
     private fun compileCall(expr: PartiqlAst.Expr.Call, metas: MetaContainer): ThunkEnv {
         val funcArgThunks = compileAstExprs(expr.args)
-        val func = functions[expr.funcName.text] ?: err(
-            "No such function: ${expr.funcName.text}",
+        val func = functions[expr.funcName.string()] ?: err(
+            "No such function: ${expr.funcName.string()}",
             ErrorCode.EVALUATOR_NO_SUCH_FUNCTION,
             errorContextFrom(metas).also {
-                it[Property.FUNCTION_NAME] = expr.funcName.text
+                it[Property.FUNCTION_NAME] = expr.funcName.string()
             },
             internal = false
         )
@@ -1104,7 +1109,7 @@ internal class EvaluatingCompiler(
                         thunkFactory.thunkEnv(metas) { env ->
                             when (val value = env.current[bindingName]) {
                                 null -> {
-                                    if (fromSourceNames.any { bindingName.isEquivalentTo(it) }) {
+                                    if (fromSourceNames.any { bindingName.isEquivalentTo(it.underlyingString()) }) {
                                         err(
                                             "Variable not in GROUP BY or aggregation function: ${bindingName.name}",
                                             ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
@@ -1792,20 +1797,20 @@ internal class EvaluatingCompiler(
     private fun compileSelect(selectExpr: PartiqlAst.Expr.Select, metas: MetaContainer): ThunkEnv {
 
         // Get all the FROM source aliases and LET bindings for binding error checks
-        val fold = object : PartiqlAst.VisitorFold<Set<String>>() {
+        val fold = object : PartiqlAst.VisitorFold<Set<Ident>>() {
             /** Store all the visited FROM source aliases in the accumulator */
-            override fun visitFromSourceScan(node: PartiqlAst.FromSource.Scan, accumulator: Set<String>): Set<String> {
-                val aliases = listOfNotNull(node.asAlias?.text, node.atAlias?.text, node.byAlias?.text)
+            override fun visitFromSourceScan(node: PartiqlAst.FromSource.Scan, accumulator: Set<Ident>): Set<Ident> {
+                val aliases = listOfNotNull(node.asAlias?.toIdent(), node.atAlias?.toIdent(), node.byAlias?.toIdent())
                 return accumulator + aliases.toSet()
             }
 
-            override fun visitLetBinding(node: PartiqlAst.LetBinding, accumulator: Set<String>): Set<String> {
-                val aliases = listOfNotNull(node.name.text)
+            override fun visitLetBinding(node: PartiqlAst.LetBinding, accumulator: Set<Ident>): Set<Ident> {
+                val aliases = listOfNotNull(node.name.toIdent())
                 return accumulator + aliases
             }
 
             /** Prevents visitor from recursing into nested select statements */
-            override fun walkExprSelect(node: PartiqlAst.Expr.Select, accumulator: Set<String>): Set<String> {
+            override fun walkExprSelect(node: PartiqlAst.Expr.Select, accumulator: Set<Ident>): Set<Ident> {
                 return accumulator
             }
         }
@@ -1888,7 +1893,7 @@ internal class EvaluatingCompiler(
 
                         // These aggregate call sites are collected in [AggregateSupportVisitorTransform].
                         val compiledAggregates = aggregateListMeta?.aggregateCallSites?.map { it ->
-                            val funcName = it.funcName.text
+                            val funcName = it.funcName.toIdent()
                             CompiledAggregate(
                                 factory = getAggregatorFactory(
                                     funcName,
@@ -1965,8 +1970,8 @@ internal class EvaluatingCompiler(
                                 // otherwise we would be re-creating them for every row.
                                 val fromSourceBindingNames = fromSourceThunks.map {
                                     FromSourceBindingNamePair(
-                                        BindingName(it.alias.asName, BindingCase.SENSITIVE),
-                                        it.alias.asName.exprValue()
+                                        BindingName(it.alias.asName.underlyingString(), BindingCase.SENSITIVE),
+                                        it.alias.asName.underlyingString().exprValue()
                                     )
                                 }
 
@@ -1976,7 +1981,7 @@ internal class EvaluatingCompiler(
                                     createFilterHavingAndProjectClosure(havingThunk, selectProjectionThunk)
 
                                 val getGroupEnv: (Environment, Group) -> Environment =
-                                    createGetGroupEnvClosure(groupAsName)
+                                    createGetGroupEnvClosure(groupAsName?.toIdent())
 
                                 thunkFactory.thunkEnv(metas) { env ->
                                     // Execute the FROM clause
@@ -2151,7 +2156,7 @@ internal class EvaluatingCompiler(
             val uniqueName =
                 (alias.metas.find(UniqueNameMeta.TAG) as UniqueNameMeta?)?.uniqueName
 
-            CompiledGroupByItem(alias.text.exprValue(), uniqueName, compileAstExpr(it.expr))
+            CompiledGroupByItem(alias.string().exprValue(), uniqueName, compileAstExpr(it.expr))
         }
 
     /**
@@ -2249,11 +2254,11 @@ internal class EvaluatingCompiler(
      * If a GROUP AS name was specified, also nests that [Environment] in another that
      * has a binding for the GROUP AS name.
      */
-    private fun createGetGroupEnvClosure(groupAsName: SymbolPrimitive?): (Environment, Group) -> Environment =
+    private fun createGetGroupEnvClosure(groupAsName: Ident?): (Environment, Group) -> Environment =
         when {
             groupAsName != null -> { groupByEnv, currentGroup ->
                 val groupAsBindings = Bindings.buildLazyBindings<ExprValue> {
-                    addBinding(groupAsName.text) {
+                    addBinding(groupAsName) {
                         ExprValue.newBag(currentGroup.groupValues.asSequence())
                     }
                 }
@@ -2303,7 +2308,7 @@ internal class EvaluatingCompiler(
             )
         }
 
-        val aggFactory = getAggregatorFactory(expr.funcName.text.lowercase(), expr.setq, metas)
+        val aggFactory = getAggregatorFactory(expr.funcName.toIdent().extraLowercase(), expr.setq, metas)
 
         val argThunk = nestCompilationContext(ExpressionContext.AGG_ARG, emptySet()) {
             compileAstExpr(expr.arg)
@@ -2347,16 +2352,16 @@ internal class EvaluatingCompiler(
     }
 
     private fun getAggregatorFactory(
-        funcName: String,
+        funcName: Ident,
         setQuantifier: PartiqlAst.SetQuantifier,
         metas: MetaContainer
     ): ExprAggregatorFactory {
-        val key = funcName.lowercase() to setQuantifier
+        val key = funcName.extraLowercase() to setQuantifier
 
         return builtinAggregates[key] ?: err(
             "No such built-in aggregate function: $funcName",
             ErrorCode.EVALUATOR_NO_SUCH_FUNCTION,
-            errorContextFrom(metas).also { it[Property.FUNCTION_NAME] = funcName },
+            errorContextFrom(metas).also { it[Property.FUNCTION_NAME] = funcName.toDisplayString() },
             internal = false
         )
     }
@@ -2374,9 +2379,9 @@ internal class EvaluatingCompiler(
 
         fun addAliases(
             thunk: ThunkEnv,
-            asName: String?,
-            atName: String?,
-            byName: String?,
+            asName: Ident?,
+            atName: Ident?,
+            byName: Ident?,
             metas: MetaContainer
         ) {
             sources.add(
@@ -2401,9 +2406,9 @@ internal class EvaluatingCompiler(
                 val thunk = compileAstExpr(fromSource.expr)
                 addAliases(
                     thunk,
-                    fromSource.asAlias?.text,
-                    fromSource.atAlias?.text,
-                    fromSource.byAlias?.text,
+                    fromSource.asAlias?.toIdent(),
+                    fromSource.atAlias?.toIdent(),
+                    fromSource.byAlias?.toIdent(),
                     fromSource.metas
                 )
             }
@@ -2412,9 +2417,9 @@ internal class EvaluatingCompiler(
                 val thunk = thunkFactory.thunkEnv(metas) { env -> exprThunk(env).unpivot() }
                 addAliases(
                     thunk,
-                    fromSource.asAlias?.text,
-                    fromSource.atAlias?.text,
-                    fromSource.byAlias?.text,
+                    fromSource.asAlias?.toIdent(),
+                    fromSource.atAlias?.toIdent(),
+                    fromSource.byAlias?.toIdent(),
                     fromSource.metas
                 )
             }
@@ -2465,7 +2470,7 @@ internal class EvaluatingCompiler(
 
     private fun compileLetSources(letSource: PartiqlAst.Let): List<CompiledLetSource> =
         letSource.letBindings.map {
-            CompiledLetSource(name = it.name.text, thunk = compileAstExpr(it.expr))
+            CompiledLetSource(name = it.name.toIdent(), thunk = compileAstExpr(it.expr))
         }
 
     private fun Environment.extend(alias: Alias, value: ExprValue): Environment =
@@ -2561,7 +2566,7 @@ internal class EvaluatingCompiler(
                         val letValue = curLetSource.thunk(accEnvironment)
                         val binding = Bindings.over { bindingName ->
                             when {
-                                bindingName.isEquivalentTo(curLetSource.name) -> letValue
+                                bindingName.isEquivalentTo(curLetSource.name.underlyingString()) -> letValue
                                 else -> null
                             }
                         }
@@ -2589,7 +2594,7 @@ internal class EvaluatingCompiler(
         selectList.projectItems.mapIndexed { idx, it ->
             when (it) {
                 is PartiqlAst.ProjectItem.ProjectExpr -> {
-                    val alias = it.asAlias?.text ?: it.expr.extractColumnAlias(idx)
+                    val alias = it.asAlias?.string() ?: it.expr.extractColumnAlias(idx)
                     val thunk = compileAstExpr(it.expr)
                     SingleProjectionElement(ExprValue.newString(alias), thunk)
                 }
@@ -3122,7 +3127,7 @@ private enum class JoinExpansion {
 }
 
 private data class CompiledLetSource(
-    val name: String,
+    val name: Ident,
     val thunk: ThunkEnv
 )
 
@@ -3150,8 +3155,8 @@ private enum class ExpressionContext {
  * @param expressionContext Indicates what part of the grammar is currently being compiled.
  * @param fromSourceNames Set of all FROM source aliases for binding error checks.
  */
-private class CompilationContext(val expressionContext: ExpressionContext, val fromSourceNames: Set<String>) {
-    fun createNested(expressionContext: ExpressionContext, fromSourceNames: Set<String>) =
+private class CompilationContext(val expressionContext: ExpressionContext, val fromSourceNames: Set<Ident>) {
+    fun createNested(expressionContext: ExpressionContext, fromSourceNames: Set<Ident>) =
         CompilationContext(expressionContext, fromSourceNames)
 }
 
@@ -3167,6 +3172,11 @@ private sealed class ProjectionElement
  * - `name` is "value"
  * - `thunk` is compiled expression, i.e. `a + b`
  */
+// wVG Why is this complication with name: ExprValue (i.e., `x` in `AS x` being "computable"),
+//   while x can only be an identifier, both in the grammar and in the AST (i.e. a thing fully known at lexing)?
+//   Best guess [see the only usage of SingleProjectionElement.name], this is because of the Named facet,
+//   as used for "named" ExprValues representing key/value pairs in struct construction.
+//   This is another reason Named facet is to be considered harmful.
 private class SingleProjectionElement(val name: ExprValue, val thunk: ThunkEnv) : ProjectionElement()
 
 /**

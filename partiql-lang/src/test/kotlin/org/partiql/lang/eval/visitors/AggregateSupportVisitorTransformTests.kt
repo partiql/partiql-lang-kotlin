@@ -60,7 +60,7 @@ class AggregateSupportVisitorTransformTests : VisitorTransformTestBase() {
                     PartiqlAst.build {
                         callAgg(
                             setq = all(),
-                            funcName = callAgg.first,
+                            funcName = defnid(callAgg.first),
                             arg = lit(ionInt(1)),
                             metas = metaContainerOf(AggregateRegisterIdMeta.TAG to AggregateRegisterIdMeta(callAgg.second))
                         )

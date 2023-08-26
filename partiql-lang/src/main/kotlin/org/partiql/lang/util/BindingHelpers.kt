@@ -16,6 +16,7 @@ package org.partiql.lang.util
 
 import org.partiql.errors.ErrorCode
 import org.partiql.errors.Property
+import org.partiql.lang.Ident
 import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.err
 
@@ -29,6 +30,10 @@ internal fun errAmbiguousBinding(bindingName: String, matchingNames: List<String
         ),
         internal = false
     )
+}
+
+internal fun errAmbiguousBinding(bindingName: Ident, matchingNames: List<Ident>): Nothing {
+    errAmbiguousBinding(bindingName.toDisplayString(), matchingNames.map { it.toDisplayString() })
 }
 
 /**

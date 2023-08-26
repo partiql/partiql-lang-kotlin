@@ -30,6 +30,7 @@ import org.partiql.lang.ast.UNKNOWN_SOURCE_LOCATION
 import org.partiql.lang.ast.sourceLocation
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.domains.staticType
+import org.partiql.lang.domains.string
 import org.partiql.lang.domains.toBindingCase
 import org.partiql.lang.eval.AnyOfCastTable
 import org.partiql.lang.eval.Arguments
@@ -816,11 +817,11 @@ internal class PhysicalPlanCompilerImpl(
 
     private fun compileCall(expr: PartiqlPhysical.Expr.Call, metas: MetaContainer): PhysicalPlanThunk {
         val funcArgThunks = compileAstExprs(expr.args)
-        val func = functions[expr.funcName.text] ?: err(
-            "No such function: ${expr.funcName.text}",
+        val func = functions[expr.funcName.string()] ?: err(
+            "No such function: ${expr.funcName.string()}",
             ErrorCode.EVALUATOR_NO_SUCH_FUNCTION,
             errorContextFrom(metas).also {
-                it[Property.FUNCTION_NAME] = expr.funcName.text
+                it[Property.FUNCTION_NAME] = expr.funcName.string()
             },
             internal = false
         )

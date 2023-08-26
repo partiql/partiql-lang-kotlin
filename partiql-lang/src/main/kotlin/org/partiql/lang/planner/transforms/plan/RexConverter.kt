@@ -4,6 +4,7 @@ import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.ionNull
 import org.partiql.errors.ErrorCode
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.domains.string
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.builtins.ExprFunctionCurrentUser
 import org.partiql.lang.eval.err
@@ -385,7 +386,7 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
 
     override fun walkExprCall(node: PartiqlAst.Expr.Call, ctx: Ctx) = visit(node) {
         Plan.rexCall(
-            id = node.funcName.text,
+            id = node.funcName.string(),
             args = args(*node.args.toTypedArray()),
             type = null,
         )
@@ -393,7 +394,7 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
 
     override fun walkExprCallAgg(node: PartiqlAst.Expr.CallAgg, ctx: Ctx) = visit(node) {
         Plan.rexAgg(
-            id = node.funcName.text,
+            id = node.funcName.string(),
             args = listOf(convert(node.arg)),
             modifier = when (node.setq) {
                 is PartiqlAst.SetQuantifier.All -> Rex.Agg.Modifier.ALL

@@ -19,6 +19,7 @@ import org.partiql.errors.ErrorCode
 import org.partiql.lang.ast.IsSyntheticNameMeta
 import org.partiql.lang.ast.UniqueNameMeta
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.domains.string
 import org.partiql.lang.eval.errNoContext
 
 /**
@@ -63,7 +64,8 @@ class GroupByPathExpressionVisitorTransform(
             when (fromSource) {
                 is PartiqlAst.FromSource.Scan ->
                     listOf(
-                        fromSource.asAlias?.text
+                        // wVG brute-forced it in this file -- there is interaction with Expr.Id and it's better to deal with this then
+                        fromSource.asAlias?.string()
                             ?: errNoContext(
                                 "FromSource.asAlias.text must be specified for this transform to work",
                                 errorCode = ErrorCode.SEMANTIC_MISSING_AS_NAME,
@@ -75,7 +77,7 @@ class GroupByPathExpressionVisitorTransform(
                     collectAliases(fromSource.left) + collectAliases(fromSource.right)
 
                 is PartiqlAst.FromSource.Unpivot ->
-                    listOfNotNull(fromSource.asAlias?.text, fromSource.atAlias?.text)
+                    listOfNotNull(fromSource.asAlias?.string(), fromSource.atAlias?.string())
             }
     }
 
@@ -139,7 +141,7 @@ class GroupByPathExpressionVisitorTransform(
                     groupKey.expr,
                     PartiqlAst.build {
                         id(
-                            name = groupKey.asAlias!!.text,
+                            name = groupKey.asAlias!!.string(),
                             case = caseSensitive(),
                             qualifier = unqualified(),
                             metas = groupKey.expr.metas + metaContainerOf(UniqueNameMeta.TAG to uniqueIdentifierMeta)

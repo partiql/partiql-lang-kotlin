@@ -1,6 +1,7 @@
 package org.partiql.lang.prettyprint
 
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.domains.string
 import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.pig.runtime.SymbolPrimitive
 
@@ -137,7 +138,7 @@ class ASTPrettyPrinter {
     private fun toRecursionTree(node: PartiqlAst.Defnid, attrOfParent: String? = null): RecursionTree =
         RecursionTree(
             astType = "Defnid",
-            value = node.symb.text,
+            value = node.string(),
             attrOfParent = attrOfParent
         )
 
@@ -488,13 +489,13 @@ class ASTPrettyPrinter {
             )
             is PartiqlAst.Expr.Call -> RecursionTree(
                 astType = "Call",
-                value = node.funcName.symb.text,
+                value = node.funcName.string(),
                 attrOfParent = attrOfParent,
                 children = toRecursionTreeList(node.args, "arg")
             )
             is PartiqlAst.Expr.CallAgg -> RecursionTree(
                 astType = "CallAgg",
-                value = node.funcName.symb.text,
+                value = node.funcName.string(),
                 attrOfParent = attrOfParent,
                 children = listOf(toRecursionTree(node.arg, "arg"))
             )

@@ -18,8 +18,8 @@ import com.amazon.ionelement.api.metaContainerOf
 import org.partiql.lang.ast.IsSyntheticNameMeta
 import org.partiql.lang.ast.UniqueNameMeta
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.domains.string
 import org.partiql.lang.eval.extractColumnAlias
-import org.partiql.pig.runtime.SymbolPrimitive
 
 /**
  * Pre-calculates [PartiqlAst.GroupBy] aliases, while not changing any that were previously specified, for example:
@@ -36,11 +36,11 @@ class GroupByItemAliasVisitorTransform(var nestLevel: Int = 0) : VisitorTransfor
 
     override fun transformGroupBy(node: PartiqlAst.GroupBy): PartiqlAst.GroupBy {
         return PartiqlAst.build {
-            groupBy_(
+            groupBy(
                 strategy = node.strategy,
                 keyList = PartiqlAst.GroupKeyList(
                     node.keyList.keys.mapIndexed { index, it ->
-                        val aliasText = it.asAlias?.text ?: it.expr.extractColumnAlias(index)
+                        val aliasText = it.asAlias?.string() ?: it.expr.extractColumnAlias(index)
                         var metas = it.expr.metas + metaContainerOf(
                             UniqueNameMeta.TAG to UniqueNameMeta("\$__partiql__group_by_${nestLevel}_item_$index")
                         )
@@ -48,13 +48,13 @@ class GroupByItemAliasVisitorTransform(var nestLevel: Int = 0) : VisitorTransfor
                         if (it.asAlias == null) {
                             metas = metas + metaContainerOf(IsSyntheticNameMeta.TAG to IsSyntheticNameMeta.instance)
                         }
-                        val alias = SymbolPrimitive(aliasText, metas)
+                        val alias = defnid(aliasText)
 
-                        groupKey_(transformExpr(it.expr), alias, alias.metas)
+                        groupKey(transformExpr(it.expr), alias, alias.metas)
                     },
                     node.keyList.metas
                 ),
-                groupAsAlias = node.groupAsAlias?.let { transformSymbolPrimitive(it) },
+                groupAsAlias = node.groupAsAlias?.let { transformDefnid(it) },
                 metas = node.metas
             )
         }

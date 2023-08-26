@@ -2,6 +2,7 @@ package org.partiql.lang.prettyprint
 
 import org.partiql.lang.ast.IsListParenthesizedMeta
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.domains.string
 import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.pig.runtime.toIonElement
 import java.time.LocalDate
@@ -116,7 +117,7 @@ class QueryPrettyPrinter {
     }
 
     private fun writeAstNode(node: PartiqlAst.Defnid, sb: StringBuilder) {
-        sb.append(node.symb.text)
+        sb.append(node.string())
     }
 
     private fun writeAstNode(node: PartiqlAst.DdlOp.CreateTable, sb: StringBuilder) {

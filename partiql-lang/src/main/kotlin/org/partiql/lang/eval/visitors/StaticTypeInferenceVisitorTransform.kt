@@ -24,6 +24,7 @@ import org.partiql.lang.ast.passes.inference.isUnknown
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.domains.staticType
+import org.partiql.lang.domains.string
 import org.partiql.lang.domains.toBindingCase
 import org.partiql.lang.errors.ProblemThrower
 import org.partiql.lang.eval.BindingCase
@@ -802,7 +803,7 @@ internal class StaticTypeInferenceVisitorTransform(
             val funcExpr = processedNode.funcName
             val functionArguments = processedNode.args
 
-            val functionName = funcExpr.text
+            val functionName = funcExpr.string()
 
             val signature = allFunctions[functionName]
             if (signature == null) {
@@ -823,7 +824,7 @@ internal class StaticTypeInferenceVisitorTransform(
                 else -> type
             }
             val sourceLocation = processedNode.getStartingSourceLocationMeta()
-            return processedNode.withStaticType(computeReturnTypeForAggFunc(funcName.text, argType, sourceLocation))
+            return processedNode.withStaticType(computeReturnTypeForAggFunc(funcName.string(), argType, sourceLocation))
         }
 
         private fun handleInvalidInputTypeForAggFun(sourceLocation: SourceLocationMeta, funcName: String, actualType: StaticType, expectedType: StaticType) {
@@ -1341,20 +1342,20 @@ internal class StaticTypeInferenceVisitorTransform(
 
             val elementType = getElementTypeForFromSource(fromExprType)
 
-            addLocal(asSymbolicName.text, elementType)
+            addLocal(asSymbolicName.string(), elementType)
 
             node.atAlias?.let {
                 val hasLists = getTypeDomain(fromExprType).contains(ExprValueType.LIST)
                 val hasOnlyLists = hasLists && (getTypeDomain(fromExprType).size == 1)
                 when {
                     hasOnlyLists -> {
-                        addLocal(it.text, StaticType.INT)
+                        addLocal(it.string(), StaticType.INT)
                     }
                     hasLists -> {
-                        addLocal(it.text, StaticType.unionOf(StaticType.INT, StaticType.MISSING))
+                        addLocal(it.string(), StaticType.unionOf(StaticType.INT, StaticType.MISSING))
                     }
                     else -> {
-                        addLocal(it.text, StaticType.MISSING)
+                        addLocal(it.string(), StaticType.MISSING)
                     }
                 }
             }
@@ -1433,20 +1434,20 @@ internal class StaticTypeInferenceVisitorTransform(
             val fromExprType = from.expr.getStaticType()
 
             val valueType = getUnpivotValueType(fromExprType)
-            addLocal(asSymbolicName.text, valueType)
+            addLocal(asSymbolicName.string(), valueType)
 
             node.atAlias?.let {
                 val valueHasMissing = getTypeDomain(valueType).contains(ExprValueType.MISSING)
                 val valueOnlyHasMissing = valueHasMissing && getTypeDomain(valueType).size == 1
                 when {
                     valueOnlyHasMissing -> {
-                        addLocal(it.text, StaticType.MISSING)
+                        addLocal(it.string(), StaticType.MISSING)
                     }
                     valueHasMissing -> {
-                        addLocal(it.text, StaticType.STRING.asOptional())
+                        addLocal(it.string(), StaticType.STRING.asOptional())
                     }
                     else -> {
-                        addLocal(it.text, StaticType.STRING)
+                        addLocal(it.string(), StaticType.STRING)
                     }
                 }
             }
@@ -1539,7 +1540,7 @@ internal class StaticTypeInferenceVisitorTransform(
 
         override fun transformLetBinding(node: PartiqlAst.LetBinding): PartiqlAst.LetBinding {
             val binding = super.transformLetBinding(node)
-            addLocal(binding.name.text, binding.expr.getStaticType())
+            addLocal(binding.name.string(), binding.expr.getStaticType())
             return binding
         }
 
@@ -1570,7 +1571,7 @@ internal class StaticTypeInferenceVisitorTransform(
                     for (item in newProjection.projectItems) {
                         when (item) {
                             is PartiqlAst.ProjectItem.ProjectExpr -> {
-                                val projectionAsName = item.asAlias?.text
+                                val projectionAsName = item.asAlias?.string()
                                     ?: error("No alias found for projection")
                                 if (projectionFields.find { it.key == projectionAsName } != null) {
                                     // Duplicate select-list-item aliases are not allowed.

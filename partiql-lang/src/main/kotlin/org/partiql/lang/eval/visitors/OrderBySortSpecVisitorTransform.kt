@@ -17,7 +17,7 @@ package org.partiql.lang.eval.visitors
 import org.partiql.lang.ast.IsTransformedOrderByAliasMeta
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.metaContainerOf
-import org.partiql.pig.runtime.SymbolPrimitive
+import org.partiql.lang.domains.string
 
 /**
  * A [PartiqlAst.VisitorTransform] to replace the [PartiqlAst.SortSpec] of a [PartiqlAst.OrderBy] with a reference to
@@ -46,9 +46,10 @@ internal class OrderBySortSpecVisitorTransform : VisitorTransformBase() {
     /**
      * Uses default transform and adds the alias to the [projectionAliases] map
      */
-    override fun transformProjectItemProjectExpr_asAlias(node: PartiqlAst.ProjectItem.ProjectExpr): SymbolPrimitive? {
+    override fun transformProjectItemProjectExpr_asAlias(node: PartiqlAst.ProjectItem.ProjectExpr): PartiqlAst.Defnid? {
         val transformedAlias = super.transformProjectItemProjectExpr_asAlias(node)
-        if (node.asAlias != null) { projectionAliases[node.asAlias!!.text] = node.expr }
+        // wVG Brute-forced, since there is an interaction with Expr.Id. Eventually, projectionAliases should be keyed on identifiers, not strings.
+        if (node.asAlias != null) { projectionAliases[node.asAlias!!.string()] = node.expr }
         return transformedAlias
     }
 

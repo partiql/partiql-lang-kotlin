@@ -4361,7 +4361,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
         select(
             project = projectX,
             from = scan(id("table1")),
-            fromLet = let(letBinding(lit(ionInt(1)), "A"))
+            fromLet = let(letBinding(lit(ionInt(1)), defnid("A")))
         )
     }
 
@@ -4370,7 +4370,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
         select(
             project = projectX,
             from = scan(id("table1")),
-            fromLet = let(letBinding(lit(ionInt(1)), "A"), letBinding(lit(ionInt(2)), "B"))
+            fromLet = let(letBinding(lit(ionInt(1)), defnid("A")), letBinding(lit(ionInt(2)), defnid("B")))
         )
     }
 
@@ -4379,7 +4379,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
         select(
             project = projectX,
             from = scan(id("table1")),
-            fromLet = let(letBinding(id("table1"), "A"))
+            fromLet = let(letBinding(id("table1"), defnid("A")))
         )
     }
 
@@ -4388,7 +4388,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
         select(
             project = projectX,
             from = scan(id("table1")),
-            fromLet = let(letBinding(call("foo", emptyList()), "A"))
+            fromLet = let(letBinding(call(defnid("foo"), emptyList()), defnid("A")))
         )
     }
 
@@ -4399,7 +4399,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
         select(
             project = projectX,
             from = scan(id("table1")),
-            fromLet = let(letBinding(call("foo", listOf(lit(ionInt(42)), lit(ionString("bar")))), "A"))
+            fromLet = let(letBinding(call(defnid("foo"), listOf(lit(ionInt(42)), lit(ionString("bar")))), defnid("A")))
         )
     }
 
@@ -4410,7 +4410,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
         select(
             project = projectX,
             from = scan(id("table1")),
-            fromLet = let(letBinding(call("foo", listOf(id("table1"))), "A"))
+            fromLet = let(letBinding(call(defnid("foo"), listOf(id("table1"))), defnid("A")))
         )
     }
 

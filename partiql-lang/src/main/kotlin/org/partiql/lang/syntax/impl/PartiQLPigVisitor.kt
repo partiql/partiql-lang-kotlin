@@ -49,6 +49,7 @@ import org.partiql.lang.ast.LegacyLogicalNotMeta
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.metaContainerOf
+import org.partiql.lang.domains.string
 import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.time.MAX_PRECISION_FOR_TIME
 import org.partiql.lang.syntax.ParserException
@@ -225,12 +226,19 @@ internal class PartiQLPigVisitor(
         defnid_(ident.name, ident.metas)
     }
 
-    fun stringToDefnid(str: String, metas: MetaContainer): PartiqlAst.Defnid = PartiqlAst.build {
-        defnid_(SymbolPrimitive(str, metas))
+    /** wVG-TODO Referring to functions in function calls would deserve a clean-up, even under legacy identifiers,
+     * to make it consistent with references to other identifier-bound things.
+     * Even under the "legacy" identifiers, the lower-case conversion here looks suspicious.
+     * This lower-casing is to reconcile that (1) the grammar refers to
+     * predefined functions via keywords (such as POSITION, MAX) which are normalized to the upper case by the lexer,
+     * vs (2) the postgres-influenced choice that regular identifiers are normalized to lower case
+     * while the predefined functions are traditionally considered named with regular identifiers.
+     * Some of this is utterly wrong, even with the legacy identifiers (e.g. that references to user-defined functions
+     * are subject to this lower-case normalization).
+     */
+    fun funDefnid(funName: String, metas: MetaContainer): PartiqlAst.Defnid = PartiqlAst.build {
+        defnid_(SymbolPrimitive(funName.lowercase(), metas))
     }
-
-    fun PartiqlAst.Defnid.lowercase(): PartiqlAst.Defnid =
-        this.copy(symb = this.symb.copy(text = this.symb.text.lowercase()))
 
     /** Interpret an ANTLR-parsed regular identifier as one of expected local keywords. */
     fun readLocalKeyword(
@@ -1281,19 +1289,22 @@ internal class PartiQLPigVisitor(
     }
 
     override fun visitFunctionCallIdent(ctx: PartiQLParser.FunctionCallIdentContext) = PartiqlAst.build {
-        // Even under the "legacy" identifiers, the lower-case conversion here looks suspicious;
-        // this probably should do "case-insensitive". However, this will become mute with SQL-conforming ids.
-        val funId = readIdentifierAsDefnid(ctx.name)
+        // The machinations with the functions id here are primarily to preserve the lower-case conversion present in the legacy implementation,
+        // while maintaining similarity with other fragments in this visitor.
+        // All these twists seem to stem from the original sin of treating this identifier as "definitional" rather than "referential".
+        // But fixing this would change the semantics, so this will happen alongside SQL-conformant identifiers.
+        val funIdOrig = readIdentifierAsDefnid(ctx.name)
         val args = ctx.expr().map { visitExpr(it) }
-        val metas = funId.metas
-        call(funId.lowercase(), args = args, metas = metas)
+        val metas = funIdOrig.metas
+        val funId = funDefnid(funIdOrig.string(), metas)
+        call(funId, args = args, metas = metas)
     }
 
     override fun visitFunctionCallReserved(ctx: PartiQLParser.FunctionCallReservedContext) = PartiqlAst.build {
         val args = ctx.expr().map { visitExpr(it) }
         val metas = ctx.name.getSourceMetaContainer()
-        val funId = stringToDefnid(ctx.name.text, metas)
-        call(funId.lowercase(), args = args, metas = metas)
+        val funId = funDefnid(ctx.name.text, metas)
+        call(funId, args = args, metas = metas)
     }
 
     private fun readDateTimeField(ctx: PartiQLParser.DateTimeFieldContext): String {
@@ -1308,37 +1319,37 @@ internal class PartiQLPigVisitor(
         val secondaryArgs = ctx.expr().map { visitExpr(it) }
         val args = listOf(datetimePart) + secondaryArgs
         val metas = ctx.func.getSourceMetaContainer()
-        val funId = stringToDefnid(ctx.func.text, metas)
-        call(funId.lowercase(), args, metas)
+        val funId = funDefnid(ctx.func.text, metas)
+        call(funId, args, metas)
     }
 
     override fun visitSubstring(ctx: PartiQLParser.SubstringContext) = PartiqlAst.build {
         val args = ctx.expr().map { visitExpr(it) }
         val metas = ctx.SUBSTRING().getSourceMetaContainer()
-        val funId = stringToDefnid(ctx.SUBSTRING().text, metas)
-        call(funId.lowercase(), args, metas)
+        val funId = funDefnid(ctx.SUBSTRING().text, metas)
+        call(funId, args, metas)
     }
 
     override fun visitPosition(ctx: PartiQLParser.PositionContext) = PartiqlAst.build {
         val args = ctx.expr().map { visitExpr(it) }
         val metas = ctx.POSITION().getSourceMetaContainer()
-        val funId = stringToDefnid(ctx.POSITION().text, metas)
-        call(funId.lowercase(), args, metas)
+        val funId = funDefnid(ctx.POSITION().text, metas)
+        call(funId, args, metas)
     }
 
     override fun visitOverlay(ctx: PartiQLParser.OverlayContext) = PartiqlAst.build {
         val args = ctx.expr().map { visitExpr(it) }
         val metas = ctx.OVERLAY().getSourceMetaContainer()
-        val funId = stringToDefnid(ctx.OVERLAY().text, metas)
-        call(funId.lowercase(), args, metas)
+        val funId = funDefnid(ctx.OVERLAY().text, metas)
+        call(funId, args, metas)
     }
 
     override fun visitCountAll(ctx: PartiQLParser.CountAllContext) = PartiqlAst.build {
         val metas = ctx.COUNT().getSourceMetaContainer()
-        val funId = stringToDefnid(ctx.func.text, metas)
+        val funId = funDefnid(ctx.func.text, metas)
         callAgg(
             all(),
-            funId.lowercase(),
+            funId,
             lit(ionInt(1)),
             metas + metaContainerOf(IsCountStarMeta.instance)
         )
@@ -1350,8 +1361,8 @@ internal class PartiQLPigVisitor(
         val timeExpr = visitExpr(ctx.rhs)
         val args = listOf(datetimePart, timeExpr)
         val metas = ctx.EXTRACT().getSourceMetaContainer()
-        val funId = stringToDefnid(ctx.EXTRACT().text, metas)
-        call(funId.lowercase(), args, metas)
+        val funId = funDefnid(ctx.EXTRACT().text, metas)
+        call(funId, args, metas)
     }
 
     /**
@@ -1396,16 +1407,16 @@ internal class PartiQLPigVisitor(
         val target = visitExpr(ctx.target)
         val args = listOfNotNull(modifier, substring, target)
         val metas = ctx.func.getSourceMetaContainer()
-        val funId = stringToDefnid(ctx.func.text, metas)
-        call(funId.lowercase(), args, metas)
+        val funId = funDefnid(ctx.func.text, metas)
+        call(funId, args, metas)
     }
 
     override fun visitAggregateBase(ctx: PartiQLParser.AggregateBaseContext) = PartiqlAst.build {
         val strategy = getStrategy(ctx.setQuantifierStrategy(), default = all())
         val arg = visitExpr(ctx.expr())
         val metas = ctx.func.getSourceMetaContainer()
-        val funId = stringToDefnid(ctx.func.text, metas)
-        callAgg(strategy, funId.lowercase(), arg, metas)
+        val funId = funDefnid(ctx.func.text, metas)
+        callAgg(strategy, funId, arg, metas)
     }
 
     /**
@@ -1429,8 +1440,8 @@ internal class PartiQLPigVisitor(
             )
         }
         val metas = ctx.func.getSourceMetaContainer()
-        val funId = stringToDefnid(ctx.func.text, metas)
-        callWindow(funId.lowercase(), over, args, metas)
+        val funId = funDefnid(ctx.func.text, metas)
+        callWindow(funId, over, args, metas)
     }
 
     override fun visitOver(ctx: PartiQLParser.OverContext) = PartiqlAst.build {
@@ -1656,15 +1667,16 @@ internal class PartiQLPigVisitor(
     }
 
     override fun visitTypeCustom(ctx: PartiQLParser.TypeCustomContext) = PartiqlAst.build {
-        val typIdent = visitIdentifier(ctx.identifier())
-        val typSymbol = typIdent.name
-        val metas = typIdent.metas
-        val customName = when (val name = typSymbol.text.lowercase()) {
+        // TODO: the renaming transformation from typIdOrig to typId can probably be more elegant,
+        //   perhaps if the lookup tables are based on identifiers rather than strings
+        val typIdOrig = readIdentifierAsDefnid(ctx.identifier())
+        val metas = typIdOrig.metas
+        val customName = when (val name = typIdOrig.string().lowercase()) {
             in customKeywords -> name
             in customTypeAliases.keys -> customTypeAliases.get(name)!!
             else -> throw ParserException("Invalid custom type name: $name", ErrorCode.PARSE_INVALID_QUERY)
         }
-        val typId = stringToDefnid(customName, metas)
+        val typId = defnid_(SymbolPrimitive(customName, metas))
         customType(typId, metas)
     }
 

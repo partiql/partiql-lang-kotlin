@@ -3,6 +3,7 @@ package org.partiql.lang.planner.transforms.plan
 import com.amazon.ionelement.api.ionInt
 import com.amazon.ionelement.api.ionString
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.domains.string
 import org.partiql.lang.eval.visitors.VisitorTransformBase
 import org.partiql.plan.Binding
 import org.partiql.plan.Case
@@ -139,9 +140,9 @@ internal class RelConverter {
             is PartiqlAst.Expr.Select -> convert(expr)
             else -> RexConverter.convert(scan.expr)
         },
-        alias = scan.asAlias?.text,
-        at = scan.atAlias?.text,
-        by = scan.byAlias?.text
+        alias = scan.asAlias?.string(),
+        at = scan.atAlias?.string(),
+        by = scan.byAlias?.string()
     )
 
     /**
@@ -150,9 +151,9 @@ internal class RelConverter {
     private fun convertUnpivot(scan: PartiqlAst.FromSource.Unpivot) = Plan.relUnpivot(
         common = empty,
         value = RexConverter.convert(scan.expr),
-        alias = scan.asAlias?.text,
-        at = scan.atAlias?.text,
-        by = scan.byAlias?.text
+        alias = scan.asAlias?.string(),
+        at = scan.atAlias?.string(),
+        by = scan.byAlias?.string()
     )
 
     /**
@@ -198,7 +199,7 @@ internal class RelConverter {
         if (groupBy != null) {
             // GROUP AS is implemented as an aggregation function
             if (groupBy.groupAsAlias != null) {
-                calls.add(convertGroupAs(groupBy.groupAsAlias!!.text, sel.from))
+                calls.add(convertGroupAs(groupBy.groupAsAlias!!.string(), sel.from))
             }
             groups = groupBy.keyList.keys.map { convertGroupByKey(it) }
             strategy = when (groupBy.strategy) {
@@ -222,7 +223,7 @@ internal class RelConverter {
      * Each GROUP BY becomes a binding available in the output tuples of [Rel.Aggregate]
      */
     private fun convertGroupByKey(groupKey: PartiqlAst.GroupKey) = binding(
-        name = groupKey.asAlias?.text ?: error("not normalized, group key $groupKey missing unique name"),
+        name = groupKey.asAlias?.string() ?: error("not normalized, group key $groupKey missing unique name"),
         expr = groupKey.expr
     )
 
@@ -346,14 +347,14 @@ internal class RelConverter {
             if (asAlias == null) {
                 error("not normalized, scan is missing an alias")
             }
-            listOf(asAlias!!.text)
+            listOf(asAlias!!.string())
         }
         is PartiqlAst.FromSource.Join -> left.bindings() + right.bindings()
         is PartiqlAst.FromSource.Unpivot -> {
             if (asAlias == null) {
                 error("not normalized, scan is missing an alias")
             }
-            listOf(asAlias!!.text)
+            listOf(asAlias!!.string())
         }
     }
 
@@ -380,7 +381,7 @@ internal class RelConverter {
                 binding(bindingName, path)
             }
             is PartiqlAst.ProjectItem.ProjectExpr -> binding(
-                name = it.asAlias?.text ?: error("not normalized"),
+                name = it.asAlias?.string() ?: error("not normalized"),
                 expr = it.expr
             )
         }

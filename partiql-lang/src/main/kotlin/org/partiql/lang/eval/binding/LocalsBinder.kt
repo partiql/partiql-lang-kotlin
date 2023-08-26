@@ -14,6 +14,7 @@
 
 package org.partiql.lang.eval.binding
 
+import org.partiql.lang.Ident
 import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.Bindings
@@ -39,7 +40,7 @@ abstract class LocalsBinder {
 }
 
 /** Sources can be aliased to names with 'AS', 'AT' or 'BY' */
-data class Alias(val asName: String, val atName: String?, val byName: String?)
+data class Alias(val asName: Ident, val atName: Ident?, val byName: Ident?)
 
 /**
  * Returns a [LocalsBinder] for the bindings specified in the [Alias] ('AS' and optionally 'AT').
@@ -56,8 +57,8 @@ data class Alias(val asName: String, val atName: String?, val byName: String?)
 fun List<Alias>.localsBinder(missingValue: ExprValue): LocalsBinder {
 
     // For each 'as' and 'at' alias, create a locals accessor => { name: binding_accessor }
-    fun compileBindings(keyMangler: (String) -> String = { it }): Map<String, (List<ExprValue>) -> ExprValue?> {
-        data class Binder(val name: String, val func: (List<ExprValue>) -> ExprValue)
+    fun compileBindings(keyMangler: (Ident) -> Ident = { it }): Map<Ident, (List<ExprValue>) -> ExprValue?> {
+        data class Binder(val name: Ident, val func: (List<ExprValue>) -> ExprValue)
         return this.mapIndexed { index, alias ->
             sequenceOf(
                 // the alias binds to the value itself
@@ -108,11 +109,13 @@ fun List<Alias>.localsBinder(missingValue: ExprValue): LocalsBinder {
     // Compile case-[in]sensitive bindings and return the accessor
     return object : LocalsBinder() {
         val caseSensitiveBindings = compileBindings()
-        val caseInsensitiveBindings = compileBindings { it.lowercase() }
+        val caseInsensitiveBindings = compileBindings { it.essentialLowercase() }
         override fun binderForName(bindingName: BindingName): (List<ExprValue>) -> ExprValue? {
             return when (bindingName.bindingCase) {
-                BindingCase.INSENSITIVE -> caseInsensitiveBindings[bindingName.name.lowercase()]
-                BindingCase.SENSITIVE -> caseSensitiveBindings[bindingName.name]
+// wVG               BindingCase.INSENSITIVE -> caseInsensitiveBindings[bindingName.name.lowercase()]
+                BindingCase.INSENSITIVE -> caseInsensitiveBindings[Ident.createRegular(bindingName.name)]
+// wVG               BindingCase.SENSITIVE -> caseSensitiveBindings[bindingName.name]
+                BindingCase.SENSITIVE -> caseSensitiveBindings[Ident.createAsIs(bindingName.name)]
             } ?: dynamicLocalsBinder(bindingName)
         }
     }
