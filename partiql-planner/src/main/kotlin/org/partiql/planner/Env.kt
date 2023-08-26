@@ -24,6 +24,7 @@ import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
 import org.partiql.types.function.FunctionParameter
 import org.partiql.types.function.FunctionSignature
+import org.partiql.value.PartiQLValueExperimental
 
 /**
  * Handle for associating a catalog with the metadata; pair of catalog to data.
@@ -75,7 +76,7 @@ internal sealed class FnMatch {
 
     public class Error(
         public val fn: Fn.Unresolved,
-        public val args: List<Rex.Op.Call.Arg>,
+        public val args: List<Rex>,
         public val candidates: List<FunctionSignature>,
     ) : FnMatch()
 }
@@ -133,6 +134,7 @@ internal enum class ResolutionStrategy {
  * @property plugins        List of plugins for global resolution
  * @property session        Session details
  */
+@OptIn(PartiQLValueExperimental::class)
 internal class Env(
     private val header: Header,
     private val plugins: List<Plugin>,
@@ -177,14 +179,10 @@ internal class Env(
     /**
      * Leverages a [FunctionResolver] to find a matching function defined in the [Header].
      */
-    internal fun resolveFn(fn: Fn.Unresolved, args: List<Rex.Op.Call.Arg>): FnMatch {
+    internal fun resolveFn(fn: Fn.Unresolved, args: List<Rex>): FnMatch {
         val candidates = header.lookup(fn)
         val parameters = args.mapIndexed { i, arg ->
-            val name = "arg-$i"
-            when (arg) {
-                is Rex.Op.Call.Arg.Type -> FunctionParameter.T(name, arg.type.toRuntimeType())
-                is Rex.Op.Call.Arg.Value -> FunctionParameter.V(name, arg.rex.type.toRuntimeType())
-            }
+            FunctionParameter("arg-$i", arg.type.toRuntimeType())
         }
         val match = functionResolver.match(candidates, parameters)
         return when (match) {

@@ -3,6 +3,7 @@ package org.partiql.planner.typer
 import org.partiql.planner.Header
 import org.partiql.types.function.FunctionParameter
 import org.partiql.types.function.FunctionSignature
+import org.partiql.value.PartiQLValueExperimental
 
 /**
  * Function arguments list. The planner is responsible for mapping arguments to parameters.
@@ -25,6 +26,7 @@ internal class Match(
 /**
  * Logic for matching signatures to arguments.
  */
+@OptIn(PartiQLValueExperimental::class)
 internal class FunctionResolver(private val header: Header) {
 
     /**
@@ -56,10 +58,8 @@ internal class FunctionResolver(private val header: Header) {
                 a::class != p::class -> return null
                 // 2. Exact match
                 a.type == p.type -> mapping.add(null)
-                // 3. Type parameter mismatch
-                (a is FunctionParameter.T && p is FunctionParameter.T) -> return null
-                // 4. Check for an implicit CAST
-                (a is FunctionParameter.V && p is FunctionParameter.V) -> {
+                // 3. Check for coercion
+                else -> {
                     val cast = header.lookupCast(a.type, p.type)
                     when (cast) {
                         null -> return null // short-circuit

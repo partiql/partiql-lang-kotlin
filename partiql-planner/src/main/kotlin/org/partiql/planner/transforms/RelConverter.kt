@@ -367,10 +367,7 @@ internal object RelConverter {
                     type = (StaticType.ANY),
                 )
                 schema.add(binding)
-                val args = agg.args.map { arg ->
-                    val rex = arg.toRex(env)
-                    Plan.rexOpCallArgValue(rex)
-                }
+                val args = agg.args.map { arg -> arg.toRex(env) }
                 val id = AstToPlan.convert(agg.function)
                 val fn = Plan.fnUnresolved(id)
                 Plan.relOpAggregateAgg(fn, args)

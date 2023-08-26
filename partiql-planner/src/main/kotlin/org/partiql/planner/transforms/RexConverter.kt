@@ -56,7 +56,7 @@ internal object RexConverter {
         override fun visitExprUnary(node: Expr.Unary, context: Env) = transform {
             val type = (StaticType.ANY)
             // Args
-            val arg = rexOpCallArgValue(node.expr.accept(ToRex, context))
+            val arg = node.expr.accept(ToRex, context)
             val args = listOf(arg)
             // Fn
             val id = identifierSymbol(node.op.name.lowercase(), Identifier.CaseSensitivity.SENSITIVE)
@@ -69,8 +69,8 @@ internal object RexConverter {
         override fun visitExprBinary(node: Expr.Binary, context: Env) = transform {
             val type = (StaticType.ANY)
             // Args
-            val lhs = rexOpCallArgValue(node.lhs.accept(ToRex, context))
-            val rhs = rexOpCallArgValue(node.rhs.accept(ToRex, context))
+            val lhs = node.lhs.accept(ToRex, context)
+            val rhs = node.rhs.accept(ToRex, context)
             val args = listOf(lhs, rhs)
             // Fn
             val id = identifierSymbol(node.op.name.lowercase(), Identifier.CaseSensitivity.SENSITIVE)
@@ -110,10 +110,7 @@ internal object RexConverter {
         override fun visitExprCall(node: Expr.Call, context: Env) = transform {
             val type = (StaticType.ANY)
             // Args
-            val args = node.args.map {
-                val rex = visitExpr(it, context)
-                rexOpCallArgValue(rex)
-            }
+            val args = node.args.map { visitExpr(it, context) }
             // Fn
             val id = AstToPlan.convert(node.function)
             val fn = fnUnresolved(id)
@@ -340,7 +337,7 @@ internal object RexConverter {
             val fn = ATTRIBUTES[attribute]
             if (fn == null) {
                 // err?
-                error("Unknown session attribute $fn")
+                error("Unknown session attribute $attribute")
             }
             val call = call(fn)
             rex(type, call)
@@ -385,7 +382,7 @@ internal object RexConverter {
             val id = identifierSymbol(name.lowercase(), Identifier.CaseSensitivity.SENSITIVE)
             val fn = fnUnresolved(id)
             // wrap
-            val arg = rexOpCallArgValue(rex(StaticType.BOOL, call))
+            val arg = rex(StaticType.BOOL, call)
             // rewrite call
             return rexOpCall(fn, listOf(arg))
         }
@@ -393,7 +390,7 @@ internal object RexConverter {
         private fun PlanFactory.call(name: String, vararg args: Rex): Rex.Op.Call {
             val id = identifierSymbol(name, Identifier.CaseSensitivity.SENSITIVE)
             val fn = fnUnresolved(id)
-            return rexOpCall(fn, args.map { rexOpCallArgValue(it) })
+            return rexOpCall(fn, args.toList())
         }
     }
 }

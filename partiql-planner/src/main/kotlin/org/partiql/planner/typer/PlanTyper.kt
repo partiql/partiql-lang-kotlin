@@ -39,6 +39,7 @@ import org.partiql.value.TextValue
  * @property env
  * @property onProblem
  */
+@OptIn(PartiQLValueExperimental::class)
 internal class PlanTyper(
     private val env: Env,
     private val onProblem: ProblemCallback,
@@ -227,6 +228,7 @@ internal class PlanTyper(
      *
      * @property locals TypeEnv in which this rex tree is evaluated.
      */
+    @OptIn(PartiQLValueExperimental::class)
     private inner class RexTyper(private val locals: TypeEnv) : PlanRewriter<StaticType?>() {
 
         override fun visitRex(node: Rex, ctx: StaticType?): Rex = super.visitRexOp(node.op, node.type) as Rex
@@ -311,7 +313,7 @@ internal class PlanTyper(
 
         override fun visitRexOpCall(node: Rex.Op.Call, ctx: StaticType?): Rex = rewrite {
             val fn = node.fn
-            val args = node.args.map { visitCallArg(it) }
+            val args = node.args.map { visitRex(it, null) }
             // Already resolved; unreachable but handle gracefully.
             if (fn is Fn.Resolved) {
                 val type = fn.signature.returns.toStaticType()
@@ -331,12 +333,6 @@ internal class PlanTyper(
                     rex(StaticType.NULL_OR_MISSING, rexOpErr())
                 }
             }
-        }
-
-        // TODO https://github.com/partiql/partiql-lang-kotlin/issues/1179
-        private fun visitCallArg(node: Rex.Op.Call.Arg): Rex.Op.Call.Arg = when (node) {
-            is Rex.Op.Call.Arg.Type -> visitRexOpCallArgType(node, null) as Rex.Op.Call.Arg
-            is Rex.Op.Call.Arg.Value -> visitRexOpCallArgValue(node, null) as Rex.Op.Call.Arg
         }
 
         override fun visitRexOpCase(node: Rex.Op.Case, ctx: StaticType?): Rex {
@@ -378,7 +374,7 @@ internal class PlanTyper(
                         // A field is only included in the StructType if its key is a text literal
                         val key = field.k.op as Rex.Op.Lit
                         if (key.value is TextValue<*>) {
-                            val name = (key.value as TextValue<*>).string
+                            val name = (key.value as TextValue<*>).string!!
                             val type = field.v.type
                             structKeysSeent.add(name)
                             structTypeFields.add(StructType.Field(name, type))
@@ -531,7 +527,7 @@ internal class PlanTyper(
             when (val key = step.key.op) {
                 is Rex.Op.Lit -> {
                     if (key.value is TextValue<*>) {
-                        val name = (key.value as TextValue<*>).string
+                        val name = (key.value as TextValue<*>).string!!
                         val case = BindingCase.SENSITIVE
                         val binding = BindingName(name, case)
                         env.inferStructLookup(struct, binding)
@@ -614,7 +610,7 @@ internal class PlanTyper(
                 val v = (step.key.op as Rex.Op.Lit).value
                 if (v is TextValue<*>) {
                     // add to prefix
-                    bindingSteps.add(BindingName(v.string, BindingCase.SENSITIVE))
+                    bindingSteps.add(BindingName(v.string!!, BindingCase.SENSITIVE))
                 } else {
                     // short-circuit
                     break
@@ -640,28 +636,21 @@ internal class PlanTyper(
     /**
      * Rewrites function arguments, wrapping in the given function if exists.
      */
-    private fun Plan.rewriteFnArgs(
-        mapping: List<FunctionSignature?>,
-        args: List<Rex.Op.Call.Arg>,
-    ): List<Rex.Op.Call.Arg> {
+    private fun Plan.rewriteFnArgs(mapping: List<FunctionSignature?>, args: List<Rex>): List<Rex> {
         if (mapping.size != args.size) {
             error("Fatal, malformed function mapping") // should be unreachable given how a mapping is generated.
         }
-        val newArgs = mutableListOf<Rex.Op.Call.Arg>()
+        val newArgs = mutableListOf<Rex>()
         for (i in mapping.indices) {
             val a = args[i]
             val m = mapping[i]
-            if (m == null || a is Rex.Op.Call.Arg.Type) {
+            if (m == null) {
                 newArgs.add(a)
             } else {
-                val vArg = (a as Rex.Op.Call.Arg.Value).rex
-                val tArg = m.returns.toStaticType()
-                val cast = rexOpCall(
-                    fn = fnResolved(m),
-                    args = listOf(rexOpCallArgValue(vArg), rexOpCallArgType(tArg)),
-                )
-                val rex = rex(tArg, cast)
-                rexOpCallArgValue(rex)
+                // rewrite
+                val type = m.returns.toStaticType()
+                val cast = rexOpCall(fnResolved(m), listOf(a))
+                rex(type, cast)
             }
         }
         return newArgs
@@ -699,12 +688,7 @@ internal class PlanTyper(
                 sourceLocation = UNKNOWN_PROBLEM_LOCATION,
                 details = PlanningProblemDetails.UnknownFunction(
                     match.fn.identifier.normalize(),
-                    match.args.map { a ->
-                        when (a) {
-                            is Rex.Op.Call.Arg.Type -> a.type
-                            is Rex.Op.Call.Arg.Value -> a.rex.type
-                        }
-                    }
+                    match.args.map { a -> a.type },
                 )
             )
         )

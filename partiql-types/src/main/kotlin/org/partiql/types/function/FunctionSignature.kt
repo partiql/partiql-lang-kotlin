@@ -16,6 +16,7 @@ public class FunctionSignature(
     public val returns: PartiQLValueType,
     public val parameters: List<FunctionParameter> = emptyList(),
     public val isDeterministic: Boolean = true,
+    public val isClosed: Boolean = true,
     public val description: String? = null,
 ) {
 
@@ -35,12 +36,16 @@ public class FunctionSignature(
     override fun toString(): String = buildString {
         val fn = name.uppercase()
         val indent = "  "
-        val extent = parameters.maxOf { it.name.length }
         append("CREATE FUNCTION \"$fn\" (")
-        for (p in parameters) {
-            val ws = (extent - p.name.length) + 1
-            appendLine()
-            append(indent).append(p.name.uppercase()).append(" ".repeat(ws)).append(p.type.name)
+        if (parameters.isNotEmpty()) {
+            val extent = parameters.maxOf { it.name.length }
+            for (i in parameters.indices) {
+                val p = parameters[i]
+                val ws = (extent - p.name.length) + 1
+                appendLine()
+                append(indent).append(p.name.uppercase()).append(" ".repeat(ws)).append(p.type.name)
+                if (i != parameters.size - 1) append(",")
+            }
         }
         appendLine(" )")
         append(indent).appendLine("RETURNS $returns")

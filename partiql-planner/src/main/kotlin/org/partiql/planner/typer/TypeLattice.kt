@@ -1,56 +1,34 @@
 package org.partiql.planner.typer
 
-import org.partiql.types.PartiQLValueType
-import org.partiql.types.PartiQLValueType.BAG
-import org.partiql.types.PartiQLValueType.BINARY
-import org.partiql.types.PartiQLValueType.BLOB
-import org.partiql.types.PartiQLValueType.BOOL
-import org.partiql.types.PartiQLValueType.BYTE
-import org.partiql.types.PartiQLValueType.CHAR
-import org.partiql.types.PartiQLValueType.CLOB
-import org.partiql.types.PartiQLValueType.DATE
-import org.partiql.types.PartiQLValueType.DECIMAL
-import org.partiql.types.PartiQLValueType.FLOAT32
-import org.partiql.types.PartiQLValueType.FLOAT64
-import org.partiql.types.PartiQLValueType.INT
-import org.partiql.types.PartiQLValueType.INT16
-import org.partiql.types.PartiQLValueType.INT32
-import org.partiql.types.PartiQLValueType.INT64
-import org.partiql.types.PartiQLValueType.INT8
-import org.partiql.types.PartiQLValueType.INTERVAL
-import org.partiql.types.PartiQLValueType.LIST
-import org.partiql.types.PartiQLValueType.MISSING
-import org.partiql.types.PartiQLValueType.NULL
-import org.partiql.types.PartiQLValueType.NULLABLE_BAG
-import org.partiql.types.PartiQLValueType.NULLABLE_BINARY
-import org.partiql.types.PartiQLValueType.NULLABLE_BLOB
-import org.partiql.types.PartiQLValueType.NULLABLE_BOOL
-import org.partiql.types.PartiQLValueType.NULLABLE_BYTE
-import org.partiql.types.PartiQLValueType.NULLABLE_CHAR
-import org.partiql.types.PartiQLValueType.NULLABLE_CLOB
-import org.partiql.types.PartiQLValueType.NULLABLE_DATE
-import org.partiql.types.PartiQLValueType.NULLABLE_DECIMAL
-import org.partiql.types.PartiQLValueType.NULLABLE_FLOAT32
-import org.partiql.types.PartiQLValueType.NULLABLE_FLOAT64
-import org.partiql.types.PartiQLValueType.NULLABLE_INT
-import org.partiql.types.PartiQLValueType.NULLABLE_INT16
-import org.partiql.types.PartiQLValueType.NULLABLE_INT32
-import org.partiql.types.PartiQLValueType.NULLABLE_INT64
-import org.partiql.types.PartiQLValueType.NULLABLE_INT8
-import org.partiql.types.PartiQLValueType.NULLABLE_INTERVAL
-import org.partiql.types.PartiQLValueType.NULLABLE_LIST
-import org.partiql.types.PartiQLValueType.NULLABLE_SEXP
-import org.partiql.types.PartiQLValueType.NULLABLE_STRING
-import org.partiql.types.PartiQLValueType.NULLABLE_STRUCT
-import org.partiql.types.PartiQLValueType.NULLABLE_SYMBOL
-import org.partiql.types.PartiQLValueType.NULLABLE_TIME
-import org.partiql.types.PartiQLValueType.NULLABLE_TIMESTAMP
-import org.partiql.types.PartiQLValueType.SEXP
-import org.partiql.types.PartiQLValueType.STRING
-import org.partiql.types.PartiQLValueType.STRUCT
-import org.partiql.types.PartiQLValueType.SYMBOL
-import org.partiql.types.PartiQLValueType.TIME
-import org.partiql.types.PartiQLValueType.TIMESTAMP
+import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.PartiQLValueType
+import org.partiql.value.PartiQLValueType.ANY
+import org.partiql.value.PartiQLValueType.BAG
+import org.partiql.value.PartiQLValueType.BINARY
+import org.partiql.value.PartiQLValueType.BLOB
+import org.partiql.value.PartiQLValueType.BOOL
+import org.partiql.value.PartiQLValueType.BYTE
+import org.partiql.value.PartiQLValueType.CHAR
+import org.partiql.value.PartiQLValueType.CLOB
+import org.partiql.value.PartiQLValueType.DATE
+import org.partiql.value.PartiQLValueType.DECIMAL
+import org.partiql.value.PartiQLValueType.FLOAT32
+import org.partiql.value.PartiQLValueType.FLOAT64
+import org.partiql.value.PartiQLValueType.INT
+import org.partiql.value.PartiQLValueType.INT16
+import org.partiql.value.PartiQLValueType.INT32
+import org.partiql.value.PartiQLValueType.INT64
+import org.partiql.value.PartiQLValueType.INT8
+import org.partiql.value.PartiQLValueType.INTERVAL
+import org.partiql.value.PartiQLValueType.LIST
+import org.partiql.value.PartiQLValueType.MISSING
+import org.partiql.value.PartiQLValueType.NULL
+import org.partiql.value.PartiQLValueType.SEXP
+import org.partiql.value.PartiQLValueType.STRING
+import org.partiql.value.PartiQLValueType.STRUCT
+import org.partiql.value.PartiQLValueType.SYMBOL
+import org.partiql.value.PartiQLValueType.TIME
+import org.partiql.value.PartiQLValueType.TIMESTAMP
 
 /**
  * Going with a matrix here (using enum ordinals) as it's simple and avoids walking.
@@ -72,6 +50,7 @@ private enum class CastType { IMPLICIT, EXPLICIT_LOSSLESS, EXPLICIT_LOSSY }
  *
  * Is this indeed a lattice? It's a rather smart sounding word.
  */
+@OptIn(PartiQLValueExperimental::class)
 internal class TypeLattice private constructor(
     private val types: Array<PartiQLValueType>,
     private val graph: TypeGraph,
@@ -106,8 +85,12 @@ internal class TypeLattice private constructor(
             append("| $t1 ")
             for (t2 in types) {
                 val symbol = when (val r = graph[t1][t2]) {
-                    null -> "-"
-                    else -> r.toString()
+                    null -> " "
+                    else -> when (r.type) {
+                        CastType.IMPLICIT -> "⬤"
+                        CastType.EXPLICIT_LOSSLESS -> "◯"
+                        CastType.EXPLICIT_LOSSY -> "△"
+                    }
                 }
                 append("| $symbol ")
             }
@@ -134,7 +117,7 @@ internal class TypeLattice private constructor(
         private fun implicit(): Relationship = Relationship(CastType.IMPLICIT)
 
         private fun lossless(): Relationship = Relationship(CastType.EXPLICIT_LOSSLESS)
-        
+
         private fun lossy(): Relationship = Relationship(CastType.EXPLICIT_LOSSY)
 
         private operator fun <T> Array<T>.set(t: PartiQLValueType, value: T): Unit = this.set(t.ordinal, value)
@@ -151,9 +134,17 @@ internal class TypeLattice private constructor(
                 // initialize all with empty relationships
                 graph[type] = arrayOfNulls(N)
             }
-            graph[NULL] = arrayOfNulls(N)
-            graph[MISSING] = arrayOfNulls(N)
+            graph[ANY] = relationships(
+                ANY to implicit()
+            )
+            graph[NULL] = relationships(
+                NULL to implicit()
+            )
+            graph[MISSING] = relationships(
+                MISSING to implicit()
+            )
             graph[BOOL] = relationships(
+                ANY to implicit(),
                 BOOL to implicit(),
                 INT8 to implicit(),
                 INT16 to implicit(),
@@ -166,20 +157,9 @@ internal class TypeLattice private constructor(
                 CHAR to implicit(),
                 STRING to implicit(),
                 SYMBOL to implicit(),
-                NULLABLE_CHAR to implicit(),
-                NULLABLE_BOOL to lossless(),
-                NULLABLE_INT8 to implicit(),
-                NULLABLE_INT16 to implicit(),
-                NULLABLE_INT32 to implicit(),
-                NULLABLE_INT64 to implicit(),
-                NULLABLE_INT to implicit(),
-                NULLABLE_DECIMAL to implicit(),
-                NULLABLE_FLOAT32 to implicit(),
-                NULLABLE_FLOAT64 to implicit(),
-                NULLABLE_STRING to implicit(),
-                NULLABLE_SYMBOL to implicit(),
             )
             graph[INT8] = relationships(
+                ANY to implicit(),
                 BOOL to lossless(),
                 INT8 to implicit(),
                 INT16 to implicit(),
@@ -191,19 +171,9 @@ internal class TypeLattice private constructor(
                 FLOAT64 to implicit(),
                 STRING to lossless(),
                 SYMBOL to lossless(),
-                NULLABLE_BOOL to lossless(),
-                NULLABLE_INT8 to implicit(),
-                NULLABLE_INT16 to implicit(),
-                NULLABLE_INT32 to implicit(),
-                NULLABLE_INT64 to implicit(),
-                NULLABLE_INT to implicit(),
-                NULLABLE_DECIMAL to implicit(),
-                NULLABLE_FLOAT32 to implicit(),
-                NULLABLE_FLOAT64 to implicit(),
-                NULLABLE_STRING to lossless(),
-                NULLABLE_SYMBOL to lossless(),
             )
             graph[INT16] = relationships(
+                ANY to implicit(),
                 BOOL to lossless(),
                 INT16 to implicit(),
                 INT32 to implicit(),
@@ -214,18 +184,9 @@ internal class TypeLattice private constructor(
                 FLOAT64 to implicit(),
                 STRING to lossless(),
                 SYMBOL to lossless(),
-                NULLABLE_BOOL to lossless(),
-                NULLABLE_INT16 to implicit(),
-                NULLABLE_INT32 to implicit(),
-                NULLABLE_INT64 to implicit(),
-                NULLABLE_INT to implicit(),
-                NULLABLE_DECIMAL to implicit(),
-                NULLABLE_FLOAT32 to implicit(),
-                NULLABLE_FLOAT64 to implicit(),
-                NULLABLE_STRING to lossless(),
-                NULLABLE_SYMBOL to lossless(),
             )
             graph[INT32] = relationships(
+                ANY to implicit(),
                 BOOL to lossless(),
                 INT32 to implicit(),
                 INT64 to implicit(),
@@ -235,17 +196,9 @@ internal class TypeLattice private constructor(
                 FLOAT64 to implicit(),
                 STRING to lossless(),
                 SYMBOL to lossless(),
-                NULLABLE_BOOL to lossless(),
-                NULLABLE_INT32 to implicit(),
-                NULLABLE_INT64 to implicit(),
-                NULLABLE_INT to implicit(),
-                NULLABLE_DECIMAL to implicit(),
-                NULLABLE_FLOAT32 to implicit(),
-                NULLABLE_FLOAT64 to implicit(),
-                NULLABLE_STRING to lossless(),
-                NULLABLE_SYMBOL to lossless(),
             )
             graph[INT64] = relationships(
+                ANY to implicit(),
                 BOOL to lossless(),
                 INT64 to implicit(),
                 INT to implicit(),
@@ -254,16 +207,9 @@ internal class TypeLattice private constructor(
                 FLOAT64 to implicit(),
                 STRING to lossless(),
                 SYMBOL to lossless(),
-                NULLABLE_BOOL to lossless(),
-                NULLABLE_INT64 to implicit(),
-                NULLABLE_INT to implicit(),
-                NULLABLE_DECIMAL to implicit(),
-                NULLABLE_FLOAT32 to implicit(),
-                NULLABLE_FLOAT64 to implicit(),
-                NULLABLE_STRING to lossless(),
-                NULLABLE_SYMBOL to lossless(),
             )
             graph[INT] = relationships(
+                ANY to implicit(),
                 BOOL to lossless(),
                 INT to implicit(),
                 DECIMAL to implicit(),
@@ -271,83 +217,55 @@ internal class TypeLattice private constructor(
                 FLOAT64 to implicit(),
                 STRING to lossless(),
                 SYMBOL to lossless(),
-                NULLABLE_BOOL to lossless(),
-                NULLABLE_INT to implicit(),
-                NULLABLE_DECIMAL to implicit(),
-                NULLABLE_FLOAT32 to implicit(),
-                NULLABLE_FLOAT64 to implicit(),
-                NULLABLE_STRING to lossless(),
-                NULLABLE_SYMBOL to lossless(),
             )
             graph[DECIMAL] = relationships(
+                ANY to implicit(),
                 BOOL to lossless(),
                 DECIMAL to implicit(),
                 FLOAT32 to implicit(),
                 FLOAT64 to implicit(),
                 STRING to lossless(),
                 SYMBOL to lossless(),
-                NULLABLE_BOOL to lossless(),
-                NULLABLE_DECIMAL to implicit(),
-                NULLABLE_FLOAT32 to implicit(),
-                NULLABLE_FLOAT64 to implicit(),
-                NULLABLE_STRING to lossless(),
-                NULLABLE_SYMBOL to lossless(),
             )
             graph[FLOAT32] = relationships(
+                ANY to implicit(),
                 BOOL to lossless(),
                 FLOAT32 to implicit(),
                 FLOAT64 to implicit(),
                 STRING to lossless(),
                 SYMBOL to lossless(),
-                NULLABLE_BOOL to lossless(),
-                NULLABLE_FLOAT32 to implicit(),
-                NULLABLE_FLOAT64 to implicit(),
-                NULLABLE_STRING to lossless(),
-                NULLABLE_SYMBOL to lossless(),
             )
             graph[FLOAT64] = relationships(
+                ANY to implicit(),
                 BOOL to lossless(),
                 FLOAT64 to implicit(),
                 STRING to lossless(),
                 SYMBOL to lossless(),
-                NULLABLE_BOOL to lossless(),
-                NULLABLE_FLOAT64 to implicit(),
-                NULLABLE_STRING to lossless(),
-                NULLABLE_SYMBOL to lossless(),
             )
             graph[CHAR] = relationships(
+                ANY to implicit(),
                 BOOL to lossless(),
                 CHAR to implicit(),
                 STRING to implicit(),
                 SYMBOL to implicit(),
-                NULLABLE_BOOL to lossless(),
-                NULLABLE_CHAR to implicit(),
-                NULLABLE_STRING to implicit(),
-                NULLABLE_SYMBOL to implicit(),
             )
             graph[STRING] = relationships(
+                ANY to implicit(),
                 BOOL to lossless(),
                 STRING to implicit(),
                 SYMBOL to implicit(),
                 CLOB to implicit(),
-                NULLABLE_BOOL to lossless(),
-                NULLABLE_STRING to implicit(),
-                NULLABLE_SYMBOL to implicit(),
-                NULLABLE_CLOB to implicit(),
             )
             graph[SYMBOL] = relationships(
+                ANY to implicit(),
                 BOOL to lossless(),
                 STRING to implicit(),
                 SYMBOL to implicit(),
                 CLOB to implicit(),
-                NULLABLE_BOOL to lossless(),
-                NULLABLE_STRING to implicit(),
-                NULLABLE_SYMBOL to implicit(),
-                NULLABLE_CLOB to implicit(),
             )
             graph[CLOB] = relationships(
+                ANY to implicit(),
                 CLOB to implicit(),
-                NULLABLE_CLOB to implicit(),
             )
             graph[BINARY] = arrayOfNulls(N)
             graph[BYTE] = arrayOfNulls(N)
@@ -357,162 +275,24 @@ internal class TypeLattice private constructor(
             graph[TIMESTAMP] = arrayOfNulls(N)
             graph[INTERVAL] = arrayOfNulls(N)
             graph[BAG] = relationships(
+                ANY to implicit(),
                 BAG to implicit(),
-                NULLABLE_BAG to implicit(),
             )
             graph[LIST] = relationships(
+                ANY to implicit(),
                 BAG to implicit(),
                 SEXP to implicit(),
                 LIST to implicit(),
-                NULLABLE_BAG to implicit(),
-                NULLABLE_SEXP to implicit(),
-                NULLABLE_LIST to implicit(),
             )
             graph[SEXP] = relationships(
+                ANY to implicit(),
                 BAG to implicit(),
                 SEXP to implicit(),
                 LIST to implicit(),
-                NULLABLE_BAG to implicit(),
-                NULLABLE_SEXP to implicit(),
-                NULLABLE_LIST to implicit(),
             )
             graph[STRUCT] = relationships(
+                ANY to implicit(),
                 STRUCT to implicit(),
-                NULLABLE_STRUCT to implicit(),
-            )
-            graph[NULLABLE_BOOL] = relationships(
-                NULLABLE_CHAR to implicit(),
-                NULLABLE_BOOL to lossless(),
-                NULLABLE_INT8 to implicit(),
-                NULLABLE_INT16 to implicit(),
-                NULLABLE_INT32 to implicit(),
-                NULLABLE_INT64 to implicit(),
-                NULLABLE_INT to implicit(),
-                NULLABLE_DECIMAL to implicit(),
-                NULLABLE_FLOAT32 to implicit(),
-                NULLABLE_FLOAT64 to implicit(),
-                NULLABLE_STRING to implicit(),
-                NULLABLE_SYMBOL to implicit(),
-            )
-            graph[NULLABLE_INT8] = relationships(
-                NULLABLE_BOOL to lossless(),
-                NULLABLE_INT8 to implicit(),
-                NULLABLE_INT16 to implicit(),
-                NULLABLE_INT32 to implicit(),
-                NULLABLE_INT64 to implicit(),
-                NULLABLE_INT to implicit(),
-                NULLABLE_DECIMAL to implicit(),
-                NULLABLE_FLOAT32 to implicit(),
-                NULLABLE_FLOAT64 to implicit(),
-                NULLABLE_STRING to lossless(),
-                NULLABLE_SYMBOL to lossless(),
-            )
-            graph[NULLABLE_INT16] = relationships(
-                NULLABLE_BOOL to lossless(),
-                NULLABLE_INT16 to implicit(),
-                NULLABLE_INT32 to implicit(),
-                NULLABLE_INT64 to implicit(),
-                NULLABLE_INT to implicit(),
-                NULLABLE_DECIMAL to implicit(),
-                NULLABLE_FLOAT32 to implicit(),
-                NULLABLE_FLOAT64 to implicit(),
-                NULLABLE_STRING to lossless(),
-                NULLABLE_SYMBOL to lossless(),
-            )
-            graph[NULLABLE_INT32] = relationships(
-                NULLABLE_BOOL to lossless(),
-                NULLABLE_INT32 to implicit(),
-                NULLABLE_INT64 to implicit(),
-                NULLABLE_INT to implicit(),
-                NULLABLE_DECIMAL to implicit(),
-                NULLABLE_FLOAT32 to implicit(),
-                NULLABLE_FLOAT64 to implicit(),
-                NULLABLE_STRING to lossless(),
-                NULLABLE_SYMBOL to lossless(),
-            )
-            graph[NULLABLE_INT64] = relationships(
-                NULLABLE_BOOL to lossless(),
-                NULLABLE_INT64 to implicit(),
-                NULLABLE_INT to implicit(),
-                NULLABLE_DECIMAL to implicit(),
-                NULLABLE_FLOAT32 to implicit(),
-                NULLABLE_FLOAT64 to implicit(),
-                NULLABLE_STRING to lossless(),
-                NULLABLE_SYMBOL to lossless(),
-            )
-            graph[NULLABLE_INT] = relationships(
-                NULLABLE_BOOL to lossless(),
-                NULLABLE_INT to implicit(),
-                NULLABLE_DECIMAL to implicit(),
-                NULLABLE_FLOAT32 to implicit(),
-                NULLABLE_FLOAT64 to implicit(),
-                NULLABLE_STRING to lossless(),
-                NULLABLE_SYMBOL to lossless(),
-            )
-            graph[NULLABLE_DECIMAL] = relationships(
-                NULLABLE_BOOL to lossless(),
-                NULLABLE_DECIMAL to implicit(),
-                NULLABLE_FLOAT32 to implicit(),
-                NULLABLE_FLOAT64 to implicit(),
-                NULLABLE_STRING to lossless(),
-                NULLABLE_SYMBOL to lossless(),
-            )
-            graph[NULLABLE_FLOAT32] = relationships(
-                NULLABLE_BOOL to lossless(),
-                NULLABLE_FLOAT32 to implicit(),
-                NULLABLE_FLOAT64 to implicit(),
-                NULLABLE_STRING to lossless(),
-                NULLABLE_SYMBOL to lossless(),
-            )
-            graph[NULLABLE_FLOAT64] = relationships(
-                NULLABLE_BOOL to lossless(),
-                NULLABLE_FLOAT64 to implicit(),
-                NULLABLE_STRING to lossless(),
-                NULLABLE_SYMBOL to lossless(),
-            )
-            graph[NULLABLE_CHAR] = relationships(
-                NULLABLE_BOOL to lossless(),
-                NULLABLE_CHAR to implicit(),
-                NULLABLE_STRING to implicit(),
-                NULLABLE_SYMBOL to implicit(),
-            )
-            graph[NULLABLE_STRING] = relationships(
-                NULLABLE_BOOL to lossless(),
-                NULLABLE_STRING to implicit(),
-                NULLABLE_SYMBOL to implicit(),
-                NULLABLE_CLOB to implicit(),
-            )
-            graph[NULLABLE_SYMBOL] = relationships(
-                NULLABLE_BOOL to lossless(),
-                NULLABLE_STRING to implicit(),
-                NULLABLE_SYMBOL to implicit(),
-                NULLABLE_CLOB to implicit(),
-            )
-            graph[NULLABLE_CLOB] = relationships(
-                NULLABLE_CLOB to implicit(),
-            )
-            graph[NULLABLE_BINARY] = arrayOfNulls(N)
-            graph[NULLABLE_BYTE] = arrayOfNulls(N)
-            graph[NULLABLE_BLOB] = arrayOfNulls(N)
-            graph[NULLABLE_DATE] = arrayOfNulls(N)
-            graph[NULLABLE_TIME] = arrayOfNulls(N)
-            graph[NULLABLE_TIMESTAMP] = arrayOfNulls(N)
-            graph[NULLABLE_INTERVAL] = arrayOfNulls(N)
-            graph[NULLABLE_BAG] = relationships(
-                NULLABLE_BAG to implicit(),
-            )
-            graph[NULLABLE_LIST] = relationships(
-                NULLABLE_BAG to implicit(),
-                NULLABLE_SEXP to implicit(),
-                NULLABLE_LIST to implicit(),
-            )
-            graph[NULLABLE_SEXP] = relationships(
-                NULLABLE_BAG to implicit(),
-                NULLABLE_SEXP to implicit(),
-                NULLABLE_LIST to implicit(),
-            )
-            graph[NULLABLE_STRUCT] = relationships(
-                NULLABLE_STRUCT to implicit(),
             )
             return TypeLattice(types, graph.requireNoNulls())
         }

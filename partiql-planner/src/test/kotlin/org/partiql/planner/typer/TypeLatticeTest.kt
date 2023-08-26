@@ -5,7 +5,8 @@ import org.junit.jupiter.api.Test
 class TypeLatticeTest {
 
     @Test
-    fun latticeDotDump() {
+    fun latticeAsciidocDump() {
+        // this test only exists for dumping the type lattice as Asciidoc
         println(TypeLattice.partiql())
     }
 }
