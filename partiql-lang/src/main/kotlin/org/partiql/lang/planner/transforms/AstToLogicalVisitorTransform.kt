@@ -529,7 +529,7 @@ internal class AstToLogicalVisitorTransform(
                         is PartiqlAst.ProjectItem.ProjectExpr ->
                             structField(
                                 lit(
-                                    projectItem.asAlias?.toIonElement()
+                                    projectItem.asAlias?.string()?.toIonElement()
                                         ?: errAstNotNormalized("SELECT-list item alias not specified")
                                 ),
                                 transformExpr(projectItem.expr),

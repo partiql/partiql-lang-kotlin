@@ -810,7 +810,7 @@ class ASTPrettyPrinterTest {
                     let: Let
                         letBinding1: LetBinding
                             expr: Lit 1
-                            name: Symbol a
+                            name: Defnid a
             """.trimIndent()
         )
     }

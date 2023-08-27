@@ -48,7 +48,7 @@ class GroupByItemAliasVisitorTransform(var nestLevel: Int = 0) : VisitorTransfor
                         if (it.asAlias == null) {
                             metas = metas + metaContainerOf(IsSyntheticNameMeta.TAG to IsSyntheticNameMeta.instance)
                         }
-                        val alias = defnid(aliasText)
+                        val alias = defnid(aliasText, metas)
 
                         groupKey(transformExpr(it.expr), alias, alias.metas)
                     },

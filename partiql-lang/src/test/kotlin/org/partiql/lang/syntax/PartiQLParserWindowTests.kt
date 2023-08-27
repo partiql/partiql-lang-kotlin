@@ -20,7 +20,7 @@ class PartiQLParserWindowTests : PartiQLParserTestBase() {
                 (project_list
                     (project_expr
                         (call_window
-                            lag
+                            (defnid lag)
                             (over
                                 (window_partition_list
                                     (id b (case_insensitive) (unqualified))
@@ -57,7 +57,7 @@ class PartiQLParserWindowTests : PartiQLParserTestBase() {
                 (project_list
                     (project_expr
                         (call_window
-                            lead
+                            (defnid lead)
                             (over
                                 (window_partition_list
                                     (id b (case_insensitive) (unqualified))
@@ -94,7 +94,7 @@ class PartiQLParserWindowTests : PartiQLParserTestBase() {
                 (project_list
                     (project_expr
                         (call_window
-                            lag
+                            (defnid lag)
                             (over
                                 (window_partition_list
                                     (id b (case_insensitive) (unqualified))
@@ -133,7 +133,7 @@ class PartiQLParserWindowTests : PartiQLParserTestBase() {
                 (project_list
                     (project_expr
                         (call_window
-                            lead
+                            (defnid lead)
                             (over
                                 (window_partition_list
                                     (id b (case_insensitive) (unqualified))
@@ -171,7 +171,7 @@ class PartiQLParserWindowTests : PartiQLParserTestBase() {
                 (project_list
                     (project_expr
                         (call_window
-                            lag
+                            (defnid lag)
                             (over
                                 (window_partition_list
                                     (id b (case_insensitive) (unqualified))
@@ -209,7 +209,7 @@ class PartiQLParserWindowTests : PartiQLParserTestBase() {
                 (project_list
                     (project_expr
                         (call_window
-                            lead
+                            (defnid lead)
                             (over
                                 (window_partition_list
                                     (id b (case_insensitive) (unqualified))

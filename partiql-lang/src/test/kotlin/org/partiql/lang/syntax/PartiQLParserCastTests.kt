@@ -41,7 +41,7 @@ class PartiQLParserCastTests : PartiQLParserTestBase() {
             ),
             Case(
                 source = "CAST(`1.2e0` as ES_FLOAT)",
-                ast = PartiqlAst.build { cast(lit(ionFloat(1.2)), customType(defnid("es_floa)t"))) }
+                ast = PartiqlAst.build { cast(lit(ionFloat(1.2)), customType(defnid("es_float"))) }
             ),
             Case(
                 source = "CAST('xyz' as ES_TEXT)",

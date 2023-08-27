@@ -195,73 +195,73 @@ class PartiQLParserTest : PartiQLParserTestBase() {
     @Test
     fun callEmpty() = assertExpression(
         "foobar()",
-        "(call foobar)"
+        "(call (defnid foobar))"
     )
 
     @Test
     fun callOneArgument() = assertExpression(
         "foobar(1)",
-        "(call foobar (lit 1))"
+        "(call (defnid foobar) (lit 1))"
     )
 
     @Test
     fun callTwoArgument() = assertExpression(
         "foobar(1, 2)",
-        "(call foobar (lit 1) (lit 2))"
+        "(call (defnid foobar) (lit 1) (lit 2))"
     )
 
     @Test
     fun callSubstringSql92Syntax() = assertExpression(
         "substring('test' from 100)",
-        "(call substring (lit \"test\") (lit 100))"
+        "(call (defnid substring) (lit \"test\") (lit 100))"
     )
 
     @Test
     fun callSubstringSql92SyntaxWithLength() = assertExpression(
         "substring('test' from 100 for 50)",
-        "(call substring (lit \"test\") (lit 100) (lit 50))"
+        "(call (defnid substring) (lit \"test\") (lit 100) (lit 50))"
     )
 
     @Test
     fun callSubstringNormalSyntax() = assertExpression(
         "substring('test', 100)",
-        "(call substring (lit \"test\") (lit 100))"
+        "(call (defnid substring) (lit \"test\") (lit 100))"
     )
 
     @Test
     fun callSubstringNormalSyntaxWithLength() = assertExpression(
         "substring('test', 100, 50)",
-        "(call substring (lit \"test\") (lit 100) (lit 50))"
+        "(call (defnid substring) (lit \"test\") (lit 100) (lit 50))"
     )
 
     @Test
     fun callTrimSingleArgument() = assertExpression(
         "trim('test')",
-        "(call trim (lit \"test\"))"
+        "(call (defnid trim) (lit \"test\"))"
     )
 
     @Test
     fun callTrimTwoArgumentsDefaultSpecification() = assertExpression(
         "trim(' ' from 'test')",
-        "(call trim (lit \" \") (lit \"test\"))"
+        "(call (defnid trim) (lit \" \") (lit \"test\"))"
     )
 
     @Test
     fun callTrimTwoArgumentsUsingBoth() = assertExpression(
         "trim(both from 'test')",
-        "(call trim (lit both) (lit \"test\"))"
+        "(call (defnid trim) (lit both) (lit \"test\"))"
     )
 
     @Test
     fun callTrimTwoArgumentsUsingLeading() = assertExpression(
         "trim(leading from 'test')",
-        "(call trim (lit leading) (lit \"test\"))"
+        "(call (defnid trim) (lit leading) (lit \"test\"))"
     )
 
     @Test
     fun callTrimTwoArgumentsUsingTrailing() = assertExpression(
         "trim(trailing from 'test')",
-        "(call trim (lit trailing) (lit \"test\"))"
+        """(call (defnid trim) (lit trailing) (lit "test"))"""
     )
 
     // ****************************************
@@ -271,19 +271,19 @@ class PartiQLParserTest : PartiQLParserTestBase() {
     @Test
     fun negCall() = assertExpression(
         "-baz()",
-        "(neg (call baz))"
+        "(neg (call (defnid baz)))"
     )
 
     @Test
     fun posNegIdent() = assertExpression(
         "+(-baz())",
-        "(pos (neg (call baz)))"
+        "(pos (neg (call (defnid baz))))"
     )
 
     @Test
     fun posNegIdentNoSpaces() = assertExpression(
         "+-baz()",
-        "(pos (neg (call baz)))"
+        "(pos (neg (call (defnid baz))))"
     )
 
     @Test
@@ -362,7 +362,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
     @Test
     fun callIsVarchar() = assertExpression(
         "f() IS VARCHAR(200)",
-        "(is_type (call f) (character_varying_type 200))"
+        "(is_type (call (defnid f)) (character_varying_type 200))"
     )
 
     @Test
@@ -380,43 +380,43 @@ class PartiQLParserTest : PartiQLParserTestBase() {
     @Test
     fun callIsNotVarchar() = assertExpression(
         "f() IS NOT VARCHAR(200)",
-        "(not (is_type (call f) (character_varying_type 200)))"
+        "(not (is_type (call (defnid f)) (character_varying_type 200)))"
     )
 
     @Test
     fun callWithMultiple() = assertExpression(
         "foobar(5, 6, a)",
-        "(call foobar (lit 5) (lit 6) (id a (case_insensitive) (unqualified)))"
+        "(call (defnid foobar) (lit 5) (lit 6) (id a (case_insensitive) (unqualified)))"
     )
 
     @Test
     fun aggregateFunctionCall() = assertExpression(
         "COUNT(a)",
-        """(call_agg (all) count (id a (case_insensitive) (unqualified)))"""
+        """(call_agg (all) (defnid count) (id a (case_insensitive) (unqualified)))"""
     )
 
     @Test
     fun aggregateDistinctFunctionCall() = assertExpression(
         "SUM(DISTINCT a)",
-        "(call_agg (distinct) sum (id a (case_insensitive) (unqualified)))"
+        "(call_agg (distinct) (defnid sum) (id a (case_insensitive) (unqualified)))"
     )
 
     @Test
     fun countStarFunctionCall() = assertExpression(
         "COUNT(*)",
-        "(call_agg (all) count (lit 1))"
+        "(call_agg (all) (defnid count) (lit 1))"
     )
 
     @Test
     fun countFunctionCall() = assertExpression(
         "COUNT(a)",
-        "(call_agg (all) count (id a (case_insensitive) (unqualified)))"
+        "(call_agg (all) (defnid count) (id a (case_insensitive) (unqualified)))"
     )
 
     @Test
     fun countDistinctFunctionCall() = assertExpression(
         "COUNT(DISTINCT a)",
-        "(call_agg (distinct) count (id a (case_insensitive) (unqualified)))"
+        "(call_agg (distinct) (defnid count) (id a (case_insensitive) (unqualified)))"
     )
 
     // ****************************************
@@ -513,7 +513,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
     @Test
     fun pathWithCallAndDotStar() = assertExpression(
         "foo(x, y).a.*.b",
-        """(path (call foo (id x (case_insensitive) (unqualified)) (id y (case_insensitive) (unqualified)))
+        """(path (call (defnid foo) (id x (case_insensitive) (unqualified)) (id y (case_insensitive) (unqualified)))
            (path_expr (lit "a") (case_insensitive))
            (path_unpivot)
            (path_expr (lit "b") (case_insensitive)))""".trimMargin()
@@ -589,13 +589,13 @@ class PartiQLParserTest : PartiQLParserTestBase() {
     @Test
     fun castAsEsBoolean() = assertExpression(
         "CAST(TRUE AS ES_BOOLEAN)",
-        "(cast (lit true) (custom_type es_boolean))"
+        "(cast (lit true) (custom_type (defnid es_boolean)))"
     )
 
     @Test
     fun castAsRsInteger() = assertExpression(
         "CAST(1.123 AS RS_INTEGER)",
-        "(cast (lit 1.123) (custom_type rs_integer))"
+        "(cast (lit 1.123) (custom_type (defnid rs_integer)))"
     )
 
     // ****************************************
@@ -828,49 +828,49 @@ class PartiQLParserTest : PartiQLParserTestBase() {
     @Test
     fun callDateArithYear() = assertDateArithmetic(
         "date_<op>(year, a, b)",
-        "(call date_<op> (lit YEAR) (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))"
+        "(call (defnid date_<op>) (lit YEAR) (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))"
     )
 
     @Test
     fun callDateArithMonth() = assertDateArithmetic(
         "date_<op>(month, a, b)",
-        "(call date_<op> (lit MONTH) (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))"
+        "(call (defnid date_<op>) (lit MONTH) (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))"
     )
 
     @Test
     fun callDateArithDay() = assertDateArithmetic(
         "date_<op>(day, a, b)",
-        "(call date_<op> (lit DAY) (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))"
+        "(call (defnid date_<op>) (lit DAY) (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))"
     )
 
     @Test
     fun callDateArithHour() = assertDateArithmetic(
         "date_<op>(hour, a, b)",
-        "(call date_<op> (lit HOUR) (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))"
+        "(call (defnid date_<op>) (lit HOUR) (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))"
     )
 
     @Test
     fun callDateArithMinute() = assertDateArithmetic(
         "date_<op>(minute, a, b)",
-        "(call date_<op> (lit MINUTE) (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))"
+        "(call (defnid date_<op>) (lit MINUTE) (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))"
     )
 
     @Test
     fun callDateArithSecond() = assertDateArithmetic(
         "date_<op>(second, a, b)",
-        "(call date_<op> (lit SECOND) (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))"
+        "(call (defnid date_<op>) (lit SECOND) (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))"
     )
 
     @Test // invalid evaluation, but valid parsing
     fun callDateArithTimezoneHour() = assertDateArithmetic(
         "date_<op>(timezone_hour, a, b)",
-        "(call date_<op> (lit TIMEZONE_HOUR) (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))"
+        "(call (defnid date_<op>) (lit TIMEZONE_HOUR) (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))"
     )
 
     @Test // invalid evaluation, but valid parsing
     fun callDateArithTimezoneMinute() = assertDateArithmetic(
         "date_<op>(timezone_minute, a, b)",
-        "(call date_<op> (lit TIMEZONE_MINUTE) (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))"
+        "(call (defnid date_<op>) (lit TIMEZONE_MINUTE) (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))"
     )
 
     // ****************************************
@@ -879,55 +879,55 @@ class PartiQLParserTest : PartiQLParserTestBase() {
     @Test
     fun callExtractYear() = assertExpression(
         "extract(year from a)",
-        "(call extract (lit YEAR) (id a (case_insensitive) (unqualified)))"
+        "(call (defnid extract) (lit YEAR) (id a (case_insensitive) (unqualified)))"
     )
 
     @Test
     fun callExtractMonth() = assertExpression(
         "extract(month from a)",
-        "(call extract (lit MONTH) (id a (case_insensitive) (unqualified)))"
+        "(call (defnid extract) (lit MONTH) (id a (case_insensitive) (unqualified)))"
     )
 
     @Test
     fun callExtractDay() = assertExpression(
         "extract(day from a)",
-        "(call extract (lit DAY) (id a (case_insensitive) (unqualified)))"
+        "(call (defnid extract) (lit DAY) (id a (case_insensitive) (unqualified)))"
     )
 
     @Test
     fun callExtractHour() = assertExpression(
         "extract(hour from a)",
-        "(call extract (lit HOUR) (id a (case_insensitive) (unqualified)))"
+        "(call (defnid extract) (lit HOUR) (id a (case_insensitive) (unqualified)))"
     )
 
     @Test
     fun callExtractMinute() = assertExpression(
         "extract(minute from a)",
-        "(call extract (lit MINUTE) (id a (case_insensitive) (unqualified)))"
+        "(call (defnid extract) (lit MINUTE) (id a (case_insensitive) (unqualified)))"
     )
 
     @Test
     fun callExtractSecond() = assertExpression(
         "extract(second from a)",
-        "(call extract (lit SECOND) (id a (case_insensitive) (unqualified)))"
+        "(call (defnid extract) (lit SECOND) (id a (case_insensitive) (unqualified)))"
     )
 
     @Test
     fun callExtractTimezoneHour() = assertExpression(
         "extract(timezone_hour from a)",
-        "(call extract (lit TIMEZONE_HOUR) (id a (case_insensitive) (unqualified)))"
+        "(call (defnid extract) (lit TIMEZONE_HOUR) (id a (case_insensitive) (unqualified)))"
     )
 
     @Test
     fun callExtractTimezoneMinute() = assertExpression(
         "extract(timezone_minute from a)",
-        "(call extract (lit TIMEZONE_MINUTE) (id a (case_insensitive) (unqualified)))"
+        "(call (defnid extract) (lit TIMEZONE_MINUTE) (id a (case_insensitive) (unqualified)))"
     )
 
     @Test
     fun caseInsensitiveFunctionName() = assertExpression(
         "mY_fUnCtIoN(a)",
-        "(call my_function (id a (case_insensitive) (unqualified)))"
+        "(call (defnid my_function) (id a (case_insensitive) (unqualified)))"
     )
 
     @Test
@@ -996,49 +996,53 @@ class PartiQLParserTest : PartiQLParserTestBase() {
     @Test
     fun selectAliasDotStar() = assertExpression(
         "SELECT t.* FROM table1 AS t",
-        "(select (project (project_list (project_all (id t (case_insensitive) (unqualified))))) (from (scan (id table1 (case_insensitive) (unqualified)) t null null)))"
+        "(select (project (project_list (project_all (id t (case_insensitive) (unqualified))))) (from (scan (id table1 (case_insensitive) (unqualified)) (defnid t) null null)))"
     )
 
     @Test
     fun selectPathAliasDotStar() = assertExpression(
         "SELECT a.b.* FROM table1 AS t",
-        "(select (project (project_list (project_all (path (id a (case_insensitive) (unqualified)) (path_expr (lit \"b\") (case_insensitive)))))) (from (scan (id table1 (case_insensitive) (unqualified)) t null null)))"
+        """
+            (select 
+               (project (project_list (project_all (path (id a (case_insensitive) (unqualified)) (path_expr (lit "b") (case_insensitive)))))) 
+               (from (scan (id table1 (case_insensitive) (unqualified)) (defnid t) null null)))
+                      """
     )
 
     @Test
     fun selectWithFromAt() = assertExpression(
         "SELECT ord FROM table1 AT ord",
-        "(select (project (project_list (project_expr (id ord (case_insensitive) (unqualified)) null))) (from (scan (id table1 (case_insensitive) (unqualified)) null ord null)))"
+        "(select (project (project_list (project_expr (id ord (case_insensitive) (unqualified)) null))) (from (scan (id table1 (case_insensitive) (unqualified)) null (defnid ord) null)))"
     )
 
     @Test
     fun selectWithFromAsAndAt() = assertExpression(
         "SELECT ord, val FROM table1 AS val AT ord",
-        "(select (project (project_list (project_expr (id ord (case_insensitive) (unqualified)) null) (project_expr (id val (case_insensitive) (unqualified)) null))) (from (scan (id table1 (case_insensitive) (unqualified)) val ord null)))"
+        "(select (project (project_list (project_expr (id ord (case_insensitive) (unqualified)) null) (project_expr (id val (case_insensitive) (unqualified)) null))) (from (scan (id table1 (case_insensitive) (unqualified)) (defnid val) (defnid ord) null)))"
     )
 
     @Test
     fun selectWithFromIdBy() = assertExpression(
         "SELECT * FROM table1 BY uid",
-        "(select (project (project_star)) (from (scan (id table1 (case_insensitive) (unqualified)) null null uid)))"
+        "(select (project (project_star)) (from (scan (id table1 (case_insensitive) (unqualified)) null null (defnid uid))))"
     )
 
     @Test
     fun selectWithFromAtIdBy() = assertExpression(
         "SELECT * FROM table1 AT ord BY uid",
-        "(select (project (project_star)) (from (scan (id table1 (case_insensitive) (unqualified)) null ord uid)))"
+        "(select (project (project_star)) (from (scan (id table1 (case_insensitive) (unqualified)) null (defnid ord) (defnid uid))))"
     )
 
     @Test
     fun selectWithFromAsIdBy() = assertExpression(
         "SELECT * FROM table1 AS t BY uid",
-        "(select (project (project_star)) (from (scan (id table1 (case_insensitive) (unqualified)) t null uid)))"
+        "(select (project (project_star)) (from (scan (id table1 (case_insensitive) (unqualified)) (defnid t) null (defnid uid))))"
     )
 
     @Test
     fun selectWithFromAsAndAtIdBy() = assertExpression(
         "SELECT * FROM table1 AS val AT ord BY uid",
-        "(select (project (project_star)) (from (scan (id table1 (case_insensitive) (unqualified)) val ord uid)))"
+        "(select (project (project_star)) (from (scan (id table1 (case_insensitive) (unqualified)) (defnid val) (defnid ord) (defnid uid))))"
     )
 
     @Test
@@ -1058,7 +1062,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
         """
         (select
           (project (project_list (project_expr (id ord (case_insensitive) (unqualified)) null)))
-          (from (unpivot (id item (case_insensitive) (unqualified)) null name null))
+          (from (unpivot (id item (case_insensitive) (unqualified)) null (defnid name) null))
         )
         """
     )
@@ -1069,7 +1073,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
         """
         (select
           (project (project_list (project_expr (id ord (case_insensitive) (unqualified)) null)))
-          (from (unpivot (id item (case_insensitive) (unqualified)) val null null))
+          (from (unpivot (id item (case_insensitive) (unqualified)) (defnid val) null null))
         )
         """
     )
@@ -1080,7 +1084,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
         """
         (select
           (project (project_list (project_expr (id ord (case_insensitive) (unqualified)) null)))
-          (from (unpivot (id item (case_insensitive) (unqualified)) val name null))
+          (from (unpivot (id item (case_insensitive) (unqualified)) (defnid val) (defnid name) null))
         )
         """
     )
@@ -1159,10 +1163,10 @@ class PartiQLParserTest : PartiQLParserTestBase() {
              (from 
                 (join
                     (inner)
-                    (scan (id table1 (case_insensitive) (unqualified)) t1 null null) 
+                    (scan (id table1 (case_insensitive) (unqualified)) (defnid t1) null null) 
                     (scan (id table2 (case_insensitive) (unqualified)) null null null)
                     null))
-             (where (call f (id t1 (case_insensitive) (unqualified))))
+             (where (call (defnid f) (id t1 (case_insensitive) (unqualified))))
            )
         """
     )
@@ -1172,14 +1176,15 @@ class PartiQLParserTest : PartiQLParserTestBase() {
         "SELECT a a1, b b1 FROM table1 t1, table2 WHERE f(t1)",
         """
         (select
-            (project (project_list (project_expr (id a (case_insensitive) (unqualified)) a1) (project_expr (id b (case_insensitive) (unqualified)) b1)))
+            (project (project_list (project_expr (id a (case_insensitive) (unqualified)) (defnid a1)) 
+                                   (project_expr (id b (case_insensitive) (unqualified)) (defnid b1))))
             (from 
                 (join 
                     (inner) 
-                    (scan (id table1 (case_insensitive) (unqualified)) t1 null null) 
+                    (scan (id table1 (case_insensitive) (unqualified)) (defnid t1) null null) 
                     (scan (id table2 (case_insensitive) (unqualified)) null null null) 
                     null))
-            (where (call f (id t1 (case_insensitive) (unqualified))))
+            (where (call (defnid f) (id t1 (case_insensitive) (unqualified))))
         )
         """
     )
@@ -1191,10 +1196,10 @@ class PartiQLParserTest : PartiQLParserTestBase() {
         (select
           (project
             (project_list
-              (project_expr (plus (call_agg (all) sum (id a (case_insensitive) (unqualified))) (call_agg (all) count (lit 1))) null)
-              (project_expr (call_agg (all) avg (id b (case_insensitive) (unqualified))) null)
-              (project_expr (call_agg (all) min (id c (case_insensitive) (unqualified))) null)
-              (project_expr (call_agg (all) max (plus (id d (case_insensitive) (unqualified)) (id e (case_insensitive) (unqualified)))) null)
+              (project_expr (plus (call_agg (all) (defnid sum) (id a (case_insensitive) (unqualified))) (call_agg (all) (defnid count) (lit 1))) null)
+              (project_expr (call_agg (all) (defnid avg) (id b (case_insensitive) (unqualified))) null)
+              (project_expr (call_agg (all) (defnid min) (id c (case_insensitive) (unqualified))) null)
+              (project_expr (call_agg (all) (defnid max) (plus (id d (case_insensitive) (unqualified)) (id e (case_insensitive) (unqualified)))) null)
             )
           )
           (from (scan (id foo (case_insensitive) (unqualified)) null null null))
@@ -1211,21 +1216,23 @@ class PartiQLParserTest : PartiQLParserTestBase() {
         """(select
              (project
                (project_list
-                 (project_expr (path (call process (id t (case_insensitive) (unqualified))) (path_expr (lit "a") (case_insensitive)) (path_expr (lit 0) (case_sensitive))) a)
-                 (project_expr (path (id t2 (case_insensitive) (unqualified)) (path_expr (lit "b") (case_insensitive))) b)
+                 (project_expr (path (call (defnid process) (id t (case_insensitive) (unqualified))) (path_expr (lit "a") (case_insensitive)) (path_expr (lit 0) (case_sensitive))) 
+                               (defnid a))
+                 (project_expr (path (id t2 (case_insensitive) (unqualified)) (path_expr (lit "b") (case_insensitive))) 
+                               (defnid b))
                )
              )
              (from
                (join 
                  (inner) 
-                 (scan (path (id t1 (case_insensitive) (unqualified)) (path_expr (lit "a") (case_insensitive))) t null null) 
+                 (scan (path (id t1 (case_insensitive) (unqualified)) (path_expr (lit "a") (case_insensitive))) (defnid t) null null) 
                  (scan (path (id t2 (case_insensitive) (unqualified)) (path_expr (lit "x") (case_insensitive)) (path_unpivot) (path_expr (lit "b") (case_insensitive))) null null null)
                  null
                )
              )
              (where
                (and
-                 (call test (path (id t2 (case_insensitive) (unqualified)) (path_expr (lit "name") (case_insensitive))) (path (id t1 (case_insensitive) (unqualified)) (path_expr (lit "name") (case_insensitive))))
+                 (call (defnid test) (path (id t2 (case_insensitive) (unqualified)) (path_expr (lit "name") (case_insensitive))) (path (id t1 (case_insensitive) (unqualified)) (path_expr (lit "name") (case_insensitive))))
                  (eq (path (id t1 (case_insensitive) (unqualified)) (path_expr (lit "id") (case_insensitive))) (path (id t2 (case_insensitive) (unqualified)) (path_expr (lit "id") (case_insensitive))))
                )
              )
@@ -1242,19 +1249,22 @@ class PartiQLParserTest : PartiQLParserTestBase() {
     @Test
     fun selectValueWithSingleAliasedFrom() = assertExpression(
         "SELECT VALUE v FROM table1 AS v",
-        "(select (project (project_value (id v (case_insensitive) (unqualified)))) (from (scan (id table1 (case_insensitive) (unqualified)) v null null)))"
+        "(select (project (project_value (id v (case_insensitive) (unqualified)))) (from (scan (id table1 (case_insensitive) (unqualified)) (defnid v) null null)))"
     )
 
     @Test
     fun selectAllValues() = assertExpression(
         "SELECT ALL VALUE v FROM table1 AS v",
-        "(select (project (project_value (id v (case_insensitive) (unqualified)))) (from (scan (id table1 (case_insensitive) (unqualified)) v null null)))"
+        "(select (project (project_value (id v (case_insensitive) (unqualified)))) (from (scan (id table1 (case_insensitive) (unqualified)) (defnid v) null null)))"
     )
 
     @Test
     fun selectDistinctValues() = assertExpression(
         "SELECT DISTINCT VALUE v FROM table1 AS v",
-        "(select (setq (distinct)) (project (project_value (id v (case_insensitive) (unqualified)))) (from (scan (id table1 (case_insensitive) (unqualified)) v null null)))"
+        """
+            (select (setq (distinct)) 
+                    (project (project_value (id v (case_insensitive) (unqualified)))) 
+                    (from (scan (id table1 (case_insensitive) (unqualified)) (defnid v) null null)))"""
     )
 
     @Test
@@ -1335,7 +1345,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
             (from
                 (scan 
                     (id foo (case_insensitive) (unqualified))
-                    f
+                    (defnid f)
                     null
                     null))
             (where
@@ -1662,19 +1672,19 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                     (group_key_list
                         (group_key
                             (id a (case_insensitive) (unqualified))
-                            x)
+                            (defnid x))
                         (group_key
                             (plus
                                 (id b (case_insensitive) (unqualified))
                                 (id c (case_insensitive) (unqualified)))
-                            y)
+                            (defnid y))
                         (group_key
                             (call
-                                foo
+                                (defnid foo)
                                 (id d (case_insensitive) (unqualified)))
-                            z)
+                            (defnid z))
                         )
-                    g
+                    (defnid g)
                 )
              )
            )
@@ -1717,7 +1727,10 @@ class PartiQLParserTest : PartiQLParserTestBase() {
             (project (project_list (project_expr (id g (case_insensitive) (unqualified)) null)))
             (from (scan (id data (case_insensitive) (unqualified)) null null null))
             (where (eq (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))))
-            (group (group_by (group_full) (group_key_list (group_key (id c (case_insensitive) (unqualified)) null) (group_key (id d (case_insensitive) (unqualified)) null)) g))
+            (group (group_by (group_full) 
+                             (group_key_list (group_key (id c (case_insensitive) (unqualified)) null) 
+                                             (group_key (id d (case_insensitive) (unqualified)) null)) 
+                             (defnid g)))
             (having (gt (id d (case_insensitive) (unqualified)) (lit 6)))
           )
         """
@@ -1751,7 +1764,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (id g (case_insensitive) (unqualified))))
             (from (scan (id data (case_insensitive) (unqualified)) null null null))
             (where (eq (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))))
-            (group (group_by (group_full) (group_key_list (group_key (id c (case_insensitive) (unqualified)) null) (group_key (id d (case_insensitive) (unqualified)) null)) g))
+            (group (group_by (group_full) (group_key_list (group_key (id c (case_insensitive) (unqualified)) null) (group_key (id d (case_insensitive) (unqualified)) null)) (defnid g)))
             (having (gt (id d (case_insensitive) (unqualified)) (lit 6)))
           )
         """
@@ -2186,7 +2199,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (lit 1)
                 null
                 (on_conflict
-                    (call attribute_exists (id hk (case_insensitive) (unqualified)))
+                    (call (defnid attribute_exists) (id hk (case_insensitive) (unqualified)))
                     (do_nothing)
                 )
               )
@@ -2206,7 +2219,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (lit 1)
                 null
                 (on_conflict
-                    (not (call attribute_exists (id hk (case_insensitive) (unqualified))))
+                    (not (call (defnid attribute_exists) (id hk (case_insensitive) (unqualified))))
                     (do_nothing)
                 )
               )
@@ -2336,7 +2349,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                     (dml_op_list
                         (insert
                             (id foo (case_insensitive) (unqualified))
-                            f
+                            (defnid f)
                             (bag
                                 (struct
                                     (expr_pair
@@ -2361,7 +2374,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                     (dml_op_list
                         (insert
                             (id foo (case_insensitive) (unqualified))
-                            f
+                            (defnid f)
                             (bag
                                 (struct
                                     (expr_pair
@@ -2393,7 +2406,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                     (dml_op_list
                         (insert
                             (id foo (case_insensitive) (unqualified))
-                            f
+                            (defnid f)
                             (bag
                                 (struct
                                     (expr_pair
@@ -2551,7 +2564,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                     (dml_op_list
                         (insert
                             (id foo (case_insensitive) (unqualified))
-                            f
+                            (defnid f)
                             (bag
                                 (struct
                                     (expr_pair
@@ -2576,7 +2589,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                     (dml_op_list
                         (insert
                             (id foo (case_insensitive) (unqualified))
-                            f
+                            (defnid f)
                             (bag
                                 (struct
                                     (expr_pair
@@ -2608,7 +2621,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                     (dml_op_list
                         (insert
                             (id foo (case_insensitive) (unqualified))
-                            f
+                            (defnid f)
                             (bag
                                 (struct
                                     (expr_pair
@@ -2738,7 +2751,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                     (dml_op_list
                         (insert
                             (id foo (case_insensitive) (unqualified))
-                            f
+                            (defnid f)
                             (bag
                                 (struct
                                     (expr_pair
@@ -2822,7 +2835,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                     (dml_op_list
                         (insert
                             (id foo (case_insensitive) (unqualified))
-                            f
+                            (defnid f)
                             (bag
                                 (struct
                                     (expr_pair
@@ -2872,7 +2885,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                     (dml_op_list
                         (insert
                             (id foo (case_insensitive) (unqualified))
-                            f
+                            (defnid f)
                             (bag
                                 (struct
                                     (expr_pair
@@ -3465,7 +3478,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 )
               )
             )
-            (from (scan (id x (case_insensitive) (unqualified)) y null null))
+            (from (scan (id x (case_insensitive) (unqualified)) (defnid y) null null))
             (where (eq (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))))
           )
         """
@@ -3492,7 +3505,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
             )
           )
         )
-        (from (scan (id x (case_insensitive) (unqualified)) y null null))
+        (from (scan (id x (case_insensitive) (unqualified)) (defnid y) null null))
         (where (eq (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))))
         (returning 
             (returning_expr 
@@ -3518,7 +3531,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
             (from
                 (scan
                     (id x (case_insensitive) (unqualified))
-                    y
+                    (defnid y)
                     null
                     null))
             (where
@@ -3544,7 +3557,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
             (from
                 (scan
                     (id x (case_insensitive) (unqualified))
-                    y
+                    (defnid y)
                     null
                     null))
             (where
@@ -3576,7 +3589,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
               )
             )    
             (from
-              (scan (id x (case_insensitive) (unqualified)) y null null))
+              (scan (id x (case_insensitive) (unqualified)) (defnid y) null null))
             (where
               (eq
                 (id a (case_insensitive) (unqualified))
@@ -3595,7 +3608,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                   (path
                     (id y (case_insensitive) (unqualified))
                     (path_expr (lit "a") (case_insensitive))))))
-            (from (scan (id x (case_insensitive) (unqualified)) y null null))
+            (from (scan (id x (case_insensitive) (unqualified)) (defnid y) null null))
             (where (eq (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))))
           )
         """
@@ -3613,7 +3626,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                     (path (id z (case_insensitive) (unqualified)) (path_expr (lit "kingdom") (case_insensitive)))
                     (lit "Fungi")))))
             (from
-              (scan (id zoo (case_insensitive) (unqualified)) z null null)))
+              (scan (id zoo (case_insensitive) (unqualified)) (defnid z) null null)))
         """
     )
 
@@ -3629,7 +3642,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                     (path (id z (case_insensitive) (unqualified)) (path_expr (lit "kingdom") (case_insensitive)))
                     (lit "Fungi")))))
             (from
-              (scan (id zoo (case_insensitive) (unqualified)) null z_ord null)))
+              (scan (id zoo (case_insensitive) (unqualified)) null (defnid z_ord) null)))
         """
     )
 
@@ -3645,7 +3658,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                     (path (id z (case_insensitive) (unqualified)) (path_expr (lit "kingdom") (case_insensitive)))
                     (lit "Fungi")))))
             (from
-              (scan (id zoo (case_insensitive) (unqualified)) null null z_id)))
+              (scan (id zoo (case_insensitive) (unqualified)) null null (defnid z_id))))
         """
     )
 
@@ -3661,7 +3674,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                     (path (id z (case_insensitive) (unqualified)) (path_expr (lit "kingdom") (case_insensitive)))
                     (lit "Fungi")))))
             (from
-              (scan (id zoo (case_insensitive) (unqualified)) null z_ord z_id)))
+              (scan (id zoo (case_insensitive) (unqualified)) null (defnid z_ord) (defnid z_id))))
         """
     )
 
@@ -3829,7 +3842,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
         """
           (dml
             (operations (dml_op_list (delete)))
-            (from (scan (id x (case_insensitive) (unqualified)) y null null))
+            (from (scan (id x (case_insensitive) (unqualified)) (defnid y) null null))
           )
         """
     )
@@ -3840,7 +3853,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
         """
             (dml
               (operations ( dml_op_list (delete)))
-              (from (scan (id x (case_insensitive) (unqualified)) null y null)))
+              (from (scan (id x (case_insensitive) (unqualified)) null (defnid y) null)))
         """
     )
 
@@ -3850,7 +3863,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
         """
             (dml
                (operations (dml_op_list (delete)))
-               (from (scan (id x (case_insensitive) (unqualified)) y z null)))
+               (from (scan (id x (case_insensitive) (unqualified)) (defnid y) (defnid z) null)))
         """
     )
 
@@ -3899,7 +3912,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                             (id x (case_insensitive) (unqualified))
                             (path_expr (lit "n") (case_insensitive))
                             (path_expr (lit "m") (case_insensitive)))
-                        y
+                        (defnid y)
                         null    
                         null)))
         """
@@ -3917,8 +3930,8 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                             (id x (case_insensitive) (unqualified))
                             (path_expr (lit "n") (case_insensitive))
                             (path_expr (lit "m") (case_insensitive)))
-                        y
-                        z
+                        (defnid y)
+                        (defnid z)
                         null)))
         """
     )
@@ -3937,7 +3950,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
         """
             (ddl (create_table (identifier foo (case_insensitive))  
               (table_def
-                (column_declaration boo (string_type)))))
+                (column_declaration (defnid boo) (string_type)))))
         """.trimIndent()
     )
 
@@ -3947,7 +3960,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
         """
             (ddl (create_table (identifier user (case_sensitive)) 
               (table_def
-                (column_declaration lastname (string_type)))))
+                (column_declaration (defnid lastname) (string_type)))))
         """.trimIndent()
     )
 
@@ -3968,12 +3981,12 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                         Customer
                         (case_insensitive)) 
                     (table_def
-                        (column_declaration name (string_type)
-                            (column_constraint name_is_present (column_notnull)))
-                        (column_declaration age (integer_type))
-                        (column_declaration city (string_type)
+                        (column_declaration (defnid name) (string_type)
+                            (column_constraint (defnid name_is_present) (column_notnull)))
+                        (column_declaration (defnid age) (integer_type))
+                        (column_declaration (defnid city) (string_type)
                             (column_constraint null (column_null)))
-                        (column_declaration state (string_type)
+                        (column_declaration (defnid state) (string_type)
                             (column_constraint null (column_null))))))
         """.trimIndent()
     )
