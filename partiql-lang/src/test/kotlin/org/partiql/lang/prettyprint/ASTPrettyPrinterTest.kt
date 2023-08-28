@@ -30,9 +30,9 @@ class ASTPrettyPrinterTest {
                     arg5: Select
                         project: ProjectList
                             projectItem1: ProjectExpr
-                                expr: Id baz (case_insensitive) (unqualified)
+                                expr: Vr baz (case_insensitive) (unqualified)
                         from: Scan
-                            Id bar (case_insensitive) (unqualified)
+                            Vr bar (case_insensitive) (unqualified)
             """.trimIndent()
         )
     }
@@ -47,10 +47,10 @@ class ASTPrettyPrinterTest {
             """
                 Ddl
                     op: CreateIndex
-                        indexName: Identifier foo (case_insensitive)
-                        field1: Id x (case_insensitive) (unqualified)
+                        indexName: Id foo (case_insensitive)
+                        field1: Vr x (case_insensitive) (unqualified)
                         field2: Path
-                            root: Id y (case_insensitive) (unqualified)
+                            root: Vr y (case_insensitive) (unqualified)
                             step1: Lit "z"
             """.trimIndent()
         )
@@ -63,7 +63,7 @@ class ASTPrettyPrinterTest {
             """
                 Ddl
                     op: CreateTable
-                        tableName: Identifier foo (case_insensitive)
+                        tableName: Id foo (case_insensitive)
             """.trimIndent()
         )
     }
@@ -75,8 +75,8 @@ class ASTPrettyPrinterTest {
             """
                 Ddl
                     op: DropIndex
-                        table: Identifier foo (case_insensitive)
-                        keys: Identifier bar (case_insensitive)
+                        table: Id foo (case_insensitive)
+                        keys: Id bar (case_insensitive)
             """.trimIndent()
         )
     }
@@ -88,7 +88,7 @@ class ASTPrettyPrinterTest {
             """
                 Ddl
                     op: DropTable
-                        tableName: Identifier foo (case_insensitive)
+                        tableName: Id foo (case_insensitive)
             """.trimIndent()
         )
     }
@@ -104,7 +104,7 @@ class ASTPrettyPrinterTest {
                 Dml
                     operations: DmlOpList
                         op1: Insert
-                            target: Id foo (case_insensitive) (unqualified)
+                            target: Vr foo (case_insensitive) (unqualified)
                             values: Bag
                                 List
                                     Lit 1
@@ -124,11 +124,11 @@ class ASTPrettyPrinterTest {
                 Dml
                     operations: DmlOpList
                         op1: InsertValue
-                            target: Id foo (case_insensitive) (unqualified)
+                            target: Vr foo (case_insensitive) (unqualified)
                             value: Lit 1
-                            index: Id bar (case_insensitive) (unqualified)
+                            index: Vr bar (case_insensitive) (unqualified)
                             onConflict: OnConflict
-                                expr: Id a (case_insensitive) (unqualified)
+                                expr: Vr a (case_insensitive) (unqualified)
                                 conflictAction: DoNothing
             """.trimIndent()
         )
@@ -144,11 +144,11 @@ class ASTPrettyPrinterTest {
                         op1: Set
                             assignment: Assignment
                                 target: Path
-                                    root: Id k (case_insensitive) (unqualified)
+                                    root: Vr k (case_insensitive) (unqualified)
                                     step1: Lit "m"
                                 value: Lit 5
                     from: Scan
-                        Id x (case_insensitive) (unqualified)
+                        Vr x (case_insensitive) (unqualified)
             """.trimIndent()
         )
     }
@@ -161,12 +161,12 @@ class ASTPrettyPrinterTest {
                 Dml
                     operations: DmlOpList
                         op1: Remove
-                            target: Id y (case_insensitive) (unqualified)
+                            target: Vr y (case_insensitive) (unqualified)
                     from: Scan
-                        Id x (case_insensitive) (unqualified)
+                        Vr x (case_insensitive) (unqualified)
                     where: =
-                        Id a (case_insensitive) (unqualified)
-                        Id b (case_insensitive) (unqualified)
+                        Vr a (case_insensitive) (unqualified)
+                        Vr b (case_insensitive) (unqualified)
             """.trimIndent()
         )
     }
@@ -180,7 +180,7 @@ class ASTPrettyPrinterTest {
                     operations: DmlOpList
                         op1: Delete
                     from: Scan
-                        Id y (case_insensitive) (unqualified)
+                        Vr y (case_insensitive) (unqualified)
             """.trimIndent()
         )
     }
@@ -194,29 +194,29 @@ class ASTPrettyPrinterTest {
                     operations: DmlOpList
                         op1: Set
                             assignment: Assignment
-                                target: Id k (case_insensitive) (unqualified)
+                                target: Vr k (case_insensitive) (unqualified)
                                 value: Lit 5
                         op2: Set
                             assignment: Assignment
-                                target: Id m (case_insensitive) (unqualified)
+                                target: Vr m (case_insensitive) (unqualified)
                                 value: Lit 6
                         op3: InsertValue
-                            target: Id c (case_insensitive) (unqualified)
+                            target: Vr c (case_insensitive) (unqualified)
                             value: Bag
                                 Lit 1
                         op4: Remove
-                            target: Id a (case_insensitive) (unqualified)
+                            target: Vr a (case_insensitive) (unqualified)
                         op5: Set
                             assignment: Assignment
-                                target: Id l (case_insensitive) (unqualified)
+                                target: Vr l (case_insensitive) (unqualified)
                                 value: Lit 3
                         op6: Remove
-                            target: Id b (case_insensitive) (unqualified)
+                            target: Vr b (case_insensitive) (unqualified)
                     from: Scan
-                        Id x (case_insensitive) (unqualified)
+                        Vr x (case_insensitive) (unqualified)
                     where: =
-                        Id a (case_insensitive) (unqualified)
-                        Id b (case_insensitive) (unqualified)
+                        Vr a (case_insensitive) (unqualified)
+                        Vr b (case_insensitive) (unqualified)
                     returning: ReturningExpr
                         elem1: ReturningElem
                             mapping: ModifiedOld
@@ -233,7 +233,7 @@ class ASTPrettyPrinterTest {
         checkPrettyPrintAst(
             "a",
             """
-                Id a (case_insensitive) (unqualified)
+                Vr a (case_insensitive) (unqualified)
             """.trimIndent()
         )
     }
@@ -540,8 +540,8 @@ class ASTPrettyPrinterTest {
             "a UNION b",
             """
                 Union
-                    Id a (case_insensitive) (unqualified)
-                    Id b (case_insensitive) (unqualified)
+                    Vr a (case_insensitive) (unqualified)
+                    Vr b (case_insensitive) (unqualified)
             """.trimIndent()
         )
     }
@@ -552,8 +552,8 @@ class ASTPrettyPrinterTest {
             "a EXCEPT b",
             """
                 Except
-                    Id a (case_insensitive) (unqualified)
-                    Id b (case_insensitive) (unqualified)
+                    Vr a (case_insensitive) (unqualified)
+                    Vr b (case_insensitive) (unqualified)
             """.trimIndent()
         )
     }
@@ -564,8 +564,8 @@ class ASTPrettyPrinterTest {
             "a INTERSECT b",
             """
                 Intersect
-                    Id a (case_insensitive) (unqualified)
-                    Id b (case_insensitive) (unqualified)
+                    Vr a (case_insensitive) (unqualified)
+                    Vr b (case_insensitive) (unqualified)
             """.trimIndent()
         )
     }
@@ -576,8 +576,8 @@ class ASTPrettyPrinterTest {
             "a LIKE b",
             """
                 Like
-                    value: Id a (case_insensitive) (unqualified)
-                    pattern: Id b (case_insensitive) (unqualified)
+                    value: Vr a (case_insensitive) (unqualified)
+                    pattern: Vr b (case_insensitive) (unqualified)
             """.trimIndent()
         )
     }
@@ -601,7 +601,7 @@ class ASTPrettyPrinterTest {
             "CASE name WHEN 'jack' THEN 1 END",
             """
                 SimpleCase
-                    expr: Id name (case_insensitive) (unqualified)
+                    expr: Vr name (case_insensitive) (unqualified)
                     cases: ExprPairList
                         pair1: Pair
                             first: Lit "jack"
@@ -619,7 +619,7 @@ class ASTPrettyPrinterTest {
                     cases: ExprPairList
                         pair1: Pair
                             first: =
-                                Id name (case_insensitive) (unqualified)
+                                Vr name (case_insensitive) (unqualified)
                                 Lit "jack"
                             second: Lit 1
             """.trimIndent()
@@ -633,7 +633,7 @@ class ASTPrettyPrinterTest {
             """
                 Struct
                     field1: Pair
-                        first: Id a (case_insensitive) (unqualified)
+                        first: Vr a (case_insensitive) (unqualified)
                         second: Lit 1
             """.trimIndent()
         )
@@ -684,7 +684,7 @@ class ASTPrettyPrinterTest {
             "a.b",
             """
                 Path
-                    root: Id a (case_insensitive) (unqualified)
+                    root: Vr a (case_insensitive) (unqualified)
                     step1: Lit "b"
             """.trimIndent()
         )
@@ -707,7 +707,7 @@ class ASTPrettyPrinterTest {
             "SUM(a)",
             """
                 CallAgg sum
-                    arg: Id a (case_insensitive) (unqualified)
+                    arg: Vr a (case_insensitive) (unqualified)
             """.trimIndent()
         )
     }
@@ -825,8 +825,8 @@ class ASTPrettyPrinterTest {
                     from: Scan
                         Lit 1
                     where: =
-                        Id a (case_insensitive) (unqualified)
-                        Id b (case_insensitive) (unqualified)
+                        Vr a (case_insensitive) (unqualified)
+                        Vr b (case_insensitive) (unqualified)
             """.trimIndent()
         )
     }
@@ -841,15 +841,15 @@ class ASTPrettyPrinterTest {
                     from: Scan
                         Lit 1
                     where: =
-                        Id a (case_insensitive) (unqualified)
-                        Id b (case_insensitive) (unqualified)
+                        Vr a (case_insensitive) (unqualified)
+                        Vr b (case_insensitive) (unqualified)
                     group: Group
                         strategy: GroupFull
                         keyList: GroupKeyList
                             key1: GroupKey
-                                expr: Id c (case_insensitive) (unqualified)
+                                expr: Vr c (case_insensitive) (unqualified)
                     having: =
-                        Id d (case_insensitive) (unqualified)
+                        Vr d (case_insensitive) (unqualified)
                         Lit "123"
             """.trimIndent()
         )
@@ -865,15 +865,15 @@ class ASTPrettyPrinterTest {
                     from: Scan
                         Lit 1
                     where: =
-                        Id a (case_insensitive) (unqualified)
-                        Id b (case_insensitive) (unqualified)
+                        Vr a (case_insensitive) (unqualified)
+                        Vr b (case_insensitive) (unqualified)
                     group: Group
                         strategy: GroupFull
                         keyList: GroupKeyList
                             key1: GroupKey
-                                expr: Id c (case_insensitive) (unqualified)
+                                expr: Vr c (case_insensitive) (unqualified)
                     having: =
-                        Id d (case_insensitive) (unqualified)
+                        Vr d (case_insensitive) (unqualified)
                         Lit "123"
                     limit: Lit 3
                     offset: Lit 4
@@ -892,22 +892,22 @@ class ASTPrettyPrinterTest {
                             expr: Select
                                 project: *
                                 from: Scan
-                                    Id foo (case_insensitive) (unqualified)
+                                    Vr foo (case_insensitive) (unqualified)
                                 where: =
-                                    Id bar (case_insensitive) (unqualified)
+                                    Vr bar (case_insensitive) (unqualified)
                                     Lit 1
                     from: Scan
                         Lit 1
                     where: =
-                        Id a (case_insensitive) (unqualified)
-                        Id b (case_insensitive) (unqualified)
+                        Vr a (case_insensitive) (unqualified)
+                        Vr b (case_insensitive) (unqualified)
                     group: Group
                         strategy: GroupFull
                         keyList: GroupKeyList
                             key1: GroupKey
-                                expr: Id c (case_insensitive) (unqualified)
+                                expr: Vr c (case_insensitive) (unqualified)
                     having: =
-                        Id d (case_insensitive) (unqualified)
+                        Vr d (case_insensitive) (unqualified)
                         Lit "123"
                     limit: Lit 3
                     offset: Lit 4

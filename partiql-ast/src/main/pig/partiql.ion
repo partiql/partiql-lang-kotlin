@@ -87,7 +87,7 @@ may then be further optimized by selecting better implementations of each operat
             (lit value::ion)
 
             // A variable reference
-            (id name::symbol case::case_sensitivity qualifier::scope_qualifier)
+            (vr name::symbol case::case_sensitivity qualifier::scope_qualifier)
 
             // A parameter, i.e. `?`
             (parameter index::int)
@@ -465,20 +465,20 @@ may then be further optimized by selecting better implementations of each operat
         // A data definition operation.
         (sum ddl_op
             // `CREATE TABLE <symbol> ( <table_def> )?`
-            (create_table table_name::identifier def::(? table_def))
+            (create_table table_name::id def::(? table_def))
 
-            // `DROP TABLE <identifier>`
-            (drop_table table_name::identifier)
+            // `DROP TABLE <id>`
+            (drop_table table_name::id)
 
-            // `CREATE INDEX ON <identifier> (<expr> [, <expr>]...)`
+            // `CREATE INDEX ON <id> (<expr> [, <expr>]...)`
             // TODO: add optional table name
-            (create_index index_name::identifier fields::(* expr 1))
+            (create_index index_name::id fields::(* expr 1))
 
-            // DROP INDEX <identifier> ON <identifier>
-            // In Statement, first <identifier> represents keys, second represents table
+            // DROP INDEX <id> ON <id>
+            // In Statement, first <id> represents keys, second represents table
             (drop_index
-                (table identifier)
-                (keys identifier)))
+                (table id)
+                (keys id)))
 
         (product table_def parts::(* table_def_part 1))
 
@@ -513,23 +513,23 @@ may then be further optimized by selecting better implementations of each operat
             (all_old)
         )
 
-        // `identifier` is a "reference identifier" for referring to / looking up an entity
+        // `id` is a "reference identifier" for referring to / looking up an entity
         // that is elsewhere bound to a 'defnid', a "definitional identifier".
-        // `identifier` can be used for names that need to be looked up with a notion of case-sensitivity.
+        // `id` can be used for names that need to be looked up with a notion of case-sensitivity.
 
         // For both `create_index` and `create_table`, there is no notion of case-sensitivity
         // for table identifiers since they are *defining* new identifiers.  However, for `drop_index` and
         // `drop_table` *do* have the notion of case sensitivity since they are referring to existing names.
-        // Identifiers with case-sensitivity is already modeled with the `id` variant of `expr`,
+        // Identifiers with case-sensitivity is already modeled with the `vr` variant of `expr`,
         // but there is no way to specify to PIG that we want to only allow a single variant of a sum as
         // an element of a type.  (Even though in the Kotlin code each varaint is its own type.)  Hence, we
-        // define an `identifier` type above which can be used without opening up an element's domain to all of
+        // define an `id` type above which can be used without opening up an element's domain to all of
         // `expr`.
-        (product identifier name::symbol case::case_sensitivity)
+        (product id symb::symbol case::case_sensitivity)
 
         // A "definitional identifier" is for use in places that introduce, or bind, a name/identifier.
         // This does not keep track of "case sensitivity", in the current design of identifiers.
-        // Upon transition to SQL-conforming identifiers, `defnid` will merge with `identifier`.
+        // Upon transition to SQL-conforming identifiers, `defnid` will merge with `id`.
         (product defnid symb::symbol)
 
         // Represents `<expr> = <expr>` in a DML SET operation.  Note that in this case, `=` is representing
@@ -673,13 +673,13 @@ may then be further optimized by selecting better implementations of each operat
                 // Example as a struct-union. Given a global environment with `foo` bound to `{ a: 42 }` and `bar`
                 // bound to `{ b: 43}`, then:
                 //     (struct
-                //         (struct_fields (id foo))
-                //         (struct_fields (id bar)))
+                //         (struct_fields (vr foo))
+                //         (struct_fields (vr bar)))
                 // Returns { a: 42, b: 43 }
                 // Note that `struct_field` and `struct_fields` may be used in combination:
                 //     (struct
-                //         (struct_fields (id foo))
-                //         (struct_fields (id bar))
+                //         (struct_fields (vr foo))
+                //         (struct_fields (vr bar))
                 //         (struct_field (lit c) (lit 44)))
                 // Returns { a: 42, b: 43, c: 44 }
                 //
@@ -840,7 +840,7 @@ may then be further optimized by selecting better implementations of each operat
                     // consisting of only literal path steps (and with no wildcard or unpivot operators).
                     // Note: partiql_ast uses the `expr` sum type for this, which is too broad.  We're not
                     // changing that at this time because `partiql_ast` is established public API.
-                    target::identifier
+                    target::id
                     operation::dml_operation
                     rows::expr
                 )
@@ -904,7 +904,7 @@ may then be further optimized by selecting better implementations of each operat
         (with expr
             // At this point there should be no undefined variables in the plan.  All variables are rewritten to
             // `local_id`, `global_id`.
-            (exclude id)
+            (exclude vr)
             (include
                 // A resolved reference to a variable that was defined within a query.  Otherwise known as a local
                 // variable. "Resolved" means that the variable is guaranteed to exist and we know its register index.

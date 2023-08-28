@@ -266,7 +266,7 @@ internal class StaticTypeInferenceVisitorTransform(
                 .firstOrNull()
         }
 
-        override fun transformExprId(node: PartiqlAst.Expr.Id): PartiqlAst.Expr {
+        override fun transformExprVr(node: PartiqlAst.Expr.Vr): PartiqlAst.Expr {
             val bindingName = BindingName(node.name.text, node.case.toBindingCase())
 
             val foundType = findBind(bindingName, node.qualifier) ?: error(

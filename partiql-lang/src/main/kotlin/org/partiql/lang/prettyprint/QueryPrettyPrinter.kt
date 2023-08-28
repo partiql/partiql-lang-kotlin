@@ -109,10 +109,10 @@ class QueryPrettyPrinter {
         }
     }
 
-    private fun writeAstNode(node: PartiqlAst.Identifier, sb: StringBuilder) {
+    private fun writeAstNode(node: PartiqlAst.Id, sb: StringBuilder) {
         when (node.case) {
-            is PartiqlAst.CaseSensitivity.CaseSensitive -> sb.append("\"${node.name.text}\"")
-            is PartiqlAst.CaseSensitivity.CaseInsensitive -> sb.append(node.name.text)
+            is PartiqlAst.CaseSensitivity.CaseSensitive -> sb.append("\"${node.symb.text}\"")
+            is PartiqlAst.CaseSensitivity.CaseInsensitive -> sb.append(node.symb.text)
         }
     }
 
@@ -287,7 +287,7 @@ class QueryPrettyPrinter {
             is PartiqlAst.Expr.Lit -> writeAstNode(node, sb)
             is PartiqlAst.Expr.LitTime -> writeAstNode(node, sb)
             is PartiqlAst.Expr.Date -> writeAstNode(node, sb)
-            is PartiqlAst.Expr.Id -> writeAstNode(node, sb)
+            is PartiqlAst.Expr.Vr -> writeAstNode(node, sb)
             is PartiqlAst.Expr.Bag -> writeAstNode(node, sb, level)
             is PartiqlAst.Expr.Sexp -> writeAstNode(node, sb, level)
             is PartiqlAst.Expr.Struct -> writeAstNode(node, sb, level)
@@ -482,7 +482,7 @@ class QueryPrettyPrinter {
         sb.append("?")
     }
 
-    private fun writeAstNode(node: PartiqlAst.Expr.Id, sb: StringBuilder) {
+    private fun writeAstNode(node: PartiqlAst.Expr.Vr, sb: StringBuilder) {
         when (node.case) {
             is PartiqlAst.CaseSensitivity.CaseSensitive -> sb.append("\"${node.name.text}\"")
             is PartiqlAst.CaseSensitivity.CaseInsensitive -> sb.append(node.name.text)

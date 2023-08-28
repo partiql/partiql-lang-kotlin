@@ -211,7 +211,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
         val name = node.symbol
         val case = node.caseSensitivity.toLegacyCaseSensitivity()
         // !! NOT AN EXPRESSION!!
-        identifier(name, case, metas)
+        id(name, case, metas)
     }
 
     fun visitIdentifierSymbolAsExpr(node: Identifier.Symbol) = translate(node) { metas ->
@@ -219,7 +219,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
         val case = node.caseSensitivity.toLegacyCaseSensitivity()
         val scope = unqualified()
         // !! ID EXPRESSION!!
-        id(name, case, scope, metas)
+        vr(name, case, scope, metas)
     }
 
     override fun visitIdentifierQualified(node: Identifier.Qualified, ctx: Ctx) = translate(node) { metas ->
@@ -285,7 +285,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
         val name = v.symbol
         val case = v.caseSensitivity.toLegacyCaseSensitivity()
         val qualifier = node.scope.toLegacyScope()
-        id(name, case, qualifier, metas)
+        vr(name, case, qualifier, metas)
     }
 
     override fun visitExprCall(node: Expr.Call, ctx: Ctx) = translate(node) { metas ->
@@ -401,7 +401,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
         val index = visitExpr(node.key, ctx)
         // Legacy AST marks every index step as CaseSensitive
         val case = when (index) {
-            is PartiqlAst.Expr.Id -> index.case
+            is PartiqlAst.Expr.Vr -> index.case
             else -> PartiqlAst.CaseSensitivity.CaseSensitive()
         }
         pathExpr(index, case, metas)

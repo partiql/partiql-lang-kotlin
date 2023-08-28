@@ -9,7 +9,7 @@ import org.partiql.lang.domains.PartiqlAst
 /**
  * Determines an appropriate column name for the given [PartiqlAst.Expr].
  *
- * If [this] is a [PartiqlAst.Expr.Id], returns the name of the variable.
+ * If [this] is a [PartiqlAst.Expr.Vr], returns the name of the variable.
  *
  * If [this] is a [PartiqlAst.Expr.Path], invokes [PartiqlAst.Expr.Path.extractColumnAlias] to determine the alias.
  *
@@ -19,7 +19,7 @@ import org.partiql.lang.domains.PartiqlAst
  */
 fun PartiqlAst.Expr.extractColumnAlias(idx: Int): String =
     when (this) {
-        is PartiqlAst.Expr.Id -> this.name.text
+        is PartiqlAst.Expr.Vr -> this.name.text
         is PartiqlAst.Expr.Path -> {
             this.extractColumnAlias(idx)
         }

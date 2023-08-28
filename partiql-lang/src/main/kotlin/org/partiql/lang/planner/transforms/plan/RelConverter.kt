@@ -369,7 +369,7 @@ internal class RelConverter {
             is PartiqlAst.ProjectItem.ProjectAll -> {
                 val path = PartiqlAst.Expr.Path(it.expr, listOf(PartiqlAst.PathStep.PathWildcard()))
                 val bindingName = when (val expr = it.expr) {
-                    is PartiqlAst.Expr.Id -> expr.name.text
+                    is PartiqlAst.Expr.Vr -> expr.name.text
                     is PartiqlAst.Expr.Lit -> {
                         when (expr.value.type.isText) {
                             true -> expr.value.stringValue
@@ -444,7 +444,7 @@ internal class RelConverter {
             val name = nextBindingName()
             aggregations.add(binding(name, node))
             return PartiqlAst.build {
-                id(
+                vr(
                     name = name,
                     case = caseInsensitive(),
                     qualifier = unqualified(),

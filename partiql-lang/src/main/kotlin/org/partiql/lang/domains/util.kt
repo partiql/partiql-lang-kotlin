@@ -12,12 +12,12 @@ import org.partiql.lang.ast.StaticTypeMeta
 import org.partiql.lang.eval.BindingCase
 
 // TODO:  once https://github.com/partiql/partiql-ir-generator/issues/6 has been completed, we can delete this.
-fun PartiqlAst.Builder.id(name: String) =
-    id(name, caseInsensitive(), unqualified())
+fun PartiqlAst.Builder.vr(name: String) =
+    vr(name, caseInsensitive(), unqualified())
 
 // TODO:  once https://github.com/partiql/partiql-ir-generator/issues/6 has been completed, we can delete this.
-fun PartiqlLogical.Builder.id(name: String) =
-    id(name, caseInsensitive(), unqualified())
+fun PartiqlLogical.Builder.vr(name: String) =
+    vr(name, caseInsensitive(), unqualified())
 
 // TODO:  once https://github.com/partiql/partiql-ir-generator/issues/6 has been completed, we can delete this.
 fun PartiqlLogical.Builder.pathExpr(exp: PartiqlLogical.Expr) =

@@ -17,8 +17,8 @@ import java.io.PrintStream
  * simply `7`. (That is, `(+ 1 (* (lit 2) (lit 3)))` would be transformed to `(lit 7)`) (Note: s-expression AST is
  * shown without wrapping `term` or `meta`.)
  *
- * The query `foo + 2 * 3` would be transformed to `foo + 6` (`(+ (id foo case_insensitive) (* 2 3)))`
- * becomes `(+ (id foo case_insensitive) (lit 6))`
+ * The query `foo + 2 * 3` would be transformed to `foo + 6` (`(+ (vr foo case_insensitive) (* 2 3)))`
+ * becomes `(+ (vr foo case_insensitive) (lit 6))`
  *
  * This example just shows the partial evaluation for addition. Once these operations are better modeled in the
  * PIG domain (https://github.com/partiql/partiql-lang-kotlin/issues/241), this can be expanded to all NAry operations
@@ -36,7 +36,7 @@ import java.io.PrintStream
  * (+
  *     (lit 1)
  *     (lit 2)
- *     (id foo case_insensitive)
+ *     (vr foo case_insensitive)
  *     (lit 3)
  *     (lit 4))
  * ```
@@ -46,7 +46,7 @@ import java.io.PrintStream
  * ```
  * (+
  *   (lit 3)
- *   (id foo case_insensitive)
+ *   (vr foo case_insensitive)
  *   (lit 7))
  * ```
  *

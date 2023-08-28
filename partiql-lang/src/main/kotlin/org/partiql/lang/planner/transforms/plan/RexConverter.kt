@@ -126,7 +126,7 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
         )
     }
 
-    override fun walkExprId(node: PartiqlAst.Expr.Id, ctx: Ctx) = visit(node) {
+    override fun walkExprVr(node: PartiqlAst.Expr.Vr, ctx: Ctx) = visit(node) {
         Plan.rexId(
             name = node.name.text,
             case = convertCase(node.case),

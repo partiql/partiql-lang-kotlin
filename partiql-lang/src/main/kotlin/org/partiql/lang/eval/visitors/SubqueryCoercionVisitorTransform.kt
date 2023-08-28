@@ -28,7 +28,7 @@ class SubqueryCoercionVisitorTransform : VisitorTransformBase() {
         return when (n) {
             is PartiqlAst.Expr.Missing -> n
             is PartiqlAst.Expr.Lit -> n
-            is PartiqlAst.Expr.Id -> n
+            is PartiqlAst.Expr.Vr -> n
             is PartiqlAst.Expr.Parameter -> n
             is PartiqlAst.Expr.SessionAttribute -> n
 

@@ -204,31 +204,31 @@ internal class PartiQLPigVisitor(
     //  methods of the Ident class.
     // For now, this follows the inconsistent legacy arrangement: lower-casing of a regular identifier is done in Ident
     // (as well, for now, as at many legacy sites), while normalization of quotes inside a delimited identifier is done here.
-    override fun visitIdentifier(ctx: PartiQLParser.IdentifierContext): PartiqlAst.Identifier = PartiqlAst.build {
+    override fun visitIdentifier(ctx: PartiQLParser.IdentifierContext): PartiqlAst.Id = PartiqlAst.build {
         val metas = ctx.ident.getSourceMetaContainer()
         when (ctx.ident.type) {
             PartiQLParser.REGULAR_IDENTIFIER -> {
                 val strId = ctx.REGULAR_IDENTIFIER().text
                 val symId = SymbolPrimitive(strId, metas)
-                identifier_(symId, caseInsensitive(), metas)
+                id_(symId, caseInsensitive(), metas)
             }
             PartiQLParser.DELIMITED_IDENTIFIER -> {
                 val strId = ctx.DELIMITED_IDENTIFIER().text.trim('\"').replace("\"\"", "\"")
                 val symId = SymbolPrimitive(strId, metas)
-                identifier_(symId, caseSensitive(), metas)
+                id_(symId, caseSensitive(), metas)
             }
             else -> throw ParserException("Bug: only REGULAR_IDENTIFIER or DELIMITED_IDENTIFIER should be possible", ErrorCode.PARSE_UNEXPECTED_TOKEN)
         }
     }
 
-    fun readIdentifierAsExprId(ctx: PartiQLParser.IdentifierContext): PartiqlAst.Expr.Id = PartiqlAst.build {
+    fun readIdentifierAsExprVr(ctx: PartiQLParser.IdentifierContext): PartiqlAst.Expr.Vr = PartiqlAst.build {
         val ident = visitIdentifier(ctx)
-        id_(ident.name, ident.case, unqualified(), ident.metas)
+        vr_(ident.symb, ident.case, unqualified(), ident.metas)
     }
 
     fun readIdentifierAsDefnid(ctx: PartiQLParser.IdentifierContext): PartiqlAst.Defnid = PartiqlAst.build {
         val ident = visitIdentifier(ctx)
-        defnid_(ident.name, ident.metas)
+        defnid_(ident.symb, ident.metas)
     }
 
     /** Encapsulate in one place the "legacy" treatment of function names when referring to functions.
@@ -399,7 +399,7 @@ internal class PartiQLPigVisitor(
 
     override fun visitInsertStatement(ctx: PartiQLParser.InsertStatementContext) = PartiqlAst.build {
         insert(
-            target = readIdentifierAsExprId(ctx.identifier()),
+            target = readIdentifierAsExprVr(ctx.identifier()),
             asAlias = ctx.asIdent()?.let { visitAsIdent(it) },
             values = visitExpr(ctx.value),
             conflictAction = ctx.onConflict()?.let { visitOnConflict(it) },
@@ -409,7 +409,7 @@ internal class PartiQLPigVisitor(
 
     override fun visitReplaceCommand(ctx: PartiQLParser.ReplaceCommandContext) = PartiqlAst.build {
         insert(
-            target = readIdentifierAsExprId(ctx.identifier()),
+            target = readIdentifierAsExprVr(ctx.identifier()),
             asAlias = ctx.asIdent()?.let { visitAsIdent(it) },
             values = visitExpr(ctx.value),
             conflictAction = doReplace(excluded()),
@@ -420,7 +420,7 @@ internal class PartiQLPigVisitor(
     // Based on https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md
     override fun visitUpsertCommand(ctx: PartiQLParser.UpsertCommandContext) = PartiqlAst.build {
         insert(
-            target = readIdentifierAsExprId(ctx.identifier()),
+            target = readIdentifierAsExprVr(ctx.identifier()),
             asAlias = ctx.asIdent()?.let { visitAsIdent(it) },
             values = visitExpr(ctx.value),
             conflictAction = doUpdate(excluded()),
@@ -514,7 +514,7 @@ internal class PartiQLPigVisitor(
     }
 
     override fun visitPathSimple(ctx: PartiQLParser.PathSimpleContext) = PartiqlAst.build {
-        val root = readIdentifierAsExprId(ctx.identifier())
+        val root = readIdentifierAsExprVr(ctx.identifier())
         if (ctx.pathSimpleSteps().isEmpty()) return@build root
         val steps = ctx.pathSimpleSteps().map { visit(it) as PartiqlAst.PathStep }
         path(root, steps, root.metas)
@@ -525,7 +525,7 @@ internal class PartiQLPigVisitor(
     }
 
     override fun visitPathSimpleSymbol(ctx: PartiQLParser.PathSimpleSymbolContext) = PartiqlAst.build {
-        pathExpr(readIdentifierAsExprId(ctx.identifier()), caseSensitive())
+        pathExpr(readIdentifierAsExprVr(ctx.identifier()), caseSensitive())
     }
 
     override fun visitPathSimpleDotSymbol(ctx: PartiQLParser.PathSimpleDotSymbolContext) =
@@ -1166,7 +1166,7 @@ internal class PartiQLPigVisitor(
         PartiqlAst.build {
             val ident = visitIdentifier(ctx.ident)
             val qualifier = if (ctx.qualifier == null) unqualified() else localsFirst()
-            id_(ident.name, ident.case, qualifier, ident.metas)
+            vr_(ident.symb, ident.case, qualifier, ident.metas)
         }
 
     override fun visitVariableKeyword(ctx: PartiQLParser.VariableKeywordContext): PartiqlAst.PartiqlAstNode =
@@ -1174,7 +1174,7 @@ internal class PartiQLPigVisitor(
             val keyword = ctx.nonReservedKeywords().start.text
             val metas = ctx.start.getSourceMetaContainer()
             val qualifier = ctx.qualifier?.let { localsFirst() } ?: unqualified()
-            id(keyword, caseInsensitive(), qualifier, metas)
+            vr(keyword, caseInsensitive(), qualifier, metas)
         }
 
     override fun visitParameter(ctx: PartiQLParser.ParameterContext) = PartiqlAst.build {
@@ -1386,7 +1386,7 @@ internal class PartiQLPigVisitor(
             // or trim(<substring> FROM target), i.e., we treat what is recognized by parser as the modifier as <substring>
             ctx.mod != null && ctx.sub == null -> {
                 if (isTrimSpec) ctx.mod.toSymbol() to null
-                else null to id(possibleModText!!, caseInsensitive(), unqualified(), ctx.mod.getSourceMetaContainer())
+                else null to vr(possibleModText!!, caseInsensitive(), unqualified(), ctx.mod.getSourceMetaContainer())
             }
 
             ctx.mod == null && ctx.sub != null -> {
@@ -1781,7 +1781,7 @@ internal class PartiQLPigVisitor(
         }
 
     private fun PartiqlAst.Expr.getStringValue(token: Token? = null): String = when (this) {
-        is PartiqlAst.Expr.Id -> this.name.text.lowercase()
+        is PartiqlAst.Expr.Vr -> this.name.text.lowercase()
         is PartiqlAst.Expr.Lit -> {
             when (this.value) {
                 is SymbolElement -> this.value.symbolValue.lowercase()
@@ -2049,7 +2049,7 @@ internal class PartiQLPigVisitor(
 
     private fun getSymbolPathExpr(ctx: PartiQLParser.IdentifierContext): PartiqlAst.PathStep.PathExpr = PartiqlAst.build {
         val ident = visitIdentifier(ctx)
-        pathExpr(lit(ionString(ident.name.text)), ident.case, ident.metas)
+        pathExpr(lit(ionString(ident.symb.text)), ident.case, ident.metas)
     }
 
     private fun String.toInteger() = BigInteger(this, 10)

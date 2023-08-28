@@ -22,7 +22,7 @@ Serialized AST
             (
               project_expr
               (
-                id
+                vr
                 exampleField
                 (
                   case_insensitive
@@ -40,7 +40,7 @@ Serialized AST
           (
             scan
             (
-              id
+              vr
               exampleTable
               (
                 case_insensitive
@@ -59,7 +59,7 @@ Serialized AST
           (
             gt
             (
-              id
+              vr
               anotherField
               (
                 case_insensitive

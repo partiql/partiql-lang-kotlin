@@ -128,10 +128,10 @@ class ASTPrettyPrinter {
             )
         }
 
-    private fun toRecursionTree(node: PartiqlAst.Identifier, attrOfParent: String? = null): RecursionTree =
+    private fun toRecursionTree(node: PartiqlAst.Id, attrOfParent: String? = null): RecursionTree =
         RecursionTree(
-            astType = "Identifier",
-            value = node.name.text + " " + node.case.toString(),
+            astType = "Id",
+            value = node.symb.text + " " + node.case.toString(),
             attrOfParent = attrOfParent
         )
 
@@ -292,8 +292,8 @@ class ASTPrettyPrinter {
     // *********
     private fun toRecursionTree(node: PartiqlAst.Expr, attrOfParent: String? = null): RecursionTree =
         when (node) {
-            is PartiqlAst.Expr.Id -> RecursionTree(
-                astType = "Id",
+            is PartiqlAst.Expr.Vr -> RecursionTree(
+                astType = "Vr",
                 value = node.name.text + " " + node.case.toString() + " " + node.qualifier.toString(),
                 attrOfParent = attrOfParent
             )

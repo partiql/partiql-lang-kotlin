@@ -21,7 +21,7 @@ import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
 import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
 import org.partiql.lang.util.propertyValueMapOf
 
-class QuotedIdentifierTests : EvaluatorTestBase() {
+class QuotedIdTests : EvaluatorTestBase() {
 
     private val simpleSession = mapOf(
         "Abc" to "1",

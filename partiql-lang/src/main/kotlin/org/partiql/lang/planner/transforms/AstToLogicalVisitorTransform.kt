@@ -123,11 +123,11 @@ internal class AstToLogicalVisitorTransform(
     /**
      * Transforms the input [node] into a pair of two items:
      *  1. An AST (where all [PartiqlAst.Expr.CallAgg]'s in the input projection list are replaced with references
-     *   ([PartiqlAst.Expr.Id]) to new [PartiqlLogical.VarDecl]'s)
+     *   ([PartiqlAst.Expr.Vr]) to new [PartiqlLogical.VarDecl]'s)
      *  2. A [PartiqlLogical.Bexpr.Aggregate] with the necessary [PartiqlLogical.GroupKey]'s and
      *   [PartiqlLogical.AggregateFunction]'s (taken from the input [node]). Also, each [PartiqlLogical.GroupKey] and
      *   [PartiqlLogical.AggregateFunction] creates a [PartiqlLogical.VarDecl] that is used to create the aforementioned
-     *   references (via [PartiqlAst.Expr.Id])
+     *   references (via [PartiqlAst.Expr.Vr])
      *
      * Transforms a query like:
      * ```
@@ -193,7 +193,7 @@ internal class AstToLogicalVisitorTransform(
             val aliasText = alias?.text ?: errAstNotNormalized("All FromSources should have aliases")
             structField(
                 lit(aliasText.toIonElement()),
-                id(aliasText, caseInsensitive(), unqualified())
+                vr(aliasText, caseInsensitive(), unqualified())
             )
         }
         aggregateFunction(
@@ -227,7 +227,7 @@ internal class AstToLogicalVisitorTransform(
     /**
      * Transforms the input [node] into a pair of two items:
      *  1. An AST (where all [PartiqlAst.Expr.CallWindow]'s in the input projection list are replaced with references
-     *   ([PartiqlAst.Expr.Id]) to new [PartiqlLogical.VarDecl]'s)
+     *   ([PartiqlAst.Expr.Vr]) to new [PartiqlLogical.VarDecl]'s)
      *  2. A modified algebra such that each window function call in the input projection list corresponding to one window operator
      *  TODO: if multiple window functions are operating on the same window, we can potentially add them in a single window operator to increase performance
      *
@@ -372,7 +372,7 @@ internal class AstToLogicalVisitorTransform(
                 val target = dmlOp.target.toDmlTargetId()
                 val alias = dmlOp.asAlias?.let {
                     PartiqlLogical.VarDecl(it.symb)
-                } ?: PartiqlLogical.VarDecl(target.name)
+                } ?: PartiqlLogical.VarDecl(target.symb)
 
                 val operation = when (val conflictAction = dmlOp.conflictAction) {
                     null -> PartiqlLogical.DmlOperation.DmlInsert(targetAlias = alias)
@@ -436,7 +436,7 @@ internal class AstToLogicalVisitorTransform(
                                     // pass over the resolved logical (or later) plan that changes this to only
                                     // include the primary keys of the rows to be deleted.
                                     rows = bindingsToValues(
-                                        exp = id(rowsSource.asDecl.name.text, caseSensitive(), unqualified()),
+                                        exp = vr(rowsSource.asDecl.name.text, caseSensitive(), unqualified()),
                                         query = rows,
                                     ),
                                     metas = node.metas
@@ -470,10 +470,10 @@ internal class AstToLogicalVisitorTransform(
         }
     }
 
-    private fun PartiqlAst.Expr.toDmlTargetId(): PartiqlLogical.Identifier {
+    private fun PartiqlAst.Expr.toDmlTargetId(): PartiqlLogical.Id {
         val dmlTargetId = when (this) {
-            is PartiqlAst.Expr.Id -> PartiqlLogical.build {
-                identifier_(name, transformCaseSensitivity(case), metas)
+            is PartiqlAst.Expr.Vr -> PartiqlLogical.build {
+                id_(name, transformCaseSensitivity(case), metas)
             }
             else -> {
                 problemHandler.handleProblem(
@@ -594,7 +594,7 @@ private class FromSourceToBexpr(
 
 /**
  * Given a [PartiqlAst.Expr.Select], transforms all [PartiqlAst.Expr.CallAgg]'s within the projection list to
- * [PartiqlAst.Expr.Id]'s that reference the new [PartiqlLogical.VarDecl].
+ * [PartiqlAst.Expr.Vr]'s that reference the new [PartiqlLogical.VarDecl].
  * Does not recurse into more than 1 [PartiqlAst.Expr.Select]. Designed to be invoked directly on a
  * [PartiqlAst.Expr.Select] using [transformExprSelect].
  */
@@ -626,7 +626,7 @@ private class CallAggregationsProjectionReplacer(var level: Int = 0) : VisitorTr
 
 /**
  * Created to be invoked by the [CallAggregationsProjectionReplacer] to transform all encountered [PartiqlAst.Expr.CallAgg]'s to
- * [PartiqlAst.Expr.Id]'s. This class is designed to be called directly on [PartiqlAst.Projection]'s and does NOT recurse
+ * [PartiqlAst.Expr.Vr]'s. This class is designed to be called directly on [PartiqlAst.Projection]'s and does NOT recurse
  * into [PartiqlAst.Expr.Select]'s. This class is designed to be instantiated once per aggregation scope. The class collects
  * all unique-per-scope aggregation variable declaration names and exposes it to the calling class.
  *
@@ -654,7 +654,7 @@ private class CallAggregationReplacer() : VisitorTransformBase() {
         val name = getAggregationIdName()
         aggregations.add(name to node)
         return PartiqlAst.build {
-            id(
+            vr(
                 name = name,
                 case = caseInsensitive(),
                 qualifier = unqualified(),
@@ -675,7 +675,7 @@ private class CallAggregationReplacer() : VisitorTransformBase() {
 
 /**
  * Given a [PartiqlAst.Expr.Select], transforms all [PartiqlAst.Expr.CallWindow]'s within the projection list to
- * [PartiqlAst.Expr.Id]'s that reference the new [PartiqlLogical.VarDecl].
+ * [PartiqlAst.Expr.Vr]'s that reference the new [PartiqlLogical.VarDecl].
  * We only want this to convert the window function in the current projection list without recuse into any sub-query.
  *
  * For example:
@@ -726,7 +726,7 @@ private class CurrentProjectionListWindowFunctionTransform(var level: Int = 0) :
 
 /**
  * Created to be invoked by the [CurrentProjectionListWindowFunctionTransform] to transform all encountered [PartiqlAst.Expr.CallWindow]'s to
- * [PartiqlAst.Expr.Id]'s. This class is designed to be called directly on [PartiqlAst.Projection]'s and does NOT recurse
+ * [PartiqlAst.Expr.Vr]'s. This class is designed to be called directly on [PartiqlAst.Projection]'s and does NOT recurse
  * into [PartiqlAst.Expr.Select]'s if the projection list contains a Select Node.
  */
 private class CallWindowReplacer : VisitorTransformBase() {
@@ -736,7 +736,7 @@ private class CallWindowReplacer : VisitorTransformBase() {
         val name = getWindowFuncIdName()
         windowFunctions.add(name to node)
         return PartiqlAst.build {
-            id(
+            vr(
                 name = name,
                 case = caseInsensitive(),
                 qualifier = unqualified(),
@@ -771,5 +771,5 @@ private val INVALID_EXPR = PartiqlLogical.build {
 }
 
 private val INVALID_DML_TARGET_ID = PartiqlLogical.build {
-    identifier("this is a placeholder for an invalid DML target - do not run", caseInsensitive())
+    id("this is a placeholder for an invalid DML target - do not run", caseInsensitive())
 }

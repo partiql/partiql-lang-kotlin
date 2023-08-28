@@ -68,8 +68,8 @@ internal class OrderBySortSpecVisitorTransform : VisitorTransformBase() {
      * A [PartiqlAst.VisitorTransform] that converts any found Expr.Id's into what it is mapped to in [aliases].
      */
     private class OrderByAliasSupport(val aliases: Map<String, PartiqlAst.Expr>) : VisitorTransformBase() {
-        override fun transformExprId(node: PartiqlAst.Expr.Id): PartiqlAst.Expr {
-            val transformedExpr = super.transformExprId(node)
+        override fun transformExprVr(node: PartiqlAst.Expr.Vr): PartiqlAst.Expr {
+            val transformedExpr = super.transformExprVr(node)
             return when (node.case) {
                 is PartiqlAst.CaseSensitivity.CaseSensitive -> aliases[node.name.text] ?: transformedExpr
                 else -> aliases[node.name.text.lowercase()] ?: aliases[node.name.text.toUpperCase()] ?: transformedExpr

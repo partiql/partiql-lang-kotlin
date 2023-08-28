@@ -27,7 +27,7 @@ class StatementRedactorTest : PartiQLParserTestBase() {
         val value = args[1]
         val argsToRedact = mutableListOf<PartiqlAst.Expr>()
 
-        if (path !is PartiqlAst.Expr.Id && path !is PartiqlAst.Expr.Path) {
+        if (path !is PartiqlAst.Expr.Vr && path !is PartiqlAst.Expr.Path) {
             throw IllegalArgumentException("Unexpected type of argument path")
         }
         if (value !is PartiqlAst.Expr.Lit || value.value !is StringElement) {

@@ -153,11 +153,11 @@ internal class AggregationVisitorTransform(
         if (contextStack.last().groupKeys.isNotEmpty() || contextStack.last().groupAsAlias != null) {
             return PartiqlAst.build {
                 val projectionItems = contextStack.last().groupKeys.map { key ->
-                    projectExpr(id(key.uniqueAlias, caseSensitive(), unqualified()), defnid(key.publicAlias))
+                    projectExpr(vr(key.uniqueAlias, caseSensitive(), unqualified()), defnid(key.publicAlias))
                 }.toMutableList()
 
                 contextStack.last().groupAsAlias?.let { alias ->
-                    val item = projectExpr(id(alias, caseSensitive(), unqualified()), defnid(alias))
+                    val item = projectExpr(vr(alias, caseSensitive(), unqualified()), defnid(alias))
                     projectionItems.add(item)
                 }
                 projectList(projectionItems)
@@ -237,7 +237,7 @@ internal class AggregationVisitorTransform(
         private val isWithinCallAgg: Boolean = false
     ) : VisitorTransformBase() {
 
-        override fun transformExprId(node: PartiqlAst.Expr.Id): PartiqlAst.Expr = when (this.isWithinCallAgg) {
+        override fun transformExprVr(node: PartiqlAst.Expr.Vr): PartiqlAst.Expr = when (this.isWithinCallAgg) {
             true -> getReplacementForIdInAggregationFunction(node)
             false -> getReplacementForIdOutsideOfAggregationFunction(node)
         }
@@ -270,7 +270,7 @@ internal class AggregationVisitorTransform(
                     key.isPublicAliasUserDefined.not() && key.represents == node
                 }?.let { key ->
                     return PartiqlAst.build {
-                        id(key.uniqueAlias, caseSensitive(), unqualified(), emptyMetaContainer())
+                        vr(key.uniqueAlias, caseSensitive(), unqualified(), emptyMetaContainer())
                     }
                 }
             }
@@ -281,7 +281,7 @@ internal class AggregationVisitorTransform(
          * IDs outside of aggregation functions should always be replaced with the Group Key unique aliases. If no
          * replacement is found, we throw an EvaluationException.
          */
-        private fun getReplacementForIdOutsideOfAggregationFunction(node: PartiqlAst.Expr.Id): PartiqlAst.Expr {
+        private fun getReplacementForIdOutsideOfAggregationFunction(node: PartiqlAst.Expr.Vr): PartiqlAst.Expr {
             val ctxStackIter = ctxStack.listIterator(ctxStack.size)
             while (ctxStackIter.hasPrevious()) {
                 val ctx = ctxStackIter.previous()
@@ -305,7 +305,7 @@ internal class AggregationVisitorTransform(
          * Called from within a CallAgg -- and therefore, all IDs should be replaced with the current context's
          * [GroupKeyInformation.represents]. If not found, search for replacements within "normal" parent contexts.
          */
-        private fun getReplacementForIdInAggregationFunction(node: PartiqlAst.Expr.Id): PartiqlAst.Expr {
+        private fun getReplacementForIdInAggregationFunction(node: PartiqlAst.Expr.Vr): PartiqlAst.Expr {
             getReplacementInAggregationContext(node, ctxStack.last())?.let { replacement -> return replacement }
 
             val ctxStackIter = ctxStack.listIterator(ctxStack.size)
@@ -319,15 +319,15 @@ internal class AggregationVisitorTransform(
         /**
          * Gets replacement ID (the alias of the Group Key or Group Alias (ID))
          */
-        private fun getReplacementInNormalContext(node: PartiqlAst.Expr.Id, ctx: VisitorContext): PartiqlAst.Expr.Id? {
+        private fun getReplacementInNormalContext(node: PartiqlAst.Expr.Vr, ctx: VisitorContext): PartiqlAst.Expr.Vr? {
             val bindingName = BindingName(node.name.text, node.case.toBindingCase())
             val replacementKey = ctx.groupKeys.firstOrNull { key ->
                 bindingName.isEquivalentTo(key.publicAlias)
-            }?.let { key -> PartiqlAst.build { id(key.uniqueAlias, caseSensitive(), node.qualifier) } }
+            }?.let { key -> PartiqlAst.build { vr(key.uniqueAlias, caseSensitive(), node.qualifier) } }
 
             return when {
                 replacementKey != null -> replacementKey
-                bindingName.isEquivalentTo(ctx.groupAsAlias) -> PartiqlAst.build { id(node.name.text, caseSensitive(), unqualified()) }
+                bindingName.isEquivalentTo(ctx.groupAsAlias) -> PartiqlAst.build { vr(node.name.text, caseSensitive(), unqualified()) }
                 else -> null
             }
         }
@@ -335,7 +335,7 @@ internal class AggregationVisitorTransform(
         /**
          * Gets replacement Expr (what the Group Key represents, or the Group As Alias)
          */
-        private fun getReplacementInAggregationContext(node: PartiqlAst.Expr.Id, ctx: VisitorContext): PartiqlAst.Expr? {
+        private fun getReplacementInAggregationContext(node: PartiqlAst.Expr.Vr, ctx: VisitorContext): PartiqlAst.Expr? {
             val bindingName = BindingName(node.name.text, node.case.toBindingCase())
             val replacementExpression = ctx.groupKeys.firstOrNull { key ->
                 bindingName.isEquivalentTo(key.publicAlias)
@@ -343,7 +343,7 @@ internal class AggregationVisitorTransform(
 
             return when {
                 replacementExpression != null -> replacementExpression
-                bindingName.isEquivalentTo(ctx.groupAsAlias) -> PartiqlAst.build { id(node.name.text, caseSensitive(), unqualified()) }
+                bindingName.isEquivalentTo(ctx.groupAsAlias) -> PartiqlAst.build { vr(node.name.text, caseSensitive(), unqualified()) }
                 else -> null
             }
         }

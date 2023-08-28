@@ -141,12 +141,12 @@ class StaticTypeVisitorTransform(
          */
         private var singleFromSourceName: String? = null
 
-        private fun singleFromSourceRef(sourceName: String, metas: MetaContainer): PartiqlAst.Expr.Id {
+        private fun singleFromSourceRef(sourceName: String, metas: MetaContainer): PartiqlAst.Expr.Vr {
             val sourceType = currentEnv[BindingName(sourceName, BindingCase.SENSITIVE)]
                 ?: throw IllegalArgumentException("Could not find type for single FROM source variable")
 
             return PartiqlAst.build {
-                id(
+                vr(
                     sourceName,
                     caseSensitive(),
                     localsFirst(),
@@ -155,7 +155,7 @@ class StaticTypeVisitorTransform(
             }
         }
 
-        private fun PartiqlAst.Expr.Id.toPathExpr(): PartiqlAst.PathStep.PathExpr =
+        private fun PartiqlAst.Expr.Vr.toPathExpr(): PartiqlAst.PathStep.PathExpr =
             PartiqlAst.build {
                 pathExpr(index = lit(ion.newString(name.text).toIonElement(), this@toPathExpr.extractSourceLocation()), case = case, metas = metas)
             }
@@ -264,7 +264,7 @@ class StaticTypeVisitorTransform(
          * The actual variable resolution occurs in this method--all other parts of the
          * [StaticTypeVisitorTransform] support what's happening here.
          */
-        override fun transformExprId(node: PartiqlAst.Expr.Id): PartiqlAst.Expr {
+        override fun transformExprVr(node: PartiqlAst.Expr.Vr): PartiqlAst.Expr {
             val bindingName = BindingName(node.name.text, node.case.toBindingCase())
 
             val found = findBind(bindingName, node.qualifier)
@@ -310,7 +310,7 @@ class StaticTypeVisitorTransform(
             }
 
             return PartiqlAst.build {
-                id_(
+                vr_(
                     node.name, node.case, newScopeQualifier,
                     node.metas + metaContainerOf(StaticTypeMeta.TAG to StaticTypeMeta(found.type))
                 )
@@ -321,7 +321,7 @@ class StaticTypeVisitorTransform(
          * Changes the specified variable reference to a path expression with the name of the variable as
          * its first and only element.
          */
-        private fun makePathIntoFromSource(fromSourceAlias: String, node: PartiqlAst.Expr.Id): PartiqlAst.Expr.Path {
+        private fun makePathIntoFromSource(fromSourceAlias: String, node: PartiqlAst.Expr.Vr): PartiqlAst.Expr.Path {
             return PartiqlAst.build {
                 path(
                     singleFromSourceRef(fromSourceAlias, node.extractSourceLocation()),
@@ -333,7 +333,7 @@ class StaticTypeVisitorTransform(
 
         override fun transformExprPath(node: PartiqlAst.Expr.Path): PartiqlAst.Expr =
             when (node.root) {
-                is PartiqlAst.Expr.Id -> super.transformExprPath(node).let {
+                is PartiqlAst.Expr.Vr -> super.transformExprPath(node).let {
                     it as PartiqlAst.Expr.Path
                     when (val root = it.root) {
                         // we started with a variable, that got turned into a path, normalize it
@@ -463,7 +463,7 @@ class StaticTypeVisitorTransform(
 
         /**
          * This function differs from the the overridden function only in that it does not attempt to resolve
-         * [PartiqlAst.DdlOp.CreateIndex.fields], which would be a problem because they contain [PartiqlAst.Expr.Id]s
+         * [PartiqlAst.DdlOp.CreateIndex.fields], which would be a problem because they contain [PartiqlAst.Expr.Vr]s
          * yet the fields/keys are scoped to the table and do not follow traditional lexical scoping rules.  This
          * indicates that [PartiqlAst.DdlOp.CreateIndex.fields] is incorrectly modeled as a [List<[PartiqlAst.Expr]>].
          */
@@ -481,7 +481,7 @@ class StaticTypeVisitorTransform(
          * [PartiqlAst.DdlOp.DropIndex.table], which would be a problem because index names are scoped to the table
          * and do not follow traditional lexical scoping rules.  This is not something the [StaticTypeVisitorTransform]
          * is currently plumbed to deal with and also indicates that [PartiqlAst.DdlOp.DropIndex.table] is incorrectly
-         * modeled as a [PartiqlAst.Expr.Id].
+         * modeled as a [PartiqlAst.Expr.Vr].
          */
         override fun transformDdlOpDropIndex(node: PartiqlAst.DdlOp.DropIndex): PartiqlAst.DdlOp =
             PartiqlAst.build {

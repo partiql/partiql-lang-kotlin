@@ -207,31 +207,31 @@ class ToLegacyAstTest {
 
         @JvmStatic
         fun identifiers() = listOf(
-            expect("(id 'a' (case_sensitive) (unqualified))") {
+            expect("(vr 'a' (case_sensitive) (unqualified))") {
                 exprVar {
                     identifier = identifierSymbol("a", Identifier.CaseSensitivity.SENSITIVE)
                     scope = Expr.Var.Scope.DEFAULT
                 }
             },
-            expect("(id 'a' (case_insensitive) (unqualified))") {
+            expect("(vr 'a' (case_insensitive) (unqualified))") {
                 exprVar {
                     identifier = identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE)
                     scope = Expr.Var.Scope.DEFAULT
                 }
             },
-            expect("(id 'a' (case_sensitive) (locals_first))") {
+            expect("(vr 'a' (case_sensitive) (locals_first))") {
                 exprVar {
                     identifier = identifierSymbol("a", Identifier.CaseSensitivity.SENSITIVE)
                     scope = Expr.Var.Scope.LOCAL
                 }
             },
-            expect("(id 'a' (case_insensitive) (locals_first))") {
+            expect("(vr 'a' (case_insensitive) (locals_first))") {
                 exprVar {
                     identifier = identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE)
                     scope = Expr.Var.Scope.LOCAL
                 }
             },
-            expect("(identifier 'a' (case_insensitive))") {
+            expect("(id 'a' (case_insensitive))") {
                 identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE)
             },
             //
@@ -520,7 +520,7 @@ class ToLegacyAstTest {
             expect(
                 """
                 (project_list
-                    (project_all (id 'a' (case_sensitive) (unqualified)))
+                    (project_all (vr 'a' (case_sensitive) (unqualified)))
                     (project_expr (lit 1) (defnid 'x'))
                 )
              """

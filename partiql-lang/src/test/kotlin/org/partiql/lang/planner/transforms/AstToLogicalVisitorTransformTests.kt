@@ -16,8 +16,8 @@ import org.partiql.errors.ProblemLocation
 import org.partiql.errors.ProblemSeverity
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.PartiqlLogical
-import org.partiql.lang.domains.id
 import org.partiql.lang.domains.pathExpr
+import org.partiql.lang.domains.vr
 import org.partiql.lang.errors.ProblemCollector
 import org.partiql.lang.eval.builtins.ExprFunctionCurrentUser
 import org.partiql.lang.planner.PlanningProblemDetails
@@ -83,14 +83,14 @@ class AstToLogicalVisitorTransformTests {
                 PartiqlLogical.build {
                     query(
                         bindingsToValues(
-                            struct(structField(lit(ionSymbol("c")), id("\$__partiql_window_function_0"))),
+                            struct(structField(lit(ionSymbol("c")), vr("\$__partiql_window_function_0"))),
                             window(
-                                scan(id("d"), varDecl("e")),
+                                scan(vr("d"), varDecl("e")),
                                 over(
                                     null,
-                                    windowSortSpecList(sortSpec(id("b"), null, null)),
+                                    windowSortSpecList(sortSpec(vr("b"), null, null)),
                                 ),
-                                windowExpression(varDecl("\$__partiql_window_function_0"), "lag", listOf(id("a")))
+                                windowExpression(varDecl("\$__partiql_window_function_0"), "lag", listOf(vr("a")))
                             )
                         )
                     )
@@ -103,23 +103,23 @@ class AstToLogicalVisitorTransformTests {
                     query(
                         bindingsToValues(
                             struct(
-                                structField(lit(ionSymbol("c")), id("\$__partiql_window_function_0")),
-                                structField(lit(ionSymbol("f")), id("\$__partiql_window_function_1")),
+                                structField(lit(ionSymbol("c")), vr("\$__partiql_window_function_0")),
+                                structField(lit(ionSymbol("f")), vr("\$__partiql_window_function_1")),
                             ),
                             window(
                                 window(
-                                    scan(id("d"), varDecl("e")),
+                                    scan(vr("d"), varDecl("e")),
                                     over(
                                         null,
-                                        windowSortSpecList(sortSpec(id("b"), null, null)),
+                                        windowSortSpecList(sortSpec(vr("b"), null, null)),
                                     ),
-                                    windowExpression(varDecl("\$__partiql_window_function_0"), "lag", listOf(id("a")))
+                                    windowExpression(varDecl("\$__partiql_window_function_0"), "lag", listOf(vr("a")))
                                 ),
                                 over(
                                     null,
-                                    windowSortSpecList(sortSpec(id("b"), null, null)),
+                                    windowSortSpecList(sortSpec(vr("b"), null, null)),
                                 ),
-                                windowExpression(varDecl("\$__partiql_window_function_1"), "lead", listOf(id("a")))
+                                windowExpression(varDecl("\$__partiql_window_function_1"), "lead", listOf(vr("a")))
                             )
                         )
                     )
@@ -150,7 +150,7 @@ class AstToLogicalVisitorTransformTests {
             val from = when (fromSource) {
                 null -> {
                     scan(
-                        id("bar", caseInsensitive(), unqualified()),
+                        vr("bar", caseInsensitive(), unqualified()),
                         asAlias = defnid("b")
                     )
                 }
@@ -183,7 +183,7 @@ class AstToLogicalVisitorTransformTests {
             source: PartiqlLogical.Bexpr? = null
         ): PartiqlLogical.Expr {
             val sourceBexpr = when (source) {
-                null -> scan(id("bar"), varDecl("b"))
+                null -> scan(vr("bar"), varDecl("b"))
                 else -> source
             }
             return bindingsToValues(
@@ -217,7 +217,7 @@ class AstToLogicalVisitorTransformTests {
             val from = when (fromSource) {
                 null -> {
                     scan(
-                        id("bar", caseInsensitive(), unqualified()),
+                        vr("bar", caseInsensitive(), unqualified()),
                         asAlias = defnid("b")
                     )
                 }
@@ -253,7 +253,7 @@ class AstToLogicalVisitorTransformTests {
             predicate: PartiqlLogical.Expr
         ): PartiqlLogical.Expr {
             val sourceBexpr = when (source) {
-                null -> scan(id("bar"), varDecl("b"))
+                null -> scan(vr("bar"), varDecl("b"))
                 else -> source
             }
             return bindingsToValues(
@@ -310,8 +310,8 @@ class AstToLogicalVisitorTransformTests {
                 PartiqlLogical.build {
                     query(
                         bindingsToValues(
-                            struct(structFields(id("b"))),
-                            scan(id("bar"), varDecl("b"))
+                            struct(structFields(vr("b"))),
+                            scan(vr("bar"), varDecl("b"))
                         )
                     )
                 }
@@ -323,10 +323,10 @@ class AstToLogicalVisitorTransformTests {
                 PartiqlLogical.build {
                     query(
                         bindingsToValues(
-                            struct(structFields(id("b"))),
+                            struct(structFields(vr("b"))),
                             filter(
                                 eq(lit(ionBool(true)), lit(ionBool(true))),
-                                scan(id("bar"), varDecl("b"))
+                                scan(vr("bar"), varDecl("b"))
                             )
                         )
                     )
@@ -337,10 +337,10 @@ class AstToLogicalVisitorTransformTests {
                 PartiqlLogical.build {
                     query(
                         bindingsToValues(
-                            struct(structFields(id("b"))),
+                            struct(structFields(vr("b"))),
                             filter(
-                                eq(path(id("b"), pathExpr(lit(ionString("primaryKey")))), lit(ionInt(42))),
-                                scan(id("bar"), varDecl("b"))
+                                eq(path(vr("b"), pathExpr(lit(ionString("primaryKey")))), lit(ionInt(42))),
+                                scan(vr("bar"), varDecl("b"))
                             )
                         )
                     )
@@ -353,8 +353,8 @@ class AstToLogicalVisitorTransformTests {
                         call(
                             defnid("filter_distinct"),
                             bindingsToValues(
-                                struct(structFields(id("b"))),
-                                scan(id("bar"), varDecl("b"))
+                                struct(structFields(vr("b"))),
+                                scan(vr("bar"), varDecl("b"))
                             )
                         )
                     )
@@ -366,10 +366,10 @@ class AstToLogicalVisitorTransformTests {
                     query(
                         bindingsToValues(
                             struct(
-                                structFields(id("v")),
-                                structFields(id("n"))
+                                structFields(vr("v")),
+                                structFields(vr("n"))
                             ),
-                            unpivot(id("bar"), varDecl("v"), varDecl("n"))
+                            unpivot(vr("bar"), varDecl("v"), varDecl("n"))
                         )
                     )
                 }
@@ -379,10 +379,10 @@ class AstToLogicalVisitorTransformTests {
                 PartiqlLogical.build {
                     query(
                         bindingsToValues(
-                            struct(structFields(id("b"))),
+                            struct(structFields(vr("b"))),
                             sort(
-                                scan(id("bar"), varDecl("b")),
-                                sortSpec(id("y"))
+                                scan(vr("bar"), varDecl("b")),
+                                sortSpec(vr("y"))
                             )
                         )
                     )
@@ -398,11 +398,11 @@ class AstToLogicalVisitorTransformTests {
                 PartiqlLogical.build {
                     simpleAggregateQuery(
                         fields = listOf(
-                            structField(lit(ionSymbol("keyAlias")), id("k"))
+                            structField(lit(ionSymbol("keyAlias")), vr("k"))
                         ),
                         keys = listOf(
                             groupKey(
-                                id("y", caseInsensitive(), unqualified()),
+                                vr("y", caseInsensitive(), unqualified()),
                                 asVar = varDecl("k")
                             )
                         )
@@ -419,11 +419,11 @@ class AstToLogicalVisitorTransformTests {
                 PartiqlLogical.build {
                     simpleAggregateQuery(
                         fields = listOf(
-                            structField(lit(ionSymbol("sum_k")), id("\$__partiql_aggregation_0"))
+                            structField(lit(ionSymbol("sum_k")), vr("\$__partiql_aggregation_0"))
                         ),
                         keys = listOf(
                             groupKey(
-                                id("y", caseInsensitive(), unqualified()),
+                                vr("y", caseInsensitive(), unqualified()),
                                 asVar = varDecl("k")
                             )
                         ),
@@ -431,7 +431,7 @@ class AstToLogicalVisitorTransformTests {
                             aggregateFunction(
                                 all(),
                                 "sum",
-                                id("k"),
+                                vr("k"),
                                 varDecl("\$__partiql_aggregation_0")
                             )
                         )
@@ -447,13 +447,13 @@ class AstToLogicalVisitorTransformTests {
                 PartiqlLogical.build {
                     simpleAggregateQuery(
                         fields = listOf(
-                            structField(lit(ionSymbol("sum_k")), id("\$__partiql_aggregation_0"))
+                            structField(lit(ionSymbol("sum_k")), vr("\$__partiql_aggregation_0"))
                         ),
                         functions = listOf(
                             aggregateFunction(
                                 all(),
                                 "sum",
-                                id("k"),
+                                vr("k"),
                                 varDecl("\$__partiql_aggregation_0")
                             )
                         )
@@ -471,13 +471,13 @@ class AstToLogicalVisitorTransformTests {
                 PartiqlLogical.build {
                     simpleAggregateQuery(
                         fields = listOf(
-                            structField(lit(ionSymbol("k")), id("k")),
-                            structField(lit(ionSymbol("g")), id("g")),
-                            structField(lit(ionSymbol("ct")), id("\$__partiql_aggregation_0"))
+                            structField(lit(ionSymbol("k")), vr("k")),
+                            structField(lit(ionSymbol("g")), vr("g")),
+                            structField(lit(ionSymbol("ct")), vr("\$__partiql_aggregation_0"))
                         ),
                         keys = listOf(
                             groupKey(
-                                id("y", caseInsensitive(), unqualified()),
+                                vr("y", caseInsensitive(), unqualified()),
                                 asVar = varDecl("k")
                             )
                         ),
@@ -488,7 +488,7 @@ class AstToLogicalVisitorTransformTests {
                                 struct(
                                     structField(
                                         lit(ionSymbol("b")),
-                                        id("b")
+                                        vr("b")
                                     )
                                 ),
                                 varDecl("g")
@@ -518,12 +518,12 @@ class AstToLogicalVisitorTransformTests {
                 PartiqlLogical.build {
                     val innerQuery = simpleAggregate(
                         fields = listOf(
-                            structField(lit(ionSymbol("k")), id("k")),
-                            structField(lit(ionSymbol("mx")), id("\$__partiql_aggregation_0"))
+                            structField(lit(ionSymbol("k")), vr("k")),
+                            structField(lit(ionSymbol("mx")), vr("\$__partiql_aggregation_0"))
                         ),
                         keys = listOf(
                             groupKey(
-                                id("c", caseInsensitive(), unqualified()),
+                                vr("c", caseInsensitive(), unqualified()),
                                 asVar = varDecl("k")
                             )
                         ),
@@ -531,19 +531,19 @@ class AstToLogicalVisitorTransformTests {
                             aggregateFunction(
                                 all(),
                                 "max",
-                                id("a", caseInsensitive(), unqualified()),
+                                vr("a", caseInsensitive(), unqualified()),
                                 varDecl("\$__partiql_aggregation_0")
                             )
                         )
                     )
                     simpleAggregateQuery(
                         fields = listOf(
-                            structField(lit(ionSymbol("k")), id("k")),
-                            structField(lit(ionSymbol("mx")), id("\$__partiql_aggregation_0"))
+                            structField(lit(ionSymbol("k")), vr("k")),
+                            structField(lit(ionSymbol("mx")), vr("\$__partiql_aggregation_0"))
                         ),
                         keys = listOf(
                             groupKey(
-                                id("y", caseInsensitive(), unqualified()),
+                                vr("y", caseInsensitive(), unqualified()),
                                 asVar = varDecl("k")
                             )
                         ),
@@ -551,7 +551,7 @@ class AstToLogicalVisitorTransformTests {
                             aggregateFunction(
                                 all(),
                                 "max",
-                                id("a", caseInsensitive(), unqualified()),
+                                vr("a", caseInsensitive(), unqualified()),
                                 varDecl("\$__partiql_aggregation_0")
                             )
                         ),
@@ -570,15 +570,15 @@ class AstToLogicalVisitorTransformTests {
                 PartiqlLogical.build {
                     simpleHavingLogicalQuery(
                         fields = listOf(
-                            structField(lit(ionSymbol("keyAlias")), id("k"))
+                            structField(lit(ionSymbol("keyAlias")), vr("k"))
                         ),
                         keys = listOf(
                             groupKey(
-                                id("y", caseInsensitive(), unqualified()),
+                                vr("y", caseInsensitive(), unqualified()),
                                 asVar = varDecl("k")
                             )
                         ),
-                        predicate = gt(id("k"), lit(ionInt(2)))
+                        predicate = gt(vr("k"), lit(ionInt(2)))
                     )
                 }
             ),
@@ -627,23 +627,23 @@ class AstToLogicalVisitorTransformTests {
                     LIMIT SUM(DISTINCT 2)
                 """,
                 PartiqlLogical.build {
-                    val scan = scan(id("t"), varDecl("t"))
-                    val let = let(scan, letBinding(call(defnid("coll_sum"), listOf(lit(ionString("all")), id("c"))), varDecl("sum_c")))
-                    val where = filter(call(defnid("coll_sum"), listOf(lit(ionString("all")), id("b"))), let)
+                    val scan = scan(vr("t"), varDecl("t"))
+                    val let = let(scan, letBinding(call(defnid("coll_sum"), listOf(lit(ionString("all")), vr("c"))), varDecl("sum_c")))
+                    val where = filter(call(defnid("coll_sum"), listOf(lit(ionString("all")), vr("b"))), let)
                     val agg = aggregate(
                         where,
                         groupFull(),
-                        groupKeyList(groupKey(id("d"), varDecl("e"))),
+                        groupKeyList(groupKey(vr("d"), varDecl("e"))),
                         aggregateFunctionList(
-                            aggregateFunction(all(), "sum", id("a"), varDecl("\$__partiql_aggregation_0")),
-                            aggregateFunction(all(), "avg", id("f"), varDecl("\$__partiql_aggregation_1")),
-                            aggregateFunction(distinct(), "min", id("g"), varDecl("\$__partiql_aggregation_2")),
+                            aggregateFunction(all(), "sum", vr("a"), varDecl("\$__partiql_aggregation_0")),
+                            aggregateFunction(all(), "avg", vr("f"), varDecl("\$__partiql_aggregation_1")),
+                            aggregateFunction(distinct(), "min", vr("g"), varDecl("\$__partiql_aggregation_2")),
                         )
                     )
-                    val having = filter(id("\$__partiql_aggregation_1"), agg)
-                    val order = sort(having, sortSpec(id("\$__partiql_aggregation_2")))
+                    val having = filter(vr("\$__partiql_aggregation_1"), agg)
+                    val order = sort(having, sortSpec(vr("\$__partiql_aggregation_2")))
                     val limit = limit(call(defnid("coll_sum"), listOf(lit(ionString("distinct")), lit(ionInt(2)))), order)
-                    val projection = bindingsToValues(struct(structField(lit(ionSymbol("sum_a")), id("\$__partiql_aggregation_0"))), limit)
+                    val projection = bindingsToValues(struct(structField(lit(ionSymbol("sum_a")), vr("\$__partiql_aggregation_0"))), limit)
                     query(projection)
                 }
             ),
@@ -653,18 +653,18 @@ class AstToLogicalVisitorTransformTests {
                     FROM t AS t
                 """,
                 PartiqlLogical.build {
-                    val scan = scan(id("t"), varDecl("t"))
+                    val scan = scan(vr("t"), varDecl("t"))
                     val agg = aggregate(
                         scan,
                         groupFull(),
                         groupKeyList(emptyList()),
                         aggregateFunctionList(
-                            aggregateFunction(all(), "sum", id("a"), varDecl("\$__partiql_aggregation_0")),
+                            aggregateFunction(all(), "sum", vr("a"), varDecl("\$__partiql_aggregation_0")),
                         )
                     )
                     val expression = plus(
-                        id("\$__partiql_aggregation_0"),
-                        call(defnid("coll_count"), listOf(lit(ionString("distinct")), id("a")))
+                        vr("\$__partiql_aggregation_0"),
+                        call(defnid("coll_count"), listOf(lit(ionString("distinct")), vr("a")))
                     )
                     val projection = bindingsToValues(struct(structField(lit(ionSymbol("sum_a")), expression)), agg)
                     query(projection)
@@ -683,34 +683,34 @@ class AstToLogicalVisitorTransformTests {
                 """,
                 PartiqlLogical.build {
                     // Create Sub-Query in PROJECTION
-                    val scanProj = scan(id("t1"), varDecl("t1"))
+                    val scanProj = scan(vr("t1"), varDecl("t1"))
                     val aggProj = aggregate(
                         scanProj,
                         groupFull(),
                         groupKeyList(emptyList()),
                         aggregateFunctionList(
-                            aggregateFunction(all(), "sum", id("a"), varDecl("\$__partiql_aggregation_0")),
+                            aggregateFunction(all(), "sum", vr("a"), varDecl("\$__partiql_aggregation_0")),
                         )
                     )
                     val exprProj = plus(
-                        id("\$__partiql_aggregation_0"),
-                        call(defnid("coll_count"), listOf(lit(ionString("distinct")), id("b")))
+                        vr("\$__partiql_aggregation_0"),
+                        call(defnid("coll_count"), listOf(lit(ionString("distinct")), vr("b")))
                     )
                     val bindingsProj = bindingsToValues(struct(structField(lit(ionSymbol("agg_proj")), exprProj)), aggProj)
 
                     // Create Sub-Query in FROM
-                    val scanFrom = scan(id("t2"), varDecl("t2"))
+                    val scanFrom = scan(vr("t2"), varDecl("t2"))
                     val aggFrom = aggregate(
                         scanFrom,
                         groupFull(),
                         groupKeyList(emptyList()),
                         aggregateFunctionList(
-                            aggregateFunction(all(), "avg", id("c"), varDecl("\$__partiql_aggregation_0")),
+                            aggregateFunction(all(), "avg", vr("c"), varDecl("\$__partiql_aggregation_0")),
                         )
                     )
                     val exprFrom = plus(
-                        id("\$__partiql_aggregation_0"),
-                        call(defnid("coll_max"), listOf(lit(ionString("all")), id("d")))
+                        vr("\$__partiql_aggregation_0"),
+                        call(defnid("coll_max"), listOf(lit(ionString("all")), vr("d")))
                     )
                     val bindingsFrom = bindingsToValues(struct(structField(lit(ionSymbol("agg_from")), exprFrom)), aggFrom)
 
@@ -732,7 +732,7 @@ class AstToLogicalVisitorTransformTests {
                 "INSERT INTO foo << 1 >>",
                 PartiqlLogical.build {
                     dml(
-                        identifier("foo", caseInsensitive()),
+                        id("foo", caseInsensitive()),
                         dmlInsert(varDecl("foo")),
                         bag(lit(ionInt(1)))
                     )
@@ -743,10 +743,10 @@ class AstToLogicalVisitorTransformTests {
                 "INSERT INTO foo SELECT x.* FROM 1 AS x",
                 PartiqlLogical.build {
                     dml(
-                        identifier("foo", caseInsensitive()),
+                        id("foo", caseInsensitive()),
                         dmlInsert(varDecl("foo")),
                         bindingsToValues(
-                            struct(structFields(id("x", caseInsensitive(), unqualified()))),
+                            struct(structFields(vr("x", caseInsensitive(), unqualified()))),
                             scan(lit(ionInt(1)), varDecl("x"))
                         )
                     )
@@ -756,10 +756,10 @@ class AstToLogicalVisitorTransformTests {
                 "INSERT INTO foo SELECT x.* FROM 1 AS x ON CONFLICT DO REPLACE EXCLUDED",
                 PartiqlLogical.build {
                     dml(
-                        identifier("foo", caseInsensitive()),
+                        id("foo", caseInsensitive()),
                         dmlReplace(varDecl("foo")),
                         bindingsToValues(
-                            struct(structFields(id("x", caseInsensitive(), unqualified()))),
+                            struct(structFields(vr("x", caseInsensitive(), unqualified()))),
                             scan(lit(ionInt(1)), varDecl("x"))
                         )
                     )
@@ -769,13 +769,13 @@ class AstToLogicalVisitorTransformTests {
                 "INSERT INTO foo SELECT x.* FROM 1 AS x ON CONFLICT DO REPLACE EXCLUDED WHERE foo.id > 2",
                 PartiqlLogical.build {
                     dml(
-                        identifier("foo", caseInsensitive()),
+                        id("foo", caseInsensitive()),
                         dmlReplace(
                             targetAlias = varDecl("foo"),
                             condition = gt(
                                 listOf(
                                     path(
-                                        id("foo", caseInsensitive(), unqualified()),
+                                        vr("foo", caseInsensitive(), unqualified()),
                                         listOf(pathExpr(lit(ionString("id")), caseInsensitive()))
                                     ),
                                     lit(ionInt(2))
@@ -784,7 +784,7 @@ class AstToLogicalVisitorTransformTests {
                             rowAlias = varDecl(AstToLogicalVisitorTransform.EXCLUDED)
                         ),
                         bindingsToValues(
-                            struct(structFields(id("x", caseInsensitive(), unqualified()))),
+                            struct(structFields(vr("x", caseInsensitive(), unqualified()))),
                             scan(lit(ionInt(1)), varDecl("x"))
                         )
                     )
@@ -795,7 +795,7 @@ class AstToLogicalVisitorTransformTests {
                 PartiqlLogical.build {
                     PartiqlLogical.build {
                         dml(
-                            identifier("foo", caseInsensitive()),
+                            id("foo", caseInsensitive()),
                             dmlReplace(varDecl("f")),
                             bag(
                                 struct(
@@ -812,13 +812,13 @@ class AstToLogicalVisitorTransformTests {
                 PartiqlLogical.build {
                     PartiqlLogical.build {
                         dml(
-                            identifier("foo", caseInsensitive()),
+                            id("foo", caseInsensitive()),
                             dmlReplace(
                                 varDecl("f"),
                                 condition = gt(
                                     listOf(
                                         path(
-                                            id("f", caseInsensitive(), unqualified()),
+                                            vr("f", caseInsensitive(), unqualified()),
                                             listOf(pathExpr(lit(ionString("id")), caseInsensitive()))
                                         ),
                                         lit(ionInt(2))
@@ -843,13 +843,13 @@ class AstToLogicalVisitorTransformTests {
                 PartiqlLogical.build {
                     PartiqlLogical.build {
                         dml(
-                            identifier("foo", caseInsensitive()),
+                            id("foo", caseInsensitive()),
                             dmlReplace(
                                 varDecl("f"),
                                 condition = gt(
                                     listOf(
                                         path(
-                                            id("f", caseInsensitive(), unqualified()),
+                                            vr("f", caseInsensitive(), unqualified()),
                                             listOf(pathExpr(lit(ionString("id")), caseInsensitive()))
                                         ),
                                         lit(ionInt(2))
@@ -877,13 +877,13 @@ class AstToLogicalVisitorTransformTests {
                 PartiqlLogical.build {
                     PartiqlLogical.build {
                         dml(
-                            identifier("foo", caseInsensitive()),
+                            id("foo", caseInsensitive()),
                             dmlReplace(
                                 varDecl("f"),
                                 condition = gt(
                                     listOf(
                                         path(
-                                            id("excluded", caseInsensitive(), unqualified()),
+                                            vr("excluded", caseInsensitive(), unqualified()),
                                             listOf(pathExpr(lit(ionString("id")), caseInsensitive()))
                                         ),
                                         lit(ionInt(2))
@@ -905,10 +905,10 @@ class AstToLogicalVisitorTransformTests {
                 "INSERT INTO foo SELECT x.* FROM 1 AS x ON CONFLICT DO UPDATE EXCLUDED",
                 PartiqlLogical.build {
                     dml(
-                        identifier("foo", caseInsensitive()),
+                        id("foo", caseInsensitive()),
                         dmlUpdate(varDecl("foo")),
                         bindingsToValues(
-                            struct(structFields(id("x", caseInsensitive(), unqualified()))),
+                            struct(structFields(vr("x", caseInsensitive(), unqualified()))),
                             scan(lit(ionInt(1)), varDecl("x"))
                         )
                     )
@@ -919,7 +919,7 @@ class AstToLogicalVisitorTransformTests {
                 PartiqlLogical.build {
                     PartiqlLogical.build {
                         dml(
-                            identifier("foo", caseInsensitive()),
+                            id("foo", caseInsensitive()),
                             dmlUpdate(varDecl("f")),
                             bag(
                                 struct(
@@ -936,13 +936,13 @@ class AstToLogicalVisitorTransformTests {
                 PartiqlLogical.build {
                     PartiqlLogical.build {
                         dml(
-                            identifier("foo", caseInsensitive()),
+                            id("foo", caseInsensitive()),
                             dmlUpdate(
                                 varDecl("f"),
                                 condition = gt(
                                     listOf(
                                         path(
-                                            id("f", caseInsensitive(), unqualified()),
+                                            vr("f", caseInsensitive(), unqualified()),
                                             listOf(pathExpr(lit(ionString("id")), caseInsensitive()))
                                         ),
                                         lit(ionInt(2))
@@ -966,13 +966,13 @@ class AstToLogicalVisitorTransformTests {
                 PartiqlLogical.build {
                     PartiqlLogical.build {
                         dml(
-                            identifier("foo", caseInsensitive()),
+                            id("foo", caseInsensitive()),
                             dmlUpdate(
                                 varDecl("f"),
                                 condition = gt(
                                     listOf(
                                         path(
-                                            id("excluded", caseInsensitive(), unqualified()),
+                                            vr("excluded", caseInsensitive(), unqualified()),
                                             listOf(pathExpr(lit(ionString("id")), caseInsensitive()))
                                         ),
                                         lit(ionInt(2))
@@ -995,7 +995,7 @@ class AstToLogicalVisitorTransformTests {
                 PartiqlLogical.build {
                     PartiqlLogical.build {
                         dml(
-                            identifier("foo", caseInsensitive()),
+                            id("foo", caseInsensitive()),
                             dmlReplace(varDecl("f")),
                             bag(
                                 struct(
@@ -1012,10 +1012,10 @@ class AstToLogicalVisitorTransformTests {
                 PartiqlLogical.build {
                     PartiqlLogical.build {
                         dml(
-                            identifier("foo", caseInsensitive()),
+                            id("foo", caseInsensitive()),
                             dmlUpdate(varDecl("f")),
                             bindingsToValues(
-                                struct(structFields(id("x", caseInsensitive(), unqualified()))),
+                                struct(structFields(vr("x", caseInsensitive(), unqualified()))),
                                 scan(lit(ionInt(1)), varDecl("x"))
                             )
                         )
@@ -1026,11 +1026,11 @@ class AstToLogicalVisitorTransformTests {
                 "DELETE FROM y AS y",
                 PartiqlLogical.build {
                     dml(
-                        identifier("y", caseInsensitive()),
+                        id("y", caseInsensitive()),
                         dmlDelete(),
                         bindingsToValues(
-                            id("y", caseSensitive(), unqualified()),
-                            scan(id("y", caseInsensitive(), unqualified()), varDecl("y"))
+                            vr("y", caseSensitive(), unqualified()),
+                            scan(vr("y", caseInsensitive(), unqualified()), varDecl("y"))
                         )
                     )
                 }
@@ -1039,14 +1039,14 @@ class AstToLogicalVisitorTransformTests {
                 "DELETE FROM y AS y WHERE 1=1",
                 PartiqlLogical.build {
                     dml(
-                        identifier("y", caseInsensitive()),
+                        id("y", caseInsensitive()),
                         dmlDelete(),
                         bindingsToValues(
-                            id("y", caseSensitive(), unqualified()),
+                            vr("y", caseSensitive(), unqualified()),
                             // this logical plan is same as previous but includes this filter
                             filter(
                                 eq(lit(ionInt(1)), lit(ionInt(1))),
-                                scan(id("y", caseInsensitive(), unqualified()), varDecl("y"))
+                                scan(vr("y", caseInsensitive(), unqualified()), varDecl("y"))
                             )
                         )
                     )
@@ -1074,8 +1074,8 @@ class AstToLogicalVisitorTransformTests {
                                 ),
                                 asDecl = varDecl("x"),
                             ),
-                            key = path(id("x"), listOf(pathExpr(lit(ionString("v"))))),
-                            value = path(id("x"), listOf(pathExpr(lit(ionString("a"))))),
+                            key = path(vr("x"), listOf(pathExpr(lit(ionString("v"))))),
+                            value = path(vr("x"), listOf(pathExpr(lit(ionString("a"))))),
                         )
                     )
                 }

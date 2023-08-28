@@ -9,7 +9,7 @@ import org.partiql.errors.ErrorCode
 import org.partiql.errors.Property
 import org.partiql.lang.ION
 import org.partiql.lang.domains.PartiqlAst
-import org.partiql.lang.domains.id
+import org.partiql.lang.domains.vr
 import org.partiql.lang.util.getAntlrDisplayString
 import org.partiql.lang.util.to
 import org.partiql.parser.antlr.PartiQLParser
@@ -60,7 +60,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
             DateTimeTestCase("SELECT DATE '2021-03-10' FROM foo") {
                 select(
                     project = projectList(projectExpr(date(2021, 3, 10))),
-                    from = scan(id("foo"))
+                    from = scan(vr("foo"))
                 )
             },
         )

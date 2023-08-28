@@ -139,7 +139,7 @@ class GroupByPathExpressionVisitorTransform(
                 SubstitutionPair(
                     groupKey.expr,
                     PartiqlAst.build {
-                        id(
+                        vr(
                             name = groupKey.asAlias!!.string(),
                             case = caseSensitive(),
                             qualifier = unqualified(),
@@ -152,7 +152,7 @@ class GroupByPathExpressionVisitorTransform(
 
     private fun getSubstitutionsExceptFor(fromSourceAliases: List<String>): Map<PartiqlAst.Expr, SubstitutionPair> {
         return super.substitutions.values.filter {
-            val targetRootVarRef = (it.target as? PartiqlAst.Expr.Path)?.root as? PartiqlAst.Expr.Id
+            val targetRootVarRef = (it.target as? PartiqlAst.Expr.Path)?.root as? PartiqlAst.Expr.Vr
             when (targetRootVarRef) {
                 null -> true
                 else -> {

@@ -4,13 +4,13 @@ import com.amazon.ionelement.api.ionBool
 import com.amazon.ionelement.api.ionInt
 import org.junit.Test
 import org.partiql.lang.domains.PartiqlAst
-import org.partiql.lang.domains.id
+import org.partiql.lang.domains.vr
 
 class PartiQLParserJoinTest : PartiQLParserTestBase() {
 
     override val targets: Array<ParserTarget> = arrayOf(ParserTarget.DEFAULT, ParserTarget.EXPERIMENTAL)
 
-    private val projectX = PartiqlAst.build { projectList(projectExpr(id("x"))) }
+    private val projectX = PartiqlAst.build { projectList(projectExpr(vr("x"))) }
 
     private fun PartiqlAst.Builder.selectWithOneJoin(
         joinType: PartiqlAst.JoinType,
@@ -21,8 +21,8 @@ class PartiQLParserJoinTest : PartiQLParserTestBase() {
             project = projectX,
             from = join(
                 joinType,
-                scan(id("stuff"), defnid("s")),
-                scan(id("foo"), defnid("f")),
+                scan(vr("stuff"), defnid("s")),
+                scan(vr("foo"), defnid("f")),
                 joinPredicate
             ),
             where = wherePredicate
@@ -47,7 +47,7 @@ class PartiQLParserJoinTest : PartiQLParserTestBase() {
     ) {
         selectWithOneJoin(
             joinType = full(),
-            joinPredicate = eq(id("s"), id("f"))
+            joinPredicate = eq(vr("s"), vr("f"))
         )
     }
 
@@ -59,9 +59,9 @@ class PartiQLParserJoinTest : PartiQLParserTestBase() {
             project = projectX,
             from = join(
                 inner(),
-                scan(id("A")),
-                scan(id("B")),
-                eq(id("A"), id("B"))
+                scan(vr("A")),
+                scan(vr("B")),
+                eq(vr("A"), vr("B"))
             ),
             where = null
         )
@@ -75,9 +75,9 @@ class PartiQLParserJoinTest : PartiQLParserTestBase() {
             project = projectX,
             from = join(
                 inner(),
-                scan(id("A")),
-                scan(id("B")),
-                eq(id("A"), id("B"))
+                scan(vr("A")),
+                scan(vr("B")),
+                eq(vr("A"), vr("B"))
             ),
             where = null
         )
@@ -93,12 +93,12 @@ class PartiQLParserJoinTest : PartiQLParserTestBase() {
                 inner(),
                 join(
                     inner(),
-                    scan(id("A")),
-                    scan(id("B")),
-                    eq(id("A"), id("B"))
+                    scan(vr("A")),
+                    scan(vr("B")),
+                    eq(vr("A"), vr("B"))
                 ),
-                scan(id("C")),
-                eq(id("B"), id("C"))
+                scan(vr("C")),
+                eq(vr("B"), vr("C"))
             ),
             where = null
         )
@@ -112,14 +112,14 @@ class PartiQLParserJoinTest : PartiQLParserTestBase() {
             project = projectX,
             from = join(
                 inner(),
-                scan(id("A")),
+                scan(vr("A")),
                 join(
                     inner(),
-                    scan(id("B")),
-                    scan(id("C")),
-                    eq(id("B"), id("C"))
+                    scan(vr("B")),
+                    scan(vr("C")),
+                    eq(vr("B"), vr("C"))
                 ),
-                eq(id("A"), id("B"))
+                eq(vr("A"), vr("B"))
             ),
             where = null
         )
@@ -133,19 +133,19 @@ class PartiQLParserJoinTest : PartiQLParserTestBase() {
             project = projectX,
             from = join(
                 inner(),
-                scan(id("A")),
+                scan(vr("A")),
                 join(
                     inner(),
-                    scan(id("B")),
+                    scan(vr("B")),
                     join(
                         inner(),
-                        scan(id("C")),
-                        scan(id("D")),
-                        eq(id("C"), id("D"))
+                        scan(vr("C")),
+                        scan(vr("D")),
+                        eq(vr("C"), vr("D"))
                     ),
-                    eq(id("B"), id("C"))
+                    eq(vr("B"), vr("C"))
                 ),
-                eq(id("A"), id("B"))
+                eq(vr("A"), vr("B"))
             ),
             where = null
         )
@@ -159,7 +159,7 @@ class PartiQLParserJoinTest : PartiQLParserTestBase() {
             project = projectX,
             from = join(
                 inner(),
-                scan(id("A")),
+                scan(vr("A")),
                 scan(lit(ionInt(1))),
                 lit(ionBool(true))
             ),
@@ -175,7 +175,7 @@ class PartiQLParserJoinTest : PartiQLParserTestBase() {
             project = projectX,
             from = join(
                 inner(),
-                scan(id("A")),
+                scan(vr("A")),
                 scan(
                     select(
                         project = projectX,
@@ -200,21 +200,21 @@ class PartiQLParserJoinTest : PartiQLParserTestBase() {
                         inner(),
                         join(
                             inner(),
-                            scan(id("a")),
-                            scan(id("b")),
+                            scan(vr("a")),
+                            scan(vr("b")),
                             null
                         ),
-                        scan(id("c")),
+                        scan(vr("c")),
                         null
                     ),
-                    scan(id("d")),
-                    id("e")
+                    scan(vr("d")),
+                    vr("e")
                 ),
-                scan(id("f")),
+                scan(vr("f")),
                 null
             ),
-            scan(id("g")),
-            id("h")
+            scan(vr("g")),
+            vr("h")
         )
     }
 

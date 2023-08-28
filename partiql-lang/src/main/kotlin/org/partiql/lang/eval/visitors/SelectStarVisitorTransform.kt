@@ -95,12 +95,12 @@ class SelectStarVisitorTransform : VisitorTransformBase() {
 
     private fun createProjectAll(name: String) =
         PartiqlAst.build {
-            projectAll(id(name, caseSensitive(), unqualified(), emptyMetaContainer()))
+            projectAll(vr(name, caseSensitive(), unqualified(), emptyMetaContainer()))
         }
 
     private fun createProjectExpr(variableName: String, asAlias: String = variableName, metas: MetaContainer = emptyMetaContainer()) =
         PartiqlAst.build {
-            projectExpr(id(variableName, caseSensitive(), unqualified(), metas), defnid(asAlias))
+            projectExpr(vr(variableName, caseSensitive(), unqualified(), metas), defnid(asAlias))
         }
 
     private class FromSourceAliases(val asAlias: String, val atAlias: String?, val byAlias: String?)

@@ -5,7 +5,7 @@ import com.amazon.ionelement.api.ionInt
 import com.amazon.ionelement.api.ionString
 import org.junit.Test
 import org.partiql.lang.domains.PartiqlAst
-import org.partiql.lang.domains.id
+import org.partiql.lang.domains.vr
 import kotlin.test.assertFailsWith
 
 class PartiQLParserMatchTest : PartiQLParserTestBase() {
@@ -53,7 +53,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     // `MyGraph MATCH (x), -[u]->`
     val astMyGraphMatchAllNodesEdges = PartiqlAst.build {
         graphMatch(
-            expr = id("MyGraph"),
+            expr = vr("MyGraph"),
             gpmlPattern = gpmlPattern(
                 patterns = listOf(
                     graphMatchPattern(
@@ -80,7 +80,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     // `MyGraph MATCH (x)`
     val astMygraphMatchAllNodes = PartiqlAst.build {
         graphMatch(
-            expr = id("MyGraph"),
+            expr = vr("MyGraph"),
             gpmlPattern = gpmlPattern(
                 patterns = listOf(
                     graphMatchPattern(
@@ -100,7 +100,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     val astSelectStarFromTbl1 = PartiqlAst.build {
         select(
             project = projectStar(),
-            from = scan(id("tbl1"))
+            from = scan(vr("tbl1"))
         )
     }
 
@@ -203,7 +203,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
             project = projectList(projectExpr(lit(ionInt(1)))),
             from = scan(
                 graphMatch(
-                    expr = id("my_graph"),
+                    expr = vr("my_graph"),
                     gpmlPattern = gpmlPattern(
                         patterns = listOf(
                             graphMatchPattern(
@@ -230,7 +230,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
             project = projectStar(),
             from = scan(
                 graphMatch(
-                    expr = id("my_graph"),
+                    expr = vr("my_graph"),
                     gpmlPattern = gpmlPattern(
                         patterns = listOf(
                             graphMatchPattern(
@@ -256,7 +256,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
             project = projectList(projectExpr(lit(ionInt(1)))),
             from = scan(
                 graphMatch(
-                    expr = id("my_graph"),
+                    expr = vr("my_graph"),
                     gpmlPattern = gpmlPattern(
                         patterns = listOf(
                             graphMatchPattern(
@@ -282,7 +282,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
                     project = projection,
                     from = scan(
                         expr = graphMatch(
-                            expr = id("my_graph"),
+                            expr = vr("my_graph"),
                             gpmlPattern = gpmlPattern(
                                 patterns = listOf(
                                     graphMatchPattern(
@@ -307,7 +307,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
         "SELECT x FROM my_graph MATCH (x)"
     ) {
         bindAllNodesAST(
-            projectList(projectExpr(expr = id("x"))),
+            projectList(projectExpr(expr = vr("x"))),
             null
         )
     }
@@ -349,13 +349,13 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
         select(
             project = projectList(
                 projectExpr(
-                    expr = path(id("x"), pathExpr(lit(ionString("info")), caseInsensitive())),
+                    expr = path(vr("x"), pathExpr(lit(ionString("info")), caseInsensitive())),
                     asAlias = defnid("info")
                 )
             ),
             from = scan(
                 graphMatch(
-                    expr = id("my_graph"),
+                    expr = vr("my_graph"),
                     gpmlPattern = gpmlPattern(
                         patterns = listOf(
                             graphMatchPattern(
@@ -371,7 +371,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
                 )
             ),
             where = like(
-                value = path(id("x"), pathExpr(lit(ionString("name")), caseInsensitive())),
+                value = path(vr("x"), pathExpr(lit(ionString("name")), caseInsensitive())),
                 pattern = lit(ionString("foo"))
             )
         )
@@ -382,10 +382,10 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
         "SELECT x AS target FROM my_graph MATCH (x:Label) WHERE x.has_data = true",
     ) {
         select(
-            project = projectList(projectExpr(expr = id("x"), asAlias = defnid("target"))),
+            project = projectList(projectExpr(expr = vr("x"), asAlias = defnid("target"))),
             from = scan(
                 graphMatch(
-                    expr = id("my_graph"),
+                    expr = vr("my_graph"),
                     gpmlPattern = gpmlPattern(
                         patterns = listOf(
                             graphMatchPattern(
@@ -403,7 +403,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
             ),
             where = eq(
                 listOf(
-                    path(id("x"), pathExpr(lit(ionString("has_data")), caseInsensitive())),
+                    path(vr("x"), pathExpr(lit(ionString("has_data")), caseInsensitive())),
                     lit(ionBool(true))
                 )
             )
@@ -418,7 +418,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
             project = projectList(projectExpr(lit(ionInt(1)))),
             from = scan(
                 graphMatch(
-                    expr = id("g"),
+                    expr = vr("g"),
                     gpmlPattern = gpmlPattern(
                         patterns = listOf(
                             graphMatchPattern(
@@ -447,7 +447,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
             project = projectList(projectExpr(lit(ionInt(1)))),
             from = scan(
                 graphMatch(
-                    expr = id("g"),
+                    expr = vr("g"),
                     gpmlPattern = gpmlPattern(
                         patterns = listOf(
                             graphMatchPattern(
@@ -484,7 +484,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
             project = projectList(projectExpr(lit(ionInt(1)))),
             from = scan(
                 graphMatch(
-                    expr = id("g"),
+                    expr = vr("g"),
                     gpmlPattern = gpmlPattern(
                         patterns = listOf(
                             graphMatchPattern(
@@ -518,10 +518,10 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
             variable: PartiqlAst.Defnid?, label: PartiqlAst.Defnid? ->
             PartiqlAst.build {
                 select(
-                    project = projectList(projectExpr(id("a")), projectExpr(id("b"))),
+                    project = projectList(projectExpr(vr("a")), projectExpr(vr("b"))),
                     from = scan(
                         graphMatch(
-                            expr = id("g"),
+                            expr = vr("g"),
                             gpmlPattern = gpmlPattern(
                                 patterns = listOf(
                                     graphMatchPattern(
@@ -716,17 +716,17 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
         select(
             project = projectList(
                 projectExpr(
-                    expr = path(id("the_a"), pathExpr(lit(ionString("name")), caseInsensitive())),
+                    expr = path(vr("the_a"), pathExpr(lit(ionString("name")), caseInsensitive())),
                     asAlias = defnid("src")
                 ),
                 projectExpr(
-                    expr = path(id("the_b"), pathExpr(lit(ionString("name")), caseInsensitive())),
+                    expr = path(vr("the_b"), pathExpr(lit(ionString("name")), caseInsensitive())),
                     asAlias = defnid("dest")
                 )
             ),
             from = scan(
                 graphMatch(
-                    expr = id("my_graph"),
+                    expr = vr("my_graph"),
                     gpmlPattern = gpmlPattern(
                         patterns = listOf(
                             graphMatchPattern(
@@ -756,7 +756,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
             ),
             where = gt(
                 listOf(
-                    path(id("the_y"), pathExpr(lit(ionString("score")), caseInsensitive())),
+                    path(vr("the_y"), pathExpr(lit(ionString("score")), caseInsensitive())),
                     lit(ionInt(10))
                 )
             )
@@ -769,12 +769,12 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     ) {
         select(
             project = projectList(
-                projectExpr(expr = id("a")),
-                projectExpr(expr = id("b"))
+                projectExpr(expr = vr("a")),
+                projectExpr(expr = vr("b"))
             ),
             from = scan(
                 graphMatch(
-                    expr = id("g"),
+                    expr = vr("g"),
                     gpmlPattern = gpmlPattern(
                         patterns = listOf(
                             graphMatchPattern(
@@ -828,12 +828,12 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     ) {
         select(
             project = projectList(
-                projectExpr(expr = id("a")),
-                projectExpr(expr = id("b"))
+                projectExpr(expr = vr("a")),
+                projectExpr(expr = vr("b"))
             ),
             from = scan(
                 graphMatch(
-                    expr = id("g"),
+                    expr = vr("g"),
                     gpmlPattern = gpmlPattern(
                         patterns = listOf(
                             graphMatchPattern(
@@ -879,10 +879,10 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     ) {
         PartiqlAst.build {
             select(
-                project = projectList(projectExpr(id("a")), projectExpr(id("b"))),
+                project = projectList(projectExpr(vr("a")), projectExpr(vr("b"))),
                 from = scan(
                     graphMatch(
-                        expr = id("g"),
+                        expr = vr("g"),
                         gpmlPattern = gpmlPattern(
                             patterns = listOf(
                                 graphMatchPattern(
@@ -918,10 +918,10 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     ) {
         PartiqlAst.build {
             select(
-                project = projectList(projectExpr(id("a")), projectExpr(id("b"))),
+                project = projectList(projectExpr(vr("a")), projectExpr(vr("b"))),
                 from = scan(
                     graphMatch(
-                        expr = id("g"),
+                        expr = vr("g"),
                         gpmlPattern = gpmlPattern(
                             patterns = listOf(
                                 graphMatchPattern(
@@ -929,8 +929,8 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
                                         pattern(
                                             graphMatchPattern(
                                                 prefilter = eq(
-                                                    path(id("a"), pathExpr(lit(ionString("owner")), caseInsensitive())),
-                                                    path(id("b"), pathExpr(lit(ionString("owner")), caseInsensitive()))
+                                                    path(vr("a"), pathExpr(lit(ionString("owner")), caseInsensitive())),
+                                                    path(vr("b"), pathExpr(lit(ionString("owner")), caseInsensitive()))
                                                 ),
                                                 quantifier = graphMatchQuantifier(lower = 2, upper = 5),
                                                 parts = listOf(
@@ -967,10 +967,10 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     ) {
         PartiqlAst.build {
             select(
-                project = projectList(projectExpr(id("a")), projectExpr(id("b"))),
+                project = projectList(projectExpr(vr("a")), projectExpr(vr("b"))),
                 from = scan(
                     graphMatch(
-                        expr = id("g"),
+                        expr = vr("g"),
                         gpmlPattern = gpmlPattern(
                             patterns = listOf(
                                 graphMatchPattern(
@@ -1012,10 +1012,10 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     val parenthesizedEdgeStarAST = {
         PartiqlAst.build {
             select(
-                project = projectList(projectExpr(id("a")), projectExpr(id("b"))),
+                project = projectList(projectExpr(vr("a")), projectExpr(vr("b"))),
                 from = scan(
                     graphMatch(
-                        expr = id("g"),
+                        expr = vr("g"),
                         gpmlPattern = gpmlPattern(
                             patterns = listOf(
                                 graphMatchPattern(
@@ -1072,10 +1072,10 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     ) {
         PartiqlAst.build {
             select(
-                project = projectList(projectExpr(id("u"), asAlias = defnid("banCandidate"))),
+                project = projectList(projectExpr(vr("u"), asAlias = defnid("banCandidate"))),
                 from = scan(
                     graphMatch(
-                        expr = id("g"),
+                        expr = vr("g"),
                         gpmlPattern = gpmlPattern(
                             patterns = listOf(
                                 graphMatchPattern(
@@ -1084,7 +1084,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
                                             variable = defnid("p"),
                                             label = graphLabelName(defnid("Post")),
                                             prefilter = eq(
-                                                path(id("p"), pathExpr(lit(ionString("isFlagged")), caseInsensitive())),
+                                                path(vr("p"), pathExpr(lit(ionString("isFlagged")), caseInsensitive())),
                                                 lit(ionBool(true))
                                             )
                                         ),
@@ -1098,13 +1098,13 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
                                             prefilter = and(
                                                 eq(
                                                     path(
-                                                        id("u"),
+                                                        vr("u"),
                                                         pathExpr(lit(ionString("isBanned")), caseInsensitive())
                                                     ),
                                                     lit(ionBool(false))
                                                 ),
                                                 lt(
-                                                    path(id("u"), pathExpr(lit(ionString("karma")), caseInsensitive())),
+                                                    path(vr("u"), pathExpr(lit(ionString("karma")), caseInsensitive())),
                                                     lit(ionInt(20))
                                                 )
                                             )
@@ -1118,7 +1118,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
                                             label = graphLabelName(defnid("Comment")),
                                             prefilter =
                                             eq(
-                                                path(id("c"), pathExpr(lit(ionString("isFlagged")), caseInsensitive())),
+                                                path(vr("c"), pathExpr(lit(ionString("isFlagged")), caseInsensitive())),
                                                 lit(ionBool(true))
                                             )
                                         ),
@@ -1129,7 +1129,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
                     )
                 ),
                 where = like(
-                    value = path(id("p"), pathExpr(lit(ionString("title")), caseInsensitive())),
+                    value = path(vr("p"), pathExpr(lit(ionString("title")), caseInsensitive())),
                     pattern = lit(ionString("%considered harmful%"))
                 )
             )
@@ -1139,10 +1139,10 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     val restrictorAst = { restrictor: PartiqlAst.GraphMatchRestrictor ->
         PartiqlAst.build {
             select(
-                project = projectList(projectExpr(id("p"))),
+                project = projectList(projectExpr(vr("p"))),
                 from = scan(
                     graphMatch(
-                        expr = id("g"),
+                        expr = vr("g"),
                         gpmlPattern = gpmlPattern(
                             patterns = listOf(
                                 graphMatchPattern(
@@ -1153,7 +1153,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
                                             variable = defnid("a"),
                                             prefilter =
                                             eq(
-                                                path(id("a"), pathExpr(lit(ionString("owner")), caseInsensitive())),
+                                                path(vr("a"), pathExpr(lit(ionString("owner")), caseInsensitive())),
                                                 lit(ionString("Dave"))
                                             ),
                                         ),
@@ -1167,7 +1167,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
                                             variable = defnid("b"),
                                             prefilter =
                                             eq(
-                                                path(id("b"), pathExpr(lit(ionString("owner")), caseInsensitive())),
+                                                path(vr("b"), pathExpr(lit(ionString("owner")), caseInsensitive())),
                                                 lit(ionString("Aretha"))
                                             ),
                                         ),
@@ -1206,10 +1206,10 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     val selectorAST = { selector: PartiqlAst.GraphMatchSelector ->
         PartiqlAst.build {
             select(
-                project = projectList(projectExpr(id("p"))),
+                project = projectList(projectExpr(vr("p"))),
                 from = scan(
                     graphMatch(
-                        expr = id("g"),
+                        expr = vr("g"),
                         gpmlPattern = gpmlPattern(
                             selector = selector,
                             patterns = listOf(
@@ -1220,7 +1220,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
                                             variable = defnid("a"),
                                             prefilter =
                                             eq(
-                                                path(id("a"), pathExpr(lit(ionString("owner")), caseInsensitive())),
+                                                path(vr("a"), pathExpr(lit(ionString("owner")), caseInsensitive())),
                                                 lit(ionString("Dave"))
                                             ),
                                         ),
@@ -1234,7 +1234,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
                                             variable = defnid("b"),
                                             prefilter =
                                             eq(
-                                                path(id("b"), pathExpr(lit(ionString("owner")), caseInsensitive())),
+                                                path(vr("b"), pathExpr(lit(ionString("owner")), caseInsensitive())),
                                                 lit(ionString("Aretha"))
                                             ),
                                         ),
@@ -1295,7 +1295,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
         val match = PartiqlAst.build {
             scan(
                 graphMatch(
-                    expr = id("graph"),
+                    expr = vr("graph"),
                     gpmlPattern = gpmlPattern(
                         patterns = listOf(
                             graphMatchPattern(
@@ -1319,21 +1319,21 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
         }
 
         val t1 = PartiqlAst.build {
-            scan(expr = id("table1"), asAlias = defnid("t1"))
+            scan(expr = vr("table1"), asAlias = defnid("t1"))
         }
 
         val t2 = PartiqlAst.build {
-            scan(expr = id("table2"), asAlias = defnid("t2"))
+            scan(expr = vr("table2"), asAlias = defnid("t2"))
         }
 
         PartiqlAst.build {
             select(
                 project = projectList(
-                    projectExpr(id("a")),
-                    projectExpr(id("b")),
-                    projectExpr(id("c")),
-                    projectExpr(path(id("t1"), pathExpr(lit(ionString("x")), caseInsensitive())), defnid("x")),
-                    projectExpr(path(id("t2"), pathExpr(lit(ionString("y")), caseInsensitive())), defnid("y"))
+                    projectExpr(vr("a")),
+                    projectExpr(vr("b")),
+                    projectExpr(vr("c")),
+                    projectExpr(path(vr("t1"), pathExpr(lit(ionString("x")), caseInsensitive())), defnid("x")),
+                    projectExpr(path(vr("t2"), pathExpr(lit(ionString("y")), caseInsensitive())), defnid("y"))
                 ),
                 from = join(
                     type = inner(),
@@ -1397,10 +1397,10 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     /** "SELECT x FROM g MATCH (x:$[spec])" */
     fun astSelectNodeWithLabelSpec(spec: PartiqlAst.GraphLabelSpec) = PartiqlAst.build {
         select(
-            project = projectList(projectExpr(expr = id("x"))),
+            project = projectList(projectExpr(expr = vr("x"))),
             from = scan(
                 expr = graphMatch(
-                    expr = id("g"),
+                    expr = vr("g"),
                     gpmlPattern = gpmlPattern(
                         patterns = listOf(
                             graphMatchPattern(
@@ -1485,7 +1485,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     /** (g MATCH <-[:$[spec]]-> ) */
     fun astMatchEdgeWithLabelSpec(spec: PartiqlAst.GraphLabelSpec) = PartiqlAst.build {
         graphMatch(
-            expr = id("g"),
+            expr = vr("g"),
             gpmlPattern = gpmlPattern(
                 patterns = listOf(
                     graphMatchPattern(

@@ -13,7 +13,7 @@ import org.partiql.lang.domains.PartiqlAst
  * @param children is a list of child RecursionTree
  *
  * Take the [PartiqlAst.Expr.Eq] node in the WHERE clause in `SELECT a FROM b WHERE c = d` as example.
- * [astType] is '=', [value] is null, [attrOfParent] is 'where', [children] is a list of [PartiqlAst.Expr.Id] c and d.
+ * [astType] is '=', [value] is null, [attrOfParent] is 'where', [children] is a list of [PartiqlAst.Expr.Vr] c and d.
  */
 class RecursionTree(
     private val astType: String,

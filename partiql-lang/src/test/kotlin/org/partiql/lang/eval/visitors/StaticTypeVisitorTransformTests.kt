@@ -116,7 +116,7 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
             expectSubNode(
                 PartiqlAst.build {
                     path(
-                        id(
+                        vr(
                             "x",
                             partiqlAstCaseSensitive,
                             partiqlAstLocalsFirst,
@@ -141,7 +141,7 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
             expectSubNode(
                 PartiqlAst.build {
                     path(
-                        id(
+                        vr(
                             "x",
                             partiqlAstCaseSensitive,
                             partiqlAstLocalsFirst,
@@ -297,7 +297,7 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
             expectSubNode(
                 PartiqlAst.build {
                     path(
-                        id(
+                        vr(
                             "b",
                             partiqlAstCaseSensitive,
                             partiqlAstLocalsFirst,
@@ -755,7 +755,7 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
             expectSubNode(
                 PartiqlAst.build {
                     path(
-                        id(
+                        vr(
                             "d",
                             partiqlAstCaseSensitive,
                             partiqlAstLocalsFirst,
@@ -785,7 +785,7 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
             expectSubNode(
                 PartiqlAst.build {
                     path(
-                        id(
+                        vr(
                             "d",
                             partiqlAstCaseSensitive,
                             partiqlAstLocalsFirst,
@@ -866,7 +866,7 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
                 val visitor = object : PartiqlAst.Visitor() {
                     override fun visitExpr(node: PartiqlAst.Expr) {
                         when (node) {
-                            is PartiqlAst.Expr.Id -> {
+                            is PartiqlAst.Expr.Vr -> {
                                 val sourceLocationMeta = node.metas[SourceLocationMeta.TAG] as SourceLocationMeta?
                                     ?: error("VariableReference '${node.name.text}' had no SourceLocationMeta")
 
@@ -998,7 +998,7 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
     @Test
     fun `ensure StaticTypeMeta can be serialized`() {
         val expectedExpr = PartiqlAst.build {
-            id(
+            vr(
                 name = "foo",
                 caseInsensitive(),
                 unqualified(),
@@ -1014,7 +1014,7 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
     @Test
     fun `ensure StaticTypeMeta can be serialized when StaticType is nested`() {
         val expectedExpr = PartiqlAst.build {
-            id(
+            vr(
                 name = "foo",
                 case = partiqlAstCaseInSensitive,
                 qualifier = partiqlAstUnqualified,

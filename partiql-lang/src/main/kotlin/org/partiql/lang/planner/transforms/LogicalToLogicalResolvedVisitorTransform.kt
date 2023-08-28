@@ -17,8 +17,8 @@ import org.partiql.lang.planner.PlanningProblemDetails
 import org.partiql.pig.runtime.asPrimitive
 
 /**
- * Resolves all variables by rewriting `(id <name> <case-sensitivity> <scope-qualifier>)` to
- * `(id <unique-index>)`) or `(global_id <name> <unique-id>)`, or a `$__dynamic_lookup__` call site (if enabled).
+ * Resolves all variables by rewriting `(vr <name> <case-sensitivity> <scope-qualifier>)` to
+ * `(vr <unique-index>)`) or `(global_id <name> <unique-id>)`, or a `$__dynamic_lookup__` call site (if enabled).
  *
  * Local variables are resolved independently within this pass, but we rely on [resolver] to resolve global variables.
  *
@@ -26,9 +26,9 @@ import org.partiql.pig.runtime.asPrimitive
  * 1. All [PartiqlLogical.VarDecl] nodes are allocated unique indexes (which is stored in a meta).  This pass is
  * relatively simple.
  * 2. Then, during the transform from the `partiql_logical` domain to the `partiql_logical_resolved` domain, we
- * determine if the `id` node refers to a global variable, local variable or undefined variable.  For global variables,
- * the `id` node is replaced with `(global_id <name> <unique-id>)`.  For local variables, the original `id` node is
- * replaced with a `(id <name> <unique-index>)`), where `<unique-index>` is the index of the corresponding `var_decl`.
+ * determine if the `vr` node refers to a global variable, local variable or undefined variable.  For global variables,
+ * the `vr` node is replaced with `(global_id <name> <unique-id>)`.  For local variables, the original `vr` node is
+ * replaced with a `(vr <name> <unique-index>)`), where `<unique-index>` is the index of the corresponding `var_decl`.
  *
  * When [allowUndefinedVariables] is `false`, the [problemHandler] is notified of any undefined variables.  Resolution
  * does not stop on the first undefined variable, rather we keep going to provide the end user any additional error
@@ -169,7 +169,7 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
         }
     }
 
-    private fun PartiqlLogical.Expr.Id.asGlobalId(uniqueId: String): PartiqlLogicalResolved.Expr.GlobalId =
+    private fun PartiqlLogical.Expr.Vr.asGlobalId(uniqueId: String): PartiqlLogicalResolved.Expr.GlobalId =
         PartiqlLogicalResolved.build {
             globalId_(
                 uniqueId = uniqueId.asPrimitive(),
@@ -177,12 +177,12 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
             )
         }
 
-    private fun PartiqlLogical.Expr.Id.asLocalId(index: Int): PartiqlLogicalResolved.Expr =
+    private fun PartiqlLogical.Expr.Vr.asLocalId(index: Int): PartiqlLogicalResolved.Expr =
         PartiqlLogicalResolved.build {
             localId_(index.asPrimitive(), this@asLocalId.metas)
         }
 
-    private fun PartiqlLogical.Expr.Id.asErrorId(): PartiqlLogicalResolved.Expr =
+    private fun PartiqlLogical.Expr.Vr.asErrorId(): PartiqlLogicalResolved.Expr =
         PartiqlLogicalResolved.build {
             localId_((-1).asPrimitive(), this@asErrorId.metas)
         }
@@ -294,10 +294,10 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
     }
 
     /**
-     * Resolves the logical `(id ...)` node node to a `(local_id ...)`, `(global_id ...)`, or dynamic `(id...)`
+     * Resolves the logical `(vr ...)` node node to a `(local_id ...)`, `(global_id ...)`, or dynamic `(id...)`
      * variable.
      */
-    override fun transformExprId(node: PartiqlLogical.Expr.Id): PartiqlLogicalResolved.Expr {
+    override fun transformExprVr(node: PartiqlLogical.Expr.Vr): PartiqlLogicalResolved.Expr {
         val bindingName = BindingName(node.name.text, node.case.toBindingCase())
 
         val globalResolutionResult = if (
@@ -352,7 +352,7 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
 
     override fun transformStatementDml(node: PartiqlLogical.Statement.Dml): PartiqlLogicalResolved.Statement {
         // We only support DML targets that are global variables.
-        val bindingName = BindingName(node.target.name.text, node.target.case.toBindingCase())
+        val bindingName = BindingName(node.target.symb.text, node.target.case.toBindingCase())
         val tableUniqueId = when (val resolvedVariable = globals.resolveGlobal(bindingName)) {
             is GlobalResolutionResult.GlobalVariable -> resolvedVariable.uniqueId
             GlobalResolutionResult.Undefined -> {
@@ -360,12 +360,12 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
                     Problem(
                         node.metas.sourceLocationMetaOrUnknown.toProblemLocation(),
                         PlanningProblemDetails.UndefinedDmlTarget(
-                            node.target.name.text,
+                            node.target.symb.text,
                             node.target.case is PartiqlLogical.CaseSensitivity.CaseSensitive
                         )
                     )
                 )
-                "undefined DML target: ${node.target.name.text} - do not run"
+                "undefined DML target: ${node.target.symb.text} - do not run"
             }
         }
         return PartiqlLogicalResolved.build {
@@ -560,7 +560,7 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
         return LocalScope(concatenatedScopeVariables)
     }
 
-    private fun PartiqlLogical.Expr.Id.asDynamicLookupCallsite(
+    private fun PartiqlLogical.Expr.Vr.asDynamicLookupCallsite(
         search: List<PartiqlLogicalResolved.Expr>
     ): PartiqlLogicalResolved.Expr {
         val caseSensitivityString = when (case) {

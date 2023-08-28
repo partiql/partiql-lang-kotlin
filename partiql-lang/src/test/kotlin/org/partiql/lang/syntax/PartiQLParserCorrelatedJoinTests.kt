@@ -2,14 +2,14 @@ package org.partiql.lang.syntax
 
 import org.junit.Test
 import org.partiql.lang.domains.PartiqlAst
-import org.partiql.lang.domains.id
+import org.partiql.lang.domains.vr
 
 class PartiQLParserCorrelatedJoinTests : PartiQLParserTestBase() {
 
     override val targets: Array<ParserTarget> = arrayOf(ParserTarget.DEFAULT, ParserTarget.EXPERIMENTAL)
 
     private fun PartiqlAst.Builder.callFWithS() =
-        call(defnid("f"), id("s", caseInsensitive(), unqualified()))
+        call(defnid("f"), vr("s", caseInsensitive(), unqualified()))
 
     private fun PartiqlAst.Builder.selectWithCorrelatedJoin(
         joinType: PartiqlAst.JoinType,
@@ -18,13 +18,13 @@ class PartiQLParserCorrelatedJoinTests : PartiQLParserTestBase() {
     ): PartiqlAst.Expr =
         select(
             project = projectList(
-                projectExpr(id("a")),
-                projectExpr(id("b"))
+                projectExpr(vr("a")),
+                projectExpr(vr("b"))
             ),
             from = join(
                 joinType,
-                scan(id("stuff"), defnid("s")),
-                scan(id("s", caseInsensitive(), localsFirst())),
+                scan(vr("stuff"), defnid("s")),
+                scan(vr("s", caseInsensitive(), localsFirst())),
                 joinPredicate
             ),
             where = wherePredicate

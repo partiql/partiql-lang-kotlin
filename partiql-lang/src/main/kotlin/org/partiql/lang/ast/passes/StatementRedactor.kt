@@ -35,7 +35,7 @@ fun skipRedaction(node: PartiqlAst.Expr, safeFieldNames: Set<String>): Boolean {
     }
 
     return when (node) {
-        is PartiqlAst.Expr.Id -> safeFieldNames.contains(node.name.text)
+        is PartiqlAst.Expr.Vr -> safeFieldNames.contains(node.name.text)
         is PartiqlAst.Expr.Lit -> {
             when (node.value) {
                 is StringElement -> safeFieldNames.contains(node.value.stringValue)
@@ -282,7 +282,7 @@ private class StatementRedactionVisitor(
     }
 
     private fun redactTypes(typed: PartiqlAst.Expr.IsType) {
-        if (typed.value is PartiqlAst.Expr.Id && !skipRedaction(typed.value, safeFieldNames)) {
+        if (typed.value is PartiqlAst.Expr.Vr && !skipRedaction(typed.value, safeFieldNames)) {
             val sourceLocation = typed.type.metas.sourceLocation ?: error("Cannot redact due to missing source location")
             sourceLocationMetaForRedaction.add(sourceLocation)
         }
