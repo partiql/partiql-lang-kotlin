@@ -28,8 +28,34 @@ package org.partiql.lang.eval
  *
  * @param branchCount represents the branch name (String) and the corresponding number of times it was executed.
  * @param branchConditionCount represents the branch-condition name (String) and the corresponding number of times it was executed.
+ *
+ * @see CoverageStructure
+ * @see ExecutionCount
  */
 public data class CoverageData(
-    val branchConditionCount: Map<String, Long> = emptyMap(),
-    val branchCount: Map<String, Long> = emptyMap()
-)
+    val branchConditionCount: ExecutionCount = ExecutionCount(emptyMap()),
+    val branchCount: ExecutionCount = ExecutionCount(emptyMap())
+) {
+    /**
+     * Holds the number of times each branch or branch-condition of a [CoverageStructure] has been executed.
+     * @see CoverageData
+     * @see CoverageStructure
+     */
+    public class ExecutionCount(private val _map: Map<String, Long>) : Map<String, Long> {
+        override val entries: Set<Map.Entry<String, Long>> = this._map.entries
+
+        override val keys: Set<String> = this._map.keys
+
+        override val size: Int = this._map.size
+
+        override val values: Collection<Long> = this._map.values
+
+        override fun containsKey(key: String): Boolean = this._map.containsKey(key)
+
+        override fun containsValue(value: Long): Boolean = this._map.containsValue(value)
+
+        override fun get(key: String): Long? = this._map[key]
+
+        override fun isEmpty(): Boolean = this._map.isEmpty()
+    }
+}

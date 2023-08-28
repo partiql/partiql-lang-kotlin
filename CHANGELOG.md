@@ -48,8 +48,7 @@ Thank you to all who have contributed!
 - Adds default `equals` and `hashCode` methods for each generated abstract class of Sprout. This affects the generated
 classes in `:partiql-ast` and `:partiql-plan`.
 - Initializes PartiQL's Code Coverage library
-  - Adds support for BRANCH Coverage
-  - Adds support for BRANCH-CONDITION Coverage
+  - Adds support for BRANCH and BRANCH-CONDITION Coverage
   - Adds integration with JUnit5 for ease-of-use
   - For more information, see the "Writing PartiQL Unit Tests" article in our GitHub Wiki.
 - Adds new constructor parameters to all variants of `PartiQLResult`.

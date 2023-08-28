@@ -98,8 +98,8 @@ internal class CoverageCompiler(
                     value = value,
                     coverageData = {
                         CoverageData(
-                            branchConditionCount = env.branchConditionCounts!!.toMap(),
-                            branchCount = env.branchCounts!!.toMap()
+                            branchConditionCount = CoverageData.ExecutionCount(env.branchConditionCounts!!.toMap()),
+                            branchCount = CoverageData.ExecutionCount(env.branchCounts!!.toMap())
                         )
                     },
                     coverageStructure = { coverageStructure }
@@ -107,38 +107,6 @@ internal class CoverageCompiler(
             }
         }
     }
-/**
-     override fun compile(originalAst: PartiqlAst.Statement): Expression {
-     contextStack.push(Context.NOT_IN_BRANCH)
-     val expression = super.compile(originalAst)
-     return object : Expression {
-     override val coverageStructure: CoverageStructure = CoverageStructure(
-     branches = branches.toMap(),
-     branchConditions = conditions.toMap()
-     )
-
-     @Suppress("DEPRECATION")
-     override fun eval(session: EvaluationSession): ExprValue {
-     return expression.eval(session)
-     }
-
-     override fun evaluate(session: EvaluationSession): PartiQLResult {
-     val result = (expression.evaluate(session) as PartiQLResult.Value).value
-     return PartiQLResult.Value(
-     value = result,
-     coverageData = {
-     val returnedConditionCounts = conditionCounts.toMap()
-     val returnedBranchCounts = branchCounts.toMap()
-     // conditionCounts.replaceAll { _, _ -> 0 }
-     // branchCounts.replaceAll { _, _ -> 0 }
-     CoverageData(branchConditionCount = returnedConditionCounts, branchCount = returnedBranchCounts)
-     },
-     coverageStructure = { coverageStructure }
-     )
-     }
-     }
-     }
-     **/
 
     // TODO: Figure out how we can determine whether an ID should be a boolean.
     //  This will likely be addressed when we move towards static resolution in the successor to the EvaluatingCompiler

@@ -20,7 +20,7 @@ package org.partiql.lang.eval
 interface Expression {
 
     /**
-     * Static Coverage Statistics
+     * Pre-Execution Coverage Statistics
      */
     val coverageStructure: CoverageStructure?
 

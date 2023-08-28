@@ -175,7 +175,7 @@ class SimpleTestProvider : PartiQLTestProvider {
 }
 
 /**
- * An implementation of a PartiQLTestCase. Note that we pass in 
+ * An implementation of a PartiQLTestCase.
  */
 class SimpleTestCase(private val x: Int, val expected: Boolean) : PartiQLTestCase {
     override val session: EvaluationSession = EvaluationSession.builder {

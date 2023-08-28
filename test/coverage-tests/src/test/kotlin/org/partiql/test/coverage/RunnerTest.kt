@@ -15,6 +15,7 @@
 
 package org.partiql.test.coverage
 
+import org.junit.jupiter.api.Disabled
 import org.partiql.coverage.api.PartiQLTest
 import org.partiql.coverage.api.PartiQLTestCase
 import org.partiql.coverage.api.PartiQLTestProvider
@@ -47,16 +48,26 @@ class RunnerTest {
         }
     }
 
+    /**
+     * NOTE: This is intentionally ignored to show that we support the use of JUnit's [Ignore] annotation. If you look
+     * at [InitializationFailureProvider.statement], it won't parse.
+     */
     @Ignore
     @PartiQLTest(provider = InitializationFailureProvider::class)
-    fun initializationFailureExample(tc: InitializationFailureProvider.TestCase, result: ExprValue) {
-        assertEquals(ExprValueType.BOOL, result.type)
+    fun initializationFailureExample(tc: InitializationFailureProvider.TestCase, result: PartiQLResult.Value) {
+        val value = result.value
+        assertEquals(ExprValueType.BOOL, value.type)
     }
 
-    @Ignore
+    /**
+     * NOTE: This is intentionally ignored to show that we support the use of JUnit's [Disabled] annotation. If you look
+     * at [TestInitializationFailureProvider.statement], it won't evaluate in the second test case.
+     */
+    @Disabled
     @PartiQLTest(provider = TestInitializationFailureProvider::class)
-    fun testInitializationFailureExample(tc: TestInitializationFailureProvider.TestCase, result: ExprValue) {
-        assertEquals(ExprValueType.STRING, result.type)
+    fun testInitializationFailureExample(tc: TestInitializationFailureProvider.TestCase, result: PartiQLResult.Value) {
+        val value = result.value
+        assertEquals(ExprValueType.STRING, value.type)
     }
 
     class SimpleTestCase(
