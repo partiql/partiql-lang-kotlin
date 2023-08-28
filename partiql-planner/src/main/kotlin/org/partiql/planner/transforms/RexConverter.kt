@@ -11,6 +11,7 @@ import org.partiql.plan.Rex
 import org.partiql.plan.builder.PlanFactory
 import org.partiql.planner.ATTRIBUTES
 import org.partiql.planner.Env
+import org.partiql.planner.typer.toNonNullStaticType
 import org.partiql.planner.typer.toStaticType
 import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValueExperimental
@@ -37,7 +38,10 @@ internal object RexConverter {
             throw IllegalArgumentException("unsupported rex $node")
 
         override fun visitExprLit(node: Expr.Lit, context: Env) = transform {
-            val type = node.value.type.toStaticType()
+            val type = when (node.value.isNull) {
+                true -> node.value.type.toStaticType()
+                else -> node.value.type.toNonNullStaticType()
+            }
             val op = rexOpLit(node.value)
             rex(type, op)
         }

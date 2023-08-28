@@ -8,23 +8,25 @@ import org.partiql.plan.Plan
 import org.partiql.planner.transforms.AstToPlan
 import org.partiql.planner.typer.PlanTyper
 import org.partiql.spi.Plugin
+import org.partiql.types.TypingMode
 
 /**
  * Default PartiQL logical query planner.
  */
 internal class PartiQLPlannerDefault(
     private val plugins: List<Plugin>,
-    private val passes: List<PartiQLPlannerPass>
+    private val passes: List<PartiQLPlannerPass>,
+    private val mode: TypingMode,
 ) : PartiQLPlanner {
 
     private val version = PartiQLVersion.VERSION_0_1
 
     // For now, only have the default header
-    private val header = Header.partiql()
+    private val header = Header.partiql(mode)
 
     override fun plan(statement: Statement, session: PartiQLPlanner.Session, onProblem: ProblemCallback): PartiQLPlanner.Result {
         // 0. Initialize the planning environment
-        val env = Env(header, plugins, session)
+        val env = Env(header, mode, plugins, session)
 
         // 1. Normalize
         val ast = statement.normalize()

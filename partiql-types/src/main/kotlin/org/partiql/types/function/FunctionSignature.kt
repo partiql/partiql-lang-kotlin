@@ -9,14 +9,23 @@ import org.partiql.value.PartiQLValueType
  * The signature includes the names of the function (which allows for function overloading),
  * the return type, a list of parameters, a flag indicating whether the function is deterministic
  * (i.e., always produces the same output given the same input), and an optional description.
+ *
+ * @property name               Function name
+ * @property returns            Operator return type
+ * @property parameters         Operator parameters
+ * @property isDeterministic    Flag indicating this function always produces the same output given the same input.
+ * @property isNullCall         Flag indicating if any of the call arguments is NULL, then return NULL.
+ * @property isNullable         Flag indicating this function's operator may return a NULL value.
+ * @property description        Optional operator description
  */
 @OptIn(PartiQLValueExperimental::class)
 public class FunctionSignature(
     public val name: String,
     public val returns: PartiQLValueType,
-    public val parameters: List<FunctionParameter> = emptyList(),
+    public val parameters: List<FunctionParameter>,
     public val isDeterministic: Boolean = true,
-    public val isClosed: Boolean = true,
+    public val isNullCall: Boolean = false,
+    public val isNullable: Boolean = true,
     public val description: String? = null,
 ) {
 

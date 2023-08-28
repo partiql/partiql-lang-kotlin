@@ -3,6 +3,7 @@ package org.partiql.planner
 import org.partiql.plan.Fn
 import org.partiql.plan.Identifier
 import org.partiql.planner.typer.TypeLattice
+import org.partiql.types.TypingMode
 import org.partiql.types.function.FunctionParameter
 import org.partiql.types.function.FunctionSignature
 import org.partiql.value.PartiQLValueExperimental
@@ -109,9 +110,11 @@ internal class Header(
     companion object {
 
         /**
-         * TEMPORARY — Hardcoded PartiQL Global Catalog
+         * TODO TEMPORARY — Hardcoded PartiQL Global Catalog
+         *
+         * TODO BUG — We don't validate function overloads
          */
-        public fun partiql(): Header {
+        public fun partiql(mode: TypingMode = TypingMode.STRICT): Header {
             val namespace = "partiql"
             val types = TypeLattice.partiql()
             val functions = Functions.combine(
@@ -119,7 +122,7 @@ internal class Header(
                 Functions.operators(),
                 Functions.special(),
                 Functions.system(),
-            )
+            ).withMode(mode)
             return Header(namespace, types, functions)
         }
 
@@ -131,6 +134,27 @@ internal class Header(
          * But what about parameterized types? Are the parameters dropped in casts, or do parameters become arguments?
          */
         private fun castName(type: PartiQLValueType) = "cast_${type.name.lowercase()}"
+
+        /**
+         * IFF mode is permissive, rewrite the [FunctionMap] by appending ANY operator variants for all functions.
+         */
+        private fun FunctionMap.withMode(mode: TypingMode): FunctionMap {
+            if (mode != TypingMode.PERMISSIVE) {
+                return this
+            }
+            return entries.associate {
+                val name = it.key
+                val signatures = it.value
+                val variants = signatures.associate { fn -> fn.parameters.size to fn.returns }
+                val additions = variants.map { e ->
+                    val returns = e.value
+                    val params = (0 until e.key).map { i -> FunctionParameter("arg_$i", ANY) }
+                    FunctionSignature(name, returns, params)
+                }
+                // Append the additional ANY signatures
+                name to (signatures + additions)
+            }
+        }
     }
 
     /**
@@ -233,14 +257,18 @@ internal class Header(
             FunctionSignature(
                 name = name,
                 returns = returns,
-                parameters = listOf(FunctionParameter("value", value))
+                parameters = listOf(FunctionParameter("value", value)),
+                isNullCall = true,
+                isNullable = false,
             )
 
         public fun binary(name: String, returns: PartiQLValueType, lhs: PartiQLValueType, rhs: PartiQLValueType) =
             FunctionSignature(
                 name = name,
                 returns = returns,
-                parameters = listOf(FunctionParameter("lhs", lhs), FunctionParameter("rhs", rhs))
+                parameters = listOf(FunctionParameter("lhs", lhs), FunctionParameter("rhs", rhs)),
+                isNullCall = true,
+                isNullable = false,
             )
 
         public fun cast(value: PartiQLValueType, type: PartiQLValueType) =
@@ -325,7 +353,9 @@ internal class Header(
                 parameters = listOf(
                     FunctionParameter("value", STRING),
                     FunctionParameter("pattern", STRING),
-                )
+                ),
+                isNullCall = true,
+                isNullable = false,
             ),
             FunctionSignature(
                 name = "like_escape",
@@ -334,7 +364,9 @@ internal class Header(
                     FunctionParameter("value", STRING),
                     FunctionParameter("pattern", STRING),
                     FunctionParameter("escape", STRING),
-                )
+                ),
+                isNullCall = true,
+                isNullable = false,
             ),
         )
 
@@ -346,7 +378,9 @@ internal class Header(
                     FunctionParameter("value", t),
                     FunctionParameter("lower", t),
                     FunctionParameter("upper", t),
-                )
+                ),
+                isNullCall = true,
+                isNullable = false,
             )
         }
 
@@ -358,7 +392,9 @@ internal class Header(
                     parameters = listOf(
                         FunctionParameter("value", element),
                         FunctionParameter("collection", collection),
-                    )
+                    ),
+                    isNullCall = true,
+                    isNullable = false,
                 )
             }
         }.flatten()
@@ -376,7 +412,9 @@ internal class Header(
                 parameters = listOf(
                     FunctionParameter("value", t),
                     FunctionParameter("nullifier", BOOL),
-                )
+                ),
+                isNullCall = true,
+                isNullable = true,
             )
         }
 
@@ -388,7 +426,9 @@ internal class Header(
                     parameters = listOf(
                         FunctionParameter("value", t),
                         FunctionParameter("start", INT64),
-                    )
+                    ),
+                    isNullCall = true,
+                    isNullable = false,
                 ),
                 FunctionSignature(
                     name = "substring_length",
@@ -397,7 +437,9 @@ internal class Header(
                         FunctionParameter("value", t),
                         FunctionParameter("start", INT64),
                         FunctionParameter("end", INT64),
-                    )
+                    ),
+                    isNullCall = true,
+                    isNullable = false,
                 )
             )
         }.flatten()
@@ -409,7 +451,9 @@ internal class Header(
                 parameters = listOf(
                     FunctionParameter("probe", t),
                     FunctionParameter("value", t),
-                )
+                ),
+                isNullCall = true,
+                isNullable = false,
             )
         }
 
@@ -420,7 +464,9 @@ internal class Header(
                     returns = t,
                     parameters = listOf(
                         FunctionParameter("value", t),
-                    )
+                    ),
+                    isNullCall = true,
+                    isNullable = false,
                 ),
                 FunctionSignature(
                     name = "trim_chars",
@@ -428,14 +474,18 @@ internal class Header(
                     parameters = listOf(
                         FunctionParameter("value", t),
                         FunctionParameter("chars", t),
-                    )
+                    ),
+                    isNullCall = true,
+                    isNullable = false,
                 ),
                 FunctionSignature(
                     name = "trim_leading",
                     returns = t,
                     parameters = listOf(
                         FunctionParameter("value", t),
-                    )
+                    ),
+                    isNullCall = true,
+                    isNullable = false,
                 ),
                 FunctionSignature(
                     name = "trim_leading_chars",
@@ -443,14 +493,18 @@ internal class Header(
                     parameters = listOf(
                         FunctionParameter("value", t),
                         FunctionParameter("chars", t),
-                    )
+                    ),
+                    isNullCall = true,
+                    isNullable = false,
                 ),
                 FunctionSignature(
                     name = "trim_trailing",
                     returns = t,
                     parameters = listOf(
                         FunctionParameter("value", t),
-                    )
+                    ),
+                    isNullCall = true,
+                    isNullable = false,
                 ),
                 FunctionSignature(
                     name = "trim_trailing_chars",
@@ -458,7 +512,9 @@ internal class Header(
                     parameters = listOf(
                         FunctionParameter("value", t),
                         FunctionParameter("chars", t),
-                    )
+                    ),
+                    isNullCall = true,
+                    isNullable = false,
                 ),
             )
         }.flatten()
@@ -479,6 +535,7 @@ internal class Header(
             name = "\$__current_user",
             returns = STRING,
             parameters = emptyList(),
+            isNullable = true,
         )
 
         // Function precedence comparator

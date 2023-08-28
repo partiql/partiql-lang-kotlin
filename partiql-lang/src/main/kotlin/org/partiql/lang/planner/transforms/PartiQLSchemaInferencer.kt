@@ -32,6 +32,7 @@ import org.partiql.plan.Statement
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.spi.Plugin
 import org.partiql.types.StaticType
+import org.partiql.types.TypingMode
 
 /**
  * Vends functions, such as [infer], to infer the output [StaticType] of a PartiQL query.
@@ -136,6 +137,7 @@ public object PartiQLSchemaInferencer {
         val parser = PartiQLParserBuilder.standard().build()
         val planner = PartiQLPlanner.builder()
             .plugins(ctx.plugins)
+            .mode(TypingMode.PERMISSIVE)
             .build()
         val ast = parser.parse(query).root
         val plan = planner.plan(ast, ctx.session, ctx.problemHandler::handleProblem).plan

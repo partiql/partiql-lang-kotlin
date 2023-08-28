@@ -22,6 +22,7 @@ import org.partiql.spi.connector.Constants
 import org.partiql.types.StaticType
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
+import org.partiql.types.TypingMode
 import org.partiql.types.function.FunctionParameter
 import org.partiql.types.function.FunctionSignature
 import org.partiql.value.PartiQLValueExperimental
@@ -33,6 +34,9 @@ internal typealias Handle<T> = Pair<String, T>
 
 /**
  * TypeEnv represents the environment in which we type expressions and resolve variables while planning.
+ *
+ * TODO TypeEnv should be a stack of locals; also the strategy has been kept here because it's easier to
+ *  pass through the traversal like this, but is conceptually odd to associate with the TypeEnv.
  *
  * @property schema
  * @property strategy
@@ -137,6 +141,7 @@ internal enum class ResolutionStrategy {
 @OptIn(PartiQLValueExperimental::class)
 internal class Env(
     private val header: Header,
+    private val mode: TypingMode,
     private val plugins: List<Plugin>,
     private val session: PartiQLPlanner.Session,
 ) {

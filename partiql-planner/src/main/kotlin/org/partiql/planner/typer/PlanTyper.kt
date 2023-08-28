@@ -323,12 +323,17 @@ internal class PlanTyper(
                 is FnMatch.Ok -> {
                     val newFn = fnResolved(match.signature)
                     val newArgs = rewriteFnArgs(match.mapping, args)
-                    val type = match.signature.returns.toStaticType()
+                    val returns = newFn.signature.returns
+                    val nullCall = newFn.signature.isNullCall && newArgs.find { it.type.isNullable() } != null
+                    val nullable = newFn.signature.isNullable
+                    val type = when {
+                        nullCall || nullable -> returns.toStaticType()
+                        else -> returns.toNonNullStaticType()
+                    }
                     val op = rexOpCall(newFn, newArgs)
                     rex(type, op)
                 }
                 is FnMatch.Error -> {
-
                     handleUnknownFunction(match)
                     rex(StaticType.NULL_OR_MISSING, rexOpErr())
                 }
