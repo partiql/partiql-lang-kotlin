@@ -75,6 +75,8 @@ classes in `:partiql-ast` and `:partiql-plan`.
   - `org.partiql.lang.errors.ProblemSeverity` -> `org.partiql.errors.ProblemSeverity`
   - `org.partiql.lang.errors.ProblemHandler` -> `org.partiql.errors.ProblemHandler`
 - **Breaking** the `sourceLocation` field of `org.partiql.errors.Problem` was changed from `org.partiql.lang.ast.SoureceLocationMeta` to `org.partiql.errors.ProblemLocation`.
+- **Breaking** removed redundant ValueParameter from FunctionParameter as all parameters are values.
+- Introduces `isNullCall` and `isNullable` properties to FunctionSignature.
 
 ### Deprecated
 - **Breaking**: Deprecates the `Arguments`, `RequiredArgs`, `RequiredWithOptional`, and `RequiredWithVariadic` classes, 

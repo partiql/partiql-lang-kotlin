@@ -18,8 +18,8 @@ object Pow : PartiQLFunction {
         name = "test_power",
         returns = PartiQLValueType.FLOAT64,
         parameters = listOf(
-            FunctionParameter.ValueParameter(name = "base", type = PartiQLValueType.INT8),
-            FunctionParameter.ValueParameter(name = "exponent", type = PartiQLValueType.INT8)
+            FunctionParameter(name = "base", type = PartiQLValueType.INT8),
+            FunctionParameter(name = "exponent", type = PartiQLValueType.INT8)
         ),
         isDeterministic = true,
         description = "Power [base] with [exponent]"
