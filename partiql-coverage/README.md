@@ -26,8 +26,12 @@ WHERE
 In the above PartiQL statement, there is 1 demonstrated type of control flow (the `WHERE` clause). Given that each
 control-flow expression can lead to two branches, this PartiQL statement contains 2 branches.
 
-There are other expressions that dictate control flow, such as `CASE-WHEN`, `HAVING`, `COALESCE`, and `NULLIF`. Here's
-a slightly more complicated example:
+**Note**: There are other expressions that dictate control flow, such as `CASE-WHEN`, `HAVING`, `COALESCE`, and `NULLIF`. PartiQL
+currently supports `WHERE`, `HAVING`, and `CASE-WHEN` (`COALESCE` and `NULLIF` are not supported, however, they may be
+supported in future versions).
+
+Here's a slightly more complicated example:
+
 ```partiql
 SELECT
     measurement AS measurement,
@@ -86,6 +90,8 @@ the above example, this would result in 9 branch-conditions.
    references will not be part of a Branch-Condition Coverage result. However, in the future, support for this will be added.
 3. As there is not a consensus regarding how `COALESCE` and `NULLIF` will be represented in the future evaluator,
    these two SQL-defined functions currently do not create branches. However, this is subject to change in future releases.
+   - **Additional note**: While `COALESCE` and `NULLIF` are not supported for branch creation, the following clauses are supported:
+     `WHERE`, `HAVING`, and `CASE-WHEN`.
 
 ## Requirements
 
