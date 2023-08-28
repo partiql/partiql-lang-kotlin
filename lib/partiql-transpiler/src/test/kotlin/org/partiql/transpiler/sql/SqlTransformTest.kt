@@ -11,11 +11,11 @@ import org.partiql.plan.Rex
 import org.partiql.plan.Statement
 import org.partiql.plan.builder.PlanFactory
 import org.partiql.transpiler.ProblemCallback
-import org.partiql.types.PartiQLValueType
 import org.partiql.types.StaticType
 import org.partiql.types.function.FunctionParameter
 import org.partiql.types.function.FunctionSignature
 import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.PartiQLValueType
 import org.partiql.value.stringValue
 import kotlin.test.assertEquals
 
@@ -39,13 +39,11 @@ class SqlTransformTest {
                     identifierQualified(
                         root = identifierSymbol("T", Identifier.CaseSensitivity.INSENSITIVE),
                         steps = emptyList(),
-                    ),
-                    StaticType.BAG
+                    ), StaticType.BAG
                 ),
             )
             val scan = rel(
-                type = schema("_1" to StaticType.STRUCT),
-                op = relOpScan(rex(StaticType.STRUCT, rexOpGlobal(0)))
+                type = schema("_1" to StaticType.STRUCT), op = relOpScan(rex(StaticType.STRUCT, rexOpGlobal(0)))
             )
 
             val var0 = rex(StaticType.STRUCT, rexOpVarResolved(0))
@@ -56,10 +54,8 @@ class SqlTransformTest {
                     "a" to StaticType.INT,
                     "b" to StaticType.INT,
                     "c" to StaticType.INT,
-                ),
-                op = relOpProject(
-                    input = scan,
-                    projections = listOf(
+                ), op = relOpProject(
+                    input = scan, projections = listOf(
                         rex(StaticType.INT, path(var0, "a")),
                         rex(StaticType.INT, path(var0, "b")),
                         rex(StaticType.INT, path(var0, "c")),
@@ -68,11 +64,9 @@ class SqlTransformTest {
             )
 
             val select = rex(
-                type = StaticType.BAG,
-                op = rexOpSelect(
+                type = StaticType.BAG, op = rexOpSelect(
                     constructor = rex(
-                        type = StaticType.STRUCT,
-                        op = rexOpStruct(
+                        type = StaticType.STRUCT, op = rexOpStruct(
                             listOf(
                                 rexOpStructField(
                                     k = rex(StaticType.STRING, rexOpLit(stringValue("a"))),
@@ -88,8 +82,7 @@ class SqlTransformTest {
                                 ),
                             )
                         )
-                    ),
-                    rel = project
+                    ), rel = project
                 )
             )
             val statement = statementQuery(select)
@@ -134,31 +127,25 @@ class SqlTransformTest {
                     identifierQualified(
                         root = identifierSymbol("T", Identifier.CaseSensitivity.INSENSITIVE),
                         steps = emptyList(),
-                    ),
-                    StaticType.BAG
+                    ), StaticType.BAG
                 ),
             )
             val scan = rel(
-                type = schema("_1" to StaticType.STRUCT),
-                op = relOpScan(rex(StaticType.STRUCT, rexOpGlobal(0)))
+                type = schema("_1" to StaticType.STRUCT), op = relOpScan(rex(StaticType.STRUCT, rexOpGlobal(0)))
             )
 
             val var0 = rex(StaticType.STRUCT, rexOpVarResolved(0))
 
             val plus = FunctionSignature(
-                name = "plus",
-                returns = PartiQLValueType.INT,
-                parameters = listOf(
-                    FunctionParameter.V("lhs", PartiQLValueType.INT),
-                    FunctionParameter.V("rhs", PartiQLValueType.INT),
+                name = "plus", returns = PartiQLValueType.INT, parameters = listOf(
+                    FunctionParameter("lhs", PartiQLValueType.INT),
+                    FunctionParameter("rhs", PartiQLValueType.INT),
                 )
             )
 
             val abs = FunctionSignature(
-                name = "abs",
-                returns = PartiQLValueType.INT,
-                parameters = listOf(
-                    FunctionParameter.V("value", PartiQLValueType.INT),
+                name = "abs", returns = PartiQLValueType.INT, parameters = listOf(
+                    FunctionParameter("value", PartiQLValueType.INT),
                 )
             )
 
@@ -167,24 +154,20 @@ class SqlTransformTest {
                 type = schema(
                     "_1" to StaticType.INT,
                     "_2" to StaticType.INT,
-                ),
-                op = relOpProject(
-                    input = scan,
-                    projections = listOf(
+                ), op = relOpProject(
+                    input = scan, projections = listOf(
                         rex(
                             StaticType.INT, rexOpCall(
-                                fn = fnResolved(plus),
-                                args = listOf(
-                                    rexOpCallArgValue(rex(StaticType.INT, path(var0, "a"))),
-                                    rexOpCallArgValue(rex(StaticType.INT, path(var0, "b"))),
+                                fn = fnResolved(plus), args = listOf(
+                                    (rex(StaticType.INT, path(var0, "a"))),
+                                    (rex(StaticType.INT, path(var0, "b"))),
                                 )
                             )
                         ),
                         rex(
                             StaticType.INT, rexOpCall(
-                                fn = fnResolved(abs),
-                                args = listOf(
-                                    rexOpCallArgValue(rex(StaticType.INT, path(var0, "c"))),
+                                fn = fnResolved(abs), args = listOf(
+                                    (rex(StaticType.INT, path(var0, "c"))),
                                 )
                             )
                         ),
@@ -193,11 +176,9 @@ class SqlTransformTest {
             )
 
             val select = rex(
-                type = StaticType.BAG,
-                op = rexOpSelect(
+                type = StaticType.BAG, op = rexOpSelect(
                     constructor = rex(
-                        type = StaticType.STRUCT,
-                        op = rexOpStruct(
+                        type = StaticType.STRUCT, op = rexOpStruct(
                             listOf(
                                 rexOpStructField(
                                     k = rex(StaticType.STRING, rexOpLit(stringValue("_1"))),
@@ -209,8 +190,7 @@ class SqlTransformTest {
                                 ),
                             )
                         )
-                    ),
-                    rel = project
+                    ), rel = project
                 )
             )
             val statement = statementQuery(select)

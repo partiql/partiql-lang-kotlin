@@ -1,0 +1,7 @@
+-- SQL 0001
+--
+-- Output Scheam
+
+SELECT order_id, asin, quantity, order_datetime
+FROM orders.row_mingled_orders_data
+WHERE order_day > DATE_ADD(DAY, -30, UTCNOW()

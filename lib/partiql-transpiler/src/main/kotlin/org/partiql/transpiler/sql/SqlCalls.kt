@@ -18,21 +18,10 @@ typealias SqlArgs = List<SqlArg>
 /**
  * Pair an [Expr] with its resolved type.
  */
-public sealed class SqlArg(
+public class SqlArg(
     public val expr: Expr,
     public val type: StaticType,
-) {
-
-    /**
-     * Value argument
-     */
-    public class V(expr: Expr, type: StaticType) : SqlArg(expr, type)
-
-    /**
-     * Type argument
-     */
-    public class T(expr: Expr, type: StaticType) : SqlArg(expr, type)
-}
+)
 
 /**
  * Maps a function name to basic rewrite logic.

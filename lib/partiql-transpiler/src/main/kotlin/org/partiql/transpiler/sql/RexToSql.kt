@@ -116,7 +116,7 @@ public open class RexToSql(
             is Fn.Resolved -> f.signature.name
             is Fn.Unresolved -> {
                 val id = Ast.translate(f.identifier)
-                assert(id is Identifier.Symbol) { "Functions with qualified identifers are currently not supported" }
+                assert(id is Identifier.Symbol) { "Functions with qualified identifiers are currently not supported" }
                 transform.handleProblem(
                     TranspilerProblem(
                         level = TranspilerProblem.Level.ERROR,
@@ -126,12 +126,7 @@ public open class RexToSql(
                 (id as Identifier.Symbol).symbol
             }
         }
-        val args = node.args.map {
-            when (it) {
-                is Rex.Op.Call.Arg.Type -> throw UnsupportedOperationException("type parameters not supported in translation")
-                is Rex.Op.Call.Arg.Value -> SqlArg.V(visitRex(it.rex, it.rex.type), it.rex.type)
-            }
-        }
+        val args = node.args.map { SqlArg(visitRex(it, StaticType.ANY), it.type) }
         return transform.getFunction(name, args)
     }
 
