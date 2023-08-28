@@ -48,7 +48,6 @@ internal class OrderBySortSpecVisitorTransform : VisitorTransformBase() {
      */
     override fun transformProjectItemProjectExpr_asAlias(node: PartiqlAst.ProjectItem.ProjectExpr): PartiqlAst.Defnid? {
         val transformedAlias = super.transformProjectItemProjectExpr_asAlias(node)
-        // wVG Brute-forced, since there is an interaction with Expr.Id. Eventually, projectionAliases should be keyed on identifiers, not strings.
         if (node.asAlias != null) { projectionAliases[node.asAlias!!.string()] = node.expr }
         return transformedAlias
     }

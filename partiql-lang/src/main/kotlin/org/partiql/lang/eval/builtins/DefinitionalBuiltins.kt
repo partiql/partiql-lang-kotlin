@@ -40,7 +40,7 @@ internal fun definitionalBuiltins(typingMode: TypingMode): List<ExprFunction> =
  */
 internal class ExprFunctionCollToScalar(typingMode: TypingMode) : ExprFunction {
     override val signature = FunctionSignature(
-        name = "coll_to_scalar", // wVG-TODO: FunctionSignature.name should be an identifier rather than String
+        name = "coll_to_scalar", // TODO: FunctionSignature.name should be an identifier rather than String
         requiredParameters = listOf(StaticType.ANY),
         returnType = StaticType.ANY
     )

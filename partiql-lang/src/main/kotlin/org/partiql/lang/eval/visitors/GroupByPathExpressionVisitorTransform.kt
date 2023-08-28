@@ -64,7 +64,6 @@ class GroupByPathExpressionVisitorTransform(
             when (fromSource) {
                 is PartiqlAst.FromSource.Scan ->
                     listOf(
-                        // wVG brute-forced it in this file -- there is interaction with Expr.Id and it's better to deal with this then
                         fromSource.asAlias?.string()
                             ?: errNoContext(
                                 "FromSource.asAlias.text must be specified for this transform to work",

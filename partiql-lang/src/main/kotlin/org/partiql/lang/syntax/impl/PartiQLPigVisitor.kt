@@ -199,6 +199,11 @@ internal class PartiQLPigVisitor(
 
     override fun visitByIdent(ctx: PartiQLParser.ByIdentContext) = readIdentifierAsDefnid(ctx.identifier())
 
+    // TODO: Eventually, PartiqlAst.Identifier node should probably just hold the string content of an identifier as it was lexed,
+    //  while the logic for processing this string content should be encapsulated in the createRegular and createDelimited
+    //  methods of the Ident class.
+    // For now, this follows the inconsistent legacy arrangement: lower-casing of a regular identifier is done in Ident
+    // (as well as at many legacy sites), while normalization of quotes inside a delimited identifier is done here.
     override fun visitIdentifier(ctx: PartiQLParser.IdentifierContext): PartiqlAst.Identifier = PartiqlAst.build {
         val metas = ctx.ident.getSourceMetaContainer()
         when (ctx.ident.type) {
@@ -226,16 +231,17 @@ internal class PartiQLPigVisitor(
         defnid_(ident.name, ident.metas)
     }
 
-    /** wVG-TODO Referring to functions in function calls would deserve a clean-up, even under legacy identifiers,
-     * to make it consistent with references to other identifier-bound things.
-     * Even under the "legacy" identifiers, the lower-case conversion here looks suspicious.
-     * This lower-casing is to reconcile that (1) the grammar refers to
-     * predefined functions via keywords (such as POSITION, MAX) which are normalized to the upper case by the lexer,
-     * vs (2) the postgres-influenced choice that regular identifiers are normalized to lower case
-     * while the predefined functions are traditionally considered named with regular identifiers.
-     * Some of this is utterly wrong, even with the legacy identifiers (e.g. that references to user-defined functions
-     * are subject to this lower-case normalization).
-     */
+    /** Encapsulate in one place the "legacy" treatment of function names when referring to functions.
+     *  This legacy treatment amounts to lower-casing of any lexed function name, regardless of whether it has lexically
+     *  originated as a regular identifier, a delimited identifier, or a keyword (a token in the lexer).
+     *  This lower-casing is to reconcile that
+     *  (1) the grammar refers to predefined functions via keywords (such as POSITION, MAX),
+     *      which are normalized to the upper case by the lexer, vs
+     *  (2) the postgres-influenced design choice that SQL regular identifiers are normalized in PartiQL to lower case,
+     *      while the predefined functions are traditionally considered named with regular identifiers.  */
+    // TODO: Even if sticking with legacy identifiers (that is, if not transitioning to SQL-conformant identifiers),
+    // treatment of function identifiers deserves a clean-up.  There is no reason for them to be treated differently
+    // from identifier references represented by the Expr.Id node.
     fun funDefnid(funName: String, metas: MetaContainer): PartiqlAst.Defnid = PartiqlAst.build {
         defnid_(SymbolPrimitive(funName.lowercase(), metas))
     }

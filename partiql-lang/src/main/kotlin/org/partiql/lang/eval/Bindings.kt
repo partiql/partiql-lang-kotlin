@@ -146,7 +146,7 @@ interface Bindings<T> {
         fun addBinding(name: String, getter: () -> T): LazyBindingBuilder<T> =
             this.apply { bindings[name] = lazy(getter) }
 
-        /** wVG-TODO: switch to HashMap<Defnid, _>, so that this addBinding is primary. */
+        /** TODO: switch to HashMap<Defnid, _>, so that this addBinding is primary. */
         fun addBinding(name: Ident, getter: () -> T): LazyBindingBuilder<T> =
             addBinding(name.underlyingString(), getter)
 

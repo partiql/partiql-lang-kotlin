@@ -343,7 +343,7 @@ internal class EvaluatingCompiler(
                 Pair("some", PartiqlAst.SetQuantifier.Distinct()) to ExprAggregatorFactory.over {
                     Accumulator(null, anySomeAccFunc, createUniqueExprValueFilter())
                 },
-            ).map { (p, a) -> Pair(Ident.createRegular(p.first), p.second) to a }.toMap()
+            ).map { (p, a) -> Pair(Ident.createFromRegular(p.first), p.second) to a }.toMap()
         }
 
     /**
@@ -3172,11 +3172,6 @@ private sealed class ProjectionElement
  * - `name` is "value"
  * - `thunk` is compiled expression, i.e. `a + b`
  */
-// wVG Why is this complication with name: ExprValue (i.e., `x` in `AS x` being "computable"),
-//   while x can only be an identifier, both in the grammar and in the AST (i.e. a thing fully known at lexing)?
-//   Best guess [see the only usage of SingleProjectionElement.name], this is because of the Named facet,
-//   as used for "named" ExprValues representing key/value pairs in struct construction.
-//   This is another reason Named facet is to be considered harmful.
 private class SingleProjectionElement(val name: ExprValue, val thunk: ThunkEnv) : ProjectionElement()
 
 /**

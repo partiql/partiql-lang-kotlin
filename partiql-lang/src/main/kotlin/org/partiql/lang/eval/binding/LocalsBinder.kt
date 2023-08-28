@@ -112,9 +112,7 @@ fun List<Alias>.localsBinder(missingValue: ExprValue): LocalsBinder {
         val caseInsensitiveBindings = compileBindings { it.essentialLowercase() }
         override fun binderForName(bindingName: BindingName): (List<ExprValue>) -> ExprValue? {
             return when (bindingName.bindingCase) {
-// wVG               BindingCase.INSENSITIVE -> caseInsensitiveBindings[bindingName.name.lowercase()]
-                BindingCase.INSENSITIVE -> caseInsensitiveBindings[Ident.createRegular(bindingName.name)]
-// wVG               BindingCase.SENSITIVE -> caseSensitiveBindings[bindingName.name]
+                BindingCase.INSENSITIVE -> caseInsensitiveBindings[Ident.createFromRegular(bindingName.name)]
                 BindingCase.SENSITIVE -> caseSensitiveBindings[Ident.createAsIs(bindingName.name)]
             } ?: dynamicLocalsBinder(bindingName)
         }

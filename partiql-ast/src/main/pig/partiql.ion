@@ -150,13 +150,17 @@ may then be further optimized by selecting better implementations of each operat
 
             // Other expression types
             (path root::expr steps::(* path_step 1))
-            // wVG It is `defnid` in call, call_agg, and call_window because it was `symbol` there before,
-            // but logically, these are references, not definitions, so even in the legacy implementation,
-            // they should have been someting more like `identifier` or Expr.Id.
+
+            // It is `defnid` in call, call_agg, and call_window because it was `symbol` there before,
+            // and other usages of `symbol` became `definid`.
+            // However, these are references, not definitions, so even in the legacy implementation,
+            // they should have been someting more like `identifier` (i.e., had a case_sensitivity field).
+            // Not certain whether this wrinkle is worth straightening prior to transitioning to SQL-conformant identifiers.
             (call func_name::defnid args::(* expr 0))
             (call_agg setq::set_quantifier func_name::defnid arg::expr)
             // TODO: In the feature, when we allow use of aggregation function as window function, we need to consider incorporate in setq
             (call_window func_name::defnid over::over args::(* expr 1))
+
             (cast value::expr as_type::type)
             (can_cast value::expr as_type::type)
             (can_lossless_cast value::expr as_type::type)
@@ -738,7 +742,6 @@ may then be further optimized by selecting better implementations of each operat
             // permuted domains we can add information to this type such as the variable's assigned index.
             // Elements:
             // - `name`: the name of the variable as specified by the query author or determined statically.
-            // wVG-TODO: var_decl seems to be exactly the defnid of partiql_ast domain, so maybe no need in var_dec?
             (product var_decl name::symbol)
 
             // The operators of PartiQL's relational algebra.

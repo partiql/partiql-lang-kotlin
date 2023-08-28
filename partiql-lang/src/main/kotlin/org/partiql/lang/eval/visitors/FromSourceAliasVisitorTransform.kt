@@ -42,14 +42,12 @@ class FromSourceAliasVisitorTransform : VisitorTransformBase() {
             val thisFromSourceIndex = fromSourceCounter++
             return node.asAlias
                 ?: PartiqlAst.build { defnid(node.expr.extractColumnAlias(thisFromSourceIndex)) }
-            // wVG: No longer adding node.extractSourceLocation() to the synthesized id, because that's bogus.
         }
 
         override fun transformFromSourceUnpivot_asAlias(node: PartiqlAst.FromSource.Unpivot): PartiqlAst.Defnid {
             val thisFromSourceIndex = fromSourceCounter++
             return node.asAlias
                 ?: PartiqlAst.build { defnid(node.expr.extractColumnAlias(thisFromSourceIndex)) }
-            // wVG: No longer adding node.extractSourceLocation() to the synthesized id, because that's bogus.
         }
 
         // Do not traverse into subexpressions of a [FromSource].

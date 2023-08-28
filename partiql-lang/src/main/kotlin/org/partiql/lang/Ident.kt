@@ -20,39 +20,43 @@ class Ident private constructor (
 
     /** For usages where only the print-out appearance of Defnid is needed.
      *  These might persist long-term.
-     *  wVG-TODO: Maybe make this the toString override. */
+     *  TODO: Maybe make this the toString override? */
     fun toDisplayString(): String = str
 
     /** A bridge hack, for usages where the legacy implementation used a string,
      *  but we should eventually transition to using an identifier. */
     fun underlyingString(): String = str
 
-    /** The difference between Defnid creation methods is primarily in intent
-     *  (to mark usages with different purposes, as opposed to invoke different implementations):
-     *  - [createRegular] performs implementation-defined case normalization;
-     *          with legacy identifiers, this is primarily used for the names of built-in functions and such;
-     *          with SQL-conforming identifiers, this will be used with user-defined things as well.
-     *  - [createDelimited] is for a Defnid that corresponds to a lexical delimited identifier;
-     *          probably will be used only with SQL-conforming identifiers.
-     *  - [createAsIs] is meant to indicate that the lexical provenance of the identifier is not important;
-     *          this corresponds to the semantics of user-introduced legacy identifiers
-     *          and should get phased out during transition to SQL-conforming identifiers.
-     */
     companion object {
-        fun createRegular(str: String): Ident =
-            Ident(normalize(str))
+        /** Create a semantic identifier corresponding to a lexical SQL *regular* identifier. */
+        //   with legacy identifiers, this is primarily used for the names of built-in functions at definition sites;
+        //   with SQL-conforming identifiers, this will be used with user-defined things as well.
+        fun createFromRegular(str: String): Ident =
+            Ident(normalizeRegular(str))
 
-        // wVG This is intended to be the one place to hold the design choice of whether
-        // regular identifiers normalize to lower or upper case.
-        private fun normalize(str: String): String =
+        /** Normalize the string contents of a *regular* SQL identifier.  */
+        // TODO This is intended to be the one place to encapsulate the design choice of whether
+        // regular identifiers normalize to lower or upper case. Transitioning to this is just in its beginning --
+        // there are still many sites sprinkled around where this is done by ad hoc string lower-casing.
+        private fun normalizeRegular(str: String): String =
             str.lowercase()
 
-        // wVG-TODO: Decide whether this method should deal with quotes within the identifier,
-        //  or the argument [str] should come properly pre-processed.
-        //  Note: in legacy, this is done in PartiqlPigVisitor.visitIdentifier()
-        fun createDelimited(str: String): Ident =
-            Ident(str)
+        /** Create a semantic identifier corresponding to a lexical SQL *delimited* identifier. */
+        //  Probably will only be used with SQL-conforming identifiers.
+        fun createFromDelimited(str: String): Ident =
+            Ident(normalizeDelimited(str))
 
+        /** Normalize the string contents of a *delimited* SQL identifier.
+         *  (Such as recognizing quoted double-quote.) */
+        // TODO At the start, this is a no-op, since the normalization is done in the parser (in PartiqlPigVisitor.visitIdentifier).
+        private fun normalizeDelimited(str: String): String =
+            str
+
+        /** Create a semantic identifier from the given string content as is, without processing it in any way. */
+        // Using this constructor indicates that the lexical provenance of the identifier is not important;
+        // this corresponds to the semantics of legacy identifiers at definition sites (defnids).
+        // This constructor should get phased out during transition to Ident ADT, in the setting of SQL-conforming identifiers
+        // (primarily by being replaced with createFromDelimited).
         fun createAsIs(str: String): Ident =
             Ident(str)
     }
@@ -61,8 +65,9 @@ class Ident private constructor (
     fun essentialLowercase(): Ident =
         Ident(str.lowercase())
 
-    /** wVG This method is to mark lowercasing that happened in the prior implementation,
-     *  but appeared extraneous. wVG-TODO: switch to no-op and see if tests pass. */
+    /** This method marks lowercasing that happened in the prior implementation, but appears extraneous.
+     *  This is a precaution; can be removed if all continues being well.  */
     fun extraLowercase(): Ident =
-        Ident(str.lowercase())
+        // Ident(str.lowercase())
+        this // the no-op is just as good
 }

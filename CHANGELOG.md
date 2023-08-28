@@ -37,6 +37,9 @@ Thank you to all who have contributed!
 - Adds support for Timestamp constructor call in Parser. 
 - Parsing of label patterns within node and edge graph patterns now supports 
   disjunction `|`, conjunction `&`, negation `!`, and grouping.
+- AST node `defnid` (for "definitional identifier") in `partiql.ion`.
+- Class `Ident`, a beginning of an ADT for identifiers, to be used internally instead of `String`s.
+
 
 ### Changed
 
@@ -68,6 +71,12 @@ Thank you to all who have contributed!
   - Introduced a new non-terminal `localKeyword` and its aliases.  They are now used instead 
     of `REGULAR_IDENTIFIER` (formerly `IDENTIFIER`) in the rules for `extract`, `dateFunction`, 
     and `pathRestrictor` (formerly `patternRestrictor`).
+- **Breaking** change in several PartiqlAst nodes of a field type from `SymbolPrimitive` to `Defnid`, 
+  in conjunction with the introduction of `defnid` in partiql.ion.  
+  The affected nodes are: `Expr.Call`, `Expr.CallAgg`, `Expr.CallWindow`, `ProjectItem.ProjectExpr`, 
+  `LetBinding`, `FromSource.Scan`, `FromSource.Unpivot`, `GraphLabelSpec.GraphLabelName`, 
+  `GraphMatchPatternPart.Node`, `GraphMatchPatternPart.Edge`, `GraphMatchPattern`, `GroupBy`, `GroupKey`, 
+  `DmlOp.Insert`, `TableDefPart.ColumnDeclaration`, `ColumnConstraint`, `Type.CustomType`. 
 
 ### Deprecated
 
