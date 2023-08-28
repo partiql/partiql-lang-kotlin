@@ -29,41 +29,14 @@ import org.partiql.value.IntValue
 import org.partiql.value.ListValue
 import org.partiql.value.MissingValue
 import org.partiql.value.NullValue
-import org.partiql.value.NullableBagValue
-import org.partiql.value.NullableBoolValue
-import org.partiql.value.NullableCharValue
-import org.partiql.value.NullableDecimalValue
-import org.partiql.value.NullableFloat32Value
-import org.partiql.value.NullableFloat64Value
-import org.partiql.value.NullableInt16Value
-import org.partiql.value.NullableInt32Value
-import org.partiql.value.NullableInt64Value
-import org.partiql.value.NullableInt8Value
-import org.partiql.value.NullableIntValue
-import org.partiql.value.NullableListValue
-import org.partiql.value.NullableSexpValue
-import org.partiql.value.NullableStringValue
-import org.partiql.value.NullableStructValue
-import org.partiql.value.NullableSymbolValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.SexpValue
 import org.partiql.value.StringValue
 import org.partiql.value.StructValue
 import org.partiql.value.SymbolValue
-import org.partiql.value.boolValue
-import org.partiql.value.charValue
-import org.partiql.value.decimalValue
-import org.partiql.value.float32Value
-import org.partiql.value.float64Value
-import org.partiql.value.int16Value
-import org.partiql.value.int32Value
-import org.partiql.value.int64Value
-import org.partiql.value.int8Value
-import org.partiql.value.intValue
-import org.partiql.value.stringValue
-import org.partiql.value.symbolValue
 import org.partiql.value.util.PartiQLValueBaseVisitor
+import java.io.OutputStream
 import java.io.PrintStream
 
 /**
@@ -123,41 +96,9 @@ public class PartiQLValueTextWriter(
         private fun annotate(v: PartiQLValue, sb: StringBuilder) {
             val annotations = v.annotations
             if (annotations.isNotEmpty()) {
-                // handle escaping
+                // TODO handle escaping
                 sb.append(annotations.joinToString("::", postfix = "::"))
             }
-        }
-
-        private fun visit(
-            v: CollectionValue<*>,
-            format: Format?,
-            terminals: Pair<String, String>,
-            separator: CharSequence = ",",
-        ) = buildString {
-            // skip empty
-            if (v.isEmpty() || format == null) {
-                format?.let { append(it.prefix) }
-                annotate(v, this)
-                append(terminals.first)
-                val items = v.elements.map {
-                    it.accept(ToString, null) // it.toString()
-                }
-                append(items.joinToString(separator))
-                append(terminals.second)
-                return@buildString
-            }
-            // print formatted
-            append(format.prefix)
-            annotate(v, this)
-            appendLine(terminals.first)
-            v.elements.forEachIndexed { i, e ->
-                val content = e.accept(ToString, format.nest()) // e.toString(format)
-                val suffix = if (i == v.size - 1) "" else ","
-                append(content)
-                appendLine(suffix)
-            }
-            append(format.prefix)
-            append(terminals.second)
         }
 
         override fun visitNull(v: NullValue, format: Format?) = v.toString(format) { "null" }
@@ -166,47 +107,106 @@ public class PartiQLValueTextWriter(
 
         override fun visitBool(v: BoolValue, format: Format?) = v.toString(format) {
             when (v.value) {
+                null -> "null"
                 true -> "true"
-                else -> "false"
+                false -> "false"
             }
         }
 
-        override fun visitInt8(v: Int8Value, format: Format?) = v.toString(format) { v.value.toString() }
+        override fun visitInt8(v: Int8Value, format: Format?) = v.toString(format) {
+            when (val value = v.value) {
+                null -> "null" // null.int8
+                else -> value.toString()
+            }
+        }
 
-        override fun visitInt16(v: Int16Value, format: Format?) = v.toString(format) { v.value.toString() }
+        override fun visitInt16(v: Int16Value, format: Format?) = v.toString(format) {
+            when (val value = v.value) {
+                null -> "null" // null.int16
+                else -> value.toString()
+            }
+        }
 
-        override fun visitInt32(v: Int32Value, format: Format?) = v.toString(format) { v.value.toString() }
+        override fun visitInt32(v: Int32Value, format: Format?) = v.toString(format) {
+            when (val value = v.value) {
+                null -> "null" // null.int32
+                else -> value.toString()
+            }
+        }
 
-        override fun visitInt64(v: Int64Value, format: Format?) = v.toString(format) { v.value.toString() }
+        override fun visitInt64(v: Int64Value, format: Format?) = v.toString(format) {
+            when (val value = v.value) {
+                null -> "null" // null.int64
+                else -> value.toString()
+            }
+        }
 
-        override fun visitInt(v: IntValue, format: Format?) = v.toString(format) { v.value.toString() }
+        override fun visitInt(v: IntValue, format: Format?) = v.toString(format) {
+            when (val value = v.value) {
+                null -> "null" // null.int
+                else -> value.toString()
+            }
+        }
 
-        override fun visitDecimal(v: DecimalValue, format: Format?) = v.toString(format) { v.value.toString() }
+        override fun visitDecimal(v: DecimalValue, format: Format?) = v.toString(format) {
+            when (val value = v.value) {
+                null -> "null" // null.decimal
+                else -> value.toString()
+            }
+        }
 
-        override fun visitFloat32(v: Float32Value, format: Format?) = v.toString(format) { v.value.toString() }
+        override fun visitFloat32(v: Float32Value, format: Format?) = v.toString(format) {
+            when (val value = v.value) {
+                null -> "null" // null.float32
+                else -> value.toString()
+            }
+        }
 
-        override fun visitFloat64(v: Float64Value, format: Format?) = v.toString(format) { v.value.toString() }
+        override fun visitFloat64(v: Float64Value, format: Format?) = v.toString(format) {
+            when (val value = v.value) {
+                null -> "null" // null.float64
+                else -> value.toString()
+            }
+        }
 
-        override fun visitChar(v: CharValue, format: Format?) = v.toString(format) { "'${v.value}'" }
+        override fun visitChar(v: CharValue, format: Format?) = v.toString(format) {
+            when (val value = v.value) {
+                null -> "null" // null.char
+                else -> "'$value'"
+            }
+        }
 
         // TODO escapes
-        override fun visitString(v: StringValue, format: Format?) = v.toString(format) { "'${v.value}'" }
+        override fun visitString(v: StringValue, format: Format?) = v.toString(format) {
+            when (val value = v.value) {
+                null -> "null" // null.string
+                else -> "'$value'"
+            }
+        }
 
-        // TODO escapes
-        override fun visitSymbol(v: SymbolValue, format: Format?) = v.toString(format) { v.value }
+        // TODO escapes, find source in IonJava
+        override fun visitSymbol(v: SymbolValue, format: Format?) = v.toString(format) {
+            when (val value = v.value) {
+                null -> "null" // null.symbol
+                else -> value
+            }
+        }
 
-        override fun visitBag(v: BagValue<*>, format: Format?) = visit(v, format, "<<" to ">>")
+        override fun visitBag(v: BagValue<*>, format: Format?) = collection(v, format, "<<" to ">>")
 
-        override fun visitList(v: ListValue<*>, format: Format?) = visit(v, format, "[" to "]")
+        override fun visitList(v: ListValue<*>, format: Format?) = collection(v, format, "[" to "]")
 
-        override fun visitSexp(v: SexpValue<*>, format: Format?) = visit(v, format, "(" to ")", " ")
+        override fun visitSexp(v: SexpValue<*>, format: Format?) = collection(v, format, "(" to ")", " ")
 
         override fun visitStruct(v: StructValue<*>, format: Format?): String = buildString {
-            if (v.isEmpty() || format == null) {
+            // null.struct
+            val fields = v.fields?.toList() ?: return "null"
+            // {}
+            if (fields.isEmpty() || format == null) {
                 format?.let { append(it.prefix) }
                 annotate(v, this)
                 append("{")
-                val items = v.fields.map {
+                val items = fields.map {
                     val fk = it.first
                     val fv = it.second.accept(ToString, null) // it.toString()
                     "$fk:$fv"
@@ -219,10 +219,10 @@ public class PartiQLValueTextWriter(
             append(format.prefix)
             annotate(v, this)
             appendLine("{")
-            v.fields.forEachIndexed { i, e ->
+            fields.forEachIndexed { i, e ->
                 val fk = e.first
                 val fv = e.second.accept(ToString, format.nest()).trimStart() // e.toString(format)
-                val suffix = if (i == v.size - 1) "" else ","
+                val suffix = if (i == fields.size - 1) "" else ","
                 append(format.prefix + format.indent)
                 append("$fk: $fv")
                 appendLine(suffix)
@@ -231,84 +231,58 @@ public class PartiQLValueTextWriter(
             append("}")
         }
 
-        override fun visitNullableBool(v: NullableBoolValue, ctx: Format?) = when (v.value) {
-            null -> "null"
-            else -> visitBool(boolValue(v.value!!, v.annotations), ctx)
-        }
-
-        override fun visitNullableInt8(v: NullableInt8Value, ctx: Format?) = when (v.value) {
-            null -> "null"
-            else -> visitInt8(int8Value(v.value!!, v.annotations), ctx)
-        }
-
-        override fun visitNullableInt16(v: NullableInt16Value, ctx: Format?) = when (v.value) {
-            null -> "null"
-            else -> visitInt16(int16Value(v.value!!, v.annotations), ctx)
-        }
-
-        override fun visitNullableInt32(v: NullableInt32Value, ctx: Format?) = when (v.value) {
-            null -> "null"
-            else -> visitInt32(int32Value(v.value!!, v.annotations), ctx)
-        }
-
-        override fun visitNullableInt64(v: NullableInt64Value, ctx: Format?) = when (v.value) {
-            null -> "null"
-            else -> visitInt64(int64Value(v.value!!, v.annotations), ctx)
-        }
-
-        override fun visitNullableInt(v: NullableIntValue, ctx: Format?) = when (v.value) {
-            null -> "null"
-            else -> visitInt(intValue(v.value!!, v.annotations), ctx)
-        }
-
-        override fun visitNullableDecimal(v: NullableDecimalValue, ctx: Format?) = when (v.value) {
-            null -> "null"
-            else -> visitDecimal(decimalValue(v.value!!, v.annotations), ctx)
-        }
-
-        override fun visitNullableFloat32(v: NullableFloat32Value, ctx: Format?) = when (v.value) {
-            null -> "null"
-            else -> visitFloat32(float32Value(v.value!!, v.annotations), ctx)
-        }
-
-        override fun visitNullableFloat64(v: NullableFloat64Value, ctx: Format?) = when (v.value) {
-            null -> "null"
-            else -> visitFloat64(float64Value(v.value!!, v.annotations), ctx)
-        }
-
-        override fun visitNullableChar(v: NullableCharValue, ctx: Format?) = when (v.value) {
-            null -> "null"
-            else -> visitChar(charValue(v.value!!, v.annotations), ctx)
-        }
-
-        override fun visitNullableString(v: NullableStringValue, ctx: Format?) = when (v.value) {
-            null -> "null"
-            else -> visitString(stringValue(v.value!!, v.annotations), ctx)
-        }
-
-        override fun visitNullableSymbol(v: NullableSymbolValue, ctx: Format?) = when (v.value) {
-            null -> "null"
-            else -> visitSymbol(symbolValue(v.value!!, v.annotations), ctx)
-        }
-
-        override fun visitNullableBag(v: NullableBagValue<*>, ctx: Format?) = when (v.isNull()) {
-            true -> "null"
-            false -> visitBag(v.promote(), ctx)
-        }
-
-        override fun visitNullableList(v: NullableListValue<*>, ctx: Format?) = when (v.isNull()) {
-            true -> "null"
-            false -> visitList(v.promote(), ctx)
-        }
-
-        override fun visitNullableSexp(v: NullableSexpValue<*>, ctx: Format?) = when (v.isNull()) {
-            true -> "null"
-            false -> visitSexp(v.promote(), ctx)
-        }
-
-        override fun visitNullableStruct(v: NullableStructValue<*>, ctx: Format?) = when (v.isNull()) {
-            true -> "null"
-            false -> visitStruct(v.promote(), ctx)
+        private fun collection(
+            v: CollectionValue<*>,
+            format: Format?,
+            terminals: Pair<String, String>,
+            separator: CharSequence = ",",
+        ) = buildString {
+            // null.bag, null.list, null.sexp
+            val elements = v.elements?.toList() ?: return "null"
+            // skip empty
+            if (elements.isEmpty() || format == null) {
+                format?.let { append(it.prefix) }
+                annotate(v, this)
+                append(terminals.first)
+                val items = elements.map {
+                    it.accept(ToString, null) // it.toString()
+                }
+                append(items.joinToString(separator))
+                append(terminals.second)
+                return@buildString
+            }
+            // print formatted
+            append(format.prefix)
+            annotate(v, this)
+            appendLine(terminals.first)
+            elements.forEachIndexed { i, e ->
+                val content = e.accept(ToString, format.nest()) // e.toString(format)
+                val suffix = if (i == elements.size - 1) "" else ","
+                append(content)
+                appendLine(suffix)
+            }
+            append(format.prefix)
+            append(terminals.second)
         }
     }
+}
+
+@OptIn(PartiQLValueExperimental::class)
+public class PartiQLValueWriterBuilder private constructor() {
+
+    private var formatted: Boolean = true
+
+    public companion object {
+        @JvmStatic
+        public fun standard(): PartiQLValueWriterBuilder = PartiQLValueWriterBuilder()
+    }
+
+    public fun build(outputStream: OutputStream): PartiQLValueWriter =
+        PartiQLValueTextWriter(
+            out = PrintStream(outputStream),
+            formatted = formatted,
+        )
+
+    public fun formatted(formatted: Boolean = true): PartiQLValueWriterBuilder =
+        this.apply { this.formatted = formatted }
 }

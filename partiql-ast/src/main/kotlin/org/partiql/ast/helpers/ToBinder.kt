@@ -46,7 +46,7 @@ private fun Expr.Path.toBinder(index: Int): Identifier.Symbol {
         is Expr.Path.Step.Index -> {
             val k = last.key
             if (k is Expr.Lit && k.value is StringValue) {
-                (k.value as StringValue).value.toBinder()
+                (k.value as StringValue).value!!.toBinder()
             } else {
                 col(index).toBinder()
             }

@@ -3,60 +3,38 @@ package org.partiql.planner
 import org.partiql.plan.Fn
 import org.partiql.plan.Identifier
 import org.partiql.planner.typer.TypeLattice
-import org.partiql.types.PartiQLValueType
-import org.partiql.types.PartiQLValueType.BAG
-import org.partiql.types.PartiQLValueType.BINARY
-import org.partiql.types.PartiQLValueType.BLOB
-import org.partiql.types.PartiQLValueType.BOOL
-import org.partiql.types.PartiQLValueType.BYTE
-import org.partiql.types.PartiQLValueType.CHAR
-import org.partiql.types.PartiQLValueType.CLOB
-import org.partiql.types.PartiQLValueType.DATE
-import org.partiql.types.PartiQLValueType.DECIMAL
-import org.partiql.types.PartiQLValueType.FLOAT32
-import org.partiql.types.PartiQLValueType.FLOAT64
-import org.partiql.types.PartiQLValueType.GRAPH
-import org.partiql.types.PartiQLValueType.INT
-import org.partiql.types.PartiQLValueType.INT16
-import org.partiql.types.PartiQLValueType.INT32
-import org.partiql.types.PartiQLValueType.INT64
-import org.partiql.types.PartiQLValueType.INT8
-import org.partiql.types.PartiQLValueType.INTERVAL
-import org.partiql.types.PartiQLValueType.LIST
-import org.partiql.types.PartiQLValueType.MISSING
-import org.partiql.types.PartiQLValueType.NULL
-import org.partiql.types.PartiQLValueType.NULLABLE_BAG
-import org.partiql.types.PartiQLValueType.NULLABLE_BINARY
-import org.partiql.types.PartiQLValueType.NULLABLE_BLOB
-import org.partiql.types.PartiQLValueType.NULLABLE_BOOL
-import org.partiql.types.PartiQLValueType.NULLABLE_BYTE
-import org.partiql.types.PartiQLValueType.NULLABLE_CHAR
-import org.partiql.types.PartiQLValueType.NULLABLE_CLOB
-import org.partiql.types.PartiQLValueType.NULLABLE_DATE
-import org.partiql.types.PartiQLValueType.NULLABLE_DECIMAL
-import org.partiql.types.PartiQLValueType.NULLABLE_FLOAT32
-import org.partiql.types.PartiQLValueType.NULLABLE_FLOAT64
-import org.partiql.types.PartiQLValueType.NULLABLE_INT
-import org.partiql.types.PartiQLValueType.NULLABLE_INT16
-import org.partiql.types.PartiQLValueType.NULLABLE_INT32
-import org.partiql.types.PartiQLValueType.NULLABLE_INT64
-import org.partiql.types.PartiQLValueType.NULLABLE_INT8
-import org.partiql.types.PartiQLValueType.NULLABLE_INTERVAL
-import org.partiql.types.PartiQLValueType.NULLABLE_LIST
-import org.partiql.types.PartiQLValueType.NULLABLE_SEXP
-import org.partiql.types.PartiQLValueType.NULLABLE_STRING
-import org.partiql.types.PartiQLValueType.NULLABLE_STRUCT
-import org.partiql.types.PartiQLValueType.NULLABLE_SYMBOL
-import org.partiql.types.PartiQLValueType.NULLABLE_TIME
-import org.partiql.types.PartiQLValueType.NULLABLE_TIMESTAMP
-import org.partiql.types.PartiQLValueType.SEXP
-import org.partiql.types.PartiQLValueType.STRING
-import org.partiql.types.PartiQLValueType.STRUCT
-import org.partiql.types.PartiQLValueType.SYMBOL
-import org.partiql.types.PartiQLValueType.TIME
-import org.partiql.types.PartiQLValueType.TIMESTAMP
+import org.partiql.types.TypingMode
 import org.partiql.types.function.FunctionParameter
 import org.partiql.types.function.FunctionSignature
+import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.PartiQLValueType
+import org.partiql.value.PartiQLValueType.ANY
+import org.partiql.value.PartiQLValueType.BAG
+import org.partiql.value.PartiQLValueType.BINARY
+import org.partiql.value.PartiQLValueType.BLOB
+import org.partiql.value.PartiQLValueType.BOOL
+import org.partiql.value.PartiQLValueType.BYTE
+import org.partiql.value.PartiQLValueType.CHAR
+import org.partiql.value.PartiQLValueType.CLOB
+import org.partiql.value.PartiQLValueType.DATE
+import org.partiql.value.PartiQLValueType.DECIMAL
+import org.partiql.value.PartiQLValueType.FLOAT32
+import org.partiql.value.PartiQLValueType.FLOAT64
+import org.partiql.value.PartiQLValueType.INT
+import org.partiql.value.PartiQLValueType.INT16
+import org.partiql.value.PartiQLValueType.INT32
+import org.partiql.value.PartiQLValueType.INT64
+import org.partiql.value.PartiQLValueType.INT8
+import org.partiql.value.PartiQLValueType.INTERVAL
+import org.partiql.value.PartiQLValueType.LIST
+import org.partiql.value.PartiQLValueType.MISSING
+import org.partiql.value.PartiQLValueType.NULL
+import org.partiql.value.PartiQLValueType.SEXP
+import org.partiql.value.PartiQLValueType.STRING
+import org.partiql.value.PartiQLValueType.STRUCT
+import org.partiql.value.PartiQLValueType.SYMBOL
+import org.partiql.value.PartiQLValueType.TIME
+import org.partiql.value.PartiQLValueType.TIMESTAMP
 
 /**
  * A structure for function lookup.
@@ -77,6 +55,7 @@ internal val ATTRIBUTES: Map<String, String> = mapOf(
  * @property types          Type definitions
  * @property functions      Function definitions
  */
+@OptIn(PartiQLValueExperimental::class)
 internal class Header(
     private val namespace: String,
     private val types: TypeLattice,
@@ -94,19 +73,14 @@ internal class Header(
     /**
      * Returns the CAST function if exists, else null.
      */
-    public fun lookupCast(t1: PartiQLValueType, t2: PartiQLValueType): FunctionSignature? {
-        val casts = functions.getOrDefault("cast", emptyList())
+    public fun lookupCast(valueType: PartiQLValueType, targetType: PartiQLValueType): FunctionSignature? {
+        val name = castName(targetType)
+        val casts = functions.getOrDefault(name, emptyList())
         for (cast in casts) {
-            if (cast.parameters.size != 2) {
+            if (cast.parameters.isEmpty()) {
                 break // should be unreachable
             }
-            val p1 = cast.parameters[0]
-            val p2 = cast.parameters[1]
-            if (p1 is FunctionParameter.V || p2 is FunctionParameter.T) {
-                if (t1 == p1.type && t2 == p2.type) {
-                    return cast
-                }
-            }
+            if (valueType == cast.parameters[0].type) return cast
         }
         return null
     }
@@ -136,9 +110,11 @@ internal class Header(
     companion object {
 
         /**
-         * TEMPORARY — Hardcoded PartiQL Global Catalog
+         * TODO TEMPORARY — Hardcoded PartiQL Global Catalog
+         *
+         * TODO BUG — We don't validate function overloads
          */
-        public fun partiql(): Header {
+        public fun partiql(mode: TypingMode = TypingMode.STRICT): Header {
             val namespace = "partiql"
             val types = TypeLattice.partiql()
             val functions = Functions.combine(
@@ -146,8 +122,38 @@ internal class Header(
                 Functions.operators(),
                 Functions.special(),
                 Functions.system(),
-            )
+            ).withMode(mode)
             return Header(namespace, types, functions)
+        }
+
+        /**
+         * Define CASTS with some mangled name; CAST(x AS T) -> cast_t(x)
+         *
+         * CAST(x AS INT8) -> cast_int8(x)
+         *
+         * But what about parameterized types? Are the parameters dropped in casts, or do parameters become arguments?
+         */
+        private fun castName(type: PartiQLValueType) = "cast_${type.name.lowercase()}"
+
+        /**
+         * IFF mode is permissive, rewrite the [FunctionMap] by appending ANY operator variants for all functions.
+         */
+        private fun FunctionMap.withMode(mode: TypingMode): FunctionMap {
+            if (mode != TypingMode.PERMISSIVE) {
+                return this
+            }
+            return entries.associate {
+                val name = it.key
+                val signatures = it.value
+                val variants = signatures.associate { fn -> fn.parameters.size to fn.returns }
+                val additions = variants.map { e ->
+                    val returns = e.value
+                    val params = (0 until e.key).map { i -> FunctionParameter("arg_$i", ANY) }
+                    FunctionSignature(name, returns, params)
+                }
+                // Append the additional ANY signatures
+                name to (signatures + additions)
+            }
         }
     }
 
@@ -221,30 +227,6 @@ internal class Header(
         private val nullableTypes = listOf(
             NULL, // null.null
             MISSING, // missing
-            NULLABLE_BOOL, // null.bool
-            NULLABLE_INT8, // null.int8
-            NULLABLE_INT16, // null.int16
-            NULLABLE_INT32, // null.int32
-            NULLABLE_INT64, // null.int64
-            NULLABLE_INT, // null.int
-            NULLABLE_DECIMAL, // null.decimal
-            NULLABLE_FLOAT32, // null.float32
-            NULLABLE_FLOAT64, // null.float64
-            NULLABLE_CHAR, // null.char
-            NULLABLE_STRING, // null.string
-            NULLABLE_SYMBOL, // null.symbol
-            NULLABLE_BINARY, // null.binary
-            NULLABLE_BYTE, // null.byte
-            NULLABLE_BLOB, // null.blob
-            NULLABLE_CLOB, // null.clob
-            NULLABLE_DATE, // null.date
-            NULLABLE_TIME, // null.time
-            NULLABLE_TIMESTAMP, // null.timestamp
-            NULLABLE_INTERVAL, // null.interval
-            NULLABLE_BAG, // null.bag
-            NULLABLE_LIST, // null.list
-            NULLABLE_SEXP, // null.sexp
-            NULLABLE_STRUCT, // null.struct
         )
 
         private val numericTypes = listOf(
@@ -256,22 +238,13 @@ internal class Header(
             DECIMAL,
             FLOAT32,
             FLOAT64,
-            NULLABLE_INT8, // null.int8
-            NULLABLE_INT16, // null.int16
-            NULLABLE_INT32, // null.int32
-            NULLABLE_INT64, // null.int64
-            NULLABLE_INT, // null.int
-            NULLABLE_DECIMAL, // null.decimal
-            NULLABLE_FLOAT32, // null.float32
-            NULLABLE_FLOAT64, // null.float64
         )
 
         // CLOB?
         private val textTypes = listOf(
             STRING,
             SYMBOL,
-            NULLABLE_STRING,
-            NULLABLE_SYMBOL,
+            CLOB,
         )
 
         private val collectionTypes = listOf(
@@ -284,31 +257,32 @@ internal class Header(
             FunctionSignature(
                 name = name,
                 returns = returns,
-                parameters = listOf(FunctionParameter.V("value", value))
+                parameters = listOf(FunctionParameter("value", value)),
+                isNullCall = true,
+                isNullable = false,
             )
 
         public fun binary(name: String, returns: PartiQLValueType, lhs: PartiQLValueType, rhs: PartiQLValueType) =
             FunctionSignature(
                 name = name,
                 returns = returns,
-                parameters = listOf(FunctionParameter.V("lhs", lhs), FunctionParameter.V("rhs", rhs))
+                parameters = listOf(FunctionParameter("lhs", lhs), FunctionParameter("rhs", rhs)),
+                isNullCall = true,
+                isNullable = false,
             )
 
         public fun cast(value: PartiQLValueType, type: PartiQLValueType) =
             FunctionSignature(
-                name = "cast",
+                name = castName(type),
                 returns = type,
                 parameters = listOf(
-                    FunctionParameter.V("value", value),
-                    FunctionParameter.T("type", type),
+                    FunctionParameter("value", value),
                 )
             )
 
         // OPERATORS
 
-        private fun not(): List<FunctionSignature> = listOf(BOOL, NULLABLE_BOOL).map { t ->
-            unary("not", BOOL, BOOL)
-        }
+        private fun not(): List<FunctionSignature> = listOf(unary("not", BOOL, BOOL))
 
         private fun pos(): List<FunctionSignature> = numericTypes.map { t ->
             unary("pos", t, t)
@@ -326,13 +300,9 @@ internal class Header(
             binary("ne", BOOL, t, t)
         }
 
-        private fun and(): List<FunctionSignature> = listOf(BOOL, NULLABLE_BOOL).map { t ->
-            binary("and", BOOL, t, t)
-        }
+        private fun and(): List<FunctionSignature> = listOf(binary("and", BOOL, BOOL, BOOL))
 
-        private fun or(): List<FunctionSignature> = listOf(BOOL, NULLABLE_BOOL).map { t ->
-            binary("or", BOOL, t, t)
-        }
+        private fun or(): List<FunctionSignature> = listOf(binary("or", BOOL, BOOL, BOOL))
 
         private fun lt(): List<FunctionSignature> = numericTypes.map { t ->
             binary("lt", BOOL, t, t)
@@ -381,18 +351,22 @@ internal class Header(
                 name = "like",
                 returns = BOOL,
                 parameters = listOf(
-                    FunctionParameter.V("value", STRING),
-                    FunctionParameter.V("pattern", STRING),
-                )
+                    FunctionParameter("value", STRING),
+                    FunctionParameter("pattern", STRING),
+                ),
+                isNullCall = true,
+                isNullable = false,
             ),
             FunctionSignature(
                 name = "like_escape",
                 returns = BOOL,
                 parameters = listOf(
-                    FunctionParameter.V("value", STRING),
-                    FunctionParameter.V("pattern", STRING),
-                    FunctionParameter.V("escape", STRING),
-                )
+                    FunctionParameter("value", STRING),
+                    FunctionParameter("pattern", STRING),
+                    FunctionParameter("escape", STRING),
+                ),
+                isNullCall = true,
+                isNullable = false,
             ),
         )
 
@@ -401,10 +375,12 @@ internal class Header(
                 name = "between",
                 returns = BOOL,
                 parameters = listOf(
-                    FunctionParameter.V("value", t),
-                    FunctionParameter.V("lower", t),
-                    FunctionParameter.V("upper", t),
-                )
+                    FunctionParameter("value", t),
+                    FunctionParameter("lower", t),
+                    FunctionParameter("upper", t),
+                ),
+                isNullCall = true,
+                isNullable = false,
             )
         }
 
@@ -414,9 +390,11 @@ internal class Header(
                     name = "in_collection",
                     returns = BOOL,
                     parameters = listOf(
-                        FunctionParameter.V("value", element),
-                        FunctionParameter.V("collection", collection),
-                    )
+                        FunctionParameter("value", element),
+                        FunctionParameter("collection", collection),
+                    ),
+                    isNullCall = true,
+                    isNullable = false,
                 )
             }
         }.flatten()
@@ -432,9 +410,11 @@ internal class Header(
                 name = "null_if",
                 returns = t,
                 parameters = listOf(
-                    FunctionParameter.V("value", t),
-                    FunctionParameter.V("nullifier", BOOL),
-                )
+                    FunctionParameter("value", t),
+                    FunctionParameter("nullifier", BOOL),
+                ),
+                isNullCall = true,
+                isNullable = true,
             )
         }
 
@@ -444,18 +424,22 @@ internal class Header(
                     name = "substring",
                     returns = t,
                     parameters = listOf(
-                        FunctionParameter.V("value", t),
-                        FunctionParameter.V("start", INT64),
-                    )
+                        FunctionParameter("value", t),
+                        FunctionParameter("start", INT64),
+                    ),
+                    isNullCall = true,
+                    isNullable = false,
                 ),
                 FunctionSignature(
                     name = "substring_length",
                     returns = t,
                     parameters = listOf(
-                        FunctionParameter.V("value", t),
-                        FunctionParameter.V("start", INT64),
-                        FunctionParameter.V("end", INT64),
-                    )
+                        FunctionParameter("value", t),
+                        FunctionParameter("start", INT64),
+                        FunctionParameter("end", INT64),
+                    ),
+                    isNullCall = true,
+                    isNullable = false,
                 )
             )
         }.flatten()
@@ -465,9 +449,11 @@ internal class Header(
                 name = "position",
                 returns = INT64,
                 parameters = listOf(
-                    FunctionParameter.V("probe", t),
-                    FunctionParameter.V("value", t),
-                )
+                    FunctionParameter("probe", t),
+                    FunctionParameter("value", t),
+                ),
+                isNullCall = true,
+                isNullable = false,
             )
         }
 
@@ -477,46 +463,58 @@ internal class Header(
                     name = "trim",
                     returns = t,
                     parameters = listOf(
-                        FunctionParameter.V("value", t),
-                    )
+                        FunctionParameter("value", t),
+                    ),
+                    isNullCall = true,
+                    isNullable = false,
                 ),
                 FunctionSignature(
                     name = "trim_chars",
                     returns = t,
                     parameters = listOf(
-                        FunctionParameter.V("value", t),
-                        FunctionParameter.V("chars", t),
-                    )
+                        FunctionParameter("value", t),
+                        FunctionParameter("chars", t),
+                    ),
+                    isNullCall = true,
+                    isNullable = false,
                 ),
                 FunctionSignature(
                     name = "trim_leading",
                     returns = t,
                     parameters = listOf(
-                        FunctionParameter.V("value", t),
-                    )
+                        FunctionParameter("value", t),
+                    ),
+                    isNullCall = true,
+                    isNullable = false,
                 ),
                 FunctionSignature(
                     name = "trim_leading_chars",
                     returns = t,
                     parameters = listOf(
-                        FunctionParameter.V("value", t),
-                        FunctionParameter.V("chars", t),
-                    )
+                        FunctionParameter("value", t),
+                        FunctionParameter("chars", t),
+                    ),
+                    isNullCall = true,
+                    isNullable = false,
                 ),
                 FunctionSignature(
                     name = "trim_trailing",
                     returns = t,
                     parameters = listOf(
-                        FunctionParameter.V("value", t),
-                    )
+                        FunctionParameter("value", t),
+                    ),
+                    isNullCall = true,
+                    isNullable = false,
                 ),
                 FunctionSignature(
                     name = "trim_trailing_chars",
                     returns = t,
                     parameters = listOf(
-                        FunctionParameter.V("value", t),
-                        FunctionParameter.V("chars", t),
-                    )
+                        FunctionParameter("value", t),
+                        FunctionParameter("chars", t),
+                    ),
+                    isNullCall = true,
+                    isNullable = false,
                 ),
             )
         }.flatten()
@@ -535,8 +533,9 @@ internal class Header(
 
         private fun currentUser() = FunctionSignature(
             name = "\$__current_user",
-            returns = NULLABLE_STRING,
+            returns = STRING,
             parameters = emptyList(),
+            isNullable = true,
         )
 
         // Function precedence comparator
@@ -559,15 +558,9 @@ internal class Header(
             0
         }
 
-        private fun FunctionParameter.compareTo(other: FunctionParameter): Int = when {
-            (this is FunctionParameter.T && other is FunctionParameter.V) -> 1
-            (this is FunctionParameter.V && other is FunctionParameter.T) -> -1
-            (this is FunctionParameter.T && other is FunctionParameter.T) -> 0
-            (this is FunctionParameter.V && other is FunctionParameter.V) -> comparePrecedence(this.type, other.type)
-            else -> 0 // unreachable
-        }
+        private fun FunctionParameter.compareTo(other: FunctionParameter): Int =
+            comparePrecedence(this.type, other.type)
 
-        // This is not explicitly defined in the PartiQL Specification
         private fun comparePrecedence(t1: PartiQLValueType, t2: PartiQLValueType): Int {
             if (t1 == t2) return 0
             val p1 = typePrecedence[t1]!!
@@ -576,60 +569,36 @@ internal class Header(
         }
 
         // This simply describes some precedence for ordering functions.
-        // It does not necessarily imply the ability to CAST!
-        // This will be replaced by a lattice in the near future!
-        private val typePrecedence = mapOf(
-            NULL to 0,
-            MISSING to 0,
-            BOOL to 1,
-            NULLABLE_BOOL to 2,
-            INT8 to 3,
-            NULLABLE_INT8 to 4,
-            INT16 to 5,
-            NULLABLE_INT16 to 6,
-            INT32 to 7,
-            NULLABLE_INT32 to 8,
-            INT64 to 9,
-            NULLABLE_INT64 to 10,
-            INT to 11,
-            NULLABLE_INT to 12,
-            DECIMAL to 13,
-            NULLABLE_DECIMAL to 14,
-            FLOAT32 to 15,
-            NULLABLE_FLOAT32 to 16,
-            FLOAT64 to 17,
-            NULLABLE_FLOAT64 to 18,
-            CHAR to 19,
-            NULLABLE_CHAR to 20,
-            STRING to 21,
-            NULLABLE_STRING to 22,
-            SYMBOL to 23,
-            NULLABLE_SYMBOL to 24,
-            CLOB to 25,
-            NULLABLE_CLOB to 26,
-            BINARY to 27,
-            NULLABLE_BINARY to 28,
-            BYTE to 29,
-            NULLABLE_BYTE to 30,
-            BLOB to 31,
-            NULLABLE_BLOB to 32,
-            DATE to 33,
-            NULLABLE_DATE to 34,
-            TIME to 35,
-            NULLABLE_TIME to 36,
-            TIMESTAMP to 37,
-            NULLABLE_TIMESTAMP to 38,
-            INTERVAL to 39,
-            NULLABLE_INTERVAL to 40,
-            LIST to 41,
-            NULLABLE_LIST to 42,
-            BAG to 43,
-            NULLABLE_BAG to 44,
-            SEXP to 45,
-            NULLABLE_SEXP to 46,
-            STRUCT to 47,
-            NULLABLE_STRUCT to 48,
-            GRAPH to 49,
-        )
+        // This is not explicitly defined in the PartiQL Specification
+        // This does not imply the ability to CAST.
+        private val typePrecedence: Map<PartiQLValueType, Int> = listOf(
+            NULL,
+            MISSING,
+            BOOL,
+            INT8,
+            INT16,
+            INT32,
+            INT64,
+            INT,
+            DECIMAL,
+            FLOAT32,
+            FLOAT64,
+            CHAR,
+            STRING,
+            CLOB,
+            SYMBOL,
+            BINARY,
+            BYTE,
+            BLOB,
+            DATE,
+            TIME,
+            TIMESTAMP,
+            INTERVAL,
+            BAG,
+            LIST,
+            SEXP,
+            STRUCT,
+            ANY,
+        ).mapIndexed { precedence, type -> type to precedence }.toMap()
     }
 }

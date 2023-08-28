@@ -105,17 +105,7 @@ rex::{
 
     call::{
        fn:    fn,
-       args:  list::[arg],
-       _: [
-        arg::[
-          value::{
-            rex: rex,
-          },
-          type::{
-            type: static_type,
-          },
-        ],
-      ],
+       args:  list::[rex],
     },
 
     case::{
@@ -308,7 +298,7 @@ rel::{
       _: [
         agg::{
           fn:   fn,
-          args: list::['.rex.op.call.arg'],
+          args: list::[rex],
         },
       ],
     },

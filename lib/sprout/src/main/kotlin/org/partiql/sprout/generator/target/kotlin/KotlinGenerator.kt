@@ -2,11 +2,13 @@ package org.partiql.sprout.generator.target.kotlin
 
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
+import com.squareup.kotlinpoet.asTypeName
 import net.pearx.kasechange.toCamelCase
 import org.partiql.sprout.generator.Generator
 import org.partiql.sprout.generator.target.kotlin.poems.KotlinBuilderPoem
@@ -130,7 +132,7 @@ class KotlinGenerator(private val options: KotlinOptions) : Generator<KotlinResu
                 constructor.addParameter(para)
             }
             // impls are open
-            impl.addSuperinterface(clazz)
+            impl.superclass(clazz)
             nodes.forEach { it.builder.addSuperinterface(symbols.base) }
             this.addDataClassMethods()
         }
@@ -170,14 +172,8 @@ class KotlinGenerator(private val options: KotlinOptions) : Generator<KotlinResu
     // TODO generate hashCode, equals, componentN so we can have OPEN internal implementations
     private fun KotlinNodeSpec.Product.addDataClassMethods() {
         impl.addModifiers(KModifier.INTERNAL, KModifier.OPEN)
-        // builder.addFunction(
-        //     FunSpec.builder("hashCode").addModifiers(KModifier.OVERRIDE, KModifier.ABSTRACT).returns(Int::class).build()
-        // )
-        // builder.addFunction(
-        //     FunSpec.builder("equals").addModifiers(KModifier.OVERRIDE, KModifier.ABSTRACT).returns(Boolean::class)
-        //         .addParameter(ParameterSpec.builder("other", Any::class.asTypeName().copy(nullable = true)).build())
-        //         .build()
-        // )
+        addEqualsMethod()
+        addHashCodeMethod()
         val args = listOf("_id") + props.map { it.name }
         val copy = FunSpec.builder("copy").addModifiers(KModifier.ABSTRACT).returns(clazz)
         val copyImpl = FunSpec.builder("copy")
@@ -191,5 +187,52 @@ class KotlinGenerator(private val options: KotlinOptions) : Generator<KotlinResu
         }
         builder.addFunction(copy.build())
         impl.addFunction(copyImpl.build())
+    }
+
+    /**
+     * Adds `equals` method to the core abstract class
+     */
+    private fun KotlinNodeSpec.Product.addEqualsMethod() {
+        val equalsFunctionBodyBuilder = CodeBlock.builder().let { body ->
+            body.addStatement("if (this === other) return true")
+            body.addStatement("if (other !is %T) return false", this.clazz)
+            this.props.forEach { prop ->
+                body.addStatement("if (%N != other.%N) return false", prop.name, prop.name)
+            }
+            body.addStatement("return true")
+        }
+        builder.addFunction(
+            FunSpec.builder("equals").addModifiers(KModifier.OVERRIDE).returns(Boolean::class)
+                .addParameter(ParameterSpec.builder("other", Any::class.asTypeName().copy(nullable = true)).build())
+                .addCode(equalsFunctionBodyBuilder.build())
+                .build()
+        )
+    }
+
+    /**
+     * Adds `hashCode` method to the core abstract class
+     */
+    private fun KotlinNodeSpec.Product.addHashCodeMethod() {
+        val hashcodeBodyBuilder = CodeBlock.builder().let { body ->
+            when (this.props.size) {
+                0 -> body.addStatement("return 0")
+                1 -> body.addStatement("return %N.hashCode()", this.props.first().name)
+                else -> {
+                    body.addStatement("var result = %N.hashCode()", this.props.first().name)
+                    this.props.subList(1, this.props.size).forEach { prop ->
+                        body.addStatement("result = 31 * result + %N.hashCode()", prop.name)
+                    }
+                    body.addStatement("return result")
+                }
+            }
+            body
+        }
+        builder.addFunction(
+            FunSpec.builder("hashCode")
+                .addModifiers(KModifier.OVERRIDE)
+                .returns(Int::class)
+                .addCode(hashcodeBodyBuilder.build())
+                .build()
+        )
     }
 }

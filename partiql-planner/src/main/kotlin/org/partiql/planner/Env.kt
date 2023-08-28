@@ -22,8 +22,10 @@ import org.partiql.spi.connector.Constants
 import org.partiql.types.StaticType
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
+import org.partiql.types.TypingMode
 import org.partiql.types.function.FunctionParameter
 import org.partiql.types.function.FunctionSignature
+import org.partiql.value.PartiQLValueExperimental
 
 /**
  * Handle for associating a catalog with the metadata; pair of catalog to data.
@@ -33,9 +35,8 @@ internal typealias Handle<T> = Pair<String, T>
 /**
  * TypeEnv represents the environment in which we type expressions and resolve variables while planning.
  *
- * TODO remove strategy
- * TODO build scope stack of TypeEnvs for correlated subqueries.
- *
+ * TODO TypeEnv should be a stack of locals; also the strategy has been kept here because it's easier to
+ *  pass through the traversal like this, but is conceptually odd to associate with the TypeEnv.
  * @property schema
  * @property strategy
  */
@@ -78,7 +79,7 @@ internal sealed class FnMatch {
 
     public class Error(
         public val fn: Fn.Unresolved,
-        public val args: List<Rex.Op.Call.Arg>,
+        public val args: List<Rex>,
         public val candidates: List<FunctionSignature>,
     ) : FnMatch()
 }
@@ -136,8 +137,10 @@ internal enum class ResolutionStrategy {
  * @property plugins        List of plugins for global resolution
  * @property session        Session details
  */
+@OptIn(PartiQLValueExperimental::class)
 internal class Env(
     private val header: Header,
+    private val mode: TypingMode,
     private val plugins: List<Plugin>,
     private val session: PartiQLPlanner.Session,
 ) {
@@ -180,14 +183,10 @@ internal class Env(
     /**
      * Leverages a [FunctionResolver] to find a matching function defined in the [Header].
      */
-    internal fun resolveFn(fn: Fn.Unresolved, args: List<Rex.Op.Call.Arg>): FnMatch {
+    internal fun resolveFn(fn: Fn.Unresolved, args: List<Rex>): FnMatch {
         val candidates = header.lookup(fn)
         val parameters = args.mapIndexed { i, arg ->
-            val name = "arg-$i"
-            when (arg) {
-                is Rex.Op.Call.Arg.Type -> FunctionParameter.T(name, arg.type.toRuntimeType())
-                is Rex.Op.Call.Arg.Value -> FunctionParameter.V(name, arg.rex.type.toRuntimeType())
-            }
+            FunctionParameter("arg-$i", arg.type.toRuntimeType())
         }
         val match = functionResolver.match(candidates, parameters)
         return when (match) {

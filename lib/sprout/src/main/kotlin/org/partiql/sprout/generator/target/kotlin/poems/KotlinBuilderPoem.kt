@@ -44,7 +44,7 @@ class KotlinBuilderPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
     private val baseFactoryClass = ClassName(builderPackageName, baseFactoryName)
     private val baseFactory = TypeSpec.classBuilder(baseFactoryClass)
         .addSuperinterface(factoryClass)
-        .addModifiers(KModifier.ABSTRACT)
+        .addModifiers(KModifier.OPEN)
         .addProperty(
             idProvider.toBuilder()
                 .addModifiers(KModifier.OVERRIDE)
@@ -289,7 +289,7 @@ class KotlinBuilderPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
     private fun factoryCompanion() = TypeSpec.companionObjectBuilder()
         .addProperty(
             PropertySpec.builder("DEFAULT", factoryClass)
-                .initializer("%T", factoryDefault)
+                .initializer("%T()", baseFactoryClass)
                 .build()
         )
         .addFunction(factoryFunc)

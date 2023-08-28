@@ -1,0 +1,65 @@
+imports::{
+  kotlin: [
+    ion::'com.amazon.ionelement.api.IonElement'
+  ],
+}
+
+statement::[
+
+  // PartiQL Expressions
+  query::{
+    expr: expr,
+  },
+]
+
+expr::[
+
+  // Ion Literal Value, ie `<ion>`
+  ion::{
+    value: '.ion',
+  },
+
+  // Variable Reference
+  var::{
+    identifier: identifier,
+    scope: [
+      DEFAULT,
+      LOCAL,
+    ],
+  },
+
+  nested::{
+    itemsList: list::[list::[expr]],
+    itemsSet: set::[set::[expr]],
+    itemsMap: map::[string, map::[string, expr]]
+  },
+
+  empty::{}
+]
+// Identifiers and Qualified Identifiers
+//----------------------------------------------
+// <identifier > ::= <id symbol> | <id path>
+//
+// <id symbol> ::=  <symbol>    // case-insensitive
+//               | "<symbol>"   // case-sensitive
+//
+// <id qualified> ::= <id symbol> ('.' <id symbol>)+;
+//
+identifier::[
+  symbol::{
+    symbol: string,
+    case_sensitivity: case_sensitivity,
+  },
+  qualified::{
+    root: symbol,
+    steps: list::[
+      symbol
+    ],
+  },
+  _::[
+    case_sensitivity::[
+      SENSITIVE,
+      INSENSITIVE,
+    ],
+  ],
+]
