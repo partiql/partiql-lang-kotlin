@@ -526,16 +526,14 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
         val start = visitOrNull<PartiqlAst.Expr>(node.start, ctx)
         val length = visitOrNull<PartiqlAst.Expr>(node.length, ctx)
         val operands = listOfNotNull(value, start, length)
-        val funId = defnid("substring")
-        call(funId, operands, metas)
+        call(defnid("substring"), operands, metas)
     }
 
     override fun visitExprPosition(node: Expr.Position, ctx: Ctx) = translate(node) { metas ->
         val lhs = visitExpr(node.lhs, ctx)
         val rhs = visitExpr(node.rhs, ctx)
         val operands = listOf(lhs, rhs)
-        val funId = defnid("position")
-        call(funId, operands, metas)
+        call(defnid("position"), operands, metas)
     }
 
     override fun visitExprTrim(node: Expr.Trim, ctx: Ctx) = translate(node) { metas ->
@@ -547,8 +545,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
         if (spec != null) operands.add(lit(ionSymbol(spec)))
         if (chars != null) operands.add(chars)
         operands.add(value)
-        val funId = defnid("trim")
-        call(funId, operands, metas)
+        call(defnid("trim"), operands, metas)
     }
 
     override fun visitExprOverlay(node: Expr.Overlay, ctx: Ctx) = translate(node) { metas ->
@@ -557,16 +554,14 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
         val start = visitExpr(node.start, ctx)
         val length = visitOrNull<PartiqlAst.Expr>(node.length, ctx)
         val operands = listOfNotNull(value, overlay, start, length)
-        val funId = defnid("overlay")
-        call(funId, operands, metas)
+        call(defnid("overlay"), operands, metas)
     }
 
     override fun visitExprExtract(node: Expr.Extract, ctx: Ctx) = translate(node) { metas ->
         val field = node.field.toLegacyDatetimePart()
         val source = visitExpr(node.source, ctx)
         val operands = listOf(field, source)
-        val funId = defnid("extract")
-        call(funId, operands, metas)
+        call(defnid("extract"), operands, metas)
     }
 
     override fun visitExprCast(node: Expr.Cast, ctx: Ctx) = translate(node) { metas ->
@@ -592,8 +587,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
         val lhs = visitExpr(node.lhs, ctx)
         val rhs = visitExpr(node.rhs, ctx)
         val operands = listOf(field, lhs, rhs)
-        val funId = defnid("date_add")
-        call(funId, operands, metas)
+        call(defnid("date_add"), operands, metas)
     }
 
     override fun visitExprDateDiff(node: Expr.DateDiff, ctx: Ctx) = translate(node) { metas ->
@@ -601,8 +595,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
         val lhs = visitExpr(node.lhs, ctx)
         val rhs = visitExpr(node.rhs, ctx)
         val operands = listOf(field, lhs, rhs)
-        val funId = defnid("date_diff")
-        call(funId, operands, metas)
+        call(defnid("date_diff"), operands, metas)
     }
 
     override fun visitExprBagOp(node: Expr.BagOp, ctx: Ctx) = translate(node) { metas ->
@@ -915,8 +908,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
 
     override fun visitGraphMatchLabelName(node: GraphMatch.Label.Name, ctx: Ctx) =
         translate(node) { metas ->
-            val id = defnid(node.name)
-            graphLabelName(id, metas)
+            graphLabelName(defnid(node.name), metas)
         }
 
     override fun visitGraphMatchLabelWildcard(node: GraphMatch.Label.Wildcard, ctx: Ctx) =

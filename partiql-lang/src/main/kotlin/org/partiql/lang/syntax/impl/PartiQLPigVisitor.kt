@@ -200,10 +200,10 @@ internal class PartiQLPigVisitor(
     override fun visitByIdent(ctx: PartiQLParser.ByIdentContext) = readIdentifierAsDefnid(ctx.identifier())
 
     // TODO: Eventually, PartiqlAst.Identifier node should probably just hold the string content of an identifier as it was lexed,
-    //  while the logic for processing this string content should be encapsulated in the createRegular and createDelimited
+    //  while the logic for processing this string content should be encapsulated in the createFromRegular and createFromDelimited
     //  methods of the Ident class.
     // For now, this follows the inconsistent legacy arrangement: lower-casing of a regular identifier is done in Ident
-    // (as well as at many legacy sites), while normalization of quotes inside a delimited identifier is done here.
+    // (as well, for now, as at many legacy sites), while normalization of quotes inside a delimited identifier is done here.
     override fun visitIdentifier(ctx: PartiQLParser.IdentifierContext): PartiqlAst.Identifier = PartiqlAst.build {
         val metas = ctx.ident.getSourceMetaContainer()
         when (ctx.ident.type) {

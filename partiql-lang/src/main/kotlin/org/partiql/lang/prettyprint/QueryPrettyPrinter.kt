@@ -138,13 +138,11 @@ class QueryPrettyPrinter {
     }
 
     private fun writeAstNode(node: PartiqlAst.TableDefPart.ColumnDeclaration, sb: StringBuilder) {
-        // sb.append("${node.name.text} ")
         writeAstNode(node.name, sb); sb.append(" ")
         writeType(node.type, sb)
         for (c in node.constraints) {
             sb.append(" ")
             c.name?.let {
-                // sb.append("CONSTRAINT ${it.text} ")
                 sb.append("CONSTRAINT ")
                 writeAstNode(it, sb)
                 sb.append(" ")
@@ -493,7 +491,6 @@ class QueryPrettyPrinter {
 
     @Suppress("UNUSED_PARAMETER")
     private fun writeAstNode(node: PartiqlAst.Expr.Call, sb: StringBuilder, level: Int) {
-        // sb.append("${node.funcName.text}(")
         writeAstNode(node.funcName, sb)
         sb.append('(')
         node.args.forEach { arg ->
@@ -509,7 +506,6 @@ class QueryPrettyPrinter {
 
     @Suppress("UNUSED_PARAMETER")
     private fun writeAstNode(node: PartiqlAst.Expr.CallAgg, sb: StringBuilder, level: Int) {
-        // sb.append("${node.funcName.text}(")
         writeAstNode(node.funcName, sb)
         sb.append('(')
         if (node.setq is PartiqlAst.SetQuantifier.Distinct) {
@@ -679,7 +675,6 @@ class QueryPrettyPrinter {
         val sqLevel = getSubQueryLevel(level)
         val separator = getSeparator(sqLevel)
         group.groupAsAlias?.let {
-            // sb.append("${separator}GROUP AS ${it.text}")
             sb.append("${separator}GROUP AS ")
             writeAstNode(it, sb)
         }
@@ -688,7 +683,6 @@ class QueryPrettyPrinter {
     private fun writeGroupKey(key: PartiqlAst.GroupKey, sb: StringBuilder, level: Int) {
         writeAstNodeCheckSubQuery(key.expr, sb, level)
         key.asAlias?.let {
-            // sb.append(" AS ${it.text}")
             sb.append(" AS ")
             writeAstNode(it, sb)
         }
@@ -704,7 +698,6 @@ class QueryPrettyPrinter {
 
     private fun writeLetBinding(letBinding: PartiqlAst.LetBinding, sb: StringBuilder, level: Int) {
         writeAstNodeCheckSubQuery(letBinding.expr, sb, level)
-        // sb.append(" AS ${letBinding.name.text}")
         sb.append(" AS ")
         writeAstNode(letBinding.name, sb)
     }
