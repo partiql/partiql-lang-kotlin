@@ -13,21 +13,24 @@ suite::{
         WHERE ss_sold_date_sk > DATE_ADD(DAY, -30, UTCNOW())
       ''',
       schema: {
-        type: "struct",
-        fields: [
-          {
-            name: "ss_ticket_number",
-            type: "string",
-          },
-          {
-            name: "ss_quantity",
-            type: ["int", "null"],
-          },
-          {
-            name: "ss_sold_date_sk",
-            type: ["date"],
-          }
-        ],
+        type: "bag",
+        items: {
+          type: "struct",
+          fields: [
+            {
+              name: "ss_ticket_number",
+              type: "string",
+            },
+            {
+              name: "ss_quantity",
+              type: ["int", "null"],
+            },
+            {
+              name: "ss_sold_date_sk",
+              type: ["date"],
+            },
+          ],
+        },
       },
     },
   },

@@ -6,7 +6,7 @@ public abstract class TranspilerTestTarget(
 ) {
 
     /**
-     * Peform target-specific assertion.
+     * Perform target-specific assertion.
      *
      * @param test
      */

@@ -5,3 +5,43 @@ The PartiQL Transpiler is an experiment in SQL source-to-source conversion.
 == Tests
 
 See resources.
+
+=== Schema Language
+
+Testing schemas are described using a modified version of the xref:https://docs.oracle.com/cd/E26161_02/html/GettingStartedGuide/avroschemas.html#avro-complexdatatypes[Avro JSON schema].
+The changes are (1) it's Ion and (2) we use the PartiQL type names.
+
+The three types that can be described are
+
+- bags
+- lists
+- structs
+
+.Basic Type Schema Examples
+[source,ion]
+----
+// type name atomic types
+"int"
+
+// type list for union types
+[ "int", "null" ]
+
+// Collection Type
+{
+  type: "bag"|"list"|"sexp",
+  items: <type>
+}
+
+// Struct Type
+{
+  type: "struct",
+  fields: [
+    {
+      name: "foo",
+      type: <type>
+    },
+    // ....
+  ]
+}
+
+----
