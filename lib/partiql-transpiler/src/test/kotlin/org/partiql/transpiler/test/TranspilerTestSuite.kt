@@ -28,7 +28,7 @@ public class TranspilerTestSuite(
             val name = nameE.textValue
             val session = TranspilerTestSession.load(sessE)
             val tests = testsE.fields.associate {
-                assert (it.value is StructElement) { "Test value must be an Ion struct" }
+                assert(it.value is StructElement) { "Test value must be an Ion struct" }
                 it.name to TranspilerTest.load(it.value as StructElement)
             }
             return TranspilerTestSuite(name, session, tests)

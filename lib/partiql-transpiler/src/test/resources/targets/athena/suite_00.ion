@@ -6,6 +6,12 @@ target::{
       statement: '''
       SELECT store_sales.ss_ticket_number, store.sales.ss_quantity, store_sales.ss_sold_date_sk
       FROM store_sales
+      ''',
+    },
+    '0001': {
+      statement: '''
+      SELECT store_sales.ss_ticket_number, store.sales.ss_quantity, store_sales.ss_sold_date_sk
+      FROM store_sales
       WHERE ss_sold_date_sk > date_add('day', -30, at_timezone(current_timestamp, 'UTC'))
       ''',
     },

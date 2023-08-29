@@ -5,12 +5,11 @@ plugins {
 
 dependencies {
     implementation(project(":partiql-ast"))
+    implementation(project(":partiql-parser"))
     implementation(project(":partiql-plan"))
+    implementation(project(":partiql-planner"))
     implementation(project(":partiql-spi"))
     implementation(project(":partiql-types"))
-    // temporary
-    implementation(project(":partiql-lang"))
-    testImplementation(project(":plugins:partiql-mockdb"))
 }
 
 kotlin {
