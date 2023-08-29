@@ -17,6 +17,7 @@ rootProject.name = "partiql"
 include(
     "partiql-ast",
     "partiql-cli",
+    "partiql-coverage",
     "partiql-lang",
     "partiql-parser",
     "partiql-plan",
@@ -25,6 +26,7 @@ include(
     "plugins:partiql-mockdb",
     "lib:isl",
     "lib:sprout",
+    "test:coverage-tests",
     "test:partiql-tests-runner",
     "test:partiql-randomized-tests",
     "test:sprout-tests",
