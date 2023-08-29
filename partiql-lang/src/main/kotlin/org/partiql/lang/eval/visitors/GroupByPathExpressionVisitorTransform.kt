@@ -140,8 +140,7 @@ class GroupByPathExpressionVisitorTransform(
                     groupKey.expr,
                     PartiqlAst.build {
                         vr(
-                            name = groupKey.asAlias!!.string(),
-                            case = caseSensitive(),
+                            id = id(groupKey.asAlias!!.string(), caseSensitive()),
                             qualifier = unqualified(),
                             metas = groupKey.expr.metas + metaContainerOf(UniqueNameMeta.TAG to uniqueIdentifierMeta)
                         )
@@ -156,11 +155,11 @@ class GroupByPathExpressionVisitorTransform(
             when (targetRootVarRef) {
                 null -> true
                 else -> {
-                    val ignoreCase = targetRootVarRef.case is PartiqlAst.CaseSensitivity.CaseInsensitive
+                    val ignoreCase = targetRootVarRef.id.case is PartiqlAst.CaseSensitivity.CaseInsensitive
                     fromSourceAliases.all { alias ->
                         when (targetRootVarRef) {
                             null -> true // this branch should never execute but we should handle it if it does.
-                            else -> targetRootVarRef.name.text.compareTo(alias, ignoreCase) != 0
+                            else -> targetRootVarRef.id.symb.text.compareTo(alias, ignoreCase) != 0
                         }
                     }
                 }

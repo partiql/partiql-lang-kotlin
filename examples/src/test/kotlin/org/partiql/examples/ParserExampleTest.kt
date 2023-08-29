@@ -23,9 +23,12 @@ Serialized AST
               project_expr
               (
                 vr
-                exampleField
                 (
-                  case_insensitive
+                  id
+                  exampleField
+                  (
+                    case_insensitive
+                  )
                 )
                 (
                   unqualified
@@ -41,9 +44,12 @@ Serialized AST
             scan
             (
               vr
-              exampleTable
               (
-                case_insensitive
+                id
+                exampleTable
+                (
+                  case_insensitive
+                )
               )
               (
                 unqualified
@@ -60,9 +66,12 @@ Serialized AST
             gt
             (
               vr
-              anotherField
               (
-                case_insensitive
+                id
+                anotherField
+                (
+                  case_insensitive
+                )
               )
               (
                 unqualified

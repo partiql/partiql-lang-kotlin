@@ -23,17 +23,17 @@ class PartiQLParserWindowTests : PartiQLParserTestBase() {
                             (defnid lag)
                             (over
                                 (window_partition_list
-                                    (vr b (case_insensitive) (unqualified))
+                                    (vr (id b (case_insensitive)) (unqualified))
                                 )
                                 (window_sort_spec_list
                                     (sort_spec
-                                        (vr c (case_insensitive) (unqualified))
+                                        (vr (id c (case_insensitive)) (unqualified))
                                         null
                                         null
                                     )
                                 )
                             )
-                            (vr a (case_insensitive) (unqualified))
+                            (vr (id a (case_insensitive)) (unqualified))
                         )
                         null
                     )
@@ -41,7 +41,7 @@ class PartiQLParserWindowTests : PartiQLParserTestBase() {
             )
             (from
                 (scan
-                    (vr d (case_insensitive) (unqualified))
+                    (vr (id d (case_insensitive)) (unqualified))
                     null
                     null
                     null)))
@@ -60,17 +60,17 @@ class PartiQLParserWindowTests : PartiQLParserTestBase() {
                             (defnid lead)
                             (over
                                 (window_partition_list
-                                    (vr b (case_insensitive) (unqualified))
+                                    (vr (id b (case_insensitive)) (unqualified))
                                 )
                                 (window_sort_spec_list
                                     (sort_spec
-                                        (vr c (case_insensitive) (unqualified))
+                                        (vr (id c (case_insensitive)) (unqualified))
                                         null
                                         null
                                     )
                                 )
                             )
-                            (vr a (case_insensitive) (unqualified))
+                            (vr (id a (case_insensitive)) (unqualified))
                         )
                         null
                     )
@@ -78,7 +78,7 @@ class PartiQLParserWindowTests : PartiQLParserTestBase() {
             )
             (from
                 (scan
-                    (vr d (case_insensitive) (unqualified))
+                    (vr (id d (case_insensitive)) (unqualified))
                     null
                     null
                     null)))
@@ -97,17 +97,17 @@ class PartiQLParserWindowTests : PartiQLParserTestBase() {
                             (defnid lag)
                             (over
                                 (window_partition_list
-                                    (vr b (case_insensitive) (unqualified))
+                                    (vr (id b (case_insensitive)) (unqualified))
                                 )
                                 (window_sort_spec_list
                                     (sort_spec
-                                        (vr c (case_insensitive) (unqualified))
+                                        (vr (id c (case_insensitive)) (unqualified))
                                         null
                                         null
                                     )
                                 )
                             )
-                            (vr a (case_insensitive) (unqualified))
+                            (vr (id a (case_insensitive)) (unqualified))
                             (lit 2)
                             (lit null)
                         )
@@ -117,7 +117,7 @@ class PartiQLParserWindowTests : PartiQLParserTestBase() {
             )
             (from
                 (scan
-                    (vr d (case_insensitive) (unqualified))
+                    (vr (id d (case_insensitive)) (unqualified))
                     null
                     null
                     null)))
@@ -136,17 +136,17 @@ class PartiQLParserWindowTests : PartiQLParserTestBase() {
                             (defnid lead)
                             (over
                                 (window_partition_list
-                                    (vr b (case_insensitive) (unqualified))
+                                    (vr (id b (case_insensitive)) (unqualified))
                                 )
                                 (window_sort_spec_list
                                     (sort_spec
-                                        (vr c (case_insensitive) (unqualified))
+                                        (vr (id c (case_insensitive)) (unqualified))
                                         null
                                         null
                                     )
                                 )
                             )
-                            (vr a (case_insensitive) (unqualified))
+                            (vr (id a (case_insensitive)) (unqualified))
                             (lit 2)
                         )
                         null
@@ -155,7 +155,7 @@ class PartiQLParserWindowTests : PartiQLParserTestBase() {
             )
             (from
                 (scan
-                    (vr d (case_insensitive) (unqualified))
+                    (vr (id d (case_insensitive)) (unqualified))
                     null
                     null
                     null)))
@@ -174,17 +174,17 @@ class PartiQLParserWindowTests : PartiQLParserTestBase() {
                             (defnid lag)
                             (over
                                 (window_partition_list
-                                    (vr b (case_insensitive) (unqualified))
+                                    (vr (id b (case_insensitive)) (unqualified))
                                 )
                                 (window_sort_spec_list
                                     (sort_spec
-                                        (vr c (case_insensitive) (unqualified))
+                                        (vr (id c (case_insensitive)) (unqualified))
                                         null
                                         null
                                     )
                                 )
                             )
-                            (vr a (case_insensitive) (unqualified))
+                            (vr (id a (case_insensitive)) (unqualified))
                             (lit 2)
                         )
                         null
@@ -193,7 +193,7 @@ class PartiQLParserWindowTests : PartiQLParserTestBase() {
             )
             (from
                 (scan
-                    (vr d (case_insensitive) (unqualified))
+                    (vr (id d (case_insensitive)) (unqualified))
                     null
                     null
                     null)))
@@ -212,17 +212,17 @@ class PartiQLParserWindowTests : PartiQLParserTestBase() {
                             (defnid lead)
                             (over
                                 (window_partition_list
-                                    (vr b (case_insensitive) (unqualified))
+                                    (vr (id b (case_insensitive)) (unqualified))
                                 )
                                 (window_sort_spec_list
                                     (sort_spec
-                                        (vr c (case_insensitive) (unqualified))
+                                        (vr (id c (case_insensitive)) (unqualified))
                                         null
                                         null
                                     )
                                 )
                             )
-                            (vr a (case_insensitive) (unqualified))
+                            (vr (id a (case_insensitive)) (unqualified))
                             (lit 2)
                             (lit null)
                         )
@@ -232,7 +232,7 @@ class PartiQLParserWindowTests : PartiQLParserTestBase() {
             )
             (from
                 (scan
-                    (vr d (case_insensitive) (unqualified))
+                    (vr (id d (case_insensitive)) (unqualified))
                     null
                     null
                     null)))

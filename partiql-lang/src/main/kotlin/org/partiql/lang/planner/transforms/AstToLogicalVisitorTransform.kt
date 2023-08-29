@@ -193,7 +193,7 @@ internal class AstToLogicalVisitorTransform(
             val aliasText = alias?.text ?: errAstNotNormalized("All FromSources should have aliases")
             structField(
                 lit(aliasText.toIonElement()),
-                vr(aliasText, caseInsensitive(), unqualified())
+                vr(id(aliasText, caseInsensitive()), unqualified())
             )
         }
         aggregateFunction(
@@ -436,7 +436,7 @@ internal class AstToLogicalVisitorTransform(
                                     // pass over the resolved logical (or later) plan that changes this to only
                                     // include the primary keys of the rows to be deleted.
                                     rows = bindingsToValues(
-                                        exp = vr(rowsSource.asDecl.name.text, caseSensitive(), unqualified()),
+                                        exp = vr(id(rowsSource.asDecl.name.text, caseSensitive()), unqualified()),
                                         query = rows,
                                     ),
                                     metas = node.metas
@@ -473,7 +473,7 @@ internal class AstToLogicalVisitorTransform(
     private fun PartiqlAst.Expr.toDmlTargetId(): PartiqlLogical.Id {
         val dmlTargetId = when (this) {
             is PartiqlAst.Expr.Vr -> PartiqlLogical.build {
-                id_(name, transformCaseSensitivity(case), metas)
+                id_(id.symb, transformCaseSensitivity(id.case), metas)
             }
             else -> {
                 problemHandler.handleProblem(
@@ -655,8 +655,7 @@ private class CallAggregationReplacer() : VisitorTransformBase() {
         aggregations.add(name to node)
         return PartiqlAst.build {
             vr(
-                name = name,
-                case = caseInsensitive(),
+                id = id(name, caseInsensitive()),
                 qualifier = unqualified(),
                 metas = node.metas
             )
@@ -737,8 +736,7 @@ private class CallWindowReplacer : VisitorTransformBase() {
         windowFunctions.add(name to node)
         return PartiqlAst.build {
             vr(
-                name = name,
-                case = caseInsensitive(),
+                id = id(name, caseInsensitive()),
                 qualifier = unqualified(),
                 metas = node.metas
             )

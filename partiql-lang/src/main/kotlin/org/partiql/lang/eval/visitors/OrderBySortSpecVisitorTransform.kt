@@ -70,9 +70,9 @@ internal class OrderBySortSpecVisitorTransform : VisitorTransformBase() {
     private class OrderByAliasSupport(val aliases: Map<String, PartiqlAst.Expr>) : VisitorTransformBase() {
         override fun transformExprVr(node: PartiqlAst.Expr.Vr): PartiqlAst.Expr {
             val transformedExpr = super.transformExprVr(node)
-            return when (node.case) {
-                is PartiqlAst.CaseSensitivity.CaseSensitive -> aliases[node.name.text] ?: transformedExpr
-                else -> aliases[node.name.text.lowercase()] ?: aliases[node.name.text.toUpperCase()] ?: transformedExpr
+            return when (node.id.case) {
+                is PartiqlAst.CaseSensitivity.CaseSensitive -> aliases[node.id.symb.text] ?: transformedExpr
+                else -> aliases[node.id.symb.text.lowercase()] ?: aliases[node.id.symb.text.toUpperCase()] ?: transformedExpr
             }
         }
     }

@@ -87,7 +87,7 @@ may then be further optimized by selecting better implementations of each operat
             (lit value::ion)
 
             // A variable reference
-            (vr name::symbol case::case_sensitivity qualifier::scope_qualifier)
+            (vr id::id qualifier::scope_qualifier)
 
             // A parameter, i.e. `?`
             (parameter index::int)
@@ -464,7 +464,7 @@ may then be further optimized by selecting better implementations of each operat
 
         // A data definition operation.
         (sum ddl_op
-            // `CREATE TABLE <symbol> ( <table_def> )?`
+            // `CREATE TABLE <id> ( <table_def> )?`
             (create_table table_name::id def::(? table_def))
 
             // `DROP TABLE <id>`
@@ -516,15 +516,6 @@ may then be further optimized by selecting better implementations of each operat
         // `id` is a "reference identifier" for referring to / looking up an entity
         // that is elsewhere bound to a 'defnid', a "definitional identifier".
         // `id` can be used for names that need to be looked up with a notion of case-sensitivity.
-
-        // For both `create_index` and `create_table`, there is no notion of case-sensitivity
-        // for table identifiers since they are *defining* new identifiers.  However, for `drop_index` and
-        // `drop_table` *do* have the notion of case sensitivity since they are referring to existing names.
-        // Identifiers with case-sensitivity is already modeled with the `vr` variant of `expr`,
-        // but there is no way to specify to PIG that we want to only allow a single variant of a sum as
-        // an element of a type.  (Even though in the Kotlin code each varaint is its own type.)  Hence, we
-        // define an `id` type above which can be used without opening up an element's domain to all of
-        // `expr`.
         (product id symb::symbol case::case_sensitivity)
 
         // A "definitional identifier" is for use in places that introduce, or bind, a name/identifier.

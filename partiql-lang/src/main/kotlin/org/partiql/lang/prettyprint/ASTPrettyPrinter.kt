@@ -294,8 +294,14 @@ class ASTPrettyPrinter {
         when (node) {
             is PartiqlAst.Expr.Vr -> RecursionTree(
                 astType = "Vr",
-                value = node.name.text + " " + node.case.toString() + " " + node.qualifier.toString(),
-                attrOfParent = attrOfParent
+                attrOfParent = attrOfParent,
+                children = listOf(
+                    toRecursionTree(node.id, "id"),
+                    RecursionTree(
+                        astType = node.qualifier.toString(),
+                        attrOfParent = "qualifier"
+                    )
+                )
             )
             is PartiqlAst.Expr.Missing -> RecursionTree(
                 astType = "missing",

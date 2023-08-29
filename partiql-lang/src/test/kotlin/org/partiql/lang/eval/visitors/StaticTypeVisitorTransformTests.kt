@@ -117,8 +117,7 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
                 PartiqlAst.build {
                     path(
                         vr(
-                            "x",
-                            partiqlAstCaseSensitive,
+                            id("x", partiqlAstCaseSensitive),
                             partiqlAstLocalsFirst,
                             StaticType.ANY.toMetas() + metas(1, 8)
                         ),
@@ -142,8 +141,7 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
                 PartiqlAst.build {
                     path(
                         vr(
-                            "x",
-                            partiqlAstCaseSensitive,
+                            id("x", partiqlAstCaseSensitive),
                             partiqlAstLocalsFirst,
                             StaticType.ANY.toMetas() + metas(1, 8)
                         ),
@@ -298,8 +296,7 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
                 PartiqlAst.build {
                     path(
                         vr(
-                            "b",
-                            partiqlAstCaseSensitive,
+                            id("b", partiqlAstCaseSensitive),
                             partiqlAstLocalsFirst,
                             StaticType.ANY.toMetas() + metas(1, 8)
                         ),
@@ -756,8 +753,7 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
                 PartiqlAst.build {
                     path(
                         vr(
-                            "d",
-                            partiqlAstCaseSensitive,
+                            id("d", partiqlAstCaseSensitive),
                             partiqlAstLocalsFirst,
                             StaticType.ANY.toMetas() + metas(1, 8)
                         ),
@@ -786,8 +782,7 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
                 PartiqlAst.build {
                     path(
                         vr(
-                            "d",
-                            partiqlAstCaseSensitive,
+                            id("d", partiqlAstCaseSensitive),
                             partiqlAstLocalsFirst,
                             StaticType.ANY.toMetas() + metas(1, 25)
                         ),
@@ -868,28 +863,28 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
                         when (node) {
                             is PartiqlAst.Expr.Vr -> {
                                 val sourceLocationMeta = node.metas[SourceLocationMeta.TAG] as SourceLocationMeta?
-                                    ?: error("VariableReference '${node.name.text}' had no SourceLocationMeta")
+                                    ?: error("VariableReference '${node.id.symb.text}' had no SourceLocationMeta")
 
                                 // Find a VarExpectation that matches the given VariableReference
                                 val matchingExpectation = remainingExpectations.firstOrNull {
-                                    it.id == node.name.text &&
+                                    it.id == node.id.symb.text &&
                                         it.line == sourceLocationMeta.lineNum &&
                                         it.charOffset == sourceLocationMeta.charOffset
-                                } ?: error("No expectation found for VariableReference ${node.name.text} at $sourceLocationMeta")
+                                } ?: error("No expectation found for VariableReference ${node.id.symb.text} at $sourceLocationMeta")
 
                                 remainingExpectations.remove(matchingExpectation)
 
                                 assertEquals(
-                                    "VariableReference '${node.name.text}' at $sourceLocationMeta scope qualifier must match expectation",
+                                    "VariableReference '${node.id.symb.text}' at $sourceLocationMeta scope qualifier must match expectation",
                                     matchingExpectation.scopeQualifier,
                                     node.qualifier
                                 )
 
                                 val staticTypeMeta = node.metas[StaticTypeMeta.TAG] as StaticTypeMeta?
-                                    ?: error("VariableReference '${node.name.text}' at $sourceLocationMeta had no StaticTypeMeta")
+                                    ?: error("VariableReference '${node.id.symb.text}' at $sourceLocationMeta had no StaticTypeMeta")
 
                                 assertEquals(
-                                    "VariableReference ${node.name.text} at $sourceLocationMeta static type must match expectation",
+                                    "VariableReference ${node.id.symb.text} at $sourceLocationMeta static type must match expectation",
                                     staticTypeMeta.type,
                                     matchingExpectation.staticType
                                 )
@@ -999,8 +994,7 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
     fun `ensure StaticTypeMeta can be serialized`() {
         val expectedExpr = PartiqlAst.build {
             vr(
-                name = "foo",
-                caseInsensitive(),
+                id = id("foo", caseInsensitive()),
                 unqualified(),
             ).withMeta("staticType", StaticTypeMeta(StaticType.DECIMAL))
         }
@@ -1015,8 +1009,7 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
     fun `ensure StaticTypeMeta can be serialized when StaticType is nested`() {
         val expectedExpr = PartiqlAst.build {
             vr(
-                name = "foo",
-                case = partiqlAstCaseInSensitive,
+                id = id("foo", partiqlAstCaseInSensitive),
                 qualifier = partiqlAstUnqualified,
             ).withMeta("staticType", StaticTypeMeta(ListType(StaticType.INT)))
         }

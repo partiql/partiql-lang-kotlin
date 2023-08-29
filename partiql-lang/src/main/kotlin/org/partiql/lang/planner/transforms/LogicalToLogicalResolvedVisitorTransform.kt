@@ -8,6 +8,7 @@ import org.partiql.lang.domains.PartiqlLogical
 import org.partiql.lang.domains.PartiqlLogicalResolved
 import org.partiql.lang.domains.PartiqlLogicalToPartiqlLogicalResolvedVisitorTransform
 import org.partiql.lang.domains.toBindingCase
+import org.partiql.lang.domains.toBindingName
 import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.builtins.DYNAMIC_LOOKUP_FUNCTION_NAME
 import org.partiql.lang.eval.physical.sourceLocationMetaOrUnknown
@@ -298,7 +299,7 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
      * variable.
      */
     override fun transformExprVr(node: PartiqlLogical.Expr.Vr): PartiqlLogicalResolved.Expr {
-        val bindingName = BindingName(node.name.text, node.case.toBindingCase())
+        val bindingName = node.id.toBindingName()
 
         val globalResolutionResult = if (
             this.currentVariableLookupStrategy == VariableLookupStrategy.GLOBALS_THEN_LOCALS &&
@@ -339,8 +340,8 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
                             Problem(
                                 (node.metas.sourceLocation ?: error("MetaContainer is missing SourceLocationMeta")).toProblemLocation(),
                                 PlanningProblemDetails.UndefinedVariable(
-                                    node.name.text,
-                                    node.case is PartiqlLogical.CaseSensitivity.CaseSensitive
+                                    node.id.symb.text,
+                                    node.id.case is PartiqlLogical.CaseSensitivity.CaseSensitive
                                 )
                             )
                         )
@@ -563,7 +564,7 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
     private fun PartiqlLogical.Expr.Vr.asDynamicLookupCallsite(
         search: List<PartiqlLogicalResolved.Expr>
     ): PartiqlLogicalResolved.Expr {
-        val caseSensitivityString = when (case) {
+        val caseSensitivityString = when (id.case) {
             is PartiqlLogical.CaseSensitivity.CaseInsensitive -> "case_insensitive"
             is PartiqlLogical.CaseSensitivity.CaseSensitive -> "case_sensitive"
         }
@@ -580,7 +581,7 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
             call(
                 funcName = defnid(DYNAMIC_LOOKUP_FUNCTION_NAME),
                 args = listOf(
-                    lit(name.toIonElement()),
+                    lit(id.symb.toIonElement()),
                     lit(ionSymbol(caseSensitivityString)),
                     lit(ionSymbol(variableLookupStrategy)),
                 ) + search,

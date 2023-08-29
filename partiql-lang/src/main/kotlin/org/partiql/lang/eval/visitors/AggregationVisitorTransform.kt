@@ -23,8 +23,7 @@ import org.partiql.lang.ast.passes.SemanticException
 import org.partiql.lang.ast.passes.SemanticProblemDetails
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.string
-import org.partiql.lang.domains.toBindingCase
-import org.partiql.lang.eval.BindingName
+import org.partiql.lang.domains.toBindingName
 import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.errorContextFrom
 import org.partiql.lang.eval.extractColumnAlias
@@ -153,11 +152,11 @@ internal class AggregationVisitorTransform(
         if (contextStack.last().groupKeys.isNotEmpty() || contextStack.last().groupAsAlias != null) {
             return PartiqlAst.build {
                 val projectionItems = contextStack.last().groupKeys.map { key ->
-                    projectExpr(vr(key.uniqueAlias, caseSensitive(), unqualified()), defnid(key.publicAlias))
+                    projectExpr(vr(id(key.uniqueAlias, caseSensitive()), unqualified()), defnid(key.publicAlias))
                 }.toMutableList()
 
                 contextStack.last().groupAsAlias?.let { alias ->
-                    val item = projectExpr(vr(alias, caseSensitive(), unqualified()), defnid(alias))
+                    val item = projectExpr(vr(id(alias, caseSensitive()), unqualified()), defnid(alias))
                     projectionItems.add(item)
                 }
                 projectList(projectionItems)
@@ -270,7 +269,7 @@ internal class AggregationVisitorTransform(
                     key.isPublicAliasUserDefined.not() && key.represents == node
                 }?.let { key ->
                     return PartiqlAst.build {
-                        vr(key.uniqueAlias, caseSensitive(), unqualified(), emptyMetaContainer())
+                        vr(id(key.uniqueAlias, caseSensitive()), unqualified(), emptyMetaContainer())
                     }
                 }
             }
@@ -291,10 +290,10 @@ internal class AggregationVisitorTransform(
             when (ctxStack.last().hasLogicalAggregate) {
                 false -> return node
                 true -> throw EvaluationException(
-                    "Variable not in GROUP BY or aggregation function: ${node.name.text}",
+                    "Variable not in GROUP BY or aggregation function: ${node.id.symb.text}",
                     ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
                     errorContextFrom(node.metas).also {
-                        it[Property.BINDING_NAME] = node.name.text
+                        it[Property.BINDING_NAME] = node.id.symb.text
                     },
                     internal = false
                 )
@@ -320,14 +319,14 @@ internal class AggregationVisitorTransform(
          * Gets replacement ID (the alias of the Group Key or Group Alias (ID))
          */
         private fun getReplacementInNormalContext(node: PartiqlAst.Expr.Vr, ctx: VisitorContext): PartiqlAst.Expr.Vr? {
-            val bindingName = BindingName(node.name.text, node.case.toBindingCase())
+            val bindingName = node.id.toBindingName()
             val replacementKey = ctx.groupKeys.firstOrNull { key ->
                 bindingName.isEquivalentTo(key.publicAlias)
-            }?.let { key -> PartiqlAst.build { vr(key.uniqueAlias, caseSensitive(), node.qualifier) } }
+            }?.let { key -> PartiqlAst.build { vr(id(key.uniqueAlias, caseSensitive()), node.qualifier) } }
 
             return when {
                 replacementKey != null -> replacementKey
-                bindingName.isEquivalentTo(ctx.groupAsAlias) -> PartiqlAst.build { vr(node.name.text, caseSensitive(), unqualified()) }
+                bindingName.isEquivalentTo(ctx.groupAsAlias) -> PartiqlAst.build { vr(id(node.id.symb.text, caseSensitive()), unqualified()) }
                 else -> null
             }
         }
@@ -336,14 +335,14 @@ internal class AggregationVisitorTransform(
          * Gets replacement Expr (what the Group Key represents, or the Group As Alias)
          */
         private fun getReplacementInAggregationContext(node: PartiqlAst.Expr.Vr, ctx: VisitorContext): PartiqlAst.Expr? {
-            val bindingName = BindingName(node.name.text, node.case.toBindingCase())
+            val bindingName = node.id.toBindingName()
             val replacementExpression = ctx.groupKeys.firstOrNull { key ->
                 bindingName.isEquivalentTo(key.publicAlias)
             }?.represents
 
             return when {
                 replacementExpression != null -> replacementExpression
-                bindingName.isEquivalentTo(ctx.groupAsAlias) -> PartiqlAst.build { vr(node.name.text, caseSensitive(), unqualified()) }
+                bindingName.isEquivalentTo(ctx.groupAsAlias) -> PartiqlAst.build { vr(id(node.id.symb.text, caseSensitive()), unqualified()) }
                 else -> null
             }
         }

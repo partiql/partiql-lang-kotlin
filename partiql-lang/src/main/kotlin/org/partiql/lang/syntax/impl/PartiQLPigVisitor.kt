@@ -223,7 +223,7 @@ internal class PartiQLPigVisitor(
 
     fun readIdentifierAsExprVr(ctx: PartiQLParser.IdentifierContext): PartiqlAst.Expr.Vr = PartiqlAst.build {
         val ident = visitIdentifier(ctx)
-        vr_(ident.symb, ident.case, unqualified(), ident.metas)
+        vr(ident, unqualified(), ident.metas)
     }
 
     fun readIdentifierAsDefnid(ctx: PartiQLParser.IdentifierContext): PartiqlAst.Defnid = PartiqlAst.build {
@@ -1166,7 +1166,7 @@ internal class PartiQLPigVisitor(
         PartiqlAst.build {
             val ident = visitIdentifier(ctx.ident)
             val qualifier = if (ctx.qualifier == null) unqualified() else localsFirst()
-            vr_(ident.symb, ident.case, qualifier, ident.metas)
+            vr(ident, qualifier, ident.metas)
         }
 
     override fun visitVariableKeyword(ctx: PartiQLParser.VariableKeywordContext): PartiqlAst.PartiqlAstNode =
@@ -1174,7 +1174,7 @@ internal class PartiQLPigVisitor(
             val keyword = ctx.nonReservedKeywords().start.text
             val metas = ctx.start.getSourceMetaContainer()
             val qualifier = ctx.qualifier?.let { localsFirst() } ?: unqualified()
-            vr(keyword, caseInsensitive(), qualifier, metas)
+            vr(id(keyword, caseInsensitive()), qualifier, metas)
         }
 
     override fun visitParameter(ctx: PartiQLParser.ParameterContext) = PartiqlAst.build {
@@ -1386,7 +1386,7 @@ internal class PartiQLPigVisitor(
             // or trim(<substring> FROM target), i.e., we treat what is recognized by parser as the modifier as <substring>
             ctx.mod != null && ctx.sub == null -> {
                 if (isTrimSpec) ctx.mod.toSymbol() to null
-                else null to vr(possibleModText!!, caseInsensitive(), unqualified(), ctx.mod.getSourceMetaContainer())
+                else null to vr(id(possibleModText!!, caseInsensitive()), unqualified(), ctx.mod.getSourceMetaContainer())
             }
 
             ctx.mod == null && ctx.sub != null -> {
@@ -1781,7 +1781,7 @@ internal class PartiQLPigVisitor(
         }
 
     private fun PartiqlAst.Expr.getStringValue(token: Token? = null): String = when (this) {
-        is PartiqlAst.Expr.Vr -> this.name.text.lowercase()
+        is PartiqlAst.Expr.Vr -> this.id.symb.text.lowercase()
         is PartiqlAst.Expr.Lit -> {
             when (this.value) {
                 is SymbolElement -> this.value.symbolValue.lowercase()

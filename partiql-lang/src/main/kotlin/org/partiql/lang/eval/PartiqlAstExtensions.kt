@@ -19,7 +19,7 @@ import org.partiql.lang.domains.PartiqlAst
  */
 fun PartiqlAst.Expr.extractColumnAlias(idx: Int): String =
     when (this) {
-        is PartiqlAst.Expr.Vr -> this.name.text
+        is PartiqlAst.Expr.Vr -> this.id.symb.text
         is PartiqlAst.Expr.Path -> {
             this.extractColumnAlias(idx)
         }

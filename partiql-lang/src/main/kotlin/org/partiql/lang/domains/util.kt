@@ -10,14 +10,15 @@ import org.partiql.lang.ast.Meta
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.StaticTypeMeta
 import org.partiql.lang.eval.BindingCase
+import org.partiql.lang.eval.BindingName
 
 // TODO:  once https://github.com/partiql/partiql-ir-generator/issues/6 has been completed, we can delete this.
 fun PartiqlAst.Builder.vr(name: String) =
-    vr(name, caseInsensitive(), unqualified())
+    vr(id(name, caseInsensitive()), unqualified())
 
 // TODO:  once https://github.com/partiql/partiql-ir-generator/issues/6 has been completed, we can delete this.
 fun PartiqlLogical.Builder.vr(name: String) =
-    vr(name, caseInsensitive(), unqualified())
+    vr(id(name, caseInsensitive()), unqualified())
 
 // TODO:  once https://github.com/partiql/partiql-ir-generator/issues/6 has been completed, we can delete this.
 fun PartiqlLogical.Builder.pathExpr(exp: PartiqlLogical.Expr) =
@@ -83,6 +84,12 @@ fun PartiqlPhysical.CaseSensitivity.toBindingCase(): BindingCase = when (this) {
     is PartiqlPhysical.CaseSensitivity.CaseInsensitive -> BindingCase.INSENSITIVE
     is PartiqlPhysical.CaseSensitivity.CaseSensitive -> BindingCase.SENSITIVE
 }
+
+fun PartiqlAst.Id.toBindingName(): BindingName =
+    BindingName(this.symb.text, this.case.toBindingCase())
+
+fun PartiqlLogical.Id.toBindingName(): BindingName =
+    BindingName(this.symb.text, this.case.toBindingCase())
 
 fun PartiqlAst.Defnid.toIdent(): Ident =
     Ident.createAsIs(this.symb.text)

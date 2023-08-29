@@ -483,9 +483,9 @@ class QueryPrettyPrinter {
     }
 
     private fun writeAstNode(node: PartiqlAst.Expr.Vr, sb: StringBuilder) {
-        when (node.case) {
-            is PartiqlAst.CaseSensitivity.CaseSensitive -> sb.append("\"${node.name.text}\"")
-            is PartiqlAst.CaseSensitivity.CaseInsensitive -> sb.append(node.name.text)
+        when (node.id.case) {
+            is PartiqlAst.CaseSensitivity.CaseSensitive -> sb.append("\"${node.id.symb.text}\"")
+            is PartiqlAst.CaseSensitivity.CaseInsensitive -> sb.append(node.id.symb.text)
         }
     }
 

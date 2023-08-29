@@ -35,7 +35,7 @@ fun skipRedaction(node: PartiqlAst.Expr, safeFieldNames: Set<String>): Boolean {
     }
 
     return when (node) {
-        is PartiqlAst.Expr.Vr -> safeFieldNames.contains(node.name.text)
+        is PartiqlAst.Expr.Vr -> safeFieldNames.contains(node.id.symb.text)
         is PartiqlAst.Expr.Lit -> {
             when (node.value) {
                 is StringElement -> safeFieldNames.contains(node.value.stringValue)

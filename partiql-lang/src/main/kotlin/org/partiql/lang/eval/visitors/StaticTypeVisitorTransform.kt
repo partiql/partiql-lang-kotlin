@@ -16,7 +16,7 @@ import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.addSourceLocation
 import org.partiql.lang.domains.extractSourceLocation
 import org.partiql.lang.domains.string
-import org.partiql.lang.domains.toBindingCase
+import org.partiql.lang.domains.toBindingName
 import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.Bindings
@@ -147,8 +147,7 @@ class StaticTypeVisitorTransform(
 
             return PartiqlAst.build {
                 vr(
-                    sourceName,
-                    caseSensitive(),
+                    id(sourceName, caseSensitive()),
                     localsFirst(),
                     metas + metaContainerOf(StaticTypeMeta.TAG to StaticTypeMeta(sourceType.type))
                 )
@@ -157,18 +156,18 @@ class StaticTypeVisitorTransform(
 
         private fun PartiqlAst.Expr.Vr.toPathExpr(): PartiqlAst.PathStep.PathExpr =
             PartiqlAst.build {
-                pathExpr(index = lit(ion.newString(name.text).toIonElement(), this@toPathExpr.extractSourceLocation()), case = case, metas = metas)
+                pathExpr(index = lit(ion.newString(id.symb.text).toIonElement(), this@toPathExpr.extractSourceLocation()), case = id.case, metas = metas)
             }
 
-        private fun errUnboundName(name: String, case: PartiqlAst.CaseSensitivity, metas: MetaContainer): Nothing =
+        private fun errUnboundName(id: PartiqlAst.Id, metas: MetaContainer): Nothing =
             throw SemanticException(
-                "No such variable named '$name'",
-                when (case) {
+                "No such variable named '${id.symb.text}'",
+                when (id.case) {
                     is PartiqlAst.CaseSensitivity.CaseInsensitive -> ErrorCode.SEMANTIC_UNBOUND_BINDING
                     is PartiqlAst.CaseSensitivity.CaseSensitive -> ErrorCode.SEMANTIC_UNBOUND_QUOTED_BINDING
                 },
                 propertyValueMapOf(
-                    Property.BINDING_NAME to name
+                    Property.BINDING_NAME to id.symb.text
                 ).addSourceLocation(metas)
             )
 
@@ -265,7 +264,7 @@ class StaticTypeVisitorTransform(
          * [StaticTypeVisitorTransform] support what's happening here.
          */
         override fun transformExprVr(node: PartiqlAst.Expr.Vr): PartiqlAst.Expr {
-            val bindingName = BindingName(node.name.text, node.case.toBindingCase())
+            val bindingName = node.id.toBindingName()
 
             val found = findBind(bindingName, node.qualifier)
 
@@ -282,7 +281,7 @@ class StaticTypeVisitorTransform(
                     }
                     else -> {
                         // otherwise there is more than one from source so an undefined variable was referenced.
-                        errUnboundName(node.name.text, node.case, node.metas)
+                        errUnboundName(node.id, node.metas)
                     }
                 }
             }
@@ -310,8 +309,8 @@ class StaticTypeVisitorTransform(
             }
 
             return PartiqlAst.build {
-                vr_(
-                    node.name, node.case, newScopeQualifier,
+                vr(
+                    node.id, newScopeQualifier,
                     node.metas + metaContainerOf(StaticTypeMeta.TAG to StaticTypeMeta(found.type))
                 )
             }

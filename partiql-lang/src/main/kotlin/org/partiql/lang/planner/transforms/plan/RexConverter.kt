@@ -128,8 +128,8 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
 
     override fun walkExprVr(node: PartiqlAst.Expr.Vr, ctx: Ctx) = visit(node) {
         Plan.rexId(
-            name = node.name.text,
-            case = convertCase(node.case),
+            name = node.id.symb.text,
+            case = convertCase(node.id.case),
             qualifier = when (node.qualifier) {
                 is PartiqlAst.ScopeQualifier.LocalsFirst -> Rex.Id.Qualifier.LOCALS_FIRST
                 is PartiqlAst.ScopeQualifier.Unqualified -> Rex.Id.Qualifier.UNQUALIFIED

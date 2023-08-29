@@ -150,7 +150,7 @@ class AstToLogicalVisitorTransformTests {
             val from = when (fromSource) {
                 null -> {
                     scan(
-                        vr("bar", caseInsensitive(), unqualified()),
+                        vr(id("bar", caseInsensitive()), unqualified()),
                         asAlias = defnid("b")
                     )
                 }
@@ -217,7 +217,7 @@ class AstToLogicalVisitorTransformTests {
             val from = when (fromSource) {
                 null -> {
                     scan(
-                        vr("bar", caseInsensitive(), unqualified()),
+                        vr(id("bar", caseInsensitive()), unqualified()),
                         asAlias = defnid("b")
                     )
                 }
@@ -402,7 +402,7 @@ class AstToLogicalVisitorTransformTests {
                         ),
                         keys = listOf(
                             groupKey(
-                                vr("y", caseInsensitive(), unqualified()),
+                                vr(id("y", caseInsensitive()), unqualified()),
                                 asVar = varDecl("k")
                             )
                         )
@@ -423,7 +423,7 @@ class AstToLogicalVisitorTransformTests {
                         ),
                         keys = listOf(
                             groupKey(
-                                vr("y", caseInsensitive(), unqualified()),
+                                vr(id("y", caseInsensitive()), unqualified()),
                                 asVar = varDecl("k")
                             )
                         ),
@@ -477,7 +477,7 @@ class AstToLogicalVisitorTransformTests {
                         ),
                         keys = listOf(
                             groupKey(
-                                vr("y", caseInsensitive(), unqualified()),
+                                vr(id("y", caseInsensitive()), unqualified()),
                                 asVar = varDecl("k")
                             )
                         ),
@@ -523,7 +523,7 @@ class AstToLogicalVisitorTransformTests {
                         ),
                         keys = listOf(
                             groupKey(
-                                vr("c", caseInsensitive(), unqualified()),
+                                vr(id("c", caseInsensitive()), unqualified()),
                                 asVar = varDecl("k")
                             )
                         ),
@@ -531,7 +531,7 @@ class AstToLogicalVisitorTransformTests {
                             aggregateFunction(
                                 all(),
                                 "max",
-                                vr("a", caseInsensitive(), unqualified()),
+                                vr(id("a", caseInsensitive()), unqualified()),
                                 varDecl("\$__partiql_aggregation_0")
                             )
                         )
@@ -543,7 +543,7 @@ class AstToLogicalVisitorTransformTests {
                         ),
                         keys = listOf(
                             groupKey(
-                                vr("y", caseInsensitive(), unqualified()),
+                                vr(id("y", caseInsensitive()), unqualified()),
                                 asVar = varDecl("k")
                             )
                         ),
@@ -551,7 +551,7 @@ class AstToLogicalVisitorTransformTests {
                             aggregateFunction(
                                 all(),
                                 "max",
-                                vr("a", caseInsensitive(), unqualified()),
+                                vr(id("a", caseInsensitive()), unqualified()),
                                 varDecl("\$__partiql_aggregation_0")
                             )
                         ),
@@ -574,7 +574,7 @@ class AstToLogicalVisitorTransformTests {
                         ),
                         keys = listOf(
                             groupKey(
-                                vr("y", caseInsensitive(), unqualified()),
+                                vr(id("y", caseInsensitive()), unqualified()),
                                 asVar = varDecl("k")
                             )
                         ),
@@ -746,7 +746,7 @@ class AstToLogicalVisitorTransformTests {
                         id("foo", caseInsensitive()),
                         dmlInsert(varDecl("foo")),
                         bindingsToValues(
-                            struct(structFields(vr("x", caseInsensitive(), unqualified()))),
+                            struct(structFields(vr(id("x", caseInsensitive()), unqualified()))),
                             scan(lit(ionInt(1)), varDecl("x"))
                         )
                     )
@@ -759,7 +759,7 @@ class AstToLogicalVisitorTransformTests {
                         id("foo", caseInsensitive()),
                         dmlReplace(varDecl("foo")),
                         bindingsToValues(
-                            struct(structFields(vr("x", caseInsensitive(), unqualified()))),
+                            struct(structFields(vr(id("x", caseInsensitive()), unqualified()))),
                             scan(lit(ionInt(1)), varDecl("x"))
                         )
                     )
@@ -775,7 +775,7 @@ class AstToLogicalVisitorTransformTests {
                             condition = gt(
                                 listOf(
                                     path(
-                                        vr("foo", caseInsensitive(), unqualified()),
+                                        vr(id("foo", caseInsensitive()), unqualified()),
                                         listOf(pathExpr(lit(ionString("id")), caseInsensitive()))
                                     ),
                                     lit(ionInt(2))
@@ -784,7 +784,7 @@ class AstToLogicalVisitorTransformTests {
                             rowAlias = varDecl(AstToLogicalVisitorTransform.EXCLUDED)
                         ),
                         bindingsToValues(
-                            struct(structFields(vr("x", caseInsensitive(), unqualified()))),
+                            struct(structFields(vr(id("x", caseInsensitive()), unqualified()))),
                             scan(lit(ionInt(1)), varDecl("x"))
                         )
                     )
@@ -818,7 +818,7 @@ class AstToLogicalVisitorTransformTests {
                                 condition = gt(
                                     listOf(
                                         path(
-                                            vr("f", caseInsensitive(), unqualified()),
+                                            vr(id("f", caseInsensitive()), unqualified()),
                                             listOf(pathExpr(lit(ionString("id")), caseInsensitive()))
                                         ),
                                         lit(ionInt(2))
@@ -849,7 +849,7 @@ class AstToLogicalVisitorTransformTests {
                                 condition = gt(
                                     listOf(
                                         path(
-                                            vr("f", caseInsensitive(), unqualified()),
+                                            vr(id("f", caseInsensitive()), unqualified()),
                                             listOf(pathExpr(lit(ionString("id")), caseInsensitive()))
                                         ),
                                         lit(ionInt(2))
@@ -883,7 +883,7 @@ class AstToLogicalVisitorTransformTests {
                                 condition = gt(
                                     listOf(
                                         path(
-                                            vr("excluded", caseInsensitive(), unqualified()),
+                                            vr(id("excluded", caseInsensitive()), unqualified()),
                                             listOf(pathExpr(lit(ionString("id")), caseInsensitive()))
                                         ),
                                         lit(ionInt(2))
@@ -908,7 +908,7 @@ class AstToLogicalVisitorTransformTests {
                         id("foo", caseInsensitive()),
                         dmlUpdate(varDecl("foo")),
                         bindingsToValues(
-                            struct(structFields(vr("x", caseInsensitive(), unqualified()))),
+                            struct(structFields(vr(id("x", caseInsensitive()), unqualified()))),
                             scan(lit(ionInt(1)), varDecl("x"))
                         )
                     )
@@ -942,7 +942,7 @@ class AstToLogicalVisitorTransformTests {
                                 condition = gt(
                                     listOf(
                                         path(
-                                            vr("f", caseInsensitive(), unqualified()),
+                                            vr(id("f", caseInsensitive()), unqualified()),
                                             listOf(pathExpr(lit(ionString("id")), caseInsensitive()))
                                         ),
                                         lit(ionInt(2))
@@ -972,7 +972,7 @@ class AstToLogicalVisitorTransformTests {
                                 condition = gt(
                                     listOf(
                                         path(
-                                            vr("excluded", caseInsensitive(), unqualified()),
+                                            vr(id("excluded", caseInsensitive()), unqualified()),
                                             listOf(pathExpr(lit(ionString("id")), caseInsensitive()))
                                         ),
                                         lit(ionInt(2))
@@ -1015,7 +1015,7 @@ class AstToLogicalVisitorTransformTests {
                             id("foo", caseInsensitive()),
                             dmlUpdate(varDecl("f")),
                             bindingsToValues(
-                                struct(structFields(vr("x", caseInsensitive(), unqualified()))),
+                                struct(structFields(vr(id("x", caseInsensitive()), unqualified()))),
                                 scan(lit(ionInt(1)), varDecl("x"))
                             )
                         )
@@ -1029,8 +1029,8 @@ class AstToLogicalVisitorTransformTests {
                         id("y", caseInsensitive()),
                         dmlDelete(),
                         bindingsToValues(
-                            vr("y", caseSensitive(), unqualified()),
-                            scan(vr("y", caseInsensitive(), unqualified()), varDecl("y"))
+                            vr(id("y", caseSensitive()), unqualified()),
+                            scan(vr(id("y", caseInsensitive()), unqualified()), varDecl("y"))
                         )
                     )
                 }
@@ -1042,11 +1042,11 @@ class AstToLogicalVisitorTransformTests {
                         id("y", caseInsensitive()),
                         dmlDelete(),
                         bindingsToValues(
-                            vr("y", caseSensitive(), unqualified()),
+                            vr(id("y", caseSensitive()), unqualified()),
                             // this logical plan is same as previous but includes this filter
                             filter(
                                 eq(lit(ionInt(1)), lit(ionInt(1))),
-                                scan(vr("y", caseInsensitive(), unqualified()), varDecl("y"))
+                                scan(vr(id("y", caseInsensitive()), unqualified()), varDecl("y"))
                             )
                         )
                     )

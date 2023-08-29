@@ -38,6 +38,7 @@ import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.domains.staticType
 import org.partiql.lang.domains.string
 import org.partiql.lang.domains.toBindingCase
+import org.partiql.lang.domains.toBindingName
 import org.partiql.lang.domains.toIdent
 import org.partiql.lang.eval.binding.Alias
 import org.partiql.lang.eval.binding.localsBinder
@@ -1103,7 +1104,7 @@ internal class EvaluatingCompiler(
 
         return when (uniqueNameMeta) {
             null -> {
-                val bindingName = BindingName(expr.name.text, expr.case.toBindingCase())
+                val bindingName = expr.id.toBindingName()
                 val evalVariableReference = when (compileOptions.undefinedVariable) {
                     UndefinedVariableBehavior.ERROR ->
                         thunkFactory.thunkEnv(metas) { env ->
@@ -1119,7 +1120,7 @@ internal class EvaluatingCompiler(
                                             internal = false
                                         )
                                     } else {
-                                        val (errorCode, hint) = when (expr.case) {
+                                        val (errorCode, hint) = when (expr.id.case) {
                                             is PartiqlAst.CaseSensitivity.CaseSensitive ->
                                                 Pair(
                                                     ErrorCode.EVALUATOR_QUOTED_BINDING_DOES_NOT_EXIST,

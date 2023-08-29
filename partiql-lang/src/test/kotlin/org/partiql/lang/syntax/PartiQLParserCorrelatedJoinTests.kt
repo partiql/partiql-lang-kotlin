@@ -9,7 +9,7 @@ class PartiQLParserCorrelatedJoinTests : PartiQLParserTestBase() {
     override val targets: Array<ParserTarget> = arrayOf(ParserTarget.DEFAULT, ParserTarget.EXPERIMENTAL)
 
     private fun PartiqlAst.Builder.callFWithS() =
-        call(defnid("f"), vr("s", caseInsensitive(), unqualified()))
+        call(defnid("f"), vr(id("s", caseInsensitive()), unqualified()))
 
     private fun PartiqlAst.Builder.selectWithCorrelatedJoin(
         joinType: PartiqlAst.JoinType,
@@ -24,7 +24,7 @@ class PartiQLParserCorrelatedJoinTests : PartiQLParserTestBase() {
             from = join(
                 joinType,
                 scan(vr("stuff"), defnid("s")),
-                scan(vr("s", caseInsensitive(), localsFirst())),
+                scan(vr(id("s", caseInsensitive()), localsFirst())),
                 joinPredicate
             ),
             where = wherePredicate

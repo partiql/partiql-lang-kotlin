@@ -26,6 +26,7 @@ import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.domains.staticType
 import org.partiql.lang.domains.string
 import org.partiql.lang.domains.toBindingCase
+import org.partiql.lang.domains.toBindingName
 import org.partiql.lang.errors.ProblemThrower
 import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.BindingName
@@ -267,10 +268,10 @@ internal class StaticTypeInferenceVisitorTransform(
         }
 
         override fun transformExprVr(node: PartiqlAst.Expr.Vr): PartiqlAst.Expr {
-            val bindingName = BindingName(node.name.text, node.case.toBindingCase())
+            val bindingName = node.id.toBindingName()
 
             val foundType = findBind(bindingName, node.qualifier) ?: error(
-                "No such variable named ${node.name.text}. " +
+                "No such variable named ${node.id.symb.text}. " +
                     "This wouldn't be the case if StaticTypeVisitorTransform was executed first."
             )
 
