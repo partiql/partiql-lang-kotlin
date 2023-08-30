@@ -21,7 +21,6 @@ import org.partiql.spi.connector.ConnectorSession
 import org.partiql.spi.connector.Constants
 import org.partiql.types.StaticType
 import org.partiql.types.StructType
-import org.partiql.types.TupleConstraint
 import org.partiql.types.TypingMode
 import org.partiql.types.function.FunctionParameter
 import org.partiql.types.function.FunctionSignature
@@ -37,7 +36,6 @@ internal typealias Handle<T> = Pair<String, T>
  *
  * TODO TypeEnv should be a stack of locals; also the strategy has been kept here because it's easier to
  *  pass through the traversal like this, but is conceptually odd to associate with the TypeEnv.
- *
  * @property schema
  * @property strategy
  */
@@ -98,10 +96,13 @@ internal sealed interface ResolvedVar {
      *
      * @property type       Resolved StaticType
      * @property ordinal    Index offset in [TypeEnv]
+     * @property tail       Remaining part of path (if any)
      */
     class Local(
         override val type: StaticType,
         override val ordinal: Int,
+        val rootType: StaticType,
+        val tail: List<BindingName>,
     ) : ResolvedVar
 
     /**
@@ -321,52 +322,64 @@ internal class Env(
     }
 
     /**
-     * Logic is as follows:
-     * 1. Look through [locals] to find the root of the [path]. If found, return. Else, go to step 2.
-     * 2. Look through [locals] and grab all [StructType]s. Then, grab the fields of each Struct corresponding to the
-     *  root of [path].
-     *  - If the Struct if ordered, grab the first matching field.
-     *  - If unordered and if multiple fields found, merge the output type. If no structs contain a matching field, return null.
+     * Check locals, else search structs.
      */
     private fun resolveLocalBind(path: BindingPath, locals: List<Rel.Binding>): ResolvedVar? {
         if (path.steps.isEmpty()) {
             return null
         }
-        val root = path.steps[0]
-        locals.forEachIndexed { i, binding ->
+
+        // 1. Check locals for root
+        locals.forEachIndexed { ordinal, binding ->
+            val root = path.steps[0]
+            val tail = path.steps.drop(1)
             if (root.isEquivalentTo(binding.name)) {
-                return ResolvedVar.Local(binding.type, i)
+                return ResolvedVar.Local(binding.type, ordinal, binding.type, tail)
             }
         }
-        return null
-        // 2.
-        // locals.map { it.type }.filterIsInstance<StructType>().mapNotNull { struct ->
-        //     inferStructLookup(struct, path.steps[0])
-        // }.let { potentialTypes ->
-        //     when (potentialTypes.size) {
-        //         1 -> potentialTypes.first()
-        //         else -> null
-        //     }
-        // }
-        // return ResolvedType(root)
+
+        // 2. Check if this variable is referencing a struct field, carrying ordinals
+        val matches = mutableListOf<ResolvedVar.Local>()
+        for (ordinal in locals.indices) {
+            val rootType = locals[ordinal].type
+            if (rootType is StructType) {
+                val varType = inferStructLookup(rootType, path)
+                if (varType != null) {
+                    // we found this path within a struct!
+                    val match = ResolvedVar.Local(varType, ordinal, rootType, path.steps)
+                    matches.add(match)
+                }
+            }
+        }
+
+        // 0 -> no match
+        // 1 -> resolved
+        // N -> ambiguous
+        return when (matches.size) {
+            0 -> null
+            1 -> matches.single()
+            else -> null // TODO emit ambiguous error
+        }
     }
 
     /**
-     * Searches for the [key] in the [struct]. If not found, return null
-     *
-     * TODO move into typer
+     * Searches for the path within the given struct, returning null if not found.
      */
-    internal fun inferStructLookup(struct: StructType, key: BindingName): StaticType? =
-        when (struct.constraints.contains(TupleConstraint.Ordered)) {
-            true -> struct.fields.firstOrNull { entry ->
-                key.isEquivalentTo(entry.key)
-            }?.value
-            false -> struct.fields.mapNotNull { entry ->
-                entry.value.takeIf { key.isEquivalentTo(entry.key) }
-            }.let { valueTypes ->
-                StaticType.unionOf(valueTypes.toSet()).flatten().takeIf { valueTypes.isNotEmpty() }
+    internal fun inferStructLookup(struct: StructType, path: BindingPath): StaticType? {
+        var curr: StaticType = struct
+        for (step in path.steps) {
+            if (curr !is StructType) {
+                // cannot navigate into non-tuple
+                return null
             }
+            // 1. Assume ORDERED for now
+            // 2. Assume our spec is implying all struct navigation is case-sensitive
+            val field = curr.fields.firstOrNull { it.key == step.name } ?: return null
+            curr = field.value
         }
+        // Lookup final field
+        return curr
+    }
 
     /**
      * Logic for determining how many BindingNames were “matched” by the ConnectorMetadata

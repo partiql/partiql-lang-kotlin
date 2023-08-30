@@ -32,6 +32,7 @@ import org.partiql.types.TupleConstraint
 import org.partiql.types.function.FunctionSignature
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.TextValue
+import org.partiql.value.stringValue
 
 /**
  * Rewrites an untyped algebraic translation of the query to be both typed and have resolved variables.
@@ -247,6 +248,8 @@ internal class PlanTyper(
         override fun visitRexOpVarUnresolved(node: Rex.Op.Var.Unresolved, ctx: StaticType?): Rex = rewrite {
             val path = node.identifier.toBindingPath()
             val resolvedVar = env.resolve(path, locals, node.scope)
+
+            // TODO error ??
             if (resolvedVar == null) {
                 handleUndefinedVariable(path.steps.last())
                 return rex(StaticType.ANY, node)
@@ -254,7 +257,7 @@ internal class PlanTyper(
             val type = resolvedVar.type
             val op = when (resolvedVar) {
                 is ResolvedVar.Global -> rexOpGlobal(resolvedVar.ordinal)
-                is ResolvedVar.Local -> rexOpVarResolved(resolvedVar.ordinal)
+                is ResolvedVar.Local -> resolvedLocalPath(resolvedVar)
             }
             rex(type, op)
         }
@@ -526,7 +529,9 @@ internal class PlanTyper(
             else -> StaticType.MISSING
         }
 
-        // TODO remove env
+        /**
+         * TODO tuple navigation isn't correct
+         */
         @OptIn(PartiQLValueExperimental::class)
         private fun inferStructLookupType(struct: StructType, step: Rex.Op.Path.Step.Index): StaticType =
             when (val key = step.key.op) {
@@ -535,7 +540,7 @@ internal class PlanTyper(
                         val name = (key.value as TextValue<*>).string!!
                         val case = BindingCase.SENSITIVE
                         val binding = BindingName(name, case)
-                        env.inferStructLookup(struct, binding)
+                        inferStructLookup(struct, binding)
                             ?: when (struct.contentClosed) {
                                 true -> StaticType.MISSING
                                 false -> StaticType.ANY
@@ -549,6 +554,20 @@ internal class PlanTyper(
                     StaticType.MISSING
                 }
             }
+
+        private fun inferStructLookup(
+            struct: StructType,
+            key: BindingName,
+        ): StaticType? = when (struct.constraints.contains(TupleConstraint.Ordered)) {
+            true -> struct.fields.firstOrNull { entry ->
+                key.isEquivalentTo(entry.key)
+            }?.value
+            false -> struct.fields.mapNotNull { entry ->
+                entry.value.takeIf { key.isEquivalentTo(entry.key) }
+            }.let { valueTypes ->
+                StaticType.unionOf(valueTypes.toSet()).flatten().takeIf { valueTypes.isNotEmpty() }
+            }
+        }
     }
 
     // HELPERS
@@ -665,6 +684,19 @@ internal class PlanTyper(
         if (type.flatten().allTypes.any { variant -> variant is IntType }.not()) {
             handleUnexpectedType(type, setOf(StaticType.INT))
         }
+    }
+
+    /**
+     * Constructs a Rex.Op.Path from a resolved local
+     */
+    private fun Plan.resolvedLocalPath(local: ResolvedVar.Local): Rex.Op.Path {
+        val root = rex(local.rootType, rexOpVarResolved(local.ordinal))
+        val steps = local.tail.map {
+            // Symbol navigation is different than string navigation x.y <=> x."y" AND x.'y' <=> x['y']
+            val key = rex(StaticType.STRING, rexOpLit(stringValue(it.name)))
+            rexOpPathStepIndex(key)
+        }
+        return rexOpPath(root, steps)
     }
 
     // ERRORS

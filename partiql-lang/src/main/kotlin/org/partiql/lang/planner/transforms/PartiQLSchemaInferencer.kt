@@ -30,6 +30,7 @@ import org.partiql.parser.PartiQLParserBuilder
 import org.partiql.plan.PartiQLPlan
 import org.partiql.plan.Statement
 import org.partiql.planner.PartiQLPlanner
+import org.partiql.planner.PartiQLPlannerBuilder
 import org.partiql.spi.Plugin
 import org.partiql.types.StaticType
 import org.partiql.types.TypingMode
@@ -135,7 +136,7 @@ public object PartiQLSchemaInferencer {
 
     internal fun inferInternal(query: String, ctx: Context): Pair<PartiQLPlan, StaticType> {
         val parser = PartiQLParserBuilder.standard().build()
-        val planner = PartiQLPlanner.builder()
+        val planner = PartiQLPlannerBuilder()
             .plugins(ctx.plugins)
             .mode(TypingMode.PERMISSIVE)
             .build()

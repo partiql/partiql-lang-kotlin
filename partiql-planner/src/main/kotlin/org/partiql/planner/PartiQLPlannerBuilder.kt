@@ -4,9 +4,9 @@ import org.partiql.spi.Plugin
 import org.partiql.types.TypingMode
 
 /**
- * PartiQLPlannerBuilder — instantiate via PartiQLPlanner.builder()
+ * PartiQLPlannerBuilder
  */
-class PartiQLPlannerBuilder internal constructor() {
+class PartiQLPlannerBuilder {
 
     private var plugins: List<Plugin> = emptyList()
     private var passes: List<PartiQLPlannerPass> = emptyList()

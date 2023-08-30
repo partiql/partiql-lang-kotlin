@@ -50,10 +50,4 @@ public interface PartiQLPlanner {
         public val catalogConfig: Map<String, StructElement> = emptyMap(),
         public val instant: Instant = Instant.now(),
     )
-
-    companion object {
-
-        @JvmStatic
-        fun builder(): PartiQLPlannerBuilder = PartiQLPlannerBuilder()
-    }
 }
