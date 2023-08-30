@@ -37,6 +37,7 @@ public class TpCatalog private constructor(private val root: TpTree.D) {
         }
         // All steps matched and we're at a leaf
         if (match.size == path.steps.size && curr is TpTree.T) {
+            match.add(curr.name)
             return TpObject(match, curr.type)
         }
         return null
@@ -63,7 +64,7 @@ public class TpCatalog private constructor(private val root: TpTree.D) {
             val text = readText()
             val ion = loadSingleElement(text)
             val type = ion.toStaticType()
-            return TpTree.T(name, type)
+            return TpTree.T(nameWithoutExtension, type)
         }
     }
 }

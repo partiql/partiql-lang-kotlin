@@ -1,11 +1,24 @@
 package org.partiql.transpiler
 
 import org.partiql.plan.PartiQLPlan
+import org.partiql.types.StaticType
+
+/**
+ * Result of retargeting.
+ *
+ * @param T
+ * @property schema
+ * @property value
+ */
+public class TpOutput<T>(
+    public val schema: StaticType,
+    public val value: T,
+)
 
 /**
  * A target determines the behavior of each stage of the transpilation.
  */
-public interface PartiQLTranspilerTarget<T> {
+public interface TpTarget<T> {
 
     /**
      * Target identifier, useful for debugging information.
@@ -24,5 +37,5 @@ public interface PartiQLTranspilerTarget<T> {
      * @param onProblem
      * @return
      */
-    public fun retarget(plan: PartiQLPlan, onProblem: ProblemCallback): T
+    public fun retarget(plan: PartiQLPlan, onProblem: ProblemCallback): TpOutput<T>
 }

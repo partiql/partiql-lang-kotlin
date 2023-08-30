@@ -19,7 +19,7 @@ public class PartiQLTranspiler(
     private val planner = PartiQLPlannerBuilder().plugins(plugins).build()
 
     @Throws(TranspilerException::class)
-    public fun <T> transpile(source: String, target: PartiQLTranspilerTarget<T>, session: PartiQLPlanner.Session): Result<T> {
+    public fun <T> transpile(source: String, target: TpTarget<T>, session: PartiQLPlanner.Session): Result<T> {
         try {
             val collector = ProblemCollector()
             // --->
@@ -54,7 +54,7 @@ public class PartiQLTranspiler(
         val source: String,
         val ast: Statement,
         val plan: PartiQLPlan,
-        val output: T,
+        val output: TpOutput<T>,
         val problems: List<TranspilerProblem>,
     )
 

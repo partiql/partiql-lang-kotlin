@@ -9,8 +9,10 @@ import org.junit.jupiter.api.DynamicNode
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.DynamicTest.dynamicTest
 import org.junit.jupiter.api.TestFactory
+import org.junit.jupiter.api.fail
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.transpiler.PartiQLTranspiler
+import org.partiql.transpiler.TranspilerProblem
 import org.partiql.transpiler.targets.PartiQLTarget
 import org.partiql.transpiler.test.plugin.TpPlugin
 import java.util.stream.Stream
@@ -60,7 +62,13 @@ class TranspilerTestJunit {
         ): DynamicTest {
             return dynamicTest(displayName) {
                 val result = transpiler.transpile(test.statement, PartiQLTarget, session)
-                log.debug("RESULT: ${result.output}")
+                log.debug("RESULT: ${result.output.value}")
+                for (problem in result.problems) {
+                    if (problem.level == TranspilerProblem.Level.ERROR) {
+                        fail { result.problems.joinToString() }
+                    }
+                }
+                log.debug("SCHEMA: ${result.output.schema}")
             }
         }
     }
