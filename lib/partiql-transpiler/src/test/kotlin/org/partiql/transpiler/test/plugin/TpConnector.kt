@@ -52,17 +52,13 @@ class TpConnector(
     private val config: StructElement,
 ) : Connector {
 
-    companion object {
-        const val CONNECTOR_NAME = "tp"
-    }
-
     private val metadata = Metadata(catalogRoot)
 
     override fun getMetadata(session: ConnectorSession): ConnectorMetadata = metadata
 
     class Factory(private val root: Path) : Connector.Factory {
 
-        override fun getName(): String = CONNECTOR_NAME
+        override fun getName(): String = "tp"
 
         override fun create(catalogName: String, config: StructElement): Connector {
             val catalogRoot = root.resolve(catalogName).toAbsolutePath()

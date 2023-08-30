@@ -249,6 +249,7 @@ internal class PlanTyper(
             val resolvedVar = env.resolve(path, locals, node.scope)
             if (resolvedVar == null) {
                 handleUndefinedVariable(path.steps.last())
+                // TODO error!!
                 return rex(StaticType.ANY, node)
             }
             val type = resolvedVar.type

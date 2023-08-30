@@ -1,10 +1,9 @@
 suite::{
   name: "suite_00",
   session: {
-    catalog: "catalog",   // session catalog
+    catalog: "default",   // session catalog
     path: ["tpc_ds"],     // session path
     vars: {},             // session variables
-    config: {}            // catalog configuration
   },
   tests: {
     '0000': {

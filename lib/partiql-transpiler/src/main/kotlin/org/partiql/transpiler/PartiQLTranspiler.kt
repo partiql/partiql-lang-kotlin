@@ -1,6 +1,7 @@
 package org.partiql.transpiler
 
 import org.partiql.ast.Statement
+import org.partiql.errors.ProblemSeverity
 import org.partiql.parser.PartiQLParserBuilder
 import org.partiql.plan.PartiQLPlan
 import org.partiql.planner.PartiQLPlanner
@@ -41,7 +42,12 @@ public class PartiQLTranspiler(
     }
 
     private fun plan(statement: Statement, session: PartiQLPlanner.Session): PartiQLPlan {
-        return planner.plan(statement, session).plan
+        val result = planner.plan(statement, session)
+        val errors = result.problems.filter { it.details.severity == ProblemSeverity.ERROR }
+        if (errors.isNotEmpty()) {
+            throw RuntimeException("Planner encountered errors: ${errors.joinToString()}")
+        }
+        return result.plan
     }
 
     public data class Result<T>(
