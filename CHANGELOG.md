@@ -48,6 +48,12 @@ Thank you to all who have contributed!
 - Adds default `equals` and `hashCode` methods for each generated abstract class of Sprout. This affects the generated
 classes in `:partiql-ast` and `:partiql-plan`.
 - Adds README to `partiql-types` package.
+- Initializes PartiQL's Code Coverage library
+  - Adds support for BRANCH and BRANCH-CONDITION Coverage
+  - Adds integration with JUnit5 for ease-of-use
+  - For more information, see the "Writing PartiQL Unit Tests" article in our GitHub Wiki.
+- Adds new constructor parameters to all variants of `PartiQLResult`.
+- Adds two new methods to `PartiQLResult`: `getCoverageData` and `getCoverageStructure`.
 
 ### Changed
 - **Breaking**: all product types defined by the internal Sprout tool no longer generate interfaces. They are now abstract
@@ -103,6 +109,7 @@ Thank you to all who have contributed!
 - @howero
 - @yuxtang-amazon
 - @yliuuuu
+- @johqunn
 - @<your-username>
 
 ## [0.12.0] - 2023-06-14
