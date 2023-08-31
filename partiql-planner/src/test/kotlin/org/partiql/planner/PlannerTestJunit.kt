@@ -15,7 +15,6 @@ import org.partiql.errors.ProblemSeverity
 import org.partiql.parser.PartiQLParserBuilder
 import org.partiql.plan.Statement
 import org.partiql.planner.test.PlannerTest
-import org.partiql.planner.test.PlannerTestLog
 import org.partiql.planner.test.PlannerTestProvider
 import org.partiql.planner.test.PlannerTestSuite
 import org.partiql.planner.test.plugin.FsPlugin
@@ -33,8 +32,6 @@ class PlannerTestJunit {
     }
 
     companion object {
-
-        private val log = PlannerTestLog(System.out)
 
         private val parser = PartiQLParserBuilder.standard().build()
 
