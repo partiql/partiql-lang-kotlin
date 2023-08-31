@@ -42,7 +42,7 @@ public abstract class SqlCalls {
     /**
      * List of special form rules. See [org.partiql.planner.Header] for the derivations.
      */
-    public val rules: Map<String, SqlCallFn> = mapOf(
+    public open val rules: Map<String, SqlCallFn> = mapOf(
         "not" to ::notFn,
         "pos" to ::posFn,
         "neg" to ::negFn,

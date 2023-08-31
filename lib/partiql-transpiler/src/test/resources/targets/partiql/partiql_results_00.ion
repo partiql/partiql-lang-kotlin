@@ -1,6 +1,6 @@
 target::{
   name: "partiql",
-  suite: "suite_00",
+  suite: "transpiler_suite_00",
   tests: {
     '0000': {
       statement: '''
@@ -15,6 +15,16 @@ target::{
       statement: '''
         SELECT store_sales.ss_wholesale_cost + CAST(10 AS DOUBLE PRECISION) < store_sales.ss_list_price AS x
         FROM store_sales AS store_sales
+      ''',
+    },
+    '0002': {
+      statement: '''
+        SELECT
+          store_sales.ss_ticket_number AS ss_ticket_number,
+          store_sales.ss_quantity AS ss_quantity,
+          store_sales.ss_sold_date_sk AS ss_sold_date_sk
+        FROM store_sales AS store_sales
+        WHERE store_sales.ss_sold_date_sk > DATE_ADD(DAY, -30, UTCNOW())
       ''',
     },
   },

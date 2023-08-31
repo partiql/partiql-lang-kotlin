@@ -91,12 +91,18 @@ open class RelToSql(
 
     /**
      * Filter -> WHERE or HAVING Clause
+     *
+     * TODO this assumes WHERE!
      */
-    // override fun visitRelOpFilter(node: Rel.Op.Filter, ctx: Rel.Type?): ExprSfwBuilder {
-    //     val sfw = visitRel(node.input, ctx)
-    //     sfw.where = parent.visitRex(node.predicate, Unit)
-    //     return sfw
-    // }
+    override fun visitRelOpFilter(node: Rel.Op.Filter, ctx: Rel.Type?): ExprSfwBuilder {
+        val sfw = visitRel(node.input, ctx)
+        // validate filter type
+        val type = ctx!!
+        // translate to AST
+        val rexToSql = RexToSql(transform, type.schema)
+        sfw.where = rexToSql.apply(node.predicate)
+        return sfw
+    }
 
     /**
      * Project -> SELECT Clause

@@ -1,4 +1,4 @@
-package org.partiql.transpiler.targets
+package org.partiql.transpiler.targets.partiql
 
 import org.partiql.plan.PartiQLPlan
 import org.partiql.transpiler.ProblemCallback

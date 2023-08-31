@@ -1,27 +1,27 @@
-package org.partiql.transpiler.test.targets.partiql
+package org.partiql.transpiler.test.targets.athena
 
 import com.amazon.ionelement.api.StructElement
 import com.amazon.ionelement.api.loadSingleElement
 import org.junit.jupiter.api.Assumptions
 import org.partiql.planner.test.PlannerTest
 import org.partiql.transpiler.PartiQLTranspiler
-import org.partiql.transpiler.targets.partiql.PartiQLTarget
+import org.partiql.transpiler.targets.athena.AthenaTarget
 import org.partiql.transpiler.test.TranspilerTestFactory
 import kotlin.io.path.toPath
 import kotlin.test.assertEquals
 
-class PartiQLTargetTestFactory : TranspilerTestFactory<String>(PartiQLTarget) {
+class AthenaTargetTestFactory : TranspilerTestFactory<String>(AthenaTarget) {
 
-    private val suites: Map<String, PartiQLTargetTestSuite>
+    private val suites: Map<String, AthenaTargetTestSuite>
 
     init {
-        val testDir = PartiQLTargetTest::class.java.getResource("/targets/partiql")!!.toURI().toPath()
+        val testDir = AthenaTargetTest::class.java.getResource("/targets/athena")!!.toURI().toPath()
         val testFiles = testDir.toFile().listFiles()!!
         suites = testFiles.associate {
             val text = it.readText()
             val ion = loadSingleElement(text)
             assert(ion is StructElement) { "Test suite file must be a single struct" }
-            val suite = PartiQLTargetTestSuite.load(ion as StructElement)
+            val suite = AthenaTargetTestSuite.load(ion as StructElement)
             suite.name to suite
         }
     }
@@ -38,7 +38,7 @@ class PartiQLTargetTestFactory : TranspilerTestFactory<String>(PartiQLTarget) {
         assertEquals(expectedNormalized, actualNormalized)
     }
 
-    private fun lookup(suiteKey: String, testKey: String): PartiQLTargetTest {
+    private fun lookup(suiteKey: String, testKey: String): AthenaTargetTest {
         val suite = suites[suiteKey]
         Assumptions.assumeTrue(suite != null)
         val test = suite!!.tests[testKey]
