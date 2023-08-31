@@ -1,6 +1,7 @@
 package org.partiql.types.function
 
-import org.partiql.types.PartiQLValueType
+import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.PartiQLValueType
 
 /**
  * Parameter of a FunctionSignature.

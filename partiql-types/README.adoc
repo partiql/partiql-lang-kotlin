@@ -1,0 +1,317 @@
+= PartiQL Types & Values
+:toc:
+:sectlinks:
+
+This package contains classes for manipulating both PartiQL types and values. APIs for `org.partiql.types.StaticType`
+are stable, but the value representation classes (PartiQLValue) are early in their lifecycle and are subject to change.
+These particular classes have been marked with xref:https://kotlinlang.org/docs/opt-in-requirements.html[@RequiresOptIn].
+
+[#types]
+== Types
+
+PartiQL's data model extends SQL to Ion's type system to cover schema-less and nested data. This section should be
+considered a draft, but the _StaticType_ class within `org.partiql.types` is stable.
+
+.Boolean Type
+[cols="1m,3,>2",grid=rows,frame=all]
+|===
+| Type | Description | Values
+
+| bool
+| Boolean value
+| `TRUE` or `FALSE`
+
+|===
+
+.Numeric Types
+[cols="1m,3,>2a",grid=rows,frame=all]
+|===
+| Type | Description | Range
+
+| int8
+| Signed integer that can be stored in one byte
+| -128 to +127
+
+| int16
+| Signed integer that can be stored in two bytes
+| -32768 to +32767
+
+| int32
+| Signed integer that can be stored in four bytes
+| -2147483648 to +2147483647
+
+| int64
+| Signed integer that can be stored in eight bytes
+| -9223372036854775808 to +9223372036854775807
+
+| int
+| Signed integer of arbitrary size
+| ...
+
+| decimal
+| Exact numeric type with arbitrary precision
+| ...
+
+| decimal(p,s)
+| Exact numeric with fixed precision and scale
+| ...
+
+| float32
+| Single-precision, binary floating point (IEEE 754 32-bit)
+| ...
+
+| float64
+| Double-precision, binary floating point (IEEE 754 64-bit)
+| ...
+
+|===
+
+.Character String Types
+[cols="1m,5",grid=rows,frame=all]
+|===
+| Type | Description
+
+| char(n)
+| Unicode codepoint sequence of fixed length _n_
+
+| string
+| Unicode codepoint sequence of arbitrary length
+
+| string(n)
+| Unicode codepoint sequence of variable length up to _n_. This is equivalent to the SQL type `CHARACTER VARYING(n)`, `VARCHAR(n)`.
+
+| symbol
+| Unicode codepoint sequences of arbitrary length. The primary difference is the intended semantics: symbols represent case-sensitive identifiers as opposed to textual literal values.
+
+|===
+
+.Bit String Types
+[cols="1m,5",grid=rows,frame=all]
+|===
+| Type | Description
+
+| bit(n)
+| Bit string of fixed length _n_
+
+| binary
+| Bit string of arbitrary length
+
+| binary(n)
+| Bit string of variable length up to _n_
+
+|===
+
+.Byte String Types
+[cols="1m,5",grid=rows,frame=all]
+|===
+| Type | Description
+
+| byte(n)
+| Octet string of fixed length _n_
+
+| blob
+| Octet string of arbitrary length
+
+| blob(n)
+| Octet string of variable length up to _n_
+
+| clob
+| Unicode codepoint sequence of arbitrary length
+
+| clob(n)
+| Unicode codepoint sequence of variable length up to _n_
+
+|===
+
+.Date/Time Types
+[cols="1m,5",grid=rows,frame=all]
+|===
+| Type | Description
+
+| date
+| A date with no _time_
+
+| time
+| A _date_-less time with arbitrary precision and no time zone offset
+
+| time(p)
+| A _date_-less time with seconds precision _p_ and no time zone offset
+
+| time(p,z)
+| A _date_-less time with seconds precision _p_ and time zone offset _z_
+
+| timestamp
+| A _date_ and _time_ with arbitrary precision
+
+| timestamp(p)
+| A _date_ and _time_ with seconds precision _p_ and no time zone offset
+
+| timestamp(p,z)
+| A _date_ and _time_ with seconds precision _p_ and time zone offset _z_
+
+// Open Question: Should we model timestamp that only has UTF offsets which are a strict subset of timezones.
+
+// SQL-99 4.7.2
+| interval(p)
+| A time interval with seconds precision _p_
+
+2+a| NOTE: A time zone offset _z_ is an hour/minute pair of integers
+
+|===
+
+.Collection Types
+[cols="1m,5",grid=rows,frame=all]
+|===
+| Type | Description
+
+| bag
+| Unordered collection of values
+
+| list
+| Ordered collection of values
+
+| sexp
+| Ordered collections of values with application-defined semantics
+
+|===
+
+.Struct Type
+[cols="1m,5",grid=rows,frame=all]
+|===
+| Type | Description
+
+| struct
+| Unordered collection of unconstrained fields
+
+2+a|  NOTE: Fields are name-value pairs where names are strings
+
+|===
+
+.Absent Types
+[cols="1m,3,>2m",grid=rows,frame=all]
+|===
+| Type | Description | Value
+
+| null
+| The null value
+| NULL
+
+| missing
+| The missing value
+| MISSING
+
+|===
+
+.Union Types
+[cols="1m,5",grid=rows,frame=all]
+|===
+
+s| Type s| Description
+
+| any
+| The union of all types
+
+| absent
+| `missing\|null`
+
+| number
+| `int8\|int16\|int32\|int64\|decimal\|float32\|float64`
+
+| exact_numeric
+| `int8\|int16\|int32\|int64\|decimal`
+
+| collection
+| `bag\|list\|sexp`
+
+|===
+
+== Values
+
+PartiQL's value classes are based upon xref:https://github.com/amazon-ion/ion-element-kotlin[IonElement].
+
+IMPORTANT: Like SQL, all values are nullable.
+
+=== Examples
+
+[source,kotlin]
+----
+// simple value
+intValue(1) // 1
+
+// complex values
+structValue(sequenceOf(
+    "a" to intValue(1, listOf("hello")), // second parameter is a list of annotations
+    "b" to sexpValue(sequenceOf(
+        symbolValue("x"),
+        stringValue("y"),
+        boolValue(null),
+    )),
+    "c" to bagValue(sequenceOf(
+        intValue(1),
+        intValue(2),
+        intValue(3),
+    ))
+))
+
+// PartiQL Text
+// {
+//   'a': hello::1,
+//   'b': (x 'y' null),
+//   'c': << 1, 2, 3 >>,
+// }
+----
+
+=== Ion Usage
+
+PartiQL Value classes can be serialized and deserialized from both Ion text and binary Ion via the standard IonReader.
+You can write PartiQL Values as plain Ion, or PartiQL values encoded as Ion (as some types in PartiQL to not exist in Ion).
+
+IMPORTANT: The encoding of PartiQL data as Ion has not been standardized.
+
+.Ion Encoding Type
+[source,kotlin]
+----
+/**
+ * The ion value annotations are always treated as annotations on PartiQL value.
+ * For example, $missing::null will be treated as nullValue(annotations = ["missing"])
+ */
+IonGeneric
+
+/**
+ * We examine the **last** annotation before convert to PartiQL Value.
+ * If the annotation is PartiQL reserved, we validate Semantics and the constructed PartiQL value may be different.
+ * For example:
+ *   - $missing::null will be treated as missingValue(annotations = [])
+ *   - a::b::$missing:null will be treated as missingValue(annotations = ["a", "b"])
+ *   - a::$missing::b::null will be treated as nullValue(annotation = ["a", "$missing", "b"]
+ *   - $missing::1 will cause an exception.
+ */
+IonForPartiQL
+----
+
+These APIs mirror IonJava, but we are working on the appropriate APIs for easier reading and writing. In the future,
+we would like entry points such as `myValue.encode(PartiQLValueEncoding.ION)` and `decode(input, PartiQLValueEncoding.ION)`.
+For DOM to DOM, we may have `myValue.toIon()`.
+
+[source,kotlin]
+----
+val bag = bagValue(sequenceOf(
+    intValue(1),
+    intValue(2),
+    intValue(3),
+))
+
+// PartiQL Text writer
+val pBuffer = ByteArrayOutputStream()
+val pWriter = PartiQLValueWriterBuilder.standard().build(pBuffer)
+
+pWriter.append(bag)
+println(pBuffer.toString()) // > <<1,2,3>>
+
+// PartiQL to Ion writer
+val iBuffer = ByteArrayOutputStream()
+val iWriter = PartiQLValueIonWriterBuilder.standardIonTextBuilder().build(iBuffer)
+
+iWriter.append(bag)
+println(iBuffer.toString()) // > $bag::[1,2,3]
+----
