@@ -15,12 +15,13 @@ import org.partiql.value.Annotations
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.bagValue
+import org.partiql.value.blobValue
 import org.partiql.value.boolValue
 import org.partiql.value.charValue
+import org.partiql.value.clobValue
 import org.partiql.value.dateValue
 import org.partiql.value.datetime.DateTimeValue
 import org.partiql.value.datetime.TimeZone
-import org.partiql.value.datetime.Timestamp
 import org.partiql.value.decimalValue
 import org.partiql.value.float32Value
 import org.partiql.value.float64Value
@@ -32,21 +33,6 @@ import org.partiql.value.intValue
 import org.partiql.value.listValue
 import org.partiql.value.missingValue
 import org.partiql.value.nullValue
-import org.partiql.value.nullableBagValue
-import org.partiql.value.nullableBlobValue
-import org.partiql.value.nullableBoolValue
-import org.partiql.value.nullableClobValue
-import org.partiql.value.nullableDateValue
-import org.partiql.value.nullableDecimalValue
-import org.partiql.value.nullableFloat64Value
-import org.partiql.value.nullableIntValue
-import org.partiql.value.nullableListValue
-import org.partiql.value.nullableSexpValue
-import org.partiql.value.nullableStringValue
-import org.partiql.value.nullableStructValue
-import org.partiql.value.nullableSymbolValue
-import org.partiql.value.nullableTimeValue
-import org.partiql.value.nullableTimestampValue
 import org.partiql.value.sexpValue
 import org.partiql.value.stringValue
 import org.partiql.value.structValue
@@ -106,81 +92,81 @@ class PartiQLValueIonSerdeTest {
             ),
             // bool.null
             roundTrip(
-                nullableBoolValue(),
+                boolValue(null),
                 ION.newNullBool()
             ),
             // int.null
             roundTrip(
-                nullableIntValue(),
+                intValue(null),
                 ION.newNullInt()
             ),
             // float.null
             roundTrip(
-                nullableFloat64Value(),
+                float64Value(null),
                 ION.newNullFloat()
             ),
             // Decimal.null
             roundTrip(
-                nullableDecimalValue(),
+                decimalValue(null),
                 ION.newNullDecimal()
             ),
             // timestamp.null
             roundTrip(
-                nullableTimestampValue(),
+                timestampValue(null),
                 ION.newNullTimestamp()
             ),
             // symbol.null
             roundTrip(
-                nullableSymbolValue(),
+                symbolValue(null),
                 ION.newNullSymbol()
             ),
             // string.null
             roundTrip(
-                nullableStringValue(),
+                stringValue(null),
                 ION.newNullString()
             ),
             // Clob.null
             roundTrip(
-                nullableClobValue(),
+                clobValue(null),
                 ION.newNullClob(),
             ),
             // blob.null
             roundTrip(
-                nullableBlobValue(),
+                blobValue(null),
                 ION.newNullBlob()
             ),
             // list.null
             roundTrip(
-                nullableListValue<PartiQLValue>(),
+                listValue<PartiQLValue>(null),
                 ION.newNullList()
             ),
             // Sexp.null
             roundTrip(
-                nullableSexpValue<PartiQLValue>(),
+                sexpValue<PartiQLValue>(null),
                 ION.newNullSexp()
             ),
             // struct.null
             roundTrip(
-                nullableStructValue<PartiQLValue>(),
+                structValue<PartiQLValue>(null),
                 ION.newNullStruct()
             ),
             // $bag::list.null
             roundTrip(
-                nullableBagValue<PartiQLValue>(),
+                bagValue<PartiQLValue>(null),
                 ION.newNullList().apply {
                     addTypeAnnotation("\$bag")
                 }
             ),
             // $date::struct.null
             roundTrip(
-                nullableDateValue(),
+                dateValue(null),
                 ION.newNullStruct().apply {
                     addTypeAnnotation("\$date")
                 }
             ),
             // $time::struct.null
             roundTrip(
-                nullableTimeValue(),
+                timeValue(null),
                 ION.newNullStruct().apply {
                     addTypeAnnotation("\$time")
                 }
@@ -374,20 +360,20 @@ class PartiQLValueIonSerdeTest {
         @JvmStatic
         fun collections() = listOf(
             roundTrip(
-                bagValue(emptyList()),
+                bagValue(emptySequence()),
                 ION.newEmptyList().apply { addTypeAnnotation("\$bag") },
             ),
             roundTrip(
-                listValue(emptyList()),
+                listValue(emptySequence()),
                 ION.newEmptyList()
             ),
             roundTrip(
-                sexpValue(emptyList()),
+                sexpValue(emptySequence()),
                 ION.newEmptySexp()
             ),
             oneWayTrip(
                 bagValue(
-                    listOf(
+                    sequenceOf(
                         int32Value(1),
                         int32Value(2),
                         int32Value(3),
@@ -399,7 +385,7 @@ class PartiQLValueIonSerdeTest {
                     ION.newInt(3)
                 ).apply { addTypeAnnotation("\$bag") },
                 bagValue(
-                    listOf(
+                    sequenceOf(
                         intValue(BigInteger.ONE),
                         intValue(BigInteger.valueOf(2L)),
                         intValue(BigInteger.valueOf(3L)),
@@ -408,7 +394,7 @@ class PartiQLValueIonSerdeTest {
             ),
             roundTrip(
                 listValue(
-                    listOf(
+                    sequenceOf(
                         stringValue("a"),
                         stringValue("b"),
                         stringValue("c"),
@@ -422,7 +408,7 @@ class PartiQLValueIonSerdeTest {
             ),
             oneWayTrip(
                 sexpValue(
-                    listOf(
+                    sequenceOf(
                         int32Value(1),
                         int32Value(2),
                         int32Value(3),
@@ -434,7 +420,7 @@ class PartiQLValueIonSerdeTest {
                     ION.newInt(3)
                 ),
                 sexpValue(
-                    listOf(
+                    sequenceOf(
                         intValue(BigInteger.ONE),
                         intValue(BigInteger.valueOf(2L)),
                         intValue(BigInteger.valueOf(3L)),
@@ -443,7 +429,7 @@ class PartiQLValueIonSerdeTest {
             ),
             oneWayTrip(
                 structValue(
-                    listOf(
+                    sequenceOf(
                         "a" to int32Value(1),
                         "b" to stringValue("x"),
                     )
@@ -454,7 +440,7 @@ class PartiQLValueIonSerdeTest {
                         add("b", ION.newString("x"))
                     },
                 structValue(
-                    listOf(
+                    sequenceOf(
                         "a" to intValue(BigInteger.ONE),
                         "b" to stringValue("x"),
                     )
@@ -466,7 +452,8 @@ class PartiQLValueIonSerdeTest {
         fun nestedCollections(): List<Case> = TODO()
 
         @JvmStatic
-        fun annotations(): List<Case> = scalars().map { toAnnotated(it) } + collections().map { toAnnotated(it) } + nulls().map { toAnnotated(it) }
+        fun annotations(): List<Case> =
+            scalars().map { toAnnotated(it) } + collections().map { toAnnotated(it) } + nulls().map { toAnnotated(it) }
 
         private fun toAnnotated(case: Case): Case =
             when (case) {

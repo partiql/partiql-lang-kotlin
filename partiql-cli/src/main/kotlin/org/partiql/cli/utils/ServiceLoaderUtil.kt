@@ -32,7 +32,6 @@ import org.partiql.lang.types.FunctionSignature
 import org.partiql.spi.Plugin
 import org.partiql.spi.function.PartiQLFunction
 import org.partiql.spi.function.PartiQLFunctionExperimental
-import org.partiql.types.PartiQLValueType
 import org.partiql.types.StaticType
 import org.partiql.types.function.FunctionParameter
 import org.partiql.value.BagValue
@@ -50,21 +49,9 @@ import org.partiql.value.Int64Value
 import org.partiql.value.Int8Value
 import org.partiql.value.IntValue
 import org.partiql.value.ListValue
-import org.partiql.value.NullableBagValue
-import org.partiql.value.NullableBlobValue
-import org.partiql.value.NullableBoolValue
-import org.partiql.value.NullableCharValue
-import org.partiql.value.NullableClobValue
-import org.partiql.value.NullableDateValue
-import org.partiql.value.NullableInt16Value
-import org.partiql.value.NullableInt32Value
-import org.partiql.value.NullableInt8Value
-import org.partiql.value.NullableListValue
-import org.partiql.value.NullableSexpValue
-import org.partiql.value.NullableStringValue
-import org.partiql.value.NullableSymbolValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.PartiQLValueType
 import org.partiql.value.SexpValue
 import org.partiql.value.StringValue
 import org.partiql.value.StructValue
@@ -109,6 +96,7 @@ import kotlin.concurrent.withLock
  * A util class to load pluggable functions by invoking Java Service Loader.
  */
 class ServiceLoaderUtil {
+    @OptIn(PartiQLValueExperimental::class)
     companion object {
         private val lock = ReentrantLock()
 
@@ -126,15 +114,15 @@ class ServiceLoaderUtil {
             } else {
                 listOf()
             }
-            return plugins
-                .flatMap { plugin -> plugin.getFunctions() }
+            return plugins.flatMap { plugin -> plugin.getFunctions() }
                 .map { partiqlFunc -> PartiQLtoExprFunction(partiqlFunc) }
         }
 
         @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
         private fun PartiQLtoExprFunction(customFunction: PartiQLFunction): ExprFunction {
             val name = customFunction.signature.name
-            val parameters = customFunction.signature.parameters.filterIsInstance<FunctionParameter.ValueParameter>().map { it.type }
+            val parameters =
+                customFunction.signature.parameters.filterIsInstance<FunctionParameter.ValueParameter>().map { it.type }
             val returnType = customFunction.signature.returns
             return object : ExprFunction {
                 override val signature = FunctionSignature(
@@ -151,58 +139,39 @@ class ServiceLoaderUtil {
             }
         }
 
+        /**
+         * All runtime values are nullable in SQL.
+         */
+        @OptIn(PartiQLValueExperimental::class)
         private fun PartiQLToStaticType(partiqlType: PartiQLValueType): StaticType {
             return when (partiqlType) {
-                PartiQLValueType.BOOL -> StaticType.BOOL
-                PartiQLValueType.INT8 -> StaticType.INT
-                PartiQLValueType.INT16 -> StaticType.INT2
-                PartiQLValueType.INT32 -> StaticType.INT4
-                PartiQLValueType.INT64 -> StaticType.INT8
-                PartiQLValueType.INT -> StaticType.INT
-                PartiQLValueType.DECIMAL -> StaticType.DECIMAL
-                PartiQLValueType.FLOAT32 -> StaticType.FLOAT
-                PartiQLValueType.FLOAT64 -> StaticType.FLOAT
-                PartiQLValueType.CHAR -> StaticType.STRING
-                PartiQLValueType.STRING -> StaticType.STRING
-                PartiQLValueType.SYMBOL -> StaticType.SYMBOL
-                PartiQLValueType.BINARY -> TODO()
-                PartiQLValueType.BYTE -> TODO()
-                PartiQLValueType.BLOB -> StaticType.BLOB
-                PartiQLValueType.CLOB -> StaticType.CLOB
-                PartiQLValueType.DATE -> StaticType.DATE
-                PartiQLValueType.TIME -> StaticType.TIME
-                PartiQLValueType.TIMESTAMP -> StaticType.TIMESTAMP
-                PartiQLValueType.INTERVAL -> TODO()
-                PartiQLValueType.BAG -> StaticType.BAG
-                PartiQLValueType.LIST -> StaticType.LIST
-                PartiQLValueType.SEXP -> StaticType.SEXP
-                PartiQLValueType.STRUCT -> StaticType.STRUCT
+                PartiQLValueType.ANY -> StaticType.ANY.asNullable()
                 PartiQLValueType.NULL -> StaticType.NULL
                 PartiQLValueType.MISSING -> StaticType.MISSING
-                PartiQLValueType.NULLABLE_BOOL -> StaticType.BOOL.asNullable()
-                PartiQLValueType.NULLABLE_INT8 -> StaticType.INT.asNullable()
-                PartiQLValueType.NULLABLE_INT16 -> StaticType.INT2.asNullable()
-                PartiQLValueType.NULLABLE_INT32 -> StaticType.INT4.asNullable()
-                PartiQLValueType.NULLABLE_INT64 -> StaticType.INT8.asNullable()
-                PartiQLValueType.NULLABLE_INT -> StaticType.INT.asNullable()
-                PartiQLValueType.NULLABLE_DECIMAL -> StaticType.DECIMAL.asNullable()
-                PartiQLValueType.NULLABLE_FLOAT32 -> StaticType.FLOAT.asNullable()
-                PartiQLValueType.NULLABLE_FLOAT64 -> StaticType.FLOAT.asNullable()
-                PartiQLValueType.NULLABLE_CHAR -> StaticType.STRING.asNullable()
-                PartiQLValueType.NULLABLE_STRING -> StaticType.STRING.asNullable()
-                PartiQLValueType.NULLABLE_SYMBOL -> StaticType.SYMBOL.asNullable()
-                PartiQLValueType.NULLABLE_BINARY -> TODO()
-                PartiQLValueType.NULLABLE_BYTE -> TODO()
-                PartiQLValueType.NULLABLE_BLOB -> StaticType.BLOB.asNullable()
-                PartiQLValueType.NULLABLE_CLOB -> StaticType.CLOB.asNullable()
-                PartiQLValueType.NULLABLE_DATE -> StaticType.DATE.asNullable()
-                PartiQLValueType.NULLABLE_TIME -> StaticType.TIME.asNullable()
-                PartiQLValueType.NULLABLE_TIMESTAMP -> StaticType.TIMESTAMP.asNullable()
-                PartiQLValueType.NULLABLE_INTERVAL -> TODO()
-                PartiQLValueType.NULLABLE_BAG -> StaticType.BAG.asNullable()
-                PartiQLValueType.NULLABLE_LIST -> StaticType.LIST.asNullable()
-                PartiQLValueType.NULLABLE_SEXP -> StaticType.SEXP.asNullable()
-                PartiQLValueType.NULLABLE_STRUCT -> StaticType.STRUCT.asNullable()
+                PartiQLValueType.BOOL -> StaticType.BOOL.asNullable()
+                PartiQLValueType.INT8 -> StaticType.INT.asNullable()
+                PartiQLValueType.INT16 -> StaticType.INT2.asNullable()
+                PartiQLValueType.INT32 -> StaticType.INT4.asNullable()
+                PartiQLValueType.INT64 -> StaticType.INT8.asNullable()
+                PartiQLValueType.INT -> StaticType.INT.asNullable()
+                PartiQLValueType.DECIMAL -> StaticType.DECIMAL.asNullable()
+                PartiQLValueType.FLOAT32 -> StaticType.FLOAT.asNullable()
+                PartiQLValueType.FLOAT64 -> StaticType.FLOAT.asNullable()
+                PartiQLValueType.CHAR -> StaticType.STRING.asNullable()
+                PartiQLValueType.STRING -> StaticType.STRING.asNullable()
+                PartiQLValueType.SYMBOL -> StaticType.SYMBOL.asNullable()
+                PartiQLValueType.BINARY -> TODO()
+                PartiQLValueType.BYTE -> TODO()
+                PartiQLValueType.BLOB -> StaticType.BLOB.asNullable()
+                PartiQLValueType.CLOB -> StaticType.CLOB.asNullable()
+                PartiQLValueType.DATE -> StaticType.DATE.asNullable()
+                PartiQLValueType.TIME -> StaticType.TIME.asNullable()
+                PartiQLValueType.TIMESTAMP -> StaticType.TIMESTAMP.asNullable()
+                PartiQLValueType.INTERVAL -> TODO()
+                PartiQLValueType.BAG -> StaticType.BAG.asNullable()
+                PartiQLValueType.LIST -> StaticType.LIST.asNullable()
+                PartiQLValueType.SEXP -> StaticType.SEXP.asNullable()
+                PartiQLValueType.STRUCT -> StaticType.STRUCT.asNullable()
             }
         }
 
@@ -210,186 +179,57 @@ class ServiceLoaderUtil {
         @OptIn(PartiQLValueExperimental::class)
         private fun PartiQLtoExprValue(partiqlValue: PartiQLValue): ExprValue {
             return when (partiqlValue.type) {
+                PartiQLValueType.ANY -> throw UnsupportedOperationException("PartiQLValue ANY not implemented")
+                PartiQLValueType.NULL -> ExprValue.nullValue
+                PartiQLValueType.MISSING -> ExprValue.missingValue
                 PartiQLValueType.BOOL -> (partiqlValue as? BoolValue)?.value?.let { newBoolean(it) }
-                    ?: throw PartiQLtoExprValueTypeMismatchException("BoolValue", partiqlValue.type)
+                    ?: ExprValue.nullValue
 
-                PartiQLValueType.INT8 -> (partiqlValue as? Int8Value)?.int?.let { newInt(it) }
-                    ?: throw PartiQLtoExprValueTypeMismatchException("INT8", partiqlValue.type)
+                PartiQLValueType.INT8 -> (partiqlValue as? Int8Value)?.int?.let { newInt(it) } ?: ExprValue.nullValue
 
-                PartiQLValueType.INT16 -> (partiqlValue as? Int16Value)?.int?.let { newInt(it) }
-                    ?: throw PartiQLtoExprValueTypeMismatchException("INT16", partiqlValue.type)
+                PartiQLValueType.INT16 -> (partiqlValue as? Int16Value)?.int?.let { newInt(it) } ?: ExprValue.nullValue
 
-                PartiQLValueType.INT32 -> (partiqlValue as? Int32Value)?.int?.let { newInt(it) }
-                    ?: throw PartiQLtoExprValueTypeMismatchException("INT32", partiqlValue.type)
+                PartiQLValueType.INT32 -> (partiqlValue as? Int32Value)?.int?.let { newInt(it) } ?: ExprValue.nullValue
 
-                PartiQLValueType.INT64 -> (partiqlValue as? Int64Value)?.long?.let { newInt(it) }
-                    ?: throw PartiQLtoExprValueTypeMismatchException("INT64", partiqlValue.type)
+                PartiQLValueType.INT64 -> (partiqlValue as? Int64Value)?.long?.let { newInt(it) } ?: ExprValue.nullValue
 
-                PartiQLValueType.INT -> (partiqlValue as? IntValue)?.long?.let { newInt(it) }
-                    ?: throw PartiQLtoExprValueTypeMismatchException("INT", partiqlValue.type)
+                PartiQLValueType.INT -> (partiqlValue as? IntValue)?.long?.let { newInt(it) } ?: ExprValue.nullValue
 
                 PartiQLValueType.DECIMAL -> (partiqlValue as? DecimalValue)?.value?.let { newDecimal(it) }
-                    ?: throw PartiQLtoExprValueTypeMismatchException("DECIMAL", partiqlValue.type)
+                    ?: ExprValue.nullValue
 
                 PartiQLValueType.FLOAT32 -> (partiqlValue as? Float32Value)?.double?.let { newFloat(it) }
-                    ?: throw PartiQLtoExprValueTypeMismatchException("FLOAT32", partiqlValue.type)
+                    ?: ExprValue.nullValue
 
                 PartiQLValueType.FLOAT64 -> (partiqlValue as? Float64Value)?.double?.let { newFloat(it) }
-                    ?: throw PartiQLtoExprValueTypeMismatchException("FLOAT64", partiqlValue.type)
+                    ?: ExprValue.nullValue
 
                 PartiQLValueType.CHAR -> (partiqlValue as? CharValue)?.string?.let { newString(it) }
-                    ?: throw PartiQLtoExprValueTypeMismatchException("CHAR", partiqlValue.type)
+                    ?: ExprValue.nullValue
 
                 PartiQLValueType.STRING -> (partiqlValue as? StringValue)?.string?.let { newString(it) }
-                    ?: throw PartiQLtoExprValueTypeMismatchException("STRING", partiqlValue.type)
+                    ?: ExprValue.nullValue
 
                 PartiQLValueType.SYMBOL -> (partiqlValue as? SymbolValue)?.string?.let { newSymbol(it) }
-                    ?: throw PartiQLtoExprValueTypeMismatchException("SYMBOL", partiqlValue.type)
+                    ?: ExprValue.nullValue
 
                 PartiQLValueType.BINARY -> TODO()
 
                 PartiQLValueType.BYTE -> TODO()
 
-                PartiQLValueType.BLOB -> (partiqlValue as? BlobValue)?.value?.let { newBlob(it) }
-                    ?: throw PartiQLtoExprValueTypeMismatchException("BLOB", partiqlValue.type)
+                PartiQLValueType.BLOB -> (partiqlValue as? BlobValue)?.value?.let { newBlob(it) } ?: ExprValue.nullValue
 
-                PartiQLValueType.CLOB -> (partiqlValue as? ClobValue)?.value?.let { newClob(it) }
-                    ?: throw PartiQLtoExprValueTypeMismatchException("CLOB", partiqlValue.type)
+                PartiQLValueType.CLOB -> (partiqlValue as? ClobValue)?.value?.let { newClob(it) } ?: ExprValue.nullValue
 
                 PartiQLValueType.DATE -> (partiqlValue as? DateValue)?.value?.let { newDate(it.year, it.month, it.day) }
-                    ?: throw PartiQLtoExprValueTypeMismatchException("DATE", partiqlValue.type)
+                    ?: ExprValue.nullValue
 
                 PartiQLValueType.TIME -> (partiqlValue as? TimeValue)?.value?.let { partiqlTime ->
                     val fraction = partiqlTime.decimalSecond.remainder(BigDecimal.ONE)
-                    val precision =
-                        when {
-                            fraction.scale() > 9 -> throw DateTimeException("Precision greater than nano seconds not supported")
-                            else -> fraction.scale()
-                        }
-
-                    val tzMinutes = when (val tz = partiqlTime.timeZone) {
-                        is TimeZone.UnknownTimeZone -> 0 // Treat unknown offset as UTC (+00:00)
-                        is TimeZone.UtcOffset -> tz.totalOffsetMinutes
-                        else -> null
+                    val precision = when {
+                        fraction.scale() > 9 -> throw DateTimeException("Precision greater than nano seconds not supported")
+                        else -> fraction.scale()
                     }
-
-                    try {
-                        newTime(
-                            Time.of(
-                                partiqlTime.hour,
-                                partiqlTime.minute,
-                                partiqlTime.decimalSecond.setScale(0, RoundingMode.DOWN).toInt(),
-                                fraction.movePointRight(9).setScale(0, RoundingMode.DOWN).toInt(),
-                                precision,
-                                tzMinutes
-                            )
-                        )
-                    } catch (e: DateTimeException) {
-                        throw e
-                    }
-                } ?: throw PartiQLtoExprValueTypeMismatchException("TIME", partiqlValue.type)
-
-                PartiQLValueType.TIMESTAMP -> TODO()
-                // TODO: Implement
-//            {
-//                val timestampValue = partiqlValue as? TimestampValue
-//                timestampValue?.let { tv ->
-//                    val localDateTime = tv.value
-//                    val zoneOffset = tv.offset
-//                    val instant = localDateTime.atOffset(zoneOffset ?: ZoneOffset.UTC).toInstant()
-//                    val timestamp = Timestamp.forMillis(instant.toEpochMilli(), (zoneOffset?.totalSeconds ?: 0) / 60)
-//                    newTimestamp(timestamp)
-//                } ?: ExprValue.nullValue
-//            }
-
-                PartiQLValueType.INTERVAL -> TODO()
-
-                PartiQLValueType.BAG -> {
-                    (partiqlValue as? BagValue<*>)?.elements?.map { PartiQLtoExprValue(it) }
-                        ?.let { newBag(it.asSequence()) }
-                        ?: throw PartiQLtoExprValueTypeMismatchException("BAG", partiqlValue.type)
-                }
-
-                PartiQLValueType.LIST -> {
-                    (partiqlValue as? ListValue<*>)?.elements?.map { PartiQLtoExprValue(it) }
-                        ?.let { newList(it.asSequence()) }
-                        ?: throw PartiQLtoExprValueTypeMismatchException("LIST", partiqlValue.type)
-                }
-
-                PartiQLValueType.SEXP -> {
-                    (partiqlValue as? SexpValue<*>)?.elements?.map { PartiQLtoExprValue(it) }
-                        ?.let { newSexp(it.asSequence()) }
-                        ?: throw PartiQLtoExprValueTypeMismatchException("SEXP", partiqlValue.type)
-                }
-
-                PartiQLValueType.STRUCT -> {
-                    (partiqlValue as? StructValue<*>)?.fields?.map { PartiQLtoExprValue(it.second).namedValue(newString(it.first)) }
-                        ?.let { newStruct(it.asSequence(), StructOrdering.ORDERED) }
-                        ?: throw PartiQLtoExprValueTypeMismatchException("STRUCT", partiqlValue.type)
-                }
-
-                PartiQLValueType.NULL -> ExprValue.nullValue
-
-                PartiQLValueType.MISSING -> ExprValue.missingValue
-
-                PartiQLValueType.NULLABLE_BOOL -> {
-                    (partiqlValue as? NullableBoolValue)?.value?.let { newBoolean(it) }
-                        ?: ExprValue.nullValue
-                }
-
-                PartiQLValueType.NULLABLE_INT8 -> (partiqlValue as? NullableInt8Value)?.int?.let { newInt(it) }
-                    ?: ExprValue.nullValue
-
-                PartiQLValueType.NULLABLE_INT16 -> (partiqlValue as? NullableInt16Value)?.int?.let { newInt(it) }
-                    ?: ExprValue.nullValue
-
-                PartiQLValueType.NULLABLE_INT32 -> (partiqlValue as? NullableInt32Value)?.int?.let { newInt(it) }
-                    ?: ExprValue.nullValue
-
-                PartiQLValueType.NULLABLE_INT64 -> (partiqlValue as? Int64Value)?.long?.let { newInt(it) }
-                    ?: ExprValue.nullValue
-
-                PartiQLValueType.NULLABLE_INT -> (partiqlValue as? IntValue)?.long?.let { newInt(it) }
-                    ?: ExprValue.nullValue
-
-                PartiQLValueType.NULLABLE_DECIMAL -> (partiqlValue as? DecimalValue)?.value?.let { newDecimal(it) }
-                    ?: ExprValue.nullValue
-
-                PartiQLValueType.NULLABLE_FLOAT32 -> (partiqlValue as? Float32Value)?.double?.let { newFloat(it) }
-                    ?: ExprValue.nullValue
-
-                PartiQLValueType.NULLABLE_FLOAT64 -> (partiqlValue as? Float32Value)?.double?.let { newFloat(it) }
-                    ?: ExprValue.nullValue
-
-                PartiQLValueType.NULLABLE_CHAR -> (partiqlValue as? NullableCharValue)?.string?.let { newString(it) }
-                    ?: ExprValue.nullValue
-
-                PartiQLValueType.NULLABLE_STRING -> (partiqlValue as? NullableStringValue)?.string?.let { newString(it) }
-                    ?: ExprValue.nullValue
-
-                PartiQLValueType.NULLABLE_SYMBOL -> (partiqlValue as? NullableSymbolValue)?.string?.let { newSymbol(it) }
-                    ?: ExprValue.nullValue
-
-                PartiQLValueType.NULLABLE_BINARY -> TODO()
-
-                PartiQLValueType.NULLABLE_BYTE -> TODO()
-
-                PartiQLValueType.NULLABLE_BLOB -> (partiqlValue as? NullableBlobValue)?.value?.let { newBlob(it) }
-                    ?: ExprValue.nullValue
-
-                PartiQLValueType.NULLABLE_CLOB -> (partiqlValue as? NullableClobValue)?.value?.let { newClob(it) }
-                    ?: ExprValue.nullValue
-
-                PartiQLValueType.NULLABLE_DATE -> (partiqlValue as? NullableDateValue)?.value?.let { newDate(it.year, it.month, it.day) }
-                    ?: ExprValue.nullValue
-
-                PartiQLValueType.NULLABLE_TIME -> (partiqlValue as? TimeValue)?.value?.let { partiqlTime ->
-                    val fraction = partiqlTime.decimalSecond.remainder(BigDecimal.ONE)
-                    val precision =
-                        when {
-                            fraction.scale() > 9 -> throw DateTimeException("Precision greater than nano seconds not supported")
-                            else -> fraction.scale()
-                        }
 
                     val tzMinutes = when (val tz = partiqlTime.timeZone) {
                         is TimeZone.UnknownTimeZone -> 0 // Treat unknown offset as UTC (+00:00)
@@ -413,39 +253,44 @@ class ServiceLoaderUtil {
                     }
                 } ?: ExprValue.nullValue
 
-                PartiQLValueType.NULLABLE_TIMESTAMP -> TODO()
+                PartiQLValueType.TIMESTAMP -> TODO()
                 // TODO: Implement
-//          {
-//                (partiqlValue as? NullableTimestampValue)?.let { tv ->
-//                    tv.value?.let { localDateTime ->
-//                        val zoneOffset = tv.offset
-//                        val instant = localDateTime.atOffset(zoneOffset ?: ZoneOffset.UTC).toInstant()
-//                        val timestamp = Timestamp.forMillis(instant.toEpochMilli(), (zoneOffset?.totalSeconds ?: 0) / 60)
-//                        newTimestamp(timestamp)
-//                    }
+//            {
+//                val timestampValue = partiqlValue as? TimestampValue
+//                timestampValue?.let { tv ->
+//                    val localDateTime = tv.value
+//                    val zoneOffset = tv.offset
+//                    val instant = localDateTime.atOffset(zoneOffset ?: ZoneOffset.UTC).toInstant()
+//                    val timestamp = Timestamp.forMillis(instant.toEpochMilli(), (zoneOffset?.totalSeconds ?: 0) / 60)
+//                    newTimestamp(timestamp)
 //                } ?: ExprValue.nullValue
 //            }
 
-                PartiQLValueType.NULLABLE_INTERVAL -> TODO() // add nullable interval conversion
+                PartiQLValueType.INTERVAL -> TODO()
 
-                PartiQLValueType.NULLABLE_BAG -> {
-                    (partiqlValue as? NullableBagValue<*>)?.promote()?.elements?.map { PartiQLtoExprValue(it) }
-                        ?.let { newBag(it.asSequence()) } ?: ExprValue.nullValue
+                PartiQLValueType.BAG -> {
+                    (partiqlValue as? BagValue<*>)?.elements?.map { PartiQLtoExprValue(it) }?.let { newBag(it) }
+                        ?: ExprValue.nullValue
                 }
 
-                PartiQLValueType.NULLABLE_LIST -> {
-                    (partiqlValue as? NullableListValue<*>)?.promote()?.map { PartiQLtoExprValue(it) }
-                        ?.let { newList(it.asSequence()) } ?: ExprValue.nullValue
+                PartiQLValueType.LIST -> {
+                    (partiqlValue as? ListValue<*>)?.elements?.map { PartiQLtoExprValue(it) }?.let { newList(it) }
+                        ?: ExprValue.nullValue
                 }
 
-                PartiQLValueType.NULLABLE_SEXP -> {
-                    (partiqlValue as? NullableSexpValue<*>)?.promote()?.map { PartiQLtoExprValue(it) }
-                        ?.let { newSexp(it.asSequence()) } ?: ExprValue.nullValue
+                PartiQLValueType.SEXP -> {
+                    (partiqlValue as? SexpValue<*>)?.elements?.map { PartiQLtoExprValue(it) }?.let { newSexp(it) }
+                        ?: ExprValue.nullValue
                 }
 
-                PartiQLValueType.NULLABLE_STRUCT -> {
-                    (partiqlValue as? StructValue<*>)?.fields?.map { PartiQLtoExprValue(it.second).namedValue(newString(it.first)) }
-                        ?.let { newStruct(it.asSequence(), StructOrdering.ORDERED) } ?: ExprValue.nullValue
+                PartiQLValueType.STRUCT -> {
+                    (partiqlValue as? StructValue<*>)?.fields?.map {
+                        PartiQLtoExprValue(it.second).namedValue(
+                            newString(
+                                it.first
+                            )
+                        )
+                    }?.let { newStruct(it, StructOrdering.ORDERED) } ?: ExprValue.nullValue
                 }
             }
         }
@@ -460,97 +305,7 @@ class ServiceLoaderUtil {
             }
 
             return when (partiqlType) {
-                PartiQLValueType.BOOL -> {
-                    checkType(ExprValueType.BOOL)
-                    boolValue(exprValue.booleanValue())
-                }
-                PartiQLValueType.INT8 -> {
-                    checkType(ExprValueType.INT)
-                    int8Value(exprValue.numberValue().toByte())
-                }
-                PartiQLValueType.INT16 -> {
-                    checkType(ExprValueType.INT)
-                    int16Value(exprValue.numberValue().toShort())
-                }
-                PartiQLValueType.INT32 -> {
-                    checkType(ExprValueType.INT)
-                    int32Value(exprValue.numberValue().toInt())
-                }
-                PartiQLValueType.INT64 -> {
-                    checkType(ExprValueType.INT)
-                    int64Value(exprValue.numberValue().toLong())
-                }
-                PartiQLValueType.INT -> {
-                    checkType(ExprValueType.INT)
-                    intValue(exprValue.numberValue() as BigInteger)
-                }
-                PartiQLValueType.DECIMAL -> {
-                    checkType(ExprValueType.DECIMAL)
-                    decimalValue(exprValue.numberValue() as BigDecimal)
-                }
-                PartiQLValueType.FLOAT32 -> {
-                    checkType(ExprValueType.FLOAT)
-                    float32Value(exprValue.numberValue().toFloat())
-                }
-                PartiQLValueType.FLOAT64 -> {
-                    checkType(ExprValueType.FLOAT)
-                    float64Value(exprValue.numberValue().toDouble())
-                }
-                PartiQLValueType.CHAR -> {
-                    checkType(ExprValueType.STRING)
-                    charValue(exprValue.stringValue().first())
-                }
-                PartiQLValueType.STRING -> {
-                    checkType(ExprValueType.STRING)
-                    stringValue(exprValue.stringValue())
-                }
-                PartiQLValueType.SYMBOL -> {
-                    checkType(ExprValueType.SYMBOL)
-                    symbolValue(exprValue.stringValue())
-                }
-                PartiQLValueType.BINARY -> TODO()
-                PartiQLValueType.BYTE -> TODO()
-                PartiQLValueType.BLOB -> {
-                    checkType(ExprValueType.BLOB)
-                    blobValue(exprValue.bytesValue())
-                }
-                PartiQLValueType.CLOB -> {
-                    checkType(ExprValueType.CLOB)
-                    clobValue(exprValue.bytesValue())
-                }
-                PartiQLValueType.DATE -> {
-                    checkType(ExprValueType.DATE)
-                    dateValue(
-                        date(exprValue.dateValue().year, exprValue.dateValue().monthValue, exprValue.dateValue().dayOfMonth)
-                    )
-                }
-                PartiQLValueType.TIME -> {
-                    checkType(ExprValueType.TIME)
-                    timeValue(
-                        time(
-                            exprValue.timeValue().localTime.hour, exprValue.timeValue().localTime.minute, exprValue.timeValue().localTime.second, exprValue.timeValue().localTime.nano,
-                            exprValue.timeValue().timezoneMinute?.let { TimeZone.UtcOffset.of(it) } ?: null
-                        )
-                    )
-                }
-                PartiQLValueType.TIMESTAMP -> TODO()
-                PartiQLValueType.INTERVAL -> TODO()
-                PartiQLValueType.BAG -> {
-                    checkType(ExprValueType.BAG)
-                    bagValue(exprValue.map { ExprToPartiQLValue(it, ExprToPartiQLValueType(it)) })
-                }
-                PartiQLValueType.LIST -> {
-                    checkType(ExprValueType.LIST)
-                    listValue(exprValue.map { ExprToPartiQLValue(it, ExprToPartiQLValueType(it)) })
-                }
-                PartiQLValueType.SEXP -> {
-                    checkType(ExprValueType.SEXP)
-                    sexpValue(exprValue.map { ExprToPartiQLValue(it, ExprToPartiQLValueType(it)) })
-                }
-                PartiQLValueType.STRUCT -> {
-                    checkType(ExprValueType.STRUCT)
-                    structValue(exprValue.map { Pair(it.name?.stringValue() ?: "", ExprToPartiQLValue(it, ExprToPartiQLValueType(it))) })
-                }
+                PartiQLValueType.ANY -> throw UnsupportedOperationException("PartiQLValue ANY not implemented")
                 PartiQLValueType.NULL -> {
                     checkType(ExprValueType.NULL)
                     nullValue()
@@ -559,114 +314,181 @@ class ServiceLoaderUtil {
                     checkType(ExprValueType.MISSING)
                     missingValue()
                 }
-                PartiQLValueType.NULLABLE_BOOL -> when (exprValue.type) {
-                    ExprValueType.NULL -> nullValue()
+                PartiQLValueType.BOOL -> when (exprValue.type) {
+                    ExprValueType.NULL -> boolValue(null)
                     ExprValueType.BOOL -> boolValue(exprValue.booleanValue())
-                    else -> throw ExprToPartiQLValueTypeMismatchException(PartiQLValueType.NULLABLE_BOOL, ExprToPartiQLValueType(exprValue))
+                    else -> throw ExprToPartiQLValueTypeMismatchException(
+                        PartiQLValueType.BOOL, ExprToPartiQLValueType(exprValue)
+                    )
                 }
-                PartiQLValueType.NULLABLE_INT8 -> when (exprValue.type) {
-                    ExprValueType.NULL -> nullValue()
+                PartiQLValueType.INT8 -> when (exprValue.type) {
+                    ExprValueType.NULL -> int8Value(null)
                     ExprValueType.INT -> int8Value(exprValue.numberValue().toByte())
-                    else -> throw ExprToPartiQLValueTypeMismatchException(PartiQLValueType.NULLABLE_INT8, ExprToPartiQLValueType(exprValue))
+                    else -> throw ExprToPartiQLValueTypeMismatchException(
+                        PartiQLValueType.INT8, ExprToPartiQLValueType(exprValue)
+                    )
                 }
-                PartiQLValueType.NULLABLE_INT16 -> when (exprValue.type) {
-                    ExprValueType.NULL -> nullValue()
+                PartiQLValueType.INT16 -> when (exprValue.type) {
+                    ExprValueType.NULL -> int16Value(null)
                     ExprValueType.INT -> int16Value(exprValue.numberValue().toShort())
-                    else -> throw ExprToPartiQLValueTypeMismatchException(PartiQLValueType.NULLABLE_INT16, ExprToPartiQLValueType(exprValue))
+                    else -> throw ExprToPartiQLValueTypeMismatchException(
+                        PartiQLValueType.INT16, ExprToPartiQLValueType(exprValue)
+                    )
                 }
-                PartiQLValueType.NULLABLE_INT32 -> when (exprValue.type) {
-                    ExprValueType.NULL -> nullValue()
+                PartiQLValueType.INT32 -> when (exprValue.type) {
+                    ExprValueType.NULL -> int32Value(null)
                     ExprValueType.INT -> int32Value(exprValue.numberValue().toInt())
-                    else -> throw ExprToPartiQLValueTypeMismatchException(PartiQLValueType.NULLABLE_INT32, ExprToPartiQLValueType(exprValue))
+                    else -> throw ExprToPartiQLValueTypeMismatchException(
+                        PartiQLValueType.INT32, ExprToPartiQLValueType(exprValue)
+                    )
                 }
-                PartiQLValueType.NULLABLE_INT64 -> when (exprValue.type) {
-                    ExprValueType.NULL -> nullValue()
+                PartiQLValueType.INT64 -> when (exprValue.type) {
+                    ExprValueType.NULL -> int64Value(null)
                     ExprValueType.INT -> int64Value(exprValue.numberValue().toLong())
-                    else -> throw ExprToPartiQLValueTypeMismatchException(PartiQLValueType.NULLABLE_INT64, ExprToPartiQLValueType(exprValue))
+                    else -> throw ExprToPartiQLValueTypeMismatchException(
+                        PartiQLValueType.INT64, ExprToPartiQLValueType(exprValue)
+                    )
                 }
-                PartiQLValueType.NULLABLE_INT -> when (exprValue.type) {
-                    ExprValueType.NULL -> nullValue()
+                PartiQLValueType.INT -> when (exprValue.type) {
+                    ExprValueType.NULL -> intValue(null)
                     ExprValueType.INT -> intValue(exprValue.numberValue() as BigInteger)
-                    else -> throw ExprToPartiQLValueTypeMismatchException(PartiQLValueType.NULLABLE_INT, ExprToPartiQLValueType(exprValue))
+                    else -> throw ExprToPartiQLValueTypeMismatchException(
+                        PartiQLValueType.INT, ExprToPartiQLValueType(exprValue)
+                    )
                 }
-                PartiQLValueType.NULLABLE_DECIMAL -> when (exprValue.type) {
-                    ExprValueType.NULL -> nullValue()
+                PartiQLValueType.DECIMAL -> when (exprValue.type) {
+                    ExprValueType.NULL -> decimalValue(null)
                     ExprValueType.DECIMAL -> decimalValue(exprValue.numberValue() as BigDecimal)
-                    else -> throw ExprToPartiQLValueTypeMismatchException(PartiQLValueType.NULLABLE_DECIMAL, ExprToPartiQLValueType(exprValue))
+                    else -> throw ExprToPartiQLValueTypeMismatchException(
+                        PartiQLValueType.DECIMAL, ExprToPartiQLValueType(exprValue)
+                    )
                 }
-                PartiQLValueType.NULLABLE_FLOAT32 -> when (exprValue.type) {
-                    ExprValueType.NULL -> nullValue()
+                PartiQLValueType.FLOAT32 -> when (exprValue.type) {
+                    ExprValueType.NULL -> float32Value(null)
                     ExprValueType.FLOAT -> float32Value(exprValue.numberValue().toFloat())
-                    else -> throw ExprToPartiQLValueTypeMismatchException(PartiQLValueType.NULLABLE_FLOAT32, ExprToPartiQLValueType(exprValue))
+                    else -> throw ExprToPartiQLValueTypeMismatchException(
+                        PartiQLValueType.FLOAT32, ExprToPartiQLValueType(exprValue)
+                    )
                 }
-                PartiQLValueType.NULLABLE_FLOAT64 -> when (exprValue.type) {
-                    ExprValueType.NULL -> nullValue()
+                PartiQLValueType.FLOAT64 -> when (exprValue.type) {
+                    ExprValueType.NULL -> float64Value(null)
                     ExprValueType.FLOAT -> float64Value(exprValue.numberValue().toDouble())
-                    else -> throw ExprToPartiQLValueTypeMismatchException(PartiQLValueType.NULLABLE_FLOAT64, ExprToPartiQLValueType(exprValue))
+                    else -> throw ExprToPartiQLValueTypeMismatchException(
+                        PartiQLValueType.FLOAT64, ExprToPartiQLValueType(exprValue)
+                    )
                 }
-                PartiQLValueType.NULLABLE_CHAR -> when (exprValue.type) {
-                    ExprValueType.NULL -> nullValue()
+                PartiQLValueType.CHAR -> when (exprValue.type) {
+                    ExprValueType.NULL -> charValue(null)
                     ExprValueType.STRING -> charValue(exprValue.stringValue().first())
-                    else -> throw ExprToPartiQLValueTypeMismatchException(PartiQLValueType.NULLABLE_CHAR, ExprToPartiQLValueType(exprValue))
+                    else -> throw ExprToPartiQLValueTypeMismatchException(
+                        PartiQLValueType.CHAR, ExprToPartiQLValueType(exprValue)
+                    )
                 }
-                PartiQLValueType.NULLABLE_STRING -> when (exprValue.type) {
-                    ExprValueType.NULL -> nullValue()
+                PartiQLValueType.STRING -> when (exprValue.type) {
+                    ExprValueType.NULL -> stringValue(null)
                     ExprValueType.STRING -> stringValue(exprValue.stringValue())
-                    else -> throw ExprToPartiQLValueTypeMismatchException(PartiQLValueType.NULLABLE_STRING, ExprToPartiQLValueType(exprValue))
+                    else -> throw ExprToPartiQLValueTypeMismatchException(
+                        PartiQLValueType.STRING, ExprToPartiQLValueType(exprValue)
+                    )
                 }
-                PartiQLValueType.NULLABLE_SYMBOL -> when (exprValue.type) {
-                    ExprValueType.NULL -> nullValue()
+                PartiQLValueType.SYMBOL -> when (exprValue.type) {
+                    ExprValueType.NULL -> symbolValue(null)
                     ExprValueType.SYMBOL -> symbolValue(exprValue.stringValue())
-                    else -> throw ExprToPartiQLValueTypeMismatchException(PartiQLValueType.NULLABLE_SYMBOL, ExprToPartiQLValueType(exprValue))
+                    else -> throw ExprToPartiQLValueTypeMismatchException(
+                        PartiQLValueType.SYMBOL, ExprToPartiQLValueType(exprValue)
+                    )
                 }
-                PartiQLValueType.NULLABLE_BINARY -> TODO()
-                PartiQLValueType.NULLABLE_BYTE -> TODO()
-                PartiQLValueType.NULLABLE_BLOB -> when (exprValue.type) {
-                    ExprValueType.NULL -> nullValue()
+                PartiQLValueType.BINARY -> TODO()
+                PartiQLValueType.BYTE -> TODO()
+                PartiQLValueType.BLOB -> when (exprValue.type) {
+                    ExprValueType.NULL -> blobValue(null)
                     ExprValueType.BLOB -> blobValue(exprValue.bytesValue())
-                    else -> throw ExprToPartiQLValueTypeMismatchException(PartiQLValueType.NULLABLE_BLOB, ExprToPartiQLValueType(exprValue))
+                    else -> throw ExprToPartiQLValueTypeMismatchException(
+                        PartiQLValueType.BLOB, ExprToPartiQLValueType(exprValue)
+                    )
                 }
-                PartiQLValueType.NULLABLE_CLOB -> when (exprValue.type) {
-                    ExprValueType.NULL -> nullValue()
+                PartiQLValueType.CLOB -> when (exprValue.type) {
+                    ExprValueType.NULL -> clobValue(null)
                     ExprValueType.CLOB -> clobValue(exprValue.bytesValue())
-                    else -> throw ExprToPartiQLValueTypeMismatchException(PartiQLValueType.NULLABLE_CLOB, ExprToPartiQLValueType(exprValue))
+                    else -> throw ExprToPartiQLValueTypeMismatchException(
+                        PartiQLValueType.CLOB, ExprToPartiQLValueType(exprValue)
+                    )
                 }
-                PartiQLValueType.NULLABLE_DATE -> when (exprValue.type) {
-                    ExprValueType.NULL -> nullValue()
-                    ExprValueType.DATE -> dateValue(date(exprValue.dateValue().year, exprValue.dateValue().monthValue, exprValue.dateValue().dayOfMonth))
-                    else -> throw ExprToPartiQLValueTypeMismatchException(PartiQLValueType.NULLABLE_DATE, ExprToPartiQLValueType(exprValue))
+                PartiQLValueType.DATE -> when (exprValue.type) {
+                    ExprValueType.NULL -> dateValue(null)
+                    ExprValueType.DATE -> dateValue(
+                        date(
+                            exprValue.dateValue().year,
+                            exprValue.dateValue().monthValue,
+                            exprValue.dateValue().dayOfMonth
+                        )
+                    )
+                    else -> throw ExprToPartiQLValueTypeMismatchException(
+                        PartiQLValueType.DATE, ExprToPartiQLValueType(exprValue)
+                    )
                 }
-                PartiQLValueType.NULLABLE_TIME -> when (exprValue.type) {
-                    ExprValueType.NULL -> nullValue()
+                PartiQLValueType.TIME -> when (exprValue.type) {
+                    ExprValueType.NULL -> timeValue(null)
                     ExprValueType.TIME -> timeValue(
                         time(
-                            exprValue.timeValue().localTime.hour, exprValue.timeValue().localTime.minute, exprValue.timeValue().localTime.second, exprValue.timeValue().localTime.nano,
+                            exprValue.timeValue().localTime.hour,
+                            exprValue.timeValue().localTime.minute,
+                            exprValue.timeValue().localTime.second,
+                            exprValue.timeValue().localTime.nano,
                             exprValue.timeValue().timezoneMinute?.let { TimeZone.UtcOffset.of(it) } ?: null
                         )
                     )
-                    else -> throw ExprToPartiQLValueTypeMismatchException(PartiQLValueType.NULLABLE_TIME, ExprToPartiQLValueType(exprValue))
+                    else -> throw ExprToPartiQLValueTypeMismatchException(
+                        PartiQLValueType.TIME, ExprToPartiQLValueType(exprValue)
+                    )
                 }
-                PartiQLValueType.NULLABLE_TIMESTAMP -> TODO()
-                PartiQLValueType.NULLABLE_INTERVAL -> TODO()
-                PartiQLValueType.NULLABLE_BAG -> when (exprValue.type) {
-                    ExprValueType.NULL -> nullValue()
-                    ExprValueType.BAG -> bagValue(exprValue.map { ExprToPartiQLValue(it, ExprToPartiQLValueType(it)) })
-                    else -> throw ExprToPartiQLValueTypeMismatchException(PartiQLValueType.NULLABLE_BAG, ExprToPartiQLValueType(exprValue))
+                PartiQLValueType.TIMESTAMP -> TODO()
+                PartiQLValueType.INTERVAL -> TODO()
+                PartiQLValueType.BAG -> when (exprValue.type) {
+                    ExprValueType.NULL -> bagValue(null)
+                    ExprValueType.BAG -> bagValue(exprValue.map { ExprToPartiQLValue(it, ExprToPartiQLValueType(it)) }.asSequence())
+                    else -> throw ExprToPartiQLValueTypeMismatchException(
+                        PartiQLValueType.BAG, ExprToPartiQLValueType(exprValue)
+                    )
                 }
-                PartiQLValueType.NULLABLE_LIST -> when (exprValue.type) {
-                    ExprValueType.NULL -> nullValue()
-                    ExprValueType.LIST -> listValue(exprValue.map { ExprToPartiQLValue(it, ExprToPartiQLValueType(it)) })
-                    else -> throw ExprToPartiQLValueTypeMismatchException(PartiQLValueType.NULLABLE_LIST, ExprToPartiQLValueType(exprValue))
+                PartiQLValueType.LIST -> when (exprValue.type) {
+                    ExprValueType.NULL -> listValue(null)
+                    ExprValueType.LIST -> listValue(
+                        exprValue.map {
+                            ExprToPartiQLValue(
+                                it, ExprToPartiQLValueType(it)
+                            )
+                        }.asSequence()
+                    )
+                    else -> throw ExprToPartiQLValueTypeMismatchException(
+                        PartiQLValueType.LIST, ExprToPartiQLValueType(exprValue)
+                    )
                 }
-                PartiQLValueType.NULLABLE_SEXP -> when (exprValue.type) {
-                    ExprValueType.NULL -> nullValue()
-                    ExprValueType.SEXP -> sexpValue(exprValue.map { ExprToPartiQLValue(it, ExprToPartiQLValueType(it)) })
-                    else -> throw ExprToPartiQLValueTypeMismatchException(PartiQLValueType.NULLABLE_SEXP, ExprToPartiQLValueType(exprValue))
+                PartiQLValueType.SEXP -> when (exprValue.type) {
+                    ExprValueType.NULL -> sexpValue(null)
+                    ExprValueType.SEXP -> sexpValue(
+                        exprValue.map {
+                            ExprToPartiQLValue(
+                                it, ExprToPartiQLValueType(it)
+                            )
+                        }.asSequence()
+                    )
+                    else -> throw ExprToPartiQLValueTypeMismatchException(
+                        PartiQLValueType.SEXP, ExprToPartiQLValueType(exprValue)
+                    )
                 }
-                PartiQLValueType.NULLABLE_STRUCT -> when (exprValue.type) {
-                    ExprValueType.NULL -> nullValue()
-                    ExprValueType.STRUCT -> structValue(exprValue.map { Pair(it.name?.stringValue() ?: "", ExprToPartiQLValue(it, ExprToPartiQLValueType(it))) })
-                    else -> throw ExprToPartiQLValueTypeMismatchException(PartiQLValueType.NULLABLE_STRUCT, ExprToPartiQLValueType(exprValue))
+                PartiQLValueType.STRUCT -> when (exprValue.type) {
+                    ExprValueType.NULL -> structValue(null)
+                    ExprValueType.STRUCT -> structValue(
+                        exprValue.map {
+                            Pair(
+                                it.name?.stringValue() ?: "", ExprToPartiQLValue(it, ExprToPartiQLValueType(it))
+                            )
+                        }.asSequence()
+                    )
+                    else -> throw ExprToPartiQLValueTypeMismatchException(
+                        PartiQLValueType.STRUCT, ExprToPartiQLValueType(exprValue)
+                    )
                 }
             }
         }

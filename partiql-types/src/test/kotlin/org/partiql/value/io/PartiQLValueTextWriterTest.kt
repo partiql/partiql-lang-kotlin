@@ -24,22 +24,6 @@ import org.partiql.value.intValue
 import org.partiql.value.listValue
 import org.partiql.value.missingValue
 import org.partiql.value.nullValue
-import org.partiql.value.nullableBagValue
-import org.partiql.value.nullableBoolValue
-import org.partiql.value.nullableCharValue
-import org.partiql.value.nullableDecimalValue
-import org.partiql.value.nullableFloat32Value
-import org.partiql.value.nullableFloat64Value
-import org.partiql.value.nullableInt16Value
-import org.partiql.value.nullableInt32Value
-import org.partiql.value.nullableInt64Value
-import org.partiql.value.nullableInt8Value
-import org.partiql.value.nullableIntValue
-import org.partiql.value.nullableListValue
-import org.partiql.value.nullableSexpValue
-import org.partiql.value.nullableStringValue
-import org.partiql.value.nullableStructValue
-import org.partiql.value.nullableSymbolValue
 import org.partiql.value.sexpValue
 import org.partiql.value.stringValue
 import org.partiql.value.structValue
@@ -210,119 +194,119 @@ class PartiQLValueTextWriterTest {
                 expected = "missing",
             ),
             case(
-                value = nullableBoolValue(true),
+                value = boolValue(true),
                 expected = "true",
             ),
             case(
-                value = nullableBoolValue(false),
+                value = boolValue(false),
                 expected = "false",
             ),
             case(
-                value = nullableBoolValue(null),
+                value = boolValue(null),
                 expected = "null",
             ),
             case(
-                value = nullableInt8Value(1),
+                value = int8Value(1),
                 expected = "1",
             ),
             case(
-                value = nullableInt8Value(null),
+                value = int8Value(null),
                 expected = "null",
             ),
             case(
-                value = nullableInt16Value(1),
+                value = int16Value(1),
                 expected = "1",
             ),
             case(
-                value = nullableInt16Value(null),
+                value = int16Value(null),
                 expected = "null",
             ),
             case(
-                value = nullableInt32Value(1),
+                value = int32Value(1),
                 expected = "1",
             ),
             case(
-                value = nullableInt32Value(null),
+                value = int32Value(null),
                 expected = "null",
             ),
             case(
-                value = nullableInt64Value(1),
+                value = int64Value(1),
                 expected = "1",
             ),
             case(
-                value = nullableInt64Value(null),
+                value = int64Value(null),
                 expected = "null",
             ),
             case(
-                value = nullableIntValue(BigInteger.valueOf(1)),
+                value = intValue(BigInteger.valueOf(1)),
                 expected = "1",
             ),
             case(
-                value = nullableIntValue(null),
+                value = intValue(null),
                 expected = "null",
             ),
             case(
-                value = nullableDecimalValue(BigDecimal("123.456")),
+                value = decimalValue(BigDecimal("123.456")),
                 expected = "123.456",
             ),
             case(
-                value = nullableDecimalValue(null),
+                value = decimalValue(null),
                 expected = "null",
             ),
             case(
-                value = nullableFloat32Value(123.0f),
+                value = float32Value(123.0f),
                 expected = "123.0",
             ),
             case(
-                value = nullableFloat32Value(null),
+                value = float32Value(null),
                 expected = "null",
             ),
             case(
-                value = nullableFloat64Value(123.0),
+                value = float64Value(123.0),
                 expected = "123.0",
             ),
             case(
-                value = nullableFloat64Value(null),
+                value = float64Value(null),
                 expected = "null",
             ),
             case(
-                value = nullableCharValue('C'),
+                value = charValue('C'),
                 expected = "'C'",
             ),
             case(
-                value = nullableCharValue(null),
+                value = charValue(null),
                 expected = "null",
             ),
             case(
-                value = nullableStringValue("word"),
+                value = stringValue("word"),
                 expected = "'word'",
             ),
             case(
-                value = nullableStringValue(null),
+                value = stringValue(null),
                 expected = "null",
             ),
             case(
-                value = nullableStringValue("word\nword"),
+                value = stringValue("word\nword"),
                 expected = "'word\nword'",
             ),
             case(
-                value = nullableStringValue(null),
+                value = stringValue(null),
                 expected = "null",
             ),
             case(
-                value = nullableSymbolValue("x"),
+                value = symbolValue("x"),
                 expected = "x",
             ),
             case(
-                value = nullableSymbolValue(null),
+                value = symbolValue(null),
                 expected = "null",
             ),
             case(
-                value = nullableSymbolValue("f.x"),
+                value = symbolValue("f.x"),
                 expected = "f.x",
             ),
             case(
-                value = nullableSymbolValue(null),
+                value = symbolValue(null),
                 expected = "null",
             ),
             // TODO CLOB
@@ -338,20 +322,20 @@ class PartiQLValueTextWriterTest {
         @JvmStatic
         fun collections() = listOf(
             case(
-                value = bagValue(emptyList()),
+                value = bagValue(emptySequence()),
                 expected = "<<>>",
             ),
             case(
-                value = listValue(emptyList()),
+                value = listValue(emptySequence()),
                 expected = "[]",
             ),
             case(
-                value = sexpValue(emptyList()),
+                value = sexpValue(emptySequence()),
                 expected = "()",
             ),
             case(
                 value = bagValue(
-                    listOf(
+                    sequenceOf(
                         int32Value(1),
                         int32Value(2),
                         int32Value(3),
@@ -361,7 +345,7 @@ class PartiQLValueTextWriterTest {
             ),
             case(
                 value = listValue(
-                    listOf(
+                    sequenceOf(
                         stringValue("a"),
                         stringValue("b"),
                         stringValue("c"),
@@ -371,7 +355,7 @@ class PartiQLValueTextWriterTest {
             ),
             case(
                 value = sexpValue(
-                    listOf(
+                    sequenceOf(
                         int32Value(1),
                         int32Value(2),
                         int32Value(3),
@@ -379,21 +363,21 @@ class PartiQLValueTextWriterTest {
                 ),
                 expected = "(1 2 3)",
             ),
-            // nullable collections
+            //  collections
             case(
-                value = nullableBagValue<PartiQLValue>(null),
+                value = bagValue<PartiQLValue>(null),
                 expected = "null",
             ),
             case(
-                value = nullableListValue<PartiQLValue>(null),
+                value = listValue<PartiQLValue>(null),
                 expected = "null",
             ),
             case(
-                value = nullableSexpValue<PartiQLValue>(null),
+                value = sexpValue<PartiQLValue>(null),
                 expected = "null",
             ),
             case(
-                value = nullableStructValue<PartiQLValue>(null),
+                value = structValue<PartiQLValue>(null),
                 expected = "null",
             ),
         )
@@ -401,12 +385,12 @@ class PartiQLValueTextWriterTest {
         @JvmStatic
         fun struct() = listOf(
             case(
-                value = structValue<PartiQLValue>(emptyList()),
+                value = structValue<PartiQLValue>(emptySequence()),
                 expected = "{}",
             ),
             case(
                 value = structValue(
-                    listOf(
+                    sequenceOf(
                         "a" to int32Value(1),
                         "b" to stringValue("x"),
                     )
@@ -419,7 +403,7 @@ class PartiQLValueTextWriterTest {
         fun collectionsFormatted() = listOf(
             formatted(
                 value = bagValue(
-                    listOf(
+                    sequenceOf(
                         int32Value(1),
                         int32Value(2),
                         int32Value(3),
@@ -435,7 +419,7 @@ class PartiQLValueTextWriterTest {
             ),
             formatted(
                 value = listValue(
-                    listOf(
+                    sequenceOf(
                         stringValue("a"),
                         stringValue("b"),
                         stringValue("c"),
@@ -451,7 +435,7 @@ class PartiQLValueTextWriterTest {
             ),
             formatted(
                 value = sexpValue(
-                    listOf(
+                    sequenceOf(
                         int32Value(1),
                         int32Value(2),
                         int32Value(3),
@@ -470,12 +454,12 @@ class PartiQLValueTextWriterTest {
         @JvmStatic
         fun structFormatted() = listOf(
             formatted(
-                value = structValue<PartiQLValue>(emptyList()),
+                value = structValue<PartiQLValue>(emptySequence()),
                 expected = "{}",
             ),
             formatted(
                 value = structValue(
-                    listOf(
+                    sequenceOf(
                         "a" to int32Value(1),
                         "b" to stringValue("x"),
                     )
@@ -493,23 +477,23 @@ class PartiQLValueTextWriterTest {
         fun nestedCollectionsFormatted() = listOf(
             formatted(
                 value = structValue(
-                    listOf(
+                    sequenceOf(
                         "bag" to bagValue(
-                            listOf(
+                            sequenceOf(
                                 int32Value(1),
                                 int32Value(2),
                                 int32Value(3),
                             )
                         ),
                         "list" to listValue(
-                            listOf(
+                            sequenceOf(
                                 stringValue("a"),
                                 stringValue("b"),
                                 stringValue("c"),
                             )
                         ),
                         "sexp" to sexpValue(
-                            listOf(
+                            sequenceOf(
                                 int32Value(1),
                                 int32Value(2),
                                 int32Value(3),
@@ -539,23 +523,23 @@ class PartiQLValueTextWriterTest {
             ),
             formatted(
                 value = bagValue(
-                    listOf(
+                    sequenceOf(
                         listValue(
-                            listOf(
+                            sequenceOf(
                                 stringValue("a"),
                                 stringValue("b"),
                                 stringValue("c"),
                             )
                         ),
                         sexpValue(
-                            listOf(
+                            sequenceOf(
                                 int32Value(1),
                                 int32Value(2),
                                 int32Value(3),
                             )
                         ),
                         structValue(
-                            listOf(
+                            sequenceOf(
                                 "a" to int32Value(1),
                                 "b" to stringValue("x"),
                             )
@@ -583,10 +567,10 @@ class PartiQLValueTextWriterTest {
             ),
             formatted(
                 value = structValue(
-                    listOf(
-                        "bag" to bagValue<PartiQLValue>(emptyList()),
-                        "list" to listValue<PartiQLValue>(emptyList()),
-                        "sexp" to sexpValue<PartiQLValue>(emptyList()),
+                    sequenceOf(
+                        "bag" to bagValue<PartiQLValue>(emptySequence()),
+                        "list" to listValue<PartiQLValue>(emptySequence()),
+                        "sexp" to sexpValue<PartiQLValue>(emptySequence()),
                     )
                 ),
                 expected = """
@@ -599,10 +583,10 @@ class PartiQLValueTextWriterTest {
             ),
             formatted(
                 value = bagValue(
-                    listOf(
-                        listValue<PartiQLValue>(emptyList()),
-                        sexpValue<PartiQLValue>(emptyList()),
-                        structValue<PartiQLValue>(emptyList()),
+                    sequenceOf(
+                        listValue<PartiQLValue>(emptySequence()),
+                        sexpValue<PartiQLValue>(emptySequence()),
+                        structValue<PartiQLValue>(emptySequence()),
                     )
                 ),
                 expected = """
@@ -706,34 +690,34 @@ class PartiQLValueTextWriterTest {
             // TODO TIMESTAMP
             // TODO INTERVAL
             case(
-                value = bagValue(emptyList(), annotations),
+                value = bagValue(emptySequence(), annotations),
                 expected = "x::y::<<>>",
             ),
             case(
-                value = listValue(emptyList(), annotations),
+                value = listValue(emptySequence(), annotations),
                 expected = "x::y::[]",
             ),
             case(
-                value = sexpValue(emptyList(), annotations),
+                value = sexpValue(emptySequence(), annotations),
                 expected = "x::y::()",
             ),
             formatted(
                 value = bagValue(
-                    listOf(
+                    sequenceOf(
                         listValue(
-                            listOf(
+                            sequenceOf(
                                 stringValue("a", listOf("x")),
                             ),
                             listOf("list")
                         ),
                         sexpValue(
-                            listOf(
+                            sequenceOf(
                                 int32Value(1, listOf("y")),
                             ),
                             listOf("sexp")
                         ),
                         structValue(
-                            listOf(
+                            sequenceOf(
                                 "a" to int32Value(1, listOf("z")),
                             ),
                             listOf("struct")
