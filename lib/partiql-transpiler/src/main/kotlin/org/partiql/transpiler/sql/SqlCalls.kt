@@ -1,6 +1,7 @@
 package org.partiql.transpiler.sql
 
 import org.partiql.ast.Ast
+import org.partiql.ast.DatetimeField
 import org.partiql.ast.Expr
 import org.partiql.ast.Identifier
 import org.partiql.types.StaticType
@@ -36,9 +37,9 @@ public abstract class SqlCalls {
     }
 
     /**
-     * List of special form rules. See [org.partiql.planner.Header] for the derivations,.
+     * List of special form rules. See [org.partiql.planner.Header] for the derivations.
      */
-    private val rules: Map<String, SqlCallFn> = mapOf(
+    public val rules: Map<String, SqlCallFn> = mapOf(
         "not" to ::notFn,
         "pos" to ::posFn,
         "neg" to ::negFn,
@@ -56,6 +57,20 @@ public abstract class SqlCalls {
         "div" to ::divFn,
         "mod" to ::modFn,
         "concat" to ::concatFn,
+        // DATE_ADD
+        "date_add_year" to { args -> dateAdd(DatetimeField.YEAR, args) },
+        "date_add_month" to { args -> dateAdd(DatetimeField.MONTH, args) },
+        "date_add_day" to { args -> dateAdd(DatetimeField.DAY, args) },
+        "date_add_hour" to { args -> dateAdd(DatetimeField.HOUR, args) },
+        "date_add_minute" to { args -> dateAdd(DatetimeField.MINUTE, args) },
+        "date_add_second" to { args -> dateAdd(DatetimeField.SECOND, args) },
+        // DATE_DIFF
+        "date_diff_year" to { args -> dateDiff(DatetimeField.YEAR, args) },
+        "date_diff_month" to { args -> dateDiff(DatetimeField.MONTH, args) },
+        "date_diff_day" to { args -> dateDiff(DatetimeField.DAY, args) },
+        "date_diff_hour" to { args -> dateDiff(DatetimeField.HOUR, args) },
+        "date_diff_minute" to { args -> dateDiff(DatetimeField.MINUTE, args) },
+        "date_diff_second" to { args -> dateDiff(DatetimeField.SECOND, args) },
     )
 
     public fun retarget(name: String, args: SqlArgs): Expr {
@@ -119,4 +134,12 @@ public abstract class SqlCalls {
     public open fun modFn(args: SqlArgs): Expr = binary(Expr.Binary.Op.MODULO, args)
 
     public open fun concatFn(args: SqlArgs): Expr = binary(Expr.Binary.Op.CONCAT, args)
+
+    public open fun dateAdd(part: DatetimeField, args: SqlArgs): Expr {
+        TODO()
+    }
+
+    public open fun dateDiff(part: DatetimeField, args: SqlArgs): Expr {
+        TODO()
+    }
 }
