@@ -1,8 +1,9 @@
-package org.partiql.planner.test
+package org.partiql.planner
 
 import com.amazon.ionelement.api.field
 import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.ionStructOf
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.DynamicContainer
 import org.junit.jupiter.api.DynamicContainer.dynamicContainer
 import org.junit.jupiter.api.DynamicNode
@@ -13,13 +14,14 @@ import org.junit.jupiter.api.fail
 import org.partiql.errors.ProblemSeverity
 import org.partiql.parser.PartiQLParserBuilder
 import org.partiql.plan.Statement
-import org.partiql.planner.PartiQLPlanner
-import org.partiql.planner.PartiQLPlannerBuilder
+import org.partiql.planner.test.PlannerTest
+import org.partiql.planner.test.PlannerTestProvider
+import org.partiql.planner.test.PlannerTestSuite
 import org.partiql.planner.test.plugin.FsPlugin
+import org.partiql.planner.test.toIon
 import org.partiql.types.TypingMode
 import java.util.stream.Stream
 import kotlin.io.path.toPath
-import kotlin.test.assertEquals
 
 class PlannerTestJunit {
 
@@ -31,8 +33,6 @@ class PlannerTestJunit {
 
     companion object {
 
-        private val log = PlannerTestLog(System.out)
-
         private val parser = PartiQLParserBuilder.standard().build()
 
         private val catalogConfig = mapOf(
@@ -42,7 +42,7 @@ class PlannerTestJunit {
         )
 
         private fun suiteNode(suite: PlannerTestSuite): DynamicContainer {
-            val schemaRoot = this::class.java.getResource("/catalogs")!!.toURI().toPath()
+            val schemaRoot = PlannerTest::class.java.getResource("/catalogs")!!.toURI().toPath()
             val plugin = FsPlugin(schemaRoot)
             val planner = PartiQLPlannerBuilder()
                 .mode(TypingMode.STRICT)

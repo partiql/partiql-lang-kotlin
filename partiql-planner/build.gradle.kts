@@ -17,6 +17,7 @@
 plugins {
     id(Plugins.conventions)
     id(Plugins.library)
+    id(Plugins.testFixtures)
 }
 
 dependencies {
@@ -28,4 +29,10 @@ dependencies {
     implementation(Deps.ionElement)
     // Test
     testImplementation(project(":partiql-parser"))
+    // Test Fixtures
+    testFixturesImplementation(project(":partiql-spi"))
+}
+
+tasks.processTestResources {
+    from("src/testFixtures/resources")
 }
