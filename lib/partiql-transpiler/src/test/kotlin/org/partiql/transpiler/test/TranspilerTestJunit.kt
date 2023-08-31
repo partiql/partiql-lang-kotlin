@@ -11,10 +11,14 @@ import org.junit.jupiter.api.DynamicTest.dynamicTest
 import org.junit.jupiter.api.TestFactory
 import org.junit.jupiter.api.fail
 import org.partiql.planner.PartiQLPlanner
+import org.partiql.planner.test.PlannerTest
+import org.partiql.planner.test.PlannerTestLog
+import org.partiql.planner.test.PlannerTestProvider
+import org.partiql.planner.test.PlannerTestSuite
+import org.partiql.planner.test.plugin.FsPlugin
 import org.partiql.transpiler.PartiQLTranspiler
 import org.partiql.transpiler.TranspilerProblem
 import org.partiql.transpiler.targets.PartiQLTarget
-import org.partiql.transpiler.test.plugin.TpPlugin
 import java.util.stream.Stream
 import kotlin.io.path.toPath
 
@@ -22,23 +26,23 @@ class TranspilerTestJunit {
 
     @TestFactory
     fun mapSuitesToJunitTests(): Stream<DynamicNode> {
-        val provider = TranspilerTestProvider()
+        val provider = PlannerTestProvider()
         return provider.suites().map { suiteNode(it) }
     }
 
     companion object {
 
-        private val log = TranspilerTestLog(System.out)
+        private val log = PlannerTestLog(System.out)
 
         private val catalogConfig = mapOf(
             "default" to ionStructOf(
-                field("connector_name", ionString("tp")),
+                field("connector_name", ionString("fs")),
             )
         )
 
-        private fun suiteNode(suite: TranspilerTestSuite): DynamicContainer {
-            val schemaRoot = this::class.java.getResource("/catalogs")!!.toURI().toPath()
-            val plugin = TpPlugin(schemaRoot)
+        private fun suiteNode(suite: PlannerTestSuite): DynamicContainer {
+            val schemaRoot = PlannerTest::class.java.getResource("/catalogs")!!.toURI().toPath()
+            val plugin = FsPlugin(schemaRoot)
             val transpiler = PartiQLTranspiler(listOf(plugin))
             val tests = suite.tests.map { (name, test) ->
                 val testName = "${suite.name}__$name"
@@ -58,7 +62,7 @@ class TranspilerTestJunit {
             displayName: String,
             transpiler: PartiQLTranspiler,
             session: PartiQLPlanner.Session,
-            test: TranspilerTest,
+            test: PlannerTest,
         ): DynamicTest {
             return dynamicTest(displayName) {
                 val result = transpiler.transpile(test.statement, PartiQLTarget, session)

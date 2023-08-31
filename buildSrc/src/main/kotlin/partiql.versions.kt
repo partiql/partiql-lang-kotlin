@@ -108,4 +108,5 @@ object Plugins {
     const val jmh = "me.champeau.gradle.jmh"
     const val ktlint = "org.jlleitschuh.gradle.ktlint"
     const val library = "org.gradle.java-library"
+    const val testFixtures = "org.gradle.java-test-fixtures"
 }

@@ -10,6 +10,8 @@ dependencies {
     implementation(project(":partiql-planner"))
     implementation(project(":partiql-spi"))
     implementation(project(":partiql-types"))
+    // Test
+    testImplementation(testFixtures(project(":partiql-planner")))
 }
 
 kotlin {
@@ -18,4 +20,8 @@ kotlin {
 
 ktlint {
     ignoreFailures.set(true)
+}
+
+tasks.processTestResources {
+    from("${project(":partiql-planner").buildDir}/resources/testFixtures")
 }
