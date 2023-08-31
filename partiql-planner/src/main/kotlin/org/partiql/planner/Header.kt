@@ -3,7 +3,6 @@ package org.partiql.planner
 import org.partiql.plan.Fn
 import org.partiql.plan.Identifier
 import org.partiql.planner.typer.TypeLattice
-import org.partiql.types.TypingMode
 import org.partiql.types.function.FunctionParameter
 import org.partiql.types.function.FunctionSignature
 import org.partiql.value.PartiQLValueExperimental
@@ -114,7 +113,7 @@ internal class Header(
          *
          * TODO BUG — We don't validate function overloads
          */
-        public fun partiql(mode: TypingMode = TypingMode.STRICT): Header {
+        public fun partiql(): Header {
             val namespace = "partiql"
             val types = TypeLattice.partiql()
             val functions = Functions.combine(
@@ -146,7 +145,7 @@ internal class Header(
                 val signatures = it.value
                 val variants = signatures.associate { fn -> fn.parameters.size to fn.returns }
                 val additions = variants.map { e ->
-                    val returns = e.value
+                    val returns = ANY
                     val params = (0 until e.key).map { i -> FunctionParameter("arg_$i", ANY) }
                     FunctionSignature(name, returns, params)
                 }

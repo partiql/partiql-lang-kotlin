@@ -75,8 +75,8 @@ public class FunctionSignature(
         appendLine(" )")
         append(indent).appendLine("RETURNS $returns")
         append(indent).appendLine("SPECIFIC $specific")
-        append(indent).append(deterministicCharacteristic)
-        append(indent).append(nullCallClause)
+        append(indent).appendLine(deterministicCharacteristic)
+        append(indent).appendLine(nullCallClause)
         append(indent).appendLine("RETURN $fn ( ${parameters.joinToString { it.name.uppercase() }} ) ;")
     }
 

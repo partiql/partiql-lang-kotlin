@@ -22,7 +22,7 @@ internal class PartiQLPlannerDefault(
     private val version = PartiQLVersion.VERSION_0_1
 
     // For now, only have the default header
-    private val header = Header.partiql(mode)
+    private val header = Header.partiql()
 
     override fun plan(statement: Statement, session: PartiQLPlanner.Session, onProblem: ProblemCallback): PartiQLPlanner.Result {
         // 0. Initialize the planning environment
