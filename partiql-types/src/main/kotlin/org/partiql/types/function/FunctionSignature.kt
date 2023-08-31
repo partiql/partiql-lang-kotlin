@@ -73,8 +73,8 @@ public class FunctionSignature(
         appendLine(" )")
         append(indent).appendLine("RETURNS $returns")
         append(indent).appendLine("SPECIFIC $specific")
-        append(indent).append(deterministicCharacteristic)
-        append(indent).append(nullCallClause)
+        append(indent).appendLine(deterministicCharacteristic)
+        append(indent).appendLine(nullCallClause)
         append(indent).appendLine("RETURN $fn ( ${parameters.joinToString { it.name.uppercase() }} ) ;")
     }
 
@@ -104,6 +104,8 @@ public class FunctionSignature(
         result = 31 * result + returns.hashCode()
         result = 31 * result + parameters.hashCode()
         result = 31 * result + isDeterministic.hashCode()
+        result = 31 * result + isNullCall.hashCode()
+        result = 31 * result + isNullable.hashCode()
         result = 31 * result + (description?.hashCode() ?: 0)
         return result
     }
