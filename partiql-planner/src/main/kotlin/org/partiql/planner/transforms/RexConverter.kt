@@ -1,6 +1,7 @@
 package org.partiql.planner.transforms
 
 import org.partiql.ast.AstNode
+import org.partiql.ast.DatetimeField
 import org.partiql.ast.Expr
 import org.partiql.ast.Select
 import org.partiql.ast.visitor.AstBaseVisitor
@@ -327,12 +328,32 @@ internal object RexConverter {
             TODO("PartiQL Special Form CAN_LOSSLESS_CAST")
         }
 
-        override fun visitExprDateAdd(node: Expr.DateAdd, ctx: Env): Rex {
-            TODO("PartiQL Special Form DATE_ADD")
+        override fun visitExprDateAdd(node: Expr.DateAdd, ctx: Env) = transform {
+            val type = StaticType.TIMESTAMP
+            // Args
+            val arg0 = visitExpr(node.lhs, ctx)
+            val arg1 = visitExpr(node.rhs, ctx)
+            // Call Variants
+            val call = when (node.field) {
+                DatetimeField.TIMEZONE_HOUR -> error("Invalid call DATE_ADD(TIMEZONE_HOUR, ...)")
+                DatetimeField.TIMEZONE_MINUTE -> error("Invalid call DATE_ADD(TIMEZONE_MINUTE, ...)")
+                else -> call("date_add_${node.field.name.lowercase()}", arg0, arg1)
+            }
+            rex(type, call)
         }
 
-        override fun visitExprDateDiff(node: Expr.DateDiff, ctx: Env): Rex {
-            TODO("PartiQL Special Form DATE_DIFF")
+        override fun visitExprDateDiff(node: Expr.DateDiff, ctx: Env) = transform {
+            val type = StaticType.TIMESTAMP
+            // Args
+            val arg0 = visitExpr(node.lhs, ctx)
+            val arg1 = visitExpr(node.rhs, ctx)
+            // Call Variants
+            val call = when (node.field) {
+                DatetimeField.TIMEZONE_HOUR -> error("Invalid call DATE_DIFF(TIMEZONE_HOUR, ...)")
+                DatetimeField.TIMEZONE_MINUTE -> error("Invalid call DATE_DIFF(TIMEZONE_MINUTE, ...)")
+                else -> call("date_diff_${node.field.name.lowercase()}", arg0, arg1)
+            }
+            rex(type, call)
         }
 
         override fun visitExprSessionAttribute(node: Expr.SessionAttribute, ctx: Env) = transform {

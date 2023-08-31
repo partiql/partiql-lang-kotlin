@@ -26,4 +26,6 @@ dependencies {
     implementation(project(":partiql-spi"))
     implementation(Deps.dotlin)
     implementation(Deps.ionElement)
+    // Test
+    testImplementation(project(":partiql-parser"))
 }

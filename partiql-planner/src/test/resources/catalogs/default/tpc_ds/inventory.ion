@@ -1,0 +1,34 @@
+{
+  type: "struct",
+  name: "inventory",
+  fields: [
+    {
+      name: "inv_date_sk",
+      type: [
+        "string",
+        "null"
+      ]
+    },
+    {
+      name: "inv_item_sk",
+      type: [
+        "string",
+        "null"
+      ]
+    },
+    {
+      name: "inv_warehouse_sk",
+      type: [
+        "string",
+        "null"
+      ]
+    },
+    {
+      name: "inv_quantity_on_hand",
+      type: [
+        "int32",
+        "null"
+      ]
+    }
+  ]
+}
