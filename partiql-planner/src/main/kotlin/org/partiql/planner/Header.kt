@@ -59,7 +59,7 @@ internal val ATTRIBUTES: Map<String, String> = mapOf(
 internal class Header(
     private val namespace: String,
     private val types: TypeLattice,
-    private val functions: Map<String, List<FunctionSignature>>,
+    private val functions: FunctionMap,
 ) {
 
     /**
@@ -540,8 +540,7 @@ internal class Header(
 
         // Function precedence comparator
         // 1. Fewest args first
-        // 2. Type parameters sort before value parameters
-        // 3. Parameters are compared left-to-right
+        // 2. Parameters are compared left-to-right
         private val functionPrecedence = Comparator<FunctionSignature> { fn1, fn2 ->
             // Compare number of arguments
             if (fn1.parameters.size != fn2.parameters.size) {

@@ -54,11 +54,9 @@ internal class FunctionResolver(private val header: Header) {
             val a = args[i]
             val p = signature.parameters[i]
             when {
-                // 1. Different parameter types
-                a::class != p::class -> return null
-                // 2. Exact match
+                // 1. Exact match
                 a.type == p.type -> mapping.add(null)
-                // 3. Check for coercion
+                // 2. Check for coercion
                 else -> {
                     val cast = header.lookupCast(a.type, p.type)
                     when (cast) {
