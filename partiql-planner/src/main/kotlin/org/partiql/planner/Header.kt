@@ -1,5 +1,6 @@
 package org.partiql.planner
 
+import org.partiql.ast.DatetimeField
 import org.partiql.plan.Fn
 import org.partiql.plan.Identifier
 import org.partiql.planner.typer.TypeLattice
@@ -214,6 +215,7 @@ internal class Header(
             extract(),
             dateAdd(),
             dateDiff(),
+            utcNow(),
         ).flatten()
 
         public fun system(): List<FunctionSignature> = listOf(
@@ -238,7 +240,6 @@ internal class Header(
             FLOAT64,
         )
 
-        // CLOB?
         private val textTypes = listOf(
             STRING,
             SYMBOL,
@@ -249,6 +250,12 @@ internal class Header(
             BAG,
             LIST,
             SEXP,
+        )
+
+        private val datetimeTypes = listOf(
+            DATE,
+            TIME,
+            TIMESTAMP,
         )
 
         public fun unary(name: String, returns: PartiQLValueType, value: PartiQLValueType) =
@@ -523,11 +530,41 @@ internal class Header(
         // TODO
         private fun extract(): List<FunctionSignature> = emptyList()
 
-        // TODO
-        private fun dateAdd(): List<FunctionSignature> = emptyList()
+        private fun dateArithmetic(prefix: String): List<FunctionSignature> {
+            val operators = mutableListOf<FunctionSignature>()
+            for (type in datetimeTypes) {
+                for (field in DatetimeField.values()) {
+                    if (field == DatetimeField.TIMEZONE_HOUR || field == DatetimeField.TIMEZONE_MINUTE) {
+                        continue
+                    }
+                    val signature = FunctionSignature(
+                        name = "${prefix}_${field.name.lowercase()}",
+                        returns = type,
+                        parameters = listOf(
+                            FunctionParameter("interval", INT),
+                            FunctionParameter("datetime", type),
+                        ),
+                        isNullCall = true,
+                        isNullable = false,
+                    )
+                    operators.add(signature)
+                }
+            }
+            return operators
+        }
 
-        // TODO
-        private fun dateDiff(): List<FunctionSignature> = emptyList()
+        private fun dateAdd(): List<FunctionSignature> = dateArithmetic("date_add")
+
+        private fun dateDiff(): List<FunctionSignature> = dateArithmetic("date_diff")
+
+        private fun utcNow(): List<FunctionSignature> = listOf(
+            FunctionSignature(
+                name = "utcnow",
+                returns = TIMESTAMP,
+                parameters = emptyList(),
+                isNullable = false,
+            )
+        )
 
         private fun currentUser() = FunctionSignature(
             name = "\$__current_user",
