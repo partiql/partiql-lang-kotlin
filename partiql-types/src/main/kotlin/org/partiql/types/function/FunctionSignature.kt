@@ -42,6 +42,22 @@ public class FunctionSignature(
         append(returns.name)
     }
 
+    /**
+     * SQL-99 p.542 <deterministic characteristic>
+     */
+    private val deterministicCharacteristic = when (isDeterministic) {
+        true -> "DETERMINISTIC"
+        else -> "NOT DETERMINISTIC"
+    }
+
+    /**
+     * SQL-99 p.543 <null-call clause>
+     */
+    private val nullCallClause = when (isNullCall) {
+        true -> "RETURNS NULL ON NULL INPUT"
+        else -> "CALLED ON NULL INPUT"
+    }
+
     override fun toString(): String = buildString {
         val fn = name.uppercase()
         val indent = "  "
@@ -59,6 +75,8 @@ public class FunctionSignature(
         appendLine(" )")
         append(indent).appendLine("RETURNS $returns")
         append(indent).appendLine("SPECIFIC $specific")
+        append(indent).append(deterministicCharacteristic)
+        append(indent).append(nullCallClause)
         append(indent).appendLine("RETURN $fn ( ${parameters.joinToString { it.name.uppercase() }} ) ;")
     }
 
@@ -68,6 +86,8 @@ public class FunctionSignature(
             other.name != name ||
             other.returns != returns ||
             other.isDeterministic != isDeterministic ||
+            other.isNullCall != isNullCall ||
+            other.isNullable != isNullable ||
             other.parameters.size != parameters.size
         ) {
             return false

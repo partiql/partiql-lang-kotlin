@@ -33,7 +33,6 @@ import org.partiql.spi.Plugin
 import org.partiql.spi.function.PartiQLFunction
 import org.partiql.spi.function.PartiQLFunctionExperimental
 import org.partiql.types.StaticType
-import org.partiql.types.function.FunctionParameter
 import org.partiql.value.BagValue
 import org.partiql.value.BlobValue
 import org.partiql.value.BoolValue
@@ -121,8 +120,7 @@ class ServiceLoaderUtil {
         @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
         private fun PartiQLtoExprFunction(customFunction: PartiQLFunction): ExprFunction {
             val name = customFunction.signature.name
-            val parameters =
-                customFunction.signature.parameters.filterIsInstance<FunctionParameter.ValueParameter>().map { it.type }
+            val parameters = customFunction.signature.parameters.map { it.type }
             val returnType = customFunction.signature.returns
             return object : ExprFunction {
                 override val signature = FunctionSignature(

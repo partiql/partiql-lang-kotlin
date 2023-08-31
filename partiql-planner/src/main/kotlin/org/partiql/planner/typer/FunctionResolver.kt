@@ -4,6 +4,7 @@ import org.partiql.planner.Header
 import org.partiql.types.function.FunctionParameter
 import org.partiql.types.function.FunctionSignature
 import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.PartiQLValueType
 
 /**
  * Function arguments list. The planner is responsible for mapping arguments to parameters.
@@ -44,6 +45,8 @@ internal class FunctionResolver(private val header: Header) {
 
     /**
      * Attempt to match arguments to the parameters; return the implicit casts if necessary.
+     *
+     * TODO we need to constrain the allowable runtime types for an ANY typed parameter.
      */
     public fun match(signature: FunctionSignature, args: Args): Mapping? {
         if (signature.parameters.size != args.size) {
@@ -56,7 +59,9 @@ internal class FunctionResolver(private val header: Header) {
             when {
                 // 1. Exact match
                 a.type == p.type -> mapping.add(null)
-                // 2. Check for coercion
+                // 2. Match ANY, no coercion needed
+                p.type == PartiQLValueType.ANY -> mapping.add(null)
+                // 3. Check for a coercion
                 else -> {
                     val cast = header.lookupCast(a.type, p.type)
                     when (cast) {
