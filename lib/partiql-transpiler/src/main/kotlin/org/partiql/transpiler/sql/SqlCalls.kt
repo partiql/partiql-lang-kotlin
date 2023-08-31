@@ -5,6 +5,8 @@ import org.partiql.ast.DatetimeField
 import org.partiql.ast.Expr
 import org.partiql.ast.Identifier
 import org.partiql.types.StaticType
+import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.PartiQLValueType
 
 /**
  * Transform the call args to the special form.
@@ -29,6 +31,7 @@ public class SqlArg(
  *
  * For target implementors, extend this and leverage the type-annotated function arguments to perform desired rewrite.
  */
+@OptIn(PartiQLValueExperimental::class)
 public abstract class SqlCalls {
 
     companion object {
@@ -57,6 +60,33 @@ public abstract class SqlCalls {
         "div" to ::divFn,
         "mod" to ::modFn,
         "concat" to ::concatFn,
+        // CASTS
+        "cast_bool" to { args -> rewriteCast(PartiQLValueType.BOOL, args) },
+        "cast_int8" to { args -> rewriteCast(PartiQLValueType.INT8, args) },
+        "cast_int16" to { args -> rewriteCast(PartiQLValueType.INT16, args) },
+        "cast_int32" to { args -> rewriteCast(PartiQLValueType.INT32, args) },
+        "cast_int64" to { args -> rewriteCast(PartiQLValueType.INT64, args) },
+        "cast_int" to { args -> rewriteCast(PartiQLValueType.INT, args) },
+        "cast_decimal" to { args -> rewriteCast(PartiQLValueType.DECIMAL, args) },
+        "cast_float32" to { args -> rewriteCast(PartiQLValueType.FLOAT32, args) },
+        "cast_float64" to { args -> rewriteCast(PartiQLValueType.FLOAT64, args) },
+        "cast_char" to { args -> rewriteCast(PartiQLValueType.CHAR, args) },
+        "cast_string" to { args -> rewriteCast(PartiQLValueType.STRING, args) },
+        "cast_symbol" to { args -> rewriteCast(PartiQLValueType.SYMBOL, args) },
+        "cast_binary" to { args -> rewriteCast(PartiQLValueType.BINARY, args) },
+        "cast_byte" to { args -> rewriteCast(PartiQLValueType.BYTE, args) },
+        "cast_blob" to { args -> rewriteCast(PartiQLValueType.BLOB, args) },
+        "cast_clob" to { args -> rewriteCast(PartiQLValueType.CLOB, args) },
+        "cast_date" to { args -> rewriteCast(PartiQLValueType.DATE, args) },
+        "cast_time" to { args -> rewriteCast(PartiQLValueType.TIME, args) },
+        "cast_timestamp" to { args -> rewriteCast(PartiQLValueType.TIMESTAMP, args) },
+        "cast_interval" to { args -> rewriteCast(PartiQLValueType.INTERVAL, args) },
+        "cast_bag" to { args -> rewriteCast(PartiQLValueType.BAG, args) },
+        "cast_list" to { args -> rewriteCast(PartiQLValueType.LIST, args) },
+        "cast_sexp" to { args -> rewriteCast(PartiQLValueType.SEXP, args) },
+        "cast_struct" to { args -> rewriteCast(PartiQLValueType.STRUCT, args) },
+        "cast_null" to { args -> rewriteCast(PartiQLValueType.NULL, args) },
+        "cast_missing" to { args -> rewriteCast(PartiQLValueType.MISSING, args) },
         // DATE_ADD
         "date_add_year" to { args -> dateAdd(DatetimeField.YEAR, args) },
         "date_add_month" to { args -> dateAdd(DatetimeField.MONTH, args) },
@@ -141,5 +171,40 @@ public abstract class SqlCalls {
 
     public open fun dateDiff(part: DatetimeField, args: SqlArgs): Expr {
         TODO()
+    }
+
+    public open fun rewriteCast(type: PartiQLValueType, args: SqlArgs): Expr = with(Ast) {
+        assert(args.size == 1) { "CAST should only have 1 argument" }
+        val value = args[0].expr
+        val asType = when (type) {
+            PartiQLValueType.ANY -> typeAny()
+            PartiQLValueType.BOOL -> typeBool()
+            PartiQLValueType.INT8 -> typeInt()
+            PartiQLValueType.INT16 -> typeInt2()
+            PartiQLValueType.INT32 -> typeInt4()
+            PartiQLValueType.INT64 -> typeInt8()
+            PartiQLValueType.INT -> typeInt()
+            PartiQLValueType.DECIMAL -> typeDecimal(null, null)
+            PartiQLValueType.FLOAT32 -> typeFloat32()
+            PartiQLValueType.FLOAT64 -> typeFloat64()
+            PartiQLValueType.CHAR -> typeChar(null)
+            PartiQLValueType.STRING -> typeString(null)
+            PartiQLValueType.SYMBOL -> typeSymbol()
+            PartiQLValueType.BINARY -> error("Unsupported")
+            PartiQLValueType.BYTE -> error("Unsupported")
+            PartiQLValueType.BLOB -> typeBlob(null)
+            PartiQLValueType.CLOB -> typeClob(null)
+            PartiQLValueType.DATE -> typeDate()
+            PartiQLValueType.TIME -> typeTime(null)
+            PartiQLValueType.TIMESTAMP -> typeTimestamp(null)
+            PartiQLValueType.INTERVAL -> typeInterval(null)
+            PartiQLValueType.BAG -> typeBag()
+            PartiQLValueType.LIST -> typeList()
+            PartiQLValueType.SEXP -> typeSexp()
+            PartiQLValueType.STRUCT -> typeStruct()
+            PartiQLValueType.NULL -> typeNullType()
+            PartiQLValueType.MISSING -> typeMissing()
+        }
+        exprCast(value, asType)
     }
 }

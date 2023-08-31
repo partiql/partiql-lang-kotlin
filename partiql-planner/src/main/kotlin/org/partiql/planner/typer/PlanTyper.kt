@@ -666,16 +666,15 @@ internal class PlanTyper(
         }
         val newArgs = mutableListOf<Rex>()
         for (i in mapping.indices) {
-            val a = args[i]
+            var a = args[i]
             val m = mapping[i]
-            if (m == null) {
-                newArgs.add(a)
-            } else {
+            if (m != null) {
                 // rewrite
                 val type = m.returns.toStaticType()
                 val cast = rexOpCall(fnResolved(m), listOf(a))
-                rex(type, cast)
+                a = rex(type, cast)
             }
+            newArgs.add(a)
         }
         return newArgs
     }

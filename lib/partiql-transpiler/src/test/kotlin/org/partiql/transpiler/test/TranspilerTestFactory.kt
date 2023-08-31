@@ -51,7 +51,8 @@ abstract class TranspilerTestFactory<T>(
 
     @TestFactory
     public fun mapSuitesToJunitTests(): Stream<DynamicNode> {
-        val provider = PlannerTestProvider()
+        val root = this::class.java.getResource("/suites")!!.toURI().toPath()
+        val provider = PlannerTestProvider(root)
         return provider.suites().map { suiteNode(it) }
     }
 

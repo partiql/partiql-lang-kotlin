@@ -8,8 +8,13 @@ target::{
           store_sales.ss_ticket_number AS ss_ticket_number,
           store_sales.ss_quantity AS ss_quantity,
           store_sales.ss_sold_date_sk AS ss_sold_date_sk
-        FROM store_sales
-        WHERE store_sales.ss_sold_date_sk > DATE_ADD(DAY, -30, UTCNOW())
+        FROM store_sales AS store_sales
+      ''',
+    },
+    '0001': {
+      statement: '''
+        SELECT store_sales.ss_wholesale_cost + CAST(10 AS DOUBLE PRECISION) < store_sales.ss_list_price AS x
+        FROM store_sales AS store_sales
       ''',
     },
   },

@@ -18,10 +18,10 @@ public class PartiQLTargetTestSuite(
          */
         public fun load(ion: StructElement): PartiQLTargetTestSuite {
             // Load
-            val nameE = ion.getAngry<StringElement>("name")
+            val suiteE = ion.getAngry<StringElement>("suite")
             val testsE = ion.getAngry<StructElement>("tests")
             // Parse
-            val name = nameE.textValue
+            val name = suiteE.textValue
             val tests = testsE.fields.associate {
                 assert(it.value is StructElement) { "Test value must be an Ion struct" }
                 it.name to PartiQLTargetTest.load(it.value as StructElement)

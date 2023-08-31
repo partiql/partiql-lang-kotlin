@@ -3,12 +3,12 @@ package org.partiql.transpiler.test.targets.partiql
 import com.amazon.ionelement.api.StructElement
 import com.amazon.ionelement.api.loadSingleElement
 import org.junit.jupiter.api.Assumptions
-import org.junit.jupiter.api.fail
 import org.partiql.planner.test.PlannerTest
 import org.partiql.transpiler.PartiQLTranspiler
 import org.partiql.transpiler.targets.PartiQLTarget
 import org.partiql.transpiler.test.TranspilerTestFactory
 import kotlin.io.path.toPath
+import kotlin.test.assertEquals
 
 class PartiQLTargetTestFactory : TranspilerTestFactory<String>(PartiQLTarget) {
 
@@ -26,14 +26,28 @@ class PartiQLTargetTestFactory : TranspilerTestFactory<String>(PartiQLTarget) {
         }
     }
 
-    override fun assert(suiteKey: String, testKey: String, test: PlannerTest, result: PartiQLTranspiler.Result<String>) {
+    override fun assert(
+        suiteKey: String,
+        testKey: String,
+        test: PlannerTest,
+        result: PartiQLTranspiler.Result<String>,
+    ) {
         val expected = lookup(suiteKey, testKey)
-        Assumptions.assumeFalse(expected != null)
-        fail { "Test made it this far!!" }
+        val expectedNormalized = normalize(expected.statement)
+        val actualNormalized = normalize(result.output.value)
+        assertEquals(expectedNormalized, actualNormalized)
     }
 
-    private fun lookup(suiteKey: String, testKey: String): PartiQLTargetTest? {
-        val suite = suites[suiteKey] ?: return null
-        return suite.tests[testKey]
+    private fun lookup(suiteKey: String, testKey: String): PartiQLTargetTest {
+        val suite = suites[suiteKey]
+        Assumptions.assumeTrue(suite != null)
+        val test = suite!!.tests[testKey]
+        Assumptions.assumeTrue(test != null)
+        return test!!
     }
+
+    /**
+     * We're comparing string equality now.
+     */
+    private fun normalize(query: String): String = query.lines().joinToString(" ") { it.trim() }.trim()
 }

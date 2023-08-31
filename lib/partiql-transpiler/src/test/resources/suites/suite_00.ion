@@ -22,11 +22,17 @@ suite::{
             },
             {
               name: "ss_quantity",
-              type: ["int32", "null"],
+              type: [
+                "int32",
+                "null"
+              ],
             },
             {
               name: "ss_sold_date_sk",
-              type: ["date", "null"],
+              type: [
+                "date",
+                "null"
+              ],
             },
           ],
         },
@@ -34,34 +40,7 @@ suite::{
     },
     '0001': {
       statement: '''
-        SELECT ss_ticket_number, ss_quantity, ss_sold_date_sk
-        FROM store_sales
-        WHERE ss_sold_date_sk > DATE_ADD(DAY, -30, UTCNOW())
-      ''',
-      schema: {
-        type: "bag",
-        items: {
-          type: "struct",
-          fields: [
-            {
-              name: "ss_ticket_number",
-              type: "string",
-            },
-            {
-              name: "ss_quantity",
-              type: ["int32", "null"],
-            },
-            {
-              name: "ss_sold_date_sk",
-              type: ["date", "null"],
-            },
-          ],
-        },
-      },
-    },
-    '0002': {
-      statement: '''
-        SELECT (ss_wholesale_cost + 10 < ss_list_price) AS x
+        SELECT (ss_wholesale_cost + 10) < ss_list_price AS x
         FROM store_sales
       ''',
       schema: {
