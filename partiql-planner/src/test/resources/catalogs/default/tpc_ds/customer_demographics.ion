@@ -1,0 +1,69 @@
+{
+  type: "struct",
+  name: "customer_demographics",
+  fields: [
+    {
+      name: "cd_demo_sk",
+      type: [
+        "string",
+        "null"
+      ]
+    },
+    {
+      name: "cd_gender",
+      type: [
+        "string",
+        "null"
+      ]
+    },
+    {
+      name: "cd_marital_status",
+      type: [
+        "string",
+        "null"
+      ]
+    },
+    {
+      name: "cd_education_status",
+      type: [
+        "string",
+        "null"
+      ]
+    },
+    {
+      name: "cd_purchase_estimate",
+      type: [
+        "int32",
+        "null"
+      ]
+    },
+    {
+      name: "cd_credit_rating",
+      type: [
+        "string",
+        "null"
+      ]
+    },
+    {
+      name: "cd_dep_count",
+      type: [
+        "int32",
+        "null"
+      ]
+    },
+    {
+      name: "cd_dep_employed_count",
+      type: [
+        "int32",
+        "null"
+      ]
+    },
+    {
+      name: "cd_dep_college_count",
+      type: [
+        "int32",
+        "null"
+      ]
+    }
+  ]
+}

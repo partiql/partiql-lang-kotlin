@@ -1,0 +1,2 @@
+I have not modified the generated TPC-DS schemas so everything is NULLABLE which isn't always the case. See
+https://www.tpc.org/tpc_documents_current_versions/pdf/tpc-ds_v2.6.0.pdf
