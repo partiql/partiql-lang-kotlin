@@ -1,6 +1,5 @@
 package org.partiql.types.function
 
-import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
 
 /**
