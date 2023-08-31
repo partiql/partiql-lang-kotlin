@@ -3,7 +3,6 @@ package org.partiql.planner
 import org.partiql.plan.Fn
 import org.partiql.plan.Identifier
 import org.partiql.planner.typer.TypeLattice
-import org.partiql.types.TypingMode
 import org.partiql.types.function.FunctionParameter
 import org.partiql.types.function.FunctionSignature
 import org.partiql.value.PartiQLValueExperimental
@@ -114,7 +113,7 @@ internal class Header(
          *
          * TODO BUG — We don't validate function overloads
          */
-        public fun partiql(mode: TypingMode = TypingMode.STRICT): Header {
+        public fun partiql(): Header {
             val namespace = "partiql"
             val types = TypeLattice.partiql()
             val functions = Functions.combine(
@@ -122,7 +121,7 @@ internal class Header(
                 Functions.operators(),
                 Functions.special(),
                 Functions.system(),
-            ).withMode(mode)
+            ).withAnyArgs()
             return Header(namespace, types, functions)
         }
 
@@ -136,18 +135,17 @@ internal class Header(
         private fun castName(type: PartiQLValueType) = "cast_${type.name.lowercase()}"
 
         /**
-         * IFF mode is permissive, rewrite the [FunctionMap] by appending ANY operator variants for all functions.
+         * For each f(arg_0, ..., arg_n), add an operator f(ANY_0, ..., ANY_n).
+         *
+         * This isn't entirely correct because we actually want to constraint the possible values of ANY.
          */
-        private fun FunctionMap.withMode(mode: TypingMode): FunctionMap {
-            if (mode != TypingMode.PERMISSIVE) {
-                return this
-            }
+        private fun FunctionMap.withAnyArgs(): FunctionMap {
             return entries.associate {
                 val name = it.key
                 val signatures = it.value
                 val variants = signatures.associate { fn -> fn.parameters.size to fn.returns }
                 val additions = variants.map { e ->
-                    val returns = e.value
+                    val returns = ANY
                     val params = (0 until e.key).map { i -> FunctionParameter("arg_$i", ANY) }
                     FunctionSignature(name, returns, params)
                 }

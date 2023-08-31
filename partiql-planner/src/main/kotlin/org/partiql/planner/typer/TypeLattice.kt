@@ -41,7 +41,7 @@ private typealias TypeGraph = Array<Array<Relationship?>>
 private data class Relationship(val type: CastType)
 
 /**
- * An IMPLICIT CAST will be inserted by the compiler during function resolution, an EXPLICIT CAST cannot be inserted.
+ * An COERCION will be inserted by the compiler during function resolution, an EXPLICIT CAST cannot be inserted.
  */
 private enum class CastType { IMPLICIT, EXPLICIT_LOSSLESS, EXPLICIT_LOSSY }
 
@@ -85,7 +85,7 @@ internal class TypeLattice private constructor(
             append("| $t1 ")
             for (t2 in types) {
                 val symbol = when (val r = graph[t1][t2]) {
-                    null -> " "
+                    null -> "X"
                     else -> when (r.type) {
                         CastType.IMPLICIT -> "⬤"
                         CastType.EXPLICIT_LOSSLESS -> "◯"
@@ -144,7 +144,6 @@ internal class TypeLattice private constructor(
                 MISSING to implicit()
             )
             graph[BOOL] = relationships(
-                ANY to implicit(),
                 BOOL to implicit(),
                 INT8 to implicit(),
                 INT16 to implicit(),
@@ -159,7 +158,6 @@ internal class TypeLattice private constructor(
                 SYMBOL to implicit(),
             )
             graph[INT8] = relationships(
-                ANY to implicit(),
                 BOOL to lossless(),
                 INT8 to implicit(),
                 INT16 to implicit(),
@@ -173,7 +171,6 @@ internal class TypeLattice private constructor(
                 SYMBOL to lossless(),
             )
             graph[INT16] = relationships(
-                ANY to implicit(),
                 BOOL to lossless(),
                 INT16 to implicit(),
                 INT32 to implicit(),
@@ -186,7 +183,6 @@ internal class TypeLattice private constructor(
                 SYMBOL to lossless(),
             )
             graph[INT32] = relationships(
-                ANY to implicit(),
                 BOOL to lossless(),
                 INT32 to implicit(),
                 INT64 to implicit(),
@@ -198,7 +194,6 @@ internal class TypeLattice private constructor(
                 SYMBOL to lossless(),
             )
             graph[INT64] = relationships(
-                ANY to implicit(),
                 BOOL to lossless(),
                 INT64 to implicit(),
                 INT to implicit(),
@@ -209,7 +204,6 @@ internal class TypeLattice private constructor(
                 SYMBOL to lossless(),
             )
             graph[INT] = relationships(
-                ANY to implicit(),
                 BOOL to lossless(),
                 INT to implicit(),
                 DECIMAL to implicit(),
@@ -219,7 +213,6 @@ internal class TypeLattice private constructor(
                 SYMBOL to lossless(),
             )
             graph[DECIMAL] = relationships(
-                ANY to implicit(),
                 BOOL to lossless(),
                 DECIMAL to implicit(),
                 FLOAT32 to implicit(),
@@ -228,7 +221,6 @@ internal class TypeLattice private constructor(
                 SYMBOL to lossless(),
             )
             graph[FLOAT32] = relationships(
-                ANY to implicit(),
                 BOOL to lossless(),
                 FLOAT32 to implicit(),
                 FLOAT64 to implicit(),
@@ -236,35 +228,30 @@ internal class TypeLattice private constructor(
                 SYMBOL to lossless(),
             )
             graph[FLOAT64] = relationships(
-                ANY to implicit(),
                 BOOL to lossless(),
                 FLOAT64 to implicit(),
                 STRING to lossless(),
                 SYMBOL to lossless(),
             )
             graph[CHAR] = relationships(
-                ANY to implicit(),
                 BOOL to lossless(),
                 CHAR to implicit(),
                 STRING to implicit(),
                 SYMBOL to implicit(),
             )
             graph[STRING] = relationships(
-                ANY to implicit(),
                 BOOL to lossless(),
                 STRING to implicit(),
                 SYMBOL to implicit(),
                 CLOB to implicit(),
             )
             graph[SYMBOL] = relationships(
-                ANY to implicit(),
                 BOOL to lossless(),
                 STRING to implicit(),
                 SYMBOL to implicit(),
                 CLOB to implicit(),
             )
             graph[CLOB] = relationships(
-                ANY to implicit(),
                 CLOB to implicit(),
             )
             graph[BINARY] = arrayOfNulls(N)
@@ -275,23 +262,19 @@ internal class TypeLattice private constructor(
             graph[TIMESTAMP] = arrayOfNulls(N)
             graph[INTERVAL] = arrayOfNulls(N)
             graph[BAG] = relationships(
-                ANY to implicit(),
                 BAG to implicit(),
             )
             graph[LIST] = relationships(
-                ANY to implicit(),
                 BAG to implicit(),
                 SEXP to implicit(),
                 LIST to implicit(),
             )
             graph[SEXP] = relationships(
-                ANY to implicit(),
                 BAG to implicit(),
                 SEXP to implicit(),
                 LIST to implicit(),
             )
             graph[STRUCT] = relationships(
-                ANY to implicit(),
                 STRUCT to implicit(),
             )
             return TypeLattice(types, graph.requireNoNulls())
