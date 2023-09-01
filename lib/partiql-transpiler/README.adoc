@@ -71,10 +71,30 @@ println(result.value)
 
 There's a basic REPL which can be useful for rapid experimentation. You can also attach a debugger to the REPL.
 
+NOTE: The partiql-byob package contains the TPC-DS schemas in `catalogs/`.
+
 .Debugging
 [source,bash]
 ----
-JAVA_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=localhost:5050
+# Install
+./gradlew :lib:partiql-byob:install
+
+# Execute
+> $ ./lib/partiql-byob/build/install/byob/bin/byob --help
+
+Usage: transpile [-hV] [--catalog=<catalog>] -d=DIR
+
+The PartiQL Transpiler Debug REPL
+This REPL is used for debugging the transpiler
+      --catalog=<catalog>   Catalog, use `default` .. by default
+                              Default: default
+  -d=DIR                    Database root directory
+  -h, --help                Show this help message and exit.
+  -V, --version             Print version information and exit.
+
+
+# attach a debugger by prepending, then you can connect to localhost:505 in intellij
+JAVA_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=localhost:5050 /path/to/bin/byob
 ----
 
 
@@ -367,8 +387,13 @@ The changes are (1) it's Ion and (2) we use the PartiQL type names.
 }
 ----
 
-For now, we omit constraints such as open/closed structs.
+IMPORTANT: For now, we omit constraints such as open/closed structs.
 
 === II. PartiQL FS Plugin
 
-TODO
+The PartiQL FS Plugin builds a catalog from a directory tree. It is implemented here https://github.com/partiql/partiql-lang-kotlin/tree/transpile/partiql-planner/src/testFixtures/kotlin/org/partiql/planner/test/plugin.
+
+NOTE: Directories are nested schemas; files represent table schema where the table name is the file name (without .ion).
+
+It will eventually be merged with mockdb. The only difference is that is meoizes parsed schemas and uses PartiQL Value Schema
+syntax.
