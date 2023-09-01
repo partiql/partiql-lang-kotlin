@@ -1,7 +1,7 @@
 = PartiQL Transpiler
 
-The PartiQL Transpiler is a compiler framework for the PartiQL SQL dialect. It is considered experimental and is under
-active development.
+The PartiQL Transpiler is a compiler framework for the PartiQL SQL dialect.
+It is considered experimental and is under active development.
 
 == Terms
 
@@ -12,8 +12,11 @@ active development.
 
 == Usage
 
-The transpiler leverages PartiQL's plugin system and planner to produce a resolved and typed logical query plan. This plan
-is passed to a _target_ implementation to be transformed to the domain specific output.
+The transpiler leverages PartiQL's plugin system and planner to produce a resolved and typed logical query plan.
+This plan is passed to a _target_ implementation to be transformed to the domain specific output.
+
+NOTE: Much of the transpiler involves manipulating both the AST and Plan which are PartiQL intermediate representations.
+This xref:https://github.com/partiql/partiql-lang-kotlin/blob/main/partiql-ast/README.adoc[PartiQL AST README] has tips on working with these structures.
 
 .Creating the Transpiler
 [source,kotlin]
@@ -26,6 +29,7 @@ val transpiler = PartiQLTranspiler(listOf(plugin))
 ----
 
 Suppose you have some table
+
 [source,sql]
 ----
 CREATE TABLE orders (
@@ -63,14 +67,11 @@ println(result.value)
 //   WHERE orders.ordered_at > date_add('day', -30, at_timezone(current_timestamp, 'UTC'))
 ----
 
-== Design
-
-=== Overview
+== Overview
 
 The PartiQL Transpiler is a framework to plug different compilation backends.
 Perhaps this project should be renamed to BYOB (bring your own backend).
-For now, we only provide SQL source-to-source compilation (hence "transpile"), but you could conceive of several non-SQL
-targets such as:
+For now, we only provide SQL source-to-source compilation (hence "transpile"), but you could conceive of several non-SQL targets such as:
 
 * xref:https://substrait.io/[Substrait]
 * xref:https://spark.apache.org/docs/latest/api/java/org/apache/spark/sql/Dataset.html[Spark Dataset Closure]
@@ -79,14 +80,13 @@ targets such as:
 
 === Producing SQL
 
-For now, the transpiler provides two simple SQL text targets. Each dialect is _quite_ similar (hence dialect) so much
-of the base translation from PartiQL's logical plan to an SQL AST is captured by `org.partiql.transpiler.sql.SqlTransform`.
+For now, the transpiler provides two simple SQL text targets.
+Each dialect is _quite_ similar (hence dialect) so much of the base translation from PartiQL's logical plan to an SQL AST is captured by `org.partiql.transpiler.sql.SqlTransform`.
 
-This applies a transformation of relational algebra to an SQL AST just like Calcite's xref:https://github.com/apache/calcite/blob/main/core/src/main/java/org/apache/calcite/rel/rel2sql/RelToSqlConverter.java[RelToSqlConverter]; however, this
-is currently more limited than Calcite's.
+This applies a transformation of relational algebra to an SQL AST just like Calcite's xref:https://github.com/apache/calcite/blob/main/core/src/main/java/org/apache/calcite/rel/rel2sql/RelToSqlConverter.java[RelToSqlConverter]; however, this is currently more limited than Calcite's.
 
-Much of the differences between dialects comes down to scalar functions, but it's often the case that each dialect has
-functions with similar functionality albeit different names. This is shown in the earlier `UTCNOW()` example.
+Much of the differences between dialects comes down to scalar functions, but it's often the case that each dialect has functions with similar functionality albeit different names.
+This is shown in the earlier `UTCNOW()` example.
 
 === Common Interfaces
 
@@ -99,7 +99,8 @@ The most useful interfaces to implement for an SQL target are
 
 == Development
 
-Let's work through an example of developing our own SQL target using SQLite as the target. How might we transpile?
+Let's work through an example of developing our own SQL target using SQLite as the target.
+How might we transpile?
 
 [source,sql]
 ----
@@ -149,12 +150,12 @@ public class SQLiteCalls : SqlCalls() {
 }
 ----
 
-This is reasonable, but what about replacing all occurrences of STRING with TEXT? It would be a cumbersome to track down
-all the places a type might be used (like this `IS` special form is another).
+This is reasonable, but what about replacing all occurrences of STRING with TEXT?
+It would be a cumbersome to track down all the places a type might be used (like this `IS` special form is another).
 
-We can actually _also_ extend how SQL is rendered to text via an extendable query printing framework. See xref:https://github.com/partiql/partiql-lang-kotlin/pull/1183[Pull #1183].
-You can provide the pretty-printer a _Dialect_ which contains base behavior for translating from an AST to a Block tree
-where the Block tree is a basic formatting structure.
+We can actually _also_ extend how SQL is rendered to text via an extendable query printing framework.
+See xref:https://github.com/partiql/partiql-lang-kotlin/pull/1183[Pull #1183].
+You can provide the pretty-printer a _Dialect_ which contains base behavior for translating from an AST to a Block tree where the Block tree is a basic formatting structure.
 
 Let's implement `SQLiteDialect` and wire it to our `SQLiteTarget`.
 
@@ -169,8 +170,8 @@ public object SQLiteDialect : SqlDialect() {
 ----
 
 .Providing the Dialect
-All this says is during the fold from an AST to Block tree, is to append the string "TEXT" to the tree. We can use this
-dialect for our target by overriding the `dialect` field.
+All this says is during the fold from an AST to Block tree, is to append the string "TEXT" to the tree.
+We can use this dialect for our target by overriding the `dialect` field.
 
 [source,kotlin]
 ----
@@ -185,7 +186,138 @@ public object SQLiteTarget : SqlTarget() {
 
 == Testing
 
-TODO
+The PartiQL Transpiler project has a basic testing framework.
+Test cases _inputs_ are specified in the `test/resources/`
+as _suites_ which are groups of related tests.
+Each suite will have some catalog configuration and map of all tests.
+
+IMPORTANT: Each test should be uniquely identifiable by the suite name and the test case key.
+This is because test inputs are separated from test targets and must be correlated.
+The implication is that every target is responsible for implementing their own assertions to the shared corpus of inputs.
+
+=== Test Input Format
+
+Test cases are currently stored in `test/resources/cases` as Ion documents.
+Here is an example:
+
+[source,ion]
+----
+suite::{
+  name: "transpiler_suite_00",    // Unique suite name
+  session: {                      // Session configuration for the entire suite
+    catalog: "default",           // Session catalog
+    path: ["tpc_ds"],             // Session path (search_path / current directory)
+    vars: {},                     // Arbitrary Map<String, String> session variables (CURRENT_USER, etc.)
+  },
+  tests: {
+    '0000': {                     // Map<String, Test> — map keys should be unique for lookup
+      statement: '''
+        -- PartiQL input as Ion multiline string
+        SELECT TRIM(LEADING FROM t.a)
+        FROM T as t
+      ''',
+      schema: {                   // Expected query output schema notated as PartiQL Value Schema
+        type: "bag",              // See Appendix I for details
+        items: {
+          type: "struct",
+          fields: [
+            {
+              name: "a",
+              type: "string",
+            },
+          ],
+        },
+      },
+    },
+  },
+}
+----
+
+=== Test Target Format
+
+Targets are responsible for defining their own expected outputs for each test case.
+This means that a target could actually implement its assertions however it pleases. In our examples, we are compiling
+PartiQL queries to SQL dialects, so we will assert on the output SQL.
+
+Let's walk through the Trino example test cases. Target test assertions are stored in `test/resources/targets`. The
+Trino target assertion format looks like this:
+
+[source,ion]
+----
+target::{
+  name: "trino",
+  suite: "transpiler_suite_00",
+  tests: {
+    '0000': {
+      statement: '''
+        SELECT ltrim(t.a) FROM T as t
+      ''',
+    },
+  },
+}
+----
+
+We expect PartiQL's special form `TRIM(LEADING FROM t.a)` to map to Trino's xref:https://trino.io/docs/current/functions/string.html#ltrim[`ltrim(_string_)`].
+The testing framework has a base class which will generate Junit tests for each input. The target is responsible for
+mapping test cases to the expected values. Let's see how we would perform assertions in our Trino example.
+
+See `test/kotlin/org/partiql/transpiler/test/targets/trino` for the full implementation.
+
+[source,kotlin]
+----
+/**
+ * We extend from the TranspilerTestFactory and need only implement `assert`.
+ */
+class TrinoTargetTestFactory : TranspilerTestFactory<String>(TrinoTarget) {
+
+    // A place to lookup a test given its key
+    private val suites: Map<String, TrinoTargetTestSuite>
+
+    // Load all expected results
+    init {
+        val testDir = TrinoTargetTest::class.java.getResource("/targets/trino")!!.toURI().toPath()
+        val testFiles = testDir.toFile().listFiles()!!
+        suites = testFiles.associate {
+            val text = it.readText()
+            val ion = loadSingleElement(text)
+            assert(ion is StructElement) { "Test suite file must be a single struct" }
+            val suite = TrinoTargetTestSuite.load(ion as StructElement)
+            suite.name to suite
+        }
+    }
+
+    // The base TranspilerTestFactory calls this for every test. Perform your target specific assertions here!
+    override fun assert(
+        suiteKey: String,
+        testKey: String,
+        test: PlannerTest,
+        result: PartiQLTranspiler.Result<String>,
+    ) {
+        val expected = lookup(suiteKey, testKey)
+        val expectedNormalized = normalize(expected.statement)
+        val actualNormalized = normalize(result.output.value)
+        assertEquals(expectedNormalized, actualNormalized)
+    }
+
+    // Attempt to lookup this test, skipping if the Assumptions fail
+    private fun lookup(suiteKey: String, testKey: String): TrinoTargetTest {
+        val suite = suites[suiteKey]
+        Assumptions.assumeTrue(suite != null)
+        val test = suite!!.tests[testKey]
+        Assumptions.assumeTrue(test != null)
+        return test!!
+    }
+
+    /**
+     * We're comparing string equality now.
+     */
+    private fun normalize(query: String): String = query.lines().joinToString(" ") { it.trim() }.trim()
+}
+----
+
+It is advised to use `Assumptions.assume...` to skip a test rather than fail iff your target does not have a solution.
+This will allow the build to succeed even if your target isn't able to fully satisfy the input cases. In the future,
+this test suite may exist outside the transpiler's unit tests.
 
 == Appendix
 
