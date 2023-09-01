@@ -30,6 +30,7 @@ import org.jline.utils.AttributedString
 import org.jline.utils.AttributedStringBuilder
 import org.jline.utils.AttributedStyle
 import org.jline.utils.AttributedStyle.BOLD
+import org.jline.utils.InfoCmp
 import org.joda.time.Duration
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.test.plugin.FsConnector
@@ -77,6 +78,7 @@ private const val HELP = """
 \debug on|off       Toggle debug printing
 \path               Get/Set the schema path (dot delimited)
 \t [<target>]       Get/Set the transpiler target
+\clear              Clear screen
 """
 
 private val SUCCESS: AttributedStyle = AttributedStyle.DEFAULT.foreground(AttributedStyle.GREEN)
@@ -251,6 +253,11 @@ internal class Shell(
                         } else {
                             setTarget(arg1)
                         }
+                    }
+                    "clear" -> {
+                        // Clear screen
+                        terminal.puts(InfoCmp.Capability.clear_screen)
+                        terminal.flush()
                     }
                     else -> out.error("Unrecognized command \\$command")
                 }

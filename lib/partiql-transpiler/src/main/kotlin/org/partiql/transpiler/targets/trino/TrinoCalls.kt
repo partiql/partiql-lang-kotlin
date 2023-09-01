@@ -6,10 +6,14 @@ import org.partiql.ast.Expr
 import org.partiql.ast.Identifier
 import org.partiql.ast.builder.AstFactory
 import org.partiql.transpiler.ProblemCallback
+import org.partiql.transpiler.error
 import org.partiql.transpiler.info
 import org.partiql.transpiler.sql.SqlArgs
 import org.partiql.transpiler.sql.SqlCallFn
 import org.partiql.transpiler.sql.SqlCalls
+import org.partiql.types.BoolType
+import org.partiql.types.IntType
+import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.stringValue
 
@@ -18,6 +22,28 @@ public class TrinoCalls(private val onProblem: ProblemCallback) : SqlCalls() {
 
     override val rules: Map<String, SqlCallFn> = super.rules.toMutableMap().apply {
         this["utcnow"] = ::utcnow
+    }
+
+    override fun eqFn(args: SqlArgs): Expr {
+        val t0 = args[0].type
+        val t1 = args[1].type
+        if (!typesAreComparable(t0, t1)) {
+            onProblem.error("Types $t0 and $t1 are not comparable in trino")
+        }
+        return super.eqFn(args)
+    }
+
+    private fun typesAreComparable(t0: StaticType, t1: StaticType): Boolean {
+        if (t0 == t1 || t0.toString() == t1.toString()) {
+            return true
+        }
+        if (t0 is BoolType && t1 is BoolType) {
+            return true
+        }
+        if (t0 is IntType && t1 is IntType) {
+            return true
+        }
+        return false
     }
 
     /**
