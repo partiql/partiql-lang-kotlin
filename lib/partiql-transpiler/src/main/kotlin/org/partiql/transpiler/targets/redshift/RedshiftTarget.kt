@@ -6,7 +6,7 @@ import org.partiql.transpiler.sql.SqlCalls
 import org.partiql.transpiler.sql.SqlTarget
 
 /**
- * Experimental Redshift transpilation target.
+ * Experimental Redshift SQL transpilation target.
  */
 public object RedshiftTarget : SqlTarget() {
 
@@ -17,7 +17,7 @@ public object RedshiftTarget : SqlTarget() {
     /**
      * Wire the Redshift call rewrite rules.
      */
-    override val calls: SqlCalls = RedshiftCalls()
+    override fun getCalls(onProblem: ProblemCallback): SqlCalls = RedshiftCalls(onProblem)
 
     /**
      * At this point, no plan rewriting.

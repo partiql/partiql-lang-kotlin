@@ -6,7 +6,7 @@ import org.partiql.transpiler.sql.SqlCalls
 import org.partiql.transpiler.sql.SqlTarget
 
 /**
- * Experimental Athena transpilation target.
+ * Experimental Trino SQL transpilation target.
  */
 public object TrinoTarget : SqlTarget() {
 
@@ -15,9 +15,9 @@ public object TrinoTarget : SqlTarget() {
     override val version: String = "3"
 
     /**
-     * Wire the Athena call rewrite rules.
+     * Wire the Trino call rewrite rules.
      */
-    override val calls: SqlCalls = TrinoCalls()
+    override fun getCalls(onProblem: ProblemCallback): SqlCalls = TrinoCalls(onProblem)
 
     /**
      * At this point, no plan rewriting.

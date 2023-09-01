@@ -133,13 +133,15 @@ public object SQLiteTarget : SqlTarget() {
     // Using SQLite3
     override val version: String = "3"
 
-    // Override the default call rulest with the SQLiteCalls ruleset
-    override val calls: SqlCalls = SQLiteCalls()
+    // Override the default call ruleset with the SQLiteCalls ruleset
+    override fun getCalls(onProblem: Problemhandler): SqlCalls = SQLiteCalls()
 
     // No need to rewrite the plan, return as is
     override fun rewrite(plan: PartiQLPlan, onProblem: ProblemCallback) = plan
 }
 ----
+
+NOTE: I'm conflicted on how to pass the problem handler to SqlCalls, so that's subject to change.
 
 .Provide Scalar Function Ruleset
 [source,kotlin]

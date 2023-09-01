@@ -7,6 +7,7 @@ import org.partiql.ast.Identifier
 import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
+import org.partiql.value.symbolValue
 
 /**
  * Transform the call args to the special form.
@@ -165,12 +166,20 @@ public abstract class SqlCalls {
 
     public open fun concatFn(args: SqlArgs): Expr = binary(Expr.Binary.Op.CONCAT, args)
 
-    public open fun dateAdd(part: DatetimeField, args: SqlArgs): Expr {
-        TODO()
+    public open fun dateAdd(part: DatetimeField, args: SqlArgs): Expr = Ast.create {
+        val call = identifierSymbol("date_add", Identifier.CaseSensitivity.INSENSITIVE)
+        val arg0 = exprLit(symbolValue(part.name.lowercase()))
+        val arg1 = args[0].expr
+        val arg2 = args[1].expr
+        exprCall(call, listOf(arg0, arg1, arg2))
     }
 
-    public open fun dateDiff(part: DatetimeField, args: SqlArgs): Expr {
-        TODO()
+    public open fun dateDiff(part: DatetimeField, args: SqlArgs): Expr = Ast.create {
+        val call = identifierSymbol("date_diff", Identifier.CaseSensitivity.INSENSITIVE)
+        val arg0 = exprLit(symbolValue(part.name.lowercase()))
+        val arg1 = args[0].expr
+        val arg2 = args[1].expr
+        exprCall(call, listOf(arg0, arg1, arg2))
     }
 
     public open fun rewriteCast(type: PartiQLValueType, args: SqlArgs): Expr = with(Ast) {

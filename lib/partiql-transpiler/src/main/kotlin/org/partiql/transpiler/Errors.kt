@@ -9,9 +9,30 @@ class TranspilerException(
 ) : Exception()
 
 /**
- * Simple handler
+ * Simple handler. The extension methods make me think I've recreated a class..
  */
 typealias ProblemCallback = (TranspilerProblem) -> Unit
+
+public fun ProblemCallback.info(message: String) = this(
+    TranspilerProblem(
+        level = TranspilerProblem.Level.INFO,
+        message = message
+    )
+)
+
+public fun ProblemCallback.warn(message: String) = this(
+    TranspilerProblem(
+        level = TranspilerProblem.Level.WARNING,
+        message = message
+    )
+)
+
+public fun ProblemCallback.error(message: String) = this(
+    TranspilerProblem(
+        level = TranspilerProblem.Level.ERROR,
+        message = message
+    )
+)
 
 /**
  * A place to record transpilation oddities

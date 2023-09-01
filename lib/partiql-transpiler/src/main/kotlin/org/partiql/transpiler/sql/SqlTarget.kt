@@ -39,7 +39,7 @@ public abstract class SqlTarget : TpTarget<String> {
     /**
      * Default SQL call transformation logic.
      */
-    open val calls: SqlCalls = SqlCalls.DEFAULT
+    open fun getCalls(onProblem: ProblemCallback) = SqlCalls.DEFAULT
 
     /**
      * Entry-point for manipulations of the [PartiQLPlan] tree.
@@ -65,7 +65,7 @@ public abstract class SqlTarget : TpTarget<String> {
      * Default Plan to AST translation. This method is only for potential edge cases
      */
     open fun unplan(plan: PartiQLPlan, onProblem: ProblemCallback): AstStatement {
-        val transform = SqlTransform(plan.globals, calls, onProblem)
+        val transform = SqlTransform(plan.globals, getCalls(onProblem), onProblem)
         val statement = transform.apply(plan.statement)
         return statement
     }

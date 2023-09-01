@@ -55,8 +55,8 @@ import java.util.concurrent.atomic.AtomicBoolean
 import javax.annotation.concurrent.GuardedBy
 
 private val PROMPT_1 =
-    AttributedStringBuilder().styled(BOLD.foreground(AttributedStyle.MAGENTA), "transpile").append(" ▶ ").toAnsi()
-private const val PROMPT_2 = "   | "
+    AttributedStringBuilder().styled(BOLD.foreground(AttributedStyle.MAGENTA), "pql").append(" ▶ ").toAnsi()
+private const val PROMPT_2 = "    | "
 private const val BAR_1 = "===' "
 private const val BAR_2 = "--- "
 private const val WELCOME_MSG = """    
@@ -177,7 +177,9 @@ internal class Shell(
             if (line.startsWith("\\")) {
                 // Handle commands, consider an actual arg parsing library
                 val args = line.trim().substring(1).split(" ")
-                out.info("Args: [${args.joinToString()}]")
+                if (state.debug) {
+                    out.info("argv: [${args.joinToString()}]")
+                }
                 val command = args[0]
                 when (command) {
                     "h" -> {
@@ -280,7 +282,7 @@ internal class Shell(
             }
         }
         state.target = target
-        out.info("Set target to `redshift`")
+        out.info("Set target to `$targetArg`")
     }
 
     private fun transpile(input: String) {
@@ -294,18 +296,24 @@ internal class Shell(
         try {
             val result = transpiler.transpile(input, state.target, session)
             out.info(result.output.toString())
-            for (problem in result.problems) {
-                val message = problem.toString()
-                when (problem.level) {
-                    TranspilerProblem.Level.INFO -> out.info(message)
-                    TranspilerProblem.Level.WARNING -> out.warn(message)
-                    TranspilerProblem.Level.ERROR -> out.error(message)
+            out.println()
+            if (result.problems.isNotEmpty()) {
+                out.warn("--- HINTS --------------")
+                for (problem in result.problems) {
+                    val message = problem.toString()
+                    when (problem.level) {
+                        TranspilerProblem.Level.INFO -> out.info(message)
+                        TranspilerProblem.Level.WARNING -> out.warn(message)
+                        TranspilerProblem.Level.ERROR -> out.error(message)
+                    }
                 }
+                out.println()
             }
             if (state.debug) {
                 out.info("----- DEBUG -----------")
                 out.info(result.output.toDebugString())
             }
+            out.println()
         } catch (ex: Exception) {
             out.error(ex.stackTraceToString())
         }
