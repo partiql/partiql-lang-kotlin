@@ -141,6 +141,13 @@ dmlBaseCommand
 pathSimple
     : identifier pathSimpleSteps*;
 
+// TODO  Confirm that #PathSimpleSymbol is wrong and remove it.
+// The #PathSimpleSymbol clause in this rule, for e[id], does not appear to have basis in the spec.
+// Moreover, assuming pathSimpleSteps rule is supposed to define a sublanguage of the pathStep rule,
+// this clause contradicts with what is there and what is dictated by the spec [p13, 4. Path Navigation]:
+// e[id] here would be considered a subcase of e[expr] there, and there, the id expression would be expected
+// to evaluate to an integer index (because an id is not a string literal or a cast to string) -- at odds with
+// the downstream processing of #PathSimpleSymbol here, which extracts the string content of the id.
 pathSimpleSteps
     : BRACKET_LEFT key=literal BRACKET_RIGHT             # PathSimpleLiteral
     | BRACKET_LEFT key=identifier BRACKET_RIGHT          # PathSimpleSymbol

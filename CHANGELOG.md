@@ -77,6 +77,10 @@ Thank you to all who have contributed!
   `LetBinding`, `FromSource.Scan`, `FromSource.Unpivot`, `GraphLabelSpec.GraphLabelName`, 
   `GraphMatchPatternPart.Node`, `GraphMatchPatternPart.Edge`, `GraphMatchPattern`, `GroupBy`, `GroupKey`, 
   `DmlOp.Insert`, `TableDefPart.ColumnDeclaration`, `ColumnConstraint`, `Type.CustomType`. 
+- **Breaking** The AST node for the expression that refers to variables got renamed from `Expr.Id` to `Expr.Vr`
+  and its internal structure has changed: instead of fields `name` of type `SymbolPrimitive` and 
+  `case` of type `CaseSensitivity`, it now contains a single field `id` of type `Id`, which carries 
+  the same information. `Id` is the new name for the node previously named `Identifier`. 
 
 ### Deprecated
 
