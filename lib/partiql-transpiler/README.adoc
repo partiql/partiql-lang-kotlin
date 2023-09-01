@@ -1,21 +1,198 @@
 = PartiQL Transpiler
 
-The PartiQL Transpiler is an experiment in SQL source-to-source conversion.
+The PartiQL Transpiler is a compiler framework for the PartiQL SQL dialect. It is considered experimental and is under
+active development.
 
-== Tests
+== Terms
 
-See resources.
+* *SQL* — Specifically the SQL-99 Data Query Language specification, colloquially select-from-where
+* *Dialect* — An implementation of the SQL language specification
+* *Target* — A representation of some computation
+* *Catalog* — Schemas, tables, types, functions, and operators available in a target
 
-=== Schema Language
+== Usage
+
+The transpiler leverages PartiQL's plugin system and planner to produce a resolved and typed logical query plan. This plan
+is passed to a _target_ implementation to be transformed to the domain specific output.
+
+.Creating the Transpiler
+[source,kotlin]
+----
+// PartiQL's plugin system is how you provide tables and schemas to the planner (à la Trino).
+val plugin = MyPlugin()
+
+// Instantiate the transpiler once. It can be re-used!
+val transpiler = PartiQLTranspiler(listOf(plugin))
+----
+
+Suppose you have some table
+[source,sql]
+----
+CREATE TABLE orders (
+    order_id   STRING PRIMARY KEY, -- PartiQL STRING type
+    ordered_at DATETIME NOT NULL   -- PartiQL DATETIME type
+);
+----
+
+How do you express this query for a different SQL engine like Trino?
+
+[source,kotlin]
+----
+// Get all orders in the last 30 days
+val query = """
+    SELECT order_id FROM orders
+    WHERE ordered_at > date_diff(day, -30, UTCNOW())
+"""
+
+// TrinoTarget holds the translation rules from a PartiQL plan to Trino SQL
+val target = TrinoTarget()
+
+// Planner session, assuming your table `orders` exists in the "default" catalog
+val session = PartiQLPlanner.Session(
+    queryId = "readme_query_id",
+    userId = "readme_user_id",
+    currentCatalog = "default",
+)
+
+// Invoke the transpiler
+val result = transpiler.transpile(query, target, session)
+
+println(result.value)
+// Output:
+//   SELECT orders.order_id AS order_id FROM orders AS orders
+//   WHERE orders.ordered_at > date_add('day', -30, at_timezone(current_timestamp, 'UTC'))
+----
+
+== Design
+
+=== Overview
+
+The PartiQL Transpiler is a framework to plug different compilation backends.
+Perhaps this project should be renamed to BYOB (bring your own backend).
+For now, we only provide SQL source-to-source compilation (hence "transpile"), but you could conceive of several non-SQL
+targets such as:
+
+* xref:https://substrait.io/[Substrait]
+* xref:https://spark.apache.org/docs/latest/api/java/org/apache/spark/sql/Dataset.html[Spark Dataset Closure]
+* xref:https://beam.apache.org/documentation/basics/[Apache Beam Transform]
+* xref:https://calcite.apache.org/docs/algebra.html[Calcite relational algebra]
+
+=== Producing SQL
+
+For now, the transpiler provides two simple SQL text targets. Each dialect is _quite_ similar (hence dialect) so much
+of the base translation from PartiQL's logical plan to an SQL AST is captured by `org.partiql.transpiler.sql.SqlTransform`.
+
+This applies a transformation of relational algebra to an SQL AST just like Calcite's xref:https://github.com/apache/calcite/blob/main/core/src/main/java/org/apache/calcite/rel/rel2sql/RelToSqlConverter.java[RelToSqlConverter]; however, this
+is currently more limited than Calcite's.
+
+Much of the differences between dialects comes down to scalar functions, but it's often the case that each dialect has
+functions with similar functionality albeit different names. This is shown in the earlier `UTCNOW()` example.
+
+=== Common Interfaces
+
+The most useful interfaces to implement for an SQL target are
+
+* `TpTarget<T>` — Base transpiler target interface
+* `SqlTarget` — Base `TpTarget<String>` implementation for an SQL dialect target
+* `SqlCalls` — Ruleset for rewriting scalar calls
+* `SqlTransform` — Ruleset for RelToSql conversion
+
+== Development
+
+Let's work through an example of developing our own SQL target using SQLite as the target. How might we transpile?
+
+[source,sql]
+----
+SELECT CAST(a AS STRING) FROM T
+----
+
+With basic familiarity of SQLite, we know that `STRING` is not a valid type name, and we should replace it with `TEXT`.
+How do we express this in a transpilation target?
+
+=== Tutorial
+
+.Extend SqlTarget
+[source,kotlin]
+----
+public object SQLiteTarget : SqlTarget() {
+
+    override val target: String = "SQLite"
+
+    // Using SQLite3
+    override val version: String = "3"
+
+    // Override the default call rulest with the SQLiteCalls ruleset
+    override val calls: SqlCalls = SQLiteCalls()
+
+    // No need to rewrite the plan, return as is
+    override fun rewrite(plan: PartiQLPlan, onProblem: ProblemCallback) = plan
+}
+----
+
+.Provide Scalar Function Ruleset
+[source,kotlin]
+----
+@OptIn(PartiQLValueExperimental::class)
+public class SQLiteCalls : SqlCalls() {
+
+    /**
+    * SqlCalls has many open functions which you can extend to override for edge cases.
+    */
+    override fun rewriteCast(type: PartiQLValueType, args: SqlArgs): Expr = Ast.create {
+        if (type == PartiQLValueType.STRING) {
+            // do something special for `CAST(.. AS STRING)`
+            Ast.create { exprCast(args[0].expr, typeCustom("TEXT")) }
+        } else {
+            return super.rewriteCast(type, args)
+        }
+    }
+}
+----
+
+This is reasonable, but what about replacing all occurrences of STRING with TEXT? It would be a cumbersome to track down
+all the places a type might be used (like this `IS` special form is another).
+
+We can actually _also_ extend how SQL is rendered to text via an extendable query printing framework. See xref:https://github.com/partiql/partiql-lang-kotlin/pull/1183[Pull #1183].
+You can provide the pretty-printer a _Dialect_ which contains base behavior for translating from an AST to a Block tree
+where the Block tree is a basic formatting structure.
+
+Let's implement `SQLiteDialect` and wire it to our `SQLiteTarget`.
+
+.Defining a Dialect
+[source,kotlin]
+----
+public object SQLiteDialect : SqlDialect() {
+
+    override fun visitTypeString(node: Type.String, head: SqlBlock) =
+        SqlBlock.Link(head, SqlBlock.Text("TEXT"))
+}
+----
+
+.Providing the Dialect
+All this says is during the fold from an AST to Block tree, is to append the string "TEXT" to the tree. We can use this
+dialect for our target by overriding the `dialect` field.
+
+[source,kotlin]
+----
+public object SQLiteTarget : SqlTarget() {
+
+    // ... same as before
+
+    // hook up the pretty-printer rules
+    override val dialect = SQLiteDialect
+}
+----
+
+== Testing
+
+TODO
+
+== Appendix
+
+=== I. PartiQL Value Schema Language
 
 Testing schemas are described using a modified version of the xref:https://docs.oracle.com/cd/E26161_02/html/GettingStartedGuide/avroschemas.html#avro-complexdatatypes[Avro JSON schema].
 The changes are (1) it's Ion and (2) we use the PartiQL type names.
-
-The three types that can be described are
-
-- bags
-- lists
-- structs
 
 .Basic Type Schema Examples
 [source,ion]
@@ -28,7 +205,7 @@ The three types that can be described are
 
 // Collection Type
 {
-  type: "bag"|"list"|"sexp",
+  type: "bag",  // valid values "bag", "list", "sexp"
   items: <type>
 }
 
@@ -43,5 +220,10 @@ The three types that can be described are
     // ....
   ]
 }
-
 ----
+
+For now, we omit constraints such as open/closed structs.
+
+=== II. PartiQL FS Plugin
+
+TODO
