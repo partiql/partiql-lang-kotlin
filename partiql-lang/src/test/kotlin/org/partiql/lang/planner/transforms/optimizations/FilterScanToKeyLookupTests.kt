@@ -243,6 +243,11 @@ class FilterScanToKeyLookupTests {
                 "SELECT * FROM $TABLE_WITH_1_FIELD_PK AS f WHERE to_string(f.id = 42)",
                 expectedOutputBexpr = null
             ),
+            // primary-key equality expressions that reference the candidate row must be ignored.
+            TestCase(
+                "SELECT * FROM $TABLE_WITH_1_FIELD_PK AS f WHERE f.id = f.bar",
+                expectedOutputBexpr = null
+            ),
         )
     }
 
