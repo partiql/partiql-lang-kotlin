@@ -1,27 +1,27 @@
-package org.partiql.transpiler.test.targets.athena
+package org.partiql.transpiler.test.targets.redshift
 
 import com.amazon.ionelement.api.StructElement
 import com.amazon.ionelement.api.loadSingleElement
 import org.junit.jupiter.api.Assumptions
 import org.partiql.planner.test.PlannerTest
 import org.partiql.transpiler.PartiQLTranspiler
-import org.partiql.transpiler.targets.athena.AthenaTarget
+import org.partiql.transpiler.targets.redshift.RedshiftTarget
 import org.partiql.transpiler.test.TranspilerTestFactory
 import kotlin.io.path.toPath
 import kotlin.test.assertEquals
 
-class AthenaTargetTestFactory : TranspilerTestFactory<String>(AthenaTarget) {
+class RedshiftTargetTestFactory : TranspilerTestFactory<String>(RedshiftTarget) {
 
-    private val suites: Map<String, AthenaTargetTestSuite>
+    private val suites: Map<String, RedshiftTargetTestSuite>
 
     init {
-        val testDir = AthenaTargetTest::class.java.getResource("/targets/athena")!!.toURI().toPath()
+        val testDir = RedshiftTargetTest::class.java.getResource("/targets/redshift")!!.toURI().toPath()
         val testFiles = testDir.toFile().listFiles()!!
         suites = testFiles.associate {
             val text = it.readText()
             val ion = loadSingleElement(text)
             assert(ion is StructElement) { "Test suite file must be a single struct" }
-            val suite = AthenaTargetTestSuite.load(ion as StructElement)
+            val suite = RedshiftTargetTestSuite.load(ion as StructElement)
             suite.name to suite
         }
     }
@@ -38,7 +38,7 @@ class AthenaTargetTestFactory : TranspilerTestFactory<String>(AthenaTarget) {
         assertEquals(expectedNormalized, actualNormalized)
     }
 
-    private fun lookup(suiteKey: String, testKey: String): AthenaTargetTest {
+    private fun lookup(suiteKey: String, testKey: String): RedshiftTargetTest {
         val suite = suites[suiteKey]
         Assumptions.assumeTrue(suite != null)
         val test = suite!!.tests[testKey]

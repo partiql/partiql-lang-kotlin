@@ -1,12 +1,12 @@
-package org.partiql.transpiler.test.targets.athena
+package org.partiql.transpiler.test.targets.redshift
 
 import com.amazon.ionelement.api.StringElement
 import com.amazon.ionelement.api.StructElement
 import org.partiql.planner.test.getAngry
 
-private typealias PartiQLTargetTests = Map<String, AthenaTargetTest>
+private typealias PartiQLTargetTests = Map<String, RedshiftTargetTest>
 
-public class AthenaTargetTestSuite(
+public class RedshiftTargetTestSuite(
     public val name: String,
     public val tests: PartiQLTargetTests,
 ) {
@@ -16,7 +16,7 @@ public class AthenaTargetTestSuite(
         /**
          * Eventually replace with something more robust.
          */
-        public fun load(ion: StructElement): AthenaTargetTestSuite {
+        public fun load(ion: StructElement): RedshiftTargetTestSuite {
             // Load
             val suiteE = ion.getAngry<StringElement>("suite")
             val testsE = ion.getAngry<StructElement>("tests")
@@ -24,9 +24,9 @@ public class AthenaTargetTestSuite(
             val name = suiteE.textValue
             val tests = testsE.fields.associate {
                 assert(it.value is StructElement) { "Test value must be an Ion struct" }
-                it.name to AthenaTargetTest.load(it.value as StructElement)
+                it.name to RedshiftTargetTest.load(it.value as StructElement)
             }
-            return AthenaTargetTestSuite(name, tests)
+            return RedshiftTargetTestSuite(name, tests)
         }
     }
 }

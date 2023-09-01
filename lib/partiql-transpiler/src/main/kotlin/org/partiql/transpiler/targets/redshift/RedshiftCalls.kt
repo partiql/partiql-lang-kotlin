@@ -1,4 +1,4 @@
-package org.partiql.transpiler.targets.athena
+package org.partiql.transpiler.targets.redshift
 
 import org.partiql.ast.Ast
 import org.partiql.ast.DatetimeField
@@ -12,7 +12,7 @@ import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.symbolValue
 
 @OptIn(PartiQLValueExperimental::class)
-public class AthenaCalls : SqlCalls() {
+public class RedshiftCalls : SqlCalls() {
 
     override val rules: Map<String, SqlCallFn> = super.rules.toMutableMap().apply {
         this["utcnow"] = ::utcnow
@@ -22,7 +22,7 @@ public class AthenaCalls : SqlCalls() {
      * https://docs.aws.amazon.com/redshift/latest/dg/r_DATEADD_function.html
      */
     override fun dateAdd(part: DatetimeField, args: SqlArgs): Expr = Ast.create {
-        val id = identifierSymbol("dateadd", Identifier.CaseSensitivity.INSENSITIVE)
+        val id = id("dateadd")
         val arg0 = exprLit(symbolValue(part.name.lowercase()))
         val arg1 = args[0].expr
         val arg2 = args[1].expr
@@ -33,7 +33,7 @@ public class AthenaCalls : SqlCalls() {
      * https://docs.aws.amazon.com/redshift/latest/dg/r_DATEDIFF_function.html
      */
     override fun dateDiff(part: DatetimeField, args: SqlArgs): Expr = Ast.create {
-        val id = identifierSymbol("datediff", Identifier.CaseSensitivity.INSENSITIVE)
+        val id = id("datediff")
         val arg0 = exprLit(symbolValue(part.name.lowercase()))
         val arg1 = args[0].expr
         val arg2 = args[1].expr
@@ -44,7 +44,7 @@ public class AthenaCalls : SqlCalls() {
      * https://docs.aws.amazon.com/redshift/latest/dg/r_SYSDATE.html
      */
     private fun utcnow(args: SqlArgs): Expr = Ast.create {
-        val id = id("SYSDATE")
+        val id = id("sysdate")
         exprVar(id, Expr.Var.Scope.DEFAULT)
     }
 

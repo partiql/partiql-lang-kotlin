@@ -1,5 +1,5 @@
 target::{
-  name: "athena",
+  name: "redshift",
   suite: "transpiler_suite_00",
   tests: {
     '0000': {
@@ -24,7 +24,7 @@ target::{
           store_sales.ss_quantity AS ss_quantity,
           store_sales.ss_sold_date_sk AS ss_sold_date_sk
         FROM store_sales AS store_sales
-        WHERE store_sales.ss_sold_date_sk > dateadd(day, -30, SYSDATE)
+        WHERE store_sales.ss_sold_date_sk > dateadd(day, -30, sysdate)
       ''',
     },
   },
