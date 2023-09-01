@@ -10,10 +10,15 @@ import org.partiql.types.StaticType
  * @property schema
  * @property value
  */
-public class TpOutput<T>(
+public abstract class TpOutput<T>(
     public val schema: StaticType,
     public val value: T,
-)
+) {
+
+    abstract override fun toString(): String
+
+    abstract fun toDebugString(): String
+}
 
 /**
  * A target determines the behavior of each stage of the transpilation.

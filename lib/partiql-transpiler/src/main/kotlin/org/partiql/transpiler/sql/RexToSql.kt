@@ -61,12 +61,13 @@ public open class RexToSql(
     }
 
     override fun visitRexOpVarUnresolved(node: Rex.Op.Var.Unresolved, ctx: StaticType): Expr {
+        val identifier = Ast.translate(node.identifier)
+        val debug = identifier.sql()
         transform.handleProblem(
             TranspilerProblem(
-                level = TranspilerProblem.Level.ERROR, message = "Unresolved variable $node",
+                level = TranspilerProblem.Level.ERROR, message = "Unresolved variable $debug",
             )
         )
-        val identifier = Ast.translate(node.identifier)
         val scope = when (node.scope) {
             Rex.Op.Var.Scope.DEFAULT -> Expr.Var.Scope.DEFAULT
             Rex.Op.Var.Scope.LOCAL -> Expr.Var.Scope.LOCAL
@@ -183,5 +184,13 @@ public open class RexToSql(
             if (vOp.ref != i) return false
         }
         return true
+    }
+
+    internal fun Identifier.sql(): String = when (this) {
+        is Identifier.Qualified -> (listOf(this.root.sql()) + this.steps.map { it.sql() }).joinToString(".")
+        is Identifier.Symbol -> when (this.caseSensitivity) {
+            Identifier.CaseSensitivity.SENSITIVE -> "\"$symbol\""
+            Identifier.CaseSensitivity.INSENSITIVE -> symbol
+        }
     }
 }

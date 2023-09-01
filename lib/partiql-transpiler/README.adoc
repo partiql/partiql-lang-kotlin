@@ -67,6 +67,17 @@ println(result.value)
 //   WHERE orders.ordered_at > date_add('day', -30, at_timezone(current_timestamp, 'UTC'))
 ----
 
+=== REPL
+
+There's a basic REPL which can be useful for rapid experimentation. You can also attach a debugger to the REPL.
+
+.Debugging
+[source,bash]
+----
+JAVA_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=localhost:5050
+----
+
+
 == Overview
 
 The PartiQL Transpiler is a framework to plug different compilation backends.

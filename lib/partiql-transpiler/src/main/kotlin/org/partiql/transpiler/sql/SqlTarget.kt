@@ -7,8 +7,19 @@ import org.partiql.plan.PartiQLPlan
 import org.partiql.transpiler.ProblemCallback
 import org.partiql.transpiler.TpOutput
 import org.partiql.transpiler.TpTarget
+import org.partiql.types.StaticType
 import org.partiql.ast.Statement as AstStatement
 import org.partiql.plan.Statement as PlanStatement
+
+public class SqlOutput(schema: StaticType, value: String) : TpOutput<String>(schema, value) {
+
+    override fun toString(): String = value
+
+    override fun toDebugString(): String = buildString {
+        append("SQL: ").appendLine(value)
+        append("Schema: ").appendLine(schema)
+    }
+}
 
 /**
  * This is a base [TpTarget] for SQL dialects.
@@ -47,7 +58,7 @@ public abstract class SqlTarget : TpTarget<String> {
         val newAst = unplan(newPlan, onProblem)
         val block = dialect.apply(newAst)
         val sql = block.sql(layout)
-        return TpOutput(schema, sql)
+        return SqlOutput(schema, sql)
     }
 
     /**

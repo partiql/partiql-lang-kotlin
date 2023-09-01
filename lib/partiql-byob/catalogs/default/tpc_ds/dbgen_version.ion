@@ -1,0 +1,34 @@
+{
+  type: "struct",
+  name: "dbgen_version",
+  fields: [
+    {
+      name: "dv_version",
+      type: [
+        "string",
+        "null"
+      ]
+    },
+    {
+      name: "dv_create_date",
+      type: [
+        "int64",
+        "null"
+      ]
+    },
+    {
+      name: "dv_create_time",
+      type: [
+        "int64",
+        "null"
+      ]
+    },
+    {
+      name: "dv_cmdline_args",
+      type: [
+        "string",
+        "null"
+      ]
+    }
+  ]
+}
