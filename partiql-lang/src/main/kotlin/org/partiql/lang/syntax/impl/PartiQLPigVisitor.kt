@@ -39,6 +39,7 @@ import org.antlr.v4.runtime.tree.TerminalNode
 import org.partiql.errors.ErrorCode
 import org.partiql.errors.Property
 import org.partiql.errors.PropertyValueMap
+import org.partiql.lang.Ident
 import org.partiql.lang.ast.IsCountStarMeta
 import org.partiql.lang.ast.IsImplictJoinMeta
 import org.partiql.lang.ast.IsIonLiteralMeta
@@ -126,12 +127,12 @@ internal class PartiQLPigVisitor(
         internal val TRIM_SPECIFICATION_KEYWORDS = setOf("both", "leading", "trailing")
     }
 
-    private val customKeywords = customTypes.map { it.name.lowercase() }
+    private val customKeywords = customTypes.map { Ident.normalizeRegular(it.name) }
 
     private val customTypeAliases =
         customTypes.map { customType ->
             customType.aliases.map { alias ->
-                Pair(alias.lowercase(), customType.name.lowercase())
+                Pair(Ident.normalizeRegular(alias), Ident.normalizeRegular(customType.name))
             }
         }.flatten().toMap()
 
@@ -148,7 +149,7 @@ internal class PartiQLPigVisitor(
     override fun visitExprTermCurrentUser(ctx: PartiQLParser.ExprTermCurrentUserContext): PartiqlAst.Expr.SessionAttribute {
         val metas = ctx.CURRENT_USER().getSourceMetaContainer()
         return PartiqlAst.Expr.SessionAttribute(
-            value = SymbolPrimitive(ctx.CURRENT_USER().text.toLowerCase(), metas),
+            value = SymbolPrimitive(ctx.CURRENT_USER().text.lowercase(), metas),
             metas = metas
         )
     }
@@ -161,7 +162,7 @@ internal class PartiQLPigVisitor(
             val metas = ctx.EXPLAIN().getSourceMetaContainer()
             ctx.explainOption().forEach { option ->
                 val parameter = try {
-                    ExplainParameters.valueOf(option.param.text.toUpperCase())
+                    ExplainParameters.valueOf(option.param.text.uppercase())
                 } catch (ex: IllegalArgumentException) {
                     throw option.param.error("Unknown EXPLAIN parameter.", ErrorCode.PARSE_UNEXPECTED_TOKEN, cause = ex)
                 }
@@ -243,7 +244,7 @@ internal class PartiQLPigVisitor(
     // treatment of function identifiers deserves a clean-up.  There is no reason for them to be treated differently
     // from identifier references represented by the Expr.Id node.
     fun funDefnid(funName: String, metas: MetaContainer): PartiqlAst.Defnid = PartiqlAst.build {
-        defnid_(SymbolPrimitive(funName.lowercase(), metas))
+        defnid_(SymbolPrimitive(Ident.normalizeRegular(funName), metas))
     }
 
     /** Interpret an ANTLR-parsed regular identifier as one of expected local keywords. */
@@ -1378,7 +1379,7 @@ internal class PartiQLPigVisitor(
      * null, we need to make the substring equal to the <spec> (and make <spec> null).
      */
     override fun visitTrimFunction(ctx: PartiQLParser.TrimFunctionContext) = PartiqlAst.build {
-        val possibleModText = if (ctx.mod != null) ctx.mod.text.lowercase() else null
+        val possibleModText = if (ctx.mod != null) Ident.normalizeRegular(ctx.mod.text) else null
         val isTrimSpec = TRIM_SPECIFICATION_KEYWORDS.contains(possibleModText)
         val (modifier, substring) = when {
             // if <spec> is not null and <substring> is null
@@ -1438,7 +1439,7 @@ internal class PartiQLPigVisitor(
         // LAG and LEAD will require a Window ORDER BY
         if (over.orderBy == null) {
             val errorContext = PropertyValueMap()
-            errorContext[Property.TOKEN_STRING] = ctx.func.text.lowercase()
+            errorContext[Property.TOKEN_STRING] = Ident.normalizeRegular(ctx.func.text)
             throw ctx.func.err(
                 "${ctx.func.text} requires Window ORDER BY",
                 ErrorCode.PARSE_EXPECTED_WINDOW_ORDER_BY,
@@ -1677,7 +1678,7 @@ internal class PartiQLPigVisitor(
         //   perhaps if the lookup tables are based on identifiers rather than strings
         val typIdOrig = readIdentifierAsDefnid(ctx.identifier())
         val metas = typIdOrig.metas
-        val customName = when (val name = typIdOrig.string().lowercase()) {
+        val customName = when (val name = Ident.normalizeRegular(typIdOrig.string())) {
             in customKeywords -> name
             in customTypeAliases.keys -> customTypeAliases.get(name)!!
             else -> throw ParserException("Invalid custom type name: $name", ErrorCode.PARSE_INVALID_QUERY)

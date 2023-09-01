@@ -477,6 +477,8 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
      *       duplicate variable: ^
      * ```
      */
+    // TODO What is happening here with lower-casing?  This appears to be above and beyond normalization of non-delimited identifiers,
+    // since this probably lower-cases delimited ones as well.  If so, this seems extraneous w.r.t. any officially-known rules.
     private fun checkForDuplicateVariables(varDecls: List<PartiqlLogical.VarDecl>) {
         val usedVariableNames = hashSetOf<String>()
         varDecls.forEach { varDecl ->

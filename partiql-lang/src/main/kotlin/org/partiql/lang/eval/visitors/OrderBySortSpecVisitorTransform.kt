@@ -14,6 +14,7 @@
 
 package org.partiql.lang.eval.visitors
 
+import org.partiql.lang.Ident
 import org.partiql.lang.ast.IsTransformedOrderByAliasMeta
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.metaContainerOf
@@ -72,7 +73,7 @@ internal class OrderBySortSpecVisitorTransform : VisitorTransformBase() {
             val transformedExpr = super.transformExprVr(node)
             return when (node.id.case) {
                 is PartiqlAst.CaseSensitivity.CaseSensitive -> aliases[node.id.symb.text] ?: transformedExpr
-                else -> aliases[node.id.symb.text.lowercase()] ?: aliases[node.id.symb.text.toUpperCase()] ?: transformedExpr
+                else -> aliases[Ident.normalizeRegular(node.id.symb.text)] ?: aliases[node.id.symb.text.toUpperCase()] ?: transformedExpr
             }
         }
     }

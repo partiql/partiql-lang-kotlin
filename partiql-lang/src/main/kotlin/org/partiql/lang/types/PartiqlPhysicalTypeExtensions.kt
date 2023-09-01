@@ -1,5 +1,6 @@
 package org.partiql.lang.types
 
+import org.partiql.lang.Ident
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.domains.string
 import org.partiql.types.DecimalType
@@ -101,8 +102,8 @@ internal fun PartiqlPhysical.Type.toTypedOpParameter(customTypedOpParameters: Ma
         is PartiqlPhysical.Type.AnyType -> TypedOpParameter(StaticType.ANY)
         is PartiqlPhysical.Type.CustomType ->
             customTypedOpParameters.mapKeys { (k, _) ->
-                k.lowercase()
-            }[this.name.string().lowercase()] ?: error("Could not find parameter for $this")
+                Ident.normalizeRegular(k)
+            }[Ident.normalizeRegular(this.name.string())] ?: error("Could not find parameter for $this")
         is PartiqlPhysical.Type.DateType -> TypedOpParameter(StaticType.DATE)
         is PartiqlPhysical.Type.TimeType -> TypedOpParameter(
             TimeType(this.precision?.value?.toInt(), withTimeZone = false)

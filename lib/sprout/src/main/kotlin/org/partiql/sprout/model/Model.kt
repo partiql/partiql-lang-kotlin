@@ -105,7 +105,7 @@ sealed class TypeRef(
         val type: ScalarType,
         nullable: Boolean = false,
     ) : TypeRef(
-        id = type.toString().lowercase(),
+        id = type.toString().lowercase(), // TODO Is this normalization of a regular identifier? If so, needs to become Ident.normalizeRegular() or equivalent.
         nullable = nullable,
     )
 

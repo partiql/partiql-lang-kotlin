@@ -38,7 +38,8 @@ class Ident private constructor (
         // TODO This is intended to be the one place to encapsulate the design choice of whether
         // regular identifiers normalize to lower or upper case. Transitioning to this is just in its beginning --
         // there are still many sites sprinkled around where this is done by ad hoc string lower-casing.
-        private fun normalizeRegular(str: String): String =
+        // TODO Make this private when its uses outside of this class are phased out.
+        fun normalizeRegular(str: String): String =
             str.lowercase()
 
         /** Create a semantic identifier corresponding to a lexical SQL *delimited* identifier. */

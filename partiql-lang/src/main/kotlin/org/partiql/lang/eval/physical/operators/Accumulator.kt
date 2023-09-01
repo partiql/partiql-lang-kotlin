@@ -15,6 +15,7 @@
 package org.partiql.lang.eval.physical.operators
 
 import org.partiql.errors.ErrorCode
+import org.partiql.lang.Ident
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.eval.ExprAggregator
 import org.partiql.lang.eval.ExprValue
@@ -39,7 +40,7 @@ internal sealed class Accumulator(
                 is PartiqlPhysical.SetQuantifier.Distinct -> createUniqueExprValueFilter()
                 is PartiqlPhysical.SetQuantifier.All -> { _: ExprValue -> true }
             }
-            return when (funcName.trim().lowercase()) {
+            return when (Ident.normalizeRegular(funcName.trim())) {
                 "min" -> AccumulatorMin(filter)
                 "max" -> AccumulatorMax(filter)
                 "avg" -> AccumulatorAvg(filter)

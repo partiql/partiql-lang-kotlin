@@ -237,7 +237,7 @@ internal class CompilerPipelineImpl(
         functions,
         customDataTypes.map { customType ->
             (customType.aliases + customType.name).map { alias ->
-                Pair(alias.lowercase(), customType.typedOpParameter)
+                Pair(Ident.normalizeRegular(alias), customType.typedOpParameter)
             }
         }.flatten().toMap(),
         procedures,
@@ -265,7 +265,7 @@ internal class CompilerPipelineImpl(
                                 customFunctionSignatures = functions.values.map { it.signature },
                                 customTypedOpParameters = customDataTypes.map { customType ->
                                     (customType.aliases + customType.name).map { alias ->
-                                        Pair(alias.lowercase(), customType.typedOpParameter)
+                                        Pair(Ident.normalizeRegular(alias), customType.typedOpParameter)
                                     }
                                 }.flatten().toMap()
                             )
