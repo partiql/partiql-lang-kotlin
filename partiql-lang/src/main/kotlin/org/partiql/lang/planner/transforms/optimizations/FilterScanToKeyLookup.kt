@@ -285,7 +285,7 @@ private fun PartiqlPhysical.Expr.rewriteFilterPredicate(
 private data class FieldReference(
     val variableId: Long,
     val referencedKey: String,
-    val case: PartiqlPhysical.CaseSensitivity
+    val case: PartiqlPhysical.IdKind
 ) {
     val fieldBindingName = BindingName(this.referencedKey, this.case.toBindingCase())
 }
@@ -308,7 +308,7 @@ private fun PartiqlPhysical.Expr.getKeyFieldReference(): FieldReference? {
                 fieldStepIndex is PartiqlPhysical.Expr.Lit && fieldStepIndex.value is TextElement ->
                     when (val root = this.root) {
                         is PartiqlPhysical.Expr.LocalId ->
-                            FieldReference(root.index.value, fieldStepIndex.value.textValue, fieldStep.case)
+                            FieldReference(root.index.value, fieldStepIndex.value.textValue, fieldStep.kind)
                         else -> null
                     }
                 else -> null

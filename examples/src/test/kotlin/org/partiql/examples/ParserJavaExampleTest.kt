@@ -27,7 +27,7 @@ Serialized AST
                   id
                   exampleField
                   (
-                    case_insensitive
+                    regular
                   )
                 )
                 (
@@ -48,7 +48,7 @@ Serialized AST
                 id
                 exampleTable
                 (
-                  case_insensitive
+                  regular
                 )
               )
               (
@@ -70,7 +70,7 @@ Serialized AST
                 id
                 anotherField
                 (
-                  case_insensitive
+                  regular
                 )
               )
               (

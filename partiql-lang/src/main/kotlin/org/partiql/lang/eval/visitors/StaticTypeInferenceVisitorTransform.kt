@@ -1519,7 +1519,7 @@ internal class StaticTypeInferenceVisitorTransform(
                 is PartiqlAst.Expr.Lit -> {
                     if (index.value is StringElement) {
                         val bindings = Bindings.ofMap(structFields)
-                        val caseSensitivity = currentPathComponent.case
+                        val caseSensitivity = currentPathComponent.kind
                         val lookupName = BindingName(
                             index.value.stringValue,
                             caseSensitivity.toBindingCase()

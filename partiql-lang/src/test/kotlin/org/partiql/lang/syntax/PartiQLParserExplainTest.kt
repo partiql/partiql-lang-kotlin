@@ -58,7 +58,7 @@ class PartiQLParserExplainTest : PartiQLParserTestBase() {
                     explain(
                         domain(
                             query(
-                                vr(id("a", caseInsensitive()), unqualified())
+                                vr(id("a", regular()), unqualified())
                             )
                         )
                     )
@@ -71,7 +71,7 @@ class PartiQLParserExplainTest : PartiQLParserTestBase() {
                     explain(
                         domain(
                             statement = query(
-                                vr(id("a", caseInsensitive()), unqualified())
+                                vr(id("a", regular()), unqualified())
                             ),
                             type = "logical"
                         )
@@ -85,7 +85,7 @@ class PartiQLParserExplainTest : PartiQLParserTestBase() {
                     explain(
                         domain(
                             statement = query(
-                                vr(id("a", caseInsensitive()), unqualified())
+                                vr(id("a", regular()), unqualified())
                             ),
                             format = "ion_sexp"
                         )
@@ -99,7 +99,7 @@ class PartiQLParserExplainTest : PartiQLParserTestBase() {
                     explain(
                         domain(
                             statement = query(
-                                vr(id("a", caseInsensitive()), unqualified())
+                                vr(id("a", regular()), unqualified())
                             ),
                             type = "ast",
                             format = "ion_sexp"
@@ -114,7 +114,7 @@ class PartiQLParserExplainTest : PartiQLParserTestBase() {
                     explain(
                         domain(
                             statement = query(
-                                vr(id("a", caseInsensitive()), unqualified())
+                                vr(id("a", regular()), unqualified())
                             ),
                             type = "aST",
                             format = "ion_SEXP"

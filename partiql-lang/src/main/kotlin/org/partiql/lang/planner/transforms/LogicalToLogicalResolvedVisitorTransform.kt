@@ -341,7 +341,7 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
                                 (node.metas.sourceLocation ?: error("MetaContainer is missing SourceLocationMeta")).toProblemLocation(),
                                 PlanningProblemDetails.UndefinedVariable(
                                     node.id.symb.text,
-                                    node.id.case is PartiqlLogical.CaseSensitivity.CaseSensitive
+                                    node.id.kind is PartiqlLogical.IdKind.Delimited
                                 )
                             )
                         )
@@ -353,7 +353,7 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
 
     override fun transformStatementDml(node: PartiqlLogical.Statement.Dml): PartiqlLogicalResolved.Statement {
         // We only support DML targets that are global variables.
-        val bindingName = BindingName(node.target.symb.text, node.target.case.toBindingCase())
+        val bindingName = BindingName(node.target.symb.text, node.target.kind.toBindingCase())
         val tableUniqueId = when (val resolvedVariable = globals.resolveGlobal(bindingName)) {
             is GlobalResolutionResult.GlobalVariable -> resolvedVariable.uniqueId
             GlobalResolutionResult.Undefined -> {
@@ -362,7 +362,7 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
                         node.metas.sourceLocationMetaOrUnknown.toProblemLocation(),
                         PlanningProblemDetails.UndefinedDmlTarget(
                             node.target.symb.text,
-                            node.target.case is PartiqlLogical.CaseSensitivity.CaseSensitive
+                            node.target.kind is PartiqlLogical.IdKind.Delimited
                         )
                     )
                 )
@@ -566,9 +566,9 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
     private fun PartiqlLogical.Expr.Vr.asDynamicLookupCallsite(
         search: List<PartiqlLogicalResolved.Expr>
     ): PartiqlLogicalResolved.Expr {
-        val caseSensitivityString = when (id.case) {
-            is PartiqlLogical.CaseSensitivity.CaseInsensitive -> "case_insensitive"
-            is PartiqlLogical.CaseSensitivity.CaseSensitive -> "case_sensitive"
+        val idKindString = when (id.kind) {
+            is PartiqlLogical.IdKind.Regular -> "case_insensitive"
+            is PartiqlLogical.IdKind.Delimited -> "case_sensitive"
         }
         val variableLookupStrategy = when (currentVariableLookupStrategy) {
             // If we are not in a FROM source, ignore the scope qualifier
@@ -584,7 +584,7 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
                 funcName = defnid(DYNAMIC_LOOKUP_FUNCTION_NAME),
                 args = listOf(
                     lit(id.symb.toIonElement()),
-                    lit(ionSymbol(caseSensitivityString)),
+                    lit(ionSymbol(idKindString)),
                     lit(ionSymbol(variableLookupStrategy)),
                 ) + search,
                 metas = this@asDynamicLookupCallsite.metas

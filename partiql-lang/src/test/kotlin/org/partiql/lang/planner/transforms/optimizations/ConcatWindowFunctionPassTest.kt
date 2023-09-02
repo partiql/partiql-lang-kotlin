@@ -28,14 +28,14 @@ class ConcatWindowFunctionPassTest {
                             windowPartitionList(
                                 path(
                                     localId(0),
-                                    listOf(pathExpr(lit(ionSymbol("a")), PartiqlPhysical.CaseSensitivity.CaseInsensitive()))
+                                    listOf(pathExpr(lit(ionSymbol("a")), PartiqlPhysical.IdKind.Regular()))
                                 )
                             ),
                             windowSortSpecList(
                                 sortSpec(
                                     path(
                                         localId(0),
-                                        listOf(pathExpr(lit(ionSymbol("b")), PartiqlPhysical.CaseSensitivity.CaseInsensitive()))
+                                        listOf(pathExpr(lit(ionSymbol("b")), PartiqlPhysical.IdKind.Regular()))
                                     )
                                 )
                             )
@@ -47,7 +47,7 @@ class ConcatWindowFunctionPassTest {
                                 path(
                                     localId(0),
                                     listOf(
-                                        pathExpr(lit(ionSymbol("b")), PartiqlPhysical.CaseSensitivity.CaseInsensitive())
+                                        pathExpr(lit(ionSymbol("b")), PartiqlPhysical.IdKind.Regular())
                                     )
                                 )
                             )
@@ -66,14 +66,14 @@ class ConcatWindowFunctionPassTest {
                             windowPartitionList(
                                 path(
                                     localId(0),
-                                    listOf(pathExpr(lit(ionSymbol("a")), PartiqlPhysical.CaseSensitivity.CaseInsensitive()))
+                                    listOf(pathExpr(lit(ionSymbol("a")), PartiqlPhysical.IdKind.Regular()))
                                 )
                             ),
                             windowSortSpecList(
                                 sortSpec(
                                     path(
                                         localId(0),
-                                        listOf(pathExpr(lit(ionSymbol("b")), PartiqlPhysical.CaseSensitivity.CaseInsensitive()))
+                                        listOf(pathExpr(lit(ionSymbol("b")), PartiqlPhysical.IdKind.Regular()))
                                     )
                                 )
                             )
@@ -85,7 +85,7 @@ class ConcatWindowFunctionPassTest {
                                 path(
                                     localId(0),
                                     listOf(
-                                        pathExpr(lit(ionSymbol("b")), PartiqlPhysical.CaseSensitivity.CaseInsensitive())
+                                        pathExpr(lit(ionSymbol("b")), PartiqlPhysical.IdKind.Regular())
                                     )
                                 )
                             )
@@ -115,7 +115,7 @@ class ConcatWindowFunctionPassTest {
                                     path(
                                         localId(0),
                                         listOf(
-                                            pathExpr(lit(ionSymbol("b")), PartiqlPhysical.CaseSensitivity.CaseInsensitive())
+                                            pathExpr(lit(ionSymbol("b")), PartiqlPhysical.IdKind.Regular())
                                         )
                                     )
                                 )
@@ -125,14 +125,14 @@ class ConcatWindowFunctionPassTest {
                             windowPartitionList(
                                 path(
                                     localId(0),
-                                    listOf(pathExpr(lit(ionSymbol("a")), PartiqlPhysical.CaseSensitivity.CaseInsensitive()))
+                                    listOf(pathExpr(lit(ionSymbol("a")), PartiqlPhysical.IdKind.Regular()))
                                 )
                             ),
                             windowSortSpecList(
                                 sortSpec(
                                     path(
                                         localId(0),
-                                        listOf(pathExpr(lit(ionSymbol("b")), PartiqlPhysical.CaseSensitivity.CaseInsensitive()))
+                                        listOf(pathExpr(lit(ionSymbol("b")), PartiqlPhysical.IdKind.Regular()))
                                     )
                                 )
                             )
@@ -144,7 +144,7 @@ class ConcatWindowFunctionPassTest {
                                 path(
                                     localId(0),
                                     listOf(
-                                        pathExpr(lit(ionSymbol("b")), PartiqlPhysical.CaseSensitivity.CaseInsensitive())
+                                        pathExpr(lit(ionSymbol("b")), PartiqlPhysical.IdKind.Regular())
                                     )
                                 )
                             )
@@ -169,7 +169,7 @@ class ConcatWindowFunctionPassTest {
                                     path(
                                         localId(0),
                                         listOf(
-                                            pathExpr(lit(ionSymbol("b")), PartiqlPhysical.CaseSensitivity.CaseInsensitive())
+                                            pathExpr(lit(ionSymbol("b")), PartiqlPhysical.IdKind.Regular())
                                         )
                                     )
                                 )
@@ -179,14 +179,14 @@ class ConcatWindowFunctionPassTest {
                             windowPartitionList(
                                 path(
                                     localId(0),
-                                    listOf(pathExpr(lit(ionSymbol("a")), PartiqlPhysical.CaseSensitivity.CaseInsensitive()))
+                                    listOf(pathExpr(lit(ionSymbol("a")), PartiqlPhysical.IdKind.Regular()))
                                 )
                             ),
                             windowSortSpecList(
                                 sortSpec(
                                     path(
                                         localId(0),
-                                        listOf(pathExpr(lit(ionSymbol("b")), PartiqlPhysical.CaseSensitivity.CaseInsensitive()))
+                                        listOf(pathExpr(lit(ionSymbol("b")), PartiqlPhysical.IdKind.Regular()))
                                     )
                                 )
                             )
@@ -198,7 +198,7 @@ class ConcatWindowFunctionPassTest {
                                 path(
                                     localId(0),
                                     listOf(
-                                        pathExpr(lit(ionSymbol("b")), PartiqlPhysical.CaseSensitivity.CaseInsensitive())
+                                        pathExpr(lit(ionSymbol("b")), PartiqlPhysical.IdKind.Regular())
                                     )
                                 )
                             )
@@ -226,7 +226,7 @@ class ConcatWindowFunctionPassTest {
                                     path(
                                         localId(0),
                                         listOf(
-                                            pathExpr(lit(ionSymbol("b")), PartiqlPhysical.CaseSensitivity.CaseInsensitive())
+                                            pathExpr(lit(ionSymbol("b")), PartiqlPhysical.IdKind.Regular())
                                         )
                                     )
                                 )
@@ -240,7 +240,7 @@ class ConcatWindowFunctionPassTest {
                                 path(
                                     localId(0),
                                     listOf(
-                                        pathExpr(lit(ionSymbol("b")), PartiqlPhysical.CaseSensitivity.CaseInsensitive())
+                                        pathExpr(lit(ionSymbol("b")), PartiqlPhysical.IdKind.Regular())
                                     )
                                 )
                             )
@@ -263,7 +263,7 @@ class ConcatWindowFunctionPassTest {
                                 path(
                                     localId(0),
                                     listOf(
-                                        pathExpr(lit(ionSymbol("b")), PartiqlPhysical.CaseSensitivity.CaseInsensitive())
+                                        pathExpr(lit(ionSymbol("b")), PartiqlPhysical.IdKind.Regular())
                                     )
                                 )
                             ),
@@ -273,7 +273,7 @@ class ConcatWindowFunctionPassTest {
                                 path(
                                     localId(0),
                                     listOf(
-                                        pathExpr(lit(ionSymbol("b")), PartiqlPhysical.CaseSensitivity.CaseInsensitive())
+                                        pathExpr(lit(ionSymbol("b")), PartiqlPhysical.IdKind.Regular())
                                     )
                                 )
                             )
@@ -302,7 +302,7 @@ class ConcatWindowFunctionPassTest {
                                         path(
                                             localId(0),
                                             listOf(
-                                                pathExpr(lit(ionSymbol("g")), PartiqlPhysical.CaseSensitivity.CaseInsensitive())
+                                                pathExpr(lit(ionSymbol("g")), PartiqlPhysical.IdKind.Regular())
                                             )
                                         )
                                     )
@@ -316,7 +316,7 @@ class ConcatWindowFunctionPassTest {
                                     path(
                                         localId(0),
                                         listOf(
-                                            pathExpr(lit(ionSymbol("b")), PartiqlPhysical.CaseSensitivity.CaseInsensitive())
+                                            pathExpr(lit(ionSymbol("b")), PartiqlPhysical.IdKind.Regular())
                                         )
                                     )
                                 )
@@ -330,7 +330,7 @@ class ConcatWindowFunctionPassTest {
                                 path(
                                     localId(0),
                                     listOf(
-                                        pathExpr(lit(ionSymbol("b")), PartiqlPhysical.CaseSensitivity.CaseInsensitive())
+                                        pathExpr(lit(ionSymbol("b")), PartiqlPhysical.IdKind.Regular())
                                     )
                                 )
                             )
@@ -353,7 +353,7 @@ class ConcatWindowFunctionPassTest {
                                 path(
                                     localId(0),
                                     listOf(
-                                        pathExpr(lit(ionSymbol("g")), PartiqlPhysical.CaseSensitivity.CaseInsensitive())
+                                        pathExpr(lit(ionSymbol("g")), PartiqlPhysical.IdKind.Regular())
                                     )
                                 )
                             ),
@@ -363,7 +363,7 @@ class ConcatWindowFunctionPassTest {
                                 path(
                                     localId(0),
                                     listOf(
-                                        pathExpr(lit(ionSymbol("b")), PartiqlPhysical.CaseSensitivity.CaseInsensitive())
+                                        pathExpr(lit(ionSymbol("b")), PartiqlPhysical.IdKind.Regular())
                                     )
                                 )
                             ),
@@ -373,7 +373,7 @@ class ConcatWindowFunctionPassTest {
                                 path(
                                     localId(0),
                                     listOf(
-                                        pathExpr(lit(ionSymbol("b")), PartiqlPhysical.CaseSensitivity.CaseInsensitive())
+                                        pathExpr(lit(ionSymbol("b")), PartiqlPhysical.IdKind.Regular())
                                     )
                                 )
                             )

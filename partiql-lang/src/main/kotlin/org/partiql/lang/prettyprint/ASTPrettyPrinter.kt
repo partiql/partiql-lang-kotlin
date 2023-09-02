@@ -20,15 +20,15 @@ class ASTPrettyPrinter {
      from: Scan
      Lit 1
      where: =
-     Id a (case_insensitive) (unqualified)
-     Id b (case_insensitive) (unqualified)
+     Id a (regular) (unqualified)
+     Id b (regular) (unqualified)
      group: Group
      strategy: GroupFull
      keyList: GroupKeyList
      key1: GroupKey
-     expr: Id c (case_insensitive) (unqualified)
+     expr: Id c (regular) (unqualified)
      having: =
-     Id d (case_insensitive) (unqualified)
+     Id d (regular) (unqualified)
      Lit "123"
      limit: Lit 3
      offset: Lit 4
@@ -131,7 +131,7 @@ class ASTPrettyPrinter {
     private fun toRecursionTree(node: PartiqlAst.Id, attrOfParent: String? = null): RecursionTree =
         RecursionTree(
             astType = "Id",
-            value = node.symb.text + " " + node.case.toString(),
+            value = node.symb.text + " " + node.kind.toString(),
             attrOfParent = attrOfParent
         )
 

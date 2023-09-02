@@ -228,7 +228,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
         val steps = node.steps.map {
             // Legacy AST wraps id twice and always uses CaseSensitive
             val expr = visitIdentifierSymbolAsExpr(it)
-            pathExpr(expr, caseSensitive())
+            pathExpr(expr, delimited())
         }
         path(root, steps, metas)
     }
@@ -250,8 +250,8 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
 
     override fun visitPathStepIndex(node: Path.Step.Index, ctx: Ctx) = translate(node) { metas ->
         val index = lit(ionInt(node.index.toLong()))
-        val case = caseSensitive() // ???
-        pathExpr(index, case, metas)
+        val kind = delimited() // ???
+        pathExpr(index, kind, metas)
     }
 
     /**
@@ -401,8 +401,8 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
         val index = visitExpr(node.key, ctx)
         // Legacy AST marks every index step as CaseSensitive
         val case = when (index) {
-            is PartiqlAst.Expr.Vr -> index.id.case
-            else -> PartiqlAst.CaseSensitivity.CaseSensitive()
+            is PartiqlAst.Expr.Vr -> index.id.kind
+            else -> PartiqlAst.IdKind.Delimited()
         }
         pathExpr(index, case, metas)
     }
@@ -1319,8 +1319,8 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
         node?.let { visit(it, ctx) as T }
 
     private fun Identifier.CaseSensitivity.toLegacyCaseSensitivity() = when (this) {
-        Identifier.CaseSensitivity.SENSITIVE -> PartiqlAst.CaseSensitivity.CaseSensitive()
-        Identifier.CaseSensitivity.INSENSITIVE -> PartiqlAst.CaseSensitivity.CaseInsensitive()
+        Identifier.CaseSensitivity.SENSITIVE -> PartiqlAst.IdKind.Delimited()
+        Identifier.CaseSensitivity.INSENSITIVE -> PartiqlAst.IdKind.Regular()
     }
 
     private fun Expr.Var.Scope.toLegacyScope() = when (this) {

@@ -349,7 +349,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
         select(
             project = projectList(
                 projectExpr(
-                    expr = path(vr("x"), pathExpr(lit(ionString("info")), caseInsensitive())),
+                    expr = path(vr("x"), pathExpr(lit(ionString("info")), regular())),
                     asAlias = defnid("info")
                 )
             ),
@@ -371,7 +371,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
                 )
             ),
             where = like(
-                value = path(vr("x"), pathExpr(lit(ionString("name")), caseInsensitive())),
+                value = path(vr("x"), pathExpr(lit(ionString("name")), regular())),
                 pattern = lit(ionString("foo"))
             )
         )
@@ -403,7 +403,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
             ),
             where = eq(
                 listOf(
-                    path(vr("x"), pathExpr(lit(ionString("has_data")), caseInsensitive())),
+                    path(vr("x"), pathExpr(lit(ionString("has_data")), regular())),
                     lit(ionBool(true))
                 )
             )
@@ -716,11 +716,11 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
         select(
             project = projectList(
                 projectExpr(
-                    expr = path(vr("the_a"), pathExpr(lit(ionString("name")), caseInsensitive())),
+                    expr = path(vr("the_a"), pathExpr(lit(ionString("name")), regular())),
                     asAlias = defnid("src")
                 ),
                 projectExpr(
-                    expr = path(vr("the_b"), pathExpr(lit(ionString("name")), caseInsensitive())),
+                    expr = path(vr("the_b"), pathExpr(lit(ionString("name")), regular())),
                     asAlias = defnid("dest")
                 )
             ),
@@ -756,7 +756,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
             ),
             where = gt(
                 listOf(
-                    path(vr("the_y"), pathExpr(lit(ionString("score")), caseInsensitive())),
+                    path(vr("the_y"), pathExpr(lit(ionString("score")), regular())),
                     lit(ionInt(10))
                 )
             )
@@ -929,8 +929,8 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
                                         pattern(
                                             graphMatchPattern(
                                                 prefilter = eq(
-                                                    path(vr("a"), pathExpr(lit(ionString("owner")), caseInsensitive())),
-                                                    path(vr("b"), pathExpr(lit(ionString("owner")), caseInsensitive()))
+                                                    path(vr("a"), pathExpr(lit(ionString("owner")), regular())),
+                                                    path(vr("b"), pathExpr(lit(ionString("owner")), regular()))
                                                 ),
                                                 quantifier = graphMatchQuantifier(lower = 2, upper = 5),
                                                 parts = listOf(
@@ -1084,7 +1084,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
                                             variable = defnid("p"),
                                             label = graphLabelName(defnid("Post")),
                                             prefilter = eq(
-                                                path(vr("p"), pathExpr(lit(ionString("isFlagged")), caseInsensitive())),
+                                                path(vr("p"), pathExpr(lit(ionString("isFlagged")), regular())),
                                                 lit(ionBool(true))
                                             )
                                         ),
@@ -1099,12 +1099,12 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
                                                 eq(
                                                     path(
                                                         vr("u"),
-                                                        pathExpr(lit(ionString("isBanned")), caseInsensitive())
+                                                        pathExpr(lit(ionString("isBanned")), regular())
                                                     ),
                                                     lit(ionBool(false))
                                                 ),
                                                 lt(
-                                                    path(vr("u"), pathExpr(lit(ionString("karma")), caseInsensitive())),
+                                                    path(vr("u"), pathExpr(lit(ionString("karma")), regular())),
                                                     lit(ionInt(20))
                                                 )
                                             )
@@ -1118,7 +1118,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
                                             label = graphLabelName(defnid("Comment")),
                                             prefilter =
                                             eq(
-                                                path(vr("c"), pathExpr(lit(ionString("isFlagged")), caseInsensitive())),
+                                                path(vr("c"), pathExpr(lit(ionString("isFlagged")), regular())),
                                                 lit(ionBool(true))
                                             )
                                         ),
@@ -1129,7 +1129,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
                     )
                 ),
                 where = like(
-                    value = path(vr("p"), pathExpr(lit(ionString("title")), caseInsensitive())),
+                    value = path(vr("p"), pathExpr(lit(ionString("title")), regular())),
                     pattern = lit(ionString("%considered harmful%"))
                 )
             )
@@ -1153,7 +1153,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
                                             variable = defnid("a"),
                                             prefilter =
                                             eq(
-                                                path(vr("a"), pathExpr(lit(ionString("owner")), caseInsensitive())),
+                                                path(vr("a"), pathExpr(lit(ionString("owner")), regular())),
                                                 lit(ionString("Dave"))
                                             ),
                                         ),
@@ -1167,7 +1167,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
                                             variable = defnid("b"),
                                             prefilter =
                                             eq(
-                                                path(vr("b"), pathExpr(lit(ionString("owner")), caseInsensitive())),
+                                                path(vr("b"), pathExpr(lit(ionString("owner")), regular())),
                                                 lit(ionString("Aretha"))
                                             ),
                                         ),
@@ -1220,7 +1220,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
                                             variable = defnid("a"),
                                             prefilter =
                                             eq(
-                                                path(vr("a"), pathExpr(lit(ionString("owner")), caseInsensitive())),
+                                                path(vr("a"), pathExpr(lit(ionString("owner")), regular())),
                                                 lit(ionString("Dave"))
                                             ),
                                         ),
@@ -1234,7 +1234,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
                                             variable = defnid("b"),
                                             prefilter =
                                             eq(
-                                                path(vr("b"), pathExpr(lit(ionString("owner")), caseInsensitive())),
+                                                path(vr("b"), pathExpr(lit(ionString("owner")), regular())),
                                                 lit(ionString("Aretha"))
                                             ),
                                         ),
@@ -1332,8 +1332,8 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
                     projectExpr(vr("a")),
                     projectExpr(vr("b")),
                     projectExpr(vr("c")),
-                    projectExpr(path(vr("t1"), pathExpr(lit(ionString("x")), caseInsensitive())), defnid("x")),
-                    projectExpr(path(vr("t2"), pathExpr(lit(ionString("y")), caseInsensitive())), defnid("y"))
+                    projectExpr(path(vr("t1"), pathExpr(lit(ionString("x")), regular())), defnid("x")),
+                    projectExpr(path(vr("t2"), pathExpr(lit(ionString("y")), regular())), defnid("y"))
                 ),
                 from = join(
                     type = inner(),
