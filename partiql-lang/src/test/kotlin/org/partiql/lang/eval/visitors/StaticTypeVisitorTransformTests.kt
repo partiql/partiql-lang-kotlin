@@ -50,8 +50,8 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
     private val partiqlAstUnqualified = PartiqlAst.build { unqualified() }
     private val partiqlAstLocalsFirst = PartiqlAst.build { localsFirst() }
 
-    private val partiqlAstCaseSensitive = PartiqlAst.build { caseSensitive() }
-    private val partiqlAstCaseInSensitive = PartiqlAst.build { caseInsensitive() }
+    private val partiqlAstCaseSensitive = PartiqlAst.build { delimited() }
+    private val partiqlAstCaseInSensitive = PartiqlAst.build { regular() }
 
     @Test
     @Parameters
@@ -994,7 +994,7 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
     fun `ensure StaticTypeMeta can be serialized`() {
         val expectedExpr = PartiqlAst.build {
             vr(
-                id = id("foo", caseInsensitive()),
+                id = id("foo", regular()),
                 unqualified(),
             ).withMeta("staticType", StaticTypeMeta(StaticType.DECIMAL))
         }

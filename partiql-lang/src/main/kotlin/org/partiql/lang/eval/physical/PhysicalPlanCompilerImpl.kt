@@ -1430,7 +1430,7 @@ internal class PhysicalPlanCompilerImpl(
                 when (pathComponent) {
                     is PartiqlPhysical.PathStep.PathExpr -> {
                         val indexExpr = pathComponent.index
-                        val caseSensitivity = pathComponent.case
+                        val caseSensitivity = pathComponent.kind
                         when {
                             // If indexExpr is a literal string, there is no need to evaluate it--just compile a
                             // thunk that directly returns a bound value

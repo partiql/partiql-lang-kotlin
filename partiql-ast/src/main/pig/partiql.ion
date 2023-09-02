@@ -202,7 +202,7 @@ may then be further optimized by selecting better implementations of each operat
         // A "step" within a path expression; that is the components of the expression following the root.
         (sum path_step
             // `someRoot[<expr>]`, or `someRoot.someField` which is equivalent to `someRoot['someField']`.
-            (path_expr index::expr case::case_sensitivity)
+            (path_expr index::expr kind::id_kind)
             // `someRoot[*]`]
             (path_wildcard)
             // `someRoot.*`
@@ -413,8 +413,8 @@ may then be further optimized by selecting better implementations of each operat
         // <sort_spec>[, <sort_spec>]...
         (product window_sort_spec_list sort_specs::(* sort_spec 1 ))
 
-        // Indicates if variable lookup should be case-sensitive or not.
-        (sum case_sensitivity (case_sensitive) (case_insensitive))
+        // Indicates lexical provenance of an identifier.
+        (sum id_kind (delimited) (regular))
 
         // Indicates scope search order when resolving variables.  Has no effect except within `FROM` sources.
         (sum scope_qualifier
@@ -516,7 +516,7 @@ may then be further optimized by selecting better implementations of each operat
         // `id` is a "reference identifier" for referring to / looking up an entity
         // that is elsewhere bound to a 'defnid', a "definitional identifier".
         // `id` can be used for names that need to be looked up with a notion of case-sensitivity.
-        (product id symb::symbol case::case_sensitivity)
+        (product id symb::symbol kind::id_kind)
 
         // A "definitional identifier" is for use in places that introduce, or bind, a name/identifier.
         // This does not keep track of "case sensitivity", in the current design of identifiers.

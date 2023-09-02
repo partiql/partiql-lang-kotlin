@@ -66,7 +66,7 @@ class PartiQLPigParserThreadInterruptTests {
 
     private fun makeBigPartiqlAstExpr(n: Int): PartiqlAst.Expr =
         PartiqlAst.build {
-            val variableA = vr(id("a", caseInsensitive()), unqualified())
+            val variableA = vr(id("a", regular()), unqualified())
             plus(FakeList(n, variableA))
         }
 

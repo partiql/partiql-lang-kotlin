@@ -207,31 +207,31 @@ class ToLegacyAstTest {
 
         @JvmStatic
         fun identifiers() = listOf(
-            expect("(vr (id 'a' (case_sensitive)) (unqualified))") {
+            expect("(vr (id 'a' (delimited)) (unqualified))") {
                 exprVar {
                     identifier = identifierSymbol("a", Identifier.CaseSensitivity.SENSITIVE)
                     scope = Expr.Var.Scope.DEFAULT
                 }
             },
-            expect("(vr (id 'a' (case_insensitive)) (unqualified))") {
+            expect("(vr (id 'a' (regular)) (unqualified))") {
                 exprVar {
                     identifier = identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE)
                     scope = Expr.Var.Scope.DEFAULT
                 }
             },
-            expect("(vr (id 'a' (case_sensitive)) (locals_first))") {
+            expect("(vr (id 'a' (delimited)) (locals_first))") {
                 exprVar {
                     identifier = identifierSymbol("a", Identifier.CaseSensitivity.SENSITIVE)
                     scope = Expr.Var.Scope.LOCAL
                 }
             },
-            expect("(vr (id 'a' (case_insensitive)) (locals_first))") {
+            expect("(vr (id 'a' (regular)) (locals_first))") {
                 exprVar {
                     identifier = identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE)
                     scope = Expr.Var.Scope.LOCAL
                 }
             },
-            expect("(id 'a' (case_insensitive))") {
+            expect("(id 'a' (regular))") {
                 identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE)
             },
             //
@@ -314,7 +314,7 @@ class ToLegacyAstTest {
 
         @JvmStatic
         fun paths() = listOf(
-            expect("(path (lit null) (path_expr (lit null) (case_sensitive)))") {
+            expect("(path (lit null) (path_expr (lit null) (delimited)))") {
                 exprPath {
                     root = NULL
                     steps += exprPathStepIndex(NULL)
@@ -520,7 +520,7 @@ class ToLegacyAstTest {
             expect(
                 """
                 (project_list
-                    (project_all (vr (id 'a' (case_sensitive)) (unqualified)))
+                    (project_all (vr (id 'a' (delimited)) (unqualified)))
                     (project_expr (lit 1) (defnid 'x'))
                 )
              """

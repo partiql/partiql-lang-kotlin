@@ -31,11 +31,11 @@ class ASTPrettyPrinterTest {
                         project: ProjectList
                             projectItem1: ProjectExpr
                                 expr: Vr
-                                    id: Id baz (case_insensitive)
+                                    id: Id baz (regular)
                                     qualifier: (unqualified)
                         from: Scan
                             Vr
-                                id: Id bar (case_insensitive)
+                                id: Id bar (regular)
                                 qualifier: (unqualified)
             """.trimIndent()
         )
@@ -51,13 +51,13 @@ class ASTPrettyPrinterTest {
             """
                 Ddl
                     op: CreateIndex
-                        indexName: Id foo (case_insensitive)
+                        indexName: Id foo (regular)
                         field1: Vr
-                            id: Id x (case_insensitive)
+                            id: Id x (regular)
                             qualifier: (unqualified)
                         field2: Path
                             root: Vr
-                                id: Id y (case_insensitive)
+                                id: Id y (regular)
                                 qualifier: (unqualified)
                             step1: Lit "z"
             """.trimIndent()
@@ -71,7 +71,7 @@ class ASTPrettyPrinterTest {
             """
                 Ddl
                     op: CreateTable
-                        tableName: Id foo (case_insensitive)
+                        tableName: Id foo (regular)
             """.trimIndent()
         )
     }
@@ -83,8 +83,8 @@ class ASTPrettyPrinterTest {
             """
                 Ddl
                     op: DropIndex
-                        table: Id foo (case_insensitive)
-                        keys: Id bar (case_insensitive)
+                        table: Id foo (regular)
+                        keys: Id bar (regular)
             """.trimIndent()
         )
     }
@@ -96,7 +96,7 @@ class ASTPrettyPrinterTest {
             """
                 Ddl
                     op: DropTable
-                        tableName: Id foo (case_insensitive)
+                        tableName: Id foo (regular)
             """.trimIndent()
         )
     }
@@ -113,7 +113,7 @@ class ASTPrettyPrinterTest {
                     operations: DmlOpList
                         op1: Insert
                             target: Vr
-                                id: Id foo (case_insensitive)
+                                id: Id foo (regular)
                                 qualifier: (unqualified)
                             values: Bag
                                 List
@@ -135,15 +135,15 @@ class ASTPrettyPrinterTest {
                     operations: DmlOpList
                         op1: InsertValue
                             target: Vr
-                                id: Id foo (case_insensitive)
+                                id: Id foo (regular)
                                 qualifier: (unqualified)
                             value: Lit 1
                             index: Vr
-                                id: Id bar (case_insensitive)
+                                id: Id bar (regular)
                                 qualifier: (unqualified)
                             onConflict: OnConflict
                                 expr: Vr
-                                    id: Id a (case_insensitive)
+                                    id: Id a (regular)
                                     qualifier: (unqualified)
                                 conflictAction: DoNothing
             """.trimIndent()
@@ -161,13 +161,13 @@ class ASTPrettyPrinterTest {
                             assignment: Assignment
                                 target: Path
                                     root: Vr
-                                        id: Id k (case_insensitive)
+                                        id: Id k (regular)
                                         qualifier: (unqualified)
                                     step1: Lit "m"
                                 value: Lit 5
                     from: Scan
                         Vr
-                            id: Id x (case_insensitive)
+                            id: Id x (regular)
                             qualifier: (unqualified)
             """.trimIndent()
         )
@@ -182,18 +182,18 @@ class ASTPrettyPrinterTest {
                     operations: DmlOpList
                         op1: Remove
                             target: Vr
-                                id: Id y (case_insensitive)
+                                id: Id y (regular)
                                 qualifier: (unqualified)
                     from: Scan
                         Vr
-                            id: Id x (case_insensitive)
+                            id: Id x (regular)
                             qualifier: (unqualified)
                     where: =
                         Vr
-                            id: Id a (case_insensitive)
+                            id: Id a (regular)
                             qualifier: (unqualified)
                         Vr
-                            id: Id b (case_insensitive)
+                            id: Id b (regular)
                             qualifier: (unqualified)
             """.trimIndent()
         )
@@ -209,7 +209,7 @@ class ASTPrettyPrinterTest {
                         op1: Delete
                     from: Scan
                         Vr
-                        	id: Id y (case_insensitive)
+                        	id: Id y (regular)
                         	qualifier: (unqualified)
             """.trimIndent()
         )
@@ -225,45 +225,45 @@ class ASTPrettyPrinterTest {
                         op1: Set
                             assignment: Assignment
                                 target: Vr
-                                    id: Id k (case_insensitive)
+                                    id: Id k (regular)
                                     qualifier: (unqualified)
                                 value: Lit 5
                         op2: Set
                             assignment: Assignment
                                 target: Vr
-                                    id: Id m (case_insensitive)
+                                    id: Id m (regular)
                                     qualifier: (unqualified)
                                 value: Lit 6
                         op3: InsertValue
                             target: Vr
-                                id: Id c (case_insensitive)
+                                id: Id c (regular)
                                 qualifier: (unqualified)
                             value: Bag
                                 Lit 1
                         op4: Remove
                             target: Vr
-                                id: Id a (case_insensitive)
+                                id: Id a (regular)
                                 qualifier: (unqualified)
                         op5: Set
                             assignment: Assignment
                                 target: Vr
-                                    id: Id l (case_insensitive)
+                                    id: Id l (regular)
                                     qualifier: (unqualified)
                                 value: Lit 3
                         op6: Remove
                             target: Vr
-                                id: Id b (case_insensitive)
+                                id: Id b (regular)
                                 qualifier: (unqualified)
                     from: Scan
                         Vr
-                            id: Id x (case_insensitive)
+                            id: Id x (regular)
                             qualifier: (unqualified)
                     where: =
                         Vr
-                            id: Id a (case_insensitive)
+                            id: Id a (regular)
                             qualifier: (unqualified)
                         Vr
-                            id: Id b (case_insensitive)
+                            id: Id b (regular)
                             qualifier: (unqualified)
                     returning: ReturningExpr
                         elem1: ReturningElem
@@ -282,7 +282,7 @@ class ASTPrettyPrinterTest {
             "a",
             """
                 Vr
-                    id: Id a (case_insensitive)
+                    id: Id a (regular)
                     qualifier: (unqualified)
             """.trimIndent()
         )
@@ -591,10 +591,10 @@ class ASTPrettyPrinterTest {
             """
                 Union
                     Vr
-                        id: Id a (case_insensitive)
+                        id: Id a (regular)
                         qualifier: (unqualified)
                     Vr
-                        id: Id b (case_insensitive)
+                        id: Id b (regular)
                         qualifier: (unqualified)
             """.trimIndent()
         )
@@ -607,10 +607,10 @@ class ASTPrettyPrinterTest {
             """
                 Except
                     Vr
-                        id: Id a (case_insensitive)
+                        id: Id a (regular)
                         qualifier: (unqualified)
                     Vr
-                        id: Id b (case_insensitive)
+                        id: Id b (regular)
                         qualifier: (unqualified)
             """.trimIndent()
         )
@@ -623,10 +623,10 @@ class ASTPrettyPrinterTest {
             """
                 Intersect
                     Vr
-                        id: Id a (case_insensitive)
+                        id: Id a (regular)
                         qualifier: (unqualified)
                     Vr
-                        id: Id b (case_insensitive)
+                        id: Id b (regular)
                         qualifier: (unqualified)
             """.trimIndent()
         )
@@ -639,10 +639,10 @@ class ASTPrettyPrinterTest {
             """
                 Like
                     value: Vr
-                        id: Id a (case_insensitive)
+                        id: Id a (regular)
                         qualifier: (unqualified)
                     pattern: Vr
-                        id: Id b (case_insensitive)
+                        id: Id b (regular)
                         qualifier: (unqualified)
             """.trimIndent()
         )
@@ -668,7 +668,7 @@ class ASTPrettyPrinterTest {
             """
                 SimpleCase
                     expr: Vr
-                        id: Id name (case_insensitive)
+                        id: Id name (regular)
                         qualifier: (unqualified)
                     cases: ExprPairList
                         pair1: Pair
@@ -688,7 +688,7 @@ class ASTPrettyPrinterTest {
                         pair1: Pair
                             first: =
                                 Vr
-                                    id: Id name (case_insensitive)
+                                    id: Id name (regular)
                                     qualifier: (unqualified)
                                 Lit "jack"
                             second: Lit 1
@@ -704,7 +704,7 @@ class ASTPrettyPrinterTest {
                 Struct
                     field1: Pair
                         first: Vr
-                            id: Id a (case_insensitive)
+                            id: Id a (regular)
                             qualifier: (unqualified)
                         second: Lit 1
             """.trimIndent()
@@ -757,7 +757,7 @@ class ASTPrettyPrinterTest {
             """
                 Path
                     root: Vr
-                        id: Id a (case_insensitive)
+                        id: Id a (regular)
                         qualifier: (unqualified)
                     step1: Lit "b"
             """.trimIndent()
@@ -782,7 +782,7 @@ class ASTPrettyPrinterTest {
             """
                 CallAgg sum
                     arg: Vr
-                        id: Id a (case_insensitive)
+                        id: Id a (regular)
                         qualifier: (unqualified)
             """.trimIndent()
         )
@@ -902,10 +902,10 @@ class ASTPrettyPrinterTest {
                         Lit 1
                     where: =
                         Vr
-                            id: Id a (case_insensitive)
+                            id: Id a (regular)
                             qualifier: (unqualified)
                         Vr
-                            id: Id b (case_insensitive)
+                            id: Id b (regular)
                             qualifier: (unqualified)
             """.trimIndent()
         )
@@ -922,21 +922,21 @@ class ASTPrettyPrinterTest {
                         Lit 1
                     where: =
                         Vr
-                            id: Id a (case_insensitive)
+                            id: Id a (regular)
                             qualifier: (unqualified)
                         Vr
-                            id: Id b (case_insensitive)
+                            id: Id b (regular)
                             qualifier: (unqualified)
                     group: Group
                         strategy: GroupFull
                         keyList: GroupKeyList
                             key1: GroupKey
                                 expr: Vr
-                                    id: Id c (case_insensitive)
+                                    id: Id c (regular)
                                     qualifier: (unqualified)
                     having: =
                         Vr
-                            id: Id d (case_insensitive)
+                            id: Id d (regular)
                             qualifier: (unqualified)
                         Lit "123"
             """.trimIndent()
@@ -954,21 +954,21 @@ class ASTPrettyPrinterTest {
                         Lit 1
                     where: =
                         Vr
-                            id: Id a (case_insensitive)
+                            id: Id a (regular)
                             qualifier: (unqualified)
                         Vr
-                            id: Id b (case_insensitive)
+                            id: Id b (regular)
                             qualifier: (unqualified)
                     group: Group
                         strategy: GroupFull
                         keyList: GroupKeyList
                             key1: GroupKey
                                 expr: Vr
-                                    id: Id c (case_insensitive)
+                                    id: Id c (regular)
                                     qualifier: (unqualified)
                     having: =
                         Vr
-                            id: Id d (case_insensitive)
+                            id: Id d (regular)
                             qualifier: (unqualified)
                         Lit "123"
                     limit: Lit 3
@@ -989,32 +989,32 @@ class ASTPrettyPrinterTest {
                                 project: *
                                 from: Scan
                                     Vr
-                                        id: Id foo (case_insensitive)
+                                        id: Id foo (regular)
                                         qualifier: (unqualified)
                                 where: =
                                     Vr
-                                        id: Id bar (case_insensitive)
+                                        id: Id bar (regular)
                                         qualifier: (unqualified)
                                     Lit 1
                     from: Scan
                         Lit 1
                     where: =
                         Vr
-                            id: Id a (case_insensitive)
+                            id: Id a (regular)
                             qualifier: (unqualified)
                         Vr
-                            id: Id b (case_insensitive)
+                            id: Id b (regular)
                             qualifier: (unqualified)
                     group: Group
                         strategy: GroupFull
                         keyList: GroupKeyList
                             key1: GroupKey
                                 expr: Vr
-                                    id: Id c (case_insensitive)
+                                    id: Id c (regular)
                                     qualifier: (unqualified)
                     having: =
                         Vr
-                            id: Id d (case_insensitive)
+                            id: Id d (regular)
                             qualifier: (unqualified)
                         Lit "123"
                     limit: Lit 3

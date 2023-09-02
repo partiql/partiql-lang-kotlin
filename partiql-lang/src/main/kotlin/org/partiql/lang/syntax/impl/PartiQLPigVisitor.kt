@@ -211,12 +211,12 @@ internal class PartiQLPigVisitor(
             PartiQLParser.REGULAR_IDENTIFIER -> {
                 val strId = ctx.REGULAR_IDENTIFIER().text
                 val symId = SymbolPrimitive(strId, metas)
-                id_(symId, caseInsensitive(), metas)
+                id_(symId, regular(), metas)
             }
             PartiQLParser.DELIMITED_IDENTIFIER -> {
                 val strId = ctx.DELIMITED_IDENTIFIER().text.trim('\"').replace("\"\"", "\"")
                 val symId = SymbolPrimitive(strId, metas)
-                id_(symId, caseSensitive(), metas)
+                id_(symId, delimited(), metas)
             }
             else -> throw ParserException("Bug: only REGULAR_IDENTIFIER or DELIMITED_IDENTIFIER should be possible", ErrorCode.PARSE_UNEXPECTED_TOKEN)
         }
@@ -522,11 +522,11 @@ internal class PartiQLPigVisitor(
     }
 
     override fun visitPathSimpleLiteral(ctx: PartiQLParser.PathSimpleLiteralContext) = PartiqlAst.build {
-        pathExpr(visit(ctx.literal()) as PartiqlAst.Expr, caseSensitive())
+        pathExpr(visit(ctx.literal()) as PartiqlAst.Expr, delimited())
     }
 
     override fun visitPathSimpleSymbol(ctx: PartiQLParser.PathSimpleSymbolContext) = PartiqlAst.build {
-        pathExpr(readIdentifierAsExprVr(ctx.identifier()), caseSensitive())
+        pathExpr(readIdentifierAsExprVr(ctx.identifier()), delimited())
     }
 
     override fun visitPathSimpleDotSymbol(ctx: PartiQLParser.PathSimpleDotSymbolContext) =
@@ -1175,7 +1175,7 @@ internal class PartiQLPigVisitor(
             val keyword = ctx.nonReservedKeywords().start.text
             val metas = ctx.start.getSourceMetaContainer()
             val qualifier = ctx.qualifier?.let { localsFirst() } ?: unqualified()
-            vr(id(keyword, caseInsensitive()), qualifier, metas)
+            vr(id(keyword, regular()), qualifier, metas)
         }
 
     override fun visitParameter(ctx: PartiQLParser.ParameterContext) = PartiqlAst.build {
@@ -1203,7 +1203,7 @@ internal class PartiQLPigVisitor(
     override fun visitPathStepIndexExpr(ctx: PartiQLParser.PathStepIndexExprContext) = PartiqlAst.build {
         val expr = visitExpr(ctx.key)
         val metas = expr.metas + metaContainerOf(IsPathIndexMeta.instance)
-        pathExpr(expr, PartiqlAst.CaseSensitivity.CaseSensitive(), metas)
+        pathExpr(expr, PartiqlAst.IdKind.Delimited(), metas)
     }
 
     override fun visitPathStepDotExpr(ctx: PartiQLParser.PathStepDotExprContext) = getSymbolPathExpr(ctx.key)
@@ -1387,7 +1387,7 @@ internal class PartiQLPigVisitor(
             // or trim(<substring> FROM target), i.e., we treat what is recognized by parser as the modifier as <substring>
             ctx.mod != null && ctx.sub == null -> {
                 if (isTrimSpec) ctx.mod.toSymbol() to null
-                else null to vr(id(possibleModText!!, caseInsensitive()), unqualified(), ctx.mod.getSourceMetaContainer())
+                else null to vr(id(possibleModText!!, regular()), unqualified(), ctx.mod.getSourceMetaContainer())
             }
 
             ctx.mod == null && ctx.sub != null -> {
@@ -2050,7 +2050,7 @@ internal class PartiQLPigVisitor(
 
     private fun getSymbolPathExpr(ctx: PartiQLParser.IdentifierContext): PartiqlAst.PathStep.PathExpr = PartiqlAst.build {
         val ident = visitIdentifier(ctx)
-        pathExpr(lit(ionString(ident.symb.text)), ident.case, ident.metas)
+        pathExpr(lit(ionString(ident.symb.text)), ident.kind, ident.metas)
     }
 
     private fun String.toInteger() = BigInteger(this, 10)

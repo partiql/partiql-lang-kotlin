@@ -99,11 +99,11 @@ internal class PartiQLPigParserSpyTest {
                     select(
                         project = projectList(
                             projectExpr(
-                                vr(id("a", caseInsensitive()), unqualified())
+                                vr(id("a", regular()), unqualified())
                             )
                         ),
                         from = scan(
-                            vr(id("t", caseInsensitive()), unqualified())
+                            vr(id("t", regular()), unqualified())
                         )
                     )
                 )
@@ -135,11 +135,11 @@ internal class PartiQLPigParserSpyTest {
                     select(
                         project = projectList(
                             projectExpr(
-                                vr(id("a", caseInsensitive()), unqualified())
+                                vr(id("a", regular()), unqualified())
                             )
                         ),
                         from = scan(
-                            vr(id("t", caseInsensitive()), unqualified())
+                            vr(id("t", regular()), unqualified())
                         )
                     )
                 )

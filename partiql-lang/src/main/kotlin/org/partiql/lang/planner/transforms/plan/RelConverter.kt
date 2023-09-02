@@ -445,7 +445,7 @@ internal class RelConverter {
             aggregations.add(binding(name, node))
             return PartiqlAst.build {
                 vr(
-                    id = id(name, caseInsensitive()),
+                    id = id(name, regular()),
                     qualifier = unqualified(),
                     metas = node.metas
                 )

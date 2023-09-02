@@ -147,7 +147,7 @@ class StaticTypeVisitorTransform(
 
             return PartiqlAst.build {
                 vr(
-                    id(sourceName, caseSensitive()),
+                    id(sourceName, delimited()),
                     localsFirst(),
                     metas + metaContainerOf(StaticTypeMeta.TAG to StaticTypeMeta(sourceType.type))
                 )
@@ -156,15 +156,15 @@ class StaticTypeVisitorTransform(
 
         private fun PartiqlAst.Expr.Vr.toPathExpr(): PartiqlAst.PathStep.PathExpr =
             PartiqlAst.build {
-                pathExpr(index = lit(ion.newString(id.symb.text).toIonElement(), this@toPathExpr.extractSourceLocation()), case = id.case, metas = metas)
+                pathExpr(index = lit(ion.newString(id.symb.text).toIonElement(), this@toPathExpr.extractSourceLocation()), kind = id.kind, metas = metas)
             }
 
         private fun errUnboundName(id: PartiqlAst.Id, metas: MetaContainer): Nothing =
             throw SemanticException(
                 "No such variable named '${id.symb.text}'",
-                when (id.case) {
-                    is PartiqlAst.CaseSensitivity.CaseInsensitive -> ErrorCode.SEMANTIC_UNBOUND_BINDING
-                    is PartiqlAst.CaseSensitivity.CaseSensitive -> ErrorCode.SEMANTIC_UNBOUND_QUOTED_BINDING
+                when (id.kind) {
+                    is PartiqlAst.IdKind.Regular -> ErrorCode.SEMANTIC_UNBOUND_BINDING
+                    is PartiqlAst.IdKind.Delimited -> ErrorCode.SEMANTIC_UNBOUND_QUOTED_BINDING
                 },
                 propertyValueMapOf(
                     Property.BINDING_NAME to id.symb.text

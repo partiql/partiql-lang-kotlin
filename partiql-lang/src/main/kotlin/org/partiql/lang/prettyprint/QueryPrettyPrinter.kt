@@ -110,9 +110,9 @@ class QueryPrettyPrinter {
     }
 
     private fun writeAstNode(node: PartiqlAst.Id, sb: StringBuilder) {
-        when (node.case) {
-            is PartiqlAst.CaseSensitivity.CaseSensitive -> sb.append("\"${node.symb.text}\"")
-            is PartiqlAst.CaseSensitivity.CaseInsensitive -> sb.append(node.symb.text)
+        when (node.kind) {
+            is PartiqlAst.IdKind.Delimited -> sb.append("\"${node.symb.text}\"")
+            is PartiqlAst.IdKind.Regular -> sb.append(node.symb.text)
         }
     }
 
@@ -483,9 +483,9 @@ class QueryPrettyPrinter {
     }
 
     private fun writeAstNode(node: PartiqlAst.Expr.Vr, sb: StringBuilder) {
-        when (node.id.case) {
-            is PartiqlAst.CaseSensitivity.CaseSensitive -> sb.append("\"${node.id.symb.text}\"")
-            is PartiqlAst.CaseSensitivity.CaseInsensitive -> sb.append(node.id.symb.text)
+        when (node.id.kind) {
+            is PartiqlAst.IdKind.Delimited -> sb.append("\"${node.id.symb.text}\"")
+            is PartiqlAst.IdKind.Regular -> sb.append(node.id.symb.text)
         }
     }
 
@@ -527,8 +527,8 @@ class QueryPrettyPrinter {
         }
         node.steps.forEach {
             when (it) {
-                is PartiqlAst.PathStep.PathExpr -> when (it.case) {
-                    is PartiqlAst.CaseSensitivity.CaseSensitive -> {
+                is PartiqlAst.PathStep.PathExpr -> when (it.kind) {
+                    is PartiqlAst.IdKind.Delimited -> {
                         // This means the value of the path component is surrounded by square brackets '[' and ']'
                         // or double-quotes i.e. either a[b] or a."b"
                         // Here we just transform it to be surrounded by square brackets
@@ -537,7 +537,7 @@ class QueryPrettyPrinter {
                         sb.append(']')
                     }
                     // Case for a.b
-                    is PartiqlAst.CaseSensitivity.CaseInsensitive -> when (val index = it.index) {
+                    is PartiqlAst.IdKind.Regular -> when (val index = it.index) {
                         is PartiqlAst.Expr.Lit -> {
                             val value = index.value.stringValue // It must be a string according to behavior of Lexer
                             sb.append(".$value")

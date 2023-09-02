@@ -52,9 +52,9 @@ enum class BindingCase {
 /**
  * Converts a [CaseSensitivity] to a [BindingCase].
  */
-fun PartiqlAst.CaseSensitivity.toBindingCase(): BindingCase = when (this) {
-    is PartiqlAst.CaseSensitivity.CaseInsensitive -> BindingCase.INSENSITIVE
-    is PartiqlAst.CaseSensitivity.CaseSensitive -> BindingCase.SENSITIVE
+fun PartiqlAst.IdKind.toBindingCase(): BindingCase = when (this) {
+    is PartiqlAst.IdKind.Regular -> BindingCase.INSENSITIVE
+    is PartiqlAst.IdKind.Delimited -> BindingCase.SENSITIVE
 }
 
 /**

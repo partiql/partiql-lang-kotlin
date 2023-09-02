@@ -142,14 +142,14 @@ class LogicalResolvedToDefaultPartiQLPhysicalVisitorTransformTestsPass {
                             windowPartitionList(
                                 path(
                                     localId(0),
-                                    listOf(pathExpr(lit(ionSymbol("a")), PartiqlLogicalResolved.CaseSensitivity.CaseInsensitive()))
+                                    listOf(pathExpr(lit(ionSymbol("a")), PartiqlLogicalResolved.IdKind.Regular()))
                                 )
                             ),
                             windowSortSpecList(
                                 sortSpec(
                                     path(
                                         localId(0),
-                                        listOf(pathExpr(lit(ionSymbol("b")), PartiqlLogicalResolved.CaseSensitivity.CaseInsensitive()))
+                                        listOf(pathExpr(lit(ionSymbol("b")), PartiqlLogicalResolved.IdKind.Regular()))
                                     )
                                 )
                             )
@@ -161,7 +161,7 @@ class LogicalResolvedToDefaultPartiQLPhysicalVisitorTransformTestsPass {
                             path(
                                 localId(0),
                                 listOf(
-                                    pathExpr(lit(ionSymbol("b")), PartiqlLogicalResolved.CaseSensitivity.CaseInsensitive())
+                                    pathExpr(lit(ionSymbol("b")), PartiqlLogicalResolved.IdKind.Regular())
                                 )
                             )
                         )
@@ -179,14 +179,14 @@ class LogicalResolvedToDefaultPartiQLPhysicalVisitorTransformTestsPass {
                             windowPartitionList(
                                 path(
                                     localId(0),
-                                    listOf(pathExpr(lit(ionSymbol("a")), PartiqlPhysical.CaseSensitivity.CaseInsensitive()))
+                                    listOf(pathExpr(lit(ionSymbol("a")), PartiqlPhysical.IdKind.Regular()))
                                 )
                             ),
                             windowSortSpecList(
                                 sortSpec(
                                     path(
                                         localId(0),
-                                        listOf(pathExpr(lit(ionSymbol("b")), PartiqlPhysical.CaseSensitivity.CaseInsensitive()))
+                                        listOf(pathExpr(lit(ionSymbol("b")), PartiqlPhysical.IdKind.Regular()))
                                     )
                                 )
                             )
@@ -198,7 +198,7 @@ class LogicalResolvedToDefaultPartiQLPhysicalVisitorTransformTestsPass {
                                 path(
                                     localId(0),
                                     listOf(
-                                        pathExpr(lit(ionSymbol("b")), PartiqlPhysical.CaseSensitivity.CaseInsensitive())
+                                        pathExpr(lit(ionSymbol("b")), PartiqlPhysical.IdKind.Regular())
                                     )
                                 )
                             )
@@ -299,7 +299,7 @@ class LogicalResolvedToDefaultPartiQLPhysicalVisitorTransformTestsPass {
                                 listOf(
                                     path(
                                         localId(0),
-                                        listOf(pathExpr(lit(ionString("id")), caseInsensitive()))
+                                        listOf(pathExpr(lit(ionString("id")), regular()))
                                     ),
                                     lit(ionInt(1))
                                 )
@@ -321,7 +321,7 @@ class LogicalResolvedToDefaultPartiQLPhysicalVisitorTransformTestsPass {
                                 listOf(
                                     path(
                                         localId(0),
-                                        listOf(pathExpr(lit(ionString("id")), caseInsensitive()))
+                                        listOf(pathExpr(lit(ionString("id")), regular()))
                                     ),
                                     lit(ionInt(1))
                                 )

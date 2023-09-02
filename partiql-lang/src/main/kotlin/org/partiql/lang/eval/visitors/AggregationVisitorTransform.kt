@@ -152,11 +152,11 @@ internal class AggregationVisitorTransform(
         if (contextStack.last().groupKeys.isNotEmpty() || contextStack.last().groupAsAlias != null) {
             return PartiqlAst.build {
                 val projectionItems = contextStack.last().groupKeys.map { key ->
-                    projectExpr(vr(id(key.uniqueAlias, caseSensitive()), unqualified()), defnid(key.publicAlias))
+                    projectExpr(vr(id(key.uniqueAlias, delimited()), unqualified()), defnid(key.publicAlias))
                 }.toMutableList()
 
                 contextStack.last().groupAsAlias?.let { alias ->
-                    val item = projectExpr(vr(id(alias, caseSensitive()), unqualified()), defnid(alias))
+                    val item = projectExpr(vr(id(alias, delimited()), unqualified()), defnid(alias))
                     projectionItems.add(item)
                 }
                 projectList(projectionItems)
@@ -269,7 +269,7 @@ internal class AggregationVisitorTransform(
                     key.isPublicAliasUserDefined.not() && key.represents == node
                 }?.let { key ->
                     return PartiqlAst.build {
-                        vr(id(key.uniqueAlias, caseSensitive()), unqualified(), emptyMetaContainer())
+                        vr(id(key.uniqueAlias, delimited()), unqualified(), emptyMetaContainer())
                     }
                 }
             }
@@ -322,11 +322,11 @@ internal class AggregationVisitorTransform(
             val bindingName = node.id.toBindingName()
             val replacementKey = ctx.groupKeys.firstOrNull { key ->
                 bindingName.isEquivalentTo(key.publicAlias)
-            }?.let { key -> PartiqlAst.build { vr(id(key.uniqueAlias, caseSensitive()), node.qualifier) } }
+            }?.let { key -> PartiqlAst.build { vr(id(key.uniqueAlias, delimited()), node.qualifier) } }
 
             return when {
                 replacementKey != null -> replacementKey
-                bindingName.isEquivalentTo(ctx.groupAsAlias) -> PartiqlAst.build { vr(id(node.id.symb.text, caseSensitive()), unqualified()) }
+                bindingName.isEquivalentTo(ctx.groupAsAlias) -> PartiqlAst.build { vr(id(node.id.symb.text, delimited()), unqualified()) }
                 else -> null
             }
         }
@@ -342,7 +342,7 @@ internal class AggregationVisitorTransform(
 
             return when {
                 replacementExpression != null -> replacementExpression
-                bindingName.isEquivalentTo(ctx.groupAsAlias) -> PartiqlAst.build { vr(id(node.id.symb.text, caseSensitive()), unqualified()) }
+                bindingName.isEquivalentTo(ctx.groupAsAlias) -> PartiqlAst.build { vr(id(node.id.symb.text, delimited()), unqualified()) }
                 else -> null
             }
         }

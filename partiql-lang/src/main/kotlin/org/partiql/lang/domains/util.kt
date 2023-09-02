@@ -14,15 +14,15 @@ import org.partiql.lang.eval.BindingName
 
 // TODO:  once https://github.com/partiql/partiql-ir-generator/issues/6 has been completed, we can delete this.
 fun PartiqlAst.Builder.vr(name: String) =
-    vr(id(name, caseInsensitive()), unqualified())
+    vr(id(name, regular()), unqualified())
 
 // TODO:  once https://github.com/partiql/partiql-ir-generator/issues/6 has been completed, we can delete this.
 fun PartiqlLogical.Builder.vr(name: String) =
-    vr(id(name, caseInsensitive()), unqualified())
+    vr(id(name, regular()), unqualified())
 
 // TODO:  once https://github.com/partiql/partiql-ir-generator/issues/6 has been completed, we can delete this.
 fun PartiqlLogical.Builder.pathExpr(exp: PartiqlLogical.Expr) =
-    pathExpr(exp, caseInsensitive())
+    pathExpr(exp, regular())
 
 val MetaContainer.staticType: StaticTypeMeta? get() = this[StaticTypeMeta.TAG] as StaticTypeMeta?
 
@@ -62,34 +62,34 @@ fun PropertyValueMap.addSourceLocation(metas: MetaContainer): PropertyValueMap {
 }
 
 /**
- * Converts a [PartiqlAst.CaseSensitivity] to a [BindingCase].
+ * Converts a [PartiqlAst.IdKind] to a [BindingCase].
  */
-fun PartiqlAst.CaseSensitivity.toBindingCase(): BindingCase = when (this) {
-    is PartiqlAst.CaseSensitivity.CaseInsensitive -> BindingCase.INSENSITIVE
-    is PartiqlAst.CaseSensitivity.CaseSensitive -> BindingCase.SENSITIVE
+fun PartiqlAst.IdKind.toBindingCase(): BindingCase = when (this) {
+    is PartiqlAst.IdKind.Regular -> BindingCase.INSENSITIVE
+    is PartiqlAst.IdKind.Delimited -> BindingCase.SENSITIVE
 }
 
 /**
- * Converts a [PartiqlLogical.CaseSensitivity] to a [BindingCase].
+ * Converts a [PartiqlLogical.IdKind] to a [BindingCase].
  */
-fun PartiqlLogical.CaseSensitivity.toBindingCase(): BindingCase = when (this) {
-    is PartiqlLogical.CaseSensitivity.CaseInsensitive -> BindingCase.INSENSITIVE
-    is PartiqlLogical.CaseSensitivity.CaseSensitive -> BindingCase.SENSITIVE
+fun PartiqlLogical.IdKind.toBindingCase(): BindingCase = when (this) {
+    is PartiqlLogical.IdKind.Regular -> BindingCase.INSENSITIVE
+    is PartiqlLogical.IdKind.Delimited -> BindingCase.SENSITIVE
 }
 
 /**
- * Converts a [PartiqlLogical.CaseSensitivity] to a [BindingCase].
+ * Converts a [PartiqlLogical.IdKind] to a [BindingCase].
  */
-fun PartiqlPhysical.CaseSensitivity.toBindingCase(): BindingCase = when (this) {
-    is PartiqlPhysical.CaseSensitivity.CaseInsensitive -> BindingCase.INSENSITIVE
-    is PartiqlPhysical.CaseSensitivity.CaseSensitive -> BindingCase.SENSITIVE
+fun PartiqlPhysical.IdKind.toBindingCase(): BindingCase = when (this) {
+    is PartiqlPhysical.IdKind.Regular -> BindingCase.INSENSITIVE
+    is PartiqlPhysical.IdKind.Delimited -> BindingCase.SENSITIVE
 }
 
 fun PartiqlAst.Id.toBindingName(): BindingName =
-    BindingName(this.symb.text, this.case.toBindingCase())
+    BindingName(this.symb.text, this.kind.toBindingCase())
 
 fun PartiqlLogical.Id.toBindingName(): BindingName =
-    BindingName(this.symb.text, this.case.toBindingCase())
+    BindingName(this.symb.text, this.kind.toBindingCase())
 
 fun PartiqlAst.Defnid.toIdent(): Ident =
     Ident.createAsIs(this.symb.text)

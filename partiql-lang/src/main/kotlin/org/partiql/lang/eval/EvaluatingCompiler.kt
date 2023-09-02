@@ -1120,13 +1120,13 @@ internal class EvaluatingCompiler(
                                             internal = false
                                         )
                                     } else {
-                                        val (errorCode, hint) = when (expr.id.case) {
-                                            is PartiqlAst.CaseSensitivity.CaseSensitive ->
+                                        val (errorCode, hint) = when (expr.id.kind) {
+                                            is PartiqlAst.IdKind.Delimited ->
                                                 Pair(
                                                     ErrorCode.EVALUATOR_QUOTED_BINDING_DOES_NOT_EXIST,
                                                     " $UNBOUND_QUOTED_IDENTIFIER_HINT"
                                                 )
-                                            is PartiqlAst.CaseSensitivity.CaseInsensitive ->
+                                            is PartiqlAst.IdKind.Regular ->
                                                 Pair(ErrorCode.EVALUATOR_BINDING_DOES_NOT_EXIST, "")
                                         }
                                         err(
@@ -2633,7 +2633,7 @@ internal class EvaluatingCompiler(
                 when (pathComponent) {
                     is PartiqlAst.PathStep.PathExpr -> {
                         val indexExpr = pathComponent.index
-                        val caseSensitivity = pathComponent.case
+                        val caseSensitivity = pathComponent.kind
                         when {
                             // If indexExpr is a literal string, there is no need to evaluate it--just compile a
                             // thunk that directly returns a bound value

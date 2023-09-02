@@ -129,7 +129,7 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
     override fun walkExprVr(node: PartiqlAst.Expr.Vr, ctx: Ctx) = visit(node) {
         Plan.rexId(
             name = node.id.symb.text,
-            case = convertCase(node.id.case),
+            case = convertCase(node.id.kind),
             qualifier = when (node.qualifier) {
                 is PartiqlAst.ScopeQualifier.LocalsFirst -> Rex.Id.Qualifier.LOCALS_FIRST
                 is PartiqlAst.ScopeQualifier.Unqualified -> Rex.Id.Qualifier.UNQUALIFIED
@@ -145,7 +145,7 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
                 when (it) {
                     is PartiqlAst.PathStep.PathExpr -> Plan.stepKey(
                         value = convert(it.index),
-                        case = convertCase(it.case)
+                        case = convertCase(it.kind)
                     )
                     is PartiqlAst.PathStep.PathUnpivot -> Plan.stepUnpivot()
                     is PartiqlAst.PathStep.PathWildcard -> Plan.stepWildcard()
@@ -522,9 +522,9 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
         }
     }
 
-    private fun convertCase(case: PartiqlAst.CaseSensitivity) = when (case) {
-        is PartiqlAst.CaseSensitivity.CaseInsensitive -> Case.INSENSITIVE
-        is PartiqlAst.CaseSensitivity.CaseSensitive -> Case.SENSITIVE
+    private fun convertCase(case: PartiqlAst.IdKind) = when (case) {
+        is PartiqlAst.IdKind.Regular -> Case.INSENSITIVE
+        is PartiqlAst.IdKind.Delimited -> Case.SENSITIVE
     }
 
     internal object Constants {
