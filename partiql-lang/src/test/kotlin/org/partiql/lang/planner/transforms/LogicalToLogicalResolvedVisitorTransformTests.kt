@@ -32,7 +32,7 @@ private fun PartiqlLogicalResolved.Builder.dynamicLookup(
     vararg searchTargets: PartiqlLogicalResolved.Expr
 ) =
     call(
-        defnid(DYNAMIC_LOOKUP_FUNCTION_NAME),
+        defnid(DYNAMIC_LOOKUP_FUNCTION_NAME, delimited()),
         listOf(
             lit(ionSymbol(name)),
             lit(

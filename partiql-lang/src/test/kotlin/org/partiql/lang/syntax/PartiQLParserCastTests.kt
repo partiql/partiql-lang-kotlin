@@ -33,47 +33,47 @@ class PartiQLParserCastTests : PartiQLParserTestBase() {
         private val cases = listOf(
             Case(
                 source = "CAST(true as es_boolean)",
-                ast = PartiqlAst.build { cast(lit(ionBool(true)), customType(defnid("es_boolean"))) }
+                ast = PartiqlAst.build { cast(lit(ionBool(true)), customType(defnid("es_boolean", regular()))) }
             ),
             Case(
                 source = "CAST(1 as es_integer)",
-                ast = PartiqlAst.build { cast(lit(ionInt(1)), customType(defnid("es_integer"))) }
+                ast = PartiqlAst.build { cast(lit(ionInt(1)), customType(defnid("es_integer", regular()))) }
             ),
             Case(
                 source = "CAST(`1.2e0` as ES_FLOAT)",
-                ast = PartiqlAst.build { cast(lit(ionFloat(1.2)), customType(defnid("es_float"))) }
+                ast = PartiqlAst.build { cast(lit(ionFloat(1.2)), customType(defnid("ES_FLOAT", regular()))) }
             ),
             Case(
                 source = "CAST('xyz' as ES_TEXT)",
-                ast = PartiqlAst.build { cast(lit(ionString("xyz")), customType(defnid("es_text"))) }
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), customType(defnid("ES_TEXT", regular()))) }
             ),
             Case(
                 source = "CAST('xyz' as RS_VARCHAR_MAX)",
-                ast = PartiqlAst.build { cast(lit(ionString("xyz")), customType(defnid("rs_varchar_max"))) }
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), customType(defnid("RS_VARCHAR_MAX", regular()))) }
             ),
             Case(
                 source = "CAST('xyz' as RS_REAL)",
-                ast = PartiqlAst.build { cast(lit(ionString("xyz")), customType(defnid("rs_real"))) }
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), customType(defnid("RS_REAL", regular()))) }
             ),
             Case(
                 source = "CAST('xyz' as RS_FLOAT4)",
-                ast = PartiqlAst.build { cast(lit(ionString("xyz")), customType(defnid("rs_real"))) }
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), customType(defnid("rs_real", regular()))) }
             ),
             Case(
                 source = "CAST('xyz' as RS_DOUBLE_PRECISION)",
-                ast = PartiqlAst.build { cast(lit(ionString("xyz")), customType(defnid("rs_double_precision"))) }
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), customType(defnid("RS_DOUBLE_PRECISION", regular()))) }
             ),
             Case(
                 source = "CAST('xyz' as RS_FLOAT)",
-                ast = PartiqlAst.build { cast(lit(ionString("xyz")), customType(defnid("rs_double_precision"))) }
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), customType(defnid("rs_double_precision", regular()))) }
             ),
             Case(
                 source = "CAST('xyz' as rs_float8)",
-                ast = PartiqlAst.build { cast(lit(ionString("xyz")), customType(defnid("rs_double_precision"))) }
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), customType(defnid("rs_double_precision", regular()))) }
             ),
             Case(
                 source = "CAST('xyz' as SPARK_FLOAT)",
-                ast = PartiqlAst.build { cast(lit(ionString("xyz")), customType(defnid("spark_float"))) }
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), customType(defnid("SPARK_FLOAT", regular()))) }
             ),
             Case(
                 source = "CAST('xyz' as int4)",
@@ -109,35 +109,35 @@ class PartiQLParserCastTests : PartiQLParserTestBase() {
             ),
             Case(
                 source = "CAST('xyz' as SPARK_SHORT)",
-                ast = PartiqlAst.build { cast(lit(ionString("xyz")), customType(defnid("spark_short"))) }
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), customType(defnid("SPARK_SHORT", regular()))) }
             ),
             Case(
                 source = "CAST('xyz' as SPARK_INTEGER)",
-                ast = PartiqlAst.build { cast(lit(ionString("xyz")), customType(defnid("spark_integer"))) }
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), customType(defnid("SPARK_INTEGER", regular()))) }
             ),
             Case(
                 source = "CAST('xyz' as SPARK_LONG)",
-                ast = PartiqlAst.build { cast(lit(ionString("xyz")), customType(defnid("spark_long"))) }
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), customType(defnid("SPARK_LONG", regular()))) }
             ),
             Case(
                 source = "CAST('xyz' as SPARK_DOUBLE)",
-                ast = PartiqlAst.build { cast(lit(ionString("xyz")), customType(defnid("spark_double"))) }
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), customType(defnid("SPARK_DOUBLE", regular()))) }
             ),
             Case(
                 source = "CAST('xyz' as SPARK_BOOLEAN)",
-                ast = PartiqlAst.build { cast(lit(ionString("xyz")), customType(defnid("spark_boolean"))) }
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), customType(defnid("SPARK_BOOLEAN", regular()))) }
             ),
             Case(
                 source = "CAST('xyz' as RS_integer)",
-                ast = PartiqlAst.build { cast(lit(ionString("xyz")), customType(defnid("rs_integer"))) }
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), customType(defnid("RS_integer", regular()))) }
             ),
             Case(
                 source = "CAST('xyz' as RS_BIGINT)",
-                ast = PartiqlAst.build { cast(lit(ionString("xyz")), customType(defnid("rs_bigint"))) }
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), customType(defnid("RS_BIGINT", regular()))) }
             ),
             Case(
                 source = "CAST('xyz' as RS_BOOLEAN)",
-                ast = PartiqlAst.build { cast(lit(ionString("xyz")), customType(defnid("rs_boolean"))) }
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), customType(defnid("RS_BOOLEAN", regular()))) }
             )
         )
     }

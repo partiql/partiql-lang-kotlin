@@ -19,6 +19,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.ast.Ast
 import org.partiql.ast.AstNode
+import org.partiql.ast.Defnid
 import org.partiql.ast.Expr
 import org.partiql.ast.From
 import org.partiql.ast.GroupBy
@@ -248,26 +249,26 @@ class ToLegacyAstTest {
 
         @JvmStatic
         fun calls() = listOf(
-            expect("(call (defnid 'a') (lit null))") {
+            expect("(call (defnid 'a' (regular)) (lit null))") {
                 exprCall {
                     function = id("a")
                     args += NULL
                 }
             },
-            expect("(call_agg (all) (defnid 'a') (lit null))") {
+            expect("(call_agg (all) (defnid 'a'  (regular)) (lit null))") {
                 exprAgg {
                     function = id("a")
                     args += NULL
                 }
             },
-            expect("(call_agg (all) (defnid 'a') (lit null))") {
+            expect("(call_agg (all) (defnid 'a'  (regular)) (lit null))") {
                 exprAgg {
                     setq = SetQuantifier.ALL
                     function = id("a")
                     args += NULL
                 }
             },
-            expect("(call_agg (distinct) (defnid 'a') (lit null))") {
+            expect("(call_agg (distinct) (defnid 'a' (regular)) (lit null))") {
                 exprAgg {
                     setq = SetQuantifier.DISTINCT
                     function = id("a")
@@ -413,7 +414,8 @@ class ToLegacyAstTest {
             // Other (??)
             expect("(integer4_type)") { typeInt4() },
             expect("(integer8_type)") { typeInt8() },
-            expect("(custom_type (defnid 'dog'))") { typeCustom("dog") }
+            // wVG REGULAR choice here is by fiat
+            expect("(custom_type (defnid 'dog' (regular)))") { typeCustom(defnid("dog", Defnid.Kind.REGULAR)) }
             // LEGACY AST does not have TIMESTAMP or INTERVAL
             // LEGACY AST does not have parameterized blob/clob
         )
@@ -487,17 +489,17 @@ class ToLegacyAstTest {
             // TODO nullif
             // TODO substring
             // TODO position
-            expect("""(call (defnid 'trim') (lit "xyz"))""") {
+            expect("""(call (defnid 'trim'  (regular)) (lit "xyz"))""") {
                 exprTrim {
                     value = exprLit(stringValue("xyz"))
                 }
             },
-            expect("""(call (defnid 'trim') (lit "xyz"))""") {
+            expect("""(call (defnid 'trim' (regular)) (lit "xyz"))""") {
                 exprTrim {
                     value = exprLit(stringValue("xyz"))
                 }
             },
-            expect("""(call (defnid 'trim') (lit "xyz"))""") {
+            expect("""(call (defnid 'trim' (regular)) (lit "xyz"))""") {
                 exprTrim {
                     value = exprLit(stringValue("xyz"))
                 }
@@ -521,7 +523,7 @@ class ToLegacyAstTest {
                 """
                 (project_list
                     (project_all (vr (id 'a' (delimited)) (unqualified)))
-                    (project_expr (lit 1) (defnid 'x'))
+                    (project_expr (lit 1) (defnid 'x' (regular)))
                 )
              """
             ) {
@@ -556,9 +558,9 @@ class ToLegacyAstTest {
             },
             expect(
                 """(scan (lit null) 
-                |          (defnid 'a') 
-                |          (defnid 'b') 
-                |          (defnid 'c')
+                |          (defnid 'a' (regular)) 
+                |          (defnid 'b' (regular)) 
+                |          (defnid 'c' (regular))
                 |      )""".trimMargin()
             ) {
                 fromValue {
@@ -577,9 +579,9 @@ class ToLegacyAstTest {
             },
             expect(
                 """(unpivot (lit null) 
-                |          (defnid 'a') 
-                |          (defnid 'b') 
-                |          (defnid 'c')
+                |          (defnid 'a'  (regular)) 
+                |          (defnid 'b'  (regular)) 
+                |          (defnid 'c'  (regular))
                    )""".trimMargin()
             ) {
                 fromValue {
@@ -634,7 +636,7 @@ class ToLegacyAstTest {
                     condition = exprLit(boolValue(true))
                 }
             },
-            expect("(let (let_binding (lit null) (defnid 'x')))") {
+            expect("(let (let_binding (lit null) (defnid 'x'  (regular))))") {
                 let {
                     bindings += letBinding {
                         expr = NULL
@@ -647,7 +649,7 @@ class ToLegacyAstTest {
                (group_by (group_full)
                     (group_key_list
                         (group_key (lit "a") null)
-                        (group_key (lit "b") (defnid 'x'))
+                        (group_key (lit "b") (defnid 'x'  (regular)))
                     )
                     null
                )
@@ -664,9 +666,9 @@ class ToLegacyAstTest {
                (group_by (group_partial)
                     (group_key_list
                         (group_key (lit "a") null)
-                        (group_key (lit "b") (defnid 'x'))
+                        (group_key (lit "b") (defnid 'x' (regular)))
                     )
-                    (defnid 'as')
+                    (defnid 'as' (regular))
                )
             """
             ) {

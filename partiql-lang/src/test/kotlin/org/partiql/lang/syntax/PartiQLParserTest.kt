@@ -27,6 +27,7 @@ import org.partiql.lang.ION
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.sourceLocation
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.domains.defnidReg
 import org.partiql.lang.domains.vr
 import org.partiql.lang.util.getAntlrDisplayString
 import org.partiql.parser.antlr.PartiQLParser
@@ -195,73 +196,73 @@ class PartiQLParserTest : PartiQLParserTestBase() {
     @Test
     fun callEmpty() = assertExpression(
         "foobar()",
-        "(call (defnid foobar))"
+        "(call (defnid foobar (regular)))"
     )
 
     @Test
     fun callOneArgument() = assertExpression(
         "foobar(1)",
-        "(call (defnid foobar) (lit 1))"
+        "(call (defnid foobar (regular)) (lit 1))"
     )
 
     @Test
     fun callTwoArgument() = assertExpression(
         "foobar(1, 2)",
-        "(call (defnid foobar) (lit 1) (lit 2))"
+        "(call (defnid foobar (regular)) (lit 1) (lit 2))"
     )
 
     @Test
     fun callSubstringSql92Syntax() = assertExpression(
         "substring('test' from 100)",
-        "(call (defnid substring) (lit \"test\") (lit 100))"
+        "(call (defnid substring (regular)) (lit \"test\") (lit 100))"
     )
 
     @Test
     fun callSubstringSql92SyntaxWithLength() = assertExpression(
         "substring('test' from 100 for 50)",
-        "(call (defnid substring) (lit \"test\") (lit 100) (lit 50))"
+        "(call (defnid substring (regular)) (lit \"test\") (lit 100) (lit 50))"
     )
 
     @Test
     fun callSubstringNormalSyntax() = assertExpression(
         "substring('test', 100)",
-        "(call (defnid substring) (lit \"test\") (lit 100))"
+        "(call (defnid substring (regular)) (lit \"test\") (lit 100))"
     )
 
     @Test
     fun callSubstringNormalSyntaxWithLength() = assertExpression(
         "substring('test', 100, 50)",
-        "(call (defnid substring) (lit \"test\") (lit 100) (lit 50))"
+        "(call (defnid substring (regular)) (lit \"test\") (lit 100) (lit 50))"
     )
 
     @Test
     fun callTrimSingleArgument() = assertExpression(
         "trim('test')",
-        "(call (defnid trim) (lit \"test\"))"
+        "(call (defnid trim (regular)) (lit \"test\"))"
     )
 
     @Test
     fun callTrimTwoArgumentsDefaultSpecification() = assertExpression(
         "trim(' ' from 'test')",
-        "(call (defnid trim) (lit \" \") (lit \"test\"))"
+        "(call (defnid trim (regular)) (lit \" \") (lit \"test\"))"
     )
 
     @Test
     fun callTrimTwoArgumentsUsingBoth() = assertExpression(
         "trim(both from 'test')",
-        "(call (defnid trim) (lit both) (lit \"test\"))"
+        "(call (defnid trim (regular)) (lit both) (lit \"test\"))"
     )
 
     @Test
     fun callTrimTwoArgumentsUsingLeading() = assertExpression(
         "trim(leading from 'test')",
-        "(call (defnid trim) (lit leading) (lit \"test\"))"
+        "(call (defnid trim (regular)) (lit leading) (lit \"test\"))"
     )
 
     @Test
     fun callTrimTwoArgumentsUsingTrailing() = assertExpression(
         "trim(trailing from 'test')",
-        """(call (defnid trim) (lit trailing) (lit "test"))"""
+        """(call (defnid trim (regular)) (lit trailing) (lit "test"))"""
     )
 
     // ****************************************
@@ -271,19 +272,19 @@ class PartiQLParserTest : PartiQLParserTestBase() {
     @Test
     fun negCall() = assertExpression(
         "-baz()",
-        "(neg (call (defnid baz)))"
+        "(neg (call (defnid baz (regular))))"
     )
 
     @Test
     fun posNegIdent() = assertExpression(
         "+(-baz())",
-        "(pos (neg (call (defnid baz))))"
+        "(pos (neg (call (defnid baz (regular)))))"
     )
 
     @Test
     fun posNegIdentNoSpaces() = assertExpression(
         "+-baz()",
-        "(pos (neg (call (defnid baz))))"
+        "(pos (neg (call (defnid baz (regular)))))"
     )
 
     @Test
@@ -362,7 +363,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
     @Test
     fun callIsVarchar() = assertExpression(
         "f() IS VARCHAR(200)",
-        "(is_type (call (defnid f)) (character_varying_type 200))"
+        "(is_type (call (defnid f (regular))) (character_varying_type 200))"
     )
 
     @Test
@@ -380,43 +381,43 @@ class PartiQLParserTest : PartiQLParserTestBase() {
     @Test
     fun callIsNotVarchar() = assertExpression(
         "f() IS NOT VARCHAR(200)",
-        "(not (is_type (call (defnid f)) (character_varying_type 200)))"
+        "(not (is_type (call (defnid f (regular))) (character_varying_type 200)))"
     )
 
     @Test
     fun callWithMultiple() = assertExpression(
         "foobar(5, 6, a)",
-        "(call (defnid foobar) (lit 5) (lit 6) (vr (id a (regular)) (unqualified)))"
+        "(call (defnid foobar (regular)) (lit 5) (lit 6) (vr (id a (regular)) (unqualified)))"
     )
 
     @Test
     fun aggregateFunctionCall() = assertExpression(
         "COUNT(a)",
-        """(call_agg (all) (defnid count) (vr (id a (regular)) (unqualified)))"""
+        """(call_agg (all) (defnid count (regular)) (vr (id a (regular)) (unqualified)))"""
     )
 
     @Test
     fun aggregateDistinctFunctionCall() = assertExpression(
         "SUM(DISTINCT a)",
-        "(call_agg (distinct) (defnid sum) (vr (id a (regular)) (unqualified)))"
+        "(call_agg (distinct) (defnid sum (regular)) (vr (id a (regular)) (unqualified)))"
     )
 
     @Test
     fun countStarFunctionCall() = assertExpression(
         "COUNT(*)",
-        "(call_agg (all) (defnid count) (lit 1))"
+        "(call_agg (all) (defnid count (regular)) (lit 1))"
     )
 
     @Test
     fun countFunctionCall() = assertExpression(
         "COUNT(a)",
-        "(call_agg (all) (defnid count) (vr (id a (regular)) (unqualified)))"
+        "(call_agg (all) (defnid count (regular)) (vr (id a (regular)) (unqualified)))"
     )
 
     @Test
     fun countDistinctFunctionCall() = assertExpression(
         "COUNT(DISTINCT a)",
-        "(call_agg (distinct) (defnid count) (vr (id a (regular)) (unqualified)))"
+        "(call_agg (distinct) (defnid count (regular)) (vr (id a (regular)) (unqualified)))"
     )
 
     // ****************************************
@@ -513,7 +514,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
     @Test
     fun pathWithCallAndDotStar() = assertExpression(
         "foo(x, y).a.*.b",
-        """(path (call (defnid foo) (vr (id x (regular)) (unqualified)) (vr (id y (regular)) (unqualified)))
+        """(path (call (defnid foo (regular)) (vr (id x (regular)) (unqualified)) (vr (id y (regular)) (unqualified)))
            (path_expr (lit "a") (regular))
            (path_unpivot)
            (path_expr (lit "b") (regular)))""".trimMargin()
@@ -589,13 +590,13 @@ class PartiQLParserTest : PartiQLParserTestBase() {
     @Test
     fun castAsEsBoolean() = assertExpression(
         "CAST(TRUE AS ES_BOOLEAN)",
-        "(cast (lit true) (custom_type (defnid es_boolean)))"
+        "(cast (lit true) (custom_type (defnid ES_BOOLEAN (regular))))"
     )
 
     @Test
     fun castAsRsInteger() = assertExpression(
         "CAST(1.123 AS RS_INTEGER)",
-        "(cast (lit 1.123) (custom_type (defnid rs_integer)))"
+        "(cast (lit 1.123) (custom_type (defnid RS_INTEGER (regular))))"
     )
 
     // ****************************************
@@ -828,49 +829,49 @@ class PartiQLParserTest : PartiQLParserTestBase() {
     @Test
     fun callDateArithYear() = assertDateArithmetic(
         "date_<op>(year, a, b)",
-        "(call (defnid date_<op>) (lit YEAR) (vr (id a (regular)) (unqualified)) (vr (id b (regular)) (unqualified)))"
+        "(call (defnid date_<op> (regular)) (lit YEAR) (vr (id a (regular)) (unqualified)) (vr (id b (regular)) (unqualified)))"
     )
 
     @Test
     fun callDateArithMonth() = assertDateArithmetic(
         "date_<op>(month, a, b)",
-        "(call (defnid date_<op>) (lit MONTH) (vr (id a (regular)) (unqualified)) (vr (id b (regular)) (unqualified)))"
+        "(call (defnid date_<op> (regular)) (lit MONTH) (vr (id a (regular)) (unqualified)) (vr (id b (regular)) (unqualified)))"
     )
 
     @Test
     fun callDateArithDay() = assertDateArithmetic(
         "date_<op>(day, a, b)",
-        "(call (defnid date_<op>) (lit DAY) (vr (id a (regular)) (unqualified)) (vr (id b (regular)) (unqualified)))"
+        "(call (defnid date_<op> (regular)) (lit DAY) (vr (id a (regular)) (unqualified)) (vr (id b (regular)) (unqualified)))"
     )
 
     @Test
     fun callDateArithHour() = assertDateArithmetic(
         "date_<op>(hour, a, b)",
-        "(call (defnid date_<op>) (lit HOUR) (vr (id a (regular)) (unqualified)) (vr (id b (regular)) (unqualified)))"
+        "(call (defnid date_<op> (regular)) (lit HOUR) (vr (id a (regular)) (unqualified)) (vr (id b (regular)) (unqualified)))"
     )
 
     @Test
     fun callDateArithMinute() = assertDateArithmetic(
         "date_<op>(minute, a, b)",
-        "(call (defnid date_<op>) (lit MINUTE) (vr (id a (regular)) (unqualified)) (vr (id b (regular)) (unqualified)))"
+        "(call (defnid date_<op> (regular)) (lit MINUTE) (vr (id a (regular)) (unqualified)) (vr (id b (regular)) (unqualified)))"
     )
 
     @Test
     fun callDateArithSecond() = assertDateArithmetic(
         "date_<op>(second, a, b)",
-        "(call (defnid date_<op>) (lit SECOND) (vr (id a (regular)) (unqualified)) (vr (id b (regular)) (unqualified)))"
+        "(call (defnid date_<op> (regular)) (lit SECOND) (vr (id a (regular)) (unqualified)) (vr (id b (regular)) (unqualified)))"
     )
 
     @Test // invalid evaluation, but valid parsing
     fun callDateArithTimezoneHour() = assertDateArithmetic(
         "date_<op>(timezone_hour, a, b)",
-        "(call (defnid date_<op>) (lit TIMEZONE_HOUR) (vr (id a (regular)) (unqualified)) (vr (id b (regular)) (unqualified)))"
+        "(call (defnid date_<op> (regular)) (lit TIMEZONE_HOUR) (vr (id a (regular)) (unqualified)) (vr (id b (regular)) (unqualified)))"
     )
 
     @Test // invalid evaluation, but valid parsing
     fun callDateArithTimezoneMinute() = assertDateArithmetic(
         "date_<op>(timezone_minute, a, b)",
-        "(call (defnid date_<op>) (lit TIMEZONE_MINUTE) (vr (id a (regular)) (unqualified)) (vr (id b (regular)) (unqualified)))"
+        "(call (defnid date_<op> (regular)) (lit TIMEZONE_MINUTE) (vr (id a (regular)) (unqualified)) (vr (id b (regular)) (unqualified)))"
     )
 
     // ****************************************
@@ -879,55 +880,55 @@ class PartiQLParserTest : PartiQLParserTestBase() {
     @Test
     fun callExtractYear() = assertExpression(
         "extract(year from a)",
-        "(call (defnid extract) (lit YEAR) (vr (id a (regular)) (unqualified)))"
+        "(call (defnid extract (regular)) (lit YEAR) (vr (id a (regular)) (unqualified)))"
     )
 
     @Test
     fun callExtractMonth() = assertExpression(
         "extract(month from a)",
-        "(call (defnid extract) (lit MONTH) (vr (id a (regular)) (unqualified)))"
+        "(call (defnid extract (regular)) (lit MONTH) (vr (id a (regular)) (unqualified)))"
     )
 
     @Test
     fun callExtractDay() = assertExpression(
         "extract(day from a)",
-        "(call (defnid extract) (lit DAY) (vr (id a (regular)) (unqualified)))"
+        "(call (defnid extract (regular)) (lit DAY) (vr (id a (regular)) (unqualified)))"
     )
 
     @Test
     fun callExtractHour() = assertExpression(
         "extract(hour from a)",
-        "(call (defnid extract) (lit HOUR) (vr (id a (regular)) (unqualified)))"
+        "(call (defnid extract (regular)) (lit HOUR) (vr (id a (regular)) (unqualified)))"
     )
 
     @Test
     fun callExtractMinute() = assertExpression(
         "extract(minute from a)",
-        "(call (defnid extract) (lit MINUTE) (vr (id a (regular)) (unqualified)))"
+        "(call (defnid extract (regular)) (lit MINUTE) (vr (id a (regular)) (unqualified)))"
     )
 
     @Test
     fun callExtractSecond() = assertExpression(
         "extract(second from a)",
-        "(call (defnid extract) (lit SECOND) (vr (id a (regular)) (unqualified)))"
+        "(call (defnid extract (regular)) (lit SECOND) (vr (id a (regular)) (unqualified)))"
     )
 
     @Test
     fun callExtractTimezoneHour() = assertExpression(
         "extract(timezone_hour from a)",
-        "(call (defnid extract) (lit TIMEZONE_HOUR) (vr (id a (regular)) (unqualified)))"
+        "(call (defnid extract (regular)) (lit TIMEZONE_HOUR) (vr (id a (regular)) (unqualified)))"
     )
 
     @Test
     fun callExtractTimezoneMinute() = assertExpression(
         "extract(timezone_minute from a)",
-        "(call (defnid extract) (lit TIMEZONE_MINUTE) (vr (id a (regular)) (unqualified)))"
+        "(call (defnid extract (regular)) (lit TIMEZONE_MINUTE) (vr (id a (regular)) (unqualified)))"
     )
 
     @Test
     fun caseInsensitiveFunctionName() = assertExpression(
         "mY_fUnCtIoN(a)",
-        "(call (defnid my_function) (vr (id a (regular)) (unqualified)))"
+        "(call (defnid my_function (regular)) (vr (id a (regular)) (unqualified)))"
     )
 
     @Test
@@ -996,7 +997,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
     @Test
     fun selectAliasDotStar() = assertExpression(
         "SELECT t.* FROM table1 AS t",
-        "(select (project (project_list (project_all (vr (id t (regular)) (unqualified))))) (from (scan (vr (id table1 (regular)) (unqualified)) (defnid t) null null)))"
+        "(select (project (project_list (project_all (vr (id t (regular)) (unqualified))))) (from (scan (vr (id table1 (regular)) (unqualified)) (defnid t (regular)) null null)))"
     )
 
     @Test
@@ -1005,44 +1006,44 @@ class PartiQLParserTest : PartiQLParserTestBase() {
         """
             (select 
                (project (project_list (project_all (path (vr (id a (regular)) (unqualified)) (path_expr (lit "b") (regular)))))) 
-               (from (scan (vr (id table1 (regular)) (unqualified)) (defnid t) null null)))
+               (from (scan (vr (id table1 (regular)) (unqualified)) (defnid t (regular)) null null)))
                       """
     )
 
     @Test
     fun selectWithFromAt() = assertExpression(
         "SELECT ord FROM table1 AT ord",
-        "(select (project (project_list (project_expr (vr (id ord (regular)) (unqualified)) null))) (from (scan (vr (id table1 (regular)) (unqualified)) null (defnid ord) null)))"
+        "(select (project (project_list (project_expr (vr (id ord (regular)) (unqualified)) null))) (from (scan (vr (id table1 (regular)) (unqualified)) null (defnid ord (regular)) null)))"
     )
 
     @Test
     fun selectWithFromAsAndAt() = assertExpression(
         "SELECT ord, val FROM table1 AS val AT ord",
-        "(select (project (project_list (project_expr (vr (id ord (regular)) (unqualified)) null) (project_expr (vr (id val (regular)) (unqualified)) null))) (from (scan (vr (id table1 (regular)) (unqualified)) (defnid val) (defnid ord) null)))"
+        "(select (project (project_list (project_expr (vr (id ord (regular)) (unqualified)) null) (project_expr (vr (id val (regular)) (unqualified)) null))) (from (scan (vr (id table1 (regular)) (unqualified)) (defnid val (regular)) (defnid ord (regular)) null)))"
     )
 
     @Test
     fun selectWithFromIdBy() = assertExpression(
         "SELECT * FROM table1 BY uid",
-        "(select (project (project_star)) (from (scan (vr (id table1 (regular)) (unqualified)) null null (defnid uid))))"
+        "(select (project (project_star)) (from (scan (vr (id table1 (regular)) (unqualified)) null null (defnid uid (regular)))))"
     )
 
     @Test
     fun selectWithFromAtIdBy() = assertExpression(
         "SELECT * FROM table1 AT ord BY uid",
-        "(select (project (project_star)) (from (scan (vr (id table1 (regular)) (unqualified)) null (defnid ord) (defnid uid))))"
+        "(select (project (project_star)) (from (scan (vr (id table1 (regular)) (unqualified)) null (defnid ord (regular)) (defnid uid (regular)))))"
     )
 
     @Test
     fun selectWithFromAsIdBy() = assertExpression(
         "SELECT * FROM table1 AS t BY uid",
-        "(select (project (project_star)) (from (scan (vr (id table1 (regular)) (unqualified)) (defnid t) null (defnid uid))))"
+        "(select (project (project_star)) (from (scan (vr (id table1 (regular)) (unqualified)) (defnid t (regular)) null (defnid uid (regular)))))"
     )
 
     @Test
     fun selectWithFromAsAndAtIdBy() = assertExpression(
         "SELECT * FROM table1 AS val AT ord BY uid",
-        "(select (project (project_star)) (from (scan (vr (id table1 (regular)) (unqualified)) (defnid val) (defnid ord) (defnid uid))))"
+        "(select (project (project_star)) (from (scan (vr (id table1 (regular)) (unqualified)) (defnid val (regular)) (defnid ord (regular)) (defnid uid (regular)))))"
     )
 
     @Test
@@ -1062,7 +1063,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
         """
         (select
           (project (project_list (project_expr (vr (id ord (regular)) (unqualified)) null)))
-          (from (unpivot (vr (id item (regular)) (unqualified)) null (defnid name) null))
+          (from (unpivot (vr (id item (regular)) (unqualified)) null (defnid name (regular)) null))
         )
         """
     )
@@ -1073,7 +1074,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
         """
         (select
           (project (project_list (project_expr (vr (id ord (regular)) (unqualified)) null)))
-          (from (unpivot (vr (id item (regular)) (unqualified)) (defnid val) null null))
+          (from (unpivot (vr (id item (regular)) (unqualified)) (defnid val (regular)) null null))
         )
         """
     )
@@ -1084,7 +1085,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
         """
         (select
           (project (project_list (project_expr (vr (id ord (regular)) (unqualified)) null)))
-          (from (unpivot (vr (id item (regular)) (unqualified)) (defnid val) (defnid name) null))
+          (from (unpivot (vr (id item (regular)) (unqualified)) (defnid val (regular)) (defnid name (regular)) null))
         )
         """
     )
@@ -1163,10 +1164,10 @@ class PartiQLParserTest : PartiQLParserTestBase() {
              (from 
                 (join
                     (inner)
-                    (scan (vr (id table1 (regular)) (unqualified)) (defnid t1) null null) 
+                    (scan (vr (id table1 (regular)) (unqualified)) (defnid t1 (regular)) null null) 
                     (scan (vr (id table2 (regular)) (unqualified)) null null null)
                     null))
-             (where (call (defnid f) (vr (id t1 (regular)) (unqualified))))
+             (where (call (defnid f (regular)) (vr (id t1 (regular)) (unqualified))))
            )
         """
     )
@@ -1176,15 +1177,15 @@ class PartiQLParserTest : PartiQLParserTestBase() {
         "SELECT a a1, b b1 FROM table1 t1, table2 WHERE f(t1)",
         """
         (select
-            (project (project_list (project_expr (vr (id a (regular)) (unqualified)) (defnid a1)) 
-                                   (project_expr (vr (id b (regular)) (unqualified)) (defnid b1))))
+            (project (project_list (project_expr (vr (id a (regular)) (unqualified)) (defnid a1 (regular))) 
+                                   (project_expr (vr (id b (regular)) (unqualified)) (defnid b1 (regular)))))
             (from 
                 (join 
                     (inner) 
-                    (scan (vr (id table1 (regular)) (unqualified)) (defnid t1) null null) 
+                    (scan (vr (id table1 (regular)) (unqualified)) (defnid t1 (regular)) null null) 
                     (scan (vr (id table2 (regular)) (unqualified)) null null null) 
                     null))
-            (where (call (defnid f) (vr (id t1 (regular)) (unqualified))))
+            (where (call (defnid f (regular)) (vr (id t1 (regular)) (unqualified))))
         )
         """
     )
@@ -1196,10 +1197,10 @@ class PartiQLParserTest : PartiQLParserTestBase() {
         (select
           (project
             (project_list
-              (project_expr (plus (call_agg (all) (defnid sum) (vr (id a (regular)) (unqualified))) (call_agg (all) (defnid count) (lit 1))) null)
-              (project_expr (call_agg (all) (defnid avg) (vr (id b (regular)) (unqualified))) null)
-              (project_expr (call_agg (all) (defnid min) (vr (id c (regular)) (unqualified))) null)
-              (project_expr (call_agg (all) (defnid max) (plus (vr (id d (regular)) (unqualified)) (vr (id e (regular)) (unqualified)))) null)
+              (project_expr (plus (call_agg (all) (defnid sum (regular)) (vr (id a (regular)) (unqualified))) (call_agg (all) (defnid count (regular)) (lit 1))) null)
+              (project_expr (call_agg (all) (defnid avg (regular)) (vr (id b (regular)) (unqualified))) null)
+              (project_expr (call_agg (all) (defnid min (regular)) (vr (id c (regular)) (unqualified))) null)
+              (project_expr (call_agg (all) (defnid max (regular)) (plus (vr (id d (regular)) (unqualified)) (vr (id e (regular)) (unqualified)))) null)
             )
           )
           (from (scan (vr (id foo (regular)) (unqualified)) null null null))
@@ -1216,23 +1217,23 @@ class PartiQLParserTest : PartiQLParserTestBase() {
         """(select
              (project
                (project_list
-                 (project_expr (path (call (defnid process) (vr (id t (regular)) (unqualified))) (path_expr (lit "a") (regular)) (path_expr (lit 0) (delimited))) 
-                               (defnid a))
+                 (project_expr (path (call (defnid process (regular)) (vr (id t (regular)) (unqualified))) (path_expr (lit "a") (regular)) (path_expr (lit 0) (delimited))) 
+                               (defnid a (regular)))
                  (project_expr (path (vr (id t2 (regular)) (unqualified)) (path_expr (lit "b") (regular))) 
-                               (defnid b))
+                               (defnid b (regular)))
                )
              )
              (from
                (join 
                  (inner) 
-                 (scan (path (vr (id t1 (regular)) (unqualified)) (path_expr (lit "a") (regular))) (defnid t) null null) 
+                 (scan (path (vr (id t1 (regular)) (unqualified)) (path_expr (lit "a") (regular))) (defnid t (regular)) null null) 
                  (scan (path (vr (id t2 (regular)) (unqualified)) (path_expr (lit "x") (regular)) (path_unpivot) (path_expr (lit "b") (regular))) null null null)
                  null
                )
              )
              (where
                (and
-                 (call (defnid test) (path (vr (id t2 (regular)) (unqualified)) (path_expr (lit "name") (regular))) (path (vr (id t1 (regular)) (unqualified)) (path_expr (lit "name") (regular))))
+                 (call (defnid test (regular)) (path (vr (id t2 (regular)) (unqualified)) (path_expr (lit "name") (regular))) (path (vr (id t1 (regular)) (unqualified)) (path_expr (lit "name") (regular))))
                  (eq (path (vr (id t1 (regular)) (unqualified)) (path_expr (lit "id") (regular))) (path (vr (id t2 (regular)) (unqualified)) (path_expr (lit "id") (regular))))
                )
              )
@@ -1249,13 +1250,13 @@ class PartiQLParserTest : PartiQLParserTestBase() {
     @Test
     fun selectValueWithSingleAliasedFrom() = assertExpression(
         "SELECT VALUE v FROM table1 AS v",
-        "(select (project (project_value (vr (id v (regular)) (unqualified)))) (from (scan (vr (id table1 (regular)) (unqualified)) (defnid v) null null)))"
+        "(select (project (project_value (vr (id v (regular)) (unqualified)))) (from (scan (vr (id table1 (regular)) (unqualified)) (defnid v (regular)) null null)))"
     )
 
     @Test
     fun selectAllValues() = assertExpression(
         "SELECT ALL VALUE v FROM table1 AS v",
-        "(select (project (project_value (vr (id v (regular)) (unqualified)))) (from (scan (vr (id table1 (regular)) (unqualified)) (defnid v) null null)))"
+        "(select (project (project_value (vr (id v (regular)) (unqualified)))) (from (scan (vr (id table1 (regular)) (unqualified)) (defnid v (regular)) null null)))"
     )
 
     @Test
@@ -1264,7 +1265,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
         """
             (select (setq (distinct)) 
                     (project (project_value (vr (id v (regular)) (unqualified)))) 
-                    (from (scan (vr (id table1 (regular)) (unqualified)) (defnid v) null null)))"""
+                    (from (scan (vr (id table1 (regular)) (unqualified)) (defnid v (regular)) null null)))"""
     )
 
     @Test
@@ -1345,7 +1346,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
             (from
                 (scan 
                     (vr (id foo (regular)) (unqualified))
-                    (defnid f)
+                    (defnid f (regular))
                     null
                     null))
             (where
@@ -1672,19 +1673,19 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                     (group_key_list
                         (group_key
                             (vr (id a (regular)) (unqualified))
-                            (defnid x))
+                            (defnid x (regular)))
                         (group_key
                             (plus
                                 (vr (id b (regular)) (unqualified))
                                 (vr (id c (regular)) (unqualified)))
-                            (defnid y))
+                            (defnid y (regular)))
                         (group_key
                             (call
-                                (defnid foo)
+                                (defnid foo (regular))
                                 (vr (id d (regular)) (unqualified)))
-                            (defnid z))
+                            (defnid z (regular)))
                         )
-                    (defnid g)
+                    (defnid g (regular))
                 )
              )
            )
@@ -1730,7 +1731,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
             (group (group_by (group_full) 
                              (group_key_list (group_key (vr (id c (regular)) (unqualified)) null) 
                                              (group_key (vr (id d (regular)) (unqualified)) null)) 
-                             (defnid g)))
+                             (defnid g (regular))))
             (having (gt (vr (id d (regular)) (unqualified)) (lit 6)))
           )
         """
@@ -1764,7 +1765,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (vr (id g (regular)) (unqualified))))
             (from (scan (vr (id data (regular)) (unqualified)) null null null))
             (where (eq (vr (id a (regular)) (unqualified)) (vr (id b (regular)) (unqualified))))
-            (group (group_by (group_full) (group_key_list (group_key (vr (id c (regular)) (unqualified)) null) (group_key (vr (id d (regular)) (unqualified)) null)) (defnid g)))
+            (group (group_by (group_full) (group_key_list (group_key (vr (id c (regular)) (unqualified)) null) (group_key (vr (id d (regular)) (unqualified)) null)) (defnid g (regular))))
             (having (gt (vr (id d (regular)) (unqualified)) (lit 6)))
           )
         """
@@ -2199,7 +2200,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (lit 1)
                 null
                 (on_conflict
-                    (call (defnid attribute_exists) (vr (id hk (regular)) (unqualified)))
+                    (call (defnid attribute_exists (regular)) (vr (id hk (regular)) (unqualified)))
                     (do_nothing)
                 )
               )
@@ -2219,7 +2220,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (lit 1)
                 null
                 (on_conflict
-                    (not (call (defnid attribute_exists) (vr (id hk (regular)) (unqualified))))
+                    (not (call (defnid attribute_exists (regular)) (vr (id hk (regular)) (unqualified))))
                     (do_nothing)
                 )
               )
@@ -2349,7 +2350,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                     (dml_op_list
                         (insert
                             (vr (id foo (regular)) (unqualified))
-                            (defnid f)
+                            (defnid f (regular))
                             (bag
                                 (struct
                                     (expr_pair
@@ -2374,7 +2375,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                     (dml_op_list
                         (insert
                             (vr (id foo (regular)) (unqualified))
-                            (defnid f)
+                            (defnid f (regular))
                             (bag
                                 (struct
                                     (expr_pair
@@ -2406,7 +2407,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                     (dml_op_list
                         (insert
                             (vr (id foo (regular)) (unqualified))
-                            (defnid f)
+                            (defnid f (regular))
                             (bag
                                 (struct
                                     (expr_pair
@@ -2564,7 +2565,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                     (dml_op_list
                         (insert
                             (vr (id foo (regular)) (unqualified))
-                            (defnid f)
+                            (defnid f (regular))
                             (bag
                                 (struct
                                     (expr_pair
@@ -2589,7 +2590,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                     (dml_op_list
                         (insert
                             (vr (id foo (regular)) (unqualified))
-                            (defnid f)
+                            (defnid f (regular))
                             (bag
                                 (struct
                                     (expr_pair
@@ -2621,7 +2622,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                     (dml_op_list
                         (insert
                             (vr (id foo (regular)) (unqualified))
-                            (defnid f)
+                            (defnid f (regular))
                             (bag
                                 (struct
                                     (expr_pair
@@ -2751,7 +2752,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                     (dml_op_list
                         (insert
                             (vr (id foo (regular)) (unqualified))
-                            (defnid f)
+                            (defnid f (regular))
                             (bag
                                 (struct
                                     (expr_pair
@@ -2835,7 +2836,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                     (dml_op_list
                         (insert
                             (vr (id foo (regular)) (unqualified))
-                            (defnid f)
+                            (defnid f (regular))
                             (bag
                                 (struct
                                     (expr_pair
@@ -2885,7 +2886,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                     (dml_op_list
                         (insert
                             (vr (id foo (regular)) (unqualified))
-                            (defnid f)
+                            (defnid f (regular))
                             (bag
                                 (struct
                                     (expr_pair
@@ -3478,7 +3479,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 )
               )
             )
-            (from (scan (vr (id x (regular)) (unqualified)) (defnid y) null null))
+            (from (scan (vr (id x (regular)) (unqualified)) (defnid y (regular)) null null))
             (where (eq (vr (id a (regular)) (unqualified)) (vr (id b (regular)) (unqualified))))
           )
         """
@@ -3505,7 +3506,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
             )
           )
         )
-        (from (scan (vr (id x (regular)) (unqualified)) (defnid y) null null))
+        (from (scan (vr (id x (regular)) (unqualified)) (defnid y (regular)) null null))
         (where (eq (vr (id a (regular)) (unqualified)) (vr (id b (regular)) (unqualified))))
         (returning 
             (returning_expr 
@@ -3531,7 +3532,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
             (from
                 (scan
                     (vr (id x (regular)) (unqualified))
-                    (defnid y)
+                    (defnid y (regular))
                     null
                     null))
             (where
@@ -3557,7 +3558,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
             (from
                 (scan
                     (vr (id x (regular)) (unqualified))
-                    (defnid y)
+                    (defnid y (regular))
                     null
                     null))
             (where
@@ -3589,7 +3590,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
               )
             )    
             (from
-              (scan (vr (id x (regular)) (unqualified)) (defnid y) null null))
+              (scan (vr (id x (regular)) (unqualified)) (defnid y (regular)) null null))
             (where
               (eq
                 (vr (id a (regular)) (unqualified))
@@ -3608,7 +3609,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                   (path
                     (vr (id y (regular)) (unqualified))
                     (path_expr (lit "a") (regular))))))
-            (from (scan (vr (id x (regular)) (unqualified)) (defnid y) null null))
+            (from (scan (vr (id x (regular)) (unqualified)) (defnid y (regular)) null null))
             (where (eq (vr (id a (regular)) (unqualified)) (vr (id b (regular)) (unqualified))))
           )
         """
@@ -3626,7 +3627,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                     (path (vr (id z (regular)) (unqualified)) (path_expr (lit "kingdom") (regular)))
                     (lit "Fungi")))))
             (from
-              (scan (vr (id zoo (regular)) (unqualified)) (defnid z) null null)))
+              (scan (vr (id zoo (regular)) (unqualified)) (defnid z (regular)) null null)))
         """
     )
 
@@ -3642,7 +3643,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                     (path (vr (id z (regular)) (unqualified)) (path_expr (lit "kingdom") (regular)))
                     (lit "Fungi")))))
             (from
-              (scan (vr (id zoo (regular)) (unqualified)) null (defnid z_ord) null)))
+              (scan (vr (id zoo (regular)) (unqualified)) null (defnid z_ord (regular)) null)))
         """
     )
 
@@ -3658,7 +3659,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                     (path (vr (id z (regular)) (unqualified)) (path_expr (lit "kingdom") (regular)))
                     (lit "Fungi")))))
             (from
-              (scan (vr (id zoo (regular)) (unqualified)) null null (defnid z_id))))
+              (scan (vr (id zoo (regular)) (unqualified)) null null (defnid z_id (regular)))))
         """
     )
 
@@ -3674,7 +3675,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                     (path (vr (id z (regular)) (unqualified)) (path_expr (lit "kingdom") (regular)))
                     (lit "Fungi")))))
             (from
-              (scan (vr (id zoo (regular)) (unqualified)) null (defnid z_ord) (defnid z_id))))
+              (scan (vr (id zoo (regular)) (unqualified)) null (defnid z_ord (regular)) (defnid z_id (regular)))))
         """
     )
 
@@ -3842,7 +3843,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
         """
           (dml
             (operations (dml_op_list (delete)))
-            (from (scan (vr (id x (regular)) (unqualified)) (defnid y) null null))
+            (from (scan (vr (id x (regular)) (unqualified)) (defnid y (regular)) null null))
           )
         """
     )
@@ -3853,7 +3854,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
         """
             (dml
               (operations ( dml_op_list (delete)))
-              (from (scan (vr (id x (regular)) (unqualified)) null (defnid y) null)))
+              (from (scan (vr (id x (regular)) (unqualified)) null (defnid y (regular)) null)))
         """
     )
 
@@ -3863,7 +3864,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
         """
             (dml
                (operations (dml_op_list (delete)))
-               (from (scan (vr (id x (regular)) (unqualified)) (defnid y) (defnid z) null)))
+               (from (scan (vr (id x (regular)) (unqualified)) (defnid y (regular)) (defnid z (regular)) null)))
         """
     )
 
@@ -3912,7 +3913,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                             (vr (id x (regular)) (unqualified))
                             (path_expr (lit "n") (regular))
                             (path_expr (lit "m") (regular)))
-                        (defnid y)
+                        (defnid y (regular))
                         null    
                         null)))
         """
@@ -3930,8 +3931,8 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                             (vr (id x (regular)) (unqualified))
                             (path_expr (lit "n") (regular))
                             (path_expr (lit "m") (regular)))
-                        (defnid y)
-                        (defnid z)
+                        (defnid y (regular))
+                        (defnid z (regular))
                         null)))
         """
     )
@@ -3950,7 +3951,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
         """
             (ddl (create_table (id foo (regular))  
               (table_def
-                (column_declaration (defnid boo) (string_type)))))
+                (column_declaration (defnid boo (regular)) (string_type)))))
         """.trimIndent()
     )
 
@@ -3960,7 +3961,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
         """
             (ddl (create_table (id user (delimited)) 
               (table_def
-                (column_declaration (defnid lastname) (string_type)))))
+                (column_declaration (defnid lastname (delimited)) (string_type)))))
         """.trimIndent()
     )
 
@@ -3981,12 +3982,12 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                         Customer
                         (regular)) 
                     (table_def
-                        (column_declaration (defnid name) (string_type)
-                            (column_constraint (defnid name_is_present) (column_notnull)))
-                        (column_declaration (defnid age) (integer_type))
-                        (column_declaration (defnid city) (string_type)
+                        (column_declaration (defnid name (regular)) (string_type)
+                            (column_constraint (defnid name_is_present (regular)) (column_notnull)))
+                        (column_declaration (defnid age (regular)) (integer_type))
+                        (column_declaration (defnid city (regular)) (string_type)
                             (column_constraint null (column_null)))
-                        (column_declaration (defnid state) (string_type)
+                        (column_declaration (defnid state (regular)) (string_type)
                             (column_constraint null (column_null))))))
         """.trimIndent()
     )
@@ -4374,7 +4375,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
         select(
             project = projectX,
             from = scan(vr("table1")),
-            fromLet = let(letBinding(lit(ionInt(1)), defnid("A")))
+            fromLet = let(letBinding(lit(ionInt(1)), defnidReg("A")))
         )
     }
 
@@ -4383,7 +4384,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
         select(
             project = projectX,
             from = scan(vr("table1")),
-            fromLet = let(letBinding(lit(ionInt(1)), defnid("A")), letBinding(lit(ionInt(2)), defnid("B")))
+            fromLet = let(letBinding(lit(ionInt(1)), defnidReg("A")), letBinding(lit(ionInt(2)), defnidReg("B")))
         )
     }
 
@@ -4392,7 +4393,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
         select(
             project = projectX,
             from = scan(vr("table1")),
-            fromLet = let(letBinding(vr("table1"), defnid("A")))
+            fromLet = let(letBinding(vr("table1"), defnidReg("A")))
         )
     }
 
@@ -4401,7 +4402,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
         select(
             project = projectX,
             from = scan(vr("table1")),
-            fromLet = let(letBinding(call(defnid("foo"), emptyList()), defnid("A")))
+            fromLet = let(letBinding(call(defnidReg("foo"), emptyList()), defnidReg("A")))
         )
     }
 
@@ -4412,7 +4413,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
         select(
             project = projectX,
             from = scan(vr("table1")),
-            fromLet = let(letBinding(call(defnid("foo"), listOf(lit(ionInt(42)), lit(ionString("bar")))), defnid("A")))
+            fromLet = let(letBinding(call(defnidReg("foo"), listOf(lit(ionInt(42)), lit(ionString("bar")))), defnidReg("A")))
         )
     }
 
@@ -4423,7 +4424,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
         select(
             project = projectX,
             from = scan(vr("table1")),
-            fromLet = let(letBinding(call(defnid("foo"), listOf(vr("table1"))), defnid("A")))
+            fromLet = let(letBinding(call(defnidReg("foo"), listOf(vr("table1"))), defnidReg("A")))
         )
     }
 

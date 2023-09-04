@@ -5,6 +5,7 @@ import com.amazon.ionelement.api.TextElement
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.sourceLocation
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.domains.toDefnid
 
 /**
  * Determines an appropriate column name for the given [PartiqlAst.Expr].
@@ -17,32 +18,33 @@ import org.partiql.lang.domains.PartiqlAst
  *
  * Otherwise, returns the column index prefixed with `_`.
  */
-fun PartiqlAst.Expr.extractColumnAlias(idx: Int): String =
+fun PartiqlAst.Expr.extractColumnAlias(idx: Int): PartiqlAst.Defnid =
     when (this) {
-        is PartiqlAst.Expr.Vr -> this.id.symb.text
+        is PartiqlAst.Expr.Vr -> this.id.toDefnid()
         is PartiqlAst.Expr.Path -> {
             this.extractColumnAlias(idx)
         }
         is PartiqlAst.Expr.Cast -> {
             this.value.extractColumnAlias(idx)
         }
-        else -> syntheticColumnName(idx)
+        else -> PartiqlAst.build { defnid(syntheticColumnName(idx), regular()) }
     }
 
 /**
  * Returns the name of the last component if it is a string literal, otherwise returns the
  * column index prefixed with `_`.
  */
-fun PartiqlAst.Expr.Path.extractColumnAlias(idx: Int): String {
-    return when (val nameOrigin = this.steps.last()) {
+fun PartiqlAst.Expr.Path.extractColumnAlias(idx: Int): PartiqlAst.Defnid = PartiqlAst.build {
+    when (val nameOrigin = this@extractColumnAlias.steps.last()) {
         is PartiqlAst.PathStep.PathExpr -> {
             val maybeLiteral = nameOrigin.index
             when {
-                maybeLiteral is PartiqlAst.Expr.Lit && maybeLiteral.value is TextElement -> maybeLiteral.value.textValue
-                else -> syntheticColumnName(idx)
+                maybeLiteral is PartiqlAst.Expr.Lit && maybeLiteral.value is TextElement ->
+                    defnid(maybeLiteral.value.textValue, nameOrigin.kind)
+                else -> defnid(syntheticColumnName(idx), nameOrigin.kind)
             }
         }
-        else -> syntheticColumnName(idx)
+        else -> defnid(syntheticColumnName(idx), regular())
     }
 }
 

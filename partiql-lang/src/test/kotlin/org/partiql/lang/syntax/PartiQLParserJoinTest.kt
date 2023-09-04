@@ -4,6 +4,7 @@ import com.amazon.ionelement.api.ionBool
 import com.amazon.ionelement.api.ionInt
 import org.junit.Test
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.domains.defnidReg
 import org.partiql.lang.domains.vr
 
 class PartiQLParserJoinTest : PartiQLParserTestBase() {
@@ -21,8 +22,8 @@ class PartiQLParserJoinTest : PartiQLParserTestBase() {
             project = projectX,
             from = join(
                 joinType,
-                scan(vr("stuff"), defnid("s")),
-                scan(vr("foo"), defnid("f")),
+                scan(vr("stuff"), defnidReg("s")),
+                scan(vr("foo"), defnidReg("f")),
                 joinPredicate
             ),
             where = wherePredicate

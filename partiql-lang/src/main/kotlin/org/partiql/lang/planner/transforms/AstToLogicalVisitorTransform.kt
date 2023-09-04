@@ -87,7 +87,7 @@ internal class AstToLogicalVisitorTransform(
 
         val expr = transformProjection(select, algebra)
         when (node.setq) {
-            is PartiqlAst.SetQuantifier.Distinct -> call(defnid("filter_distinct"), expr)
+            is PartiqlAst.SetQuantifier.Distinct -> call(defnid("filter_distinct", regular()), expr)
             else -> expr
         }
     }
@@ -103,7 +103,7 @@ internal class AstToLogicalVisitorTransform(
             )
         }
         call(
-            funcName = defnid(functionName),
+            funcName = defnid(functionName, delimited()),
             args = emptyList()
         )
     }
@@ -112,7 +112,7 @@ internal class AstToLogicalVisitorTransform(
     //  `aggregation` relational algebra operator.
     override fun transformExprCallAgg(node: PartiqlAst.Expr.CallAgg): PartiqlLogical.Expr = PartiqlLogical.build {
         call(
-            defnid("${CollectionAggregationFunction.PREFIX}${node.funcName.string()}"),
+            defnid("${CollectionAggregationFunction.PREFIX}${node.funcName.string()}", regular()),
             listOf(
                 lit(ionString(node.setq.javaClass.simpleName.lowercase())),
                 transformExpr(node.arg)

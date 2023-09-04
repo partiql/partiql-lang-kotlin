@@ -41,13 +41,13 @@ class FromSourceAliasVisitorTransform : VisitorTransformBase() {
         override fun transformFromSourceScan_asAlias(node: PartiqlAst.FromSource.Scan): PartiqlAst.Defnid {
             val thisFromSourceIndex = fromSourceCounter++
             return node.asAlias
-                ?: PartiqlAst.build { defnid(node.expr.extractColumnAlias(thisFromSourceIndex)) }
+                ?: node.expr.extractColumnAlias(thisFromSourceIndex)
         }
 
         override fun transformFromSourceUnpivot_asAlias(node: PartiqlAst.FromSource.Unpivot): PartiqlAst.Defnid {
             val thisFromSourceIndex = fromSourceCounter++
             return node.asAlias
-                ?: PartiqlAst.build { defnid(node.expr.extractColumnAlias(thisFromSourceIndex)) }
+                ?: node.expr.extractColumnAlias(thisFromSourceIndex)
         }
 
         // Do not traverse into subexpressions of a [FromSource].

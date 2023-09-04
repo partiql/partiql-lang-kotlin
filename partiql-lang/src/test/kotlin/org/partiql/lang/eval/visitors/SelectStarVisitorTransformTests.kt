@@ -16,7 +16,7 @@ class SelectStarVisitorTransformTests : VisitorTransformTestBase() {
                 FROM foo AS f
             """,
                 """
-                SELECT "f".* 
+                SELECT f.* 
                 FROM foo AS f
             """
             ),
@@ -27,7 +27,7 @@ class SelectStarVisitorTransformTests : VisitorTransformTestBase() {
                 """,
                 """
                     SELECT DISTINCT 
-                        "f".* 
+                        f.* 
                     FROM foo AS f
                 """
             ),
@@ -38,8 +38,8 @@ class SelectStarVisitorTransformTests : VisitorTransformTestBase() {
                 """,
                 """
                     SELECT 
-                        "f".*, 
-                        "idx" AS idx 
+                        f.*, 
+                        idx AS idx 
                     FROM foo AS f AT idx
                 """
             ),
@@ -50,9 +50,9 @@ class SelectStarVisitorTransformTests : VisitorTransformTestBase() {
                 """,
                 """
                     SELECT 
-                        "f".*, 
-                        "idx" AS idx, 
-                        "addr" as addr 
+                        f.*, 
+                        idx AS idx, 
+                        addr as addr 
                     FROM foo AS f AT idx BY addr
                 """
             ),
@@ -64,8 +64,8 @@ class SelectStarVisitorTransformTests : VisitorTransformTestBase() {
                 """,
                 """
                     SELECT 
-                        "f".*, 
-                        "b".* 
+                        f.*, 
+                        b.* 
                     FROM foo AS f, 
                          bar AS b
                 """
@@ -78,10 +78,10 @@ class SelectStarVisitorTransformTests : VisitorTransformTestBase() {
                 """,
                 """
                     SELECT 
-                        "f".*, 
-                        "f_idx" AS f_idx, 
-                        "b".*, 
-                        "b_idx" AS b_idx 
+                        f.*, 
+                        f_idx AS f_idx, 
+                        b.*, 
+                        b_idx AS b_idx 
                     FROM foo AS f AT f_idx, 
                          bar AS b AT b_idx
                 """
@@ -94,12 +94,12 @@ class SelectStarVisitorTransformTests : VisitorTransformTestBase() {
                 """,
                 """
                     SELECT 
-                        "f".*, 
-                        "f_idx" AS f_idx, 
-                        "f_addr" AS f_addr, 
-                        "b".*, 
-                        "b_idx" AS b_idx,
-                        "b_addr" AS b_addr
+                        f.*, 
+                        f_idx AS f_idx, 
+                        f_addr AS f_addr, 
+                        b.*, 
+                        b_idx AS b_idx,
+                        b_addr AS b_addr
                     FROM foo AS f AT f_idx BY f_addr, 
                          bar AS b AT b_idx BY b_addr
                 """
@@ -130,7 +130,7 @@ class SelectStarVisitorTransformTests : VisitorTransformTestBase() {
                         "${'$'}__partiql__group_by_1_item_0" AS a,
                         "${'$'}__partiql__group_by_1_item_1" AS b,
                         "${'$'}__partiql__group_by_1_item_2" AS c,
-                        "g" AS g
+                        g AS g
                     FROM foo AS f
                     GROUP BY a AS a, b AS b, c AS c GROUP AS g
                 """
@@ -146,7 +146,7 @@ class SelectStarVisitorTransformTests : VisitorTransformTestBase() {
                         "${'$'}__partiql__group_by_1_item_0" AS dup,
                         "${'$'}__partiql__group_by_1_item_1" AS dup,
                         "${'$'}__partiql__group_by_1_item_2" AS dup,
-                        "dup" AS dup
+                        dup AS dup
                     FROM foo AS f
                     GROUP BY a AS dup, b AS dup, c AS dup GROUP AS dup
                 """

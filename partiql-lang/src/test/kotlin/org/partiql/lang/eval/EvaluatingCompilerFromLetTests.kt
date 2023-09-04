@@ -31,12 +31,12 @@ class EvaluatingCompilerFromLetTests : EvaluatorTestBase() {
             // LET used in SELECT
             EvaluatorTestCase(
                 "SELECT X FROM A LET 1 AS X",
-                """<< {'X': 1} >>"""
+                """<< {'x': 1} >>"""
             ),
             // LET used in GROUP BY
             EvaluatorTestCase(
                 "SELECT * FROM C LET region AS X GROUP BY X",
-                """<< {'X': `EU`}, {'X': `NA`} >>""",
+                """<< {'x': `EU`}, {'x': `NA`} >>""",
                 target = EvaluatorTestTarget.COMPILER_PIPELINE // no support in physical plans yet for GROUP BY
             ),
             // LET used in projection after GROUP BY
@@ -54,7 +54,7 @@ class EvaluatingCompilerFromLetTests : EvaluatorTestBase() {
             // LET shadowed binding
             EvaluatorTestCase(
                 "SELECT X FROM A LET 1 AS X, 2 AS X",
-                """<< {'X': 2} >>"""
+                """<< {'x': 2} >>"""
             ),
 
             // For the two tests immediately below--one tests the AST evaluator only and the other tests
@@ -77,33 +77,33 @@ class EvaluatingCompilerFromLetTests : EvaluatorTestBase() {
             // LET using other variables
             EvaluatorTestCase(
                 "SELECT X, Y FROM A LET 1 AS X, X + 1 AS Y",
-                """<< {'X': 1, 'Y': 2} >>"""
+                """<< {'x': 1, 'y': 2} >>"""
             ),
             // LET recursive binding
             EvaluatorTestCase(
                 "SELECT X FROM A LET 1 AS X, X AS X",
-                """<< {'X': 1} >>"""
+                """<< {'x': 1} >>"""
             ),
             // LET calling function
             EvaluatorTestCase(
                 "SELECT X FROM A LET upper('foo') AS X",
-                """<< {'X': 'FOO'} >>"""
+                """<< {'x': 'FOO'} >>"""
             ),
             // LET calling function on each row
             EvaluatorTestCase(
-                "SELECT nameLength FROM C LET char_length(C.name) AS nameLength",
+                """SELECT "nameLength" FROM C LET char_length(C.name) AS "nameLength" """,
                 """<< {'nameLength': 3}, {'nameLength': 6}, {'nameLength': 9} >>"""
             ),
             // LET calling function with GROUP BY and aggregation
             EvaluatorTestCase(
-                "SELECT C.region, MAX(nameLength) AS maxLen FROM C LET char_length(C.name) AS nameLength GROUP BY C.region",
+                """SELECT C.region, MAX(nameLength) AS "maxLen" FROM C LET char_length(C.name) AS nameLength GROUP BY C.region""",
                 """<< {'region': `EU`, 'maxLen': 6}, {'region': `NA`, 'maxLen': 9} >>""",
                 target = EvaluatorTestTarget.COMPILER_PIPELINE // no support in physical plans yet for GROUP BY
             ),
             // LET outer query has correct value
             EvaluatorTestCase(
                 "SELECT X FROM (SELECT VALUE X FROM A LET 1 AS X) LET 2 AS X",
-                """<< {'X': 2} >>"""
+                """<< {'x': 2} >>"""
             )
         )
     }
@@ -137,7 +137,7 @@ class EvaluatingCompilerFromLetTests : EvaluatorTestBase() {
                     Property.COLUMN_NUMBER to 29L,
                     Property.BINDING_NAME to "Y"
                 ),
-                expectedPermissiveModeResult = "<<{'X': 1}>>"
+                expectedPermissiveModeResult = "<<{'x': 1}>>"
             ),
             // LET inner query binding not available in outer query
             EvaluatorErrorTestCase(

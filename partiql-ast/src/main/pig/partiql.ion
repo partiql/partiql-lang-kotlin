@@ -519,9 +519,9 @@ may then be further optimized by selecting better implementations of each operat
         (product id symb::symbol kind::id_kind)
 
         // A "definitional identifier" is for use in places that introduce, or bind, a name/identifier.
-        // This does not keep track of "case sensitivity", in the current design of identifiers.
+        // wVG-update: This does not keep track of "case sensitivity", in the current design of identifiers.
         // Upon transition to SQL-conforming identifiers, `defnid` will merge with `id`.
-        (product defnid symb::symbol)
+        (product defnid symb::symbol kind::id_kind)
 
         // Represents `<expr> = <expr>` in a DML SET operation.  Note that in this case, `=` is representing
         // an assignment operation and *not* the equality operator.

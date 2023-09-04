@@ -2104,7 +2104,7 @@ internal class EvaluatingCompiler(
                                             when (element) {
                                                 is SingleProjectionElement -> {
                                                     val eval = element.thunk(env)
-                                                    columns.add(eval.namedValue(element.name))
+                                                    columns.add(eval.namedValueByIdent(element.name))
                                                 }
                                                 is MultipleProjectionElement -> {
                                                     for (projThunk in element.thunks) {
@@ -2595,9 +2595,9 @@ internal class EvaluatingCompiler(
         selectList.projectItems.mapIndexed { idx, it ->
             when (it) {
                 is PartiqlAst.ProjectItem.ProjectExpr -> {
-                    val alias = it.asAlias?.string() ?: it.expr.extractColumnAlias(idx)
+                    val alias = it.asAlias ?: it.expr.extractColumnAlias(idx)
                     val thunk = compileAstExpr(it.expr)
-                    SingleProjectionElement(ExprValue.newString(alias), thunk)
+                    SingleProjectionElement(alias.toIdent(), thunk)
                 }
                 is PartiqlAst.ProjectItem.ProjectAll -> {
                     MultipleProjectionElement(listOf(compileAstExpr(it.expr)))
@@ -3169,11 +3169,11 @@ private sealed class ProjectionElement
 
 /**
  * Represents a single compiled expression to be projected into the final result.
- * Given `SELECT a + b as value FROM foo`:
- * - `name` is "value"
+ * Given `SELECT a + b AS x FROM foo`:
+ * - `name` is "x"
  * - `thunk` is compiled expression, i.e. `a + b`
  */
-private class SingleProjectionElement(val name: ExprValue, val thunk: ThunkEnv) : ProjectionElement()
+private class SingleProjectionElement(val name: Ident, val thunk: ThunkEnv) : ProjectionElement()
 
 /**
  * Represents a wildcard ((path_project_all) node) expression to be projected into the final result.

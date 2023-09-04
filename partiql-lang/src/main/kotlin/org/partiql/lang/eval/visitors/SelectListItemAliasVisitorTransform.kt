@@ -44,7 +44,7 @@ class SelectListItemAliasVisitorTransform : VisitorTransformBase() {
                                 //  Synthesize a column name if one was not specified in the query.
                                 null -> projectExpr(
                                     expr = transformExpr(it.expr),
-                                    asAlias = defnid(it.expr.extractColumnAlias(idx)),
+                                    asAlias = it.expr.extractColumnAlias(idx),
                                 )
                                 else -> projectExpr(
                                     expr = transformExpr(it.expr),

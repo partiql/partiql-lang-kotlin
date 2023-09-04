@@ -61,9 +61,9 @@ class EvaluatingCompilerHavingTest : EvaluatorTestBase() {
             EvaluatorTestCase(
                 groupName = "GROUP BY with HAVING - all rows",
                 """
-                    SELECT attributeId, COUNT(*) as the_count
+                    SELECT "attributeId", COUNT(*) as the_count
                     FROM repeating_things
-                    GROUP BY attributeId GROUP AS g
+                    GROUP BY "attributeId" GROUP AS g
                     HAVING 1 = 1
                 """,
                 """<<
@@ -78,10 +78,10 @@ class EvaluatingCompilerHavingTest : EvaluatorTestBase() {
             EvaluatorTestCase(
                 groupName = "GROUP BY with HAVING and WHERE",
                 """
-                    SELECT attributeId, COUNT(*) as the_count
+                    SELECT "attributeId", COUNT(*) as the_count
                     FROM repeating_things
                     WHERE thingId >= 9
-                    GROUP BY attributeId GROUP AS g
+                    GROUP BY "attributeId" GROUP AS g
                     HAVING 1 = 1
                 """,
                 """<<
@@ -93,9 +93,9 @@ class EvaluatingCompilerHavingTest : EvaluatorTestBase() {
             EvaluatorTestCase(
                 groupName = "GROUP BY with HAVING - no rows",
                 """
-                    SELECT attributeId, COUNT(*) as the_count
+                    SELECT "attributeId", COUNT(*) as the_count
                     FROM repeating_things
-                    GROUP BY attributeId GROUP AS g
+                    GROUP BY "attributeId" GROUP AS g
                     HAVING 1 = 0
                 """,
                 """<<>>"""
@@ -103,10 +103,10 @@ class EvaluatingCompilerHavingTest : EvaluatorTestBase() {
             EvaluatorTestCase(
                 groupName = "GROUP BY with HAVING",
                 """
-                    SELECT attributeId, COUNT(*) as the_count
+                    SELECT "attributeId", COUNT(*) as the_count
                     FROM repeating_things
-                    GROUP BY attributeId
-                    HAVING attributeId > 30
+                    GROUP BY "attributeId"
+                    HAVING "attributeId" > 30
                 """,
                 """<<
                   { 'attributeId': 40, 'the_count': 4 },
@@ -116,11 +116,11 @@ class EvaluatingCompilerHavingTest : EvaluatorTestBase() {
             EvaluatorTestCase(
                 groupName = "GROUP BY with HAVING and WHERE",
                 """
-                    SELECT attributeId, COUNT(*) as the_count
+                    SELECT "attributeId", COUNT(*) as the_count
                     FROM repeating_things
                     WHERE thingId >= 9
-                    GROUP BY attributeId
-                    HAVING attributeId > 30
+                    GROUP BY "attributeId"
+                    HAVING "attributeId" > 30
                 """,
                 """<<
                   { 'attributeId': 40, 'the_count': 2 },
@@ -130,9 +130,9 @@ class EvaluatingCompilerHavingTest : EvaluatorTestBase() {
             EvaluatorTestCase(
                 groupName = "GROUP BY with HAVING that calls COUNT(*)",
                 """
-                    SELECT attributeId, COUNT(*) as the_count
+                    SELECT "attributeId", COUNT(*) as the_count
                     FROM repeating_things
-                    GROUP BY attributeId
+                    GROUP BY "attributeId"
                     HAVING COUNT(*) >= 3
                 """,
                 """<<
@@ -145,9 +145,9 @@ class EvaluatingCompilerHavingTest : EvaluatorTestBase() {
             EvaluatorTestCase(
                 groupName = "GROUP BY with HAVING that calls SUM()",
                 """
-                    SELECT attributeId, SUM(attributeId) as the_sum
+                    SELECT "attributeId", SUM(attributeId) as the_sum
                     FROM repeating_things
-                    GROUP BY attributeId
+                    GROUP BY "attributeId"
                     HAVING SUM(attributeId) >= 160
                 """,
                 """<<
@@ -158,9 +158,9 @@ class EvaluatingCompilerHavingTest : EvaluatorTestBase() {
             EvaluatorTestCase(
                 groupName = "GROUP BY with HAVING that references GROUP AS variable",
                 """
-                    SELECT attributeId, COUNT(*) as the_count
+                    SELECT "attributeId", COUNT(*) as the_count
                     FROM repeating_things
-                    GROUP BY attributeId GROUP AS g
+                    GROUP BY "attributeId" GROUP AS g
                     HAVING g IS NOT MISSING AND g IS NOT NULL
                 """,
                 """<<

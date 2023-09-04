@@ -229,7 +229,7 @@ internal class PartiQLPigVisitor(
 
     fun readIdentifierAsDefnid(ctx: PartiQLParser.IdentifierContext): PartiqlAst.Defnid = PartiqlAst.build {
         val ident = visitIdentifier(ctx)
-        defnid_(ident.symb, ident.metas)
+        defnid_(ident.symb, ident.kind, ident.metas)
     }
 
     /** Encapsulate in one place the "legacy" treatment of function names when referring to functions.
@@ -244,7 +244,8 @@ internal class PartiQLPigVisitor(
     // treatment of function identifiers deserves a clean-up.  There is no reason for them to be treated differently
     // from identifier references represented by the Expr.Id node.
     fun funDefnid(funName: String, metas: MetaContainer): PartiqlAst.Defnid = PartiqlAst.build {
-        defnid_(SymbolPrimitive(Ident.normalizeRegular(funName), metas))
+        // wVG-TODO: try without Ident.normalizeRegular: since the defnig is of kind regular() now, the proper normalization  should be happening elsewhere
+        defnid_(SymbolPrimitive(Ident.normalizeRegular(funName), metas), regular())
     }
 
     /** Interpret an ANTLR-parsed regular identifier as one of expected local keywords. */
@@ -1679,11 +1680,11 @@ internal class PartiQLPigVisitor(
         val typIdOrig = readIdentifierAsDefnid(ctx.identifier())
         val metas = typIdOrig.metas
         val customName = when (val name = Ident.normalizeRegular(typIdOrig.string())) {
-            in customKeywords -> name
+            in customKeywords -> typIdOrig.string()
             in customTypeAliases.keys -> customTypeAliases.get(name)!!
             else -> throw ParserException("Invalid custom type name: $name", ErrorCode.PARSE_INVALID_QUERY)
         }
-        val typId = defnid_(SymbolPrimitive(customName, metas))
+        val typId = defnid_(SymbolPrimitive(customName, metas), regular())
         customType(typId, metas)
     }
 

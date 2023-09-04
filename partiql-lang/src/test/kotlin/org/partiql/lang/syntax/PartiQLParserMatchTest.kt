@@ -5,6 +5,7 @@ import com.amazon.ionelement.api.ionInt
 import com.amazon.ionelement.api.ionString
 import org.junit.Test
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.domains.defnidReg
 import org.partiql.lang.domains.vr
 import kotlin.test.assertFailsWith
 
@@ -51,7 +52,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     }
 
     // `MyGraph MATCH (x), -[u]->`
-    val astMyGraphMatchAllNodesEdges = PartiqlAst.build {
+    private val astMyGraphMatchAllNodesEdges = PartiqlAst.build {
         graphMatch(
             expr = vr("MyGraph"),
             gpmlPattern = gpmlPattern(
@@ -60,7 +61,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
                         parts = listOf(
                             node(
                                 prefilter = null,
-                                variable = defnid("x"),
+                                variable = defnidReg("x"),
                             )
                         )
                     ),
@@ -68,7 +69,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
                         parts = listOf(
                             edge(
                                 direction = edgeRight(),
-                                variable = defnid("u")
+                                variable = defnidReg("u")
                             )
                         )
                     )
@@ -78,7 +79,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     }
 
     // `MyGraph MATCH (x)`
-    val astMygraphMatchAllNodes = PartiqlAst.build {
+    private val astMygraphMatchAllNodes = PartiqlAst.build {
         graphMatch(
             expr = vr("MyGraph"),
             gpmlPattern = gpmlPattern(
@@ -87,7 +88,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
                         parts = listOf(
                             node(
                                 prefilter = null,
-                                variable = defnid("x"),
+                                variable = defnidReg("x"),
                             )
                         )
                     )
@@ -97,7 +98,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     }
 
     // `SELECT * FROM tbl1`
-    val astSelectStarFromTbl1 = PartiqlAst.build {
+    private val astSelectStarFromTbl1 = PartiqlAst.build {
         select(
             project = projectStar(),
             from = scan(vr("tbl1"))
@@ -271,7 +272,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
                     )
                 )
             ),
-            where = call(funcName = defnid("contains_value"), args = listOf(lit(ionString("1"))))
+            where = call(funcName = defnidReg("contains_value"), args = listOf(lit(ionString("1"))))
         )
     }
 
@@ -289,7 +290,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
                                         parts = listOf(
                                             node(
                                                 prefilter = null,
-                                                variable = defnid("x"),
+                                                variable = defnidReg("x"),
                                             )
                                         )
                                     )
@@ -328,7 +329,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     ) {
         bindAllNodesAST(
             projectStar(),
-            defnid("a")
+            defnidReg("a")
         )
     }
 
@@ -338,7 +339,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     ) {
         bindAllNodesAST(
             projectStar(),
-            defnid("a")
+            defnidReg("a")
         )
     }
 
@@ -350,7 +351,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
             project = projectList(
                 projectExpr(
                     expr = path(vr("x"), pathExpr(lit(ionString("info")), regular())),
-                    asAlias = defnid("info")
+                    asAlias = defnidReg("info")
                 )
             ),
             from = scan(
@@ -362,7 +363,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
                                 parts = listOf(
                                     node(
                                         prefilter = null,
-                                        variable = defnid("x"),
+                                        variable = defnidReg("x"),
                                     )
                                 )
                             )
@@ -382,7 +383,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
         "SELECT x AS target FROM my_graph MATCH (x:Label) WHERE x.has_data = true",
     ) {
         select(
-            project = projectList(projectExpr(expr = vr("x"), asAlias = defnid("target"))),
+            project = projectList(projectExpr(expr = vr("x"), asAlias = defnidReg("target"))),
             from = scan(
                 graphMatch(
                     expr = vr("my_graph"),
@@ -392,8 +393,8 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
                                 parts = listOf(
                                     node(
                                         prefilter = null,
-                                        variable = defnid("x"),
-                                        label = graphLabelName(defnid("Label"))
+                                        variable = defnidReg("x"),
+                                        label = graphLabelName(defnidReg("Label"))
                                     )
                                 )
                             )
@@ -529,8 +530,8 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
                                         parts = listOf(
                                             node(
                                                 prefilter = null,
-                                                variable = defnid("a"),
-                                                label = graphLabelName(defnid("A"))
+                                                variable = defnidReg("a"),
+                                                label = graphLabelName(defnidReg("A"))
                                             ),
                                             edge(
                                                 direction = direction,
@@ -541,8 +542,8 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
                                             ),
                                             node(
                                                 prefilter = null,
-                                                variable = defnid("b"),
-                                                label = graphLabelName(defnid("B"))
+                                                variable = defnidReg("b"),
+                                                label = graphLabelName(defnidReg("B"))
                                             ),
                                         )
                                     )
@@ -559,7 +560,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     fun rightDirected() = assertExpression(
         "SELECT a,b FROM g MATCH (a:A) -[e:E]-> (b:B)",
     ) {
-        simpleGraphAST(edgeRight(), null, defnid("e"), defnid("E"))
+        simpleGraphAST(edgeRight(), null, defnidReg("e"), defnidReg("E"))
     }
 
     @Test
@@ -573,7 +574,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     fun leftDirected() = assertExpression(
         "SELECT a,b FROM g MATCH (a:A) <-[e:E]- (b:B)",
     ) {
-        simpleGraphAST(edgeLeft(), null, defnid("e"), defnid("E"))
+        simpleGraphAST(edgeLeft(), null, defnidReg("e"), defnidReg("E"))
     }
 
     @Test
@@ -587,7 +588,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     fun undirected() = assertExpression(
         "SELECT a,b FROM g MATCH (a:A) ~[e:E]~ (b:B)",
     ) {
-        simpleGraphAST(edgeUndirected(), null, defnid("e"), defnid("E"))
+        simpleGraphAST(edgeUndirected(), null, defnidReg("e"), defnidReg("E"))
     }
 
     @Test
@@ -601,7 +602,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     fun rightOrUnDirected() = assertExpression(
         "SELECT a,b FROM g MATCH (a:A) ~[e:E]~> (b:B)",
     ) {
-        simpleGraphAST(edgeUndirectedOrRight(), null, defnid("e"), defnid("E"))
+        simpleGraphAST(edgeUndirectedOrRight(), null, defnidReg("e"), defnidReg("E"))
     }
 
     @Test
@@ -615,7 +616,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     fun leftOrUnDirected() = assertExpression(
         "SELECT a,b FROM g MATCH (a:A) <~[e:E]~ (b:B)",
     ) {
-        simpleGraphAST(edgeLeftOrUndirected(), null, defnid("e"), defnid("E"))
+        simpleGraphAST(edgeLeftOrUndirected(), null, defnidReg("e"), defnidReg("E"))
     }
 
     @Test
@@ -629,7 +630,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     fun leftOrRight() = assertExpression(
         "SELECT a,b FROM g MATCH (a:A) <-[e:E]-> (b:B)",
     ) {
-        simpleGraphAST(edgeLeftOrRight(), null, defnid("e"), defnid("E"))
+        simpleGraphAST(edgeLeftOrRight(), null, defnidReg("e"), defnidReg("E"))
     }
 
     @Test
@@ -643,7 +644,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     fun leftOrRightOrUndirected() = assertExpression(
         "SELECT a,b FROM g MATCH (a:A) -[e:E]- (b:B)",
     ) {
-        simpleGraphAST(edgeLeftOrUndirectedOrRight(), null, defnid("e"), defnid("E"))
+        simpleGraphAST(edgeLeftOrUndirectedOrRight(), null, defnidReg("e"), defnidReg("E"))
     }
 
     @Test
@@ -657,28 +658,28 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     fun quantifierStar() = assertExpression(
         "SELECT a,b FROM g MATCH (a:A)-[:edge]->*(b:B)",
     ) {
-        simpleGraphAST(edgeRight(), graphMatchQuantifier(lower = 0, upper = null), null, defnid("edge"))
+        simpleGraphAST(edgeRight(), graphMatchQuantifier(lower = 0, upper = null), null, defnidReg("edge"))
     }
 
     @Test
     fun quantifierPlus() = assertExpression(
         "SELECT a,b FROM g MATCH (a:A)<-[:edge]-+(b:B)",
     ) {
-        simpleGraphAST(edgeLeft(), graphMatchQuantifier(lower = 1, upper = null), null, defnid("edge"))
+        simpleGraphAST(edgeLeft(), graphMatchQuantifier(lower = 1, upper = null), null, defnidReg("edge"))
     }
 
     @Test
     fun quantifierM() = assertExpression(
         "SELECT a,b FROM g MATCH (a:A)~[:edge]~{5,}(b:B)",
     ) {
-        simpleGraphAST(edgeUndirected(), graphMatchQuantifier(lower = 5, upper = null), null, defnid("edge"))
+        simpleGraphAST(edgeUndirected(), graphMatchQuantifier(lower = 5, upper = null), null, defnidReg("edge"))
     }
 
     @Test
     fun quantifierMN() = assertExpression(
         "SELECT a,b FROM g MATCH (a:A)-[e:edge]-{2,6}(b:B)",
     ) {
-        simpleGraphAST(edgeLeftOrUndirectedOrRight(), graphMatchQuantifier(lower = 2, upper = 6), defnid("e"), defnid("edge"))
+        simpleGraphAST(edgeLeftOrUndirectedOrRight(), graphMatchQuantifier(lower = 2, upper = 6), defnidReg("e"), defnidReg("edge"))
     }
 
     @Test
@@ -717,11 +718,11 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
             project = projectList(
                 projectExpr(
                     expr = path(vr("the_a"), pathExpr(lit(ionString("name")), regular())),
-                    asAlias = defnid("src")
+                    asAlias = defnidReg("src")
                 ),
                 projectExpr(
                     expr = path(vr("the_b"), pathExpr(lit(ionString("name")), regular())),
-                    asAlias = defnid("dest")
+                    asAlias = defnidReg("dest")
                 )
             ),
             from = scan(
@@ -733,20 +734,20 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
                                 parts = listOf(
                                     node(
                                         prefilter = null,
-                                        variable = defnid("the_a"),
-                                        label = graphLabelName(defnid("a"))
+                                        variable = defnidReg("the_a"),
+                                        label = graphLabelName(defnidReg("a"))
                                     ),
                                     edge(
                                         direction = edgeRight(),
                                         quantifier = null,
                                         prefilter = null,
-                                        variable = defnid("the_y"),
-                                        label = graphLabelName(defnid("y"))
+                                        variable = defnidReg("the_y"),
+                                        label = graphLabelName(defnidReg("y"))
                                     ),
                                     node(
                                         prefilter = null,
-                                        variable = defnid("the_b"),
-                                        label = graphLabelName(defnid("b"))
+                                        variable = defnidReg("the_b"),
+                                        label = graphLabelName(defnidReg("b"))
                                     ),
                                 )
                             )
@@ -781,18 +782,18 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
                                 parts = listOf(
                                     node(
                                         prefilter = null,
-                                        variable = defnid("a"),
+                                        variable = defnidReg("a"),
                                     ),
                                     edge(
                                         direction = edgeRight(),
                                         quantifier = null,
                                         prefilter = null,
                                         variable = null,
-                                        label = graphLabelName(defnid("has"))
+                                        label = graphLabelName(defnidReg("has"))
                                     ),
                                     node(
                                         prefilter = null,
-                                        variable = defnid("x"),
+                                        variable = defnidReg("x"),
                                     ),
                                 )
                             ),
@@ -800,18 +801,18 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
                                 parts = listOf(
                                     node(
                                         prefilter = null,
-                                        variable = defnid("x"),
+                                        variable = defnidReg("x"),
                                     ),
                                     edge(
                                         direction = edgeRight(),
                                         quantifier = null,
                                         prefilter = null,
                                         variable = null,
-                                        label = graphLabelName(defnid("contains"))
+                                        label = graphLabelName(defnidReg("contains"))
                                     ),
                                     node(
                                         prefilter = null,
-                                        variable = defnid("b"),
+                                        variable = defnidReg("b"),
                                     ),
                                 )
                             )
@@ -840,14 +841,14 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
                                 parts = listOf(
                                     node(
                                         prefilter = null,
-                                        variable = defnid("a"),
+                                        variable = defnidReg("a"),
                                     ),
                                     edge(
                                         direction = edgeRight(),
                                         quantifier = null,
                                         prefilter = null,
                                         variable = null,
-                                        label = graphLabelName(defnid("has"))
+                                        label = graphLabelName(defnidReg("has"))
                                     ),
                                     node(
                                         prefilter = null,
@@ -858,11 +859,11 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
                                         quantifier = null,
                                         prefilter = null,
                                         variable = null,
-                                        label = graphLabelName(defnid("contains"))
+                                        label = graphLabelName(defnidReg("contains"))
                                     ),
                                     node(
                                         prefilter = null,
-                                        variable = defnid("b"),
+                                        variable = defnidReg("b"),
                                     ),
                                 )
                             )
@@ -886,20 +887,20 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
                         gpmlPattern = gpmlPattern(
                             patterns = listOf(
                                 graphMatchPattern(
-                                    variable = defnid("p"),
+                                    variable = defnidReg("p"),
                                     parts = listOf(
                                         node(
-                                            variable = defnid("a"),
-                                            label = graphLabelName(defnid("A"))
+                                            variable = defnidReg("a"),
+                                            label = graphLabelName(defnidReg("A"))
                                         ),
                                         edge(
                                             direction = edgeRight(),
-                                            variable = defnid("e"),
-                                            label = graphLabelName(defnid("E"))
+                                            variable = defnidReg("e"),
+                                            label = graphLabelName(defnidReg("E"))
                                         ),
                                         node(
-                                            variable = defnid("b"),
-                                            label = graphLabelName(defnid("B"))
+                                            variable = defnidReg("b"),
+                                            label = graphLabelName(defnidReg("B"))
                                         ),
                                     )
                                 )
@@ -935,17 +936,17 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
                                                 quantifier = graphMatchQuantifier(lower = 2, upper = 5),
                                                 parts = listOf(
                                                     node(
-                                                        variable = defnid("a"),
-                                                        label = graphLabelName(defnid("A"))
+                                                        variable = defnidReg("a"),
+                                                        label = graphLabelName(defnidReg("A"))
                                                     ),
                                                     edge(
                                                         direction = edgeRight(),
-                                                        variable = defnid("e"),
-                                                        label = graphLabelName(defnid("Edge"))
+                                                        variable = defnidReg("e"),
+                                                        label = graphLabelName(defnidReg("Edge"))
                                                     ),
                                                     node(
-                                                        variable = defnid("b"),
-                                                        label = graphLabelName(defnid("A"))
+                                                        variable = defnidReg("b"),
+                                                        label = graphLabelName(defnidReg("A"))
                                                     ),
                                                 ),
                                             )
@@ -974,11 +975,11 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
                         gpmlPattern = gpmlPattern(
                             patterns = listOf(
                                 graphMatchPattern(
-                                    variable = defnid("pathVar"),
+                                    variable = defnidReg("pathVar"),
                                     parts = listOf(
                                         node(
-                                            variable = defnid("a"),
-                                            label = graphLabelName(defnid("A"))
+                                            variable = defnidReg("a"),
+                                            label = graphLabelName(defnidReg("A"))
                                         ),
                                         pattern(
                                             graphMatchPattern(
@@ -987,16 +988,16 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
                                                     node(),
                                                     edge(
                                                         direction = edgeRight(),
-                                                        variable = defnid("e"),
-                                                        label = graphLabelName(defnid("Edge"))
+                                                        variable = defnidReg("e"),
+                                                        label = graphLabelName(defnidReg("Edge"))
                                                     ),
                                                     node(),
                                                 )
                                             )
                                         ),
                                         node(
-                                            variable = defnid("b"),
-                                            label = graphLabelName(defnid("B"))
+                                            variable = defnidReg("b"),
+                                            label = graphLabelName(defnidReg("B"))
                                         ),
                                     )
                                 )
@@ -1019,11 +1020,11 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
                         gpmlPattern = gpmlPattern(
                             patterns = listOf(
                                 graphMatchPattern(
-                                    variable = defnid("pathVar"),
+                                    variable = defnidReg("pathVar"),
                                     parts = listOf(
                                         node(
-                                            variable = defnid("a"),
-                                            label = graphLabelName(defnid("A"))
+                                            variable = defnidReg("a"),
+                                            label = graphLabelName(defnidReg("A"))
                                         ),
                                         pattern(
                                             graphMatchPattern(
@@ -1031,15 +1032,15 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
                                                 parts = listOf(
                                                     edge(
                                                         direction = edgeRight(),
-                                                        variable = defnid("e"),
-                                                        label = graphLabelName(defnid("Edge"))
+                                                        variable = defnidReg("e"),
+                                                        label = graphLabelName(defnidReg("Edge"))
                                                     ),
                                                 )
                                             )
                                         ),
                                         node(
-                                            variable = defnid("b"),
-                                            label = graphLabelName(defnid("B"))
+                                            variable = defnidReg("b"),
+                                            label = graphLabelName(defnidReg("B"))
                                         ),
                                     )
                                 )
@@ -1072,7 +1073,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     ) {
         PartiqlAst.build {
             select(
-                project = projectList(projectExpr(vr("u"), asAlias = defnid("banCandidate"))),
+                project = projectList(projectExpr(vr("u"), asAlias = defnidReg("banCandidate"))),
                 from = scan(
                     graphMatch(
                         expr = vr("g"),
@@ -1081,8 +1082,8 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
                                 graphMatchPattern(
                                     parts = listOf(
                                         node(
-                                            variable = defnid("p"),
-                                            label = graphLabelName(defnid("Post")),
+                                            variable = defnidReg("p"),
+                                            label = graphLabelName(defnidReg("Post")),
                                             prefilter = eq(
                                                 path(vr("p"), pathExpr(lit(ionString("isFlagged")), regular())),
                                                 lit(ionBool(true))
@@ -1090,11 +1091,11 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
                                         ),
                                         edge(
                                             direction = edgeLeft(),
-                                            label = graphLabelName(defnid("createdPost"))
+                                            label = graphLabelName(defnidReg("createdPost"))
                                         ),
                                         node(
-                                            variable = defnid("u"),
-                                            label = graphLabelName(defnid("Usr")),
+                                            variable = defnidReg("u"),
+                                            label = graphLabelName(defnidReg("Usr")),
                                             prefilter = and(
                                                 eq(
                                                     path(
@@ -1111,11 +1112,11 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
                                         ),
                                         edge(
                                             direction = edgeRight(),
-                                            label = graphLabelName(defnid("createdComment"))
+                                            label = graphLabelName(defnidReg("createdComment"))
                                         ),
                                         node(
-                                            variable = defnid("c"),
-                                            label = graphLabelName(defnid("Comment")),
+                                            variable = defnidReg("c"),
+                                            label = graphLabelName(defnidReg("Comment")),
                                             prefilter =
                                             eq(
                                                 path(vr("c"), pathExpr(lit(ionString("isFlagged")), regular())),
@@ -1147,10 +1148,10 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
                             patterns = listOf(
                                 graphMatchPattern(
                                     restrictor = restrictor,
-                                    variable = defnid("p"),
+                                    variable = defnidReg("p"),
                                     parts = listOf(
                                         node(
-                                            variable = defnid("a"),
+                                            variable = defnidReg("a"),
                                             prefilter =
                                             eq(
                                                 path(vr("a"), pathExpr(lit(ionString("owner")), regular())),
@@ -1159,12 +1160,12 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
                                         ),
                                         edge(
                                             direction = edgeRight(),
-                                            variable = defnid("t"),
-                                            label = graphLabelName(defnid("Transfer")),
+                                            variable = defnidReg("t"),
+                                            label = graphLabelName(defnidReg("Transfer")),
                                             quantifier = graphMatchQuantifier(0)
                                         ),
                                         node(
-                                            variable = defnid("b"),
+                                            variable = defnidReg("b"),
                                             prefilter =
                                             eq(
                                                 path(vr("b"), pathExpr(lit(ionString("owner")), regular())),
@@ -1214,10 +1215,10 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
                             selector = selector,
                             patterns = listOf(
                                 graphMatchPattern(
-                                    variable = defnid("p"),
+                                    variable = defnidReg("p"),
                                     parts = listOf(
                                         node(
-                                            variable = defnid("a"),
+                                            variable = defnidReg("a"),
                                             prefilter =
                                             eq(
                                                 path(vr("a"), pathExpr(lit(ionString("owner")), regular())),
@@ -1226,12 +1227,12 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
                                         ),
                                         edge(
                                             direction = edgeRight(),
-                                            variable = defnid("t"),
-                                            label = graphLabelName(defnid("Transfer")),
+                                            variable = defnidReg("t"),
+                                            label = graphLabelName(defnidReg("Transfer")),
                                             quantifier = graphMatchQuantifier(0)
                                         ),
                                         node(
-                                            variable = defnid("b"),
+                                            variable = defnidReg("b"),
                                             prefilter =
                                             eq(
                                                 path(vr("b"), pathExpr(lit(ionString("owner")), regular())),
@@ -1300,16 +1301,16 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
                         patterns = listOf(
                             graphMatchPattern(
                                 parts = listOf(
-                                    node(variable = defnid("a")),
+                                    node(variable = defnidReg("a")),
                                     edge(direction = edgeRight()),
-                                    node(variable = defnid("b")),
+                                    node(variable = defnidReg("b")),
                                 )
                             ),
                             graphMatchPattern(
                                 parts = listOf(
-                                    node(variable = defnid("a")),
+                                    node(variable = defnidReg("a")),
                                     edge(direction = edgeRight()),
-                                    node(variable = defnid("c")),
+                                    node(variable = defnidReg("c")),
                                 )
                             )
                         )
@@ -1319,11 +1320,11 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
         }
 
         val t1 = PartiqlAst.build {
-            scan(expr = vr("table1"), asAlias = defnid("t1"))
+            scan(expr = vr("table1"), asAlias = defnidReg("t1"))
         }
 
         val t2 = PartiqlAst.build {
-            scan(expr = vr("table2"), asAlias = defnid("t2"))
+            scan(expr = vr("table2"), asAlias = defnidReg("t2"))
         }
 
         PartiqlAst.build {
@@ -1332,8 +1333,8 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
                     projectExpr(vr("a")),
                     projectExpr(vr("b")),
                     projectExpr(vr("c")),
-                    projectExpr(path(vr("t1"), pathExpr(lit(ionString("x")), regular())), defnid("x")),
-                    projectExpr(path(vr("t2"), pathExpr(lit(ionString("y")), regular())), defnid("y"))
+                    projectExpr(path(vr("t1"), pathExpr(lit(ionString("x")), regular())), defnidReg("x")),
+                    projectExpr(path(vr("t2"), pathExpr(lit(ionString("y")), regular())), defnidReg("y"))
                 ),
                 from = join(
                     type = inner(),
@@ -1395,7 +1396,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     }
 
     /** "SELECT x FROM g MATCH (x:$[spec])" */
-    fun astSelectNodeWithLabelSpec(spec: PartiqlAst.GraphLabelSpec) = PartiqlAst.build {
+    private fun astSelectNodeWithLabelSpec(spec: PartiqlAst.GraphLabelSpec) = PartiqlAst.build {
         select(
             project = projectList(projectExpr(expr = vr("x"))),
             from = scan(
@@ -1407,7 +1408,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
                                 parts = listOf(
                                     node(
                                         prefilter = null,
-                                        variable = defnid("x"),
+                                        variable = defnidReg("x"),
                                         label = spec,
                                     )
                                 )
@@ -1423,7 +1424,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     fun labelSimpleNamed() = assertExpression(
         "SELECT x FROM g MATCH (x:A)"
     ) {
-        astSelectNodeWithLabelSpec(spec = graphLabelName(defnid("A")))
+        astSelectNodeWithLabelSpec(spec = graphLabelName(defnidReg("A")))
     }
 
     @Test
@@ -1431,7 +1432,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
         "SELECT x FROM g MATCH (x:Label|OtherLabel)",
     ) {
         astSelectNodeWithLabelSpec(
-            spec = graphLabelDisj(graphLabelName(defnid("Label")), graphLabelName(defnid("OtherLabel")))
+            spec = graphLabelDisj(graphLabelName(defnidReg("Label")), graphLabelName(defnidReg("OtherLabel")))
         )
     }
 
@@ -1440,7 +1441,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
         "SELECT x FROM g MATCH (x:Label&OtherLabel)",
     ) {
         astSelectNodeWithLabelSpec(
-            spec = graphLabelConj(graphLabelName(defnid("Label")), graphLabelName(defnid("OtherLabel")))
+            spec = graphLabelConj(graphLabelName(defnidReg("Label")), graphLabelName(defnidReg("OtherLabel")))
         )
     }
 
@@ -1448,7 +1449,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     fun labelNegation() = assertExpression(
         "SELECT x FROM g MATCH (x:!Label)",
     ) {
-        astSelectNodeWithLabelSpec(spec = graphLabelNegation(graphLabelName(defnid("Label"))))
+        astSelectNodeWithLabelSpec(spec = graphLabelNegation(graphLabelName(defnidReg("Label"))))
     }
 
     @Test
@@ -1458,17 +1459,17 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
         astSelectNodeWithLabelSpec(spec = graphLabelWildcard())
     }
 
-    val astLabelCombo = PartiqlAst.build {
+    private val astLabelCombo = PartiqlAst.build {
         astSelectNodeWithLabelSpec(
             spec = graphLabelDisj(
                 graphLabelDisj(
                     graphLabelDisj(
-                        graphLabelName(defnid("L1")),
-                        graphLabelConj(graphLabelName(defnid("L2")), graphLabelName(defnid("L3")))
+                        graphLabelName(defnidReg("L1")),
+                        graphLabelConj(graphLabelName(defnidReg("L2")), graphLabelName(defnidReg("L3")))
                     ),
-                    graphLabelNegation(graphLabelName(defnid("L4")))
+                    graphLabelNegation(graphLabelName(defnidReg("L4")))
                 ),
-                graphLabelConj(graphLabelName(defnid("L5")), graphLabelWildcard())
+                graphLabelConj(graphLabelName(defnidReg("L5")), graphLabelWildcard())
             )
         )
     }
@@ -1483,7 +1484,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     ) { astLabelCombo }
 
     /** (g MATCH <-[:$[spec]]-> ) */
-    fun astMatchEdgeWithLabelSpec(spec: PartiqlAst.GraphLabelSpec) = PartiqlAst.build {
+    private fun astMatchEdgeWithLabelSpec(spec: PartiqlAst.GraphLabelSpec) = PartiqlAst.build {
         graphMatch(
             expr = vr("g"),
             gpmlPattern = gpmlPattern(
@@ -1507,7 +1508,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     fun edgeLabelSimpleNamed() = assertExpression(
         "(g MATCH <-[:City]->)"
     ) {
-        astMatchEdgeWithLabelSpec(graphLabelName(defnid("City")))
+        astMatchEdgeWithLabelSpec(graphLabelName(defnidReg("City")))
     }
 
     @Test
@@ -1516,8 +1517,8 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     ) {
         astMatchEdgeWithLabelSpec(
             graphLabelDisj(
-                graphLabelName(defnid("Country")),
-                graphLabelConj(graphLabelName(defnid("City")), graphLabelName(defnid("Sovereign")))
+                graphLabelName(defnidReg("Country")),
+                graphLabelConj(graphLabelName(defnidReg("City")), graphLabelName(defnidReg("Sovereign")))
             )
         )
     }

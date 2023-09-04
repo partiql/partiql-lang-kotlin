@@ -14,6 +14,7 @@
 
 package org.partiql.lang.eval
 
+import org.junit.Ignore
 import org.junit.Test
 import org.partiql.errors.ErrorCode
 import org.partiql.errors.Property
@@ -129,6 +130,9 @@ class QuotedIdTests : EvaluatorTestBase() {
     }
 
     @Test
+    @Ignore
+    // wVG-TODO Remove or adjust to reflect the new reality? (Make it a failing test?)
+    // Upon transition to SQL-conformant identifiers, the FROM aliases Abc, aBc, abC are the same identifier.
     fun quotedTableAliasesReferencesAreCaseSensitive() =
         runEvaluatorTestCase(
             "SELECT \"Abc\".n AS a, \"aBc\".n AS b, \"abC\".n AS c FROM a as Abc, b as aBc, c as abC",

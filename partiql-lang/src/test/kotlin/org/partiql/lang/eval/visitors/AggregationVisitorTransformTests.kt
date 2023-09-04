@@ -475,7 +475,7 @@ internal class AggregationVisitorTransformTests : VisitorTransformTestBase() {
                     GROUP BY t.a AS k, t.b AS G
                 """,
                 expected = """
-                    SELECT ${uniqueId(0, 0)} AS "k", ${uniqueId(0, 1)} AS "G"
+                    SELECT ${uniqueId(0, 0)} AS k, ${uniqueId(0, 1)} AS G
                     FROM t
                     GROUP BY t.a AS ${uniqueId(0, 0)}, t.b AS ${uniqueId(0, 1)}
                 """
@@ -493,7 +493,7 @@ internal class AggregationVisitorTransformTests : VisitorTransformTestBase() {
                     HAVING SUM(k) > 2
                 """,
                 expected = """
-                    SELECT ${uniqueId(0, 0)} AS "k"
+                    SELECT ${uniqueId(0, 0)} AS k
                     FROM (
                         SELECT ${uniqueId(0, 1)} AS p
                         FROM t
@@ -516,9 +516,9 @@ internal class AggregationVisitorTransformTests : VisitorTransformTestBase() {
                     HAVING SUM(k) > 2
                 """,
                 expected = """
-                    SELECT ${uniqueId(0, 0)} AS "k"
+                    SELECT ${uniqueId(0, 0)} AS k
                     FROM (
-                        SELECT ${uniqueId(0, 0)} AS "l", ${uniqueId(0, 1)} AS "p"
+                        SELECT ${uniqueId(0, 0)} AS l, ${uniqueId(0, 1)} AS p
                         FROM t
                         GROUP BY t.a AS ${uniqueId(0, 0)}, t.b AS ${uniqueId(0, 1)}
                     ) AS t
@@ -544,7 +544,7 @@ internal class AggregationVisitorTransformTests : VisitorTransformTestBase() {
                     SELECT
                         ${uniqueId(0, 0)} AS k,
                         (
-                            SELECT ${uniqueId(1, 0)} AS "l", ${uniqueId(1, 1)} AS "p"
+                            SELECT ${uniqueId(1, 0)} AS l, ${uniqueId(1, 1)} AS p
                             FROM t
                             GROUP BY t.a AS ${uniqueId(1, 0)}, t.b AS ${uniqueId(1, 1)}
                         ) AS t

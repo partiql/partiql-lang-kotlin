@@ -198,7 +198,7 @@ type::[
   tuple::{},                                                   // TUPLE
   struct::{},                                                  // STRUCT
   any::{},                                                     // ANY
-  custom::{ name: string },                                    // <symbol>
+  custom::{ name: defnid },                                    // <symbol>
 ]
 
 // Identifiers and Qualified Identifiers
@@ -210,6 +210,12 @@ type::[
 //
 // <id qualified> ::= <id symbol> ('.' <id symbol>)+;
 //
+// TODO It would be beneficial to extract `identifier.symbol` as an independent AST node.
+// See a comment in ToLegacyAst.visitExprCall indicating a shortcoming for the current design.
+// The name for this independent node would be `id`, if to keep in sync with changes in partiql.ion
+// on SQL-conformant identifiers.
+// What would remain of `identifier` here would be a "possibly-qualified identifier",
+// as a sequence of one or more of these new `id`s.
 identifier::[
   symbol::{
     symbol:           string,
@@ -226,6 +232,17 @@ identifier::[
     ],
   ],
 ]
+
+defnid::{
+  symbol: string,
+  kind: kind,
+  _: [
+    kind::[
+      REGULAR,
+      DELIMITED,
+    ],
+  ],
+}
 
 // Path Literals
 //  - Much like qualified identifier but allowing bracket notation '[' <int> | <string> ']'
@@ -642,7 +659,7 @@ graph_match::{
     pattern::{
       restrictor: optional::restrictor,
       prefilter:  optional::expr,       // An optional pattern pre-filter, e.g.: `WHERE a.name=b.name` in `MATCH [(a)->(b) WHERE a.name=b.name]`
-      variable:   optional::string,     // The optional element variable of the pattern, e.g.: `p` in `MATCH p = (a) −[t]−> (b)`
+      variable:   optional::defnid,     // The optional element variable of the pattern, e.g.: `p` in `MATCH p = (a) −[t]−> (b)`
       quantifier: optional::quantifier, // An optional quantifier for the entire pattern match, e.g. `{2,5}` in `MATCH (a:Account)−[:Transfer]−>{2,5}(b:Account)`
       parts:      list::[part],         // The ordered pattern parts
       _: [
@@ -650,7 +667,7 @@ graph_match::{
           // A single node in a graph pattern
           node::{
             prefilter:  optional::expr,    // An optional node pre-filter, e.g.: `WHERE c.name='Alarm'` in `MATCH (c WHERE c.name='Alarm')`
-            variable:   optional::string,  // The optional element variable of the node match, e.g.: `x` in `MATCH (x)`
+            variable:   optional::defnid,  // The optional element variable of the node match, e.g.: `x` in `MATCH (x)`
             label:      optional::label,    // The optional label(s) to match for the node, e.g.: `Entity` in `MATCH (x:Entity)`
           },
           // A single edge in a graph pattern
@@ -658,7 +675,7 @@ graph_match::{
             direction:  direction,            // Edge Direction
             quantifier: optional::quantifier, // An optional quantifier for the entire pattern match, e.g. `{2,5}` in `MATCH (a:Account)−[:Transfer]−>{2,5}(b:Account)`
             prefilter:  optional::expr,       // An optional edge pre-filter, e.g.: `WHERE t.capacity>100` in `MATCH −[t:hasSupply WHERE t.capacity>100]−>`
-            variable:   optional::string,     // The optional element variable of the edge match, e.g.: `t` in `MATCH −[t]−>`
+            variable:   optional::defnid,     // The optional element variable of the edge match, e.g.: `t` in `MATCH −[t]−>`
             label:      optional::label,      // The optional label spec to match for the edge. e.g.: `Target` in `MATCH −[t:Target]−>`
           },
           // A sub-pattern
@@ -705,7 +722,7 @@ graph_match::{
 
     // A label spec in a node pattern like `MATCH (x : <lab>)` or in an edge pattern like `MATCH −[t : <lab>]−>`
     label::[
-      name::{ name: string },          // as in `MATCH (x:Account)` or `MATCH -[x:Transfer]->`
+      name::{ name: defnid },          // as in `MATCH (x:Account)` or `MATCH -[x:Transfer]->`
       wildcard::{},                    // as in `MATCH (x: %)`
       negation::{arg: label},          // as in `MATCH (x: !Account)`
       conj::{lhs: label, rhs: label},  // as in `MATCH (x: City&Country)` - Monaco can do
@@ -769,14 +786,14 @@ table_definition::{
   columns: list::[column],
   _: [
     column::{
-      name:        string,
+      name:        defnid,
       type:        '.type',
       constraints: list::[constraint],
       _: [
         // TODO improve modeling language to avoid these wrapped unions
         // Also, prefer not to nest more than twice
         constraint::{
-          name: optional::string,
+          name: optional::defnid,
           body: [
             nullable::{},
             not_null::{},

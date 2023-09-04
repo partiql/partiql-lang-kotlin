@@ -84,62 +84,62 @@ class EvaluatingCompilerOrderByTests : EvaluatorTestBase() {
             ),
             // should order by price desc and productId asc
             EvaluatorTestCase(
-                "SELECT productId, price FROM products ORDER BY price DESC, productId ASC",
+                """SELECT "productId", price FROM products ORDER BY price DESC, "productId" ASC""",
                 "[{'productId': 3, 'price': 15.0}, {'productId': 5, 'price': 15.0}, {'productId': 2, 'price': 10.0}, {'productId': 1, 'price': 5.0}, {'productId': 4, 'price': 5.0}]"
             ),
             // should order by supplierId_nulls nulls last
             EvaluatorTestCase(
-                "SELECT productId, supplierId_nulls FROM products_sparse ORDER BY supplierId_nulls NULLS LAST, productId",
+                """SELECT "productId", "supplierId_nulls" FROM products_sparse ORDER BY "supplierId_nulls" NULLS LAST, "productId"""",
                 "[{'productId': 1, 'supplierId_nulls': 10}, {'productId': 2, 'supplierId_nulls': 10}, {'productId': 3, 'supplierId_nulls': 10}, {'productId': 6, 'supplierId_nulls': 11}, {'productId': 7, 'supplierId_nulls': 11}, {'productId': 4, 'supplierId_nulls': NULL}, {'productId': 5, 'supplierId_nulls': NULL}, {'productId': 8, 'supplierId_nulls': NULL}, {'productId': 9, 'supplierId_nulls': NULL}, {'productId': 10, 'supplierId_nulls': NULL}]"
             ),
             // should order by supplierId_nulls nulls first
             EvaluatorTestCase(
-                "SELECT productId, supplierId_nulls FROM products_sparse ORDER BY supplierId_nulls NULLS FIRST, productId",
+                """SELECT "productId", "supplierId_nulls" FROM products_sparse ORDER BY "supplierId_nulls" NULLS FIRST, "productId"""",
                 "[{'productId': 4, 'supplierId_nulls': NULL}, {'productId': 5, 'supplierId_nulls': NULL}, {'productId': 8, 'supplierId_nulls': NULL}, {'productId': 9, 'supplierId_nulls': NULL}, {'productId': 10, 'supplierId_nulls': NULL}, {'productId': 1, 'supplierId_nulls': 10}, {'productId': 2, 'supplierId_nulls': 10}, {'productId': 3, 'supplierId_nulls': 10}, {'productId': 6, 'supplierId_nulls': 11}, {'productId': 7, 'supplierId_nulls': 11}]"
             ),
             // should order by nulls last as default for supplierId_nulls asc
             EvaluatorTestCase(
-                "SELECT productId, supplierId_nulls FROM products_sparse ORDER BY supplierId_nulls ASC, productId",
+                """SELECT "productId", "supplierId_nulls" FROM products_sparse ORDER BY "supplierId_nulls" ASC, "productId" """,
                 "[{'productId': 1, 'supplierId_nulls': 10}, {'productId': 2, 'supplierId_nulls': 10}, {'productId': 3, 'supplierId_nulls': 10}, {'productId': 6, 'supplierId_nulls': 11}, {'productId': 7, 'supplierId_nulls': 11}, {'productId': 4, 'supplierId_nulls': NULL}, {'productId': 5, 'supplierId_nulls': NULL}, {'productId': 8, 'supplierId_nulls': NULL}, {'productId': 9, 'supplierId_nulls': NULL}, {'productId': 10, 'supplierId_nulls': NULL}]"
             ),
             // should order by nulls first as default for supplierId_nulls desc
             EvaluatorTestCase(
-                "SELECT productId, supplierId_nulls FROM products_sparse ORDER BY supplierId_nulls DESC, productId",
+                """SELECT "productId", "supplierId_nulls" FROM products_sparse ORDER BY "supplierId_nulls" DESC, "productId" """,
                 "[{'productId': 4, 'supplierId_nulls': NULL}, {'productId': 5, 'supplierId_nulls': NULL}, {'productId': 8, 'supplierId_nulls': NULL}, {'productId': 9, 'supplierId_nulls': NULL}, {'productId': 10, 'supplierId_nulls': NULL}, {'productId': 6, 'supplierId_nulls': 11}, {'productId': 7, 'supplierId_nulls': 11}, {'productId': 1, 'supplierId_nulls': 10}, {'productId': 2, 'supplierId_nulls': 10}, {'productId': 3, 'supplierId_nulls': 10}]"
             ),
             // should group and order by asc sellerId
             EvaluatorTestCase(
-                "SELECT sellerId FROM orders GROUP BY sellerId ORDER BY sellerId ASC",
+                """SELECT "sellerId" FROM orders GROUP BY "sellerId" ORDER BY "sellerId" ASC""",
                 "[{'sellerId': 1}, {'sellerId': 2}]"
             ),
             // should group and order by desc sellerId
             EvaluatorTestCase(
-                "SELECT sellerId FROM orders GROUP BY sellerId ORDER BY sellerId DESC",
+                """SELECT "sellerId" FROM orders GROUP BY "sellerId" ORDER BY "sellerId" DESC""",
                 "[{'sellerId': 2}, {'sellerId': 1}]"
             ),
             // should group and order by DESC (NULLS FIRST as default)
             EvaluatorTestCase(
-                "SELECT supplierId_nulls FROM products_sparse GROUP BY supplierId_nulls ORDER BY supplierId_nulls DESC",
+                """SELECT "supplierId_nulls" FROM products_sparse GROUP BY "supplierId_nulls" ORDER BY "supplierId_nulls" DESC""",
                 " [{'supplierId_nulls': NULL}, {'supplierId_nulls': 11}, {'supplierId_nulls': 10}]"
             ),
             // should group and order by ASC (NULLS LAST as default)
             EvaluatorTestCase(
-                "SELECT supplierId_nulls FROM products_sparse GROUP BY supplierId_nulls ORDER BY supplierId_nulls ASC",
+                """SELECT "supplierId_nulls" FROM products_sparse GROUP BY "supplierId_nulls" ORDER BY "supplierId_nulls" ASC""",
                 "[{'supplierId_nulls': 10}, {'supplierId_nulls': 11}, {'supplierId_nulls': NULL}]"
             ),
             // should group and place nulls first (asc as default)
             EvaluatorTestCase(
-                "SELECT supplierId_nulls FROM products_sparse GROUP BY supplierId_nulls ORDER BY supplierId_nulls NULLS FIRST",
+                """SELECT "supplierId_nulls" FROM products_sparse GROUP BY "supplierId_nulls" ORDER BY "supplierId_nulls" NULLS FIRST""",
                 "[{'supplierId_nulls': NULL}, {'supplierId_nulls': 10}, {'supplierId_nulls': 11}]"
             ),
             // should group and place nulls last (asc as default)
             EvaluatorTestCase(
-                "SELECT supplierId_nulls FROM products_sparse GROUP BY supplierId_nulls ORDER BY supplierId_nulls NULLS LAST",
+                """SELECT "supplierId_nulls" FROM products_sparse GROUP BY "supplierId_nulls" ORDER BY "supplierId_nulls" NULLS LAST""",
                 "[{'supplierId_nulls': 10}, {'supplierId_nulls': 11}, {'supplierId_nulls': NULL}]"
             ),
             // should group and order by asc and place nulls first
             EvaluatorTestCase(
-                "SELECT supplierId_nulls FROM products_sparse GROUP BY supplierId_nulls ORDER BY supplierId_nulls ASC NULLS FIRST",
+                """SELECT "supplierId_nulls" FROM products_sparse GROUP BY "supplierId_nulls" ORDER BY "supplierId_nulls" ASC NULLS FIRST""",
                 "[{'supplierId_nulls': NULL}, {'supplierId_nulls': 10}, {'supplierId_nulls': 11}]"
             ),
 
@@ -347,11 +347,11 @@ class EvaluatingCompilerOrderByTests : EvaluatorTestBase() {
         override fun getParameters() = listOf(
             EvaluatorTestCase(
                 query = """
-                    SELECT supplierId_nulls
+                    SELECT "supplierId_nulls"
                     FROM products_sparse
-                    GROUP BY supplierId_nulls
+                    GROUP BY "supplierId_nulls"
                     ORDER BY
-                        (SELECT supplierId_nulls FROM << 1 >>)
+                        (SELECT "supplierId_nulls" FROM << 1 >>)
                     DESC NULLS FIRST
                 """,
                 "[{'supplierId_nulls': NULL}, {'supplierId_nulls': 11}, {'supplierId_nulls': 10}]"
@@ -359,11 +359,11 @@ class EvaluatingCompilerOrderByTests : EvaluatorTestBase() {
             // Nested SELECT in ORDER BY ASC
             EvaluatorTestCase(
                 query = """
-                    SELECT supplierId_nulls
+                    SELECT "supplierId_nulls"
                     FROM products_sparse
-                    GROUP BY supplierId_nulls
+                    GROUP BY "supplierId_nulls"
                     ORDER BY
-                        (SELECT supplierId_nulls FROM << 1 >>)
+                        (SELECT "supplierId_nulls" FROM << 1 >>)
                     ASC NULLS FIRST
                 """,
                 "[{'supplierId_nulls': NULL}, {'supplierId_nulls': 10}, {'supplierId_nulls': 11}]"
@@ -374,11 +374,11 @@ class EvaluatingCompilerOrderByTests : EvaluatorTestBase() {
             // be the same value -- therefore, it can be treated as a constant -- and ordering won't occur.
             EvaluatorTestCase(
                 query = """
-                    SELECT supplierId_nulls
+                    SELECT "supplierId_nulls"
                     FROM products_sparse
-                    GROUP BY supplierId_nulls
+                    GROUP BY "supplierId_nulls"
                     ORDER BY
-                        (SELECT VALUE { '_1': 1 } FROM products_sparse GROUP BY supplierId_nulls ORDER BY supplierId_nulls ASC NULLS FIRST)
+                        (SELECT VALUE { '_1': 1 } FROM products_sparse GROUP BY "supplierId_nulls" ORDER BY "supplierId_nulls" ASC NULLS FIRST)
                     DESC NULLS FIRST
                 """,
                 "[{'supplierId_nulls': NULL}, {'supplierId_nulls': 10}, {'supplierId_nulls': 11}]"

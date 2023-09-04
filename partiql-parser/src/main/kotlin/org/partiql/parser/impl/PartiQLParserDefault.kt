@@ -35,6 +35,7 @@ import org.antlr.v4.runtime.tree.TerminalNode
 import org.partiql.ast.Ast
 import org.partiql.ast.AstNode
 import org.partiql.ast.DatetimeField
+import org.partiql.ast.Defnid
 import org.partiql.ast.Expr
 import org.partiql.ast.From
 import org.partiql.ast.GraphMatch
@@ -434,6 +435,17 @@ internal class PartiQLParserDefault : PartiQLParser {
             else throw error(ctx, "Expected one of: ${expected.joinToString(", ")}.")
         }
 
+        private fun readIdentifierAsDefnid(ctx: GeneratedParser.IdentifierContext) = translate(ctx) {
+            val id = visitIdentifier(ctx)
+            defnid(id.symbol, id.caseSensitivity.toKind())
+        }
+
+        private fun Identifier.CaseSensitivity.toKind() =
+            when (this@toKind) {
+                Identifier.CaseSensitivity.INSENSITIVE -> Defnid.Kind.REGULAR
+                Identifier.CaseSensitivity.SENSITIVE -> Defnid.Kind.DELIMITED
+            }
+
         /**
          *
          * DATA DEFINITION LANGUAGE (DDL)
@@ -476,7 +488,7 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitColumnDeclaration(ctx: GeneratedParser.ColumnDeclarationContext) = translate(ctx) {
-            val name = visitIdentifier(ctx.columnName().identifier()).symbol
+            val name = readIdentifierAsDefnid(ctx.columnName().identifier())
             val type = visit(ctx.type()) as Type
             val constraints = ctx.columnConstraint().map {
                 visitColumnConstraint(it)
@@ -485,7 +497,7 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitColumnConstraint(ctx: GeneratedParser.ColumnConstraintContext) = translate(ctx) {
-            val identifier = ctx.columnConstraintName()?.let { visitIdentifier(it.identifier()).symbol }
+            val identifier = ctx.columnConstraintName()?.let { readIdentifierAsDefnid(it.identifier()) }
             val body = visit(ctx.columnConstraintDef()) as TableDefinition.Column.Constraint.Body
             tableDefinitionColumnConstraint(identifier, body)
         }
@@ -977,7 +989,7 @@ internal class PartiQLParserDefault : PartiQLParser {
         override fun visitMatchPattern(ctx: GeneratedParser.MatchPatternContext) = translate(ctx) {
             val parts = visitOrEmpty<GraphMatch.Pattern.Part>(ctx.graphPart())
             val restrictor = ctx.restrictor?.let { readPathRestrictor(it) }
-            val variable = visitOrNull<Identifier.Symbol>(ctx.variable)?.symbol
+            val variable = ctx.variable?.let { readIdentifierAsDefnid(it.identifier()) }
             graphMatchPattern(restrictor, null, variable, null, parts)
         }
 
@@ -1025,8 +1037,8 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitLabelPrimaryName(ctx: GeneratedParser.LabelPrimaryNameContext) = translate(ctx) {
-            val x = visitIdentifier(ctx.identifier())
-            graphMatchLabelName(x.symbol)
+            val name = readIdentifierAsDefnid(ctx.identifier())
+            graphMatchLabelName(name)
         }
 
         override fun visitLabelPrimaryWild(ctx: GeneratedParser.LabelPrimaryWildContext) = translate(ctx) {
@@ -1038,7 +1050,7 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitPattern(ctx: GeneratedParser.PatternContext) = translate(ctx) {
             val restrictor = ctx.restrictor?.let { readPathRestrictor(it) }
-            val variable = visitOrNull<Identifier.Symbol>(ctx.variable)?.symbol
+            val variable = ctx.variable?.let { readIdentifierAsDefnid(it.identifier()) }
             val prefilter = ctx.where?.let { visitExpr(it.expr()) }
             val quantifier = ctx.quantifier?.let { visitPatternQuantifier(it) }
             val parts = visitOrEmpty<GraphMatch.Pattern.Part>(ctx.graphPart())
@@ -1059,7 +1071,7 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitEdgeSpec(ctx: GeneratedParser.EdgeSpecContext) = translate(ctx) {
             val placeholderDirection = GraphMatch.Direction.RIGHT
-            val variable = visitOrNull<Identifier.Symbol>(ctx.identifier())?.symbol
+            val variable = ctx.identifier()?.let { readIdentifierAsDefnid(it) }
             val prefilter = ctx.whereClause()?.let { visitExpr(it.expr()) }
             val label = visitOrNull<GraphMatch.Label>(ctx.labelSpec())
             graphMatchPatternPartEdge(placeholderDirection, null, prefilter, variable, label)
@@ -1129,7 +1141,7 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitNode(ctx: GeneratedParser.NodeContext) = translate(ctx) {
-            val variable = visitOrNull<Identifier.Symbol>(ctx.identifier())?.symbol
+            val variable = ctx.identifier()?.let { readIdentifierAsDefnid(it) }
             val prefilter = ctx.whereClause()?.let { visitExpr(it.expr()) }
             val label = visitOrNull<GraphMatch.Label>(ctx.labelSpec())
             graphMatchPatternPartNode(prefilter, variable, label)
@@ -1868,7 +1880,11 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitTypeCustom(ctx: GeneratedParser.TypeCustomContext) = translate(ctx) {
-            typeCustom(ctx.text.uppercase())
+            // typeCustom(ctx.text.uppercase())
+            // wVG-TODO? The prior code (above) had uppercase() here.
+            // This might need revisiting, but hoping that this was a hack that will just go away.
+            val id = readIdentifierAsDefnid(ctx.identifier())
+            typeCustom(id)
         }
 
         private inline fun <reified T : AstNode> visitOrEmpty(ctx: List<ParserRuleContext>?): List<T> = when {

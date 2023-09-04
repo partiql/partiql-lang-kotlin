@@ -25,6 +25,7 @@ import com.amazon.ion.system.IonSystemBuilder
 import org.partiql.errors.ErrorCode
 import org.partiql.errors.Property
 import org.partiql.errors.PropertyValueMap
+import org.partiql.lang.Ident
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.eval.time.NANOS_PER_SECOND
 import org.partiql.lang.eval.time.Time
@@ -101,6 +102,18 @@ fun ExprValue.namedValue(nameValue: ExprValue): ExprValue = object : ExprValue b
     override fun <T : Any?> asFacet(type: Class<T>?): T? =
         downcast(type) ?: this@namedValue.asFacet(type)
     override fun toString(): String = stringify()
+}
+
+/** Create a [Named]-faced [ExprValue] where the name is known as an identifier.
+ *  This is similar to the [namedValue] method above, but is intended for situations
+ *  where is seems gratuitous to take statically-known identifier and use its string content
+ *  to build a run-time computation to build a value.
+ */
+// TODO Review which uses of [namedValue] method above can transition to this [namedValueByIdent] method.
+// This could be a useful simplifying step towards eliminating the [Named] facet.
+fun ExprValue.namedValueByIdent(nameIdent: Ident): ExprValue {
+    val nameValue = ExprValue.newString(nameIdent.underlyingString())
+    return this.namedValue(nameValue)
 }
 
 /** Wraps this [ExprValue] in a delegate that always masks the [Named] facet. */

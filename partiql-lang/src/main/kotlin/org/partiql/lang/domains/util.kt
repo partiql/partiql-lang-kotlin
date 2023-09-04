@@ -92,4 +92,18 @@ fun PartiqlLogical.Id.toBindingName(): BindingName =
     BindingName(this.symb.text, this.kind.toBindingCase())
 
 fun PartiqlAst.Defnid.toIdent(): Ident =
-    Ident.createAsIs(this.symb.text)
+    when (this.kind) {
+        is PartiqlAst.IdKind.Regular -> Ident.createFromRegular(this.symb.text)
+        is PartiqlAst.IdKind.Delimited -> Ident.createFromDelimited(this.symb.text)
+    }
+
+fun PartiqlAst.Defnid.toId(): PartiqlAst.Id = PartiqlAst.build {
+    id_(this@toId.symb, this@toId.kind)
+}
+
+fun PartiqlAst.Id.toDefnid(): PartiqlAst.Defnid = PartiqlAst.build {
+    defnid_(this@toDefnid.symb, this@toDefnid.kind)
+}
+
+fun PartiqlAst.Builder.defnidReg(name: String) =
+    defnid(name, regular())

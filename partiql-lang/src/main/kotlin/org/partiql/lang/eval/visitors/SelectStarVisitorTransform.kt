@@ -20,7 +20,7 @@ import org.partiql.lang.ast.IsGroupAttributeReferenceMeta
 import org.partiql.lang.ast.UniqueNameMeta
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.metaContainerOf
-import org.partiql.lang.domains.string
+import org.partiql.lang.domains.toId
 import org.partiql.lang.eval.errNoContext
 
 /** Desugars `SELECT *` by, for example,
@@ -72,15 +72,16 @@ class SelectStarVisitorTransform : VisitorTransformBase() {
                         // the case when multiple grouping fields are assigned the same name (which is currently allowed)
                         val uniqueNameMeta = asName.metas[UniqueNameMeta.TAG] as? UniqueNameMeta?
                             ?: error("UniqueNameMeta not found--normally, this is added by GroupByItemAliasVisitorTransform")
+                        val uniqueNameId = PartiqlAst.build { defnid(uniqueNameMeta.uniqueName, delimited()) }
 
                         val metas = it.metas + metaContainerOf(IsGroupAttributeReferenceMeta.instance)
-                        createProjectExpr(uniqueNameMeta.uniqueName, asName.string(), metas)
+                        createProjectExpr(uniqueNameId, asName, metas)
                     }
 
                     val groupNameItem = transformedExpr.group!!.groupAsAlias.let {
                         if (it != null) {
                             val metas = it.metas + metaContainerOf(IsGroupAttributeReferenceMeta.instance)
-                            listOf(createProjectExpr(it.string(), metas = metas))
+                            listOf(createProjectExpr(it, metas = metas))
                         } else emptyList()
                     }
 
@@ -93,17 +94,25 @@ class SelectStarVisitorTransform : VisitorTransformBase() {
         return transformedExpr
     }
 
-    private fun createProjectAll(name: String) =
+    private fun createProjectAll(name: PartiqlAst.Defnid) =
         PartiqlAst.build {
-            projectAll(vr(id(name, delimited()), unqualified(), emptyMetaContainer()))
+            projectAll(vr(name.toId(), unqualified(), emptyMetaContainer()))
         }
 
-    private fun createProjectExpr(variableName: String, asAlias: String = variableName, metas: MetaContainer = emptyMetaContainer()) =
+    private fun createProjectExpr(
+        variableName: PartiqlAst.Defnid,
+        asAlias: PartiqlAst.Defnid = variableName,
+        metas: MetaContainer = emptyMetaContainer()
+    ) =
         PartiqlAst.build {
-            projectExpr(vr(id(variableName, delimited()), unqualified(), metas), defnid(asAlias))
+            // wVG-- projectExpr(vr(id(variableName, delimited()), unqualified(), metas), defnid(asAlias))
+            // Use of delimited() in the prior code above might explain why some of the tests in SelectStarVisitorTransformTests
+            // had the same variable both delimited and not, such as `"f"` and `f`, in the same test.
+            // Now, the kind of the variable is carried through from its definition site and does not need to be invented at reference site.
+            projectExpr(vr(variableName.toId(), unqualified(), metas), asAlias)
         }
 
-    private class FromSourceAliases(val asAlias: String, val atAlias: String?, val byAlias: String?)
+    private class FromSourceAliases(val asAlias: PartiqlAst.Defnid, val atAlias: PartiqlAst.Defnid?, val byAlias: PartiqlAst.Defnid?)
 
     /** Extracts all the FROM source/unpivot aliases without recursing into any nested queries */
     private fun extractAliases(fromSource: PartiqlAst.FromSource): List<FromSourceAliases> {
@@ -112,10 +121,10 @@ class SelectStarVisitorTransform : VisitorTransformBase() {
             override fun visitFromSourceScan(node: PartiqlAst.FromSource.Scan) {
                 aliases.add(
                     FromSourceAliases(
-                        node.asAlias?.string()
+                        node.asAlias
                             ?: error("FromSourceAliasVisitorTransform must be executed before SelectStarVisitorTransform"),
-                        node.atAlias?.string(),
-                        node.byAlias?.string()
+                        node.atAlias,
+                        node.byAlias
                     )
                 )
             }
@@ -123,10 +132,10 @@ class SelectStarVisitorTransform : VisitorTransformBase() {
             override fun visitFromSourceUnpivot(node: PartiqlAst.FromSource.Unpivot) {
                 aliases.add(
                     FromSourceAliases(
-                        node.asAlias?.string()
+                        node.asAlias
                             ?: error("FromSourceAliasVisitorTransform must be executed before SelectStarVisitorTransform"),
-                        node.atAlias?.string(),
-                        node.byAlias?.string()
+                        node.atAlias,
+                        node.byAlias
                     )
                 )
             }

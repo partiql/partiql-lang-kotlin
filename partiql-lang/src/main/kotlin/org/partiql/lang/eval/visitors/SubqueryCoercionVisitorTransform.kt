@@ -110,7 +110,7 @@ class SubqueryCoercionVisitorTransform : VisitorTransformBase() {
         when (e) {
             is PartiqlAst.Expr.Select ->
                 if ((e.project is PartiqlAst.Projection.ProjectStar) || (e.project is PartiqlAst.Projection.ProjectList)) {
-                    PartiqlAst.build { call(defnid("coll_to_scalar"), e) }
+                    PartiqlAst.build { call(defnid("coll_to_scalar", regular()), e) }
                 } else e
             else -> e
         }

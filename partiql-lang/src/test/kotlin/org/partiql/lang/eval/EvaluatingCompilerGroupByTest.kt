@@ -362,25 +362,25 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
 
             createGroupByTestCases(
                 queries = listOf(
-                    "SELECT *                            FROM simple_1_col_1_group GROUP BY col1 + 1 AS someGBE",
-                    "SELECT someGBE                      FROM simple_1_col_1_group GROUP BY col1 + 1 AS someGBE",
-                    "SELECT VALUE { 'someGBE': someGBE } FROM simple_1_col_1_group GROUP BY col1 + 1 AS someGBE"
+                    """SELECT *                            FROM simple_1_col_1_group GROUP BY col1 + 1 AS "someGBE"""",
+                    """SELECT "someGBE"                      FROM simple_1_col_1_group GROUP BY col1 + 1 AS "someGBE"""",
+                    """SELECT VALUE { 'someGBE': "someGBE" } FROM simple_1_col_1_group GROUP BY col1 + 1 AS "someGBE""""
                 ),
                 expected = "<< { 'someGBE': 2 } >>"
             ) +
             createGroupByTestCases(
                 queries = listOf(
-                    "SELECT *                            FROM string_groups GROUP BY col1 || 'a' AS someGBE",
-                    "SELECT someGBE                      FROM string_groups GROUP BY col1 || 'a' AS someGBE",
-                    "SELECT VALUE { 'someGBE': someGBE } FROM string_groups GROUP BY col1 || 'a' AS someGBE"
+                    """SELECT *                            FROM string_groups GROUP BY col1 || 'a' AS "someGBE"""",
+                    """SELECT "someGBE"                      FROM string_groups GROUP BY col1 || 'a' AS "someGBE"""",
+                    """SELECT VALUE { 'someGBE': "someGBE" } FROM string_groups GROUP BY col1 || 'a' AS "someGBE""""
                 ),
                 expected = "<< { 'someGBE': 'aa' } >>"
             ) +
             createGroupByTestCases(
                 queries = listOf(
-                    "SELECT *                            FROM string_numbers GROUP BY CAST(num AS INT) AS someGBE",
-                    "SELECT someGBE                      FROM string_numbers GROUP BY CAST(num AS INT) AS someGBE",
-                    "SELECT VALUE { 'someGBE': someGBE } FROM string_numbers GROUP BY CAST(num AS INT) AS someGBE"
+                    """SELECT *                            FROM string_numbers GROUP BY CAST(num AS INT) AS "someGBE"""",
+                    """SELECT "someGBE"                      FROM string_numbers GROUP BY CAST(num AS INT) AS "someGBE"""",
+                    """SELECT VALUE { 'someGBE': "someGBE" } FROM string_numbers GROUP BY CAST(num AS INT) AS "someGBE""""
                 ),
                 expected = "<< { 'someGBE': 1 }, { 'someGBE': 2 } >>"
             ) +
@@ -388,42 +388,42 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
             // GROUP BY NULL/MISSING cases
             createGroupByTestCases(
                 queries = listOf(
-                    "SELECT *                              FROM simple_1_col_1_group GROUP BY NULL AS someNull",
-                    "SELECT someNull                       FROM simple_1_col_1_group GROUP BY NULL AS someNull",
-                    "SELECT VALUE { 'someNull': someNull } FROM simple_1_col_1_group GROUP BY NULL AS someNull"
+                    """SELECT *                              FROM simple_1_col_1_group GROUP BY NULL AS "someNull"""",
+                    """SELECT "someNull"                       FROM simple_1_col_1_group GROUP BY NULL AS "someNull"""",
+                    """SELECT VALUE { 'someNull': "someNull" } FROM simple_1_col_1_group GROUP BY NULL AS "someNull""""
                 ),
                 expected = "<< { 'someNull': null } >>"
             ) +
             createGroupByTestCases(
                 queries = listOf(
-                    "SELECT *                                    FROM simple_1_col_1_group GROUP BY MISSING AS someMissing",
-                    "SELECT someMissing                          FROM simple_1_col_1_group GROUP BY MISSING AS someMissing",
-                    "SELECT VALUE { 'someMissing': someMissing } FROM simple_1_col_1_group GROUP BY MISSING AS someMissing"
+                    """SELECT *                                    FROM simple_1_col_1_group GROUP BY MISSING AS "someMissing"""",
+                    """SELECT "someMissing"                          FROM simple_1_col_1_group GROUP BY MISSING AS "someMissing"""",
+                    """SELECT VALUE { 'someMissing': "someMissing" } FROM simple_1_col_1_group GROUP BY MISSING AS "someMissing""""
                 ),
                 // must explicitly specify MISSING here because https://github.com/partiql/partiql-lang-kotlin/issues/36
                 expected = "<< { 'someMissing': MISSING } >>"
             ) +
             createGroupByTestCases(
                 queries = listOf(
-                    "SELECT *                              FROM simple_1_col_1_group GROUP BY NULL AS groupExp",
-                    "SELECT groupExp                       FROM simple_1_col_1_group GROUP BY NULL AS groupExp",
-                    "SELECT VALUE { 'groupExp': groupExp } FROM simple_1_col_1_group GROUP BY NULL AS groupExp"
+                    """SELECT *                              FROM simple_1_col_1_group GROUP BY NULL AS "groupExp"""",
+                    """SELECT "groupExp"                       FROM simple_1_col_1_group GROUP BY NULL AS "groupExp"""",
+                    """SELECT VALUE { 'groupExp': "groupExp" } FROM simple_1_col_1_group GROUP BY NULL AS "groupExp""""
                 ),
                 expected = "<< { 'groupExp': null } >>"
             ) +
             createGroupByTestCases(
                 queries = listOf(
-                    "SELECT *                              FROM simple_1_col_1_group GROUP BY MISSING AS groupExp",
-                    "SELECT groupExp                       FROM simple_1_col_1_group GROUP BY MISSING AS groupExp",
-                    "SELECT VALUE { 'groupExp': groupExp } FROM simple_1_col_1_group GROUP BY MISSING AS groupExp"
+                    """SELECT *                              FROM simple_1_col_1_group GROUP BY MISSING AS "groupExp"""",
+                    """SELECT "groupExp"                       FROM simple_1_col_1_group GROUP BY MISSING AS "groupExp"""",
+                    """SELECT VALUE { 'groupExp': "groupExp" } FROM simple_1_col_1_group GROUP BY MISSING AS "groupExp""""
                 ),
                 expected = "<< { 'groupExp': MISSING } >>"
             ) +
             createGroupByTestCases(
                 queries = listOf(
-                    "SELECT *                                              FROM products_sparse p GROUP BY p.supplierId_nulls",
-                    "SELECT supplierId_nulls                               FROM products_sparse p GROUP BY p.supplierId_nulls",
-                    "SELECT VALUE { 'supplierId_nulls': supplierId_nulls } FROM products_sparse p GROUP BY p.supplierId_nulls"
+                    """SELECT *                                              FROM products_sparse p GROUP BY p."supplierId_nulls"""",
+                    """SELECT "supplierId_nulls"                               FROM products_sparse p GROUP BY p."supplierId_nulls"""",
+                    """SELECT VALUE { 'supplierId_nulls': "supplierId_nulls" } FROM products_sparse p GROUP BY p."supplierId_nulls""""
                 ),
                 expected = """<<
                             { 'supplierId_nulls': 10   },
@@ -433,9 +433,9 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
             ) +
             createGroupByTestCases(
                 queries = listOf(
-                    "SELECT *                                                       FROM products_sparse p GROUP BY p.supplierId_missings",
-                    "SELECT p.supplierId_missings                                   FROM products_sparse p GROUP BY p.supplierId_missings",
-                    "SELECT VALUE { 'supplierId_missings' : p.supplierId_missings } FROM products_sparse p GROUP BY p.supplierId_missings"
+                    """SELECT *                                                       FROM products_sparse p GROUP BY p."supplierId_missings"""",
+                    """SELECT p."supplierId_missings"                                   FROM products_sparse p GROUP BY p."supplierId_missings"""",
+                    """SELECT VALUE { 'supplierId_missings' : p."supplierId_missings" } FROM products_sparse p GROUP BY p."supplierId_missings""""
                 ),
                 expected = """<<
                             { 'supplierId_missings': 10 },
@@ -446,9 +446,9 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
             ) +
             createGroupByTestCases(
                 queries = listOf(
-                    "SELECT *                                                 FROM products_sparse p GROUP BY p.supplierId_mixed",
-                    "SELECT p.supplierId_mixed                                FROM products_sparse p GROUP BY p.supplierId_mixed",
-                    "SELECT VALUE { 'supplierId_mixed' : p.supplierId_mixed } FROM products_sparse p GROUP BY p.supplierId_mixed"
+                    """SELECT *                                                 FROM products_sparse p GROUP BY p."supplierId_mixed"""",
+                    """SELECT p."supplierId_mixed"                                FROM products_sparse p GROUP BY p."supplierId_mixed"""",
+                    """SELECT VALUE { 'supplierId_mixed' : p."supplierId_mixed" } FROM products_sparse p GROUP BY p."supplierId_mixed""""
                 ),
                 expected = """<<
                             { 'supplierId_mixed': 10 },
@@ -459,9 +459,9 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
             ) +
             createGroupByTestCases(
                 queries = listOf(
-                    "SELECT *                                                                    FROM products_sparse p GROUP BY p.regionId, p.supplierId_nulls",
-                    "SELECT regionId, supplierId_nulls                                           FROM products_sparse p GROUP BY p.regionId, p.supplierId_nulls",
-                    "SELECT VALUE { 'regionId': regionId, 'supplierId_nulls': supplierId_nulls } FROM products_sparse p GROUP BY p.regionId, p.supplierId_nulls"
+                    """SELECT *                                                                    FROM products_sparse p GROUP BY p."regionId", p."supplierId_nulls"""",
+                    """SELECT "regionId", "supplierId_nulls"                                           FROM products_sparse p GROUP BY p."regionId", p."supplierId_nulls"""",
+                    """SELECT VALUE { 'regionId': "regionId", 'supplierId_nulls': "supplierId_nulls" } FROM products_sparse p GROUP BY p."regionId", p."supplierId_nulls""""
                 ),
                 expected = """<<
                             { 'regionId': 100, 'supplierId_nulls': 10   },
@@ -474,9 +474,9 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
             ) +
             createGroupByTestCases(
                 queries = listOf(
-                    "SELECT *                                                                              FROM products_sparse p GROUP BY p.regionId, p.supplierId_missings",
-                    "SELECT p.regionId, p.supplierId_missings                                              FROM products_sparse p GROUP BY p.regionId, p.supplierId_missings",
-                    "SELECT VALUE { 'regionId': p.regionId, 'supplierId_missings': p.supplierId_missings } FROM products_sparse p GROUP BY p.regionId, p.supplierId_missings"
+                    """SELECT *                                                                              FROM products_sparse p GROUP BY p."regionId", p."supplierId_missings"""",
+                    """SELECT p."regionId", p."supplierId_missings"                                              FROM products_sparse p GROUP BY p."regionId", p."supplierId_missings"""",
+                    """SELECT VALUE { 'regionId': p."regionId", 'supplierId_missings': p."supplierId_missings" } FROM products_sparse p GROUP BY p."regionId", p."supplierId_missings""""
                 ),
                 expected = """<<
                             --must explicitly include the missing values here because of https://github.com/partiql/partiql-lang-kotlin/issues/36
@@ -490,9 +490,9 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
             ) +
             createGroupByTestCases(
                 queries = listOf(
-                    "SELECT *                                                                         FROM products_sparse p GROUP BY p.regionId, p.supplierId_mixed",
-                    "SELECT regionId, p.supplierId_mixed                                              FROM products_sparse p GROUP BY p.regionId, p.supplierId_mixed",
-                    "SELECT VALUE { 'regionId': p.regionId, 'supplierId_mixed': p.supplierId_mixed }  FROM products_sparse p GROUP BY p.regionId, p.supplierId_mixed"
+                    """SELECT *                                                                         FROM products_sparse p GROUP BY p."regionId", p."supplierId_mixed"""",
+                    """SELECT "regionId", p."supplierId_mixed"                                              FROM products_sparse p GROUP BY p."regionId", p."supplierId_mixed"""",
+                    """SELECT VALUE { 'regionId': p."regionId", 'supplierId_mixed': p."supplierId_mixed" }  FROM products_sparse p GROUP BY p."regionId", p."supplierId_mixed""""
                 ),
                 expected = """<<
                             --must explicitly include the missing values here because of https://github.com/partiql/partiql-lang-kotlin/issues/36
@@ -531,8 +531,8 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
             createAggregateTestCasesFromSqlStrings(
                 groupName = "variable argument",
                 sqlStrings = listOf(
-                    "SELECT {{agg}}(numInStock) AS agg FROM products",
-                    "SELECT {{agg}}(p.numInStock) AS agg FROM products AS p"
+                    """SELECT {{agg}}("numInStock") AS agg FROM products""",
+                    """SELECT {{agg}}(p."numInStock") AS agg FROM products AS p"""
                 ),
 
                 expectedResultForCount = "<< { 'agg': 5 } >>",
@@ -544,8 +544,8 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
             createAggregateTestCasesFromSqlStrings(
                 groupName = "binary expression argument",
                 sqlStrings = listOf(
-                    "SELECT {{agg}}(  numInStock + 1) AS agg FROM products",
-                    "SELECT {{agg}}(p.numInStock + 1) AS agg FROM products as p"
+                    """SELECT {{agg}}(  "numInStock" + 1) AS agg FROM products""",
+                    """SELECT {{agg}}(p."numInStock" + 1) AS agg FROM products as p"""
                 ),
 
                 expectedResultForCount = "<< { 'agg': 5 } >>",
@@ -557,8 +557,8 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
             createAggregateTestCasesFromSqlStrings(
                 groupName = "as part of binary expression",
                 sqlStrings = listOf(
-                    "SELECT {{agg}}( numInStock) + 2 AS agg FROM products",
-                    "SELECT {{agg}}(p.numInStock) + 2 AS agg FROM products as p"
+                    """SELECT {{agg}}( "numInStock") + 2 AS agg FROM products""",
+                    """SELECT {{agg}}(p."numInStock") + 2 AS agg FROM products as p"""
                 ),
 
                 expectedResultForCount = "<< { 'agg': 7 } >>",
@@ -570,8 +570,8 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
             createAggregateTestCasesFromSqlStrings(
                 groupName = "variable or path argument and WHERE clause (1)",
                 sqlStrings = listOf(
-                    "SELECT {{agg}}(numInStock)   AS agg FROM products      WHERE supplierId = 10",
-                    "SELECT {{agg}}(p.numInStock) AS agg FROM products AS p WHERE supplierId = 10"
+                    """SELECT {{agg}}("numInStock")   AS agg FROM products      WHERE "supplierId" = 10""",
+                    """SELECT {{agg}}(p."numInStock") AS agg FROM products AS p WHERE "supplierId" = 10"""
                 ),
 
                 expectedResultForCount = "<< { 'agg': 3 } >>",
@@ -583,8 +583,8 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
             createAggregateTestCasesFromSqlStrings(
                 groupName = "variable or path argument and WHERE clause (2)",
                 sqlStrings = listOf(
-                    "SELECT {{agg}}(  numInStock) AS agg FROM products      WHERE supplierId = 11",
-                    "SELECT {{agg}}(p.numInStock) AS agg FROM products AS p WHERE supplierId = 11"
+                    """SELECT {{agg}}(  "numInStock") AS agg FROM products      WHERE "supplierId" = 11""",
+                    """SELECT {{agg}}(p."numInStock") AS agg FROM products AS p WHERE "supplierId" = 11"""
                 ),
 
                 expectedResultForCount = "<< { 'agg': 2 } >>",
@@ -596,8 +596,8 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
             createAggregateTestCasesFromSqlStrings(
                 groupName = "variable or path argument and WHERE clause (3)",
                 sqlStrings = listOf(
-                    "SELECT {{agg}}(  numInStock) AS agg FROM products      WHERE categoryId = 20",
-                    "SELECT {{agg}}(p.numInStock) AS agg FROM products AS p WHERE p.categoryId = 20"
+                    """SELECT {{agg}}(  "numInStock") AS agg FROM products      WHERE "categoryId" = 20""",
+                    """SELECT {{agg}}(p."numInStock") AS agg FROM products AS p WHERE p."categoryId" = 20"""
                 ),
 
                 expectedResultForCount = "<< { 'agg': 2 } >>",
@@ -609,8 +609,8 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
             createAggregateTestCasesFromSqlStrings(
                 groupName = "variable or path argument and WHERE clause (4)",
                 sqlStrings = listOf(
-                    "SELECT {{agg}}(  numInStock) AS agg FROM products WHERE categoryId = 21",
-                    "SELECT {{agg}}(p.numInStock) AS agg FROM products AS p WHERE categoryId = 21"
+                    """SELECT {{agg}}(  "numInStock") AS agg FROM products WHERE "categoryId" = 21""",
+                    """SELECT {{agg}}(p."numInStock") AS agg FROM products AS p WHERE "categoryId" = 21"""
                 ),
 
                 expectedResultForCount = "<< { 'agg': 3 } >>",
@@ -622,9 +622,9 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
             createAggregateTestCasesFromSqlStrings(
                 groupName = "GROUP BY (1 column) (#1)",
                 sqlStrings = listOf(
-                    "SELECT   supplierId, {{agg}}(  numInStock) AS agg FROM products      GROUP BY   supplierId",
-                    "SELECT   supplierId, {{agg}}(p.numInStock) AS agg FROM products AS p GROUP BY p.supplierId",
-                    "SELECT p.supplierId, {{agg}}(p.numInStock) AS agg FROM products AS p GROUP BY p.supplierId"
+                    """SELECT   "supplierId", {{agg}}(  "numInStock") AS agg FROM products      GROUP BY   "supplierId"""",
+                    """SELECT   "supplierId", {{agg}}(p."numInStock") AS agg FROM products AS p GROUP BY p."supplierId"""",
+                    """SELECT p."supplierId", {{agg}}(p."numInStock") AS agg FROM products AS p GROUP BY p."supplierId""""
                 ),
 
                 expectedResultForCount = """<<
@@ -651,9 +651,9 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
             createAggregateTestCasesFromSqlStrings(
                 groupName = "GROUP BY (1 column) (#2)",
                 sqlStrings = listOf(
-                    "SELECT   categoryId, {{agg}}(  numInStock) AS agg FROM products      GROUP BY   categoryId",
-                    "SELECT   categoryId, {{agg}}(p.numInStock) AS agg FROM products AS p GROUP BY p.categoryId",
-                    "SELECT p.categoryId, {{agg}}(p.numInStock) AS agg FROM products AS p GROUP BY p.categoryId"
+                    """SELECT   "categoryId", {{agg}}(  "numInStock") AS agg FROM products      GROUP BY   "categoryId"""",
+                    """SELECT   "categoryId", {{agg}}(p."numInStock") AS agg FROM products AS p GROUP BY p."categoryId"""",
+                    """SELECT p."categoryId", {{agg}}(p."numInStock") AS agg FROM products AS p GROUP BY p."categoryId""""
                 ),
 
                 expectedResultForCount = """<<
@@ -680,9 +680,9 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
             createAggregateTestCasesFromSqlStrings(
                 groupName = "GROUP BY (1 column) and WHERE (#1)",
                 sqlStrings = listOf(
-                    "SELECT   supplierId, {{agg}}(  numInStock) AS agg FROM products      WHERE price >= 10 GROUP BY   supplierId",
-                    "SELECT   supplierId, {{agg}}(p.numInStock) AS agg FROM products AS p WHERE price >= 10 GROUP BY p.supplierId",
-                    "SELECT p.supplierId, {{agg}}(p.numInStock) AS agg FROM products AS p WHERE price >= 10 GROUP BY p.supplierId"
+                    """SELECT   "supplierId", {{agg}}(  "numInStock") AS agg FROM products      WHERE price >= 10 GROUP BY   "supplierId"""",
+                    """SELECT   "supplierId", {{agg}}(p."numInStock") AS agg FROM products AS p WHERE price >= 10 GROUP BY p."supplierId"""",
+                    """SELECT p."supplierId", {{agg}}(p."numInStock") AS agg FROM products AS p WHERE price >= 10 GROUP BY p."supplierId""""
                 ),
 
                 expectedResultForCount = """<<
@@ -709,9 +709,9 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
             createAggregateTestCasesFromSqlStrings(
                 groupName = "GROUP BY (1 column) and WHERE (#2)",
                 sqlStrings = listOf(
-                    "SELECT   categoryId, {{agg}}(  numInStock) AS agg FROM products      WHERE price >= 10 GROUP BY   categoryId",
-                    "SELECT   categoryId, {{agg}}(p.numInStock) AS agg FROM products AS p WHERE price >= 10 GROUP BY p.categoryId",
-                    "SELECT p.categoryId, {{agg}}(p.numInStock) AS agg FROM products AS p WHERE price >= 10 GROUP BY p.categoryId"
+                    """SELECT   "categoryId", {{agg}}(  "numInStock") AS agg FROM products      WHERE price >= 10 GROUP BY   "categoryId"""",
+                    """SELECT   "categoryId", {{agg}}(p."numInStock") AS agg FROM products AS p WHERE price >= 10 GROUP BY p."categoryId"""",
+                    """SELECT p."categoryId", {{agg}}(p."numInStock") AS agg FROM products AS p WHERE price >= 10 GROUP BY p."categoryId""""
                 ),
 
                 expectedResultForCount = """<<
@@ -738,9 +738,9 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
             createAggregateTestCasesFromSqlStrings(
                 groupName = "GROUP BY (2 columns)",
                 sqlStrings = listOf(
-                    "SELECT   supplierId,   categoryId, {{agg}}(  numInStock) AS agg FROM products      GROUP BY   supplierId,   categoryId",
-                    "SELECT   supplierId,   categoryId, {{agg}}(p.numInStock) AS agg FROM products AS p GROUP BY p.supplierId, p.categoryId",
-                    "SELECT p.supplierId, p.categoryId, {{agg}}(p.numInStock) AS agg FROM products   AS p GROUP BY p.supplierId, p.categoryId"
+                    """SELECT   "supplierId",   "categoryId", {{agg}}(  "numInStock") AS agg FROM products      GROUP BY   "supplierId",   "categoryId"""",
+                    """SELECT   "supplierId",   "categoryId", {{agg}}(p."numInStock") AS agg FROM products AS p GROUP BY p."supplierId", p."categoryId"""",
+                    """SELECT p."supplierId", p."categoryId", {{agg}}(p."numInStock") AS agg FROM products   AS p GROUP BY p."supplierId", p."categoryId""""
                 ),
 
                 expectedResultForCount = """<<
@@ -772,9 +772,9 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
             createAggregateTestCasesFromSqlStrings(
                 groupName = "GROUP BY (2 columns) with WHERE",
                 sqlStrings = listOf(
-                    "SELECT   supplierId,   categoryId, {{agg}}(  numInStock) AS agg FROM products      WHERE   price < 15 GROUP BY   supplierId,   categoryId",
-                    "SELECT   supplierId,   categoryId, {{agg}}(p.numInStock) AS agg FROM products AS p WHERE p.price < 15 GROUP BY p.supplierId, p.categoryId",
-                    "SELECT p.supplierId, p.categoryId, {{agg}}(p.numInStock) AS agg FROM products AS p WHERE p.price < 15 GROUP BY p.supplierId, p.categoryId"
+                    """SELECT   "supplierId",   "categoryId", {{agg}}(  "numInStock") AS agg FROM products      WHERE   price < 15 GROUP BY   "supplierId",   "categoryId"""",
+                    """SELECT   "supplierId",   "categoryId", {{agg}}(p."numInStock") AS agg FROM products AS p WHERE p.price < 15 GROUP BY p."supplierId", p."categoryId"""",
+                    """SELECT p."supplierId", p."categoryId", {{agg}}(p."numInStock") AS agg FROM products AS p WHERE p.price < 15 GROUP BY p."supplierId", p."categoryId""""
                 ),
                 expectedResultForCount = """<<
                  { 'supplierId': 10, 'categoryId': 20, 'agg': 2 },
@@ -818,22 +818,22 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
                 groupName = "null and missing aggregate arguments with GROUP BY",
                 sqlTemplates = listOf(
                     // Templates below which reference `price_missings` and `price_mixed` will only work with UndefinedVariableBehavior.MISSING
-                    SqlTemplate("SELECT  categoryId, COUNT(1) AS the_count, {{agg}}(  price_nulls)    AS the_agg FROM products_sparse AS p GROUP BY categoryId"),
+                    SqlTemplate("""SELECT  "categoryId", COUNT(1) AS the_count, {{agg}}(  price_nulls)    AS the_agg FROM products_sparse AS p GROUP BY "categoryId""""),
 
-                    SqlTemplate("SELECT  categoryId, COUNT(1) AS the_count, {{agg}}(  price_missings) AS the_agg FROM products_sparse AS p GROUP BY categoryId", CompOptions.onlyUndefinedVariableBehaviorMissing),
-                    SqlTemplate("SELECT  categoryId, COUNT(1) AS the_count, {{agg}}(  price_mixed)    AS the_agg FROM products_sparse AS p GROUP BY categoryId", CompOptions.onlyUndefinedVariableBehaviorMissing),
+                    SqlTemplate("""SELECT  "categoryId", COUNT(1) AS the_count, {{agg}}(  price_missings) AS the_agg FROM products_sparse AS p GROUP BY "categoryId"""", CompOptions.onlyUndefinedVariableBehaviorMissing),
+                    SqlTemplate("""SELECT  "categoryId", COUNT(1) AS the_count, {{agg}}(  price_mixed)    AS the_agg FROM products_sparse AS p GROUP BY "categoryId"""", CompOptions.onlyUndefinedVariableBehaviorMissing),
 
-                    SqlTemplate("SELECT  categoryId, COUNT(1) AS the_count, {{agg}}(p.price_nulls)    AS the_agg FROM products_sparse AS p GROUP BY categoryId"),
-                    SqlTemplate("SELECT  categoryId, COUNT(1) AS the_count, {{agg}}(p.price_missings) AS the_agg FROM products_sparse AS p GROUP BY categoryId", CompOptions.onlyUndefinedVariableBehaviorMissing),
-                    SqlTemplate("SELECT  categoryId, COUNT(1) AS the_count, {{agg}}(p.price_mixed)    AS the_agg FROM products_sparse AS p GROUP BY categoryId", CompOptions.onlyUndefinedVariableBehaviorMissing),
+                    SqlTemplate("""SELECT  "categoryId", COUNT(1) AS the_count, {{agg}}(p.price_nulls)    AS the_agg FROM products_sparse AS p GROUP BY "categoryId""""),
+                    SqlTemplate("""SELECT  "categoryId", COUNT(1) AS the_count, {{agg}}(p.price_missings) AS the_agg FROM products_sparse AS p GROUP BY "categoryId"""", CompOptions.onlyUndefinedVariableBehaviorMissing),
+                    SqlTemplate("""SELECT  "categoryId", COUNT(1) AS the_count, {{agg}}(p.price_mixed)    AS the_agg FROM products_sparse AS p GROUP BY "categoryId"""", CompOptions.onlyUndefinedVariableBehaviorMissing),
 
-                    SqlTemplate("SELECT p.categoryId, COUNT(1) AS the_count, {{agg}}(  price_nulls)    AS the_agg FROM products_sparse AS p GROUP BY p.categoryId"),
-                    SqlTemplate("SELECT p.categoryId, COUNT(1) AS the_count, {{agg}}(  price_missings) AS the_agg FROM products_sparse AS p GROUP BY p.categoryId", CompOptions.onlyUndefinedVariableBehaviorMissing),
-                    SqlTemplate("SELECT p.categoryId, COUNT(1) AS the_count, {{agg}}(  price_mixed)    AS the_agg FROM products_sparse AS p GROUP BY p.categoryId", CompOptions.onlyUndefinedVariableBehaviorMissing),
+                    SqlTemplate("""SELECT p."categoryId", COUNT(1) AS the_count, {{agg}}(  price_nulls)    AS the_agg FROM products_sparse AS p GROUP BY p."categoryId""""),
+                    SqlTemplate("""SELECT p."categoryId", COUNT(1) AS the_count, {{agg}}(  price_missings) AS the_agg FROM products_sparse AS p GROUP BY p."categoryId"""", CompOptions.onlyUndefinedVariableBehaviorMissing),
+                    SqlTemplate("""SELECT p."categoryId", COUNT(1) AS the_count, {{agg}}(  price_mixed)    AS the_agg FROM products_sparse AS p GROUP BY p."categoryId"""", CompOptions.onlyUndefinedVariableBehaviorMissing),
 
-                    SqlTemplate("SELECT p.categoryId, COUNT(1) AS the_count, {{agg}}(p.price_nulls)    AS the_agg FROM products_sparse AS p GROUP BY p.categoryId"),
-                    SqlTemplate("SELECT p.categoryId, COUNT(1) AS the_count, {{agg}}(p.price_missings) AS the_agg FROM products_sparse AS p GROUP BY p.categoryId", CompOptions.onlyUndefinedVariableBehaviorMissing),
-                    SqlTemplate("SELECT p.categoryId, COUNT(1) AS the_count, {{agg}}(p.price_mixed)    AS the_agg FROM products_sparse AS p GROUP BY p.categoryId", CompOptions.onlyUndefinedVariableBehaviorMissing)
+                    SqlTemplate("""SELECT p."categoryId", COUNT(1) AS the_count, {{agg}}(p.price_nulls)    AS the_agg FROM products_sparse AS p GROUP BY p."categoryId""""),
+                    SqlTemplate("""SELECT p."categoryId", COUNT(1) AS the_count, {{agg}}(p.price_missings) AS the_agg FROM products_sparse AS p GROUP BY p."categoryId"""", CompOptions.onlyUndefinedVariableBehaviorMissing),
+                    SqlTemplate("""SELECT p."categoryId", COUNT(1) AS the_count, {{agg}}(p.price_mixed)    AS the_agg FROM products_sparse AS p GROUP BY p."categoryId"""", CompOptions.onlyUndefinedVariableBehaviorMissing)
                 ),
                 expectedResultForCount = """<<
                 { 'categoryId': 20, 'the_count': 4, 'the_agg': 3 },
@@ -988,16 +988,16 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
         ),
         EvaluatorTestCase(
             groupName = "Aggregates with subquery containing another aggregate",
-            query = "SELECT COUNT(1) + CAST((SELECT SUM(numInStock) FROM products) AS LIST)[0]._1 as a_number FROM products",
+            query = """SELECT COUNT(1) + CAST((SELECT SUM("numInStock") FROM products) AS LIST)[0]._1 as a_number FROM products""",
             "<<{ 'a_number': 11116 }>>"
         ),
         EvaluatorTestCase(
             groupName = "GROUP BY with JOIN",
             query = """
-                SELECT supplierName, COUNT(*) as the_count
+                SELECT "supplierName", COUNT(*) as the_count
                 FROM suppliers AS s
-                    INNER JOIN products AS p ON s.supplierId = p.supplierId
-                GROUP BY supplierName
+                    INNER JOIN products AS p ON s."supplierId" = p."supplierId"
+                GROUP BY "supplierName"
             """,
             """<<
                 { 'supplierName': 'Umbrella', 'the_count': 3 },
@@ -1292,27 +1292,27 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
         createGroupByTestCases(
             """
             SELECT
-                a.categoryId,
+                a."categoryId",
                 (
                     SELECT a.name
                     FROM widgets_b AS a --`a` shadows `a` from outer query
                 ) AS from_widgets_b
             FROM widgets_a AS a
-            GROUP BY a.categoryId
+            GROUP BY a."categoryId"
             """,
             "<< { 'categoryId': 1, 'from_widgets_b': 'Thingy' }>>"
         ) +
             createGroupByTestCases(
                 """
             SELECT
-                a.categoryId,
+                a."categoryId",
                 (
                     SELECT a.name
                     FROM widgets_b AS a --`a` shadows `a` from outer query
                     GROUP BY a.name
                 ) AS from_widgets_b
             FROM widgets_a AS a
-            GROUP BY a.categoryId
+            GROUP BY a."categoryId"
             """,
                 "<< { 'categoryId': 1, 'from_widgets_b': 'Thingy' }>>"
             )
@@ -1327,7 +1327,7 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
             """
             SELECT dup
             FROM suppliers AS s
-            GROUP BY s.supplierId AS dup, s.supplierName as dup
+            GROUP BY s."supplierId" AS dup, s."supplierName" as dup
             """,
             "<< { 'dup': 10 }, { 'dup': 11 } >>"
         ) +
@@ -1335,7 +1335,7 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
                 """
             SELECT *
             FROM suppliers AS s
-            GROUP BY s.supplierId AS dup, s.supplierName as dup
+            GROUP BY s."supplierId" AS dup, s."supplierName" as dup
             """,
                 """<< { 'dup': 10, 'dup': 'Umbrella' }, { 'dup': 11, 'dup': 'Initech' } >>"""
             )

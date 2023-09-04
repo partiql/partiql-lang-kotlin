@@ -17,6 +17,7 @@ import com.amazon.ionelement.api.ionSymbol
 import com.amazon.ionelement.api.metaContainerOf
 import org.partiql.ast.AstNode
 import org.partiql.ast.DatetimeField
+import org.partiql.ast.Defnid
 import org.partiql.ast.Expr
 import org.partiql.ast.From
 import org.partiql.ast.GraphMatch
@@ -177,7 +178,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
     }
 
     override fun visitTableDefinitionColumn(node: TableDefinition.Column, ctx: Ctx) = translate(node) { metas ->
-        val name = defnid(node.name)
+        val name = node.name.toLegacyDefnid()
         val type = visitType(node.type, ctx)
         val constraints = node.constraints.translate<PartiqlAst.ColumnConstraint>(ctx)
         columnDeclaration(name, type, constraints, metas)
@@ -187,7 +188,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
         node: TableDefinition.Column.Constraint,
         ctx: Ctx,
     ) = translate(node) { metas ->
-        val name = node.name?.let { defnid(it) }
+        val name = node.name?.toLegacyDefnid()
         val def = when (node.body) {
             is TableDefinition.Column.Constraint.Body.Check -> {
                 throw IllegalArgumentException("PIG AST does not support CHECK (<expr>) constraint")
@@ -209,14 +210,14 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
 
     override fun visitIdentifierSymbol(node: Identifier.Symbol, ctx: Ctx) = translate(node) { metas ->
         val name = node.symbol
-        val case = node.caseSensitivity.toLegacyCaseSensitivity()
+        val case = node.caseSensitivity.toLegacyIdKind()
         // !! NOT AN EXPRESSION!!
         id(name, case, metas)
     }
 
     fun visitIdentifierSymbolAsExpr(node: Identifier.Symbol) = translate(node) { metas ->
         val name = node.symbol
-        val case = node.caseSensitivity.toLegacyCaseSensitivity()
+        val case = node.caseSensitivity.toLegacyIdKind()
         val scope = unqualified()
         // !! ID EXPRESSION!!
         vr(id(name, case), scope, metas)
@@ -244,7 +245,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
     override fun visitPathStepSymbol(node: Path.Step.Symbol, ctx: Ctx) = translate(node) { metas ->
         // val index = visitIdentifierSymbolAsExpr(node.symbol, ctx)
         val index = lit(ionString(node.symbol.symbol), metas)
-        val case = node.symbol.caseSensitivity.toLegacyCaseSensitivity()
+        val case = node.symbol.caseSensitivity.toLegacyIdKind()
         pathExpr(index, case, metas)
     }
 
@@ -283,7 +284,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
         }
         val v = node.identifier as Identifier.Symbol
         val name = v.symbol
-        val case = v.caseSensitivity.toLegacyCaseSensitivity()
+        val case = v.caseSensitivity.toLegacyIdKind()
         val qualifier = node.scope.toLegacyScope()
         vr(id(name, case), qualifier, metas)
     }
@@ -292,16 +293,21 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
         if (node.function is Identifier.Qualified) {
             error("Qualified identifiers are not allowed in legacy AST `call` function identifiers")
         }
-        val funcName = (node.function as Identifier.Symbol).symbol.lowercase()
+        // TODO Bad smell, indicating that the design of `identifier` in partiql_ast.ion might not be the best.
+        // That is, here the type of node.function is `identifier`,
+        // but the code claims, by some extra knowledge, that the type is `identifier.symbol`.
+        // It should be possible to have the more precise type here through the type system, avoiding the cast.
+        val funcSymb = node.function as Identifier.Symbol
+        val funcId = defnid(funcSymb.symbol.lowercase(), funcSymb.caseSensitivity.toLegacyIdKind())
         val args = node.args.translate<PartiqlAst.Expr>(ctx)
-        call(defnid(funcName), args, metas)
+        call(funcId, args, metas)
     }
 
     override fun visitExprAgg(node: Expr.Agg, ctx: Ctx) = translate(node) { metas ->
         val setq = node.setq?.toLegacySetQuantifier() ?: all()
         // Legacy AST translates COUNT(*) to COUNT(1)
         if (node.function is Identifier.Symbol && (node.function as Identifier.Symbol).symbol == "COUNT_STAR") {
-            val funId = defnid("count")
+            val funId = funDefnid("count")
             return callAgg(setq, funId, lit(ionInt(1)), metas)
         }
         // Default Case
@@ -312,9 +318,10 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
             error("Qualified identifiers are not allowed in legacy AST `call_agg` function identifiers")
         }
         // Legacy parser/ast always inserts ALL quantifier
-        val funcName = (node.function as Identifier.Symbol).symbol.lowercase()
+        val funcSymb = node.function as Identifier.Symbol
+        val funcId = defnid(funcSymb.symbol.lowercase(), funcSymb.caseSensitivity.toLegacyIdKind())
         val arg = visitExpr(node.args[0], ctx)
-        callAgg(setq, defnid(funcName), arg, metas)
+        callAgg(setq, funcId, arg, metas)
     }
 
     override fun visitExprUnary(node: Expr.Unary, ctx: Ctx) = translate(node) { metas ->
@@ -393,7 +400,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
 
     override fun visitExprPathStepSymbol(node: Expr.Path.Step.Symbol, ctx: Ctx) = translate(node) { metas ->
         val index = lit(ionString(node.symbol.symbol))
-        val case = node.symbol.caseSensitivity.toLegacyCaseSensitivity()
+        val case = node.symbol.caseSensitivity.toLegacyIdKind()
         pathExpr(index, case, metas)
     }
 
@@ -526,14 +533,14 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
         val start = visitOrNull<PartiqlAst.Expr>(node.start, ctx)
         val length = visitOrNull<PartiqlAst.Expr>(node.length, ctx)
         val operands = listOfNotNull(value, start, length)
-        call(defnid("substring"), operands, metas)
+        call(funDefnid("substring"), operands, metas)
     }
 
     override fun visitExprPosition(node: Expr.Position, ctx: Ctx) = translate(node) { metas ->
         val lhs = visitExpr(node.lhs, ctx)
         val rhs = visitExpr(node.rhs, ctx)
         val operands = listOf(lhs, rhs)
-        call(defnid("position"), operands, metas)
+        call(funDefnid("position"), operands, metas)
     }
 
     override fun visitExprTrim(node: Expr.Trim, ctx: Ctx) = translate(node) { metas ->
@@ -545,7 +552,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
         if (spec != null) operands.add(lit(ionSymbol(spec)))
         if (chars != null) operands.add(chars)
         operands.add(value)
-        call(defnid("trim"), operands, metas)
+        call(funDefnid("trim"), operands, metas)
     }
 
     override fun visitExprOverlay(node: Expr.Overlay, ctx: Ctx) = translate(node) { metas ->
@@ -554,14 +561,14 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
         val start = visitExpr(node.start, ctx)
         val length = visitOrNull<PartiqlAst.Expr>(node.length, ctx)
         val operands = listOfNotNull(value, overlay, start, length)
-        call(defnid("overlay"), operands, metas)
+        call(funDefnid("overlay"), operands, metas)
     }
 
     override fun visitExprExtract(node: Expr.Extract, ctx: Ctx) = translate(node) { metas ->
         val field = node.field.toLegacyDatetimePart()
         val source = visitExpr(node.source, ctx)
         val operands = listOf(field, source)
-        call(defnid("extract"), operands, metas)
+        call(funDefnid("extract"), operands, metas)
     }
 
     override fun visitExprCast(node: Expr.Cast, ctx: Ctx) = translate(node) { metas ->
@@ -587,7 +594,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
         val lhs = visitExpr(node.lhs, ctx)
         val rhs = visitExpr(node.rhs, ctx)
         val operands = listOf(field, lhs, rhs)
-        call(defnid("date_add"), operands, metas)
+        call(funDefnid("date_add"), operands, metas)
     }
 
     override fun visitExprDateDiff(node: Expr.DateDiff, ctx: Ctx) = translate(node) { metas ->
@@ -595,7 +602,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
         val lhs = visitExpr(node.lhs, ctx)
         val rhs = visitExpr(node.rhs, ctx)
         val operands = listOf(field, lhs, rhs)
-        call(defnid("date_diff"), operands, metas)
+        call(funDefnid("date_diff"), operands, metas)
     }
 
     override fun visitExprBagOp(node: Expr.BagOp, ctx: Ctx) = translate(node) { metas ->
@@ -628,7 +635,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
         val funcName = node.function.name.lowercase()
         val over = visitExprWindowOver(node.over, ctx)
         val args = listOfNotNull(node.expression, node.offset, node.default).translate<PartiqlAst.Expr>(ctx)
-        callWindow(defnid(funcName), over, args, metas)
+        callWindow(funDefnid(funcName), over, args, metas)
     }
 
     override fun visitExprWindowOver(node: Expr.Window.Over, ctx: Ctx) = translate(node) { metas ->
@@ -701,7 +708,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
     override fun visitSelectProjectItemExpression(node: Select.Project.Item.Expression, ctx: Ctx) =
         translate(node) { metas ->
             val expr = visitExpr(node.expr, ctx)
-            val alias = node.asAlias?.let { defnid(it.symbol) }
+            val alias = node.asAlias?.let { it.toLegacyDefnid() }
             projectExpr(expr, alias, metas)
         }
 
@@ -719,9 +726,9 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
     override fun visitFrom(node: From, ctx: Ctx) = super.visitFrom(node, ctx) as PartiqlAst.FromSource
     override fun visitFromValue(node: From.Value, ctx: Ctx) = translate(node) { metas ->
         val expr = visitExpr(node.expr, ctx)
-        val asAlias = node.asAlias?.let { defnid(it.symbol) }
-        val atAlias = node.atAlias?.let { defnid(it.symbol) }
-        val byAlias = node.byAlias?.let { defnid(it.symbol) }
+        val asAlias = node.asAlias?.toLegacyDefnid()
+        val atAlias = node.atAlias?.toLegacyDefnid()
+        val byAlias = node.byAlias?.toLegacyDefnid()
         when (node.type) {
             From.Value.Type.SCAN -> scan(expr, asAlias, atAlias, byAlias, metas)
             From.Value.Type.UNPIVOT -> unpivot(expr, asAlias, atAlias, byAlias, metas)
@@ -756,7 +763,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
 
     override fun visitLetBinding(node: Let.Binding, ctx: Ctx) = translate(node) { metas ->
         val expr = visitExpr(node.expr, ctx)
-        val name = defnid(node.asAlias.symbol)
+        val name = node.asAlias.toLegacyDefnid()
         letBinding(expr, name, metas)
     }
 
@@ -766,13 +773,13 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
             GroupBy.Strategy.PARTIAL -> groupPartial()
         }
         val keyList = groupKeyList(node.keys.translate<PartiqlAst.GroupKey>(ctx))
-        val groupAsAlias = node.asAlias?.let { defnid(it.symbol) }
+        val groupAsAlias = node.asAlias?.toLegacyDefnid()
         groupBy(strategy, keyList, groupAsAlias, metas)
     }
 
     override fun visitGroupByKey(node: GroupBy.Key, ctx: Ctx) = translate(node) { metas ->
         val expr = visitExpr(node.expr, ctx)
-        val asAlias = node.asAlias?.let { defnid(it.symbol) }
+        val asAlias = node.asAlias?.toLegacyDefnid()
         groupKey(expr, asAlias, metas)
     }
 
@@ -819,7 +826,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
             null -> null
         }
         val prefilter = node.prefilter?.let { visitExpr(it, ctx) }
-        val variable = node.variable?.let { defnid(it) }
+        val variable = node.variable?.toLegacyDefnid()
         val quantifier = node.quantifier?.let { visitGraphMatchQuantifier(it, ctx) }
         val parts = node.parts.translate<PartiqlAst.GraphMatchPatternPart>(ctx)
         graphMatchPattern(restrictor, prefilter, variable, quantifier, parts, metas)
@@ -831,7 +838,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
     override fun visitGraphMatchPatternPartNode(node: GraphMatch.Pattern.Part.Node, ctx: Ctx) =
         translate(node) { metas ->
             val prefilter = node.prefilter?.let { visitExpr(it, ctx) }
-            val variable = node.variable?.let { defnid(it) }
+            val variable = node.variable?.toLegacyDefnid()
             val label = node.label?.let { visitGraphMatchLabel(it, ctx) }
             node(prefilter, variable, label, metas)
         }
@@ -849,7 +856,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
             }
             val quantifier = node.quantifier?.let { visitGraphMatchQuantifier(it, ctx) }
             val prefilter = node.prefilter?.let { visitExpr(it, ctx) }
-            val variable = node.variable?.let { defnid(it) }
+            val variable = node.variable?.toLegacyDefnid()
             val label = node.label?.let { visitGraphMatchLabel(it, ctx) }
             edge(direction, quantifier, prefilter, variable, label, metas)
         }
@@ -908,7 +915,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
 
     override fun visitGraphMatchLabelName(node: GraphMatch.Label.Name, ctx: Ctx) =
         translate(node) { metas ->
-            graphLabelName(defnid(node.name), metas)
+            graphLabelName(node.name.toLegacyDefnid(), metas)
         }
 
     override fun visitGraphMatchLabelWildcard(node: GraphMatch.Label.Wildcard, ctx: Ctx) =
@@ -945,7 +952,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
 
     override fun visitStatementDMLInsert(node: Statement.DML.Insert, ctx: Ctx) = translate(node) { metas ->
         val target = visitIdentifier(node.target, ctx)
-        val asAlias = node.asAlias?.let { defnid(it.symbol) }
+        val asAlias = node.asAlias?.toLegacyDefnid()
         val values = visitExpr(node.values, ctx)
         val conflictAction = node.onConflict?.let { visitOnConflictAction(it.action, ctx) }
         val op = insert(target, asAlias, values, conflictAction)
@@ -969,7 +976,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
 
     override fun visitStatementDMLUpsert(node: Statement.DML.Upsert, ctx: Ctx) = translate(node) { metas ->
         val target = visitIdentifier(node.target, ctx)
-        val asAlias = node.asAlias?.let { defnid(it.symbol) }
+        val asAlias = node.asAlias?.toLegacyDefnid()
         val values = visitExpr(node.values, ctx)
         val conflictAction = doUpdate(excluded())
         // UPSERT overloads legacy INSERT
@@ -979,7 +986,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
 
     override fun visitStatementDMLReplace(node: Statement.DML.Replace, ctx: Ctx) = translate(node) { metas ->
         val target = visitIdentifier(node.target, ctx)
-        val asAlias = node.asAlias?.let { defnid(it.symbol) }
+        val asAlias = node.asAlias?.toLegacyDefnid()
         val values = visitExpr(node.values, ctx)
         val conflictAction = doReplace(excluded())
         // REPLACE overloads legacy INSERT
@@ -1025,9 +1032,9 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
 
     override fun visitStatementDMLDeleteTarget(node: Statement.DML.Delete.Target, ctx: Ctx) = translate(node) { metas ->
         val path = visitPathUnpack(node.path, ctx)
-        val asAlias = node.asAlias?.let { defnid(it.symbol) }
-        val atAlias = node.atAlias?.let { defnid(it.symbol) }
-        val byAlias = node.byAlias?.let { defnid(it.symbol) }
+        val asAlias = node.asAlias?.toLegacyDefnid()
+        val atAlias = node.atAlias?.toLegacyDefnid()
+        val byAlias = node.byAlias?.toLegacyDefnid()
         scan(path, asAlias, atAlias, byAlias, metas)
     }
 
@@ -1075,7 +1082,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
         ctx: Ctx,
     ) = translate(node) { metas ->
         val target = visitIdentifier(node.target, ctx)
-        val asAlias = node.asAlias?.let { defnid(it.symbol) }
+        val asAlias = node.asAlias?.toLegacyDefnid()
         val values = visitExpr(node.values, ctx)
         val conflictAction = node.onConflict?.let { visitOnConflictAction(it.action, ctx) }
         dmlOpList(insert(target, asAlias, values, conflictAction, metas))
@@ -1306,7 +1313,11 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
     override fun visitTypeAny(node: Type.Any, ctx: Ctx) = translate(node) { metas -> anyType(metas) }
 
     override fun visitTypeCustom(node: Type.Custom, ctx: Ctx) =
-        translate(node) { metas -> customType(defnid(node.name.lowercase()), metas) }
+        // wVG-TODO? The prior implementation did lowercase() here. Presumably because no other "instruction" was available,
+        //  but now we have Defnid.kind, which carries through as the "instruction".
+        //
+        // translate(node) { metas -> customType(defnid(node.name.lowercase()), metas) }
+        translate(node) { metas -> customType(node.name.toLegacyDefnid(), metas) }
 
     /**
      * HELPERS
@@ -1318,7 +1329,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
     private inline fun <reified T : PartiqlAst.PartiqlAstNode> visitOrNull(node: AstNode?, ctx: Ctx): T? =
         node?.let { visit(it, ctx) as T }
 
-    private fun Identifier.CaseSensitivity.toLegacyCaseSensitivity() = when (this) {
+    private fun Identifier.CaseSensitivity.toLegacyIdKind() = when (this) {
         Identifier.CaseSensitivity.SENSITIVE -> PartiqlAst.IdKind.Delimited()
         Identifier.CaseSensitivity.INSENSITIVE -> PartiqlAst.IdKind.Regular()
     }
@@ -1331,6 +1342,26 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
     private fun SetQuantifier.toLegacySetQuantifier() = when (this) {
         SetQuantifier.ALL -> PartiqlAst.SetQuantifier.All()
         SetQuantifier.DISTINCT -> PartiqlAst.SetQuantifier.Distinct()
+    }
+
+    /** One place to create function identifiers, encapsulating the decision what
+     *  identifier kind they have. */
+    private fun funDefnid(funName: String): PartiqlAst.Defnid = PartiqlAst.build {
+        defnid(funName, regular())
+    }
+
+    private fun Identifier.Symbol.toLegacyDefnid(): PartiqlAst.Defnid = PartiqlAst.build {
+        defnid(this@toLegacyDefnid.symbol, this@toLegacyDefnid.caseSensitivity.toLegacyIdKind())
+    }
+
+    private fun Defnid.Kind.toLegacyIdKind(): PartiqlAst.IdKind = PartiqlAst.build {
+        when (this@toLegacyIdKind) {
+            Defnid.Kind.REGULAR -> regular()
+            Defnid.Kind.DELIMITED -> delimited()
+        }
+    }
+    private fun Defnid.toLegacyDefnid(): PartiqlAst.Defnid = PartiqlAst.build {
+        defnid(this@toLegacyDefnid.symbol, this@toLegacyDefnid.kind.toLegacyIdKind())
     }
 
     private fun DatetimeField.toLegacyDatetimePart(): PartiqlAst.Expr.Lit {
