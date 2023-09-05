@@ -81,6 +81,9 @@ Thank you to all who have contributed!
   and its internal structure has changed: instead of fields `name` of type `SymbolPrimitive` and 
   `case` of type `CaseSensitivity`, it now contains a single field `id` of type `Id`, which carries 
   the same information. `Id` is the new name for the node previously named `Identifier`. 
+- **Breaking** The AST node that indicates the kind of identifiers got renamed from `CaseSensitivity` to `IdKind`, 
+  alongside with its subclasses, which got renamed from `CaseSensitive` to `Delimited` and 
+  from `CaseInsensitive` to `Regular`. 
 
 ### Deprecated
 
