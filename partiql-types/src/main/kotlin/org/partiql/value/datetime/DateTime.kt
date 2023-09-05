@@ -117,7 +117,7 @@ public sealed interface Date : DateTime, Comparable<Date> {
      * Returns a [Date] value with the specified number of months added.
      * [years] can be negative.
      */
-    public fun plusYear(years: Long): Date
+    public fun plusYears(years: Long): Date
 
     /**
      * Comparison method for [Date] value.
@@ -253,7 +253,7 @@ public sealed interface Timestamp : DateTime, Comparable<Timestamp> {
      * Returns a [Timestamp] value with the specified number of years added.
      * [years] can be negative.
      */
-    public fun plusYear(years: Long): Timestamp
+    public fun plusYears(years: Long): Timestamp
 
     /**
      * Returns a [Timestamp] value with the specified number of years added.
@@ -470,7 +470,7 @@ public abstract class TimestampWithTimeZone : Timestamp {
         epochSecond.movePointRight(3)
     }
 
-    public abstract override fun plusYear(years: Long): TimestampWithTimeZone
+    public abstract override fun plusYears(years: Long): TimestampWithTimeZone
     public abstract override fun plusMonths(months: Long): TimestampWithTimeZone
     public abstract override fun plusDays(days: Long): TimestampWithTimeZone
     public abstract override fun plusHours(hours: Long): TimestampWithTimeZone
@@ -521,7 +521,7 @@ public abstract class TimestampWithTimeZone : Timestamp {
  */
 public abstract class TimestampWithoutTimeZone : Timestamp {
     public override val timeZone: TimeZone? = null
-    public abstract override fun plusYear(years: Long): TimestampWithoutTimeZone
+    public abstract override fun plusYears(years: Long): TimestampWithoutTimeZone
     public abstract override fun plusMonths(months: Long): TimestampWithoutTimeZone
     public abstract override fun plusDays(days: Long): TimestampWithoutTimeZone
     public abstract override fun plusHours(hours: Long): TimestampWithoutTimeZone
