@@ -410,7 +410,7 @@ internal class EvaluatingCompiler(
         return when (expr) {
             is PartiqlAst.Expr.Lit -> compileLit(expr, metas)
             is PartiqlAst.Expr.Missing -> compileMissing(metas)
-            is PartiqlAst.Expr.Vr -> compileId(expr, metas)
+            is PartiqlAst.Expr.Vr -> compileVr(expr, metas)
             is PartiqlAst.Expr.SimpleCase -> compileSimpleCase(expr, metas)
             is PartiqlAst.Expr.SearchedCase -> compileSearchedCase(expr, metas)
             is PartiqlAst.Expr.Path -> compilePath(expr, metas)
@@ -1098,7 +1098,7 @@ internal class EvaluatingCompiler(
     private fun compileMissing(metas: MetaContainer): ThunkEnv =
         thunkFactory.thunkEnv(metas) { ExprValue.missingValue }
 
-    private fun compileId(expr: PartiqlAst.Expr.Vr, metas: MetaContainer): ThunkEnv {
+    private fun compileVr(expr: PartiqlAst.Expr.Vr, metas: MetaContainer): ThunkEnv {
         val uniqueNameMeta = metas[UniqueNameMeta.TAG] as? UniqueNameMeta
         val fromSourceNames = currentCompilationContext.fromSourceNames
 
