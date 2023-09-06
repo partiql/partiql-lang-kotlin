@@ -372,7 +372,15 @@ public class TimestampType internal constructor(internal val timestampType: Part
     public val precision: Int? = timestampType.precision
     @PartiQLTimestampExperimental
     public val withTimeZone: Boolean = timestampType.withTimeZone
-    public constructor(metas: Map<String, Any> = mapOf()) : this(PartiQLTimestampType(metas = metas))
+
+    // Preserve the original semantics. An arbitrary timestamp type without time zone
+    public constructor(metas: Map<String, Any> = mapOf()) : this(PartiQLTimestampType(null, true, metas))
+
+    /**
+     * @param precision specifies the number of digits in the fractional seconds. If omitted, the default value is 6.
+     * @param withTimeZone If true, then the underlying data must be associated with either unknown timezone(-00:00) or an UTC offset.
+     * @param metas Metadata associated with the timestamp type.
+     */
     @PartiQLTimestampExperimental
     public constructor(
         precision: Int? = 6,
@@ -396,16 +404,20 @@ public class TimestampType internal constructor(internal val timestampType: Part
     public fun copy(precision: Int? = this.precision, withTimeZone: Boolean = this.withTimeZone, metas: Map<String, Any>): TimestampType =
         TimestampType(PartiQLTimestampType(precision, withTimeZone, metas))
 
-    // not propagate the opt-in requirement for to string method.
+    // not propagate the opt-in requirement for copy method.
     @OptIn(PartiQLTimestampExperimental::class)
     public fun copy(metas: Map<String, Any>): TimestampType =
         TimestampType(PartiQLTimestampType(this.precision, this.withTimeZone, metas))
 
-    // not propagate the opt-in requirement for copy method.
-    @OptIn(PartiQLTimestampExperimental::class)
-    override fun toString(): String = when (withTimeZone) {
-        true -> "timestamp with time zone"
-        false -> "timestamp"
+    // This function is preserved to avoid behavior change.
+    // The legacy timestamp type is actually an arbitrary precision timestamp with time zone
+    // To string should print something like "timestamp(..) with time zone". which is a breaking change.
+    override fun toString(): String = "timestamp"
+
+    @PartiQLTimestampExperimental
+    public fun toStringExperimental(): String = when (withTimeZone) {
+        true -> precision?.let { "timestamp($it) with time zone" } ?: TODO("Syntax for arbitrary timestamp is not yet supported")
+        false -> precision?.let { "timestamp($it)" } ?: TODO("Syntax for arbitrary timestamp is not yet supported")
     }
 }
 
