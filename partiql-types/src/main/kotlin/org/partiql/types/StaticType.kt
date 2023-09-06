@@ -4,6 +4,7 @@
 
 package org.partiql.types
 
+import org.partiql.value.PartiQLTimestampExperimental
 import java.math.BigDecimal
 import java.math.RoundingMode
 
@@ -48,7 +49,9 @@ public sealed class StaticType {
         @JvmField public val NUMERIC: StaticType = unionOf(INT2, INT4, INT8, INT, FLOAT, DECIMAL)
         @JvmField public val DATE: DateType = DateType()
         @JvmField public val TIME: TimeType = TimeType()
-        @JvmField public val TIMESTAMP: TimestampType = TimestampType()
+        // This used to refer to timestamp with arbitrary precision, with time zone (ion timestamp always has timezone)
+        @OptIn(PartiQLTimestampExperimental::class)
+        @JvmField public val TIMESTAMP: TimestampType = TimestampType(null, true)
         @JvmField public val SYMBOL: SymbolType = SymbolType()
         @JvmField public val STRING: StringType = StringType()
         @JvmField public val TEXT: StaticType = unionOf(SYMBOL, STRING)
@@ -61,6 +64,7 @@ public sealed class StaticType {
         @JvmField public val GRAPH: GraphType = GraphType()
 
         /** All the StaticTypes, except for `ANY`. */
+        @OptIn(PartiQLTimestampExperimental::class)
         @JvmStatic
         public val ALL_TYPES: List<SingleType> = listOf(
             MISSING,
@@ -360,12 +364,57 @@ public data class TimeType(
     }
 }
 
-public data class TimestampType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
-    override val allTypes: List<StaticType>
-        get() = listOf(this)
+public class TimestampType internal constructor(internal val timestampType: PartiQLTimestampType = PartiQLTimestampType()) : SingleType() {
 
-    override fun toString(): String = "timestamp"
+    override val metas: Map<String, Any> = timestampType.metas
+    override val allTypes: List<StaticType> = listOf(this)
+    @PartiQLTimestampExperimental
+    public val precision: Int? = timestampType.precision
+    @PartiQLTimestampExperimental
+    public val withTimeZone: Boolean = timestampType.withTimeZone
+    public constructor(metas: Map<String, Any> = mapOf()) : this(PartiQLTimestampType(metas = metas))
+    @PartiQLTimestampExperimental
+    public constructor(
+        precision: Int? = 6,
+        withTimeZone: Boolean = false,
+        metas: Map<String, Any> = mapOf()
+    ) : this(PartiQLTimestampType(precision, withTimeZone, metas))
+
+    override fun hashCode(): Int {
+        return timestampType.hashCode()
+    }
+
+    override fun equals(other: Any?): Boolean {
+        return if (other !is TimestampType) {
+            false
+        } else {
+            this.timestampType == other.timestampType
+        }
+    }
+
+    @PartiQLTimestampExperimental
+    public fun copy(precision: Int? = this.precision, withTimeZone: Boolean = this.withTimeZone, metas: Map<String, Any>): TimestampType =
+        TimestampType(PartiQLTimestampType(precision, withTimeZone, metas))
+
+    // not propagate the opt-in requirement for to string method.
+    @OptIn(PartiQLTimestampExperimental::class)
+    public fun copy(metas: Map<String, Any>): TimestampType =
+        TimestampType(PartiQLTimestampType(this.precision, this.withTimeZone, metas))
+
+    // not propagate the opt-in requirement for copy method.
+    @OptIn(PartiQLTimestampExperimental::class)
+    override fun toString(): String = when (withTimeZone) {
+        true -> "timestamp with time zone"
+        false -> "timestamp"
+    }
 }
+
+// TODO: Delete this workaround when https://github.com/partiql/partiql-docs/blob/datetime/RFCs/0047-datetime-data-type.md is approved.
+internal data class PartiQLTimestampType(
+    val precision: Int? = 6,
+    val withTimeZone: Boolean = false,
+    val metas: Map<String, Any> = mapOf()
+)
 
 public data class SymbolType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
     override val allTypes: List<StaticType>

@@ -19,3 +19,12 @@ package org.partiql.value
     level = RequiresOptIn.Level.ERROR,
 )
 public annotation class PartiQLValueExperimental
+
+@RequiresOptIn(
+    message = """
+        PartiQL Timestamp Type requires explicit opt-in, 
+        See https://github.com/partiql/partiql-docs/blob/datetime/RFCs/0047-datetime-data-type.md
+    """,
+    level = RequiresOptIn.Level.ERROR,
+)
+public annotation class PartiQLTimestampExperimental
