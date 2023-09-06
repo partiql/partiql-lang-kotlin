@@ -20,7 +20,7 @@ object TrimLead : PartiQLFunction {
         name = "trim_lead",
         returns = PartiQLValueType.STRING,
         parameters = listOf(
-            FunctionParameter.ValueParameter(name = "str", type = PartiQLValueType.STRING)
+            FunctionParameter(name = "str", type = PartiQLValueType.STRING)
         ),
         isDeterministic = true,
         description = "Trims leading whitespace of a [str]."
