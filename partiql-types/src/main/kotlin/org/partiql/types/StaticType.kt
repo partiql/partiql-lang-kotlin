@@ -373,11 +373,13 @@ public class TimestampType internal constructor(internal val timestampType: Part
     @PartiQLTimestampExperimental
     public val withTimeZone: Boolean = timestampType.withTimeZone
 
-    // Preserve the original semantics. An arbitrary timestamp type without time zone
+    // Preserve the original semantics (ion timestamp). An arbitrary timestamp type with time zone.
     public constructor(metas: Map<String, Any> = mapOf()) : this(PartiQLTimestampType(null, true, metas))
 
     /**
-     * @param precision specifies the number of digits in the fractional seconds. If omitted, the default value is 6.
+     * @param precision specifies the number of digits in the fractional seconds.
+     *  If omitted, the default value is 6 as specified in the SQL spec.
+     *  If null, then the timestamp can have arbitrary constraint.
      * @param withTimeZone If true, then the underlying data must be associated with either unknown timezone(-00:00) or an UTC offset.
      * @param metas Metadata associated with the timestamp type.
      */
