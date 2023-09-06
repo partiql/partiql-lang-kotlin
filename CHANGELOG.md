@@ -84,6 +84,7 @@ classes in `:partiql-ast` and `:partiql-plan`.
 - **Breaking** the `sourceLocation` field of `org.partiql.errors.Problem` was changed from `org.partiql.lang.ast.SoureceLocationMeta` to `org.partiql.errors.ProblemLocation`.
 - Removed `Nullable...Value` implementations of PartiQLValue and made the standard implementations nullable.
 - Using PartiQLValueType requires optin; this was a miss from an earlier commit.
+- Modified timestamp static type to model precision and time zone. 
 
 ### Deprecated
 - **Breaking**: Deprecates the `Arguments`, `RequiredArgs`, `RequiredWithOptional`, and `RequiredWithVariadic` classes, 
