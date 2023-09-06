@@ -86,6 +86,7 @@ classes in `:partiql-ast` and `:partiql-plan`.
 - Introduces `isNullCall` and `isNullable` properties to FunctionSignature.
 - Removed `Nullable...Value` implementations of PartiQLValue and made the standard implementations nullable.
 - Using PartiQLValueType requires optin; this was a miss from an earlier commit.
+- Modified timestamp static type to model precision and time zone. 
 
 ### Deprecated
 - **Breaking**: Deprecates the `Arguments`, `RequiredArgs`, `RequiredWithOptional`, and `RequiredWithVariadic` classes, 
