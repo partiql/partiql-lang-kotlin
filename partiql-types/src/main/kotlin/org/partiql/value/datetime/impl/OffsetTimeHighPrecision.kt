@@ -35,8 +35,6 @@ internal class OffsetTimeHighPrecision private constructor(
             val localTime = LocalTimeHighPrecision.forSeconds(elapsedSeconds)
             return OffsetTimeHighPrecision(localTime, timeZone)
         }
-
-        private const val MAX_ELAPSED_SECOND = SECONDS_IN_DAY
     }
 
     override val hour: Int = localTime.hour
@@ -99,7 +97,7 @@ internal class OffsetTimeHighPrecision private constructor(
         }
 
     private fun normalizeElapsedTime(timePassed: BigDecimal): BigDecimal {
-        val maxBD = BigDecimal.valueOf(MAX_ELAPSED_SECOND)
+        val maxBD = BigDecimal.valueOf(SECONDS_IN_DAY)
         val mod = timePassed % maxBD
         return if (mod < BigDecimal.ZERO) maxBD + mod else mod
     }
