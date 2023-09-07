@@ -29,6 +29,25 @@ Thank you to all who have contributed!
 ## [Unreleased]
 
 ### Added
+=======
+
+### Changed
+
+### Deprecated
+
+### Fixed
+
+### Removed
+
+### Security
+
+### Contributors
+Thank you to all who have contributed!
+- @<your-username>
+
+## [0.13.0] - 2023-09-07
+
+### Added
 - Adds `org.partiql.value` (experimental) package for reading/writing PartiQL values
 - Adds function overloading to the `CompilerPipeline` and experimental `PartiQLCompilerPipeline`.
 - Adds new method `getFunctions()` to `org.partiql.spi.Plugin`.
