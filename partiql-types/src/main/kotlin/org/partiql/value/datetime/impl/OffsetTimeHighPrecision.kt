@@ -2,7 +2,9 @@ package org.partiql.value.datetime.impl
 
 import org.partiql.value.datetime.Date
 import org.partiql.value.datetime.DateTimeUtil
+import org.partiql.value.datetime.DateTimeUtil.SECONDS_IN_DAY
 import org.partiql.value.datetime.DateTimeUtil.SECONDS_IN_HOUR
+import org.partiql.value.datetime.DateTimeUtil.SECONDS_IN_MINUTE
 import org.partiql.value.datetime.DateTimeUtil.toBigDecimal
 import org.partiql.value.datetime.TimeWithTimeZone
 import org.partiql.value.datetime.TimeZone
@@ -34,7 +36,7 @@ internal class OffsetTimeHighPrecision private constructor(
             return OffsetTimeHighPrecision(localTime, timeZone)
         }
 
-        private const val MAX_ELAPSED_SECOND = 24 * SECONDS_IN_HOUR + 60 + SECONDS_IN_HOUR + 60
+        private const val MAX_ELAPSED_SECOND = SECONDS_IN_DAY
     }
 
     override val hour: Int = localTime.hour
