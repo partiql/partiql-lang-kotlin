@@ -131,7 +131,7 @@ class QuotedIdTests : EvaluatorTestBase() {
 
     @Test
     @Ignore
-    // wVG-TODO Remove or adjust to reflect the new reality? (Make it a failing test?)
+    // SQL-ids-TODO Remove or adjust to reflect the new reality? (Make it a failing test?)
     // Upon transition to SQL-conformant identifiers, the FROM aliases Abc, aBc, abC are the same identifier.
     fun quotedTableAliasesReferencesAreCaseSensitive() =
         runEvaluatorTestCase(

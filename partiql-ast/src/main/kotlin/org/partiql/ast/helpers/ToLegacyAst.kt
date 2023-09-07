@@ -1313,10 +1313,8 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
     override fun visitTypeAny(node: Type.Any, ctx: Ctx) = translate(node) { metas -> anyType(metas) }
 
     override fun visitTypeCustom(node: Type.Custom, ctx: Ctx) =
-        // wVG-TODO? The prior implementation did lowercase() here. Presumably because no other "instruction" was available,
+        // SQL-ids The prior implementation did lowercase() here. Presumably because no other "instruction" was available,
         //  but now we have Defnid.kind, which carries through as the "instruction".
-        //
-        // translate(node) { metas -> customType(defnid(node.name.lowercase()), metas) }
         translate(node) { metas -> customType(node.name.toLegacyDefnid(), metas) }
 
     /**

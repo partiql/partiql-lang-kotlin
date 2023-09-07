@@ -414,7 +414,7 @@ class ToLegacyAstTest {
             // Other (??)
             expect("(integer4_type)") { typeInt4() },
             expect("(integer8_type)") { typeInt8() },
-            // wVG REGULAR choice here is by fiat
+            // SQL-ids The choice of REGULAR kind here arbitrary.
             expect("(custom_type (defnid 'dog' (regular)))") { typeCustom(defnid("dog", Defnid.Kind.REGULAR)) }
             // LEGACY AST does not have TIMESTAMP or INTERVAL
             // LEGACY AST does not have parameterized blob/clob

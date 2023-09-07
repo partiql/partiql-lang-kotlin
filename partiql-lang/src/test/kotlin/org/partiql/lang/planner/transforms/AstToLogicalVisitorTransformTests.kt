@@ -134,7 +134,7 @@ class AstToLogicalVisitorTransformTests {
 
     class ArgumentsForToLogicalSfwTests : ArgumentsProviderBase() {
 
-        // wVG-TODO Remove, as never used? Also simpleHaving helper later.
+        // TODO Remove, as never used? Also simpleHaving helper later.
         private fun PartiqlAst.Builder.simpleGroup(
             projections: List<PartiqlAst.ProjectItem>,
             keys: List<PartiqlAst.GroupKey>,
