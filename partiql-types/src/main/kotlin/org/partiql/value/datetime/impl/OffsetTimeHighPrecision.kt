@@ -1,10 +1,24 @@
+/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
 package org.partiql.value.datetime.impl
 
 import org.partiql.value.datetime.Date
 import org.partiql.value.datetime.DateTimeUtil
 import org.partiql.value.datetime.DateTimeUtil.SECONDS_IN_DAY
 import org.partiql.value.datetime.DateTimeUtil.SECONDS_IN_HOUR
-import org.partiql.value.datetime.DateTimeUtil.SECONDS_IN_MINUTE
 import org.partiql.value.datetime.DateTimeUtil.toBigDecimal
 import org.partiql.value.datetime.TimeWithTimeZone
 import org.partiql.value.datetime.TimeZone
@@ -98,7 +112,7 @@ internal class OffsetTimeHighPrecision private constructor(
 
     private fun normalizeElapsedTime(timePassed: BigDecimal): BigDecimal {
         val maxBD = BigDecimal.valueOf(SECONDS_IN_DAY)
-        val mod = timePassed % maxBD
-        return if (mod < BigDecimal.ZERO) maxBD + mod else mod
+        val remainder = timePassed % maxBD // % (remainder) in java may return negative value.
+        return if (remainder < BigDecimal.ZERO) maxBD + remainder else remainder
     }
 }
