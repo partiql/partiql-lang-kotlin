@@ -91,6 +91,12 @@ fun PartiqlAst.Id.toBindingName(): BindingName =
 fun PartiqlLogical.Id.toBindingName(): BindingName =
     BindingName(this.symb.text, this.kind.toBindingCase())
 
+fun PartiqlLogical.Id.toIdent(): Ident =
+    when (this.kind) {
+        is PartiqlLogical.IdKind.Regular -> Ident.createFromRegular(this.symb.text)
+        is PartiqlLogical.IdKind.Delimited -> Ident.createFromDelimited(this.symb.text)
+    }
+
 fun PartiqlAst.Defnid.toIdent(): Ident =
     when (this.kind) {
         is PartiqlAst.IdKind.Regular -> Ident.createFromRegular(this.symb.text)

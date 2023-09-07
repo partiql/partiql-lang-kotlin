@@ -13,6 +13,7 @@ import org.partiql.lang.domains.PartiqlAstToPartiqlLogicalVisitorTransform
 import org.partiql.lang.domains.PartiqlLogical
 import org.partiql.lang.domains.metaContainerOf
 import org.partiql.lang.domains.string
+import org.partiql.lang.domains.toIdent
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.builtins.CollectionAggregationFunction
 import org.partiql.lang.eval.builtins.ExprFunctionCurrentUser
@@ -160,7 +161,7 @@ internal class AstToLogicalVisitorTransform(
         }
 
         return transformedNode to PartiqlLogical.build {
-            val groupAsFunction = node.group?.groupAsAlias?.let { convertGroupAsAlias(it.symb, node.from) }
+            val groupAsFunction = node.group?.groupAsAlias?.let { convertGroupAsAlias(it, node.from) }
             val aggFunctions = aggregationReplacer.getAggregations().map { (name, callAgg) -> convertCallAgg(callAgg, name) }
             aggregate(
                 source = source,
@@ -178,7 +179,8 @@ internal class AstToLogicalVisitorTransform(
             groupKey(
                 expr = thiz.transformExpr(node.expr),
                 asVar = varDecl(
-                    name = node.asAlias?.string() ?: errAstNotNormalized(
+                    // wVG-- name = node.asAlias?.string() ?: errAstNotNormalized(
+                    name = node.asAlias?.toIdent()?.underlyingString() ?: errAstNotNormalized(
                         "The group key should have encountered a unique name. This is typically added by the GroupByItemAliasVisitorTransform."
                     ),
                     metas = node.asAlias!!.metas
@@ -187,7 +189,7 @@ internal class AstToLogicalVisitorTransform(
         }
     }
 
-    private fun convertGroupAsAlias(node: SymbolPrimitive, from: PartiqlAst.FromSource) = PartiqlLogical.build {
+    private fun convertGroupAsAlias(gAsId: PartiqlAst.Defnid, from: PartiqlAst.FromSource) = PartiqlLogical.build {
         val sourceAliases = getSourceAliases(from)
         val structFields = sourceAliases.map { alias ->
             val aliasText = alias?.text ?: errAstNotNormalized("All FromSources should have aliases")
@@ -200,8 +202,8 @@ internal class AstToLogicalVisitorTransform(
             quantifier = all(),
             name = "group_as",
             arg = struct(structFields),
-            asVar = varDecl_(node, node.metas),
-            metas = node.metas
+            asVar = varDecl(gAsId.toIdent().underlyingString(), gAsId.metas),
+            metas = gAsId.metas
         )
     }
 
@@ -214,7 +216,7 @@ internal class AstToLogicalVisitorTransform(
     private fun convertCallAgg(node: PartiqlAst.Expr.CallAgg, name: String): PartiqlLogical.AggregateFunction = PartiqlLogical.build {
         aggregateFunction(
             quantifier = transformSetQuantifier(node.setq),
-            name = node.funcName.string(),
+            name = node.funcName.toIdent().underlyingString(),
             arg = transformExpr(node.arg),
             asVar = varDecl(name, node.metas),
             metas = node.metas
@@ -334,7 +336,7 @@ internal class AstToLogicalVisitorTransform(
         PartiqlLogical.build {
             letBinding(
                 transformExpr(node.expr),
-                varDecl_(node.name.symb, node.name.metas),
+                varDecl(node.name.toIdent().underlyingString(), node.name.metas),
                 node.metas
             )
         }
@@ -371,8 +373,8 @@ internal class AstToLogicalVisitorTransform(
 
                 val target = dmlOp.target.toDmlTargetId()
                 val alias = dmlOp.asAlias?.let {
-                    PartiqlLogical.VarDecl(it.symb)
-                } ?: PartiqlLogical.VarDecl(target.symb)
+                    PartiqlLogical.build { varDecl(it.toIdent().underlyingString()) }
+                } ?: PartiqlLogical.build { varDecl(target.toIdent().underlyingString()) }
 
                 val operation = when (val conflictAction = dmlOp.conflictAction) {
                     null -> PartiqlLogical.DmlOperation.DmlInsert(targetAlias = alias)
@@ -529,7 +531,7 @@ internal class AstToLogicalVisitorTransform(
                         is PartiqlAst.ProjectItem.ProjectExpr ->
                             structField(
                                 lit(
-                                    projectItem.asAlias?.string()?.toIonElement()
+                                    projectItem.asAlias?.toIdent()?.underlyingString()?.toIonElement()
                                         ?: errAstNotNormalized("SELECT-list item alias not specified")
                                 ),
                                 transformExpr(projectItem.expr),
@@ -559,9 +561,9 @@ private class FromSourceToBexpr(
         return PartiqlLogical.build {
             scan(
                 toLogicalTransform.transformExpr(node.expr),
-                varDecl_(asAlias.symb, asAlias.metas),
-                node.atAlias?.let { varDecl_(it.symb, it.metas) },
-                node.byAlias?.let { varDecl_(it.symb, it.metas) },
+                varDecl(asAlias.toIdent().underlyingString(), asAlias.metas),
+                node.atAlias?.let { varDecl(it.toIdent().underlyingString(), it.metas) },
+                node.byAlias?.let { varDecl(it.toIdent().underlyingString(), it.metas) },
                 node.metas
             )
         }
@@ -572,9 +574,9 @@ private class FromSourceToBexpr(
         return PartiqlLogical.build {
             unpivot(
                 toLogicalTransform.transformExpr(node.expr),
-                varDecl_(asAlias.symb, asAlias.metas),
-                node.atAlias?.let { varDecl_(it.symb, it.metas) },
-                node.byAlias?.let { varDecl_(it.symb, it.metas) },
+                varDecl(asAlias.toIdent().underlyingString(), asAlias.metas),
+                node.atAlias?.let { varDecl(it.toIdent().underlyingString(), it.metas) },
+                node.byAlias?.let { varDecl(it.toIdent().underlyingString(), it.metas) },
                 node.metas
             )
         }
