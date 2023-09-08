@@ -29,7 +29,6 @@ Thank you to all who have contributed!
 ## [Unreleased]
 
 ### Added
-=======
 
 ### Changed
 
