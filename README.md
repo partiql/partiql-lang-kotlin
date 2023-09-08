@@ -31,7 +31,7 @@ This project is published to [Maven Central](https://search.maven.org/artifact/o
 
 | Group ID      | Artifact ID           | Recommended Version |
 |---------------|-----------------------|---------------------|
-| `org.partiql` | `partiql-lang-kotlin` | `0.12.0`            | 
+| `org.partiql` | `partiql-lang-kotlin` | `0.13.0`            |
 
 
 For Maven builds, add the following to your `pom.xml`:
