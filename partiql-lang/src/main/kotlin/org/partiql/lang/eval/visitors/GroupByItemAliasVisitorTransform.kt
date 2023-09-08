@@ -39,7 +39,6 @@ class GroupByItemAliasVisitorTransform(var nestLevel: Int = 0) : VisitorTransfor
                 strategy = node.strategy,
                 keyList = PartiqlAst.GroupKeyList(
                     node.keyList.keys.mapIndexed { index, it ->
-                        // wVG-- val aliasText = it.asAlias?.string() ?: it.expr.extractColumnAlias(index)
                         val alias = it.asAlias ?: it.expr.extractColumnAlias(index)
                         var metas = it.expr.metas + metaContainerOf(
                             UniqueNameMeta.TAG to UniqueNameMeta("\$__partiql__group_by_${nestLevel}_item_$index")
@@ -48,7 +47,6 @@ class GroupByItemAliasVisitorTransform(var nestLevel: Int = 0) : VisitorTransfor
                         if (it.asAlias == null) {
                             metas = metas + metaContainerOf(IsSyntheticNameMeta.TAG to IsSyntheticNameMeta.instance)
                         }
-                        // wVG-- val alias = defnid(aliasText, metas)
                         val alias2 = alias.copy(metas = metas)
 
                         groupKey(transformExpr(it.expr), alias2, alias.metas)

@@ -1880,9 +1880,8 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitTypeCustom(ctx: GeneratedParser.TypeCustomContext) = translate(ctx) {
-            // typeCustom(ctx.text.uppercase())
-            // wVG-TODO? The prior code (above) had uppercase() here.
-            // This might need revisiting, but hoping that this was a hack that will just go away.
+            // SQL-ids The prior code had uppercase() here.
+            // This might need revisiting, but hoping that this was a hack that will become irrelevant.
             val id = readIdentifierAsDefnid(ctx.identifier())
             typeCustom(id)
         }

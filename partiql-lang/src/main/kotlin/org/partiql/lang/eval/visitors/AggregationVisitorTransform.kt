@@ -117,7 +117,6 @@ internal class AggregationVisitorTransform(
         val groupAsAlias = node.group!!.groupAsAlias
         val transformedKeys = mutableListOf<PartiqlAst.GroupKey>()
         val groupKeyInformation = node.group!!.keyList.keys.mapIndexed { index, key ->
-            // wVG-- val publicAlias = key.asAlias?.string() ?: key.expr.extractColumnAlias(index)
             val publicAlias = key.asAlias ?: key.expr.extractColumnAlias(index)
             val uniqueAlias = uniqueAlias(this.contextStack.size, index)
             val represents = key.expr
@@ -158,8 +157,7 @@ internal class AggregationVisitorTransform(
                 }.toMutableList()
 
                 contextStack.last().groupAsAlias?.let { alias ->
-                    // val item = projectExpr(vr(id(alias, delimited()), unqualified()), defnid(alias))
-                    // wVG Prior code had adding delimited()/caseSensitive(),
+                    // SQL-ids Prior code had adding delimited()/caseSensitive(),
                     // but now it comes with its own, so we keep what it has
                     val item = projectExpr(vr(alias.toId(), unqualified()), alias)
                     projectionItems.add(item)

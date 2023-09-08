@@ -43,7 +43,7 @@ import java.io.File
 abstract class EvaluatorTestBase : TestBase() {
     private val testHarness: EvaluatorTestAdapter = MultipleTestAdapter(
         listOf(
-            // wVG-BAD
+            // SQL-ids-BAD
             PipelineEvaluatorTestAdapter(CompilerPipelineFactory()),
             PipelineEvaluatorTestAdapter(PartiQLCompilerPipelineFactory()),
             VisitorTransformBaseTestAdapter()

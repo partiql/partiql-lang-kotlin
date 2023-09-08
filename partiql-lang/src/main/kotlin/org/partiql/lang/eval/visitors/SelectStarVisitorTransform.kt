@@ -105,10 +105,9 @@ class SelectStarVisitorTransform : VisitorTransformBase() {
         metas: MetaContainer = emptyMetaContainer()
     ) =
         PartiqlAst.build {
-            // wVG-- projectExpr(vr(id(variableName, delimited()), unqualified(), metas), defnid(asAlias))
-            // Use of delimited() in the prior code above might explain why some of the tests in SelectStarVisitorTransformTests
+            // SQL-ids Use of delimited() in the prior code above might explain why some of the tests in SelectStarVisitorTransformTests
             // had the same variable both delimited and not, such as `"f"` and `f`, in the same test.
-            // Now, the kind of the variable is carried through from its definition site and does not need to be invented at reference site.
+            // Now, the kind of the variable is carried through from its definition site and does not need to be invented here, at a reference site.
             projectExpr(vr(variableName.toId(), unqualified(), metas), asAlias)
         }
 
