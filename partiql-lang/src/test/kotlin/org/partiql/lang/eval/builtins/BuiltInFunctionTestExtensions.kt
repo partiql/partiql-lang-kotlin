@@ -1,9 +1,9 @@
 package org.partiql.lang.eval.builtins
 
 import com.amazon.ion.Timestamp
-import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.binding.Bindings
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
 import org.partiql.lang.util.newFromIonText
 

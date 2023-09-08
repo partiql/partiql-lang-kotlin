@@ -21,10 +21,12 @@ import org.partiql.cli.format.ExplainFormatter
 import org.partiql.cli.pico.PartiQLCommand
 import org.partiql.cli.pipeline.AbstractPipeline
 import org.partiql.cli.utils.EmptyInputStream
-import org.partiql.lang.eval.Bindings
+import org.partiql.lang.Ident
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.PartiQLResult
+import org.partiql.lang.eval.binding.Bindings
+import org.partiql.lang.eval.binding.delegate
 import org.partiql.lang.eval.delegate
 import org.partiql.lang.eval.toIonValue
 import org.partiql.lang.util.ConfigurableExprValueFormatter
@@ -131,7 +133,7 @@ internal class Cli(
         return Bindings.buildLazyBindings<ExprValue> {
             // If `input` is a class of `EmptyInputStream`, it means there is no input data provided by user.
             if (input !is EmptyInputStream) {
-                addBinding("input_data") { value }
+                addBinding(Ident.createAsIs("input_data")) { value }
             }
         }.delegate(globals)
     }

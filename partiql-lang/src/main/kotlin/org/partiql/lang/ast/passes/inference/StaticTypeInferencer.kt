@@ -6,7 +6,7 @@ import org.partiql.lang.ast.passes.SemanticException
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.staticType
 import org.partiql.lang.errors.ProblemCollector
-import org.partiql.lang.eval.Bindings
+import org.partiql.lang.eval.binding.Bindings
 import org.partiql.lang.eval.visitors.StaticTypeInferenceVisitorTransform
 import org.partiql.lang.eval.visitors.StaticTypeVisitorTransform
 import org.partiql.lang.types.FunctionSignature

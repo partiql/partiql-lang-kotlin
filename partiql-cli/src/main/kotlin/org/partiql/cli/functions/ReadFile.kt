@@ -19,10 +19,10 @@ import com.amazon.ion.system.IonReaderBuilder
 import org.apache.commons.csv.CSVFormat
 import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.BindingName
-import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.binding.Bindings
 import org.partiql.lang.eval.booleanValue
 import org.partiql.lang.eval.io.DelimitedValues
 import org.partiql.lang.eval.io.DelimitedValues.ConversionMode

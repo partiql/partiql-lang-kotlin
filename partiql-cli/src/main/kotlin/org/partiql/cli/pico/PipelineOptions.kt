@@ -15,7 +15,6 @@
 package org.partiql.cli.pico
 
 import org.partiql.cli.pipeline.AbstractPipeline
-import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.PartiQLResult
@@ -23,6 +22,7 @@ import org.partiql.lang.eval.ProjectionIterationBehavior
 import org.partiql.lang.eval.TypedOpBehavior
 import org.partiql.lang.eval.TypingMode
 import org.partiql.lang.eval.UndefinedVariableBehavior
+import org.partiql.lang.eval.binding.Bindings
 import picocli.CommandLine
 import java.io.File
 

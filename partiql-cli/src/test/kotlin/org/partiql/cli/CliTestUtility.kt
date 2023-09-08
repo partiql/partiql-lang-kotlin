@@ -7,8 +7,8 @@ import org.partiql.cli.pico.PartiQLCommand
 import org.partiql.cli.pipeline.AbstractPipeline
 import org.partiql.cli.query.Cli
 import org.partiql.cli.utils.EmptyInputStream
-import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.binding.Bindings
 import java.io.ByteArrayOutputStream
 import java.io.OutputStream
 

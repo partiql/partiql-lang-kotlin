@@ -34,6 +34,8 @@ import com.amazon.ion.IonValue
 import com.amazon.ion.Timestamp
 import com.amazon.ion.facet.Faceted
 import org.partiql.errors.ErrorCode
+import org.partiql.lang.eval.binding.Bindings
+import org.partiql.lang.eval.binding.IonStructBindings
 import org.partiql.lang.eval.time.NANOS_PER_SECOND
 import org.partiql.lang.eval.time.Time
 import org.partiql.lang.graph.ExternalGraphReader

@@ -85,6 +85,12 @@ fun PartiqlPhysical.IdKind.toBindingCase(): BindingCase = when (this) {
     is PartiqlPhysical.IdKind.Delimited -> BindingCase.SENSITIVE
 }
 
+fun PartiqlAst.Id.toIdent(): Ident =
+    when (this.kind) {
+        is PartiqlAst.IdKind.Regular -> Ident.createFromRegular(this.symb.text)
+        is PartiqlAst.IdKind.Delimited -> Ident.createFromDelimited(this.symb.text)
+    }
+
 fun PartiqlAst.Id.toBindingName(): BindingName =
     BindingName(this.symb.text, this.kind.toBindingCase())
 
@@ -107,3 +113,21 @@ fun PartiqlAst.Id.toDefnid(): PartiqlAst.Defnid = PartiqlAst.build {
 
 fun PartiqlAst.Builder.defnidReg(name: String) =
     defnid(name, regular())
+
+fun String.toIdent(kind: PartiqlAst.IdKind): Ident =
+    when (kind) {
+        is PartiqlAst.IdKind.Regular -> Ident.createFromRegular(this)
+        is PartiqlAst.IdKind.Delimited -> Ident.createFromDelimited(this)
+    }
+
+fun String.toIdent(kind: PartiqlPhysical.IdKind): Ident =
+    when (kind) {
+        is PartiqlPhysical.IdKind.Regular -> Ident.createFromRegular(this)
+        is PartiqlPhysical.IdKind.Delimited -> Ident.createFromDelimited(this)
+    }
+
+fun BindingName.toIdent(): Ident =
+    when (this.bindingCase) {
+        BindingCase.INSENSITIVE -> Ident.createFromRegular(this.name)
+        BindingCase.SENSITIVE -> Ident.createFromDelimited(this.name)
+    }

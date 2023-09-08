@@ -14,6 +14,8 @@
 
 package org.partiql.lang.eval
 
+import org.partiql.lang.eval.binding.Bindings
+import org.partiql.lang.eval.binding.delegate
 import java.util.TreeMap
 
 /**

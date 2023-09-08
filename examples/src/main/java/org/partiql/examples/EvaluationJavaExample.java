@@ -18,7 +18,8 @@ import kotlin.Unit;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.examples.util.Example;
 import org.partiql.lang.CompilerPipeline;
-import org.partiql.lang.eval.Bindings;
+import org.partiql.lang.Ident;
+import org.partiql.lang.eval.binding.Bindings;
 import org.partiql.lang.eval.EvaluationSession;
 import org.partiql.lang.eval.ExprValue;
 import org.partiql.lang.eval.Expression;
@@ -54,7 +55,7 @@ public class EvaluationJavaExample extends Example {
 
         // [Bindings.ofMap] can be used to construct a [Bindings] instance of
         // bindings with previously materialized values.
-        final Map<String, ExprValue> globals = singletonMap("user_name", usernameValue);
+        final Map<Ident, ExprValue> globals = singletonMap(Ident.Companion.createAsIs("user_name"), usernameValue);
         final Bindings<ExprValue> globalVariables = Bindings.ofMap(globals);
         print("global variables:", globals);
 

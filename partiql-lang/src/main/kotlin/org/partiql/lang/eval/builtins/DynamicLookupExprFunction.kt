@@ -1,8 +1,10 @@
 package org.partiql.lang.eval.builtins
 
 import org.partiql.errors.ErrorCode
+import org.partiql.lang.Ident
+import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.domains.toIdent
 import org.partiql.lang.eval.BindingCase
-import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
@@ -65,7 +67,16 @@ class DynamicLookupExprFunction : ExprFunction {
             )
         }
 
-        val bindingName = BindingName(variableName, caseSensitivity)
+        // wVG-- val bindingName = BindingName(variableName, caseSensitivity)
+        // SQL-ids-TODO Something better is needed here, revisiting the purpose of DynamicLookupExprFunction.
+        // For now, treating "case sensitivity" as a synonym of "id kind",
+        // but perhaps this 2nd argument of this function is no longer needed at all,
+        // since the 1st argument can be understood as the normalized identifier.
+        val idKind = when (caseSensitivity) {
+            BindingCase.INSENSITIVE -> PartiqlAst.IdKind.Regular()
+            BindingCase.SENSITIVE -> PartiqlAst.IdKind.Delimited()
+        }
+        val bindingName = variableName.toIdent(idKind)
 
         val globalsFirst = when (val lookupStrategyParameterValue = required[2].stringValue()) {
             "locals_then_globals" -> false
@@ -95,7 +106,7 @@ class DynamicLookupExprFunction : ExprFunction {
         }
     }
 
-    private fun searchLocals(possibleLocations: List<ExprValue>, bindingName: BindingName) =
+    private fun searchLocals(possibleLocations: List<ExprValue>, bindingName: Ident) =
         possibleLocations.asSequence().map {
             when (it.type) {
                 ExprValueType.STRUCT ->

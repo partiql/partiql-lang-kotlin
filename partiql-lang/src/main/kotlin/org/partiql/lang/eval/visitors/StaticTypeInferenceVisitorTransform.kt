@@ -11,6 +11,7 @@ import com.amazon.ionelement.api.ionBool
 import org.partiql.errors.Problem
 import org.partiql.errors.ProblemHandler
 import org.partiql.errors.ProblemSeverity
+import org.partiql.lang.Ident
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.StaticTypeMeta
 import org.partiql.lang.ast.passes.SemanticException
@@ -25,15 +26,12 @@ import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.domains.staticType
 import org.partiql.lang.domains.string
-import org.partiql.lang.domains.toBindingCase
-import org.partiql.lang.domains.toBindingName
+import org.partiql.lang.domains.toIdent
 import org.partiql.lang.errors.ProblemThrower
-import org.partiql.lang.eval.BindingCase
-import org.partiql.lang.eval.BindingName
-import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.ExprValueType
+import org.partiql.lang.eval.binding.Bindings
+import org.partiql.lang.eval.binding.delegate
 import org.partiql.lang.eval.builtins.SCALAR_BUILTINS_DEFAULT
-import org.partiql.lang.eval.delegate
 import org.partiql.lang.eval.getStartingSourceLocationMeta
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.StaticTypeUtils.areStaticTypesComparable
@@ -114,7 +112,7 @@ internal class StaticTypeInferenceVisitorTransform(
         /** Specifies the current scope search order--default is LEXICAL. */
         private var scopeOrder = ScopeSearchOrder.LEXICAL
 
-        private val localsMap = mutableMapOf<String, StaticType>()
+        private val localsMap = mutableMapOf<Ident, StaticType>()
 
         private var localsOnlyEnv = wrapBindings(Bindings.ofMap(localsMap), currentScopeDepth)
 
@@ -229,8 +227,8 @@ internal class StaticTypeInferenceVisitorTransform(
             )
         }
 
-        private fun addLocal(name: String, type: StaticType) {
-            val existing = localsOnlyEnv[BindingName(name, BindingCase.INSENSITIVE)]
+        private fun addLocal(name: Ident, type: StaticType) {
+            val existing = localsOnlyEnv[name]
             if (existing != null) {
                 TODO(
                     "A variable named '$name' was already defined in this scope. " +
@@ -242,7 +240,7 @@ internal class StaticTypeInferenceVisitorTransform(
             localsOnlyEnv = wrapBindings(Bindings.ofMap(localsMap), currentScopeDepth)
         }
 
-        private fun Bindings<TypeAndDepth>.lookupBinding(bindingName: BindingName): StaticType? = this[bindingName]?.type
+        private fun Bindings<TypeAndDepth>.lookupBinding(bindingName: Ident): StaticType? = this[bindingName]?.type
 
         /**
          * Encapsulates variable reference lookup, layering the scoping
@@ -250,7 +248,7 @@ internal class StaticTypeInferenceVisitorTransform(
          *
          * Returns an instance of [StaticType] if the binding was found, otherwise returns null.
          */
-        private fun findBind(bindingName: BindingName, scopeQualifier: PartiqlAst.ScopeQualifier): StaticType? {
+        private fun findBind(bindingName: Ident, scopeQualifier: PartiqlAst.ScopeQualifier): StaticType? {
             // Override the current scope search order if the var is lexically qualified.
             val overriddenScopeSearchOrder = when (scopeQualifier) {
                 is PartiqlAst.ScopeQualifier.LocalsFirst -> ScopeSearchOrder.LEXICAL
@@ -268,7 +266,7 @@ internal class StaticTypeInferenceVisitorTransform(
         }
 
         override fun transformExprVr(node: PartiqlAst.Expr.Vr): PartiqlAst.Expr {
-            val bindingName = node.id.toBindingName()
+            val bindingName = node.id.toIdent()
 
             val foundType = findBind(bindingName, node.qualifier) ?: error(
                 "No such variable named ${node.id.symb.text}. " +
@@ -1343,20 +1341,20 @@ internal class StaticTypeInferenceVisitorTransform(
 
             val elementType = getElementTypeForFromSource(fromExprType)
 
-            addLocal(asSymbolicName.string(), elementType)
+            addLocal(asSymbolicName.toIdent(), elementType)
 
             node.atAlias?.let {
                 val hasLists = getTypeDomain(fromExprType).contains(ExprValueType.LIST)
                 val hasOnlyLists = hasLists && (getTypeDomain(fromExprType).size == 1)
                 when {
                     hasOnlyLists -> {
-                        addLocal(it.string(), StaticType.INT)
+                        addLocal(it.toIdent(), StaticType.INT)
                     }
                     hasLists -> {
-                        addLocal(it.string(), StaticType.unionOf(StaticType.INT, StaticType.MISSING))
+                        addLocal(it.toIdent(), StaticType.unionOf(StaticType.INT, StaticType.MISSING))
                     }
                     else -> {
-                        addLocal(it.string(), StaticType.MISSING)
+                        addLocal(it.toIdent(), StaticType.MISSING)
                     }
                 }
             }
@@ -1435,20 +1433,20 @@ internal class StaticTypeInferenceVisitorTransform(
             val fromExprType = from.expr.getStaticType()
 
             val valueType = getUnpivotValueType(fromExprType)
-            addLocal(asSymbolicName.string(), valueType)
+            addLocal(asSymbolicName.toIdent(), valueType)
 
             node.atAlias?.let {
                 val valueHasMissing = getTypeDomain(valueType).contains(ExprValueType.MISSING)
                 val valueOnlyHasMissing = valueHasMissing && getTypeDomain(valueType).size == 1
                 when {
                     valueOnlyHasMissing -> {
-                        addLocal(it.string(), StaticType.MISSING)
+                        addLocal(it.toIdent(), StaticType.MISSING)
                     }
                     valueHasMissing -> {
-                        addLocal(it.string(), StaticType.STRING.asOptional())
+                        addLocal(it.toIdent(), StaticType.STRING.asOptional())
                     }
                     else -> {
-                        addLocal(it.string(), StaticType.STRING)
+                        addLocal(it.toIdent(), StaticType.STRING)
                     }
                 }
             }
@@ -1483,7 +1481,10 @@ internal class StaticTypeInferenceVisitorTransform(
         ): StaticType =
             when (previousComponentType) {
                 is AnyType -> StaticType.ANY
-                is StructType -> inferStructLookupType(currentPathComponent, previousComponentType.fields.associate { it.key to it.value }, previousComponentType.contentClosed)
+                is StructType -> {
+                    val structFields = previousComponentType.fields.associate { Ident.createAsIs(it.key) to it.value }
+                    inferStructLookupType(currentPathComponent, structFields, previousComponentType.contentClosed)
+                }
                 is ListType,
                 is SexpType -> {
                     val previous = previousComponentType as CollectionType // help Kotlin's type inference to be more specific
@@ -1512,18 +1513,15 @@ internal class StaticTypeInferenceVisitorTransform(
 
         private fun inferStructLookupType(
             currentPathComponent: PartiqlAst.PathStep.PathExpr,
-            structFields: Map<String, StaticType>,
+            structFields: Map<Ident, StaticType>,
             contentClosed: Boolean
         ): StaticType =
             when (val index = currentPathComponent.index) {
                 is PartiqlAst.Expr.Lit -> {
                     if (index.value is StringElement) {
                         val bindings = Bindings.ofMap(structFields)
-                        val caseSensitivity = currentPathComponent.kind
-                        val lookupName = BindingName(
-                            index.value.stringValue,
-                            caseSensitivity.toBindingCase()
-                        )
+                        val idKind = currentPathComponent.kind
+                        val lookupName = index.value.stringValue.toIdent(idKind)
                         bindings[lookupName] ?: if (contentClosed) {
                             StaticType.MISSING
                         } else {
@@ -1541,7 +1539,7 @@ internal class StaticTypeInferenceVisitorTransform(
 
         override fun transformLetBinding(node: PartiqlAst.LetBinding): PartiqlAst.LetBinding {
             val binding = super.transformLetBinding(node)
-            addLocal(binding.name.string(), binding.expr.getStaticType())
+            addLocal(binding.name.toIdent(), binding.expr.getStaticType())
             return binding
         }
 

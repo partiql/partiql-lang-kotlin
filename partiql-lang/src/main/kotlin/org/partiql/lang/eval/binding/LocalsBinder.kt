@@ -15,9 +15,6 @@
 package org.partiql.lang.eval.binding
 
 import org.partiql.lang.Ident
-import org.partiql.lang.eval.BindingCase
-import org.partiql.lang.eval.BindingName
-import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.address
 import org.partiql.lang.eval.name
@@ -31,12 +28,12 @@ import org.partiql.lang.util.errAmbiguousBinding
 abstract class LocalsBinder {
     fun bindLocals(locals: List<ExprValue>): Bindings<ExprValue> {
         return object : Bindings<ExprValue> {
-            override fun get(bindingName: BindingName): ExprValue? = binderForName(bindingName)(locals)
+            override fun get(bindingName: Ident): ExprValue? = binderForName(bindingName)(locals)
         }
     }
 
     /** This method is the backbone of [bindLocals] and should be used when optimizing lookups. */
-    abstract fun binderForName(bindingName: BindingName): (List<ExprValue>) -> ExprValue?
+    abstract fun binderForName(bindingName: Ident): (List<ExprValue>) -> ExprValue?
 }
 
 /** Sources can be aliased to names with 'AS', 'AT' or 'BY' */
@@ -93,7 +90,7 @@ fun List<Alias>.localsBinder(missingValue: ExprValue): LocalsBinder {
      * Nothing found at our scope, attempt to look at the attributes in our variables
      * TODO fix dynamic scoping to be in line with PartiQL rules
      */
-    val dynamicLocalsBinder: (BindingName) -> (List<ExprValue>) -> ExprValue? = when (this.count()) {
+    val dynamicLocalsBinder: (Ident) -> (List<ExprValue>) -> ExprValue? = when (this.count()) {
         0 -> { _ -> { _ -> null } }
         1 -> { name -> { locals -> locals.first().bindings[name] } }
         else -> { name ->
@@ -109,12 +106,8 @@ fun List<Alias>.localsBinder(missingValue: ExprValue): LocalsBinder {
     // Compile case-[in]sensitive bindings and return the accessor
     return object : LocalsBinder() {
         val caseSensitiveBindings = compileBindings()
-        val caseInsensitiveBindings = compileBindings { it.essentialLowercase() }
-        override fun binderForName(bindingName: BindingName): (List<ExprValue>) -> ExprValue? {
-            return when (bindingName.bindingCase) {
-                BindingCase.INSENSITIVE -> caseInsensitiveBindings[Ident.createFromRegular(bindingName.name)]
-                BindingCase.SENSITIVE -> caseSensitiveBindings[Ident.createAsIs(bindingName.name)]
-            } ?: dynamicLocalsBinder(bindingName)
+        override fun binderForName(bindingName: Ident): (List<ExprValue>) -> ExprValue? {
+            return caseSensitiveBindings[bindingName] ?: dynamicLocalsBinder(bindingName)
         }
     }
 }

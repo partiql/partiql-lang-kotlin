@@ -16,8 +16,8 @@ import org.partiql.lang.ast.passes.inference.isText
 import org.partiql.lang.ast.passes.inference.isUnknown
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.staticType
-import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.ExprFunction
+import org.partiql.lang.eval.binding.Bindings
 import org.partiql.lang.eval.numberValue
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.TypedOpParameter

@@ -32,11 +32,11 @@ import org.joda.time.Duration
 import org.partiql.cli.format.ExplainFormatter
 import org.partiql.cli.pipeline.AbstractPipeline
 import org.partiql.lang.SqlException
-import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.PartiQLResult
+import org.partiql.lang.eval.binding.Bindings
 import org.partiql.lang.eval.delegate
 import org.partiql.lang.eval.namedValue
 import org.partiql.lang.graph.ExternalGraphException

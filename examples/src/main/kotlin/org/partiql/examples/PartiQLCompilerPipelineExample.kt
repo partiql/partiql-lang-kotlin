@@ -3,12 +3,14 @@ package org.partiql.examples
 import com.amazon.ion.system.IonSystemBuilder
 import org.partiql.annotations.ExperimentalPartiQLCompilerPipeline
 import org.partiql.examples.util.Example
+import org.partiql.lang.Ident
 import org.partiql.lang.compiler.PartiQLCompilerPipeline
-import org.partiql.lang.eval.Bindings
+import org.partiql.lang.domains.toIdent
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.PartiQLResult
 import org.partiql.lang.eval.ProjectionIterationBehavior
+import org.partiql.lang.eval.binding.Bindings
 import org.partiql.lang.planner.EvaluatorOptions
 import org.partiql.lang.planner.GlobalResolutionResult
 import org.partiql.lang.planner.GlobalVariableResolver
@@ -34,7 +36,7 @@ class PartiQLCompilerPipelineExample(out: PrintStream) : Example(out) {
     ]"""
 
     private val globalVariables = Bindings.buildLazyBindings<ExprValue> {
-        addBinding("myTable") {
+        addBinding(Ident.createAsIs("myTable")) {
             ExprValue.of(
                 myIonSystem.singleValue(myTable)
             )
@@ -46,7 +48,10 @@ class PartiQLCompilerPipelineExample(out: PrintStream) : Example(out) {
         .build()
 
     private val globalVariableResolver = GlobalVariableResolver {
-        val value = session.globals[it]
+        // SQL-ids-TODO GlobalVariableResolver should be transitioned from BindingName to Ident,
+        // but perhaps this can be a stop-gap.
+        val id = it.toIdent()
+        val value = session.globals[id]
         if (value != null) {
             GlobalResolutionResult.GlobalVariable(it.name)
         } else {

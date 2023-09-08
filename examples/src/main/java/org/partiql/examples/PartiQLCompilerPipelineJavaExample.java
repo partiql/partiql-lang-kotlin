@@ -9,7 +9,7 @@ import org.partiql.examples.util.Example;
 import org.partiql.lang.compiler.PartiQLCompiler;
 import org.partiql.lang.compiler.PartiQLCompilerBuilder;
 import org.partiql.lang.compiler.PartiQLCompilerPipeline;
-import org.partiql.lang.eval.Bindings;
+import org.partiql.lang.eval.binding.Bindings;
 import org.partiql.lang.eval.EvaluationSession;
 import org.partiql.lang.eval.ExprValue;
 import org.partiql.lang.eval.PartiQLResult;

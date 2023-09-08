@@ -18,7 +18,10 @@ class Ident private constructor (
         return str.hashCode()
     }
 
-    /** For usages where only the print-out appearance of Defnid is needed.
+    // wVG-TODO Remove after dust settles.  Was just to maintain provenance from BindingName.isEquivalentTo
+    fun isEquivalentTo(other: Ident) = equals(other)
+
+    /** For usages where only the print-out appearance of identifier is needed.
      *  These might persist long-term.
      *  TODO: Maybe make this the toString override? */
     fun toDisplayString(): String = str

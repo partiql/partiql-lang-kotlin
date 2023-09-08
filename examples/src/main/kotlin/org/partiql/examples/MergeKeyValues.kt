@@ -1,7 +1,6 @@
 package org.partiql.examples
 
-import org.partiql.lang.eval.BindingCase
-import org.partiql.lang.eval.BindingName
+import org.partiql.lang.Ident
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
@@ -55,9 +54,14 @@ class MergeKeyValues : MergeKeysBaseExprFunction() {
                 throw Exception("All elements on input collection must be of type struct. Erroneous value: $it")
             }
 
-            val binding = it.bindings[BindingName(mergeKey, BindingCase.INSENSITIVE)]
+            // SQL-ids  Even though the original used INSENSITIVE,
+            // creating an id without normalization, since this gives the caller more control.
+            //
+            // val binding = it.bindings[BindingName(mergeKey, BindingCase.INSENSITIVE)]
+            val binding = it.bindings[Ident.createAsIs(mergeKey)]
             val bindingValue = binding!!.stringValue()
-            val valueElem = it.bindings[BindingName(valueKey, BindingCase.INSENSITIVE)]
+            // val valueElem = it.bindings[BindingName(valueKey, BindingCase.INSENSITIVE)]
+            val valueElem = it.bindings[Ident.createAsIs(valueKey)]
 
             if (valueElem != null) {
                 if (result[bindingValue] == null) {

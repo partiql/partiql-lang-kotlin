@@ -1,8 +1,5 @@
 package org.partiql.lang.planner
 
-import org.partiql.lang.eval.BindingCase
-import org.partiql.lang.eval.BindingName
-import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 
@@ -66,5 +63,6 @@ enum class DmlAction {
     }
 }
 
-private operator fun Bindings<ExprValue>.get(fieldName: String): ExprValue? =
-    this[BindingName(fieldName, BindingCase.SENSITIVE)]
+// wVG Not used? Or the use site needs to be adjusted first before IDE can find it?
+// private operator fun Bindings<ExprValue>.get(fieldName: String): ExprValue? =
+//    this[BindingName(fieldName, BindingCase.SENSITIVE)]

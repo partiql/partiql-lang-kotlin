@@ -16,10 +16,10 @@ package org.partiql.cli.shell
 
 import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.BindingName
-import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.MapBindings
 import org.partiql.lang.eval.StructOrdering
+import org.partiql.lang.eval.binding.Bindings
 import org.partiql.lang.eval.delegate
 
 class ShellGlobalBinding {

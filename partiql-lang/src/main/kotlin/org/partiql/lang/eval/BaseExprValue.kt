@@ -14,6 +14,7 @@
 
 package org.partiql.lang.eval
 
+import org.partiql.lang.eval.binding.Bindings
 import org.partiql.lang.graph.Graph
 import org.partiql.lang.graph.SimpleGraph
 import org.partiql.lang.util.downcast

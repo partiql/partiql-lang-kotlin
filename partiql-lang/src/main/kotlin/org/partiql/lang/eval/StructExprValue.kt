@@ -15,6 +15,8 @@
 package org.partiql.lang.eval
 
 import org.partiql.errors.ErrorCode
+import org.partiql.lang.Ident
+import org.partiql.lang.eval.binding.Bindings
 
 /** Indicates if a struct is ordered or not. */
 enum class StructOrdering {
@@ -40,12 +42,13 @@ internal open class StructExprValue(
     )
 
     private val materialized by lazy {
-        val bindMap = HashMap<String, ExprValue>()
+        val bindMap = HashMap<Ident, ExprValue>()
         val bindList = ArrayList<ExprValue>()
         val bindNames = ArrayList<String>()
         sequence.forEach {
             val name = it.name?.stringValue() ?: errNoContext("Expected non-null name for lazy struct", errorCode = ErrorCode.EVALUATOR_UNEXPECTED_VALUE, internal = false)
-            bindMap.putIfAbsent(name, it)
+            val id = Ident.createAsIs(name)
+            bindMap.putIfAbsent(id, it)
             if (ordering == StructOrdering.ORDERED) {
                 bindList.add(it)
                 bindNames.add(name)

@@ -24,6 +24,7 @@ import com.amazon.ionelement.api.toIonValue
 import org.partiql.errors.ErrorCode
 import org.partiql.errors.Property
 import org.partiql.errors.PropertyValueMap
+import org.partiql.lang.Ident
 import org.partiql.lang.ast.IsOrderedMeta
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.UNKNOWN_SOURCE_LOCATION
@@ -31,12 +32,10 @@ import org.partiql.lang.ast.sourceLocation
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.domains.staticType
 import org.partiql.lang.domains.string
-import org.partiql.lang.domains.toBindingCase
+import org.partiql.lang.domains.toIdent
 import org.partiql.lang.eval.AnyOfCastTable
 import org.partiql.lang.eval.Arguments
 import org.partiql.lang.eval.BaseExprValue
-import org.partiql.lang.eval.BindingCase
-import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.CastFunc
 import org.partiql.lang.eval.DEFAULT_COMPARATOR
 import org.partiql.lang.eval.ErrorDetails
@@ -919,7 +918,10 @@ internal class PhysicalPlanCompilerImpl(
         // TODO: we really should consider using something other than `Bindings<ExprValue>` for global variables
         // with the physical plan evaluator because `Bindings<ExprValue>.get()` accepts a `BindingName` instance
         // which contains the `case` property which is always set to `SENSITIVE` and is therefore redundant.
-        val bindingName = BindingName(expr.uniqueId.text, BindingCase.SENSITIVE)
+        //
+        // val bindingName = BindingName(expr.uniqueId.text, BindingCase.SENSITIVE)
+        // SQL-ids  Does this change address the above comment?
+        val bindingName = Ident.createAsIs(expr.uniqueId.text)
         return thunkFactory.thunkEnv(expr.metas) { env ->
             env.session.globals[bindingName] ?: throwUndefinedVariableException(bindingName, expr.metas)
         }
@@ -1430,15 +1432,12 @@ internal class PhysicalPlanCompilerImpl(
                 when (pathComponent) {
                     is PartiqlPhysical.PathStep.PathExpr -> {
                         val indexExpr = pathComponent.index
-                        val caseSensitivity = pathComponent.kind
+                        val idKind = pathComponent.kind
                         when {
                             // If indexExpr is a literal string, there is no need to evaluate it--just compile a
                             // thunk that directly returns a bound value
                             indexExpr is PartiqlPhysical.Expr.Lit && indexExpr.value.toIonValue(ion) is IonString -> {
-                                val lookupName = BindingName(
-                                    indexExpr.value.toIonValue(ion).stringValue()!!,
-                                    caseSensitivity.toBindingCase()
-                                )
+                                val lookupName = indexExpr.value.toIonValue(ion).stringValue()!!.toIdent(idKind)
                                 thunkFactory.thunkEnvValue(componentMetas) { _, componentValue ->
                                     componentValue.bindings[lookupName] ?: ExprValue.missingValue
                                 }
@@ -1452,8 +1451,7 @@ internal class PhysicalPlanCompilerImpl(
                                             componentValue.ordinalBindings[indexValue.numberValue().toInt()]
                                         }
                                         indexValue.type.isText -> {
-                                            val lookupName =
-                                                BindingName(indexValue.stringValue(), caseSensitivity.toBindingCase())
+                                            val lookupName = indexValue.stringValue().toIdent(idKind)
                                             componentValue.bindings[lookupName]
                                         }
                                         else -> {

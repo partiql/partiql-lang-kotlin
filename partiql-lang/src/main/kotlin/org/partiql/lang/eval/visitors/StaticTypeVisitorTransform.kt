@@ -10,16 +10,15 @@ import com.amazon.ionelement.api.metaContainerOf
 import com.amazon.ionelement.api.toIonElement
 import org.partiql.errors.ErrorCode
 import org.partiql.errors.Property
+import org.partiql.lang.Ident
 import org.partiql.lang.ast.StaticTypeMeta
 import org.partiql.lang.ast.passes.SemanticException
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.addSourceLocation
 import org.partiql.lang.domains.extractSourceLocation
-import org.partiql.lang.domains.string
-import org.partiql.lang.domains.toBindingName
-import org.partiql.lang.eval.BindingCase
-import org.partiql.lang.eval.BindingName
-import org.partiql.lang.eval.Bindings
+import org.partiql.lang.domains.toIdent
+import org.partiql.lang.eval.binding.Bindings
+import org.partiql.lang.eval.binding.delegate
 import org.partiql.lang.eval.delegate
 import org.partiql.lang.util.propertyValueMapOf
 import org.partiql.types.StaticType
@@ -121,7 +120,7 @@ class StaticTypeVisitorTransform(
         /** Specifies the current scope search order--default is LEXICAL. */
         private var scopeOrder = ScopeSearchOrder.LEXICAL
 
-        private val localsMap = mutableMapOf<String, StaticType>()
+        private val localsMap = mutableMapOf<Ident, StaticType>()
 
         // TODO this used to use a wrapper over localsMap, but that API no longer exists, we should figure something
         //      more reasonable out later for this at some point, but this is good enough for now
@@ -139,15 +138,16 @@ class StaticTypeVisitorTransform(
          * In short, after the FROM sources have been visited, this is set to the name if-and-only-if there is
          * a single from source.  Otherwise, it is null.
          */
-        private var singleFromSourceName: String? = null
+        private var singleFromSourceName: Ident? = null
 
-        private fun singleFromSourceRef(sourceName: String, metas: MetaContainer): PartiqlAst.Expr.Vr {
-            val sourceType = currentEnv[BindingName(sourceName, BindingCase.SENSITIVE)]
+        private fun singleFromSourceRef(sourceName: Ident, metas: MetaContainer): PartiqlAst.Expr.Vr {
+            // wVG val sourceType = currentEnv[BindingName(sourceName, BindingCase.SENSITIVE)]
+            val sourceType = currentEnv[sourceName]
                 ?: throw IllegalArgumentException("Could not find type for single FROM source variable")
 
             return PartiqlAst.build {
                 vr(
-                    id(sourceName, delimited()),
+                    id(sourceName.underlyingString(), delimited()),
                     localsFirst(),
                     metas + metaContainerOf(StaticTypeMeta.TAG to StaticTypeMeta(sourceType.type))
                 )
@@ -171,19 +171,19 @@ class StaticTypeVisitorTransform(
                 ).addSourceLocation(metas)
             )
 
-        private fun errIllegalGlobalVariableAccess(name: String, metas: MetaContainer): Nothing = throw SemanticException(
+        private fun errIllegalGlobalVariableAccess(name: Ident, metas: MetaContainer): Nothing = throw SemanticException(
             "Global variable access is illegal in this context",
             ErrorCode.SEMANTIC_ILLEGAL_GLOBAL_VARIABLE_ACCESS,
             propertyValueMapOf(
-                Property.BINDING_NAME to name
+                Property.BINDING_NAME to name.toDisplayString()
             ).addSourceLocation(metas)
         )
 
-        private fun errAmbiguousName(name: String, metas: MetaContainer): Nothing = throw SemanticException(
-            "A variable named '$name' was already defined in this scope",
+        private fun errAmbiguousName(name: Ident, metas: MetaContainer): Nothing = throw SemanticException(
+            "A variable named '${name.toDisplayString()}' was already defined in this scope",
             ErrorCode.SEMANTIC_AMBIGUOUS_BINDING,
             propertyValueMapOf(
-                Property.BINDING_NAME to name
+                Property.BINDING_NAME to name.toDisplayString()
             ).addSourceLocation(metas)
         )
 
@@ -199,8 +199,9 @@ class StaticTypeVisitorTransform(
             }
         )
 
-        private fun addLocal(name: String, type: StaticType, metas: MetaContainer) {
-            val existing = localsOnlyEnv[BindingName(name, BindingCase.INSENSITIVE)]
+        private fun addLocal(name: Ident, type: StaticType, metas: MetaContainer) {
+            // wVG val existing = localsOnlyEnv[BindingName(name, BindingCase.INSENSITIVE)]
+            val existing = localsOnlyEnv[name]
             if (existing != null) {
                 errAmbiguousName(name, metas)
             }
@@ -221,7 +222,7 @@ class StaticTypeVisitorTransform(
             }
         }
 
-        private fun Bindings<TypeAndDepth>.lookupBinding(bindingName: BindingName): TypeAndScope? =
+        private fun Bindings<TypeAndDepth>.lookupBinding(bindingName: Ident): TypeAndScope? =
             when (val match = this[bindingName]) {
                 null -> null
                 else -> {
@@ -242,7 +243,7 @@ class StaticTypeVisitorTransform(
          *
          * Returns an instance of [TypeAndScope] if the binding was found, otherwise returns null.
          */
-        private fun findBind(bindingName: BindingName, scopeQualifier: PartiqlAst.ScopeQualifier): TypeAndScope? {
+        private fun findBind(bindingName: Ident, scopeQualifier: PartiqlAst.ScopeQualifier): TypeAndScope? {
             // Override the current scope search order if the var is lexically qualified.
             val overridenScopeSearchOrder = when (scopeQualifier) {
                 is PartiqlAst.ScopeQualifier.LocalsFirst -> ScopeSearchOrder.LEXICAL
@@ -264,7 +265,7 @@ class StaticTypeVisitorTransform(
          * [StaticTypeVisitorTransform] support what's happening here.
          */
         override fun transformExprVr(node: PartiqlAst.Expr.Vr): PartiqlAst.Expr {
-            val bindingName = node.id.toBindingName()
+            val bindingName = node.id.toIdent()
 
             val found = findBind(bindingName, node.qualifier)
 
@@ -295,10 +296,10 @@ class StaticTypeVisitorTransform(
                         return makePathIntoFromSource(singleBinding, node)
                     }
                     preventGlobalsExceptInFrom && fromVisited -> {
-                        errIllegalGlobalVariableAccess(bindingName.name, node.metas)
+                        errIllegalGlobalVariableAccess(bindingName, node.metas)
                     }
                     preventGlobalsInNestedQueries && currentScopeDepth > 1 -> {
-                        errIllegalGlobalVariableAccess(bindingName.name, node.metas)
+                        errIllegalGlobalVariableAccess(bindingName, node.metas)
                     }
                 }
             }
@@ -320,7 +321,7 @@ class StaticTypeVisitorTransform(
          * Changes the specified variable reference to a path expression with the name of the variable as
          * its first and only element.
          */
-        private fun makePathIntoFromSource(fromSourceAlias: String, node: PartiqlAst.Expr.Vr): PartiqlAst.Expr.Path {
+        private fun makePathIntoFromSource(fromSourceAlias: Ident, node: PartiqlAst.Expr.Vr): PartiqlAst.Expr.Path {
             return PartiqlAst.build {
                 path(
                     singleFromSourceRef(fromSourceAlias, node.extractSourceLocation()),
@@ -355,11 +356,11 @@ class StaticTypeVisitorTransform(
             val from = super.transformFromSourceScan(node)
 
             node.atAlias?.let {
-                addLocal(it.string(), StaticType.ANY, it.metas)
+                addLocal(it.toIdent(), StaticType.ANY, it.metas)
             }
 
             node.byAlias?.let {
-                addLocal(it.string(), StaticType.ANY, it.metas)
+                addLocal(it.toIdent(), StaticType.ANY, it.metas)
             }
 
             val asSymbolicName = node.asAlias
@@ -368,12 +369,12 @@ class StaticTypeVisitorTransform(
                         "FromSourceAliasVisitorTransform was executed first."
                 )
 
-            addLocal(asSymbolicName.string(), StaticType.ANY, asSymbolicName.metas)
+            addLocal(asSymbolicName.toIdent(), StaticType.ANY, asSymbolicName.metas)
 
             if (!containsJoin) {
                 fromVisited = true
                 if (currentScopeDepth == 1) {
-                    singleFromSourceName = asSymbolicName.string()
+                    singleFromSourceName = asSymbolicName.toIdent()
                 }
             }
             return from
@@ -384,11 +385,11 @@ class StaticTypeVisitorTransform(
             val from = super.transformFromSourceUnpivot(node)
 
             node.atAlias?.let {
-                addLocal(it.string(), StaticType.ANY, it.metas)
+                addLocal(it.toIdent(), StaticType.ANY, it.metas)
             }
 
             node.byAlias?.let {
-                addLocal(it.string(), StaticType.ANY, it.metas)
+                addLocal(it.toIdent(), StaticType.ANY, it.metas)
             }
 
             val asSymbolicName = node.asAlias
@@ -397,12 +398,12 @@ class StaticTypeVisitorTransform(
                         "FromSourceAliasVisitorTransform was executed first."
                 )
 
-            addLocal(asSymbolicName.string(), StaticType.ANY, asSymbolicName.metas)
+            addLocal(asSymbolicName.toIdent(), StaticType.ANY, asSymbolicName.metas)
 
             if (!containsJoin) {
                 fromVisited = true
                 if (currentScopeDepth == 1) {
-                    singleFromSourceName = asSymbolicName.string()
+                    singleFromSourceName = asSymbolicName.toIdent()
                 }
             }
             return from
@@ -410,7 +411,7 @@ class StaticTypeVisitorTransform(
 
         override fun transformLetBinding(node: PartiqlAst.LetBinding): PartiqlAst.LetBinding {
             val binding = super.transformLetBinding(node)
-            addLocal(binding.name.string(), StaticType.ANY, binding.name.metas)
+            addLocal(binding.name.toIdent(), StaticType.ANY, binding.name.metas)
             return binding
         }
 

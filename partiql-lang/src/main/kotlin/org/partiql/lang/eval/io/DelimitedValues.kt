@@ -26,8 +26,7 @@ import com.amazon.ion.system.IonSystemBuilder
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVParser
 import org.apache.commons.csv.CSVPrinter
-import org.partiql.lang.eval.BindingCase
-import org.partiql.lang.eval.BindingName
+import org.partiql.lang.Ident
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.StructOrdering
 import org.partiql.lang.eval.namedValue
@@ -157,7 +156,7 @@ object DelimitedValues {
 
                 csvPrinter.printRecord(
                     names.map {
-                        val col = row.bindings[BindingName(it, BindingCase.SENSITIVE)]?.toIonValue(ion) ?: ion.newNull()
+                        val col = row.bindings[Ident.createAsIs(it)]?.toIonValue(ion) ?: ion.newNull()
                         col.csvStringValue()
                     }
                 )

@@ -5,9 +5,9 @@ import com.amazon.ionschema.IonSchemaSystem
 import org.partiql.ionschema.discovery.NormalizeDecimalPrecisionsToUpToRange
 import org.partiql.ionschema.discovery.SchemaInferencerFromExampleImpl
 import org.partiql.lang.ION
-import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.binding.Bindings
 import org.partiql.types.StaticType
 
 /**

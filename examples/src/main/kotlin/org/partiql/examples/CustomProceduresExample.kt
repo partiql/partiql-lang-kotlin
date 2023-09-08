@@ -6,14 +6,13 @@ import org.partiql.errors.Property
 import org.partiql.errors.PropertyValueMap
 import org.partiql.examples.util.Example
 import org.partiql.lang.CompilerPipeline
-import org.partiql.lang.eval.BindingCase
-import org.partiql.lang.eval.BindingName
-import org.partiql.lang.eval.Bindings
+import org.partiql.lang.Ident
 import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.StructOrdering
+import org.partiql.lang.eval.binding.Bindings
 import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
 import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedureSignature
 import org.partiql.lang.eval.namedValue
@@ -60,17 +59,17 @@ class CalculateCrewMoonWeight : StoredProcedure {
 
         // Next we check if the given `crewName` is in the [EvaluationSession]'s global bindings. If not, we return 0.
         val sessionGlobals = session.globals
-        val crewBindings = sessionGlobals[BindingName(crewName.stringValue(), BindingCase.INSENSITIVE)]
+        val crewBindings = sessionGlobals[Ident.createAsIs(crewName.stringValue())]
             ?: return ExprValue.newInt(-1)
 
         // Now that we've confirmed the given `crewName` is in the session's global bindings, we calculate and return
         // the moon weight for each crewmate in the crew.
         val result = mutableListOf<ExprValue>()
         for (crewmateBinding in crewBindings) {
-            val nameBindingName = BindingName("name", BindingCase.INSENSITIVE)
+            val nameBindingName = Ident.createAsIs("name")
             val name = crewmateBinding.bindings[nameBindingName]!!
 
-            val massBindingName = BindingName("mass", BindingCase.INSENSITIVE)
+            val massBindingName = Ident.createAsIs("mass")
             val mass = crewmateBinding.bindings[massBindingName]!!
 
             val moonWeight = (mass.numberValue() as BigDecimal * MOON_GRAVITATIONAL_CONSTANT).setScale(1, RoundingMode.HALF_UP)
@@ -103,14 +102,14 @@ class CustomProceduresExample(out: PrintStream) : Example(out) {
         // Here, we initialize the crews to be stored in our global session bindings
         val initialCrews = Bindings.ofMap(
             mapOf(
-                "crew1" to ExprValue.of(
+                Ident.createAsIs("crew1") to ExprValue.of(
                     ion.singleValue(
                         """[ { name: "Neil",    mass: 80.5 }, 
                                          { name: "Buzz",    mass: 72.3 },
                                          { name: "Michael", mass: 89.9 } ]"""
                     )
                 ),
-                "crew2" to ExprValue.of(
+                Ident.createAsIs("crew2") to ExprValue.of(
                     ion.singleValue(
                         """[ { name: "James", mass: 77.1 }, 
                                          { name: "Spock", mass: 81.6 } ]"""
@@ -120,8 +119,8 @@ class CustomProceduresExample(out: PrintStream) : Example(out) {
         )
         val session = EvaluationSession.build { globals(initialCrews) }
 
-        val crew1BindingName = BindingName("crew1", BindingCase.INSENSITIVE)
-        val crew2BindingName = BindingName("crew2", BindingCase.INSENSITIVE)
+        val crew1BindingName = Ident.createAsIs("crew1")
+        val crew2BindingName = Ident.createAsIs("crew2")
 
         out.println("Initial global session bindings:")
         print("Crew 1:", "${session.globals[crew1BindingName]}")

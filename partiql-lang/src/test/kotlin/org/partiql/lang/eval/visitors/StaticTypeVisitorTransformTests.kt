@@ -19,7 +19,7 @@ import org.partiql.lang.ast.StaticTypeMeta
 import org.partiql.lang.ast.passes.SemanticException
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.metaContainerOf
-import org.partiql.lang.eval.Bindings
+import org.partiql.lang.eval.binding.Bindings
 import org.partiql.types.ListType
 import org.partiql.types.StaticType
 import java.io.PrintWriter

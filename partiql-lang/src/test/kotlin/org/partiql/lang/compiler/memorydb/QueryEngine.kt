@@ -8,11 +8,11 @@ import org.partiql.lang.compiler.memorydb.operators.GetByKeyProjectRelationalOpe
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.BindingName
-import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.PartiQLResult
 import org.partiql.lang.eval.StructOrdering
+import org.partiql.lang.eval.binding.Bindings
 import org.partiql.lang.eval.namedValue
 import org.partiql.lang.planner.GlobalResolutionResult
 import org.partiql.lang.planner.GlobalVariableResolver

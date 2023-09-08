@@ -2,11 +2,12 @@ package org.partiql.examples
 
 import org.partiql.examples.util.Example
 import org.partiql.lang.CompilerPipeline
+import org.partiql.lang.Ident
 import org.partiql.lang.eval.BaseExprValue
-import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
+import org.partiql.lang.eval.binding.Bindings
 import org.partiql.lang.eval.namedValue
 import java.io.PrintStream
 
@@ -27,12 +28,12 @@ private class CsvRowExprValue(private val rowString: String) : BaseExprValue() {
      * The lazily constructed set of row values.  Laziness is good practice here because it avoids
      * constructing this map if it isn't needed.
      */
-    private val rowValues: Map<String, ExprValue> by lazy {
+    private val rowValues: Map<Ident, ExprValue> by lazy {
         rowString.split(',')
             .mapIndexed { i, it ->
                 val fieldName = "_${i + 1}"
                 // Note that we invoke
-                fieldName to ExprValue.newString(it).namedValue(ExprValue.newString(fieldName))
+                Ident.createAsIs(fieldName) to ExprValue.newString(it).namedValue(ExprValue.newString(fieldName))
             }.toMap()
     }
 
@@ -63,7 +64,7 @@ class CsvExprValueExample(out: PrintStream) : Example(out) {
         print("CSV file:", EXAMPLE_CSV_FILE_CONTENTS)
 
         val globals = Bindings.buildLazyBindings<ExprValue> {
-            addBinding("csv_data") {
+            addBinding(Ident.createAsIs("csv_data")) {
                 // The first time "csv_data" is encountered during query evaluation this closure will be
                 // invoked to obtain its value, which will then be cached for later use.
 
