@@ -35,6 +35,8 @@ Thank you to all who have contributed!
 ### Deprecated
 
 ### Fixed
+- Fix a bug in `FilterScanToKeyLookup` pass wherein it was rewriting primary key equality expressions with references
+  to the candidate row on both sides.  Now it will correctly ignore such expressions.
 
 ### Removed
 
@@ -116,9 +118,6 @@ classes in `:partiql-ast` and `:partiql-plan`.
   represent variadic parameters instead.
 
 ### Fixed
-
-- Fix a bug in `FilterScanToKeyLookup` pass wherein it was rewriting primary key equality expressions with references 
-to the candidate row on both sides.  Now it will correctly ignore such expressions.
 
 ### Removed
 - **Breaking**: Removes `optionalParameter` and `variadicParameter` from `org.partiql.lang.types.FunctionSignature`. To continue support for evaluation of `optionalParameters`, please create another same-named function. To continue support for evaluation of `variadicParameter`, please use a `StaticType.LIST` to hold all previously variadic parameters.
