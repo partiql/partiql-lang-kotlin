@@ -117,6 +117,9 @@ classes in `:partiql-ast` and `:partiql-plan`.
 
 ### Fixed
 
+- Fix a bug in `FilterScanToKeyLookup` pass wherein it was rewriting primary key equality expressions with references 
+to the candidate row on both sides.  Now it will correctly ignore such expressions.
+
 ### Removed
 - **Breaking**: Removes `optionalParameter` and `variadicParameter` from `org.partiql.lang.types.FunctionSignature`. To continue support for evaluation of `optionalParameters`, please create another same-named function. To continue support for evaluation of `variadicParameter`, please use a `StaticType.LIST` to hold all previously variadic parameters.
   As this changes coincides with the addition of function overloading, only `callWithRequired` will be invoked upon execution of an `ExprFunction`. Note: Function overloading is now allowed, which is the reason for the removal of `optionalParameter` and `variadicParameter`.
