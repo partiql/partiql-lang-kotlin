@@ -100,6 +100,16 @@ public sealed class StaticType {
         }
 
     /**
+     *  Returns a non-nullable version of the current [StaticType].
+     *
+     *  If it already non-nullable, returns the original type.
+     */
+    public fun asNonNullable(): StaticType = when (this.isNullable()) {
+        false -> this
+        true -> unionOf(this.allTypes.filter { it !is NullType }.toSet()).flatten()
+    }
+
+    /**
      *  Returns an optional version of the current [StaticType].
      *
      *  If it already optional, returns the original type.

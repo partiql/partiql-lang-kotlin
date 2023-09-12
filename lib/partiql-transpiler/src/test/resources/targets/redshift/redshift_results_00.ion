@@ -27,5 +27,31 @@ target::{
         WHERE store_sales.ss_sold_date_sk > dateadd(day, -30, sysdate)
       ''',
     },
+    '0003': {
+      // TODO: For the last projection item (CASE-WHEN), the second WHEN should not be able to compare INT32? and STR.
+      // TODO: However, this will be addressed when functions are resolved. When this happens, we should assert on the
+      // TODO: error message here.
+      statement: '''
+        SELECT
+          store_sales.ss_quantity AS ss_quantity,
+          CASE
+            WHEN CAST(store_sales.ss_quantity AS INT) = 0 THEN 'Did not sell anything!'
+            WHEN CAST(store_sales.ss_quantity AS INT) = 1 THEN 'Sold a single item!'
+            WHEN true THEN 'Sold multiple items!'
+          END AS ss_quantity_description_1,
+          CASE
+            WHEN CAST(store_sales.ss_quantity AS INT) = 0 THEN 'Hello'
+            WHEN CAST(store_sales.ss_quantity AS INT) = 1 THEN 1.0
+            WHEN CAST(store_sales.ss_quantity AS INT) = 2 THEN 2
+            WHEN true THEN NULL
+          END AS ss_quantity_description_2,
+          CASE
+            WHEN CAST(store_sales.ss_quantity AS INT) = 0 THEN 'Hello'
+            WHEN store_sales.ss_quantity = 'not an int32' THEN 'not cast-able'
+            WHEN true THEN 'fallback'
+          END AS ss_quantity_description_3
+        FROM store_sales AS store_sales
+      ''',
+    },
   },
 }

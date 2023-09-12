@@ -343,12 +343,16 @@ internal class PlanTyper(
             }
         }
 
-        override fun visitRexOpCase(node: Rex.Op.Case, ctx: StaticType?): Rex {
-            TODO("Type RexOpCase")
+        override fun visitRexOpCase(node: Rex.Op.Case, ctx: StaticType?): Rex = rewrite {
+            val visitedBranches = node.branches.map { visitRexOpCaseBranch(it, null) }
+            val resultTypes = visitedBranches.map { it.rex }.map { it.type }
+            rex(AnyOfType(resultTypes.toSet()).flatten(), node.copy(branches = visitedBranches))
         }
 
-        override fun visitRexOpCaseBranch(node: Rex.Op.Case.Branch, ctx: StaticType?): Rex {
-            TODO("Type RexOpCaseBranch")
+        override fun visitRexOpCaseBranch(node: Rex.Op.Case.Branch, ctx: StaticType?): Rex.Op.Case.Branch {
+            val visitedCondition = visitRex(node.condition, null)
+            val visitedReturn = visitRex(node.rex, null)
+            return node.copy(condition = visitedCondition, rex = visitedReturn)
         }
 
         override fun visitRexOpCollection(node: Rex.Op.Collection, ctx: StaticType?): Rex = rewrite {

@@ -109,7 +109,6 @@ rex::{
     },
 
     case::{
-      rex:      rex,
       branches: list::[branch],
       _: [
         branch::{
