@@ -11,7 +11,7 @@ import org.partiql.lang.CompilerPipeline
  * https://github.com/partiql/partiql-spec/issues/63.
  */
 class IonAnnotationTests : EvaluatorTestBase() {
-    // Round-tripped Ion value with annotation (IonValue -> ExprValue -> IonValue) results in the elided annotation.
+    // Round-tripped Ion value with Annotation (IonValue -> ExprValue -> IonValue) results in the elided annotation.
     @Test
     fun ionValueWithAnnotationExprValueRoundTrip() {
         val ion: IonSystem = IonSystemBuilder.standard().build()
@@ -21,7 +21,7 @@ class IonAnnotationTests : EvaluatorTestBase() {
         assertEquals(ionValue, roundTripped)
     }
 
-    // Evaluated Ion Literal with annotation converted to an IonValue results in the elided annotation.
+    // Evaluated Ion Literal with Annotation converted to an IonValue results in the elided annotation.
     @Test
     fun ionLiteralWithAnnotationEvaluation() {
         val pipeline = CompilerPipeline.standard()
@@ -33,7 +33,7 @@ class IonAnnotationTests : EvaluatorTestBase() {
         assertEquals(ion.singleValue("{a: 1}"), ionValueRoundtripped)
     }
 
-    // Evaluated Ion value with annotation in an SFW projection. Converting result to an IonValue elides the annotation.
+    // Evaluated Ion value with Annotation in an SFW projection. Converting result to an IonValue elides the annotation.
     @Test
     fun ionValueWithAnnotationInSFW() {
         val pipeline = CompilerPipeline.standard()
@@ -44,7 +44,7 @@ class IonAnnotationTests : EvaluatorTestBase() {
         assertEquals(ion.singleValue("\$bag::[{a: 1}]"), ionValueRoundtripped)
     }
 
-    // Evaluated Ion values with annotations in an Arithmetic operation results to an Ion Value without annotation.
+    // Evaluated Ion values with annotations in an Arithmetic operation results in an Ion Value without Annotation.
     @Test
     fun ionValueWithAnnotationInArithmeticOperation() {
         val pipeline = CompilerPipeline.standard()
