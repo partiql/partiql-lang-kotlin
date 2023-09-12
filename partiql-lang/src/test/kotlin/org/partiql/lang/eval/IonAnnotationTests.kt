@@ -15,10 +15,10 @@ class IonAnnotationTests : EvaluatorTestBase() {
     @Test
     fun ionValueWithAnnotationExprValueRoundTrip() {
         val ion: IonSystem = IonSystemBuilder.standard().build()
-        val ionValue = ion.singleValue("1")
-        val exprValue = ExprValue.of(ion.singleValue("annotation::1"))
+        val inputIonValue = ion.singleValue("annotation::1")
+        val exprValue = ExprValue.of(inputIonValue)
         val roundTripped = exprValue.toIonValue(ion)
-        assertEquals(ionValue, roundTripped)
+        assertEquals(ion.singleValue("1"), roundTripped)
     }
 
     // Evaluated Ion Literal with Annotation converted to an IonValue results in the elided annotation.
