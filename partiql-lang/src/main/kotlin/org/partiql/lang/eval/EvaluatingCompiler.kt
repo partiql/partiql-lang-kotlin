@@ -150,6 +150,15 @@ internal open class EvaluatingCompiler(
             "compilationContextStack was empty.", ErrorCode.EVALUATOR_UNEXPECTED_VALUE, internal = true
         )
 
+    private val interruptionCheck: () -> Unit = when (compileOptions.interruptible) {
+        true -> { ->
+            if (Thread.interrupted()) {
+                throw InterruptedException()
+            }
+        }
+        false -> { -> }
+    }
+
     // Note: please don't make this inline -- it messes up [EvaluationException] stack traces and
     // isn't a huge benefit because this is only used at SQL-compile time anyway.
     internal fun <R> nestCompilationContext(
@@ -1824,7 +1833,10 @@ internal open class EvaluatingCompiler(
                         // Grouping is not needed -- simply project the results from the FROM clause directly.
                         thunkFactory.thunkEnv(metas) { env ->
 
-                            val sourcedRows = sourceThunks(env)
+                            val sourcedRows = sourceThunks(env).map {
+                                interruptionCheck()
+                                it
+                            }
 
                             val orderedRows = when (orderByThunk) {
                                 null -> sourcedRows
@@ -1908,6 +1920,7 @@ internal open class EvaluatingCompiler(
                                     // iterate over the values from the FROM clause and populate our
                                     // aggregate register values.
                                     fromProductions.forEach { fromProduction ->
+                                        interruptionCheck()
                                         compiledAggregates?.forEachIndexed { index, ca ->
                                             registers[index].aggregator.next(ca.argThunk(fromProduction.env))
                                         }
@@ -2473,6 +2486,7 @@ internal open class EvaluatingCompiler(
             // compute the join over the data sources
             var seq = compiledSources
                 .foldLeftProduct({ env: Environment -> env }) { currEnvT: (Environment) -> Environment, currSource: CompiledFromSource ->
+                    interruptionCheck()
                     // [currSource] - the next FROM currSource to add to the join
                     // [currEnvT] - the environment add-on that previous sources of the join have constructed
                     //                and that can be used for evaluating this [currSource] (if it depends on the previous sources)
@@ -2521,6 +2535,7 @@ internal open class EvaluatingCompiler(
                 }
                 .asSequence()
                 .map { joinedValues ->
+                    interruptionCheck()
                     // bind the joined value to the bindings for the filter/project
                     FromProduction(joinedValues, fromEnv.nest(localsBinder.bindLocals(joinedValues)))
                 }
