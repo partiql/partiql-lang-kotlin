@@ -35,6 +35,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+## [0.11.1] - 2023-09-19
+
+### Added
+- Added Maven publishing plugin for partiql-planner
 
 ## [0.11.0] - 2023-05-22
 

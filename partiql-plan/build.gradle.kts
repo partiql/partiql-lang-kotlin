@@ -16,6 +16,7 @@
 
 plugins {
     id(Plugins.conventions)
+    id(Plugins.publish)
     id(Plugins.library)
 }
 
@@ -23,6 +24,12 @@ dependencies {
     implementation(project(":partiql-types"))
     implementation(Deps.ionElement)
     implementation(Deps.kotlinReflect)
+}
+
+publish {
+    artifactId = "partiql-plan"
+    name = "PartiQL Plan"
+    description = "PartiQL Plan experimental data structures"
 }
 
 val generate = tasks.register<Exec>("generate") {
