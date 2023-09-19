@@ -150,13 +150,23 @@ internal open class EvaluatingCompiler(
             "compilationContextStack was empty.", ErrorCode.EVALUATOR_UNEXPECTED_VALUE, internal = true
         )
 
+    /**
+     * This checks whether the thread has been interrupted. Specifically, it currently checks during the compilation
+     * of aggregations and joins, the "evaluation" of aggregations and joins, and the materialization of joins
+     * and from source scans.
+     *
+     * Note: This is essentially a way to avoid constantly checking [CompileOptions.interruptible]. By writing it this
+     * way, we statically determine whether to introduce checks. If the compiler has specified
+     * [CompileOptions.interruptible], the invocation of this function will insert a Thread interruption check. If not
+     * specified, it will not perform the check during compilation/evaluation/materialization.
+     */
     private val interruptionCheck: () -> Unit = when (compileOptions.interruptible) {
         true -> { ->
             if (Thread.interrupted()) {
                 throw InterruptedException()
             }
         }
-        false -> { -> }
+        false -> { -> Unit }
     }
 
     // Note: please don't make this inline -- it messes up [EvaluationException] stack traces and
