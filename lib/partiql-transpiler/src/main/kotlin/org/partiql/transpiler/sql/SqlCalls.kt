@@ -5,6 +5,8 @@ import org.partiql.ast.DatetimeField
 import org.partiql.ast.Expr
 import org.partiql.ast.Identifier
 import org.partiql.types.StaticType
+import org.partiql.value.NumericValue
+import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
 import org.partiql.value.symbolValue
@@ -58,8 +60,8 @@ public abstract class SqlCalls {
         "plus" to ::plusFn,
         "minus" to ::minusFn,
         "times" to ::timesFn,
-        "div" to ::divFn,
-        "mod" to ::modFn,
+        "divide" to ::divFn,
+        "modulo" to ::modFn,
         "concat" to ::concatFn,
         // CASTS
         "cast_bool" to { args -> rewriteCast(PartiQLValueType.BOOL, args) },
@@ -102,6 +104,33 @@ public abstract class SqlCalls {
         "date_diff_hour" to { args -> dateDiff(DatetimeField.HOUR, args) },
         "date_diff_minute" to { args -> dateDiff(DatetimeField.MINUTE, args) },
         "date_diff_second" to { args -> dateDiff(DatetimeField.SECOND, args) },
+        // IS
+        "is_bool" to { args -> isType(PartiQLValueType.BOOL, args) },
+        "is_int8" to { args -> isType(PartiQLValueType.INT8, args) },
+        "is_int16" to { args -> isType(PartiQLValueType.INT16, args) },
+        "is_int32" to { args -> isType(PartiQLValueType.INT32, args) },
+        "is_int64" to { args -> isType(PartiQLValueType.INT64, args) },
+        "is_int" to { args -> isType(PartiQLValueType.INT, args) },
+        "is_decimal" to { args -> isType(PartiQLValueType.DECIMAL, args) },
+        "is_float32" to { args -> isType(PartiQLValueType.FLOAT32, args) },
+        "is_float64" to { args -> isType(PartiQLValueType.FLOAT64, args) },
+        "is_char" to { args -> isType(PartiQLValueType.CHAR, args) },
+        "is_string" to { args -> isType(PartiQLValueType.STRING, args) },
+        "is_symbol" to { args -> isType(PartiQLValueType.SYMBOL, args) },
+        "is_binary" to { args -> isType(PartiQLValueType.BINARY, args) },
+        "is_byte" to { args -> isType(PartiQLValueType.BYTE, args) },
+        "is_blob" to { args -> isType(PartiQLValueType.BLOB, args) },
+        "is_clob" to { args -> isType(PartiQLValueType.CLOB, args) },
+        "is_date" to { args -> isType(PartiQLValueType.DATE, args) },
+        "is_time" to { args -> isType(PartiQLValueType.TIME, args) },
+        "is_timestamp" to { args -> isType(PartiQLValueType.TIMESTAMP, args) },
+        "is_interval" to { args -> isType(PartiQLValueType.INTERVAL, args) },
+        "is_bag" to { args -> isType(PartiQLValueType.BAG, args) },
+        "is_list" to { args -> isType(PartiQLValueType.LIST, args) },
+        "is_sexp" to { args -> isType(PartiQLValueType.SEXP, args) },
+        "is_struct" to { args -> isType(PartiQLValueType.STRUCT, args) },
+        "is_null" to { args -> isType(PartiQLValueType.NULL, args) },
+        "is_missing" to { args -> isType(PartiQLValueType.MISSING, args) },
     )
 
     public fun retarget(name: String, args: SqlArgs): Expr {
@@ -215,5 +244,42 @@ public abstract class SqlCalls {
             PartiQLValueType.MISSING -> typeMissing()
         }
         exprCast(value, asType)
+    }
+
+    public open fun isType(type: PartiQLValueType, args: SqlArgs) : Expr = Ast.create {
+        assert(args.size == 1) { "IS should only have 1 argument" }
+        val value = args.last().expr
+        val asType = when (type) {
+            PartiQLValueType.ANY -> Ast.typeAny()
+            PartiQLValueType.BOOL -> Ast.typeBool()
+            PartiQLValueType.INT8 -> error("unsupported")
+            PartiQLValueType.INT16 -> Ast.typeInt2()
+            PartiQLValueType.INT32 -> Ast.typeInt4()
+            PartiQLValueType.INT64 -> Ast.typeInt8()
+            PartiQLValueType.INT -> Ast.typeInt()
+            PartiQLValueType.DECIMAL -> {
+                Ast.typeDecimal(((args[0].expr as Expr.Lit).value as NumericValue<*>).int, ((args[1].expr as Expr.Lit).value as NumericValue<*>).int)
+            }
+            PartiQLValueType.FLOAT32 -> Ast.typeFloat32()
+            PartiQLValueType.FLOAT64 -> Ast.typeFloat64()
+            PartiQLValueType.CHAR -> Ast.typeChar(null)
+            PartiQLValueType.STRING -> Ast.typeString(null)
+            PartiQLValueType.SYMBOL -> Ast.typeSymbol()
+            PartiQLValueType.BINARY -> error("Unsupported")
+            PartiQLValueType.BYTE -> error("Unsupported")
+            PartiQLValueType.BLOB -> Ast.typeBlob(null)
+            PartiQLValueType.CLOB -> Ast.typeClob(null)
+            PartiQLValueType.DATE -> Ast.typeDate()
+            PartiQLValueType.TIME -> Ast.typeTime(null)
+            PartiQLValueType.TIMESTAMP -> Ast.typeTimestamp(null)
+            PartiQLValueType.INTERVAL -> Ast.typeInterval(null)
+            PartiQLValueType.BAG -> Ast.typeBag()
+            PartiQLValueType.LIST -> Ast.typeList()
+            PartiQLValueType.SEXP -> Ast.typeSexp()
+            PartiQLValueType.STRUCT -> Ast.typeStruct()
+            PartiQLValueType.NULL -> Ast.typeNullType()
+            PartiQLValueType.MISSING -> Ast.typeMissing()
+        }
+        Ast.exprIsType(value, asType, null)
     }
 }
