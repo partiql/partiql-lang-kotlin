@@ -258,12 +258,12 @@ public abstract class SqlCalls {
             PartiQLValueType.INT64 -> Ast.typeInt8()
             PartiQLValueType.INT -> Ast.typeInt()
             PartiQLValueType.DECIMAL -> {
-                Ast.typeDecimal(((args[0].expr as Expr.Lit).value as NumericValue<*>).int, ((args[1].expr as Expr.Lit).value as NumericValue<*>).int)
+                Ast.typeDecimal(args[0].toInt(), args[1].toInt())
             }
             PartiQLValueType.FLOAT32 -> Ast.typeFloat32()
             PartiQLValueType.FLOAT64 -> Ast.typeFloat64()
-            PartiQLValueType.CHAR -> Ast.typeChar(null)
-            PartiQLValueType.STRING -> Ast.typeString(null)
+            PartiQLValueType.CHAR -> Ast.typeChar(args[0].toInt())
+            PartiQLValueType.STRING -> Ast.typeString(args[0].toInt())
             PartiQLValueType.SYMBOL -> Ast.typeSymbol()
             PartiQLValueType.BINARY -> error("Unsupported")
             PartiQLValueType.BYTE -> error("Unsupported")
@@ -282,4 +282,6 @@ public abstract class SqlCalls {
         }
         Ast.exprIsType(value, asType, null)
     }
+
+    private fun SqlArg.toInt() = ((this.expr as Expr.Lit).value as NumericValue<*>).int
 }
