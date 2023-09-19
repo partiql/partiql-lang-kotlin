@@ -131,11 +131,13 @@ internal class Shell(
     fun start() {
         val interrupter = ThreadInterrupter()
         val exited = CountDownLatch(1)
-        Runtime.getRuntime().addShutdownHook(Thread {
-            exiting.set(true)
-            interrupter.interrupt()
-            Uninterruptibles.awaitUninterruptibly(exited, EXIT_DELAY.millis, TimeUnit.MILLISECONDS)
-        })
+        Runtime.getRuntime().addShutdownHook(
+            Thread {
+                exiting.set(true)
+                interrupter.interrupt()
+                Uninterruptibles.awaitUninterruptibly(exited, EXIT_DELAY.millis, TimeUnit.MILLISECONDS)
+            }
+        )
         try {
             AnsiConsole.systemInstall()
             run(exiting)

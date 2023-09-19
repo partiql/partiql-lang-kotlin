@@ -6,7 +6,6 @@ import org.partiql.ast.Expr
 import org.partiql.ast.Identifier
 import org.partiql.types.StaticType
 import org.partiql.value.NumericValue
-import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
 import org.partiql.value.symbolValue
@@ -246,7 +245,7 @@ public abstract class SqlCalls {
         exprCast(value, asType)
     }
 
-    public open fun isType(type: PartiQLValueType, args: SqlArgs) : Expr = Ast.create {
+    public open fun isType(type: PartiQLValueType, args: SqlArgs): Expr = Ast.create {
         assert(args.size == 1) { "IS should only have 1 argument" }
         val value = args.last().expr
         val asType = when (type) {
@@ -257,9 +256,7 @@ public abstract class SqlCalls {
             PartiQLValueType.INT32 -> Ast.typeInt4()
             PartiQLValueType.INT64 -> Ast.typeInt8()
             PartiQLValueType.INT -> Ast.typeInt()
-            PartiQLValueType.DECIMAL -> {
-                Ast.typeDecimal(args[0].toInt(), args[1].toInt())
-            }
+            PartiQLValueType.DECIMAL -> Ast.typeDecimal(args[0].toInt(), args[1].toInt())
             PartiQLValueType.FLOAT32 -> Ast.typeFloat32()
             PartiQLValueType.FLOAT64 -> Ast.typeFloat64()
             PartiQLValueType.CHAR -> Ast.typeChar(args[0].toInt())

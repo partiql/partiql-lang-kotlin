@@ -77,7 +77,7 @@ public class RedshiftCalls(private val onProblem: ProblemCallback) : SqlCalls() 
      * Throwing a warning message if the type assertion is not targeting null type.
      */
     override fun isType(type: PartiQLValueType, args: SqlArgs): Expr {
-        when(type) {
+        when (type) {
             PartiQLValueType.NULL -> Unit
             else -> onProblem.warn("Redshift does not support type assertion on ${type.name} ")
         }

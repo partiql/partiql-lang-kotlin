@@ -238,7 +238,7 @@ internal object RexConverter {
             // arg
             val arg0 = visitExpr(node.value, ctx)
 
-            var call = when(val targetType = node.type) {
+            var call = when (val targetType = node.type) {
                 is Type.NullType -> call("is_null", arg0)
                 is Type.Missing -> call("is_missing", arg0)
                 is Type.Bool -> call("is_bool", arg0)
