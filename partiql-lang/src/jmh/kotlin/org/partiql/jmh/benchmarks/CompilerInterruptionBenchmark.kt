@@ -40,12 +40,6 @@ import java.util.concurrent.TimeUnit
  * These are the sample benchmarks to demonstrate how JMH benchmarks in PartiQL should be set up.
  * Refer this [JMH tutorial](http://tutorials.jenkov.com/java-performance/jmh.html) for more information on [Benchmark]s,
  * [BenchmarkMode]s, etc.
- *
- * TODO: Many of these benchmarks are currently commented out. This is intentional. The reason is that the evaluation of
- *  queries containing aggregations is currently materializing all data -- and therefore, these take a long time. These
- *  are left commented out to allow developers to uncomment out when necessary. When aggregations are fixed to materialize
- *  later on in the process, we can uncomment the `eval...` benchmarks. For those uncommented, these are functioning
- *  appropriately, and we are leaving them uncommented to track any changes to their speed over time.
  */
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
@@ -195,113 +189,103 @@ open class CompilerInterruptionBenchmark {
         blackhole.consume(value)
     }
 
-//    TODO: See the note in the KDoc for the class.
-//    @Benchmark
-//    @Fork(value = FORK_VALUE)
-//    @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
-//    @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
-//    fun evalCrossJoinAggWithInterruptible(state: MyState, blackhole: Blackhole) {
-//        val result = state.pipeline.compile(state.crossJoinsAggAst).evaluate(state.session) as PartiQLResult.Value
-//        val value = result.value
-//        blackhole.consume(value)
-//    }
+    @Benchmark
+    @Fork(value = FORK_VALUE)
+    @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
+    @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
+    fun evalCrossJoinAggWithInterruptible(state: MyState, blackhole: Blackhole) {
+        val result = state.pipeline.compile(state.crossJoinsAggAst).evaluate(state.session) as PartiQLResult.Value
+        val value = result.value
+        blackhole.consume(value)
+    }
 
-//    TODO: See the note in the KDoc for the class.
-//    @Benchmark
-//    @Fork(value = FORK_VALUE)
-//    @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
-//    @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
-//    fun evalCrossJoinAggWithoutInterruptible(state: MyState, blackhole: Blackhole) {
-//        val result = state.pipelineWithoutInterruption.compile(state.crossJoinsAggAst).evaluate(state.session) as PartiQLResult.Value
-//        val value = result.value
-//        blackhole.consume(value)
-//    }
+    @Benchmark
+    @Fork(value = FORK_VALUE)
+    @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
+    @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
+    fun evalCrossJoinAggWithoutInterruptible(state: MyState, blackhole: Blackhole) {
+        val result = state.pipelineWithoutInterruption.compile(state.crossJoinsAggAst).evaluate(state.session) as PartiQLResult.Value
+        val value = result.value
+        blackhole.consume(value)
+    }
 
-//    TODO: See the note in the KDoc for the class.
-//    @Benchmark
-//    @Fork(value = FORK_VALUE)
-//    @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
-//    @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
-//    fun evalCrossJoinAggGroupWithInterruptible(state: MyState, blackhole: Blackhole) {
-//        val result = state.pipeline.compile(state.crossJoinsAggGroupAst).evaluate(state.session) as PartiQLResult.Value
-//        val value = result.value
-//        blackhole.consume(value)
-//    }
+    @Benchmark
+    @Fork(value = FORK_VALUE)
+    @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
+    @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
+    fun evalCrossJoinAggGroupWithInterruptible(state: MyState, blackhole: Blackhole) {
+        val result = state.pipeline.compile(state.crossJoinsAggGroupAst).evaluate(state.session) as PartiQLResult.Value
+        val value = result.value
+        blackhole.consume(value)
+    }
 
-//    TODO: See the note in the KDoc for the class.
-//    @Benchmark
-//    @Fork(value = FORK_VALUE)
-//    @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
-//    @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
-//    fun evalCrossJoinAggGroupWithoutInterruptible(state: MyState, blackhole: Blackhole) {
-//        val result = state.pipelineWithoutInterruption.compile(state.crossJoinsAggGroupAst).evaluate(state.session) as PartiQLResult.Value
-//        val value = result.value
-//        blackhole.consume(value)
-//    }
+    @Benchmark
+    @Fork(value = FORK_VALUE)
+    @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
+    @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
+    fun evalCrossJoinAggGroupWithoutInterruptible(state: MyState, blackhole: Blackhole) {
+        val result = state.pipelineWithoutInterruption.compile(state.crossJoinsAggGroupAst).evaluate(state.session) as PartiQLResult.Value
+        val value = result.value
+        blackhole.consume(value)
+    }
 
-//    TODO: See the note in the KDoc for the class.
-//    @Benchmark
-//    @Fork(value = FORK_VALUE)
-//    @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
-//    @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
-//    fun iterCrossJoinWithInterruptible(state: MyState, blackhole: Blackhole) {
-//        val result = state.pipeline.compile(state.crossJoinsAst).evaluate(state.session) as PartiQLResult.Value
-//        val value = result.value
-//        value.forEach { blackhole.consume(it) }
-//    }
+    @Benchmark
+    @Fork(value = FORK_VALUE)
+    @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
+    @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
+    fun iterCrossJoinWithInterruptible(state: MyState, blackhole: Blackhole) {
+        val result = state.pipeline.compile(state.crossJoinsAst).evaluate(state.session) as PartiQLResult.Value
+        val value = result.value
+        value.forEach { blackhole.consume(it) }
+    }
 
-//    TODO: See the note in the KDoc for the class.
-//    @Benchmark
-//    @Fork(value = FORK_VALUE)
-//    @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
-//    @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
-//    fun iterCrossJoinWithoutInterruptible(state: MyState, blackhole: Blackhole) {
-//        val result = state.pipelineWithoutInterruption.compile(state.crossJoinsAst).evaluate(state.session) as PartiQLResult.Value
-//        val value = result.value
-//        value.forEach { blackhole.consume(it) }
-//    }
+    @Benchmark
+    @Fork(value = FORK_VALUE)
+    @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
+    @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
+    fun iterCrossJoinWithoutInterruptible(state: MyState, blackhole: Blackhole) {
+        val result = state.pipelineWithoutInterruption.compile(state.crossJoinsAst).evaluate(state.session) as PartiQLResult.Value
+        val value = result.value
+        value.forEach { blackhole.consume(it) }
+    }
 
-//    TODO: See the note in the KDoc for the class.
-//    @Benchmark
-//    @Fork(value = FORK_VALUE)
-//    @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
-//    @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
-//    fun iterCrossJoinAggWithInterruptible(state: MyState, blackhole: Blackhole) {
-//        val result = state.pipeline.compile(state.crossJoinsAggAst).evaluate(state.session) as PartiQLResult.Value
-//        val value = result.value
-//        value.forEach { blackhole.consume(it) }
-//    }
+    @Benchmark
+    @Fork(value = FORK_VALUE)
+    @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
+    @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
+    fun iterCrossJoinAggWithInterruptible(state: MyState, blackhole: Blackhole) {
+        val result = state.pipeline.compile(state.crossJoinsAggAst).evaluate(state.session) as PartiQLResult.Value
+        val value = result.value
+        value.forEach { blackhole.consume(it) }
+    }
 
-//    TODO: See the note in the KDoc for the class.
-//    @Benchmark
-//    @Fork(value = FORK_VALUE)
-//    @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
-//    @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
-//    fun iterCrossJoinAggWithoutInterruptible(state: MyState, blackhole: Blackhole) {
-//        val result = state.pipelineWithoutInterruption.compile(state.crossJoinsAggAst).evaluate(state.session) as PartiQLResult.Value
-//        val value = result.value
-//        value.forEach { blackhole.consume(it) }
-//    }
+    @Benchmark
+    @Fork(value = FORK_VALUE)
+    @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
+    @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
+    fun iterCrossJoinAggWithoutInterruptible(state: MyState, blackhole: Blackhole) {
+        val result = state.pipelineWithoutInterruption.compile(state.crossJoinsAggAst).evaluate(state.session) as PartiQLResult.Value
+        val value = result.value
+        value.forEach { blackhole.consume(it) }
+    }
 
-//    TODO: See the note in the KDoc for the class.
-//    @Benchmark
-//    @Fork(value = FORK_VALUE)
-//    @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
-//    @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
-//    fun iterCrossJoinAggGroupWithInterruptible(state: MyState, blackhole: Blackhole) {
-//        val result = state.pipeline.compile(state.crossJoinsAggGroupAst).evaluate(state.session) as PartiQLResult.Value
-//        val value = result.value
-//        value.forEach { blackhole.consume(it) }
-//    }
+    @Benchmark
+    @Fork(value = FORK_VALUE)
+    @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
+    @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
+    fun iterCrossJoinAggGroupWithInterruptible(state: MyState, blackhole: Blackhole) {
+        val result = state.pipeline.compile(state.crossJoinsAggGroupAst).evaluate(state.session) as PartiQLResult.Value
+        val value = result.value
+        value.forEach { blackhole.consume(it) }
+    }
 
-//    TODO: See the note in the KDoc for the class.
-//    @Benchmark
-//    @Fork(value = FORK_VALUE)
-//    @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
-//    @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
-//    fun iterCrossJoinAggGroupWithoutInterruptible(state: MyState, blackhole: Blackhole) {
-//        val result = state.pipelineWithoutInterruption.compile(state.crossJoinsAggGroupAst).evaluate(state.session) as PartiQLResult.Value
-//        val value = result.value
-//        value.forEach { blackhole.consume(it) }
-//    }
+    @Benchmark
+    @Fork(value = FORK_VALUE)
+    @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
+    @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
+    fun iterCrossJoinAggGroupWithoutInterruptible(state: MyState, blackhole: Blackhole) {
+        val result = state.pipelineWithoutInterruption.compile(state.crossJoinsAggGroupAst).evaluate(state.session) as PartiQLResult.Value
+        val value = result.value
+        value.forEach { blackhole.consume(it) }
+    }
 }
