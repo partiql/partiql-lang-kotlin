@@ -145,6 +145,7 @@ internal sealed class AbstractPipeline(open val options: PipelineOptions) {
             projectionIteration(options.projectionIterationBehavior)
             undefinedVariable(options.undefinedVariableBehavior)
             typingMode(options.typingMode)
+            isInterruptible(true)
         }
 
         private val compilerPipeline = CompilerPipeline.build {

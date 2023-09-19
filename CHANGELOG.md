@@ -29,6 +29,10 @@ Thank you to all who have contributed!
 ## [Unreleased]
 
 ### Added
+- Adds `isInterruptible` property to `CompileOptions`. The default value is `false`. Please see the KDocs for more information.
+- Adds support for thread interruption in compilation and execution. If you'd like to opt-in to this addition, please see
+  the `isInterruptible` addition above for more information.
+- Adds support for CLI users to use CTRL-C to cancel long-running compilation/execution of queries
 
 ### Changed
 
