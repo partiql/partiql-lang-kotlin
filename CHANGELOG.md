@@ -27,8 +27,8 @@ Thank you to all who have contributed!
 
 ## [0.12.1] - 2023-09-19
 
-### Added
-- Added Maven publishing plugin for partiql-planner and partiql-parser
+### Fixed
+- Fixes build failure for version `0.12.0` by publishing `partiql-plan` and `partiql-parser` as an independent artifact. Please note that `partiql-plan` is experimental.
 
 ### Contributors
 Thank you to all who have contributed!
