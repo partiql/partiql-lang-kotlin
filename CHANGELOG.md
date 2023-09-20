@@ -26,29 +26,26 @@ Thank you to all who have contributed!
 -->
 
 
-## [Unreleased]
+## [0.13.1] - 2023-09-19
 
 ### Added
 - Adds `isInterruptible` property to `CompileOptions`. The default value is `false`. Please see the KDocs for more information.
 - Adds support for thread interruption in compilation and execution. If you'd like to opt-in to this addition, please see
   the `isInterruptible` addition above for more information.
 - Adds support for CLI users to use CTRL-C to cancel long-running compilation/execution of queries
-
-### Changed
-
-### Deprecated
+- Added Maven publishing plugin for partiql-planner
 
 ### Fixed
 - Fix a bug in `FilterScanToKeyLookup` pass wherein it was rewriting primary key equality expressions with references
   to the candidate row on both sides.  Now it will correctly ignore such expressions.
 
-### Removed
-
-### Security
-
 ### Contributors
 Thank you to all who have contributed!
-- @<your-username>
+- @dlurton
+- @yliuuuu
+- @am357
+- @johnedquinn
+- @alancai98
 
 ## [0.13.0] - 2023-09-07
 
