@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1695171472017,
+  "lastUpdate": 1695245047968,
   "repoUrl": "https://github.com/partiql/partiql-lang-kotlin",
   "entries": {
     "JMH Benchmark": [
@@ -63376,6 +63376,552 @@ window.BENCHMARK_DATA = {
           {
             "name": "org.partiql.jmh.benchmarks.PartiQLBenchmark.testPartiQLParser",
             "value": 15.425383865793256,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "caialan@amazon.com",
+            "name": "Alan Cai",
+            "username": "alancai98"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8a8fdd091e4065652a76622e63baaa5790214057",
+          "message": "Prepare v0.13.1 release and add partiql-planner Maven publishing plugin v0.13.1 (#1217)\n\nCo-authored-by: John Ed Quinn <40360967+johnedquinn@users.noreply.github.com>",
+          "timestamp": "2023-09-20T12:10:36-07:00",
+          "tree_id": "78f6a3d8532a7f2ef4cb93c09ad6154bb0eeaec4",
+          "url": "https://github.com/partiql/partiql-lang-kotlin/commit/8a8fdd091e4065652a76622e63baaa5790214057"
+        },
+        "date": 1695245045554,
+        "tool": "jmh",
+        "benches": [
+          {
+            "name": "org.partiql.jmh.benchmarks.CompilerInterruptionBenchmark.compileCrossJoinAggFuncGroupingWithInterruptible",
+            "value": 614.1878603088155,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.CompilerInterruptionBenchmark.compileCrossJoinAggFuncGroupingWithoutInterruptible",
+            "value": 608.5191134017807,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.CompilerInterruptionBenchmark.compileCrossJoinAggFuncWithInterruptible",
+            "value": 522.9803571922064,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.CompilerInterruptionBenchmark.compileCrossJoinAggFuncWithoutInterruptible",
+            "value": 517.5549545989422,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.CompilerInterruptionBenchmark.compileCrossJoinWithInterruptible",
+            "value": 385.60029681234687,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.CompilerInterruptionBenchmark.compileCrossJoinWithoutInterruptible",
+            "value": 371.08685234586034,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.CompilerInterruptionBenchmark.evalCrossJoinAggWithInterruptible",
+            "value": 11307677.14135,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.CompilerInterruptionBenchmark.evalCrossJoinAggWithoutInterruptible",
+            "value": 11265610.77305,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.CompilerInterruptionBenchmark.evalCrossJoinWithInterruptible",
+            "value": 94.86138539846257,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.CompilerInterruptionBenchmark.evalCrossJoinWithoutInterruptible",
+            "value": 91.28302577727649,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.CompilerInterruptionBenchmark.iterCrossJoinAggWithInterruptible",
+            "value": 11010991.94375,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.CompilerInterruptionBenchmark.iterCrossJoinAggWithoutInterruptible",
+            "value": 10785716.714799998,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.CompilerInterruptionBenchmark.iterCrossJoinWithInterruptible",
+            "value": 182095.56028,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.CompilerInterruptionBenchmark.iterCrossJoinWithoutInterruptible",
+            "value": 183513.5928916667,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.MultipleLikeBenchmark.testPartiQLCompiler15",
+            "value": 186.2030455354638,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.MultipleLikeBenchmark.testPartiQLCompiler30",
+            "value": 420.9617539453596,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.MultipleLikeBenchmark.testPartiQLEvaluator15",
+            "value": 660025.8126999999,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.MultipleLikeBenchmark.testPartiQLEvaluator30",
+            "value": 1296769.73735,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.MultipleLikeBenchmark.testPartiQLEvaluator30WithData10",
+            "value": 12927491.74305,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.MultipleLikeBenchmark.testPartiQLParser15",
+            "value": 268.40184466291134,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.MultipleLikeBenchmark.testPartiQLParser30",
+            "value": 499.52468438958766,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseFailNameCaseWhenThen",
+            "value": 82.8682951742749,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseFailNameComplexQuery",
+            "value": 99.95866336857681,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseFailNameComplexQuery01",
+            "value": 489.1332311017637,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseFailNameComplexQuery02",
+            "value": 809.525405631508,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseFailNameExceptUnionIntersectSixty",
+            "value": 314.76679532842644,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseFailNameExec20Expressions",
+            "value": 104.7350940638396,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseFailNameFromLet",
+            "value": 84.46057960580626,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseFailNameGraphPattern",
+            "value": 80.59664860215115,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseFailNameGraphPreFilters",
+            "value": 136.51257793978408,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseFailNameGroupLimit",
+            "value": 95.08763761848788,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseFailNameLongFromSourceOrderBy",
+            "value": 110.40707223949963,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseFailNameManyJoins",
+            "value": 127.49398270896366,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseFailNameNestedAggregates",
+            "value": 192.69562139349026,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseFailNameNestedParen",
+            "value": 34.40823197159269,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseFailNamePivot",
+            "value": 123.20395026247118,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseFailNameQuery15OrsAndLikes",
+            "value": 403.5659905478959,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseFailNameQuery30Plus",
+            "value": 189.30493779808265,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseFailNameQueryFunc",
+            "value": 90.23709368268625,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseFailNameQueryFuncInProjection",
+            "value": 194.7527885276577,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseFailNameQueryList",
+            "value": 132.2132452654836,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseFailNameQueryNestedSelect",
+            "value": 1092.1039334499956,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseFailNameQuerySimple",
+            "value": 32.279677258317236,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseFailNameSeveralJoins",
+            "value": 45.087982809965396,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseFailNameSeveralProjections",
+            "value": 125.34008897575896,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseFailNameSeveralSelect",
+            "value": 348.85987251940946,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseFailNameSimpleInsert",
+            "value": 56.97030119654562,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseFailNameSomeJoins",
+            "value": 44.956603787031746,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseFailNameSomeProjections",
+            "value": 56.7352677427326,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseFailNameSomeSelect",
+            "value": 98.98645395171451,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseFailNameTimeZone",
+            "value": 49.16336122989374,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseFailNameVeryLongQuery",
+            "value": 529.1020516092733,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseFailNameVeryLongQuery01",
+            "value": 1681.2512893197722,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseNameCaseWhenThen",
+            "value": 43.197178278118194,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseNameComplexQuery",
+            "value": 394.43872841815335,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseNameComplexQuery01",
+            "value": 179.1241608999323,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseNameExceptUnionIntersectSixty",
+            "value": 328.6123348934167,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseNameExec20Expressions",
+            "value": 95.87909582969938,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseNameFromLet",
+            "value": 65.08018715935506,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseNameGraphPattern",
+            "value": 71.23644017244357,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseNameGraphPreFilters",
+            "value": 121.57588339088113,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseNameGroupLimit",
+            "value": 66.99627935264434,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseNameLongFromSourceOrderBy",
+            "value": 206.01920284996964,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseNameManyJoins",
+            "value": 75.51686631940369,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseNameNestedAggregates",
+            "value": 149.83753797135424,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseNameNestedParen",
+            "value": 118.30474072585139,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseNamePivot",
+            "value": 107.73841468401471,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseNameQuery15OrsAndLikes",
+            "value": 277.2723562660475,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseNameQuery30Plus",
+            "value": 89.77688498888485,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseNameQueryFunc",
+            "value": 225.87172396639647,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseNameQueryFuncInProjection",
+            "value": 140.1260593388694,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseNameQueryList",
+            "value": 117.51579171520743,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseNameQueryNestedSelect",
+            "value": 219.01590219593922,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseNameQuerySimple",
+            "value": 22.71864764842065,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseNameSeveralJoins",
+            "value": 114.40159131830346,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseNameSeveralProjections",
+            "value": 89.4778694792492,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseNameSeveralSelect",
+            "value": 168.98587991315185,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseNameSimpleInsert",
+            "value": 36.871340369767395,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseNameSomeJoins",
+            "value": 36.78982418072724,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseNameSomeProjections",
+            "value": 32.45022258608178,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseNameSomeSelect",
+            "value": 56.952567682348786,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseNameTimeZone",
+            "value": 16.85367387837276,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseNameVeryLongQuery",
+            "value": 632.4347984570134,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.ParserBenchmark.parseNameVeryLongQuery01",
+            "value": 1679.8820112735073,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.PartiQLBenchmark.testPartiQLCompiler",
+            "value": 14.969167523572875,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.PartiQLBenchmark.testPartiQLEvaluator",
+            "value": 3.643275992888701,
+            "unit": "us/op",
+            "extra": "iterations: 10\nforks: 2\nthreads: 1"
+          },
+          {
+            "name": "org.partiql.jmh.benchmarks.PartiQLBenchmark.testPartiQLParser",
+            "value": 20.943634962469655,
             "unit": "us/op",
             "extra": "iterations: 10\nforks: 2\nthreads: 1"
           }
