@@ -22,12 +22,6 @@ plugins {
     id(Plugins.publish)
 }
 
-val libs: Configuration by configurations.creating
-
-configurations {
-    api.get().extendsFrom(libs)
-}
-
 // Disabled for partiql-lang project.
 kotlin {
     explicitApi = null
@@ -105,14 +99,4 @@ tasks.processResources {
         include("partiql.ion")
         into("org/partiql/type-domains/")
     }
-}
-
-tasks.jar {
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    // adds all `libs(project(...))` to the partiql-lang-kotlin jar
-    from(
-        libs.dependencies.filterIsInstance<ProjectDependency>().map {
-            it.dependencyProject.sourceSets.main.get().output.classesDirs
-        }
-    )
 }
