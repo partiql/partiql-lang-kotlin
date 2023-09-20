@@ -25,6 +25,14 @@ Thank you to all who have contributed!
 
 -->
 
+## [0.12.1] - 2023-09-19
+
+### Fixed
+- Fixes build failure for version `0.12.0` by publishing `partiql-plan` and `partiql-parser` as independent artifacts. Please note that `partiql-plan` and `partiql-parser` are experimental.
+
+### Contributors
+Thank you to all who have contributed!
+- @alancai98
 
 ## [0.12.0] - 2023-06-14
 

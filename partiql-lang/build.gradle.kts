@@ -20,12 +20,6 @@ plugins {
     id(Plugins.publish)
 }
 
-val libs: Configuration by configurations.creating
-
-configurations {
-    api.get().extendsFrom(libs)
-}
-
 // Disabled for partiql-lang project.
 kotlin {
     explicitApi = null
@@ -35,12 +29,11 @@ dependencies {
     api(project(":partiql-ast"))
     api(project(":partiql-spi"))
     api(project(":partiql-types"))
+    api(project(":partiql-plan"))
+    api(project(":partiql-parser"))
     api(Deps.ionElement)
     api(Deps.ionJava)
     api(Deps.ionSchema)
-    // libs are included in partiql-lang-kotlin JAR, but are not published independently yet.
-    libs(project(":partiql-parser"))
-    libs(project(":partiql-plan"))
     implementation(Deps.antlrRuntime)
     implementation(Deps.csv)
     implementation(Deps.kotlinReflect)
@@ -78,14 +71,4 @@ tasks.processResources {
     from("$rootDir/partiql-ast/src/main/pig") {
         include("partiql.ion")
     }
-}
-
-tasks.jar {
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    // adds all `libs(project(...))` to the partiql-lang-kotlin jar
-    from(
-        libs.dependencies.filterIsInstance<ProjectDependency>().map {
-            it.dependencyProject.sourceSets.main.get().output.classesDirs
-        }
-    )
 }
