@@ -54,7 +54,7 @@ Thank you to all who have contributed!
 ### Fixed
 - Fix a bug in `FilterScanToKeyLookup` pass wherein it was rewriting primary key equality expressions with references
   to the candidate row on both sides.  Now it will correctly ignore such expressions.
-- Fixes build failure for version `0.13.0` by publishing `partiql-plan` and `partiql-parser` as an independent artifact. Please note that `partiql-plan` is experimental.
+- Fixes build failure for version `0.13.0` by publishing `partiql-plan` as an independent artifact. Please note that `partiql-plan` is experimental.
 
 
 ### Contributors
