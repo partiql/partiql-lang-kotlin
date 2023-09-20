@@ -26,6 +26,11 @@ dependencies {
     implementation(Deps.kotlinReflect)
 }
 
+// Disabled for partiql-plan project.
+kotlin {
+    explicitApi = null
+}
+
 publish {
     artifactId = "partiql-plan"
     name = "PartiQL Plan"
