@@ -35,6 +35,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+## [0.10.1] - 2023-09-19
+
+### Fixes
+- Fixes build failure for version `0.10.0` by publishing `partiql-plan` as an independent artifact. Please note that `partiql-plan` is experimental.
+
 ## [0.10.0] - 2023-05-05
 
 ### Added
