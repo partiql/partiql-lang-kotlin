@@ -28,7 +28,7 @@ Thank you to all who have contributed!
 ## [0.12.1] - 2023-09-19
 
 ### Added
-- Added Maven publishing plugin for partiql-planner
+- Added Maven publishing plugin for partiql-planner and partiql-parser
 
 ### Contributors
 Thank you to all who have contributed!
