@@ -25,22 +25,15 @@ Thank you to all who have contributed!
 
 -->
 
-
 ## [Unreleased]
 
 ### Added
-- Adds `isInterruptible` property to `CompileOptions`. The default value is `false`. Please see the KDocs for more information.
-- Adds support for thread interruption in compilation and execution. If you'd like to opt-in to this addition, please see
-  the `isInterruptible` addition above for more information.
-- Adds support for CLI users to use CTRL-C to cancel long-running compilation/execution of queries
 
 ### Changed
 
 ### Deprecated
 
 ### Fixed
-- Fix a bug in `FilterScanToKeyLookup` pass wherein it was rewriting primary key equality expressions with references
-  to the candidate row on both sides.  Now it will correctly ignore such expressions.
 
 ### Removed
 
@@ -49,6 +42,28 @@ Thank you to all who have contributed!
 ### Contributors
 Thank you to all who have contributed!
 - @<your-username>
+
+## [0.13.1] - 2023-09-19
+
+### Added
+- Adds `isInterruptible` property to `CompileOptions`. The default value is `false`. Please see the KDocs for more information.
+- Adds support for thread interruption in compilation and execution. If you'd like to opt-in to this addition, please see
+  the `isInterruptible` addition above for more information.
+- Adds support for CLI users to use CTRL-C to cancel long-running compilation/execution of queries
+
+### Fixed
+- Fix a bug in `FilterScanToKeyLookup` pass wherein it was rewriting primary key equality expressions with references
+  to the candidate row on both sides.  Now it will correctly ignore such expressions.
+- Fixes build failure for version `0.13.0` by publishing `partiql-plan` as an independent artifact. Please note that `partiql-plan` is experimental.
+
+
+### Contributors
+Thank you to all who have contributed!
+- @dlurton
+- @yliuuuu
+- @am357
+- @johnedquinn
+- @alancai98
 
 ## [0.13.0] - 2023-09-07
 

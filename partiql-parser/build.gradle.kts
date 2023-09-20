@@ -55,5 +55,5 @@ tasks.processResources {
 publish {
     artifactId = "partiql-parser"
     name = "PartiQL Parser"
-    description = "PartiQL's Parser"
+    description = "PartiQL's experimental Parser"
 }
