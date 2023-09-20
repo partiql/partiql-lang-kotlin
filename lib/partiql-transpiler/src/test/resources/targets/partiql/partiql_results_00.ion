@@ -53,5 +53,16 @@ target::{
         FROM store_sales AS store_sales
       ''',
     },
+    '0004': {
+      statement: '''
+        SELECT
+          store.s_store_sk AS s_store_sk
+        FROM
+            tpc_ds."store" AS store
+          LEFT OUTER JOIN
+            tpc_ds."store_returns" AS returns
+          ON store.s_store_sk = returns.sr_store_sk
+      '''
+    }
   },
 }

@@ -121,5 +121,28 @@ suite::{
         }
       }
     },
+    // TODO: Add support for SELECT * so we can assert on the schema
+    '0004': {
+      statement: '''
+        SELECT s_store_sk
+        FROM
+            tpc_ds.store AS store
+          LEFT JOIN
+            tpc_ds.store_returns AS returns
+          ON s_store_sk = sr_store_sk
+      ''',
+      schema: {
+        type: "bag",
+        items: {
+          type: "struct",
+          fields: [
+            {
+              name:"s_store_sk",
+              type:"string"
+            }
+          ]
+        }
+      }
+    }
   },
 }
