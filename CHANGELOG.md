@@ -50,11 +50,12 @@ Thank you to all who have contributed!
 - Adds support for thread interruption in compilation and execution. If you'd like to opt-in to this addition, please see
   the `isInterruptible` addition above for more information.
 - Adds support for CLI users to use CTRL-C to cancel long-running compilation/execution of queries
-- Added Maven publishing plugin for partiql-planner
 
 ### Fixed
 - Fix a bug in `FilterScanToKeyLookup` pass wherein it was rewriting primary key equality expressions with references
   to the candidate row on both sides.  Now it will correctly ignore such expressions.
+- Fixes build failure for version `0.13.0` by publishing `partiql-plan` and `partiql-parser` as an independent artifact. Please note that `partiql-plan` is experimental.
+
 
 ### Contributors
 Thank you to all who have contributed!
