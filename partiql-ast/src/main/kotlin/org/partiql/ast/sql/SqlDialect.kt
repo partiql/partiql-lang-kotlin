@@ -151,7 +151,7 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
     override fun visitTypeInterval(node: Type.Interval, head: SqlBlock) = head concat type("INTERVAL", node.precision)
 
     // unsupported
-    override fun visitTypeCustom(node: Type.Custom, head: SqlBlock) = defaultReturn(node, head)
+    override fun visitTypeCustom(node: Type.Custom, head: SqlBlock) = head concat r(node.name)
 
     // Expressions
 
