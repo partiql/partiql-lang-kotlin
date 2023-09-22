@@ -28,6 +28,7 @@ Thank you to all who have contributed!
 ## [Unreleased]
 
 ### Added
+- **Breaking**: Compacts query pretty printing for `List`, `Bag`, and `Sexp`. E.g.: before `[ 1, 2, 3 ]` after `[1,2,3]`.
 
 ### Changed
 

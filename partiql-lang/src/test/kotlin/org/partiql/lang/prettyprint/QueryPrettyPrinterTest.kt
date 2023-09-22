@@ -22,7 +22,7 @@ class QueryPrettyPrinterTest {
     @Test
     fun exec() {
         checkPrettyPrintQuery(
-            "EXEC foo 'bar0', 1, 2, [3]", "EXEC foo 'bar0', 1, 2, [ 3 ]"
+            "EXEC foo 'bar0', 1, 2, [3]", "EXEC foo 'bar0', 1, 2, [3]"
         )
     }
 
@@ -96,7 +96,7 @@ class QueryPrettyPrinterTest {
     @Test
     fun insertValue() {
         checkPrettyPrintQuery(
-            "INSERT INTO foo VALUE (1, 2)", "INSERT INTO foo VALUE ( 1, 2 )"
+            "INSERT INTO foo VALUE (1, 2)", "INSERT INTO foo VALUE (1,2)"
         )
     }
 
@@ -171,7 +171,7 @@ class QueryPrettyPrinterTest {
                 FROM x
                 WHERE a = b
                 SET k = 5, m = 6
-                INSERT INTO c VALUE << 1 >>
+                INSERT INTO c VALUE <<1>>
                 REMOVE a
                 SET l = 3
                 REMOVE b
@@ -320,17 +320,17 @@ class QueryPrettyPrinterTest {
 
     @Test
     fun bag() {
-        checkPrettyPrintQuery("<<1,2,3>>", "<< 1, 2, 3 >>")
+        checkPrettyPrintQuery("<<1,2,3>>", "<<1,2,3>>")
     }
 
     @Test
     fun list() {
-        checkPrettyPrintQuery("[1,2,3]", "[ 1, 2, 3 ]")
+        checkPrettyPrintQuery("[1,2,3]", "[1,2,3]")
     }
 
     @Test
     fun sexp() {
-        checkPrettyPrintQuery("sexp(1,2,3)", "sexp(1, 2, 3)")
+        checkPrettyPrintQuery("sexp(1,2,3)", "sexp(1,2,3)")
     }
 
     @Test
@@ -455,12 +455,12 @@ class QueryPrettyPrinterTest {
 
     @Test
     fun inCollectionBrackets() {
-        checkPrettyPrintQuery("1 IN [1, 2, 3]", "1 IN [ 1, 2, 3 ]")
+        checkPrettyPrintQuery("1 IN [1, 2, 3]", "1 IN [1,2,3]")
     }
 
     @Test
     fun inCollectionParens() {
-        checkPrettyPrintQuery("1 IN (1, 2, 3)", "1 IN ( 1, 2, 3 )")
+        checkPrettyPrintQuery("1 IN (1, 2, 3)", "1 IN (1,2,3)")
     }
 
     @Test
@@ -802,7 +802,7 @@ class QueryPrettyPrinterTest {
         checkPrettyPrintQuery(
             "<< (SELECT a FROM b), c >>",
             """
-                << (SELECT a FROM b), c >>
+                <<(SELECT a FROM b),c>>
             """.trimIndent()
         )
     }
@@ -812,7 +812,7 @@ class QueryPrettyPrinterTest {
         checkPrettyPrintQuery(
             "<< (CASE name WHEN 'jack' THEN 1 WHEN 'joe' THEN 2 END), c >>",
             """
-                << (CASE name WHEN 'jack' THEN 1 WHEN 'joe' THEN 2 END), c >>
+                <<(CASE name WHEN 'jack' THEN 1 WHEN 'joe' THEN 2 END),c>>
             """.trimIndent()
         )
     }
@@ -899,7 +899,7 @@ class QueryPrettyPrinterTest {
     @Test
     fun selectInExec() {
         checkPrettyPrintQuery(
-            "EXEC foo 'bar0', 1, 2, [3], SELECT a FROM b", "EXEC foo 'bar0', 1, 2, [ 3 ], (SELECT a FROM b)"
+            "EXEC foo 'bar0', 1, 2, [3], SELECT a FROM b", "EXEC foo 'bar0', 1, 2, [3], (SELECT a FROM b)"
         )
     }
 
@@ -925,7 +925,7 @@ class QueryPrettyPrinterTest {
             query = "SELECT * FROM [ CURRENT_user ]",
             expected = """
                 SELECT *
-                FROM [ CURRENT_USER ]
+                FROM [CURRENT_USER]
             """.trimIndent()
         )
     }

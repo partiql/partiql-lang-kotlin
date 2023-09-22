@@ -407,16 +407,16 @@ class QueryPrettyPrinter {
 
     @Suppress("UNUSED_PARAMETER")
     private fun writeAstNode(node: PartiqlAst.Expr.Bag, sb: StringBuilder, level: Int) {
-        sb.append("<< ")
+        sb.append("<<")
         node.values.forEach {
             // Print anything as one line inside a bag
             writeAstNodeCheckSubQuery(it, sb, -1)
-            sb.append(", ")
+            sb.append(",")
         }
         if (node.values.isNotEmpty()) {
-            sb.removeLast(2)
+            sb.removeLast(1)
         }
-        sb.append(" >>")
+        sb.append(">>")
     }
 
     @Suppress("UNUSED_PARAMETER")
@@ -425,10 +425,10 @@ class QueryPrettyPrinter {
         node.values.forEach {
             // Print anything as one line inside a sexp
             writeAstNodeCheckSubQuery(it, sb, -1)
-            sb.append(", ")
+            sb.append(",")
         }
         if (node.values.isNotEmpty()) {
-            sb.removeLast(2)
+            sb.removeLast(1)
         }
         sb.append(")")
     }
@@ -436,17 +436,17 @@ class QueryPrettyPrinter {
     @Suppress("UNUSED_PARAMETER")
     private fun writeAstNode(node: PartiqlAst.Expr.List, sb: StringBuilder, level: Int) {
         val (open, close) = when (node.metas.containsKey(IsListParenthesizedMeta.tag)) {
-            true -> "( " to " )"
-            else -> "[ " to " ]"
+            true -> "(" to ")"
+            else -> "[" to "]"
         }
         sb.append(open)
         node.values.forEach {
             // Print anything as one line inside a list
             writeAstNodeCheckSubQuery(it, sb, -1)
-            sb.append(", ")
+            sb.append(",")
         }
         if (node.values.isNotEmpty()) {
-            sb.removeLast(2)
+            sb.removeLast(1)
         }
         sb.append(close)
     }
