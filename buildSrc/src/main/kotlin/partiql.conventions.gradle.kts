@@ -77,6 +77,10 @@ configure<KtlintExtension> {
     }
 }
 
+tasks.named("build") {
+    dependsOn("ktlintFormat")
+}
+
 sourceSets {
     main {
         java.srcDir(generatedSrc)
