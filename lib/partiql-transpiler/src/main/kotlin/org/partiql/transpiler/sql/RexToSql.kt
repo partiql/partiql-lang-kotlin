@@ -140,7 +140,7 @@ public open class RexToSql(
                 transform.handleProblem(
                     TranspilerProblem(
                         level = TranspilerProblem.Level.ERROR,
-                        message = "Could not resolve function $"
+                        message = "Could not resolve function ${id.sql()}"
                     )
                 )
                 (id as Identifier.Symbol).symbol
