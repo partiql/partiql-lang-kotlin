@@ -1475,6 +1475,10 @@ internal class PartiQLParserDefault : PartiQLParser {
             exprSessionAttribute(Expr.SessionAttribute.Attribute.CURRENT_USER)
         }
 
+        override fun visitExprTermCurrentDate(ctx: org.partiql.parser.antlr.PartiQLParser.ExprTermCurrentDateContext) = translate(ctx) {
+            exprSessionAttribute(Expr.SessionAttribute.Attribute.CURRENT_DATE)
+        }
+
         /**
          *
          * FUNCTIONS
