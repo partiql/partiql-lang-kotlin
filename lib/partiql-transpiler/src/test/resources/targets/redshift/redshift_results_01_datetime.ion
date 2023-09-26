@@ -1,0 +1,16 @@
+target::{
+  name: "redshift",
+  suite: "transpiler_suite_01_datetime",
+  tests: {
+    '0000': {
+      statement: '''
+        SELECT dateadd(day, 30, store_sales.ss_sold_date_sk) AS d FROM store_sales AS store_sales
+      ''',
+    },
+    '0001': {
+      statement: '''
+        SELECT dateadd(day, -30, store_sales.ss_sold_date_sk) AS d FROM store_sales AS store_sales
+      ''',
+    },
+  },
+}

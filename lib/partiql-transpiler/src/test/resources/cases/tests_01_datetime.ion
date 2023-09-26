@@ -1,0 +1,57 @@
+//
+// DATETIME Transpilation tests
+//
+suite::{
+  name: "transpiler_suite_01_datetime",
+  session: {
+    catalog: "default",
+    path: [
+      "tpc_ds"
+    ],
+    vars: {},
+  },
+  tests: {
+    '0000': {
+      // DAY ARITHMETIC PLUS
+      statement: '''
+        SELECT DATE_ADD(DAY, 30, ss_sold_date_sk) AS d FROM store_sales
+      ''',
+      schema: {
+        type: "bag",
+        items: {
+          type: "struct",
+          fields: [
+            {
+              name: "d",
+              type: [
+                "date",
+                "null"
+              ],
+            },
+          ],
+        },
+      },
+    },
+    // DAY ARITHMETIC MINUS
+    '0001': {
+      statement: '''
+        SELECT DATE_ADD(DAY, -30, ss_sold_date_sk) AS d FROM store_sales
+      ''',
+      schema: {
+        type: "bag",
+        items: {
+          type: "struct",
+          fields: [
+            {
+              name: "d",
+              type: [
+                "date",
+                "null"
+              ],
+            },
+          ],
+        },
+      },
+    },
+  },
+}

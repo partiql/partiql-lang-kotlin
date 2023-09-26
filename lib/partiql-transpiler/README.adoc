@@ -1,4 +1,5 @@
 = PartiQL Transpiler
+:toc:
 
 The PartiQL Transpiler is a compiler framework for the PartiQL SQL dialect.
 It is considered experimental and is under active development.
@@ -223,6 +224,17 @@ The PartiQL Transpiler project has a basic testing framework.
 Test cases _inputs_ are specified in the `test/resources/`
 as _suites_ which are groups of related tests.
 Each suite will have some catalog configuration and map of all tests.
+
+=== Executing Tests
+
+[source,shell]
+----
+# All tests
+./gradlew :lib:partiql-transpiler:test
+
+# For a single target
+./gradlew :lib:partiql-transpiler:test --tests "org.partiql.transpiler.test.targets.redshift.*"
+----
 
 IMPORTANT: Each test should be uniquely identifiable by the suite name and the test case key.
 This is because test inputs are separated from test targets and must be correlated.
