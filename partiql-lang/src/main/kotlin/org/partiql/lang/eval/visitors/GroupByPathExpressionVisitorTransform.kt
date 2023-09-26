@@ -102,6 +102,7 @@ class GroupByPathExpressionVisitorTransform(
         val projection = currentAndUnshadowedTransformer.transformExprSelect_project(node)
 
         // The scope of the expressions in the FROM clause is the same as that of the parent scope.
+        val exclude = unshadowedTransformer.transformExprSelect_excludeClause(node)
         val from = this.transformExprSelect_from(node)
         val fromLet = unshadowedTransformer.transformExprSelect_fromLet(node)
         val where = unshadowedTransformer.transformExprSelect_where(node)
@@ -116,6 +117,7 @@ class GroupByPathExpressionVisitorTransform(
             PartiqlAst.Expr.Select(
                 setq = node.setq,
                 project = projection,
+                excludeClause = exclude,
                 from = from,
                 fromLet = fromLet,
                 where = where,

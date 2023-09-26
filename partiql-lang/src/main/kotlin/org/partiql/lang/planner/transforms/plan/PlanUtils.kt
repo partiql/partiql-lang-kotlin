@@ -34,6 +34,7 @@ internal object PlanUtils {
         is Rel.Scan -> input.common.typeEnv
         is Rel.Sort -> input.common.typeEnv
         is Rel.Unpivot -> input.common.typeEnv
+        is Rel.Exclude -> input.common.typeEnv
     }
 
     internal fun Rex.addType(type: StaticType): Rex = when (this) {

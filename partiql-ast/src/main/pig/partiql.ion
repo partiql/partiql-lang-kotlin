@@ -166,6 +166,7 @@ may then be further optimized by selecting better implementations of each operat
             (select
                 (setq (? set_quantifier))
                 (project projection)
+                (exclude_clause (? exclude_op))
                 (from from_source)
                 (from_let (? let))
                 (where (? expr))
@@ -218,6 +219,21 @@ may then be further optimized by selecting better implementations of each operat
             (project_all expr::expr)
             // For `<expr> [AS <id>]`
             (project_expr expr::expr as_alias::(? symbol)))
+
+        // EXCLUDE clause
+        (product exclude_op exprs::(* exclude_expr 1))
+
+        (product exclude_expr root::identifier steps::(* exclude_step 0))
+
+        (sum exclude_step
+            // `someRoot.someField` which is equivalent to `someRoot['someField']` (case-sensitive)
+            (exclude_tuple_attr attr::identifier)
+            // `someRoot[<int literal>]`
+            (exclude_collection_index index::int)
+            // `someRoot[*]`]
+            (exclude_tuple_wildcard)
+            // `someRoot.*`
+            (exclude_collection_wildcard))
 
         // A list of LET bindings
         (product let let_bindings::(* let_binding 1))

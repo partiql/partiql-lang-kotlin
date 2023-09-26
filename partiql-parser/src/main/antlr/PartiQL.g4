@@ -334,6 +334,20 @@ windowSortSpecList
 havingClause
     : HAVING arg=exprSelect;
 
+excludeClause
+    : EXCLUDE excludeExpr (COMMA excludeExpr)*;
+
+excludeExpr
+    : symbolPrimitive excludeExprSteps*;
+
+excludeExprSteps
+    : PERIOD symbolPrimitive                            # ExcludeExprTupleAttr
+    | BRACKET_LEFT attr=LITERAL_STRING BRACKET_RIGHT    # ExcludeExprCollectionAttr
+    | BRACKET_LEFT index=LITERAL_INTEGER BRACKET_RIGHT  # ExcludeExprCollectionIndex
+    | BRACKET_LEFT ASTERISK BRACKET_RIGHT               # ExcludeExprCollectionWildcard
+    | PERIOD ASTERISK                                   # ExcludeExprTupleWildcard
+    ;
+
 fromClause
     : FROM tableReference;
 
@@ -513,6 +527,7 @@ exprBagOp
 
 exprSelect
     : select=selectClause
+        exclude=excludeClause?
         from=fromClause
         let=letClause?
         where=whereClauseSelect?

@@ -4521,6 +4521,289 @@ class PartiQLParserTest : PartiQLParserTestBase() {
         )
     }
 
+    // EXCLUDE tests
+    @Test
+    fun selectStarExcludeTopLevelAttrs() = assertExpression(
+        "SELECT * EXCLUDE a, b, c FROM t"
+    ) {
+        select(
+            project = projectStar(),
+            excludeClause = excludeOp(
+                excludeExpr(
+                    root = identifier("a", caseInsensitive()),
+                    steps = emptyList(),
+                ),
+                excludeExpr(
+                    root = identifier("b", caseInsensitive()),
+                    steps = emptyList(),
+                ),
+                excludeExpr(
+                    root = identifier("c", caseInsensitive()),
+                    steps = emptyList(),
+                )
+            ),
+            from = scan(id("t"))
+        )
+    }
+
+    @Test
+    fun selectListExcludeTopLevelAttr() = assertExpression(
+        "SELECT x, y, z EXCLUDE a, b, c FROM t"
+    ) {
+        select(
+            project = projectList(
+                projectItems = listOf(
+                    projectExpr(
+                        id("x"),
+                    ),
+                    projectExpr(
+                        id("y"),
+                    ),
+                    projectExpr(
+                        id("z"),
+                    ),
+                ),
+            ),
+            excludeClause = excludeOp(
+                excludeExpr(
+                    root = identifier("a", caseInsensitive()),
+                    steps = emptyList(),
+                ),
+                excludeExpr(
+                    root = identifier("b", caseInsensitive()),
+                    steps = emptyList(),
+                ),
+                excludeExpr(
+                    root = identifier("c", caseInsensitive()),
+                    steps = emptyList(),
+                )
+            ),
+            from = scan(id("t"))
+        )
+    }
+
+    @Test
+    fun selectValueExcludeTopLevelAttr() = assertExpression(
+        "SELECT VALUE { 'x': 1, 'y': 2, 'z': 3 } EXCLUDE a, b, c FROM t"
+    ) {
+        select(
+            project = projectValue(
+                value = struct(
+                    exprPair(lit(ionString("x")), lit(ionInt(1))),
+                    exprPair(lit(ionString("y")), lit(ionInt(2))),
+                    exprPair(lit(ionString("z")), lit(ionInt(3)))
+                )
+            ),
+            excludeClause = excludeOp(
+                excludeExpr(
+                    root = identifier("a", caseInsensitive()),
+                    steps = emptyList(),
+                ),
+                excludeExpr(
+                    root = identifier("b", caseInsensitive()),
+                    steps = emptyList(),
+                ),
+                excludeExpr(
+                    root = identifier("c", caseInsensitive()),
+                    steps = emptyList(),
+                )
+            ),
+            from = scan(id("t"))
+        )
+    }
+
+    @Test
+    fun selectStarExcludeNestedAttrs() = assertExpression(
+        "SELECT * EXCLUDE a.foo.bar, b[0].*[*].baz, c.d.*.e[*].f.* FROM t"
+    ) {
+        select(
+            project = projectStar(),
+            excludeClause = excludeOp(
+                excludeExpr(
+                    root = identifier("a", caseInsensitive()),
+                    steps = listOf(
+                        excludeTupleAttr(identifier("foo", caseInsensitive())),
+                        excludeTupleAttr(identifier("bar", caseInsensitive()))
+                    ),
+                ),
+                excludeExpr(
+                    root = identifier("b", caseInsensitive()),
+                    steps = listOf(
+                        excludeCollectionIndex(0),
+                        excludeTupleWildcard(),
+                        excludeCollectionWildcard(),
+                        excludeTupleAttr(identifier("baz", caseInsensitive()))
+                    ),
+                ),
+                excludeExpr(
+                    root = identifier("c", caseInsensitive()),
+                    steps = listOf(
+                        excludeTupleAttr(identifier("d", caseInsensitive())),
+                        excludeTupleWildcard(),
+                        excludeTupleAttr(identifier("e", caseInsensitive())),
+                        excludeCollectionWildcard(),
+                        excludeTupleAttr(identifier("f", caseInsensitive())),
+                        excludeTupleWildcard()
+                    ),
+                )
+            ),
+            from = scan(id("t"))
+        )
+    }
+
+    @Test
+    fun selectListExcludeNestedAttrs() = assertExpression(
+        "SELECT x, y, z EXCLUDE a.foo.bar, b[0].*[*].baz, c.d.*.e[*].f.* FROM t"
+    ) {
+        select(
+            project = projectList(
+                projectItems = listOf(
+                    projectExpr(
+                        id("x"),
+                    ),
+                    projectExpr(
+                        id("y"),
+                    ),
+                    projectExpr(
+                        id("z"),
+                    ),
+                ),
+            ),
+            excludeClause = excludeOp(
+                excludeExpr(
+                    root = identifier("a", caseInsensitive()),
+                    steps = listOf(
+                        excludeTupleAttr(identifier("foo", caseInsensitive())),
+                        excludeTupleAttr(identifier("bar", caseInsensitive()))
+                    ),
+                ),
+                excludeExpr(
+                    root = identifier("b", caseInsensitive()),
+                    steps = listOf(
+                        excludeCollectionIndex(0),
+                        excludeTupleWildcard(),
+                        excludeCollectionWildcard(),
+                        excludeTupleAttr(identifier("baz", caseInsensitive()))
+                    ),
+                ),
+                excludeExpr(
+                    root = identifier("c", caseInsensitive()),
+                    steps = listOf(
+                        excludeTupleAttr(identifier("d", caseInsensitive())),
+                        excludeTupleWildcard(),
+                        excludeTupleAttr(identifier("e", caseInsensitive())),
+                        excludeCollectionWildcard(),
+                        excludeTupleAttr(identifier("f", caseInsensitive())),
+                        excludeTupleWildcard()
+                    ),
+                )
+            ),
+            from = scan(id("t"))
+        )
+    }
+
+    @Test
+    fun selectValueExcludeNestedAttrs() = assertExpression(
+        "SELECT VALUE { 'x': 1, 'y': 2, 'z': 3 } EXCLUDE a.foo.bar, b[0].*[*].baz, c.d.*.e[*].f.* FROM t"
+    ) {
+        select(
+            project = projectValue(
+                value = struct(
+                    exprPair(lit(ionString("x")), lit(ionInt(1))),
+                    exprPair(lit(ionString("y")), lit(ionInt(2))),
+                    exprPair(lit(ionString("z")), lit(ionInt(3)))
+                )
+            ),
+            excludeClause = excludeOp(
+                excludeExpr(
+                    root = identifier("a", caseInsensitive()),
+                    steps = listOf(
+                        excludeTupleAttr(identifier("foo", caseInsensitive())),
+                        excludeTupleAttr(identifier("bar", caseInsensitive()))
+                    ),
+                ),
+                excludeExpr(
+                    root = identifier("b", caseInsensitive()),
+                    steps = listOf(
+                        excludeCollectionIndex(0),
+                        excludeTupleWildcard(),
+                        excludeCollectionWildcard(),
+                        excludeTupleAttr(identifier("baz", caseInsensitive()))
+                    ),
+                ),
+                excludeExpr(
+                    root = identifier("c", caseInsensitive()),
+                    steps = listOf(
+                        excludeTupleAttr(identifier("d", caseInsensitive())),
+                        excludeTupleWildcard(),
+                        excludeTupleAttr(identifier("e", caseInsensitive())),
+                        excludeCollectionWildcard(),
+                        excludeTupleAttr(identifier("f", caseInsensitive())),
+                        excludeTupleWildcard()
+                    ),
+                )
+            ),
+            from = scan(id("t"))
+        )
+    }
+
+    @Test
+    fun selectStarExcludeCaseSensitiveAndInsensitiveAttrs() = assertExpression(
+        """SELECT * EXCLUDE a."b".C['d']."E" FROM t"""
+    ) {
+        select(
+            project = projectStar(),
+            excludeClause = excludeOp(
+                excludeExpr(
+                    root = identifier("a", caseInsensitive()),
+                    steps = listOf(
+                        excludeTupleAttr(identifier("b", caseSensitive())),
+                        excludeTupleAttr(identifier("C", caseInsensitive())),
+                        excludeTupleAttr(identifier("d", caseSensitive())),
+                        excludeTupleAttr(identifier("E", caseSensitive())),
+                    ),
+                ),
+            ),
+            from = scan(id("t"))
+        )
+    }
+
+    @Test
+    fun selectStarExcludeErrorTrailingComma() = checkInputThrowingParserException(
+        "SELECT * EXCLUDE t.a.b.c, d.e, FROM t",
+        ErrorCode.PARSE_UNEXPECTED_TOKEN,
+        expectErrorContextValues = mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 32L,
+            Property.TOKEN_DESCRIPTION to PartiQLParser.FROM.getAntlrDisplayString(),
+            Property.TOKEN_VALUE to ION.newSymbol("FROM")
+        )
+    )
+
+    @Test
+    fun selectStarExcludeErrorStar() = checkInputThrowingParserException(
+        "SELECT * EXCLUDE * FROM",
+        ErrorCode.PARSE_UNEXPECTED_TOKEN,
+        expectErrorContextValues = mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 18L,
+            Property.TOKEN_DESCRIPTION to PartiQLParser.ASTERISK.getAntlrDisplayString(),
+            Property.TOKEN_VALUE to ION.newSymbol("*")
+        )
+    )
+
+    @Test
+    fun selectStarExcludeErrorNonLiteralExpr() = checkInputThrowingParserException(
+        "SELECT * EXCLUDE t.a[x + y] FROM t",
+        ErrorCode.PARSE_UNEXPECTED_TOKEN,
+        expectErrorContextValues = mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 22L,
+            Property.TOKEN_DESCRIPTION to PartiQLParser.IDENTIFIER.getAntlrDisplayString(),
+            Property.TOKEN_VALUE to ION.newSymbol("x")
+        )
+    )
+
     @Test
     fun manyNestedNotPerformanceRegressionTest(): Unit = forEachTarget {
         val startTime = System.currentTimeMillis()

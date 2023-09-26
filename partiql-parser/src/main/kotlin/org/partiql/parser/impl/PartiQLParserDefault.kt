@@ -35,6 +35,7 @@ import org.antlr.v4.runtime.tree.TerminalNode
 import org.partiql.ast.Ast
 import org.partiql.ast.AstNode
 import org.partiql.ast.DatetimeField
+import org.partiql.ast.Exclude
 import org.partiql.ast.Expr
 import org.partiql.ast.From
 import org.partiql.ast.GraphMatch
@@ -761,6 +762,7 @@ internal class PartiQLParserDefault : PartiQLParser {
         override fun visitSfwQuery(ctx: GeneratedParser.SfwQueryContext) = translate(ctx) {
             val select = visit(ctx.select) as Select
             val from = visitFromClause(ctx.from)
+            val exclude = visitOrNull<Exclude>(ctx.exclude)
             val let = visitOrNull<Let>(ctx.let)
             val where = visitOrNull<Expr>(ctx.where)
             val groupBy = ctx.group?.let { visitGroupClause(it) }
@@ -770,7 +772,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             val orderBy = ctx.order?.let { visitOrderByClause(it) }
             val limit = visitOrNull<Expr>(ctx.limit?.arg)
             val offset = visitOrNull<Expr>(ctx.offset?.arg)
-            exprSFW(select, from, let, where, groupBy, having, setOp, orderBy, limit, offset)
+            exprSFW(select, exclude, from, let, where, groupBy, having, setOp, orderBy, limit, offset)
         }
 
         /**
@@ -897,6 +899,49 @@ internal class PartiQLParserDefault : PartiQLParser {
             val expr = visitAs<Expr>(ctx.key)
             val alias = ctx.symbolPrimitive()?.let { visitSymbolPrimitive(it) }
             groupByKey(expr, alias)
+        }
+
+        /**
+         * EXCLUDE CLAUSE
+         */
+        override fun visitExcludeClause(ctx: GeneratedParser.ExcludeClauseContext) = translate(ctx) {
+            val excludeExprs = ctx.excludeExpr().map { expr ->
+                visitExcludeExpr(expr)
+            }
+            exclude(excludeExprs)
+        }
+
+        override fun visitExcludeExpr(ctx: GeneratedParser.ExcludeExprContext) = translate(ctx) {
+            val root = visitSymbolPrimitive(ctx.symbolPrimitive())
+            val steps = visitOrEmpty<Exclude.Step>(ctx.excludeExprSteps())
+            excludeExcludeExpr(root, steps)
+        }
+
+        override fun visitExcludeExprTupleAttr(ctx: GeneratedParser.ExcludeExprTupleAttrContext) = translate(ctx) {
+            val identifier = visitSymbolPrimitive(ctx.symbolPrimitive())
+            excludeStepExcludeTupleAttr(identifier)
+        }
+
+        override fun visitExcludeExprCollectionIndex(ctx: GeneratedParser.ExcludeExprCollectionIndexContext) = translate(ctx) {
+            val index = ctx.index.text.toInt()
+            excludeStepExcludeCollectionIndex(index)
+        }
+
+        override fun visitExcludeExprCollectionAttr(ctx: GeneratedParser.ExcludeExprCollectionAttrContext) = translate(ctx) {
+            val attr = ctx.attr.getStringValue()
+            val identifier = identifierSymbol(
+                attr,
+                Identifier.CaseSensitivity.SENSITIVE,
+            )
+            excludeStepExcludeTupleAttr(identifier)
+        }
+
+        override fun visitExcludeExprCollectionWildcard(ctx: org.partiql.parser.antlr.PartiQLParser.ExcludeExprCollectionWildcardContext) = translate(ctx) {
+            excludeStepExcludeCollectionWildcard()
+        }
+
+        override fun visitExcludeExprTupleWildcard(ctx: org.partiql.parser.antlr.PartiQLParser.ExcludeExprTupleWildcardContext) = translate(ctx) {
+            excludeStepExcludeTupleWildcard()
         }
 
         /**

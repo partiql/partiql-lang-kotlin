@@ -521,7 +521,7 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
         }
     }
 
-    private fun convertCase(case: PartiqlAst.CaseSensitivity) = when (case) {
+    internal fun convertCase(case: PartiqlAst.CaseSensitivity) = when (case) {
         is PartiqlAst.CaseSensitivity.CaseInsensitive -> Case.INSENSITIVE
         is PartiqlAst.CaseSensitivity.CaseSensitive -> Case.SENSITIVE
     }

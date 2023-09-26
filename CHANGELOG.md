@@ -29,13 +29,15 @@ Thank you to all who have contributed!
 ## [Unreleased]
 
 ### Added
+- **EXPERIMENTAL** Adds `EXCLUDE` to parser, ast, plan, and plan schema inferencer
+  - This feature is marked as experimental until an RFC is added https://github.com/partiql/partiql-spec/issues/39
 
 ### Changed
 
 ### Deprecated
 
 ### Fixed
-
+- Fixes schema inferencer behavior for ORDER BY
 ### Removed
 
 ### Security

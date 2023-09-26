@@ -37,8 +37,11 @@ import org.partiql.lang.types.TypedOpParameter
 import org.partiql.lang.types.UnknownArguments
 import org.partiql.lang.util.cartesianProduct
 import org.partiql.plan.Arg
+import org.partiql.plan.Attribute
 import org.partiql.plan.Binding
 import org.partiql.plan.Case
+import org.partiql.plan.ExcludeExpr
+import org.partiql.plan.ExcludeStep
 import org.partiql.plan.Plan
 import org.partiql.plan.PlanNode
 import org.partiql.plan.Property
@@ -155,6 +158,114 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
         )
     }
 
+    override fun visitRelExclude(node: Rel.Exclude, ctx: Context): Rel.Exclude {
+        val input = visitRel(node.input, ctx)
+        val exprs = node.exprs
+        val typeEnv = input.getTypeEnv()
+        val newTypeEnv = exprs.fold(typeEnv) { tEnv, expr ->
+            excludeExpr(tEnv, expr, ctx)
+        }
+        return node.copy(
+            input = input,
+            common = node.common.copy(
+                typeEnv = newTypeEnv,
+                properties = input.getProperties()
+            )
+        )
+    }
+
+    private fun excludeExpr(attrs: List<Attribute>, expr: ExcludeExpr, ctx: Context): List<Attribute> {
+        val resultAttrs = mutableListOf<Attribute>()
+        attrs.forEach { attr ->
+            val rootId = expr.root
+            if (attr.name == rootId || (expr.rootCase == Case.INSENSITIVE && attr.name.equals(expr.root, ignoreCase = true))) {
+                if (expr.steps.isEmpty()) {
+                    // no other exclude steps; don't include attr
+                } else {
+                    // exclude steps remain. remove fields
+                    val newType = excludeExprSteps(attr.type, expr.steps, lastStepAsOptional = false, ctx)
+                    resultAttrs.add(
+                        attr.copy(
+                            type = newType
+                        )
+                    )
+                }
+            } else {
+                resultAttrs.add(
+                    attr
+                )
+            }
+        }
+        return resultAttrs
+    }
+
+    private fun excludeExprSteps(type: StaticType, steps: List<ExcludeStep>, lastStepAsOptional: Boolean, ctx: Context): StaticType {
+        fun excludeExprStepsStruct(s: StructType, steps: List<ExcludeStep>, lastStepAsOptional: Boolean): StaticType {
+            val outputFields = mutableListOf<StructType.Field>()
+            val first = steps.first()
+            s.fields.forEach { field ->
+                when (first) {
+                    is ExcludeStep.TupleAttr -> {
+                        if (field.key == first.attr || (first.case == Case.INSENSITIVE && field.key.equals(first.attr, ignoreCase = true))) {
+                            if (steps.size == 1) {
+                                if (lastStepAsOptional) {
+                                    val newField = StructType.Field(field.key, field.value.asOptional())
+                                    outputFields.add(newField)
+                                }
+                            } else {
+                                outputFields.add(StructType.Field(field.key, excludeExprSteps(field.value, steps.drop(1), lastStepAsOptional, ctx)))
+                            }
+                        } else {
+                            outputFields.add(field)
+                        }
+                    }
+                    is ExcludeStep.TupleWildcard -> {
+                        if (steps.size == 1) {
+                            if (lastStepAsOptional) {
+                                val newField = StructType.Field(field.key, field.value.asOptional())
+                                outputFields.add(newField)
+                            }
+                        } else {
+                            outputFields.add(StructType.Field(field.key, excludeExprSteps(field.value, steps.drop(1), lastStepAsOptional, ctx)))
+                        }
+                    }
+                    else -> {
+                        handleInvalidExcludeExpr(ctx)
+                    }
+                }
+            }
+            return s.copy(fields = outputFields)
+        }
+
+        fun excludeExprStepsCollection(c: CollectionType, steps: List<ExcludeStep>, lastStepAsOptional: Boolean): StaticType {
+            var elementType = c.elementType
+            when (steps.first()) {
+                is ExcludeStep.CollectionIndex -> {
+                    if (steps.size > 1) {
+                        elementType = excludeExprSteps(elementType, steps.drop(1), lastStepAsOptional = true, ctx)
+                    }
+                }
+                is ExcludeStep.CollectionWildcard -> {
+                    elementType = excludeExprSteps(elementType, steps.drop(1), lastStepAsOptional = lastStepAsOptional, ctx)
+                }
+                else -> {
+                    handleInvalidExcludeExpr(ctx)
+                }
+            }
+            return when (c) {
+                is BagType -> c.copy(elementType)
+                is ListType -> c.copy(elementType)
+                is SexpType -> c.copy(elementType)
+            }
+        }
+
+        return when (type) {
+            is StructType -> excludeExprStepsStruct(type, steps, lastStepAsOptional)
+            is CollectionType -> excludeExprStepsCollection(type, steps, lastStepAsOptional)
+            else -> type
+        }
+    }
+
     override fun visitRelUnpivot(node: Rel.Unpivot, ctx: Context): Rel.Unpivot {
         val from = node
 
@@ -227,7 +338,8 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
         return node.copy(
             input = input,
             common = node.common.copy(
-                typeEnv = typeEnv
+                typeEnv = typeEnv,
+                properties = input.getProperties()
             )
         )
     }
@@ -1001,6 +1113,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
         is Rel.Scan -> this.common
         is Rel.Sort -> this.common
         is Rel.Unpivot -> this.common
+        is Rel.Exclude -> this.common
     }
 
     private fun inferPathComponentExprType(
@@ -1660,6 +1773,16 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
             Problem(
                 sourceLocation = UNKNOWN_PROBLEM_LOCATION,
                 details = PlanningProblemDetails.CompileError("Unable to determine type of node.")
+            )
+        )
+        return StaticType.ANY
+    }
+
+    private fun handleInvalidExcludeExpr(ctx: Context): StaticType {
+        ctx.problemHandler.handleProblem(
+            Problem(
+                sourceLocation = UNKNOWN_PROBLEM_LOCATION,
+                details = PlanningProblemDetails.InvalidExcludeExpr
             )
         )
         return StaticType.ANY
