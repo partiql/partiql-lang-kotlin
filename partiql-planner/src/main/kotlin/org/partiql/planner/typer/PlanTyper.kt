@@ -337,7 +337,7 @@ internal class PlanTyper(
                 }
                 is FnMatch.Error -> {
                     handleUnknownFunction(match)
-                    rex(StaticType.NULL_OR_MISSING, rexOpErr())
+                    rex(StaticType.NULL_OR_MISSING, rexOpErr("Unknown function $fn"))
                 }
             }
         }
@@ -357,7 +357,7 @@ internal class PlanTyper(
         override fun visitRexOpCollection(node: Rex.Op.Collection, ctx: StaticType?): Rex = rewrite {
             if (ctx!! !is CollectionType) {
                 handleUnexpectedType(ctx, setOf(StaticType.LIST, StaticType.BAG, StaticType.SEXP))
-                return rex(StaticType.NULL_OR_MISSING, rexOpErr())
+                return rex(StaticType.NULL_OR_MISSING, rexOpErr("Expected collection type"))
             }
             val values = node.values.map { visitRex(it, null) }
             val t = values.toUnionType()

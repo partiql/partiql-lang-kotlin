@@ -45,7 +45,8 @@ private typealias FunctionMap = Map<String, List<FunctionSignature>>
  * Map session attributes to underlying function name.
  */
 internal val ATTRIBUTES: Map<String, String> = mapOf(
-    "CURRENT_USER" to "\$__current_user"
+    "CURRENT_USER" to "\$__current_user",
+    "CURRENT_DATE" to "\$__current_date"
 )
 
 /**
@@ -223,6 +224,7 @@ internal class Header(
 
         public fun system(): List<FunctionSignature> = listOf(
             currentUser(),
+            currentDate(),
         )
 
         private val allTypes = PartiQLValueType.values()
@@ -633,6 +635,13 @@ internal class Header(
             returns = STRING,
             parameters = emptyList(),
             isNullable = true,
+        )
+
+        private fun currentDate() = FunctionSignature(
+            name = "\$__current_date",
+            returns = DATE,
+            parameters = emptyList(),
+            isNullable = false,
         )
 
         // Function precedence comparator

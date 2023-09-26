@@ -157,5 +157,26 @@ suite::{
         }
       }
     },
+    '0005': {
+      statement: '''
+        SELECT CURRENT_USER, CURRENT_DATE FROM store_sales
+    ''',
+      schema: {
+        type: "bag",
+        items: {
+          type: "struct",
+          fields: [
+            {
+              name: "CURRENT_USER",
+              type: "string",
+            },
+            {
+              name: "CURRENT_DATE",
+              type: "date",
+            },
+          ],
+        },
+      },
+    },
   }
 }
