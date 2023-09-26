@@ -63,6 +63,6 @@ target::{
             tpc_ds."store_returns" AS returns
           ON store.s_store_sk = returns.sr_store_sk
       '''
-    }
+    },
   },
 }
