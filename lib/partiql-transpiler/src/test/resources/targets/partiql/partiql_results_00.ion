@@ -27,5 +27,42 @@ target::{
         WHERE store_sales.ss_sold_date_sk > date_add(day, -30, utcnow())
       ''',
     },
+    '0003': {
+      // TODO: For the last projection item (CASE-WHEN), the second WHEN should not be able to compare INT32? and STR.
+      // TODO: However, this will be addressed when functions are resolved. When this happens, we should assert on the
+      // TODO: error message here. This TODO will largely be affected by strict vs permissive mode.
+      statement: '''
+        SELECT
+          store_sales.ss_quantity AS ss_quantity,
+          CASE
+            WHEN CAST(store_sales.ss_quantity AS INT) = 0 THEN 'Did not sell anything!'
+            WHEN CAST(store_sales.ss_quantity AS INT) = 1 THEN 'Sold a single item!'
+            WHEN true THEN 'Sold multiple items!'
+          END AS ss_quantity_description_1,
+          CASE
+            WHEN CAST(store_sales.ss_quantity AS INT) = 0 THEN 'Hello'
+            WHEN CAST(store_sales.ss_quantity AS INT) = 1 THEN 1.0
+            WHEN CAST(store_sales.ss_quantity AS INT) = 2 THEN 2
+            WHEN true THEN NULL
+          END AS ss_quantity_description_2,
+          CASE
+            WHEN CAST(store_sales.ss_quantity AS INT) = 0 THEN 'Hello'
+            WHEN store_sales.ss_quantity = 'not an int32' THEN 'not cast-able'
+            WHEN true THEN 'fallback'
+          END AS ss_quantity_description_3
+        FROM store_sales AS store_sales
+      ''',
+    },
+    '0004': {
+      statement: '''
+        SELECT
+          store.s_store_sk AS s_store_sk
+        FROM
+            tpc_ds."store" AS store
+          LEFT OUTER JOIN
+            tpc_ds."store_returns" AS returns
+          ON store.s_store_sk = returns.sr_store_sk
+      '''
+    }
   },
 }

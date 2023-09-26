@@ -15,9 +15,11 @@ import org.partiql.planner.Env
 import org.partiql.planner.typer.toNonNullStaticType
 import org.partiql.planner.typer.toStaticType
 import org.partiql.types.StaticType
+import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.boolValue
 import org.partiql.value.int64Value
+import org.partiql.value.nullValue
 import org.partiql.value.symbolValue
 
 /**
@@ -130,17 +132,28 @@ internal object RexConverter {
                 null -> bool(true) // match `true`
                 else -> visitExpr(node.expr!!, context) // match `rex
             }
+
+            // Converts AST CASE (x) WHEN y THEN z --> Plan CASE WHEN x = y THEN z
+            val id = identifierSymbol(Expr.Binary.Op.EQ.name.lowercase(), Identifier.CaseSensitivity.SENSITIVE)
+            val fn = fnUnresolved(id)
+            val createBranch: (Rex, Rex) -> Rex.Op.Case.Branch = { condition: Rex, result: Rex ->
+                val op = rexOpCall(fn.copy(), listOf(rex, condition))
+                val updatedCondition = rex(type, op)
+                rexOpCaseBranch(updatedCondition, result)
+            }
+
             val branches = node.branches.map {
                 val branchCondition = visitExpr(it.condition, context)
                 val branchRex = visitExpr(it.expr, context)
-                rexOpCaseBranch(branchCondition, branchRex)
+                createBranch(branchCondition, branchRex)
             }.toMutableList()
-            if (node.default != null) {
-                val defaultCondition = bool(true)
-                val defaultRex = visitExpr(node.default!!, context)
-                branches += rexOpCaseBranch(defaultCondition, defaultRex)
+
+            val defaultRex = when (val default = node.default) {
+                null -> rex(type = StaticType.NULL, op = rexOpLit(value = nullValue()))
+                else -> visitExpr(default, context)
             }
-            val op = rexOpCase(rex, branches)
+            branches += rexOpCaseBranch(bool(true), defaultRex)
+            val op = rexOpCase(branches)
             rex(type, op)
         }
 

@@ -1,12 +1,14 @@
 package org.partiql.transpiler.sql
 
 import org.partiql.ast.Ast
+import org.partiql.ast.Expr
 import org.partiql.ast.From
 import org.partiql.ast.Identifier
 import org.partiql.ast.builder.ExprSfwBuilder
 import org.partiql.plan.PlanNode
 import org.partiql.plan.Rel
 import org.partiql.plan.visitor.PlanBaseVisitor
+import org.partiql.value.PartiQLValueExperimental
 
 /**
  * This class transforms a relational expression tree to a PartiQL [Expr.SFW].
@@ -44,6 +46,9 @@ open class RelToSql(
         val op2 = op1.input.op
         if (op2 is Rel.Op.Scan) {
             return // done
+        }
+        if (op2 is Rel.Op.Join) {
+            return
         }
         if (op2 !is Rel.Op.Filter) {
             error("Invalid SELECT-FROM-WHERE, expected Rel.Op.Filter but found $op2")
@@ -124,6 +129,29 @@ open class RelToSql(
             )
         }
         return sfw
+    }
+
+    @OptIn(PartiQLValueExperimental::class)
+    override fun visitRelOpJoin(node: Rel.Op.Join, ctx: Rel.Type?): ExprSfwBuilder {
+        val lhs = visitRel(node.lhs, null)
+        val rhs = visitRel(node.rhs, null)
+        val schema = node.lhs.type.schema + node.rhs.type.schema
+        val condition = RexToSql(transform, schema).apply(node.rex)
+        val type = when (val type = node.type) {
+            Rel.Op.Join.Type.INNER -> From.Join.Type.INNER
+            Rel.Op.Join.Type.LEFT -> From.Join.Type.LEFT_OUTER
+            Rel.Op.Join.Type.RIGHT -> From.Join.Type.RIGHT_OUTER
+            Rel.Op.Join.Type.FULL -> From.Join.Type.FULL_OUTER
+        }
+        lhs.from = Ast.create {
+            fromJoin(
+                lhs = lhs.from!!,
+                rhs = rhs.from!!,
+                type = type,
+                condition = condition
+            )
+        }
+        return lhs
     }
 
     private fun id(symbol: String): Identifier.Symbol = Ast.identifierSymbol(

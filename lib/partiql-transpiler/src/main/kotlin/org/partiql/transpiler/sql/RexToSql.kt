@@ -112,6 +112,25 @@ public open class RexToSql(
         return Ast.exprStruct(fields)
     }
 
+    override fun visitRexOpCase(node: Rex.Op.Case, ctx: StaticType): Expr {
+        val branches = node.branches.map {
+            val condition = visitRex(it.condition, StaticType.ANY)
+            val result = visitRex(it.rex, StaticType.ANY)
+            condition to result
+        }.map {
+            Ast.exprCaseBranch(condition = it.first, expr = it.second)
+        }
+        if (branches.isEmpty()) {
+            transform.handleProblem(
+                TranspilerProblem(
+                    TranspilerProblem.Level.ERROR,
+                    "No CASE-WHEN-THEN branches to convert to AST."
+                )
+            )
+        }
+        return Ast.exprCase(expr = null, branches = branches, default = null)
+    }
+
     override fun visitRexOpCall(node: Rex.Op.Call, ctx: StaticType): Expr {
         val name = when (val f = node.fn) {
             is Fn.Resolved -> f.signature.name
@@ -121,7 +140,7 @@ public open class RexToSql(
                 transform.handleProblem(
                     TranspilerProblem(
                         level = TranspilerProblem.Level.ERROR,
-                        message = "Could not resolve function $"
+                        message = "Could not resolve function ${id.sql()}"
                     )
                 )
                 (id as Identifier.Symbol).symbol

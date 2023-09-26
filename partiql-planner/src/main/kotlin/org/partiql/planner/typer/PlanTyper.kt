@@ -192,20 +192,19 @@ internal class PlanTyper(
             rel(type, op)
         }
 
-        override fun visitRelOpJoin(node: Rel.Op.Join, ctx: Rel.Type?): Rel {
-            TODO("Type RelOp Join")
-        }
+        override fun visitRelOpJoin(node: Rel.Op.Join, ctx: Rel.Type?): Rel = rewrite {
+            // Rewrite LHS and RHS
+            val lhs = visitRel(node.lhs, ctx)
+            val rhs = visitRel(node.rhs, ctx)
 
-        override fun visitRelOpJoinTypeCross(node: Rel.Op.Join.Type.Cross, ctx: Rel.Type?): Rel {
-            TODO("Type RelOp Cross")
-        }
-
-        override fun visitRelOpJoinTypeEqui(node: Rel.Op.Join.Type.Equi, ctx: Rel.Type?): Rel {
-            TODO("Type RelOp Equi")
-        }
-
-        override fun visitRelOpJoinTypeTheta(node: Rel.Op.Join.Type.Theta, ctx: Rel.Type?): Rel {
-            TODO("Type RelOp Theta")
+            // Return with Projections
+            val newCtx = relType(
+                schema = lhs.type.schema.map { relBinding(it.name, it.type) } + rhs.type.schema.map { relBinding(it.name, it.type) },
+                props = ctx!!.props
+            )
+            val condition = node.rex.type(TypeEnv(newCtx.schema, ResolutionStrategy.LOCAL))
+            val op = relOpJoin(lhs, rhs, condition, node.type)
+            rel(newCtx, op)
         }
 
         override fun visitRelOpAggregate(node: Rel.Op.Aggregate, ctx: Rel.Type?): Rel {
@@ -343,12 +342,16 @@ internal class PlanTyper(
             }
         }
 
-        override fun visitRexOpCase(node: Rex.Op.Case, ctx: StaticType?): Rex {
-            TODO("Type RexOpCase")
+        override fun visitRexOpCase(node: Rex.Op.Case, ctx: StaticType?): Rex = rewrite {
+            val visitedBranches = node.branches.map { visitRexOpCaseBranch(it, null) }
+            val resultTypes = visitedBranches.map { it.rex }.map { it.type }
+            rex(AnyOfType(resultTypes.toSet()).flatten(), node.copy(branches = visitedBranches))
         }
 
-        override fun visitRexOpCaseBranch(node: Rex.Op.Case.Branch, ctx: StaticType?): Rex {
-            TODO("Type RexOpCaseBranch")
+        override fun visitRexOpCaseBranch(node: Rex.Op.Case.Branch, ctx: StaticType?): Rex.Op.Case.Branch {
+            val visitedCondition = visitRex(node.condition, null)
+            val visitedReturn = visitRex(node.rex, null)
+            return node.copy(condition = visitedCondition, rex = visitedReturn)
         }
 
         override fun visitRexOpCollection(node: Rex.Op.Collection, ctx: StaticType?): Rex = rewrite {

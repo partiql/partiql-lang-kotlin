@@ -1196,7 +1196,7 @@ internal class PartiQLParserDefault : PartiQLParser {
         override fun visitTableCrossJoin(ctx: GeneratedParser.TableCrossJoinContext) = translate(ctx) {
             val lhs = visitAs<From>(ctx.lhs)
             val rhs = visitAs<From>(ctx.rhs)
-            val type = convertJoinType(ctx.joinType())
+            val type = convertJoinType(ctx.joinType()) ?: From.Join.Type.CROSS
             fromJoin(lhs, rhs, type, null)
         }
 
