@@ -31,6 +31,7 @@ Thank you to all who have contributed!
 ### Added
 - **EXPERIMENTAL** Adds `EXCLUDE` to parser, ast, plan, and plan schema inferencer
   - This feature is marked as experimental until an RFC is added https://github.com/partiql/partiql-spec/issues/39
+  - NOTE: this feature is not currently implemented in the evaluator
 
 ### Changed
 

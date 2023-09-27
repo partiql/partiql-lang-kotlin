@@ -1328,7 +1328,7 @@ class PartiQLSchemaInferencerTests {
                 )
             ),
             SuccessTestCase(
-                name = "EXCLUDE SELECT list with JOINs",
+                name = "EXCLUDE SELECT star with JOINs",
                 query = """SELECT *
                     EXCLUDE bar.d
                     FROM 
@@ -1353,7 +1353,7 @@ class PartiQLSchemaInferencerTests {
                 )
             ),
             SuccessTestCase(
-                name = "SELECT * EXCLUDE ex 1",
+                name = "SELECT t.b EXCLUDE ex 1",
                 query = """SELECT t.b EXCLUDE t.b[*].b_1
                     FROM <<
                     {
@@ -1416,6 +1416,28 @@ class PartiQLSchemaInferencerTests {
                         contentClosed = true,
                         constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
                     )
+                )
+            ),
+            SuccessTestCase(
+                name = "SELECT VALUE t.b EXCLUDE",
+                query = """SELECT VALUE t.b EXCLUDE t.b[*].b_1
+                    FROM <<
+                    {
+                        'a': {'a_1':1,'a_2':2},
+                        'b': [ {'b_1':3,'b_2':4}, {'b_1':5,'b_2':6} ],
+                        'c': 7,
+                        'd': 8
+                    } >> AS t""",
+                expected = BagType(
+                    ListType(
+                        elementType = StructType(
+                            fields = mapOf(
+                                "b_2" to StaticType.INT
+                            ),
+                            contentClosed = true,
+                            constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                        )
+                    ),
                 )
             ),
             SuccessTestCase(

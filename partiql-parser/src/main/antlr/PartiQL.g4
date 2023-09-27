@@ -338,7 +338,7 @@ excludeClause
     : EXCLUDE excludeExpr (COMMA excludeExpr)*;
 
 excludeExpr
-    : symbolPrimitive excludeExprSteps*;
+    : symbolPrimitive excludeExprSteps+;  // Require 1 more `excludeExprSteps`. Disallow `EXCLUDE a`
 
 excludeExprSteps
     : PERIOD symbolPrimitive                            # ExcludeExprTupleAttr
