@@ -223,6 +223,17 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
         )
     }
 
+    override fun walkExprBitwiseAnd(node: PartiqlAst.Expr.BitwiseAnd, accumulator: Ctx) = visit(node) {
+        Plan.rexBinary(
+            lhs = convert(node.operands[0]),
+            rhs = convert(node.operands[1]),
+            op = Rex.Binary.Op.BITWISE_AND,
+            type = StaticType.unionOf(
+                StaticType.INT2, StaticType.INT4, StaticType.INT8, StaticType.INT
+            )
+        )
+    }
+
     override fun walkExprConcat(node: PartiqlAst.Expr.Concat, ctx: Ctx) = visit(node) {
         Plan.rexBinary(
             lhs = convert(node.operands[0]),

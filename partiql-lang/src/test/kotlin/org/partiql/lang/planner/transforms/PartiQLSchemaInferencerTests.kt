@@ -26,6 +26,7 @@ import org.partiql.types.BagType
 import org.partiql.types.ListType
 import org.partiql.types.StaticType
 import org.partiql.types.StaticType.Companion.INT
+import org.partiql.types.StaticType.Companion.MISSING
 import org.partiql.types.StaticType.Companion.STRING
 import org.partiql.types.StaticType.Companion.unionOf
 import org.partiql.types.StructType
@@ -1070,6 +1071,58 @@ class PartiQLSchemaInferencerTests {
                     )
                 }
             ),
+            SuccessTestCase(
+                name = "BITWISE_AND_1",
+                query = "1 & 2",
+                expected = StaticType.INT
+            ),
+            // casting to a parameterized type produced Missing.
+            SuccessTestCase(
+                name = "BITWISE_AND_2",
+                query = "CAST(1 AS INT2) & CAST(2 AS INT2)",
+                expected = StaticType.unionOf(StaticType.INT2, MISSING)
+            ),
+            SuccessTestCase(
+                name = "BITWISE_AND_3",
+                query = "CAST(1 AS INT4) & CAST(2 AS INT4)",
+                expected = StaticType.unionOf(StaticType.INT4, MISSING)
+            ),
+            SuccessTestCase(
+                name = "BITWISE_AND_4",
+                query = "CAST(1 AS INT8) & CAST(2 AS INT8)",
+                expected = StaticType.unionOf(StaticType.INT8, MISSING)
+            ),
+            SuccessTestCase(
+                name = "BITWISE_AND_5",
+                query = "CAST(1 AS INT2) & CAST(2 AS INT4)",
+                expected = StaticType.unionOf(StaticType.INT4, MISSING)
+            ),
+            SuccessTestCase(
+                name = "BITWISE_AND_6",
+                query = "CAST(1 AS INT2) & CAST(2 AS INT8)",
+                expected = StaticType.unionOf(StaticType.INT8, MISSING)
+            ),
+            SuccessTestCase(
+                name = "BITWISE_AND_7",
+                query = "CAST(1 AS INT2) & 2",
+                expected = StaticType.unionOf(StaticType.INT, MISSING)
+            ),
+            SuccessTestCase(
+                name = "BITWISE_AND_8",
+                query = "CAST(1 AS INT4) & CAST(2 AS INT8)",
+                expected = StaticType.unionOf(StaticType.INT8, MISSING)
+            ),
+            SuccessTestCase(
+                name = "BITWISE_AND_9",
+                query = "CAST(1 AS INT4) & 2",
+                expected = StaticType.unionOf(StaticType.INT, MISSING)
+            ),
+            SuccessTestCase(
+                name = "BITWISE_AND_10",
+                query = "CAST(1 AS INT8) & 2",
+                expected = StaticType.unionOf(StaticType.INT, MISSING)
+            ),
+
         )
 
         private fun assertProblemExists(problem: () -> Problem) = ProblemHandler { problems, ignoreSourceLocation ->
