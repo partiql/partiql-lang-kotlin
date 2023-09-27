@@ -6,6 +6,7 @@ import org.partiql.ast.Expr
 import org.partiql.ast.Identifier
 import org.partiql.ast.builder.AstFactory
 import org.partiql.transpiler.ProblemCallback
+import org.partiql.transpiler.error
 import org.partiql.transpiler.info
 import org.partiql.transpiler.sql.SqlArgs
 import org.partiql.transpiler.sql.SqlCallFn
@@ -55,6 +56,64 @@ public class RedshiftCalls(private val onProblem: ProblemCallback) : SqlCalls() 
         exprVar(id, Expr.Var.Scope.DEFAULT)
     }
 
+    override fun rewriteCast(type: PartiQLValueType, args: SqlArgs): Expr = Ast.create {
+        when (type) {
+            PartiQLValueType.ANY -> {
+                onProblem.error("PartiQL `ANY` type not supported in Redshift")
+                super.rewriteCast(type, args)
+            }
+            PartiQLValueType.INT8 -> {
+                onProblem.error("PartiQL `INT8` type (1-byte integer) not supported in Redshift")
+                super.rewriteCast(type, args)
+            }
+            PartiQLValueType.INT -> {
+                onProblem.error("PartiQL `INT` type (arbitrary precision integer) not supported in Redshift")
+                // this needs a extra safety renaming because int refers to int4 in redshift.
+                exprCast(args[0].expr, typeCustom("Arbitrary Precision Integer"))
+            }
+            PartiQLValueType.MISSING -> {
+                onProblem.error("PartiQL `MISSING` type not supported in Redshift")
+                super.rewriteCast(type, args)
+            }
+            PartiQLValueType.SYMBOL -> {
+                onProblem.error("PartiQL `SYMBOL` type not supported in Redshift")
+                super.rewriteCast(type, args)
+            }
+            PartiQLValueType.INTERVAL -> {
+                onProblem.error("PartiQL `INTERVAL` type not supported in Redshift")
+                super.rewriteCast(type, args)
+            }
+            PartiQLValueType.BLOB -> {
+                onProblem.error("PartiQL `BLOB` type not supported in Redshift")
+                super.rewriteCast(type, args)
+            }
+            PartiQLValueType.CLOB -> {
+                onProblem.error("PartiQL `CLOB` type not supported in Redshift")
+                super.rewriteCast(type, args)
+            }
+            PartiQLValueType.BAG -> {
+                onProblem.error("PartiQL `BAG` type not supported in Redshift")
+                super.rewriteCast(type, args)
+            }
+            PartiQLValueType.LIST -> {
+                onProblem.error("PartiQL `LIST` type not supported in Redshift")
+                super.rewriteCast(type, args)
+            }
+            PartiQLValueType.SEXP -> {
+                onProblem.error("PartiQL `SEXP` type not supported in Redshift")
+                super.rewriteCast(type, args)
+            }
+            PartiQLValueType.STRUCT -> {
+                onProblem.error("PartiQL `STRUCT` type not supported in Redshift")
+                super.rewriteCast(type, args)
+            }
+            // using the customer type to rename type
+            PartiQLValueType.FLOAT32 -> exprCast(args[0].expr, typeCustom("FLOAT4"))
+            PartiQLValueType.FLOAT64 -> exprCast(args[0].expr, typeCustom("FLOAT8"))
+            PartiQLValueType.BINARY -> exprCast(args[0].expr, typeCustom("VARBYTE"))
+            PartiQLValueType.BYTE -> TODO("Mapping to VARBYTE(1), do this after supporting parameterized type")
+            else -> super.rewriteCast(type, args)
+        }
     /**
      * Push the negation down if possible.
      * For example : NOT 1 is NULL -> 1 is NOT NULL.
