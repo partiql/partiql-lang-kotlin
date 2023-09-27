@@ -146,6 +146,20 @@ class EvaluatingCompilerIntTest : EvaluatorTestBase() {
     )
 
     @Test
+    @Parameters
+    fun bitwiseAnd(pair: Pair<String, String>) = assertPair(pair)
+
+    fun parametersForBitwiseAnd(): List<Pair<String, String>> {
+        val parameters = mutableListOf<Pair<String, String>>()
+
+        parameters.add("1 & 2" to "0")
+        parameters.add("3 & 5" to "1")
+        parameters.add("5 & 7" to "5")
+
+        return parameters
+    }
+
+    @Test
     fun castBigInt() = runEvaluatorErrorTestCase(
         "cast('$bigInt' as int)",
         ErrorCode.EVALUATOR_INTEGER_OVERFLOW,

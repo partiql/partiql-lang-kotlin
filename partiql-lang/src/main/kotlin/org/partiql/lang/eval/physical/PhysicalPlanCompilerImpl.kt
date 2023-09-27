@@ -72,6 +72,7 @@ import org.partiql.lang.eval.impl.FunctionManager
 import org.partiql.lang.eval.isNotUnknown
 import org.partiql.lang.eval.isUnknown
 import org.partiql.lang.eval.like.parsePattern
+import org.partiql.lang.eval.longValue
 import org.partiql.lang.eval.namedValue
 import org.partiql.lang.eval.numberValue
 import org.partiql.lang.eval.rangeOver
@@ -271,6 +272,7 @@ internal class PhysicalPlanCompilerImpl(
             is PartiqlPhysical.Expr.Minus -> compileMinus(expr, metas)
             is PartiqlPhysical.Expr.Divide -> compileDivide(expr, metas)
             is PartiqlPhysical.Expr.Modulo -> compileModulo(expr, metas)
+            is PartiqlPhysical.Expr.BitwiseAnd -> compileBitwiseAnd(expr, metas)
 
             // comparison operators
             is PartiqlPhysical.Expr.And -> compileAnd(expr, metas)
@@ -569,6 +571,14 @@ internal class PhysicalPlanCompilerImpl(
         }
 
         return checkIntegerOverflow(computeThunk, metas)
+    }
+
+    private fun compileBitwiseAnd(expr: PartiqlPhysical.Expr.BitwiseAnd, metas: MetaContainer): PhysicalPlanThunk {
+        val argThunks = compileAstExprs(expr.operands)
+
+        return thunkFactory.thunkFold(metas, argThunks) { lValue, rValue ->
+            (lValue.longValue() and rValue.longValue()).exprValue()
+        }
     }
 
     private fun compileEq(expr: PartiqlPhysical.Expr.Eq, metas: MetaContainer): PhysicalPlanThunk {

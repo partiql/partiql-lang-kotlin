@@ -929,4 +929,9 @@ class QueryPrettyPrinterTest {
             """.trimIndent()
         )
     }
+
+    @Test
+    fun bitwiseAnd() {
+        checkPrettyPrintQuery("1 & 2", "1 & 2")
+    }
 }

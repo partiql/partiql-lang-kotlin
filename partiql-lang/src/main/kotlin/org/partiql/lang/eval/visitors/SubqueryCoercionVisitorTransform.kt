@@ -44,6 +44,7 @@ class SubqueryCoercionVisitorTransform : VisitorTransformBase() {
             is PartiqlAst.Expr.Concat -> n.copy(operands = n.operands.map { coerceToSingle(it) })
             is PartiqlAst.Expr.And -> n.copy(operands = n.operands.map { coerceToSingle(it) })
             is PartiqlAst.Expr.Or -> n.copy(operands = n.operands.map { coerceToSingle(it) })
+            is PartiqlAst.Expr.BitwiseAnd -> n.copy(operands = n.operands.map { coerceToSingle(it) })
 
             is PartiqlAst.Expr.Eq -> n.copy(operands = coerceInComparisonOps(n.operands))
             is PartiqlAst.Expr.Ne -> n.copy(operands = coerceInComparisonOps(n.operands))
