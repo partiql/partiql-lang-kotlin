@@ -25,7 +25,7 @@ Your Catalog is specified as the `root` directory from your configuration file a
 
 Each Catalog holds Directories. Here's an example filesystem using the Configuration File from further above:
 ```text
-fs (Connector: localdb) (Root: /Users)
+fs (Connector: local) (Root: /Users)
 ├── john
 │   ├── plants.ion
 │   └── pets.ion
