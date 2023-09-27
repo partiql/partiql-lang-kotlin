@@ -1,10 +1,11 @@
-# MockDB (LocalDB)
+# PartiQL Local DB Plugin
 
-This is a mock DB that represents a lightweight database that is defined by JSON files. It is used for testing purposes.
+This is a PartiQL Plugin for a local database which represents its catalog with object descriptors in Ion files.
+Its primary use is for testing.
 
 ## Configuration
 
-In order to configure your root directory (Catalog), please create a Connector Configuration file as
+In order to configure the catalog root directory, please create a Connector Configuration file as
 `~/.partiql/plugins/<catalog_name>.ion`, where `<catalog_name>` will be the catalog name. See the below example:
 
 ```ion
@@ -12,78 +13,84 @@ In order to configure your root directory (Catalog), please create a Connector C
 // Description: Stands for File System
 
 {
-  "connector_name": "localdb",  // This connector
-  "localdb_root": "/Users"  // The (configurable) root of my filesystem to query against
+  connector_name: "local",  // Associate the local connector to this catalog.
+  root: "/Users"            // Specify this catalog's root directory where object descriptor files are stored.
 }
 ```
 
 ## Catalog 
 
-Your Catalog is specified as the `localdb_root` directory from your configuration file above. If not specified, it defaults to
-`${HOME}/.partiql/localdb`.
+Your Catalog is specified as the `root` directory from your configuration file above. If not specified, it defaults to
+`${HOME}/.partiql/local`.
 
 Each Catalog holds Directories. Here's an example filesystem using the Configuration File from further above:
 ```text
 fs (Connector: localdb) (Root: /Users)
 ├── john
-│   ├── plants.json
-│   └── pets.json
+│   ├── plants.ion
+│   └── pets.ion
 └── jack
     ├── living
-    |  ├── furniture.json
-    |  └── pets.json
+    |  ├── furniture.ion
+    |  └── pets.ion
     └── kitchen
-       └── appliances.json
+       └── appliances.ion
 ```
 
 In the above PartiQL Environment, we have loaded all of the files from our filesystem starting at `/Users`. We can see
 that there are two top-level directories `john` and `jack`. `john` does not have child directories, but `jack` does.
 `john` directly holds Value Descriptors, while `jack`'s child directories hold Value Descriptors.
 
-## Table Descriptors
+## Object Descriptors
 
-Table schemas are stored as JSON files and have the following format:
+Each leaf in the catalog tree is an Ion file describing that object's value schema. Importantly, the file paths are
+the qualified names of each object; ie the object `c` with path `a/b/c` corresponds to the qualified identifier `a.b.c`.
 
-```json
+Object value schemas are stored as Ion files using PartiQL Value Schema notation. Here is an example of that format:
+
+```ion
 {
-  "name": "plants",
-  "type": "TABLE",
-  "attributes": [
-    {
-      "name": "id",
-      "type": "STRING",
-      "attributes": []
-    },
-    {
-      "name": "room_no",
-      "type": "INT",
-      "attributes": []
-    },
-    {
-      "name": "water_frequency_days",
-      "type": "DECIMAL",
-      "attributes": [32, 0]
-    },
-    {
-      "name": "metas",
-      "type": "STRUCT",
-      "attributes": [
-        {
-          "name": "a",
-          "type": "INT",
-          "attributes": []
-        },
-        {
-          "name": "b",
-          "type": "STRING",
-          "attributes": []
+  type: "bag",
+  items: {
+    type: "struct",
+    constraints: [
+      closed,
+      unique,
+      odered
+    ],
+    fields: [
+      {
+        name: "id",
+        type: "string"
+      },
+      {
+        name: "room_no",
+        type: "int"
+      },
+      {
+        name: "water_frequency_days",
+        type: "decimal"
+      },
+      {
+        name: "metas",
+        type: {
+          type: "struct",
+          fields: [
+            {
+              name: "a",
+              type: "int"
+            },
+            {
+              name: "b",
+              type: "string"
+            }
+          ]
         }
-      ]
-    }
-  ]
+      }
+    ]
+  }  
 }
 ```
-
 
 ## Inference Examples
 
