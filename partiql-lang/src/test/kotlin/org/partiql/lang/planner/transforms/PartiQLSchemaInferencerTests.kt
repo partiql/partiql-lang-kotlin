@@ -1057,7 +1057,7 @@ class PartiQLSchemaInferencerTests {
             ),
             // EXCLUDE test cases
             SuccessTestCase(
-                name = "EXCLUDE SELECT list",
+                name = "EXCLUDE SELECT star",
                 query = """SELECT * EXCLUDE c.ssn FROM [
                     {
                         'name': 'Alan',
@@ -1091,7 +1091,7 @@ class PartiQLSchemaInferencerTests {
                 )
             ),
             SuccessTestCase(
-                name = "EXCLUDE SELECT list multiple paths",
+                name = "EXCLUDE SELECT star multiple paths",
                 query = """SELECT * EXCLUDE c.ssn, c.address.street FROM [
                     {
                         'name': 'Alan',
@@ -1124,7 +1124,7 @@ class PartiQLSchemaInferencerTests {
                 )
             ),
             SuccessTestCase(
-                name = "EXCLUDE SELECT list index and list index field",
+                name = "EXCLUDE SELECT star list index and list index field",
                 query = """SELECT *
                     EXCLUDE
                         t.a.b.c[0],
@@ -1184,7 +1184,7 @@ class PartiQLSchemaInferencerTests {
                 )
             ),
             SuccessTestCase(
-                name = "EXCLUDE SELECT list wildcard",
+                name = "EXCLUDE SELECT star list wildcard",
                 query = """SELECT *
                     EXCLUDE
                         t.a.b.c[*].field_x
@@ -1241,7 +1241,7 @@ class PartiQLSchemaInferencerTests {
                 )
             ),
             SuccessTestCase(
-                name = "EXCLUDE SELECT list tuple wildcard",
+                name = "EXCLUDE SELECT star list tuple wildcard",
                 query = """SELECT *
                     EXCLUDE
                         t.a.b.c[*].*
@@ -1298,7 +1298,7 @@ class PartiQLSchemaInferencerTests {
                 )
             ),
             SuccessTestCase(
-                name = "EXCLUDE SELECT list order by",
+                name = "EXCLUDE SELECT star order by",
                 query = """SELECT *
                     EXCLUDE
                         t.a
