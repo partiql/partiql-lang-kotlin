@@ -30,6 +30,7 @@ Thank you to all who have contributed!
 ## [Unreleased]
 
 ### Added
+- Support parsing and evaluation of Bitwise AND operator (&).
 
 ### Changed
 
