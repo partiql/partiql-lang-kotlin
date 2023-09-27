@@ -241,7 +241,7 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
         if (key is Expr.Lit && key.value is TextValue<*>) {
             // use . syntax
             h = h concat r(".")
-            h = h concat r((key.value as TextValue<*>).string)
+            h = h concat r((key.value as TextValue<*>).string!!)
         } else {
             // use [ ] syntax
             h = h concat r("[")
