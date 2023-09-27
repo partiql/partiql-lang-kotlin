@@ -17,7 +17,7 @@ import kotlin.test.assertEquals
 class LocalConnectorMetadataTests {
 
     private val catalogUrl =
-        LocalConnectorMetadataTests::class.java.classLoader.getResource("catalogs/fs") ?: error("Couldn't be found")
+        LocalConnectorMetadataTests::class.java.classLoader.getResource("catalogs/local") ?: error("Couldn't be found")
     private val session = object : ConnectorSession {
         override fun getQueryId(): String = "mock_query_id"
         override fun getUserId(): String = "mock_user"
