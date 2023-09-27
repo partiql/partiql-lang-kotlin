@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Adds overridden `toString()` method for Sprout-generated code.
+- Adds CURRENT_DATE session variable to PartiQL.g4 and PartiQLParser
 
 ### Changed
 

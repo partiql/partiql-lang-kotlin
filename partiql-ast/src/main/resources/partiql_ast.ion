@@ -277,6 +277,7 @@ expr::[
   session_attribute::{
     attribute: [
       CURRENT_USER,
+      CURRENT_DATE,
     ],
   },
 

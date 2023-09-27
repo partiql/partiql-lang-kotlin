@@ -42,7 +42,7 @@ object Versions {
     const val kotlinxCollections = "0.3.5"
     const val picoCli = "4.7.0"
     const val kasechange = "1.3.0"
-    const val ktlint = "11.5.0"
+    const val ktlint = "11.6.0"
     const val pig = "0.6.2"
 
     // Testing

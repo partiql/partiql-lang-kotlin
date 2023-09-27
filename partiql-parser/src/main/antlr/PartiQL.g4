@@ -617,6 +617,7 @@ exprPrimary
 exprTerm
     : PAREN_LEFT expr PAREN_RIGHT    # ExprTermWrappedQuery
     | CURRENT_USER                   # ExprTermCurrentUser
+    | CURRENT_DATE                   # ExprTermCurrentDate
     | parameter                      # ExprTermBase
     | varRefExpr                     # ExprTermBase
     | literal                        # ExprTermBase
