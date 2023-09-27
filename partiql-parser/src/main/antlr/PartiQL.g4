@@ -557,7 +557,7 @@ mathOp00
     ;
 
 mathOp01
-    : lhs=mathOp01 op=(PLUS|MINUS|AMPERSAND) rhs=mathOp02
+    : lhs=mathOp01 op=(PLUS|MINUS) rhs=mathOp02
     | parent=mathOp02
     ;
 
