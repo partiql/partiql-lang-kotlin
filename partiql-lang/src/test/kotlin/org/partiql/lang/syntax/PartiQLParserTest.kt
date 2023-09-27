@@ -4575,4 +4575,30 @@ class PartiQLParserTest : PartiQLParserTestBase() {
         val metas = orderExpr?.metas ?: throw AssertionError("Expected ORDER BY clause to have metas")
         assertEquals(expected, metas.sourceLocation)
     }
+
+    @Test
+    fun testBitWiseAnd() = assertExpression("1 & 2") {
+        bitwiseAnd(
+            lit(ionInt(1)),
+            lit(ionInt(2))
+        )
+    }
+
+    // left to right associativity
+    @Test
+    fun testChainedBitWiseAnd() = assertExpression("31 & 15 & 7 & 3 & 1") {
+        bitwiseAnd(
+            bitwiseAnd(
+                bitwiseAnd(
+                    bitwiseAnd(
+                        lit(ionInt(31)),
+                        lit(ionInt(15))
+                    ),
+                    lit(ionInt(7))
+                ),
+                lit(ionInt(3))
+            ),
+            lit(ionInt(1))
+        )
+    }
 }

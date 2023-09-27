@@ -364,6 +364,11 @@ class ASTPrettyPrinter {
                 attrOfParent = attrOfParent,
                 children = toRecursionTreeList(node.operands)
             )
+            is PartiqlAst.Expr.BitwiseAnd -> RecursionTree(
+                astType = "&",
+                attrOfParent = attrOfParent,
+                children = toRecursionTreeList(node.operands)
+            )
             is PartiqlAst.Expr.And -> RecursionTree(
                 astType = "And",
                 attrOfParent = attrOfParent,

@@ -486,7 +486,7 @@ joinType
  *
  * EXPRESSIONS & PRECEDENCE
  *
- * Precedence Table:
+ * Precedence Table (from highest to lowest precedence)
  * 1. Primary Expressions: Functions, Literals, Paths, Identifiers, etc (ex: a, f(a), 1, a.b, "a")
  * 2. Unary plus, minus (ex: -a, +a)
  * 3. Multiplication, Division, Modulo (ex: a * b)
@@ -549,8 +549,10 @@ exprPredicate
     | parent=mathOp00                                                                # PredicateBase
     ;
 
+// TODO : Opreator precedence of BITWISE_AND (&) may change in the future.
+//  SEE: https://github.com/partiql/partiql-docs/issues/50
 mathOp00
-    : lhs=mathOp00 op=CONCAT rhs=mathOp01
+    : lhs=mathOp00 op=(AMPERSAND|CONCAT) rhs=mathOp01
     | parent=mathOp01
     ;
 

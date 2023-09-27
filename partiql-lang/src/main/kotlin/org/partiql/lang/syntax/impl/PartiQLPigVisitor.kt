@@ -1665,6 +1665,7 @@ internal class PartiQLPigVisitor(
             PartiQLParser.GT_EQ -> gte(args, metas)
             PartiQLParser.NEQ -> ne(args, metas)
             PartiQLParser.EQ -> eq(args, metas)
+            PartiQLParser.AMPERSAND -> bitwiseAnd(args, metas)
             else -> throw ParserException("Unknown binary operator", ErrorCode.PARSE_INVALID_QUERY)
         }
     }

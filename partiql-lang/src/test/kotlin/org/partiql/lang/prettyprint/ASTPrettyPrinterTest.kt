@@ -914,4 +914,16 @@ class ASTPrettyPrinterTest {
             """.trimIndent()
         )
     }
+
+    @Test
+    fun bitwiseAnd() {
+        checkPrettyPrintAst(
+            "1 & 2",
+            """
+                &
+                    Lit 1
+                    Lit 2
+            """.trimIndent()
+        )
+    }
 }

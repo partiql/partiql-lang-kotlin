@@ -322,7 +322,7 @@ expr::[
   // Binary Operators
   binary::{
     op: [
-      PLUS, MINUS, TIMES, DIVIDE, MODULO, CONCAT,
+      PLUS, MINUS, TIMES, DIVIDE, MODULO, CONCAT, BITWISE_AND,
       AND, OR,
       EQ, NE, GT, GTE, LT, LTE,
     ],
