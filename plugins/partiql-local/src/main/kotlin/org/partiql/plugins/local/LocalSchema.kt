@@ -8,6 +8,7 @@ import com.amazon.ionelement.api.SymbolElement
 import com.amazon.ionelement.api.ionListOf
 import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.ionStructOf
+import com.amazon.ionelement.api.ionSymbol
 import org.partiql.types.AnyOfType
 import org.partiql.types.AnyType
 import org.partiql.types.BagType
@@ -199,6 +200,15 @@ private fun SexpType.toIon(): IonElement = ionStructOf(
 )
 
 private fun StructType.toIon(): IonElement {
+    val constraintSymbols = mutableListOf<SymbolElement>()
+    for (constraint in constraints) {
+        val c = when (constraint) {
+            is TupleConstraint.Open -> if (constraint.value) null else ionSymbol("closed")
+            TupleConstraint.Ordered -> ionSymbol("ordered")
+            is TupleConstraint.UniqueAttrs -> ionSymbol("unique")
+        }
+        if (c != null) constraintSymbols.add(c)
+    }
     val fieldTypes = this.fields.map {
         ionStructOf(
             "name" to ionString(it.key),
@@ -207,6 +217,7 @@ private fun StructType.toIon(): IonElement {
     }
     return ionStructOf(
         "type" to ionString("struct"),
-        "fields" to ionListOf(fieldTypes)
+        "fields" to ionListOf(fieldTypes),
+        "constraints" to ionListOf(constraintSymbols),
     )
 }
