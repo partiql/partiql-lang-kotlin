@@ -17,6 +17,7 @@ import org.partiql.plan.Rex
 import org.partiql.planner.Env
 import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.boolValue
 import org.partiql.value.stringValue
 
 /**
@@ -244,14 +245,24 @@ internal object RelConverter {
          *
          * TODO compute basic schema
          */
+        @OptIn(PartiQLValueExperimental::class)
         override fun visitFromJoin(node: From.Join, nil: Rel) = Plan.create {
             val lhs = visitFrom(node.lhs, nil)
             val rhs = visitFrom(node.rhs, nil)
             val schema = listOf<Rel.Binding>()
             val props = emptySet<Rel.Prop>()
-            val joinType = convertJoinType(node)
+            val condition = node.condition?.let { RexConverter.apply(it, env) } ?: rex(StaticType.BOOL, rexOpLit(boolValue(true)))
+            val joinType = when (node.type) {
+                From.Join.Type.LEFT_OUTER, From.Join.Type.LEFT -> Rel.Op.Join.Type.LEFT
+                From.Join.Type.RIGHT_OUTER, From.Join.Type.RIGHT -> Rel.Op.Join.Type.RIGHT
+                From.Join.Type.FULL_OUTER, From.Join.Type.FULL -> Rel.Op.Join.Type.FULL
+                From.Join.Type.COMMA,
+                From.Join.Type.INNER,
+                From.Join.Type.CROSS -> Rel.Op.Join.Type.INNER // Cross Joins are just INNER JOIN ON TRUE
+                null -> Rel.Op.Join.Type.INNER // a JOIN b ON a.id = b.id <--> a INNER JOIN b ON a.id = b.id
+            }
             val type = relType(schema, props)
-            val op = relOpJoin(lhs, rhs, joinType)
+            val op = relOpJoin(lhs, rhs, condition, joinType)
             rel(type, op)
         }
 
@@ -311,25 +322,6 @@ internal object RelConverter {
             val predicate = expr.toRex(env)
             val op = relOpFilter(input, predicate)
             rel(type, op)
-        }
-
-        private fun convertJoinType(join: From.Join): Rel.Op.Join.Type = Plan.create {
-            val capture = when (join.type) {
-                From.Join.Type.INNER -> Rel.Op.Join.Capture.INNER
-                From.Join.Type.LEFT -> Rel.Op.Join.Capture.LEFT
-                From.Join.Type.LEFT_OUTER -> Rel.Op.Join.Capture.LEFT_OUTER
-                From.Join.Type.RIGHT -> Rel.Op.Join.Capture.RIGHT
-                From.Join.Type.RIGHT_OUTER -> Rel.Op.Join.Capture.RIGHT_OUTER
-                From.Join.Type.FULL -> Rel.Op.Join.Capture.FULL
-                From.Join.Type.FULL_OUTER -> Rel.Op.Join.Capture.FULL_OUTER
-                From.Join.Type.CROSS -> return relOpJoinTypeCross()
-                From.Join.Type.COMMA -> return relOpJoinTypeCross()
-                null -> Rel.Op.Join.Capture.INNER
-            }
-            when (join.condition) {
-                null -> relOpJoinTypeEqui(capture)
-                else -> relOpJoinTypeTheta(capture, join.condition!!.toRex(env))
-            }
         }
 
         /**

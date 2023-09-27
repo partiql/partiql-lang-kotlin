@@ -77,9 +77,9 @@ public fun StringElement.toStaticType(): StaticType = when (textValue) {
     "timestamp" -> StaticType.TIMESTAMP
     "interval" -> error("`interval` is currently not supported")
     "bag" -> error("`bag` is not an atomic type")
-    "list" -> error("`bag` is not an atomic type")
-    "sexp" -> error("`bag` is not an atomic type")
-    "struct" -> error("`bag` is not an atomic type")
+    "list" -> error("`list` is not an atomic type")
+    "sexp" -> error("`sexp` is not an atomic type")
+    "struct" -> error("`struct` is not an atomic type")
     "null" -> StaticType.NULL
     "missing" -> StaticType.MISSING
     else -> error("Invalid type `$textValue`")

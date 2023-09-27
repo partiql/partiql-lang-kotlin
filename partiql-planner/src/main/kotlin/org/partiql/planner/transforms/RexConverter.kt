@@ -8,6 +8,8 @@ import org.partiql.ast.Type
 import org.partiql.ast.visitor.AstBaseVisitor
 import org.partiql.plan.Identifier
 import org.partiql.plan.Plan
+import org.partiql.plan.Plan.rex
+import org.partiql.plan.Plan.rexOpLit
 import org.partiql.plan.PlanNode
 import org.partiql.plan.Rex
 import org.partiql.plan.builder.PlanFactory
@@ -21,6 +23,7 @@ import org.partiql.types.TimestampType
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.boolValue
+import org.partiql.value.int32Value
 import org.partiql.value.int64Value
 import org.partiql.value.nullValue
 import org.partiql.value.symbolValue
@@ -242,8 +245,59 @@ internal object RexConverter {
             rex(type, call)
         }
 
+        /**
+         * <arg0> IS <NOT>? <type>
+         */
         override fun visitExprIsType(node: Expr.IsType, ctx: Env) = transform {
-            TODO("SQL Special Form is_type")
+            val type = StaticType.BOOL
+            // arg
+            val arg0 = visitExpr(node.value, ctx)
+
+            var call = when (val targetType = node.type) {
+                is Type.NullType -> call("is_null", arg0)
+                is Type.Missing -> call("is_missing", arg0)
+                is Type.Bool -> call("is_bool", arg0)
+                is Type.Tinyint -> call("is_int8", arg0)
+                is Type.Smallint, is Type.Int2 -> call("is_int16", arg0)
+                is Type.Int4 -> call("is_int32", arg0)
+                is Type.Bigint, is Type.Int8 -> call("is_int64", arg0)
+                is Type.Int -> call("is_int", arg0)
+                is Type.Real -> call("is_real", arg0)
+                is Type.Float32 -> call("is_float32", arg0)
+                is Type.Float64 -> call("is_float64", arg0)
+                is Type.Decimal -> call("is_decimal", targetType.precision.toRex(), targetType.scale.toRex(), arg0)
+                is Type.Numeric -> call("is_numeric", targetType.precision.toRex(), targetType.scale.toRex(), arg0)
+                is Type.Char -> call("is_char", targetType.length.toRex(), arg0)
+                is Type.Varchar -> call("is_varchar", targetType.length.toRex(), arg0)
+                is Type.String -> call("is_string", targetType.length.toRex(), arg0)
+                is Type.Symbol -> call("is_symbol", arg0)
+                is Type.Bit -> call("is_bit", arg0)
+                is Type.BitVarying -> call("is_bitVarying", arg0)
+                is Type.ByteString -> call("is_byteString", arg0)
+                is Type.Blob -> call("is_blob", arg0)
+                is Type.Clob -> call("is_clob", arg0)
+                is Type.Date -> call("is_date", arg0)
+                is Type.Time -> call("is_time", arg0)
+                // TODO: DO we want to seperate with time zone vs without time zone into two different type in the plan?
+                //  leave the parameterized type out for now until the above is answered
+                is Type.TimeWithTz -> call("is_timeWithTz", arg0)
+                is Type.Timestamp -> call("is_timestamp", arg0)
+                is Type.TimestampWithTz -> call("is_timestampWithTz", arg0)
+                is Type.Interval -> call("is_interval", arg0)
+                is Type.Bag -> call("is_bag", arg0)
+                is Type.List -> call("is_list", arg0)
+                is Type.Sexp -> call("is_sexp", arg0)
+                is Type.Tuple -> call("is_tuple", arg0)
+                is Type.Struct -> call("is_struct", arg0)
+                is Type.Any -> call("is_any", arg0)
+                is Type.Custom -> call("is_custom", arg0)
+            }
+
+            if (node.not == true) {
+                call = negate(call)
+            }
+
+            rex(type, call)
         }
 
         override fun visitExprCoalesce(node: Expr.Coalesce, ctx: Env): Rex = transform {
@@ -472,5 +526,9 @@ internal object RexConverter {
             val fn = fnUnresolved(id)
             return rexOpCall(fn, args.toList())
         }
+
+        private fun Int?.toRex() = rex(StaticType.INT4, rexOpLit(int32Value(this)))
+
+        private fun Boolean?.toRex() = rex(StaticType.BOOL, rexOpLit(boolValue(this)))
     }
 }

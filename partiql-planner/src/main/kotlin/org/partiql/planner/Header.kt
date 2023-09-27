@@ -195,7 +195,7 @@ internal class Header(
             times(),
             div(),
             mod(),
-            concat(),
+            concat()
         ).flatten()
 
         /**
@@ -206,6 +206,9 @@ internal class Header(
             between(),
             inCollection(),
             isType(),
+            isTypeSingleArg(),
+            isTypeDoubleArgsInt(),
+            isTypeTime(),
             coalesce(),
             nullIf(),
             substring(),
@@ -338,11 +341,11 @@ internal class Header(
         }
 
         private fun div(): List<FunctionSignature> = numericTypes.map { t ->
-            binary("div", t, t, t)
+            binary("divide", t, t, t)
         }
 
         private fun mod(): List<FunctionSignature> = numericTypes.map { t ->
-            binary("mod", t, t, t)
+            binary("modulo", t, t, t)
         }
 
         private fun concat(): List<FunctionSignature> = textTypes.map { t ->
@@ -404,8 +407,67 @@ internal class Header(
             }
         }.flatten()
 
-        // TODO
-        private fun isType(): List<FunctionSignature> = emptyList()
+        // To model type assertion, generating a list of assertion function based on the type,
+        // and the parameter will be the value entered.
+        //  i.e., 1 is INT2  => is_int16(1)
+        // TODO: We can remove the types with parameter in this function.
+        //  but, leaving out the decision to have, for example:
+        //  is_decimal(null, null, value) vs is_decimal(value) later....
+        private fun isType(): List<FunctionSignature> = allTypes.map { element ->
+            FunctionSignature(
+                name = "is_${element.name.lowercase()}",
+                returns = BOOL,
+                parameters = listOf(
+                    FunctionParameter("value", ANY) // TODO: Decide if we need to further segment this
+                ),
+                isNullCall = false,
+                isNullable = false
+            )
+        }
+
+        // In type assertion, it is possible for types to have args
+        // i.e., 'a' is CHAR(2)
+        // we put type parameter before value.
+        private fun isTypeSingleArg(): List<FunctionSignature> = listOf(CHAR, STRING).map { element ->
+            FunctionSignature(
+                name = "is_${element.name.lowercase()}",
+                returns = BOOL,
+                parameters = listOf(
+                    FunctionParameter("type_parameter_1", INT32),
+                    FunctionParameter("value", ANY) // TODO: Decide if we need to further segment this
+                ),
+                isNullCall = false,
+                isNullable = false
+            )
+        }
+
+        private fun isTypeDoubleArgsInt(): List<FunctionSignature> = listOf(DECIMAL).map { element ->
+            FunctionSignature(
+                name = "is_${element.name.lowercase()}",
+                returns = BOOL,
+                parameters = listOf(
+                    FunctionParameter("type_parameter_1", INT32),
+                    FunctionParameter("type_parameter_2", INT32),
+                    FunctionParameter("value", ANY) // TODO: Decide if we need to further segment this
+                ),
+                isNullCall = false,
+                isNullable = false
+            )
+        }
+
+        private fun isTypeTime(): List<FunctionSignature> = listOf(TIME, TIMESTAMP).map { element ->
+            FunctionSignature(
+                name = "is_${element.name.lowercase()}",
+                returns = BOOL,
+                parameters = listOf(
+                    FunctionParameter("type_parameter_1", BOOL),
+                    FunctionParameter("type_parameter_2", INT32),
+                    FunctionParameter("value", ANY) // TODO: Decide if we need to further segment this
+                ),
+                isNullCall = false,
+                isNullable = false
+            )
+        }
 
         // TODO
         private fun coalesce(): List<FunctionSignature> = emptyList()
