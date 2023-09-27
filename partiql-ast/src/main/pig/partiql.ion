@@ -223,7 +223,7 @@ may then be further optimized by selecting better implementations of each operat
         // EXCLUDE clause
         (product exclude_op exprs::(* exclude_expr 1))
 
-        (product exclude_expr root::identifier steps::(* exclude_step 0))
+        (product exclude_expr root::identifier steps::(* exclude_step 1))
 
         (sum exclude_step
             // `someRoot.someField` which is equivalent to `someRoot['someField']` (case-sensitive)
