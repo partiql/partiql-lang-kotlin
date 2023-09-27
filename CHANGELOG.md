@@ -33,7 +33,7 @@ Thank you to all who have contributed!
 ### Added
 - Support parsing and evaluation of Bitwise AND operator (&).
   - The Bitwise And Operator only works for integer operands. 
-  - The operator precedence may change based on the pending operator precedence [RFC](https://github.com/partiql/partiql-docs/issues/50). 
+  - The operator precedence may change based on the pending operator precedence [RFC](https://github.com/partiql/partiql-docs/issues/50).
 
 ### Changed
 
