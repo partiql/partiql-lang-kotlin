@@ -269,7 +269,7 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
         if (f is Identifier.Symbol && f.symbol == "COUNT_STAR") {
             return h concat r("COUNT(*)")
         }
-        val start = if (node.setq != null) "(${node.setq} " else "("
+        val start = if (node.setq != null) "(${node.setq!!.name} " else "("
         h = h concat visitIdentifier(f, h)
         h = h concat list(start) { node.args }
         return h
@@ -416,7 +416,7 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
         h = h concat r("TRIM(")
         // [LEADING|TRAILING|BOTH]
         if (node.spec != null) {
-            h = h concat r("${node.spec} ")
+            h = h concat r("${node.spec!!.name} ")
         }
         // [<chars> FROM]
         if (node.chars != null) {
