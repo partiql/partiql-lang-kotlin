@@ -26,6 +26,7 @@ import org.partiql.lang.eval.EvaluationSession
 import org.partiql.parser.PartiQLParserBuilder
 import org.partiql.plan.debug.PlanPrinter
 import org.partiql.planner.PartiQLPlanner
+import org.partiql.planner.PartiQLPlannerBuilder
 import org.partiql.plugins.mockdb.LocalPlugin
 import picocli.CommandLine
 import java.io.PrintStream
@@ -59,7 +60,7 @@ object Debug {
         )
     )
 
-    private val planner = PartiQLPlanner.builder().plugins(plugins).build()
+    private val planner = PartiQLPlannerBuilder().plugins(plugins).build()
     private val parser = PartiQLParserBuilder.standard().build()
 
     // !!

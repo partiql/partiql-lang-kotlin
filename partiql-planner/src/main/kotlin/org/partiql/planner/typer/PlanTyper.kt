@@ -76,7 +76,7 @@ internal class PlanTyper(
      */
     private inner class RelTyper(private val outer: TypeEnv) : PlanRewriter<Rel.Type?>() {
 
-        override fun visitRel(node: Rel, ctx: Rel.Type?) = super.visitRelOp(node.op, node.type) as Rel
+        override fun visitRel(node: Rel, ctx: Rel.Type?) = visitRelOp(node.op, node.type) as Rel
 
         /**
          * The output schema of a `rel.op.scan` is the single value binding.
@@ -232,7 +232,7 @@ internal class PlanTyper(
     @OptIn(PartiQLValueExperimental::class)
     private inner class RexTyper(private val locals: TypeEnv) : PlanRewriter<StaticType?>() {
 
-        override fun visitRex(node: Rex, ctx: StaticType?): Rex = super.visitRexOp(node.op, node.type) as Rex
+        override fun visitRex(node: Rex, ctx: StaticType?): Rex = visitRexOp(node.op, node.type) as Rex
 
         override fun visitRexOpLit(node: Rex.Op.Lit, ctx: StaticType?): Rex = rewrite {
             // type comes from RexConverter
