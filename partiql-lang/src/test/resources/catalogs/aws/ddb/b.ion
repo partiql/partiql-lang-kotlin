@@ -1,0 +1,9 @@
+{
+  type: "struct",
+  fields: [
+    {
+      name: "identifier",
+      type: "string",
+    }
+  ]
+}

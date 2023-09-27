@@ -1,0 +1,13 @@
+{
+  type: "struct",
+  fields: [
+    {
+      name: "id",
+      type: "int",
+    },
+    {
+      name: "breed",
+      type: "string",
+    }
+  ]
+}

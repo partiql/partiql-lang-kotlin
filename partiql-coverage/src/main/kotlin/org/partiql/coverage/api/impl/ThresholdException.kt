@@ -18,7 +18,7 @@ package org.partiql.coverage.api.impl
 internal class ThresholdException internal constructor(
     val minimum: Double,
     val actual: Double,
-    val type: ThresholdType
+    val type: ThresholdType,
 ) : Exception("PartiQL $type Coverage Minimum set to $minimum, however, $actual was received.", null) {
     enum class ThresholdType {
         BRANCH,
