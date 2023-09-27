@@ -486,7 +486,7 @@ joinType
  *
  * EXPRESSIONS & PRECEDENCE
  *
- * Precedence Table (from highest to lowst precedence)
+ * Precedence Table (from highest to lowest precedence)
  * 1. Primary Expressions: Functions, Literals, Paths, Identifiers, etc (ex: a, f(a), 1, a.b, "a")
  * 2. Unary plus, minus (ex: -a, +a)
  * 3. Multiplication, Division, Modulo (ex: a * b)
