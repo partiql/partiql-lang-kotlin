@@ -38,7 +38,7 @@ dependencies {
     implementation(Deps.csv)
     implementation(Deps.kotlinReflect)
 
-    testImplementation(project(":plugins:partiql-mockdb"))
+    testImplementation(project(":plugins:partiql-local"))
     testImplementation(project(":lib:isl"))
     testImplementation(Deps.assertj)
     testImplementation(Deps.junit4)
