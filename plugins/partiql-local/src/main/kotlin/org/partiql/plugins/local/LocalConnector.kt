@@ -23,10 +23,20 @@ import org.partiql.spi.connector.ConnectorObjectPath
 import org.partiql.spi.connector.ConnectorSession
 import org.partiql.types.StaticType
 import java.nio.file.Path
+import java.nio.file.Paths
 import kotlin.io.path.notExists
 
 /**
  * An implementation of a PartiQL [Connector] backed by a catalog in a local directory.
+ *
+ * Set to the "root" key to specify the root of the local database.
+ *
+ * ```ion
+ * {
+ *   connector_name: "local",
+ *   root: "/Users/me/some/root/directory"
+ * }
+ * ```
  *
  * @property catalogRoot    Catalog root path
  * @property catalogName    Catalog name
@@ -40,18 +50,22 @@ class LocalConnector(
 
     companion object {
         const val CONNECTOR_NAME = "local"
+        const val ROOT_KEY = "root"
     }
 
     private val metadata = Metadata(catalogRoot)
 
     override fun getMetadata(session: ConnectorSession): ConnectorMetadata = metadata
 
-    class Factory(private val root: Path) : Connector.Factory {
+    class Factory : Connector.Factory {
+
+        private val default: Path = Paths.get(System.getProperty("user.home")).resolve(".partiql/local")
 
         override fun getName(): String = CONNECTOR_NAME
 
         override fun create(catalogName: String, config: StructElement): Connector {
-            val catalogRoot = root.resolve(catalogName).toAbsolutePath()
+            val root = config.getOptional(ROOT_KEY)?.stringValueOrNull?.let { Paths.get(it) }
+            val catalogRoot = root ?: default
             if (catalogRoot.notExists()) {
                 error("Invalid catalog `$catalogRoot`")
             }

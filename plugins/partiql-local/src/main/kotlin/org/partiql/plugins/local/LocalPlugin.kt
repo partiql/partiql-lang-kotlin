@@ -20,16 +20,15 @@ import org.partiql.spi.Plugin
 import org.partiql.spi.connector.Connector
 import org.partiql.spi.function.PartiQLFunction
 import org.partiql.spi.function.PartiQLFunctionExperimental
-import java.nio.file.Path
 
 /**
  * FsPlugin is a PartiQL plugin that provides schemas written in PartiQL Value Schema.
  *
  * Backed by a memoized catalog tree from the given root dir; global bindings are files.
  */
-class LocalPlugin(private val root: Path) : Plugin {
+class LocalPlugin : Plugin {
 
-    override fun getConnectorFactories(): List<Connector.Factory> = listOf(LocalConnector.Factory(root))
+    override fun getConnectorFactories(): List<Connector.Factory> = listOf(LocalConnector.Factory())
 
     @PartiQLFunctionExperimental
     override fun getFunctions(): List<PartiQLFunction> = listOf(

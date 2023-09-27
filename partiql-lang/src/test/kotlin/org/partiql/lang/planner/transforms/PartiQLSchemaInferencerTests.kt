@@ -32,6 +32,7 @@ import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
 import java.time.Instant
 import java.util.stream.Stream
+import kotlin.io.path.pathString
 import kotlin.io.path.toPath
 import kotlin.test.assertTrue
 
@@ -39,21 +40,24 @@ class PartiQLSchemaInferencerTests {
 
     companion object {
 
-        private val root = this::class.java.getResource("/catalogs")!!.toURI().toPath()
+        private val root = this::class.java.getResource("/catalogs")!!.toURI().toPath().pathString
 
-        private val PLUGINS = listOf(LocalPlugin(root))
+        private val PLUGINS = listOf(LocalPlugin())
 
         private const val USER_ID = "TEST_USER"
 
         private val catalogConfig = mapOf(
             "aws" to ionStructOf(
                 field("connector_name", ionString("local")),
+                field("root", ionString("$root/aws")),
             ),
             "b" to ionStructOf(
                 field("connector_name", ionString("local")),
+                field("root", ionString("$root/b")),
             ),
             "db" to ionStructOf(
                 field("connector_name", ionString("local")),
+                field("root", ionString("$root/db")),
             ),
         )
 
