@@ -14,10 +14,11 @@
 
 package org.partiql.value
 
-import org.partiql.types.PartiQLValueType
+import com.amazon.ionelement.api.IonElement
 import org.partiql.value.datetime.Date
 import org.partiql.value.datetime.Time
 import org.partiql.value.datetime.Timestamp
+import org.partiql.value.helpers.ToIon
 import org.partiql.value.util.PartiQLValueVisitor
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -27,8 +28,7 @@ internal typealias Annotations = List<String>
 
 /**
  * TODO
- *  - Implement value equality for comparisons of nullable and non-nullable value classes
- *  - Relate types T and UNION(NULL, T) with an abstract base
+ *  - Implement ANY
  *  - Implement comparators
  */
 @PartiQLValueExperimental
@@ -37,6 +37,8 @@ public sealed interface PartiQLValue {
     public val type: PartiQLValueType
 
     public val annotations: Annotations
+
+    public val isNull: Boolean
 
     public fun copy(annotations: Annotations = this.annotations): PartiQLValue
 
@@ -48,21 +50,12 @@ public sealed interface PartiQLValue {
 }
 
 @PartiQLValueExperimental
-public abstract class MissingValue : PartiQLValue {
-
-    override val type: PartiQLValueType = PartiQLValueType.MISSING
-
-    abstract override fun copy(annotations: Annotations): MissingValue
-
-    abstract override fun withAnnotations(annotations: Annotations): MissingValue
-
-    abstract override fun withoutAnnotations(): MissingValue
-}
-
-@PartiQLValueExperimental
 public sealed interface ScalarValue<T> : PartiQLValue {
 
-    public val value: T
+    public val value: T?
+
+    override val isNull: Boolean
+        get() = value == null
 
     override fun copy(annotations: Annotations): ScalarValue<T>
 
@@ -72,11 +65,14 @@ public sealed interface ScalarValue<T> : PartiQLValue {
 }
 
 @PartiQLValueExperimental
-public sealed interface CollectionValue<T : PartiQLValue> : PartiQLValue, Collection<T> {
+public sealed interface CollectionValue<T : PartiQLValue> : PartiQLValue, Sequence<T> {
 
-    public override val size: Int
+    public val elements: Sequence<T>?
 
-    public val elements: Collection<T>
+    override val isNull: Boolean
+        get() = elements == null
+
+    override fun iterator(): Iterator<T> = elements!!.iterator()
 
     override fun copy(annotations: Annotations): CollectionValue<T>
 
@@ -86,7 +82,7 @@ public sealed interface CollectionValue<T : PartiQLValue> : PartiQLValue, Collec
 }
 
 @PartiQLValueExperimental
-public abstract class BoolValue : ScalarValue<Boolean> {
+public abstract class BoolValue : ScalarValue<Boolean?> {
 
     override val type: PartiQLValueType = PartiQLValueType.BOOL
 
@@ -100,17 +96,17 @@ public abstract class BoolValue : ScalarValue<Boolean> {
 @PartiQLValueExperimental
 public sealed class NumericValue<T : Number> : ScalarValue<T> {
 
-    public val int: Int
-        get() = value.toInt()
+    public val int: Int?
+        get() = value?.toInt()
 
-    public val long: Long
-        get() = value.toLong()
+    public val long: Long?
+        get() = value?.toLong()
 
-    public val float: Float
-        get() = value.toFloat()
+    public val float: Float?
+        get() = value?.toFloat()
 
-    public val double: Double
-        get() = value.toDouble()
+    public val double: Double?
+        get() = value?.toDouble()
 
     abstract override fun copy(annotations: Annotations): NumericValue<T>
 
@@ -218,7 +214,7 @@ public abstract class Float64Value : NumericValue<Double>() {
 @PartiQLValueExperimental
 public sealed class TextValue<T> : ScalarValue<T> {
 
-    public abstract val string: String
+    public abstract val string: String?
 
     abstract override fun copy(annotations: Annotations): TextValue<T>
 
@@ -232,8 +228,8 @@ public abstract class CharValue : TextValue<Char>() {
 
     override val type: PartiQLValueType = PartiQLValueType.CHAR
 
-    override val string: String
-        get() = value.toString()
+    override val string: String?
+        get() = value?.toString()
 
     abstract override fun copy(annotations: Annotations): CharValue
 
@@ -247,7 +243,7 @@ public abstract class StringValue : TextValue<String>() {
 
     override val type: PartiQLValueType = PartiQLValueType.STRING
 
-    override val string: String
+    override val string: String?
         get() = value
 
     abstract override fun copy(annotations: Annotations): StringValue
@@ -262,7 +258,7 @@ public abstract class SymbolValue : TextValue<String>() {
 
     override val type: PartiQLValueType = PartiQLValueType.SYMBOL
 
-    override val string: String
+    override val string: String?
         get() = value
 
     abstract override fun copy(annotations: Annotations): SymbolValue
@@ -277,8 +273,8 @@ public abstract class ClobValue : TextValue<ByteArray>() {
 
     override val type: PartiQLValueType = PartiQLValueType.CLOB
 
-    override val string: String
-        get() = value.toString(Charsets.UTF_8)
+    override val string: String?
+        get() = value?.toString(Charsets.UTF_8)
 
     abstract override fun copy(annotations: Annotations): ClobValue
 
@@ -381,6 +377,27 @@ public abstract class BagValue<T : PartiQLValue> : CollectionValue<T> {
     abstract override fun withAnnotations(annotations: Annotations): BagValue<T>
 
     abstract override fun withoutAnnotations(): BagValue<T>
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+        other as BagValue<*>
+        if (other.annotations != this.annotations) return false
+
+        // one (or both) null.bag
+        if (this.isNull || other.isNull) return this.isNull == other.isNull
+
+        // both not null, compare values
+        val lhs = this.elements!!.toList()
+        val rhs = other.elements!!.toList()
+        // this is incorrect as it assumes ordered-ness, but we don't have a sort or hash yet
+        return lhs == rhs
+    }
+
+    override fun hashCode(): Int {
+        // TODO
+        return type.hashCode()
+    }
 }
 
 @PartiQLValueExperimental
@@ -393,6 +410,26 @@ public abstract class ListValue<T : PartiQLValue> : CollectionValue<T> {
     abstract override fun withAnnotations(annotations: Annotations): ListValue<T>
 
     abstract override fun withoutAnnotations(): ListValue<T>
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+        other as ListValue<*>
+        if (other.annotations != this.annotations) return false
+
+        // one (or both) null.list
+        if (this.isNull || other.isNull) return this.isNull == other.isNull
+
+        // both not null, compare values
+        val lhs = this.elements!!.toList()
+        val rhs = other.elements!!.toList()
+        return lhs == rhs
+    }
+
+    override fun hashCode(): Int {
+        // TODO
+        return type.hashCode()
+    }
 }
 
 @PartiQLValueExperimental
@@ -405,26 +442,94 @@ public abstract class SexpValue<T : PartiQLValue> : CollectionValue<T> {
     abstract override fun withAnnotations(annotations: Annotations): SexpValue<T>
 
     abstract override fun withoutAnnotations(): SexpValue<T>
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is SexpValue<*>) return false
+        if (other.annotations != this.annotations) return false
+
+        // one (or both) null.sexp
+        if (this.isNull || other.isNull) return this.isNull == other.isNull
+
+        // both not null, compare values
+        val lhs = this.elements!!.toList()
+        val rhs = other.elements!!.toList()
+        return lhs == rhs
+    }
+
+    override fun hashCode(): Int {
+        // TODO
+        return type.hashCode()
+    }
 }
 
 @PartiQLValueExperimental
-public abstract class StructValue<T : PartiQLValue> : PartiQLValue, Collection<Pair<String, T>> {
-
-    public abstract val fields: List<Pair<String, T>>
+public abstract class StructValue<T : PartiQLValue> : PartiQLValue, Sequence<Pair<String, T>> {
 
     override val type: PartiQLValueType = PartiQLValueType.STRUCT
+
+    public abstract val fields: Sequence<Pair<String, T>>?
+
+    override val isNull: Boolean
+        get() = fields == null
+
+    override fun iterator(): Iterator<Pair<String, T>> = fields!!.iterator()
+
+    public abstract operator fun get(key: String): T?
+
+    public abstract fun getAll(key: String): Iterable<T>
 
     abstract override fun copy(annotations: Annotations): StructValue<T>
 
     abstract override fun withAnnotations(annotations: Annotations): StructValue<T>
 
     abstract override fun withoutAnnotations(): StructValue<T>
+
+    /**
+     * See equality of IonElement StructElementImpl
+     *
+     * https://github.com/amazon-ion/ion-element-kotlin/blob/master/src/com/amazon/ionelement/impl/StructElementImpl.kt
+     *
+     * @param other
+     * @return
+     */
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is StructValue<*>) return false
+        if (other.annotations != this.annotations) return false
+
+        // one (or both) null.struct
+        if (this.isNull || other.isNull) return this.isNull == other.isNull
+
+        // both not null, compare fields
+        val lhs = this.fields!!.groupBy({ it.first }, { it.second })
+        val rhs = other.fields!!.groupBy({ it.first }, { it.second })
+
+        // check size
+        if (lhs.size != rhs.size) return false
+        if (lhs.keys != rhs.keys) return false
+
+        // check values
+        lhs.forEach { (key, values) ->
+            val lGroup: Map<PartiQLValue, Int> = values.groupingBy { it }.eachCount()
+            val rGroup: Map<PartiQLValue, Int> = rhs[key]!!.groupingBy { it }.eachCount()
+            if (lGroup != rGroup) return false
+        }
+        return true
+    }
+
+    override fun hashCode(): Int {
+        // TODO
+        return super.hashCode()
+    }
 }
 
 @PartiQLValueExperimental
 public abstract class NullValue : PartiQLValue {
 
     override val type: PartiQLValueType = PartiQLValueType.NULL
+
+    override val isNull: Boolean = true
 
     abstract override fun copy(annotations: Annotations): NullValue
 
@@ -434,369 +539,18 @@ public abstract class NullValue : PartiQLValue {
 }
 
 @PartiQLValueExperimental
-public sealed interface NullableScalarValue<T> : PartiQLValue {
+public abstract class MissingValue : PartiQLValue {
 
-    public val value: T?
+    override val type: PartiQLValueType = PartiQLValueType.MISSING
 
-    override fun copy(annotations: Annotations): NullableScalarValue<T>
+    override val isNull: Boolean = true
 
-    override fun withAnnotations(annotations: Annotations): NullableScalarValue<T>
+    abstract override fun copy(annotations: Annotations): MissingValue
 
-    override fun withoutAnnotations(): NullableScalarValue<T>
+    abstract override fun withAnnotations(annotations: Annotations): MissingValue
+
+    abstract override fun withoutAnnotations(): MissingValue
 }
 
 @PartiQLValueExperimental
-public sealed interface NullableCollectionValue<T : PartiQLValue> : PartiQLValue {
-    public fun isNull(): Boolean
-
-    public fun promote(): CollectionValue<T>
-
-    override fun copy(annotations: Annotations): NullableCollectionValue<T>
-
-    override fun withAnnotations(annotations: Annotations): NullableCollectionValue<T>
-
-    override fun withoutAnnotations(): NullableCollectionValue<T>
-}
-
-@PartiQLValueExperimental
-public abstract class NullableBoolValue : NullableScalarValue<Boolean> {
-
-    override val type: PartiQLValueType = PartiQLValueType.NULLABLE_BOOL
-
-    abstract override fun copy(annotations: Annotations): NullableBoolValue
-
-    abstract override fun withAnnotations(annotations: Annotations): NullableBoolValue
-
-    abstract override fun withoutAnnotations(): NullableBoolValue
-}
-
-@PartiQLValueExperimental
-public sealed class NullableNumericValue<T : Number> : NullableScalarValue<T> {
-
-    public val int: Int?
-        get() = value?.toInt()
-
-    public val long: Long?
-        get() = value?.toLong()
-
-    public val float: Float?
-        get() = value?.toFloat()
-
-    public val double: Double?
-        get() = value?.toDouble()
-
-    abstract override fun copy(annotations: Annotations): NullableNumericValue<T>
-
-    abstract override fun withAnnotations(annotations: Annotations): NullableNumericValue<T>
-
-    abstract override fun withoutAnnotations(): NullableNumericValue<T>
-}
-
-@PartiQLValueExperimental
-public abstract class NullableInt8Value : NullableNumericValue<Byte>() {
-
-    override val type: PartiQLValueType = PartiQLValueType.NULLABLE_INT8
-
-    abstract override fun copy(annotations: Annotations): NullableInt8Value
-
-    abstract override fun withAnnotations(annotations: Annotations): NullableInt8Value
-
-    abstract override fun withoutAnnotations(): NullableInt8Value
-}
-
-@PartiQLValueExperimental
-public abstract class NullableInt16Value : NullableNumericValue<Short>() {
-
-    override val type: PartiQLValueType = PartiQLValueType.NULLABLE_INT16
-
-    abstract override fun copy(annotations: Annotations): NullableInt16Value
-
-    abstract override fun withAnnotations(annotations: Annotations): NullableInt16Value
-
-    abstract override fun withoutAnnotations(): NullableInt16Value
-}
-
-@PartiQLValueExperimental
-public abstract class NullableInt32Value : NullableNumericValue<Int>() {
-
-    override val type: PartiQLValueType = PartiQLValueType.NULLABLE_INT32
-
-    abstract override fun copy(annotations: Annotations): NullableInt32Value
-
-    abstract override fun withAnnotations(annotations: Annotations): NullableInt32Value
-
-    abstract override fun withoutAnnotations(): NullableInt32Value
-}
-
-@PartiQLValueExperimental
-public abstract class NullableInt64Value : NullableNumericValue<Long>() {
-
-    override val type: PartiQLValueType = PartiQLValueType.NULLABLE_INT64
-
-    abstract override fun copy(annotations: Annotations): NullableInt64Value
-
-    abstract override fun withAnnotations(annotations: Annotations): NullableInt64Value
-
-    abstract override fun withoutAnnotations(): NullableInt64Value
-}
-
-@PartiQLValueExperimental
-public abstract class NullableIntValue : NullableNumericValue<BigInteger>() {
-
-    override val type: PartiQLValueType = PartiQLValueType.NULLABLE_INT
-
-    abstract override fun copy(annotations: Annotations): NullableIntValue
-
-    abstract override fun withAnnotations(annotations: Annotations): NullableIntValue
-
-    abstract override fun withoutAnnotations(): NullableIntValue
-}
-
-@PartiQLValueExperimental
-public abstract class NullableDecimalValue : NullableNumericValue<BigDecimal>() {
-
-    override val type: PartiQLValueType = PartiQLValueType.NULLABLE_DECIMAL
-
-    abstract override fun copy(annotations: Annotations): NullableDecimalValue
-
-    abstract override fun withAnnotations(annotations: Annotations): NullableDecimalValue
-
-    abstract override fun withoutAnnotations(): NullableDecimalValue
-}
-
-@PartiQLValueExperimental
-public abstract class NullableFloat32Value : NullableScalarValue<Float> {
-
-    override val type: PartiQLValueType = PartiQLValueType.NULLABLE_FLOAT32
-
-    abstract override fun copy(annotations: Annotations): NullableFloat32Value
-
-    abstract override fun withAnnotations(annotations: Annotations): NullableFloat32Value
-
-    abstract override fun withoutAnnotations(): NullableFloat32Value
-}
-
-@PartiQLValueExperimental
-public abstract class NullableFloat64Value : NullableScalarValue<Double> {
-
-    override val type: PartiQLValueType = PartiQLValueType.NULLABLE_FLOAT64
-
-    abstract override fun copy(annotations: Annotations): NullableFloat64Value
-
-    abstract override fun withAnnotations(annotations: Annotations): NullableFloat64Value
-
-    abstract override fun withoutAnnotations(): NullableFloat64Value
-}
-
-@PartiQLValueExperimental
-public sealed class NullableTextValue<T> : NullableScalarValue<T> {
-
-    public abstract val string: String?
-
-    abstract override fun copy(annotations: Annotations): NullableTextValue<T>
-
-    abstract override fun withAnnotations(annotations: Annotations): NullableTextValue<T>
-
-    abstract override fun withoutAnnotations(): NullableTextValue<T>
-}
-
-@PartiQLValueExperimental
-public abstract class NullableCharValue : NullableTextValue<Char>() {
-
-    override val type: PartiQLValueType = PartiQLValueType.NULLABLE_CHAR
-
-    override val string: String?
-        get() = value?.toString()
-
-    abstract override fun copy(annotations: Annotations): NullableCharValue
-
-    abstract override fun withAnnotations(annotations: Annotations): NullableCharValue
-
-    abstract override fun withoutAnnotations(): NullableCharValue
-}
-
-@PartiQLValueExperimental
-public abstract class NullableStringValue : NullableTextValue<String>() {
-
-    override val type: PartiQLValueType = PartiQLValueType.NULLABLE_STRING
-
-    override val string: String?
-        get() = value
-
-    abstract override fun copy(annotations: Annotations): NullableStringValue
-
-    abstract override fun withAnnotations(annotations: Annotations): NullableStringValue
-
-    abstract override fun withoutAnnotations(): NullableStringValue
-}
-
-@PartiQLValueExperimental
-public abstract class NullableSymbolValue : NullableTextValue<String>() {
-
-    override val type: PartiQLValueType = PartiQLValueType.NULLABLE_SYMBOL
-
-    override val string: String?
-        get() = value
-
-    abstract override fun copy(annotations: Annotations): NullableSymbolValue
-
-    abstract override fun withAnnotations(annotations: Annotations): NullableSymbolValue
-
-    abstract override fun withoutAnnotations(): NullableSymbolValue
-}
-
-@PartiQLValueExperimental
-public abstract class NullableClobValue : NullableTextValue<ByteArray>() {
-
-    override val type: PartiQLValueType = PartiQLValueType.NULLABLE_CLOB
-
-    override val string: String?
-        get() = value?.toString(Charsets.UTF_8)
-
-    abstract override fun copy(annotations: Annotations): NullableClobValue
-
-    abstract override fun withAnnotations(annotations: Annotations): NullableClobValue
-
-    abstract override fun withoutAnnotations(): NullableClobValue
-}
-
-@PartiQLValueExperimental
-public abstract class NullableBinaryValue : NullableScalarValue<BitSet> {
-
-    override val type: PartiQLValueType = PartiQLValueType.NULLABLE_BINARY
-
-    abstract override fun copy(annotations: Annotations): NullableBinaryValue
-
-    abstract override fun withAnnotations(annotations: Annotations): NullableBinaryValue
-
-    abstract override fun withoutAnnotations(): NullableBinaryValue
-}
-
-@PartiQLValueExperimental
-public abstract class NullableByteValue : NullableScalarValue<Byte> {
-
-    override val type: PartiQLValueType = PartiQLValueType.NULLABLE_BYTE
-
-    abstract override fun copy(annotations: Annotations): NullableByteValue
-
-    abstract override fun withAnnotations(annotations: Annotations): NullableByteValue
-
-    abstract override fun withoutAnnotations(): NullableByteValue
-}
-
-@PartiQLValueExperimental
-public abstract class NullableBlobValue : NullableScalarValue<ByteArray> {
-
-    override val type: PartiQLValueType = PartiQLValueType.NULLABLE_BLOB
-
-    abstract override fun copy(annotations: Annotations): NullableBlobValue
-
-    abstract override fun withAnnotations(annotations: Annotations): NullableBlobValue
-
-    abstract override fun withoutAnnotations(): NullableBlobValue
-}
-
-@PartiQLValueExperimental
-public abstract class NullableDateValue : NullableScalarValue<Date> {
-
-    override val type: PartiQLValueType = PartiQLValueType.NULLABLE_DATE
-
-    abstract override fun copy(annotations: Annotations): NullableDateValue
-
-    abstract override fun withAnnotations(annotations: Annotations): NullableDateValue
-
-    abstract override fun withoutAnnotations(): NullableDateValue
-}
-
-@PartiQLValueExperimental
-public abstract class NullableTimeValue : NullableScalarValue<Time> {
-
-    override val type: PartiQLValueType = PartiQLValueType.NULLABLE_TIME
-
-    abstract override fun copy(annotations: Annotations): NullableTimeValue
-
-    abstract override fun withAnnotations(annotations: Annotations): NullableTimeValue
-
-    abstract override fun withoutAnnotations(): NullableTimeValue
-}
-
-@PartiQLValueExperimental
-public abstract class NullableTimestampValue : NullableScalarValue<Timestamp> {
-
-    override val type: PartiQLValueType = PartiQLValueType.NULLABLE_TIMESTAMP
-
-    abstract override fun copy(annotations: Annotations): NullableTimestampValue
-
-    abstract override fun withAnnotations(annotations: Annotations): NullableTimestampValue
-
-    abstract override fun withoutAnnotations(): NullableTimestampValue
-}
-
-@PartiQLValueExperimental
-public abstract class NullableIntervalValue : NullableScalarValue<Long> {
-
-    override val type: PartiQLValueType = PartiQLValueType.NULLABLE_INTERVAL
-
-    abstract override fun copy(annotations: Annotations): NullableIntervalValue
-
-    abstract override fun withAnnotations(annotations: Annotations): NullableIntervalValue
-
-    abstract override fun withoutAnnotations(): NullableIntervalValue
-}
-
-@PartiQLValueExperimental
-public abstract class NullableBagValue<T : PartiQLValue> : NullableCollectionValue<T> {
-
-    override val type: PartiQLValueType = PartiQLValueType.NULLABLE_BAG
-
-    abstract override fun promote(): BagValue<T>
-
-    abstract override fun copy(annotations: Annotations): NullableBagValue<T>
-
-    abstract override fun withAnnotations(annotations: Annotations): NullableBagValue<T>
-
-    abstract override fun withoutAnnotations(): NullableBagValue<T>
-}
-
-@PartiQLValueExperimental
-public abstract class NullableListValue<T : PartiQLValue> : NullableCollectionValue<T> {
-
-    override val type: PartiQLValueType = PartiQLValueType.NULLABLE_LIST
-
-    abstract override fun promote(): ListValue<T>
-
-    abstract override fun copy(annotations: Annotations): NullableListValue<T>
-
-    abstract override fun withAnnotations(annotations: Annotations): NullableListValue<T>
-
-    abstract override fun withoutAnnotations(): NullableListValue<T>
-}
-
-@PartiQLValueExperimental
-public abstract class NullableSexpValue<T : PartiQLValue> : NullableCollectionValue<T> {
-
-    override val type: PartiQLValueType = PartiQLValueType.NULLABLE_SEXP
-
-    abstract override fun promote(): SexpValue<T>
-
-    abstract override fun copy(annotations: Annotations): NullableSexpValue<T>
-
-    abstract override fun withAnnotations(annotations: Annotations): NullableSexpValue<T>
-
-    abstract override fun withoutAnnotations(): NullableSexpValue<T>
-}
-
-@PartiQLValueExperimental
-public abstract class NullableStructValue<T : PartiQLValue> : PartiQLValue {
-    public abstract fun isNull(): Boolean
-
-    public abstract fun promote(): StructValue<T>
-
-    override val type: PartiQLValueType = PartiQLValueType.NULLABLE_STRUCT
-
-    abstract override fun copy(annotations: Annotations): NullableStructValue<T>
-
-    abstract override fun withAnnotations(annotations: Annotations): NullableStructValue<T>
-
-    abstract override fun withoutAnnotations(): NullableStructValue<T>
-}
+public fun PartiQLValue.toIon(): IonElement = accept(ToIon, Unit)

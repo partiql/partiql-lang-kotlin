@@ -1,0 +1,2 @@
+org.partiql.coverage.api.impl.LcovReportListener$LcovReportBranchListener
+org.partiql.coverage.api.impl.LcovReportListener$LcovReportConditionListener

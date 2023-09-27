@@ -706,10 +706,10 @@ internal class PartiQLParserDefault : PartiQLParser {
                 throw error(ctx, "Expected a path element literal")
             }
             when (val i = v.value) {
-                is NumericValue<*> -> pathStepIndex(i.int)
+                is NumericValue<*> -> pathStepIndex(i.int!!)
                 is StringValue -> pathStepSymbol(
                     identifierSymbol(
-                        i.value, Identifier.CaseSensitivity.SENSITIVE
+                        i.value!!, Identifier.CaseSensitivity.SENSITIVE
                     )
                 )
                 else -> throw error(ctx, "Expected an integer or string literal, found literal ${i.type}")
@@ -1473,6 +1473,10 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitExprTermCurrentUser(ctx: GeneratedParser.ExprTermCurrentUserContext) = translate(ctx) {
             exprSessionAttribute(Expr.SessionAttribute.Attribute.CURRENT_USER)
+        }
+
+        override fun visitExprTermCurrentDate(ctx: org.partiql.parser.antlr.PartiQLParser.ExprTermCurrentDateContext) = translate(ctx) {
+            exprSessionAttribute(Expr.SessionAttribute.Attribute.CURRENT_DATE)
         }
 
         /**

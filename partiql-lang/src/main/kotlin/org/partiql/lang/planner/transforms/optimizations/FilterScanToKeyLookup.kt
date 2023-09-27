@@ -247,8 +247,9 @@ private fun PartiqlPhysical.Expr.rewriteFilterPredicate(
         }
 
         /**
-         * If [operand1] is a key field reference of the local variable with matching [variableIndexId], adds
-         * and removes the field from [remainingFilterKeys] and adds an entry to [filterKeyValueExpressions].
+         * If [operand1] is a key field reference of the local variable with matching [variableIndexId],
+         * and if [operand2] does not contain a reference to [variableIndexId], adds and removes the field from
+         * [remainingFilterKeys] and adds an entry to [filterKeyValueExpressions].
          *
          * Otherwise, `false`.
          */
@@ -258,13 +259,27 @@ private fun PartiqlPhysical.Expr.rewriteFilterPredicate(
         ): Boolean {
             val fieldReference = operand1.getKeyFieldReference() ?: return false
 
-            // DL TODO: support case-insensitivity here. for now we force case-sensitive.
             // if the located field reference was to the table of interest
             if (fieldReference.variableId == variableIndexId) {
                 // and if the field reference was to one if its key fields (respecting the case-sensitivity requested
                 // by the query author)
                 val fieldIndex = remainingFilterKeys.indexOfFirst { fieldReference.fieldBindingName.isEquivalentTo(it) }
+
                 if (fieldIndex >= 0) {
+
+                    // lastly, we need to ensure that operand2 doesn't reference the candidate row.  operand2 executes
+                    // a context that doesn't have access to the candidate row.
+                    val referencesCandidateRow = object : PartiqlPhysical.VisitorFold<Boolean>() {
+                        override fun visitExprLocalId(
+                            node: PartiqlPhysical.Expr.LocalId,
+                            accumulator: Boolean
+                        ): Boolean = accumulator || node.index.value == variableIndexId
+                    }.walkExpr(operand2, false)
+
+                    if (referencesCandidateRow) {
+                        return false
+                    }
+
                     filterKeyValueExpressions.add(FieldEqualityPredicate(remainingFilterKeys[fieldIndex], operand2))
                     remainingFilterKeys.removeAt(fieldIndex)
                     return true

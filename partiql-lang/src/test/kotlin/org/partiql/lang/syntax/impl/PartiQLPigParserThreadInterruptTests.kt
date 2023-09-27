@@ -37,10 +37,10 @@ import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.concurrent.thread
 
 /** How long (in millis) to wait after starting a thread to set the interrupted flag. */
-private const val INTERRUPT_AFTER_MS: Long = 100
+const val INTERRUPT_AFTER_MS: Long = 100
 
 /** How long (in millis) to wait for a thread to terminate after setting the interrupted flag. */
-private const val WAIT_FOR_THREAD_TERMINATION_MS: Long = 1000
+const val WAIT_FOR_THREAD_TERMINATION_MS: Long = 1000
 
 /**
  * At various locations in this codebase we check the state of [Thread.interrupted] and throw an

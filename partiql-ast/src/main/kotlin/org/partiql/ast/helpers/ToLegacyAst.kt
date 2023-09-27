@@ -45,6 +45,7 @@ import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.TimeValue
 import org.partiql.value.TimestampValue
 import org.partiql.value.datetime.TimeZone
+import org.partiql.value.toIon
 import java.math.BigDecimal
 import java.math.BigInteger
 
@@ -267,7 +268,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
             is TimeValue -> v.toLegacyAst(metas)
             is TimestampValue -> v.toLegacyAst(metas)
             else -> {
-                val ion = v.accept(ToIon, Unit) // v.toIon()
+                val ion = v.toIon()
                 lit(ion, metas)
             }
         }
@@ -538,7 +539,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
     override fun visitExprTrim(node: Expr.Trim, ctx: Ctx) = translate(node) { metas ->
         val operands = mutableListOf<PartiqlAst.Expr>()
         // Legacy AST requires adding the spec as an argument
-        val spec = node.spec?.toString()?.lowercase()
+        val spec = node.spec?.name?.lowercase()
         val chars = node.chars?.let { visitExpr(it, ctx) }
         val value = visitExpr(node.value, ctx)
         if (spec != null) operands.add(lit(ionSymbol(spec)))
@@ -1333,7 +1334,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
     }
 
     private fun DatetimeField.toLegacyDatetimePart(): PartiqlAst.Expr.Lit {
-        val symbol = this.toString().lowercase()
+        val symbol = this.name.lowercase()
         return pig.lit(ionSymbol(symbol))
     }
 
@@ -1347,17 +1348,21 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
 
     // Time Value is not an Expr.Lit in the legacy AST; needs special treatment.
     private fun TimeValue.toLegacyAst(metas: MetaContainer): PartiqlAst.Expr.LitTime {
-        val d = this.value.decimalSecond
+        val v = this.value
+        if (v == null) {
+            throw IllegalArgumentException("TimeValue was null, but shouldn't have been")
+        }
+        val d = v.decimalSecond
         val seconds = d.toLong()
         val nano = d.subtract(BigDecimal(seconds)).scaleByPowerOfTen(9).toLong()
         val time = pig.timeValue(
-            hour = this.value.hour.toLong(),
-            minute = this.value.minute.toLong(),
+            hour = v.hour.toLong(),
+            minute = v.minute.toLong(),
             second = seconds,
             nano = nano,
-            precision = this.value.decimalSecond.precision().toLong(),
-            withTimeZone = this.value.timeZone != null,
-            tzMinutes = this.value.timeZone?.let {
+            precision = v.decimalSecond.precision().toLong(),
+            withTimeZone = v.timeZone != null,
+            tzMinutes = v.timeZone?.let {
                 when (it) {
                     is TimeZone.UtcOffset -> it.totalOffsetMinutes.toLong()
                     else -> 0
@@ -1369,12 +1374,16 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
 
     // Timestamp Value is not an Expr.Lit in the legacy AST; needs special treatment.
     private fun TimestampValue.toLegacyAst(metas: MetaContainer): PartiqlAst.Expr.Timestamp {
-        val timeZone = value.timeZone?.toLegacyAst(metas)
-        val precision = value.decimalSecond.precision().toLong()
+        val v = this.value
+        if (v == null) {
+            throw IllegalArgumentException("TimeStampValue was null, but shouldn't have been")
+        }
+        val timeZone = v.timeZone?.toLegacyAst(metas)
+        val precision = v.decimalSecond.precision().toLong()
         return pig.timestamp(
             pig.timestampValue(
-                value.year.toLong(), value.month.toLong(), value.day.toLong(),
-                value.hour.toLong(), value.minute.toLong(), ionDecimal(Decimal.valueOf(value.decimalSecond)),
+                v.year.toLong(), v.month.toLong(), v.day.toLong(),
+                v.hour.toLong(), v.minute.toLong(), ionDecimal(Decimal.valueOf(v.decimalSecond)),
                 timeZone, precision
             )
         )
@@ -1382,10 +1391,14 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
 
     // Date Value is not an Expr.Lit in the legacy AST; needs special treatment.
     private fun DateValue.toLegacyAst(metas: MetaContainer): PartiqlAst.Expr.Date {
+        val v = this.value
+        if (v == null) {
+            throw IllegalArgumentException("DateValue was null, but shouldn't have been")
+        }
         return pig.date(
-            year = this.value.year.toLong(),
-            month = this.value.month.toLong(),
-            day = this.value.day.toLong(),
+            year = v.year.toLong(),
+            month = v.month.toLong(),
+            day = v.day.toLong(),
             metas = metas,
         )
     }

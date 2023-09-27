@@ -30,7 +30,9 @@ internal data class Environment(
     val current: Bindings<ExprValue> = locals,
     val session: EvaluationSession,
     val groups: MutableMap<ExprValue, Group> = createGroupMap(),
-    val currentGroup: Group? = null
+    val currentGroup: Group? = null,
+    val branchCounts: MutableMap<String, Long>? = null,
+    val branchConditionCounts: MutableMap<String, Long>? = null
 ) {
 
     companion object {
