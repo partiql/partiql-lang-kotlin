@@ -583,7 +583,6 @@ class ASTPrettyPrinter {
             is PartiqlAst.Expr.GraphMatch -> TODO("Unsupported GraphMatch AST node")
             is PartiqlAst.Expr.CallWindow -> TODO("PrettyPrinter doesn't support Window Function yet.")
             is PartiqlAst.Expr.Timestamp -> TODO()
-            is PartiqlAst.Expr.BitwiseAnd -> TODO()
         }
 
     private fun toRecursionTreeList(nodes: List<PartiqlAst.Expr>, attrOfParent: String? = null): List<RecursionTree> =

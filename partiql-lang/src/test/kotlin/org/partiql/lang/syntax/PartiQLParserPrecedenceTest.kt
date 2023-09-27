@@ -930,6 +930,41 @@ class PartiQLParserPrecedenceTest : PartiQLParserTestBase() {
     )
 
     @Test
+    @Parameters
+    @TestCaseName("{0}")
+    fun bitwiseAndPrecedence(pair: Pair<String, String>) = runTest(pair)
+    fun parametersForBitwiseAndPrecedence() = listOf(
+        /* (&, intersect)               */ "a & b intersect c" to "(bag_op (intersect) (distinct) (bitwise_and (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified)))",
+        /* (&, intersect_all)           */ "a & b intersect all c" to "(bag_op (intersect) (all) (bitwise_and (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified)))",
+        /* (&, except)                  */ "a & b except c" to "(bag_op (except) (distinct) (bitwise_and (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified)))",
+        /* (&, except_all)              */ "a & b except all c" to "(bag_op (except) (all) (bitwise_and (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified)))",
+        /* (&, union)                   */ "a & b union c" to "(bag_op (union) (distinct) (bitwise_and (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified)))",
+        /* (&, union_all)               */ "a & b union all c" to "(bag_op (union) (all) (bitwise_and (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified)))",
+        /* (&, or)                      */ "a & b or c" to "(or (bitwise_and (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified)))",
+        /* (&, and)                     */ "a & b and c" to "(and (bitwise_and (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified)))",
+        /* (&, =)                       */ "a & b = c" to "(eq (bitwise_and (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified)))",
+        /* (&, <>)                      */ "a & b <> c" to "(ne (bitwise_and (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified)))",
+        /* (&, in)                      */ "a & b in c" to "(in_collection (bitwise_and (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified)))",
+        /* (&, not_in)                  */ "a & b not in c" to "(not (in_collection (bitwise_and (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified))))",
+        /* (&, <)                       */ "a & b < c" to "(lt (bitwise_and (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified)))",
+        /* (&, <=)                      */ "a & b <= c" to "(lte (bitwise_and (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified)))",
+        /* (&, >)                       */ "a & b > c" to "(gt (bitwise_and (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified)))",
+        /* (&, >=)                      */ "a & b >= c" to "(gte (bitwise_and (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified)))",
+        /* (&, between)                 */ "a & b between w and c" to "(between (bitwise_and (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id w (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified)))",
+        /* (&, not_between)             */ "a & b not between y and c" to "(not (between (bitwise_and (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id y (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
+        /* (&, like)                    */ "a & b like c" to "(like (bitwise_and (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified)) null)",
+        /* (&, not_like)                */ "a & b not like c" to "(not (like (bitwise_and (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified)) null))",
+        /* (&, +)                       */ "a & b + c" to "(bitwise_and (id a (case_insensitive) (unqualified)) (plus (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
+        /* (&, -)                       */ "a & b - c" to "(bitwise_and (id a (case_insensitive) (unqualified)) (minus (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
+        /* (&, ||)                      */ "a & b || c" to "(concat (bitwise_and (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified)))",
+        /* (&, *)                       */ "a & b * c" to "(bitwise_and (id a (case_insensitive) (unqualified)) (times (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
+        /* (&, /)                       */ "a & b / c" to "(bitwise_and (id a (case_insensitive) (unqualified)) (divide (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
+        /* (&, %)                       */ "a & b % c" to "(bitwise_and (id a (case_insensitive) (unqualified)) (modulo (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
+        /* (&, is)                      */ "a & b is boolean" to "(is_type (bitwise_and (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (boolean_type))",
+        /* (&, is_not)                  */ "a & b is not boolean" to "(not (is_type (bitwise_and (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (boolean_type)))"
+    )
+
+    @Test
     fun combinationOfBinaryOperators() = runTest(
         "a + b AND c / d * e - f || g OR h" to """
             (or

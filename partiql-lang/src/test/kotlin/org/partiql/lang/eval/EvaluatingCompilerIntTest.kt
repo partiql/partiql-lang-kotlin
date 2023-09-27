@@ -155,6 +155,13 @@ class EvaluatingCompilerIntTest : EvaluatorTestBase() {
         parameters.add("1 & 2" to "0")
         parameters.add("3 & 5" to "1")
         parameters.add("5 & 7" to "5")
+        parameters.add("31 & 15 & 7 & 3 & 1" to "1")
+        parameters.add("1 + 5 & 5" to "4")
+        parameters.add("(1 + 5) & 5" to "4")
+        parameters.add("1 + (5 & 5)" to "6")
+        parameters.add("5 & 5 + 1" to "4")
+        parameters.add("(5 & 5) + 1" to "6")
+        parameters.add("5 & (5 + 1)" to "4")
 
         return parameters
     }
