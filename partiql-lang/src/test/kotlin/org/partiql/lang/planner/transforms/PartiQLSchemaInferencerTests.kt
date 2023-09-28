@@ -27,6 +27,7 @@ import org.partiql.types.ListType
 import org.partiql.types.StaticType
 import org.partiql.types.StaticType.Companion.INT
 import org.partiql.types.StaticType.Companion.MISSING
+import org.partiql.types.StaticType.Companion.NULL
 import org.partiql.types.StaticType.Companion.STRING
 import org.partiql.types.StaticType.Companion.unionOf
 import org.partiql.types.StructType
@@ -1122,7 +1123,44 @@ class PartiQLSchemaInferencerTests {
                 query = "CAST(1 AS INT8) & 2",
                 expected = StaticType.unionOf(StaticType.INT, MISSING)
             ),
-
+            ErrorTestCase(
+                name = "BITWISE_AND_NULL_OPERAND",
+                query = "1 & NULL",
+                expected = StaticType.NULL,
+                problemHandler = assertProblemExists {
+                    Problem(
+                        UNKNOWN_PROBLEM_LOCATION,
+                        SemanticProblemDetails.ExpressionAlwaysReturnsNullOrMissing
+                    )
+                }
+            ),
+            ErrorTestCase(
+                name = "BITWISE_AND_MISSING_OPERAND",
+                query = "1 & MISSING",
+                expected = StaticType.MISSING,
+                problemHandler = assertProblemExists {
+                    Problem(
+                        UNKNOWN_PROBLEM_LOCATION,
+                        SemanticProblemDetails.ExpressionAlwaysReturnsNullOrMissing
+                    )
+                }
+            ),
+            ErrorTestCase(
+                name = "BITWISE_AND_NON_INT_OPERAND",
+                query = "1 & 'NOT AN INT'",
+                expected = StaticType.MISSING,
+                problemHandler = assertProblemExists {
+                    Problem(
+                        UNKNOWN_PROBLEM_LOCATION,
+                        SemanticProblemDetails.IncompatibleDatatypesForOp(
+                            listOf(
+                                INT, STRING
+                            ),
+                            Rex.Binary.Op.BITWISE_AND.name
+                        )
+                    )
+                }
+            ),
         )
 
         private fun assertProblemExists(problem: () -> Problem) = ProblemHandler { problems, ignoreSourceLocation ->
