@@ -156,91 +156,6 @@ class PartiQLSchemaInferencerTests {
         }
     }
 
-    @ParameterizedTest
-    @ArgumentsSource(TestProviderExclude::class)
-    fun testExclude(tc: TestCase) = runTest(tc)
-    class TestProviderExclude : ArgumentsProvider {
-        override fun provideArguments(context: ExtensionContext?): Stream<out Arguments> {
-            return parameters.map { Arguments.of(it) }.stream()
-        }
-
-        private val parameters = listOf(
-            SuccessTestCase(
-                name = "EXCLUDE case sensitive lookup with capitalized and uncapitalized attr",
-                query = """SELECT * EXCLUDE t."a".b['c']
-                    FROM <<
-                        {
-                            'a': {
-                                'B': {
-                                    'c': 0,
-                                    'C': true,
-                                    'd': 'foo'
-                                }
-                            }
-                        }
-                    >> AS t""",
-                expected = BagType(
-                    StructType(
-                        fields = mapOf(
-                            "a" to StructType(
-                                fields = mapOf(
-                                    "B" to StructType(
-                                        fields = mapOf(
-                                            "C" to StaticType.BOOL, // keep 'C'
-                                            "d" to StaticType.STRING
-                                        ),
-                                        contentClosed = true,
-                                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
-                                    ),
-                                ),
-                                contentClosed = true,
-                                constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
-                            ),
-                        ),
-                        contentClosed = true,
-                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
-                    )
-                )
-            ),
-            SuccessTestCase(
-                name = "EXCLUDE case sensitive lookup with both capitalized and uncapitalized removed",
-                query = """SELECT * EXCLUDE t."a".b.c
-                    FROM <<
-                        {
-                            'a': {
-                                'B': {
-                                    'c': 0,
-                                    'C': true,
-                                    'd': 'foo'
-                                }
-                            }
-                        }
-                    >> AS t""",
-                expected = BagType(
-                    StructType(
-                        fields = mapOf(
-                            "a" to StructType(
-                                fields = mapOf(
-                                    "B" to StructType(
-                                        fields = mapOf(
-                                            "d" to StaticType.STRING
-                                        ),
-                                        contentClosed = true,
-                                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
-                                    ),
-                                ),
-                                contentClosed = true,
-                                constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
-                            ),
-                        ),
-                        contentClosed = true,
-                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
-                    )
-                )
-            ),
-        )
-    }
-
     class TestProvider : ArgumentsProvider {
         override fun provideArguments(context: ExtensionContext?): Stream<out Arguments> {
             return parameters.map { Arguments.of(it) }.stream()
@@ -1284,6 +1199,44 @@ class PartiQLSchemaInferencerTests {
                 )
             ),
             SuccessTestCase(
+                name = "EXCLUDE SELECT star collection index as last element",
+                query = """SELECT *
+                    EXCLUDE
+                        t.a.b.c[0]
+                    FROM [{
+                        'a': {
+                            'b': {
+                                'c': [0, 1, 2]
+                            }
+                        },
+                        'foo': 'bar'
+                    }] AS t""",
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "a" to StructType(
+                                fields = mapOf(
+                                    "b" to StructType(
+                                        fields = mapOf(
+                                            "c" to ListType(
+                                                elementType = StaticType.INT
+                                            )
+                                        ),
+                                        contentClosed = true,
+                                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                    )
+                                ),
+                                contentClosed = true,
+                                constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                            ),
+                            "foo" to StaticType.STRING
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                    )
+                )
+            ),
+            SuccessTestCase(
                 name = "EXCLUDE SELECT star list wildcard",
                 query = """SELECT *
                     EXCLUDE
@@ -1899,7 +1852,7 @@ class PartiQLSchemaInferencerTests {
                     FROM <<
                         {
                             'a': {
-                                'B': {
+                                'B': {          -- both 'c' and 'C' to be removed
                                     'c': 0,
                                     'C': true,
                                     'd': 'foo'
@@ -1965,6 +1918,57 @@ class PartiQLSchemaInferencerTests {
                         constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
                     )
                 )
+            ),
+            // EXCLUDE regression test (behavior subject to change pending RFC)
+            SuccessTestCase(
+                name = "EXCLUDE with removed attribute later referenced",
+                query = "SELECT * EXCLUDE t.a, t.a.b FROM << { 'a': { 'b': 1 }, 'c': 2 } >> AS t",
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "c" to StaticType.INT
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                    )
+                )
+            ),
+            // EXCLUDE regression test (behavior subject to change pending RFC)
+            SuccessTestCase(
+                name = "EXCLUDE with non-existent attribute reference",
+                query = "SELECT * EXCLUDE t.attr_does_not_exist FROM << { 'a': 1 } >> AS t",
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "a" to StaticType.INT
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                    )
+                )
+            ),
+            // EXCLUDE regression test (behavior subject to change pending RFC)
+            ErrorTestCase(
+                name = "invalid exclude union of types",
+                query = """SELECT * EXCLUDE t.a[*]
+                    FROM <<
+                        {
+                            'a': {                  -- `a` is a struct here
+                                'b': {
+                                    'c': 0,
+                                    'd': 'foo'
+                                }
+                            }
+                        },
+                        {
+                            'a': [                  -- `a` is a list here
+                                {
+                                    'c': 0,
+                                    'd': 'foo'
+                                }
+                            ]
+                        }
+                    >> AS t""",
             ),
             ErrorTestCase(
                 name = "invalid exclude collection wildcard",

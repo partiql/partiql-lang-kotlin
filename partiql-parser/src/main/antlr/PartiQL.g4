@@ -337,8 +337,11 @@ havingClause
 excludeClause
     : EXCLUDE excludeExpr (COMMA excludeExpr)*;
 
+// Require 1 more `excludeExprSteps` (disallow `EXCLUDE a`).
+// There's not a clear use case in which a user would exclude a previously introdced binding variable. If a use case
+// arises, we can always change the requirement to 0 or more steps.
 excludeExpr
-    : symbolPrimitive excludeExprSteps+;  // Require 1 more `excludeExprSteps`. Disallow `EXCLUDE a`
+    : symbolPrimitive excludeExprSteps+;
 
 excludeExprSteps
     : PERIOD symbolPrimitive                            # ExcludeExprTupleAttr

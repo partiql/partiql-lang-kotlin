@@ -226,7 +226,8 @@ may then be further optimized by selecting better implementations of each operat
         (product exclude_expr root::identifier steps::(* exclude_step 1))
 
         (sum exclude_step
-            // `someRoot.someField` which is equivalent to `someRoot['someField']` (case-sensitive)
+            // `someRoot.someField` case sensitivity depends on if `someField` is quoted
+            // `someRoot[<string literal>] is equivalent to `someRoot."<string literal>"` (case-sensitive)
             (exclude_tuple_attr attr::identifier)
             // `someRoot[<int literal>]`
             (exclude_collection_index index::int)

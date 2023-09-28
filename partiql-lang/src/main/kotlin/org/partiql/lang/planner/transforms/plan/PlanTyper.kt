@@ -158,6 +158,25 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
         )
     }
 
+    /**
+     * Initial implementation of `EXCLUDE` schema inference. Until an RFC is finalized for `EXCLUDE`
+     * (https://github.com/partiql/partiql-spec/issues/39), this behavior is considered experimental and subject to
+     * change.
+     *
+     * There are still discussion points regarding the following edge cases
+     * - EXCLUDE on a tuple attribute that doesn't exist -- give an error/warning?
+     *   - currently no error
+     * - EXCLUDE on a tuple attribute that has duplicates -- give an error/warning? exclude one? exclude both?
+     *   - currently excludes both w/ no error
+     * - EXCLUDE on a collection index as the last step -- mark element type as optional?
+     *   - currently element type as-is
+     * - EXCLUDE on a collection index w/ remaining path steps -- mark last step's type as optional?
+     *   - currently marks last step's type as optional
+     * - EXCLUDE on a binding tuple variable (e.g. SELECT ... EXCLUDE t FROM t) -- error?
+     *   - currently a parser error
+     * - EXCLUDE on a union type -- give an error/warning? no-op? exclude on each type in union?
+     *   - currently is a no-op
+     */
     override fun visitRelExclude(node: Rel.Exclude, ctx: Context): Rel.Exclude {
         val input = visitRel(node.input, ctx)
         val exprs = node.exprs
@@ -180,9 +199,8 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
             val rootId = expr.root
             if (attr.name == rootId || (expr.rootCase == Case.INSENSITIVE && attr.name.equals(expr.root, ignoreCase = true))) {
                 if (expr.steps.isEmpty()) {
-                    // no other exclude steps; don't include attr
+                    throw IllegalStateException("Empty `ExcludeExpr.steps` encountered. This should have been caught by the parser.")
                 } else {
-                    // exclude steps remain. remove fields
                     val newType = excludeExprSteps(attr.type, expr.steps, lastStepAsOptional = false, ctx)
                     resultAttrs.add(
                         attr.copy(

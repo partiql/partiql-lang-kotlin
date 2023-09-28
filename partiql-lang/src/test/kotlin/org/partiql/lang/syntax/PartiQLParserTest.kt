@@ -4797,6 +4797,40 @@ class PartiQLParserTest : PartiQLParserTestBase() {
     }
 
     @Test
+    fun pivotExclude() = assertExpression(
+        """PIVOT v AT attr EXCLUDE t.a[*].b.c.*.d, t.foo.bar[*] FROM t"""
+    ) {
+        select(
+            project = projectPivot(
+                key = id("v"),
+                value = id("attr"),
+            ),
+            excludeClause = excludeOp(
+                excludeExpr(
+                    root = identifier("t", caseInsensitive()),
+                    steps = listOf(
+                        excludeTupleAttr(identifier("a", caseInsensitive())),
+                        excludeCollectionWildcard(),
+                        excludeTupleAttr(identifier("b", caseInsensitive())),
+                        excludeTupleAttr(identifier("c", caseInsensitive())),
+                        excludeTupleWildcard(),
+                        excludeTupleAttr(identifier("d", caseInsensitive())),
+                    ),
+                ),
+                excludeExpr(
+                    root = identifier("t", caseInsensitive()),
+                    steps = listOf(
+                        excludeTupleAttr(identifier("foo", caseInsensitive())),
+                        excludeTupleAttr(identifier("bar", caseInsensitive())),
+                        excludeCollectionWildcard(),
+                    ),
+                ),
+            ),
+            from = scan(id("t"))
+        )
+    }
+
+    @Test
     fun selectStarExcludeErrorBinding() = checkInputThrowingParserException(
         "SELECT * EXCLUDE t FROM t",
         ErrorCode.PARSE_UNEXPECTED_TOKEN,
