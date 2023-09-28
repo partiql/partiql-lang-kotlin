@@ -176,6 +176,9 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
      *   - currently a parser error
      * - EXCLUDE on a union type -- give an error/warning? no-op? exclude on each type in union?
      *   - currently is a no-op
+     * - If SELECT list includes an attribute that is excluded, we could consider giving an error in PlanTyper or
+     * some other semantic pass
+     *   - currently does not give an error
      */
     override fun visitRelExclude(node: Rel.Exclude, ctx: Context): Rel.Exclude {
         val input = visitRel(node.input, ctx)
