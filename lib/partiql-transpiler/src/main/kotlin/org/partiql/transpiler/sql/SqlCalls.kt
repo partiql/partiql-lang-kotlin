@@ -130,6 +130,9 @@ public abstract class SqlCalls {
         "is_struct" to { args -> isType(PartiQLValueType.STRUCT, args) },
         "is_null" to { args -> isType(PartiQLValueType.NULL, args) },
         "is_missing" to { args -> isType(PartiQLValueType.MISSING, args) },
+        // Session Attributes
+        "\$__current_user" to sessionAttribute(Expr.SessionAttribute.Attribute.CURRENT_USER),
+        "\$__current_date" to sessionAttribute(Expr.SessionAttribute.Attribute.CURRENT_DATE),
     )
 
     public fun retarget(name: String, args: SqlArgs): Expr {
@@ -148,6 +151,10 @@ public abstract class SqlCalls {
             function = identifierSymbol(name, Identifier.CaseSensitivity.INSENSITIVE),
             args = args.map { it.expr },
         )
+    }
+
+    private fun sessionAttribute(attribute: Expr.SessionAttribute.Attribute): SqlCallFn {
+        return { _ -> Ast.exprSessionAttribute(attribute) }
     }
 
     public open fun unary(op: Expr.Unary.Op, args: SqlArgs): Expr {

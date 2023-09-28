@@ -182,7 +182,9 @@ rex::{
       ],
     },
 
-    err::{},
+    err::{
+      message: string,
+    },
   ],
 }
 
