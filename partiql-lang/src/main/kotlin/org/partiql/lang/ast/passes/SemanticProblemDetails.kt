@@ -22,6 +22,20 @@ sealed class SemanticProblemDetails(override val severity: ProblemSeverity, val 
             }
         )
 
+    data class CoercionError(val actualType: StaticType) : SemanticProblemDetails(
+        severity = ProblemSeverity.ERROR,
+        messageFormatter = {
+            "Unable to coerce $actualType into a single value."
+        }
+    )
+
+    data class UnimplementedError(val feature: String) : SemanticProblemDetails(
+        severity = ProblemSeverity.ERROR,
+        messageFormatter = {
+            "The feature ($feature) is unimplemented."
+        }
+    )
+
     object DuplicateAliasesInSelectListItem :
         SemanticProblemDetails(
             severity = ProblemSeverity.ERROR,

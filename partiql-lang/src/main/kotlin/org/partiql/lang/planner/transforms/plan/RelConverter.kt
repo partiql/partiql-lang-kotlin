@@ -2,6 +2,7 @@ package org.partiql.lang.planner.transforms.plan
 
 import com.amazon.ionelement.api.ionInt
 import com.amazon.ionelement.api.ionString
+import org.partiql.errors.ProblemHandler
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.eval.visitors.VisitorTransformBase
 import org.partiql.plan.Binding
@@ -15,7 +16,7 @@ import org.partiql.types.StaticType
 /**
  * Lexically scoped state for use in translating an individual SELECT statement.
  */
-internal class RelConverter {
+internal class RelConverter(val problemHandler: ProblemHandler) {
 
     /**
      * As of now, the COMMON property of relation operators is under development, so just use empty for now
@@ -32,15 +33,15 @@ internal class RelConverter {
          * Converts a SELECT-FROM-WHERE AST node to a [Rex.Query]
          */
         @JvmStatic
-        fun convert(select: PartiqlAst.Expr.Select): Rex.Query = with(RelConverter()) {
+        fun convert(select: PartiqlAst.Expr.Select, problemHandler: ProblemHandler): Rex.Query = with(RelConverter(problemHandler)) {
             val rel = convertSelect(select)
             val rex = when (val projection = select.project) {
                 // PIVOT ... FROM
                 is PartiqlAst.Projection.ProjectPivot -> {
                     Plan.rexQueryScalarPivot(
                         rel = rel,
-                        value = RexConverter.convert(projection.value),
-                        at = RexConverter.convert(projection.key),
+                        value = RexConverter.convert(projection.value, problemHandler),
+                        at = RexConverter.convert(projection.key, problemHandler),
                         type = null
                     )
                 }
@@ -48,7 +49,7 @@ internal class RelConverter {
                 is PartiqlAst.Projection.ProjectValue -> {
                     Plan.rexQueryCollection(
                         rel = rel,
-                        constructor = RexConverter.convert(projection.value),
+                        constructor = RexConverter.convert(projection.value, problemHandler),
                         type = null
                     )
                 }
@@ -115,7 +116,7 @@ internal class RelConverter {
     private fun convertJoin(join: PartiqlAst.FromSource.Join): Rel {
         val lhs = convertFrom(join.left)
         val rhs = convertFrom(join.right)
-        val condition = if (join.predicate != null) RexConverter.convert(join.predicate!!) else null
+        val condition = if (join.predicate != null) RexConverter.convert(join.predicate!!, problemHandler) else null
         return Plan.relJoin(
             common = empty,
             lhs = lhs,
@@ -136,8 +137,8 @@ internal class RelConverter {
     private fun convertScan(scan: PartiqlAst.FromSource.Scan) = Plan.relScan(
         common = empty,
         value = when (val expr = scan.expr) {
-            is PartiqlAst.Expr.Select -> convert(expr)
-            else -> RexConverter.convert(scan.expr)
+            is PartiqlAst.Expr.Select -> convert(expr, problemHandler)
+            else -> RexConverter.convert(scan.expr, problemHandler)
         },
         alias = scan.asAlias?.text,
         at = scan.atAlias?.text,
@@ -149,7 +150,7 @@ internal class RelConverter {
      */
     private fun convertUnpivot(scan: PartiqlAst.FromSource.Unpivot) = Plan.relUnpivot(
         common = empty,
-        value = RexConverter.convert(scan.expr),
+        value = RexConverter.convert(scan.expr, problemHandler),
         alias = scan.asAlias?.text,
         at = scan.atAlias?.text,
         by = scan.byAlias?.text
@@ -163,7 +164,7 @@ internal class RelConverter {
         else -> Plan.relFilter(
             common = empty,
             input = input,
-            condition = RexConverter.convert(expr)
+            condition = RexConverter.convert(expr, problemHandler)
         )
     }
 
@@ -180,7 +181,7 @@ internal class RelConverter {
         groupBy: PartiqlAst.GroupBy?
     ): Pair<PartiqlAst.Expr.Select, Rel> {
         // Rewrite and extract all aggregations in the SELECT clause
-        val (sel, aggregations) = AggregationTransform.apply(select)
+        val (sel, aggregations) = AggregationTransform(problemHandler, ::nextBindingName).apply(select)
 
         // No aggregation planning required for GROUP BY
         if (aggregations.isEmpty()) {
@@ -237,7 +238,7 @@ internal class RelConverter {
         else -> Plan.relFilter(
             common = empty,
             input = input,
-            condition = RexConverter.convert(expr)
+            condition = RexConverter.convert(expr, problemHandler)
         )
     }
 
@@ -271,8 +272,8 @@ internal class RelConverter {
         return Plan.relFetch(
             common = empty,
             input = input,
-            limit = RexConverter.convert(limit),
-            offset = RexConverter.convert(offset ?: PartiqlAst.Expr.Lit(ionInt(0).asAnyElement()))
+            limit = RexConverter.convert(limit, problemHandler),
+            offset = RexConverter.convert(offset ?: PartiqlAst.Expr.Lit(ionInt(0).asAnyElement()), problemHandler)
         )
     }
 
@@ -297,7 +298,7 @@ internal class RelConverter {
      *  - DESC NULLS FIRST (default for DESC)
      */
     private fun convertSortSpec(sortSpec: PartiqlAst.SortSpec) = Plan.sortSpec(
-        value = RexConverter.convert(sortSpec.expr),
+        value = RexConverter.convert(sortSpec.expr, problemHandler),
         dir = when (sortSpec.orderingSpec) {
             is PartiqlAst.OrderingSpec.Desc -> SortSpec.Dir.DESC
             is PartiqlAst.OrderingSpec.Asc -> SortSpec.Dir.ASC
@@ -410,7 +411,7 @@ internal class RelConverter {
      * Inner object class to have access to current SELECT-FROM-WHERE converter state
      */
     @Suppress("PrivatePropertyName")
-    private val AggregationTransform = object : VisitorTransformBase() {
+    private class AggregationTransform(val problemHandler: ProblemHandler, val nextBindingName: () -> String) : VisitorTransformBase() {
 
         private var level = 0
         private var aggregations = mutableListOf<Binding>()
@@ -451,6 +452,14 @@ internal class RelConverter {
                 )
             }
         }
+
+        /**
+         * Binding helper
+         */
+        private fun binding(name: String, expr: PartiqlAst.Expr) = Plan.binding(
+            name = name,
+            value = RexConverter.convert(expr, problemHandler)
+        )
     }
 
     /**
@@ -458,6 +467,6 @@ internal class RelConverter {
      */
     private fun binding(name: String, expr: PartiqlAst.Expr) = Plan.binding(
         name = name,
-        value = RexConverter.convert(expr)
+        value = RexConverter.convert(expr, problemHandler)
     )
 }
