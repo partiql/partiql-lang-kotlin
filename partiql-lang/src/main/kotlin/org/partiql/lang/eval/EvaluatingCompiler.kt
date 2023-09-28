@@ -92,7 +92,7 @@ import java.util.regex.Pattern
  *
  * This name was chosen because it is a thunk that accepts an instance of `Environment`.
  */
-private typealias ThunkEnv = Thunk<Environment>
+internal typealias ThunkEnv = Thunk<Environment>
 
 /**
  * A thunk taking a single [T] argument and the current environment.
@@ -125,18 +125,18 @@ private typealias ThunkEnvValue<T> = ThunkValue<Environment, T>
  * @param functions A map of functions keyed by function name that will be available during compilation.
  * @param compileOptions Various options that effect how the source code is compiled.
  */
-internal class EvaluatingCompiler(
+internal open class EvaluatingCompiler(
     private val functions: List<ExprFunction>,
     private val customTypedOpParameters: Map<String, TypedOpParameter>,
     private val procedures: Map<String, StoredProcedure>,
-    private val compileOptions: CompileOptions = CompileOptions.standard()
+    internal val compileOptions: CompileOptions = CompileOptions.standard()
 ) {
 
     // TODO: remove this once we migrate from `IonValue` to `IonElement`.
     private val ion = IonSystemBuilder.standard().build()
 
     private val errorSignaler = compileOptions.typingMode.createErrorSignaler()
-    private val thunkFactory = compileOptions.typingMode.createThunkFactory<Environment>(compileOptions.thunkOptions)
+    internal val thunkFactory = compileOptions.typingMode.createThunkFactory<Environment>(compileOptions.thunkOptions)
     private val functionManager = FunctionManager(functions)
 
     private val compilationContextStack = Stack<CompilationContext>()
@@ -150,9 +150,28 @@ internal class EvaluatingCompiler(
             "compilationContextStack was empty.", ErrorCode.EVALUATOR_UNEXPECTED_VALUE, internal = true
         )
 
+    /**
+     * This checks whether the thread has been interrupted. Specifically, it currently checks during the compilation
+     * of aggregations and joins, the "evaluation" of aggregations and joins, and the materialization of joins
+     * and from source scans.
+     *
+     * Note: This is essentially a way to avoid constantly checking [CompileOptions.interruptible]. By writing it this
+     * way, we statically determine whether to introduce checks. If the compiler has specified
+     * [CompileOptions.interruptible], the invocation of this function will insert a Thread interruption check. If not
+     * specified, it will not perform the check during compilation/evaluation/materialization.
+     */
+    private val interruptionCheck: () -> Unit = when (compileOptions.interruptible) {
+        true -> { ->
+            if (Thread.interrupted()) {
+                throw InterruptedException()
+            }
+        }
+        false -> { -> Unit }
+    }
+
     // Note: please don't make this inline -- it messes up [EvaluationException] stack traces and
     // isn't a huge benefit because this is only used at SQL-compile time anyway.
-    private fun <R> nestCompilationContext(
+    internal fun <R> nestCompilationContext(
         expressionContext: ExpressionContext,
         fromSourceNames: Set<String>,
         block: () -> R
@@ -348,7 +367,7 @@ internal class EvaluatingCompiler(
      * and throws [InterruptedException] if [Thread.interrupted] it has been set in the
      * hope that long-running compilations may be aborted by the caller.
      */
-    fun compile(originalAst: PartiqlAst.Statement): Expression {
+    open fun compile(originalAst: PartiqlAst.Statement): Expression {
         val visitorTransform = compileOptions.visitorTransformMode.createVisitorTransform()
         val transformedAst = visitorTransform.transformStatement(originalAst)
         val partiqlAstSanityValidator = PartiqlAstSanityValidator()
@@ -360,15 +379,25 @@ internal class EvaluatingCompiler(
         }
 
         return object : Expression {
-            override fun eval(session: EvaluationSession): ExprValue {
+            override val coverageStructure: CoverageStructure? = null
 
+            override fun eval(session: EvaluationSession): ExprValue {
                 val env = Environment(
                     session = session,
                     locals = session.globals,
                     current = session.globals
                 )
-
                 return thunk(env)
+            }
+
+            override fun evaluate(session: EvaluationSession): PartiQLResult {
+                val env = Environment(
+                    session = session,
+                    locals = session.globals,
+                    current = session.globals
+                )
+                val value = thunk(env)
+                return PartiQLResult.Value(value = value)
             }
         }
     }
@@ -383,7 +412,7 @@ internal class EvaluatingCompiler(
      *
      * This function will [InterruptedException] if [Thread.interrupted] has been set.
      */
-    private fun compileAstStatement(ast: PartiqlAst.Statement): ThunkEnv {
+    internal open fun compileAstStatement(ast: PartiqlAst.Statement): ThunkEnv {
         checkThreadInterrupted()
         return when (ast) {
             is PartiqlAst.Statement.Query -> compileAstExpr(ast.expr)
@@ -398,7 +427,7 @@ internal class EvaluatingCompiler(
         }
     }
 
-    private fun compileAstExpr(expr: PartiqlAst.Expr): ThunkEnv {
+    internal open fun compileAstExpr(expr: PartiqlAst.Expr): ThunkEnv {
         val metas = expr.metas
 
         return when (expr) {
@@ -421,6 +450,7 @@ internal class EvaluatingCompiler(
             is PartiqlAst.Expr.Minus -> compileMinus(expr, metas)
             is PartiqlAst.Expr.Divide -> compileDivide(expr, metas)
             is PartiqlAst.Expr.Modulo -> compileModulo(expr, metas)
+            is PartiqlAst.Expr.BitwiseAnd -> compileBitwiseAnd(expr, metas)
 
             // comparison operators
             is PartiqlAst.Expr.And -> compileAnd(expr, metas)
@@ -713,7 +743,16 @@ internal class EvaluatingCompiler(
         return checkIntegerOverflow(computeThunk, metas)
     }
 
-    private fun compileEq(expr: PartiqlAst.Expr.Eq, metas: MetaContainer): ThunkEnv {
+    private fun compileBitwiseAnd(expr: PartiqlAst.Expr.BitwiseAnd, metas: MetaContainer): ThunkEnv {
+        val argThunks = compileAstExprs(expr.operands)
+
+        // Bitwise operator will not overflow
+        return thunkFactory.thunkFold(metas, argThunks) { lValue, rValue ->
+            (lValue.longValue() and rValue.longValue()).exprValue()
+        }
+    }
+
+    internal open fun compileEq(expr: PartiqlAst.Expr.Eq, metas: MetaContainer): ThunkEnv {
         val argThunks = compileAstExprs(expr.operands)
 
         return thunkFactory.thunkAndMap(metas, argThunks) { lValue, rValue ->
@@ -721,7 +760,7 @@ internal class EvaluatingCompiler(
         }
     }
 
-    private fun compileNe(expr: PartiqlAst.Expr.Ne, metas: MetaContainer): ThunkEnv {
+    internal open fun compileNe(expr: PartiqlAst.Expr.Ne, metas: MetaContainer): ThunkEnv {
         val argThunks = compileAstExprs(expr.operands)
 
         return thunkFactory.thunkFold(metas, argThunks) { lValue, rValue ->
@@ -729,31 +768,31 @@ internal class EvaluatingCompiler(
         }
     }
 
-    private fun compileLt(expr: PartiqlAst.Expr.Lt, metas: MetaContainer): ThunkEnv {
+    internal open fun compileLt(expr: PartiqlAst.Expr.Lt, metas: MetaContainer): ThunkEnv {
         val argThunks = compileAstExprs(expr.operands)
 
         return thunkFactory.thunkAndMap(metas, argThunks) { lValue, rValue -> lValue < rValue }
     }
 
-    private fun compileLte(expr: PartiqlAst.Expr.Lte, metas: MetaContainer): ThunkEnv {
+    internal open fun compileLte(expr: PartiqlAst.Expr.Lte, metas: MetaContainer): ThunkEnv {
         val argThunks = compileAstExprs(expr.operands)
 
         return thunkFactory.thunkAndMap(metas, argThunks) { lValue, rValue -> lValue <= rValue }
     }
 
-    private fun compileGt(expr: PartiqlAst.Expr.Gt, metas: MetaContainer): ThunkEnv {
+    internal open fun compileGt(expr: PartiqlAst.Expr.Gt, metas: MetaContainer): ThunkEnv {
         val argThunks = compileAstExprs(expr.operands)
 
         return thunkFactory.thunkAndMap(metas, argThunks) { lValue, rValue -> lValue > rValue }
     }
 
-    private fun compileGte(expr: PartiqlAst.Expr.Gte, metas: MetaContainer): ThunkEnv {
+    internal open fun compileGte(expr: PartiqlAst.Expr.Gte, metas: MetaContainer): ThunkEnv {
         val argThunks = compileAstExprs(expr.operands)
 
         return thunkFactory.thunkAndMap(metas, argThunks) { lValue, rValue -> lValue >= rValue }
     }
 
-    private fun compileBetween(expr: PartiqlAst.Expr.Between, metas: MetaContainer): ThunkEnv {
+    internal open fun compileBetween(expr: PartiqlAst.Expr.Between, metas: MetaContainer): ThunkEnv {
         val valueThunk = compileAstExpr(expr.value)
         val fromThunk = compileAstExpr(expr.from)
         val toThunk = compileAstExpr(expr.to)
@@ -779,7 +818,7 @@ internal class EvaluatingCompiler(
      * `IN` is varies from the `OR` operator in that this behavior holds true when other types of expressions are
      * used on the right side of `IN` such as sub-queries and variables whose value is that of a list or bag.
      */
-    private fun compileIn(expr: PartiqlAst.Expr.InCollection, metas: MetaContainer): ThunkEnv {
+    internal open fun compileIn(expr: PartiqlAst.Expr.InCollection, metas: MetaContainer): ThunkEnv {
         val args = expr.operands
         val leftThunk = compileAstExpr(args[0])
         val rightOp = args[1]
@@ -866,7 +905,7 @@ internal class EvaluatingCompiler(
         }
     }
 
-    private fun compileNot(expr: PartiqlAst.Expr.Not, metas: MetaContainer): ThunkEnv {
+    internal open fun compileNot(expr: PartiqlAst.Expr.Not, metas: MetaContainer): ThunkEnv {
         val argThunk = compileAstExpr(expr.expr)
 
         return thunkFactory.thunkEnvOperands(metas, argThunk) { _, value ->
@@ -874,7 +913,7 @@ internal class EvaluatingCompiler(
         }
     }
 
-    private fun compileAnd(expr: PartiqlAst.Expr.And, metas: MetaContainer): ThunkEnv {
+    internal open fun compileAnd(expr: PartiqlAst.Expr.And, metas: MetaContainer): ThunkEnv {
         val argThunks = compileAstExprs(expr.operands)
 
         // can't use the null propagation supplied by [ThunkFactory.thunkEnv] here because AND short-circuits on
@@ -919,7 +958,7 @@ internal class EvaluatingCompiler(
         }
     }
 
-    private fun compileOr(expr: PartiqlAst.Expr.Or, metas: MetaContainer): ThunkEnv {
+    internal open fun compileOr(expr: PartiqlAst.Expr.Or, metas: MetaContainer): ThunkEnv {
         val argThunks = compileAstExprs(expr.operands)
 
         // can't use the null propagation supplied by [ThunkFactory.thunkEnv] here because OR short-circuits on
@@ -992,7 +1031,7 @@ internal class EvaluatingCompiler(
         }
     }
 
-    private fun compileCall(expr: PartiqlAst.Expr.Call, metas: MetaContainer): ThunkEnv {
+    internal open fun compileCall(expr: PartiqlAst.Expr.Call, metas: MetaContainer): ThunkEnv {
         val funcArgThunks = compileAstExprs(expr.args)
         val arity = funcArgThunks.size
         val name = expr.funcName.text
@@ -1037,7 +1076,7 @@ internal class EvaluatingCompiler(
         }
     }
 
-    private fun compileLit(expr: PartiqlAst.Expr.Lit, metas: MetaContainer): ThunkEnv {
+    internal open fun compileLit(expr: PartiqlAst.Expr.Lit, metas: MetaContainer): ThunkEnv {
         val value = ExprValue.of(expr.value.toIonValue(ion))
 
         return thunkFactory.thunkEnv(metas) { value }
@@ -1046,7 +1085,7 @@ internal class EvaluatingCompiler(
     private fun compileMissing(metas: MetaContainer): ThunkEnv =
         thunkFactory.thunkEnv(metas) { ExprValue.missingValue }
 
-    private fun compileId(expr: PartiqlAst.Expr.Id, metas: MetaContainer): ThunkEnv {
+    internal open fun compileId(expr: PartiqlAst.Expr.Id, metas: MetaContainer): ThunkEnv {
         val uniqueNameMeta = metas[UniqueNameMeta.TAG] as? UniqueNameMeta
         val fromSourceNames = currentCompilationContext.fromSourceNames
 
@@ -1177,7 +1216,7 @@ internal class EvaluatingCompiler(
         }
     }
 
-    private fun compileIs(expr: PartiqlAst.Expr.IsType, metas: MetaContainer): ThunkEnv {
+    internal open fun compileIs(expr: PartiqlAst.Expr.IsType, metas: MetaContainer): ThunkEnv {
         val expThunk = compileAstExpr(expr.value)
         val typedOpParameter = expr.type.toTypedOpParameter()
         if (typedOpParameter.staticType is AnyType) {
@@ -1307,7 +1346,7 @@ internal class EvaluatingCompiler(
     private fun compileCast(expr: PartiqlAst.Expr.Cast, metas: MetaContainer): ThunkEnv =
         thunkFactory.thunkEnv(metas, compileCastHelper(expr.value, expr.asType, metas))
 
-    private fun compileCanCast(expr: PartiqlAst.Expr.CanCast, metas: MetaContainer): ThunkEnv {
+    internal open fun compileCanCast(expr: PartiqlAst.Expr.CanCast, metas: MetaContainer): ThunkEnv {
         val typedOpParameter = expr.asType.toTypedOpParameter()
         if (typedOpParameter.staticType is AnyType) {
             return thunkFactory.thunkEnv(metas) { ExprValue.newBoolean(true) }
@@ -1342,7 +1381,7 @@ internal class EvaluatingCompiler(
         }
     }
 
-    private fun compileCanLosslessCast(expr: PartiqlAst.Expr.CanLosslessCast, metas: MetaContainer): ThunkEnv {
+    internal open fun compileCanLosslessCast(expr: PartiqlAst.Expr.CanLosslessCast, metas: MetaContainer): ThunkEnv {
         val typedOpParameter = expr.asType.toTypedOpParameter()
         if (typedOpParameter.staticType is AnyType) {
             return thunkFactory.thunkEnv(metas) { ExprValue.newBoolean(true) }
@@ -1412,7 +1451,7 @@ internal class EvaluatingCompiler(
         }
     }
 
-    private fun compileSimpleCase(expr: PartiqlAst.Expr.SimpleCase, metas: MetaContainer): ThunkEnv {
+    internal open fun compileSimpleCase(expr: PartiqlAst.Expr.SimpleCase, metas: MetaContainer): ThunkEnv {
         val valueThunk = compileAstExpr(expr.expr)
         val branchThunks = expr.cases.pairs.map { Pair(compileAstExpr(it.first), compileAstExpr(it.second)) }
         val elseThunk = when (val default = expr.default) {
@@ -1445,7 +1484,7 @@ internal class EvaluatingCompiler(
         }
     }
 
-    private fun compileSearchedCase(expr: PartiqlAst.Expr.SearchedCase, metas: MetaContainer): ThunkEnv {
+    internal open fun compileSearchedCase(expr: PartiqlAst.Expr.SearchedCase, metas: MetaContainer): ThunkEnv {
         val branchThunks = expr.cases.pairs.map { compileAstExpr(it.first) to compileAstExpr(it.second) }
         val elseThunk = when (val default = expr.default) {
             null -> thunkFactory.thunkEnv(metas) { ExprValue.nullValue }
@@ -1743,7 +1782,15 @@ internal class EvaluatingCompiler(
         return offsetValue
     }
 
-    private fun compileSelect(selectExpr: PartiqlAst.Expr.Select, metas: MetaContainer): ThunkEnv {
+    internal open fun compileWhere(node: PartiqlAst.Expr): ThunkEnv {
+        return compileAstExpr(node)
+    }
+
+    internal open fun compileHaving(node: PartiqlAst.Expr): ThunkEnv {
+        return compileAstExpr(node)
+    }
+
+    internal open fun compileSelect(selectExpr: PartiqlAst.Expr.Select, metas: MetaContainer): ThunkEnv {
 
         // Get all the FROM source aliases and LET bindings for binding error checks
         val fold = object : PartiqlAst.VisitorFold<Set<String>>() {
@@ -1770,7 +1817,7 @@ internal class EvaluatingCompiler(
         return nestCompilationContext(ExpressionContext.NORMAL, emptySet()) {
             val fromSourceThunks = compileFromSources(selectExpr.from)
             val letSourceThunks = selectExpr.fromLet?.let { compileLetSources(it) }
-            val compiledWhere = selectExpr.where?.let { compileAstExpr(it) }
+            val compiledWhere = selectExpr.where?.let { compileWhere(it) }
             val sourceThunks = compileFromLetWhere(fromSourceThunks, letSourceThunks, compiledWhere)
 
             val orderByThunk = selectExpr.order?.let { compileOrderByExpression(it.sortSpecs) }
@@ -1806,7 +1853,10 @@ internal class EvaluatingCompiler(
                         // Grouping is not needed -- simply project the results from the FROM clause directly.
                         thunkFactory.thunkEnv(metas) { env ->
 
-                            val sourcedRows = sourceThunks(env)
+                            val sourcedRows = sourceThunks(env).map {
+                                interruptionCheck()
+                                it
+                            }
 
                             val orderedRows = when (orderByThunk) {
                                 null -> sourcedRows
@@ -1890,6 +1940,7 @@ internal class EvaluatingCompiler(
                                     // iterate over the values from the FROM clause and populate our
                                     // aggregate register values.
                                     fromProductions.forEach { fromProduction ->
+                                        interruptionCheck()
                                         compiledAggregates?.forEachIndexed { index, ca ->
                                             registers[index].aggregator.next(ca.argThunk(fromProduction.env))
                                         }
@@ -1924,7 +1975,7 @@ internal class EvaluatingCompiler(
                                     )
                                 }
 
-                                val havingThunk = selectExpr.having?.let { compileAstExpr(it) }
+                                val havingThunk = selectExpr.having?.let { compileHaving(it) }
 
                                 val filterHavingAndProject: (Environment, Group) -> ExprValue? =
                                     createFilterHavingAndProjectClosure(havingThunk, selectProjectionThunk)
@@ -2455,6 +2506,7 @@ internal class EvaluatingCompiler(
             // compute the join over the data sources
             var seq = compiledSources
                 .foldLeftProduct({ env: Environment -> env }) { currEnvT: (Environment) -> Environment, currSource: CompiledFromSource ->
+                    interruptionCheck()
                     // [currSource] - the next FROM currSource to add to the join
                     // [currEnvT] - the environment add-on that previous sources of the join have constructed
                     //                and that can be used for evaluating this [currSource] (if it depends on the previous sources)
@@ -2503,6 +2555,7 @@ internal class EvaluatingCompiler(
                 }
                 .asSequence()
                 .map { joinedValues ->
+                    interruptionCheck()
                     // bind the joined value to the bindings for the filter/project
                     FromProduction(joinedValues, fromEnv.nest(localsBinder.bindLocals(joinedValues)))
                 }
@@ -3080,7 +3133,7 @@ private data class CompiledLetSource(
     val thunk: ThunkEnv
 )
 
-private enum class ExpressionContext {
+internal enum class ExpressionContext {
     /**
      * Indicates that the compiler is compiling a normal expression (i.e. not one of the other
      * contexts).

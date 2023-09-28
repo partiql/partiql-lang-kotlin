@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Adds overridden `toString()` method for Sprout-generated code.
+- Adds CURRENT_DATE session variable to PartiQL.g4 and PartiQLParser
+- Adds configurable AST to SQL pretty printer. Usage in Java `AstKt.sql(ast)` or in Kotlin `ast.sql()`.
 
 ### Changed
 
@@ -25,8 +28,49 @@ Thank you to all who have contributed!
 
 -->
 
-
 ## [Unreleased]
+
+### Added
+- Support parsing, planning, and evaluation of Bitwise AND operator (&).
+  - The Bitwise And Operator only works for integer operands.
+  - The operator precedence may change based on the pending operator precedence [RFC](https://github.com/partiql/partiql-docs/issues/50).
+
+### Changed
+
+### Deprecated
+
+### Fixed
+
+### Removed
+
+### Security
+
+### Contributors
+Thank you to all who have contributed!
+- @<your-username>
+
+## [0.13.1] - 2023-09-19
+
+### Added
+- Adds `isInterruptible` property to `CompileOptions`. The default value is `false`. Please see the KDocs for more information.
+- Adds support for thread interruption in compilation and execution. If you'd like to opt-in to this addition, please see
+  the `isInterruptible` addition above for more information.
+- Adds support for CLI users to use CTRL-C to cancel long-running compilation/execution of queries
+
+### Fixed
+- Fix a bug in `FilterScanToKeyLookup` pass wherein it was rewriting primary key equality expressions with references
+  to the candidate row on both sides.  Now it will correctly ignore such expressions.
+- Fixes build failure for version `0.13.0` by publishing `partiql-plan` as an independent artifact. Please note that `partiql-plan` is experimental.
+
+### Contributors
+Thank you to all who have contributed!
+- @dlurton
+- @yliuuuu
+- @am357
+- @johnedquinn
+- @alancai98
+
+## [0.13.0] - 2023-09-07
 
 ### Added
 - Adds `org.partiql.value` (experimental) package for reading/writing PartiQL values
@@ -48,6 +92,12 @@ Thank you to all who have contributed!
 - Adds default `equals` and `hashCode` methods for each generated abstract class of Sprout. This affects the generated
 classes in `:partiql-ast` and `:partiql-plan`.
 - Adds README to `partiql-types` package.
+- Initializes PartiQL's Code Coverage library
+  - Adds support for BRANCH and BRANCH-CONDITION Coverage
+  - Adds integration with JUnit5 for ease-of-use
+  - For more information, see the "Writing PartiQL Unit Tests" article in our GitHub Wiki.
+- Adds new constructor parameters to all variants of `PartiQLResult`.
+- Adds two new methods to `PartiQLResult`: `getCoverageData` and `getCoverageStructure`.
 
 ### Changed
 - **Breaking**: all product types defined by the internal Sprout tool no longer generate interfaces. They are now abstract
@@ -80,6 +130,9 @@ classes in `:partiql-ast` and `:partiql-plan`.
 - Using PartiQLValueType requires optin; this was a miss from an earlier commit.
 - **Breaking** removed redundant ValueParameter from FunctionParameter as all parameters are values.
 - Introduces `isNullCall` and `isNullable` properties to FunctionSignature.
+- Removed `Nullable...Value` implementations of PartiQLValue and made the standard implementations nullable.
+- Using PartiQLValueType requires optin; this was a miss from an earlier commit.
+- Modified timestamp static type to model precision and time zone. 
 
 ### Deprecated
 - **Breaking**: Deprecates the `Arguments`, `RequiredArgs`, `RequiredWithOptional`, and `RequiredWithVariadic` classes, 
@@ -105,6 +158,7 @@ Thank you to all who have contributed!
 - @howero
 - @yuxtang-amazon
 - @yliuuuu
+- @johqunn
 - @<your-username>
 
 ## [0.12.0] - 2023-06-14

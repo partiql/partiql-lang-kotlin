@@ -382,14 +382,12 @@ public abstract class BagValue<T : PartiQLValue> : CollectionValue<T> {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
         other as BagValue<*>
-        if (other.annotations != this.annotations) {
-            return false
-        }
-        // both null.bag
-        if (other.isNull && this.isNull) {
-            return true
-        }
-        // compare values
+        if (other.annotations != this.annotations) return false
+
+        // one (or both) null.bag
+        if (this.isNull || other.isNull) return this.isNull == other.isNull
+
+        // both not null, compare values
         val lhs = this.elements!!.toList()
         val rhs = other.elements!!.toList()
         // this is incorrect as it assumes ordered-ness, but we don't have a sort or hash yet
@@ -417,14 +415,12 @@ public abstract class ListValue<T : PartiQLValue> : CollectionValue<T> {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
         other as ListValue<*>
-        if (other.annotations != this.annotations) {
-            return false
-        }
-        // both null.list
-        if (other.isNull && this.isNull) {
-            return true
-        }
-        // compare values
+        if (other.annotations != this.annotations) return false
+
+        // one (or both) null.list
+        if (this.isNull || other.isNull) return this.isNull == other.isNull
+
+        // both not null, compare values
         val lhs = this.elements!!.toList()
         val rhs = other.elements!!.toList()
         return lhs == rhs
@@ -452,10 +448,10 @@ public abstract class SexpValue<T : PartiQLValue> : CollectionValue<T> {
         if (other !is SexpValue<*>) return false
         if (other.annotations != this.annotations) return false
 
-        // both null.sexp
-        if (other.isNull && this.isNull) return true
+        // one (or both) null.sexp
+        if (this.isNull || other.isNull) return this.isNull == other.isNull
 
-        // compare values
+        // both not null, compare values
         val lhs = this.elements!!.toList()
         val rhs = other.elements!!.toList()
         return lhs == rhs
@@ -502,10 +498,10 @@ public abstract class StructValue<T : PartiQLValue> : PartiQLValue, Sequence<Pai
         if (other !is StructValue<*>) return false
         if (other.annotations != this.annotations) return false
 
-        // both null.struct
-        if (other.isNull && this.isNull) return true
+        // one (or both) null.struct
+        if (this.isNull || other.isNull) return this.isNull == other.isNull
 
-        // compare contents
+        // both not null, compare fields
         val lhs = this.fields!!.groupBy({ it.first }, { it.second })
         val rhs = other.fields!!.groupBy({ it.first }, { it.second })
 

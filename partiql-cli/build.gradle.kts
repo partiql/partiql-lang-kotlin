@@ -25,7 +25,7 @@ dependencies {
     implementation(project(":partiql-plan"))
     implementation(project(":partiql-planner"))
     implementation(project(":partiql-types"))
-    implementation(project(":plugins:partiql-mockdb"))
+    implementation(project(":plugins:partiql-local"))
     implementation(project(":partiql-spi"))
     implementation(Deps.csv)
     implementation(Deps.awsSdkBom)
@@ -66,17 +66,17 @@ tasks.register<GradleBuild>("install") {
 }
 
 val testingPluginDirectory = "$buildDir/tmp/plugins"
-val mockDBPluginDirectory = "$testingPluginDirectory/mockdb"
+val mockDBPluginDirectory = "$testingPluginDirectory/local"
 
-tasks.register<Copy>("generateMockDBJAR") {
-    dependsOn(":plugins:partiql-mockdb:assemble")
-    from("${rootProject.projectDir}/plugins/partiql-mockdb/build/libs")
+tasks.register<Copy>("generateLocalPluginJar") {
+    dependsOn(":plugins:partiql-local:assemble")
+    from("${rootProject.projectDir}/plugins/partiql-local/build/libs")
     into(mockDBPluginDirectory)
-    include("partiql-mockdb-*.jar")
+    include("partiql-local-*.jar")
 }
 
 tasks.test.configure {
-    dependsOn(tasks.findByName("generateMockDBJAR"))
+    dependsOn(tasks.findByName("generateLocalPluginJar"))
 }
 
 tasks.withType<Test>().configureEach {

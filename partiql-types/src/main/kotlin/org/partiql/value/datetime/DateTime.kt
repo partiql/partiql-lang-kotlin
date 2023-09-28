@@ -1,3 +1,18 @@
+/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
 package org.partiql.value.datetime
 
 import org.partiql.value.datetime.DateTimeUtil.toBigDecimal
@@ -117,7 +132,7 @@ public sealed interface Date : DateTime, Comparable<Date> {
      * Returns a [Date] value with the specified number of months added.
      * [years] can be negative.
      */
-    public fun plusYear(years: Long): Date
+    public fun plusYears(years: Long): Date
 
     /**
      * Comparison method for [Date] value.
@@ -253,7 +268,7 @@ public sealed interface Timestamp : DateTime, Comparable<Timestamp> {
      * Returns a [Timestamp] value with the specified number of years added.
      * [years] can be negative.
      */
-    public fun plusYear(years: Long): Timestamp
+    public fun plusYears(years: Long): Timestamp
 
     /**
      * Returns a [Timestamp] value with the specified number of years added.
@@ -470,7 +485,7 @@ public abstract class TimestampWithTimeZone : Timestamp {
         epochSecond.movePointRight(3)
     }
 
-    public abstract override fun plusYear(years: Long): TimestampWithTimeZone
+    public abstract override fun plusYears(years: Long): TimestampWithTimeZone
     public abstract override fun plusMonths(months: Long): TimestampWithTimeZone
     public abstract override fun plusDays(days: Long): TimestampWithTimeZone
     public abstract override fun plusHours(hours: Long): TimestampWithTimeZone
@@ -521,7 +536,7 @@ public abstract class TimestampWithTimeZone : Timestamp {
  */
 public abstract class TimestampWithoutTimeZone : Timestamp {
     public override val timeZone: TimeZone? = null
-    public abstract override fun plusYear(years: Long): TimestampWithoutTimeZone
+    public abstract override fun plusYears(years: Long): TimestampWithoutTimeZone
     public abstract override fun plusMonths(months: Long): TimestampWithoutTimeZone
     public abstract override fun plusDays(days: Long): TimestampWithoutTimeZone
     public abstract override fun plusHours(hours: Long): TimestampWithoutTimeZone

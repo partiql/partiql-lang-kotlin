@@ -5,10 +5,6 @@
   * [Cookbook](https://github.com/partiql/partiql-lang-kotlin/wiki/Cookbook)
   * [Manipulating the AST](https://github.com/partiql/partiql-lang-kotlin/wiki/Manipulating-the-AST)
   * [Use Experimental Features](https://github.com/partiql/partiql-lang-kotlin/wiki/ExperimentalFeatures)
-* Design & Development Documents
-  * [Abstract Syntax Tree](https://github.com/partiql/partiql-lang-kotlin/wiki/Abstract-Syntax-Tree)
-  * [Architecture Design](https://github.com/partiql/partiql-lang-kotlin/wiki/Architecture-Design)
-  * [Code Style Guidelines](https://github.com/partiql/partiql-lang-kotlin/wiki/CODE-STYLE)
 * Documentation
   * [Exceptions](https://github.com/partiql/partiql-lang-kotlin/wiki/Exceptions)
   * [Functions](https://github.com/partiql/partiql-lang-kotlin/wiki/Functions)
@@ -21,6 +17,8 @@
   * [Further Reading](https://github.com/partiql/partiql-lang-kotlin/wiki/Further-Reading)
 * Clauses
   * [EXPLAIN](https://github.com/partiql/partiql-lang-kotlin/wiki/Explain)
+* Testing
+  * [Writing PartiQL Unit Tests](https://github.com/partiql/partiql-lang-kotlin/wiki/PartiQL-Code-Coverage)
 * Serde
   * [PartiQL Value <> ION](https://github.com/partiql/partiql-lang-kotlin/wiki/Serde)
 * Upgrade Guides
@@ -35,3 +33,8 @@
   * [v0.7 -> v0.8](https://github.com/partiql/partiql-lang-kotlin/wiki/v0.7-to-v0.8-upgrade)
   * [v0.8 -> v0.9](https://github.com/partiql/partiql-lang-kotlin/wiki/v0.8-to-v0.9-upgrade)
   * [Rewriter to Visitor Transform Guide](https://github.com/partiql/partiql-lang-kotlin/wiki/Rewriter-to-Visitor-Transform-Guide)
+---
+* Design & Development Documents
+  * [Abstract Syntax Tree](https://github.com/partiql/partiql-lang-kotlin/wiki/Abstract-Syntax-Tree)
+  * [Architecture Design](https://github.com/partiql/partiql-lang-kotlin/wiki/Architecture-Design)
+  * [Code Style Guidelines](https://github.com/partiql/partiql-lang-kotlin/wiki/CODE-STYLE)

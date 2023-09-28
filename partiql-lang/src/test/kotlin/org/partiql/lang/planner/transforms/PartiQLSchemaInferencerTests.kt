@@ -3,6 +3,7 @@ package org.partiql.lang.planner.transforms
 import com.amazon.ionelement.api.field
 import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.ionStructOf
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
@@ -18,10 +19,9 @@ import org.partiql.lang.errors.ProblemCollector
 import org.partiql.lang.planner.transforms.PartiQLSchemaInferencerTests.ProblemHandler
 import org.partiql.lang.planner.transforms.PartiQLSchemaInferencerTests.TestCase.ErrorTestCase
 import org.partiql.lang.planner.transforms.PartiQLSchemaInferencerTests.TestCase.SuccessTestCase
+import org.partiql.plan.Rex
 import org.partiql.plan.debug.PlanPrinter
 import org.partiql.planner.PartiQLPlanner
-import org.partiql.planner.PlanningProblemDetails
-import org.partiql.plugins.mockdb.LocalPlugin
 import org.partiql.types.AnyOfType
 import org.partiql.types.AnyType
 import org.partiql.types.BagType
@@ -29,13 +29,16 @@ import org.partiql.types.ListType
 import org.partiql.types.SexpType
 import org.partiql.types.StaticType
 import org.partiql.types.StaticType.Companion.INT
+import org.partiql.types.StaticType.Companion.MISSING
+import org.partiql.types.StaticType.Companion.NULL
 import org.partiql.types.StaticType.Companion.STRING
 import org.partiql.types.StaticType.Companion.unionOf
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
-import java.net.URL
 import java.time.Instant
 import java.util.stream.Stream
+import kotlin.io.path.pathString
+import kotlin.io.path.toPath
 import kotlin.test.assertTrue
 
 class PartiQLSchemaInferencerTests {
@@ -61,18 +64,27 @@ class PartiQLSchemaInferencerTests {
 
     companion object {
 
+        private val root = this::class.java.getResource("/catalogs")!!.toURI().toPath().pathString
+
         private val PLUGINS = listOf(LocalPlugin())
 
         private const val USER_ID = "TEST_USER"
-        private val CATALOG_MAP = listOf("aws", "b", "db").associateWith { catalogName ->
-            val catalogUrl: URL =
-                PartiQLSchemaInferencerTests::class.java.classLoader.getResource("catalogs/$catalogName")
-                    ?: error("Couldn't be found")
-            ionStructOf(
-                field("connector_name", ionString("localdb")),
-                field("localdb_root", ionString(catalogUrl.path))
-            )
-        }
+
+        private val catalogConfig = mapOf(
+            "aws" to ionStructOf(
+                field("connector_name", ionString("local")),
+                field("root", ionString("$root/aws")),
+            ),
+            "b" to ionStructOf(
+                field("connector_name", ionString("local")),
+                field("root", ionString("$root/b")),
+            ),
+            "db" to ionStructOf(
+                field("connector_name", ionString("local")),
+                field("root", ionString("$root/db")),
+            ),
+        )
+
         const val CATALOG_AWS = "aws"
         const val CATALOG_B = "b"
         const val CATALOG_DB = "db"
@@ -281,10 +293,10 @@ class PartiQLSchemaInferencerTests {
                 query = "SELECT * FROM pets",
                 expected = BagType(
                     StructType(
-                        fields = emptyMap(),
-                        contentClosed = false,
+                        fields = mapOf("pets" to StaticType.ANY),
+                        contentClosed = true,
                         constraints = setOf(
-                            TupleConstraint.Open(true),
+                            TupleConstraint.Open(false),
                             TupleConstraint.UniqueAttrs(true),
                             TupleConstraint.Ordered
                         )
@@ -303,10 +315,10 @@ class PartiQLSchemaInferencerTests {
                 query = "SELECT * FROM pets",
                 expected = BagType(
                     StructType(
-                        fields = emptyMap(),
-                        contentClosed = false,
+                        fields = mapOf("pets" to StaticType.ANY),
+                        contentClosed = true,
                         constraints = setOf(
-                            TupleConstraint.Open(true),
+                            TupleConstraint.Open(false),
                             TupleConstraint.UniqueAttrs(true),
                             TupleConstraint.Ordered
                         )
@@ -359,10 +371,10 @@ class PartiQLSchemaInferencerTests {
                 query = "SELECT * FROM ddb.pets",
                 expected = BagType(
                     StructType(
-                        fields = emptyMap(),
-                        contentClosed = false,
+                        fields = mapOf("pets" to StaticType.ANY),
+                        contentClosed = true,
                         constraints = setOf(
-                            TupleConstraint.Open(true),
+                            TupleConstraint.Open(false),
                             TupleConstraint.UniqueAttrs(true),
                             TupleConstraint.Ordered
                         )
@@ -1088,6 +1100,179 @@ class PartiQLSchemaInferencerTests {
                     )
                 )
             ),
+            SuccessTestCase(
+                name = "Current User",
+                query = "CURRENT_USER",
+                expected = unionOf(STRING, StaticType.NULL)
+            ),
+            SuccessTestCase(
+                name = "Trim",
+                query = "trim(' ')",
+                expected = StaticType.STRING
+            ),
+            SuccessTestCase(
+                name = "Current User Concat",
+                query = "CURRENT_USER || 'hello'",
+                expected = unionOf(STRING, StaticType.NULL)
+            ),
+            SuccessTestCase(
+                name = "Current User Concat in WHERE",
+                query = "SELECT VALUE a FROM [ 0 ] AS a WHERE CURRENT_USER = 'hello'",
+                expected = BagType(StaticType.INT)
+            ),
+            SuccessTestCase(
+                name = "TRIM_2",
+                query = "trim(' ' FROM ' Hello, World! ')",
+                expected = StaticType.STRING
+            ),
+            SuccessTestCase(
+                name = "TRIM_1",
+                query = "trim(' Hello, World! ')",
+                expected = StaticType.STRING
+            ),
+            SuccessTestCase(
+                name = "TRIM_3",
+                query = "trim(LEADING ' ' FROM ' Hello, World! ')",
+                expected = StaticType.STRING
+            ),
+            ErrorTestCase(
+                name = "TRIM_2_error",
+                query = "trim(2 FROM ' Hello, World! ')",
+                expected = StaticType.STRING,
+                problemHandler = assertProblemExists {
+                    Problem(
+                        UNKNOWN_PROBLEM_LOCATION,
+                        SemanticProblemDetails.InvalidArgumentTypeForFunction(
+                            "trim",
+                            unionOf(StaticType.STRING, StaticType.SYMBOL),
+                            StaticType.INT,
+                        )
+                    )
+                }
+            ),
+            ErrorTestCase(
+                name = "Current User Concat in WHERE",
+                query = "SELECT VALUE a FROM [ 0 ] AS a WHERE CURRENT_USER = 5",
+                expected = BagType(StaticType.INT),
+                problemHandler = assertProblemExists {
+                    Problem(
+                        UNKNOWN_PROBLEM_LOCATION,
+                        SemanticProblemDetails.IncompatibleDatatypesForOp(
+                            listOf(
+                                unionOf(STRING, StaticType.NULL),
+                                INT,
+                            ),
+                            Rex.Binary.Op.EQ.name
+                        )
+                    )
+                }
+            ),
+            ErrorTestCase(
+                name = "Current User (String) PLUS String",
+                query = "CURRENT_USER + 'hello'",
+                expected = unionOf(StaticType.MISSING, StaticType.NULL),
+                problemHandler = assertProblemExists {
+                    Problem(
+                        UNKNOWN_PROBLEM_LOCATION,
+                        SemanticProblemDetails.IncompatibleDatatypesForOp(
+                            listOf(
+                                unionOf(STRING, StaticType.NULL),
+                                STRING,
+                            ),
+                            Rex.Binary.Op.PLUS.name
+                        )
+                    )
+                }
+            ),
+            SuccessTestCase(
+                name = "BITWISE_AND_1",
+                query = "1 & 2",
+                expected = StaticType.INT
+            ),
+            // casting to a parameterized type produced Missing.
+            SuccessTestCase(
+                name = "BITWISE_AND_2",
+                query = "CAST(1 AS INT2) & CAST(2 AS INT2)",
+                expected = StaticType.unionOf(StaticType.INT2, MISSING)
+            ),
+            SuccessTestCase(
+                name = "BITWISE_AND_3",
+                query = "CAST(1 AS INT4) & CAST(2 AS INT4)",
+                expected = StaticType.unionOf(StaticType.INT4, MISSING)
+            ),
+            SuccessTestCase(
+                name = "BITWISE_AND_4",
+                query = "CAST(1 AS INT8) & CAST(2 AS INT8)",
+                expected = StaticType.unionOf(StaticType.INT8, MISSING)
+            ),
+            SuccessTestCase(
+                name = "BITWISE_AND_5",
+                query = "CAST(1 AS INT2) & CAST(2 AS INT4)",
+                expected = StaticType.unionOf(StaticType.INT4, MISSING)
+            ),
+            SuccessTestCase(
+                name = "BITWISE_AND_6",
+                query = "CAST(1 AS INT2) & CAST(2 AS INT8)",
+                expected = StaticType.unionOf(StaticType.INT8, MISSING)
+            ),
+            SuccessTestCase(
+                name = "BITWISE_AND_7",
+                query = "CAST(1 AS INT2) & 2",
+                expected = StaticType.unionOf(StaticType.INT, MISSING)
+            ),
+            SuccessTestCase(
+                name = "BITWISE_AND_8",
+                query = "CAST(1 AS INT4) & CAST(2 AS INT8)",
+                expected = StaticType.unionOf(StaticType.INT8, MISSING)
+            ),
+            SuccessTestCase(
+                name = "BITWISE_AND_9",
+                query = "CAST(1 AS INT4) & 2",
+                expected = StaticType.unionOf(StaticType.INT, MISSING)
+            ),
+            SuccessTestCase(
+                name = "BITWISE_AND_10",
+                query = "CAST(1 AS INT8) & 2",
+                expected = StaticType.unionOf(StaticType.INT, MISSING)
+            ),
+            ErrorTestCase(
+                name = "BITWISE_AND_NULL_OPERAND",
+                query = "1 & NULL",
+                expected = StaticType.NULL,
+                problemHandler = assertProblemExists {
+                    Problem(
+                        UNKNOWN_PROBLEM_LOCATION,
+                        SemanticProblemDetails.ExpressionAlwaysReturnsNullOrMissing
+                    )
+                }
+            ),
+            ErrorTestCase(
+                name = "BITWISE_AND_MISSING_OPERAND",
+                query = "1 & MISSING",
+                expected = StaticType.MISSING,
+                problemHandler = assertProblemExists {
+                    Problem(
+                        UNKNOWN_PROBLEM_LOCATION,
+                        SemanticProblemDetails.ExpressionAlwaysReturnsNullOrMissing
+                    )
+                }
+            ),
+            ErrorTestCase(
+                name = "BITWISE_AND_NON_INT_OPERAND",
+                query = "1 & 'NOT AN INT'",
+                expected = StaticType.MISSING,
+                problemHandler = assertProblemExists {
+                    Problem(
+                        UNKNOWN_PROBLEM_LOCATION,
+                        SemanticProblemDetails.IncompatibleDatatypesForOp(
+                            listOf(
+                                INT, STRING
+                            ),
+                            Rex.Binary.Op.BITWISE_AND.name
+                        )
+                    )
+                }
+            ),
         )
     }
 
@@ -1103,7 +1288,7 @@ class PartiQLSchemaInferencerTests {
             USER_ID,
             tc.catalog,
             tc.catalogPath,
-            CATALOG_MAP,
+            catalogConfig,
             Instant.now()
         )
         val collector = ProblemCollector()
@@ -1131,7 +1316,7 @@ class PartiQLSchemaInferencerTests {
             USER_ID,
             tc.catalog,
             tc.catalogPath,
-            CATALOG_MAP,
+            catalogConfig,
             Instant.now()
         )
         val collector = ProblemCollector()
@@ -1159,5 +1344,18 @@ class PartiQLSchemaInferencerTests {
 
     fun interface ProblemHandler {
         fun handle(problems: List<Problem>, ignoreSourceLocation: Boolean)
+    }
+
+    @Test
+    fun test() {
+        runTest(
+            ErrorTestCase(
+                name = "Case Sensitive failure",
+                catalog = CATALOG_DB,
+                catalogPath = DB_SCHEMA_MARKETS,
+                query = "order_info.\"CUSTOMER_ID\" = 1",
+                expected = TYPE_BOOL
+            )
+        )
     }
 }

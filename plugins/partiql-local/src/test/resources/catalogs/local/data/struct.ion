@@ -1,0 +1,31 @@
+{
+  type: "struct",
+  constraints: [
+    closed,
+    unique,
+    ordered
+  ],
+  fields: [
+    {
+      name: "id",
+      type: "int",
+    },
+    {
+      name: "nested",
+      type: {
+        type: "struct",
+        constraints: [
+          closed,
+          unique,
+          ordered
+        ],
+        fields: [
+          {
+            name: "nested_id",
+            type: "int",
+          },
+        ],
+      },
+    },
+  ],
+}

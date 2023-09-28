@@ -118,7 +118,13 @@ internal val DEFAULT_EXCEPTION_HANDLER_FOR_LEGACY_MODE: ThunkExceptionHandlerFor
     )
 }
 
-internal val DEFAULT_EXCEPTION_HANDLER_FOR_PERMISSIVE_MODE: ThunkExceptionHandlerForPermissiveMode = { _, _ -> }
+internal val DEFAULT_EXCEPTION_HANDLER_FOR_PERMISSIVE_MODE: ThunkExceptionHandlerForPermissiveMode = { e, _ ->
+    when (e) {
+        is InterruptedException -> { throw e }
+        is StackOverflowError -> { throw e }
+        else -> {}
+    }
+}
 
 /**
  * An extension method for creating [ThunkFactory] based on the type of [TypingMode]

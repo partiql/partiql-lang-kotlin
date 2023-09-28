@@ -1,23 +1,37 @@
+/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
 package org.partiql.value.datetime.impl
 
 import org.partiql.value.datetime.Date
-import org.partiql.value.datetime.DateTimeException
 import org.partiql.value.datetime.DateTimeUtil
+import org.partiql.value.datetime.DateTimeUtil.SECONDS_IN_DAY
 import org.partiql.value.datetime.DateTimeUtil.SECONDS_IN_HOUR
 import org.partiql.value.datetime.DateTimeUtil.toBigDecimal
 import org.partiql.value.datetime.TimeWithTimeZone
-import org.partiql.value.datetime.TimeWithoutTimeZone
 import org.partiql.value.datetime.TimeZone
-import org.partiql.value.datetime.TimestampWithTimeZone
 import java.math.BigDecimal
 
+/**
+ * This implementation handles edge cases that can not be supported by [OffsetTimeLowPrecision], that is:
+ * 1. The desired precision exceeds nanosecond.
+ * 2. The desired timestamp exceeds the range of +18:00 to -18:00
+ */
 internal class OffsetTimeHighPrecision private constructor(
-    override val hour: Int,
-    override val minute: Int,
-    override val decimalSecond: BigDecimal,
-    override val timeZone: TimeZone,
-    _localTime: LocalTimeHighPrecision,
-    _elapsedSecond: BigDecimal? = null
+    val localTime: LocalTimeHighPrecision,
+    override val timeZone: TimeZone
 ) : TimeWithTimeZone() {
 
     companion object {
@@ -27,45 +41,54 @@ internal class OffsetTimeHighPrecision private constructor(
             decimalSecond: BigDecimal,
             timeZone: TimeZone
         ): OffsetTimeHighPrecision {
-            try {
-                val localTime = LocalTimeHighPrecision.of(hour, minute, decimalSecond)
-                return OffsetTimeHighPrecision(localTime.hour, localTime.minute, localTime.decimalSecond, timeZone, localTime)
-            } catch (e: java.time.DateTimeException) {
-                throw DateTimeException(e.localizedMessage, e)
-            }
+            val localTime = LocalTimeHighPrecision.of(hour, minute, decimalSecond)
+            return OffsetTimeHighPrecision(localTime, timeZone)
         }
 
         fun forSeconds(elapsedSeconds: BigDecimal, timeZone: TimeZone): OffsetTimeHighPrecision {
             val localTime = LocalTimeHighPrecision.forSeconds(elapsedSeconds)
-            return OffsetTimeHighPrecision(
-                localTime.hour, localTime.minute, localTime.decimalSecond,
-                timeZone, localTime, elapsedSeconds
-            )
+            return OffsetTimeHighPrecision(localTime, timeZone)
         }
     }
 
+    override val hour: Int = localTime.hour
+    override val minute: Int = localTime.minute
+    override val decimalSecond: BigDecimal = localTime.decimalSecond
+
     override val elapsedSecond: BigDecimal by lazy {
-        _elapsedSecond ?: _localTime.elapsedSecond
+        localTime.elapsedSecond
     }
 
-    override fun plusHours(hours: Long): TimeWithTimeZone =
-        forSeconds(this.elapsedSecond.plus((hours * SECONDS_IN_HOUR).toBigDecimal()), timeZone)
+    override fun plusHours(hours: Long): OffsetTimeHighPrecision {
+        val timePassed = this.elapsedSecond
+            .plus((hours * SECONDS_IN_HOUR).toBigDecimal())
+            .let { normalizeElapsedTime(it) }
+        return forSeconds(timePassed, timeZone)
+    }
 
-    override fun plusMinutes(minutes: Long): TimeWithTimeZone =
-        forSeconds(this.elapsedSecond.plus((minutes * DateTimeUtil.SECONDS_IN_MINUTE).toBigDecimal()), timeZone)
+    override fun plusMinutes(minutes: Long): OffsetTimeHighPrecision {
+        val timePassed = this.elapsedSecond
+            .plus((minutes * DateTimeUtil.SECONDS_IN_MINUTE).toBigDecimal())
+            .let { normalizeElapsedTime(it) }
+        return forSeconds(timePassed, timeZone)
+    }
 
-    override fun plusSeconds(seconds: BigDecimal): TimeWithTimeZone =
-        forSeconds(this.elapsedSecond.plus(seconds.toBigDecimal()), timeZone)
+    override fun plusSeconds(seconds: BigDecimal): OffsetTimeHighPrecision {
+        val timePassed = this.elapsedSecond
+            .plus(seconds)
+            .let { normalizeElapsedTime(it) }
+        return forSeconds(timePassed, timeZone)
+    }
 
-    override fun atDate(date: Date): TimestampWithTimeZone =
+    override fun atDate(date: Date): OffsetTimestampHighPrecision =
         OffsetTimestampHighPrecision.forDateTime(date, this)
 
-    override fun toTimeWithoutTimeZone(timeZone: TimeZone): TimeWithoutTimeZone =
+    override fun toTimeWithoutTimeZone(timeZone: TimeZone): LocalTimeHighPrecision =
         this.atTimeZone(timeZone).let {
             LocalTimeHighPrecision.of(it.hour, it.minute, it.decimalSecond)
         }
 
-    override fun atTimeZone(timeZone: TimeZone): TimeWithTimeZone =
+    override fun atTimeZone(timeZone: TimeZone): OffsetTimeHighPrecision =
         when (val valueTimeZone = this.timeZone) {
             TimeZone.UnknownTimeZone -> {
                 when (timeZone) {
@@ -86,4 +109,10 @@ internal class OffsetTimeHighPrecision private constructor(
                 }
             }
         }
+
+    private fun normalizeElapsedTime(timePassed: BigDecimal): BigDecimal {
+        val maxBD = BigDecimal.valueOf(SECONDS_IN_DAY)
+        val remainder = timePassed % maxBD // % (remainder) in java may return negative value.
+        return if (remainder < BigDecimal.ZERO) maxBD + remainder else remainder
+    }
 }

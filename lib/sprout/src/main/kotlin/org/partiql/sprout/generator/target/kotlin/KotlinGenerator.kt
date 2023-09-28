@@ -21,6 +21,7 @@ import org.partiql.sprout.generator.target.kotlin.spec.KotlinNodeSpec
 import org.partiql.sprout.generator.target.kotlin.spec.KotlinUniverseSpec
 import org.partiql.sprout.model.TypeDef
 import org.partiql.sprout.model.TypeProp
+import org.partiql.sprout.model.TypeRef
 import org.partiql.sprout.model.Universe
 
 /**
@@ -134,7 +135,7 @@ class KotlinGenerator(private val options: KotlinOptions) : Generator<KotlinResu
             // impls are open
             impl.superclass(clazz)
             nodes.forEach { it.builder.addSuperinterface(symbols.base) }
-            this.addDataClassMethods()
+            this.addDataClassMethods(symbols, ref)
         }
     }
 
@@ -156,7 +157,10 @@ class KotlinGenerator(private val options: KotlinOptions) : Generator<KotlinResu
      * Enum constant generation
      */
     private fun TypeDef.Enum.generate(symbols: KotlinSymbols) =
-        TypeSpec.enumBuilder(symbols.clazz(ref)).apply { values.forEach { addEnumConstant(it) } }.build()
+        TypeSpec.enumBuilder(symbols.clazz(ref)).apply {
+            addFunction(enumToStringSpec(symbols.pascal(ref)))
+            values.forEach { addEnumConstant(it) }
+        }.build()
 
     private fun List<TypeProp>.enumProps(symbols: KotlinSymbols) = filterIsInstance<TypeProp.Inline>().mapNotNull {
         when (it.def) {
@@ -170,10 +174,11 @@ class KotlinGenerator(private val options: KotlinOptions) : Generator<KotlinResu
     }
 
     // TODO generate hashCode, equals, componentN so we can have OPEN internal implementations
-    private fun KotlinNodeSpec.Product.addDataClassMethods() {
+    private fun KotlinNodeSpec.Product.addDataClassMethods(symbols: KotlinSymbols, ref: TypeRef.Path) {
         impl.addModifiers(KModifier.INTERNAL, KModifier.OPEN)
         addEqualsMethod()
         addHashCodeMethod()
+        addToStringMethod(symbols, ref)
         val args = listOf("_id") + props.map { it.name }
         val copy = FunSpec.builder("copy").addModifiers(KModifier.ABSTRACT).returns(clazz)
         val copyImpl = FunSpec.builder("copy")
@@ -232,6 +237,55 @@ class KotlinGenerator(private val options: KotlinOptions) : Generator<KotlinResu
                 .addModifiers(KModifier.OVERRIDE)
                 .returns(Int::class)
                 .addCode(hashcodeBodyBuilder.build())
+                .build()
+        )
+    }
+
+    private fun enumToStringSpec(base: String): FunSpec {
+        val bodyBuilder = CodeBlock.builder().let { body ->
+            val str = "$base::\${super.toString()}"
+            body.addStatement("return %P", str)
+            body
+        }
+        return FunSpec.builder("toString")
+            .addModifiers(KModifier.OVERRIDE)
+            .returns(String::class)
+            .addCode(bodyBuilder.build())
+            .build()
+    }
+
+    /**
+     * Adds `toString` method to the core abstract class. We write it in Ion syntax, however, it is NOT a contract
+     * and therefore subject to failure.
+     *
+     * Notably, the following don't format to Ion:
+     * - Maps
+     * - Imported Types
+     * - Escape Characters
+     */
+    private fun KotlinNodeSpec.Product.addToStringMethod(symbols: KotlinSymbols, ref: TypeRef.Path) {
+        val annotation = symbols.pascal(ref)
+        val thiz = this
+        val bodyBuilder = CodeBlock.builder().let { body ->
+            val returnString = buildString {
+                append("$annotation::{")
+                thiz.props.forEach { prop ->
+                    if (String::class.asTypeName() == prop.type) {
+                        append("${prop.name}: \"\$${prop.name}\",")
+                    } else {
+                        append("${prop.name}: \$${prop.name},")
+                    }
+                }
+                append("}")
+            }
+            body.addStatement("return %P", returnString)
+            body
+        }
+        builder.addFunction(
+            FunSpec.builder("toString")
+                .addModifiers(KModifier.OVERRIDE)
+                .returns(String::class)
+                .addCode(bodyBuilder.build())
                 .build()
         )
     }

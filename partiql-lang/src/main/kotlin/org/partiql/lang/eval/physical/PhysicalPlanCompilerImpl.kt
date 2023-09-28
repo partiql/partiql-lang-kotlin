@@ -37,6 +37,7 @@ import org.partiql.lang.eval.BaseExprValue
 import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.CastFunc
+import org.partiql.lang.eval.CoverageStructure
 import org.partiql.lang.eval.DEFAULT_COMPARATOR
 import org.partiql.lang.eval.ErrorDetails
 import org.partiql.lang.eval.EvaluationException
@@ -48,6 +49,7 @@ import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.Expression
 import org.partiql.lang.eval.FunctionNotFoundException
 import org.partiql.lang.eval.Named
+import org.partiql.lang.eval.PartiQLResult
 import org.partiql.lang.eval.ProjectionIterationBehavior
 import org.partiql.lang.eval.StructOrdering
 import org.partiql.lang.eval.ThunkValue
@@ -70,6 +72,7 @@ import org.partiql.lang.eval.impl.FunctionManager
 import org.partiql.lang.eval.isNotUnknown
 import org.partiql.lang.eval.isUnknown
 import org.partiql.lang.eval.like.parsePattern
+import org.partiql.lang.eval.longValue
 import org.partiql.lang.eval.namedValue
 import org.partiql.lang.eval.numberValue
 import org.partiql.lang.eval.rangeOver
@@ -174,13 +177,23 @@ internal class PhysicalPlanCompilerImpl(
         val thunk = compileAstStatement(plan.stmt)
 
         return object : Expression {
+            override val coverageStructure: CoverageStructure? = null
+
             override fun eval(session: EvaluationSession): ExprValue {
                 val env = EvaluatorState(
                     session = session,
                     registers = Array(plan.locals.size) { ExprValue.missingValue }
                 )
-
                 return thunk(env)
+            }
+
+            override fun evaluate(session: EvaluationSession): PartiQLResult {
+                val env = EvaluatorState(
+                    session = session,
+                    registers = Array(plan.locals.size) { ExprValue.missingValue }
+                )
+                val value = thunk(env)
+                return PartiQLResult.Value(value = value)
             }
         }
     }
@@ -196,12 +209,23 @@ internal class PhysicalPlanCompilerImpl(
         val thunk = compileAstExpr(expr)
 
         return object : Expression {
+            override val coverageStructure: CoverageStructure? = null
+
             override fun eval(session: EvaluationSession): ExprValue {
                 val env = EvaluatorState(
                     session = session,
                     registers = Array(localsSize) { ExprValue.missingValue }
                 )
                 return thunk(env)
+            }
+
+            override fun evaluate(session: EvaluationSession): PartiQLResult {
+                val env = EvaluatorState(
+                    session = session,
+                    registers = Array(localsSize) { ExprValue.missingValue }
+                )
+                val value = thunk(env)
+                return PartiQLResult.Value(value = value)
             }
         }
     }
@@ -248,6 +272,7 @@ internal class PhysicalPlanCompilerImpl(
             is PartiqlPhysical.Expr.Minus -> compileMinus(expr, metas)
             is PartiqlPhysical.Expr.Divide -> compileDivide(expr, metas)
             is PartiqlPhysical.Expr.Modulo -> compileModulo(expr, metas)
+            is PartiqlPhysical.Expr.BitwiseAnd -> compileBitwiseAnd(expr, metas)
 
             // comparison operators
             is PartiqlPhysical.Expr.And -> compileAnd(expr, metas)
@@ -546,6 +571,14 @@ internal class PhysicalPlanCompilerImpl(
         }
 
         return checkIntegerOverflow(computeThunk, metas)
+    }
+
+    private fun compileBitwiseAnd(expr: PartiqlPhysical.Expr.BitwiseAnd, metas: MetaContainer): PhysicalPlanThunk {
+        val argThunks = compileAstExprs(expr.operands)
+
+        return thunkFactory.thunkFold(metas, argThunks) { lValue, rValue ->
+            (lValue.longValue() and rValue.longValue()).exprValue()
+        }
     }
 
     private fun compileEq(expr: PartiqlPhysical.Expr.Eq, metas: MetaContainer): PhysicalPlanThunk {

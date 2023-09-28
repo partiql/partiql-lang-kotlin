@@ -1,35 +1,70 @@
+/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
 package org.partiql.value.datetime.impl
 
 import org.partiql.value.datetime.Date
-import org.partiql.value.datetime.DateTimeException
-import org.partiql.value.datetime.DateTimeUtil.JAVA_MAX_OFFSET
 import org.partiql.value.datetime.DateTimeUtil.toBigDecimal
-import org.partiql.value.datetime.TimeWithTimeZone
 import org.partiql.value.datetime.TimeZone
 import org.partiql.value.datetime.Timestamp
 import org.partiql.value.datetime.TimestampWithTimeZone
-import org.partiql.value.datetime.TimestampWithoutTimeZone
 import java.math.BigDecimal
 import java.math.RoundingMode
+import java.time.Instant
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
-import kotlin.math.absoluteValue
 import kotlin.math.max
 
+/**
+ * This implementation utilize [java.time.OffsetDateTime] to handle timestamp with time zone if :
+ * 1. The desired precision is below nanosecond (9 digits after decimal point).
+ * 2. The desired timezone is within +18:00 to -18:00.
+ *
+ * The constructor functions assumes the above conditions to be true.
+ */
 internal class OffsetTimestampLowPrecision(
     val offsetDateTime: OffsetDateTime,
     val isUnknownTimeZone: Boolean,
-    _year: Int? = null,
-    _month: Int? = null,
-    _day: Int? = null,
-    _hour: Int? = null,
-    _minute: Int? = null,
-    _decimalSecond: BigDecimal? = null,
-    _timeZone: TimeZone? = null,
-    _inputIonTimestamp: com.amazon.ion.Timestamp? = null
+    val date: Date,
+    val time: OffsetTimeLowPrecision,
+    _inputIonTimestamp: com.amazon.ion.Timestamp? = null,
+    _epochSecond: BigDecimal? = null
 ) : TimestampWithTimeZone() {
 
     companion object {
+        /**
+         * Construct a Timestamp by concatenate a Date and a Time component.
+         *
+         * The time component should have a TimeZone.
+         *
+         * This should be called by other constructors for validation date / time.
+         */
+        fun forDateTime(date: Date, time: OffsetTimeLowPrecision): OffsetTimestampLowPrecision {
+            val offsetDateTime =
+                OffsetDateTime.of(
+                    LocalDate.of(date.year, date.month, date.day),
+                    time.offsetTime.toLocalTime(),
+                    time.offsetTime.offset
+                )
+            return OffsetTimestampLowPrecision(offsetDateTime, time.isUnknownTimeZone, date, time)
+        }
+
+        /**
+         * Construct a Timestamp with nanosecond precision.
+         */
         fun of(
             year: Int,
             month: Int,
@@ -40,28 +75,9 @@ internal class OffsetTimestampLowPrecision(
             nanoOfSecond: Int,
             timeZone: TimeZone,
         ): OffsetTimestampLowPrecision {
-            try {
-                return when (timeZone) {
-                    TimeZone.UnknownTimeZone ->
-                        OffsetTimestampLowPrecision(
-                            OffsetDateTime.of(year, month, day, hour, minute, second, nanoOfSecond, ZoneOffset.UTC),
-                            true,
-                            year, month, day, hour, minute, null, timeZone, null
-                        )
-
-                    is TimeZone.UtcOffset -> OffsetTimestampLowPrecision(
-                        OffsetDateTime.of(
-                            year, month, day,
-                            hour, minute, second, nanoOfSecond,
-                            ZoneOffset.ofTotalSeconds(timeZone.totalOffsetMinutes * 60)
-                        ),
-                        false,
-                        year, month, day, hour, minute, null, timeZone, null
-                    )
-                }
-            } catch (e: java.time.DateTimeException) {
-                throw DateTimeException(e.localizedMessage)
-            }
+            val date = SqlDate.of(year, month, day)
+            val time = OffsetTimeLowPrecision.of(hour, minute, second, nanoOfSecond, timeZone)
+            return forDateTime(date, time)
         }
 
         fun of(
@@ -73,20 +89,9 @@ internal class OffsetTimestampLowPrecision(
             decimalSecond: BigDecimal,
             timeZone: TimeZone
         ): OffsetTimestampLowPrecision {
-            val wholeSecond = decimalSecond.setScale(0, RoundingMode.DOWN)
-            val nano = decimalSecond.minus(wholeSecond).movePointRight(9)
-            return of(year, month, day, hour, minute, wholeSecond.intValueExact(), nano.intValueExact(), timeZone).let {
-                OffsetTimestampLowPrecision(
-                    it.offsetDateTime, it.isUnknownTimeZone,
-                    year, month, day,
-                    hour, minute, decimalSecond,
-                    timeZone, null
-                )
-            }
-        }
-
-        fun forDateTime(date: Date, time: TimeWithTimeZone): OffsetTimestampLowPrecision {
-            return of(date.year, date.month, date.day, time.hour, time.minute, time.decimalSecond, time.timeZone)
+            val date = SqlDate.of(year, month, day)
+            val time = OffsetTimeLowPrecision.of(hour, minute, decimalSecond, timeZone)
+            return forDateTime(date, time)
         }
 
         fun forIonTimestamp(ionTs: com.amazon.ion.Timestamp): TimestampWithTimeZone {
@@ -97,12 +102,7 @@ internal class OffsetTimestampLowPrecision(
                         ionTs.hour, ionTs.minute, ionTs.decimalSecond,
                         TimeZone.UnknownTimeZone
                     ).copy(_inputIonTimestamp = ionTs)
-                ionTs.localOffset.absoluteValue > JAVA_MAX_OFFSET ->
-                    OffsetTimestampHighPrecision.of(
-                        ionTs.year, ionTs.month, ionTs.day,
-                        ionTs.hour, ionTs.minute, ionTs.decimalSecond,
-                        TimeZone.UtcOffset.of(ionTs.localOffset)
-                    ).copy(_inputIonTimestamp = ionTs)
+                // it should never have reached the case where offset exceeds Java max offset.
                 else ->
                     of(
                         ionTs.year, ionTs.month, ionTs.day,
@@ -113,100 +113,135 @@ internal class OffsetTimestampLowPrecision(
             return timestamp
         }
 
+        fun forEpochSeconds(epochSeconds: BigDecimal, timeZone: TimeZone): OffsetTimestampLowPrecision {
+            val wholeSeconds = epochSeconds.setScale(0, RoundingMode.DOWN)
+            val nano = (epochSeconds - wholeSeconds).let { it.movePointRight(9) }
+            val offsetDateTime = OffsetDateTime.ofInstant(
+                Instant.ofEpochSecond(wholeSeconds.longValueExact(), nano.longValueExact()),
+                when (timeZone) {
+                    TimeZone.UnknownTimeZone -> ZoneOffset.ofTotalSeconds(0)
+                    is TimeZone.UtcOffset -> ZoneOffset.ofTotalSeconds(timeZone.totalOffsetMinutes * 60)
+                }
+            )
+            val date = SqlDate.of(offsetDateTime.year, offsetDateTime.monthValue, offsetDateTime.dayOfMonth)
+            // we need to assign a precision based on the input epochSecond
+            val time =
+                OffsetTimeLowPrecision
+                    .of(offsetDateTime.hour, offsetDateTime.minute, offsetDateTime.second, offsetDateTime.nano, timeZone)
+                    .let { it.copy(_decimalSecond = it.decimalSecond.setScale(epochSeconds.scale(), RoundingMode.UNNECESSARY)) }
+            return forDateTime(date, time).copy(_epochSecond = epochSeconds)
+        }
+
         @JvmStatic
-        fun nowZ() =
-            OffsetTimestampLowPrecision(OffsetDateTime.now(ZoneOffset.UTC), false)
+        fun nowZ(): OffsetTimestampLowPrecision {
+            val javaNowZ = OffsetDateTime.now(ZoneOffset.UTC)
+            val date = SqlDate.of(javaNowZ.year, javaNowZ.monthValue, javaNowZ.dayOfMonth)
+            val time = OffsetTimeLowPrecision.of(javaNowZ.hour, javaNowZ.minute, javaNowZ.second, javaNowZ.nano, TimeZone.UtcOffset.of(0))
+            return forDateTime(date, time)
+        }
     }
 
-    override val year: Int = _year ?: offsetDateTime.year
-    override val month: Int = _month ?: offsetDateTime.monthValue
-    override val day: Int = _day ?: offsetDateTime.dayOfMonth
-    override val hour: Int = _hour ?: offsetDateTime.hour
-    override val minute: Int = _minute ?: offsetDateTime.minute
-    override val decimalSecond: BigDecimal =
-        _decimalSecond
-            ?: BigDecimal.valueOf(offsetDateTime.second.toLong())
-                .plus(BigDecimal.valueOf(offsetDateTime.nano.toLong(), 9))
-    override val timeZone: TimeZone =
-        _timeZone
-            ?: if (isUnknownTimeZone) TimeZone.UnknownTimeZone else TimeZone.UtcOffset.of(offsetDateTime.offset.totalSeconds / 60)
+    override val year: Int = date.year
+    override val month: Int = date.month
+    override val day: Int = date.day
+    override val hour: Int = time.hour
+    override val minute: Int = time.minute
+    override val decimalSecond: BigDecimal = time.decimalSecond
+    override val timeZone: TimeZone = time.timeZone
     override val ionRaw: com.amazon.ion.Timestamp? = _inputIonTimestamp
     val second: Int = offsetDateTime.second
     val nano: Int = offsetDateTime.nano
     override val epochSecond: BigDecimal by lazy {
-        (offsetDateTime.toEpochSecond() - second).toBigDecimal() + decimalSecond
+        _epochSecond
+            ?: ((offsetDateTime.toEpochSecond() - second).toBigDecimal() + decimalSecond)
     }
 
-    override fun plusYear(years: Long): TimestampWithTimeZone =
+    override fun plusYears(years: Long): OffsetTimestampLowPrecision =
         offsetDateTime.plusYears(years).let {
             of(it.year, it.monthValue, it.dayOfMonth, it.hour, it.minute, decimalSecond, timeZone)
         }
 
-    override fun plusMonths(months: Long): TimestampWithTimeZone =
+    override fun plusMonths(months: Long): OffsetTimestampLowPrecision =
         offsetDateTime.plusMonths(months).let {
             of(it.year, it.monthValue, it.dayOfMonth, it.hour, it.minute, decimalSecond, timeZone)
         }
 
-    override fun plusDays(days: Long): TimestampWithTimeZone =
+    override fun plusDays(days: Long): OffsetTimestampLowPrecision =
         offsetDateTime.plusDays(days).let {
             of(it.year, it.monthValue, it.dayOfMonth, it.hour, it.minute, decimalSecond, timeZone)
         }
 
-    override fun plusHours(hours: Long): TimestampWithTimeZone =
+    override fun plusHours(hours: Long): OffsetTimestampLowPrecision =
         offsetDateTime.plusHours(hours).let {
             of(it.year, it.monthValue, it.dayOfMonth, it.hour, it.minute, decimalSecond, timeZone)
         }
 
-    override fun plusMinutes(minutes: Long): TimestampWithTimeZone =
+    override fun plusMinutes(minutes: Long): OffsetTimestampLowPrecision =
         offsetDateTime.plusMinutes(minutes).let {
             of(it.year, it.monthValue, it.dayOfMonth, it.hour, it.minute, decimalSecond, timeZone)
         }
 
     override fun plusSeconds(seconds: BigDecimal): TimestampWithTimeZone =
         if (seconds.scale() > 9) {
-            OffsetTimestampHighPrecision.of(year, month, day, hour, minute, decimalSecond, timeZone).plusSeconds(seconds)
+            OffsetTimestampHighPrecision.of(year, month, day, hour, minute, decimalSecond, timeZone)
+                .plusSeconds(seconds)
         } else {
             val wholeSecond = seconds.setScale(0, RoundingMode.DOWN)
-            val nano = seconds.minus(wholeSecond).let { it.movePointRight(it.scale()) }
+            val nano = seconds.minus(wholeSecond).movePointRight(9)
             val newTime = offsetDateTime.plusSeconds(wholeSecond.longValueExact()).plusNanos(nano.longValueExact())
             // the real precision of this operation, should be max(original_value.decimalSecond.precision, seconds.precision)
             val newDecimalSecond = newTime.second.toBigDecimal() + newTime.nano.toBigDecimal().movePointLeft(9)
             val roundedDecimalSecond =
-                newDecimalSecond.setScale(max(this.decimalSecond.scale(), seconds.scale()), RoundingMode.UNNECESSARY)
-            of(newTime.year, newTime.monthValue, newTime.dayOfMonth, newTime.hour, newTime.minute, roundedDecimalSecond, timeZone)
+                newDecimalSecond.stripTrailingZeros().setScale(max(this.decimalSecond.scale(), seconds.scale()), RoundingMode.UNNECESSARY)
+            of(
+                newTime.year,
+                newTime.monthValue,
+                newTime.dayOfMonth,
+                newTime.hour,
+                newTime.minute,
+                roundedDecimalSecond,
+                timeZone
+            )
         }
 
-    override fun toTimeWithoutTimeZone(timeZone: TimeZone): TimestampWithoutTimeZone {
+    override fun toTimeWithoutTimeZone(timeZone: TimeZone): LocalTimestampLowPrecision {
         val local = when (timeZone) {
             TimeZone.UnknownTimeZone -> offsetDateTime.withOffsetSameInstant(ZoneOffset.UTC)
             is TimeZone.UtcOffset -> offsetDateTime.withOffsetSameInstant(ZoneOffset.ofTotalSeconds(timeZone.totalOffsetMinutes * 60))
         }
         // Second field should be intact from this operation
-        return LocalTimestampLowPrecision.of(local.year, local.monthValue, local.dayOfMonth, local.hour, local.minute, decimalSecond)
+        return LocalTimestampLowPrecision.of(
+            local.year,
+            local.monthValue,
+            local.dayOfMonth,
+            local.hour,
+            local.minute,
+            decimalSecond
+        )
     }
 
-    override fun atTimeZone(timeZone: TimeZone): TimestampWithTimeZone {
+    override fun atTimeZone(timeZone: TimeZone): OffsetTimestampLowPrecision {
         val local = when (timeZone) {
             TimeZone.UnknownTimeZone -> offsetDateTime.withOffsetSameInstant(ZoneOffset.UTC)
             is TimeZone.UtcOffset -> offsetDateTime.withOffsetSameInstant(ZoneOffset.ofTotalSeconds(timeZone.totalOffsetMinutes * 60))
         }
-        return of(local.year, local.monthValue, local.dayOfMonth, local.hour, local.minute, this.decimalSecond, timeZone)
+        return of(
+            local.year,
+            local.monthValue,
+            local.dayOfMonth,
+            local.hour,
+            local.minute,
+            this.decimalSecond,
+            timeZone
+        )
     }
 
     internal fun copy(
-        _year: Int? = null,
-        _month: Int? = null,
-        _day: Int? = null,
-        _hour: Int? = null,
-        _minute: Int? = null,
-        _decimalSecond: BigDecimal? = null,
-        _timeZone: TimeZone? = null,
-        _inputIonTimestamp: com.amazon.ion.Timestamp? = null
+        _inputIonTimestamp: com.amazon.ion.Timestamp? = null,
+        _epochSecond: BigDecimal? = null
     ) =
         OffsetTimestampLowPrecision(
-            this.offsetDateTime, this.isUnknownTimeZone,
-            _year ?: this.year, _month ?: this.month, _day ?: this.day,
-            _hour ?: this.hour, _minute ?: this.minute, _decimalSecond ?: this.decimalSecond,
-            _timeZone ?: this.timeZone, _inputIonTimestamp ?: this.ionRaw
+            this.offsetDateTime, this.isUnknownTimeZone, this.date, this.time,
+            _inputIonTimestamp ?: this.ionRaw, _epochSecond ?: this.epochSecond
         )
 }

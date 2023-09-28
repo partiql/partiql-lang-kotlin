@@ -379,6 +379,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
             Expr.Binary.Op.GTE -> gte(operands, metas)
             Expr.Binary.Op.LT -> lt(operands, metas)
             Expr.Binary.Op.LTE -> lte(operands, metas)
+            Expr.Binary.Op.BITWISE_AND -> bitwiseAnd(operands, metas)
         }
     }
 
@@ -539,7 +540,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
     override fun visitExprTrim(node: Expr.Trim, ctx: Ctx) = translate(node) { metas ->
         val operands = mutableListOf<PartiqlAst.Expr>()
         // Legacy AST requires adding the spec as an argument
-        val spec = node.spec?.toString()?.lowercase()
+        val spec = node.spec?.name?.lowercase()
         val chars = node.chars?.let { visitExpr(it, ctx) }
         val value = visitExpr(node.value, ctx)
         if (spec != null) operands.add(lit(ionSymbol(spec)))
@@ -1334,7 +1335,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
     }
 
     private fun DatetimeField.toLegacyDatetimePart(): PartiqlAst.Expr.Lit {
-        val symbol = this.toString().lowercase()
+        val symbol = this.name.lowercase()
         return pig.lit(ionSymbol(symbol))
     }
 

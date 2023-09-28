@@ -106,6 +106,8 @@ public class FunctionSignature(
         result = 31 * result + returns.hashCode()
         result = 31 * result + parameters.hashCode()
         result = 31 * result + isDeterministic.hashCode()
+        result = 31 * result + isNullCall.hashCode()
+        result = 31 * result + isNullable.hashCode()
         result = 31 * result + (description?.hashCode() ?: 0)
         return result
     }

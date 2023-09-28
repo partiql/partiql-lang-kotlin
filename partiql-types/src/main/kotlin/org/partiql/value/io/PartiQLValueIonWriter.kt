@@ -13,6 +13,7 @@ import java.io.OutputStream
 public class PartiQLValueIonWriter internal constructor(
     private val ionWriter: IonWriter,
 ) : PartiQLValueWriter {
+
     override fun append(value: PartiQLValue): PartiQLValueWriter {
         value.toIon().writeTo(ionWriter)
         return this

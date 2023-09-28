@@ -1291,6 +1291,7 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         private fun convertBinaryOp(token: Token) = when (token.type) {
+            GeneratedParser.AMPERSAND -> Expr.Binary.Op.BITWISE_AND
             GeneratedParser.AND -> Expr.Binary.Op.AND
             GeneratedParser.OR -> Expr.Binary.Op.OR
             GeneratedParser.ASTERISK -> Expr.Binary.Op.TIMES
@@ -1472,6 +1473,10 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitExprTermCurrentUser(ctx: GeneratedParser.ExprTermCurrentUserContext) = translate(ctx) {
             exprSessionAttribute(Expr.SessionAttribute.Attribute.CURRENT_USER)
+        }
+
+        override fun visitExprTermCurrentDate(ctx: org.partiql.parser.antlr.PartiQLParser.ExprTermCurrentDateContext) = translate(ctx) {
+            exprSessionAttribute(Expr.SessionAttribute.Attribute.CURRENT_DATE)
         }
 
         /**

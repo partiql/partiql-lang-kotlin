@@ -137,6 +137,10 @@ enum class ThunkReturnTypeAssertions {
  *
  * @param defaultTimezoneOffset Default timezone offset to be used when TIME WITH TIME ZONE does not explicitly
  * specify the time zone. Defaults to [ZoneOffset.UTC]
+ * @param interruptible specifies whether the compilation and execution of the compiled statement is interruptible. If
+ * set to true, the compilation and execution of statements will check [Thread.interrupted] frequently. If set to
+ * false, the compilation and execution of statements is not guaranteed to be interruptible. It *may* still be interrupted,
+ * however, it is not guaranteed. The default is false.
  */
 @Suppress("DataClassPrivateConstructor")
 data class CompileOptions private constructor (
@@ -146,7 +150,8 @@ data class CompileOptions private constructor (
     val thunkOptions: ThunkOptions = ThunkOptions.standard(),
     val typingMode: TypingMode = TypingMode.LEGACY,
     val typedOpBehavior: TypedOpBehavior = TypedOpBehavior.HONOR_PARAMETERS,
-    val defaultTimezoneOffset: ZoneOffset = ZoneOffset.UTC
+    val defaultTimezoneOffset: ZoneOffset = ZoneOffset.UTC,
+    val interruptible: Boolean = false
 ) {
 
     companion object {
@@ -193,6 +198,7 @@ data class CompileOptions private constructor (
         fun thunkOptions(value: ThunkOptions) = set { copy(thunkOptions = value) }
         fun thunkOptions(build: ThunkOptions.Builder.() -> Unit) = set { copy(thunkOptions = ThunkOptions.build(build)) }
         fun defaultTimezoneOffset(value: ZoneOffset) = set { copy(defaultTimezoneOffset = value) }
+        fun isInterruptible(value: Boolean) = set { copy(interruptible = value) }
 
         private inline fun set(block: CompileOptions.() -> CompileOptions): Builder {
             options = block(options)

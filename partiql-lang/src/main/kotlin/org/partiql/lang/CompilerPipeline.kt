@@ -26,6 +26,7 @@ import org.partiql.lang.eval.ThunkReturnTypeAssertions
 import org.partiql.lang.eval.builtins.SCALAR_BUILTINS_DEFAULT
 import org.partiql.lang.eval.builtins.definitionalBuiltins
 import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
+import org.partiql.lang.eval.impl.CoverageCompiler
 import org.partiql.lang.eval.visitors.PipelinedVisitorTransform
 import org.partiql.lang.eval.visitors.StaticTypeInferenceVisitorTransform
 import org.partiql.lang.eval.visitors.StaticTypeVisitorTransform
@@ -134,6 +135,7 @@ interface CompilerPipeline {
         private val customProcedures: MutableMap<String, StoredProcedure> = HashMap()
         private val preProcessingSteps: MutableList<ProcessingStep> = ArrayList()
         private var globalTypeBindings: Bindings<StaticType>? = null
+        private var withCoverageStatistics: Boolean = false
 
         /**
          * Specifies the [Parser] to be used to turn an PartiQL query into an instance of [PartiqlAst].
@@ -185,6 +187,9 @@ interface CompilerPipeline {
         /** Adds the [Bindings<StaticType>] for global variables. */
         fun globalTypeBindings(bindings: Bindings<StaticType>): Builder = this.apply { this.globalTypeBindings = bindings }
 
+        /** Modifies [CompilerPipeline] to also emit coverage statistics of PartiQL statements. */
+        fun withCoverageStatistics(value: Boolean): Builder = this.apply { this.withCoverageStatistics = value }
+
         /** Builds the actual implementation of [CompilerPipeline]. */
         fun build(): CompilerPipeline {
             val compileOptionsToUse = compileOptions ?: CompileOptions.standard()
@@ -205,6 +210,29 @@ interface CompilerPipeline {
             // built-in functions with the same name.
             val allFunctions = definitionalBuiltins + builtinFunctions + customFunctions
 
+            val compiler: EvaluatingCompiler = when (withCoverageStatistics) {
+                false -> EvaluatingCompiler(
+                    allFunctions,
+                    customDataTypes.map { customType ->
+                        (customType.aliases + customType.name).map { alias ->
+                            Pair(alias.lowercase(), customType.typedOpParameter)
+                        }
+                    }.flatten().toMap(),
+                    customProcedures,
+                    compileOptionsToUse
+                )
+                true -> CoverageCompiler(
+                    allFunctions,
+                    customDataTypes.map { customType ->
+                        (customType.aliases + customType.name).map { alias ->
+                            Pair(alias.lowercase(), customType.typedOpParameter)
+                        }
+                    }.flatten().toMap(),
+                    customProcedures,
+                    compileOptionsToUse
+                )
+            }
+
             return CompilerPipelineImpl(
                 ion = ion,
                 parser = parser ?: PartiQLParserBuilder().customTypes(customDataTypes).build(),
@@ -213,7 +241,8 @@ interface CompilerPipeline {
                 customDataTypes = customDataTypes,
                 procedures = customProcedures,
                 preProcessingSteps = preProcessingSteps,
-                globalTypeBindings = globalTypeBindings
+                globalTypeBindings = globalTypeBindings,
+                compiler = compiler
             )
         }
     }
@@ -227,19 +256,9 @@ internal class CompilerPipelineImpl(
     override val customDataTypes: List<CustomType>,
     override val procedures: Map<String, StoredProcedure>,
     private val preProcessingSteps: List<ProcessingStep>,
-    override val globalTypeBindings: Bindings<StaticType>?
+    override val globalTypeBindings: Bindings<StaticType>?,
+    private val compiler: EvaluatingCompiler
 ) : CompilerPipeline {
-
-    private val compiler = EvaluatingCompiler(
-        functions.values.toList(),
-        customDataTypes.map { customType ->
-            (customType.aliases + customType.name).map { alias ->
-                Pair(alias.lowercase(), customType.typedOpParameter)
-            }
-        }.flatten().toMap(),
-        procedures,
-        compileOptions
-    )
 
     override fun compile(query: String): Expression = compile(parser.parseAstStatement(query))
 
