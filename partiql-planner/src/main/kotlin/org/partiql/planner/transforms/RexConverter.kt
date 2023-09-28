@@ -19,8 +19,6 @@ import org.partiql.planner.typer.toNonNullStaticType
 import org.partiql.planner.typer.toStaticType
 import org.partiql.types.StaticType
 import org.partiql.types.TimeType
-import org.partiql.types.TimestampType
-import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.boolValue
 import org.partiql.value.int32Value
@@ -390,7 +388,7 @@ internal object RexConverter {
         override fun visitExprCast(node: Expr.Cast, ctx: Env): Rex = transform {
             val type = node.asType
             val arg0 = visitExpr(node.value, ctx)
-            when(type) {
+            when (type) {
                 is Type.NullType -> rex(StaticType.NULL, call("cast_null", arg0))
                 is Type.Missing -> rex(StaticType.MISSING, call("cast_missing", arg0))
                 is Type.Bool -> rex(StaticType.BOOL, call("cast_bool", arg0))
@@ -416,7 +414,7 @@ internal object RexConverter {
                 is Type.Date -> rex(StaticType.DATE, call("cast_date", arg0))
                 is Type.Time -> rex(StaticType.TIME, call("cast_time", arg0))
                 is Type.TimeWithTz -> rex(TimeType(null, true), call("cast_timeWithTz", arg0))
-                is Type.Timestamp ->  TODO("Need to rebase main")
+                is Type.Timestamp -> TODO("Need to rebase main")
                 is Type.TimestampWithTz -> rex(StaticType.TIMESTAMP, call("cast_timeWithTz", arg0))
                 is Type.Interval -> TODO("Static Type does not have Interval type")
                 is Type.Bag -> rex(StaticType.BAG, call("cast_bag", arg0))

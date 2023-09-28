@@ -13,7 +13,7 @@ target::{
     },
     '0001': {
       statement: '''
-        SELECT store_sales.ss_wholesale_cost + CAST(10 AS DOUBLE PRECISION) < store_sales.ss_list_price AS x
+        SELECT store_sales.ss_wholesale_cost + CAST(10 AS FLOAT8) < store_sales.ss_list_price AS x
         FROM store_sales AS store_sales
       ''',
     },
@@ -31,6 +31,7 @@ target::{
       // TODO: For the last projection item (CASE-WHEN), the second WHEN should not be able to compare INT32? and STR.
       // TODO: However, this will be addressed when functions are resolved. When this happens, we should assert on the
       // TODO: error message here.
+      // TODO: PartiQL integer literals get type INT (which does not exist in Redshift) causing transpilation to fail
       statement: '''
         SELECT
           store_sales.ss_quantity AS ss_quantity,

@@ -69,7 +69,7 @@ public class RedshiftCalls(private val onProblem: ProblemCallback) : SqlCalls() 
             PartiQLValueType.INT -> {
                 onProblem.error("PartiQL `INT` type (arbitrary precision integer) not supported in Redshift")
                 // this needs a extra safety renaming because int refers to int4 in redshift.
-                exprCast(args[0].expr, typeCustom("Arbitrary Precision Integer"))
+                exprCast(args[0].expr, typeCustom("UNKNOWN"))
             }
             PartiQLValueType.MISSING -> {
                 onProblem.error("PartiQL `MISSING` type not supported in Redshift")
@@ -114,6 +114,8 @@ public class RedshiftCalls(private val onProblem: ProblemCallback) : SqlCalls() 
             PartiQLValueType.BYTE -> TODO("Mapping to VARBYTE(1), do this after supporting parameterized type")
             else -> super.rewriteCast(type, args)
         }
+    }
+
     /**
      * Push the negation down if possible.
      * For example : NOT 1 is NULL -> 1 is NOT NULL.

@@ -157,10 +157,31 @@ suite::{
         }
       }
     },
+    '0004': {
+      statement: '''
+        SELECT s_store_sk FROM
+        tpc_ds.store AS store
+        LEFT JOIN
+        tpc_ds.store_returns AS returns
+        ON s_store_sk = sr_store_sk
+      ''',
+      schema: {
+        type: "bag",
+        items: {
+          type: "struct",
+          fields: [
+            {
+              name: "s_store_sk",
+              type: "string"
+            }
+          ]
+        }
+      }
+    },
     '0005': {
       statement: '''
         SELECT CURRENT_USER, CURRENT_DATE FROM store_sales
-    ''',
+      ''',
       schema: {
         type: "bag",
         items: {

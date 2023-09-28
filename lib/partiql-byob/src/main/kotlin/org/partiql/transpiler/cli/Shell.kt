@@ -14,9 +14,7 @@
 
 package org.partiql.transpiler.cli
 
-import com.amazon.ion.IonWriter
 import com.amazon.ion.system.IonTextWriterBuilder
-import com.amazon.ion.system.IonWriterBuilder
 import com.amazon.ionelement.api.field
 import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.ionStructOf
@@ -34,8 +32,6 @@ import org.jline.utils.AttributedStyle
 import org.jline.utils.AttributedStyle.BOLD
 import org.jline.utils.InfoCmp
 import org.joda.time.Duration
-import org.partiql.ast.sql.SqlBlock
-import org.partiql.ast.sql.SqlLayout
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.test.plugin.FsConnector
 import org.partiql.planner.test.plugin.FsPlugin
@@ -47,7 +43,6 @@ import org.partiql.spi.connector.ConnectorSession
 import org.partiql.transpiler.PartiQLTranspiler
 import org.partiql.transpiler.TpTarget
 import org.partiql.transpiler.TranspilerProblem
-import org.partiql.transpiler.sql.SqlTransform
 import org.partiql.transpiler.targets.partiql.PartiQLTarget
 import org.partiql.transpiler.targets.redshift.RedshiftTarget
 import org.partiql.transpiler.targets.trino.TrinoTarget

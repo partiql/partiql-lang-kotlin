@@ -1,6 +1,5 @@
 package org.partiql.transpiler.targets.redshift
 
-import org.partiql.ast.sql.SqlDialect
 import org.partiql.plan.PartiQLPlan
 import org.partiql.plan.PlanNode
 import org.partiql.plan.Rel
