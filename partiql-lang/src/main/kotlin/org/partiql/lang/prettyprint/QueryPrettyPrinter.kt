@@ -309,6 +309,7 @@ class QueryPrettyPrinter {
             is PartiqlAst.Expr.Times -> writeNAryOperator("*", node.operands, sb, level)
             is PartiqlAst.Expr.Divide -> writeNAryOperator("/", node.operands, sb, level)
             is PartiqlAst.Expr.Modulo -> writeNAryOperator("%", node.operands, sb, level)
+            is PartiqlAst.Expr.BitwiseAnd -> writeNAryOperator("&", node.operands, sb, level)
             is PartiqlAst.Expr.Eq -> writeNAryOperator("=", node.operands, sb, level)
             is PartiqlAst.Expr.Ne -> writeNAryOperator("!=", node.operands, sb, level)
             is PartiqlAst.Expr.Gt -> writeNAryOperator(">", node.operands, sb, level)

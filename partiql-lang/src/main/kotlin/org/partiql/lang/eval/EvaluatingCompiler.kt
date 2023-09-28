@@ -450,6 +450,7 @@ internal open class EvaluatingCompiler(
             is PartiqlAst.Expr.Minus -> compileMinus(expr, metas)
             is PartiqlAst.Expr.Divide -> compileDivide(expr, metas)
             is PartiqlAst.Expr.Modulo -> compileModulo(expr, metas)
+            is PartiqlAst.Expr.BitwiseAnd -> compileBitwiseAnd(expr, metas)
 
             // comparison operators
             is PartiqlAst.Expr.And -> compileAnd(expr, metas)
@@ -740,6 +741,15 @@ internal open class EvaluatingCompiler(
         }
 
         return checkIntegerOverflow(computeThunk, metas)
+    }
+
+    private fun compileBitwiseAnd(expr: PartiqlAst.Expr.BitwiseAnd, metas: MetaContainer): ThunkEnv {
+        val argThunks = compileAstExprs(expr.operands)
+
+        // Bitwise operator will not overflow
+        return thunkFactory.thunkFold(metas, argThunks) { lValue, rValue ->
+            (lValue.longValue() and rValue.longValue()).exprValue()
+        }
     }
 
     internal open fun compileEq(expr: PartiqlAst.Expr.Eq, metas: MetaContainer): ThunkEnv {

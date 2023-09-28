@@ -503,12 +503,12 @@ joinType
  *
  * EXPRESSIONS & PRECEDENCE
  *
- * Precedence Table:
+ * Precedence Table (from highest to lowest precedence)
  * 1. Primary Expressions: Functions, Literals, Paths, Identifiers, etc (ex: a, f(a), 1, a.b, "a")
  * 2. Unary plus, minus (ex: -a, +a)
  * 3. Multiplication, Division, Modulo (ex: a * b)
  * 4. Addition, Subtraction (ex: a + b)
- * 5. Other operators (ex: a || b)
+ * 5. Other operators (ex: a || b, a & b)
  * 6. Predicates (ex: a LIKE b, a < b, a IN b, a = b)
  * 7. IS true/false. Not yet implemented in PartiQL, but defined in SQL-92. (ex: a IS TRUE)
  * 8. NOT (ex: NOT a)
@@ -567,8 +567,10 @@ exprPredicate
     | parent=mathOp00                                                                # PredicateBase
     ;
 
+// TODO : Opreator precedence of BITWISE_AND (&) may change in the future.
+//  SEE: https://github.com/partiql/partiql-docs/issues/50
 mathOp00
-    : lhs=mathOp00 op=CONCAT rhs=mathOp01
+    : lhs=mathOp00 op=(AMPERSAND|CONCAT) rhs=mathOp01
     | parent=mathOp01
     ;
 

@@ -207,3 +207,28 @@ Example
     -- IN HONOR PARAMETER MODE
     CAST(5 as decimal(3,2)) % CAST(2 as DECIMAL(3,2)) -- 1.00
 ```
+
+### Bitwise And
+Performs a bitwise logical AND operation between two integer values.
+
+Syntax
+: `expression & expression`
+
+Example: 
+```sql
+   2 & 6 -- 0010 & 0110 = 0010 = 2
+```
+
+Return Type:
+: If one operand is of `INT` type, returns `INT` type. 
+: Else if one operand is of INT8 type, returns `INT8` type. 
+: Else if one operand is of INT4 type, returns `INT4` type. 
+: Else return `INT2` type. 
+
+Note: 
+: Type precedence of the bitwise operator is lower than the plus/minus operator and higher than the predicates.
+
+```sql
+   2 & 6 + 1 -- 2 & (6 + 1) = 2 & 7 = 2
+   (2 & 6) + 1 -- 2 + 1 = 3    
+```

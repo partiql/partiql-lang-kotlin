@@ -105,6 +105,7 @@ may then be further optimized by selecting better implementations of each operat
             (divide operands::(* expr 2))
             (modulo operands::(* expr 2))
             (concat operands::(* expr 2))
+            (bitwise_and operands::(* expr 2))
 
             // Logical operators
             (and operands::(* expr 2))

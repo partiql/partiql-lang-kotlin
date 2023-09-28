@@ -623,6 +623,11 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
                 true -> computeReturnTypeForNAry(args, PlanTyper::inferBinaryArithmeticOp)
                 false -> StaticType.NUMERIC // continuation type to prevent incompatible types and unknown errors from propagating
             }
+            Rex.Binary.Op.BITWISE_AND -> when (hasValidOperandTypes(args, node.op.name, ctx) { it is IntType }) {
+                true -> computeReturnTypeForNAry(args, PlanTyper::inferBinaryArithmeticOp)
+                false -> StaticType.unionOf(StaticType.INT2, StaticType.INT4, StaticType.INT8, StaticType.INT) // continuation type to prevent incompatible types and unknown errors from propagating
+            }
+
             Rex.Binary.Op.CONCAT -> when (hasValidOperandTypes(args, node.op.name, ctx) { it.isText() }) {
                 true -> computeReturnTypeForNAry(args, PlanTyper::inferConcatOp)
                 false -> StaticType.STRING // continuation type to prevent incompatible types and unknown errors from propagating

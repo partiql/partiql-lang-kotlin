@@ -380,6 +380,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
             Expr.Binary.Op.GTE -> gte(operands, metas)
             Expr.Binary.Op.LT -> lt(operands, metas)
             Expr.Binary.Op.LTE -> lte(operands, metas)
+            Expr.Binary.Op.BITWISE_AND -> bitwiseAnd(operands, metas)
         }
     }
 

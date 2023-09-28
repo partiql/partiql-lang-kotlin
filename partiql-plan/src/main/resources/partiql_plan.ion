@@ -202,7 +202,7 @@ rex::[
     lhs: rex,
     rhs: rex,
     op: [
-      PLUS, MINUS, TIMES, DIV, MODULO, CONCAT,
+      PLUS, MINUS, TIMES, DIV, MODULO, CONCAT, BITWISE_AND,
       AND, OR,
       EQ, NEQ, GTE, GT, LT, LTE,
     ],

@@ -1337,6 +1337,7 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         private fun convertBinaryOp(token: Token) = when (token.type) {
+            GeneratedParser.AMPERSAND -> Expr.Binary.Op.BITWISE_AND
             GeneratedParser.AND -> Expr.Binary.Op.AND
             GeneratedParser.OR -> Expr.Binary.Op.OR
             GeneratedParser.ASTERISK -> Expr.Binary.Op.TIMES
