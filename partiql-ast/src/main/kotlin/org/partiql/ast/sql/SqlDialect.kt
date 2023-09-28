@@ -204,6 +204,7 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
             Expr.Binary.Op.GTE -> ">="
             Expr.Binary.Op.LT -> "<"
             Expr.Binary.Op.LTE -> "<="
+            Expr.Binary.Op.BITWISE_AND -> "&"
         }
         var h = head
         h = visitExpr(node.lhs, h)

@@ -26,6 +26,8 @@ import org.partiql.types.BagType
 import org.partiql.types.ListType
 import org.partiql.types.StaticType
 import org.partiql.types.StaticType.Companion.INT
+import org.partiql.types.StaticType.Companion.MISSING
+import org.partiql.types.StaticType.Companion.NULL
 import org.partiql.types.StaticType.Companion.STRING
 import org.partiql.types.StaticType.Companion.unionOf
 import org.partiql.types.StructType
@@ -1066,6 +1068,95 @@ class PartiQLSchemaInferencerTests {
                                 STRING,
                             ),
                             Rex.Binary.Op.PLUS.name
+                        )
+                    )
+                }
+            ),
+            SuccessTestCase(
+                name = "BITWISE_AND_1",
+                query = "1 & 2",
+                expected = StaticType.INT
+            ),
+            // casting to a parameterized type produced Missing.
+            SuccessTestCase(
+                name = "BITWISE_AND_2",
+                query = "CAST(1 AS INT2) & CAST(2 AS INT2)",
+                expected = StaticType.unionOf(StaticType.INT2, MISSING)
+            ),
+            SuccessTestCase(
+                name = "BITWISE_AND_3",
+                query = "CAST(1 AS INT4) & CAST(2 AS INT4)",
+                expected = StaticType.unionOf(StaticType.INT4, MISSING)
+            ),
+            SuccessTestCase(
+                name = "BITWISE_AND_4",
+                query = "CAST(1 AS INT8) & CAST(2 AS INT8)",
+                expected = StaticType.unionOf(StaticType.INT8, MISSING)
+            ),
+            SuccessTestCase(
+                name = "BITWISE_AND_5",
+                query = "CAST(1 AS INT2) & CAST(2 AS INT4)",
+                expected = StaticType.unionOf(StaticType.INT4, MISSING)
+            ),
+            SuccessTestCase(
+                name = "BITWISE_AND_6",
+                query = "CAST(1 AS INT2) & CAST(2 AS INT8)",
+                expected = StaticType.unionOf(StaticType.INT8, MISSING)
+            ),
+            SuccessTestCase(
+                name = "BITWISE_AND_7",
+                query = "CAST(1 AS INT2) & 2",
+                expected = StaticType.unionOf(StaticType.INT, MISSING)
+            ),
+            SuccessTestCase(
+                name = "BITWISE_AND_8",
+                query = "CAST(1 AS INT4) & CAST(2 AS INT8)",
+                expected = StaticType.unionOf(StaticType.INT8, MISSING)
+            ),
+            SuccessTestCase(
+                name = "BITWISE_AND_9",
+                query = "CAST(1 AS INT4) & 2",
+                expected = StaticType.unionOf(StaticType.INT, MISSING)
+            ),
+            SuccessTestCase(
+                name = "BITWISE_AND_10",
+                query = "CAST(1 AS INT8) & 2",
+                expected = StaticType.unionOf(StaticType.INT, MISSING)
+            ),
+            ErrorTestCase(
+                name = "BITWISE_AND_NULL_OPERAND",
+                query = "1 & NULL",
+                expected = StaticType.NULL,
+                problemHandler = assertProblemExists {
+                    Problem(
+                        UNKNOWN_PROBLEM_LOCATION,
+                        SemanticProblemDetails.ExpressionAlwaysReturnsNullOrMissing
+                    )
+                }
+            ),
+            ErrorTestCase(
+                name = "BITWISE_AND_MISSING_OPERAND",
+                query = "1 & MISSING",
+                expected = StaticType.MISSING,
+                problemHandler = assertProblemExists {
+                    Problem(
+                        UNKNOWN_PROBLEM_LOCATION,
+                        SemanticProblemDetails.ExpressionAlwaysReturnsNullOrMissing
+                    )
+                }
+            ),
+            ErrorTestCase(
+                name = "BITWISE_AND_NON_INT_OPERAND",
+                query = "1 & 'NOT AN INT'",
+                expected = StaticType.MISSING,
+                problemHandler = assertProblemExists {
+                    Problem(
+                        UNKNOWN_PROBLEM_LOCATION,
+                        SemanticProblemDetails.IncompatibleDatatypesForOp(
+                            listOf(
+                                INT, STRING
+                            ),
+                            Rex.Binary.Op.BITWISE_AND.name
                         )
                     )
                 }
