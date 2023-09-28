@@ -54,6 +54,9 @@ class FsConnector(
 
     private val metadata = Metadata(catalogRoot)
 
+    // not yet defined in SPI
+    public fun listObjects(): List<BindingPath> = metadata.listObjects()
+
     override fun getMetadata(session: ConnectorSession): ConnectorMetadata = metadata
 
     class Factory(private val root: Path) : Connector.Factory {
@@ -85,5 +88,7 @@ class FsConnector(
                 value = value,
             )
         }
+
+        internal fun listObjects(): List<BindingPath> = catalog.listObjects()
     }
 }

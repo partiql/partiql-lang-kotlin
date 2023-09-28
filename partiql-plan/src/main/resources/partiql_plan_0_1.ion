@@ -109,7 +109,6 @@ rex::{
     },
 
     case::{
-      rex:      rex,
       branches: list::[branch],
       _: [
         branch::{
@@ -183,7 +182,9 @@ rex::{
       ],
     },
 
-    err::{},
+    err::{
+      message: string,
+    },
   ],
 }
 
@@ -267,26 +268,12 @@ rel::{
     join::{
       lhs: rel,
       rhs: rel,
+      rex: rex, // The Join Expression (required) (can be set to TRUE)
       type: [
-        cross::{},
-        equi::{
-          capture: capture,
-        },
-        theta::{
-          capture: capture,
-          rex: rex,
-        },
-      ],
-      _: [
-        capture::[
-          INNER,
-          LEFT,
-          LEFT_OUTER,
-          RIGHT,
-          RIGHT_OUTER,
-          FULL,
-          FULL_OUTER,
-        ],
+        INNER, // Inner Join
+        LEFT,  // Left Outer Join
+        RIGHT, // Right Outer Join
+        FULL   // Full Outer Join
       ],
     },
 

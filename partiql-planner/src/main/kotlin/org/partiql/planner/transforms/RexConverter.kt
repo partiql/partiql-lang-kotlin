@@ -4,9 +4,12 @@ import org.partiql.ast.AstNode
 import org.partiql.ast.DatetimeField
 import org.partiql.ast.Expr
 import org.partiql.ast.Select
+import org.partiql.ast.Type
 import org.partiql.ast.visitor.AstBaseVisitor
 import org.partiql.plan.Identifier
 import org.partiql.plan.Plan
+import org.partiql.plan.Plan.rex
+import org.partiql.plan.Plan.rexOpLit
 import org.partiql.plan.PlanNode
 import org.partiql.plan.Rex
 import org.partiql.plan.builder.PlanFactory
@@ -15,9 +18,12 @@ import org.partiql.planner.Env
 import org.partiql.planner.typer.toNonNullStaticType
 import org.partiql.planner.typer.toStaticType
 import org.partiql.types.StaticType
+import org.partiql.types.TimeType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.boolValue
+import org.partiql.value.int32Value
 import org.partiql.value.int64Value
+import org.partiql.value.nullValue
 import org.partiql.value.symbolValue
 
 /**
@@ -130,17 +136,28 @@ internal object RexConverter {
                 null -> bool(true) // match `true`
                 else -> visitExpr(node.expr!!, context) // match `rex
             }
+
+            // Converts AST CASE (x) WHEN y THEN z --> Plan CASE WHEN x = y THEN z
+            val id = identifierSymbol(Expr.Binary.Op.EQ.name.lowercase(), Identifier.CaseSensitivity.SENSITIVE)
+            val fn = fnUnresolved(id)
+            val createBranch: (Rex, Rex) -> Rex.Op.Case.Branch = { condition: Rex, result: Rex ->
+                val op = rexOpCall(fn.copy(), listOf(rex, condition))
+                val updatedCondition = rex(type, op)
+                rexOpCaseBranch(updatedCondition, result)
+            }
+
             val branches = node.branches.map {
                 val branchCondition = visitExpr(it.condition, context)
                 val branchRex = visitExpr(it.expr, context)
-                rexOpCaseBranch(branchCondition, branchRex)
+                createBranch(branchCondition, branchRex)
             }.toMutableList()
-            if (node.default != null) {
-                val defaultCondition = bool(true)
-                val defaultRex = visitExpr(node.default!!, context)
-                branches += rexOpCaseBranch(defaultCondition, defaultRex)
+
+            val defaultRex = when (val default = node.default) {
+                null -> rex(type = StaticType.NULL, op = rexOpLit(value = nullValue()))
+                else -> visitExpr(default, context)
             }
-            val op = rexOpCase(rex, branches)
+            branches += rexOpCaseBranch(bool(true), defaultRex)
+            val op = rexOpCase(branches)
             rex(type, op)
         }
 
@@ -226,8 +243,59 @@ internal object RexConverter {
             rex(type, call)
         }
 
+        /**
+         * <arg0> IS <NOT>? <type>
+         */
         override fun visitExprIsType(node: Expr.IsType, ctx: Env) = transform {
-            TODO("SQL Special Form is_type")
+            val type = StaticType.BOOL
+            // arg
+            val arg0 = visitExpr(node.value, ctx)
+
+            var call = when (val targetType = node.type) {
+                is Type.NullType -> call("is_null", arg0)
+                is Type.Missing -> call("is_missing", arg0)
+                is Type.Bool -> call("is_bool", arg0)
+                is Type.Tinyint -> call("is_int8", arg0)
+                is Type.Smallint, is Type.Int2 -> call("is_int16", arg0)
+                is Type.Int4 -> call("is_int32", arg0)
+                is Type.Bigint, is Type.Int8 -> call("is_int64", arg0)
+                is Type.Int -> call("is_int", arg0)
+                is Type.Real -> call("is_real", arg0)
+                is Type.Float32 -> call("is_float32", arg0)
+                is Type.Float64 -> call("is_float64", arg0)
+                is Type.Decimal -> call("is_decimal", targetType.precision.toRex(), targetType.scale.toRex(), arg0)
+                is Type.Numeric -> call("is_numeric", targetType.precision.toRex(), targetType.scale.toRex(), arg0)
+                is Type.Char -> call("is_char", targetType.length.toRex(), arg0)
+                is Type.Varchar -> call("is_varchar", targetType.length.toRex(), arg0)
+                is Type.String -> call("is_string", targetType.length.toRex(), arg0)
+                is Type.Symbol -> call("is_symbol", arg0)
+                is Type.Bit -> call("is_bit", arg0)
+                is Type.BitVarying -> call("is_bitVarying", arg0)
+                is Type.ByteString -> call("is_byteString", arg0)
+                is Type.Blob -> call("is_blob", arg0)
+                is Type.Clob -> call("is_clob", arg0)
+                is Type.Date -> call("is_date", arg0)
+                is Type.Time -> call("is_time", arg0)
+                // TODO: DO we want to seperate with time zone vs without time zone into two different type in the plan?
+                //  leave the parameterized type out for now until the above is answered
+                is Type.TimeWithTz -> call("is_timeWithTz", arg0)
+                is Type.Timestamp -> call("is_timestamp", arg0)
+                is Type.TimestampWithTz -> call("is_timestampWithTz", arg0)
+                is Type.Interval -> call("is_interval", arg0)
+                is Type.Bag -> call("is_bag", arg0)
+                is Type.List -> call("is_list", arg0)
+                is Type.Sexp -> call("is_sexp", arg0)
+                is Type.Tuple -> call("is_tuple", arg0)
+                is Type.Struct -> call("is_struct", arg0)
+                is Type.Any -> call("is_any", arg0)
+                is Type.Custom -> call("is_custom", arg0)
+            }
+
+            if (node.not == true) {
+                call = negate(call)
+            }
+
+            rex(type, call)
         }
 
         override fun visitExprCoalesce(node: Expr.Coalesce, ctx: Env): Rex = transform {
@@ -316,8 +384,47 @@ internal object RexConverter {
             TODO("SQL Special Form EXTRACT")
         }
 
-        override fun visitExprCast(node: Expr.Cast, ctx: Env): Rex {
-            TODO("SQL Special Form CAST")
+        // TODO: Ignoring type parameter now
+        override fun visitExprCast(node: Expr.Cast, ctx: Env): Rex = transform {
+            val type = node.asType
+            val arg0 = visitExpr(node.value, ctx)
+            when (type) {
+                is Type.NullType -> rex(StaticType.NULL, call("cast_null", arg0))
+                is Type.Missing -> rex(StaticType.MISSING, call("cast_missing", arg0))
+                is Type.Bool -> rex(StaticType.BOOL, call("cast_bool", arg0))
+                is Type.Tinyint -> TODO("Static Type does not have TINYINT type")
+                is Type.Smallint, is Type.Int2 -> rex(StaticType.INT2, call("cast_int16", arg0))
+                is Type.Int4 -> rex(StaticType.INT4, call("cast_int32", arg0))
+                is Type.Bigint, is Type.Int8 -> rex(StaticType.INT8, call("cast_int64", arg0))
+                is Type.Int -> rex(StaticType.INT, call("cast_int", arg0))
+                is Type.Real -> TODO("Static Type does not have REAL type")
+                is Type.Float32 -> TODO("Static Type does not have FLOAT32 type")
+                is Type.Float64 -> rex(StaticType.FLOAT, call("cast_float64", arg0))
+                is Type.Decimal -> rex(StaticType.DECIMAL, call("cast_decimal", arg0))
+                is Type.Numeric -> rex(StaticType.DECIMAL, call("cast_numeric", arg0))
+                is Type.Char -> rex(StaticType.CHAR, call("cast_char", arg0))
+                is Type.Varchar -> rex(StaticType.STRING, call("cast_varchar", arg0))
+                is Type.String -> rex(StaticType.STRING, call("cast_string", arg0))
+                is Type.Symbol -> rex(StaticType.SYMBOL, call("cast_symbol", arg0))
+                is Type.Bit -> TODO("Static Type does not have Bit type")
+                is Type.BitVarying -> TODO("Static Type does not have BitVarying type")
+                is Type.ByteString -> TODO("Static Type does not have ByteString type")
+                is Type.Blob -> rex(StaticType.BLOB, call("cast_blob", arg0))
+                is Type.Clob -> rex(StaticType.CLOB, call("cast_clob", arg0))
+                is Type.Date -> rex(StaticType.DATE, call("cast_date", arg0))
+                is Type.Time -> rex(StaticType.TIME, call("cast_time", arg0))
+                is Type.TimeWithTz -> rex(TimeType(null, true), call("cast_timeWithTz", arg0))
+                is Type.Timestamp -> TODO("Need to rebase main")
+                is Type.TimestampWithTz -> rex(StaticType.TIMESTAMP, call("cast_timeWithTz", arg0))
+                is Type.Interval -> TODO("Static Type does not have Interval type")
+                is Type.Bag -> rex(StaticType.BAG, call("cast_bag", arg0))
+                is Type.List -> rex(StaticType.LIST, call("cast_list", arg0))
+                is Type.Sexp -> rex(StaticType.SEXP, call("cast_sexp", arg0))
+                is Type.Tuple -> rex(StaticType.STRUCT, call("cast_tuple", arg0))
+                is Type.Struct -> rex(StaticType.STRUCT, call("cast_struct", arg0))
+                is Type.Any -> rex(StaticType.ANY, call("cast_any", arg0))
+                is Type.Custom -> TODO("Custom type not supported ")
+            }
         }
 
         override fun visitExprCanCast(node: Expr.CanCast, ctx: Env): Rex {
@@ -417,5 +524,9 @@ internal object RexConverter {
             val fn = fnUnresolved(id)
             return rexOpCall(fn, args.toList())
         }
+
+        private fun Int?.toRex() = rex(StaticType.INT4, rexOpLit(int32Value(this)))
+
+        private fun Boolean?.toRex() = rex(StaticType.BOOL, rexOpLit(boolValue(this)))
     }
 }

@@ -2,6 +2,8 @@ package org.partiql.planner.test.plugin
 
 import com.amazon.ionelement.api.loadSingleElement
 import org.partiql.planner.test.toStaticType
+import org.partiql.spi.BindingCase
+import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
 import org.partiql.types.StaticType
 import java.io.File
@@ -41,6 +43,26 @@ public class FsCatalog private constructor(private val root: FsTree.D) {
             return FsObject(match, curr.type)
         }
         return null
+    }
+
+    public fun listObjects(): List<BindingPath> = sequence { search(emptyList(), root) }.toList()
+
+    private suspend fun SequenceScope<BindingPath>.search(acc: List<BindingName>, node: FsTree) =
+        when (node) {
+            is FsTree.D -> search(acc, node)
+            is FsTree.T -> search(acc, node)
+        }
+
+    private suspend fun SequenceScope<BindingPath>.search(acc: List<BindingName>, node: FsTree.D) {
+        val steps = acc + BindingName(node.name, BindingCase.INSENSITIVE)
+        for (child in node.children) {
+            search(steps, child)
+        }
+    }
+
+    private suspend fun SequenceScope<BindingPath>.search(acc: List<BindingName>, node: FsTree.T) {
+        val steps = acc + BindingName(node.name, BindingCase.INSENSITIVE)
+        this.yield(BindingPath(steps))
     }
 
     companion object {

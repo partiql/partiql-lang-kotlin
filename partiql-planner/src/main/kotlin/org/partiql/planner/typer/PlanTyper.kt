@@ -76,7 +76,7 @@ internal class PlanTyper(
      */
     private inner class RelTyper(private val outer: TypeEnv) : PlanRewriter<Rel.Type?>() {
 
-        override fun visitRel(node: Rel, ctx: Rel.Type?) = visitRelOp(node.op, node.type) as Rel
+        override fun visitRel(node: Rel, ctx: Rel.Type?) = super.visitRelOp(node.op, node.type) as Rel
 
         /**
          * The output schema of a `rel.op.scan` is the single value binding.
@@ -192,20 +192,19 @@ internal class PlanTyper(
             rel(type, op)
         }
 
-        override fun visitRelOpJoin(node: Rel.Op.Join, ctx: Rel.Type?): Rel {
-            TODO("Type RelOp Join")
-        }
+        override fun visitRelOpJoin(node: Rel.Op.Join, ctx: Rel.Type?): Rel = rewrite {
+            // Rewrite LHS and RHS
+            val lhs = visitRel(node.lhs, ctx)
+            val rhs = visitRel(node.rhs, ctx)
 
-        override fun visitRelOpJoinTypeCross(node: Rel.Op.Join.Type.Cross, ctx: Rel.Type?): Rel {
-            TODO("Type RelOp Cross")
-        }
-
-        override fun visitRelOpJoinTypeEqui(node: Rel.Op.Join.Type.Equi, ctx: Rel.Type?): Rel {
-            TODO("Type RelOp Equi")
-        }
-
-        override fun visitRelOpJoinTypeTheta(node: Rel.Op.Join.Type.Theta, ctx: Rel.Type?): Rel {
-            TODO("Type RelOp Theta")
+            // Return with Projections
+            val newCtx = relType(
+                schema = lhs.type.schema.map { relBinding(it.name, it.type) } + rhs.type.schema.map { relBinding(it.name, it.type) },
+                props = ctx!!.props
+            )
+            val condition = node.rex.type(TypeEnv(newCtx.schema, ResolutionStrategy.LOCAL))
+            val op = relOpJoin(lhs, rhs, condition, node.type)
+            rel(newCtx, op)
         }
 
         override fun visitRelOpAggregate(node: Rel.Op.Aggregate, ctx: Rel.Type?): Rel {
@@ -232,7 +231,7 @@ internal class PlanTyper(
     @OptIn(PartiQLValueExperimental::class)
     private inner class RexTyper(private val locals: TypeEnv) : PlanRewriter<StaticType?>() {
 
-        override fun visitRex(node: Rex, ctx: StaticType?): Rex = visitRexOp(node.op, node.type) as Rex
+        override fun visitRex(node: Rex, ctx: StaticType?): Rex = super.visitRexOp(node.op, node.type) as Rex
 
         override fun visitRexOpLit(node: Rex.Op.Lit, ctx: StaticType?): Rex = rewrite {
             // type comes from RexConverter
@@ -338,23 +337,27 @@ internal class PlanTyper(
                 }
                 is FnMatch.Error -> {
                     handleUnknownFunction(match)
-                    rex(StaticType.NULL_OR_MISSING, rexOpErr())
+                    rex(StaticType.NULL_OR_MISSING, rexOpErr("Unknown function $fn"))
                 }
             }
         }
 
-        override fun visitRexOpCase(node: Rex.Op.Case, ctx: StaticType?): Rex {
-            TODO("Type RexOpCase")
+        override fun visitRexOpCase(node: Rex.Op.Case, ctx: StaticType?): Rex = rewrite {
+            val visitedBranches = node.branches.map { visitRexOpCaseBranch(it, null) }
+            val resultTypes = visitedBranches.map { it.rex }.map { it.type }
+            rex(AnyOfType(resultTypes.toSet()).flatten(), node.copy(branches = visitedBranches))
         }
 
-        override fun visitRexOpCaseBranch(node: Rex.Op.Case.Branch, ctx: StaticType?): Rex {
-            TODO("Type RexOpCaseBranch")
+        override fun visitRexOpCaseBranch(node: Rex.Op.Case.Branch, ctx: StaticType?): Rex.Op.Case.Branch {
+            val visitedCondition = visitRex(node.condition, null)
+            val visitedReturn = visitRex(node.rex, null)
+            return node.copy(condition = visitedCondition, rex = visitedReturn)
         }
 
         override fun visitRexOpCollection(node: Rex.Op.Collection, ctx: StaticType?): Rex = rewrite {
             if (ctx!! !is CollectionType) {
                 handleUnexpectedType(ctx, setOf(StaticType.LIST, StaticType.BAG, StaticType.SEXP))
-                return rex(StaticType.NULL_OR_MISSING, rexOpErr())
+                return rex(StaticType.NULL_OR_MISSING, rexOpErr("Expected collection type"))
             }
             val values = node.values.map { visitRex(it, null) }
             val t = values.toUnionType()
