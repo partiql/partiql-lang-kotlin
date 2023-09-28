@@ -2,6 +2,7 @@ package org.partiql.lang.planner.transforms
 
 import org.partiql.errors.ProblemHandler
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.errors.ProblemThrower
 import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.TypedOpBehavior
 import org.partiql.lang.eval.visitors.AggregationVisitorTransform
@@ -25,7 +26,8 @@ object AstToPlan {
     /**
      * Converts a PartiqlAst.Statement to a [PartiQLPlan]
      */
-    fun transform(statement: PartiqlAst.Statement, problemHandler: ProblemHandler): PartiQLPlan {
+    @JvmOverloads
+    fun transform(statement: PartiqlAst.Statement, problemHandler: ProblemHandler = ProblemThrower()): PartiQLPlan {
         val ast = statement.normalize()
         if (ast !is PartiqlAst.Statement.Query) {
             unsupported(ast)
