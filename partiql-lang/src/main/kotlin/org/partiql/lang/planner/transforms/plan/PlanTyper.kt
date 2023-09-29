@@ -345,7 +345,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
         }
         val resultType = when (type) {
             is StructType -> {
-                if (type.contentClosed && type.fields.size == 1) {
+                if (StaticTypeUtils.isClosedSafe(type) == true && type.fields.size == 1) {
                     type.fields[0].value
                 } else {
                     handleCoercionError(ctx, type)

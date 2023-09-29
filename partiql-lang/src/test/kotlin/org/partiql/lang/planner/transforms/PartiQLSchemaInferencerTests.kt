@@ -1064,10 +1064,20 @@ class PartiQLSchemaInferencerTests {
                         (SELECT identifier FROM aws.ddb.b) AS some_str,                         -- identifier is STRING
                         ('hello' || (SELECT identifier FROM aws.ddb.b)) AS concat_str,          -- identifier is STRING
                         (1 < (SELECT id FROM aws.ddb.pets)) AS one_lt_id,                       -- id is INT
+                        (1 > (SELECT id FROM aws.ddb.pets)) AS one_gt_id,                       -- id is INT
+                        (1 <= (SELECT id FROM aws.ddb.pets)) AS one_lte_id,                     -- id is INT
+                        (1 >= (SELECT id FROM aws.ddb.pets)) AS one_gte_id,                     -- id is INT
+                        (1 = (SELECT id FROM aws.ddb.pets)) AS one_eq_id,                       -- id is INT
+                        (1 != (SELECT id FROM aws.ddb.pets)) AS one_ne_id,                      -- id is INT
                         ((SELECT id FROM aws.ddb.pets) > 1) AS id_gt_one,                       -- id is INT
                         (1 IN (SELECT id FROM aws.ddb.pets)) AS one_in_ids,                     -- id is INT
                         ([1, 2] IN (SELECT id, id + 1 FROM aws.ddb.pets)) AS array_in_ids,      -- id is INT
-                        ([1, 2] <= (SELECT id, id + 1 FROM aws.ddb.pets)) AS lit_array_lte_ids  -- id is INT
+                        ([1, 2] <= (SELECT id, id + 1 FROM aws.ddb.pets)) AS lit_array_lte_ids, -- id is INT
+                        ([1, 2] < (SELECT id, id + 1 FROM aws.ddb.pets)) AS lit_array_lt_ids,   -- id is INT
+                        ([1, 2] >= (SELECT id, id + 1 FROM aws.ddb.pets)) AS lit_array_gte_ids, -- id is INT
+                        ([1, 2] > (SELECT id, id + 1 FROM aws.ddb.pets)) AS lit_array_gt_ids,   -- id is INT
+                        ([1, 2] = (SELECT id, id + 1 FROM aws.ddb.pets)) AS lit_array_eq_ids,   -- id is INT
+                        ([1, 2] != (SELECT id, id + 1 FROM aws.ddb.pets)) AS lit_array_ne_ids   -- id is INT
                     FROM
                         << 0, 1, 2 >> AS t
                 """.trimIndent(),
@@ -1077,10 +1087,20 @@ class PartiQLSchemaInferencerTests {
                             StructType.Field("some_str", STRING),
                             StructType.Field("concat_str", STRING),
                             StructType.Field("one_lt_id", BOOL),
+                            StructType.Field("one_gt_id", BOOL),
+                            StructType.Field("one_lte_id", BOOL),
+                            StructType.Field("one_gte_id", BOOL),
+                            StructType.Field("one_eq_id", BOOL),
+                            StructType.Field("one_ne_id", BOOL),
                             StructType.Field("id_gt_one", BOOL),
                             StructType.Field("one_in_ids", BOOL),
                             StructType.Field("array_in_ids", BOOL),
                             StructType.Field("lit_array_lte_ids", BOOL),
+                            StructType.Field("lit_array_lt_ids", BOOL),
+                            StructType.Field("lit_array_gte_ids", BOOL),
+                            StructType.Field("lit_array_gt_ids", BOOL),
+                            StructType.Field("lit_array_eq_ids", BOOL),
+                            StructType.Field("lit_array_ne_ids", BOOL),
                         ),
                         contentClosed = true,
                         constraints = setOf(

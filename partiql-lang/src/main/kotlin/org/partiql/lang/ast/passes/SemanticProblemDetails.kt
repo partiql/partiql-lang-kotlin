@@ -29,13 +29,6 @@ sealed class SemanticProblemDetails(override val severity: ProblemSeverity, val 
         }
     )
 
-    data class UnimplementedError(val feature: String) : SemanticProblemDetails(
-        severity = ProblemSeverity.ERROR,
-        messageFormatter = {
-            "The feature ($feature) is unimplemented."
-        }
-    )
-
     object DuplicateAliasesInSelectListItem :
         SemanticProblemDetails(
             severity = ProblemSeverity.ERROR,
