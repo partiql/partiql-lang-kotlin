@@ -8,9 +8,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Adds overridden `toString()` method for Sprout-generated code.
-- Adds CURRENT_DATE session variable to PartiQL.g4 and PartiQLParser
-- Adds configurable AST to SQL pretty printer. Usage in Java `AstKt.sql(ast)` or in Kotlin `ast.sql()`.
 
 ### Changed
 
@@ -28,9 +25,12 @@ Thank you to all who have contributed!
 
 -->
 
-## [Unreleased]
+## [0.13.2]
 
 ### Added
+- Adds overridden `toString()` method for Sprout-generated code.
+- Adds CURRENT_DATE session variable to PartiQL.g4 and PartiQLParser
+- Adds configurable AST to SQL pretty printer. Usage in Java `AstKt.sql(ast)` or in Kotlin `ast.sql()`.
 - Support parsing, planning, and evaluation of Bitwise AND operator (&).
   - The Bitwise And Operator only works for integer operands.
   - The operator precedence may change based on the pending operator precedence [RFC](https://github.com/partiql/partiql-docs/issues/50).
@@ -54,6 +54,9 @@ Thank you to all who have contributed!
 ### Contributors
 Thank you to all who have contributed!
 - @johnedquinn
+- @RCHowell
+- @yliuuuu
+- @alanca98
 
 ## [0.13.1] - 2023-09-19
 
