@@ -1201,7 +1201,7 @@ class PartiQLSchemaInferencerTests {
                 )
             ),
             SuccessTestCase(
-                name = "EXCLUDE SELECT star collection index as last element",
+                name = "EXCLUDE SELECT star collection index as last step",
                 query = """SELECT *
                     EXCLUDE
                         t.a.b.c[0]
@@ -1232,6 +1232,27 @@ class PartiQLSchemaInferencerTests {
                                 constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
                             ),
                             "foo" to StaticType.STRING
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                    )
+                )
+            ),
+            // EXCLUDE regression test (behavior subject to change pending RFC)
+            SuccessTestCase(
+                name = "EXCLUDE SELECT star collection wildcard as last step",
+                query = """SELECT *
+                    EXCLUDE
+                        t.a[*]
+                    FROM [{
+                        'a': [0, 1, 2]
+                    }] AS t""",
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "a" to ListType(
+                                elementType = StaticType.INT // empty list but still preserve typing information
+                            )
                         ),
                         contentClosed = true,
                         constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
@@ -1949,30 +1970,109 @@ class PartiQLSchemaInferencerTests {
                     )
                 )
             ),
-            // EXCLUDE regression test (behavior subject to change pending RFC)
-            ErrorTestCase(
-                name = "invalid exclude union of types",
-                query = """SELECT * EXCLUDE t.a[*]
+            // EXCLUDE regression test (behavior subject to change pending RFC); could give error/warning
+            SuccessTestCase(
+                name = "exclude union of types",
+                query = """SELECT t EXCLUDE t.a.b
                     FROM <<
                         {
-                            'a': {                  -- `a` is a struct here
-                                'b': {
-                                    'c': 0,
-                                    'd': 'foo'
-                                }
+                            'a': {
+                                'b': 1,    -- `b` to be excluded
+                                'c': 'foo'
                             }
                         },
                         {
-                            'a': [                  -- `a` is a list here
-                                {
-                                    'c': 0,
-                                    'd': 'foo'
-                                }
-                            ]
+                            'a': NULL
                         }
                     >> AS t""",
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "t" to StaticType.unionOf(
+                                StructType(
+                                    fields = mapOf(
+                                        "a" to StructType(
+                                            fields = mapOf(
+                                                "c" to StaticType.STRING
+                                            ),
+                                            contentClosed = true,
+                                            constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                        )
+                                    ),
+                                    contentClosed = true,
+                                    constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                ),
+                                StructType(
+                                    fields = mapOf(
+                                        "a" to StaticType.NULL
+                                    ),
+                                    contentClosed = true,
+                                    constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                ),
+                            )
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                    )
+                )
             ),
-            ErrorTestCase(
+            // EXCLUDE regression test (behavior subject to change pending RFC); could give error/warning
+            SuccessTestCase(
+                name = "exclude union of types nullable nested type",
+                query = """SELECT t EXCLUDE t.a.b
+                    FROM <<
+                        {
+                            'a': {
+                                'b': 1,    -- `b` to be excluded
+                                'c': 'foo'
+                            }
+                        },
+                        {
+                            'a': {
+                                'b': 1,    -- `b` to be excluded
+                                'c': NULL
+                            }
+                        }
+                    >> AS t""",
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "t" to StaticType.unionOf(
+                                StructType(
+                                    fields = mapOf(
+                                        "a" to StructType(
+                                            fields = mapOf(
+                                                "c" to StaticType.STRING
+                                            ),
+                                            contentClosed = true,
+                                            constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                        )
+                                    ),
+                                    contentClosed = true,
+                                    constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                ),
+                                StructType(
+                                    fields = mapOf(
+                                        "a" to StructType(
+                                            fields = mapOf(
+                                                "c" to StaticType.NULL
+                                            ),
+                                            contentClosed = true,
+                                            constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                        )
+                                    ),
+                                    contentClosed = true,
+                                    constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                ),
+                            )
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                    )
+                )
+            ),
+            // EXCLUDE regression test (behavior subject to change pending RFC); could give error/warning
+            SuccessTestCase(
                 name = "invalid exclude collection wildcard",
                 query = """SELECT * EXCLUDE t.a[*]
                     FROM <<
@@ -1985,14 +2085,31 @@ class PartiQLSchemaInferencerTests {
                             }
                         }
                     >> AS t""",
-                problemHandler = assertProblemExists {
-                    Problem(
-                        UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.InvalidExcludeExpr
+                expected = BagType(
+                    elementType = StructType(
+                        fields = mapOf(
+                            "a" to StructType(
+                                fields = mapOf(
+                                    "b" to StructType(
+                                        fields = mapOf(
+                                            "c" to StaticType.INT,
+                                            "d" to StaticType.STRING
+                                        ),
+                                        contentClosed = true,
+                                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                    )
+                                ),
+                                contentClosed = true,
+                                constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                            )
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
                     )
-                }
+                )
             ),
-            ErrorTestCase(
+            // EXCLUDE regression test (behavior subject to change pending RFC); could give error/warning
+            SuccessTestCase(
                 name = "invalid exclude collection index",
                 query = """SELECT * EXCLUDE t.a[1]
                     FROM <<
@@ -2005,14 +2122,31 @@ class PartiQLSchemaInferencerTests {
                             }
                         }
                     >> AS t""",
-                problemHandler = assertProblemExists {
-                    Problem(
-                        UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.InvalidExcludeExpr
+                expected = BagType(
+                    elementType = StructType(
+                        fields = mapOf(
+                            "a" to StructType(
+                                fields = mapOf(
+                                    "b" to StructType(
+                                        fields = mapOf(
+                                            "c" to StaticType.INT,
+                                            "d" to StaticType.STRING
+                                        ),
+                                        contentClosed = true,
+                                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                    )
+                                ),
+                                contentClosed = true,
+                                constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                            )
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
                     )
-                }
+                )
             ),
-            ErrorTestCase(
+            // EXCLUDE regression test (behavior subject to change pending RFC); could give error/warning
+            SuccessTestCase(
                 name = "invalid exclude tuple attr",
                 query = """SELECT * EXCLUDE t.a.b
                     FROM <<
@@ -2024,14 +2158,26 @@ class PartiQLSchemaInferencerTests {
                             ]
                         }
                     >> AS t""",
-                problemHandler = assertProblemExists {
-                    Problem(
-                        UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.InvalidExcludeExpr
+                expected = BagType(
+                    elementType = StructType(
+                        fields = mapOf(
+                            "a" to ListType(
+                                elementType = StructType(
+                                    fields = mapOf(
+                                        "b" to StaticType.INT
+                                    ),
+                                    contentClosed = true,
+                                    constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                )
+                            )
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
                     )
-                }
+                )
             ),
-            ErrorTestCase(
+            // EXCLUDE regression test (behavior subject to change pending RFC); could give error/warning
+            SuccessTestCase(
                 name = "invalid exclude tuple wildcard",
                 query = """SELECT * EXCLUDE t.a.*
                     FROM <<
@@ -2043,12 +2189,23 @@ class PartiQLSchemaInferencerTests {
                             ]
                         }
                     >> AS t""",
-                problemHandler = assertProblemExists {
-                    Problem(
-                        UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.InvalidExcludeExpr
+                expected = BagType(
+                    elementType = StructType(
+                        fields = mapOf(
+                            "a" to ListType(
+                                elementType = StructType(
+                                    fields = mapOf(
+                                        "b" to StaticType.INT
+                                    ),
+                                    contentClosed = true,
+                                    constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                )
+                            )
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
                     )
-                }
+                )
             ),
             SuccessTestCase(
                 name = "BITWISE_AND_1",

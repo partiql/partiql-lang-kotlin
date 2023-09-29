@@ -77,13 +77,6 @@ sealed class PlanningProblemDetails(
                     "Please use the `INSERT INTO <table> << <expr>, ... >>` form instead."
             }
         )
-
-    object InvalidExcludeExpr : PlanningProblemDetails(
-        severity = ProblemSeverity.ERROR,
-        messageFormatter = {
-            "Exclusion expression data type mismatch"
-        }
-    )
 }
 
 private fun quotationHint(caseSensitive: Boolean) =

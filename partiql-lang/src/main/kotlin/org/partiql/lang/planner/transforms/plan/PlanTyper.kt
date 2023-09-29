@@ -175,7 +175,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
      * - EXCLUDE on a binding tuple variable (e.g. SELECT ... EXCLUDE t FROM t) -- error?
      *   - currently a parser error
      * - EXCLUDE on a union type -- give an error/warning? no-op? exclude on each type in union?
-     *   - currently is a no-op
+     *   - currently exclude on each union type
      * - If SELECT list includes an attribute that is excluded, we could consider giving an error in PlanTyper or
      * some other semantic pass
      *   - currently does not give an error
@@ -251,7 +251,9 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
                         }
                     }
                     else -> {
-                        handleInvalidExcludeExpr(ctx)
+                        // currently no change to field.value and no error thrown; could consider an error/warning in
+                        // the future
+                        outputFields.add(StructType.Field(field.key, field.value))
                     }
                 }
             }
@@ -267,10 +269,16 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
                     }
                 }
                 is ExcludeStep.CollectionWildcard -> {
-                    elementType = excludeExprSteps(elementType, steps.drop(1), lastStepAsOptional = lastStepAsOptional, ctx)
+                    if (steps.size > 1) {
+                        elementType =
+                            excludeExprSteps(elementType, steps.drop(1), lastStepAsOptional = lastStepAsOptional, ctx)
+                    }
+                    // currently no change to elementType if collection wildcard is last element; this behavior could
+                    // change based on RFC definition
                 }
                 else -> {
-                    handleInvalidExcludeExpr(ctx)
+                    // currently no change to elementType and no error thrown; could consider an error/warning in
+                    // the future
                 }
             }
             return when (c) {
@@ -283,6 +291,13 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
         return when (type) {
             is StructType -> excludeExprStepsStruct(type, steps, lastStepAsOptional)
             is CollectionType -> excludeExprStepsCollection(type, steps, lastStepAsOptional)
+            is AnyOfType -> {
+                StaticType.unionOf(
+                    type.types.map {
+                        excludeExprSteps(it, steps, lastStepAsOptional, ctx)
+                    }.toSet()
+                )
+            }
             else -> type
         }
     }
@@ -1799,16 +1814,6 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
             Problem(
                 sourceLocation = UNKNOWN_PROBLEM_LOCATION,
                 details = PlanningProblemDetails.CompileError("Unable to determine type of node.")
-            )
-        )
-        return StaticType.ANY
-    }
-
-    private fun handleInvalidExcludeExpr(ctx: Context): StaticType {
-        ctx.problemHandler.handleProblem(
-            Problem(
-                sourceLocation = UNKNOWN_PROBLEM_LOCATION,
-                details = PlanningProblemDetails.InvalidExcludeExpr
             )
         )
         return StaticType.ANY
