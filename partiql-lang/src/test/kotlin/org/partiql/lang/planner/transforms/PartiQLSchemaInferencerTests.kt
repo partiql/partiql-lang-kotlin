@@ -4,6 +4,7 @@ import com.amazon.ionelement.api.field
 import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.ionStructOf
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
@@ -18,6 +19,7 @@ import org.partiql.lang.planner.PlanningProblemDetails
 import org.partiql.lang.planner.transforms.PartiQLSchemaInferencerTests.ProblemHandler
 import org.partiql.lang.planner.transforms.PartiQLSchemaInferencerTests.TestCase.ErrorTestCase
 import org.partiql.lang.planner.transforms.PartiQLSchemaInferencerTests.TestCase.SuccessTestCase
+import org.partiql.lang.planner.transforms.PartiQLSchemaInferencerTests.TestCase.ThrowingExceptionTestCase
 import org.partiql.plan.Rex
 import org.partiql.plugins.local.LocalPlugin
 import org.partiql.types.AnyOfType
@@ -25,6 +27,7 @@ import org.partiql.types.AnyType
 import org.partiql.types.BagType
 import org.partiql.types.ListType
 import org.partiql.types.StaticType
+import org.partiql.types.StaticType.Companion.BOOL
 import org.partiql.types.StaticType.Companion.INT
 import org.partiql.types.StaticType.Companion.MISSING
 import org.partiql.types.StaticType.Companion.NULL
@@ -36,6 +39,9 @@ import java.time.Instant
 import java.util.stream.Stream
 import kotlin.io.path.pathString
 import kotlin.io.path.toPath
+import kotlin.reflect.KClass
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class PartiQLSchemaInferencerTests {
@@ -68,9 +74,9 @@ class PartiQLSchemaInferencerTests {
         const val CATALOG_DB = "db"
         val DB_SCHEMA_MARKETS = listOf("markets")
 
-        val TYPE_BOOL = StaticType.BOOL
-        private val TYPE_AWS_DDB_PETS_ID = StaticType.INT
-        private val TYPE_AWS_DDB_PETS_BREED = StaticType.STRING
+        val TYPE_BOOL = BOOL
+        private val TYPE_AWS_DDB_PETS_ID = INT
+        private val TYPE_AWS_DDB_PETS_BREED = STRING
         val TABLE_AWS_DDB_PETS_ELEMENT_TYPE = StructType(
             fields = mapOf(
                 "id" to TYPE_AWS_DDB_PETS_ID,
@@ -87,7 +93,7 @@ class PartiQLSchemaInferencerTests {
         )
         val TABLE_AWS_DDB_B = BagType(
             StructType(
-                fields = mapOf("identifier" to StaticType.STRING),
+                fields = mapOf("identifier" to STRING),
                 contentClosed = true,
                 constraints = setOf(
                     TupleConstraint.Open(false),
@@ -98,7 +104,7 @@ class PartiQLSchemaInferencerTests {
         )
         val TABLE_AWS_B_B = BagType(
             StructType(
-                fields = mapOf("identifier" to StaticType.INT),
+                fields = mapOf("identifier" to INT),
                 contentClosed = true,
                 constraints = setOf(
                     TupleConstraint.Open(false),
@@ -107,14 +113,14 @@ class PartiQLSchemaInferencerTests {
                 )
             )
         )
-        val TYPE_B_B_B_B_B = StaticType.INT
+        val TYPE_B_B_B_B_B = INT
         private val TYPE_B_B_B_B = StructType(
             mapOf("b" to TYPE_B_B_B_B_B),
             contentClosed = true,
             constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
         )
-        val TYPE_B_B_B_C = StaticType.INT
-        val TYPE_B_B_C = StaticType.INT
+        val TYPE_B_B_B_C = INT
+        val TYPE_B_B_C = INT
         val TYPE_B_B_B =
             StructType(
                 fields = mapOf(
@@ -155,6 +161,19 @@ class PartiQLSchemaInferencerTests {
             val problemHandler: ProblemHandler? = null,
         ) : TestCase() {
             override fun toString(): String = "$name : $query"
+        }
+
+        class ThrowingExceptionTestCase(
+            val name: String,
+            val query: String,
+            val catalog: String? = null,
+            val catalogPath: List<String> = emptyList(),
+            val note: String? = null,
+            val expectedThrowable: KClass<out Throwable>
+        ) : TestCase() {
+            override fun toString(): String {
+                return "$name : $query"
+            }
         }
     }
 
@@ -476,7 +495,7 @@ class PartiQLSchemaInferencerTests {
                 catalog = CATALOG_DB,
                 catalogPath = DB_SCHEMA_MARKETS,
                 query = "order_info.ship_option LIKE 3",
-                expected = StaticType.MISSING,
+                expected = MISSING,
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
@@ -545,9 +564,9 @@ class PartiQLSchemaInferencerTests {
                 query = "non_existing_column = 1",
                 expected = AnyOfType(
                     setOf(
-                        StaticType.MISSING,
-                        StaticType.NULL,
-                        StaticType.BOOL
+                        MISSING,
+                        NULL,
+                        BOOL
                     )
                 ),
                 problemHandler = assertProblemExists {
@@ -562,12 +581,12 @@ class PartiQLSchemaInferencerTests {
                 catalog = CATALOG_DB,
                 catalogPath = DB_SCHEMA_MARKETS,
                 query = "order_info.customer_id = 1 AND 1",
-                expected = StaticType.MISSING,
+                expected = MISSING,
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
                         SemanticProblemDetails.IncompatibleDatatypesForOp(
-                            listOf(StaticType.BOOL, INT),
+                            listOf(BOOL, INT),
                             "AND"
                         )
                     )
@@ -578,12 +597,12 @@ class PartiQLSchemaInferencerTests {
                 catalog = CATALOG_DB,
                 catalogPath = DB_SCHEMA_MARKETS,
                 query = "1 AND order_info.customer_id = 1",
-                expected = StaticType.MISSING,
+                expected = MISSING,
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
                         SemanticProblemDetails.IncompatibleDatatypesForOp(
-                            listOf(INT, StaticType.BOOL),
+                            listOf(INT, BOOL),
                             "AND"
                         )
                     )
@@ -680,7 +699,7 @@ class PartiQLSchemaInferencerTests {
                 query = "SELECT CAST(breed AS INT) AS cast_breed FROM pets",
                 expected = BagType(
                     StructType(
-                        fields = mapOf("cast_breed" to unionOf(StaticType.INT, StaticType.MISSING)),
+                        fields = mapOf("cast_breed" to unionOf(INT, MISSING)),
                         contentClosed = true,
                         constraints = setOf(
                             TupleConstraint.Open(false),
@@ -697,7 +716,7 @@ class PartiQLSchemaInferencerTests {
                 query = "SELECT UPPER(breed) AS upper_breed FROM pets",
                 expected = BagType(
                     StructType(
-                        fields = mapOf("upper_breed" to StaticType.STRING),
+                        fields = mapOf("upper_breed" to STRING),
                         contentClosed = true,
                         constraints = setOf(
                             TupleConstraint.Open(false),
@@ -712,7 +731,7 @@ class PartiQLSchemaInferencerTests {
                 query = "SELECT a FROM << [ 1, 1.0 ] >> AS a",
                 expected = BagType(
                     StructType(
-                        fields = mapOf("a" to ListType(unionOf(StaticType.INT, StaticType.DECIMAL))),
+                        fields = mapOf("a" to ListType(unionOf(INT, StaticType.DECIMAL))),
                         contentClosed = true,
                         constraints = setOf(
                             TupleConstraint.Open(false),
@@ -726,19 +745,19 @@ class PartiQLSchemaInferencerTests {
                 name = "Non-tuples in SELECT VALUE",
                 query = "SELECT VALUE a FROM << [ 1, 1.0 ] >> AS a",
                 expected =
-                BagType(ListType(unionOf(StaticType.INT, StaticType.DECIMAL)))
+                BagType(ListType(unionOf(INT, StaticType.DECIMAL)))
             ),
             SuccessTestCase(
                 name = "SELECT VALUE",
                 query = "SELECT VALUE [1, 1.0] FROM <<>>",
                 expected =
-                BagType(ListType(unionOf(StaticType.INT, StaticType.DECIMAL)))
+                BagType(ListType(unionOf(INT, StaticType.DECIMAL)))
             ),
             SuccessTestCase(
                 name = "UNPIVOT",
                 query = "SELECT VALUE v FROM UNPIVOT { 'a': 2 } AS v AT attr WHERE attr = 'a'",
                 expected =
-                BagType(StaticType.INT)
+                BagType(INT)
 
             ),
             SuccessTestCase(
@@ -747,7 +766,7 @@ class PartiQLSchemaInferencerTests {
                 expected = BagType(
                     StructType(
                         fields = mapOf(
-                            "a" to StaticType.INT,
+                            "a" to INT,
                             "b" to StaticType.DECIMAL,
                         ),
                         contentClosed = true,
@@ -765,7 +784,7 @@ class PartiQLSchemaInferencerTests {
                 expected = BagType(
                     StructType(
                         fields = mapOf(
-                            "a" to StaticType.INT,
+                            "a" to INT,
                             "b" to StaticType.DECIMAL,
                         ),
                         contentClosed = true,
@@ -784,7 +803,7 @@ class PartiQLSchemaInferencerTests {
                     StructType(
                         fields = listOf(
                             StructType.Field("b", StaticType.DECIMAL),
-                            StructType.Field("a", StaticType.INT),
+                            StructType.Field("a", INT),
                         ),
                         contentClosed = true,
                         constraints = setOf(
@@ -801,7 +820,7 @@ class PartiQLSchemaInferencerTests {
                 expected = BagType(
                     StructType(
                         fields = listOf(
-                            StructType.Field("a", StaticType.INT),
+                            StructType.Field("a", INT),
                             StructType.Field("a", StaticType.DECIMAL),
                         ),
                         contentClosed = true,
@@ -819,7 +838,7 @@ class PartiQLSchemaInferencerTests {
                 expected = BagType(
                     StructType(
                         fields = listOf(
-                            StructType.Field("a", StaticType.INT),
+                            StructType.Field("a", INT),
                             StructType.Field("a", StaticType.DECIMAL),
                         ),
                         contentClosed = true,
@@ -847,9 +866,9 @@ class PartiQLSchemaInferencerTests {
                 expected = BagType(
                     StructType(
                         fields = listOf(
-                            StructType.Field("a", StaticType.INT),
+                            StructType.Field("a", INT),
                             StructType.Field("a", StaticType.DECIMAL),
-                            StructType.Field("a", StaticType.STRING),
+                            StructType.Field("a", STRING),
                         ),
                         contentClosed = true,
                         constraints = setOf(
@@ -908,7 +927,7 @@ class PartiQLSchemaInferencerTests {
                 expected = BagType(
                     StructType(
                         fields = listOf(
-                            StructType.Field("a", StaticType.INT),
+                            StructType.Field("a", INT),
                             StructType.Field("a", StaticType.DECIMAL),
                         ),
                         contentClosed = true,
@@ -954,10 +973,10 @@ class PartiQLSchemaInferencerTests {
                 expected = BagType(
                     StructType(
                         fields = mapOf(
-                            "a" to StaticType.INT,
-                            "c" to StaticType.INT,
-                            "s" to StaticType.INT,
-                            "m" to StaticType.INT,
+                            "a" to INT,
+                            "c" to INT,
+                            "s" to INT,
+                            "m" to INT,
                         ),
                         contentClosed = true,
                         constraints = setOf(
@@ -975,7 +994,7 @@ class PartiQLSchemaInferencerTests {
                     StructType(
                         fields = mapOf(
                             "a" to StaticType.DECIMAL,
-                            "c" to StaticType.INT,
+                            "c" to INT,
                             "s" to StaticType.DECIMAL,
                             "m" to StaticType.DECIMAL,
                         ),
@@ -991,49 +1010,302 @@ class PartiQLSchemaInferencerTests {
             SuccessTestCase(
                 name = "Current User",
                 query = "CURRENT_USER",
-                expected = unionOf(STRING, StaticType.NULL)
+                expected = unionOf(STRING, NULL)
             ),
             SuccessTestCase(
                 name = "Trim",
                 query = "trim(' ')",
-                expected = StaticType.STRING
+                expected = STRING
             ),
             SuccessTestCase(
                 name = "Current User Concat",
                 query = "CURRENT_USER || 'hello'",
-                expected = unionOf(STRING, StaticType.NULL)
+                expected = unionOf(STRING, NULL)
             ),
             SuccessTestCase(
                 name = "Current User Concat in WHERE",
                 query = "SELECT VALUE a FROM [ 0 ] AS a WHERE CURRENT_USER = 'hello'",
-                expected = BagType(StaticType.INT)
+                expected = BagType(INT)
             ),
             SuccessTestCase(
                 name = "TRIM_2",
                 query = "trim(' ' FROM ' Hello, World! ')",
-                expected = StaticType.STRING
+                expected = STRING
             ),
             SuccessTestCase(
                 name = "TRIM_1",
                 query = "trim(' Hello, World! ')",
-                expected = StaticType.STRING
+                expected = STRING
             ),
             SuccessTestCase(
                 name = "TRIM_3",
                 query = "trim(LEADING ' ' FROM ' Hello, World! ')",
-                expected = StaticType.STRING
+                expected = STRING
+            ),
+            SuccessTestCase(
+                name = "Subquery coercion in top-level expression",
+                query = "COALESCE(SELECT identifier FROM aws.ddb.b)",
+                expected = STRING
+            ),
+            SuccessTestCase(
+                name = "Subquery coercion in WHERE. Also showcases conflicting bindings. INT vs STRING.",
+                query = """
+                    SELECT VALUE identifier
+                    FROM aws.b.b AS b -- aws.b.b.identifier is an INT
+                    WHERE
+                        COALESCE(SELECT identifier AS identifier FROM aws.ddb.b) IS NOT NULL -- aws.ddb.b.identifier is a STRING
+                """,
+                expected = BagType(INT)
+            ),
+            SuccessTestCase(
+                name = "Subquery coercion in SFW",
+                query = """
+                    SELECT
+                        (SELECT identifier FROM aws.ddb.b) AS some_str,                         -- identifier is STRING
+                        ('hello' || (SELECT identifier FROM aws.ddb.b)) AS concat_str,          -- identifier is STRING
+                        (1 < (SELECT id FROM aws.ddb.pets)) AS one_lt_id,                       -- id is INT
+                        (1 > (SELECT id FROM aws.ddb.pets)) AS one_gt_id,                       -- id is INT
+                        (1 <= (SELECT id FROM aws.ddb.pets)) AS one_lte_id,                     -- id is INT
+                        (1 >= (SELECT id FROM aws.ddb.pets)) AS one_gte_id,                     -- id is INT
+                        (1 = (SELECT id FROM aws.ddb.pets)) AS one_eq_id,                       -- id is INT
+                        (1 != (SELECT id FROM aws.ddb.pets)) AS one_ne_id,                      -- id is INT
+                        ((SELECT id FROM aws.ddb.pets) > 1) AS id_gt_one,                       -- id is INT
+                        (1 IN (SELECT id FROM aws.ddb.pets)) AS one_in_ids,                     -- id is INT
+                        ([1, 2] IN (SELECT id, id + 1 FROM aws.ddb.pets)) AS array_in_ids,      -- id is INT
+                        ([1, 2] <= (SELECT id, id + 1 FROM aws.ddb.pets)) AS lit_array_lte_ids, -- id is INT
+                        ([1, 2] < (SELECT id, id + 1 FROM aws.ddb.pets)) AS lit_array_lt_ids,   -- id is INT
+                        ([1, 2] >= (SELECT id, id + 1 FROM aws.ddb.pets)) AS lit_array_gte_ids, -- id is INT
+                        ([1, 2] > (SELECT id, id + 1 FROM aws.ddb.pets)) AS lit_array_gt_ids,   -- id is INT
+                        ([1, 2] = (SELECT id, id + 1 FROM aws.ddb.pets)) AS lit_array_eq_ids,   -- id is INT
+                        ([1, 2] != (SELECT id, id + 1 FROM aws.ddb.pets)) AS lit_array_ne_ids   -- id is INT
+                    FROM
+                        << 0, 1, 2 >> AS t
+                """.trimIndent(),
+                expected = BagType(
+                    StructType(
+                        fields = listOf(
+                            StructType.Field("some_str", STRING),
+                            StructType.Field("concat_str", STRING),
+                            StructType.Field("one_lt_id", BOOL),
+                            StructType.Field("one_gt_id", BOOL),
+                            StructType.Field("one_lte_id", BOOL),
+                            StructType.Field("one_gte_id", BOOL),
+                            StructType.Field("one_eq_id", BOOL),
+                            StructType.Field("one_ne_id", BOOL),
+                            StructType.Field("id_gt_one", BOOL),
+                            StructType.Field("one_in_ids", BOOL),
+                            StructType.Field("array_in_ids", BOOL),
+                            StructType.Field("lit_array_lte_ids", BOOL),
+                            StructType.Field("lit_array_lt_ids", BOOL),
+                            StructType.Field("lit_array_gte_ids", BOOL),
+                            StructType.Field("lit_array_gt_ids", BOOL),
+                            StructType.Field("lit_array_eq_ids", BOOL),
+                            StructType.Field("lit_array_ne_ids", BOOL),
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered
+                        )
+                    )
+                )
+            ),
+            ErrorTestCase(
+                name = "List of Lists on RHS for IN",
+                query = "1 IN (SELECT id, id + 1 FROM aws.ddb.pets)",
+                expected = BOOL,
+                problemHandler = assertProblemExists {
+                    Problem(
+                        sourceLocation = UNKNOWN_PROBLEM_LOCATION,
+                        details = SemanticProblemDetails.IncompatibleDatatypesForOp(
+                            listOf(INT, BagType(ListType(INT))),
+                            "IN"
+                        )
+                    )
+                }
+            ),
+            ErrorTestCase(
+                name = "Coercion of select with multiple projections in COALESCE",
+                query = "COALESCE(SELECT id AS id, id + 1 AS increment FROM aws.ddb.pets)",
+                problemHandler = assertProblemExists {
+                    Problem(
+                        sourceLocation = UNKNOWN_PROBLEM_LOCATION,
+                        details = SemanticProblemDetails.CoercionError(
+                            StructType(
+                                fields = listOf(
+                                    StructType.Field("id", INT),
+                                    StructType.Field("increment", INT),
+                                ),
+                                contentClosed = true,
+                                constraints = setOf(
+                                    TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered
+                                )
+                            ),
+                        )
+                    )
+                }
+            ),
+            ErrorTestCase(
+                name = "Lists on LHS for IN",
+                query = "[1, 2] IN (SELECT id FROM aws.ddb.pets)",
+                expected = BOOL,
+                problemHandler = assertProblemExists {
+                    Problem(
+                        sourceLocation = UNKNOWN_PROBLEM_LOCATION,
+                        details = SemanticProblemDetails.IncompatibleDatatypesForOp(
+                            listOf(ListType(INT), BagType(INT)),
+                            "IN"
+                        )
+                    )
+                }
+            ),
+            ErrorTestCase(
+                name = "List of Lists on RHS for LTE",
+                query = "1 <= (SELECT id AS id, id + 1 AS increment FROM aws.ddb.pets)",
+                expected = unionOf(MISSING, NULL, BOOL),
+                problemHandler = assertProblemExists {
+                    Problem(
+                        sourceLocation = UNKNOWN_PROBLEM_LOCATION,
+                        details = SemanticProblemDetails.CoercionError(
+                            StructType(
+                                fields = listOf(
+                                    StructType.Field("id", INT),
+                                    StructType.Field("increment", INT),
+                                ),
+                                contentClosed = true,
+                                constraints = setOf(
+                                    TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered
+                                )
+                            ),
+                        )
+                    )
+                }
+            ),
+            ThrowingExceptionTestCase(
+                name = "SELECT * in Subquery", // TODO: This needs to be fixed.
+                query = "1 IN (SELECT * FROM aws.ddb.pets)",
+                expectedThrowable = IllegalStateException::class
+            ),
+            ThrowingExceptionTestCase(
+                name = "SELECT * in Subquery with IN coercion rules", // TODO: This needs to be fixed.
+                query = "[1, 2] IN (SELECT * FROM aws.ddb.pets)",
+                expectedThrowable = IllegalStateException::class
+            ),
+            SuccessTestCase(
+                name = "SELECT * in Subquery with plus -- aws.b.b has one column (INT)",
+                query = "1 + (SELECT * FROM aws.b.b)",
+                expected = INT,
+            ),
+            ErrorTestCase(
+                name = "Cannot coerce subquery of multiple columns into single value",
+                query = "[1, 2] + (SELECT * FROM aws.ddb.pets)",
+                expected = unionOf(MISSING, NULL),
+                problemHandler = assertProblemExists {
+                    Problem(
+                        UNKNOWN_PROBLEM_LOCATION,
+                        SemanticProblemDetails.CoercionError(
+                            StructType(
+                                fields = listOf(
+                                    StructType.Field("id", INT),
+                                    StructType.Field("breed", STRING),
+                                ),
+                                contentClosed = true,
+                                constraints = setOf(
+                                    TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered
+                                )
+                            ),
+                        )
+                    )
+                }
+            ),
+            ErrorTestCase(
+                name = "SELECT * in Subquery with comparison -- aws.ddb.pets has two columns",
+                query = "1 < (SELECT * FROM aws.ddb.pets)",
+                expected = unionOf(MISSING, NULL, BOOL),
+                problemHandler = assertProblemExists {
+                    Problem(
+                        UNKNOWN_PROBLEM_LOCATION,
+                        SemanticProblemDetails.CoercionError(
+                            StructType(
+                                fields = listOf(
+                                    StructType.Field("id", INT),
+                                    StructType.Field("breed", STRING),
+                                ),
+                                contentClosed = true,
+                                constraints = setOf(
+                                    TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered
+                                )
+                            ),
+                        )
+                    )
+                }
+            ),
+            SuccessTestCase(
+                name = "SELECT * in Subquery with comparison -- aws.b.b has one column (INT)",
+                query = "1 < (SELECT * FROM aws.b.b)",
+                expected = BOOL,
+            ),
+            ErrorTestCase(
+                name = "SELECT * in Subquery with comparison -- aws.ddb.pets has two columns (INT)",
+                query = "1 < (SELECT * FROM aws.ddb.pets)",
+                expected = unionOf(NULL, MISSING, BOOL),
+                problemHandler = assertProblemExists {
+                    Problem(
+                        UNKNOWN_PROBLEM_LOCATION,
+                        SemanticProblemDetails.CoercionError(
+                            StructType(
+                                fields = listOf(
+                                    StructType.Field("id", INT),
+                                    StructType.Field("breed", STRING),
+                                ),
+                                contentClosed = true,
+                                constraints = setOf(
+                                    TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered
+                                )
+                            ),
+                        )
+                    )
+                }
+            ),
+            ThrowingExceptionTestCase(
+                name = "SELECT * in multi-column subquery with comparison coercion.", // TODO: This needs to be fixed.
+                query = "[1, 2] < (SELECT * FROM aws.ddb.pets)",
+                expectedThrowable = IllegalStateException::class
+            ),
+            ThrowingExceptionTestCase(
+                name = "SELECT * in single-column subquery with comparison coercion.", // TODO: This needs to be fixed.
+                query = "[1, 2] < (SELECT * FROM aws.b.b)",
+                expectedThrowable = IllegalStateException::class
+            ),
+            ThrowingExceptionTestCase(
+                name = "SELECT * in Subquery with comparison of array", // TODO: This needs to be fixed.
+                query = "[1, 2] < (SELECT * FROM aws.ddb.pets)",
+                expectedThrowable = IllegalStateException::class
+            ),
+            ErrorTestCase(
+                name = "List of Lists on LHS for LTE",
+                query = "[1,2] <= (SELECT id FROM aws.ddb.pets)",
+                expected = BOOL,
+                problemHandler = assertProblemExists {
+                    Problem(
+                        sourceLocation = UNKNOWN_PROBLEM_LOCATION,
+                        details = SemanticProblemDetails.IncompatibleDatatypesForOp(
+                            listOf(ListType(INT), INT),
+                            "LTE"
+                        )
+                    )
+                }
             ),
             ErrorTestCase(
                 name = "TRIM_2_error",
                 query = "trim(2 FROM ' Hello, World! ')",
-                expected = StaticType.STRING,
+                expected = STRING,
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
                         SemanticProblemDetails.InvalidArgumentTypeForFunction(
                             "trim",
-                            unionOf(StaticType.STRING, StaticType.SYMBOL),
-                            StaticType.INT,
+                            unionOf(STRING, StaticType.SYMBOL),
+                            INT,
                         )
                     )
                 }
@@ -1041,13 +1313,13 @@ class PartiQLSchemaInferencerTests {
             ErrorTestCase(
                 name = "Current User Concat in WHERE",
                 query = "SELECT VALUE a FROM [ 0 ] AS a WHERE CURRENT_USER = 5",
-                expected = BagType(StaticType.INT),
+                expected = BagType(INT),
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
                         SemanticProblemDetails.IncompatibleDatatypesForOp(
                             listOf(
-                                unionOf(STRING, StaticType.NULL),
+                                unionOf(STRING, NULL),
                                 INT,
                             ),
                             Rex.Binary.Op.EQ.name
@@ -1058,13 +1330,13 @@ class PartiQLSchemaInferencerTests {
             ErrorTestCase(
                 name = "Current User (String) PLUS String",
                 query = "CURRENT_USER + 'hello'",
-                expected = unionOf(StaticType.MISSING, StaticType.NULL),
+                expected = unionOf(MISSING, NULL),
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
                         SemanticProblemDetails.IncompatibleDatatypesForOp(
                             listOf(
-                                unionOf(STRING, StaticType.NULL),
+                                unionOf(STRING, NULL),
                                 STRING,
                             ),
                             Rex.Binary.Op.PLUS.name
@@ -2494,6 +2766,28 @@ class PartiQLSchemaInferencerTests {
     private fun runTest(tc: TestCase) = when (tc) {
         is SuccessTestCase -> runTest(tc)
         is ErrorTestCase -> runTest(tc)
+        is ThrowingExceptionTestCase -> runTest(tc)
+    }
+
+    @OptIn(ExperimentalPartiQLSchemaInferencer::class)
+    private fun runTest(tc: ThrowingExceptionTestCase) {
+        val session = PlannerSession(
+            tc.query.hashCode().toString(),
+            USER_ID,
+            tc.catalog,
+            tc.catalogPath,
+            catalogConfig,
+            Instant.now()
+        )
+        val collector = ProblemCollector()
+        val ctx = PartiQLSchemaInferencer.Context(session, PLUGINS, collector)
+        val exception = assertThrows<Throwable> {
+            PartiQLSchemaInferencer.infer(tc.query, ctx)
+            Unit
+        }
+        val cause = exception.cause
+        assertNotNull(cause)
+        assertEquals(tc.expectedThrowable, cause::class)
     }
 
     @OptIn(ExperimentalPartiQLSchemaInferencer::class)
@@ -2534,9 +2828,6 @@ class PartiQLSchemaInferencerTests {
         val collector = ProblemCollector()
         val ctx = PartiQLSchemaInferencer.Context(session, PLUGINS, collector)
         val result = PartiQLSchemaInferencer.infer(tc.query, ctx)
-        assert(collector.problems.isNotEmpty()) {
-            "Expected to find problems, but none were found."
-        }
         if (tc.expected != null) {
             assert(tc.expected == result) {
                 buildString {
@@ -2544,6 +2835,9 @@ class PartiQLSchemaInferencerTests {
                     appendLine("Actual: $result")
                 }
             }
+        }
+        assert(collector.problems.isNotEmpty()) {
+            "Expected to find problems, but none were found."
         }
         tc.problemHandler?.handle(collector.problems, true)
     }

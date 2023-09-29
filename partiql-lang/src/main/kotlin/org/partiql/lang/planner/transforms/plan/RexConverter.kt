@@ -9,10 +9,13 @@ import org.partiql.lang.eval.builtins.ExprFunctionCurrentUser
 import org.partiql.lang.eval.err
 import org.partiql.lang.eval.errorContextFrom
 import org.partiql.lang.planner.transforms.AstToPlan
+import org.partiql.lang.planner.transforms.plan.PlanTyper.isProjectAll
 import org.partiql.plan.Case
 import org.partiql.plan.Plan
+import org.partiql.plan.Rel
 import org.partiql.plan.Rex
 import org.partiql.types.StaticType
+import java.util.Locale
 
 /**
  * Some workarounds for transforming a PIG tree without having to create another visitor:
@@ -109,7 +112,7 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
     }
 
     override fun walkExprSessionAttribute(node: PartiqlAst.Expr.SessionAttribute, accumulator: Ctx) = visit(node) {
-        val functionName = when (node.value.text.toUpperCase()) {
+        val functionName = when (node.value.text.uppercase(Locale.getDefault())) {
             EvaluationSession.Constants.CURRENT_USER_KEY -> ExprFunctionCurrentUser.FUNCTION_NAME
             else -> err(
                 "Unsupported session attribute: ${node.value.text}",
@@ -262,57 +265,116 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
     }
 
     override fun walkExprEq(node: PartiqlAst.Expr.Eq, ctx: Ctx) = visit(node) {
+        val (lhs, rhs) = walkComparisonOperands(node.operands)
         Plan.rexBinary(
-            lhs = convert(node.operands[0]),
-            rhs = convert(node.operands[1]),
+            lhs = lhs,
+            rhs = rhs,
             op = Rex.Binary.Op.EQ,
             type = StaticType.BOOL,
         )
     }
 
     override fun walkExprNe(node: PartiqlAst.Expr.Ne, ctx: Ctx) = visit(node) {
+        val (lhs, rhs) = walkComparisonOperands(node.operands)
         Plan.rexBinary(
-            lhs = convert(node.operands[0]),
-            rhs = convert(node.operands[1]),
+            lhs = lhs,
+            rhs = rhs,
             op = Rex.Binary.Op.NEQ,
             type = StaticType.BOOL,
         )
     }
 
     override fun walkExprGt(node: PartiqlAst.Expr.Gt, ctx: Ctx) = visit(node) {
+        val (lhs, rhs) = walkComparisonOperands(node.operands)
         Plan.rexBinary(
-            lhs = convert(node.operands[0]),
-            rhs = convert(node.operands[1]),
+            lhs = lhs,
+            rhs = rhs,
             op = Rex.Binary.Op.GT,
             type = StaticType.BOOL,
         )
     }
 
     override fun walkExprGte(node: PartiqlAst.Expr.Gte, ctx: Ctx) = visit(node) {
+        val (lhs, rhs) = walkComparisonOperands(node.operands)
         Plan.rexBinary(
-            lhs = convert(node.operands[0]),
-            rhs = convert(node.operands[1]),
+            lhs = lhs,
+            rhs = rhs,
             op = Rex.Binary.Op.GTE,
             type = StaticType.BOOL,
         )
     }
 
     override fun walkExprLt(node: PartiqlAst.Expr.Lt, ctx: Ctx) = visit(node) {
+        val (lhs, rhs) = walkComparisonOperands(node.operands)
         Plan.rexBinary(
-            lhs = convert(node.operands[0]),
-            rhs = convert(node.operands[1]),
+            lhs = lhs,
+            rhs = rhs,
             op = Rex.Binary.Op.LT,
             type = StaticType.BOOL,
         )
     }
 
     override fun walkExprLte(node: PartiqlAst.Expr.Lte, ctx: Ctx) = visit(node) {
+        val (lhs, rhs) = walkComparisonOperands(node.operands)
         Plan.rexBinary(
-            lhs = convert(node.operands[0]),
-            rhs = convert(node.operands[1]),
+            lhs = lhs,
+            rhs = rhs,
             op = Rex.Binary.Op.LTE,
             type = StaticType.BOOL,
         )
+    }
+
+    /**
+     * Converts Comparison Operands. Also coerces them if one of them is an array.
+     */
+    private fun walkComparisonOperands(operands: List<PartiqlAst.Expr>): Pair<Rex, Rex> {
+        var lhs = convert(operands[0])
+        var rhs = convert(operands[1])
+        if (lhs is Rex.Collection.Array) { rhs = coercePotentialSubquery(rhs) }
+        if (rhs is Rex.Collection.Array) { lhs = coercePotentialSubquery(lhs) }
+        return lhs to rhs
+    }
+
+    /**
+     * We convert the scalar subquery of a SFW into a scalar subquery of a SELECT VALUE.
+     */
+    private fun coercePotentialSubquery(rex: Rex): Rex {
+        var rhs = rex
+        if (rhs is Rex.Query.Scalar.Subquery) {
+            val sfw = rhs.query as? Rex.Query.Collection ?: error("Malformed plan, all scalar subqueries should hold collection queries")
+            val constructor = sfw.constructor ?: run {
+                val relProject = sfw.rel as? Rel.Project ?: error("Malformed plan, the top of a plan should be a projection")
+                getConstructorFromRelProject(relProject)
+            }
+            rhs = rhs.copy(
+                query = rhs.query.copy(
+                    constructor = constructor
+                )
+            )
+        }
+        return rhs
+    }
+
+    private fun getConstructorFromRelProject(relProject: Rel.Project): Rex {
+        return when (relProject.bindings.size) {
+            0 -> error("The Projection should not have held empty bindings.")
+            1 -> {
+                val binding = relProject.bindings.first()
+                if (binding.value.isProjectAll()) {
+                    error("Unimplemented feature: coercion of SELECT *.")
+                }
+                relProject.bindings.first().value
+            }
+            else -> {
+                if (relProject.bindings.any { it.value.isProjectAll() }) {
+                    error("Unimplemented feature: coercion of SELECT *.")
+                }
+                Plan.rexCollectionArray(
+                    relProject.bindings.map { it.value },
+                    type = StaticType.LIST
+                )
+            }
+        }
     }
 
     override fun walkExprLike(node: PartiqlAst.Expr.Like, ctx: Ctx) = visit(node) {
@@ -345,12 +407,14 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
         )
     }
 
+    /**
+     * Here, we must visit the RHS. If it is a scalar subquery, we need to grab the underlying collection.
+     */
     override fun walkExprInCollection(node: PartiqlAst.Expr.InCollection, ctx: Ctx) = visit(node) {
         val lhs = convert(node.operands[0])
-        var rhs = convert(node.operands[1])
-        if (rhs is Rex.Query.Scalar.Subquery) {
-            rhs = rhs.query // unpack a scalar subquery coercion
-        }
+        val potentialSubqueryRex = convert(node.operands[1])
+        val potentialSubquery = coercePotentialSubquery(potentialSubqueryRex)
+        val rhs = (potentialSubquery as? Rex.Query.Scalar.Subquery)?.query ?: potentialSubquery
         Plan.rexCall(
             id = Constants.inCollection,
             args = listOf(
