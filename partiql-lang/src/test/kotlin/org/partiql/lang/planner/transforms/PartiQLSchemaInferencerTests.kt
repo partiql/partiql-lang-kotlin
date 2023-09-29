@@ -77,19 +77,19 @@ class PartiQLSchemaInferencerTests {
         val TYPE_BOOL = BOOL
         private val TYPE_AWS_DDB_PETS_ID = INT
         private val TYPE_AWS_DDB_PETS_BREED = STRING
-        val TABLE_AWS_DDB_PETS = BagType(
-            elementType = StructType(
-                fields = mapOf(
-                    "id" to TYPE_AWS_DDB_PETS_ID,
-                    "breed" to TYPE_AWS_DDB_PETS_BREED
-                ),
-                contentClosed = true,
-                constraints = setOf(
-                    TupleConstraint.Open(false),
-                    TupleConstraint.UniqueAttrs(true),
-                    TupleConstraint.Ordered
-                )
-            )
+        val TABLE_AWS_DDB_PETS_ELEMENT_TYPE = StructType(
+            fields = mapOf(
+                "id" to TYPE_AWS_DDB_PETS_ID,
+                "breed" to TYPE_AWS_DDB_PETS_BREED
+            ),
+            contentClosed = true,
+            constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+        )
+        val TABLE_AWS_DDB_PETS_BAG = BagType(
+            elementType = TABLE_AWS_DDB_PETS_ELEMENT_TYPE
+        )
+        val TABLE_AWS_DDB_PETS_LIST = ListType(
+            elementType = TABLE_AWS_DDB_PETS_ELEMENT_TYPE
         )
         val TABLE_AWS_DDB_B = BagType(
             StructType(
@@ -231,14 +231,14 @@ class PartiQLSchemaInferencerTests {
                 catalog = CATALOG_AWS,
                 catalogPath = listOf("ddb"),
                 query = "SELECT * FROM pets",
-                expected = TABLE_AWS_DDB_PETS
+                expected = TABLE_AWS_DDB_PETS_BAG
             ),
             SuccessTestCase(
                 name = "Project all implicitly",
                 catalog = CATALOG_AWS,
                 catalogPath = listOf("ddb"),
                 query = "SELECT id, breed FROM pets",
-                expected = TABLE_AWS_DDB_PETS
+                expected = TABLE_AWS_DDB_PETS_BAG
             ),
             SuccessTestCase(
                 name = "Test #4",
@@ -286,7 +286,7 @@ class PartiQLSchemaInferencerTests {
                 name = "Test #8",
                 catalog = CATALOG_AWS,
                 query = "SELECT * FROM ddb.pets",
-                expected = TABLE_AWS_DDB_PETS
+                expected = TABLE_AWS_DDB_PETS_BAG
             ),
             SuccessTestCase(
                 name = "Test #9",
@@ -324,7 +324,7 @@ class PartiQLSchemaInferencerTests {
             SuccessTestCase(
                 name = "Test #14",
                 query = "SELECT * FROM aws.ddb.pets",
-                expected = TABLE_AWS_DDB_PETS
+                expected = TABLE_AWS_DDB_PETS_BAG
             ),
             SuccessTestCase(
                 name = "Test #15",
@@ -636,35 +636,35 @@ class PartiQLSchemaInferencerTests {
                 catalog = CATALOG_AWS,
                 catalogPath = listOf("ddb"),
                 query = "SELECT * FROM pets ORDER BY id",
-                expected = TABLE_AWS_DDB_PETS
+                expected = TABLE_AWS_DDB_PETS_LIST
             ),
             SuccessTestCase(
                 name = "ORDER BY str",
                 catalog = CATALOG_AWS,
                 catalogPath = listOf("ddb"),
                 query = "SELECT * FROM pets ORDER BY breed",
-                expected = TABLE_AWS_DDB_PETS
+                expected = TABLE_AWS_DDB_PETS_LIST
             ),
             SuccessTestCase(
                 name = "ORDER BY str",
                 catalog = CATALOG_AWS,
                 catalogPath = listOf("ddb"),
                 query = "SELECT * FROM pets ORDER BY unknown_col",
-                expected = TABLE_AWS_DDB_PETS
+                expected = TABLE_AWS_DDB_PETS_LIST
             ),
             SuccessTestCase(
                 name = "LIMIT INT",
                 catalog = CATALOG_AWS,
                 catalogPath = listOf("ddb"),
                 query = "SELECT * FROM pets LIMIT 5",
-                expected = TABLE_AWS_DDB_PETS
+                expected = TABLE_AWS_DDB_PETS_BAG
             ),
             ErrorTestCase(
                 name = "LIMIT STR",
                 catalog = CATALOG_AWS,
                 catalogPath = listOf("ddb"),
                 query = "SELECT * FROM pets LIMIT '5'",
-                expected = TABLE_AWS_DDB_PETS,
+                expected = TABLE_AWS_DDB_PETS_BAG,
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
@@ -677,14 +677,14 @@ class PartiQLSchemaInferencerTests {
                 catalog = CATALOG_AWS,
                 catalogPath = listOf("ddb"),
                 query = "SELECT * FROM pets LIMIT 1 OFFSET 5",
-                expected = TABLE_AWS_DDB_PETS
+                expected = TABLE_AWS_DDB_PETS_BAG
             ),
             ErrorTestCase(
                 name = "OFFSET STR",
                 catalog = CATALOG_AWS,
                 catalogPath = listOf("ddb"),
                 query = "SELECT * FROM pets LIMIT 1 OFFSET '5'",
-                expected = TABLE_AWS_DDB_PETS,
+                expected = TABLE_AWS_DDB_PETS_BAG,
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
@@ -1343,6 +1343,1326 @@ class PartiQLSchemaInferencerTests {
                         )
                     )
                 }
+            ),
+            // EXCLUDE test cases
+            SuccessTestCase(
+                name = "EXCLUDE SELECT star",
+                query = """SELECT * EXCLUDE c.ssn FROM [
+                    {
+                        'name': 'Alan',
+                        'custId': 1,
+                        'address': {
+                            'city': 'Seattle',
+                            'zipcode': 98109,
+                            'street': '123 Seaplane Dr.'
+                        },
+                        'ssn': 123456789
+                    }
+                ] AS c""",
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "name" to StaticType.STRING,
+                            "custId" to StaticType.INT,
+                            "address" to StructType(
+                                fields = mapOf(
+                                    "city" to StaticType.STRING,
+                                    "zipcode" to StaticType.INT,
+                                    "street" to StaticType.STRING,
+                                ),
+                                contentClosed = true,
+                                constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                            )
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "EXCLUDE SELECT star multiple paths",
+                query = """SELECT * EXCLUDE c.ssn, c.address.street FROM [
+                    {
+                        'name': 'Alan',
+                        'custId': 1,
+                        'address': {
+                            'city': 'Seattle',
+                            'zipcode': 98109,
+                            'street': '123 Seaplane Dr.'
+                        },
+                        'ssn': 123456789
+                    }
+                ] AS c""",
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "name" to StaticType.STRING,
+                            "custId" to StaticType.INT,
+                            "address" to StructType(
+                                fields = mapOf(
+                                    "city" to StaticType.STRING,
+                                    "zipcode" to StaticType.INT
+                                ),
+                                contentClosed = true,
+                                constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                            )
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "EXCLUDE SELECT star list index and list index field",
+                query = """SELECT *
+                    EXCLUDE
+                        t.a.b.c[0],
+                        t.a.b.c[1].field
+                    FROM [{
+                        'a': {
+                            'b': {
+                                'c': [
+                                    {
+                                        'field': 0    -- c[0]
+                                    },
+                                    {
+                                        'field': 1    -- c[1]
+                                    },
+                                    {
+                                        'field': 2    -- c[2]
+                                    }
+                                ]
+                            }
+                        },
+                        'foo': 'bar'
+                    }] AS t""",
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "a" to StructType(
+                                fields = mapOf(
+                                    "b" to StructType(
+                                        fields = mapOf(
+                                            "c" to ListType(
+                                                elementType = StructType(
+                                                    fields = mapOf(
+                                                        "field" to AnyOfType(
+                                                            setOf(
+                                                                StaticType.INT,
+                                                                StaticType.MISSING // c[1]'s `field` was excluded
+                                                            )
+                                                        )
+                                                    ),
+                                                    contentClosed = true,
+                                                    constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                                )
+                                            )
+                                        ),
+                                        contentClosed = true,
+                                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                    )
+                                ),
+                                contentClosed = true,
+                                constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                            ),
+                            "foo" to StaticType.STRING
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "EXCLUDE SELECT star collection index as last step",
+                query = """SELECT *
+                    EXCLUDE
+                        t.a.b.c[0]
+                    FROM [{
+                        'a': {
+                            'b': {
+                                'c': [0, 1, 2]
+                            }
+                        },
+                        'foo': 'bar'
+                    }] AS t""",
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "a" to StructType(
+                                fields = mapOf(
+                                    "b" to StructType(
+                                        fields = mapOf(
+                                            "c" to ListType(
+                                                elementType = StaticType.INT
+                                            )
+                                        ),
+                                        contentClosed = true,
+                                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                    )
+                                ),
+                                contentClosed = true,
+                                constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                            ),
+                            "foo" to StaticType.STRING
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                    )
+                )
+            ),
+            // EXCLUDE regression test (behavior subject to change pending RFC)
+            SuccessTestCase(
+                name = "EXCLUDE SELECT star collection wildcard as last step",
+                query = """SELECT *
+                    EXCLUDE
+                        t.a[*]
+                    FROM [{
+                        'a': [0, 1, 2]
+                    }] AS t""",
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "a" to ListType(
+                                elementType = StaticType.INT // empty list but still preserve typing information
+                            )
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "EXCLUDE SELECT star list wildcard",
+                query = """SELECT *
+                    EXCLUDE
+                        t.a.b.c[*].field_x
+                    FROM [{
+                        'a': {
+                            'b': {
+                                'c': [
+                                    {                    -- c[0]
+                                        'field_x': 0, 
+                                        'field_y': 0
+                                    },
+                                    {                    -- c[1]
+                                        'field_x': 1,
+                                        'field_y': 1
+                                    },
+                                    {                    -- c[2]
+                                        'field_x': 2,
+                                        'field_y': 2
+                                    }
+                                ]
+                            }
+                        },
+                        'foo': 'bar'
+                    }] AS t""",
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "a" to StructType(
+                                fields = mapOf(
+                                    "b" to StructType(
+                                        fields = mapOf(
+                                            "c" to ListType(
+                                                elementType = StructType(
+                                                    fields = mapOf(
+                                                        "field_y" to StaticType.INT
+                                                    ),
+                                                    contentClosed = true,
+                                                    constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                                )
+                                            )
+                                        ),
+                                        contentClosed = true,
+                                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                    )
+                                ),
+                                contentClosed = true,
+                                constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                            ),
+                            "foo" to StaticType.STRING
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "EXCLUDE SELECT star list tuple wildcard",
+                query = """SELECT *
+                    EXCLUDE
+                        t.a.b.c[*].*
+                    FROM [{
+                        'a': {
+                            'b': {
+                                'c': [
+                                    {                    -- c[0]
+                                        'field_x': 0, 
+                                        'field_y': 0
+                                    },
+                                    {                    -- c[1]
+                                        'field_x': 1,
+                                        'field_y': 1
+                                    },
+                                    {                    -- c[2]
+                                        'field_x': 2,
+                                        'field_y': 2
+                                    }
+                                ]
+                            }
+                        },
+                        'foo': 'bar'
+                    }] AS t""",
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "a" to StructType(
+                                fields = mapOf(
+                                    "b" to StructType(
+                                        fields = mapOf(
+                                            "c" to ListType(
+                                                elementType = StructType(
+                                                    fields = mapOf(
+                                                        // all fields gone
+                                                    ),
+                                                    contentClosed = true,
+                                                    constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                                )
+                                            )
+                                        ),
+                                        contentClosed = true,
+                                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                    )
+                                ),
+                                contentClosed = true,
+                                constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                            ),
+                            "foo" to StaticType.STRING
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "EXCLUDE SELECT star order by",
+                query = """SELECT *
+                    EXCLUDE
+                        t.a
+                    FROM [
+                        {
+                            'a': 2,
+                            'foo': 'bar2'
+                        },
+                        {
+                            'a': 1,
+                            'foo': 'bar1'
+                        },
+                        {
+                            'a': 3,
+                            'foo': 'bar3'
+                        }
+                    ] AS t
+                    ORDER BY t.a""",
+                expected = ListType(
+                    StructType(
+                        fields = mapOf(
+                            "foo" to StaticType.STRING
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "EXCLUDE SELECT star with JOINs",
+                query = """SELECT *
+                    EXCLUDE bar.d
+                    FROM 
+                    <<
+                        {'a': 1, 'b': 11}, 
+                        {'a': 2, 'b': 22}
+                    >> AS foo,
+                    <<
+                        {'c': 3, 'd': 33},
+                        {'c': 4, 'd': 44}
+                    >> AS bar""",
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "a" to StaticType.INT,
+                            "b" to StaticType.INT,
+                            "c" to StaticType.INT
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "SELECT t.b EXCLUDE ex 1",
+                query = """SELECT t.b EXCLUDE t.b[*].b_1
+                    FROM <<
+                    {
+                        'a': {'a_1':1,'a_2':2},
+                        'b': [ {'b_1':3,'b_2':4}, {'b_1':5,'b_2':6} ],
+                        'c': 7,
+                        'd': 8
+                    } >> AS t""",
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "b" to ListType(
+                                elementType = StructType(
+                                    fields = mapOf(
+                                        "b_2" to StaticType.INT
+                                    ),
+                                    contentClosed = true,
+                                    constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                )
+                            ),
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "SELECT * EXCLUDE ex 2",
+                query = """SELECT * EXCLUDE t.b[*].b_1
+                    FROM <<
+                    {
+                        'a': {'a_1':1,'a_2':2},
+                        'b': [ {'b_1':3,'b_2':4}, {'b_1':5,'b_2':6} ],
+                        'c': 7,
+                        'd': 8
+                    } >> AS t""",
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "a" to StructType(
+                                fields = mapOf(
+                                    "a_1" to StaticType.INT,
+                                    "a_2" to StaticType.INT
+                                ),
+                                contentClosed = true,
+                                constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                            ),
+                            "b" to ListType(
+                                elementType = StructType(
+                                    fields = mapOf(
+                                        "b_2" to StaticType.INT
+                                    ),
+                                    contentClosed = true,
+                                    constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                )
+                            ),
+                            "c" to StaticType.INT,
+                            "d" to StaticType.INT
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "SELECT VALUE t.b EXCLUDE",
+                query = """SELECT VALUE t.b EXCLUDE t.b[*].b_1
+                    FROM <<
+                    {
+                        'a': {'a_1':1,'a_2':2},
+                        'b': [ {'b_1':3,'b_2':4}, {'b_1':5,'b_2':6} ],
+                        'c': 7,
+                        'd': 8
+                    } >> AS t""",
+                expected = BagType(
+                    ListType(
+                        elementType = StructType(
+                            fields = mapOf(
+                                "b_2" to StaticType.INT
+                            ),
+                            contentClosed = true,
+                            constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                        )
+                    ),
+                )
+            ),
+            SuccessTestCase(
+                name = "SELECT * EXCLUDE collection wildcard and nested tuple attr",
+                query = """SELECT * EXCLUDE t.a[*].b.c
+                    FROM <<
+                        {
+                            'a': [
+                                { 'b': { 'c': 0, 'd': 'zero' } },
+                                { 'b': { 'c': 1, 'd': 'one' } },
+                                { 'b': { 'c': 2, 'd': 'two' } }
+                            ]
+                        }
+                    >> AS t""",
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "a" to ListType(
+                                elementType = StructType(
+                                    fields = mapOf(
+                                        "b" to StructType(
+                                            fields = mapOf(
+                                                "d" to StaticType.STRING
+                                            ),
+                                            contentClosed = true,
+                                            constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                        ),
+                                    ),
+                                    contentClosed = true,
+                                    constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                ),
+                            )
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "SELECT * EXCLUDE collection index and nested tuple attr",
+                query = """SELECT * EXCLUDE t.a[1].b.c
+                    FROM <<
+                        {
+                            'a': [
+                                { 'b': { 'c': 0, 'd': 'zero' } },
+                                { 'b': { 'c': 1, 'd': 'one' } },
+                                { 'b': { 'c': 2, 'd': 'two' } }
+                            ]
+                        }
+                    >> AS t""",
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "a" to ListType(
+                                elementType = StructType(
+                                    fields = mapOf(
+                                        "b" to StructType(
+                                            fields = mapOf(
+                                                "c" to StaticType.INT.asOptional(),
+                                                "d" to StaticType.STRING
+                                            ),
+                                            contentClosed = true,
+                                            constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                        ),
+                                    ),
+                                    contentClosed = true,
+                                    constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                ),
+                            )
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "SELECT * EXCLUDE collection wildcard and nested tuple wildcard",
+                query = """SELECT * EXCLUDE t.a[*].b.*
+                    FROM <<
+                        {
+                            'a': [
+                                { 'b': { 'c': 0, 'd': 'zero' } },
+                                { 'b': { 'c': 1, 'd': 'one' } },
+                                { 'b': { 'c': 2, 'd': 'two' } }
+                            ]
+                        }
+                    >> AS t""",
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "a" to ListType(
+                                elementType = StructType(
+                                    fields = mapOf(
+                                        "b" to StructType(
+                                            fields = mapOf(), // empty map; all fields of b excluded
+                                            contentClosed = true,
+                                            constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                        ),
+                                    ),
+                                    contentClosed = true,
+                                    constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                ),
+                            )
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "SELECT * EXCLUDE collection index and nested tuple wildcard",
+                query = """SELECT * EXCLUDE t.a[1].b.*
+                    FROM <<
+                        {
+                            'a': [
+                                { 'b': { 'c': 0, 'd': 'zero' } },
+                                { 'b': { 'c': 1, 'd': 'one' } },
+                                { 'b': { 'c': 2, 'd': 'two' } }
+                            ]
+                        }
+                    >> AS t""",
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "a" to ListType(
+                                elementType = StructType(
+                                    fields = mapOf(
+                                        "b" to StructType(
+                                            fields = mapOf( // all fields of b optional
+                                                "c" to StaticType.INT.asOptional(),
+                                                "d" to StaticType.STRING.asOptional()
+                                            ),
+                                            contentClosed = true,
+                                            constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                        ),
+                                    ),
+                                    contentClosed = true,
+                                    constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                ),
+                            )
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "SELECT * EXCLUDE collection wildcard and nested collection wildcard",
+                query = """SELECT * EXCLUDE t.a[*].b.d[*].e
+                    FROM <<
+                        {
+                            'a': [
+                                { 'b': { 'c': 0, 'd': [{'e': 'zero', 'f': true}] } },
+                                { 'b': { 'c': 1, 'd': [{'e': 'one', 'f': true}] } },
+                                { 'b': { 'c': 2, 'd': [{'e': 'two', 'f': true}] } }
+                            ]
+                        }
+                    >> AS t""",
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "a" to ListType(
+                                elementType = StructType(
+                                    fields = mapOf(
+                                        "b" to StructType(
+                                            fields = mapOf(
+                                                "c" to StaticType.INT,
+                                                "d" to ListType(
+                                                    elementType = StructType(
+                                                        fields = mapOf(
+                                                            "f" to StaticType.BOOL
+                                                        ),
+                                                        contentClosed = true,
+                                                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                                    )
+                                                )
+                                            ),
+                                            contentClosed = true,
+                                            constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                        ),
+                                    ),
+                                    contentClosed = true,
+                                    constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                ),
+                            )
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "SELECT * EXCLUDE collection index and nested collection wildcard",
+                query = """SELECT * EXCLUDE t.a[1].b.d[*].e
+                    FROM <<
+                        {
+                            'a': [
+                                { 'b': { 'c': 0, 'd': [{'e': 'zero', 'f': true}] } },
+                                { 'b': { 'c': 1, 'd': [{'e': 'one', 'f': true}] } },
+                                { 'b': { 'c': 2, 'd': [{'e': 'two', 'f': true}] } }
+                            ]
+                        }
+                    >> AS t""",
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "a" to ListType(
+                                elementType = StructType(
+                                    fields = mapOf(
+                                        "b" to StructType(
+                                            fields = mapOf(
+                                                "c" to StaticType.INT,
+                                                "d" to ListType(
+                                                    elementType = StructType(
+                                                        fields = mapOf(
+                                                            "e" to StaticType.STRING.asOptional(), // last step is optional since only a[1]... is excluded
+                                                            "f" to StaticType.BOOL
+                                                        ),
+                                                        contentClosed = true,
+                                                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                                    )
+                                                )
+                                            ),
+                                            contentClosed = true,
+                                            constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                        ),
+                                    ),
+                                    contentClosed = true,
+                                    constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                ),
+                            )
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "SELECT * EXCLUDE collection index and nested collection index",
+                query = """SELECT * EXCLUDE t.a[1].b.d[0].e
+                    FROM <<
+                        {
+                            'a': [
+                                { 'b': { 'c': 0, 'd': [{'e': 'zero', 'f': true}] } },
+                                { 'b': { 'c': 1, 'd': [{'e': 'one', 'f': true}] } },
+                                { 'b': { 'c': 2, 'd': [{'e': 'two', 'f': true}] } }
+                            ]
+                        }
+                    >> AS t""",
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "a" to ListType(
+                                elementType = StructType(
+                                    fields = mapOf(
+                                        "b" to StructType(
+                                            fields = mapOf(
+                                                "c" to StaticType.INT,
+                                                "d" to ListType(
+                                                    elementType = StructType(
+                                                        fields = mapOf( // same as above
+                                                            "e" to StaticType.STRING.asOptional(),
+                                                            "f" to StaticType.BOOL
+                                                        ),
+                                                        contentClosed = true,
+                                                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                                    )
+                                                )
+                                            ),
+                                            contentClosed = true,
+                                            constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                        ),
+                                    ),
+                                    contentClosed = true,
+                                    constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                ),
+                            )
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "EXCLUDE case sensitive lookup",
+                query = """SELECT * EXCLUDE t."a".b['c']
+                    FROM <<
+                        {
+                            'a': {
+                                'B': {
+                                    'c': 0,
+                                    'd': 'foo'
+                                }
+                            }
+                        }
+                    >> AS t""",
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "a" to StructType(
+                                fields = mapOf(
+                                    "B" to StructType(
+                                        fields = mapOf(
+                                            "d" to StaticType.STRING
+                                        ),
+                                        contentClosed = true,
+                                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                    ),
+                                ),
+                                contentClosed = true,
+                                constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                            ),
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "EXCLUDE case sensitive lookup with capitalized and uncapitalized attr",
+                query = """SELECT * EXCLUDE t."a".b['c']
+                    FROM <<
+                        {
+                            'a': {
+                                'B': {
+                                    'c': 0,
+                                    'C': true,
+                                    'd': 'foo'
+                                }
+                            }
+                        }
+                    >> AS t""",
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "a" to StructType(
+                                fields = mapOf(
+                                    "B" to StructType(
+                                        fields = mapOf(
+                                            "C" to StaticType.BOOL, // keep 'C'
+                                            "d" to StaticType.STRING
+                                        ),
+                                        contentClosed = true,
+                                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                    ),
+                                ),
+                                contentClosed = true,
+                                constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                            ),
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "EXCLUDE case sensitive lookup with both capitalized and uncapitalized removed",
+                query = """SELECT * EXCLUDE t."a".b.c
+                    FROM <<
+                        {
+                            'a': {
+                                'B': {          -- both 'c' and 'C' to be removed
+                                    'c': 0,
+                                    'C': true,
+                                    'd': 'foo'
+                                }
+                            }
+                        }
+                    >> AS t""",
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "a" to StructType(
+                                fields = mapOf(
+                                    "B" to StructType(
+                                        fields = mapOf(
+                                            "d" to StaticType.STRING
+                                        ),
+                                        contentClosed = true,
+                                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                    ),
+                                ),
+                                contentClosed = true,
+                                constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                            ),
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "EXCLUDE with both duplicates",
+                query = """SELECT * EXCLUDE t."a".b.c
+                    FROM <<
+                        {
+                            'a': {
+                                'B': {
+                                    'c': 0,
+                                    'c': true,
+                                    'd': 'foo'
+                                }
+                            }
+                        }
+                    >> AS t""",
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "a" to StructType(
+                                fields = mapOf(
+                                    "B" to StructType(
+                                        fields = mapOf(
+                                            // both "c" removed
+                                            "d" to StaticType.STRING
+                                        ),
+                                        contentClosed = true,
+                                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(false)) // UniqueAttrs set to false
+                                    ),
+                                ),
+                                contentClosed = true,
+                                constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                            ),
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                    )
+                )
+            ),
+            // EXCLUDE regression test (behavior subject to change pending RFC)
+            SuccessTestCase(
+                name = "EXCLUDE with removed attribute later referenced",
+                query = "SELECT * EXCLUDE t.a, t.a.b FROM << { 'a': { 'b': 1 }, 'c': 2 } >> AS t",
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "c" to StaticType.INT
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                    )
+                )
+            ),
+            // EXCLUDE regression test (behavior subject to change pending RFC)
+            SuccessTestCase(
+                name = "EXCLUDE with non-existent attribute reference",
+                query = "SELECT * EXCLUDE t.attr_does_not_exist FROM << { 'a': 1 } >> AS t",
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "a" to StaticType.INT
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                    )
+                )
+            ),
+            // EXCLUDE regression test (behavior subject to change pending RFC); could give error/warning
+            SuccessTestCase(
+                name = "exclude union of types",
+                query = """SELECT t EXCLUDE t.a.b
+                    FROM <<
+                        {
+                            'a': {
+                                'b': 1,    -- `b` to be excluded
+                                'c': 'foo'
+                            }
+                        },
+                        {
+                            'a': NULL
+                        }
+                    >> AS t""",
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "t" to StaticType.unionOf(
+                                StructType(
+                                    fields = mapOf(
+                                        "a" to StructType(
+                                            fields = mapOf(
+                                                "c" to StaticType.STRING
+                                            ),
+                                            contentClosed = true,
+                                            constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                        )
+                                    ),
+                                    contentClosed = true,
+                                    constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                ),
+                                StructType(
+                                    fields = mapOf(
+                                        "a" to StaticType.NULL
+                                    ),
+                                    contentClosed = true,
+                                    constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                ),
+                            )
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "exclude union of types exclude same type",
+                query = """SELECT t EXCLUDE t.a.b
+                    FROM <<
+                        {
+                            'a': {
+                                'b': 1,    -- `b` to be excluded
+                                'c': 'foo'
+                            }
+                        },
+                        {
+                            'a': {
+                                'b': 1,    -- `b` to be excluded
+                                'c': NULL
+                            }
+                        }
+                    >> AS t""",
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "t" to StaticType.unionOf(
+                                StructType(
+                                    fields = mapOf(
+                                        "a" to StructType(
+                                            fields = mapOf(
+                                                "c" to StaticType.STRING
+                                            ),
+                                            contentClosed = true,
+                                            constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                        )
+                                    ),
+                                    contentClosed = true,
+                                    constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                ),
+                                StructType(
+                                    fields = mapOf(
+                                        "a" to StructType(
+                                            fields = mapOf(
+                                                "c" to StaticType.NULL
+                                            ),
+                                            contentClosed = true,
+                                            constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                        )
+                                    ),
+                                    contentClosed = true,
+                                    constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                ),
+                            )
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "exclude union of types exclude different type",
+                query = """SELECT t EXCLUDE t.a.c
+                    FROM <<
+                        {
+                            'a': {
+                                'b': 1,
+                                'c': 'foo'  -- `c` to be excluded
+                            }
+                        },
+                        {
+                            'a': {
+                                'b': 1,
+                                'c': NULL   -- `c` to be excluded
+                            }
+                        }
+                    >> AS t""",
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "t" to StructType( // union gone
+                                fields = mapOf(
+                                    "a" to StructType(
+                                        fields = mapOf(
+                                            "b" to StaticType.INT
+                                        ),
+                                        contentClosed = true,
+                                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                    )
+                                ),
+                                contentClosed = true,
+                                constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                            )
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                    )
+                )
+            ),
+            // EXCLUDE regression test (behavior subject to change pending RFC); could give error/warning
+            SuccessTestCase(
+                name = "invalid exclude collection wildcard",
+                query = """SELECT * EXCLUDE t.a[*]
+                    FROM <<
+                        {
+                            'a': {
+                                'b': {
+                                    'c': 0,
+                                    'd': 'foo'
+                                }
+                            }
+                        }
+                    >> AS t""",
+                expected = BagType(
+                    elementType = StructType(
+                        fields = mapOf(
+                            "a" to StructType(
+                                fields = mapOf(
+                                    "b" to StructType(
+                                        fields = mapOf(
+                                            "c" to StaticType.INT,
+                                            "d" to StaticType.STRING
+                                        ),
+                                        contentClosed = true,
+                                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                    )
+                                ),
+                                contentClosed = true,
+                                constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                            )
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                    )
+                )
+            ),
+            // EXCLUDE regression test (behavior subject to change pending RFC); could give error/warning
+            SuccessTestCase(
+                name = "invalid exclude collection index",
+                query = """SELECT * EXCLUDE t.a[1]
+                    FROM <<
+                        {
+                            'a': {
+                                'b': {
+                                    'c': 0,
+                                    'd': 'foo'
+                                }
+                            }
+                        }
+                    >> AS t""",
+                expected = BagType(
+                    elementType = StructType(
+                        fields = mapOf(
+                            "a" to StructType(
+                                fields = mapOf(
+                                    "b" to StructType(
+                                        fields = mapOf(
+                                            "c" to StaticType.INT,
+                                            "d" to StaticType.STRING
+                                        ),
+                                        contentClosed = true,
+                                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                    )
+                                ),
+                                contentClosed = true,
+                                constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                            )
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                    )
+                )
+            ),
+            // EXCLUDE regression test (behavior subject to change pending RFC); could give error/warning
+            SuccessTestCase(
+                name = "invalid exclude tuple attr",
+                query = """SELECT * EXCLUDE t.a.b
+                    FROM <<
+                        {
+                            'a': [
+                                { 'b': 0 },
+                                { 'b': 1 },
+                                { 'b': 2 }
+                            ]
+                        }
+                    >> AS t""",
+                expected = BagType(
+                    elementType = StructType(
+                        fields = mapOf(
+                            "a" to ListType(
+                                elementType = StructType(
+                                    fields = mapOf(
+                                        "b" to StaticType.INT
+                                    ),
+                                    contentClosed = true,
+                                    constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                )
+                            )
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                    )
+                )
+            ),
+            // EXCLUDE regression test (behavior subject to change pending RFC); could give error/warning
+            SuccessTestCase(
+                name = "invalid exclude tuple wildcard",
+                query = """SELECT * EXCLUDE t.a.*
+                    FROM <<
+                        {
+                            'a': [
+                                { 'b': 0 },
+                                { 'b': 1 },
+                                { 'b': 2 }
+                            ]
+                        }
+                    >> AS t""",
+                expected = BagType(
+                    elementType = StructType(
+                        fields = mapOf(
+                            "a" to ListType(
+                                elementType = StructType(
+                                    fields = mapOf(
+                                        "b" to StaticType.INT
+                                    ),
+                                    contentClosed = true,
+                                    constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                )
+                            )
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                    )
+                )
+            ),
+            // EXCLUDE regression test (behavior subject to change pending RFC); could give error/warning
+            SuccessTestCase(
+                name = "invalid exclude tuple attr step",
+                query = """SELECT * EXCLUDE t.b   -- `t.b` does not exist
+                    FROM <<
+                        {
+                            'a': <<
+                                { 'b': 0 },
+                                { 'b': 1 },
+                                { 'b': 2 }
+                            >>
+                        }
+                    >> AS t""",
+                expected = BagType(
+                    elementType = StructType(
+                        fields = mapOf(
+                            "a" to BagType(
+                                elementType = StructType(
+                                    fields = mapOf(
+                                        "b" to StaticType.INT
+                                    ),
+                                    contentClosed = true,
+                                    constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                )
+                            )
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                    )
+                )
+            ),
+            // EXCLUDE regression test (behavior subject to change pending RFC); could give error/warning
+            ErrorTestCase(
+                name = "invalid exclude root",
+                query = """SELECT * EXCLUDE nonsense.b   -- `nonsense` does not exist in binding tuples
+                    FROM <<
+                        {
+                            'a': <<
+                                { 'b': 0 },
+                                { 'b': 1 },
+                                { 'b': 2 }
+                            >>
+                        }
+                    >> AS t""",
+                expected = BagType(
+                    elementType = StructType(
+                        fields = mapOf(
+                            "a" to BagType(
+                                elementType = StructType(
+                                    fields = mapOf(
+                                        "b" to StaticType.INT
+                                    ),
+                                    contentClosed = true,
+                                    constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                )
+                            )
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                    )
+                ),
+                problemHandler = assertProblemExists {
+                    Problem(
+                        UNKNOWN_PROBLEM_LOCATION,
+                        PlanningProblemDetails.UnresolvedExcludeExprRoot("nonsense")
+                    )
+                }
+            ),
+            // EXCLUDE regression test (behavior subject to change pending RFC); could give error/warning
+            SuccessTestCase(
+                name = "exclude with unions and last step collection index",
+                query = """SELECT * EXCLUDE t.a[0].c    -- `c`'s type to be unioned with `MISSING`
+                    FROM <<
+                        {
+                            'a': [
+                                {
+                                    'b': 0,
+                                    'c': 0
+                                },
+                                {
+                                    'b': 1,
+                                    'c': NULL
+                                },
+                                {
+                                    'b': 2,
+                                    'c': 0.1
+                                }
+                            ]
+                        }
+                    >> AS t""",
+                expected = BagType(
+                    elementType = StructType(
+                        fields = mapOf(
+                            "a" to ListType(
+                                elementType = StaticType.unionOf(
+                                    StructType(
+                                        fields = mapOf(
+                                            "b" to StaticType.INT,
+                                            "c" to StaticType.INT.asOptional()
+                                        ),
+                                        contentClosed = true,
+                                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                    ),
+                                    StructType(
+                                        fields = mapOf(
+                                            "b" to StaticType.INT,
+                                            "c" to StaticType.NULL.asOptional()
+                                        ),
+                                        contentClosed = true,
+                                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                    ),
+                                    StructType(
+                                        fields = mapOf(
+                                            "b" to StaticType.INT,
+                                            "c" to StaticType.DECIMAL.asOptional()
+                                        ),
+                                        contentClosed = true,
+                                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                    )
+                                )
+                            )
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "EXCLUDE using a catalog",
+                catalog = CATALOG_B,
+                query = "SELECT * EXCLUDE t.c FROM b.b.b AS t",
+                expected = BagType(
+                    elementType = StructType(
+                        fields = mapOf(
+                            "b" to StructType(
+                                fields = mapOf(
+                                    "b" to StaticType.INT
+                                ),
+                                contentClosed = true,
+                                constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                            ),
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                    )
+                )
             ),
             SuccessTestCase(
                 name = "BITWISE_AND_1",

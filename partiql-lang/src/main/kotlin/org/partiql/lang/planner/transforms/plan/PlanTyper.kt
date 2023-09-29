@@ -37,8 +37,11 @@ import org.partiql.lang.types.TypedOpParameter
 import org.partiql.lang.types.UnknownArguments
 import org.partiql.lang.util.cartesianProduct
 import org.partiql.plan.Arg
+import org.partiql.plan.Attribute
 import org.partiql.plan.Binding
 import org.partiql.plan.Case
+import org.partiql.plan.ExcludeExpr
+import org.partiql.plan.ExcludeStep
 import org.partiql.plan.Plan
 import org.partiql.plan.PlanNode
 import org.partiql.plan.Property
@@ -155,6 +158,164 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
         )
     }
 
+    /**
+     * Initial implementation of `EXCLUDE` schema inference. Until an RFC is finalized for `EXCLUDE`
+     * (https://github.com/partiql/partiql-spec/issues/39), this behavior is considered experimental and subject to
+     * change.
+     *
+     * So far this implementation includes
+     * - Excluding tuple attrs (e.g. t.a.b.c)
+     * - Excluding tuple wildcards (e.g. t.a.*.b)
+     * - Excluding collection indexes (e.g. t.a[0].b -- behavior subject to change; see below discussion)
+     * - Excluding collection wildcards (e.g. t.a[*].b)
+     *
+     * There are still discussion points regarding the following edge cases
+     * - EXCLUDE on a tuple attribute that doesn't exist -- give an error/warning?
+     *   - currently no error
+     * - EXCLUDE on a tuple attribute that has duplicates -- give an error/warning? exclude one? exclude both?
+     *   - currently excludes both w/ no error
+     * - EXCLUDE on a collection index as the last step -- mark element type as optional?
+     *   - currently element type as-is
+     * - EXCLUDE on a collection index w/ remaining path steps -- mark last step's type as optional?
+     *   - currently marks last step's type as optional
+     * - EXCLUDE on a binding tuple variable (e.g. SELECT ... EXCLUDE t FROM t) -- error?
+     *   - currently a parser error
+     * - EXCLUDE on a union type -- give an error/warning? no-op? exclude on each type in union?
+     *   - currently exclude on each union type
+     * - If SELECT list includes an attribute that is excluded, we could consider giving an error in PlanTyper or
+     * some other semantic pass
+     *   - currently does not give an error
+     */
+    override fun visitRelExclude(node: Rel.Exclude, ctx: Context): Rel.Exclude {
+        val input = visitRel(node.input, ctx)
+        val exprs = node.exprs
+        val typeEnv = input.getTypeEnv()
+        val newTypeEnv = exprs.fold(typeEnv) { tEnv, expr ->
+            excludeExpr(tEnv, expr, ctx)
+        }
+        return node.copy(
+            input = input,
+            common = node.common.copy(
+                typeEnv = newTypeEnv,
+                properties = input.getProperties()
+            )
+        )
+    }
+
+    private fun attrEqualsExcludeRoot(attr: Attribute, expr: ExcludeExpr): Boolean {
+        val rootId = expr.root
+        return attr.name == rootId || (expr.rootCase == Case.INSENSITIVE && attr.name.equals(expr.root, ignoreCase = true))
+    }
+
+    private fun excludeExpr(attrs: List<Attribute>, expr: ExcludeExpr, ctx: Context): List<Attribute> {
+        val resultAttrs = mutableListOf<Attribute>()
+        val attrsExist = attrs.find { attr -> attrEqualsExcludeRoot(attr, expr) } != null
+        if (!attrsExist) {
+            handleUnresolvedExcludeExprRoot(expr.root, ctx)
+        }
+        attrs.forEach { attr ->
+            if (attrEqualsExcludeRoot(attr, expr)) {
+                if (expr.steps.isEmpty()) {
+                    throw IllegalStateException("Empty `ExcludeExpr.steps` encountered. This should have been caught by the parser.")
+                } else {
+                    val newType = excludeExprSteps(attr.type, expr.steps, lastStepAsOptional = false, ctx)
+                    resultAttrs.add(
+                        attr.copy(
+                            type = newType
+                        )
+                    )
+                }
+            } else {
+                resultAttrs.add(
+                    attr
+                )
+            }
+        }
+        return resultAttrs
+    }
+
+    private fun excludeExprSteps(type: StaticType, steps: List<ExcludeStep>, lastStepAsOptional: Boolean, ctx: Context): StaticType {
+        fun excludeExprStepsStruct(s: StructType, steps: List<ExcludeStep>, lastStepAsOptional: Boolean): StaticType {
+            val outputFields = mutableListOf<StructType.Field>()
+            val first = steps.first()
+            s.fields.forEach { field ->
+                when (first) {
+                    is ExcludeStep.TupleAttr -> {
+                        if (field.key == first.attr || (first.case == Case.INSENSITIVE && field.key.equals(first.attr, ignoreCase = true))) {
+                            if (steps.size == 1) {
+                                if (lastStepAsOptional) {
+                                    val newField = StructType.Field(field.key, field.value.asOptional())
+                                    outputFields.add(newField)
+                                }
+                            } else {
+                                outputFields.add(StructType.Field(field.key, excludeExprSteps(field.value, steps.drop(1), lastStepAsOptional, ctx)))
+                            }
+                        } else {
+                            outputFields.add(field)
+                        }
+                    }
+                    is ExcludeStep.TupleWildcard -> {
+                        if (steps.size == 1) {
+                            if (lastStepAsOptional) {
+                                val newField = StructType.Field(field.key, field.value.asOptional())
+                                outputFields.add(newField)
+                            }
+                        } else {
+                            outputFields.add(StructType.Field(field.key, excludeExprSteps(field.value, steps.drop(1), lastStepAsOptional, ctx)))
+                        }
+                    }
+                    else -> {
+                        // currently no change to field.value and no error thrown; could consider an error/warning in
+                        // the future
+                        outputFields.add(StructType.Field(field.key, field.value))
+                    }
+                }
+            }
+            return s.copy(fields = outputFields)
+        }
+
+        fun excludeExprStepsCollection(c: CollectionType, steps: List<ExcludeStep>, lastStepAsOptional: Boolean): StaticType {
+            var elementType = c.elementType
+            when (steps.first()) {
+                is ExcludeStep.CollectionIndex -> {
+                    if (steps.size > 1) {
+                        elementType = excludeExprSteps(elementType, steps.drop(1), lastStepAsOptional = true, ctx)
+                    }
+                }
+                is ExcludeStep.CollectionWildcard -> {
+                    if (steps.size > 1) {
+                        elementType =
+                            excludeExprSteps(elementType, steps.drop(1), lastStepAsOptional = lastStepAsOptional, ctx)
+                    }
+                    // currently no change to elementType if collection wildcard is last element; this behavior could
+                    // change based on RFC definition
+                }
+                else -> {
+                    // currently no change to elementType and no error thrown; could consider an error/warning in
+                    // the future
+                }
+            }
+            return when (c) {
+                is BagType -> c.copy(elementType)
+                is ListType -> c.copy(elementType)
+                is SexpType -> c.copy(elementType)
+            }
+        }
+
+        return when (type) {
+            is StructType -> excludeExprStepsStruct(type, steps, lastStepAsOptional)
+            is CollectionType -> excludeExprStepsCollection(type, steps, lastStepAsOptional)
+            is AnyOfType -> {
+                StaticType.unionOf(
+                    type.types.map {
+                        excludeExprSteps(it, steps, lastStepAsOptional, ctx)
+                    }.toSet()
+                )
+            }
+            else -> type
+        }.flatten()
+    }
+
     override fun visitRelUnpivot(node: Rel.Unpivot, ctx: Context): Rel.Unpivot {
         val from = node
 
@@ -227,7 +388,8 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
         return node.copy(
             input = input,
             common = node.common.copy(
-                typeEnv = typeEnv
+                typeEnv = typeEnv,
+                properties = input.getProperties()
             )
         )
     }
@@ -1026,6 +1188,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
         is Rel.Scan -> this.common
         is Rel.Sort -> this.common
         is Rel.Unpivot -> this.common
+        is Rel.Exclude -> this.common
     }
 
     private fun inferPathComponentExprType(
@@ -1704,6 +1867,15 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
             Problem(
                 sourceLocation = UNKNOWN_PROBLEM_LOCATION,
                 details = SemanticProblemDetails.CoercionError(actualType)
+            )
+        )
+    }
+
+    private fun handleUnresolvedExcludeExprRoot(root: String, ctx: Context) {
+        ctx.problemHandler.handleProblem(
+            Problem(
+                sourceLocation = UNKNOWN_PROBLEM_LOCATION,
+                details = PlanningProblemDetails.UnresolvedExcludeExprRoot(root)
             )
         )
     }

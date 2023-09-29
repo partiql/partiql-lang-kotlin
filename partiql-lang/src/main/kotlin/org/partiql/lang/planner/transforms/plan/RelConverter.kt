@@ -4,8 +4,11 @@ import com.amazon.ionelement.api.ionInt
 import com.amazon.ionelement.api.ionString
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.eval.visitors.VisitorTransformBase
+import org.partiql.lang.planner.transforms.plan.RexConverter.convertCase
 import org.partiql.plan.Binding
 import org.partiql.plan.Case
+import org.partiql.plan.ExcludeExpr
+import org.partiql.plan.ExcludeStep
 import org.partiql.plan.Plan
 import org.partiql.plan.Rel
 import org.partiql.plan.Rex
@@ -91,6 +94,7 @@ internal class RelConverter {
         rel = convertHaving(rel, sel.having)
         rel = convertOrderBy(rel, sel.order)
         rel = convertFetch(rel, sel.limit, sel.offset)
+        rel = convertExclude(rel, sel.excludeClause)
         // append SQL projection if present
         rel = when (val projection = sel.project) {
             is PartiqlAst.Projection.ProjectList -> convertProjectList(rel, projection)
@@ -98,6 +102,34 @@ internal class RelConverter {
             else -> rel // skip
         }
         return rel
+    }
+
+    private fun convertExclude(input: Rel, excludeOp: PartiqlAst.ExcludeOp?): Rel = when (excludeOp) {
+        null -> input
+        else -> {
+            val exprs = excludeOp.exprs.map { convertExcludeExpr(it) }
+            Plan.relExclude(
+                common = empty,
+                input = input,
+                exprs = exprs,
+            )
+        }
+    }
+
+    private fun convertExcludeExpr(excludeExpr: PartiqlAst.ExcludeExpr): ExcludeExpr {
+        val root = excludeExpr.root.name.text
+        val case = convertCase(excludeExpr.root.case)
+        val steps = excludeExpr.steps.map { convertExcludeSteps(it) }
+        return Plan.excludeExpr(root, case, steps)
+    }
+
+    private fun convertExcludeSteps(excludeStep: PartiqlAst.ExcludeStep): ExcludeStep {
+        return when (excludeStep) {
+            is PartiqlAst.ExcludeStep.ExcludeCollectionWildcard -> Plan.excludeStepCollectionWildcard()
+            is PartiqlAst.ExcludeStep.ExcludeTupleWildcard -> Plan.excludeStepTupleWildcard()
+            is PartiqlAst.ExcludeStep.ExcludeTupleAttr -> Plan.excludeStepTupleAttr(excludeStep.attr.name.text, convertCase(excludeStep.attr.case))
+            is PartiqlAst.ExcludeStep.ExcludeCollectionIndex -> Plan.excludeStepCollectionIndex(excludeStep.index.value.toInt())
+        }
     }
 
     /**

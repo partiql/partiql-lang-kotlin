@@ -36,6 +36,7 @@ abstract class VisitorTransformBase : PartiqlAst.VisitorTransform() {
      * infinite recursion.
      */
     fun transformExprSelectEvaluationOrder(node: PartiqlAst.Expr.Select): PartiqlAst.Expr {
+        val exclude = transformExprSelect_excludeClause(node)
         val from = transformExprSelect_from(node)
         val fromLet = transformExprSelect_fromLet(node)
         val where = transformExprSelect_where(node)
@@ -51,6 +52,7 @@ abstract class VisitorTransformBase : PartiqlAst.VisitorTransform() {
             PartiqlAst.Expr.Select(
                 setq = setq,
                 project = project,
+                excludeClause = exclude,
                 from = from,
                 fromLet = fromLet,
                 where = where,

@@ -167,6 +167,7 @@ may then be further optimized by selecting better implementations of each operat
             (select
                 (setq (? set_quantifier))
                 (project projection)
+                (exclude_clause (? exclude_op))
                 (from from_source)
                 (from_let (? let))
                 (where (? expr))
@@ -197,7 +198,7 @@ may then be further optimized by selecting better implementations of each operat
         (sum path_step
             // `someRoot[<expr>]`, or `someRoot.someField` which is equivalent to `someRoot['someField']`.
             (path_expr index::expr case::case_sensitivity)
-            // `someRoot[*]`]
+            // `someRoot[*]`
             (path_wildcard)
             // `someRoot.*`
             (path_unpivot))
@@ -219,6 +220,22 @@ may then be further optimized by selecting better implementations of each operat
             (project_all expr::expr)
             // For `<expr> [AS <id>]`
             (project_expr expr::expr as_alias::(? symbol)))
+
+        // EXCLUDE clause
+        (product exclude_op exprs::(* exclude_expr 1))
+
+        (product exclude_expr root::identifier steps::(* exclude_step 1))
+
+        (sum exclude_step
+            // `someRoot.someField` case sensitivity depends on if `someField` is quoted
+            // `someRoot[<string literal>] is equivalent to `someRoot."<string literal>"` (case-sensitive)
+            (exclude_tuple_attr attr::identifier)
+            // `someRoot[<int literal>]`
+            (exclude_collection_index index::int)
+            // `someRoot[*]`]
+            (exclude_tuple_wildcard)
+            // `someRoot.*`
+            (exclude_collection_wildcard))
 
         // A list of LET bindings
         (product let let_bindings::(* let_binding 1))

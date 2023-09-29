@@ -494,6 +494,7 @@ expr::[
   // The PartiQL `<sfw>` query expression, think SQL `<query specification>`
   s_f_w::{
     select:   select,              // oneof SELECT / SELECT VALUE / PIVOT
+    exclude:  optional::exclude,
     from:     from,
     let:      optional::let,
     where:    optional::expr,
@@ -560,6 +561,22 @@ select::[
     setq:         optional::set_quantifier,
   },
 ]
+
+exclude::{
+  exprs: list::[exclude_expr],
+  _: [
+    exclude_expr::{
+      root: '.identifier.symbol',
+      steps: list::[step],
+    },
+    step::[
+      exclude_tuple_attr::{ symbol: '.identifier.symbol' },
+      exclude_collection_index::{ index: int },
+      exclude_tuple_wildcard::{},
+      exclude_collection_wildcard::{},
+    ]
+  ]
+}
 
 // PartiQL FROM Clause Variants — https://partiql.org/dql/from.html
 from::[

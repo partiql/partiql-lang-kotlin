@@ -36,6 +36,7 @@ import com.amazon.ionelement.api.loadSingleElement
 import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.Token
 import org.antlr.v4.runtime.tree.TerminalNode
+import org.partiql.ast.Identifier
 import org.partiql.errors.ErrorCode
 import org.partiql.errors.Property
 import org.partiql.errors.PropertyValueMap
@@ -513,6 +514,7 @@ internal class PartiQLPigVisitor(
     override fun visitSfwQuery(ctx: PartiQLParser.SfwQueryContext) = PartiqlAst.build {
         val projection = visit(ctx.select) as PartiqlAst.Projection
         val strategy = getSetQuantifierStrategy(ctx.select)
+        val exclude = ctx.exclude?.let { visitExcludeClause(it) }
         val from = visitFromClause(ctx.from)
         val order = ctx.order?.let { visitOrderByClause(it) }
         val group = ctx.group?.let { visitGroupClause(it) }
@@ -524,6 +526,7 @@ internal class PartiQLPigVisitor(
         val metas = ctx.selectClause().getMetas()
         select(
             project = projection,
+            excludeClause = exclude,
             from = from,
             setq = strategy,
             order = order,
@@ -616,6 +619,51 @@ internal class PartiQLPigVisitor(
         val expr = visitExpr(ctx.expr())
         val metas = ctx.symbolPrimitive().getSourceMetaContainer()
         letBinding_(expr, convertSymbolPrimitive(ctx.symbolPrimitive())!!, metas)
+    }
+
+    /**
+     * EXCLUDE CLAUSE
+     *
+     */
+    override fun visitExcludeClause(ctx: PartiQLParser.ExcludeClauseContext) = PartiqlAst.build {
+        val excludeExprs = ctx.excludeExpr().map { expr ->
+            visitExcludeExpr(expr)
+        }
+        excludeOp(excludeExprs)
+    }
+
+    override fun visitExcludeExpr(ctx: PartiQLParser.ExcludeExprContext) = PartiqlAst.build {
+        val root = visitSymbolPrimitive(ctx.symbolPrimitive()).toIdentifier()
+        val steps = ctx.excludeExprSteps().map { visit(it) as PartiqlAst.ExcludeStep }
+        excludeExpr(root, steps)
+    }
+
+    override fun visitExcludeExprTupleAttr(ctx: PartiQLParser.ExcludeExprTupleAttrContext) = PartiqlAst.build {
+        val attr = ctx.symbolPrimitive().getString()
+        val caseSensitivity = when (ctx.symbolPrimitive().ident.type) {
+            PartiQLParser.IDENTIFIER_QUOTED -> caseSensitive()
+            PartiQLParser.IDENTIFIER -> caseInsensitive()
+            else -> throw ParserException("Invalid symbol reference.", ErrorCode.PARSE_INVALID_QUERY)
+        }
+        excludeTupleAttr(identifier(attr, caseSensitivity))
+    }
+
+    override fun visitExcludeExprCollectionIndex(ctx: PartiQLParser.ExcludeExprCollectionIndexContext) = PartiqlAst.build {
+        val index = ctx.index.text.toInteger().toLong()
+        excludeCollectionIndex(index)
+    }
+
+    override fun visitExcludeExprCollectionAttr(ctx: PartiQLParser.ExcludeExprCollectionAttrContext) = PartiqlAst.build {
+        val attr = ctx.attr.getStringValue()
+        excludeTupleAttr(identifier(attr, caseSensitive()))
+    }
+
+    override fun visitExcludeExprCollectionWildcard(ctx: PartiQLParser.ExcludeExprCollectionWildcardContext) = PartiqlAst.build {
+        excludeCollectionWildcard()
+    }
+
+    override fun visitExcludeExprTupleWildcard(ctx: PartiQLParser.ExcludeExprTupleWildcardContext) = PartiqlAst.build {
+        excludeTupleWildcard()
     }
 
     /**

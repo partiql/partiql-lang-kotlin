@@ -34,6 +34,9 @@ Thank you to all who have contributed!
 - Support parsing, planning, and evaluation of Bitwise AND operator (&).
   - The Bitwise And Operator only works for integer operands.
   - The operator precedence may change based on the pending operator precedence [RFC](https://github.com/partiql/partiql-docs/issues/50).
+- **EXPERIMENTAL** Adds `EXCLUDE` to parser, ast, plan, and plan schema inferencer
+  - This feature is marked as experimental until an RFC is added https://github.com/partiql/partiql-spec/issues/39
+  - NOTE: this feature is not currently implemented in the evaluator
 
 ### Changed
 
@@ -42,6 +45,7 @@ Thank you to all who have contributed!
 ### Fixed
 - Fixes typing of scalar subqueries in the PartiQLSchemaInferencer. Note that usage of `SELECT *` in subqueries
   is not fully supported. Please make sure to handle InferenceExceptions.
+- Fixes schema inferencer behavior for ORDER BY
 
 ### Removed
 
