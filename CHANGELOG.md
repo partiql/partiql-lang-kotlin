@@ -40,6 +40,8 @@ Thank you to all who have contributed!
 ### Deprecated
 
 ### Fixed
+- Fixes typing of scalar subqueries in the PartiQLSchemaInferencer. Note that usage of `SELECT *` in subqueries
+  is not fully supported. Please make sure to handle InferenceExceptions.
 
 ### Removed
 
@@ -47,7 +49,7 @@ Thank you to all who have contributed!
 
 ### Contributors
 Thank you to all who have contributed!
-- @<your-username>
+- @johnedquinn
 
 ## [0.13.1] - 2023-09-19
 

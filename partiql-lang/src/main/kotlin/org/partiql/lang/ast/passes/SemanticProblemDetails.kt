@@ -22,6 +22,13 @@ sealed class SemanticProblemDetails(override val severity: ProblemSeverity, val 
             }
         )
 
+    data class CoercionError(val actualType: StaticType) : SemanticProblemDetails(
+        severity = ProblemSeverity.ERROR,
+        messageFormatter = {
+            "Unable to coerce $actualType into a single value."
+        }
+    )
+
     object DuplicateAliasesInSelectListItem :
         SemanticProblemDetails(
             severity = ProblemSeverity.ERROR,

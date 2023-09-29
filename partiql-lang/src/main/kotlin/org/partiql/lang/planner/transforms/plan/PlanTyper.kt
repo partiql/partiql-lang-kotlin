@@ -334,12 +334,32 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
 
     override fun visitRexQueryScalarSubquery(node: Rex.Query.Scalar.Subquery, ctx: Context): PlanNode {
         val query = visitRex(node.query, ctx) as Rex.Query.Collection
-        when (val queryType = query.grabType() ?: handleMissingType(ctx)) {
+        // If it is SELECT VALUE, do not coerce.
+        if (query.constructor != null) {
+            val type = query.type as? CollectionType
+            return node.copy(query = query, type = type?.elementType?.flatten())
+        }
+        val type = when (val queryType = query.grabType() ?: handleMissingType(ctx)) {
             is CollectionType -> queryType.elementType
             else -> error("Query collection subqueries should always return a CollectionType.")
         }
+        val resultType = when (type) {
+            is StructType -> {
+                if (StaticTypeUtils.isClosedSafe(type) == true && type.fields.size == 1) {
+                    type.fields[0].value
+                } else {
+                    handleCoercionError(ctx, type)
+                    StaticType.ANY
+                }
+            }
+            else -> {
+                handleCoercionError(ctx, type)
+                StaticType.ANY
+            }
+        }
         return node.copy(
-            query = query
+            query = query,
+            type = resultType.flatten()
         )
     }
 
@@ -1313,7 +1333,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
         return requiredArgumentsMatch
     }
 
-    private fun Rex.isProjectAll(): Boolean {
+    internal fun Rex.isProjectAll(): Boolean {
         return when (this) {
             is Rex.Path -> {
                 val step = this.steps.lastOrNull() ?: return false
@@ -1675,6 +1695,15 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
             Problem(
                 sourceLocation = UNKNOWN_PROBLEM_LOCATION,
                 details = SemanticProblemDetails.DuplicateAliasesInSelectListItem
+            )
+        )
+    }
+
+    private fun handleCoercionError(ctx: Context, actualType: StaticType) {
+        ctx.problemHandler.handleProblem(
+            Problem(
+                sourceLocation = UNKNOWN_PROBLEM_LOCATION,
+                details = SemanticProblemDetails.CoercionError(actualType)
             )
         )
     }
