@@ -299,7 +299,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
                 )
             }
             else -> type
-        }
+        }.flatten()
     }
 
     override fun visitRelUnpivot(node: Rel.Unpivot, ctx: Context): Rel.Unpivot {

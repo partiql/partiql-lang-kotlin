@@ -2016,9 +2016,8 @@ class PartiQLSchemaInferencerTests {
                     )
                 )
             ),
-            // EXCLUDE regression test (behavior subject to change pending RFC); could give error/warning
             SuccessTestCase(
-                name = "exclude union of types nullable nested type",
+                name = "exclude union of types exclude same type",
                 query = """SELECT t EXCLUDE t.a.b
                     FROM <<
                         {
@@ -2064,6 +2063,45 @@ class PartiQLSchemaInferencerTests {
                                     contentClosed = true,
                                     constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
                                 ),
+                            )
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "exclude union of types exclude different type",
+                query = """SELECT t EXCLUDE t.a.c
+                    FROM <<
+                        {
+                            'a': {
+                                'b': 1,
+                                'c': 'foo'  -- `c` to be excluded
+                            }
+                        },
+                        {
+                            'a': {
+                                'b': 1,
+                                'c': NULL   -- `c` to be excluded
+                            }
+                        }
+                    >> AS t""",
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "t" to StructType( // union gone
+                                fields = mapOf(
+                                    "a" to StructType(
+                                        fields = mapOf(
+                                            "b" to StaticType.INT
+                                        ),
+                                        contentClosed = true,
+                                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                    )
+                                ),
+                                contentClosed = true,
+                                constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
                             )
                         ),
                         contentClosed = true,
