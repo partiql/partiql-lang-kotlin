@@ -2245,6 +2245,153 @@ class PartiQLSchemaInferencerTests {
                     )
                 )
             ),
+            // EXCLUDE regression test (behavior subject to change pending RFC); could give error/warning
+            SuccessTestCase(
+                name = "invalid exclude tuple attr step",
+                query = """SELECT * EXCLUDE t.b   -- `t.b` does not exist
+                    FROM <<
+                        {
+                            'a': <<
+                                { 'b': 0 },
+                                { 'b': 1 },
+                                { 'b': 2 }
+                            >>
+                        }
+                    >> AS t""",
+                expected = BagType(
+                    elementType = StructType(
+                        fields = mapOf(
+                            "a" to BagType(
+                                elementType = StructType(
+                                    fields = mapOf(
+                                        "b" to StaticType.INT
+                                    ),
+                                    contentClosed = true,
+                                    constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                )
+                            )
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                    )
+                )
+            ),
+            // EXCLUDE regression test (behavior subject to change pending RFC); could give error/warning
+            ErrorTestCase(
+                name = "invalid exclude root",
+                query = """SELECT * EXCLUDE nonsense.b   -- `nonsense` does not exist in binding tuples
+                    FROM <<
+                        {
+                            'a': <<
+                                { 'b': 0 },
+                                { 'b': 1 },
+                                { 'b': 2 }
+                            >>
+                        }
+                    >> AS t""",
+                expected = BagType(
+                    elementType = StructType(
+                        fields = mapOf(
+                            "a" to BagType(
+                                elementType = StructType(
+                                    fields = mapOf(
+                                        "b" to StaticType.INT
+                                    ),
+                                    contentClosed = true,
+                                    constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                )
+                            )
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                    )
+                ),
+                problemHandler = assertProblemExists {
+                    Problem(
+                        UNKNOWN_PROBLEM_LOCATION,
+                        PlanningProblemDetails.UnresolvedExcludeExprRoot("nonsense")
+                    )
+                }
+            ),
+            // EXCLUDE regression test (behavior subject to change pending RFC); could give error/warning
+            SuccessTestCase(
+                name = "exclude with unions and last step collection index",
+                query = """SELECT * EXCLUDE t.a[0].c    -- `c`'s type to be unioned with `MISSING`
+                    FROM <<
+                        {
+                            'a': [
+                                {
+                                    'b': 0,
+                                    'c': 0
+                                },
+                                {
+                                    'b': 1,
+                                    'c': NULL
+                                },
+                                {
+                                    'b': 2,
+                                    'c': 0.1
+                                }
+                            ]
+                        }
+                    >> AS t""",
+                expected = BagType(
+                    elementType = StructType(
+                        fields = mapOf(
+                            "a" to ListType(
+                                elementType = StaticType.unionOf(
+                                    StructType(
+                                        fields = mapOf(
+                                            "b" to StaticType.INT,
+                                            "c" to StaticType.INT.asOptional()
+                                        ),
+                                        contentClosed = true,
+                                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                    ),
+                                    StructType(
+                                        fields = mapOf(
+                                            "b" to StaticType.INT,
+                                            "c" to StaticType.NULL.asOptional()
+                                        ),
+                                        contentClosed = true,
+                                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                    ),
+                                    StructType(
+                                        fields = mapOf(
+                                            "b" to StaticType.INT,
+                                            "c" to StaticType.DECIMAL.asOptional()
+                                        ),
+                                        contentClosed = true,
+                                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                    )
+                                )
+                            )
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "EXCLUDE using a catalog",
+                catalog = CATALOG_B,
+                query = "SELECT * EXCLUDE t.c FROM b.b.b AS t",
+                expected = BagType(
+                    elementType = StructType(
+                        fields = mapOf(
+                            "b" to StructType(
+                                fields = mapOf(
+                                    "b" to StaticType.INT
+                                ),
+                                contentClosed = true,
+                                constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                            ),
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                    )
+                )
+            ),
             SuccessTestCase(
                 name = "BITWISE_AND_1",
                 query = "1 & 2",

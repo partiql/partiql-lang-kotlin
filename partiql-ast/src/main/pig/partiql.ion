@@ -198,7 +198,7 @@ may then be further optimized by selecting better implementations of each operat
         (sum path_step
             // `someRoot[<expr>]`, or `someRoot.someField` which is equivalent to `someRoot['someField']`.
             (path_expr index::expr case::case_sensitivity)
-            // `someRoot[*]`]
+            // `someRoot[*]`
             (path_wildcard)
             // `someRoot.*`
             (path_unpivot))

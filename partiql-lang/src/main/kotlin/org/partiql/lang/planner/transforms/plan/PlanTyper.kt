@@ -163,6 +163,12 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
      * (https://github.com/partiql/partiql-spec/issues/39), this behavior is considered experimental and subject to
      * change.
      *
+     * So far this implementation includes
+     * - Excluding tuple attrs (e.g. t.a.b.c)
+     * - Excluding tuple wildcards (e.g. t.a.*.b)
+     * - Excluding collection indexes (e.g. t.a[0].b -- behavior subject to change; see below discussion)
+     * - Excluding collection wildcards (e.g. t.a[*].b)
+     *
      * There are still discussion points regarding the following edge cases
      * - EXCLUDE on a tuple attribute that doesn't exist -- give an error/warning?
      *   - currently no error
@@ -196,11 +202,19 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
         )
     }
 
+    private fun attrEqualsExcludeRoot(attr: Attribute, expr: ExcludeExpr): Boolean {
+        val rootId = expr.root
+        return attr.name == rootId || (expr.rootCase == Case.INSENSITIVE && attr.name.equals(expr.root, ignoreCase = true))
+    }
+
     private fun excludeExpr(attrs: List<Attribute>, expr: ExcludeExpr, ctx: Context): List<Attribute> {
         val resultAttrs = mutableListOf<Attribute>()
+        val attrsExist = attrs.find { attr -> attrEqualsExcludeRoot(attr, expr) } != null
+        if (!attrsExist) {
+            handleUnresolvedExcludeExprRoot(expr.root, ctx)
+        }
         attrs.forEach { attr ->
-            val rootId = expr.root
-            if (attr.name == rootId || (expr.rootCase == Case.INSENSITIVE && attr.name.equals(expr.root, ignoreCase = true))) {
+            if (attrEqualsExcludeRoot(attr, expr)) {
                 if (expr.steps.isEmpty()) {
                     throw IllegalStateException("Empty `ExcludeExpr.steps` encountered. This should have been caught by the parser.")
                 } else {
@@ -1824,6 +1838,15 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
             Problem(
                 sourceLocation = UNKNOWN_PROBLEM_LOCATION,
                 details = SemanticProblemDetails.DuplicateAliasesInSelectListItem
+            )
+        )
+    }
+
+    private fun handleUnresolvedExcludeExprRoot(root: String, ctx: Context) {
+        ctx.problemHandler.handleProblem(
+            Problem(
+                sourceLocation = UNKNOWN_PROBLEM_LOCATION,
+                details = PlanningProblemDetails.UnresolvedExcludeExprRoot(root)
             )
         )
     }
