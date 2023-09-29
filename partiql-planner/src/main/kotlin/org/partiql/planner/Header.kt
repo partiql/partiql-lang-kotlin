@@ -3,6 +3,7 @@ package org.partiql.planner
 import org.partiql.ast.DatetimeField
 import org.partiql.plan.Fn
 import org.partiql.plan.Identifier
+import org.partiql.planner.typer.CastType
 import org.partiql.planner.typer.TypeLattice
 import org.partiql.types.function.FunctionParameter
 import org.partiql.types.function.FunctionSignature
@@ -61,6 +62,7 @@ internal class Header(
     private val namespace: String,
     private val types: TypeLattice,
     private val functions: FunctionMap,
+    private val unsafeCastSet: Set<String>,
 ) {
 
     /**
@@ -74,7 +76,10 @@ internal class Header(
     /**
      * Returns the CAST function if exists, else null.
      */
-    public fun lookupCast(valueType: PartiQLValueType, targetType: PartiQLValueType): FunctionSignature? {
+    public fun lookupCoercion(valueType: PartiQLValueType, targetType: PartiQLValueType): FunctionSignature? {
+        if (!types.canCoerce(valueType, targetType)) {
+            return null
+        }
         val name = castName(targetType)
         val casts = functions.getOrDefault(name, emptyList())
         for (cast in casts) {
@@ -85,6 +90,11 @@ internal class Header(
         }
         return null
     }
+
+    /**
+     * Easy lookup of whether this CAST can return MISSING.
+     */
+    public fun isUnsafeCast(specific: String): Boolean = unsafeCastSet.contains(specific)
 
     /**
      * Return a normalized function identifier for lookup in our list of function definitions.
@@ -112,49 +122,49 @@ internal class Header(
 
         /**
          * TODO TEMPORARY — Hardcoded PartiQL Global Catalog
-         *
          * TODO BUG — We don't validate function overloads
          */
         public fun partiql(): Header {
             val namespace = "partiql"
             val types = TypeLattice.partiql()
+            val (casts, unsafeCastSet) = Functions.casts(types)
             val functions = Functions.combine(
-                Functions.casts(types),
+                casts,
                 Functions.operators(),
                 Functions.special(),
                 Functions.system(),
-            ).withAnyArgs()
-            return Header(namespace, types, functions)
+            )
+            return Header(namespace, types, functions, unsafeCastSet)
         }
 
         /**
          * Define CASTS with some mangled name; CAST(x AS T) -> cast_t(x)
          *
-         * CAST(x AS INT8) -> cast_int8(x)
+         * CAST(x AS INT8) -> cast_int64(x)
          *
          * But what about parameterized types? Are the parameters dropped in casts, or do parameters become arguments?
          */
         private fun castName(type: PartiQLValueType) = "cast_${type.name.lowercase()}"
 
-        /**
-         * For each f(arg_0, ..., arg_n), add an operator f(ANY_0, ..., ANY_n).
-         *
-         * This isn't entirely correct because we actually want to constraint the possible values of ANY.
-         */
-        private fun FunctionMap.withAnyArgs(): FunctionMap {
-            return entries.associate {
-                val name = it.key
-                val signatures = it.value
-                val variants = signatures.associate { fn -> fn.parameters.size to fn.returns }
-                val additions = variants.map { e ->
-                    val returns = ANY
-                    val params = (0 until e.key).map { i -> FunctionParameter("arg_$i", ANY) }
-                    FunctionSignature(name, returns, params)
-                }
-                // Append the additional ANY signatures
-                name to (signatures + additions)
-            }
-        }
+        // /**
+        //  * For each f(arg_0, ..., arg_n), add an operator f(ANY_0, ..., ANY_n).
+        //  *
+        //  * This isn't entirely correct because we actually want to constraint the possible values of ANY.
+        //  */
+        // private fun FunctionMap.withAnyArgs(): FunctionMap {
+        //     return entries.associate {
+        //         val name = it.key
+        //         val signatures = it.value
+        //         val variants = signatures.associate { fn -> fn.parameters.size to fn.returns }
+        //         val additions = variants.map { e ->
+        //             val returns = ANY
+        //             val params = (0 until e.key).map { i -> FunctionParameter("arg_$i", ANY) }
+        //             FunctionSignature(name, returns, params)
+        //         }
+        //         // Append the additional ANY signatures
+        //         name to (signatures + additions)
+        //     }
+        // }
     }
 
     /**
@@ -170,10 +180,25 @@ internal class Header(
         }
 
         /**
-         * Generate all "safe" CAST functions from the given lattice.
+         * Generate all CAST functions from the given lattice.
+         *
+         * @param lattice
+         * @return Pair(0) is the function list, Pair(1) represens the unsafe cast specifics
          */
-        public fun casts(lattice: TypeLattice): List<FunctionSignature> = lattice.implicitCasts().map {
-            cast(it.first, it.second)
+        public fun casts(lattice: TypeLattice): Pair<List<FunctionSignature>, Set<String>> {
+            val casts = mutableListOf<FunctionSignature>()
+            val unsafeCastSet = mutableSetOf<String>()
+            for (t1 in lattice.types) {
+                for (t2 in lattice.types) {
+                    val r = lattice.graph[t1.ordinal][t2.ordinal]
+                    if (r != null) {
+                        val fn = cast(t1, t2)
+                        casts.add(fn)
+                        if (r.cast == CastType.UNSAFE) unsafeCastSet.add(fn.specific)
+                    }
+                }
+            }
+            return casts to unsafeCastSet
         }
 
         /**
@@ -196,7 +221,8 @@ internal class Header(
             times(),
             div(),
             mod(),
-            concat()
+            concat(),
+            bitwiseAnd(),
         ).flatten()
 
         /**
@@ -232,6 +258,14 @@ internal class Header(
         private val nullableTypes = listOf(
             NULL, // null.null
             MISSING, // missing
+        )
+
+        private val intTypes = listOf(
+            INT8,
+            INT16,
+            INT32,
+            INT64,
+            INT,
         )
 
         private val numericTypes = listOf(
@@ -281,12 +315,14 @@ internal class Header(
                 isNullable = false,
             )
 
-        public fun cast(value: PartiQLValueType, type: PartiQLValueType) =
+        public fun cast(operand: PartiQLValueType, target: PartiQLValueType) =
             FunctionSignature(
-                name = castName(type),
-                returns = type,
+                name = castName(target),
+                returns = target,
+                isNullCall = true,
+                isNullable = false,
                 parameters = listOf(
-                    FunctionParameter("value", value),
+                    FunctionParameter("value", operand),
                 )
             )
 
@@ -352,6 +388,10 @@ internal class Header(
 
         private fun concat(): List<FunctionSignature> = textTypes.map { t ->
             binary("concat", t, t, t)
+        }
+
+        private fun bitwiseAnd(): List<FunctionSignature> = intTypes.map { t ->
+            binary("bitwise_and", t, t, t)
         }
 
         // SPECIAL FORMS
@@ -699,9 +739,9 @@ internal class Header(
             TIME,
             TIMESTAMP,
             INTERVAL,
-            BAG,
             LIST,
             SEXP,
+            BAG,
             STRUCT,
             ANY,
         ).mapIndexed { precedence, type -> type to precedence }.toMap()

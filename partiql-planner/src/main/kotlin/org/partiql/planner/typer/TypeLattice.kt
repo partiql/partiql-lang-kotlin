@@ -33,17 +33,21 @@ import org.partiql.value.PartiQLValueType.TIMESTAMP
 /**
  * Going with a matrix here (using enum ordinals) as it's simple and avoids walking.
  */
-private typealias TypeGraph = Array<Array<Relationship?>>
+internal typealias TypeGraph = Array<Array<TypeRelationship?>>
 
 /**
  * Each edge represents a type relationship
  */
-private data class Relationship(val type: CastType)
+internal data class TypeRelationship(val cast: CastType)
 
 /**
- * An COERCION will be inserted by the compiler during function resolution, an EXPLICIT CAST cannot be inserted.
+ * An COERCION will be inserted by the compiler during function resolution, an EXPLICIT CAST will never be inserted.
+ *
+ * COERCION: Lossless CAST(V AS T) -> T
+ * EXPLICIT: Lossy    CAST(V AS T) -> T
+ * UNSAFE:            CAST(V AS T) -> T|MISSING
  */
-private enum class CastType { IMPLICIT, EXPLICIT_LOSSLESS, EXPLICIT_LOSSY }
+internal enum class CastType { COERCION, EXPLICIT, UNSAFE }
 
 /**
  * A place to model type relationships (for now this is to answer CAST inquiries).
@@ -52,24 +56,12 @@ private enum class CastType { IMPLICIT, EXPLICIT_LOSSLESS, EXPLICIT_LOSSY }
  */
 @OptIn(PartiQLValueExperimental::class)
 internal class TypeLattice private constructor(
-    private val types: Array<PartiQLValueType>,
-    private val graph: TypeGraph,
+    public val types: Array<PartiQLValueType>,
+    public val graph: TypeGraph,
 ) {
 
-    /**
-     * Returns a list of all implicit CAST pairs.
-     */
-    public fun implicitCasts(): List<Pair<PartiQLValueType, PartiQLValueType>> {
-        val casts = mutableListOf<Pair<PartiQLValueType, PartiQLValueType>>()
-        for (t1 in types) {
-            for (t2 in types) {
-                val r = graph[t1][t2]
-                if (r != null && r.type == CastType.IMPLICIT) {
-                    casts.add(t1 to t2)
-                }
-            }
-        }
-        return casts
+    public fun canCoerce(operand: PartiQLValueType, target: PartiQLValueType): Boolean {
+        return graph[operand][target]?.cast == CastType.COERCION
     }
 
     /**
@@ -86,10 +78,10 @@ internal class TypeLattice private constructor(
             for (t2 in types) {
                 val symbol = when (val r = graph[t1][t2]) {
                     null -> "X"
-                    else -> when (r.type) {
-                        CastType.IMPLICIT -> "⬤"
-                        CastType.EXPLICIT_LOSSLESS -> "◯"
-                        CastType.EXPLICIT_LOSSY -> "△"
+                    else -> when (r.cast) {
+                        CastType.COERCION -> "⬤"
+                        CastType.EXPLICIT -> "◯"
+                        CastType.UNSAFE -> "△"
                     }
                 }
                 append("| $symbol ")
@@ -106,19 +98,19 @@ internal class TypeLattice private constructor(
 
         private val N = PartiQLValueType.values().size
 
-        private fun relationships(vararg relationships: Pair<PartiQLValueType, Relationship>): Array<Relationship?> {
-            val arr = arrayOfNulls<Relationship?>(N)
+        private fun relationships(vararg relationships: Pair<PartiQLValueType, TypeRelationship>): Array<TypeRelationship?> {
+            val arr = arrayOfNulls<TypeRelationship?>(N)
             for (type in relationships) {
                 arr[type.first] = type.second
             }
             return arr
         }
 
-        private fun implicit(): Relationship = Relationship(CastType.IMPLICIT)
+        private fun coercion(): TypeRelationship = TypeRelationship(CastType.COERCION)
 
-        private fun lossless(): Relationship = Relationship(CastType.EXPLICIT_LOSSLESS)
+        private fun explicit(): TypeRelationship = TypeRelationship(CastType.EXPLICIT)
 
-        private fun lossy(): Relationship = Relationship(CastType.EXPLICIT_LOSSY)
+        private fun unsafe(): TypeRelationship = TypeRelationship(CastType.UNSAFE)
 
         private operator fun <T> Array<T>.set(t: PartiQLValueType, value: T): Unit = this.set(t.ordinal, value)
 
@@ -129,130 +121,140 @@ internal class TypeLattice private constructor(
          */
         public fun partiql(): TypeLattice {
             val types = PartiQLValueType.values()
-            val graph = arrayOfNulls<Array<Relationship?>>(N)
+            val graph = arrayOfNulls<Array<TypeRelationship?>>(N)
             for (type in types) {
                 // initialize all with empty relationships
                 graph[type] = arrayOfNulls(N)
             }
             graph[ANY] = relationships(
-                ANY to implicit()
+                ANY to coercion()
             )
             graph[NULL] = relationships(
-                NULL to implicit()
+                NULL to coercion()
             )
             graph[MISSING] = relationships(
-                MISSING to implicit()
+                MISSING to coercion()
             )
             graph[BOOL] = relationships(
-                BOOL to implicit(),
-                INT8 to implicit(),
-                INT16 to implicit(),
-                INT32 to implicit(),
-                INT64 to implicit(),
-                INT to implicit(),
-                DECIMAL to implicit(),
-                FLOAT32 to implicit(),
-                FLOAT64 to implicit(),
-                CHAR to implicit(),
-                STRING to implicit(),
-                SYMBOL to implicit(),
+                BOOL to coercion(),
+                INT8 to coercion(),
+                INT16 to coercion(),
+                INT32 to coercion(),
+                INT64 to coercion(),
+                INT to coercion(),
+                DECIMAL to coercion(),
+                FLOAT32 to coercion(),
+                FLOAT64 to coercion(),
+                CHAR to coercion(),
+                STRING to coercion(),
+                SYMBOL to coercion(),
             )
             graph[INT8] = relationships(
-                BOOL to lossless(),
-                INT8 to implicit(),
-                INT16 to implicit(),
-                INT32 to implicit(),
-                INT64 to implicit(),
-                INT to implicit(),
-                DECIMAL to implicit(),
-                FLOAT32 to implicit(),
-                FLOAT64 to implicit(),
-                STRING to lossless(),
-                SYMBOL to lossless(),
+                BOOL to explicit(),
+                INT8 to coercion(),
+                INT16 to coercion(),
+                INT32 to coercion(),
+                INT64 to coercion(),
+                INT to coercion(),
+                DECIMAL to coercion(),
+                FLOAT32 to coercion(),
+                FLOAT64 to coercion(),
+                STRING to explicit(),
+                SYMBOL to explicit(),
             )
             graph[INT16] = relationships(
-                BOOL to lossless(),
-                INT16 to implicit(),
-                INT32 to implicit(),
-                INT64 to implicit(),
-                INT to implicit(),
-                DECIMAL to implicit(),
-                FLOAT32 to implicit(),
-                FLOAT64 to implicit(),
-                STRING to lossless(),
-                SYMBOL to lossless(),
+                BOOL to explicit(),
+                INT8 to unsafe(),
+                INT16 to coercion(),
+                INT32 to coercion(),
+                INT64 to coercion(),
+                INT to coercion(),
+                DECIMAL to coercion(),
+                FLOAT32 to coercion(),
+                FLOAT64 to coercion(),
+                STRING to explicit(),
+                SYMBOL to explicit(),
             )
             graph[INT32] = relationships(
-                BOOL to lossless(),
-                INT32 to implicit(),
-                INT64 to implicit(),
-                INT to implicit(),
-                DECIMAL to implicit(),
-                FLOAT32 to implicit(),
-                FLOAT64 to implicit(),
-                STRING to lossless(),
-                SYMBOL to lossless(),
+                BOOL to explicit(),
+                INT8 to unsafe(),
+                INT16 to unsafe(),
+                INT32 to coercion(),
+                INT64 to coercion(),
+                INT to coercion(),
+                DECIMAL to coercion(),
+                FLOAT32 to coercion(),
+                FLOAT64 to coercion(),
+                STRING to explicit(),
+                SYMBOL to explicit(),
             )
             graph[INT64] = relationships(
-                BOOL to lossless(),
-                INT64 to implicit(),
-                INT to implicit(),
-                DECIMAL to implicit(),
-                FLOAT32 to implicit(),
-                FLOAT64 to implicit(),
-                STRING to lossless(),
-                SYMBOL to lossless(),
+                BOOL to explicit(),
+                INT8 to unsafe(),
+                INT16 to unsafe(),
+                INT32 to unsafe(),
+                INT64 to coercion(),
+                INT to coercion(),
+                DECIMAL to coercion(),
+                FLOAT32 to coercion(),
+                FLOAT64 to coercion(),
+                STRING to explicit(),
+                SYMBOL to explicit(),
             )
             graph[INT] = relationships(
-                BOOL to lossless(),
-                INT to implicit(),
-                DECIMAL to implicit(),
-                FLOAT32 to implicit(),
-                FLOAT64 to implicit(),
-                STRING to lossless(),
-                SYMBOL to lossless(),
+                BOOL to explicit(),
+                INT8 to unsafe(),
+                INT16 to unsafe(),
+                INT32 to unsafe(),
+                INT64 to unsafe(),
+                INT to coercion(),
+                DECIMAL to coercion(),
+                FLOAT32 to coercion(),
+                FLOAT64 to coercion(),
+                STRING to explicit(),
+                SYMBOL to explicit(),
             )
             graph[DECIMAL] = relationships(
-                BOOL to lossless(),
-                DECIMAL to implicit(),
-                FLOAT32 to implicit(),
-                FLOAT64 to implicit(),
-                STRING to lossless(),
-                SYMBOL to lossless(),
+                BOOL to explicit(),
+                DECIMAL to coercion(),
+                FLOAT32 to coercion(),
+                FLOAT64 to coercion(),
+                STRING to explicit(),
+                SYMBOL to explicit(),
             )
             graph[FLOAT32] = relationships(
-                BOOL to lossless(),
-                FLOAT32 to implicit(),
-                FLOAT64 to implicit(),
-                STRING to lossless(),
-                SYMBOL to lossless(),
+                BOOL to explicit(),
+                FLOAT32 to coercion(),
+                FLOAT64 to coercion(),
+                STRING to explicit(),
+                SYMBOL to explicit(),
             )
             graph[FLOAT64] = relationships(
-                BOOL to lossless(),
-                FLOAT64 to implicit(),
-                STRING to lossless(),
-                SYMBOL to lossless(),
+                BOOL to explicit(),
+                FLOAT64 to coercion(),
+                STRING to explicit(),
+                SYMBOL to explicit(),
             )
             graph[CHAR] = relationships(
-                BOOL to lossless(),
-                CHAR to implicit(),
-                STRING to implicit(),
-                SYMBOL to implicit(),
+                BOOL to explicit(),
+                CHAR to coercion(),
+                STRING to coercion(),
+                SYMBOL to coercion(),
             )
             graph[STRING] = relationships(
-                BOOL to lossless(),
-                STRING to implicit(),
-                SYMBOL to implicit(),
-                CLOB to implicit(),
+                BOOL to explicit(),
+                STRING to coercion(),
+                SYMBOL to coercion(),
+                CLOB to coercion(),
             )
             graph[SYMBOL] = relationships(
-                BOOL to lossless(),
-                STRING to implicit(),
-                SYMBOL to implicit(),
-                CLOB to implicit(),
+                BOOL to explicit(),
+                STRING to coercion(),
+                SYMBOL to coercion(),
+                CLOB to coercion(),
             )
             graph[CLOB] = relationships(
-                CLOB to implicit(),
+                CLOB to coercion(),
             )
             graph[BINARY] = arrayOfNulls(N)
             graph[BYTE] = arrayOfNulls(N)
@@ -262,20 +264,20 @@ internal class TypeLattice private constructor(
             graph[TIMESTAMP] = arrayOfNulls(N)
             graph[INTERVAL] = arrayOfNulls(N)
             graph[BAG] = relationships(
-                BAG to implicit(),
+                BAG to coercion(),
             )
             graph[LIST] = relationships(
-                BAG to implicit(),
-                SEXP to implicit(),
-                LIST to implicit(),
+                BAG to coercion(),
+                SEXP to coercion(),
+                LIST to coercion(),
             )
             graph[SEXP] = relationships(
-                BAG to implicit(),
-                SEXP to implicit(),
-                LIST to implicit(),
+                BAG to coercion(),
+                SEXP to coercion(),
+                LIST to coercion(),
             )
             graph[STRUCT] = relationships(
-                STRUCT to implicit(),
+                STRUCT to coercion(),
             )
             return TypeLattice(types, graph.requireNoNulls())
         }

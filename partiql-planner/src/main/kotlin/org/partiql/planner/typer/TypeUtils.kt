@@ -85,11 +85,11 @@ internal fun PartiQLValueType.toNonNullStaticType(): StaticType = when (this) {
 
 @OptIn(PartiQLValueExperimental::class)
 internal fun StaticType.toRuntimeType(): PartiQLValueType {
-    // handle anyOf(null, T) cases
     if (this is AnyOfType) {
-        val t = types.filter { it !is NullType }
+        // handle anyOf(null, T) cases
+        val t = types.filter { it !is NullType && it !is MissingType }
         return if (t.size != 1) {
-            error("ANY_OF is not a runtime type: $this")
+            error("Cannot have a UNION runtime type: $this")
         } else {
             t.first().asRuntimeType()
         }

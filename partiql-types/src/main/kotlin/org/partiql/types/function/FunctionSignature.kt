@@ -34,7 +34,7 @@ public class FunctionSignature(
      *
      * Format NAME__INPUTS__RETURNS
      */
-    private val specific = buildString {
+    public val specific: String = buildString {
         append(name.uppercase())
         append("__")
         append(parameters.joinToString("_") { it.type.name })
@@ -58,7 +58,9 @@ public class FunctionSignature(
         else -> "CALLED ON NULL INPUT"
     }
 
-    override fun toString(): String = buildString {
+    override fun toString(): String = specific
+
+    internal fun sql(): String = buildString {
         val fn = name.uppercase()
         val indent = "  "
         append("CREATE FUNCTION \"$fn\" (")

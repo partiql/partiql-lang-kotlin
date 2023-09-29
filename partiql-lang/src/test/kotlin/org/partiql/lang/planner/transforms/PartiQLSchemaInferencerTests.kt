@@ -3,7 +3,6 @@ package org.partiql.lang.planner.transforms
 import com.amazon.ionelement.api.field
 import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.ionStructOf
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
@@ -19,9 +18,10 @@ import org.partiql.lang.errors.ProblemCollector
 import org.partiql.lang.planner.transforms.PartiQLSchemaInferencerTests.ProblemHandler
 import org.partiql.lang.planner.transforms.PartiQLSchemaInferencerTests.TestCase.ErrorTestCase
 import org.partiql.lang.planner.transforms.PartiQLSchemaInferencerTests.TestCase.SuccessTestCase
-import org.partiql.plan.Rex
 import org.partiql.plan.debug.PlanPrinter
 import org.partiql.planner.PartiQLPlanner
+import org.partiql.planner.PlanningProblemDetails
+import org.partiql.plugins.local.LocalPlugin
 import org.partiql.types.AnyOfType
 import org.partiql.types.AnyType
 import org.partiql.types.BagType
@@ -30,7 +30,6 @@ import org.partiql.types.SexpType
 import org.partiql.types.StaticType
 import org.partiql.types.StaticType.Companion.INT
 import org.partiql.types.StaticType.Companion.MISSING
-import org.partiql.types.StaticType.Companion.NULL
 import org.partiql.types.StaticType.Companion.STRING
 import org.partiql.types.StaticType.Companion.unionOf
 import org.partiql.types.StructType
@@ -61,6 +60,11 @@ class PartiQLSchemaInferencerTests {
     @MethodSource("sessionVariables")
     @Execution(ExecutionMode.CONCURRENT)
     fun testSessionVariables(tc: TestCase) = runTest(tc)
+
+    @ParameterizedTest
+    @MethodSource("bitwiseAnd")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun testBitwiseAnd(tc: TestCase) = runTest(tc)
 
     companion object {
 
@@ -204,7 +208,7 @@ class PartiQLSchemaInferencerTests {
         )
 
         @JvmStatic
-        fun sessionVariables() = listOf<TestCase>(
+        fun sessionVariables() = listOf(
             SuccessTestCase(
                 name = "Current User",
                 query = "CURRENT_USER",
@@ -254,7 +258,87 @@ class PartiQLSchemaInferencerTests {
                     )
                 }
             ),
+        )
 
+        @JvmStatic
+        fun bitwiseAnd() = listOf(
+            SuccessTestCase(
+                name = "BITWISE_AND_1",
+                query = "1 & 2",
+                expected = StaticType.INT
+            ),
+            SuccessTestCase(
+                name = "BITWISE_AND_2",
+                query = "CAST(1 AS INT2) & CAST(2 AS INT2)",
+                expected = StaticType.unionOf(StaticType.INT2, MISSING)
+            ),
+            SuccessTestCase(
+                name = "BITWISE_AND_3",
+                query = "CAST(1 AS INT4) & CAST(2 AS INT4)",
+                expected = StaticType.unionOf(StaticType.INT4, MISSING)
+            ),
+            SuccessTestCase(
+                name = "BITWISE_AND_4",
+                query = "CAST(1 AS INT8) & CAST(2 AS INT8)",
+                expected = StaticType.unionOf(StaticType.INT8, MISSING)
+            ),
+            SuccessTestCase(
+                name = "BITWISE_AND_5",
+                query = "CAST(1 AS INT2) & CAST(2 AS INT4)",
+                expected = StaticType.unionOf(StaticType.INT4, MISSING)
+            ),
+            SuccessTestCase(
+                name = "BITWISE_AND_6",
+                query = "CAST(1 AS INT2) & CAST(2 AS INT8)",
+                expected = StaticType.unionOf(StaticType.INT8, MISSING)
+            ),
+            SuccessTestCase(
+                name = "BITWISE_AND_7",
+                query = "CAST(1 AS INT2) & 2",
+                expected = StaticType.unionOf(StaticType.INT, MISSING)
+            ),
+            SuccessTestCase(
+                name = "BITWISE_AND_8",
+                query = "CAST(1 AS INT4) & CAST(2 AS INT8)",
+                expected = StaticType.unionOf(StaticType.INT8, MISSING)
+            ),
+            SuccessTestCase(
+                name = "BITWISE_AND_9",
+                query = "CAST(1 AS INT4) & 2",
+                expected = StaticType.unionOf(StaticType.INT, MISSING)
+            ),
+            SuccessTestCase(
+                name = "BITWISE_AND_10",
+                query = "CAST(1 AS INT8) & 2",
+                expected = StaticType.unionOf(StaticType.INT, MISSING)
+            ),
+            SuccessTestCase(
+                name = "BITWISE_AND_NULL_OPERAND",
+                query = "1 & NULL",
+                expected = StaticType.NULL,
+            ),
+            ErrorTestCase(
+                name = "BITWISE_AND_MISSING_OPERAND",
+                query = "1 & MISSING",
+                expected = StaticType.MISSING,
+                problemHandler = assertProblemExists {
+                    Problem(
+                        UNKNOWN_PROBLEM_LOCATION,
+                        PlanningProblemDetails.ExpressionAlwaysReturnsNullOrMissing
+                    )
+                }
+            ),
+            ErrorTestCase(
+                name = "BITWISE_AND_NON_INT_OPERAND",
+                query = "1 & 'NOT AN INT'",
+                expected = StaticType.MISSING,
+                problemHandler = assertProblemExists {
+                    Problem(
+                        UNKNOWN_PROBLEM_LOCATION,
+                        PlanningProblemDetails.UnknownFunction("bitwise_and", listOf(INT, STRING))
+                    )
+                }
+            ),
         )
     }
 
@@ -1142,133 +1226,10 @@ class PartiQLSchemaInferencerTests {
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
-                        SemanticProblemDetails.InvalidArgumentTypeForFunction(
+                        PlanningProblemDetails.InvalidArgumentTypeForFunction(
                             "trim",
                             unionOf(StaticType.STRING, StaticType.SYMBOL),
                             StaticType.INT,
-                        )
-                    )
-                }
-            ),
-            ErrorTestCase(
-                name = "Current User Concat in WHERE",
-                query = "SELECT VALUE a FROM [ 0 ] AS a WHERE CURRENT_USER = 5",
-                expected = BagType(StaticType.INT),
-                problemHandler = assertProblemExists {
-                    Problem(
-                        UNKNOWN_PROBLEM_LOCATION,
-                        SemanticProblemDetails.IncompatibleDatatypesForOp(
-                            listOf(
-                                unionOf(STRING, StaticType.NULL),
-                                INT,
-                            ),
-                            Rex.Binary.Op.EQ.name
-                        )
-                    )
-                }
-            ),
-            ErrorTestCase(
-                name = "Current User (String) PLUS String",
-                query = "CURRENT_USER + 'hello'",
-                expected = unionOf(StaticType.MISSING, StaticType.NULL),
-                problemHandler = assertProblemExists {
-                    Problem(
-                        UNKNOWN_PROBLEM_LOCATION,
-                        SemanticProblemDetails.IncompatibleDatatypesForOp(
-                            listOf(
-                                unionOf(STRING, StaticType.NULL),
-                                STRING,
-                            ),
-                            Rex.Binary.Op.PLUS.name
-                        )
-                    )
-                }
-            ),
-            SuccessTestCase(
-                name = "BITWISE_AND_1",
-                query = "1 & 2",
-                expected = StaticType.INT
-            ),
-            // casting to a parameterized type produced Missing.
-            SuccessTestCase(
-                name = "BITWISE_AND_2",
-                query = "CAST(1 AS INT2) & CAST(2 AS INT2)",
-                expected = StaticType.unionOf(StaticType.INT2, MISSING)
-            ),
-            SuccessTestCase(
-                name = "BITWISE_AND_3",
-                query = "CAST(1 AS INT4) & CAST(2 AS INT4)",
-                expected = StaticType.unionOf(StaticType.INT4, MISSING)
-            ),
-            SuccessTestCase(
-                name = "BITWISE_AND_4",
-                query = "CAST(1 AS INT8) & CAST(2 AS INT8)",
-                expected = StaticType.unionOf(StaticType.INT8, MISSING)
-            ),
-            SuccessTestCase(
-                name = "BITWISE_AND_5",
-                query = "CAST(1 AS INT2) & CAST(2 AS INT4)",
-                expected = StaticType.unionOf(StaticType.INT4, MISSING)
-            ),
-            SuccessTestCase(
-                name = "BITWISE_AND_6",
-                query = "CAST(1 AS INT2) & CAST(2 AS INT8)",
-                expected = StaticType.unionOf(StaticType.INT8, MISSING)
-            ),
-            SuccessTestCase(
-                name = "BITWISE_AND_7",
-                query = "CAST(1 AS INT2) & 2",
-                expected = StaticType.unionOf(StaticType.INT, MISSING)
-            ),
-            SuccessTestCase(
-                name = "BITWISE_AND_8",
-                query = "CAST(1 AS INT4) & CAST(2 AS INT8)",
-                expected = StaticType.unionOf(StaticType.INT8, MISSING)
-            ),
-            SuccessTestCase(
-                name = "BITWISE_AND_9",
-                query = "CAST(1 AS INT4) & 2",
-                expected = StaticType.unionOf(StaticType.INT, MISSING)
-            ),
-            SuccessTestCase(
-                name = "BITWISE_AND_10",
-                query = "CAST(1 AS INT8) & 2",
-                expected = StaticType.unionOf(StaticType.INT, MISSING)
-            ),
-            ErrorTestCase(
-                name = "BITWISE_AND_NULL_OPERAND",
-                query = "1 & NULL",
-                expected = StaticType.NULL,
-                problemHandler = assertProblemExists {
-                    Problem(
-                        UNKNOWN_PROBLEM_LOCATION,
-                        SemanticProblemDetails.ExpressionAlwaysReturnsNullOrMissing
-                    )
-                }
-            ),
-            ErrorTestCase(
-                name = "BITWISE_AND_MISSING_OPERAND",
-                query = "1 & MISSING",
-                expected = StaticType.MISSING,
-                problemHandler = assertProblemExists {
-                    Problem(
-                        UNKNOWN_PROBLEM_LOCATION,
-                        SemanticProblemDetails.ExpressionAlwaysReturnsNullOrMissing
-                    )
-                }
-            ),
-            ErrorTestCase(
-                name = "BITWISE_AND_NON_INT_OPERAND",
-                query = "1 & 'NOT AN INT'",
-                expected = StaticType.MISSING,
-                problemHandler = assertProblemExists {
-                    Problem(
-                        UNKNOWN_PROBLEM_LOCATION,
-                        SemanticProblemDetails.IncompatibleDatatypesForOp(
-                            listOf(
-                                INT, STRING
-                            ),
-                            Rex.Binary.Op.BITWISE_AND.name
                         )
                     )
                 }
@@ -1344,18 +1305,5 @@ class PartiQLSchemaInferencerTests {
 
     fun interface ProblemHandler {
         fun handle(problems: List<Problem>, ignoreSourceLocation: Boolean)
-    }
-
-    @Test
-    fun test() {
-        runTest(
-            ErrorTestCase(
-                name = "Case Sensitive failure",
-                catalog = CATALOG_DB,
-                catalogPath = DB_SCHEMA_MARKETS,
-                query = "order_info.\"CUSTOMER_ID\" = 1",
-                expected = TYPE_BOOL
-            )
-        )
     }
 }

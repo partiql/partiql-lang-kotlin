@@ -111,11 +111,15 @@ suite::{
             },
             {
               name: "ss_quantity_description_1",
-              type: ["string"]
+              type: "string"
             },
             {
               name: "ss_quantity_description_2",
               type: ["string", "decimal", "int", "null"]
+            },
+            {
+              name: "ss_quantity_description_3",
+              type: "string"
             },
           ]
         }

@@ -61,12 +61,14 @@ internal class FunctionResolver(private val header: Header) {
                 a.type == p.type -> mapping.add(null)
                 // 2. Match ANY, no coercion needed
                 p.type == PartiQLValueType.ANY -> mapping.add(null)
-                // 3. Check for a coercion
+                // 3. Match NULL argument
+                a.type == PartiQLValueType.NULL -> mapping.add(null)
+                // 4. Check for a coercion
                 else -> {
-                    val cast = header.lookupCast(a.type, p.type)
-                    when (cast) {
+                    val coercion = header.lookupCoercion(a.type, p.type)
+                    when (coercion) {
                         null -> return null // short-circuit
-                        else -> mapping.add(cast)
+                        else -> mapping.add(coercion)
                     }
                 }
             }

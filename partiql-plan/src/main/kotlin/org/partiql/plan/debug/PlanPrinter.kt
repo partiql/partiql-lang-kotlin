@@ -2,6 +2,7 @@ package org.partiql.plan.debug
 
 import org.partiql.plan.PlanNode
 import org.partiql.plan.Rel
+import org.partiql.plan.Rex
 import org.partiql.plan.visitor.PlanBaseVisitor
 import kotlin.reflect.KVisibility
 import kotlin.reflect.full.isSubclassOf
@@ -56,7 +57,10 @@ object PlanPrinter {
         override fun defaultVisit(node: PlanNode, ctx: Args): Unit = with(ctx) {
             out.append(lead)
             // print node name
-            out.append(node::class.simpleName)
+            when {
+                (node is Rex) -> out.append("rex")
+                else -> out.append(node::class.simpleName)
+            }
             // print primitive items
             val primitives = node.primitives().filter { it.second != null }
             if (primitives.isNotEmpty()) {
@@ -77,11 +81,11 @@ object PlanPrinter {
         private fun PlanNode.primitives(): List<Pair<String, Any?>> = javaClass.kotlin.memberProperties
             .filter {
                 val t = it.returnType.jvmErasure
-                val notChildren = it.name != "children"
+                val notChildrenOrId = it.name != "children" && it.name != "_id"
                 val notNode = !t.isSubclassOf(PlanNode::class)
                 // not currently correct
                 val notCollectionOfNodes = !(t.isSubclassOf(Collection::class))
-                notChildren && notNode && notCollectionOfNodes && it.visibility == KVisibility.PUBLIC
+                notChildrenOrId && notNode && notCollectionOfNodes && it.visibility == KVisibility.PUBLIC
             }
             .map { it.name to it.get(this) }
     }

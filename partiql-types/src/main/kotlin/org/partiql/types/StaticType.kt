@@ -156,6 +156,18 @@ public sealed class StaticType {
         }
 
     /**
+     * Type is missable if it is MISSING or is an AnyOfType that contains a MISSING type
+     *
+     * @return
+     */
+    public fun isMissable(): Boolean =
+        when (this) {
+            is AnyOfType -> types.any { it.isMissable() }
+            is AnyType, is MissingType -> true
+            else -> false
+        }
+
+    /**
      * Type is optional if it is Any, or Missing, or an AnyOfType that contains Any or Missing type
      */
     private fun isOptional(): Boolean =

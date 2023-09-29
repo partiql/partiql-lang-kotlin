@@ -8,6 +8,7 @@ import org.partiql.plan.Rel
 import org.partiql.plan.Rex
 import org.partiql.planner.typer.FunctionResolver
 import org.partiql.planner.typer.Mapping
+import org.partiql.planner.typer.isNullOrMissing
 import org.partiql.planner.typer.toRuntimeType
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
@@ -21,7 +22,6 @@ import org.partiql.spi.connector.ConnectorSession
 import org.partiql.spi.connector.Constants
 import org.partiql.types.StaticType
 import org.partiql.types.StructType
-import org.partiql.types.TypingMode
 import org.partiql.types.function.FunctionParameter
 import org.partiql.types.function.FunctionSignature
 import org.partiql.value.PartiQLValueExperimental
@@ -71,12 +71,22 @@ internal class TypeEnv(
  * Result of attempting to match an unresolved function.
  */
 internal sealed class FnMatch {
-    public class Ok(
+
+    /**
+     * 7.1 Inputs with wrong types
+     *      It follows that all functions return MISSING when one of their inputs is MISSING
+     *
+     * @property signature
+     * @property mapping
+     * @property isMissable TRUE when anyone of the arguments _could_ be MISSING. We *always* propagate MISSING.
+     */
+    public data class Ok(
         public val signature: FunctionSignature,
         public val mapping: Mapping,
+        public val isMissable: Boolean,
     ) : FnMatch()
 
-    public class Error(
+    public data class Error(
         public val fn: Fn.Unresolved,
         public val args: List<Rex>,
         public val candidates: List<FunctionSignature>,
@@ -142,7 +152,6 @@ internal enum class ResolutionStrategy {
 @OptIn(PartiQLValueExperimental::class)
 internal class Env(
     private val header: Header,
-    private val mode: TypingMode,
     private val plugins: List<Plugin>,
     private val session: PartiQLPlanner.Session,
 ) {
@@ -187,13 +196,21 @@ internal class Env(
      */
     internal fun resolveFn(fn: Fn.Unresolved, args: List<Rex>): FnMatch {
         val candidates = header.lookup(fn)
+        var hadMissingArg = false
         val parameters = args.mapIndexed { i, arg ->
+            if (!hadMissingArg && arg.type.isMissable()) {
+                hadMissingArg = true
+            }
+            arg.type.isNullOrMissing()
             FunctionParameter("arg-$i", arg.type.toRuntimeType())
         }
         val match = functionResolver.match(candidates, parameters)
         return when (match) {
             null -> FnMatch.Error(fn, args, candidates)
-            else -> FnMatch.Ok(match.signature, match.mapping)
+            else -> {
+                val isMissable = hadMissingArg || header.isUnsafeCast(match.signature.specific)
+                FnMatch.Ok(match.signature, match.mapping, isMissable)
+            }
         }
     }
 

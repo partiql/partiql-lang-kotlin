@@ -25,6 +25,8 @@ import org.partiql.types.BagType
 import org.partiql.types.CollectionType
 import org.partiql.types.IntType
 import org.partiql.types.ListType
+import org.partiql.types.MissingType
+import org.partiql.types.NullType
 import org.partiql.types.SexpType
 import org.partiql.types.StaticType
 import org.partiql.types.StructType
@@ -199,7 +201,12 @@ internal class PlanTyper(
 
             // Return with Projections
             val newCtx = relType(
-                schema = lhs.type.schema.map { relBinding(it.name, it.type) } + rhs.type.schema.map { relBinding(it.name, it.type) },
+                schema = lhs.type.schema.map {
+                    relBinding(
+                        it.name,
+                        it.type
+                    )
+                } + rhs.type.schema.map { relBinding(it.name, it.type) },
                 props = ctx!!.props
             )
             val condition = node.rex.type(TypeEnv(newCtx.schema, ResolutionStrategy.LOCAL))
@@ -313,31 +320,80 @@ internal class PlanTyper(
             rex(type, rexOpPath(root, steps))
         }
 
+        /**
+         * Typing of functions is
+         *
+         * 1. If any argument is MISSING, the function return type is MISSING
+         * 2. If all arguments are NULL
+         *
+         * @param node
+         * @param ctx
+         * @return
+         */
         override fun visitRexOpCall(node: Rex.Op.Call, ctx: StaticType?): Rex = rewrite {
-            val fn = node.fn
-            val args = node.args.map { visitRex(it, null) }
             // Already resolved; unreachable but handle gracefully.
-            if (fn is Fn.Resolved) {
-                val type = fn.signature.returns.toStaticType()
-                return rex(type, rexOpCall(fn, args))
+            if (node.fn is Fn.Resolved) return rex(ctx!!, node)
+
+            // Type the arguments
+            val fn = node.fn
+            var missingArg = false
+            val args = node.args.map {
+                val arg = visitRex(it, null)
+                if (arg.type == MissingType) missingArg = true
+                arg
             }
+
+            // 7.1 All functions return MISSING when one of their inputs is MISSING
+            if (missingArg) {
+                handleAlwaysMissing()
+                return@rewrite rex(StaticType.MISSING, rexOpCall(fn, args))
+            }
+
+            // Try to match the arguments to functions defined in the catalog
             when (val match = env.resolveFn(fn as Fn.Unresolved, args)) {
                 is FnMatch.Ok -> {
+
+                    // Found a match!
                     val newFn = fnResolved(match.signature)
                     val newArgs = rewriteFnArgs(match.mapping, args)
                     val returns = newFn.signature.returns
-                    val nullCall = newFn.signature.isNullCall && newArgs.find { it.type.isNullable() } != null
-                    val nullable = newFn.signature.isNullable
-                    val type = when {
-                        nullCall || nullable -> returns.toStaticType()
+
+                    // Determine the nullability of the return type
+                    var isNull = false      // True iff NULL CALL and has a NULL arg
+                    var isNullable = false  // True iff NULL CALL and has a NULLABLE arg; or is a NULLABLE operator
+                    if (newFn.signature.isNullCall) {
+                        for (arg in newArgs) {
+                            if (arg.type is NullType) {
+                                isNull = true
+                                break
+                            }
+                            if (arg.type.isNullable()) {
+                                isNullable = true
+                                break
+                            }
+                        }
+                    }
+                    isNullable = isNullable || newFn.signature.isNullable
+
+                    // Return type with calculated nullability
+                    var type = when {
+                        isNull -> StaticType.NULL
+                        isNullable -> returns.toStaticType()
                         else -> returns.toNonNullStaticType()
                     }
+
+                    // Some operators can return MISSING during runtime
+                    if (match.isMissable) {
+                        type = StaticType.unionOf(type, StaticType.MISSING)
+                    }
+
+                    // Finally, rewrite this node
                     val op = rexOpCall(newFn, newArgs)
                     rex(type, op)
                 }
                 is FnMatch.Error -> {
                     handleUnknownFunction(match)
-                    rex(StaticType.NULL_OR_MISSING, rexOpErr("Unknown function $fn"))
+                    rex(StaticType.MISSING, rexOpErr("Unknown function $fn"))
                 }
             }
         }
@@ -673,7 +729,7 @@ internal class PlanTyper(
             val m = mapping[i]
             if (m != null) {
                 // rewrite
-                val type = m.returns.toStaticType()
+                val type = m.returns.toNonNullStaticType()
                 val cast = rexOpCall(fnResolved(m), listOf(a))
                 a = rex(type, cast)
             }
@@ -729,6 +785,15 @@ internal class PlanTyper(
                     match.fn.identifier.normalize(),
                     match.args.map { a -> a.type },
                 )
+            )
+        )
+    }
+
+    private fun handleAlwaysMissing() {
+        onProblem(
+            Problem(
+                sourceLocation = UNKNOWN_PROBLEM_LOCATION,
+                details = PlanningProblemDetails.ExpressionAlwaysReturnsNullOrMissing
             )
         )
     }

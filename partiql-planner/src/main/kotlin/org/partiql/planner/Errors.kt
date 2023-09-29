@@ -93,6 +93,30 @@ sealed class PlanningProblemDetails(
         val types = args.joinToString { "<${it.toString().lowercase()}>" }
         "Unknown function `$identifier($types)"
     })
+
+    object ExpressionAlwaysReturnsNullOrMissing : PlanningProblemDetails(
+        severity = ProblemSeverity.ERROR,
+        messageFormatter = { "Expression always returns null or missing." }
+    )
+
+    data class InvalidArgumentTypeForFunction(
+        val functionName: String,
+        val expectedType: StaticType,
+        val actualType: StaticType,
+    ) :
+        PlanningProblemDetails(
+            severity = ProblemSeverity.ERROR,
+            messageFormatter = { "Invalid argument type for $functionName. Expected $expectedType but got $actualType" }
+        )
+
+    data class IncompatibleTypesForOp(
+        val actualTypes: List<StaticType>,
+        val operator: String,
+    ) :
+        PlanningProblemDetails(
+            severity = ProblemSeverity.ERROR,
+            messageFormatter = { "${actualTypes.joinToString()} is/are incompatible data types for the '$operator' operator." }
+        )
 }
 
 private fun quotationHint(caseSensitive: Boolean) =
