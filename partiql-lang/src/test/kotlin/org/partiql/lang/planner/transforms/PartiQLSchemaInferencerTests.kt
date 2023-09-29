@@ -4,6 +4,7 @@ import com.amazon.ionelement.api.field
 import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.ionStructOf
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
@@ -18,6 +19,7 @@ import org.partiql.lang.planner.PlanningProblemDetails
 import org.partiql.lang.planner.transforms.PartiQLSchemaInferencerTests.ProblemHandler
 import org.partiql.lang.planner.transforms.PartiQLSchemaInferencerTests.TestCase.ErrorTestCase
 import org.partiql.lang.planner.transforms.PartiQLSchemaInferencerTests.TestCase.SuccessTestCase
+import org.partiql.lang.planner.transforms.PartiQLSchemaInferencerTests.TestCase.ThrowingExceptionTestCase
 import org.partiql.plan.Rex
 import org.partiql.plugins.local.LocalPlugin
 import org.partiql.types.AnyOfType
@@ -37,6 +39,9 @@ import java.time.Instant
 import java.util.stream.Stream
 import kotlin.io.path.pathString
 import kotlin.io.path.toPath
+import kotlin.reflect.KClass
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class PartiQLSchemaInferencerTests {
@@ -156,6 +161,19 @@ class PartiQLSchemaInferencerTests {
             val problemHandler: ProblemHandler? = null,
         ) : TestCase() {
             override fun toString(): String = "$name : $query"
+        }
+
+        class ThrowingExceptionTestCase(
+            val name: String,
+            val query: String,
+            val catalog: String? = null,
+            val catalogPath: List<String> = emptyList(),
+            val note: String? = null,
+            val expectedThrowable: KClass<out Throwable>
+        ) : TestCase() {
+            override fun toString(): String {
+                return "$name : $query"
+            }
         }
     }
 
@@ -1142,27 +1160,15 @@ class PartiQLSchemaInferencerTests {
                     )
                 }
             ),
-            ErrorTestCase(
+            ThrowingExceptionTestCase(
                 name = "SELECT * in Subquery", // TODO: This needs to be fixed.
                 query = "1 IN (SELECT * FROM aws.ddb.pets)",
-                expected = unionOf(MISSING, NULL, BOOL),
-                problemHandler = assertProblemExists {
-                    Problem(
-                        UNKNOWN_PROBLEM_LOCATION,
-                        SemanticProblemDetails.UnimplementedError("* in SELECT VALUE")
-                    )
-                }
+                expectedThrowable = IllegalStateException::class
             ),
-            ErrorTestCase(
+            ThrowingExceptionTestCase(
                 name = "SELECT * in Subquery with IN coercion rules", // TODO: This needs to be fixed.
                 query = "[1, 2] IN (SELECT * FROM aws.ddb.pets)",
-                expected = unionOf(MISSING, NULL, BOOL),
-                problemHandler = assertProblemExists {
-                    Problem(
-                        UNKNOWN_PROBLEM_LOCATION,
-                        SemanticProblemDetails.UnimplementedError("* in SELECT VALUE")
-                    )
-                }
+                expectedThrowable = IllegalStateException::class
             ),
             SuccessTestCase(
                 name = "SELECT * in Subquery with plus -- aws.b.b has one column (INT)",
@@ -1240,38 +1246,20 @@ class PartiQLSchemaInferencerTests {
                     )
                 }
             ),
-            ErrorTestCase(
+            ThrowingExceptionTestCase(
                 name = "SELECT * in multi-column subquery with comparison coercion.", // TODO: This needs to be fixed.
                 query = "[1, 2] < (SELECT * FROM aws.ddb.pets)",
-                expected = unionOf(NULL, MISSING, BOOL),
-                problemHandler = assertProblemExists {
-                    Problem(
-                        UNKNOWN_PROBLEM_LOCATION,
-                        SemanticProblemDetails.UnimplementedError("* in SELECT VALUE")
-                    )
-                }
+                expectedThrowable = IllegalStateException::class
             ),
-            ErrorTestCase(
+            ThrowingExceptionTestCase(
                 name = "SELECT * in single-column subquery with comparison coercion.", // TODO: This needs to be fixed.
                 query = "[1, 2] < (SELECT * FROM aws.b.b)",
-                expected = unionOf(NULL, MISSING, BOOL),
-                problemHandler = assertProblemExists {
-                    Problem(
-                        UNKNOWN_PROBLEM_LOCATION,
-                        SemanticProblemDetails.UnimplementedError("* in SELECT VALUE")
-                    )
-                }
+                expectedThrowable = IllegalStateException::class
             ),
-            ErrorTestCase(
+            ThrowingExceptionTestCase(
                 name = "SELECT * in Subquery with comparison of array", // TODO: This needs to be fixed.
                 query = "[1, 2] < (SELECT * FROM aws.ddb.pets)",
-                expected = unionOf(MISSING, NULL, BOOL),
-                problemHandler = assertProblemExists {
-                    Problem(
-                        UNKNOWN_PROBLEM_LOCATION,
-                        SemanticProblemDetails.UnimplementedError("* in SELECT VALUE")
-                    )
-                }
+                expectedThrowable = IllegalStateException::class
             ),
             ErrorTestCase(
                 name = "List of Lists on LHS for LTE",
@@ -1438,6 +1426,28 @@ class PartiQLSchemaInferencerTests {
     private fun runTest(tc: TestCase) = when (tc) {
         is SuccessTestCase -> runTest(tc)
         is ErrorTestCase -> runTest(tc)
+        is ThrowingExceptionTestCase -> runTest(tc)
+    }
+
+    @OptIn(ExperimentalPartiQLSchemaInferencer::class)
+    private fun runTest(tc: ThrowingExceptionTestCase) {
+        val session = PlannerSession(
+            tc.query.hashCode().toString(),
+            USER_ID,
+            tc.catalog,
+            tc.catalogPath,
+            catalogConfig,
+            Instant.now()
+        )
+        val collector = ProblemCollector()
+        val ctx = PartiQLSchemaInferencer.Context(session, PLUGINS, collector)
+        val exception = assertThrows<Throwable> {
+            PartiQLSchemaInferencer.infer(tc.query, ctx)
+            Unit
+        }
+        val cause = exception.cause
+        assertNotNull(cause)
+        assertEquals(tc.expectedThrowable, cause::class)
     }
 
     @OptIn(ExperimentalPartiQLSchemaInferencer::class)

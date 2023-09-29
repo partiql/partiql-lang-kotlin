@@ -17,8 +17,6 @@ package org.partiql.cli
 
 import com.amazon.ion.system.IonSystemBuilder
 import org.partiql.cli.pico.PartiQLCommand
-import org.partiql.errors.Problem
-import org.partiql.errors.ProblemHandler
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.planner.transforms.AstToPlan
 import org.partiql.lang.syntax.PartiQLParserBuilder
@@ -50,25 +48,11 @@ object Debug {
     fun action(input: String, session: EvaluationSession): String {
         // IMPLEMENT DEBUG BEHAVIOR HERE
         val out = PrintStream(System.out)
-        val problemHandler = PrintingProblemHandler()
         val parser = PartiQLParserBuilder.standard().build()
         val ast = parser.parseAstStatement(input)
-        val plan = AstToPlan.transform(ast, problemHandler)
+        val plan = AstToPlan.transform(ast)
         // print plan as tree
         PlanPrinter.append(out, plan)
-        if (problemHandler.problems.isNotEmpty()) {
-            out.appendLine("Problems Encountered:")
-            problemHandler.problems.forEachIndexed { index, problem ->
-                out.appendLine("  #${index + 1} (${problem.details.severity.name}): $problem")
-            }
-        }
         return "OK"
-    }
-
-    class PrintingProblemHandler : ProblemHandler {
-        val problems = mutableListOf<Problem>()
-        override fun handleProblem(problem: Problem) {
-            problems.add(problem)
-        }
     }
 }

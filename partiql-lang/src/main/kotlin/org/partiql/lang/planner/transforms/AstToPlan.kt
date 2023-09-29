@@ -1,8 +1,6 @@
 package org.partiql.lang.planner.transforms
 
-import org.partiql.errors.ProblemHandler
 import org.partiql.lang.domains.PartiqlAst
-import org.partiql.lang.errors.ProblemThrower
 import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.TypedOpBehavior
 import org.partiql.lang.eval.visitors.AggregationVisitorTransform
@@ -26,13 +24,12 @@ object AstToPlan {
     /**
      * Converts a PartiqlAst.Statement to a [PartiQLPlan]
      */
-    @JvmOverloads
-    fun transform(statement: PartiqlAst.Statement, problemHandler: ProblemHandler = ProblemThrower()): PartiQLPlan {
+    fun transform(statement: PartiqlAst.Statement): PartiQLPlan {
         val ast = statement.normalize()
         if (ast !is PartiqlAst.Statement.Query) {
             unsupported(ast)
         }
-        val root = transform(ast.expr, problemHandler)
+        val root = transform(ast.expr)
         return Plan.partiQLPlan(
             version = PartiQLPlan.Version.PARTIQL_V0,
             root = root,
@@ -77,15 +74,15 @@ object AstToPlan {
     /**
      * Convert Partiql.Ast.Expr to a Rex/Rel tree
      */
-    private fun transform(query: PartiqlAst.Expr, problemHandler: ProblemHandler): Rex = when (query) {
+    private fun transform(query: PartiqlAst.Expr): Rex = when (query) {
         is PartiqlAst.Expr.Select -> {
             // <query-expression>
-            val rex = RelConverter.convert(query, problemHandler)
+            val rex = RelConverter.convert(query)
             rex
         }
         else -> {
             // <value-expression>
-            val rex = RexConverter.convert(query, problemHandler)
+            val rex = RexConverter.convert(query)
             rex
         }
     }

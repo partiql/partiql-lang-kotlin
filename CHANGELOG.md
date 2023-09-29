@@ -41,7 +41,7 @@ Thank you to all who have contributed!
 
 ### Fixed
 - Fixes typing of scalar subqueries in the PartiQLSchemaInferencer. Note that usage of `SELECT *` in subqueries
-  is not fully supported, and appropriate problems will be delivered to the registered ProblemHandler.
+  is not fully supported. Please make sure to handle InferenceExceptions.
 
 ### Removed
 

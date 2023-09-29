@@ -139,7 +139,7 @@ public object PartiQLSchemaInferencer {
         val ast = parser.parseAstStatement(query)
 
         // Transform to Plan
-        val plan = AstToPlan.transform(ast, ctx.problemHandler)
+        val plan = AstToPlan.transform(ast)
         val typedPlan = PlanTyper.type(
             plan.root,
             PlanTyper.Context(
