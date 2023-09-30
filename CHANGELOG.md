@@ -25,7 +25,25 @@ Thank you to all who have contributed!
 
 -->
 
-## [0.13.2]
+## [Unreleased]
+
+### Added
+
+### Changed
+
+### Deprecated
+
+### Fixed
+
+### Removed
+
+### Security
+
+### Contributors
+Thank you to all who have contributed!
+- @<your-username>
+
+## [0.13.2-alpha] - 2023-09-29
 
 ### Added
 - Adds overridden `toString()` method for Sprout-generated code.
@@ -38,27 +56,19 @@ Thank you to all who have contributed!
   - This feature is marked as experimental until an RFC is added https://github.com/partiql/partiql-spec/issues/39
   - NOTE: this feature is not currently implemented in the evaluator
 
-### Changed
-
-### Deprecated
-
 ### Fixed
 - Fixes typing of scalar subqueries in the PartiQLSchemaInferencer. Note that usage of `SELECT *` in subqueries
   is not fully supported. Please make sure to handle InferenceExceptions.
 - Fixes schema inferencer behavior for ORDER BY
-
-### Removed
-
-### Security
 
 ### Contributors
 Thank you to all who have contributed!
 - @johnedquinn
 - @RCHowell
 - @yliuuuu
-- @alanca98
+- @alancai98
 
-## [0.13.1] - 2023-09-19
+## [0.13.1-alpha] - 2023-09-19
 
 ### Added
 - Adds `isInterruptible` property to `CompileOptions`. The default value is `false`. Please see the KDocs for more information.
@@ -79,7 +89,7 @@ Thank you to all who have contributed!
 - @johnedquinn
 - @alancai98
 
-## [0.13.0] - 2023-09-07
+## [0.13.0-alpha] - 2023-09-07
 
 ### Added
 - Adds `org.partiql.value` (experimental) package for reading/writing PartiQL values
@@ -168,7 +178,7 @@ Thank you to all who have contributed!
 - @johqunn
 - @<your-username>
 
-## [0.12.0] - 2023-06-14
+## [0.12.0-alpha] - 2023-06-14
 
 ### Added
 
@@ -261,7 +271,7 @@ Thank you to all who have contributed!
 - @RCHowell
 - @vgapeyev
 
-## [0.11.0] - 2023-05-22
+## [0.11.0-alpha] - 2023-05-22
 
 ### Added
 
@@ -293,7 +303,7 @@ Thank you to all who have contributed!
 
 ### Security
 
-## [0.10.0] - 2023-05-05
+## [0.10.0-alpha] - 2023-05-05
 
 ### Added
 - Added numeric builtins ABS, SQRT, EXP, LN, POW, MOD.
@@ -369,16 +379,16 @@ Thank you to all who have contributed!
 
 ### Security
 
-## [0.9.4] - 2023-04-20
+## [0.9.4-alpha] - 2023-04-20
 
 This version reverts many accidental breaking changes introduced in v0.9.3. Its contents are equivalent to v0.9.2.
 
-## [0.9.3] - 2023-04-12
+## [0.9.3-alpha] - 2023-04-12
 
 This version accidentally released multiple breaking changes and is not recommended. Please use v0.9.4 to avoid
 breaking changes if migrating from v0.9.2. The breaking changes accidentally introduced in v0.9.3 can be found in v0.10.0.
 
-## [0.9.2] - 2023-01-20
+## [0.9.2-alpha] - 2023-01-20
 
 ### Added
 - Adds ability to pipe queries to the CLI.
@@ -394,7 +404,7 @@ breaking changes if migrating from v0.9.2. The breaking changes accidentally int
 - Fixes list/bag ExprValue creation in plan evaluator
 - Fixes gradle build issues.
 
-## [0.9.1] - 2023-01-04
+## [0.9.1-alpha] - 2023-01-04
 
 ### Added
 - Makes the following `PartiQLCompilerBuilder` functions are moved to public
@@ -402,7 +412,7 @@ breaking changes if migrating from v0.9.2. The breaking changes accidentally int
   - `customFunctions`
   - `customProcedures`
 
-## [0.9.0] - 2022-12-13
+## [0.9.0-alpha] - 2022-12-13
 
 ### Added
 - Adds simple auto-completion to the CLI.
@@ -470,7 +480,7 @@ breaking changes if migrating from v0.9.2. The breaking changes accidentally int
 ### Security
 
 
-## [0.8.2] - 2022-11-28
+## [0.8.2-alpha] - 2022-11-28
 ### Added
 - Adds simple auto-completion to the CLI.
 
@@ -481,13 +491,13 @@ breaking changes if migrating from v0.9.2. The breaking changes accidentally int
   - Modifications have also been made to the ANTLR grammar to increase the speed of parsing joined table references
   - Updates how the PartiQLParser handles parameter indexes to remove the double-pass while lexing
 
-## [0.8.1] - 2022-10-28
+## [0.8.1-alpha] - 2022-10-28
 
 ### Added
 - Extends statement redaction to support `INSERT/REPLACE/UPSERT INTO`.
 
 
-## [0.8.0] - 2022-10-14
+## [0.8.0-alpha] - 2022-10-14
 
 ### Added
 - `CHANGELOG.md` with back-filling of the previous releases to the change log to provide more visibility on unreleased
@@ -883,7 +893,21 @@ breaking changes if migrating from v0.9.2. The breaking changes accidentally int
 ### Added
 Initial alpha release of PartiQL.
 
-[Unreleased]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.7.0-alpha...HEAD
+[Unreleased]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.13.2-alpha...HEAD
+[0.13.2-alpha]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.13.1-alpha...v0.13.2-alpha
+[0.13.1-alpha]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.13.0-alpha...v0.13.1-alpha
+[0.13.0-alpha]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.12.0-alpha...v0.13.0-alpha
+[0.12.0-alpha]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.11.0-alpha...v0.12.0-alpha
+[0.11.0-alpha]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.10.0-alpha...v0.11.0-alpha
+[0.10.0-alpha]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.9.4-alpha...v0.10.0-alpha
+[0.9.4-alpha]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.9.3-alpha...v0.9.4-alpha
+[0.9.3-alpha]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.9.2-alpha...v0.9.3-alpha
+[0.9.2-alpha]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.9.1-alpha...v0.9.2-alpha
+[0.9.1-alpha]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.9.0-alpha...v0.9.1-alpha
+[0.9.0-alpha]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.8.2-alpha...v0.9.0-alpha
+[0.8.2-alpha]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.8.1-alpha...v0.8.2-alpha
+[0.8.1-alpha]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.8.0-alpha...v0.8.1-alpha
+[0.8.0-alpha]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.7.0-alpha...v0.8.0-alpha
 [0.7.0-alpha]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.6.0-alpha...v0.7.0-alpha
 [0.6.0-alpha]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.5.0-alpha...v0.6.0-alpha
 [0.5.0-alpha]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.4.0-alpha...v0.5.0-alpha
