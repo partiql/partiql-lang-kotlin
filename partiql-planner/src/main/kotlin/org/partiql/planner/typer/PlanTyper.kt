@@ -110,8 +110,35 @@ internal class PlanTyper(
             rel(type, op)
         }
 
-        override fun visitRelOpUnpivot(node: Rel.Op.Unpivot, ctx: Rel.Type?): Rel {
-            TODO("Type RelOp Unpivot")
+        /**
+         * TODO handle NULL|STRUCT type
+         */
+        override fun visitRelOpUnpivot(node: Rel.Op.Unpivot, ctx: Rel.Type?): Rel = rewrite {
+            // descend, with GLOBAL resolution strategy
+            val rex = node.rex.type(outer.global())
+
+            // only UNPIVOT a struct
+            if (rex.type !is StructType) {
+                handleUnexpectedType(rex.type, expected = setOf(StaticType.STRUCT))
+                return rel(ctx!!, relOpErr())
+            }
+
+            // compute element type
+            val t = rex.type as StructType
+            val e = if (t.contentClosed) {
+                StaticType.unionOf(t.fields.map { it.value }.toSet()).flatten()
+            } else {
+                StaticType.ANY
+            }
+
+            // compute rel type
+            val kType = StaticType.STRING
+            val vType = e
+            val type = ctx!!.copyWithSchema(listOf(kType, vType))
+
+            // rewrite
+            val op = relOpUnpivot(rex)
+            rel(type, op)
         }
 
         override fun visitRelOpDistinct(node: Rel.Op.Distinct, ctx: Rel.Type?): Rel {

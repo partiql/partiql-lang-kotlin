@@ -284,6 +284,13 @@ internal object RelConverter {
             rel(type, op)
         }
 
+        /**
+         * Output schema of an UNPIVOT is < k, v >
+         *
+         * @param rex
+         * @param k
+         * @param v
+         */
         private fun convertUnpivot(rex: Rex, k: Rel.Binding, v: Rel.Binding) = Plan.create {
             val schema = listOf(k, v)
             val props = emptySet<Rel.Prop>()

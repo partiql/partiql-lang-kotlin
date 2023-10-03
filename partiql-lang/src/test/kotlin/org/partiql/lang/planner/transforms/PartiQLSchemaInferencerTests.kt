@@ -65,6 +65,11 @@ class PartiQLSchemaInferencerTests {
     @Execution(ExecutionMode.CONCURRENT)
     fun testBitwiseAnd(tc: TestCase) = runTest(tc)
 
+    @ParameterizedTest
+    @MethodSource("unpivotCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun testUnpivot(tc: TestCase) = runTest(tc)
+
     companion object {
 
         private val root = this::class.java.getResource("/catalogs")!!.toURI().toPath().pathString
@@ -337,6 +342,15 @@ class PartiQLSchemaInferencerTests {
                         PlanningProblemDetails.UnknownFunction("bitwise_and", listOf(INT, STRING))
                     )
                 }
+            ),
+        )
+
+        @JvmStatic
+        fun unpivotCases() = listOf(
+            SuccessTestCase(
+                name = "UNPIVOT",
+                query = "SELECT VALUE v FROM UNPIVOT { 'a': 2 } AS v AT attr WHERE attr = 'a'",
+                expected = BagType(INT)
             ),
         )
     }
@@ -913,13 +927,6 @@ class PartiQLSchemaInferencerTests {
                 query = "SELECT VALUE [1, 1.0] FROM <<>>",
                 expected =
                 BagType(ListType(unionOf(INT, StaticType.DECIMAL)))
-            ),
-            SuccessTestCase(
-                name = "UNPIVOT",
-                query = "SELECT VALUE v FROM UNPIVOT { 'a': 2 } AS v AT attr WHERE attr = 'a'",
-                expected =
-                BagType(INT)
-
             ),
             SuccessTestCase(
                 name = "CROSS JOIN",
