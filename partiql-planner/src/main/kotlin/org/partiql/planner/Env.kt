@@ -258,7 +258,7 @@ internal class Env(
     }
 
     /**
-     * TODO
+     * TODO optimization, check known globals before calling out to connector again
      *
      * @param catalog
      * @param originalPath
@@ -274,9 +274,8 @@ internal class Env(
             getObjectHandle(cat, catalogPath)?.let { handle ->
                 getObjectDescriptor(handle).let { type ->
                     val depth = calculateMatched(originalPath, catalogPath, handle.second.absolutePath)
-                    // TODO check known globals before calling out to connector again
-                    // Append this to the global list
-                    val global = Plan.global(originalPath.toIdentifier(), type)
+                    val match = BindingPath(originalPath.steps.subList(0, depth))
+                    val global = Plan.global(match.toIdentifier(), type)
                     globals.add(global)
                     // Return resolution metadata
                     ResolvedVar.Global(type, globals.size - 1, depth)
@@ -389,9 +388,8 @@ internal class Env(
                 // cannot navigate into non-tuple
                 return null
             }
-            // 1. Assume ORDERED for now
-            // 2. Assume our spec is implying all struct navigation is case-sensitive
-            val field = curr.fields.firstOrNull { it.key == step.name } ?: return null
+            // Assume ORDERED for now
+            val field = curr.fields.firstOrNull { step.isEquivalentTo(it.key) } ?: return null
             curr = field.value
         }
         // Lookup final field

@@ -97,6 +97,7 @@ rex::{
       _: [
         step::[
           index::{ key: rex },
+          symbol::{ identifier: '.identifier.symbol' },
           wildcard::{},
           unpivot::{},
         ],

@@ -27,7 +27,7 @@ import org.partiql.parser.PartiQLParserBuilder
 import org.partiql.plan.debug.PlanPrinter
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.PartiQLPlannerBuilder
-import org.partiql.plugins.mockdb.LocalPlugin
+import org.partiql.plugins.local.LocalPlugin
 import picocli.CommandLine
 import java.io.PrintStream
 import java.util.UUID
@@ -56,7 +56,7 @@ object Debug {
     private val plugins = listOf(LocalPlugin())
     private val catalogs = mapOf(
         "local" to ionStructOf(
-            field("connector_name", ionString("localdb")),
+            field("connector_name", ionString("local")),
         )
     )
 

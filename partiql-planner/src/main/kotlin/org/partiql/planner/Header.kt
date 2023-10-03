@@ -43,6 +43,11 @@ import org.partiql.value.PartiQLValueType.TIMESTAMP
 private typealias FunctionMap = Map<String, List<FunctionSignature>>
 
 /**
+ * Unicode non-character to be used for name sanitization
+ */
+// private val OP: Char = Char(0xFDEF)
+
+/**
  * Map session attributes to underlying function name.
  */
 internal val ATTRIBUTES: Map<String, String> = mapOf(
@@ -131,6 +136,7 @@ internal class Header(
             val functions = Functions.combine(
                 casts,
                 Functions.operators(),
+                Functions.builtins(),
                 Functions.special(),
                 Functions.system(),
             )
@@ -145,26 +151,6 @@ internal class Header(
          * But what about parameterized types? Are the parameters dropped in casts, or do parameters become arguments?
          */
         private fun castName(type: PartiQLValueType) = "cast_${type.name.lowercase()}"
-
-        // /**
-        //  * For each f(arg_0, ..., arg_n), add an operator f(ANY_0, ..., ANY_n).
-        //  *
-        //  * This isn't entirely correct because we actually want to constraint the possible values of ANY.
-        //  */
-        // private fun FunctionMap.withAnyArgs(): FunctionMap {
-        //     return entries.associate {
-        //         val name = it.key
-        //         val signatures = it.value
-        //         val variants = signatures.associate { fn -> fn.parameters.size to fn.returns }
-        //         val additions = variants.map { e ->
-        //             val returns = ANY
-        //             val params = (0 until e.key).map { i -> FunctionParameter("arg_$i", ANY) }
-        //             FunctionSignature(name, returns, params)
-        //         }
-        //         // Append the additional ANY signatures
-        //         name to (signatures + additions)
-        //     }
-        // }
     }
 
     /**
@@ -223,6 +209,14 @@ internal class Header(
             mod(),
             concat(),
             bitwiseAnd(),
+        ).flatten()
+
+        /**
+         * SQL Builtins (not special forms)
+         */
+        public fun builtins(): List<FunctionSignature> = listOf(
+            upper(),
+            lower(),
         ).flatten()
 
         /**
@@ -339,7 +333,13 @@ internal class Header(
         }
 
         private fun eq(): List<FunctionSignature> = allTypes.map { t ->
-            binary("eq", BOOL, t, t)
+            FunctionSignature(
+                name = "eq",
+                returns = BOOL,
+                isNullCall = false,
+                isNullable = false,
+                parameters = listOf(FunctionParameter("lhs", t), FunctionParameter("rhs", t)),
+            )
         }
 
         private fun ne(): List<FunctionSignature> = allTypes.map { t ->
@@ -392,6 +392,28 @@ internal class Header(
 
         private fun bitwiseAnd(): List<FunctionSignature> = intTypes.map { t ->
             binary("bitwise_and", t, t, t)
+        }
+
+        // BUILT INTS
+
+        private fun upper(): List<FunctionSignature> = textTypes.map { t ->
+            FunctionSignature(
+                name = "upper",
+                returns = t,
+                parameters = listOf(FunctionParameter("value", t)),
+                isNullCall = true,
+                isNullable = false,
+            )
+        }
+
+        private fun lower(): List<FunctionSignature> = textTypes.map { t ->
+            FunctionSignature(
+                name = "lower",
+                returns = t,
+                parameters = listOf(FunctionParameter("value", t)),
+                isNullCall = true,
+                isNullable = false,
+            )
         }
 
         // SPECIAL FORMS

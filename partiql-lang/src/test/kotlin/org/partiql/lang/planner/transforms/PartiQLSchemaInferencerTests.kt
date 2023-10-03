@@ -22,7 +22,6 @@ import org.partiql.plan.debug.PlanPrinter
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.PlanningProblemDetails
 import org.partiql.plugins.local.LocalPlugin
-import org.partiql.types.AnyOfType
 import org.partiql.types.AnyType
 import org.partiql.types.BagType
 import org.partiql.types.ListType
@@ -244,7 +243,7 @@ class PartiQLSchemaInferencerTests {
             ErrorTestCase(
                 name = "Current User (String) PLUS String",
                 query = "CURRENT_USER + 'hello'",
-                expected = unionOf(StaticType.MISSING, StaticType.NULL),
+                expected = StaticType.MISSING,
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
@@ -622,12 +621,12 @@ class PartiQLSchemaInferencerTests {
                 catalog = CATALOG_DB,
                 catalogPath = DB_SCHEMA_MARKETS,
                 query = "order_info.customer_id IN 'hello'",
-                expected = TYPE_BOOL,
+                expected = MISSING,
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
                         PlanningProblemDetails.UnknownFunction(
-                            "in",
+                            "in_collection",
                             listOf(INT, STRING),
                         )
                     )
@@ -645,7 +644,7 @@ class PartiQLSchemaInferencerTests {
                 catalog = CATALOG_DB,
                 catalogPath = DB_SCHEMA_MARKETS,
                 query = "order_info.customer_id BETWEEN 1 AND 'a'",
-                expected = TYPE_BOOL,
+                expected = MISSING,
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
@@ -684,7 +683,7 @@ class PartiQLSchemaInferencerTests {
                 }
             ),
             SuccessTestCase(
-                name = "Case insensitive",
+                name = "Case Insensitive success",
                 catalog = CATALOG_DB,
                 catalogPath = DB_SCHEMA_MARKETS,
                 query = "order_info.CUSTOMER_ID = 1",
@@ -718,34 +717,19 @@ class PartiQLSchemaInferencerTests {
                 query = "(order_info.customer_id = 1) AND (order_info.marketplace_id = 2) OR (order_info.customer_id = 3) AND (order_info.marketplace_id = 4)",
                 expected = TYPE_BOOL
             ),
-            ErrorTestCase(
+            SuccessTestCase(
                 name = "INT and STR Comparison",
                 catalog = CATALOG_DB,
                 catalogPath = DB_SCHEMA_MARKETS,
                 query = "order_info.customer_id = 'something'",
                 expected = TYPE_BOOL,
-                problemHandler = assertProblemExists {
-                    Problem(
-                        UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UnknownFunction(
-                            "eq",
-                            listOf(INT, STRING),
-                        )
-                    )
-                }
             ),
             ErrorTestCase(
                 name = "Nonexisting Comparison",
                 catalog = CATALOG_DB,
                 catalogPath = DB_SCHEMA_MARKETS,
                 query = "non_existing_column = 1",
-                expected = AnyOfType(
-                    setOf(
-                        StaticType.MISSING,
-                        StaticType.NULL,
-                        StaticType.BOOL
-                    )
-                ),
+                expected = StaticType.BOOL,
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
@@ -876,7 +860,7 @@ class PartiQLSchemaInferencerTests {
                 query = "SELECT CAST(breed AS INT) AS cast_breed FROM pets",
                 expected = BagType(
                     StructType(
-                        fields = mapOf("cast_breed" to unionOf(INT, StaticType.MISSING)),
+                        fields = mapOf("cast_breed" to unionOf(INT, MISSING)),
                         contentClosed = true,
                         constraints = setOf(
                             TupleConstraint.Open(false),
@@ -1222,7 +1206,7 @@ class PartiQLSchemaInferencerTests {
             ErrorTestCase(
                 name = "TRIM_2_error",
                 query = "trim(2 FROM ' Hello, World! ')",
-                expected = StaticType.STRING,
+                expected = MISSING,
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,

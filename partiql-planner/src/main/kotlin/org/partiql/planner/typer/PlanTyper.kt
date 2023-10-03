@@ -29,6 +29,7 @@ import org.partiql.types.MissingType
 import org.partiql.types.NullType
 import org.partiql.types.SexpType
 import org.partiql.types.StaticType
+import org.partiql.types.StringType
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
 import org.partiql.types.function.FunctionSignature
@@ -78,7 +79,7 @@ internal class PlanTyper(
      */
     private inner class RelTyper(private val outer: TypeEnv) : PlanRewriter<Rel.Type?>() {
 
-        override fun visitRel(node: Rel, ctx: Rel.Type?) = super.visitRelOp(node.op, node.type) as Rel
+        override fun visitRel(node: Rel, ctx: Rel.Type?) = visitRelOp(node.op, node.type) as Rel
 
         /**
          * The output schema of a `rel.op.scan` is the single value binding.
@@ -238,7 +239,7 @@ internal class PlanTyper(
     @OptIn(PartiQLValueExperimental::class)
     private inner class RexTyper(private val locals: TypeEnv) : PlanRewriter<StaticType?>() {
 
-        override fun visitRex(node: Rex, ctx: StaticType?): Rex = super.visitRexOp(node.op, node.type) as Rex
+        override fun visitRex(node: Rex, ctx: StaticType?): Rex = visitRexOp(node.op, node.type) as Rex
 
         override fun visitRexOpLit(node: Rex.Op.Lit, ctx: StaticType?): Rex = rewrite {
             // type comes from RexConverter
@@ -309,14 +310,29 @@ internal class PlanTyper(
                 }
                 else -> node.root to node.steps
             }
-            // 2. Evaluate remaining path steps
-            val type = steps.fold(root.type) { type, step ->
-                when (step) {
-                    is Rex.Op.Path.Step.Index -> inferPathStepType(type, step)
-                    is Rex.Op.Path.Step.Unpivot -> type
-                    is Rex.Op.Path.Step.Wildcard -> error("Wildcard path type inference implemented")
-                }
+            // short-circuit if whole path was matched
+            if (steps.isEmpty()) {
+                return root
             }
+
+            // 2. TODO rewrite and type the steps containing expressions
+            // val typedSteps = steps.map {
+            //     if (it is Rex.Op.Path.Step.Index) {
+            //         val key = visitRex(it.key, null)
+            //         rexOpPathStepIndex(key)
+            //     } else it
+            // }
+
+            // 3. Walk the steps to determine the path type.
+            val type = steps.fold(root.type) { curr, step -> inferPathStep(curr, step) }
+
+            // 4. Invalid path reference; always MISSING
+            if (type == StaticType.MISSING) {
+                handleAlwaysMissing()
+                return rex(type, rexOpErr("Unknown identifier $node"))
+            }
+
+            // 5. Non-missing, root is resolved
             rex(type, rexOpPath(root, steps))
         }
 
@@ -335,7 +351,8 @@ internal class PlanTyper(
             if (node.fn is Fn.Resolved) return rex(ctx!!, node)
 
             // Type the arguments
-            val fn = node.fn
+            val fn = node.fn as Fn.Unresolved
+            val isEq = fn.isEq()
             var missingArg = false
             val args = node.args.map {
                 val arg = visitRex(it, null)
@@ -343,14 +360,14 @@ internal class PlanTyper(
                 arg
             }
 
-            // 7.1 All functions return MISSING when one of their inputs is MISSING
-            if (missingArg) {
+            // 7.1 All functions return MISSING when one of their inputs is MISSING (except `=`)
+            if (missingArg && !isEq) {
                 handleAlwaysMissing()
                 return@rewrite rex(StaticType.MISSING, rexOpCall(fn, args))
             }
 
             // Try to match the arguments to functions defined in the catalog
-            when (val match = env.resolveFn(fn as Fn.Unresolved, args)) {
+            when (val match = env.resolveFn(fn, args)) {
                 is FnMatch.Ok -> {
 
                     // Found a match!
@@ -359,8 +376,8 @@ internal class PlanTyper(
                     val returns = newFn.signature.returns
 
                     // Determine the nullability of the return type
-                    var isNull = false      // True iff NULL CALL and has a NULL arg
-                    var isNullable = false  // True iff NULL CALL and has a NULLABLE arg; or is a NULLABLE operator
+                    var isNull = false // True iff NULL CALL and has a NULL arg
+                    var isNullable = false // True iff NULL CALL and has a NULLABLE arg; or is a NULLABLE operator
                     if (newFn.signature.isNullCall) {
                         for (arg in newArgs) {
                             if (arg.type is NullType) {
@@ -383,7 +400,7 @@ internal class PlanTyper(
                     }
 
                     // Some operators can return MISSING during runtime
-                    if (match.isMissable) {
+                    if (match.isMissable && !isEq) {
                         type = StaticType.unionOf(type, StaticType.MISSING)
                     }
 
@@ -556,21 +573,10 @@ internal class PlanTyper(
 
         // Helpers
 
-        // TODO remove env
-        private fun inferPathStepType(type: StaticType, step: Rex.Op.Path.Step.Index): StaticType = when (type) {
+        private fun inferPathStep(type: StaticType, step: Rex.Op.Path.Step): StaticType = when (type) {
             is AnyType -> StaticType.ANY
-            is StructType -> inferStructLookupType(type, step).flatten()
-            is ListType,
-            is SexpType,
-            -> {
-                val previous = type as CollectionType
-                val key = visitRex(step.key, null)
-                if (key.type is IntType) {
-                    previous.elementType
-                } else {
-                    StaticType.MISSING
-                }
-            }
+            is StructType -> inferPathStep(type, step)
+            is ListType, is SexpType -> inferPathStep(type as CollectionType, step)
             is AnyOfType -> {
                 when (type.types.size) {
                     0 -> throw IllegalStateException("Cannot path on an empty StaticType union")
@@ -579,7 +585,7 @@ internal class PlanTyper(
                         if (prevTypes.any { it is AnyType }) {
                             StaticType.ANY
                         } else {
-                            val staticTypes = prevTypes.map { inferPathStepType(it, step) }
+                            val staticTypes = prevTypes.map { inferPathStep(it, step) }
                             AnyOfType(staticTypes.toSet()).flatten()
                         }
                     }
@@ -588,43 +594,53 @@ internal class PlanTyper(
             else -> StaticType.MISSING
         }
 
-        /**
-         * TODO tuple navigation isn't correct
-         */
-        @OptIn(PartiQLValueExperimental::class)
-        private fun inferStructLookupType(struct: StructType, step: Rex.Op.Path.Step.Index): StaticType =
-            when (val key = step.key.op) {
-                is Rex.Op.Lit -> {
-                    if (key.value is TextValue<*>) {
-                        val name = (key.value as TextValue<*>).string!!
-                        val case = BindingCase.SENSITIVE
-                        val binding = BindingName(name, case)
-                        inferStructLookup(struct, binding)
-                            ?: when (struct.contentClosed) {
-                                true -> StaticType.MISSING
-                                false -> StaticType.ANY
-                            }
-                    } else {
-                        // Should this branch result in an error?
-                        StaticType.MISSING
-                    }
+        private fun inferPathStep(struct: StructType, step: Rex.Op.Path.Step): StaticType = when (step) {
+            is Rex.Op.Path.Step.Index -> {
+                if (step.key.type !is StringType) {
+                    error("Expected string but found: ${step.key.type}")
                 }
-                else -> {
-                    StaticType.MISSING
+                if (step.key.op is Rex.Op.Lit) {
+                    val lit = (step.key.op as Rex.Op.Lit).value
+                    if (lit is TextValue<*> && !lit.isNull) {
+                        val id = Plan.identifierSymbol(lit.string!!, Identifier.CaseSensitivity.SENSITIVE)
+                        inferStructLookup(struct, id)
+                    } else {
+                        error("Expected text literal, but got $lit")
+                    }
+                } else {
+                    // cannot infer type of non-literal path step because we don't know its value
+                    // we might improve upon this with some constant folding prior to typing
+                    StaticType.ANY
                 }
             }
+            is Rex.Op.Path.Step.Symbol -> inferStructLookup(struct, step.identifier)
+            is Rex.Op.Path.Step.Unpivot -> error("Unpivot not supported")
+            is Rex.Op.Path.Step.Wildcard -> error("Wildcard not supported")
+        }
 
-        private fun inferStructLookup(
-            struct: StructType,
-            key: BindingName,
-        ): StaticType? = when (struct.constraints.contains(TupleConstraint.Ordered)) {
-            true -> struct.fields.firstOrNull { entry ->
-                key.isEquivalentTo(entry.key)
-            }?.value
-            false -> struct.fields.mapNotNull { entry ->
-                entry.value.takeIf { key.isEquivalentTo(entry.key) }
-            }.let { valueTypes ->
-                StaticType.unionOf(valueTypes.toSet()).flatten().takeIf { valueTypes.isNotEmpty() }
+        private fun inferPathStep(collection: CollectionType, step: Rex.Op.Path.Step): StaticType {
+            if (step !is Rex.Op.Path.Step.Index) {
+                error("Path step on a collection must be an expression")
+            }
+            if (step.key.type !is IntType) {
+                error("Collections must be indexed with integers, found ${step.key.type}")
+            }
+            return collection.elementType
+        }
+
+        private fun inferStructLookup(struct: StructType, key: Identifier.Symbol): StaticType {
+            val binding = key.toBindingName()
+            val type = when (struct.constraints.contains(TupleConstraint.Ordered)) {
+                true -> struct.fields.firstOrNull { entry -> binding.isEquivalentTo(entry.key) }?.value
+                false -> struct.fields.mapNotNull { entry ->
+                    entry.value.takeIf { binding.isEquivalentTo(entry.key) }
+                }.let { valueTypes ->
+                    StaticType.unionOf(valueTypes.toSet()).flatten().takeIf { valueTypes.isNotEmpty() }
+                }
+            }
+            return type ?: when (struct.contentClosed) {
+                true -> StaticType.MISSING
+                false -> StaticType.ANY
             }
         }
     }
@@ -680,6 +696,8 @@ internal class PlanTyper(
 
     /**
      * Helper function which returns the literal string/symbol steps of a path expression as a [BindingPath].
+     *
+     * TODO this does not handle constant expressions in `[]`, only literals
      */
     @OptIn(PartiQLValueExperimental::class)
     private fun rexPathToBindingPath(rootOp: Rex.Op.Var.Unresolved, steps: List<Rex.Op.Path.Step>): BindingPath {
@@ -689,18 +707,23 @@ internal class PlanTyper(
         val bindingRoot = (rootOp.identifier as Identifier.Symbol).toBindingName()
         val bindingSteps = mutableListOf(bindingRoot)
         for (step in steps) {
-            if (step is Rex.Op.Path.Step.Index && step.key.op is Rex.Op.Lit) {
-                val v = (step.key.op as Rex.Op.Lit).value
-                if (v is TextValue<*>) {
-                    // add to prefix
-                    bindingSteps.add(BindingName(v.string!!, BindingCase.SENSITIVE))
-                } else {
-                    // short-circuit
-                    break
+            when (step) {
+                is Rex.Op.Path.Step.Index -> {
+                    if (step.key.op is Rex.Op.Lit) {
+                        val v = (step.key.op as Rex.Op.Lit).value
+                        if (v is TextValue<*>) {
+                            // add to prefix
+                            bindingSteps.add(BindingName(v.string!!, BindingCase.SENSITIVE))
+                        } else {
+                            // short-circuit
+                            break
+                        }
+                    } else {
+                        break
+                    }
                 }
-            } else {
-                // short-circuit
-                break
+                is Rex.Op.Path.Step.Symbol -> bindingSteps.add(step.identifier.toBindingName())
+                else -> break // short-circuit
             }
         }
         return BindingPath(bindingSteps)
@@ -804,5 +827,13 @@ internal class PlanTyper(
             Identifier.CaseSensitivity.SENSITIVE -> symbol
             Identifier.CaseSensitivity.INSENSITIVE -> symbol.lowercase()
         }
+    }
+
+    /**
+     * The equals function is the only function which NEVER returns MISSING. This function is called when typing
+     * and resolving the equals function.
+     */
+    private fun Fn.Unresolved.isEq(): Boolean {
+        return (identifier is Identifier.Symbol && (identifier as Identifier.Symbol).symbol == "eq")
     }
 }

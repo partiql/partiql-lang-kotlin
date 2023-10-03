@@ -243,6 +243,11 @@ internal class TypeLattice private constructor(
             )
             graph[STRING] = relationships(
                 BOOL to explicit(),
+                INT8 to unsafe(),
+                INT16 to unsafe(),
+                INT32 to unsafe(),
+                INT64 to unsafe(),
+                INT to unsafe(),
                 STRING to coercion(),
                 SYMBOL to coercion(),
                 CLOB to coercion(),

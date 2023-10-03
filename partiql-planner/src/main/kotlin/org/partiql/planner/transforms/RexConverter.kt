@@ -24,7 +24,6 @@ import org.partiql.value.boolValue
 import org.partiql.value.int32Value
 import org.partiql.value.int64Value
 import org.partiql.value.nullValue
-import org.partiql.value.symbolValue
 
 /**
  * Converts an AST expression node to a Plan Rex node; ignoring any typing.
@@ -102,12 +101,8 @@ internal object RexConverter {
                         rexOpPathStepIndex(key)
                     }
                     is Expr.Path.Step.Symbol -> {
-                        // Treat each symbol `foo` as ["foo"]
-                        // Per resolution rules, we may be able to resolve and replace the first `n` symbols
-                        val symbolType = (StaticType.SYMBOL)
-                        val symbol = rexOpLit(symbolValue(it.symbol.symbol))
-                        val key = rex(symbolType, symbol)
-                        rexOpPathStepIndex(key)
+                        val identifier = AstToPlan.convert(it.symbol)
+                        rexOpPathStepSymbol(identifier)
                     }
                     is Expr.Path.Step.Unpivot -> rexOpPathStepUnpivot()
                     is Expr.Path.Step.Wildcard -> rexOpPathStepWildcard()

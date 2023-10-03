@@ -2,7 +2,6 @@ package org.partiql.plan.debug
 
 import org.partiql.plan.PlanNode
 import org.partiql.plan.Rel
-import org.partiql.plan.Rex
 import org.partiql.plan.visitor.PlanBaseVisitor
 import kotlin.reflect.KVisibility
 import kotlin.reflect.full.isSubclassOf
@@ -57,10 +56,7 @@ object PlanPrinter {
         override fun defaultVisit(node: PlanNode, ctx: Args): Unit = with(ctx) {
             out.append(lead)
             // print node name
-            when {
-                (node is Rex) -> out.append("rex")
-                else -> out.append(node::class.simpleName)
-            }
+            out.append(node::class.simpleName)
             // print primitive items
             val primitives = node.primitives().filter { it.second != null }
             if (primitives.isNotEmpty()) {
@@ -88,5 +84,25 @@ object PlanPrinter {
                 notChildrenOrId && notNode && notCollectionOfNodes && it.visibility == KVisibility.PUBLIC
             }
             .map { it.name to it.get(this) }
+
+        // override fun visitIdentifierSymbol(node: Identifier.Symbol, ctx: Args): Unit = with(ctx) {
+        //     out.append(lead)
+        //     val sql = when (node.caseSensitivity) {
+        //         Identifier.CaseSensitivity.SENSITIVE -> "\"${node.symbol}\""
+        //         Identifier.CaseSensitivity.INSENSITIVE -> node.symbol
+        //     }
+        //     out.append(sql)
+        //     out.append(EOL)
+        // }
+        //
+        // override fun visitIdentifierQualified(node: Identifier.Qualified, ctx: Args): Unit = with(ctx) {
+        //     out.append(lead)
+        //     val root = visitIdentifierSymbol(node.root, ctx)
+        //     val args = Args(out, levels + !last, last = false)
+        //     val steps = node.steps.map { visitIdentifierSymbol(it, args) }
+        //     val sql = (listOf(root) + steps).joinToString(".")
+        //     out.append(sql)
+        //     out.append(EOL)
+        // }
     }
 }
