@@ -100,7 +100,7 @@ class PartiQLSchemaInferencerTests {
 
         val TYPE_BOOL = StaticType.BOOL
         private val TYPE_AWS_DDB_PETS_ID = INT
-        private val TYPE_AWS_DDB_PETS_BREED = StaticType.STRING
+        private val TYPE_AWS_DDB_PETS_BREED = STRING
         val TABLE_AWS_DDB_PETS = BagType(
             elementType = StructType(
                 fields = mapOf(
@@ -117,7 +117,7 @@ class PartiQLSchemaInferencerTests {
         )
         val TABLE_AWS_DDB_B = BagType(
             StructType(
-                fields = mapOf("identifier" to StaticType.STRING),
+                fields = mapOf("identifier" to STRING),
                 contentClosed = true,
                 constraints = setOf(
                     TupleConstraint.Open(false),
@@ -228,22 +228,12 @@ class PartiQLSchemaInferencerTests {
                 query = "SELECT VALUE a FROM [ 0 ] AS a WHERE CURRENT_USER = 'hello'",
                 expected = BagType(INT)
             ),
-            ErrorTestCase(
+            // TODO discuss how this is not an ERROR case. It's nonsense, but is not an error. The PartiQL `=` always
+            // returns a boolean so this is valid query with no typing errors, just a bit silly.
+            SuccessTestCase(
                 name = "Current User in WHERE",
                 query = "SELECT VALUE a FROM [ 0 ] AS a WHERE CURRENT_USER = 5",
                 expected = BagType(INT),
-                problemHandler = assertProblemExists {
-                    Problem(
-                        UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UnknownFunction(
-                            "eq",
-                            listOf(
-                                unionOf(STRING, StaticType.NULL),
-                                INT,
-                            ),
-                        )
-                    )
-                }
             ),
             ErrorTestCase(
                 name = "Current User (String) PLUS String",
@@ -269,7 +259,7 @@ class PartiQLSchemaInferencerTests {
             SuccessTestCase(
                 name = "BITWISE_AND_1",
                 query = "1 & 2",
-                expected = StaticType.INT
+                expected = INT
             ),
             SuccessTestCase(
                 name = "BITWISE_AND_2",
@@ -299,7 +289,7 @@ class PartiQLSchemaInferencerTests {
             SuccessTestCase(
                 name = "BITWISE_AND_7",
                 query = "CAST(1 AS INT2) & 2",
-                expected = StaticType.unionOf(StaticType.INT, MISSING)
+                expected = StaticType.unionOf(INT, MISSING)
             ),
             SuccessTestCase(
                 name = "BITWISE_AND_8",
@@ -309,12 +299,12 @@ class PartiQLSchemaInferencerTests {
             SuccessTestCase(
                 name = "BITWISE_AND_9",
                 query = "CAST(1 AS INT4) & 2",
-                expected = StaticType.unionOf(StaticType.INT, MISSING)
+                expected = StaticType.unionOf(INT, MISSING)
             ),
             SuccessTestCase(
                 name = "BITWISE_AND_10",
                 query = "CAST(1 AS INT8) & 2",
-                expected = StaticType.unionOf(StaticType.INT, MISSING)
+                expected = StaticType.unionOf(INT, MISSING)
             ),
             SuccessTestCase(
                 name = "BITWISE_AND_NULL_OPERAND",
@@ -891,7 +881,7 @@ class PartiQLSchemaInferencerTests {
                 query = "SELECT UPPER(breed) AS upper_breed FROM pets",
                 expected = BagType(
                     StructType(
-                        fields = mapOf("upper_breed" to StaticType.STRING),
+                        fields = mapOf("upper_breed" to STRING),
                         contentClosed = true,
                         constraints = setOf(
                             TupleConstraint.Open(false),
@@ -1036,7 +1026,7 @@ class PartiQLSchemaInferencerTests {
                         fields = listOf(
                             StructType.Field("a", INT),
                             StructType.Field("a", StaticType.DECIMAL),
-                            StructType.Field("a", StaticType.STRING),
+                            StructType.Field("a", STRING),
                         ),
                         contentClosed = true,
                         constraints = setOf(
@@ -1183,7 +1173,7 @@ class PartiQLSchemaInferencerTests {
             SuccessTestCase(
                 name = "Trim",
                 query = "trim(' ')",
-                expected = StaticType.STRING
+                expected = STRING
             ),
             SuccessTestCase(
                 name = "Current User Concat",
@@ -1193,22 +1183,22 @@ class PartiQLSchemaInferencerTests {
             SuccessTestCase(
                 name = "Current User Concat in WHERE",
                 query = "SELECT VALUE a FROM [ 0 ] AS a WHERE CURRENT_USER = 'hello'",
-                expected = BagType(StaticType.INT)
+                expected = BagType(INT)
             ),
             SuccessTestCase(
                 name = "TRIM_2",
                 query = "trim(' ' FROM ' Hello, World! ')",
-                expected = StaticType.STRING
+                expected = STRING
             ),
             SuccessTestCase(
                 name = "TRIM_1",
                 query = "trim(' Hello, World! ')",
-                expected = StaticType.STRING
+                expected = STRING
             ),
             SuccessTestCase(
                 name = "TRIM_3",
                 query = "trim(LEADING ' ' FROM ' Hello, World! ')",
-                expected = StaticType.STRING
+                expected = STRING
             ),
             ErrorTestCase(
                 name = "TRIM_2_error",
@@ -1217,10 +1207,9 @@ class PartiQLSchemaInferencerTests {
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.InvalidArgumentTypeForFunction(
-                            "trim",
-                            unionOf(StaticType.STRING, StaticType.SYMBOL),
-                            StaticType.INT,
+                        PlanningProblemDetails.UnknownFunction(
+                            "trim_chars",
+                            args = listOf(STRING, INT)
                         )
                     )
                 }
