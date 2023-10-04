@@ -27,8 +27,10 @@ import org.partiql.types.BagType
 import org.partiql.types.ListType
 import org.partiql.types.SexpType
 import org.partiql.types.StaticType
+import org.partiql.types.StaticType.Companion.DECIMAL
 import org.partiql.types.StaticType.Companion.INT
 import org.partiql.types.StaticType.Companion.MISSING
+import org.partiql.types.StaticType.Companion.NULL
 import org.partiql.types.StaticType.Companion.STRING
 import org.partiql.types.StaticType.Companion.unionOf
 import org.partiql.types.StructType
@@ -69,6 +71,11 @@ class PartiQLSchemaInferencerTests {
     @MethodSource("unpivotCases")
     @Execution(ExecutionMode.CONCURRENT)
     fun testUnpivot(tc: TestCase) = runTest(tc)
+
+    @ParameterizedTest
+    @MethodSource("joinCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun testJoins(tc: TestCase) = runTest(tc)
 
     companion object {
 
@@ -341,6 +348,153 @@ class PartiQLSchemaInferencerTests {
                 name = "UNPIVOT",
                 query = "SELECT VALUE v FROM UNPIVOT { 'a': 2 } AS v AT attr WHERE attr = 'a'",
                 expected = BagType(INT)
+            ),
+        )
+
+        @JvmStatic
+        fun joinCases() = listOf(
+            SuccessTestCase(
+                name = "CROSS JOIN",
+                query = "SELECT * FROM <<{ 'a': 1 }>> AS t1, <<{ 'b': 2.0 }>> AS t2",
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "a" to INT,
+                            "b" to StaticType.DECIMAL,
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "LEFT JOIN",
+                query = "SELECT * FROM <<{ 'a': 1 }>> AS t1 LEFT JOIN <<{ 'b': 2.0 }>> AS t2 ON TRUE",
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "a" to INT,
+                            "b" to unionOf(NULL, DECIMAL),
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "LEFT JOIN",
+                query = "SELECT b, a FROM <<{ 'a': 1 }>> AS t1 LEFT JOIN <<{ 'b': 2.0 }>> AS t2 ON TRUE",
+                expected = BagType(
+                    StructType(
+                        fields = listOf(
+                            StructType.Field("b", unionOf(NULL, DECIMAL)),
+                            StructType.Field("a", INT),
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "LEFT JOIN",
+                query = "SELECT t1.a, t2.a FROM <<{ 'a': 1 }>> AS t1 LEFT JOIN <<{ 'a': 2.0 }>> AS t2 ON t1.a = t2.a",
+                expected = BagType(
+                    StructType(
+                        fields = listOf(
+                            StructType.Field("a", INT),
+                            StructType.Field("a", unionOf(NULL, DECIMAL)),
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(false),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "LEFT JOIN ALL",
+                query = "SELECT * FROM <<{ 'a': 1 }>> AS t1 LEFT JOIN <<{ 'a': 2.0 }>> AS t2 ON t1.a = t2.a",
+                expected = BagType(
+                    StructType(
+                        fields = listOf(
+                            StructType.Field("a", INT),
+                            StructType.Field("a", unionOf(NULL, DECIMAL)),
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(false),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "LEFT JOIN ALL",
+                query = """
+                    SELECT *
+                    FROM
+                            <<{ 'a': 1 }>> AS t1
+                        LEFT JOIN
+                            <<{ 'a': 2.0 }>> AS t2
+                        ON t1.a = t2.a
+                        LEFT JOIN
+                            <<{ 'a': 'hello, world' }>> AS t3
+                        ON t3.a = 'hello'
+                """,
+                expected = BagType(
+                    StructType(
+                        fields = listOf(
+                            StructType.Field("a", INT),
+                            StructType.Field("a", unionOf(DECIMAL, NULL)),
+                            StructType.Field("a", unionOf(STRING, NULL)),
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(false),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                )
+            ),
+            ErrorTestCase(
+                name = "LEFT JOIN Ambiguous Reference in ON",
+                query = "SELECT * FROM <<{ 'a': 1 }>> AS t1 LEFT JOIN <<{ 'a': 2.0 }>> AS t2 ON a = 3",
+                expected = BagType(
+                    StructType(
+                        fields = listOf(
+                            StructType.Field("a", INT),
+                            StructType.Field("a", unionOf(DECIMAL, NULL)),
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(false),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                ),
+                problemHandler = assertProblemExists {
+                    Problem(
+                        UNKNOWN_PROBLEM_LOCATION,
+                        PlanningProblemDetails.UndefinedVariable("a", false)
+                    )
+                }
             ),
         )
     }
@@ -919,125 +1073,6 @@ class PartiQLSchemaInferencerTests {
                 BagType(ListType(unionOf(INT, StaticType.DECIMAL)))
             ),
             SuccessTestCase(
-                name = "CROSS JOIN",
-                query = "SELECT * FROM <<{ 'a': 1 }>> AS t1, <<{ 'b': 2.0 }>> AS t2",
-                expected = BagType(
-                    StructType(
-                        fields = mapOf(
-                            "a" to INT,
-                            "b" to StaticType.DECIMAL,
-                        ),
-                        contentClosed = true,
-                        constraints = setOf(
-                            TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(true),
-                            TupleConstraint.Ordered
-                        )
-                    )
-                )
-            ),
-            SuccessTestCase(
-                name = "LEFT JOIN",
-                query = "SELECT * FROM <<{ 'a': 1 }>> AS t1 LEFT JOIN <<{ 'b': 2.0 }>> AS t2 ON TRUE",
-                expected = BagType(
-                    StructType(
-                        fields = mapOf(
-                            "a" to INT,
-                            "b" to StaticType.DECIMAL,
-                        ),
-                        contentClosed = true,
-                        constraints = setOf(
-                            TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(true),
-                            TupleConstraint.Ordered
-                        )
-                    )
-                )
-            ),
-            SuccessTestCase(
-                name = "LEFT JOIN",
-                query = "SELECT b, a FROM <<{ 'a': 1 }>> AS t1 LEFT JOIN <<{ 'b': 2.0 }>> AS t2 ON TRUE",
-                expected = BagType(
-                    StructType(
-                        fields = listOf(
-                            StructType.Field("b", StaticType.DECIMAL),
-                            StructType.Field("a", INT),
-                        ),
-                        contentClosed = true,
-                        constraints = setOf(
-                            TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(true),
-                            TupleConstraint.Ordered
-                        )
-                    )
-                )
-            ),
-            SuccessTestCase(
-                name = "LEFT JOIN",
-                query = "SELECT t1.a, t2.a FROM <<{ 'a': 1 }>> AS t1 LEFT JOIN <<{ 'a': 2.0 }>> AS t2 ON t1.a = t2.a",
-                expected = BagType(
-                    StructType(
-                        fields = listOf(
-                            StructType.Field("a", INT),
-                            StructType.Field("a", StaticType.DECIMAL),
-                        ),
-                        contentClosed = true,
-                        constraints = setOf(
-                            TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(true),
-                            TupleConstraint.Ordered
-                        )
-                    )
-                )
-            ),
-            SuccessTestCase(
-                name = "LEFT JOIN ALL",
-                query = "SELECT * FROM <<{ 'a': 1 }>> AS t1 LEFT JOIN <<{ 'a': 2.0 }>> AS t2 ON t1.a = t2.a",
-                expected = BagType(
-                    StructType(
-                        fields = listOf(
-                            StructType.Field("a", INT),
-                            StructType.Field("a", StaticType.DECIMAL),
-                        ),
-                        contentClosed = true,
-                        constraints = setOf(
-                            TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(true),
-                            TupleConstraint.Ordered
-                        )
-                    )
-                )
-            ),
-            SuccessTestCase(
-                name = "LEFT JOIN ALL",
-                query = """
-                    SELECT *
-                    FROM
-                            <<{ 'a': 1 }>> AS t1
-                        LEFT JOIN
-                            <<{ 'a': 2.0 }>> AS t2
-                        ON t1.a = t2.a
-                        LEFT JOIN
-                            <<{ 'a': 'hello, world' }>> AS t3
-                        ON t3.a = 'hello'
-                """,
-                expected = BagType(
-                    StructType(
-                        fields = listOf(
-                            StructType.Field("a", INT),
-                            StructType.Field("a", StaticType.DECIMAL),
-                            StructType.Field("a", STRING),
-                        ),
-                        contentClosed = true,
-                        constraints = setOf(
-                            TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(true),
-                            TupleConstraint.Ordered
-                        )
-                    )
-                )
-            ),
-            SuccessTestCase(
                 name = "Duplicate fields in struct",
                 query = """
                     SELECT t.a AS a
@@ -1078,30 +1113,6 @@ class PartiQLSchemaInferencerTests {
                         )
                     )
                 )
-            ),
-            ErrorTestCase(
-                name = "LEFT JOIN Ambiguous Reference in ON",
-                query = "SELECT * FROM <<{ 'a': 1 }>> AS t1 LEFT JOIN <<{ 'a': 2.0 }>> AS t2 ON a = 3",
-                expected = BagType(
-                    StructType(
-                        fields = listOf(
-                            StructType.Field("a", INT),
-                            StructType.Field("a", StaticType.DECIMAL),
-                        ),
-                        contentClosed = true,
-                        constraints = setOf(
-                            TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(true),
-                            TupleConstraint.Ordered
-                        )
-                    )
-                ),
-                problemHandler = assertProblemExists {
-                    Problem(
-                        UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UndefinedVariable("a", false)
-                    )
-                }
             ),
             SuccessTestCase(
                 name = "Duplicate fields in struct",
@@ -1242,7 +1253,8 @@ class PartiQLSchemaInferencerTests {
         val actual = result.second
         assert(tc.expected == actual) {
             buildString {
-                appendLine("Expected: ${tc.expected}")
+                appendLine()
+                appendLine("Expect: ${tc.expected}")
                 appendLine("Actual: $actual")
                 appendLine()
                 PlanPrinter.append(this, result.first)
@@ -1273,7 +1285,8 @@ class PartiQLSchemaInferencerTests {
         if (tc.expected != null) {
             assert(tc.expected == result.second) {
                 buildString {
-                    appendLine("Expected: ${tc.expected}")
+                    appendLine()
+                    appendLine("Expect: ${tc.expected}")
                     appendLine("Actual: ${result.second}")
                     appendLine()
                     PlanPrinter.append(this, result.first)

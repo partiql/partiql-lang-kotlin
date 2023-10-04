@@ -35,7 +35,6 @@ import org.partiql.types.TupleConstraint
 import org.partiql.types.function.FunctionSignature
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.TextValue
-import org.partiql.value.stringValue
 
 /**
  * Rewrites an untyped algebraic translation of the query to be both typed and have resolved variables.
@@ -227,19 +226,22 @@ internal class PlanTyper(
             val lhs = visitRel(node.lhs, ctx)
             val rhs = visitRel(node.rhs, ctx)
 
-            // Return with Projections
-            val newCtx = relType(
-                schema = lhs.type.schema.map {
-                    relBinding(
-                        it.name,
-                        it.type
-                    )
-                } + rhs.type.schema.map { relBinding(it.name, it.type) },
-                props = ctx!!.props
-            )
-            val condition = node.rex.type(TypeEnv(newCtx.schema, ResolutionStrategy.LOCAL))
+            // Calculate output schema given JOIN type
+            val l = lhs.type.schema
+            val r = rhs.type.schema
+            val schema = when (node.type) {
+                Rel.Op.Join.Type.INNER -> l + r
+                Rel.Op.Join.Type.LEFT -> l + r.pad()
+                Rel.Op.Join.Type.RIGHT -> l.pad() + r
+                Rel.Op.Join.Type.FULL -> l.pad() + r.pad()
+            }
+            val type = relType(schema, ctx!!.props)
+
+            // Type the condition on the output schema
+            val condition = node.rex.type(TypeEnv(type.schema, ResolutionStrategy.LOCAL))
+
             val op = relOpJoin(lhs, rhs, condition, node.type)
-            rel(newCtx, op)
+            rel(type, op)
         }
 
         override fun visitRelOpAggregate(node: Rel.Op.Aggregate, ctx: Rel.Type?): Rel {
@@ -283,10 +285,9 @@ internal class PlanTyper(
             val path = node.identifier.toBindingPath()
             val resolvedVar = env.resolve(path, locals, node.scope)
 
-            // TODO error ??
             if (resolvedVar == null) {
                 handleUndefinedVariable(path.steps.last())
-                return rex(StaticType.ANY, node)
+                return rex(StaticType.ANY, rexOpErr("Undefined variable ${node.identifier}"))
             }
             val type = resolvedVar.type
             val op = when (resolvedVar) {
@@ -800,9 +801,11 @@ internal class PlanTyper(
     private fun Plan.resolvedLocalPath(local: ResolvedVar.Local): Rex.Op.Path {
         val root = rex(local.rootType, rexOpVarResolved(local.ordinal))
         val steps = local.tail.map {
-            // Symbol navigation is different than string navigation x.y <=> x."y" AND x.'y' <=> x['y']
-            val key = rex(StaticType.STRING, rexOpLit(stringValue(it.name)))
-            rexOpPathStepIndex(key)
+            val case = when (it.bindingCase) {
+                BindingCase.SENSITIVE -> Identifier.CaseSensitivity.SENSITIVE
+                BindingCase.INSENSITIVE -> Identifier.CaseSensitivity.INSENSITIVE
+            }
+            rexOpPathStepSymbol(identifierSymbol(it.name, case))
         }
         return rexOpPath(root, steps)
     }
@@ -862,5 +865,22 @@ internal class PlanTyper(
      */
     private fun Fn.Unresolved.isEq(): Boolean {
         return (identifier is Identifier.Symbol && (identifier as Identifier.Symbol).symbol == "eq")
+    }
+
+    /**
+     * This will make all binding values nullables. If the value is a struct, each field will be nullable.
+     *
+     * Note, this does not handle union types or nullable struct types.
+     */
+    private fun List<Rel.Binding>.pad() = map {
+        val type = when (val t = it.type) {
+            is StructType -> t.withNullableFields()
+            else -> t.asNullable()
+        }
+        Plan.relBinding(it.name, type)
+    }
+
+    private fun StructType.withNullableFields(): StructType {
+        return copy(fields.map { it.copy(value = it.value.asNullable()) })
     }
 }
