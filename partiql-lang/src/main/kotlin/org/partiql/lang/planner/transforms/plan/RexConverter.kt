@@ -11,9 +11,27 @@ import org.partiql.lang.eval.errorContextFrom
 import org.partiql.lang.planner.transforms.AstToPlan
 import org.partiql.lang.planner.transforms.plan.PlanTyper.isProjectAll
 import org.partiql.plan.Case
-import org.partiql.plan.Plan
 import org.partiql.plan.Rel
 import org.partiql.plan.Rex
+import org.partiql.plan.argType
+import org.partiql.plan.argValue
+import org.partiql.plan.branch
+import org.partiql.plan.field
+import org.partiql.plan.rexAgg
+import org.partiql.plan.rexBinary
+import org.partiql.plan.rexCall
+import org.partiql.plan.rexCollectionArray
+import org.partiql.plan.rexCollectionBag
+import org.partiql.plan.rexId
+import org.partiql.plan.rexLit
+import org.partiql.plan.rexPath
+import org.partiql.plan.rexQueryScalarSubquery
+import org.partiql.plan.rexSwitch
+import org.partiql.plan.rexTuple
+import org.partiql.plan.rexUnary
+import org.partiql.plan.stepKey
+import org.partiql.plan.stepUnpivot
+import org.partiql.plan.stepWildcard
 import org.partiql.types.StaticType
 import java.util.Locale
 
@@ -57,11 +75,11 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
     private fun convert(vararg nodes: PartiqlAst.Expr) = nodes.map { convert(it) }
 
     private fun arg(name: String, node: PartiqlAst.PartiqlAstNode) = when (node) {
-        is PartiqlAst.Expr -> Plan.argValue(
+        is PartiqlAst.Expr -> argValue(
             name = name,
             value = convert(node),
         )
-        is PartiqlAst.Type -> Plan.argType(
+        is PartiqlAst.Type -> argType(
             name = name,
             type = TypeConverter.convert(node)
         )
@@ -100,12 +118,12 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
     override fun walkMetas(node: MetaContainer, ctx: Ctx) = AstToPlan.unsupported(ctx.node)
 
     override fun walkExprMissing(node: PartiqlAst.Expr.Missing, ctx: Ctx) = visit(node) {
-        Plan.rexLit(ionNull(), StaticType.MISSING)
+        rexLit(ionNull(), StaticType.MISSING)
     }
 
     override fun walkExprLit(node: PartiqlAst.Expr.Lit, ctx: Ctx) = visit(node) {
         val ionType = node.value.type.toIonType()
-        Plan.rexLit(
+        rexLit(
             value = node.value,
             type = TypeConverter.convert(ionType)
         )
@@ -121,7 +139,7 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
                 internal = false
             )
         }
-        Plan.rexCall(
+        rexCall(
             id = functionName,
             args = emptyList(),
             type = null
@@ -129,7 +147,7 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
     }
 
     override fun walkExprId(node: PartiqlAst.Expr.Id, ctx: Ctx) = visit(node) {
-        Plan.rexId(
+        rexId(
             name = node.name.text,
             case = convertCase(node.case),
             qualifier = when (node.qualifier) {
@@ -141,16 +159,16 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
     }
 
     override fun walkExprPath(node: PartiqlAst.Expr.Path, ctx: Ctx) = visit(node) {
-        Plan.rexPath(
+        rexPath(
             root = convert(node.root),
             steps = node.steps.map {
                 when (it) {
-                    is PartiqlAst.PathStep.PathExpr -> Plan.stepKey(
+                    is PartiqlAst.PathStep.PathExpr -> stepKey(
                         value = convert(it.index),
                         case = convertCase(it.case)
                     )
-                    is PartiqlAst.PathStep.PathUnpivot -> Plan.stepUnpivot()
-                    is PartiqlAst.PathStep.PathWildcard -> Plan.stepWildcard()
+                    is PartiqlAst.PathStep.PathUnpivot -> stepUnpivot()
+                    is PartiqlAst.PathStep.PathWildcard -> stepWildcard()
                 }
             },
             type = null,
@@ -158,7 +176,7 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
     }
 
     override fun walkExprNot(node: PartiqlAst.Expr.Not, ctx: Ctx) = visit(node) {
-        Plan.rexUnary(
+        rexUnary(
             value = convert(node.expr),
             op = Rex.Unary.Op.NOT,
             type = StaticType.BOOL,
@@ -166,7 +184,7 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
     }
 
     override fun walkExprPos(node: PartiqlAst.Expr.Pos, ctx: Ctx) = visit(node) {
-        Plan.rexUnary(
+        rexUnary(
             value = convert(node.expr),
             op = Rex.Unary.Op.POS,
             type = StaticType.NUMERIC,
@@ -174,7 +192,7 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
     }
 
     override fun walkExprNeg(node: PartiqlAst.Expr.Neg, ctx: Ctx) = visit(node) {
-        Plan.rexUnary(
+        rexUnary(
             value = convert(node.expr),
             op = Rex.Unary.Op.NEG,
             type = StaticType.NUMERIC,
@@ -182,7 +200,7 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
     }
 
     override fun walkExprPlus(node: PartiqlAst.Expr.Plus, ctx: Ctx) = visit(node) {
-        Plan.rexBinary(
+        rexBinary(
             lhs = convert(node.operands[0]),
             rhs = convert(node.operands[1]),
             op = Rex.Binary.Op.PLUS,
@@ -191,7 +209,7 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
     }
 
     override fun walkExprMinus(node: PartiqlAst.Expr.Minus, ctx: Ctx) = visit(node) {
-        Plan.rexBinary(
+        rexBinary(
             lhs = convert(node.operands[0]),
             rhs = convert(node.operands[1]),
             op = Rex.Binary.Op.MINUS,
@@ -200,7 +218,7 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
     }
 
     override fun walkExprTimes(node: PartiqlAst.Expr.Times, ctx: Ctx) = visit(node) {
-        Plan.rexBinary(
+        rexBinary(
             lhs = convert(node.operands[0]),
             rhs = convert(node.operands[1]),
             op = Rex.Binary.Op.TIMES,
@@ -209,7 +227,7 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
     }
 
     override fun walkExprDivide(node: PartiqlAst.Expr.Divide, ctx: Ctx) = visit(node) {
-        Plan.rexBinary(
+        rexBinary(
             lhs = convert(node.operands[0]),
             rhs = convert(node.operands[1]),
             op = Rex.Binary.Op.DIV,
@@ -218,7 +236,7 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
     }
 
     override fun walkExprModulo(node: PartiqlAst.Expr.Modulo, ctx: Ctx) = visit(node) {
-        Plan.rexBinary(
+        rexBinary(
             lhs = convert(node.operands[0]),
             rhs = convert(node.operands[1]),
             op = Rex.Binary.Op.MODULO,
@@ -227,7 +245,7 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
     }
 
     override fun walkExprBitwiseAnd(node: PartiqlAst.Expr.BitwiseAnd, accumulator: Ctx) = visit(node) {
-        Plan.rexBinary(
+        rexBinary(
             lhs = convert(node.operands[0]),
             rhs = convert(node.operands[1]),
             op = Rex.Binary.Op.BITWISE_AND,
@@ -238,7 +256,7 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
     }
 
     override fun walkExprConcat(node: PartiqlAst.Expr.Concat, ctx: Ctx) = visit(node) {
-        Plan.rexBinary(
+        rexBinary(
             lhs = convert(node.operands[0]),
             rhs = convert(node.operands[1]),
             op = Rex.Binary.Op.CONCAT,
@@ -247,7 +265,7 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
     }
 
     override fun walkExprAnd(node: PartiqlAst.Expr.And, ctx: Ctx) = visit(node) {
-        Plan.rexBinary(
+        rexBinary(
             lhs = convert(node.operands[0]),
             rhs = convert(node.operands[1]),
             op = Rex.Binary.Op.AND,
@@ -256,7 +274,7 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
     }
 
     override fun walkExprOr(node: PartiqlAst.Expr.Or, ctx: Ctx) = visit(node) {
-        Plan.rexBinary(
+        rexBinary(
             lhs = convert(node.operands[0]),
             rhs = convert(node.operands[1]),
             op = Rex.Binary.Op.OR,
@@ -266,7 +284,7 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
 
     override fun walkExprEq(node: PartiqlAst.Expr.Eq, ctx: Ctx) = visit(node) {
         val (lhs, rhs) = walkComparisonOperands(node.operands)
-        Plan.rexBinary(
+        rexBinary(
             lhs = lhs,
             rhs = rhs,
             op = Rex.Binary.Op.EQ,
@@ -276,7 +294,7 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
 
     override fun walkExprNe(node: PartiqlAst.Expr.Ne, ctx: Ctx) = visit(node) {
         val (lhs, rhs) = walkComparisonOperands(node.operands)
-        Plan.rexBinary(
+        rexBinary(
             lhs = lhs,
             rhs = rhs,
             op = Rex.Binary.Op.NEQ,
@@ -286,7 +304,7 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
 
     override fun walkExprGt(node: PartiqlAst.Expr.Gt, ctx: Ctx) = visit(node) {
         val (lhs, rhs) = walkComparisonOperands(node.operands)
-        Plan.rexBinary(
+        rexBinary(
             lhs = lhs,
             rhs = rhs,
             op = Rex.Binary.Op.GT,
@@ -296,7 +314,7 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
 
     override fun walkExprGte(node: PartiqlAst.Expr.Gte, ctx: Ctx) = visit(node) {
         val (lhs, rhs) = walkComparisonOperands(node.operands)
-        Plan.rexBinary(
+        rexBinary(
             lhs = lhs,
             rhs = rhs,
             op = Rex.Binary.Op.GTE,
@@ -306,7 +324,7 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
 
     override fun walkExprLt(node: PartiqlAst.Expr.Lt, ctx: Ctx) = visit(node) {
         val (lhs, rhs) = walkComparisonOperands(node.operands)
-        Plan.rexBinary(
+        rexBinary(
             lhs = lhs,
             rhs = rhs,
             op = Rex.Binary.Op.LT,
@@ -316,7 +334,7 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
 
     override fun walkExprLte(node: PartiqlAst.Expr.Lte, ctx: Ctx) = visit(node) {
         val (lhs, rhs) = walkComparisonOperands(node.operands)
-        Plan.rexBinary(
+        rexBinary(
             lhs = lhs,
             rhs = rhs,
             op = Rex.Binary.Op.LTE,
@@ -369,7 +387,7 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
                 if (relProject.bindings.any { it.value.isProjectAll() }) {
                     error("Unimplemented feature: coercion of SELECT *.")
                 }
-                Plan.rexCollectionArray(
+                rexCollectionArray(
                     relProject.bindings.map { it.value },
                     type = StaticType.LIST
                 )
@@ -379,7 +397,7 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
 
     override fun walkExprLike(node: PartiqlAst.Expr.Like, ctx: Ctx) = visit(node) {
         when (val escape = node.escape) {
-            null -> Plan.rexCall(
+            null -> rexCall(
                 id = Constants.like,
                 args = args(
                     "value" to node.value,
@@ -387,7 +405,7 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
                 ),
                 type = StaticType.BOOL,
             )
-            else -> Plan.rexCall(
+            else -> rexCall(
                 id = Constants.likeEscape,
                 args = args(
                     "value" to node.value,
@@ -400,7 +418,7 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
     }
 
     override fun walkExprBetween(node: PartiqlAst.Expr.Between, ctx: Ctx) = visit(node) {
-        Plan.rexCall(
+        rexCall(
             id = Constants.between,
             args = args("value" to node.value, "from" to node.from, "to" to node.to),
             type = StaticType.BOOL,
@@ -415,20 +433,20 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
         val potentialSubqueryRex = convert(node.operands[1])
         val potentialSubquery = coercePotentialSubquery(potentialSubqueryRex)
         val rhs = (potentialSubquery as? Rex.Query.Scalar.Subquery)?.query ?: potentialSubquery
-        Plan.rexCall(
+        rexCall(
             id = Constants.inCollection,
             args = listOf(
-                Plan.argValue("lhs", lhs),
-                Plan.argValue("rhs", rhs),
+                argValue("lhs", lhs),
+                argValue("rhs", rhs),
             ),
             type = StaticType.BOOL,
         )
     }
 
     override fun walkExprStruct(node: PartiqlAst.Expr.Struct, ctx: Ctx) = visit(node) {
-        Plan.rexTuple(
+        rexTuple(
             fields = node.fields.map {
-                Plan.field(
+                field(
                     name = convert(it.first),
                     value = convert(it.second)
                 )
@@ -438,28 +456,28 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
     }
 
     override fun walkExprBag(node: PartiqlAst.Expr.Bag, ctx: Ctx) = visit(node) {
-        Plan.rexCollectionBag(
+        rexCollectionBag(
             values = convert(node.values),
             type = StaticType.BAG,
         )
     }
 
     override fun walkExprList(node: PartiqlAst.Expr.List, ctx: Ctx) = visit(node) {
-        Plan.rexCollectionArray(
+        rexCollectionArray(
             values = convert(node.values),
             type = StaticType.LIST,
         )
     }
 
     override fun walkExprSexp(node: PartiqlAst.Expr.Sexp, accumulator: Ctx) = visit(node) {
-        Plan.rexCollectionArray(
+        rexCollectionArray(
             values = convert(node.values),
             type = StaticType.LIST,
         )
     }
 
     override fun walkExprCall(node: PartiqlAst.Expr.Call, ctx: Ctx) = visit(node) {
-        Plan.rexCall(
+        rexCall(
             id = node.funcName.text,
             args = args(*node.args.toTypedArray()),
             type = null,
@@ -467,7 +485,7 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
     }
 
     override fun walkExprCallAgg(node: PartiqlAst.Expr.CallAgg, ctx: Ctx) = visit(node) {
-        Plan.rexAgg(
+        rexAgg(
             id = node.funcName.text,
             args = listOf(convert(node.arg)),
             modifier = when (node.setq) {
@@ -479,7 +497,7 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
     }
 
     override fun walkExprIsType(node: PartiqlAst.Expr.IsType, ctx: Ctx) = visit(node) {
-        Plan.rexCall(
+        rexCall(
             id = Constants.isType,
             args = args("value" to node.value, "type" to node.type),
             type = StaticType.BOOL,
@@ -487,10 +505,10 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
     }
 
     override fun walkExprSimpleCase(node: PartiqlAst.Expr.SimpleCase, ctx: Ctx) = visit(node) {
-        Plan.rexSwitch(
+        rexSwitch(
             match = convert(node.expr),
             branches = node.cases.pairs.map {
-                Plan.branch(
+                branch(
                     condition = convert(it.first),
                     value = convert(it.second),
                 )
@@ -501,10 +519,10 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
     }
 
     override fun walkExprSearchedCase(node: PartiqlAst.Expr.SearchedCase, ctx: Ctx) = visit(node) {
-        Plan.rexSwitch(
+        rexSwitch(
             match = null,
             branches = node.cases.pairs.map {
-                Plan.branch(
+                branch(
                     condition = convert(it.first),
                     value = convert(it.second),
                 )
@@ -542,7 +560,7 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
                 is PartiqlAst.BagOpType.OuterExcept -> Constants.outerSetExcept
             }
         }
-        Plan.rexCall(
+        rexCall(
             id = op,
             args = args("lhs" to node.operands[0], "rhs" to node.operands[1]),
             type = StaticType.BAG,
@@ -550,7 +568,7 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
     }
 
     override fun walkExprCast(node: PartiqlAst.Expr.Cast, ctx: Ctx) = visit(node) {
-        Plan.rexCall(
+        rexCall(
             id = Constants.cast,
             args = args("value" to node.value, "type" to node.asType),
             type = TypeConverter.convert(node.asType),
@@ -558,7 +576,7 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
     }
 
     override fun walkExprCanCast(node: PartiqlAst.Expr.CanCast, ctx: Ctx) = visit(node) {
-        Plan.rexCall(
+        rexCall(
             id = Constants.canCast,
             args = args("value" to node.value, "type" to node.asType),
             type = StaticType.BOOL,
@@ -566,7 +584,7 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
     }
 
     override fun walkExprCanLosslessCast(node: PartiqlAst.Expr.CanLosslessCast, ctx: Ctx) = visit(node) {
-        Plan.rexCall(
+        rexCall(
             id = Constants.canLosslessCast,
             args = args("value" to node.value, "type" to node.asType),
             type = StaticType.BOOL,
@@ -574,7 +592,7 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
     }
 
     override fun walkExprNullIf(node: PartiqlAst.Expr.NullIf, ctx: Ctx) = visit(node) {
-        Plan.rexCall(
+        rexCall(
             id = Constants.nullIf,
             args = args(node.expr1, node.expr2),
             type = StaticType.BOOL,
@@ -582,7 +600,7 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
     }
 
     override fun walkExprCoalesce(node: PartiqlAst.Expr.Coalesce, ctx: Ctx) = visit(node) {
-        Plan.rexCall(
+        rexCall(
             id = Constants.coalesce,
             args = args(node.args),
             type = null,
@@ -591,7 +609,7 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
 
     override fun walkExprSelect(node: PartiqlAst.Expr.Select, ctx: Ctx) = visit(node) {
         when (val query = RelConverter.convert(node)) {
-            is Rex.Query.Collection -> Plan.rexQueryScalarSubquery(query, null)
+            is Rex.Query.Collection -> rexQueryScalarSubquery(query, null)
             is Rex.Query.Scalar -> query
         }
     }

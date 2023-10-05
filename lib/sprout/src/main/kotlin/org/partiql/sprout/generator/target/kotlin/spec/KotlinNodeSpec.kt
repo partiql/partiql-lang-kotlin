@@ -70,26 +70,19 @@ sealed class KotlinNodeSpec(
     class Product(
         val product: TypeDef.Product,
         val props: List<Prop>,
-        val implClazz: ClassName,
-        val impl: TypeSpec.Builder,
         override val nodes: List<KotlinNodeSpec>,
         clazz: ClassName,
         ext: MutableList<TypeSpec> = mutableListOf(),
     ) : KotlinNodeSpec(
         def = product,
         clazz = clazz,
-        builder = TypeSpec.classBuilder(clazz).addModifiers(KModifier.ABSTRACT),
+        builder = TypeSpec.classBuilder(clazz).addModifiers(KModifier.DATA),
         companion = TypeSpec.companionObjectBuilder(),
         ext = ext,
     ) {
         val constructor = FunSpec.constructorBuilder()
 
         override val children: List<KotlinNodeSpec> = nodes
-
-        fun buildImpl(): TypeSpec {
-            impl.primaryConstructor(constructor.build())
-            return impl.build()
-        }
     }
 
     /**
@@ -104,7 +97,7 @@ sealed class KotlinNodeSpec(
     ) : KotlinNodeSpec(
         def = sum,
         clazz = clazz,
-        builder = TypeSpec.interfaceBuilder(clazz).addModifiers(KModifier.SEALED),
+        builder = TypeSpec.classBuilder(clazz).addModifiers(KModifier.SEALED),
         companion = TypeSpec.companionObjectBuilder(),
         ext = ext,
     ) {

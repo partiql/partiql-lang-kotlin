@@ -1,5 +1,16 @@
 package org.partiql.ast.sql
 
+import org.partiql.ast.AstNode
+
+/**
+ * Pretty-print this [AstNode] as SQL text with the given [SqlLayout]
+ */
+@JvmOverloads
+public fun AstNode.sql(
+    layout: SqlLayout = SqlLayout.DEFAULT,
+    dialect: SqlDialect = SqlDialect.PARTIQL,
+): String = accept(dialect, SqlBlock.Nil).sql(layout)
+
 // a <> b  <-> a concat b
 
 internal infix fun SqlBlock.concat(rhs: SqlBlock): SqlBlock = link(this, rhs)

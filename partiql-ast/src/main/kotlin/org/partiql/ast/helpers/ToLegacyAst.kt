@@ -88,7 +88,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
         node: AstNode,
         block: PartiqlAst.Builder.(metas: MetaContainer) -> T,
     ): T {
-        val metas = metas[node._id] ?: emptyMetaContainer()
+        val metas = metas[node.tag] ?: emptyMetaContainer()
         return pig.block(metas)
     }
 

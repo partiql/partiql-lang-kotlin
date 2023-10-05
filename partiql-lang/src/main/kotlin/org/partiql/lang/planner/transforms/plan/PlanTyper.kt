@@ -27,8 +27,6 @@ import org.partiql.lang.eval.builtins.SCALAR_BUILTINS_DEFAULT
 import org.partiql.lang.planner.PlanningProblemDetails
 import org.partiql.lang.planner.transforms.PlannerSession
 import org.partiql.lang.planner.transforms.impl.Metadata
-import org.partiql.lang.planner.transforms.plan.PlanTyper.MinimumTolerance.FULL
-import org.partiql.lang.planner.transforms.plan.PlanTyper.MinimumTolerance.PARTIAL
 import org.partiql.lang.planner.transforms.plan.PlanUtils.addType
 import org.partiql.lang.planner.transforms.plan.PlanUtils.grabType
 import org.partiql.lang.types.FunctionSignature
@@ -42,12 +40,14 @@ import org.partiql.plan.Binding
 import org.partiql.plan.Case
 import org.partiql.plan.ExcludeExpr
 import org.partiql.plan.ExcludeStep
-import org.partiql.plan.Plan
 import org.partiql.plan.PlanNode
 import org.partiql.plan.Property
 import org.partiql.plan.Rel
 import org.partiql.plan.Rex
 import org.partiql.plan.Step
+import org.partiql.plan.attribute
+import org.partiql.plan.binding
+import org.partiql.plan.rexId
 import org.partiql.plan.util.PlanRewriter
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
@@ -73,7 +73,7 @@ import org.partiql.types.SymbolType
 import org.partiql.types.TupleConstraint
 
 /**
- * Types a given logical plan.
+ * Types a given logical
  */
 internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
 
@@ -327,20 +327,20 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
         val fromExprType = value.grabType() ?: handleMissingType(ctx)
 
         val valueType = getUnpivotValueType(fromExprType)
-        val typeEnv = mutableListOf(Plan.attribute(asSymbolicName, valueType))
+        val typeEnv = mutableListOf(attribute(asSymbolicName, valueType))
 
         from.at?.let {
             val valueHasMissing = StaticTypeUtils.getTypeDomain(valueType).contains(ExprValueType.MISSING)
             val valueOnlyHasMissing = valueHasMissing && StaticTypeUtils.getTypeDomain(valueType).size == 1
             when {
                 valueOnlyHasMissing -> {
-                    typeEnv.add(Plan.attribute(it, StaticType.MISSING))
+                    typeEnv.add(attribute(it, StaticType.MISSING))
                 }
                 valueHasMissing -> {
-                    typeEnv.add(Plan.attribute(it, StaticType.STRING.asOptional()))
+                    typeEnv.add(attribute(it, StaticType.STRING.asOptional()))
                 }
                 else -> {
-                    typeEnv.add(Plan.attribute(it, StaticType.STRING))
+                    typeEnv.add(attribute(it, StaticType.STRING))
                 }
             }
         }
@@ -357,8 +357,8 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
 
     override fun visitRelAggregate(node: Rel.Aggregate, ctx: Context): PlanNode {
         val input = visitRel(node.input, ctx)
-        val calls = node.calls.map { Plan.binding(it.name, typeRex(it.value, input, ctx)) }
-        val groups = node.groups.map { Plan.binding(it.name, typeRex(it.value, input, ctx)) }
+        val calls = node.calls.map { binding(it.name, typeRex(it.value, input, ctx)) }
+        val groups = node.groups.map { binding(it.name, typeRex(it.value, input, ctx)) }
         return node.copy(
             calls = calls,
             groups = groups,
@@ -377,12 +377,12 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
                     when (val structType = type as? StructType) {
                         null -> {
                             handleIncompatibleDataTypeForExprError(StaticType.STRUCT, type, ctx)
-                            listOf(Plan.attribute(binding.name, type))
+                            listOf(attribute(binding.name, type))
                         }
-                        else -> structType.fields.map { entry -> Plan.attribute(entry.key, entry.value) }
+                        else -> structType.fields.map { entry -> attribute(entry.key, entry.value) }
                     }
                 }
-                false -> listOf(Plan.attribute(binding.name, type))
+                false -> listOf(attribute(binding.name, type))
             }
         }
         return node.copy(
@@ -418,7 +418,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
             is Rex.Query.Collection -> when (value.constructor) {
                 null -> value.rel
                 else -> {
-                    val typeEnv = listOf(Plan.attribute(asSymbolicName, sourceType))
+                    val typeEnv = listOf(attribute(asSymbolicName, sourceType))
                     node.copy(
                         value = value,
                         common = node.common.copy(
@@ -428,7 +428,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
                 }
             }
             else -> {
-                val typeEnv = listOf(Plan.attribute(asSymbolicName, sourceType))
+                val typeEnv = listOf(attribute(asSymbolicName, sourceType))
                 node.copy(
                     value = value,
                     common = node.common.copy(
@@ -1265,7 +1265,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
         rexCaseToBindingCase(node.case)
     )
 
-    private fun List<Binding>.toAttributes(ctx: Context) = this.map { Plan.attribute(it.name, it.grabType() ?: handleMissingType(ctx)) }
+    private fun List<Binding>.toAttributes(ctx: Context) = this.map { attribute(it.name, it.grabType() ?: handleMissingType(ctx)) }
 
     private fun inferConcatOp(leftType: SingleType, rightType: SingleType): SingleType {
         fun checkUnconstrainedText(type: SingleType) = type is SymbolType || type is StringType && type.lengthConstraint is StringType.StringLengthConstraint.Unconstrained
@@ -1688,7 +1688,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
                             ElementType.SYMBOL, ElementType.STRING -> {
                                 val stringValue = value.value.asAnyElement().stringValueOrNull
                                 stringValue?.let { str ->
-                                    Plan.rexId(str, it.case, Rex.Id.Qualifier.UNQUALIFIED, null)
+                                    rexId(str, it.case, Rex.Id.Qualifier.UNQUALIFIED, null)
                                 }
                             }
                             else -> null
