@@ -1,6 +1,5 @@
 package org.partiql.ast.normalize
 
-import org.partiql.ast.AstPass
 import org.partiql.ast.Expr
 import org.partiql.ast.From
 import org.partiql.ast.Identifier

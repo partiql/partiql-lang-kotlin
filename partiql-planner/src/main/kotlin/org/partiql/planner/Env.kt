@@ -3,9 +3,11 @@ package org.partiql.planner
 import org.partiql.plan.Fn
 import org.partiql.plan.Global
 import org.partiql.plan.Identifier
-import org.partiql.plan.Plan
 import org.partiql.plan.Rel
 import org.partiql.plan.Rex
+import org.partiql.plan.global
+import org.partiql.plan.identifierQualified
+import org.partiql.plan.identifierSymbol
 import org.partiql.planner.typer.FunctionResolver
 import org.partiql.planner.typer.Mapping
 import org.partiql.planner.typer.isNullOrMissing
@@ -275,7 +277,7 @@ internal class Env(
                 getObjectDescriptor(handle).let { type ->
                     val depth = calculateMatched(originalPath, catalogPath, handle.second.absolutePath)
                     val match = BindingPath(originalPath.steps.subList(0, depth))
-                    val global = Plan.global(match.toIdentifier(), type)
+                    val global = global(match.toIdentifier(), type)
                     globals.add(global)
                     // Return resolution metadata
                     ResolvedVar.Global(type, globals.size - 1, depth)
@@ -411,12 +413,12 @@ internal class Env(
         return originalPath.steps.size + outputCatalogPath.steps.size - inputCatalogPath.steps.size
     }
 
-    private fun BindingPath.toIdentifier() = Plan.identifierQualified(
+    private fun BindingPath.toIdentifier() = identifierQualified(
         root = steps[0].toIdentifier(),
         steps = steps.subList(1, steps.size).map { it.toIdentifier() }
     )
 
-    private fun BindingName.toIdentifier() = Plan.identifierSymbol(
+    private fun BindingName.toIdentifier() = identifierSymbol(
         symbol = name,
         caseSensitivity = when (bindingCase) {
             BindingCase.SENSITIVE -> Identifier.CaseSensitivity.SENSITIVE
