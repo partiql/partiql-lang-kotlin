@@ -334,6 +334,23 @@ windowSortSpecList
 havingClause
     : HAVING arg=exprSelect;
 
+excludeClause
+    : EXCLUDE excludeExpr (COMMA excludeExpr)*;
+
+// Require 1 more `excludeExprSteps` (disallow `EXCLUDE a`).
+// There's not a clear use case in which a user would exclude a previously introdced binding variable. If a use case
+// arises, we can always change the requirement to 0 or more steps.
+excludeExpr
+    : symbolPrimitive excludeExprSteps+;
+
+excludeExprSteps
+    : PERIOD symbolPrimitive                            # ExcludeExprTupleAttr
+    | BRACKET_LEFT attr=LITERAL_STRING BRACKET_RIGHT    # ExcludeExprCollectionAttr
+    | BRACKET_LEFT index=LITERAL_INTEGER BRACKET_RIGHT  # ExcludeExprCollectionIndex
+    | BRACKET_LEFT ASTERISK BRACKET_RIGHT               # ExcludeExprCollectionWildcard
+    | PERIOD ASTERISK                                   # ExcludeExprTupleWildcard
+    ;
+
 fromClause
     : FROM tableReference;
 
@@ -513,6 +530,7 @@ exprBagOp
 
 exprSelect
     : select=selectClause
+        exclude=excludeClause?
         from=fromClause
         let=letClause?
         where=whereClauseSelect?

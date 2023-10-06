@@ -17,6 +17,7 @@ import com.amazon.ionelement.api.ionSymbol
 import com.amazon.ionelement.api.metaContainerOf
 import org.partiql.ast.AstNode
 import org.partiql.ast.DatetimeField
+import org.partiql.ast.Exclude
 import org.partiql.ast.Expr
 import org.partiql.ast.From
 import org.partiql.ast.GraphMatch
@@ -87,7 +88,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
         node: AstNode,
         block: PartiqlAst.Builder.(metas: MetaContainer) -> T,
     ): T {
-        val metas = metas[node._id] ?: emptyMetaContainer()
+        val metas = metas[node.tag] ?: emptyMetaContainer()
         return pig.block(metas)
     }
 
@@ -665,6 +666,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
         }
         val project = visitSelect(node.select, ctx)
         val from = visitFrom(node.from, ctx)
+        val exclude = node.exclude?.let { visitExclude(it, ctx) }
         val fromLet = node.let?.let { visitLet(it, ctx) }
         val where = node.where?.let { visitExpr(it, ctx) }
         val groupBy = node.groupBy?.let { visitGroupBy(it, ctx) }
@@ -672,7 +674,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
         val orderBy = node.orderBy?.let { visitOrderBy(it, ctx) }
         val limit = node.limit?.let { visitExpr(it, ctx) }
         val offset = node.offset?.let { visitExpr(it, ctx) }
-        select(setq, project, from, fromLet, where, groupBy, having, orderBy, limit, offset, metas)
+        select(setq, project, exclude, from, fromLet, where, groupBy, having, orderBy, limit, offset, metas)
     }
 
     /**
@@ -748,6 +750,48 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
         val rhs = visitFrom(node.rhs, ctx)
         val condition = visitOrNull<PartiqlAst.Expr>(node.condition, ctx)
         join(type, lhs, rhs, condition, metas)
+    }
+
+    override fun visitExclude(node: Exclude, ctx: Ctx): PartiqlAst.ExcludeOp = translate(node) { metas ->
+        val excludeExprs = node.exprs.translate<PartiqlAst.ExcludeExpr>(ctx)
+        excludeOp(excludeExprs, metas)
+    }
+
+    override fun visitExcludeExcludeExpr(node: Exclude.ExcludeExpr, ctx: Ctx) = translate(node) { metas ->
+        val root = visitIdentifierSymbol(node.root, ctx)
+        val steps = node.steps.translate<PartiqlAst.ExcludeStep>(ctx)
+        excludeExpr(root = root, steps = steps, metas)
+    }
+
+    override fun visitExcludeStep(node: Exclude.Step, ctx: Ctx) =
+        super.visitExcludeStep(node, ctx) as PartiqlAst.ExcludeStep
+
+    override fun visitExcludeStepExcludeTupleAttr(node: Exclude.Step.ExcludeTupleAttr, ctx: Ctx) = translate(node) { metas ->
+        val attr = node.symbol.symbol
+        val case = node.symbol.caseSensitivity.toLegacyCaseSensitivity()
+        excludeTupleAttr(identifier(attr, case), metas)
+    }
+
+    override fun visitExcludeStepExcludeCollectionIndex(
+        node: Exclude.Step.ExcludeCollectionIndex,
+        ctx: Ctx
+    ) = translate(node) { metas ->
+        val index = node.index.toLong()
+        excludeCollectionIndex(index, metas)
+    }
+
+    override fun visitExcludeStepExcludeTupleWildcard(
+        node: Exclude.Step.ExcludeTupleWildcard,
+        ctx: Ctx
+    ) = translate(node) { metas ->
+        excludeTupleWildcard(metas)
+    }
+
+    override fun visitExcludeStepExcludeCollectionWildcard(
+        node: Exclude.Step.ExcludeCollectionWildcard,
+        ctx: Ctx
+    ) = translate(node) { metas ->
+        excludeCollectionWildcard(metas)
     }
 
     override fun visitLet(node: Let, ctx: Ctx) = translate(node) { metas ->

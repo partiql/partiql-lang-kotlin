@@ -227,6 +227,22 @@ public object StaticTypeUtils {
     //
     //
 
+    internal fun isClosedSafe(type: StructType): Boolean? = try {
+        isClosed(type)
+    } catch (_: StructClosedMismatch) {
+        null
+    }
+
+    @kotlin.jvm.Throws(StructClosedMismatch::class)
+    internal fun isClosed(type: StructType): Boolean {
+        val contentClosed = type.contentClosed
+        val constraintClosed = type.constraints.contains(TupleConstraint.Open(false))
+        if (contentClosed != constraintClosed) { throw StructClosedMismatch }
+        return contentClosed
+    }
+
+    internal object StructClosedMismatch : Exception()
+
     /**
      * By far, structs have the most complicated logic behind their instance check.
      *

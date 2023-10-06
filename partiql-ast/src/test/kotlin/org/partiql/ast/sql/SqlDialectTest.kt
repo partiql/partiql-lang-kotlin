@@ -13,7 +13,6 @@ import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
-import org.partiql.ast.Ast
 import org.partiql.ast.AstNode
 import org.partiql.ast.DatetimeField
 import org.partiql.ast.Expr
@@ -24,9 +23,8 @@ import org.partiql.ast.SetOp
 import org.partiql.ast.SetQuantifier
 import org.partiql.ast.Sort
 import org.partiql.ast.builder.AstBuilder
-import org.partiql.ast.builder.AstFactory
 import org.partiql.ast.builder.ast
-import org.partiql.ast.sql
+import org.partiql.ast.exprLit
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.boolValue
 import org.partiql.value.decimalValue
@@ -168,7 +166,7 @@ class SqlDialectTest {
 
     companion object {
 
-        private val NULL = Ast.exprLit(nullValue())
+        private val NULL = exprLit(nullValue())
 
         @JvmStatic
         fun types() = listOf(
@@ -1593,12 +1591,12 @@ class SqlDialectTest {
         )
 
         private fun expect(expected: String, block: AstBuilder.() -> AstNode): Case {
-            val i = ast(AstFactory.DEFAULT, block)
+            val i = ast(block)
             return Case.Success(i, expected)
         }
 
         private fun fail(message: String, block: AstBuilder.() -> AstNode): Case {
-            val i = ast(AstFactory.DEFAULT, block)
+            val i = ast(block)
             return Case.Fail(i, message)
         }
 

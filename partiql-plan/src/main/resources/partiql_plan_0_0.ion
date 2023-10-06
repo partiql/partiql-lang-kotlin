@@ -78,6 +78,25 @@ arg::[
   }
 ]
 
+// Exclude expr and step
+exclude_expr::{
+  root: string,
+  root_case: case,
+  steps: list::[exclude_step],
+}
+
+exclude_step::[
+  tuple_attr::{
+    attr: string,
+    case: case,
+  },
+  collection_index::{
+    index: int,
+  },
+  tuple_wildcard::{},
+  collection_wildcard::{},
+]
+
 branch::{
   condition: rex,
   value: rex,
@@ -149,6 +168,11 @@ rel::[
     groups: list::[binding],
     strategy: [ FULL, PARTIAL ],
   },
+  exclude::{
+    common: common,
+    input: rel,
+    exprs: list::[exclude_expr],
+  }
 ]
 
 // Operators that return any value

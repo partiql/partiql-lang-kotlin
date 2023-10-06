@@ -60,6 +60,7 @@ val generate = tasks.register<Exec>("generate") {
         "-o", "$buildDir/generated-src",
         "-p", "org.partiql.ast",
         "-u", "Ast",
+        "--poems", "factory",
         "--poems", "visitor",
         "--poems", "builder",
         "--poems", "util",

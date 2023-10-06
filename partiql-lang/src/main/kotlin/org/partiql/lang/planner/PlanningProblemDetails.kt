@@ -77,6 +77,12 @@ sealed class PlanningProblemDetails(
                     "Please use the `INSERT INTO <table> << <expr>, ... >>` form instead."
             }
         )
+
+    data class UnresolvedExcludeExprRoot(val root: String) :
+        PlanningProblemDetails(
+            ProblemSeverity.ERROR,
+            { "Exclude expression given an unresolvable root '$root'" }
+        )
 }
 
 private fun quotationHint(caseSensitive: Boolean) =

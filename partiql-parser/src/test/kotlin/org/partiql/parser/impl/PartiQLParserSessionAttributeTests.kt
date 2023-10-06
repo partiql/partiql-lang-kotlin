@@ -3,7 +3,10 @@ package org.partiql.parser.impl
 import org.junit.jupiter.api.Test
 import org.partiql.ast.AstNode
 import org.partiql.ast.Expr
-import org.partiql.ast.builder.AstFactory
+import org.partiql.ast.exprBinary
+import org.partiql.ast.exprLit
+import org.partiql.ast.exprSessionAttribute
+import org.partiql.ast.statementQuery
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.int64Value
 import kotlin.test.assertEquals
@@ -13,9 +16,7 @@ class PartiQLParserSessionAttributeTests {
 
     private val parser = PartiQLParserDefault()
 
-    private fun query(body: AstFactory.() -> Expr) = AstFactory.create {
-        statementQuery(this.body())
-    }
+    private inline fun query(body: () -> Expr) = statementQuery(body())
 
     @Test
     fun currentUserUpperCase() = assertExpression(
