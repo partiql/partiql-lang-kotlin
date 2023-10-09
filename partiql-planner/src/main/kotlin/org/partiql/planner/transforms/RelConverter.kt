@@ -67,7 +67,6 @@ import org.partiql.plan.rexOpTupleUnionArgSpread
 import org.partiql.plan.rexOpTupleUnionArgStruct
 import org.partiql.plan.rexOpVarResolved
 import org.partiql.planner.Env
-import org.partiql.types.ListType
 import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.boolValue
