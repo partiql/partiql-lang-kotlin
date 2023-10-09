@@ -327,7 +327,7 @@ internal class PlanTyper(
             val init = input.type.schema.map { it.copy() }
             val schema = node.items.fold((init)) { bindings, item -> excludeBindings(bindings, item) }
 
-            //
+            // rewrite
             val type = ctx!!.copy(schema)
             return rel(type, node)
         }
