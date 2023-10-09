@@ -154,7 +154,7 @@ internal class PlanTyper(
             // only UNPIVOT a struct
             if (rex.type !is StructType) {
                 handleUnexpectedType(rex.type, expected = setOf(StaticType.STRUCT))
-                return rel(ctx!!, relOpErr())
+                return rel(ctx!!, relOpErr("UNPIVOT on non-STRUCT type ${rex.type}"))
             }
 
             // compute element type
@@ -289,6 +289,47 @@ internal class PlanTyper(
 
             val op = relOpJoin(lhs, rhs, condition, node.type)
             return rel(type, op)
+        }
+
+        /**
+         * Initial implementation of `EXCLUDE` schema inference. Until an RFC is finalized for `EXCLUDE`
+         * (https://github.com/partiql/partiql-spec/issues/39), this behavior is considered experimental and subject to
+         * change.
+         *
+         * So far this implementation includes
+         *  - Excluding tuple bindings (e.g. t.a.b.c)
+         *  - Excluding tuple wildcards (e.g. t.a.*.b)
+         *  - Excluding collection indexes (e.g. t.a[0].b -- behavior subject to change; see below discussion)
+         *  - Excluding collection wildcards (e.g. t.a[*].b)
+         *
+         * There are still discussion points regarding the following edge cases:
+         *  - EXCLUDE on a tuple bindingibute that doesn't exist -- give an error/warning?
+         *      - currently no error
+         *  - EXCLUDE on a tuple bindingibute that has duplicates -- give an error/warning? exclude one? exclude both?
+         *      - currently excludes both w/ no error
+         *  - EXCLUDE on a collection index as the last step -- mark element type as optional?
+         *      - currently element type as-is
+         *  - EXCLUDE on a collection index w/ remaining path steps -- mark last step's type as optional?
+         *      - currently marks last step's type as optional
+         *  - EXCLUDE on a binding tuple variable (e.g. SELECT ... EXCLUDE t FROM t) -- error?
+         *      - currently a parser error
+         *  - EXCLUDE on a union type -- give an error/warning? no-op? exclude on each type in union?
+         *      - currently exclude on each union type
+         *  - If SELECT list includes an bindingibute that is excluded, we could consider giving an error in PlanTyper or
+         * some other semantic pass
+         *      - currently does not give an error
+         */
+        override fun visitRelOpExclude(node: Rel.Op.Exclude, ctx: Rel.Type?): Rel {
+            // compute input schema
+            val input = visitRel(node.input, ctx)
+
+            // apply exclusions to the input schema
+            val init = input.type.schema.map { it.copy() }
+            val schema = node.items.fold((init)) { bindings, item -> excludeBindings(bindings, item) }
+
+            // rewrite
+            val type = ctx!!.copy(schema)
+            return rel(type, node)
         }
 
         override fun visitRelOpAggregate(node: Rel.Op.Aggregate, ctx: Rel.Type?): Rel {
@@ -898,6 +939,17 @@ internal class PlanTyper(
         )
     }
 
+    private fun handleUnresolvedExcludeRoot(root: String) {
+        onProblem(
+            Problem(
+                sourceLocation = UNKNOWN_PROBLEM_LOCATION,
+                details = PlanningProblemDetails.UnresolvedExcludeExprRoot(root)
+            )
+        )
+    }
+
+    // HELPERS
+
     private fun Identifier.normalize(): String = when (this) {
         is Identifier.Qualified -> (listOf(root.normalize()) + steps.map { it.normalize() }).joinToString(".")
         is Identifier.Symbol -> when (caseSensitivity) {
@@ -929,5 +981,26 @@ internal class PlanTyper(
 
     private fun StructType.withNullableFields(): StructType {
         return copy(fields.map { it.copy(value = it.value.asNullable()) })
+    }
+
+    private fun excludeBindings(input: List<Rel.Binding>, item: Rel.Op.Exclude.Item): List<Rel.Binding> {
+        var matchedRoot = false
+        val output = input.map {
+            if (item.root.isEquivalentTo(it.name)) {
+                matchedRoot = true
+                // recompute the StaticType of this binding after apply the exclusions
+                val type = it.type.exclude(item.steps, false)
+                it.copy(type = type)
+            } else {
+                it
+            }
+        }
+        if (!matchedRoot) handleUnresolvedExcludeRoot(item.root.symbol)
+        return output
+    }
+
+    private fun Identifier.Symbol.isEquivalentTo(other: String): Boolean = when (caseSensitivity) {
+        Identifier.CaseSensitivity.SENSITIVE -> symbol.equals(other)
+        Identifier.CaseSensitivity.INSENSITIVE -> symbol.equals(other, ignoreCase = true)
     }
 }

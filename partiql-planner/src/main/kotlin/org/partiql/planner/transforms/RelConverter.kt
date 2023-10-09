@@ -17,6 +17,7 @@
 package org.partiql.planner.transforms
 
 import org.partiql.ast.AstNode
+import org.partiql.ast.Exclude
 import org.partiql.ast.Expr
 import org.partiql.ast.From
 import org.partiql.ast.GroupBy
@@ -36,6 +37,12 @@ import org.partiql.plan.relOpAggregate
 import org.partiql.plan.relOpAggregateAgg
 import org.partiql.plan.relOpErr
 import org.partiql.plan.relOpExcept
+import org.partiql.plan.relOpExclude
+import org.partiql.plan.relOpExcludeItem
+import org.partiql.plan.relOpExcludeStepAttr
+import org.partiql.plan.relOpExcludeStepCollectionWildcard
+import org.partiql.plan.relOpExcludeStepPos
+import org.partiql.plan.relOpExcludeStepStructWildcard
 import org.partiql.plan.relOpFilter
 import org.partiql.plan.relOpIntersect
 import org.partiql.plan.relOpJoin
@@ -60,7 +67,6 @@ import org.partiql.plan.rexOpTupleUnionArgSpread
 import org.partiql.plan.rexOpTupleUnionArgStruct
 import org.partiql.plan.rexOpVarResolved
 import org.partiql.planner.Env
-import org.partiql.types.ListType
 import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.boolValue
@@ -72,7 +78,7 @@ import org.partiql.value.stringValue
 internal object RelConverter {
 
     // IGNORE — so we don't have to non-null assert on operator inputs
-    private val nil = rel(relType(emptyList(), emptySet()), relOpErr())
+    private val nil = rel(relType(emptyList(), emptySet()), relOpErr("nil"))
 
     /**
      * Here we convert an SFW to composed [Rel]s, then apply the appropriate relation-value projection to get a [Rex].
@@ -225,6 +231,7 @@ internal object RelConverter {
             rel = convertOrderBy(rel, sel.orderBy)
             rel = convertLimit(rel, sel.limit)
             rel = convertOffset(rel, sel.offset)
+            rel = convertExclude(rel, sel.exclude)
             // append SQL projection if present
             rel = when (val projection = sel.select) {
                 is Select.Project -> visitSelectProject(projection, rel)
@@ -526,6 +533,29 @@ internal object RelConverter {
             val rex = RexConverter.apply(offset, env)
             val op = relOpOffset(input, rex)
             return rel(type, op)
+        }
+
+        private fun convertExclude(input: Rel, exclude: Exclude?): Rel {
+            if (exclude == null) {
+                return input
+            }
+            val type = input.type // PlanTyper handles typing the exclusion
+            val items = exclude.exprs.map { convertExcludeItem(it) }
+            val op = relOpExclude(input, items)
+            return rel(type, op)
+        }
+
+        private fun convertExcludeItem(expr: Exclude.ExcludeExpr): Rel.Op.Exclude.Item {
+            val root = AstToPlan.convert(expr.root)
+            val steps = expr.steps.map { convertExcludeStep(it) }
+            return relOpExcludeItem(root, steps)
+        }
+
+        private fun convertExcludeStep(step: Exclude.Step): Rel.Op.Exclude.Step = when (step) {
+            is Exclude.Step.ExcludeTupleAttr -> relOpExcludeStepAttr(AstToPlan.convert(step.symbol))
+            is Exclude.Step.ExcludeCollectionIndex -> relOpExcludeStepPos(step.index)
+            is Exclude.Step.ExcludeCollectionWildcard -> relOpExcludeStepCollectionWildcard()
+            is Exclude.Step.ExcludeTupleWildcard -> relOpExcludeStepStructWildcard()
         }
 
         // /**

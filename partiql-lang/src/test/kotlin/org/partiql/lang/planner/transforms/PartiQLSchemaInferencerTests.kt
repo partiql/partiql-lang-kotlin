@@ -83,10 +83,10 @@ class PartiQLSchemaInferencerTests {
     @Execution(ExecutionMode.CONCURRENT)
     fun testJoins(tc: TestCase) = runTest(tc)
 
-    // @ParameterizedTest
-    // @MethodSource("excludeCases")
-    // @Execution(ExecutionMode.CONCURRENT)
-    // fun testExclude(tc: TestCase) = runTest(tc)
+    @ParameterizedTest
+    @MethodSource("excludeCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun testExclude(tc: TestCase) = runTest(tc)
 
     @ParameterizedTest
     @MethodSource("orderByCases")

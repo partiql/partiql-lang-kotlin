@@ -117,6 +117,12 @@ sealed class PlanningProblemDetails(
             severity = ProblemSeverity.ERROR,
             messageFormatter = { "${actualTypes.joinToString()} is/are incompatible data types for the '$operator' operator." }
         )
+
+    data class UnresolvedExcludeExprRoot(val root: String) :
+        PlanningProblemDetails(
+            ProblemSeverity.ERROR,
+            { "Exclude expression given an unresolvable root '$root'" }
+        )
 }
 
 private fun quotationHint(caseSensitive: Boolean) =
