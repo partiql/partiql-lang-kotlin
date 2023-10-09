@@ -83,10 +83,15 @@ class PartiQLSchemaInferencerTests {
     @Execution(ExecutionMode.CONCURRENT)
     fun testJoins(tc: TestCase) = runTest(tc)
 
+    // @ParameterizedTest
+    // @MethodSource("excludeCases")
+    // @Execution(ExecutionMode.CONCURRENT)
+    // fun testExclude(tc: TestCase) = runTest(tc)
+
     @ParameterizedTest
-    @MethodSource("excludeCases")
+    @MethodSource("orderByCases")
     @Execution(ExecutionMode.CONCURRENT)
-    fun testExclude(tc: TestCase) = runTest(tc)
+    fun testOrderBy(tc: TestCase) = runTest(tc)
 
     companion object {
 
@@ -222,6 +227,26 @@ class PartiQLSchemaInferencerTests {
                 query = "SEXP ( 1, 2, 3 )",
                 expected = SexpType(INT),
             ),
+            SuccessTestCase(
+                name = "SELECT from array",
+                query = "SELECT VALUE x FROM [ 1, 2, 3 ] as x",
+                expected = BagType(INT),
+            ),
+            SuccessTestCase(
+                name = "SELECT from array",
+                query = "SELECT x FROM [ 1, 2, 3 ] as x",
+                expected = BagType(
+                    StructType(
+                        fields = listOf(StructType.Field("x", INT)),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                )
+            ),
         )
 
         @JvmStatic
@@ -260,8 +285,6 @@ class PartiQLSchemaInferencerTests {
                 query = "SELECT VALUE a FROM [ 0 ] AS a WHERE CURRENT_USER = 'hello'",
                 expected = BagType(INT)
             ),
-            // TODO discuss how this is not an ERROR case. It's nonsense, but is not an error. The PartiQL `=` always
-            // returns a boolean so this is valid query with no typing errors, just a bit silly.
             SuccessTestCase(
                 name = "Current User in WHERE",
                 query = "SELECT VALUE a FROM [ 0 ] AS a WHERE CURRENT_USER = 5",
@@ -2079,6 +2102,31 @@ class PartiQLSchemaInferencerTests {
                 )
             ),
         )
+
+        @JvmStatic
+        fun orderByCases() = listOf(
+            SuccessTestCase(
+                name = "ORDER BY int",
+                catalog = CATALOG_AWS,
+                catalogPath = listOf("ddb"),
+                query = "SELECT * FROM pets ORDER BY id",
+                expected = TABLE_AWS_DDB_PETS_LIST
+            ),
+            SuccessTestCase(
+                name = "ORDER BY str",
+                catalog = CATALOG_AWS,
+                catalogPath = listOf("ddb"),
+                query = "SELECT * FROM pets ORDER BY breed",
+                expected = TABLE_AWS_DDB_PETS_LIST
+            ),
+            SuccessTestCase(
+                name = "ORDER BY str",
+                catalog = CATALOG_AWS,
+                catalogPath = listOf("ddb"),
+                query = "SELECT * FROM pets ORDER BY unknown_col",
+                expected = TABLE_AWS_DDB_PETS_LIST
+            ),
+        )
     }
 
     sealed class TestCase {
@@ -2544,27 +2592,6 @@ class PartiQLSchemaInferencerTests {
                         PlanningProblemDetails.UndefinedVariable("unknown_col", false)
                     )
                 }
-            ),
-            SuccessTestCase(
-                name = "ORDER BY int",
-                catalog = CATALOG_AWS,
-                catalogPath = listOf("ddb"),
-                query = "SELECT * FROM pets ORDER BY id",
-                expected = TABLE_AWS_DDB_PETS_LIST
-            ),
-            SuccessTestCase(
-                name = "ORDER BY str",
-                catalog = CATALOG_AWS,
-                catalogPath = listOf("ddb"),
-                query = "SELECT * FROM pets ORDER BY breed",
-                expected = TABLE_AWS_DDB_PETS_LIST
-            ),
-            SuccessTestCase(
-                name = "ORDER BY str",
-                catalog = CATALOG_AWS,
-                catalogPath = listOf("ddb"),
-                query = "SELECT * FROM pets ORDER BY unknown_col",
-                expected = TABLE_AWS_DDB_PETS_LIST
             ),
             SuccessTestCase(
                 name = "LIMIT INT",

@@ -35,6 +35,7 @@ import org.partiql.plan.relOpLimit
 import org.partiql.plan.relOpOffset
 import org.partiql.plan.relOpProject
 import org.partiql.plan.relOpScan
+import org.partiql.plan.relOpSort
 import org.partiql.plan.relOpUnpivot
 import org.partiql.plan.relType
 import org.partiql.plan.rex
@@ -192,7 +193,19 @@ internal class PlanTyper(
         }
 
         override fun visitRelOpSort(node: Rel.Op.Sort, ctx: Rel.Type?): Rel {
-            TODO("Type RelOp Sort")
+            // compute input schema
+            val input = visitRel(node.input, ctx)
+            // type sub-nodes
+            val typeEnv = TypeEnv(input.type.schema, ResolutionStrategy.LOCAL)
+            val specs = node.specs.map {
+                val rex = it.rex.type(typeEnv)
+                it.copy(rex)
+            }
+            // output schema of a sort is the same as the input
+            val type = input.type.copy(props = setOf(Rel.Prop.ORDERED))
+            // rewrite
+            val op = relOpSort(input, specs)
+            return rel(type, op)
         }
 
         override fun visitRelOpSortSpec(node: Rel.Op.Sort.Spec, ctx: Rel.Type?): Rel {
@@ -249,7 +262,7 @@ internal class PlanTyper(
             val projections = node.projections.map { it.type(typeEnv) }
             // compute output schema
             val schema = projections.map { it.type }
-            val type = ctx!!.copyWithSchema(schema)
+            val type = input.type.copyWithSchema(schema)
             // rewrite
             val op = relOpProject(input, projections)
             return rel(type, op)

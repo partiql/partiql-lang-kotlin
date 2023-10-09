@@ -60,6 +60,7 @@ import org.partiql.plan.rexOpTupleUnionArgSpread
 import org.partiql.plan.rexOpTupleUnionArgStruct
 import org.partiql.plan.rexOpVarResolved
 import org.partiql.planner.Env
+import org.partiql.types.ListType
 import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.boolValue
@@ -236,7 +237,7 @@ internal object RelConverter {
         override fun visitSelectProject(node: Select.Project, input: Rel): Rel {
             // this ignores aggregations
             val schema = mutableListOf<Rel.Binding>()
-            val props = emptySet<Rel.Prop>()
+            val props = input.type.props
             val projections = mutableListOf<Rex>()
             node.items.forEach {
                 val (binding, projection) = convertProjectionItem(it)
