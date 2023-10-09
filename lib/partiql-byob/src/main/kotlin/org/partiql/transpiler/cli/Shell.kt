@@ -32,6 +32,7 @@ import org.jline.utils.AttributedStyle
 import org.jline.utils.AttributedStyle.BOLD
 import org.jline.utils.InfoCmp
 import org.joda.time.Duration
+import org.partiql.plan.debug.PlanPrinter
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.test.plugin.FsConnector
 import org.partiql.planner.test.plugin.FsPlugin
@@ -305,15 +306,18 @@ internal class Shell(
         try {
             val result = transpiler.transpile(input, state.target, session)
             out.info("==============================")
-            out.info("Transpilation Output:")
-            out.info(result.output.value.toString())
-            out.println()
+            out.info("PartiQL Plan:")
+            PlanPrinter.append(out, result.plan)
             out.info("==============================")
             out.info("Output Schema:")
             val outputSchema = java.lang.StringBuilder()
             val ionWriter = IonTextWriterBuilder.minimal().withPrettyPrinting().build(outputSchema)
             result.output.schema.toIon().writeTo(ionWriter)
             out.info(outputSchema.toString())
+            out.println()
+            out.info("==============================")
+            out.info("Transpilation Output:")
+            out.info(result.output.value.toString())
             out.println()
             if (result.problems.isNotEmpty()) {
                 out.warn("--- HINTS --------------")

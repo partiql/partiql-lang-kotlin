@@ -3,6 +3,8 @@ package org.partiql.transpiler.sql
 import org.partiql.ast.Ast
 import org.partiql.ast.Expr
 import org.partiql.ast.Identifier
+import org.partiql.ast.Select
+import org.partiql.ast.SetQuantifier
 import org.partiql.plan.Fn
 import org.partiql.plan.PlanNode
 import org.partiql.plan.Rel
@@ -77,9 +79,7 @@ public open class RexToSql(
 
     override fun visitRexOpGlobal(node: Rex.Op.Global, ctx: StaticType): Expr {
         val global = transform.getGlobal(node.ref)
-        if (global == null) {
-            error("Malformed plan, resolved global (\$global ${node.ref}) does not exist")
-        }
+            ?: error("Malformed plan, resolved global (\$global ${node.ref}) does not exist")
         val identifier = global
         val scope = Expr.Var.Scope.DEFAULT
         return Ast.exprVar(identifier, scope)
@@ -89,6 +89,17 @@ public open class RexToSql(
         val root = visitRex(node.root, StaticType.ANY)
         val steps = node.steps.map { visitRexOpPathStep(it) }
         return Ast.exprPath(root, steps)
+    }
+
+    @OptIn(PartiQLValueExperimental::class)
+    override fun visitRexOpTupleUnion(node: Rex.Op.TupleUnion, ctx: StaticType): Expr {
+        return Ast.create {
+            val args = node.args.map { arg -> visitRex(arg, ctx) }
+            exprCall(
+                identifierSymbol("TUPLEUNION", Identifier.CaseSensitivity.INSENSITIVE),
+                args = args
+            )
+        }
     }
 
     private fun visitRexOpPathStep(node: Rex.Op.Path.Step): Expr.Path.Step = when (node) {
@@ -151,19 +162,101 @@ public open class RexToSql(
     }
 
     override fun visitRexOpSelect(node: Rex.Op.Select, ctx: StaticType): Expr {
-        // val typeEnv = node.rel.type.schema
+        val typeEnv = node.rel.type.schema
         val relToSql = RelToSql(transform)
-        // val rexToSql = RexToSql(transform, typeEnv)
+        val rexToSql = RexToSql(transform, typeEnv)
         val sfw = relToSql.apply(node.rel)
         assert(sfw.select != null) { "SELECT from RelToSql should never be null" }
-        if (node.constructor.isDefault(node.rel.type.schema)) {
-            // SELECT
-            return sfw.build()
-        } else {
-            // SELECT VALUE
-            // TODO rewrite the constructor replacing variable references with the projected expressions
-            throw UnsupportedOperationException("SELECT VALUE is not supported")
+        val setq = getSetQuantifier(sfw.select!!)
+        val select = convertSelectValueToSqlSelect(node.constructor, node.rel, setq)
+            ?: convertSelectValue(node.constructor, node.rel, setq)
+            ?: Ast.create { selectValue(rexToSql.apply(node.constructor), setq) }
+        sfw.select = select
+        return sfw.build()
+    }
+
+    /**
+     * Grabs the [SetQuantifier] of a [Select].
+     */
+    private fun getSetQuantifier(select: Select): SetQuantifier? = when (select) {
+        is Select.Project -> select.setq
+        is Select.Value -> select.setq
+        is Select.Star -> select.setq
+        is Select.Pivot -> null
+    }
+
+    /**
+     * Attempts to convert a SELECT VALUE to a SELECT LIST. Returns NULL if unable.
+     *
+     * For SELECT VALUE <v> FROM queries, the <v> gets pushed into the PROJECT, and it gets replaced with a variable
+     * reference to the single projection. Therefore, if there was a SELECT * (which gets converted into a SELECT VALUE TUPLEUNION),
+     * then the TUPLEUNION will be placed in the [Rel.Op.Project], and the [Rex.Op.Select.constructor] will be a
+     * [Rex.Op.Var.Resolved] referencing the single projection. With that in mind, we can reconstruct the AST by looking
+     * at the [constructor]. If it's a [Rex.Op.Var.Resolved], and it references a literal [Rex.Op.Struct], we can pull
+     * out those struct's attributes and create a SQL-style select.
+     *
+     * NOTE: [Rex.Op.TupleUnion]'s get constant folded in the [org.partiql.planner.typer.PlanTyper].
+     *
+     * Example:
+     * ```
+     * SELECT t.* FROM t
+     * -- Gets converted into
+     * SELECT VALUE TUPLEUNION({ 'a': <INT>, 'b': <DECIMAL> }) FROM t
+     * -- Gets constant folded (in the PlanTyper) into:
+     * SELECT VALUE { 'a': <INT>, 'b': <DECIMAL> } FROM t
+     * -- Gets converted into:
+     * SELECT VALUE $__x
+     * -> PROJECT < $__x: TUPLEUNION(...) >
+     * -> SCAN t
+     * -- Gets converted into:
+     * SELECT a, b, c FROM t
+     * ```
+     *
+     * If unable to convert into SQL-style projections (due to open content structs, non-struct arguments, etc), we
+     * return null.
+     */
+    @OptIn(PartiQLValueExperimental::class)
+    private fun convertSelectValueToSqlSelect(constructor: Rex, input: Rel, setq: SetQuantifier?): Select? {
+        val relProject = input.op as? Rel.Op.Project ?: return null
+        val structOp = getConstructorFromProjection(constructor, relProject)?.op as? Rex.Op.Struct ?: return null
+        val newRexToSql = RexToSql(transform, relProject.input.type.schema)
+        val projections = structOp.fields.map { field ->
+            val key = field.k.op
+            if (key !is Rex.Op.Lit || key.value !is StringValue) { return null }
+            val fieldName = (key.value as StringValue).value ?: return null
+            Ast.create {
+                selectProjectItemExpression(expr = newRexToSql.apply(field.v), asAlias = id(fieldName))
+            }
         }
+        return Ast.create {
+            selectProject(
+                items = projections,
+                setq = setq
+            )
+        }
+    }
+
+    /**
+     * Since the <v> in SELECT VALUE <v> gets pulled into the [Rel.Op.Project], we attempt to recuperate the [Rex] and
+     * convert it to SQL. If we are unable to, return NULL.
+     */
+    @OptIn(PartiQLValueExperimental::class)
+    private fun convertSelectValue(constructor: Rex, input: Rel, setq: SetQuantifier?): Select? {
+        val relProject = input.op as? Rel.Op.Project ?: return null
+        val projection = getConstructorFromProjection(constructor, relProject) ?: return null
+        val rexToSql = RexToSql(transform, relProject.input.type.schema)
+        return Ast.create { selectValue(rexToSql.apply(projection), setq) }
+    }
+
+    /**
+     * Grabs the first projection from [Rel.Op.Project] if the [constructor] is referencing it. If unable to
+     * grab, return null.
+     */
+    private fun getConstructorFromProjection(constructor: Rex, relProject: Rel.Op.Project): Rex? {
+        val constructorOp = constructor.op as? Rex.Op.Var.Resolved ?: return null
+        if (constructorOp.ref != 0) { return null }
+        if (relProject.projections.size != 1) { return null }
+        return relProject.projections[0]
     }
 
     private fun id(symbol: String): Identifier.Symbol = Ast.identifierSymbol(
@@ -174,35 +267,6 @@ public open class RexToSql(
     private fun TypeEnv.dump(): String {
         val pairs = this.joinToString { "${it.name}: ${it.type}" }
         return "< $pairs >"
-    }
-
-    /**
-     * Returns true iff this [Rex] is the default constructor for [schema] derived from an SQL SELECT.
-     *
-     * See [RelConverter.defaultConstructor] to see how the default constructor is created.
-     */
-    @OptIn(PartiQLValueExperimental::class)
-    private fun Rex.isDefault(schema: List<Rel.Binding>): Boolean {
-        val op = this.op
-        if (op !is Rex.Op.Struct) {
-            return false
-        }
-        if (op.fields.size != schema.size) {
-            // not everything is projected out
-            return false
-        }
-        schema.forEachIndexed { i, binding ->
-            val f = op.fields[i]
-            val kOp = f.k.op
-            val vOp = f.v.op
-            // check types
-            if (kOp !is Rex.Op.Lit || kOp.value !is StringValue) return false
-            if (vOp !is Rex.Op.Var.Resolved) return false
-            // check values
-            if ((kOp.value as StringValue).value != binding.name) return false
-            if (vOp.ref != i) return false
-        }
-        return true
     }
 
     internal fun Identifier.sql(): String = when (this) {

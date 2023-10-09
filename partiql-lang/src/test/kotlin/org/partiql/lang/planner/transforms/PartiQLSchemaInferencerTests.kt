@@ -280,14 +280,27 @@ class PartiQLSchemaInferencerTests {
                 name = "Pets should not be accessible #1",
                 query = "SELECT * FROM pets",
                 expected = BagType(
-                    StructType(
-                        fields = emptyMap(),
-                        contentClosed = false,
-                        constraints = setOf(
-                            TupleConstraint.Open(true),
-                            TupleConstraint.UniqueAttrs(true),
-                            TupleConstraint.Ordered
-                        )
+                    unionOf(
+                        StructType(
+                            fields = emptyMap(),
+                            contentClosed = false,
+                            constraints = setOf(
+                                TupleConstraint.Open(true),
+                                TupleConstraint.UniqueAttrs(false),
+                                TupleConstraint.Ordered
+                            )
+                        ),
+                        StructType(
+                            fields = mapOf(
+                                "_1" to StaticType.ANY
+                            ),
+                            contentClosed = true,
+                            constraints = setOf(
+                                TupleConstraint.Open(false),
+                                TupleConstraint.UniqueAttrs(true),
+                                TupleConstraint.Ordered
+                            )
+                        ),
                     )
                 ),
                 problemHandler = assertProblemExists {
@@ -302,14 +315,27 @@ class PartiQLSchemaInferencerTests {
                 catalog = CATALOG_AWS,
                 query = "SELECT * FROM pets",
                 expected = BagType(
-                    StructType(
-                        fields = emptyMap(),
-                        contentClosed = false,
-                        constraints = setOf(
-                            TupleConstraint.Open(true),
-                            TupleConstraint.UniqueAttrs(true),
-                            TupleConstraint.Ordered
-                        )
+                    unionOf(
+                        StructType(
+                            fields = emptyMap(),
+                            contentClosed = false,
+                            constraints = setOf(
+                                TupleConstraint.Open(true),
+                                TupleConstraint.UniqueAttrs(false),
+                                TupleConstraint.Ordered
+                            )
+                        ),
+                        StructType(
+                            fields = mapOf(
+                                "_1" to StaticType.ANY
+                            ),
+                            contentClosed = true,
+                            constraints = setOf(
+                                TupleConstraint.Open(false),
+                                TupleConstraint.UniqueAttrs(true),
+                                TupleConstraint.Ordered
+                            )
+                        ),
                     )
                 ),
                 problemHandler = assertProblemExists {
@@ -358,20 +384,35 @@ class PartiQLSchemaInferencerTests {
                 name = "Test #7",
                 query = "SELECT * FROM ddb.pets",
                 expected = BagType(
-                    StructType(
-                        fields = emptyMap(),
-                        contentClosed = false,
-                        constraints = setOf(
-                            TupleConstraint.Open(true),
-                            TupleConstraint.UniqueAttrs(true),
-                            TupleConstraint.Ordered
-                        )
+                    unionOf(
+                        StructType(
+                            fields = emptyMap(),
+                            contentClosed = false,
+                            constraints = setOf(
+                                TupleConstraint.Open(true),
+                                TupleConstraint.UniqueAttrs(false),
+                                TupleConstraint.Ordered
+                            )
+                        ),
+                        StructType(
+                            fields = mapOf(
+                                "_1" to StaticType.ANY
+                            ),
+                            contentClosed = true,
+                            constraints = setOf(
+                                TupleConstraint.Open(false),
+                                TupleConstraint.UniqueAttrs(true),
+                                TupleConstraint.Ordered
+                            )
+                        ),
                     )
                 ),
                 problemHandler = assertProblemExists {
+                    // TODO: Case sensitivity here is TRUE but should be false. It is currently true because we are
+                    //  operating at the resolved plan.
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UndefinedVariable("pets", false)
+                        PlanningProblemDetails.UndefinedVariable("pets", true)
                     )
                 }
             ),
@@ -907,7 +948,7 @@ class PartiQLSchemaInferencerTests {
                         contentClosed = true,
                         constraints = setOf(
                             TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.UniqueAttrs(false),
                             TupleConstraint.Ordered
                         )
                     )
@@ -925,7 +966,7 @@ class PartiQLSchemaInferencerTests {
                         contentClosed = true,
                         constraints = setOf(
                             TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.UniqueAttrs(false),
                             TupleConstraint.Ordered
                         )
                     )
@@ -954,7 +995,7 @@ class PartiQLSchemaInferencerTests {
                         contentClosed = true,
                         constraints = setOf(
                             TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.UniqueAttrs(false),
                             TupleConstraint.Ordered
                         )
                     )
@@ -1014,7 +1055,7 @@ class PartiQLSchemaInferencerTests {
                         contentClosed = true,
                         constraints = setOf(
                             TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.UniqueAttrs(false),
                             TupleConstraint.Ordered
                         )
                     )

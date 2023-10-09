@@ -18,7 +18,6 @@ import org.partiql.planner.Env
 import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.boolValue
-import org.partiql.value.stringValue
 
 /**
  * Lexically scoped state for use in translating an individual SELECT statement.
@@ -30,11 +29,14 @@ internal object RelConverter {
         rel(relType(emptyList(), emptySet()), relOpErr())
     }
 
+    private var uniqueNumber: Long = 0L
+    private fun getNextUniqueName(): String = "\$__${uniqueNumber++}"
+
     /**
      * Here we convert an SFW to composed [Rel]s, then apply the appropriate relation-value projection to get a [Rex].
      */
     internal fun apply(sfw: Expr.SFW, env: Env): Rex = Plan.create {
-        var rel = sfw.accept(ToRel(env), nil)
+        val rel = sfw.accept(ToRel(env), nil)
         val rex = when (val projection = sfw.select) {
             // PIVOT ... FROM
             is Select.Pivot -> {
@@ -46,7 +48,11 @@ internal object RelConverter {
             }
             // SELECT VALUE ... FROM
             is Select.Value -> {
-                val constructor = projection.constructor.toRex(env)
+                val projectionOp = rel.op as? Rel.Op.Project ?: error("SELECT VALUE should have a PROJECT underneath")
+                assert(projectionOp.projections.size == 1) {
+                    "Expected SELECT VALUE projection to have a single binding. However, it looked like ${projectionOp.projections}"
+                }
+                val constructor = rex(StaticType.ANY, rexOpVarResolved(0))
                 val op = rexOpSelect(constructor, rel)
                 val type = when (rel.type.props.contains(Rel.Prop.ORDERED)) {
                     true -> (StaticType.LIST)
@@ -60,14 +66,7 @@ internal object RelConverter {
             }
             // SELECT ... FROM
             is Select.Project -> {
-                val (constructor, newRel) = deriveConstructor(rel)
-                rel = newRel
-                val op = rexOpSelect(constructor, rel)
-                val type = when (rel.type.props.contains(Rel.Prop.ORDERED)) {
-                    true -> (StaticType.LIST)
-                    else -> (StaticType.BAG)
-                }
-                rex(type, op)
+                throw IllegalArgumentException("AST not normalized")
             }
         }
         return rex
@@ -77,85 +76,6 @@ internal object RelConverter {
      * Syntax sugar for converting an [Expr] tree to a [Rex] tree.
      */
     private fun Expr.toRex(env: Env): Rex = RexConverter.apply(this, env)
-
-    /**
-     * Derives the appropriate SELECT VALUE constructor given the Rel projection - removing any UNPIVOT path steps.
-     */
-    private fun deriveConstructor(rel: Rel): Pair<Rex, Rel> {
-        val op = rel.op
-        if (op !is Rel.Op.Project) {
-            return defaultConstructor(rel.type.schema) to rel
-        }
-        val hasProjectAll = op.projections.any { it.isProjectAll() }
-        return when (hasProjectAll) {
-            true -> tupleUnionConstructor(op, rel.type)
-            else -> defaultConstructor(rel.type.schema) to rel
-        }
-    }
-
-    /**
-     * Produces the default constructor to generalize a SQL SELECT to a SELECT VALUE.
-     *
-     * See https://partiql.org/dql/select.html#sql-select
-     */
-    @OptIn(PartiQLValueExperimental::class)
-    private fun defaultConstructor(schema: List<Rel.Binding>): Rex = Plan.create {
-        val fields = schema.mapIndexed { i, b ->
-            val k = rex(StaticType.STRING, rexOpLit(stringValue(b.name)))
-            val v = rex(b.type, rexOpVarResolved(i))
-            rexOpStructField(k, v)
-        }
-        val op = rexOpStruct(fields)
-        rex(StaticType.STRUCT, op)
-    }
-
-    /**
-     * Produces the `TUPLEUNION` constructor defined in Section 6.3.2 `SQL's SELECT *`.
-     *
-     * See https://partiql.org/assets/PartiQL-Specification.pdf#page=28
-     */
-    private fun tupleUnionConstructor(op: Rel.Op.Project, type: Rel.Type): Pair<Rex, Rel> = with(Plan) {
-        val projections = mutableListOf<Rex>()
-        val args = op.projections.mapIndexed { i, item ->
-            val binding = type.schema[i]
-            val k = binding.name
-            val v = rex(binding.type, rexOpVarResolved(i))
-            when (item.isProjectAll()) {
-                true -> {
-                    projections.add(item.removeUnpivot())
-                    rexOpTupleUnionArgSpread(k, v)
-                }
-                else -> {
-                    projections.add(item)
-                    rexOpTupleUnionArgStruct(k, v)
-                }
-            }
-        }
-        val constructor = rex(StaticType.STRUCT, rexOpTupleUnion(args))
-        val rel = rel(type, relOpProject(op.input, projections))
-        constructor to rel
-    }
-
-    private fun Rex.isProjectAll(): Boolean {
-        return (op is Rex.Op.Path && (op as Rex.Op.Path).steps.last() is Rex.Op.Path.Step.Unpivot)
-    }
-
-    private fun Rex.removeUnpivot(): Rex = Plan.create {
-        val rex = this@removeUnpivot
-        val path = op
-        if (path is Rex.Op.Path) {
-            if (path.steps.last() is Rex.Op.Path.Step.Unpivot) {
-                val newRoot = path.root
-                val newSteps = path.steps.dropLast(1)
-                return when (newSteps.isEmpty()) {
-                    true -> newRoot
-                    else -> rex(rex.type, rexOpPath(newRoot, newSteps))
-                }
-            }
-        }
-        // skip, should be unreachable
-        rex
-    }
 
     @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE", "LocalVariableName")
     private class ToRel(private val env: Env) : AstBaseVisitor<Rel, Rel>() {
@@ -184,6 +104,7 @@ internal object RelConverter {
             // append SQL projection if present
             rel = when (val projection = sel.select) {
                 is Select.Project -> visitSelectProject(projection, rel)
+                is Select.Value -> visitSelectValue(projection, rel)
                 is Select.Star -> error("AST not normalized, found project star")
                 else -> rel // skip PIVOT and SELECT VALUE
             }
@@ -202,6 +123,19 @@ internal object RelConverter {
             }
             val type = relType(schema, props)
             val op = relOpProject(input, projections)
+            rel(type, op)
+        }
+
+        /**
+         * Note: The name of the [Rel.Binding] doesn't actually matter. We make it unique to avoid any potential conflicts
+         * in the future.
+         */
+        override fun visitSelectValue(node: Select.Value, input: Rel): Rel = Plan.create {
+            val rex = RexConverter.apply(node.constructor, env)
+            val schema = listOf(relBinding(name = getNextUniqueName(), rex.type))
+            val props = emptySet<Rel.Prop>()
+            val type = relType(schema, props)
+            val op = relOpProject(input, projections = listOf(rex))
             rel(type, op)
         }
 

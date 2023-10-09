@@ -158,28 +158,9 @@ rex::{
     //   CASE WHEN v3 IS TUPLE THEN v3 ELSE {'_2': v3} END
     // )
     //
-    // tuple_union::{
-    //   args: [
-    //     spread('_1', v1),
-    //     struct('a', e2),
-    //     spread('_2', v3),
-    //   ]
-    // }
-    //
+    // Tuple Union Function Signature: (Array<Struct>) -> Struct
     tuple_union::{
-      args: list::[arg],
-      _: [
-        arg::[
-          struct::{
-            k: string,
-            v: rex,
-          },
-          spread::{
-            k: string,
-            v: rex,
-          },
-        ],
-      ],
+      args: list::[rex],
     },
 
     err::{

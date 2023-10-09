@@ -57,17 +57,31 @@ target::{
     '0004': {
       statement: '''
         SELECT
-          store.s_store_sk AS s_store_sk
+          p.name AS name,
+          p.ssn AS ssn,
+          p.company AS company,
+          e.name AS name,
+          e.tax_id AS tax_id,
+          e.address AS address
         FROM
-            tpc_ds."store" AS store
-          LEFT OUTER JOIN
-            tpc_ds."store_returns" AS returns
-          ON store.s_store_sk = returns.sr_store_sk
+          pql."person" AS p
+            INNER JOIN
+          pql."employer" AS e
+            ON p.employer = e.name
       '''
     },
     '0005': {
       statement: '''
         SELECT CURRENT_USER AS CURRENT_USER, CURRENT_DATE AS CURRENT_DATE FROM store_sales AS store_sales
+      ''',
+    },
+    '0006': {
+      statement: '''
+        SELECT
+          p.name.first AS first,
+          p.name.last AS last,
+          p.name.first || ' ' || p.name.last AS full_name
+        FROM pql."person" AS p
       ''',
     },
   },
