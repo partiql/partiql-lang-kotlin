@@ -291,7 +291,30 @@ rel::{
       ],
     },
 
-    err::{},
+    exclude::{
+      input: rel,
+      items: list::[item],
+      _: [
+        item::{
+          root: '.identifier.symbol',
+          steps: list::[step],
+        },
+        step::[
+          attr::{
+            symbol: '.identifier.symbol',
+          },
+          pos::{
+            index: int,
+          },
+          struct_wildcard::{},
+          collection_wildcard::{},
+        ],
+      ],
+    },
+
+    err::{
+      message: string,
+    },
   ],
   _: [
     prop::[

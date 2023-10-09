@@ -1,11 +1,14 @@
 package org.partiql.planner.typer
 
+import org.partiql.plan.Identifier
+import org.partiql.plan.Rel
 import org.partiql.types.AnyOfType
 import org.partiql.types.AnyType
 import org.partiql.types.BagType
 import org.partiql.types.BlobType
 import org.partiql.types.BoolType
 import org.partiql.types.ClobType
+import org.partiql.types.CollectionType
 import org.partiql.types.DateType
 import org.partiql.types.DecimalType
 import org.partiql.types.FloatType
@@ -124,4 +127,102 @@ private fun StaticType.asRuntimeType(): PartiQLValueType = when (this) {
     is SymbolType -> PartiQLValueType.SYMBOL
     is TimeType -> PartiQLValueType.TIME
     is TimestampType -> PartiQLValueType.TIMESTAMP
+}
+
+/**
+ * Applies the given exclusion path to produce the reduced StaticType
+ *
+ * @param steps
+ * @param lastStepOptional
+ * @return
+ */
+internal fun StaticType.exclude(steps: List<Rel.Op.Exclude.Step>, lastStepOptional: Boolean = true): StaticType =
+    when (this) {
+        is StructType -> this.exclude(steps, lastStepOptional)
+        is CollectionType -> this.exclude(steps, lastStepOptional)
+        is AnyOfType -> StaticType.unionOf(
+            this.types.map { it.exclude(steps, lastStepOptional) }.toSet()
+        )
+        else -> this
+    }.flatten()
+
+/**
+ * Applies exclusions to struct fields.
+ *
+ * @param steps
+ * @param lastStepOptional
+ * @return
+ */
+internal fun StructType.exclude(steps: List<Rel.Op.Exclude.Step>, lastStepOptional: Boolean = true): StaticType {
+    val step = steps.first()
+    val output = fields.map { field ->
+        val newField = if (steps.size == 1) {
+            if (lastStepOptional) {
+                StructType.Field(field.key, field.value.asOptional())
+            } else {
+                null
+            }
+        } else {
+            val k = field.key
+            val v = field.value.exclude(steps.drop(1), lastStepOptional)
+            StructType.Field(k, v)
+        }
+        when (step) {
+            is Rel.Op.Exclude.Step.Attr -> {
+                if (step.symbol.isEquivalentTo(field.key)) {
+                    newField
+                } else {
+                    field
+                }
+            }
+            is Rel.Op.Exclude.Step.StructWildcard -> newField
+            else -> field
+        }
+    }.filterNotNull()
+    return this.copy(fields = output)
+}
+
+/**
+ * Applies exclusions to collection element type.
+ *
+ * @param steps
+ * @param lastStepOptional
+ * @return
+ */
+internal fun CollectionType.exclude(steps: List<Rel.Op.Exclude.Step>, lastStepOptional: Boolean = true): StaticType {
+    var e = this.elementType
+    when (steps.first()) {
+        is Rel.Op.Exclude.Step.Pos -> {
+            if (steps.size > 1) {
+                e = e.exclude(steps.drop(1), true)
+            }
+        }
+        is Rel.Op.Exclude.Step.CollectionWildcard -> {
+            if (steps.size > 1) {
+                e = e.exclude(steps.drop(1), lastStepOptional)
+            }
+            // currently no change to elementType if collection wildcard is last element; this behavior could
+            // change based on RFC definition
+        }
+        else -> {
+            // currently no change to elementType and no error thrown; could consider an error/warning in
+            // the future
+        }
+    }
+    return when (this) {
+        is BagType -> this.copy(e)
+        is ListType -> this.copy(e)
+        is SexpType -> this.copy(e)
+    }
+}
+
+/**
+ * Compare an identifier to a struct field; handling case-insensitive comparisons.
+ *
+ * @param other
+ * @return
+ */
+private fun Identifier.Symbol.isEquivalentTo(other: String): Boolean = when (caseSensitivity) {
+    Identifier.CaseSensitivity.SENSITIVE -> symbol.equals(other)
+    Identifier.CaseSensitivity.INSENSITIVE -> symbol.equals(other, ignoreCase = true)
 }

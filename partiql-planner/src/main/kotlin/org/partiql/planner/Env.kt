@@ -383,7 +383,7 @@ internal class Env(
     /**
      * Searches for the path within the given struct, returning null if not found.
      */
-    internal fun inferStructLookup(struct: StructType, path: BindingPath): StaticType? {
+    private fun inferStructLookup(struct: StructType, path: BindingPath): StaticType? {
         var curr: StaticType = struct
         for (step in path.steps) {
             if (curr !is StructType) {
