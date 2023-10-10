@@ -21,9 +21,11 @@ import org.partiql.errors.ProblemCallback
 import org.partiql.errors.UNKNOWN_PROBLEM_LOCATION
 import org.partiql.plan.Fn
 import org.partiql.plan.Identifier
+import org.partiql.plan.PlanNode
 import org.partiql.plan.Rel
 import org.partiql.plan.Rex
 import org.partiql.plan.Statement
+import org.partiql.plan.builder.plan
 import org.partiql.plan.fnResolved
 import org.partiql.plan.identifierSymbol
 import org.partiql.plan.rel
@@ -127,6 +129,11 @@ internal class PlanTyper(
             // rewrite
             val op = relOpScan(rex)
             return rel(type, op)
+        }
+
+        override fun visitRelOpErr(node: Rel.Op.Err, ctx: Rel.Type?): Rel {
+            val type = ctx ?: relType(emptyList(), emptySet())
+            return rel(type, node)
         }
 
         /**
@@ -531,16 +538,44 @@ internal class PlanTyper(
             }
         }
 
-        override fun visitRexOpCase(node: Rex.Op.Case, ctx: StaticType?): Rex {
-            val visitedBranches = node.branches.map { visitRexOpCaseBranch(it, null) }
+        override fun visitRexOpCase(node: Rex.Op.Case, ctx: StaticType?): Rex = plan {
+            val visitedBranches = node.branches.map { visitRexOpCaseBranch(it, it.rex.type) }
             val resultTypes = visitedBranches.map { it.rex }.map { it.type }
-            return rex(AnyOfType(resultTypes.toSet()).flatten(), node.copy(branches = visitedBranches))
+            rex(AnyOfType(resultTypes.toSet()).flatten(), node.copy(branches = visitedBranches))
         }
 
+        /**
+         * We need special handling for:
+         * ```
+         * CASE
+         *   WHEN a IS STRUCT THEN a
+         *   ELSE { 'a': a }
+         * END
+         * ```
+         * When we type the above, we can't just assume
+         */
         override fun visitRexOpCaseBranch(node: Rex.Op.Case.Branch, ctx: StaticType?): Rex.Op.Case.Branch {
-            val visitedCondition = visitRex(node.condition, null)
-            val visitedReturn = visitRex(node.rex, null)
-            return node.copy(condition = visitedCondition, rex = visitedReturn)
+            val visitedCondition = visitRex(node.condition, node.condition.type)
+            val visitedReturn = visitRex(node.rex, node.rex.type)
+            val rex = handleSmartCasts(visitedCondition, visitedReturn) ?: visitedReturn
+            return node.copy(condition = visitedCondition, rex = rex)
+        }
+
+        /**
+         * This takes in a [Rex.Op.Case.Branch.condition] and [Rex.Op.Case.Branch.rex]. If the [condition] is a type check,
+         * AKA `<var> IS STRUCT`, then this function will return a [Rex.Op.Case.Branch.rex] that assumes that the `<var>`
+         * is a struct.
+         */
+        private fun handleSmartCasts(condition: Rex, result: Rex): Rex? {
+            val call = condition.op as? Rex.Op.Call ?: return null
+            val fn = call.fn as? Fn.Resolved ?: return null
+            if (fn.signature.name.equals("is_struct", ignoreCase = true).not()) { return null }
+            val ref = call.args.getOrNull(0) ?: error("IS STRUCT requires an argument.")
+            if (ref.op !is Rex.Op.Var.Resolved) { return null }
+            val structTypes = ref.type.allTypes.filterIsInstance<StructType>()
+            val type = AnyOfType(structTypes.toSet())
+            val replacementVal = ref.copy(type = type)
+            return RexReplacer.replace(result, ref, replacementVal)
         }
 
         override fun visitRexOpCollection(node: Rex.Op.Collection, ctx: StaticType?): Rex {
@@ -548,7 +583,7 @@ internal class PlanTyper(
                 handleUnexpectedType(ctx, setOf(StaticType.LIST, StaticType.BAG, StaticType.SEXP))
                 return rex(StaticType.NULL_OR_MISSING, rexOpErr("Expected collection type"))
             }
-            val values = node.values.map { visitRex(it, null) }
+            val values = node.values.map { visitRex(it, it.type) }
             val t = values.toUnionType()
             val type = when (ctx as CollectionType) {
                 is BagType -> BagType(t)
@@ -561,8 +596,8 @@ internal class PlanTyper(
         @OptIn(PartiQLValueExperimental::class)
         override fun visitRexOpStruct(node: Rex.Op.Struct, ctx: StaticType?): Rex {
             val fields = node.fields.map {
-                val k = visitRex(it.k, null)
-                val v = visitRex(it.v, null)
+                val k = visitRex(it.k, it.k.type)
+                val v = visitRex(it.v, it.v.type)
                 rexOpStructField(k, v)
             }
             var structIsClosed = true
@@ -620,6 +655,7 @@ internal class PlanTyper(
             var constructorType = constructor.type
             // add the ordered property to the constructor
             if (constructorType is StructType) {
+                // TODO: We shouldn't need to copy the ordered constraint.
                 constructorType = constructorType.copy(
                     constraints = constructorType.constraints + setOf(TupleConstraint.Ordered)
                 )
@@ -632,60 +668,99 @@ internal class PlanTyper(
             return rex(type, rexOpSelect(constructor, rel))
         }
 
-        override fun visitRexOpTupleUnion(node: Rex.Op.TupleUnion, ctx: StaticType?): Rex {
-            val args = node.args.map { visitTupleUnionArg(it) }
+        override fun visitRexOpTupleUnion(node: Rex.Op.TupleUnion, ctx: StaticType?): Rex = plan {
+            val args = node.args.map { visitRex(it, ctx) }
+            val argTypes = args.map { it.type }
+            val potentialTypes = buildArgumentPermutations(argTypes).map { argumentList ->
+                calculateTupleUnionOutputType(argumentList)
+            }
+            val op = rexOpTupleUnion(args)
+            rex(StaticType.unionOf(potentialTypes.toSet()).flatten(), op)
+        }
+
+        override fun visitRexOpErr(node: Rex.Op.Err, ctx: StaticType?): PlanNode {
+            val type = ctx ?: StaticType.ANY
+            return rex(type, node)
+        }
+
+        // Helpers
+
+        private fun calculateTupleUnionOutputType(args: List<StaticType>): StaticType {
             val structFields = mutableListOf<StructType.Field>()
+            var structAmount = 0
             var structIsClosed = true
-            for (arg in args) {
+            var structIsOrdered = true
+            var canReturnStruct = false
+            var uniqueAttrs = true
+            val possibleOutputTypes = mutableListOf<StaticType>()
+            args.forEach { arg ->
                 when (arg) {
-                    is Rex.Op.TupleUnion.Arg.Spread -> {
-                        val t = arg.v.type
-                        if (t is StructType) {
-                            // arg is definitely a struct
-                            structFields.addAll(t.fields)
-                            structIsClosed = structIsClosed && t.contentClosed
-                        } else if (t.allTypes.filterIsInstance<StructType>().isNotEmpty()) {
-                            // arg is possibly a struct, just declare OPEN content
-                            structIsClosed = false
-                        } else {
-                            // arg is definitely NOT a struct
-                            val field = StructType.Field(arg.k, arg.v.type)
-                            structFields.add(field)
-                        }
+                    is StructType -> {
+                        structAmount += 1
+                        canReturnStruct = true
+                        structFields.addAll(arg.fields)
+                        structIsClosed = structIsClosed && arg.constraints.contains(TupleConstraint.Open(false))
+                        structIsOrdered = structIsOrdered && arg.constraints.contains(TupleConstraint.Ordered)
+                        uniqueAttrs = uniqueAttrs && arg.constraints.contains(TupleConstraint.UniqueAttrs(true))
                     }
-                    is Rex.Op.TupleUnion.Arg.Struct -> {
-                        val field = StructType.Field(arg.k, arg.v.type)
-                        structFields.add(field)
+                    is AnyOfType -> {
+                        onProblem.invoke(
+                            Problem(
+                                UNKNOWN_PROBLEM_LOCATION,
+                                PlanningProblemDetails.CompileError("TupleUnion wasn't normalized to exclude union types.")
+                            )
+                        )
+                        possibleOutputTypes.add(StaticType.MISSING)
                     }
+                    is NullType -> { possibleOutputTypes.add(StaticType.NULL) }
+                    else -> { possibleOutputTypes.add(StaticType.MISSING) }
                 }
             }
-            val type = StructType(
-                fields = structFields,
-                contentClosed = structIsClosed,
-                constraints = setOf(
-                    TupleConstraint.Open(!structIsClosed),
-                    TupleConstraint.UniqueAttrs(structFields.size == structFields.map { it.key }.distinct().size),
-                    TupleConstraint.Ordered,
-                ),
+            uniqueAttrs = when {
+                structIsClosed.not() && structAmount > 1 -> false
+                structFields.distinctBy { it.key }.size != structFields.size -> false
+                else -> uniqueAttrs
+            }
+            val orderedConstraint = when (structIsOrdered) {
+                true -> TupleConstraint.Ordered
+                false -> null
+            }
+            val constraints = setOfNotNull(
+                TupleConstraint.Open(!structIsClosed),
+                TupleConstraint.UniqueAttrs(uniqueAttrs),
+                orderedConstraint
             )
-            val op = rexOpTupleUnion(args)
-            return rex(type, op)
+            if (canReturnStruct) {
+                uniqueAttrs = uniqueAttrs && (structFields.size == structFields.map { it.key }.distinct().size)
+                possibleOutputTypes.add(
+                    StructType(
+                        fields = structFields.map { it },
+                        contentClosed = structIsClosed,
+                        constraints = constraints
+                    )
+                )
+            }
+            return StaticType.unionOf(possibleOutputTypes.toSet()).flatten()
         }
 
-        private fun visitTupleUnionArg(node: Rex.Op.TupleUnion.Arg) = when (node) {
-            is Rex.Op.TupleUnion.Arg.Spread -> visitRexOpTupleUnionArgSpread(node, null)
-            is Rex.Op.TupleUnion.Arg.Struct -> visitRexOpTupleUnionArgStruct(node, null)
+        private fun buildArgumentPermutations(args: List<StaticType>): Sequence<List<StaticType>> {
+            val flattenedArgs = args.map { it.flatten().allTypes }
+            return buildArgumentPermutations(flattenedArgs, accumulator = emptyList())
         }
 
-        override fun visitRexOpTupleUnionArgStruct(
-            node: Rex.Op.TupleUnion.Arg.Struct,
-            ctx: StaticType?,
-        ) = super.visitRexOpTupleUnionArgStruct(node, ctx) as Rex.Op.TupleUnion.Arg
-
-        override fun visitRexOpTupleUnionArgSpread(
-            node: Rex.Op.TupleUnion.Arg.Spread,
-            ctx: StaticType?,
-        ) = super.visitRexOpTupleUnionArgSpread(node, ctx) as Rex.Op.TupleUnion.Arg
+        private fun buildArgumentPermutations(args: List<List<StaticType>>, accumulator: List<StaticType>): Sequence<List<StaticType>> {
+            if (args.isEmpty()) { return sequenceOf(accumulator) }
+            val first = args.first()
+            val rest = when (args.size) {
+                1 -> emptyList()
+                else -> args.subList(1, args.size)
+            }
+            return sequence {
+                first.forEach { argSubType ->
+                    yieldAll(buildArgumentPermutations(rest, accumulator + listOf(argSubType)))
+                }
+            }
+        }
 
         // Helpers
 
@@ -765,7 +840,7 @@ internal class PlanTyper(
 
     private fun Rel.type(typeEnv: TypeEnv): Rel = RelTyper(typeEnv).visitRel(this, null)
 
-    private fun Rex.type(typeEnv: TypeEnv) = RexTyper(typeEnv).visitRex(this, null)
+    private fun Rex.type(typeEnv: TypeEnv) = RexTyper(typeEnv).visitRex(this, this.type)
 
     /**
      * I found decorating the tree with the binding names (for resolution) was easier than associating introduced
@@ -886,7 +961,7 @@ internal class PlanTyper(
     /**
      * Constructs a Rex.Op.Path from a resolved local
      */
-    private fun resolvedLocalPath(local: ResolvedVar.Local): Rex.Op.Path {
+    private fun resolvedLocalPath(local: ResolvedVar.Local): Rex.Op {
         val root = rex(local.rootType, rexOpVarResolved(local.ordinal))
         val steps = local.tail.map {
             val case = when (it.bindingCase) {
@@ -895,7 +970,10 @@ internal class PlanTyper(
             }
             rexOpPathStepSymbol(identifierSymbol(it.name, case))
         }
-        return rexOpPath(root, steps)
+        return when (steps.isEmpty()) {
+            true -> root.op
+            false -> rexOpPath(root, steps)
+        }
     }
 
     // ERRORS

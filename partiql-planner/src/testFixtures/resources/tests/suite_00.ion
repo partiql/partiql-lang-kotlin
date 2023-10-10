@@ -125,28 +125,99 @@ suite::{
         }
       }
     },
-    // TODO: Add support for SELECT * so we can assert on the schema
     '0004': {
       statement: '''
-        SELECT s_store_sk
+        SELECT p.*, e.*
         FROM
-            tpc_ds.store AS store
-          LEFT JOIN
-            tpc_ds.store_returns AS returns
-          ON s_store_sk = sr_store_sk
+          pql.person AS p
+            INNER JOIN
+          pql.employer AS e
+            ON p.employer = e.name
       ''',
       schema: {
         type: "bag",
         items: {
-          type: "struct",
-          fields: [
+          type:"struct",
+          fields:[
             {
-              name:"s_store_sk",
+              name:"name",
+              type:{
+                type:"struct",
+                fields:[
+                  {
+                    name:"first",
+                    type:"string"
+                  },
+                  {
+                    name:"last",
+                    type:"string"
+                  }
+                ]
+              }
+            },
+            {
+              name:"ssn",
               type:"string"
+            },
+            {
+              name:"company",
+              type:[
+                "null",
+                "string"
+              ]
+            },
+            {
+              name:"name",
+              type:"string"
+            },
+            {
+              name:"tax_id",
+              type:"int64"
+            },
+            {
+              name:"address",
+              type:{
+                type:"struct",
+                fields:[
+                  {
+                    name:"street",
+                    type:"string"
+                  },
+                  {
+                    name:"zip",
+                    type:"int32"
+                  }
+                ]
+              }
             }
           ]
         }
       }
     },
+    '0005': {
+      statement: '''
+        SELECT p.name.*, (p.name."first" || ' ' || p.name."last") AS full_name FROM pql.person AS p
+      ''',
+      schema: {
+        type:"bag",
+        items:{
+          type:"struct",
+          fields:[
+            {
+              name:"first",
+              type:"string"
+            },
+            {
+              name:"last",
+              type:"string"
+            },
+            {
+              name:"full_name",
+              type:"string"
+            }
+          ]
+        }
+      }
+    }
   },
 }

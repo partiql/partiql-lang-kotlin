@@ -28,6 +28,7 @@ import org.partiql.types.StructType
 import org.partiql.types.SymbolType
 import org.partiql.types.TimeType
 import org.partiql.types.TimestampType
+import org.partiql.types.TupleConstraint
 
 // Use some generated serde eventually
 
@@ -127,7 +128,7 @@ public fun StructElement.toStructType(): StaticType {
         val type = it.getAngry<IonElement>("type").toStaticType()
         StructType.Field(name, type)
     }
-    return StructType(fields)
+    return StructType(fields, contentClosed = true, constraints = setOf(TupleConstraint.Open(false)))
 }
 
 public fun StaticType.toIon(): IonElement = when (this) {

@@ -8,8 +8,7 @@ import org.partiql.ast.Statement
 public fun Statement.normalize(): Statement {
     // could be a fold, but this is nice for setting breakpoints
     var ast = this
-    ast = NormalizeSelectList.apply(ast)
     ast = NormalizeFromSource.apply(ast)
-    ast = NormalizeSelectStar.apply(ast)
+    ast = NormalizeSelect.apply(ast)
     return ast
 }

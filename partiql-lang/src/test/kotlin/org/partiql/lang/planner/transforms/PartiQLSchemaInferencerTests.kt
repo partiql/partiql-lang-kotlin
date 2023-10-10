@@ -27,6 +27,7 @@ import org.partiql.plugins.local.LocalPlugin
 import org.partiql.types.AnyOfType
 import org.partiql.types.AnyType
 import org.partiql.types.BagType
+import org.partiql.types.IntType
 import org.partiql.types.ListType
 import org.partiql.types.SexpType
 import org.partiql.types.StaticType
@@ -36,6 +37,7 @@ import org.partiql.types.StaticType.Companion.MISSING
 import org.partiql.types.StaticType.Companion.NULL
 import org.partiql.types.StaticType.Companion.STRING
 import org.partiql.types.StaticType.Companion.unionOf
+import org.partiql.types.StringType
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
 import java.time.Instant
@@ -92,6 +94,11 @@ class PartiQLSchemaInferencerTests {
     @MethodSource("orderByCases")
     @Execution(ExecutionMode.CONCURRENT)
     fun testOrderBy(tc: TestCase) = runTest(tc)
+
+    @ParameterizedTest
+    @MethodSource("tupleUnionCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun testTupleUnion(tc: TestCase) = runTest(tc)
 
     companion object {
 
@@ -2119,12 +2126,277 @@ class PartiQLSchemaInferencerTests {
                 query = "SELECT * FROM pets ORDER BY breed",
                 expected = TABLE_AWS_DDB_PETS_LIST
             ),
-            SuccessTestCase(
+            ErrorTestCase(
                 name = "ORDER BY str",
                 catalog = CATALOG_AWS,
                 catalogPath = listOf("ddb"),
                 query = "SELECT * FROM pets ORDER BY unknown_col",
-                expected = TABLE_AWS_DDB_PETS_LIST
+                expected = TABLE_AWS_DDB_PETS_LIST,
+                problemHandler = assertProblemExists {
+                    Problem(
+                        UNKNOWN_PROBLEM_LOCATION,
+                        PlanningProblemDetails.UndefinedVariable("unknown_col", false)
+                    )
+                }
+            ),
+        )
+
+        @JvmStatic
+        fun tupleUnionCases() = listOf(
+            SuccessTestCase(
+                name = "Empty Tuple Union",
+                query = "TUPLEUNION()",
+                expected = StructType(
+                    fields = emptyMap(),
+                    contentClosed = true,
+                    constraints = setOf(
+                        TupleConstraint.Open(false),
+                        TupleConstraint.UniqueAttrs(true)
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "Tuple Union with Literal Struct",
+                query = "TUPLEUNION({ 'a': 1, 'b': 'hello' })",
+                expected = StructType(
+                    fields = mapOf(
+                        "a" to IntType(),
+                        "b" to StringType()
+                    ),
+                    contentClosed = true,
+                    constraints = setOf(
+                        TupleConstraint.Open(false),
+                        TupleConstraint.UniqueAttrs(true),
+                    )
+                ),
+            ),
+            // TODO: Is this right? Given the lack of ordering, can we say that there are 2 fields (but we don't know
+            //  whether one will definitely be accessed?
+            SuccessTestCase(
+                name = "Tuple Union with Literal Struct AND Duplicates",
+                query = "TUPLEUNION({ 'a': 1, 'a': 'hello' })",
+                expected = StructType(
+                    fields = listOf(
+                        StructType.Field("a", unionOf(INT, STRING)),
+                        StructType.Field("a", unionOf(INT, STRING)),
+                    ),
+                    contentClosed = true,
+                    constraints = setOf(
+                        TupleConstraint.Open(false),
+                        TupleConstraint.UniqueAttrs(false),
+                    )
+                ),
+            ),
+            SuccessTestCase(
+                name = "Tuple Union with Nested Struct",
+                query = """
+                    SELECT VALUE TUPLEUNION(
+                      t.a
+                    ) FROM <<
+                        { 'a': { 'b': 1 } }
+                    >> AS t
+                """,
+                expected = BagType(
+                    StructType(
+                        fields = listOf(
+                            StructType.Field("b", INT),
+                        ),
+                        contentClosed = true,
+                        // TODO: This shouldn't be ordered. However, this doesn't come from the TUPLEUNION. It is
+                        //  coming from the RexOpSelect.
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                ),
+            ),
+            SuccessTestCase(
+                name = "Tuple Union with Heterogeneous Data",
+                query = """
+                    SELECT VALUE TUPLEUNION(
+                      t.a
+                    ) FROM <<
+                        { 'a': { 'b': 1 } },
+                        { 'a': 1 }
+                    >> AS t
+                """,
+                expected = BagType(
+                    unionOf(
+                        MISSING,
+                        StructType(
+                            fields = listOf(
+                                StructType.Field("b", INT),
+                            ),
+                            contentClosed = true,
+                            constraints = setOf(
+                                TupleConstraint.Open(false),
+                                TupleConstraint.UniqueAttrs(true),
+                            )
+                        )
+                    )
+                ),
+            ),
+            SuccessTestCase(
+                name = "Tuple Union with Heterogeneous Data (2)",
+                query = """
+                    SELECT VALUE TUPLEUNION(
+                      t.a
+                    ) FROM <<
+                        { 'a': { 'b': 1 } },
+                        { 'a': { 'b': 'hello' } },
+                        { 'a': NULL },
+                        { 'a': 4.5 },
+                        { }
+                    >> AS t
+                """,
+                expected = BagType(
+                    unionOf(
+                        NULL,
+                        MISSING,
+                        StructType(
+                            fields = listOf(
+                                StructType.Field("b", INT),
+                            ),
+                            contentClosed = true,
+                            constraints = setOf(
+                                TupleConstraint.Open(false),
+                                TupleConstraint.UniqueAttrs(true),
+                            )
+                        ),
+                        StructType(
+                            fields = listOf(
+                                StructType.Field("b", STRING),
+                            ),
+                            contentClosed = true,
+                            constraints = setOf(
+                                TupleConstraint.Open(false),
+                                TupleConstraint.UniqueAttrs(true),
+                            )
+                        )
+                    )
+                ),
+            ),
+            SuccessTestCase(
+                name = "Tuple Union with Heterogeneous Data (3)",
+                query = """
+                    SELECT VALUE TUPLEUNION(
+                      p.name
+                    ) FROM aws.ddb.persons AS p
+                """,
+                expected = BagType(
+                    unionOf(
+                        MISSING,
+                        StructType(
+                            fields = listOf(
+                                StructType.Field("first", STRING),
+                                StructType.Field("last", STRING),
+                            ),
+                            contentClosed = false,
+                            constraints = setOf(
+                                TupleConstraint.Open(true),
+                                TupleConstraint.UniqueAttrs(false),
+                            )
+                        ),
+                        StructType(
+                            fields = listOf(
+                                StructType.Field("full_name", STRING),
+                            ),
+                            contentClosed = true,
+                            constraints = setOf(
+                                TupleConstraint.Open(false),
+                                TupleConstraint.UniqueAttrs(true),
+                                TupleConstraint.Ordered
+                            )
+                        ),
+                    )
+                ),
+            ),
+            SuccessTestCase(
+                name = "Complex Tuple Union with Heterogeneous Data",
+                query = """
+                    SELECT VALUE TUPLEUNION(
+                      p.name,
+                      p.name
+                    ) FROM aws.ddb.persons AS p
+                """,
+                expected = BagType(
+                    unionOf(
+                        MISSING,
+                        StructType(
+                            fields = listOf(
+                                StructType.Field("first", STRING),
+                                StructType.Field("last", STRING),
+                            ),
+                            contentClosed = false,
+                            constraints = setOf(
+                                TupleConstraint.Open(true),
+                                TupleConstraint.UniqueAttrs(false),
+                            )
+                        ),
+                        StructType(
+                            fields = listOf(
+                                StructType.Field("full_name", STRING),
+                            ),
+                            contentClosed = true,
+                            constraints = setOf(
+                                TupleConstraint.Open(false),
+                                TupleConstraint.UniqueAttrs(true),
+                                TupleConstraint.Ordered
+                            )
+                        ),
+                        StructType(
+                            fields = listOf(
+                                StructType.Field("first", STRING),
+                                StructType.Field("last", STRING),
+                                StructType.Field("first", STRING),
+                                StructType.Field("last", STRING),
+                            ),
+                            contentClosed = false,
+                            constraints = setOf(
+                                TupleConstraint.Open(true),
+                                TupleConstraint.UniqueAttrs(false),
+                            )
+                        ),
+                        StructType(
+                            fields = listOf(
+                                StructType.Field("first", STRING),
+                                StructType.Field("last", STRING),
+                                StructType.Field("full_name", STRING),
+                            ),
+                            contentClosed = false,
+                            constraints = setOf(
+                                TupleConstraint.Open(true),
+                                TupleConstraint.UniqueAttrs(false),
+                            )
+                        ),
+                        StructType(
+                            fields = listOf(
+                                StructType.Field("full_name", STRING),
+                                StructType.Field("first", STRING),
+                                StructType.Field("last", STRING),
+                            ),
+                            contentClosed = false,
+                            constraints = setOf(
+                                TupleConstraint.Open(true),
+                                TupleConstraint.UniqueAttrs(false),
+                            )
+                        ),
+                        StructType(
+                            fields = listOf(
+                                StructType.Field("full_name", STRING),
+                                StructType.Field("full_name", STRING),
+                            ),
+                            contentClosed = true,
+                            constraints = setOf(
+                                TupleConstraint.Open(false),
+                                TupleConstraint.UniqueAttrs(false),
+                                TupleConstraint.Ordered
+                            )
+                        ),
+                    )
+                ),
             ),
         )
     }
@@ -2176,14 +2448,25 @@ class PartiQLSchemaInferencerTests {
                 name = "Pets should not be accessible #1",
                 query = "SELECT * FROM pets",
                 expected = BagType(
-                    StructType(
-                        fields = mapOf("pets" to StaticType.ANY),
-                        contentClosed = true,
-                        constraints = setOf(
-                            TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(true),
-                            TupleConstraint.Ordered
-                        )
+                    unionOf(
+                        StructType(
+                            fields = emptyMap(),
+                            contentClosed = false,
+                            constraints = setOf(
+                                TupleConstraint.Open(true),
+                                TupleConstraint.UniqueAttrs(false),
+                            )
+                        ),
+                        StructType(
+                            fields = mapOf(
+                                "_1" to StaticType.ANY
+                            ),
+                            contentClosed = true,
+                            constraints = setOf(
+                                TupleConstraint.Open(false),
+                                TupleConstraint.UniqueAttrs(true),
+                            )
+                        ),
                     )
                 ),
                 problemHandler = assertProblemExists {
@@ -2198,14 +2481,25 @@ class PartiQLSchemaInferencerTests {
                 catalog = CATALOG_AWS,
                 query = "SELECT * FROM pets",
                 expected = BagType(
-                    StructType(
-                        fields = mapOf("pets" to StaticType.ANY),
-                        contentClosed = true,
-                        constraints = setOf(
-                            TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(true),
-                            TupleConstraint.Ordered
-                        )
+                    unionOf(
+                        StructType(
+                            fields = emptyMap(),
+                            contentClosed = false,
+                            constraints = setOf(
+                                TupleConstraint.Open(true),
+                                TupleConstraint.UniqueAttrs(false),
+                            )
+                        ),
+                        StructType(
+                            fields = mapOf(
+                                "_1" to StaticType.ANY
+                            ),
+                            contentClosed = true,
+                            constraints = setOf(
+                                TupleConstraint.Open(false),
+                                TupleConstraint.UniqueAttrs(true),
+                            )
+                        ),
                     )
                 ),
                 problemHandler = assertProblemExists {
@@ -2254,14 +2548,25 @@ class PartiQLSchemaInferencerTests {
                 name = "Test #7",
                 query = "SELECT * FROM ddb.pets",
                 expected = BagType(
-                    StructType(
-                        fields = mapOf("pets" to StaticType.ANY),
-                        contentClosed = true,
-                        constraints = setOf(
-                            TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(true),
-                            TupleConstraint.Ordered
-                        )
+                    unionOf(
+                        StructType(
+                            fields = emptyMap(),
+                            contentClosed = false,
+                            constraints = setOf(
+                                TupleConstraint.Open(true),
+                                TupleConstraint.UniqueAttrs(false),
+                            )
+                        ),
+                        StructType(
+                            fields = mapOf(
+                                "_1" to StaticType.ANY
+                            ),
+                            contentClosed = true,
+                            constraints = setOf(
+                                TupleConstraint.Open(false),
+                                TupleConstraint.UniqueAttrs(true),
+                            )
+                        ),
                     )
                 ),
                 problemHandler = assertProblemExists {
