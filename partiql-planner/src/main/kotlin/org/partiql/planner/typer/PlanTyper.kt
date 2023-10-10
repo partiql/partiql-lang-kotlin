@@ -346,10 +346,6 @@ internal class PlanTyper(
             TODO("Type RelOp Aggregate")
         }
 
-        override fun visitRelOpAggregateAgg(node: Rel.Op.Aggregate.Agg, ctx: Rel.Type?): Rel {
-            TODO("Type RelOp Agg")
-        }
-
         override fun visitRelBinding(node: Rel.Binding, ctx: Rel.Type?): Rel {
             TODO("Type RelOp Binding")
         }
@@ -536,7 +532,7 @@ internal class PlanTyper(
                 }
                 is FnMatch.Error -> {
                     handleUnknownFunction(match)
-                    rex(StaticType.MISSING, rexOpErr("Unknown function $fn"))
+                    rex(StaticType.MISSING, rexOpErr("Unknown scalar function $fn"))
                 }
             }
         }
@@ -1026,7 +1022,7 @@ internal class PlanTyper(
     /**
      * Rewrites function arguments, wrapping in the given function if exists.
      */
-    private fun rewriteFnArgs(mapping: List<FunctionSignature?>, args: List<Rex>): List<Rex> {
+    private fun rewriteFnArgs(mapping: List<FunctionSignature.Scalar?>, args: List<Rex>): List<Rex> {
         if (mapping.size != args.size) {
             error("Fatal, malformed function mapping") // should be unreachable given how a mapping is generated.
         }
@@ -1089,12 +1085,12 @@ internal class PlanTyper(
         )
     }
 
-    private fun handleUnknownFunction(match: FnMatch.Error) {
+    private fun handleUnknownFunction(match: FnMatch.Error<*>) {
         onProblem(
             Problem(
                 sourceLocation = UNKNOWN_PROBLEM_LOCATION,
                 details = PlanningProblemDetails.UnknownFunction(
-                    match.fn.identifier.normalize(),
+                    match.identifier.normalize(),
                     match.args.map { a -> a.type },
                 )
             )

@@ -1,6 +1,7 @@
 package org.partiql.planner
 
 import org.partiql.ast.DatetimeField
+import org.partiql.plan.Agg
 import org.partiql.plan.Fn
 import org.partiql.plan.Identifier
 import org.partiql.planner.typer.CastType
@@ -38,14 +39,9 @@ import org.partiql.value.PartiQLValueType.TIME
 import org.partiql.value.PartiQLValueType.TIMESTAMP
 
 /**
- * A structure for function lookup.
+ * A structure for scalar function lookup.
  */
-private typealias FunctionMap = Map<String, List<FunctionSignature>>
-
-/**
- * Unicode non-character to be used for name sanitization
- */
-// private val OP: Char = Char(0xFDEF)
+private typealias FnMap<T> = Map<String, List<T>>
 
 /**
  * Map session attributes to underlying function name.
@@ -60,28 +56,38 @@ internal val ATTRIBUTES: Map<String, String> = mapOf(
  *
  * @property namespace      Definition namespace e.g. partiql, spark, redshift, ...
  * @property types          Type definitions
- * @property functions      Function definitions
+ * @property functions      Scalar function definitions
+ * @property aggregations   Aggregation function definitions
  */
 @OptIn(PartiQLValueExperimental::class)
 internal class Header(
     private val namespace: String,
     private val types: TypeLattice,
-    private val functions: FunctionMap,
+    private val functions: FnMap<FunctionSignature.Scalar>,
+    private val aggregations: FnMap<FunctionSignature.Aggregation>,
     private val unsafeCastSet: Set<String>,
 ) {
 
     /**
-     * Return a list of all function signatures matching the given identifier.
+     * Return a list of all scalar function signatures matching the given identifier.
      */
-    public fun lookup(ref: Fn.Unresolved): List<FunctionSignature> {
+    public fun lookup(ref: Fn.Unresolved): List<FunctionSignature.Scalar> {
         val name = getFnName(ref.identifier)
         return functions.getOrDefault(name, emptyList())
     }
 
     /**
+     * Return a list of all aggregation function signatures matching the given identifier.
+     */
+    public fun lookup(ref: Agg.Unresolved): List<FunctionSignature.Aggregation> {
+        val name = getFnName(ref.identifier)
+        return aggregations.getOrDefault(name, emptyList())
+    }
+
+    /**
      * Returns the CAST function if exists, else null.
      */
-    public fun lookupCoercion(valueType: PartiQLValueType, targetType: PartiQLValueType): FunctionSignature? {
+    public fun lookupCoercion(valueType: PartiQLValueType, targetType: PartiQLValueType): FunctionSignature.Scalar? {
         if (!types.canCoerce(valueType, targetType)) {
             return null
         }
@@ -127,7 +133,6 @@ internal class Header(
 
         /**
          * TODO TEMPORARY — Hardcoded PartiQL Global Catalog
-         * TODO BUG — We don't validate function overloads
          */
         public fun partiql(): Header {
             val namespace = "partiql"
@@ -137,10 +142,12 @@ internal class Header(
                 casts,
                 Functions.operators(),
                 Functions.builtins(),
-                Functions.special(),
                 Functions.system(),
             )
-            return Header(namespace, types, functions, unsafeCastSet)
+            val aggregations = Functions.combine(
+                Functions.aggregations(),
+            )
+            return Header(namespace, types, functions, aggregations, unsafeCastSet)
         }
 
         /**
@@ -159,93 +166,15 @@ internal class Header(
     internal object Functions {
 
         /**
-         * Produce a function map (grouping by name) from a list of signatures.
+         * Group list of [FunctionSignature.Scalar] by name.
          */
-        public fun combine(vararg functions: List<FunctionSignature>): FunctionMap {
+        public fun <T : FunctionSignature> combine(vararg functions: List<T>): FnMap<T> {
             return functions.flatMap { it.sortedWith(functionPrecedence) }.groupBy { it.name }
         }
 
-        /**
-         * Generate all CAST functions from the given lattice.
-         *
-         * @param lattice
-         * @return Pair(0) is the function list, Pair(1) represens the unsafe cast specifics
-         */
-        public fun casts(lattice: TypeLattice): Pair<List<FunctionSignature>, Set<String>> {
-            val casts = mutableListOf<FunctionSignature>()
-            val unsafeCastSet = mutableSetOf<String>()
-            for (t1 in lattice.types) {
-                for (t2 in lattice.types) {
-                    val r = lattice.graph[t1.ordinal][t2.ordinal]
-                    if (r != null) {
-                        val fn = cast(t1, t2)
-                        casts.add(fn)
-                        if (r.cast == CastType.UNSAFE) unsafeCastSet.add(fn.specific)
-                    }
-                }
-            }
-            return casts to unsafeCastSet
-        }
-
-        /**
-         * Generate all unary and binary operator signatures.
-         */
-        public fun operators(): List<FunctionSignature> = listOf(
-            not(),
-            pos(),
-            neg(),
-            eq(),
-            ne(),
-            and(),
-            or(),
-            lt(),
-            lte(),
-            gt(),
-            gte(),
-            plus(),
-            minus(),
-            times(),
-            div(),
-            mod(),
-            concat(),
-            bitwiseAnd(),
-        ).flatten()
-
-        /**
-         * SQL Builtins (not special forms)
-         */
-        public fun builtins(): List<FunctionSignature> = listOf(
-            upper(),
-            lower(),
-        ).flatten()
-
-        /**
-         * SQL and PartiQL special forms
-         */
-        public fun special(): List<FunctionSignature> = listOf(
-            like(),
-            between(),
-            inCollection(),
-            isType(),
-            isTypeSingleArg(),
-            isTypeDoubleArgsInt(),
-            isTypeTime(),
-            coalesce(),
-            nullIf(),
-            substring(),
-            position(),
-            trim(),
-            overlay(),
-            extract(),
-            dateAdd(),
-            dateDiff(),
-            utcNow(),
-        ).flatten()
-
-        public fun system(): List<FunctionSignature> = listOf(
-            currentUser(),
-            currentDate(),
-        )
+        // ====================================
+        //  TYPES
+        // ====================================
 
         private val allTypes = PartiQLValueType.values()
 
@@ -291,49 +220,105 @@ internal class Header(
             TIMESTAMP,
         )
 
-        public fun unary(name: String, returns: PartiQLValueType, value: PartiQLValueType) =
-            FunctionSignature(
-                name = name,
-                returns = returns,
-                parameters = listOf(FunctionParameter("value", value)),
-                isNullCall = true,
-                isNullable = false,
-            )
+        // ====================================
+        //  SCALAR FUNCTIONS
+        // ====================================
 
-        public fun binary(name: String, returns: PartiQLValueType, lhs: PartiQLValueType, rhs: PartiQLValueType) =
-            FunctionSignature(
-                name = name,
-                returns = returns,
-                parameters = listOf(FunctionParameter("lhs", lhs), FunctionParameter("rhs", rhs)),
-                isNullCall = true,
-                isNullable = false,
-            )
+        /**
+         * Generate all CAST functions from the given lattice.
+         *
+         * @param lattice
+         * @return Pair(0) is the function list, Pair(1) represents the unsafe cast specifics
+         */
+        public fun casts(lattice: TypeLattice): Pair<List<FunctionSignature.Scalar>, Set<String>> {
+            val casts = mutableListOf<FunctionSignature.Scalar>()
+            val unsafeCastSet = mutableSetOf<String>()
+            for (t1 in lattice.types) {
+                for (t2 in lattice.types) {
+                    val r = lattice.graph[t1.ordinal][t2.ordinal]
+                    if (r != null) {
+                        val fn = cast(t1, t2)
+                        casts.add(fn)
+                        if (r.cast == CastType.UNSAFE) unsafeCastSet.add(fn.specific)
+                    }
+                }
+            }
+            return casts to unsafeCastSet
+        }
 
-        public fun cast(operand: PartiQLValueType, target: PartiQLValueType) =
-            FunctionSignature(
-                name = castName(target),
-                returns = target,
-                isNullCall = true,
-                isNullable = false,
-                parameters = listOf(
-                    FunctionParameter("value", operand),
-                )
-            )
+        /**
+         * Generate all unary and binary operator signatures.
+         */
+        public fun operators(): List<FunctionSignature.Scalar> = listOf(
+            not(),
+            pos(),
+            neg(),
+            eq(),
+            ne(),
+            and(),
+            or(),
+            lt(),
+            lte(),
+            gt(),
+            gte(),
+            plus(),
+            minus(),
+            times(),
+            div(),
+            mod(),
+            concat(),
+            bitwiseAnd(),
+        ).flatten()
+
+        /**
+         * SQL and PartiQL Scalar Builtins
+         */
+        public fun builtins(): List<FunctionSignature.Scalar> = listOf(
+            upper(),
+            lower(),
+            like(),
+            between(),
+            inCollection(),
+            isType(),
+            isTypeSingleArg(),
+            isTypeDoubleArgsInt(),
+            isTypeTime(),
+            coalesce(),
+            nullIf(),
+            substring(),
+            position(),
+            trim(),
+            overlay(),
+            extract(),
+            dateAdd(),
+            dateDiff(),
+            utcNow(),
+        ).flatten()
+
+        /**
+         * System functions (for now, CURRENT_USER and CURRENT_DATE)
+         *
+         * @return
+         */
+        public fun system(): List<FunctionSignature.Scalar> = listOf(
+            currentUser(),
+            currentDate(),
+        )
 
         // OPERATORS
 
-        private fun not(): List<FunctionSignature> = listOf(unary("not", BOOL, BOOL))
+        private fun not(): List<FunctionSignature.Scalar> = listOf(unary("not", BOOL, BOOL))
 
-        private fun pos(): List<FunctionSignature> = numericTypes.map { t ->
+        private fun pos(): List<FunctionSignature.Scalar> = numericTypes.map { t ->
             unary("pos", t, t)
         }
 
-        private fun neg(): List<FunctionSignature> = numericTypes.map { t ->
+        private fun neg(): List<FunctionSignature.Scalar> = numericTypes.map { t ->
             unary("neg", t, t)
         }
 
-        private fun eq(): List<FunctionSignature> = allTypes.map { t ->
-            FunctionSignature(
+        private fun eq(): List<FunctionSignature.Scalar> = allTypes.map { t ->
+            FunctionSignature.Scalar(
                 name = "eq",
                 returns = BOOL,
                 isNullCall = false,
@@ -342,62 +327,62 @@ internal class Header(
             )
         }
 
-        private fun ne(): List<FunctionSignature> = allTypes.map { t ->
+        private fun ne(): List<FunctionSignature.Scalar> = allTypes.map { t ->
             binary("ne", BOOL, t, t)
         }
 
-        private fun and(): List<FunctionSignature> = listOf(binary("and", BOOL, BOOL, BOOL))
+        private fun and(): List<FunctionSignature.Scalar> = listOf(binary("and", BOOL, BOOL, BOOL))
 
-        private fun or(): List<FunctionSignature> = listOf(binary("or", BOOL, BOOL, BOOL))
+        private fun or(): List<FunctionSignature.Scalar> = listOf(binary("or", BOOL, BOOL, BOOL))
 
-        private fun lt(): List<FunctionSignature> = numericTypes.map { t ->
+        private fun lt(): List<FunctionSignature.Scalar> = numericTypes.map { t ->
             binary("lt", BOOL, t, t)
         }
 
-        private fun lte(): List<FunctionSignature> = numericTypes.map { t ->
+        private fun lte(): List<FunctionSignature.Scalar> = numericTypes.map { t ->
             binary("lte", BOOL, t, t)
         }
 
-        private fun gt(): List<FunctionSignature> = numericTypes.map { t ->
+        private fun gt(): List<FunctionSignature.Scalar> = numericTypes.map { t ->
             binary("gt", BOOL, t, t)
         }
 
-        private fun gte(): List<FunctionSignature> = numericTypes.map { t ->
+        private fun gte(): List<FunctionSignature.Scalar> = numericTypes.map { t ->
             binary("gte", BOOL, t, t)
         }
 
-        private fun plus(): List<FunctionSignature> = numericTypes.map { t ->
+        private fun plus(): List<FunctionSignature.Scalar> = numericTypes.map { t ->
             binary("plus", t, t, t)
         }
 
-        private fun minus(): List<FunctionSignature> = numericTypes.map { t ->
+        private fun minus(): List<FunctionSignature.Scalar> = numericTypes.map { t ->
             binary("minus", t, t, t)
         }
 
-        private fun times(): List<FunctionSignature> = numericTypes.map { t ->
+        private fun times(): List<FunctionSignature.Scalar> = numericTypes.map { t ->
             binary("times", t, t, t)
         }
 
-        private fun div(): List<FunctionSignature> = numericTypes.map { t ->
+        private fun div(): List<FunctionSignature.Scalar> = numericTypes.map { t ->
             binary("divide", t, t, t)
         }
 
-        private fun mod(): List<FunctionSignature> = numericTypes.map { t ->
+        private fun mod(): List<FunctionSignature.Scalar> = numericTypes.map { t ->
             binary("modulo", t, t, t)
         }
 
-        private fun concat(): List<FunctionSignature> = textTypes.map { t ->
+        private fun concat(): List<FunctionSignature.Scalar> = textTypes.map { t ->
             binary("concat", t, t, t)
         }
 
-        private fun bitwiseAnd(): List<FunctionSignature> = intTypes.map { t ->
+        private fun bitwiseAnd(): List<FunctionSignature.Scalar> = intTypes.map { t ->
             binary("bitwise_and", t, t, t)
         }
 
         // BUILT INTS
 
-        private fun upper(): List<FunctionSignature> = textTypes.map { t ->
-            FunctionSignature(
+        private fun upper(): List<FunctionSignature.Scalar> = textTypes.map { t ->
+            FunctionSignature.Scalar(
                 name = "upper",
                 returns = t,
                 parameters = listOf(FunctionParameter("value", t)),
@@ -406,8 +391,8 @@ internal class Header(
             )
         }
 
-        private fun lower(): List<FunctionSignature> = textTypes.map { t ->
-            FunctionSignature(
+        private fun lower(): List<FunctionSignature.Scalar> = textTypes.map { t ->
+            FunctionSignature.Scalar(
                 name = "lower",
                 returns = t,
                 parameters = listOf(FunctionParameter("value", t)),
@@ -418,8 +403,8 @@ internal class Header(
 
         // SPECIAL FORMS
 
-        private fun like(): List<FunctionSignature> = listOf(
-            FunctionSignature(
+        private fun like(): List<FunctionSignature.Scalar> = listOf(
+            FunctionSignature.Scalar(
                 name = "like",
                 returns = BOOL,
                 parameters = listOf(
@@ -429,7 +414,7 @@ internal class Header(
                 isNullCall = true,
                 isNullable = false,
             ),
-            FunctionSignature(
+            FunctionSignature.Scalar(
                 name = "like_escape",
                 returns = BOOL,
                 parameters = listOf(
@@ -442,8 +427,8 @@ internal class Header(
             ),
         )
 
-        private fun between(): List<FunctionSignature> = numericTypes.map { t ->
-            FunctionSignature(
+        private fun between(): List<FunctionSignature.Scalar> = numericTypes.map { t ->
+            FunctionSignature.Scalar(
                 name = "between",
                 returns = BOOL,
                 parameters = listOf(
@@ -456,9 +441,9 @@ internal class Header(
             )
         }
 
-        private fun inCollection(): List<FunctionSignature> = allTypes.map { element ->
+        private fun inCollection(): List<FunctionSignature.Scalar> = allTypes.map { element ->
             collectionTypes.map { collection ->
-                FunctionSignature(
+                FunctionSignature.Scalar(
                     name = "in_collection",
                     returns = BOOL,
                     parameters = listOf(
@@ -477,8 +462,8 @@ internal class Header(
         // TODO: We can remove the types with parameter in this function.
         //  but, leaving out the decision to have, for example:
         //  is_decimal(null, null, value) vs is_decimal(value) later....
-        private fun isType(): List<FunctionSignature> = allTypes.map { element ->
-            FunctionSignature(
+        private fun isType(): List<FunctionSignature.Scalar> = allTypes.map { element ->
+            FunctionSignature.Scalar(
                 name = "is_${element.name.lowercase()}",
                 returns = BOOL,
                 parameters = listOf(
@@ -492,8 +477,8 @@ internal class Header(
         // In type assertion, it is possible for types to have args
         // i.e., 'a' is CHAR(2)
         // we put type parameter before value.
-        private fun isTypeSingleArg(): List<FunctionSignature> = listOf(CHAR, STRING).map { element ->
-            FunctionSignature(
+        private fun isTypeSingleArg(): List<FunctionSignature.Scalar> = listOf(CHAR, STRING).map { element ->
+            FunctionSignature.Scalar(
                 name = "is_${element.name.lowercase()}",
                 returns = BOOL,
                 parameters = listOf(
@@ -505,8 +490,8 @@ internal class Header(
             )
         }
 
-        private fun isTypeDoubleArgsInt(): List<FunctionSignature> = listOf(DECIMAL).map { element ->
-            FunctionSignature(
+        private fun isTypeDoubleArgsInt(): List<FunctionSignature.Scalar> = listOf(DECIMAL).map { element ->
+            FunctionSignature.Scalar(
                 name = "is_${element.name.lowercase()}",
                 returns = BOOL,
                 parameters = listOf(
@@ -519,8 +504,8 @@ internal class Header(
             )
         }
 
-        private fun isTypeTime(): List<FunctionSignature> = listOf(TIME, TIMESTAMP).map { element ->
-            FunctionSignature(
+        private fun isTypeTime(): List<FunctionSignature.Scalar> = listOf(TIME, TIMESTAMP).map { element ->
+            FunctionSignature.Scalar(
                 name = "is_${element.name.lowercase()}",
                 returns = BOOL,
                 parameters = listOf(
@@ -534,10 +519,10 @@ internal class Header(
         }
 
         // TODO
-        private fun coalesce(): List<FunctionSignature> = emptyList()
+        private fun coalesce(): List<FunctionSignature.Scalar> = emptyList()
 
-        private fun nullIf(): List<FunctionSignature> = nullableTypes.map { t ->
-            FunctionSignature(
+        private fun nullIf(): List<FunctionSignature.Scalar> = nullableTypes.map { t ->
+            FunctionSignature.Scalar(
                 name = "null_if",
                 returns = t,
                 parameters = listOf(
@@ -549,9 +534,9 @@ internal class Header(
             )
         }
 
-        private fun substring(): List<FunctionSignature> = textTypes.map { t ->
+        private fun substring(): List<FunctionSignature.Scalar> = textTypes.map { t ->
             listOf(
-                FunctionSignature(
+                FunctionSignature.Scalar(
                     name = "substring",
                     returns = t,
                     parameters = listOf(
@@ -561,7 +546,7 @@ internal class Header(
                     isNullCall = true,
                     isNullable = false,
                 ),
-                FunctionSignature(
+                FunctionSignature.Scalar(
                     name = "substring_length",
                     returns = t,
                     parameters = listOf(
@@ -575,8 +560,8 @@ internal class Header(
             )
         }.flatten()
 
-        private fun position(): List<FunctionSignature> = textTypes.map { t ->
-            FunctionSignature(
+        private fun position(): List<FunctionSignature.Scalar> = textTypes.map { t ->
+            FunctionSignature.Scalar(
                 name = "position",
                 returns = INT64,
                 parameters = listOf(
@@ -588,9 +573,9 @@ internal class Header(
             )
         }
 
-        private fun trim(): List<FunctionSignature> = textTypes.map { t ->
+        private fun trim(): List<FunctionSignature.Scalar> = textTypes.map { t ->
             listOf(
-                FunctionSignature(
+                FunctionSignature.Scalar(
                     name = "trim",
                     returns = t,
                     parameters = listOf(
@@ -599,7 +584,7 @@ internal class Header(
                     isNullCall = true,
                     isNullable = false,
                 ),
-                FunctionSignature(
+                FunctionSignature.Scalar(
                     name = "trim_chars",
                     returns = t,
                     parameters = listOf(
@@ -609,7 +594,7 @@ internal class Header(
                     isNullCall = true,
                     isNullable = false,
                 ),
-                FunctionSignature(
+                FunctionSignature.Scalar(
                     name = "trim_leading",
                     returns = t,
                     parameters = listOf(
@@ -618,7 +603,7 @@ internal class Header(
                     isNullCall = true,
                     isNullable = false,
                 ),
-                FunctionSignature(
+                FunctionSignature.Scalar(
                     name = "trim_leading_chars",
                     returns = t,
                     parameters = listOf(
@@ -628,7 +613,7 @@ internal class Header(
                     isNullCall = true,
                     isNullable = false,
                 ),
-                FunctionSignature(
+                FunctionSignature.Scalar(
                     name = "trim_trailing",
                     returns = t,
                     parameters = listOf(
@@ -637,7 +622,7 @@ internal class Header(
                     isNullCall = true,
                     isNullable = false,
                 ),
-                FunctionSignature(
+                FunctionSignature.Scalar(
                     name = "trim_trailing_chars",
                     returns = t,
                     parameters = listOf(
@@ -651,19 +636,19 @@ internal class Header(
         }.flatten()
 
         // TODO
-        private fun overlay(): List<FunctionSignature> = emptyList()
+        private fun overlay(): List<FunctionSignature.Scalar> = emptyList()
 
         // TODO
-        private fun extract(): List<FunctionSignature> = emptyList()
+        private fun extract(): List<FunctionSignature.Scalar> = emptyList()
 
-        private fun dateArithmetic(prefix: String): List<FunctionSignature> {
-            val operators = mutableListOf<FunctionSignature>()
+        private fun dateArithmetic(prefix: String): List<FunctionSignature.Scalar> {
+            val operators = mutableListOf<FunctionSignature.Scalar>()
             for (type in datetimeTypes) {
                 for (field in DatetimeField.values()) {
                     if (field == DatetimeField.TIMEZONE_HOUR || field == DatetimeField.TIMEZONE_MINUTE) {
                         continue
                     }
-                    val signature = FunctionSignature(
+                    val signature = FunctionSignature.Scalar(
                         name = "${prefix}_${field.name.lowercase()}",
                         returns = type,
                         parameters = listOf(
@@ -679,12 +664,12 @@ internal class Header(
             return operators
         }
 
-        private fun dateAdd(): List<FunctionSignature> = dateArithmetic("date_add")
+        private fun dateAdd(): List<FunctionSignature.Scalar> = dateArithmetic("date_add")
 
-        private fun dateDiff(): List<FunctionSignature> = dateArithmetic("date_diff")
+        private fun dateDiff(): List<FunctionSignature.Scalar> = dateArithmetic("date_diff")
 
-        private fun utcNow(): List<FunctionSignature> = listOf(
-            FunctionSignature(
+        private fun utcNow(): List<FunctionSignature.Scalar> = listOf(
+            FunctionSignature.Scalar(
                 name = "utcnow",
                 returns = TIMESTAMP,
                 parameters = emptyList(),
@@ -692,19 +677,113 @@ internal class Header(
             )
         )
 
-        private fun currentUser() = FunctionSignature(
+        private fun currentUser() = FunctionSignature.Scalar(
             name = "\$__current_user",
             returns = STRING,
             parameters = emptyList(),
             isNullable = true,
         )
 
-        private fun currentDate() = FunctionSignature(
+        private fun currentDate() = FunctionSignature.Scalar(
             name = "\$__current_date",
             returns = DATE,
             parameters = emptyList(),
             isNullable = false,
         )
+
+        // ====================================
+        //  AGGREGATIONS
+        // ====================================
+
+        /**
+         * SQL and PartiQL Aggregation Builtins
+         */
+        public fun aggregations(): List<FunctionSignature.Aggregation> = listOf(
+            every(),
+            any(),
+            some(),
+            count(),
+            min(),
+            max(),
+            sum(),
+            avg(),
+        ).flatten()
+
+        private fun every() = listOf(
+            FunctionSignature.Aggregation(
+                name = "every",
+                returns = BOOL,
+                parameters = listOf(FunctionParameter("value", BOOL)),
+                isNullable = true,
+            )
+        )
+
+        private fun any() = listOf(
+            FunctionSignature.Aggregation(
+                name = "any",
+                returns = BOOL,
+                parameters = listOf(FunctionParameter("value", BOOL)),
+                isNullable = true,
+            )
+        )
+
+        private fun some() = listOf(
+            FunctionSignature.Aggregation(
+                name = "some",
+                returns = BOOL,
+                parameters = listOf(FunctionParameter("value", BOOL)),
+                isNullable = true,
+            )
+        )
+
+        private fun count() = listOf(
+            FunctionSignature.Aggregation(
+                name = "count",
+                returns = INT,
+                parameters = listOf(FunctionParameter("value", ANY)),
+                isNullable = false,
+            )
+        )
+
+        private fun min() = numericTypes.map {
+            FunctionSignature.Aggregation(
+                name = "min",
+                returns = it,
+                parameters = listOf(FunctionParameter("value", it)),
+                isNullable = true,
+            )
+        }
+
+        private fun max() = numericTypes.map {
+            FunctionSignature.Aggregation(
+                name = "max",
+                returns = it,
+                parameters = listOf(FunctionParameter("value", it)),
+                isNullable = true,
+            )
+        }
+
+        private fun sum() = numericTypes.map {
+            FunctionSignature.Aggregation(
+                name = "sum",
+                returns = it,
+                parameters = listOf(FunctionParameter("value", it)),
+                isNullable = true,
+            )
+        }
+
+        private fun avg() = numericTypes.map {
+            FunctionSignature.Aggregation(
+                name = "avg",
+                returns = it,
+                parameters = listOf(FunctionParameter("value", it)),
+                isNullable = true,
+            )
+        }
+
+        // ====================================
+        //  SORTING
+        // ====================================
 
         // Function precedence comparator
         // 1. Fewest args first
@@ -767,5 +846,38 @@ internal class Header(
             STRUCT,
             ANY,
         ).mapIndexed { precedence, type -> type to precedence }.toMap()
+
+        // ====================================
+        //  HELPERS
+        // ====================================
+
+        public fun unary(name: String, returns: PartiQLValueType, value: PartiQLValueType) =
+            FunctionSignature.Scalar(
+                name = name,
+                returns = returns,
+                parameters = listOf(FunctionParameter("value", value)),
+                isNullCall = true,
+                isNullable = false,
+            )
+
+        public fun binary(name: String, returns: PartiQLValueType, lhs: PartiQLValueType, rhs: PartiQLValueType) =
+            FunctionSignature.Scalar(
+                name = name,
+                returns = returns,
+                parameters = listOf(FunctionParameter("lhs", lhs), FunctionParameter("rhs", rhs)),
+                isNullCall = true,
+                isNullable = false,
+            )
+
+        public fun cast(operand: PartiQLValueType, target: PartiQLValueType) =
+            FunctionSignature.Scalar(
+                name = castName(target),
+                returns = target,
+                isNullCall = true,
+                isNullable = false,
+                parameters = listOf(
+                    FunctionParameter("value", operand),
+                )
+            )
     }
 }

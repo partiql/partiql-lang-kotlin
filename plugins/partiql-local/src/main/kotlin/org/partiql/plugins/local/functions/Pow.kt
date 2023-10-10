@@ -15,7 +15,7 @@ import org.partiql.value.float64Value
 object Pow : PartiQLFunction {
 
     @OptIn(PartiQLValueExperimental::class)
-    override val signature = FunctionSignature(
+    override val signature = FunctionSignature.Scalar(
         name = "test_power",
         returns = PartiQLValueType.FLOAT64,
         parameters = listOf(

@@ -31,11 +31,11 @@ import org.partiql.ast.util.AstRewriter
 import org.partiql.ast.visitor.AstBaseVisitor
 import org.partiql.plan.Rel
 import org.partiql.plan.Rex
-import org.partiql.plan.fnUnresolved
+import org.partiql.plan.aggUnresolved
 import org.partiql.plan.rel
 import org.partiql.plan.relBinding
 import org.partiql.plan.relOpAggregate
-import org.partiql.plan.relOpAggregateAgg
+import org.partiql.plan.relOpAggregateCall
 import org.partiql.plan.relOpErr
 import org.partiql.plan.relOpExcept
 import org.partiql.plan.relOpExclude
@@ -334,16 +334,16 @@ internal object RelConverter {
 
             // Build the rel operator
             var strategy = Rel.Op.Aggregate.Strategy.FULL
-            val aggs = aggregations.mapIndexed { i, agg ->
+            val calls = aggregations.mapIndexed { i, expr ->
                 val binding = relBinding(
                     name = syntheticAgg(i),
                     type = (StaticType.ANY),
                 )
                 schema.add(binding)
-                val args = agg.args.map { arg -> arg.toRex(env) }
-                val id = AstToPlan.convert(agg.function)
-                val fn = fnUnresolved(id)
-                relOpAggregateAgg(fn, args)
+                val args = expr.args.map { arg -> arg.toRex(env) }
+                val id = AstToPlan.convert(expr.function)
+                val agg = aggUnresolved(id)
+                relOpAggregateCall(agg, args)
             }
             var groups = emptyList<Rex>()
             if (groupBy != null) {
@@ -364,7 +364,7 @@ internal object RelConverter {
                 }
             }
             val type = relType(schema, props)
-            val op = relOpAggregate(input, strategy, aggs, groups)
+            val op = relOpAggregate(input, strategy, calls, groups)
             val rel = rel(type, op)
             return Pair(sel, rel)
         }
