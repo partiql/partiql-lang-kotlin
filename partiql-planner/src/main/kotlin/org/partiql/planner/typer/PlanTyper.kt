@@ -262,7 +262,7 @@ internal class PlanTyper(
             val projections = node.projections.map { it.type(typeEnv) }
             // compute output schema
             val schema = projections.map { it.type }
-            val type = input.type.copyWithSchema(schema)
+            val type = ctx!!.copyWithSchema(schema)
             // rewrite
             val op = relOpProject(input, projections)
             return rel(type, op)

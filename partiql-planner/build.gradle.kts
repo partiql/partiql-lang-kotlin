@@ -29,6 +29,7 @@ dependencies {
     implementation(Deps.ionElement)
     // Test
     testImplementation(project(":partiql-parser"))
+    testImplementation(project(":plugins:partiql-local"))
     // Test Fixtures
     testFixturesImplementation(project(":partiql-spi"))
 }

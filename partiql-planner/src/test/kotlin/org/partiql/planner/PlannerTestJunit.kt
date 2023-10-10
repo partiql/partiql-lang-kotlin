@@ -17,10 +17,10 @@ import org.partiql.plan.Statement
 import org.partiql.planner.test.PlannerTest
 import org.partiql.planner.test.PlannerTestProvider
 import org.partiql.planner.test.PlannerTestSuite
-import org.partiql.planner.test.plugin.FsPlugin
 import org.partiql.planner.test.toIon
-import org.partiql.types.TypingMode
+import org.partiql.plugins.local.LocalPlugin
 import java.util.stream.Stream
+import kotlin.io.path.pathString
 import kotlin.io.path.toPath
 
 class PlannerTestJunit {
@@ -33,19 +33,20 @@ class PlannerTestJunit {
 
     companion object {
 
+        private val root = PlannerTest::class.java.getResource("/catalogs")!!.toURI().toPath().pathString
+
         private val parser = PartiQLParserBuilder.standard().build()
 
         private val catalogConfig = mapOf(
             "default" to ionStructOf(
-                field("connector_name", ionString("fs")),
-            )
+                field("connector_name", ionString("local")),
+                field("root", ionString("$root/default")),
+            ),
         )
 
         private fun suiteNode(suite: PlannerTestSuite): DynamicContainer {
-            val schemaRoot = PlannerTest::class.java.getResource("/catalogs")!!.toURI().toPath()
-            val plugin = FsPlugin(schemaRoot)
+            val plugin = LocalPlugin()
             val planner = PartiQLPlannerBuilder()
-                .mode(TypingMode.STRICT)
                 .plugins(listOf(plugin))
                 .build()
             val tests = suite.tests.map { (name, test) ->
