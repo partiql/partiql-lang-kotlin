@@ -81,6 +81,28 @@ internal object NormalizeSelect : AstPass {
 
     private object Visitor : AstRewriter<Int>() {
 
+        /**
+         * This is used to give projections a name. For example:
+         * ```
+         * SELECT t.* FROM t AS t
+         * ```
+         *
+         * Will get converted into:
+         * ```
+         * SELECT VALUE TUPLEUNION(
+         *   CASE
+         *     WHEN t IS STRUCT THEN t
+         *     ELSE { '_1': t }
+         *   END
+         * )
+         * FROM t AS t
+         * ```
+         *
+         * In order to produce the struct's key in `{ '_1': t }` above, we use [col] to produce the column name
+         * given the ordinal.
+         */
+        private val col = { index: Int -> "_${index + 1}" }
+
         override fun visitExprSFW(node: Expr.SFW, ctx: Int) = ast {
             val sfw = super.visitExprSFW(node, ctx) as Expr.SFW
             when (val select = sfw.select) {
@@ -230,8 +252,6 @@ internal object NormalizeSelect : AstPass {
                 listOf(Triple(asAlias, atAlias, byAlias))
             }
         }
-
-        private val col = { index: Int -> "_${index + 1}" }
 
         // t -> t.* AS _i
         private fun String.star(i: Int) = ast {
