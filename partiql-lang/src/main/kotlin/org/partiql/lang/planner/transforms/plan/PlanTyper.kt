@@ -777,9 +777,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
             else -> {
                 val type = match.grabType() ?: handleMissingType(ctx)
                 // comparison never succeeds if caseValue is an unknown
-                if (type.isUnknown()) {
-                    handleExpressionAlwaysReturnsNullOrMissingError(ctx)
-                }
+                handleExpressionAlwaysReturnsUnknown(type, ctx)
                 type
             }
         }
@@ -797,7 +795,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
             val conditionType = condition.grabType() ?: handleMissingType(ctx)
             // comparison never succeeds if whenExpr is unknown -> null or missing error
             if (conditionType.isUnknown()) {
-                handleExpressionAlwaysReturnsNullOrMissingError(ctx)
+                handleExpressionAlwaysReturnsUnknown(conditionType, ctx)
             }
             // if caseValueType is incomparable to whenExprType -> data type mismatch
             else if (check.invoke(conditionType)) {
@@ -1037,8 +1035,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
         var errorAdded = false
 
         // check if any operands are unknown, then null or missing error
-        if (operands.any { operand -> operand.isUnknown() }) {
-            handleExpressionAlwaysReturnsNullOrMissingError(ctx)
+        if (handleExpressionAlwaysReturnsUnknown(operands, ctx)) {
             errorAdded = true
         }
 
@@ -1154,7 +1151,6 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
     private fun assertType(expected: StaticType, actual: StaticType, ctx: Context) {
         // Relates to `verifyExpressionType`
         if (actual.isUnknown()) {
-            handleExpressionAlwaysReturnsNullOrMissingError(ctx)
         } else if (actual.allTypes.none { it == expected }) {
             handleIncompatibleDataTypeForExprError(
                 expectedType = expected,
@@ -1545,7 +1541,10 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
      *
      * If an operand is not comparable to another, the [SemanticProblemDetails.IncompatibleDatatypesForOp] error is
      * handled by [ProblemHandler]. If an operand is unknown, the
-     * [SemanticProblemDetails.ExpressionAlwaysReturnsNullOrMissing] error is handled by [ProblemHandler].
+     * [SemanticProblemDetails.ExpressionAlwaysReturnsMissing] error is handled by [ProblemHandler].
+     *
+     * If an operand is always NULL, or unionOf(NULL, MISSING), the
+     * [SemanticProblemDetails.ExpressionAlwaysReturnsMissingOrNull] **warning** is handled by [ProblemHandler]
      *
      * TODO: consider if collection comparison semantics should be different (e.g. errors over warnings,
      *  more details in error message): https://github.com/partiql/partiql-lang-kotlin/issues/505
@@ -1565,8 +1564,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
         }
 
         // check for an unknown operand type
-        if (argsStaticType.any { operand -> operand.isUnknown() }) {
-            handleExpressionAlwaysReturnsNullOrMissingError(ctx)
+        if (handleExpressionAlwaysReturnsUnknown(argsStaticType, ctx)) {
             hasValidOperands = false
         }
         return hasValidOperands
@@ -1623,9 +1621,8 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
         }
 
         // check for an unknown operand type
-        if (operandsStaticType.any { operandStaticType -> operandStaticType.isUnknown() }) {
-            handleExpressionAlwaysReturnsNullOrMissingError(ctx)
-        }
+        handleExpressionAlwaysReturnsUnknown(operandsStaticType, ctx)
+
         return true
     }
 
@@ -1752,11 +1749,45 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
         )
     }
 
-    private fun handleExpressionAlwaysReturnsNullOrMissingError(ctx: Context) {
+    private fun handleExpressionAlwaysReturnsUnknown(types: List<StaticType>, ctx: Context): Boolean {
+        if (types.any { type -> type is MissingType }) {
+            handleExpressionAlwaysReturnsMissingError(ctx)
+            return true
+        }
+
+        if (types.any { type -> type is NullType || type == StaticType.NULL_OR_MISSING }) {
+            handleExpressionAlwaysReturnsMissingOrNullWarning(ctx)
+        }
+        return false
+    }
+
+    private fun handleExpressionAlwaysReturnsUnknown(type: StaticType, ctx: Context): Boolean {
+        if (type is MissingType) {
+            handleExpressionAlwaysReturnsMissingError(ctx)
+            return true
+        }
+
+        if (type is NullType || type == StaticType.NULL_OR_MISSING) {
+            handleExpressionAlwaysReturnsMissingOrNullWarning(ctx)
+        }
+
+        return false
+    }
+
+    private fun handleExpressionAlwaysReturnsMissingOrNullWarning(ctx: Context) {
         ctx.problemHandler.handleProblem(
             Problem(
                 sourceLocation = UNKNOWN_PROBLEM_LOCATION,
-                details = SemanticProblemDetails.ExpressionAlwaysReturnsNullOrMissing
+                details = SemanticProblemDetails.ExpressionAlwaysReturnsMissingOrNull
+            )
+        )
+    }
+
+    private fun handleExpressionAlwaysReturnsMissingError(ctx: Context) {
+        ctx.problemHandler.handleProblem(
+            Problem(
+                sourceLocation = UNKNOWN_PROBLEM_LOCATION,
+                details = SemanticProblemDetails.ExpressionAlwaysReturnsMissing
             )
         )
     }

@@ -12,6 +12,7 @@ import org.junit.jupiter.params.provider.ArgumentsProvider
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.annotations.ExperimentalPartiQLSchemaInferencer
 import org.partiql.errors.Problem
+import org.partiql.errors.ProblemSeverity
 import org.partiql.errors.UNKNOWN_PROBLEM_LOCATION
 import org.partiql.lang.ast.passes.SemanticProblemDetails
 import org.partiql.lang.errors.ProblemCollector
@@ -147,6 +148,7 @@ class PartiQLSchemaInferencerTests {
             val catalog: String? = null,
             val catalogPath: List<String> = emptyList(),
             val expected: StaticType,
+            val warnings: ProblemHandler? = null
         ) : TestCase() {
             override fun toString(): String = "$name : $query"
         }
@@ -2722,7 +2724,7 @@ class PartiQLSchemaInferencerTests {
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
-                        SemanticProblemDetails.ExpressionAlwaysReturnsNullOrMissing
+                        SemanticProblemDetails.ExpressionAlwaysReturnsMissingOrNull
                     )
                 }
             ),
@@ -2733,7 +2735,7 @@ class PartiQLSchemaInferencerTests {
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
-                        SemanticProblemDetails.ExpressionAlwaysReturnsNullOrMissing
+                        SemanticProblemDetails.ExpressionAlwaysReturnsMissing
                     )
                 }
             ),
@@ -2753,6 +2755,22 @@ class PartiQLSchemaInferencerTests {
                     )
                 }
             ),
+            SuccessTestCase(
+                name = "NULLIF - 1",
+                query = "NULLIF(NULL,'')",
+                expected = StaticType.NULL,
+                warnings = assertProblemExists {
+                    Problem(
+                        UNKNOWN_PROBLEM_LOCATION,
+                        SemanticProblemDetails.ExpressionAlwaysReturnsMissingOrNull
+                    )
+                }
+            ),
+            SuccessTestCase(
+                name = "NULLIF",
+                query = "NULLIF('',NULL)",
+                expected = StaticType.unionOf(StaticType.NULL, StaticType.STRING)
+            )
         )
 
         private fun assertProblemExists(problem: () -> Problem) = ProblemHandler { problems, ignoreSourceLocation ->
@@ -2803,9 +2821,11 @@ class PartiQLSchemaInferencerTests {
         val collector = ProblemCollector()
         val ctx = PartiQLSchemaInferencer.Context(session, PLUGINS, collector)
         val result = PartiQLSchemaInferencer.infer(tc.query, ctx)
-        assert(collector.problems.isEmpty()) {
+        assert(collector.problems.none { it.details.severity == ProblemSeverity.ERROR }) {
             collector.problems.toString()
         }
+
+        tc.warnings?.handle(collector.problems, true)
 
         assert(tc.expected == result) {
             buildString {
