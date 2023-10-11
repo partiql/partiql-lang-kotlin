@@ -45,5 +45,150 @@ suite::{
         },
       },
     },
+    'min(int32|null)': {
+      statement: '''
+        SELECT MIN(n) as "min" FROM numbers.nullable_int32s AS n
+      ''',
+      schema: {
+        type: "bag",
+        items: {
+          type: "struct",
+          fields: [
+            {
+              name: "min",
+              type: [
+                "int32",
+                "null",
+              ],
+            },
+          ],
+        },
+      },
+    },
+    'max(int32|null)': {
+      statement: '''
+        SELECT MAX(n) as "max" FROM numbers.nullable_int32s AS n
+      ''',
+      schema: {
+        type: "bag",
+        items: {
+          type: "struct",
+          fields: [
+            {
+              name: "max",
+              type: [
+                "int32",
+                "null",
+              ],
+            },
+          ],
+        },
+      },
+    },
+    'sum(int32|null)': {
+      statement: '''
+        SELECT SUM(n) as "sum" FROM numbers.nullable_int32s AS n
+      ''',
+      schema: {
+        type: "bag",
+        items: {
+          type: "struct",
+          fields: [
+            {
+              name: "sum",
+              type: [
+                "int32",
+                "null",
+              ],
+            },
+          ],
+        },
+      },
+    },
+    'avg(int32)': {
+      statement: '''
+        SELECT AVG(n) as "avg" FROM numbers.int32s AS n
+      ''',
+      schema: {
+        type: "bag",
+        items: {
+          type: "struct",
+          fields: [
+            {
+              name: "avg",
+              type: "int32"
+            },
+          ],
+        },
+      },
+    },
+    'count(int32)': {
+      statement: '''
+        SELECT COUNT(n) as "count" FROM numbers.int32s AS n
+      ''',
+      schema: {
+        type: "bag",
+        items: {
+          type: "struct",
+          fields: [
+            {
+              name: "count",
+              type: "int",
+            },
+          ],
+        },
+      },
+    },
+    'min(int32)': {
+      statement: '''
+        SELECT MIN(n) as "min" FROM numbers.int32s AS n
+      ''',
+      schema: {
+        type: "bag",
+        items: {
+          type: "struct",
+          fields: [
+            {
+              name: "min",
+              type: "int32"
+            },
+          ],
+        },
+      },
+    },
+    'max(int32)': {
+      statement: '''
+        SELECT MAX(n) as "max" FROM numbers.int32s AS n
+      ''',
+      schema: {
+        type: "bag",
+        items: {
+          type: "struct",
+          fields: [
+            {
+              name: "max",
+              type: "int32"
+            },
+          ],
+        },
+      },
+    },
+    'sum(int32)': {
+      statement: '''
+        SELECT SUM(n) as "sum" FROM numbers.int32s AS n
+      ''',
+      schema: {
+        type: "bag",
+        items: {
+          type: "struct",
+          fields: [
+            {
+              name: "sum",
+              type: "int32"
+            },
+          ],
+        },
+      },
+    },
   },
 }
