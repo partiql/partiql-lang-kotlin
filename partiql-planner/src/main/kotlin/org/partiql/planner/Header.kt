@@ -715,7 +715,13 @@ internal class Header(
                 returns = BOOL,
                 parameters = listOf(FunctionParameter("value", BOOL)),
                 isNullable = true,
-            )
+            ),
+            FunctionSignature.Aggregation(
+                name = "every",
+                returns = BOOL,
+                parameters = listOf(FunctionParameter("value", ANY)),
+                isNullable = true,
+            ),
         )
 
         private fun any() = listOf(
@@ -724,7 +730,13 @@ internal class Header(
                 returns = BOOL,
                 parameters = listOf(FunctionParameter("value", BOOL)),
                 isNullable = true,
-            )
+            ),
+            FunctionSignature.Aggregation(
+                name = "any",
+                returns = BOOL,
+                parameters = listOf(FunctionParameter("value", ANY)),
+                isNullable = true,
+            ),
         )
 
         private fun some() = listOf(
@@ -733,7 +745,13 @@ internal class Header(
                 returns = BOOL,
                 parameters = listOf(FunctionParameter("value", BOOL)),
                 isNullable = true,
-            )
+            ),
+            FunctionSignature.Aggregation(
+                name = "some",
+                returns = BOOL,
+                parameters = listOf(FunctionParameter("value", ANY)),
+                isNullable = true,
+            ),
         )
 
         private fun count() = listOf(
@@ -742,7 +760,7 @@ internal class Header(
                 returns = INT,
                 parameters = listOf(FunctionParameter("value", ANY)),
                 isNullable = false,
-            )
+            ),
         )
 
         private fun min() = numericTypes.map {
@@ -752,7 +770,12 @@ internal class Header(
                 parameters = listOf(FunctionParameter("value", it)),
                 isNullable = true,
             )
-        }
+        } + FunctionSignature.Aggregation(
+            name = "min",
+            returns = ANY,
+            parameters = listOf(FunctionParameter("value", ANY)),
+            isNullable = true,
+        )
 
         private fun max() = numericTypes.map {
             FunctionSignature.Aggregation(
@@ -761,7 +784,12 @@ internal class Header(
                 parameters = listOf(FunctionParameter("value", it)),
                 isNullable = true,
             )
-        }
+        } + FunctionSignature.Aggregation(
+            name = "max",
+            returns = ANY,
+            parameters = listOf(FunctionParameter("value", ANY)),
+            isNullable = true,
+        )
 
         private fun sum() = numericTypes.map {
             FunctionSignature.Aggregation(
@@ -770,7 +798,12 @@ internal class Header(
                 parameters = listOf(FunctionParameter("value", it)),
                 isNullable = true,
             )
-        }
+        } + FunctionSignature.Aggregation(
+            name = "sum",
+            returns = ANY,
+            parameters = listOf(FunctionParameter("value", ANY)),
+            isNullable = true,
+        )
 
         private fun avg() = numericTypes.map {
             FunctionSignature.Aggregation(
@@ -779,7 +812,12 @@ internal class Header(
                 parameters = listOf(FunctionParameter("value", it)),
                 isNullable = true,
             )
-        }
+        } + FunctionSignature.Aggregation(
+            name = "avg",
+            returns = ANY,
+            parameters = listOf(FunctionParameter("value", ANY)),
+            isNullable = true,
+        )
 
         // ====================================
         //  SORTING

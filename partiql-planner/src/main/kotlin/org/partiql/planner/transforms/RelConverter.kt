@@ -328,7 +328,7 @@ internal object RelConverter {
                 return Pair(select, input)
             }
 
-            // Build the schema -> (aggs... groups...)
+            // Build the schema -> (calls... groups...)
             val schema = mutableListOf<Rel.Binding>()
             val props = emptySet<Rel.Prop>()
 

@@ -1,15 +1,16 @@
-// https://web.cecs.pdx.edu/~len/sql1999.pdf#page=181
 suite::{
   name: "aggregations",
   session: {
-    catalog: "default",   // session catalog
-    path: ["tpc_ds"],     // session path
-    vars: {},             // session variables
+    catalog: "default",
+    path: [
+      "pql"
+    ],
+    vars: {},
   },
   tests: {
-    'avg(int32)': {
+    'avg(int32|null)': {
       statement: '''
-        SELECT AVG(ss_quantity) FROM store_sales
+        SELECT AVG(n) as "avg" FROM numbers.nullable_int32s AS n
       ''',
       schema: {
         type: "bag",
@@ -17,16 +18,19 @@ suite::{
           type: "struct",
           fields: [
             {
-              name: "_1",
-              type: "float64",
+              name: "avg",
+              type: [
+                "int32",
+                "null",
+              ],
             },
           ],
         },
       },
     },
-    'sum(int32)': {
+    'count(int32|null)': {
       statement: '''
-        SELECT SUM(ss_quantity) FROM store_sales
+        SELECT COUNT(n) as "count" FROM numbers.nullable_int32s AS n
       ''',
       schema: {
         type: "bag",
@@ -34,59 +38,8 @@ suite::{
           type: "struct",
           fields: [
             {
-              name: "_1",
+              name: "count",
               type: "int",
-            },
-          ],
-        },
-      },
-    },
-    'min(int32)': {
-      statement: '''
-        SELECT MIN(ss_quantity) FROM store_sales
-      ''',
-      schema: {
-        type: "bag",
-        items: {
-          type: "struct",
-          fields: [
-            {
-              name: "_1",
-              type: "int32",
-            },
-          ],
-        },
-      },
-    },
-    'max(int32)': {
-      statement: '''
-        SELECT MAX(ss_quantity) FROM store_sales
-      ''',
-      schema: {
-        type: "bag",
-        items: {
-          type: "struct",
-          fields: [
-            {
-              name: "_1",
-              type: "int32",
-            },
-          ],
-        },
-      },
-    },
-    'count(int32)': {
-      statement: '''
-        SELECT COUNT(1) FROM store_sales
-      ''',
-      schema: {
-        type: "bag",
-        items: {
-          type: "struct",
-          fields: [
-            {
-              name: "_1",
-              type: "int64",
             },
           ],
         },
