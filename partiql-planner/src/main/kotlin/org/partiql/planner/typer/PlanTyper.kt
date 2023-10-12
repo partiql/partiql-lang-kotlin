@@ -552,7 +552,9 @@ internal class PlanTyper(
          *   ELSE { 'a': a }
          * END
          * ```
-         * When we type the above, we can't just assume
+         * When we type the above, if we know that `a` can be many different types (one of them being a struct),
+         * then when we see the top-level `a IS STRUCT`, then we can assume that the `a` on the RHS is definitely a
+         * struct. We handle this by using [handleSmartCasts].
          */
         override fun visitRexOpCaseBranch(node: Rex.Op.Case.Branch, ctx: StaticType?): Rex.Op.Case.Branch {
             val visitedCondition = visitRex(node.condition, node.condition.type)

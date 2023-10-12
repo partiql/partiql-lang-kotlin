@@ -90,9 +90,9 @@ internal object RelConverter {
             }
             // SELECT VALUE ... FROM
             is Select.Value -> {
-                val projectionOp = rel.op as? Rel.Op.Project ?: error("SELECT VALUE should have a PROJECT underneath")
-                assert(projectionOp.projections.size == 1) {
-                    "Expected SELECT VALUE projection to have a single binding. However, it looked like ${projectionOp.projections}"
+                assert(rel.type.schema.size == 1) {
+                    "Expected SELECT VALUE's input to have a single binding. " +
+                        "However, it contained: ${rel.type.schema.map { it.name }}."
                 }
                 val constructor = rex(StaticType.ANY, rexOpVarResolved(0))
                 val op = rexOpSelect(constructor, rel)

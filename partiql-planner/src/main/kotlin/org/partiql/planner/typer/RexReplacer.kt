@@ -15,6 +15,7 @@
 package org.partiql.planner.typer
 
 import org.partiql.plan.Rex
+// import org.partiql.plan.rex
 import org.partiql.plan.util.PlanRewriter
 
 /**
