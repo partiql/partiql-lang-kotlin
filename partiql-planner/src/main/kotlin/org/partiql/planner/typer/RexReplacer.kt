@@ -15,6 +15,7 @@
 package org.partiql.planner.typer
 
 import org.partiql.plan.Rex
+import org.partiql.plan.rex
 // import org.partiql.plan.rex
 import org.partiql.plan.util.PlanRewriter
 
@@ -37,7 +38,8 @@ internal object RexReplacer {
 
         override fun visitRex(node: Rex, ctx: ReplaceParams): Rex {
             if (node == ctx.replace) { return ctx.with }
-            return visitRexOp(node.op, ctx) as Rex
+            val op = visitRexOp(node.op, ctx) as Rex.Op
+            return if (op !== node.op) rex(node.type, op) else node
         }
     }
 }
