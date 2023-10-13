@@ -2151,7 +2151,8 @@ class PartiQLSchemaInferencerTests {
                     contentClosed = true,
                     constraints = setOf(
                         TupleConstraint.Open(false),
-                        TupleConstraint.UniqueAttrs(true)
+                        TupleConstraint.UniqueAttrs(true),
+                        TupleConstraint.Ordered
                     )
                 )
             ),
@@ -2170,15 +2171,13 @@ class PartiQLSchemaInferencerTests {
                     )
                 ),
             ),
-            // TODO: Is this right? Given the lack of ordering, can we say that there are 2 fields (but we don't know
-            //  whether one will definitely be accessed?
             SuccessTestCase(
                 name = "Tuple Union with Literal Struct AND Duplicates",
                 query = "TUPLEUNION({ 'a': 1, 'a': 'hello' })",
                 expected = StructType(
                     fields = listOf(
-                        StructType.Field("a", unionOf(INT, STRING)),
-                        StructType.Field("a", unionOf(INT, STRING)),
+                        StructType.Field("a", INT),
+                        StructType.Field("a", STRING),
                     ),
                     contentClosed = true,
                     constraints = setOf(

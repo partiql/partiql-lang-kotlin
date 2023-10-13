@@ -6,7 +6,6 @@ import org.partiql.errors.ProblemCallback
 import org.partiql.plan.PartiQLVersion
 import org.partiql.plan.partiQLPlan
 import org.partiql.planner.transforms.AstToPlan
-import org.partiql.planner.typer.ConstantFolder
 import org.partiql.planner.typer.PlanTyper
 import org.partiql.spi.Plugin
 
@@ -35,28 +34,17 @@ internal class PartiQLPlannerDefault(
 
         // 3. Resolve variables
         val typer = PlanTyper(env, onProblem)
-        var planStmt = typer.resolve(root)
-
-        // 4. Fold and re-resolve
-        planStmt = fold(planStmt, env, onProblem)
-
         var plan = partiQLPlan(
             version = version,
             globals = env.globals,
-            statement = planStmt,
+            statement = typer.resolve(root),
         )
 
-        // 5. Apply all passes
+        // 4. Apply all passes
         for (pass in passes) {
             plan = pass.apply(plan, onProblem)
         }
 
         return PartiQLPlanner.Result(plan, emptyList())
-    }
-
-    private fun fold(stmt: org.partiql.plan.Statement, env: Env, onProblem: ProblemCallback): org.partiql.plan.Statement {
-        val foldedPlan = ConstantFolder.fold(stmt)
-        val typer = PlanTyper(env, onProblem)
-        return typer.resolve(foldedPlan)
     }
 }

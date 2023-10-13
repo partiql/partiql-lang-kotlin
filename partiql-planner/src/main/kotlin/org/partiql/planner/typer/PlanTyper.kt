@@ -42,9 +42,11 @@ import org.partiql.plan.relOpUnpivot
 import org.partiql.plan.relType
 import org.partiql.plan.rex
 import org.partiql.plan.rexOpCall
+import org.partiql.plan.rexOpCaseBranch
 import org.partiql.plan.rexOpCollection
 import org.partiql.plan.rexOpErr
 import org.partiql.plan.rexOpGlobal
+import org.partiql.plan.rexOpLit
 import org.partiql.plan.rexOpPath
 import org.partiql.plan.rexOpPathStepSymbol
 import org.partiql.plan.rexOpSelect
@@ -77,8 +79,10 @@ import org.partiql.types.StringType
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
 import org.partiql.types.function.FunctionSignature
+import org.partiql.value.BoolValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.TextValue
+import org.partiql.value.boolValue
 
 /**
  * Rewrites an untyped algebraic translation of the query to be both typed and have resolved variables.
@@ -539,9 +543,33 @@ internal class PlanTyper(
         }
 
         override fun visitRexOpCase(node: Rex.Op.Case, ctx: StaticType?): Rex = plan {
+            // Type and simplify branches
             val visitedBranches = node.branches.map { visitRexOpCaseBranch(it, it.rex.type) }
+
+            // Prune branches known to never execute
+            val newBranches = visitedBranches.mapNotNull { branch ->
+                val conditionFoldedOp = branch.condition.op as? Rex.Op.Lit ?: return@mapNotNull branch
+                val conditionBooleanLiteral = conditionFoldedOp.value as? BoolValue ?: return@mapNotNull branch
+                when (conditionBooleanLiteral.value) {
+                    false -> null
+                    else -> branch
+                }
+            }
+
+            // Calculate final expression (short-circuit to first branch if the condition is always TRUE).
             val resultTypes = visitedBranches.map { it.rex }.map { it.type }
-            rex(AnyOfType(resultTypes.toSet()).flatten(), node.copy(branches = visitedBranches))
+            val firstBranch = newBranches.firstOrNull() ?: error("CASE_WHEN has NO branches.")
+            return@plan when (isLiteralTrue(firstBranch.condition)) {
+                true -> firstBranch.rex
+                false -> rex(type = StaticType.unionOf(resultTypes.toSet()).flatten(), node.copy(branches = newBranches))
+            }
+        }
+
+        @OptIn(PartiQLValueExperimental::class)
+        private fun isLiteralTrue(rex: Rex): Boolean {
+            val op = rex.op as? Rex.Op.Lit ?: return false
+            val value = op.value as? BoolValue ?: return false
+            return value.value ?: false
         }
 
         /**
@@ -554,30 +582,46 @@ internal class PlanTyper(
          * ```
          * When we type the above, if we know that `a` can be many different types (one of them being a struct),
          * then when we see the top-level `a IS STRUCT`, then we can assume that the `a` on the RHS is definitely a
-         * struct. We handle this by using [handleSmartCasts].
+         * struct. We handle this by using [foldCaseBranch].
          */
         override fun visitRexOpCaseBranch(node: Rex.Op.Case.Branch, ctx: StaticType?): Rex.Op.Case.Branch {
             val visitedCondition = visitRex(node.condition, node.condition.type)
             val visitedReturn = visitRex(node.rex, node.rex.type)
-            val rex = handleSmartCasts(visitedCondition, visitedReturn) ?: visitedReturn
-            return node.copy(condition = visitedCondition, rex = rex)
+            return foldCaseBranch(visitedCondition, visitedReturn)
         }
 
         /**
          * This takes in a [Rex.Op.Case.Branch.condition] and [Rex.Op.Case.Branch.rex]. If the [condition] is a type check,
-         * AKA `<var> IS STRUCT`, then this function will return a [Rex.Op.Case.Branch.rex] that assumes that the `<var>`
-         * is a struct.
+         * AKA `<var> IS STRUCT`, then this function will return a new [Rex.Op.Case.Branch] whose [Rex.Op.Case.Branch.rex]
+         * assumes that the type will always be a struct. The [Rex.Op.Case.Branch.condition] will be replaced by a
+         * boolean literal if it is KNOWN whether a branch will always/never execute. This can be used to prune the
+         * branch in subsequent passes.
+         *
+         * TODO: Currently, this only folds type checking for STRUCTs. We need to add support for all other types.
+         *
+         * TODO: I added a check for [Rex.Op.Var.Resolved] as it seemed odd to replace a general expression like:
+         *  `WHEN { 'a': { 'b': 1} }.a IS STRUCT THEN { 'a': { 'b': 1} }.a.b`. We can discuss this later, but I'm
+         *  currently limiting the scope of this intentionally.
          */
-        private fun handleSmartCasts(condition: Rex, result: Rex): Rex? {
-            val call = condition.op as? Rex.Op.Call ?: return null
-            val fn = call.fn as? Fn.Resolved ?: return null
-            if (fn.signature.name.equals("is_struct", ignoreCase = true).not()) { return null }
+        private fun foldCaseBranch(condition: Rex, result: Rex): Rex.Op.Case.Branch {
+            val call = condition.op as? Rex.Op.Call ?: return rexOpCaseBranch(condition, result)
+            val fn = call.fn as? Fn.Resolved ?: return rexOpCaseBranch(condition, result)
+            if (fn.signature.name.equals("is_struct", ignoreCase = true).not()) { return rexOpCaseBranch(condition, result) }
             val ref = call.args.getOrNull(0) ?: error("IS STRUCT requires an argument.")
-            if (ref.op !is Rex.Op.Var.Resolved) { return null }
-            val structTypes = ref.type.allTypes.filterIsInstance<StructType>()
-            val type = AnyOfType(structTypes.toSet())
+            val simplifiedCondition = when {
+                ref.type.allTypes.all { it is StructType } -> rex(StaticType.BOOL, rexOpLit(boolValue(true)))
+                ref.type.allTypes.none { it is StructType } -> rex(StaticType.BOOL, rexOpLit(boolValue(false)))
+                else -> condition
+            }
+
+            // Replace the result's type
+            val type = AnyOfType(ref.type.allTypes.filterIsInstance<StructType>().toSet())
             val replacementVal = ref.copy(type = type)
-            return RexReplacer.replace(result, ref, replacementVal)
+            val rex = when (ref.op is Rex.Op.Var.Resolved) {
+                true -> RexReplacer.replace(result, ref, replacementVal)
+                false -> result
+            }
+            return rexOpCaseBranch(simplifiedCondition, rex)
         }
 
         override fun visitRexOpCollection(node: Rex.Op.Collection, ctx: StaticType?): Rex {
@@ -672,12 +716,26 @@ internal class PlanTyper(
 
         override fun visitRexOpTupleUnion(node: Rex.Op.TupleUnion, ctx: StaticType?): Rex = plan {
             val args = node.args.map { visitRex(it, ctx) }
-            val argTypes = args.map { it.type }
-            val potentialTypes = buildArgumentPermutations(argTypes).map { argumentList ->
-                calculateTupleUnionOutputType(argumentList)
+            val type = when (args.size) {
+                0 -> StructType(
+                    fields = emptyMap(),
+                    contentClosed = true,
+                    constraints = setOf(
+                        TupleConstraint.Open(false),
+                        TupleConstraint.UniqueAttrs(true),
+                        TupleConstraint.Ordered
+                    )
+                )
+                else -> {
+                    val argTypes = args.map { it.type }
+                    val potentialTypes = buildArgumentPermutations(argTypes).map { argumentList ->
+                        calculateTupleUnionOutputType(argumentList)
+                    }
+                    StaticType.unionOf(potentialTypes.toSet()).flatten()
+                }
             }
             val op = rexOpTupleUnion(args)
-            rex(StaticType.unionOf(potentialTypes.toSet()).flatten(), op)
+            rex(type, op)
         }
 
         override fun visitRexOpErr(node: Rex.Op.Err, ctx: StaticType?): PlanNode {

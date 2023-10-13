@@ -24,6 +24,7 @@ import org.partiql.spi.connector.ConnectorSession
 import org.partiql.spi.connector.Constants
 import org.partiql.types.StaticType
 import org.partiql.types.StructType
+import org.partiql.types.TupleConstraint
 import org.partiql.types.function.FunctionParameter
 import org.partiql.types.function.FunctionSignature
 import org.partiql.value.PartiQLValueExperimental
@@ -391,11 +392,21 @@ internal class Env(
                 return null
             }
             // Assume ORDERED for now
-            val field = curr.fields.firstOrNull { step.isEquivalentTo(it.key) } ?: return null
-            curr = field.value
+            curr = inferStructLookup(curr, step) ?: return null
         }
         // Lookup final field
         return curr
+    }
+
+    private fun inferStructLookup(struct: StructType, binding: BindingName): StaticType? {
+        return when (struct.constraints.contains(TupleConstraint.Ordered)) {
+            true -> struct.fields.firstOrNull { entry -> binding.isEquivalentTo(entry.key) }?.value
+            false -> struct.fields.mapNotNull { entry ->
+                entry.value.takeIf { binding.isEquivalentTo(entry.key) }
+            }.let { valueTypes ->
+                StaticType.unionOf(valueTypes.toSet()).flatten().takeIf { valueTypes.isNotEmpty() }
+            }
+        }
     }
 
     /**
