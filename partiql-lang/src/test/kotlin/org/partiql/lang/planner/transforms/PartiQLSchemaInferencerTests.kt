@@ -93,6 +93,28 @@ class PartiQLSchemaInferencerTests {
     @Execution(ExecutionMode.CONCURRENT)
     fun testOrderBy(tc: TestCase) = runTest(tc)
 
+    // @Test
+    // @Disabled
+    // fun testPrint() {
+    //     val cases = orderByCases()
+    //     val prefix = "orderByCases"
+    //     cases.forEachIndexed { i, t ->
+    //         val name = "$prefix-${"%02d".format(i + 1)}"
+    //         println("--#[$name]")
+    //         println(t.query + ";")
+    //         println()
+    //     }
+    //     cases.forEachIndexed { i, t ->
+    //         val name = "$prefix-${"%02d".format(i + 1)}"
+    //         println("case::{")
+    //         println("  input: \"$name\",")
+    //         println("  catalog: \"default\",")
+    //         println("  schema: ${t.expected.toIon()}")
+    //         println("}")
+    //         println()
+    //     }
+    // }
+
     companion object {
 
         private val root = this::class.java.getResource("/catalogs")!!.toURI().toPath().pathString

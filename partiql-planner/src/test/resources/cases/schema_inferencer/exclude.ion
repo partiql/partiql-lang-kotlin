@@ -1,0 +1,1714 @@
+case::{
+  input: "exclude-01",
+  catalog: "default",
+  schema: {
+    type: "bag",
+    items: {
+      type: "struct",
+      fields: [
+        {
+          name: "name",
+          type: "string"
+        },
+        {
+          name: "custId",
+          type: "int"
+        },
+        {
+          name: "address",
+          type: {
+            type: "struct",
+            fields: [
+              {
+                name: "city",
+                type: "string"
+              },
+              {
+                name: "zipcode",
+                type: "int"
+              },
+              {
+                name: "street",
+                type: "string"
+              }
+            ],
+            constraints: [
+              closed,
+              unique
+            ]
+          }
+        }
+      ],
+      constraints: [
+        closed,
+        unique,
+        ordered
+      ]
+    }
+  }
+}
+
+case::{
+  input: "exclude-02",
+  catalog: "default",
+  schema: {
+    type: "bag",
+    items: {
+      type: "struct",
+      fields: [
+        {
+          name: "name",
+          type: "string"
+        },
+        {
+          name: "custId",
+          type: "int"
+        },
+        {
+          name: "address",
+          type: {
+            type: "struct",
+            fields: [
+              {
+                name: "city",
+                type: "string"
+              },
+              {
+                name: "zipcode",
+                type: "int"
+              }
+            ],
+            constraints: [
+              closed,
+              unique
+            ]
+          }
+        }
+      ],
+      constraints: [
+        closed,
+        unique,
+        ordered
+      ]
+    }
+  }
+}
+
+case::{
+  input: "exclude-03",
+  catalog: "default",
+  schema: {
+    type: "bag",
+    items: {
+      type: "struct",
+      fields: [
+        {
+          name: "a",
+          type: {
+            type: "struct",
+            fields: [
+              {
+                name: "b",
+                type: {
+                  type: "struct",
+                  fields: [
+                    {
+                      name: "c",
+                      type: {
+                        type: "list",
+                        items: {
+                          type: "struct",
+                          fields: [
+                            {
+                              name: "field",
+                              type: [
+                                "int",
+                                "missing"
+                              ]
+                            }
+                          ],
+                          constraints: [
+                            closed,
+                            unique
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  constraints: [
+                    closed,
+                    unique
+                  ]
+                }
+              }
+            ],
+            constraints: [
+              closed,
+              unique
+            ]
+          }
+        },
+        {
+          name: "foo",
+          type: "string"
+        }
+      ],
+      constraints: [
+        closed,
+        unique,
+        ordered
+      ]
+    }
+  }
+}
+
+case::{
+  input: "exclude-04",
+  catalog: "default",
+  schema: {
+    type: "bag",
+    items: {
+      type: "struct",
+      fields: [
+        {
+          name: "a",
+          type: {
+            type: "struct",
+            fields: [
+              {
+                name: "b",
+                type: {
+                  type: "struct",
+                  fields: [
+                    {
+                      name: "c",
+                      type: {
+                        type: "list",
+                        items: "int"
+                      }
+                    }
+                  ],
+                  constraints: [
+                    closed,
+                    unique
+                  ]
+                }
+              }
+            ],
+            constraints: [
+              closed,
+              unique
+            ]
+          }
+        },
+        {
+          name: "foo",
+          type: "string"
+        }
+      ],
+      constraints: [
+        closed,
+        unique,
+        ordered
+      ]
+    }
+  }
+}
+
+case::{
+  input: "exclude-05",
+  catalog: "default",
+  schema: {
+    type: "bag",
+    items: {
+      type: "struct",
+      fields: [
+        {
+          name: "a",
+          type: {
+            type: "list",
+            items: "int"
+          }
+        }
+      ],
+      constraints: [
+        closed,
+        unique,
+        ordered
+      ]
+    }
+  }
+}
+
+case::{
+  input: "exclude-06",
+  catalog: "default",
+  schema: {
+    type: "bag",
+    items: {
+      type: "struct",
+      fields: [
+        {
+          name: "a",
+          type: {
+            type: "struct",
+            fields: [
+              {
+                name: "b",
+                type: {
+                  type: "struct",
+                  fields: [
+                    {
+                      name: "c",
+                      type: {
+                        type: "list",
+                        items: {
+                          type: "struct",
+                          fields: [
+                            {
+                              name: "field_y",
+                              type: "int"
+                            }
+                          ],
+                          constraints: [
+                            closed,
+                            unique
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  constraints: [
+                    closed,
+                    unique
+                  ]
+                }
+              }
+            ],
+            constraints: [
+              closed,
+              unique
+            ]
+          }
+        },
+        {
+          name: "foo",
+          type: "string"
+        }
+      ],
+      constraints: [
+        closed,
+        unique,
+        ordered
+      ]
+    }
+  }
+}
+
+case::{
+  input: "exclude-07",
+  catalog: "default",
+  schema: {
+    type: "bag",
+    items: {
+      type: "struct",
+      fields: [
+        {
+          name: "a",
+          type: {
+            type: "struct",
+            fields: [
+              {
+                name: "b",
+                type: {
+                  type: "struct",
+                  fields: [
+                    {
+                      name: "c",
+                      type: {
+                        type: "list",
+                        items: {
+                          type: "struct",
+                          fields: [],
+                          constraints: [
+                            closed,
+                            unique
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  constraints: [
+                    closed,
+                    unique
+                  ]
+                }
+              }
+            ],
+            constraints: [
+              closed,
+              unique
+            ]
+          }
+        },
+        {
+          name: "foo",
+          type: "string"
+        }
+      ],
+      constraints: [
+        closed,
+        unique,
+        ordered
+      ]
+    }
+  }
+}
+
+case::{
+  input: "exclude-08",
+  catalog: "default",
+  schema: {
+    type: "list",
+    items: {
+      type: "struct",
+      fields: [
+        {
+          name: "foo",
+          type: "string"
+        }
+      ],
+      constraints: [
+        closed,
+        unique,
+        ordered
+      ]
+    }
+  }
+}
+
+case::{
+  input: "exclude-09",
+  catalog: "default",
+  schema: {
+    type: "bag",
+    items: {
+      type: "struct",
+      fields: [
+        {
+          name: "a",
+          type: "int"
+        },
+        {
+          name: "b",
+          type: "int"
+        },
+        {
+          name: "c",
+          type: "int"
+        }
+      ],
+      constraints: [
+        closed,
+        unique,
+        ordered
+      ]
+    }
+  }
+}
+
+case::{
+  input: "exclude-10",
+  catalog: "default",
+  schema: {
+    type: "bag",
+    items: {
+      type: "struct",
+      fields: [
+        {
+          name: "b",
+          type: {
+            type: "list",
+            items: {
+              type: "struct",
+              fields: [
+                {
+                  name: "b_2",
+                  type: "int"
+                }
+              ],
+              constraints: [
+                closed,
+                unique
+              ]
+            }
+          }
+        }
+      ],
+      constraints: [
+        closed,
+        unique,
+        ordered
+      ]
+    }
+  }
+}
+
+case::{
+  input: "exclude-11",
+  catalog: "default",
+  schema: {
+    type: "bag",
+    items: {
+      type: "struct",
+      fields: [
+        {
+          name: "a",
+          type: {
+            type: "struct",
+            fields: [
+              {
+                name: "a_1",
+                type: "int"
+              },
+              {
+                name: "a_2",
+                type: "int"
+              }
+            ],
+            constraints: [
+              closed,
+              unique
+            ]
+          }
+        },
+        {
+          name: "b",
+          type: {
+            type: "list",
+            items: {
+              type: "struct",
+              fields: [
+                {
+                  name: "b_2",
+                  type: "int"
+                }
+              ],
+              constraints: [
+                closed,
+                unique
+              ]
+            }
+          }
+        },
+        {
+          name: "c",
+          type: "int"
+        },
+        {
+          name: "d",
+          type: "int"
+        }
+      ],
+      constraints: [
+        closed,
+        unique,
+        ordered
+      ]
+    }
+  }
+}
+
+case::{
+  input: "exclude-12",
+  catalog: "default",
+  schema: {
+    type: "bag",
+    items: {
+      type: "list",
+      items: {
+        type: "struct",
+        fields: [
+          {
+            name: "b_2",
+            type: "int"
+          }
+        ],
+        constraints: [
+          closed,
+          unique
+        ]
+      }
+    }
+  }
+}
+
+case::{
+  input: "exclude-13",
+  catalog: "default",
+  schema: {
+    type: "bag",
+    items: {
+      type: "struct",
+      fields: [
+        {
+          name: "a",
+          type: {
+            type: "list",
+            items: {
+              type: "struct",
+              fields: [
+                {
+                  name: "b",
+                  type: {
+                    type: "struct",
+                    fields: [
+                      {
+                        name: "d",
+                        type: "string"
+                      }
+                    ],
+                    constraints: [
+                      closed,
+                      unique
+                    ]
+                  }
+                }
+              ],
+              constraints: [
+                closed,
+                unique
+              ]
+            }
+          }
+        }
+      ],
+      constraints: [
+        closed,
+        unique,
+        ordered
+      ]
+    }
+  }
+}
+
+case::{
+  input: "exclude-14",
+  catalog: "default",
+  schema: {
+    type: "bag",
+    items: {
+      type: "struct",
+      fields: [
+        {
+          name: "a",
+          type: {
+            type: "list",
+            items: {
+              type: "struct",
+              fields: [
+                {
+                  name: "b",
+                  type: {
+                    type: "struct",
+                    fields: [
+                      {
+                        name: "c",
+                        type: [
+                          "int",
+                          "missing"
+                        ]
+                      },
+                      {
+                        name: "d",
+                        type: "string"
+                      }
+                    ],
+                    constraints: [
+                      closed,
+                      unique
+                    ]
+                  }
+                }
+              ],
+              constraints: [
+                closed,
+                unique
+              ]
+            }
+          }
+        }
+      ],
+      constraints: [
+        closed,
+        unique,
+        ordered
+      ]
+    }
+  }
+}
+
+case::{
+  input: "exclude-15",
+  catalog: "default",
+  schema: {
+    type: "bag",
+    items: {
+      type: "struct",
+      fields: [
+        {
+          name: "a",
+          type: {
+            type: "list",
+            items: {
+              type: "struct",
+              fields: [
+                {
+                  name: "b",
+                  type: {
+                    type: "struct",
+                    fields: [],
+                    constraints: [
+                      closed,
+                      unique
+                    ]
+                  }
+                }
+              ],
+              constraints: [
+                closed,
+                unique
+              ]
+            }
+          }
+        }
+      ],
+      constraints: [
+        closed,
+        unique,
+        ordered
+      ]
+    }
+  }
+}
+
+case::{
+  input: "exclude-16",
+  catalog: "default",
+  schema: {
+    type: "bag",
+    items: {
+      type: "struct",
+      fields: [
+        {
+          name: "a",
+          type: {
+            type: "list",
+            items: {
+              type: "struct",
+              fields: [
+                {
+                  name: "b",
+                  type: {
+                    type: "struct",
+                    fields: [
+                      {
+                        name: "c",
+                        type: [
+                          "int",
+                          "missing"
+                        ]
+                      },
+                      {
+                        name: "d",
+                        type: [
+                          "missing",
+                          "string"
+                        ]
+                      }
+                    ],
+                    constraints: [
+                      closed,
+                      unique
+                    ]
+                  }
+                }
+              ],
+              constraints: [
+                closed,
+                unique
+              ]
+            }
+          }
+        }
+      ],
+      constraints: [
+        closed,
+        unique,
+        ordered
+      ]
+    }
+  }
+}
+
+case::{
+  input: "exclude-17",
+  catalog: "default",
+  schema: {
+    type: "bag",
+    items: {
+      type: "struct",
+      fields: [
+        {
+          name: "a",
+          type: {
+            type: "list",
+            items: {
+              type: "struct",
+              fields: [
+                {
+                  name: "b",
+                  type: {
+                    type: "struct",
+                    fields: [
+                      {
+                        name: "c",
+                        type: "int"
+                      },
+                      {
+                        name: "d",
+                        type: {
+                          type: "list",
+                          items: {
+                            type: "struct",
+                            fields: [
+                              {
+                                name: "f",
+                                type: "bool"
+                              }
+                            ],
+                            constraints: [
+                              closed,
+                              unique
+                            ]
+                          }
+                        }
+                      }
+                    ],
+                    constraints: [
+                      closed,
+                      unique
+                    ]
+                  }
+                }
+              ],
+              constraints: [
+                closed,
+                unique
+              ]
+            }
+          }
+        }
+      ],
+      constraints: [
+        closed,
+        unique,
+        ordered
+      ]
+    }
+  }
+}
+
+case::{
+  input: "exclude-18",
+  catalog: "default",
+  schema: {
+    type: "bag",
+    items: {
+      type: "struct",
+      fields: [
+        {
+          name: "a",
+          type: {
+            type: "list",
+            items: {
+              type: "struct",
+              fields: [
+                {
+                  name: "b",
+                  type: {
+                    type: "struct",
+                    fields: [
+                      {
+                        name: "c",
+                        type: "int"
+                      },
+                      {
+                        name: "d",
+                        type: {
+                          type: "list",
+                          items: {
+                            type: "struct",
+                            fields: [
+                              {
+                                name: "e",
+                                type: [
+                                  "missing",
+                                  "string"
+                                ]
+                              },
+                              {
+                                name: "f",
+                                type: "bool"
+                              }
+                            ],
+                            constraints: [
+                              closed,
+                              unique
+                            ]
+                          }
+                        }
+                      }
+                    ],
+                    constraints: [
+                      closed,
+                      unique
+                    ]
+                  }
+                }
+              ],
+              constraints: [
+                closed,
+                unique
+              ]
+            }
+          }
+        }
+      ],
+      constraints: [
+        closed,
+        unique,
+        ordered
+      ]
+    }
+  }
+}
+
+case::{
+  input: "exclude-19",
+  catalog: "default",
+  schema: {
+    type: "bag",
+    items: {
+      type: "struct",
+      fields: [
+        {
+          name: "a",
+          type: {
+            type: "list",
+            items: {
+              type: "struct",
+              fields: [
+                {
+                  name: "b",
+                  type: {
+                    type: "struct",
+                    fields: [
+                      {
+                        name: "c",
+                        type: "int"
+                      },
+                      {
+                        name: "d",
+                        type: {
+                          type: "list",
+                          items: {
+                            type: "struct",
+                            fields: [
+                              {
+                                name: "e",
+                                type: [
+                                  "missing",
+                                  "string"
+                                ]
+                              },
+                              {
+                                name: "f",
+                                type: "bool"
+                              }
+                            ],
+                            constraints: [
+                              closed,
+                              unique
+                            ]
+                          }
+                        }
+                      }
+                    ],
+                    constraints: [
+                      closed,
+                      unique
+                    ]
+                  }
+                }
+              ],
+              constraints: [
+                closed,
+                unique
+              ]
+            }
+          }
+        }
+      ],
+      constraints: [
+        closed,
+        unique,
+        ordered
+      ]
+    }
+  }
+}
+
+case::{
+  input: "exclude-20",
+  catalog: "default",
+  schema: {
+    type: "bag",
+    items: {
+      type: "struct",
+      fields: [
+        {
+          name: "a",
+          type: {
+            type: "struct",
+            fields: [
+              {
+                name: "B",
+                type: {
+                  type: "struct",
+                  fields: [
+                    {
+                      name: "d",
+                      type: "string"
+                    }
+                  ],
+                  constraints: [
+                    closed,
+                    unique
+                  ]
+                }
+              }
+            ],
+            constraints: [
+              closed,
+              unique
+            ]
+          }
+        }
+      ],
+      constraints: [
+        closed,
+        unique,
+        ordered
+      ]
+    }
+  }
+}
+
+case::{
+  input: "exclude-21",
+  catalog: "default",
+  schema: {
+    type: "bag",
+    items: {
+      type: "struct",
+      fields: [
+        {
+          name: "a",
+          type: {
+            type: "struct",
+            fields: [
+              {
+                name: "B",
+                type: {
+                  type: "struct",
+                  fields: [
+                    {
+                      name: "C",
+                      type: "bool"
+                    },
+                    {
+                      name: "d",
+                      type: "string"
+                    }
+                  ],
+                  constraints: [
+                    closed,
+                    unique
+                  ]
+                }
+              }
+            ],
+            constraints: [
+              closed,
+              unique
+            ]
+          }
+        }
+      ],
+      constraints: [
+        closed,
+        unique,
+        ordered
+      ]
+    }
+  }
+}
+
+case::{
+  input: "exclude-22",
+  catalog: "default",
+  schema: {
+    type: "bag",
+    items: {
+      type: "struct",
+      fields: [
+        {
+          name: "a",
+          type: {
+            type: "struct",
+            fields: [
+              {
+                name: "B",
+                type: {
+                  type: "struct",
+                  fields: [
+                    {
+                      name: "d",
+                      type: "string"
+                    }
+                  ],
+                  constraints: [
+                    closed,
+                    unique
+                  ]
+                }
+              }
+            ],
+            constraints: [
+              closed,
+              unique
+            ]
+          }
+        }
+      ],
+      constraints: [
+        closed,
+        unique,
+        ordered
+      ]
+    }
+  }
+}
+
+case::{
+  input: "exclude-23",
+  catalog: "default",
+  schema: {
+    type: "bag",
+    items: {
+      type: "struct",
+      fields: [
+        {
+          name: "a",
+          type: {
+            type: "struct",
+            fields: [
+              {
+                name: "B",
+                type: {
+                  type: "struct",
+                  fields: [
+                    {
+                      name: "d",
+                      type: "string"
+                    }
+                  ],
+                  constraints: [
+                    closed,
+                    unique
+                  ]
+                }
+              }
+            ],
+            constraints: [
+              closed,
+              unique
+            ]
+          }
+        }
+      ],
+      constraints: [
+        closed,
+        unique,
+        ordered
+      ]
+    }
+  }
+}
+
+case::{
+  input: "exclude-24",
+  catalog: "default",
+  schema: {
+    type: "bag",
+    items: {
+      type: "struct",
+      fields: [
+        {
+          name: "c",
+          type: "int"
+        }
+      ],
+      constraints: [
+        closed,
+        unique,
+        ordered
+      ]
+    }
+  }
+}
+
+case::{
+  input: "exclude-25",
+  catalog: "default",
+  schema: {
+    type: "bag",
+    items: {
+      type: "struct",
+      fields: [
+        {
+          name: "a",
+          type: "int"
+        }
+      ],
+      constraints: [
+        closed,
+        unique,
+        ordered
+      ]
+    }
+  }
+}
+
+case::{
+  input: "exclude-26",
+  catalog: "default",
+  schema: {
+    type: "bag",
+    items: {
+      type: "struct",
+      fields: [
+        {
+          name: "t",
+          type: [
+            {
+              type: "struct",
+              fields: [
+                {
+                  name: "a",
+                  type: {
+                    type: "struct",
+                    fields: [
+                      {
+                        name: "c",
+                        type: "string"
+                      }
+                    ],
+                    constraints: [
+                      closed,
+                      unique
+                    ]
+                  }
+                }
+              ],
+              constraints: [
+                closed,
+                unique
+              ]
+            },
+            {
+              type: "struct",
+              fields: [
+                {
+                  name: "a",
+                  type: "null"
+                }
+              ],
+              constraints: [
+                closed,
+                unique
+              ]
+            }
+          ]
+        }
+      ],
+      constraints: [
+        closed,
+        unique,
+        ordered
+      ]
+    }
+  }
+}
+
+case::{
+  input: "exclude-27",
+  catalog: "default",
+  schema: {
+    type: "bag",
+    items: {
+      type: "struct",
+      fields: [
+        {
+          name: "t",
+          type: [
+            {
+              type: "struct",
+              fields: [
+                {
+                  name: "a",
+                  type: {
+                    type: "struct",
+                    fields: [
+                      {
+                        name: "c",
+                        type: "string"
+                      }
+                    ],
+                    constraints: [
+                      closed,
+                      unique
+                    ]
+                  }
+                }
+              ],
+              constraints: [
+                closed,
+                unique
+              ]
+            },
+            {
+              type: "struct",
+              fields: [
+                {
+                  name: "a",
+                  type: {
+                    type: "struct",
+                    fields: [
+                      {
+                        name: "c",
+                        type: "null"
+                      }
+                    ],
+                    constraints: [
+                      closed,
+                      unique
+                    ]
+                  }
+                }
+              ],
+              constraints: [
+                closed,
+                unique
+              ]
+            }
+          ]
+        }
+      ],
+      constraints: [
+        closed,
+        unique,
+        ordered
+      ]
+    }
+  }
+}
+
+case::{
+  input: "exclude-28",
+  catalog: "default",
+  schema: {
+    type: "bag",
+    items: {
+      type: "struct",
+      fields: [
+        {
+          name: "t",
+          type: {
+            type: "struct",
+            fields: [
+              {
+                name: "a",
+                type: {
+                  type: "struct",
+                  fields: [
+                    {
+                      name: "b",
+                      type: "int"
+                    }
+                  ],
+                  constraints: [
+                    closed,
+                    unique
+                  ]
+                }
+              }
+            ],
+            constraints: [
+              closed,
+              unique
+            ]
+          }
+        }
+      ],
+      constraints: [
+        closed,
+        unique,
+        ordered
+      ]
+    }
+  }
+}
+
+case::{
+  input: "exclude-29",
+  catalog: "default",
+  schema: {
+    type: "bag",
+    items: {
+      type: "struct",
+      fields: [
+        {
+          name: "a",
+          type: {
+            type: "struct",
+            fields: [
+              {
+                name: "b",
+                type: {
+                  type: "struct",
+                  fields: [
+                    {
+                      name: "c",
+                      type: "int"
+                    },
+                    {
+                      name: "d",
+                      type: "string"
+                    }
+                  ],
+                  constraints: [
+                    closed,
+                    unique
+                  ]
+                }
+              }
+            ],
+            constraints: [
+              closed,
+              unique
+            ]
+          }
+        }
+      ],
+      constraints: [
+        closed,
+        unique,
+        ordered
+      ]
+    }
+  }
+}
+
+case::{
+  input: "exclude-30",
+  catalog: "default",
+  schema: {
+    type: "bag",
+    items: {
+      type: "struct",
+      fields: [
+        {
+          name: "a",
+          type: {
+            type: "struct",
+            fields: [
+              {
+                name: "b",
+                type: {
+                  type: "struct",
+                  fields: [
+                    {
+                      name: "c",
+                      type: "int"
+                    },
+                    {
+                      name: "d",
+                      type: "string"
+                    }
+                  ],
+                  constraints: [
+                    closed,
+                    unique
+                  ]
+                }
+              }
+            ],
+            constraints: [
+              closed,
+              unique
+            ]
+          }
+        }
+      ],
+      constraints: [
+        closed,
+        unique,
+        ordered
+      ]
+    }
+  }
+}
+
+case::{
+  input: "exclude-31",
+  catalog: "default",
+  schema: {
+    type: "bag",
+    items: {
+      type: "struct",
+      fields: [
+        {
+          name: "a",
+          type: {
+            type: "list",
+            items: {
+              type: "struct",
+              fields: [
+                {
+                  name: "b",
+                  type: "int"
+                }
+              ],
+              constraints: [
+                closed,
+                unique
+              ]
+            }
+          }
+        }
+      ],
+      constraints: [
+        closed,
+        unique,
+        ordered
+      ]
+    }
+  }
+}
+
+case::{
+  input: "exclude-32",
+  catalog: "default",
+  schema: {
+    type: "bag",
+    items: {
+      type: "struct",
+      fields: [
+        {
+          name: "a",
+          type: {
+            type: "list",
+            items: {
+              type: "struct",
+              fields: [
+                {
+                  name: "b",
+                  type: "int"
+                }
+              ],
+              constraints: [
+                closed,
+                unique
+              ]
+            }
+          }
+        }
+      ],
+      constraints: [
+        closed,
+        unique,
+        ordered
+      ]
+    }
+  }
+}
+
+case::{
+  input: "exclude-33",
+  catalog: "default",
+  schema: {
+    type: "bag",
+    items: {
+      type: "struct",
+      fields: [
+        {
+          name: "a",
+          type: {
+            type: "bag",
+            items: {
+              type: "struct",
+              fields: [
+                {
+                  name: "b",
+                  type: "int"
+                }
+              ],
+              constraints: [
+                closed,
+                unique
+              ]
+            }
+          }
+        }
+      ],
+      constraints: [
+        closed,
+        unique,
+        ordered
+      ]
+    }
+  }
+}
+
+case::{
+  input: "exclude-34",
+  catalog: "default",
+  schema: {
+    type: "bag",
+    items: {
+      type: "struct",
+      fields: [
+        {
+          name: "a",
+          type: {
+            type: "list",
+            items: [
+              {
+                type: "struct",
+                fields: [
+                  {
+                    name: "b",
+                    type: "int"
+                  },
+                  {
+                    name: "c",
+                    type: [
+                      "int",
+                      "missing"
+                    ]
+                  }
+                ],
+                constraints: [
+                  closed,
+                  unique
+                ]
+              },
+              {
+                type: "struct",
+                fields: [
+                  {
+                    name: "b",
+                    type: "int"
+                  },
+                  {
+                    name: "c",
+                    type: [
+                      "missing",
+                      "null"
+                    ]
+                  }
+                ],
+                constraints: [
+                  closed,
+                  unique
+                ]
+              },
+              {
+                type: "struct",
+                fields: [
+                  {
+                    name: "b",
+                    type: "int"
+                  },
+                  {
+                    name: "c",
+                    type: [
+                      "decimal",
+                      "missing"
+                    ]
+                  }
+                ],
+                constraints: [
+                  closed,
+                  unique
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      constraints: [
+        closed,
+        unique,
+        ordered
+      ]
+    }
+  }
+}
+
+case::{
+  input: "exclude-35",
+  catalog: "default",
+  schema: {
+    type: "bag",
+    items: {
+      type: "struct",
+      fields: [
+        {
+          name: "b",
+          type: {
+            type: "struct",
+            fields: [
+              {
+                name: "b",
+                type: "int"
+              }
+            ],
+            constraints: [
+              closed,
+              unique,
+              ordered
+            ]
+          }
+        }
+      ],
+      constraints: [
+        closed,
+        unique,
+        ordered
+      ]
+    }
+  }
+}

@@ -1,0 +1,66 @@
+case::{
+  input: "collections-01",
+  catalog: "default",
+  schema: {
+    type: "bag",
+    items: "int",
+  }
+}
+
+case::{
+  input: "collections-02",
+  catalog: "default",
+  schema: {
+    type: "list",
+    items: "int",
+  }
+}
+
+case::{
+  input: "collections-03",
+  catalog: "default",
+  schema: {
+    type: "list",
+    items: "int",
+  }
+}
+
+case::{
+  input: "collections-04",
+  catalog: "default",
+  schema: {
+    type: "sexp",
+    items: "int",
+  }
+}
+
+case::{
+  input: "collections-05",
+  catalog: "default",
+  schema: {
+    type: "bag",
+    items: "int",
+  }
+}
+
+case::{
+  input: "collections-06",
+  catalog: "default",
+  schema: {
+    type: "bag",
+    items: {
+      type: "struct",
+      constraints: [
+        closed,
+        unique,
+        ordered
+      ],
+      fields: [
+        {
+          name: "x",
+          type: "int",
+        }
+      ]
+    }
+  }
+}
