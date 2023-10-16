@@ -39,7 +39,7 @@ Thank you to all who have contributed!
 ### Fixed
 
 ### Removed
-- Removed IR factory in favor of static top-level functions. Change `Ast.foo()`
+- [Breaking] Removed IR factory in favor of static top-level functions. Change `Ast.foo()`
   to `foo()`
 
 ### Security

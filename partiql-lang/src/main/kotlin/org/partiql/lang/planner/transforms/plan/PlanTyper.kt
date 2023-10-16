@@ -73,7 +73,7 @@ import org.partiql.types.SymbolType
 import org.partiql.types.TupleConstraint
 
 /**
- * Types a given logical
+ * Types a given logical plan.
  */
 internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
 
