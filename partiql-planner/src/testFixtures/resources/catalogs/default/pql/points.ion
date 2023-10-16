@@ -1,0 +1,21 @@
+{
+  type: "bag",
+  items: {
+    type: "struct",
+    constraints: [closed],
+    fields: [
+      {
+        name: "x",
+        type: "float32",
+      },
+      {
+        name: "y",
+        type: "float32",
+      },
+      {
+        name: "z",
+        type: "float32",
+      },
+    ]
+  }
+}

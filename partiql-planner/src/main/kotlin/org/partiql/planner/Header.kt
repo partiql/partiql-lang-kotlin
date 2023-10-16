@@ -757,8 +757,14 @@ internal class Header(
         private fun count() = listOf(
             FunctionSignature.Aggregation(
                 name = "count",
-                returns = INT,
+                returns = INT32,
                 parameters = listOf(FunctionParameter("value", ANY)),
+                isNullable = false,
+            ),
+            FunctionSignature.Aggregation(
+                name = "count_star",
+                returns = INT32,
+                parameters = listOf(),
                 isNullable = false,
             ),
         )

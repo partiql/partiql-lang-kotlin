@@ -10,5 +10,6 @@ public fun Statement.normalize(): Statement {
     var ast = this
     ast = NormalizeFromSource.apply(ast)
     ast = NormalizeSelect.apply(ast)
+    ast = NormalizeGroupBy.apply(ast)
     return ast
 }

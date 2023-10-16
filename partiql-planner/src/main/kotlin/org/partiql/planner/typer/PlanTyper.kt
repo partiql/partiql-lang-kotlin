@@ -221,10 +221,6 @@ internal class PlanTyper(
             return rel(type, op)
         }
 
-        override fun visitRelOpSortSpec(node: Rel.Op.Sort.Spec, ctx: Rel.Type?): Rel {
-            TODO("Type RelOp SortSpec")
-        }
-
         override fun visitRelOpUnion(node: Rel.Op.Union, ctx: Rel.Type?): Rel {
             TODO("Type RelOp Union")
         }
@@ -272,7 +268,9 @@ internal class PlanTyper(
             val input = visitRel(node.input, ctx)
             // type sub-nodes
             val typeEnv = TypeEnv(input.type.schema, ResolutionStrategy.LOCAL)
-            val projections = node.projections.map { it.type(typeEnv) }
+            val projections = node.projections.map {
+                it.type(typeEnv)
+            }
             // compute output schema
             val schema = projections.map { it.type }
             val type = ctx!!.copyWithSchema(schema)
@@ -374,10 +372,6 @@ internal class PlanTyper(
                 groups = groups,
             )
             return rel(type, op)
-        }
-
-        override fun visitRelBinding(node: Rel.Binding, ctx: Rel.Type?): Rel {
-            TODO("Type RelOp Binding")
         }
     }
 
