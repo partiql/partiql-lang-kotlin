@@ -1,0 +1,160 @@
+case::{
+  input: "sanity-01",
+  catalog: "tpc_ds",
+  schema: {
+    type: "bag",
+    items: {
+      type: "struct",
+      constraints: [
+        closed,
+        unique,
+        ordered
+      ],
+      fields: [
+        {
+          name: "ss_ticket_number",
+          type: "string",
+        },
+        {
+          name: "ss_quantity",
+          type: [
+            "int32",
+            "null"
+          ],
+        },
+        {
+          name: "ss_sold_date_sk",
+          type: [
+            "date",
+            "null"
+          ],
+        },
+      ],
+    },
+  }
+}
+
+case::{
+  input: "sanity-02",
+  catalog: "tpc_ds",
+  schema: {
+    type: "bag",
+    items: {
+      type: "struct",
+      constraints: [
+        closed,
+        unique,
+        ordered
+      ],
+      fields: [
+        {
+          name: "ss_ticket_number",
+          type: "string",
+        },
+        {
+          name: "ss_quantity",
+          type: [
+            "int32",
+            "null"
+          ],
+        },
+        {
+          name: "ss_sold_date_sk",
+          type: [
+            "date",
+            "null"
+          ],
+        },
+      ],
+    },
+  }
+}
+
+case::{
+  input: "sanity-03",
+  catalog: "tpc_ds",
+  schema: {
+    type: "bag",
+    items: {
+      type: "struct",
+      constraints: [
+        closed,
+        unique,
+        ordered
+      ],
+      fields: [
+        {
+          name: "x",
+          type: [
+            "bool",
+            "null"
+          ],
+        },
+      ],
+    },
+  },
+}
+
+case::{
+  input: "sanity-04",
+  catalog: "tpc_ds",
+  schema: {
+    type: "bag",
+    items: {
+      type: "struct",
+      constraints: [
+        closed,
+        unique,
+        ordered
+      ],
+      fields: [
+        {
+          name: "ss_quantity",
+          type: [
+            "int32",
+            "null"
+          ]
+        },
+        {
+          name: "ss_quantity_description_1",
+          type: "string"
+        },
+        {
+          name: "ss_quantity_description_2",
+          type: [
+            "string",
+            "decimal",
+            "int",
+            "null"
+          ]
+        },
+        {
+          name: "ss_quantity_description_3",
+          type: "string"
+        },
+      ]
+    }
+  }
+}
+
+case::{
+  input: "sanity-05",
+  catalog: "tpc_ds",
+  schema: {
+    type: "bag",
+    items: {
+      type: "struct",
+      constraints: [
+        closed,
+        unique,
+        ordered
+      ],
+      fields: [
+        {
+          name: "s_store_sk",
+          type: "string"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  type: "struct",
+  constraints: [ ordered ],
+  fields: [
+    {
+      name: "e",
+      type: "int",
+    },
+    {
+      name: "e",
+      type: {
+        type: "struct",
+        fields: [
+          {
+            name: "f",
+            type: "int",
+          }
+        ]
+      }
+    }
+  ]
+}
