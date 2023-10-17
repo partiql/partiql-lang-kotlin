@@ -14,7 +14,7 @@ import org.junit.jupiter.api.fail
 import org.partiql.errors.ProblemSeverity
 import org.partiql.parser.PartiQLParserBuilder
 import org.partiql.plan.Statement
-import org.partiql.planner.test.PartiQLTestCase
+import org.partiql.planner.test.PartiQLTest
 import org.partiql.planner.test.PartiQLTestProvider
 import org.partiql.plugins.local.LocalPlugin
 import org.partiql.plugins.local.toIon
@@ -51,7 +51,7 @@ class PlannerTestJunit {
             ),
         )
 
-        private fun groupNode(group: PlannerTestGroup, inputs: Map<String, PartiQLTestCase>): DynamicContainer {
+        private fun groupNode(group: PlannerTestGroup, inputs: Map<String, PartiQLTest>): DynamicContainer {
             val plugin = LocalPlugin()
             val planner = PartiQLPlannerBuilder()
                 .plugins(listOf(plugin))

@@ -39,6 +39,7 @@ dependencies {
     implementation(Deps.csv)
     implementation(Deps.kotlinReflect)
 
+    testImplementation(testFixtures(project(":partiql-planner")))
     testImplementation(project(":plugins:partiql-local"))
     testImplementation(project(":lib:isl"))
     testImplementation(Deps.assertj)
@@ -72,4 +73,8 @@ tasks.processResources {
     from("$rootDir/partiql-ast/src/main/pig") {
         include("partiql.ion")
     }
+}
+
+tasks.processTestResources {
+    from("${project(":partiql-planner").buildDir}/resources/testFixtures")
 }

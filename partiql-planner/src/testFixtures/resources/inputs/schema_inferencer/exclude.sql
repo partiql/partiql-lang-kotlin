@@ -437,6 +437,18 @@ FROM <<
     >> AS t;
 
 --#[exclude-34]
+-- EXCLUDE regression test (behavior subject to change pending RFC); could give error/warning
+SELECT * EXCLUDE nonsense.b   -- `nonsense` does not exist in binding tuples
+FROM <<
+    { 'a': <<
+            { 'b': 0 },
+            { 'b': 1 },
+            { 'b': 2 }
+        >>
+    }
+>> AS t;
+
+--#[exclude-35]
 SELECT * EXCLUDE t.a[0].c    -- `c`'s type to be unioned with `MISSING`
 FROM <<
     {
@@ -457,5 +469,5 @@ FROM <<
     }
     >> AS t;
 
---#[exclude-35]
+--#[exclude-36]
 SELECT * EXCLUDE t.c FROM b.b.b AS t;
