@@ -34,7 +34,7 @@ Thank you to all who have contributed!
 ### Deprecated
 
 ### Fixed
-
+- Inferencer will not raise an error when an expression is inferred to `NULL` or `unionOf(NULL, MISSING)`
 ### Removed
 
 ### Security
