@@ -195,11 +195,45 @@ internal class StaticTypeInferenceVisitorTransform(
             )
         }
 
-        private fun handleExpressionAlwaysReturnsNullOrMissingError(sourceLocationMeta: SourceLocationMeta) {
+        private fun handleExpressionAlwaysReturnsUnknown(types: List<StaticType>, sourceLocationMeta: SourceLocationMeta): Boolean {
+            if (types.any { type -> type is MissingType }) {
+                handleExpressionAlwaysReturnsMissingError(sourceLocationMeta)
+                return true
+            }
+
+            if (types.any { type -> type is NullType || type == StaticType.NULL_OR_MISSING }) {
+                handleExpressionAlwaysReturnsMissingOrNullWarning(sourceLocationMeta)
+            }
+            return false
+        }
+
+        private fun handleExpressionAlwaysReturnsUnknown(type: StaticType, sourceLocationMeta: SourceLocationMeta): Boolean {
+            if (type is MissingType) {
+                handleExpressionAlwaysReturnsMissingError(sourceLocationMeta)
+                return true
+            }
+
+            if (type is NullType || type == StaticType.NULL_OR_MISSING) {
+                handleExpressionAlwaysReturnsMissingOrNullWarning(sourceLocationMeta)
+            }
+
+            return false
+        }
+
+        private fun handleExpressionAlwaysReturnsMissingOrNullWarning(sourceLocationMeta: SourceLocationMeta) {
             problemHandler.handleProblem(
                 Problem(
                     sourceLocation = sourceLocationMeta.toProblemLocation(),
-                    details = SemanticProblemDetails.ExpressionAlwaysReturnsNullOrMissing
+                    details = SemanticProblemDetails.ExpressionAlwaysReturnsMissingOrNull
+                )
+            )
+        }
+
+        private fun handleExpressionAlwaysReturnsMissingError(sourceLocationMeta: SourceLocationMeta) {
+            problemHandler.handleProblem(
+                Problem(
+                    sourceLocation = sourceLocationMeta.toProblemLocation(),
+                    details = SemanticProblemDetails.ExpressionAlwaysReturnsMissing
                 )
             )
         }
@@ -297,8 +331,7 @@ internal class StaticTypeInferenceVisitorTransform(
             }
 
             // check for an unknown operand type
-            if (operandsStaticType.any { operandStaticType -> operandStaticType.isUnknown() }) {
-                handleExpressionAlwaysReturnsNullOrMissingError(metas.getSourceLocation())
+            if (handleExpressionAlwaysReturnsUnknown(operandsStaticType, metas.getSourceLocation())) {
                 hasValidOperands = false
             }
 
@@ -331,8 +364,7 @@ internal class StaticTypeInferenceVisitorTransform(
             }
 
             // check for an unknown operand type
-            if (argsStaticType.any { operand -> operand.isUnknown() }) {
-                handleExpressionAlwaysReturnsNullOrMissingError(metas.getSourceLocation())
+            if (handleExpressionAlwaysReturnsUnknown(argsStaticType, metas.getSourceLocation())) {
                 hasValidOperands = false
             }
             return hasValidOperands
@@ -694,8 +726,7 @@ internal class StaticTypeInferenceVisitorTransform(
             var errorAdded = false
 
             // check if any operands are unknown, then null or missing error
-            if (operands.any { operand -> operand.isUnknown() }) {
-                handleExpressionAlwaysReturnsNullOrMissingError(processedNode.metas.getSourceLocation())
+            if (handleExpressionAlwaysReturnsUnknown(operands, processedNode.metas.getSourceLocation())) {
                 errorAdded = true
             }
 
@@ -777,6 +808,10 @@ internal class StaticTypeInferenceVisitorTransform(
             argsAllTypes.cartesianProduct().forEach { argsChildType ->
                 val argsSingleType = argsChildType.map { it as SingleType }
                 when {
+                    // If any one of the operands is missing, return missing
+                    // notice since we short circuit above to handle atomic missing type
+                    // missing type here indicates one of the args is union type and in the union type we have missing
+                    argsSingleType.any() { it is MissingType } -> possibleReturnTypes.add(StaticType.MISSING)
                     // If any one of the operands is null, return NULL
                     argsSingleType.any { it is NullType } -> possibleReturnTypes.add(StaticType.NULL)
                     // Arguments for LIKE need to be text type
@@ -1077,7 +1112,7 @@ internal class StaticTypeInferenceVisitorTransform(
 
             // comparison never succeeds if caseValue is an unknown
             if (caseValueType.isUnknown()) {
-                handleExpressionAlwaysReturnsNullOrMissingError(caseValue.getStartingSourceLocationMeta())
+                handleExpressionAlwaysReturnsUnknown(caseValueType, caseValue.getStartingSourceLocationMeta())
             }
 
             val whenExprs = simpleCase.cases.pairs.map { expr -> expr.first }
@@ -1085,7 +1120,7 @@ internal class StaticTypeInferenceVisitorTransform(
                 val whenExprType = whenExpr.getStaticType()
                 // comparison never succeeds if whenExpr is unknown -> null or missing error
                 if (whenExprType.isUnknown()) {
-                    handleExpressionAlwaysReturnsNullOrMissingError(whenExpr.getStartingSourceLocationMeta())
+                    handleExpressionAlwaysReturnsUnknown(whenExprType, whenExpr.getStartingSourceLocationMeta())
                 }
 
                 // if caseValueType is incomparable to whenExprType -> data type mismatch
@@ -1102,6 +1137,8 @@ internal class StaticTypeInferenceVisitorTransform(
 
             // keep all the `THEN` expr types even if the comparison doesn't succeed
             val simpleCaseType = inferCaseWhenBranches(thenExprs, simpleCase.default)
+            // TODO: if case input expression is union(null, missing), we will lose the missing type.
+            //   Figure out if this is intentional.
             return simpleCase.withStaticType(simpleCaseType)
         }
 
@@ -1114,7 +1151,7 @@ internal class StaticTypeInferenceVisitorTransform(
 
                 // if whenExpr is unknown -> null or missing error
                 if (whenExprType.isUnknown()) {
-                    handleExpressionAlwaysReturnsNullOrMissingError(whenExpr.getStartingSourceLocationMeta())
+                    handleExpressionAlwaysReturnsUnknown(whenExprType, whenExpr.getStartingSourceLocationMeta())
                 }
 
                 // if whenExpr can never be bool -> data type mismatch
@@ -1316,7 +1353,7 @@ internal class StaticTypeInferenceVisitorTransform(
             val exprType = expr.getStaticType()
 
             if (exprType.isUnknown()) {
-                handleExpressionAlwaysReturnsNullOrMissingError(expr.getStartingSourceLocationMeta())
+                handleExpressionAlwaysReturnsUnknown(exprType, expr.getStartingSourceLocationMeta())
             } else if (exprType.allTypes.none { it == expectedType }) {
                 handleIncompatibleDataTypeForExprError(
                     expectedType = expectedType,
