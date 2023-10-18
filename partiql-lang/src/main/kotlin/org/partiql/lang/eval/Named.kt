@@ -26,4 +26,9 @@ interface Named {
      * a `struct` or an `int` for values that have some ordinal in a collection.
      */
     val name: ExprValue
+
+    /**
+     * TODO ALAN: docs
+     */
+    val value: ExprValue
 }

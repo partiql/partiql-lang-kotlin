@@ -26,7 +26,8 @@ class EvaluatingCompilerSelectStarTests : EvaluatorTestBase() {
     class AddressedExprValue(
         private val innerExprValue: ExprValue,
         override val name: ExprValue,
-        override val address: ExprValue
+        override val address: ExprValue,
+        override val value: ExprValue,
     ) : ExprValue by innerExprValue, Named, Addressed {
 
         // Need to override the asFacet provided by [innerExprValue] since it won't implement either facet.
@@ -38,7 +39,8 @@ class EvaluatingCompilerSelectStarTests : EvaluatorTestBase() {
         AddressedExprValue(
             ExprValue.of(ion.singleValue(ionText)),
             ExprValue.newInt(index),
-            ExprValue.newString(address)
+            ExprValue.newString(address),
+            ExprValue.missingValue
         )
 
     @Test
