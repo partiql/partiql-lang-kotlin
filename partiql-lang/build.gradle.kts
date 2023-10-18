@@ -18,6 +18,7 @@ plugins {
     id(Plugins.jmh) version Versions.jmh
     id(Plugins.library)
     id(Plugins.publish)
+    id(Plugins.shadow) version Versions.shadow
 }
 
 // Disabled for partiql-lang project.
@@ -28,10 +29,13 @@ kotlin {
 dependencies {
     api(project(":partiql-ast"))
     api(project(":partiql-parser"))
+    api(project(":partiql-plan"))
+    api(project(":partiql-planner"))
     api(project(":partiql-spi"))
     api(project(":partiql-types"))
     api(project(":partiql-plan"))
     api(project(":partiql-planner"))
+    //
     api(Deps.ionElement)
     api(Deps.ionJava)
     api(Deps.ionSchema)
@@ -72,4 +76,9 @@ tasks.processResources {
     from("$rootDir/partiql-ast/src/main/pig") {
         include("partiql.ion")
     }
+}
+
+tasks.shadowJar {
+    archiveBaseName.set("shadow")
+    archiveClassifier.set("")
 }
