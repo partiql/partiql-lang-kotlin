@@ -9,10 +9,33 @@ import org.partiql.plan.Binding
 import org.partiql.plan.Case
 import org.partiql.plan.ExcludeExpr
 import org.partiql.plan.ExcludeStep
-import org.partiql.plan.Plan
 import org.partiql.plan.Rel
 import org.partiql.plan.Rex
 import org.partiql.plan.SortSpec
+import org.partiql.plan.binding
+import org.partiql.plan.common
+import org.partiql.plan.excludeExpr
+import org.partiql.plan.excludeStepCollectionIndex
+import org.partiql.plan.excludeStepCollectionWildcard
+import org.partiql.plan.excludeStepTupleAttr
+import org.partiql.plan.excludeStepTupleWildcard
+import org.partiql.plan.field
+import org.partiql.plan.relAggregate
+import org.partiql.plan.relExclude
+import org.partiql.plan.relFetch
+import org.partiql.plan.relFilter
+import org.partiql.plan.relJoin
+import org.partiql.plan.relProject
+import org.partiql.plan.relScan
+import org.partiql.plan.relSort
+import org.partiql.plan.relUnpivot
+import org.partiql.plan.rexAgg
+import org.partiql.plan.rexId
+import org.partiql.plan.rexLit
+import org.partiql.plan.rexQueryCollection
+import org.partiql.plan.rexQueryScalarPivot
+import org.partiql.plan.rexTuple
+import org.partiql.plan.sortSpec
 import org.partiql.types.StaticType
 
 /**
@@ -23,7 +46,7 @@ internal class RelConverter {
     /**
      * As of now, the COMMON property of relation operators is under development, so just use empty for now
      */
-    private val empty = Plan.common(
+    private val empty = common(
         typeEnv = emptyList(),
         properties = emptySet(),
         metas = emptyMap()
@@ -40,7 +63,7 @@ internal class RelConverter {
             val rex = when (val projection = select.project) {
                 // PIVOT ... FROM
                 is PartiqlAst.Projection.ProjectPivot -> {
-                    Plan.rexQueryScalarPivot(
+                    rexQueryScalarPivot(
                         rel = rel,
                         value = RexConverter.convert(projection.value),
                         at = RexConverter.convert(projection.key),
@@ -49,7 +72,7 @@ internal class RelConverter {
                 }
                 // SELECT VALUE ... FROM
                 is PartiqlAst.Projection.ProjectValue -> {
-                    Plan.rexQueryCollection(
+                    rexQueryCollection(
                         rel = rel,
                         constructor = RexConverter.convert(projection.value),
                         type = null
@@ -57,7 +80,7 @@ internal class RelConverter {
                 }
                 // SELECT ... FROM
                 else -> {
-                    Plan.rexQueryCollection(
+                    rexQueryCollection(
                         rel = rel,
                         constructor = null,
                         type = null
@@ -108,7 +131,7 @@ internal class RelConverter {
         null -> input
         else -> {
             val exprs = excludeOp.exprs.map { convertExcludeExpr(it) }
-            Plan.relExclude(
+            relExclude(
                 common = empty,
                 input = input,
                 exprs = exprs,
@@ -120,15 +143,15 @@ internal class RelConverter {
         val root = excludeExpr.root.name.text
         val case = convertCase(excludeExpr.root.case)
         val steps = excludeExpr.steps.map { convertExcludeSteps(it) }
-        return Plan.excludeExpr(root, case, steps)
+        return excludeExpr(root, case, steps)
     }
 
     private fun convertExcludeSteps(excludeStep: PartiqlAst.ExcludeStep): ExcludeStep {
         return when (excludeStep) {
-            is PartiqlAst.ExcludeStep.ExcludeCollectionWildcard -> Plan.excludeStepCollectionWildcard()
-            is PartiqlAst.ExcludeStep.ExcludeTupleWildcard -> Plan.excludeStepTupleWildcard()
-            is PartiqlAst.ExcludeStep.ExcludeTupleAttr -> Plan.excludeStepTupleAttr(excludeStep.attr.name.text, convertCase(excludeStep.attr.case))
-            is PartiqlAst.ExcludeStep.ExcludeCollectionIndex -> Plan.excludeStepCollectionIndex(excludeStep.index.value.toInt())
+            is PartiqlAst.ExcludeStep.ExcludeCollectionWildcard -> excludeStepCollectionWildcard()
+            is PartiqlAst.ExcludeStep.ExcludeTupleWildcard -> excludeStepTupleWildcard()
+            is PartiqlAst.ExcludeStep.ExcludeTupleAttr -> excludeStepTupleAttr(excludeStep.attr.name.text, convertCase(excludeStep.attr.case))
+            is PartiqlAst.ExcludeStep.ExcludeCollectionIndex -> excludeStepCollectionIndex(excludeStep.index.value.toInt())
         }
     }
 
@@ -148,7 +171,7 @@ internal class RelConverter {
         val lhs = convertFrom(join.left)
         val rhs = convertFrom(join.right)
         val condition = if (join.predicate != null) RexConverter.convert(join.predicate!!) else null
-        return Plan.relJoin(
+        return relJoin(
             common = empty,
             lhs = lhs,
             rhs = rhs,
@@ -165,7 +188,7 @@ internal class RelConverter {
     /**
      * Appends [Rel.Scan] which takes no input relational expression
      */
-    private fun convertScan(scan: PartiqlAst.FromSource.Scan) = Plan.relScan(
+    private fun convertScan(scan: PartiqlAst.FromSource.Scan) = relScan(
         common = empty,
         value = when (val expr = scan.expr) {
             is PartiqlAst.Expr.Select -> convert(expr)
@@ -179,7 +202,7 @@ internal class RelConverter {
     /**
      * Appends [Rel.Unpivot] to range over attribute value pairs
      */
-    private fun convertUnpivot(scan: PartiqlAst.FromSource.Unpivot) = Plan.relUnpivot(
+    private fun convertUnpivot(scan: PartiqlAst.FromSource.Unpivot) = relUnpivot(
         common = empty,
         value = RexConverter.convert(scan.expr),
         alias = scan.asAlias?.text,
@@ -192,7 +215,7 @@ internal class RelConverter {
      */
     private fun convertWhere(input: Rel, expr: PartiqlAst.Expr?): Rel = when (expr) {
         null -> input
-        else -> Plan.relFilter(
+        else -> relFilter(
             common = empty,
             input = input,
             condition = RexConverter.convert(expr)
@@ -239,7 +262,7 @@ internal class RelConverter {
             }
         }
 
-        val rel = Plan.relAggregate(
+        val rel = relAggregate(
             common = empty,
             input = input,
             calls = calls,
@@ -266,7 +289,7 @@ internal class RelConverter {
      */
     private fun convertHaving(input: Rel, expr: PartiqlAst.Expr?): Rel = when (expr) {
         null -> input
-        else -> Plan.relFilter(
+        else -> relFilter(
             common = empty,
             input = input,
             condition = RexConverter.convert(expr)
@@ -278,7 +301,7 @@ internal class RelConverter {
      */
     private fun convertOrderBy(input: Rel, orderBy: PartiqlAst.OrderBy?) = when (orderBy) {
         null -> input
-        else -> Plan.relSort(
+        else -> relSort(
             common = empty,
             input = input,
             specs = orderBy.sortSpecs.map { convertSortSpec(it) }
@@ -300,7 +323,7 @@ internal class RelConverter {
             if (offset != null) error("offset without limit")
             return input
         }
-        return Plan.relFetch(
+        return relFetch(
             common = empty,
             input = input,
             limit = RexConverter.convert(limit),
@@ -315,7 +338,7 @@ internal class RelConverter {
      * @param projection
      * @return
      */
-    private fun convertProjectList(input: Rel, projection: PartiqlAst.Projection.ProjectList) = Plan.relProject(
+    private fun convertProjectList(input: Rel, projection: PartiqlAst.Projection.ProjectList) = relProject(
         common = empty,
         input = input,
         bindings = projection.projectItems.bindings()
@@ -328,7 +351,7 @@ internal class RelConverter {
      *  - ASC NULLS LAST   (default)
      *  - DESC NULLS FIRST (default for DESC)
      */
-    private fun convertSortSpec(sortSpec: PartiqlAst.SortSpec) = Plan.sortSpec(
+    private fun convertSortSpec(sortSpec: PartiqlAst.SortSpec) = sortSpec(
         value = RexConverter.convert(sortSpec.expr),
         dir = when (sortSpec.orderingSpec) {
             is PartiqlAst.OrderingSpec.Desc -> SortSpec.Dir.DESC
@@ -354,16 +377,16 @@ internal class RelConverter {
      */
     private fun convertGroupAs(name: String, from: PartiqlAst.FromSource): Binding {
         val fields = from.bindings().map { n ->
-            Plan.field(
-                name = Plan.rexLit(ionString(n), StaticType.STRING),
-                value = Plan.rexId(n, Case.SENSITIVE, Rex.Id.Qualifier.UNQUALIFIED, type = StaticType.STRUCT)
+            field(
+                name = rexLit(ionString(n), StaticType.STRING),
+                value = rexId(n, Case.SENSITIVE, Rex.Id.Qualifier.UNQUALIFIED, type = StaticType.STRUCT)
             )
         }
-        return Plan.binding(
+        return binding(
             name = name,
-            value = Plan.rexAgg(
+            value = rexAgg(
                 id = "group_as",
-                args = listOf(Plan.rexTuple(fields, StaticType.STRUCT)),
+                args = listOf(rexTuple(fields, StaticType.STRUCT)),
                 modifier = Rex.Agg.Modifier.ALL,
                 type = StaticType.STRUCT
             )
@@ -488,7 +511,7 @@ internal class RelConverter {
     /**
      * Binding helper
      */
-    private fun binding(name: String, expr: PartiqlAst.Expr) = Plan.binding(
+    private fun binding(name: String, expr: PartiqlAst.Expr) = binding(
         name = name,
         value = RexConverter.convert(expr)
     )

@@ -32,7 +32,6 @@ import org.antlr.v4.runtime.TokenStream
 import org.antlr.v4.runtime.atn.PredictionMode
 import org.antlr.v4.runtime.misc.ParseCancellationException
 import org.antlr.v4.runtime.tree.TerminalNode
-import org.partiql.ast.Ast
 import org.partiql.ast.AstNode
 import org.partiql.ast.DatetimeField
 import org.partiql.ast.Exclude
@@ -52,7 +51,155 @@ import org.partiql.ast.Sort
 import org.partiql.ast.Statement
 import org.partiql.ast.TableDefinition
 import org.partiql.ast.Type
-import org.partiql.ast.builder.AstFactory
+import org.partiql.ast.exclude
+import org.partiql.ast.excludeExcludeExpr
+import org.partiql.ast.excludeStepExcludeCollectionIndex
+import org.partiql.ast.excludeStepExcludeCollectionWildcard
+import org.partiql.ast.excludeStepExcludeTupleAttr
+import org.partiql.ast.excludeStepExcludeTupleWildcard
+import org.partiql.ast.exprAgg
+import org.partiql.ast.exprBagOp
+import org.partiql.ast.exprBetween
+import org.partiql.ast.exprBinary
+import org.partiql.ast.exprCall
+import org.partiql.ast.exprCanCast
+import org.partiql.ast.exprCanLosslessCast
+import org.partiql.ast.exprCase
+import org.partiql.ast.exprCaseBranch
+import org.partiql.ast.exprCast
+import org.partiql.ast.exprCoalesce
+import org.partiql.ast.exprCollection
+import org.partiql.ast.exprDateAdd
+import org.partiql.ast.exprDateDiff
+import org.partiql.ast.exprExtract
+import org.partiql.ast.exprInCollection
+import org.partiql.ast.exprIon
+import org.partiql.ast.exprIsType
+import org.partiql.ast.exprLike
+import org.partiql.ast.exprLit
+import org.partiql.ast.exprMatch
+import org.partiql.ast.exprNullIf
+import org.partiql.ast.exprOverlay
+import org.partiql.ast.exprParameter
+import org.partiql.ast.exprPath
+import org.partiql.ast.exprPathStepIndex
+import org.partiql.ast.exprPathStepSymbol
+import org.partiql.ast.exprPathStepUnpivot
+import org.partiql.ast.exprPathStepWildcard
+import org.partiql.ast.exprPosition
+import org.partiql.ast.exprSFW
+import org.partiql.ast.exprSessionAttribute
+import org.partiql.ast.exprStruct
+import org.partiql.ast.exprStructField
+import org.partiql.ast.exprSubstring
+import org.partiql.ast.exprTrim
+import org.partiql.ast.exprUnary
+import org.partiql.ast.exprVar
+import org.partiql.ast.exprWindow
+import org.partiql.ast.exprWindowOver
+import org.partiql.ast.fromJoin
+import org.partiql.ast.fromValue
+import org.partiql.ast.graphMatch
+import org.partiql.ast.graphMatchLabelConj
+import org.partiql.ast.graphMatchLabelDisj
+import org.partiql.ast.graphMatchLabelName
+import org.partiql.ast.graphMatchLabelNegation
+import org.partiql.ast.graphMatchLabelWildcard
+import org.partiql.ast.graphMatchPattern
+import org.partiql.ast.graphMatchPatternPartEdge
+import org.partiql.ast.graphMatchPatternPartNode
+import org.partiql.ast.graphMatchPatternPartPattern
+import org.partiql.ast.graphMatchQuantifier
+import org.partiql.ast.graphMatchSelectorAllShortest
+import org.partiql.ast.graphMatchSelectorAny
+import org.partiql.ast.graphMatchSelectorAnyK
+import org.partiql.ast.graphMatchSelectorAnyShortest
+import org.partiql.ast.graphMatchSelectorShortestK
+import org.partiql.ast.graphMatchSelectorShortestKGroup
+import org.partiql.ast.groupBy
+import org.partiql.ast.groupByKey
+import org.partiql.ast.identifierSymbol
+import org.partiql.ast.let
+import org.partiql.ast.letBinding
+import org.partiql.ast.onConflict
+import org.partiql.ast.onConflictActionDoNothing
+import org.partiql.ast.onConflictActionDoReplace
+import org.partiql.ast.onConflictActionDoUpdate
+import org.partiql.ast.onConflictTargetConstraint
+import org.partiql.ast.onConflictTargetSymbols
+import org.partiql.ast.orderBy
+import org.partiql.ast.path
+import org.partiql.ast.pathStepIndex
+import org.partiql.ast.pathStepSymbol
+import org.partiql.ast.returning
+import org.partiql.ast.returningColumn
+import org.partiql.ast.returningColumnValueExpression
+import org.partiql.ast.returningColumnValueWildcard
+import org.partiql.ast.selectPivot
+import org.partiql.ast.selectProject
+import org.partiql.ast.selectProjectItemAll
+import org.partiql.ast.selectProjectItemExpression
+import org.partiql.ast.selectStar
+import org.partiql.ast.selectValue
+import org.partiql.ast.setOp
+import org.partiql.ast.sort
+import org.partiql.ast.statementDDLCreateIndex
+import org.partiql.ast.statementDDLCreateTable
+import org.partiql.ast.statementDDLDropIndex
+import org.partiql.ast.statementDDLDropTable
+import org.partiql.ast.statementDMLBatchLegacy
+import org.partiql.ast.statementDMLBatchLegacyOpDelete
+import org.partiql.ast.statementDMLBatchLegacyOpInsert
+import org.partiql.ast.statementDMLBatchLegacyOpInsertLegacy
+import org.partiql.ast.statementDMLBatchLegacyOpRemove
+import org.partiql.ast.statementDMLBatchLegacyOpSet
+import org.partiql.ast.statementDMLDelete
+import org.partiql.ast.statementDMLDeleteTarget
+import org.partiql.ast.statementDMLInsert
+import org.partiql.ast.statementDMLInsertLegacy
+import org.partiql.ast.statementDMLRemove
+import org.partiql.ast.statementDMLReplace
+import org.partiql.ast.statementDMLUpdate
+import org.partiql.ast.statementDMLUpdateAssignment
+import org.partiql.ast.statementDMLUpsert
+import org.partiql.ast.statementExec
+import org.partiql.ast.statementExplain
+import org.partiql.ast.statementExplainTargetDomain
+import org.partiql.ast.statementQuery
+import org.partiql.ast.tableDefinition
+import org.partiql.ast.tableDefinitionColumn
+import org.partiql.ast.tableDefinitionColumnConstraint
+import org.partiql.ast.tableDefinitionColumnConstraintBodyNotNull
+import org.partiql.ast.tableDefinitionColumnConstraintBodyNullable
+import org.partiql.ast.typeAny
+import org.partiql.ast.typeBag
+import org.partiql.ast.typeBlob
+import org.partiql.ast.typeBool
+import org.partiql.ast.typeChar
+import org.partiql.ast.typeClob
+import org.partiql.ast.typeCustom
+import org.partiql.ast.typeDate
+import org.partiql.ast.typeDecimal
+import org.partiql.ast.typeFloat32
+import org.partiql.ast.typeFloat64
+import org.partiql.ast.typeInt
+import org.partiql.ast.typeInt2
+import org.partiql.ast.typeInt4
+import org.partiql.ast.typeInt8
+import org.partiql.ast.typeList
+import org.partiql.ast.typeMissing
+import org.partiql.ast.typeNullType
+import org.partiql.ast.typeNumeric
+import org.partiql.ast.typeReal
+import org.partiql.ast.typeSexp
+import org.partiql.ast.typeString
+import org.partiql.ast.typeStruct
+import org.partiql.ast.typeSymbol
+import org.partiql.ast.typeTime
+import org.partiql.ast.typeTimeWithTz
+import org.partiql.ast.typeTimestamp
+import org.partiql.ast.typeTuple
+import org.partiql.ast.typeVarchar
 import org.partiql.parser.PartiQLLexerException
 import org.partiql.parser.PartiQLParser
 import org.partiql.parser.PartiQLParserException
@@ -171,7 +318,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             line: Int,
             charPositionInLine: Int,
             msg: String,
-            e: RecognitionException?
+            e: RecognitionException?,
         ) {
             if (offendingSymbol is Token) {
                 val token = offendingSymbol.text
@@ -208,7 +355,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             line: Int,
             charPositionInLine: Int,
             msg: String,
-            e: RecognitionException?
+            e: RecognitionException?,
         ) {
             if (offendingSymbol is Token) {
                 val rule = e?.ctx?.toString(rules) ?: "UNKNOWN"
@@ -274,9 +421,6 @@ internal class PartiQLParserDefault : PartiQLParser {
         private val parameters: Map<Int, Int> = mapOf(),
     ) : PartiQLBaseVisitor<AstNode>() {
 
-        // Use default factory
-        private val factory = Ast
-
         companion object {
 
             private val rules = GeneratedParser.ruleNames.asList()
@@ -287,7 +431,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             fun translate(
                 source: String,
                 tokens: CountingTokenStream,
-                tree: GeneratedParser.RootContext
+                tree: GeneratedParser.RootContext,
             ): PartiQLParser.Result {
                 val locations = SourceLocations.Mutable()
                 val visitor = Visitor(locations, tokens.parameterIndexes)
@@ -342,10 +486,10 @@ internal class PartiQLParserDefault : PartiQLParser {
         /**
          * Each visit attaches source locations from the given parse tree node; constructs nodes via the factory.
          */
-        private inline fun <T : AstNode> translate(ctx: ParserRuleContext, block: AstFactory.() -> T): T {
-            val node = factory.block()
+        private inline fun <T : AstNode> translate(ctx: ParserRuleContext, block: () -> T): T {
+            val node = block()
             if (ctx.start != null) {
-                locations[node._id] = SourceLocation(
+                locations[node.tag] = SourceLocation(
                     line = ctx.start.line,
                     offset = ctx.start.charPositionInLine + 1,
                     length = (ctx.stop?.stopIndex ?: ctx.start.stopIndex) - ctx.start.startIndex + 1,
@@ -922,27 +1066,31 @@ internal class PartiQLParserDefault : PartiQLParser {
             excludeStepExcludeTupleAttr(identifier)
         }
 
-        override fun visitExcludeExprCollectionIndex(ctx: GeneratedParser.ExcludeExprCollectionIndexContext) = translate(ctx) {
-            val index = ctx.index.text.toInt()
-            excludeStepExcludeCollectionIndex(index)
-        }
+        override fun visitExcludeExprCollectionIndex(ctx: GeneratedParser.ExcludeExprCollectionIndexContext) =
+            translate(ctx) {
+                val index = ctx.index.text.toInt()
+                excludeStepExcludeCollectionIndex(index)
+            }
 
-        override fun visitExcludeExprCollectionAttr(ctx: GeneratedParser.ExcludeExprCollectionAttrContext) = translate(ctx) {
-            val attr = ctx.attr.getStringValue()
-            val identifier = identifierSymbol(
-                attr,
-                Identifier.CaseSensitivity.SENSITIVE,
-            )
-            excludeStepExcludeTupleAttr(identifier)
-        }
+        override fun visitExcludeExprCollectionAttr(ctx: GeneratedParser.ExcludeExprCollectionAttrContext) =
+            translate(ctx) {
+                val attr = ctx.attr.getStringValue()
+                val identifier = identifierSymbol(
+                    attr,
+                    Identifier.CaseSensitivity.SENSITIVE,
+                )
+                excludeStepExcludeTupleAttr(identifier)
+            }
 
-        override fun visitExcludeExprCollectionWildcard(ctx: org.partiql.parser.antlr.PartiQLParser.ExcludeExprCollectionWildcardContext) = translate(ctx) {
-            excludeStepExcludeCollectionWildcard()
-        }
+        override fun visitExcludeExprCollectionWildcard(ctx: org.partiql.parser.antlr.PartiQLParser.ExcludeExprCollectionWildcardContext) =
+            translate(ctx) {
+                excludeStepExcludeCollectionWildcard()
+            }
 
-        override fun visitExcludeExprTupleWildcard(ctx: org.partiql.parser.antlr.PartiQLParser.ExcludeExprTupleWildcardContext) = translate(ctx) {
-            excludeStepExcludeTupleWildcard()
-        }
+        override fun visitExcludeExprTupleWildcard(ctx: org.partiql.parser.antlr.PartiQLParser.ExcludeExprTupleWildcardContext) =
+            translate(ctx) {
+                excludeStepExcludeTupleWildcard()
+            }
 
         /**
          *
@@ -1333,7 +1481,7 @@ internal class PartiQLParserDefault : PartiQLParser {
         private fun convertBinaryExpr(lhs: ParserRuleContext, rhs: ParserRuleContext, op: Expr.Binary.Op): Expr {
             val l = visit(lhs) as Expr
             val r = visit(rhs) as Expr
-            return factory.exprBinary(op, l, r)
+            return exprBinary(op, l, r)
         }
 
         private fun convertBinaryOp(token: Token) = when (token.type) {
@@ -1450,8 +1598,7 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitParameter(ctx: GeneratedParser.ParameterContext) = translate(ctx) {
             val index = parameters[ctx.QUESTION_MARK().symbol.tokenIndex] ?: throw error(
-                ctx,
-                "Unable to find index of parameter."
+                ctx, "Unable to find index of parameter."
             )
             exprParameter(index)
         }
@@ -1521,9 +1668,10 @@ internal class PartiQLParserDefault : PartiQLParser {
             exprSessionAttribute(Expr.SessionAttribute.Attribute.CURRENT_USER)
         }
 
-        override fun visitExprTermCurrentDate(ctx: org.partiql.parser.antlr.PartiQLParser.ExprTermCurrentDateContext) = translate(ctx) {
-            exprSessionAttribute(Expr.SessionAttribute.Attribute.CURRENT_DATE)
-        }
+        override fun visitExprTermCurrentDate(ctx: org.partiql.parser.antlr.PartiQLParser.ExprTermCurrentDateContext) =
+            translate(ctx) {
+                exprSessionAttribute(Expr.SessionAttribute.Attribute.CURRENT_DATE)
+            }
 
         /**
          *
@@ -1926,7 +2074,8 @@ internal class PartiQLParserDefault : PartiQLParser {
             else -> ctx.map { visit(it) as T }
         }
 
-        private inline fun <reified T : AstNode> visitOrNull(ctx: ParserRuleContext?): T? = ctx?.let { it.accept(this) as T }
+        private inline fun <reified T : AstNode> visitOrNull(ctx: ParserRuleContext?): T? =
+            ctx?.let { it.accept(this) as T }
 
         private inline fun <reified T : AstNode> visitAs(ctx: ParserRuleContext): T = visit(ctx) as T
 
@@ -1955,7 +2104,7 @@ internal class PartiQLParserDefault : PartiQLParser {
          */
         private fun getTimeStringAndPrecision(
             stringNode: TerminalNode,
-            integerNode: TerminalNode?
+            integerNode: TerminalNode?,
         ): Pair<String, Int> {
             val timeString = stringNode.getStringValue()
             val precision = when (integerNode) {
@@ -2036,7 +2185,7 @@ internal class PartiQLParserDefault : PartiQLParser {
                         selectProjectItemAll(path.root)
                     }
                     path.steps.last() is Expr.Path.Step.Unpivot -> {
-                        selectProjectItemAll(factory.exprPath(path.root, steps))
+                        selectProjectItemAll(exprPath(path.root, steps))
                     }
                     else -> {
                         selectProjectItemExpression(path, alias)
@@ -2054,7 +2203,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             else -> throw error(this, "Unsupported token for grabbing string value.")
         }
 
-        private fun String.toIdentifier(): Identifier.Symbol = factory.identifierSymbol(
+        private fun String.toIdentifier(): Identifier.Symbol = identifierSymbol(
             symbol = this,
             caseSensitivity = Identifier.CaseSensitivity.INSENSITIVE,
         )

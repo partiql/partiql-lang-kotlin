@@ -17,7 +17,6 @@ import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
-import org.partiql.ast.Ast
 import org.partiql.ast.AstNode
 import org.partiql.ast.Expr
 import org.partiql.ast.From
@@ -26,8 +25,9 @@ import org.partiql.ast.Identifier
 import org.partiql.ast.SetQuantifier
 import org.partiql.ast.Sort
 import org.partiql.ast.builder.AstBuilder
-import org.partiql.ast.builder.AstFactory
 import org.partiql.ast.builder.ast
+import org.partiql.ast.exprLit
+import org.partiql.ast.identifierSymbol
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.blobValue
@@ -113,20 +113,20 @@ class ToLegacyAstTest {
     companion object {
 
         private fun expect(expected: String, block: AstBuilder.() -> AstNode): Case {
-            val i = ast(AstFactory.DEFAULT, block)
+            val i = ast(block)
             val e = PartiqlAst.transform(loadSingleElement(expected))
             return Case.Translate(i, e)
         }
 
         private fun fail(message: String, block: AstBuilder.() -> AstNode): Case {
-            val i = ast(AstFactory.DEFAULT, block)
+            val i = ast(block)
             return Case.Fail(i, message)
         }
 
-        private val NULL = Ast.exprLit(nullValue())
+        private val NULL = exprLit(nullValue())
 
         // Shortcut to construct a "legacy-compatible" simple identifier
-        private fun id(name: String) = Ast.identifierSymbol(name, Identifier.CaseSensitivity.INSENSITIVE)
+        private fun id(name: String) = identifierSymbol(name, Identifier.CaseSensitivity.INSENSITIVE)
 
         @JvmStatic
         fun literals() = listOf(

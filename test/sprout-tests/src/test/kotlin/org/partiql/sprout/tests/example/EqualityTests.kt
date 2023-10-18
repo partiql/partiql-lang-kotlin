@@ -18,7 +18,6 @@ import com.amazon.ionelement.api.ionInt
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.sprout.tests.ArgumentsProviderBase
-import org.partiql.sprout.tests.example.builder.ExampleFactoryImpl
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 
@@ -46,65 +45,65 @@ class EqualityTests {
     }
 
     class EqualArgumentsProvider : ArgumentsProviderBase() {
-        private val factory = ExampleFactoryImpl()
+
         override fun getParameters(): List<TestCase> = listOf(
-            TestCase(factory.exprEmpty(), factory.exprEmpty()),
-            TestCase(factory.exprIon(ionInt(1)), factory.exprIon(ionInt(1))),
+            TestCase(exprEmpty(), exprEmpty()),
+            TestCase(exprIon(ionInt(1)), exprIon(ionInt(1))),
             TestCase(
-                factory.identifierQualified(
-                    factory.identifierSymbol("hello", Identifier.CaseSensitivity.INSENSITIVE),
+                identifierQualified(
+                    identifierSymbol("hello", Identifier.CaseSensitivity.INSENSITIVE),
                     emptyList()
                 ),
-                factory.identifierQualified(
-                    factory.identifierSymbol("hello", Identifier.CaseSensitivity.INSENSITIVE),
+                identifierQualified(
+                    identifierSymbol("hello", Identifier.CaseSensitivity.INSENSITIVE),
                     emptyList()
                 )
             ),
             TestCase(
-                factory.identifierQualified(
-                    factory.identifierSymbol("hello", Identifier.CaseSensitivity.INSENSITIVE),
+                identifierQualified(
+                    identifierSymbol("hello", Identifier.CaseSensitivity.INSENSITIVE),
                     listOf(
-                        factory.identifierSymbol("world", Identifier.CaseSensitivity.SENSITIVE),
-                        factory.identifierSymbol("yeah", Identifier.CaseSensitivity.INSENSITIVE),
-                        factory.identifierSymbol("foliage", Identifier.CaseSensitivity.INSENSITIVE),
+                        identifierSymbol("world", Identifier.CaseSensitivity.SENSITIVE),
+                        identifierSymbol("yeah", Identifier.CaseSensitivity.INSENSITIVE),
+                        identifierSymbol("foliage", Identifier.CaseSensitivity.INSENSITIVE),
                     )
                 ),
-                factory.identifierQualified(
-                    factory.identifierSymbol("hello", Identifier.CaseSensitivity.INSENSITIVE),
+                identifierQualified(
+                    identifierSymbol("hello", Identifier.CaseSensitivity.INSENSITIVE),
                     listOf(
-                        factory.identifierSymbol("world", Identifier.CaseSensitivity.SENSITIVE),
-                        factory.identifierSymbol("yeah", Identifier.CaseSensitivity.INSENSITIVE),
-                        factory.identifierSymbol("foliage", Identifier.CaseSensitivity.INSENSITIVE),
+                        identifierSymbol("world", Identifier.CaseSensitivity.SENSITIVE),
+                        identifierSymbol("yeah", Identifier.CaseSensitivity.INSENSITIVE),
+                        identifierSymbol("foliage", Identifier.CaseSensitivity.INSENSITIVE),
                     )
                 )
             ),
             TestCase(
-                factory.statementQuery(factory.exprEmpty()),
-                factory.statementQuery(factory.exprEmpty())
+                statementQuery(exprEmpty()),
+                statementQuery(exprEmpty())
             ),
             // Tests deep equality of LISTS
             TestCase(
-                factory.exprNested(
+                exprNested(
                     itemsList = listOf(
                         listOf(
-                            factory.exprEmpty(),
-                            factory.exprIon(ionInt(1))
+                            exprEmpty(),
+                            exprIon(ionInt(1))
                         ),
                         listOf(
-                            factory.exprIon(ionInt(3))
+                            exprIon(ionInt(3))
                         )
                     ),
                     itemsSet = emptySet(),
                     itemsMap = emptyMap()
                 ),
-                factory.exprNested(
+                exprNested(
                     itemsList = listOf(
                         listOf(
-                            factory.exprEmpty(),
-                            factory.exprIon(ionInt(1))
+                            exprEmpty(),
+                            exprIon(ionInt(1))
                         ),
                         listOf(
-                            factory.exprIon(ionInt(3))
+                            exprIon(ionInt(3))
                         )
                     ),
                     itemsSet = emptySet(),
@@ -113,50 +112,50 @@ class EqualityTests {
             ),
             // Tests deep equality of SETS
             TestCase(
-                first = factory.exprNested(
+                first = exprNested(
                     itemsList = emptyList(),
                     itemsSet = setOf(
                         setOf(),
-                        setOf(factory.exprEmpty()),
-                        setOf(factory.exprIon(ionInt(1)), factory.exprIon(ionInt(2)))
+                        setOf(exprEmpty()),
+                        setOf(exprIon(ionInt(1)), exprIon(ionInt(2)))
                     ),
                     itemsMap = emptyMap()
                 ),
-                second = factory.exprNested(
+                second = exprNested(
                     itemsList = emptyList(),
                     itemsSet = setOf(
                         setOf(),
-                        setOf(factory.exprEmpty()),
-                        setOf(factory.exprIon(ionInt(1)), factory.exprIon(ionInt(2)))
+                        setOf(exprEmpty()),
+                        setOf(exprIon(ionInt(1)), exprIon(ionInt(2)))
                     ),
                     itemsMap = emptyMap()
                 ),
             ),
             // Tests deep equality of MAPS
             TestCase(
-                first = factory.exprNested(
+                first = exprNested(
                     itemsList = emptyList(),
                     itemsSet = emptySet(),
                     itemsMap = mapOf(
                         "hello" to mapOf(
-                            "world" to factory.exprEmpty(),
-                            "!" to factory.exprIon(ionInt(1))
+                            "world" to exprEmpty(),
+                            "!" to exprIon(ionInt(1))
                         ),
                         "goodbye" to mapOf(
-                            "friend" to factory.exprIon(ionInt(2))
+                            "friend" to exprIon(ionInt(2))
                         )
                     )
                 ),
-                second = factory.exprNested(
+                second = exprNested(
                     itemsList = emptyList(),
                     itemsSet = emptySet(),
                     itemsMap = mapOf(
                         "hello" to mapOf(
-                            "world" to factory.exprEmpty(),
-                            "!" to factory.exprIon(ionInt(1))
+                            "world" to exprEmpty(),
+                            "!" to exprIon(ionInt(1))
                         ),
                         "goodbye" to mapOf(
-                            "friend" to factory.exprIon(ionInt(2))
+                            "friend" to exprIon(ionInt(2))
                         )
                     )
                 ),
@@ -170,55 +169,55 @@ class EqualityTests {
     }
 
     class NotEqualArgumentsProvider : ArgumentsProviderBase() {
-        private val factory = ExampleFactoryImpl()
+
         override fun getParameters(): List<TestCase> = listOf(
-            TestCase(factory.exprEmpty(), factory.exprIon(ionInt(1))),
-            TestCase(factory.exprIon(ionInt(1)), factory.exprIon(ionInt(2))),
+            TestCase(exprEmpty(), exprIon(ionInt(1))),
+            TestCase(exprIon(ionInt(1)), exprIon(ionInt(2))),
             TestCase(
-                factory.identifierSymbol("hello", Identifier.CaseSensitivity.INSENSITIVE),
-                factory.identifierSymbol("hello", Identifier.CaseSensitivity.SENSITIVE)
+                identifierSymbol("hello", Identifier.CaseSensitivity.INSENSITIVE),
+                identifierSymbol("hello", Identifier.CaseSensitivity.SENSITIVE)
             ),
             TestCase(
-                factory.identifierQualified(
-                    factory.identifierSymbol("hello", Identifier.CaseSensitivity.INSENSITIVE),
+                identifierQualified(
+                    identifierSymbol("hello", Identifier.CaseSensitivity.INSENSITIVE),
                     listOf(
-                        factory.identifierSymbol("world", Identifier.CaseSensitivity.SENSITIVE),
-                        factory.identifierSymbol("yeah", Identifier.CaseSensitivity.INSENSITIVE),
-                        factory.identifierSymbol("foliage", Identifier.CaseSensitivity.INSENSITIVE),
+                        identifierSymbol("world", Identifier.CaseSensitivity.SENSITIVE),
+                        identifierSymbol("yeah", Identifier.CaseSensitivity.INSENSITIVE),
+                        identifierSymbol("foliage", Identifier.CaseSensitivity.INSENSITIVE),
                     )
                 ),
-                factory.identifierQualified(
-                    factory.identifierSymbol("hello", Identifier.CaseSensitivity.INSENSITIVE),
+                identifierQualified(
+                    identifierSymbol("hello", Identifier.CaseSensitivity.INSENSITIVE),
                     listOf(
-                        factory.identifierSymbol("NOT_WORLD", Identifier.CaseSensitivity.SENSITIVE),
-                        factory.identifierSymbol("yeah", Identifier.CaseSensitivity.INSENSITIVE),
-                        factory.identifierSymbol("foliage", Identifier.CaseSensitivity.INSENSITIVE),
+                        identifierSymbol("NOT_WORLD", Identifier.CaseSensitivity.SENSITIVE),
+                        identifierSymbol("yeah", Identifier.CaseSensitivity.INSENSITIVE),
+                        identifierSymbol("foliage", Identifier.CaseSensitivity.INSENSITIVE),
                     )
                 )
             ),
             // Tests deep equality of LISTS
             TestCase(
-                factory.exprNested(
+                exprNested(
                     itemsList = listOf(
                         listOf(
-                            factory.exprEmpty(),
-                            factory.exprIon(ionInt(1))
+                            exprEmpty(),
+                            exprIon(ionInt(1))
                         ),
                         listOf(
-                            factory.exprIon(ionInt(3))
+                            exprIon(ionInt(3))
                         )
                     ),
                     itemsSet = emptySet(),
                     itemsMap = emptyMap()
                 ),
-                factory.exprNested(
+                exprNested(
                     itemsList = listOf(
                         listOf(
-                            factory.exprEmpty(),
-                            factory.exprIon(ionInt(2))
+                            exprEmpty(),
+                            exprIon(ionInt(2))
                         ),
                         listOf(
-                            factory.exprIon(ionInt(3))
+                            exprIon(ionInt(3))
                         )
                     ),
                     itemsSet = emptySet(),
@@ -227,50 +226,50 @@ class EqualityTests {
             ),
             // Tests deep equality of SETS
             TestCase(
-                first = factory.exprNested(
+                first = exprNested(
                     itemsList = emptyList(),
                     itemsSet = setOf(
                         setOf(),
-                        setOf(factory.exprEmpty()),
-                        setOf(factory.exprIon(ionInt(1)), factory.exprIon(ionInt(2)))
+                        setOf(exprEmpty()),
+                        setOf(exprIon(ionInt(1)), exprIon(ionInt(2)))
                     ),
                     itemsMap = emptyMap()
                 ),
-                second = factory.exprNested(
+                second = exprNested(
                     itemsList = emptyList(),
                     itemsSet = setOf(
                         setOf(),
-                        setOf(factory.exprEmpty()),
-                        setOf(factory.exprIon(ionInt(1)), factory.exprIon(ionInt(3)))
+                        setOf(exprEmpty()),
+                        setOf(exprIon(ionInt(1)), exprIon(ionInt(3)))
                     ),
                     itemsMap = emptyMap()
                 ),
             ),
             // Tests deep equality of MAPS
             TestCase(
-                first = factory.exprNested(
+                first = exprNested(
                     itemsList = emptyList(),
                     itemsSet = emptySet(),
                     itemsMap = mapOf(
                         "hello" to mapOf(
-                            "world" to factory.exprEmpty(),
-                            "!" to factory.exprIon(ionInt(1))
+                            "world" to exprEmpty(),
+                            "!" to exprIon(ionInt(1))
                         ),
                         "goodbye" to mapOf(
-                            "friend" to factory.exprIon(ionInt(2))
+                            "friend" to exprIon(ionInt(2))
                         )
                     )
                 ),
-                second = factory.exprNested(
+                second = exprNested(
                     itemsList = emptyList(),
                     itemsSet = emptySet(),
                     itemsMap = mapOf(
                         "hello" to mapOf(
-                            "world" to factory.exprEmpty(),
-                            "!" to factory.exprIon(ionInt(1))
+                            "world" to exprEmpty(),
+                            "!" to exprIon(ionInt(1))
                         ),
                         "goodbye" to mapOf(
-                            "friend" to factory.exprIon(ionInt(3))
+                            "friend" to exprIon(ionInt(3))
                         )
                     )
                 ),

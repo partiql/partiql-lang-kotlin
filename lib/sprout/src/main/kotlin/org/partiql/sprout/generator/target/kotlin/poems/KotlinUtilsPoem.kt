@@ -10,10 +10,8 @@ import com.squareup.kotlinpoet.LIST
 import com.squareup.kotlinpoet.LambdaTypeName
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
-import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.SET
 import com.squareup.kotlinpoet.TypeSpec
-import net.pearx.kasechange.toCamelCase
 import org.partiql.sprout.generator.target.kotlin.KotlinPoem
 import org.partiql.sprout.generator.target.kotlin.KotlinSymbols
 import org.partiql.sprout.generator.target.kotlin.spec.KotlinNodeSpec
@@ -43,14 +41,11 @@ class KotlinUtilsPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
         .build()
 
     // Not taking a dep on builder or visitor poems, as this is temporary
-    private val factoryClass = ClassName("${symbols.rootPackage}.builder", "${symbols.rootId}Factory")
     private val visitorBaseClass = ClassName("${symbols.rootPackage}.visitor", "${symbols.rootId}BaseVisitor")
         .parameterizedBy(symbols.base, Parameters.C)
 
     private val rewriterPackageName = "${symbols.rootPackage}.util"
     private val rewriterName = "${symbols.rootId}Rewriter"
-
-    private val factory = symbols.rootId.toCamelCase()
 
     /**
      * Defines the open `children` property and the abstract`accept` method on the base node
@@ -61,13 +56,6 @@ class KotlinUtilsPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
             .addModifiers(KModifier.ABSTRACT)
             .addTypeVariable(Parameters.C)
             .apply {
-                // open val foo: FooFactory = FooFactory.DEFAULT
-                addProperty(
-                    PropertySpec.builder(factory, factoryClass)
-                        .addModifiers(KModifier.OPEN)
-                        .initializer("%T.DEFAULT", factoryClass)
-                        .build()
-                )
                 // override fun defaultReturn(node: PlanNode, ctx: C) = node
                 addFunction(
                     FunSpec.builder("defaultReturn")
@@ -114,7 +102,6 @@ class KotlinUtilsPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
 
     private fun KotlinNodeSpec.Product.rewriter(): FunSpec {
         val visit = product.ref.visitMethodName()
-        val constructor = symbols.camel(product.ref)
         return FunSpec.builder(visit)
             .addModifiers(KModifier.OVERRIDE)
             .addParameter(ParameterSpec("node", clazz))
@@ -175,7 +162,7 @@ class KotlinUtilsPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
                 }
                 val condition = names.joinToString(" || ") { "$it !== node.$it" }
                 beginControlFlow("return if ($condition)")
-                addStatement("$factory.$constructor(${names.joinToString(", ")})")
+                addStatement("%T(${names.joinToString(", ")})", clazz)
                 nextControlFlow("else")
                 addStatement("node")
                 endControlFlow()

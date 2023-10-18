@@ -42,7 +42,8 @@ class KotlinUniverseSpec(
      * Build the Kotlin files
      *
      * <root>
-     *  ├── Types.kt
+     *  ├── <Universe>.kt
+     *  ├── Nodes.kt
      *  ├── ...
      *  ├── builder
      *  │   └── <Universe>Builder.kt
@@ -55,8 +56,8 @@ class KotlinUniverseSpec(
         val files = mutableListOf<FileSpec>()
         val specs = nodes.map { it.build() }
 
-        // <root>/Types.kt
-        files += with(FileSpec.builder(root, "Types")) {
+        // <root>/Nodes.kt
+        files += with(FileSpec.builder(root, "Nodes")) {
             addType(base.build())
             specs.forEach { addType(it) }
             types.forEach { addType(it) }
@@ -68,16 +69,6 @@ class KotlinUniverseSpec(
 
         // <root>/<package>/...
         files += packages.flatMap { it.files }
-
-        // <root>/impl/Types.kt
-        files += with(FileSpec.builder("$root.impl", "Types")) {
-            forEachNode {
-                if (it is KotlinNodeSpec.Product) {
-                    addType(it.buildImpl())
-                }
-            }
-            build()
-        }
 
         return files
     }

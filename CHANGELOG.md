@@ -28,6 +28,9 @@ Thank you to all who have contributed!
 ## [Unreleased]
 
 ### Added
+- Adds top-level IR node creation functions.
+- Adds `componentN` functions (destructuring) to IR nodes via Kotlin data classes
+- Adds public `tag` field to IR nodes for associating metadata
 
 ### Changed
 
@@ -36,12 +39,14 @@ Thank you to all who have contributed!
 ### Fixed
 
 ### Removed
+- [Breaking] Removed IR factory in favor of static top-level functions. Change `Ast.foo()`
+  to `foo()`
 
 ### Security
 
 ### Contributors
 Thank you to all who have contributed!
-- @<your-username>
+- @rchowell
 
 ## [0.13.2-alpha] - 2023-09-29
 

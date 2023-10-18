@@ -13,8 +13,8 @@ import org.partiql.lang.eval.visitors.SelectStarVisitorTransform
 import org.partiql.lang.planner.transforms.plan.RelConverter
 import org.partiql.lang.planner.transforms.plan.RexConverter
 import org.partiql.plan.PartiQLPlan
-import org.partiql.plan.Plan
 import org.partiql.plan.Rex
+import org.partiql.plan.partiQLPlan
 
 /**
  * Translate the PIG AST to an implementation of the PartiQL Plan Representation.
@@ -30,7 +30,7 @@ object AstToPlan {
             unsupported(ast)
         }
         val root = transform(ast.expr)
-        return Plan.partiQLPlan(
+        return partiQLPlan(
             version = PartiQLPlan.Version.PARTIQL_V0,
             root = root,
         )

@@ -30,6 +30,7 @@ val generate = tasks.register<Exec>("generate") {
         "-o", "$buildDir/generated-src",
         "-p", "org.partiql.sprout.tests.example",
         "-u", "Example",
+        "--poems", "factory",
         "--poems", "visitor",
         "--poems", "builder",
         "--poems", "util",
