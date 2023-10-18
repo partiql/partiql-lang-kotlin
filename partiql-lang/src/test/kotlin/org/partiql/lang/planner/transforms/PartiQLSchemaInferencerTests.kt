@@ -2327,28 +2327,6 @@ class PartiQLSchemaInferencerTests {
                             fields = listOf(
                                 StructType.Field("first", STRING),
                                 StructType.Field("last", STRING),
-                            ),
-                            contentClosed = false,
-                            constraints = setOf(
-                                TupleConstraint.Open(true),
-                                TupleConstraint.UniqueAttrs(false),
-                            )
-                        ),
-                        StructType(
-                            fields = listOf(
-                                StructType.Field("full_name", STRING),
-                            ),
-                            contentClosed = true,
-                            constraints = setOf(
-                                TupleConstraint.Open(false),
-                                TupleConstraint.UniqueAttrs(true),
-                                TupleConstraint.Ordered
-                            )
-                        ),
-                        StructType(
-                            fields = listOf(
-                                StructType.Field("first", STRING),
-                                StructType.Field("last", STRING),
                                 StructType.Field("first", STRING),
                                 StructType.Field("last", STRING),
                             ),

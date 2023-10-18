@@ -25,7 +25,6 @@ import org.partiql.plan.PlanNode
 import org.partiql.plan.Rel
 import org.partiql.plan.Rex
 import org.partiql.plan.Statement
-import org.partiql.plan.builder.plan
 import org.partiql.plan.fnResolved
 import org.partiql.plan.identifierSymbol
 import org.partiql.plan.rel
@@ -542,34 +541,26 @@ internal class PlanTyper(
             }
         }
 
-        override fun visitRexOpCase(node: Rex.Op.Case, ctx: StaticType?): Rex = plan {
-            // Type and simplify branches
-            val visitedBranches = node.branches.map { visitRexOpCaseBranch(it, it.rex.type) }
-
-            // Prune branches known to never execute
-            val newBranches = visitedBranches.mapNotNull { branch ->
-                val conditionFoldedOp = branch.condition.op as? Rex.Op.Lit ?: return@mapNotNull branch
-                val conditionBooleanLiteral = conditionFoldedOp.value as? BoolValue ?: return@mapNotNull branch
-                when (conditionBooleanLiteral.value) {
-                    false -> null
-                    else -> branch
-                }
-            }
+        override fun visitRexOpCase(node: Rex.Op.Case, ctx: StaticType?): Rex {
+            // Type branches and prune branches known to never execute
+            val newBranches = node.branches
+                .map { visitRexOpCaseBranch(it, it.rex.type) }
+                .filterNot { isLiteralBool(it.condition, false) }
 
             // Calculate final expression (short-circuit to first branch if the condition is always TRUE).
-            val resultTypes = visitedBranches.map { it.rex }.map { it.type }
+            val resultTypes = newBranches.map { it.rex }.map { it.type }
             val firstBranch = newBranches.firstOrNull() ?: error("CASE_WHEN has NO branches.")
-            return@plan when (isLiteralTrue(firstBranch.condition)) {
+            return when (isLiteralBool(firstBranch.condition, true)) {
                 true -> firstBranch.rex
                 false -> rex(type = StaticType.unionOf(resultTypes.toSet()).flatten(), node.copy(branches = newBranches))
             }
         }
 
         @OptIn(PartiQLValueExperimental::class)
-        private fun isLiteralTrue(rex: Rex): Boolean {
+        private fun isLiteralBool(rex: Rex, bool: Boolean): Boolean {
             val op = rex.op as? Rex.Op.Lit ?: return false
             val value = op.value as? BoolValue ?: return false
-            return value.value ?: false
+            return value.value == bool
         }
 
         /**
@@ -714,7 +705,7 @@ internal class PlanTyper(
             return rex(type, rexOpSelect(constructor, rel))
         }
 
-        override fun visitRexOpTupleUnion(node: Rex.Op.TupleUnion, ctx: StaticType?): Rex = plan {
+        override fun visitRexOpTupleUnion(node: Rex.Op.TupleUnion, ctx: StaticType?): Rex {
             val args = node.args.map { visitRex(it, ctx) }
             val type = when (args.size) {
                 0 -> StructType(
@@ -735,7 +726,7 @@ internal class PlanTyper(
                 }
             }
             val op = rexOpTupleUnion(args)
-            rex(type, op)
+            return rex(type, op)
         }
 
         override fun visitRexOpErr(node: Rex.Op.Err, ctx: StaticType?): PlanNode {
@@ -745,19 +736,37 @@ internal class PlanTyper(
 
         // Helpers
 
+        /**
+         * Given a list of [args], this calculates the output type of `TUPLEUNION(args)`. NOTE: This does NOT handle union
+         * types intentionally. This function expects that all arguments be flattened, and, if need be, that you invoke
+         * this function multiple times based on the permutations of arguments.
+         *
+         * The signature of TUPLEUNION is: (LIST<STRUCT>) -> STRUCT.
+         *
+         * If any of the arguments are NULL (or potentially NULL), we return NULL.
+         * If any of the arguments are non-struct, we return MISSING.
+         *
+         * Now, assuming all the other arguments are STRUCT, then we compute the output based on a number of factors:
+         * - closed content
+         * - ordering
+         * - unique attributes
+         *
+         * If all arguments are closed content, then the output is closed content.
+         * If all arguments are ordered, then the output is ordered.
+         * If all arguments contain unique attributes AND all arguments are closed AND no fields clash, the output has
+         *  unique attributes.
+         */
         private fun calculateTupleUnionOutputType(args: List<StaticType>): StaticType {
             val structFields = mutableListOf<StructType.Field>()
             var structAmount = 0
             var structIsClosed = true
             var structIsOrdered = true
-            var canReturnStruct = false
             var uniqueAttrs = true
             val possibleOutputTypes = mutableListOf<StaticType>()
             args.forEach { arg ->
                 when (arg) {
                     is StructType -> {
                         structAmount += 1
-                        canReturnStruct = true
                         structFields.addAll(arg.fields)
                         structIsClosed = structIsClosed && arg.constraints.contains(TupleConstraint.Open(false))
                         structIsOrdered = structIsOrdered && arg.constraints.contains(TupleConstraint.Ordered)
@@ -772,15 +781,15 @@ internal class PlanTyper(
                         )
                         possibleOutputTypes.add(StaticType.MISSING)
                     }
-                    is NullType -> { possibleOutputTypes.add(StaticType.NULL) }
-                    else -> { possibleOutputTypes.add(StaticType.MISSING) }
+                    is NullType -> { return StaticType.NULL }
+                    else -> { return StaticType.MISSING }
                 }
             }
             uniqueAttrs = when {
                 structIsClosed.not() && structAmount > 1 -> false
-                structFields.distinctBy { it.key }.size != structFields.size -> false
                 else -> uniqueAttrs
             }
+            uniqueAttrs = uniqueAttrs && (structFields.size == structFields.distinctBy { it.key }.size)
             val orderedConstraint = when (structIsOrdered) {
                 true -> TupleConstraint.Ordered
                 false -> null
@@ -790,19 +799,43 @@ internal class PlanTyper(
                 TupleConstraint.UniqueAttrs(uniqueAttrs),
                 orderedConstraint
             )
-            if (canReturnStruct) {
-                uniqueAttrs = uniqueAttrs && (structFields.size == structFields.map { it.key }.distinct().size)
-                possibleOutputTypes.add(
-                    StructType(
-                        fields = structFields.map { it },
-                        contentClosed = structIsClosed,
-                        constraints = constraints
-                    )
-                )
-            }
-            return StaticType.unionOf(possibleOutputTypes.toSet()).flatten()
+            return StructType(
+                fields = structFields.map { it },
+                contentClosed = structIsClosed,
+                constraints = constraints
+            )
         }
 
+        /**
+         * We are essentially making permutations of arguments that maintain the same initial ordering. For example,
+         * consider the following args:
+         * ```
+         * [ 0 = UNION(INT, STRING), 1 = (DECIMAL, TIMESTAMP) ]
+         * ```
+         * This function will return:
+         * ```
+         * [
+         *   [ 0 = INT, 1 = DECIMAL ],
+         *   [ 0 = INT, 1 = TIMESTAMP ],
+         *   [ 0 = STRING, 1 = DECIMAL ],
+         *   [ 0 = STRING, 1 = TIMESTAMP ]
+         * ]
+         * ```
+         *
+         * Essentially, this becomes useful specifically in the case of TUPLEUNION, since we can make sure that
+         * the ordering of argument's attributes remains the same. For example:
+         * ```
+         * TUPLEUNION( UNION(STRUCT(a, b), STRUCT(c)), UNION(STRUCT(d, e), STRUCT(f)) )
+         * ```
+         *
+         * Then, the output of the tupleunion will have the output types of all of the below:
+         * ```
+         * TUPLEUNION(STRUCT(a,b), STRUCT(d,e)) --> STRUCT(a, b, d, e)
+         * TUPLEUNION(STRUCT(a,b), STRUCT(f)) --> STRUCT(a, b, f)
+         * TUPLEUNION(STRUCT(c), STRUCT(d,e)) --> STRUCT(c, d, e)
+         * TUPLEUNION(STRUCT(c), STRUCT(f)) --> STRUCT(c, f)
+         * ```
+         */
         private fun buildArgumentPermutations(args: List<StaticType>): Sequence<List<StaticType>> {
             val flattenedArgs = args.map { it.flatten().allTypes }
             return buildArgumentPermutations(flattenedArgs, accumulator = emptyList())

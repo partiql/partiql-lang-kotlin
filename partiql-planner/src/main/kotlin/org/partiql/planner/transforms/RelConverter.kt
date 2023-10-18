@@ -26,11 +26,11 @@ import org.partiql.ast.Select
 import org.partiql.ast.SetOp
 import org.partiql.ast.Sort
 import org.partiql.ast.builder.ast
+import org.partiql.ast.helpers.toBinder
 import org.partiql.ast.util.AstRewriter
 import org.partiql.ast.visitor.AstBaseVisitor
 import org.partiql.plan.Rel
 import org.partiql.plan.Rex
-import org.partiql.plan.builder.plan
 import org.partiql.plan.fnUnresolved
 import org.partiql.plan.rel
 import org.partiql.plan.relBinding
@@ -58,6 +58,9 @@ import org.partiql.plan.relOpUnpivot
 import org.partiql.plan.relType
 import org.partiql.plan.rex
 import org.partiql.plan.rexOpLit
+import org.partiql.plan.rexOpPivot
+import org.partiql.plan.rexOpSelect
+import org.partiql.plan.rexOpVarResolved
 import org.partiql.planner.Env
 import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValueExperimental
@@ -71,13 +74,10 @@ internal object RelConverter {
     // IGNORE — so we don't have to non-null assert on operator inputs
     private val nil = rel(relType(emptyList(), emptySet()), relOpErr("nil"))
 
-    private var uniqueNumber: Long = 0L
-    private fun getNextUniqueName(): String = "\$__${uniqueNumber++}"
-
     /**
      * Here we convert an SFW to composed [Rel]s, then apply the appropriate relation-value projection to get a [Rex].
      */
-    internal fun apply(sfw: Expr.SFW, env: Env): Rex = plan {
+    internal fun apply(sfw: Expr.SFW, env: Env): Rex {
         val rel = sfw.accept(ToRel(env), nil)
         val rex = when (val projection = sfw.select) {
             // PIVOT ... FROM
@@ -111,7 +111,7 @@ internal object RelConverter {
                 throw IllegalArgumentException("AST not normalized")
             }
         }
-        rex
+        return rex
     }
 
     /**
@@ -169,20 +169,17 @@ internal object RelConverter {
             return rel(type, op)
         }
 
-        /**
-         * Note: The name of the [Rel.Binding] doesn't actually matter. We make it unique to avoid any potential conflicts
-         * in the future.
-         */
-        override fun visitSelectValue(node: Select.Value, input: Rel): Rel = plan {
+        override fun visitSelectValue(node: Select.Value, input: Rel): Rel {
+            val name = node.constructor.toBinder(1).symbol
             val rex = RexConverter.apply(node.constructor, env)
-            val schema = listOf(relBinding(name = getNextUniqueName(), rex.type))
+            val schema = listOf(relBinding(name, rex.type))
             val props = input.type.props
             val type = relType(schema, props)
             val op = relOpProject(input, projections = listOf(rex))
-            rel(type, op)
+            return rel(type, op)
         }
 
-        override fun visitFromValue(node: From.Value, nil: Rel) = plan {
+        override fun visitFromValue(node: From.Value, nil: Rel): Rel {
             val rex = RexConverter.apply(node.expr, env)
             val binding = when (val a = node.asAlias) {
                 null -> error("AST not normalized, missing AS alias on $node")
@@ -191,7 +188,7 @@ internal object RelConverter {
                     type = rex.type
                 )
             }
-            when (node.type) {
+            return when (node.type) {
                 From.Value.Type.SCAN -> {
                     when (val i = node.atAlias) {
                         null -> convertScan(rex, binding)

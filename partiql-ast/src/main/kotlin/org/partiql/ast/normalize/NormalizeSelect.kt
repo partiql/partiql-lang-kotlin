@@ -161,7 +161,7 @@ internal object NormalizeSelect : AstPass {
                     buildSimpleStruct(it.expr, alias.symbol)
                 }
                 val byAliasItem = byAlias?.simple()?.let {
-                    val alias = it.asAlias ?: error("The AT alias should be present. This wasn't normalized.")
+                    val alias = it.asAlias ?: error("The BY alias should be present. This wasn't normalized.")
                     buildSimpleStruct(it.expr, alias.symbol)
                 }
                 listOfNotNull(
