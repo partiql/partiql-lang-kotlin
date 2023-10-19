@@ -13,6 +13,7 @@ import org.partiql.value.PartiQLValueType
  * @property returns            Operator return type
  * @property parameters         Operator parameters
  * @property description        Optional operator description
+ * @property isNullable         Flag indicating this function's operator may return a NULL value.
  */
 @OptIn(PartiQLValueExperimental::class)
 public sealed class FunctionSignature(
@@ -21,7 +22,6 @@ public sealed class FunctionSignature(
     @JvmField public val parameters: List<FunctionParameter>,
     @JvmField public val description: String? = null,
     @JvmField public val isNullable: Boolean = true,
-    @JvmField public val isHidden: Boolean = false,
 ) {
 
     /**
@@ -47,8 +47,6 @@ public sealed class FunctionSignature(
      *
      * @property isDeterministic    Flag indicating this function always produces the same output given the same input.
      * @property isNullCall         Flag indicating if any of the call arguments is NULL, then return NULL.
-     * @property isNullable         Flag indicating this function's operator may return a NULL value.
-     * @property isHidden           Flag indicating this functional is hidden from SQL call syntax
      * @constructor
      */
     public class Scalar(
@@ -57,10 +55,9 @@ public sealed class FunctionSignature(
         parameters: List<FunctionParameter>,
         description: String? = null,
         isNullable: Boolean = true,
-        isHidden: Boolean = false,
         @JvmField public val isDeterministic: Boolean = true,
         @JvmField public val isNullCall: Boolean = false,
-    ) : FunctionSignature(name, returns, parameters, description, isNullable, isHidden) {
+    ) : FunctionSignature(name, returns, parameters, description, isNullable) {
 
         override fun equals(other: Any?): Boolean {
             if (other !is Scalar) return false
@@ -70,8 +67,7 @@ public sealed class FunctionSignature(
                 other.parameters.size != parameters.size ||
                 other.isDeterministic != isDeterministic ||
                 other.isNullCall != isNullCall ||
-                other.isNullable != isNullable ||
-                other.isHidden != isHidden
+                other.isNullable != isNullable
             ) {
                 return false
             }
@@ -91,7 +87,6 @@ public sealed class FunctionSignature(
             result = 31 * result + isDeterministic.hashCode()
             result = 31 * result + isNullCall.hashCode()
             result = 31 * result + isNullable.hashCode()
-            result = 31 * result + isHidden.hashCode()
             result = 31 * result + (description?.hashCode() ?: 0)
             return result
         }
@@ -101,7 +96,6 @@ public sealed class FunctionSignature(
      * Represents the signature of a PartiQL aggregation function.
      *
      * @property isDecomposable     Flag indicating this aggregation can be decomposed
-     * @property isHidden           Flag indicating this functional is hidden from SQL call syntax
      * @constructor
      */
     public class Aggregation(
@@ -110,9 +104,8 @@ public sealed class FunctionSignature(
         parameters: List<FunctionParameter>,
         description: String? = null,
         isNullable: Boolean = true,
-        isHidden: Boolean = false,
         @JvmField public val isDecomposable: Boolean = true,
-    ) : FunctionSignature(name, returns, parameters, description, isNullable, isHidden) {
+    ) : FunctionSignature(name, returns, parameters, description, isNullable) {
 
         override fun equals(other: Any?): Boolean {
             if (other !is Aggregation) return false
@@ -120,8 +113,7 @@ public sealed class FunctionSignature(
                 other.name != name ||
                 other.returns != returns ||
                 other.parameters.size != parameters.size ||
-                other.isDecomposable != isDecomposable ||
-                other.isHidden != isHidden
+                other.isDecomposable != isDecomposable
             ) {
                 return false
             }
@@ -139,13 +131,12 @@ public sealed class FunctionSignature(
             result = 31 * result + returns.hashCode()
             result = 31 * result + parameters.hashCode()
             result = 31 * result + isDecomposable.hashCode()
-            result = 31 * result + isHidden.hashCode()
             result = 31 * result + (description?.hashCode() ?: 0)
             return result
         }
     }
 
-    //
+
     // // Logic for writing a [FunctionSignature] using SQL `CREATE FUNCTION` syntax.
     //
     // /**
@@ -164,7 +155,7 @@ public sealed class FunctionSignature(
     //     else -> "CALLED ON NULL INPUT"
     // }
     //
-    // internal fun sql(): String = buildString {
+    // private fun sql(): String = buildString {
     //     val fn = name.uppercase()
     //     val indent = "  "
     //     append("CREATE FUNCTION \"$fn\" (")
