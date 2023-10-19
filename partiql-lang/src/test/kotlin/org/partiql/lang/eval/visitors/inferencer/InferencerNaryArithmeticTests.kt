@@ -406,7 +406,7 @@ class InferencerNaryArithmeticTests {
                                 )
                             )
                         } +
-                            // non-numeric, non-unknown with an unknown -> data type mismatch and null or missing error
+                            // non-numeric, non-unknown with an unknown -> data type mismatch & always returns missing error or null or missing warning
                             generateAllUniquePairs(
                                 ALL_NON_NUMERIC_NON_UNKNOWN_TYPES,
                                 ALL_UNKNOWN_TYPES
@@ -451,7 +451,7 @@ class InferencerNaryArithmeticTests {
                                     )
                                 }
                             } +
-                            // numeric with an unknown -> null or missing error
+                            // numeric with an unknown -> always returns missing error or null or missing warning
                             generateAllUniquePairs(
                                 ALL_NUMERIC_TYPES,
                                 ALL_UNKNOWN_TYPES
@@ -499,7 +499,7 @@ class InferencerNaryArithmeticTests {
                                     )
                                 }
                             } +
-                            // unknown with an unknown -> null or missing error
+                            // unknown with an unknown -> always returns missing error or null or missing warning
                             generateAllUniquePairs(
                                 ALL_UNKNOWN_TYPES,
                                 ALL_UNKNOWN_TYPES
@@ -548,7 +548,7 @@ class InferencerNaryArithmeticTests {
                                 }
                             } +
                             listOf(
-                                // double arithmetic ops with unknowns -> null or missing errors
+                                // double arithmetic ops with unknowns -> null or missing warnings/errors
                                 doubleOpTestCases(
                                     name = "null, null, null",
                                     op = op,

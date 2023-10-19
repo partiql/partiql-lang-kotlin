@@ -414,12 +414,12 @@ class InferencerNaryOpInTests {
                         )
                     }
                 } +
-                // unknown IN non-collection (non-unknown) -> data type mismatch and unknown operand error
+                // unknown IN non-collection (non-unknown) -> data type mismatch and always returns missing error
                 ALL_UNKNOWN_TYPES.flatMap { unknown ->
                     if (unknown is MissingType) {
                         ALL_NON_COLLECTION_NON_UNKNOWN_TYPES.map { nonCollection ->
                             createNAryOpInErrorTest(
-                                name = "$unknown IN $nonCollection - data type mismatch, unknown error",
+                                name = "$unknown IN $nonCollection - data type mismatch, always returns missing error",
                                 leftType = unknown,
                                 rightType = nonCollection,
                                 expectedErrors = listOf(
@@ -438,7 +438,7 @@ class InferencerNaryOpInTests {
                     } else {
                         ALL_NON_COLLECTION_NON_UNKNOWN_TYPES.map { nonCollection ->
                             createNAryOpInErrorTest(
-                                name = "$unknown IN $nonCollection - data type mismatch, unknown error",
+                                name = "$unknown IN $nonCollection - data type mismatch, null or missing error",
                                 leftType = unknown,
                                 rightType = nonCollection,
                                 expectedErrors = listOf(

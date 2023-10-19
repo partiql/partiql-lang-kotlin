@@ -98,7 +98,7 @@ class InferencerSelectWhereTests {
                         )
                     )
                 } +
-                // unknown types for where expression -> null or missing error
+                // unknown types for where expression -> always returns missing error or null or missing warning
                 ALL_UNKNOWN_TYPES.map { unknownType ->
                     if (unknownType is MissingType) {
                         createSelectWhereContinuationTypeTests(

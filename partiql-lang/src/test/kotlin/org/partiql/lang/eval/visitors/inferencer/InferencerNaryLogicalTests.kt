@@ -302,7 +302,7 @@ class InferencerNaryLogicalTests {
                             )
                         }
                     } +
-                    // bool with an unknown -> null or missing error
+                    // bool with an unknown -> always missing error or null or missing warning
                     generateAllUniquePairs(
                         listOf(StaticType.BOOL),
                         ALL_UNKNOWN_TYPES
@@ -350,7 +350,7 @@ class InferencerNaryLogicalTests {
                             )
                         }
                     } +
-                    // unknown with an unknown -> null or missing error
+                    // unknown with an unknown -> always missing error or null or missing warning
                     generateAllUniquePairs(
                         ALL_UNKNOWN_TYPES,
                         ALL_UNKNOWN_TYPES

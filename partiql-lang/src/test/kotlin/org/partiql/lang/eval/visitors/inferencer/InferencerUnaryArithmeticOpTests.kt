@@ -20,7 +20,7 @@ class InferencerUnaryArithmeticOpTests {
     companion object {
         /**
          * Creates a test case with the specified unary [op] of the form `[op] x` with [argType] corresponding to
-         * `x`'s static type. Each test case is expected to have [expectedProblems] through inference.
+         * `x`'s static type. Each test case is expected to have [expectedErrors] through inference.
          */
         private fun createUnaryOpErrorCase(
             name: String,
@@ -122,7 +122,7 @@ class InferencerUnaryArithmeticOpTests {
                         )
                     } else {
                         createSingleUnaryOpTestCase(
-                            name = "unary op with unknown op error - $unknownType",
+                            name = "unary op with unknown op warning - $unknownType",
                             op = op,
                             argType = unknownType,
                             expectedType = unknownType,

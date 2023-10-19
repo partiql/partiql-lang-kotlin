@@ -409,7 +409,7 @@ class InferencerNaryComparisonAndEqualityTests {
                                 )
                             }
                         } +
-                        // any type compared with an unknown -> null or missing error
+                        // any type compared with an unknown -> always returns missing error or null or missing warning
                         generateAllUniquePairs(
                             StaticType.ALL_TYPES,
                             ALL_UNKNOWN_TYPES

@@ -307,7 +307,7 @@ class InferencerNaryBetweenTests {
                                 // <comparable> BETWEEN <incomparable> AND MISSING -> data type mismatch and always missing
                                 // error
                                 // <comparable> comes from [comparableTypes] and <incomparable> comes from [incomparableTypes].
-                                // Comparing <comparable> with <unknown> results in a null or missing error
+                                // Comparing <comparable> with <unknown> results in an always returns missing error or null or missing warning
                                 createNAryBetweenProblemTest(
                                     name = "data type mismatch, always missing error - x: $comparable, y: $incomparable, z: $unknownType",
                                     valueType = comparable,
@@ -329,7 +329,7 @@ class InferencerNaryBetweenTests {
                                 // <comparable> BETWEEN <incomparable> AND null/ unionOf(null, missing) -> data type mismatch and null or missing
                                 // error
                                 // <comparable> comes from [comparableTypes] and <incomparable> comes from [incomparableTypes].
-                                // Comparing <comparable> with <unknown> results in a null or missing error
+                                // Comparing <comparable> with <unknown> results in always returns missing error or null or missing warning
                                 createNAryBetweenProblemTest(
                                     name = "data type mismatch, null or missing warning - x: $comparable, y: $incomparable, z: $unknownType",
                                     valueType = comparable,

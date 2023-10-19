@@ -2756,7 +2756,7 @@ class PartiQLSchemaInferencerTests {
                 }
             ),
             SuccessTestCase(
-                name = "NULLIF - 1",
+                name = "NULLIF - NULL first arg",
                 query = "NULLIF(NULL,'')",
                 expected = StaticType.NULL,
                 warnings = assertProblemExists {
@@ -2767,7 +2767,7 @@ class PartiQLSchemaInferencerTests {
                 }
             ),
             SuccessTestCase(
-                name = "NULLIF",
+                name = "NULLIF - NULL second arg",
                 query = "NULLIF('',NULL)",
                 expected = StaticType.unionOf(StaticType.NULL, StaticType.STRING)
             )

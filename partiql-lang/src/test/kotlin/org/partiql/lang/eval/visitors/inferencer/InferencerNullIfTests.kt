@@ -202,7 +202,7 @@ class InferencerNullIfTests {
                         )
                     }
                 } +
-                // NULLIF with a type and unknown -> null or missing error
+                // NULLIF with a type and unknown -> always return missing error or null or missing warning
                 generateAllUniquePairs(
                     StaticType.ALL_TYPES,
                     ALL_UNKNOWN_TYPES
@@ -301,7 +301,7 @@ class InferencerNullIfTests {
                         )
                     ),
                     createErrorNullIfTest(
-                        name = "null or missing error - NULLIF(missing, optional int)",
+                        name = "always returns missing error - NULLIF(missing, optional int)",
                         leftType = StaticType.MISSING,
                         rightType = StaticType.INT.asOptional(),
                         expectedErrors = listOf(

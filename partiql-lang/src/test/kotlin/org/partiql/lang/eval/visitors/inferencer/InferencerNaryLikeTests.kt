@@ -206,7 +206,7 @@ class InferencerNaryLikeTests {
                     )
                 )
             } +
-            // non-text, non-unknown with unknown -> data type mismatch and null or missing error
+            // non-text, non-unknown with unknown -> data type mismatch & always returns missing error or null or missing warning
             generateAllUniquePairs(
                 ALL_NON_TEXT_NON_UNKNOWN_TYPES,
                 ALL_UNKNOWN_TYPES
@@ -249,7 +249,7 @@ class InferencerNaryLikeTests {
                     )
                 }
             } +
-            // text with an unknown -> null or missing error
+            // text with an unknown -> always returns missing error or null or missing warning
             generateAllUniquePairs(
                 ALL_TEXT_TYPES,
                 ALL_UNKNOWN_TYPES
@@ -281,7 +281,7 @@ class InferencerNaryLikeTests {
                     )
                 }
             } +
-            // unknown with an unknown -> null or missing error
+            // unknown with an unknown -> always returns missing error or null or missing warning
             generateAllUniquePairs(
                 ALL_UNKNOWN_TYPES,
                 ALL_UNKNOWN_TYPES
