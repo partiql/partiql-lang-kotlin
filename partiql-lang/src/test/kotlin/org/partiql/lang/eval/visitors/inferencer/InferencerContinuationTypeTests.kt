@@ -702,7 +702,7 @@ class InferencerContinuationTypeTests {
                         )
                     ),
                     TestCase(
-                        name = "null or missing error (from caseValue): CASE <missing> WHEN <string> THEN <string> WHEN <symbol> THEN <symbol> END",
+                        name = "always returns missing error (from caseValue): CASE <missing> WHEN <string> THEN <string> WHEN <symbol> THEN <symbol> END",
                         originalSql = "CASE t_missing WHEN t_string THEN t_string WHEN t_symbol THEN t_symbol END",
                         globals = mapOf(
                             "t_missing" to StaticType.MISSING,
@@ -723,7 +723,7 @@ class InferencerContinuationTypeTests {
                         )
                     ),
                     TestCase(
-                        name = "data type mismatch and null or missing errors: CASE <int> WHEN <missingT> THEN <string> WHEN <symbol> THEN <symbol> END",
+                        name = "data type mismatch and always returns missing errors: CASE <int> WHEN <missingT> THEN <string> WHEN <symbol> THEN <symbol> END",
                         originalSql = "CASE t_int WHEN t_missing THEN t_string WHEN t_symbol THEN t_symbol END",
                         globals = mapOf(
                             "t_int" to StaticType.INT,
@@ -801,7 +801,7 @@ class InferencerContinuationTypeTests {
                         )
                     ),
                     TestCase(
-                        name = "null or missing error: CASE WHEN <null> THEN <null> WHEN <missing> THEN <missing> END",
+                        name = "null or missing warnings/errors: CASE WHEN <null> THEN <null> WHEN <missing> THEN <missing> END",
                         originalSql = "CASE WHEN t_null THEN t_null WHEN t_missing THEN t_missing END",
                         globals = mapOf(
                             "t_null" to StaticType.NULL,
@@ -822,7 +822,7 @@ class InferencerContinuationTypeTests {
                         )
                     ),
                     TestCase(
-                        name = "data type mismatch and null or missing errors: whenExprs of non-bools and unknown",
+                        name = "data type mismatch and always returns missing errors: whenExprs of non-bools and unknown",
                         originalSql = "CASE WHEN t_int THEN t_int WHEN t_string THEN t_string WHEN t_missing THEN t_missing END",
                         globals = mapOf(
                             "t_int" to StaticType.INT,
