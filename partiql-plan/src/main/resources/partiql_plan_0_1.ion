@@ -33,6 +33,7 @@ fn::[
   },
   unresolved::{
     identifier: identifier,
+    isHidden: bool,
   },
 ]
 

@@ -342,8 +342,8 @@ internal object RelConverter {
                 schema.add(binding)
                 val args = expr.args.map { arg -> arg.toRex(env) }
                 val id = AstToPlan.convert(expr.function)
-                val agg = aggUnresolved(id)
-                relOpAggregateCall(agg, args)
+                val fn = aggUnresolved(id)
+                relOpAggregateCall(fn, args)
             }
             var groups = emptyList<Rex>()
             if (groupBy != null) {

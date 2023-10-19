@@ -1,0 +1,77 @@
+== Planner Implementation Check List
+
+=== Functions and Operators
+
+
+|===
+|Category |Name |Query Expression |Header Function signature | Hidden | Implemented | COMMENT
+
+|Logical Operator |NOT | NOT expr | not(expr: Boolean) : Boolean | True | Yes. |
+|Logical Operator | AND | expr1 AND expr2 | and(expr1: Boolean, expr2: Boolean) : Boolean | True | Yes. |
+|Logical Operator | OR | expr1 or expr2 | or(expr1: Boolean, expr2 Boolean) : Boolean | True | Yes. |
+| Unary Operator | POS | +expr | pos(expr: T) : T  where T is a numeric Type| True | Yes. |
+|Unary Operator | NEG | -expr | neg(expr:T) : T where T is a numeric Type| True | Yes. |
+|Arithmetic Operator | PLUS | expr1 + expr2 | plus(expr1: T, expr2: T) : T where T is a numeric Type | True | Yes. |
+|Arithmetic Operator | MINUS | expr1 - expr2 | minus(expr1: T, expr2: T) : T where T is a numeric Type | True | Yes. |
+|Arithmetic Operator | Multiplication | expr1 * expr2 | times(expr1: T, expr2: T) : T where T is a numeric Type | True | Yes. |
+|Arithmetic Operator | Division | expr1 / expr2 | div(expr1: T, expr2: T) : T where T is a numeric Type | True | Yes. |
+|Arithmetic Operator | Modulo | expr1 % expr2 | mod(expr1: T, expr2: T) : T where T is a numeric Type | True | Yes. |
+|Arithmetic Operator | Bitwise AND | expr1 & expr2 | bitwise_and(expr1: I, expr2: I) : I where I is a Integer Type| True | Yes. |
+|Comparison Operator | Equal | expr1 = expr2 | eq(expr1: T, expr2: T) : Boolean where T is any PartiQL Value Type.  | True | Yes. |
+|Comparison Operator | NOT EQUAL | expr1 != expr2 ; expr1 <> expr2 | ne(expr1: T, expr2: T) : Boolean where T is any PartiQL Value Type.  | True | Yes. |
+|Comparison Operator | LESS THAN | expr1 < expr2 | lt(expr1: T, expr2: T) : Boolean where T is any PartiQL Value Type.  | True | Yes. |
+|Comparison Operator | LESS THAN OR EQUAL | expr1 ≤ expr2 | lte(expr1: T, expr2: T) : Boolean where T is any PartiQL Value Type.  | True | Yes. |
+|Comparison Operator | GREATER THAN | expr1 > expr2 | gt(expr1: T, expr2: T) : Boolean where T is any PartiQL Value Type.  | True | Yes. |
+|Comparison Operator | GREATER THAN OR EQUAL | expr1 ≥ expr2 | gte(expr1: T, expr2: T) : Boolean where T is any PartiQL Value Type.  | True | Yes. |
+| Function | Upper | UPPER(expr) | upper(expr: T) : T where T is a text Type | False | Yes. |
+| Function | Lower | LOWER(expr) | lower(expr: T) : T where T is a text Type | False | Yes. |
+| Function | Coalesce | COALESCE(expr, expr2, ...., expr_n) | N/A | False | No. |
+| Function | Nullif | NULLIF(expr1, expr2) | N/A | False | Yes. |
+| Function | UtcNow | UTCNOW() | utcnow() : Timestamp | False | Yes. |
+| Function | position | POSITION(expr1, epxr2) | position(expr1: T, expr2: T) : INT64 | False | YES. |
+| Function - Special Form| position | POSITION(expr1 in expr2) | position(expr1: T, expr2: T) : INT64 | TRUE | YES. |
+| Function | substring | SUBSTRING(expr1, expr2) | substring(expr1: T, expr2: INT64) : T where T is a Text Type | False | Yes. |
+| Function - special form | substring | SUBSTRING(expr1 FROM expr2) | substring(expr1: T, expr2: INT64) : T where T is a Text Type | True | Yes. |
+| Function | substring | SUBSTRING(expr1, expr2, expr3) | substring(expr1: T, expr2: INT64, expr3: INT64) : T where T is a Text Type | False | Yes. |
+| Function - special form | substring | SUBSTRING(expr1 FROM expr2 FOR expr3) | substring(expr1: T, expr2: INT64, expr3: INT64) : T where T is a Text Type | False | Yes. |
+| Function | Trim | TRIM(expr) | trim(expr: T) : T where T is a Text Type | False | Yes. |
+| Function - special form | Trim | TRIM(BOTH FROM expr) | N/A | TRUE | NO. |
+| Function - special form | Trim | TRIM(expr1 FROM expr2); TRIM(BOTH expr1 FROM expr2) | trim_chars(expr1: T, expr2: T) : T where T is a Text Type | True | Yes. |
+| Function - special form | Trim | TRIM(LEADING FROM expr) | trim_leading(expr: T) : T where T is a Text Type | True | Yes. |
+| Function - special form | Trim | TRIM(LEADING expr1 FROM expr2) | trim_leading_chars(expr1: T, expr2: T) : T where T is a Text Type | True | Yes. |
+| Function - special form | Trim | TRIM(TRAILING FROM expr) | trim_trailing(expr: T) : T where T is a Text Type | True | Yes. |
+| Function - special form | Trim | TRIM(TRAILING expr1 FROM expr2) | trim_trailing_chars(expr1: T, expr2: T) : T where T is a Text Type | True | Yes. |
+| Function - special form | LIKE | expr1 LIKE expr2 | like(expr1: STRING, expr2: STRING) : Boolean | True | Yes. |
+| Function - special form | LIKE | expr1 LIKE expr2 ESCAPE expr3 | like(expr1: STRING, expr2: STRING, expr3: STRING) : Boolean | True | Yes. |
+| Function - special form | BETWEEN | expr1 BETWEEN expr2 AND expr3 | between(expr1: T, expr2: T, expr3: T) : Boolean where T is a numeric Type | True | Yes. | Between can also be applied to Datetime type in many data base system.
+| Function - special form | IN | expr1 IN expr2 | in_collection(expr1: T1, expr2: T2) : Boolean where T1 can be any PartiQL value Type and T2 is a collection Type | True | Yes. |
+| is Operator | IS | expr IS type | is_$type_name(expr: T) where T can be any PartiQL Value Type | True | Yes. | The type operand of the is Operator get reflected by the function name
+| Cast Operator | CAST | CAST(expr AS Type)| cast_$type_name(expr) | True | Yes | Cast function are generated based on the Type lattice
+| Function - special form | DATE_ADD | DATE_ADD(datetimePart, expr1, expr2) | date_add_$datetimePart(expr1: INT, expr2: T) where T is a Datetime Type | True | Yes. | The datetime part operand of the date_add function get reflected by the function name
+| Function - special form | DATE_DIFF | DATE_DIFF(datetimePart, expr1, expr2) | date_diff_$datetimePart(expr1: T, expr2: T) : INT64 :  where T is a Datetime Type | True | Yes. | The datetime part operand of the date_diff function get reflected by the function name
+| System Function | CURRENT_USER |  CURRENT_USER | current_user()| True | Yes |
+| System Function | CURRENT_DATE |  CURRENT_DATE | current_user()| True | Yes |
+| Function | CHAR_LENGTH | CHAR_LENGTH(str) | N/A | N/A | No |
+| Function | EXIST | EXISTS(val) | N/A | N/A | No |
+| Function | EXTRACT | EXTRACT(datatimePart FROM t) | N/A | N/A | No |
+| Function | FILTER_DISTINCT | FILTER_DISTINCT(c) | N/A | N/A | No |
+| Function | MAKE DATE | MAKE_DATE(year, month, day) | N/A | N/A | No | We might be able to deprecate this function once we have the constructor call for Date Literal
+| Function | MAKE DATE | MAKE_TIME(hour, minute, second, timezoneMinutes?) | N/A | N/A | No | We might be able to deprecate this function once we have the constructor call for TIME Literal
+| Function | SIZE | SIZE(c) | N/A | N/A | No |
+| Function | TO_STRING | TO_STRING(timestamp, timestamp_format_pattern) | N/A | N/A | No |
+| Function | TO_TIMESTAMP | TO_TIMESTAMP(str[ ,  timestamp_format_pattern]) | N/A | N/A | No |
+| Function | UNIX_TIMESTAMP | UNIX_TIMESTAMP([timestamp]) | N/A | N/A | No |
+| Function | FROM_UNIXTIME | FROM_UNIXTIME(unix_timestamp) | N/A | N/A | No |
+| Function | CEILING | CEILING(v) | N/A | N/A | NO |
+| Function | FLOOR | FLOOR(v) | N/A | N/A | NO |
+| Function | ABS | ABS(v) | N/A | N/A | NO |
+| Function | SQRT | SQRT(v) | N/A | N/A | NO |
+| Function | Nature log  | LN(v) | N/A | N/A | NO |
+| Function | exponential  | EXP(v) | N/A | N/A | NO |
+| Function | POWER  | POW(v) | N/A | N/A | NO |
+| Function | BIT_LENGTH  | BIT_LENGTH(v) | N/A | N/A | NO |
+| Function | OCTET_LENGTH  | OCTET_LENGTH(v) | N/A | N/A | NO |
+| Function | OVERLAY  | OVERLAY(str1 PLACING str2 FROM pos) | N/A | N/A | NO |
+| Function | OVERLAY  | OVERLAY(str1 PLACING str2 FROM pos FOR for) | N/A | N/A | NO |
+| Function | TEXT_REPLACE  | TEXT_REPLACE(string, from, to) | N/A | N/A | NO |
+|===
