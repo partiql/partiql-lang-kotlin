@@ -351,7 +351,7 @@ internal class PlanTyper(
             // type the calls and groups
             val typer = RexTyper(locals = TypeEnv(input.type.schema, ResolutionStrategy.LOCAL))
 
-            // typing of aggregate calls it slightly more complicated because they are not expressions.
+            // typing of aggregate calls is slightly more complicated because they are not expressions.
             val calls = node.calls.mapIndexed { i, call ->
                 when (val agg = call.agg) {
                     is Agg.Resolved -> call to ctx!!.schema[i].type
