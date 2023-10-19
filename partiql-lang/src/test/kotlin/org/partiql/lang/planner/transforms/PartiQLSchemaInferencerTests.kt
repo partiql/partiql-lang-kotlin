@@ -23,6 +23,8 @@ import org.partiql.lang.planner.transforms.PartiQLSchemaInferencerTests.TestCase
 import org.partiql.plan.debug.PlanPrinter
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.PlanningProblemDetails
+import org.partiql.planner.test.PartiQLTest
+import org.partiql.planner.test.PartiQLTestProvider
 import org.partiql.plugins.local.LocalPlugin
 import org.partiql.types.AnyOfType
 import org.partiql.types.AnyType
@@ -50,6 +52,13 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class PartiQLSchemaInferencerTests {
+
+    private val provider = PartiQLTestProvider()
+
+    init {
+        // load test inputs
+        provider.load()
+    }
 
     @ParameterizedTest
     @ArgumentsSource(TestProvider::class)
@@ -102,7 +111,7 @@ class PartiQLSchemaInferencerTests {
 
     companion object {
 
-        private val root = this::class.java.getResource("/catalogs")!!.toURI().toPath().pathString
+        private val root = this::class.java.getResource("/catalogs/default")!!.toURI().toPath().pathString
 
         private val PLUGINS = listOf(LocalPlugin())
 
@@ -212,36 +221,38 @@ class PartiQLSchemaInferencerTests {
 
         // Tests
 
+        private fun key(name: String) = PartiQLTest.Key("schema_inferencer", name)
+
         @JvmStatic
         fun collections() = listOf<TestCase>(
             SuccessTestCase(
                 name = "Collection BAG<INT>",
-                query = "<< 1, 2, 3 >>",
+                key = key("collections-01"),
                 expected = BagType(INT),
             ),
             SuccessTestCase(
                 name = "Collection LIST<INT>",
-                query = "[ 1, 2, 3 ]",
+                key = key("collections-02"),
                 expected = ListType(INT),
             ),
             SuccessTestCase(
                 name = "Collection LIST<INT>",
-                query = "( 1, 2, 3 )",
+                key = key("collections-03"),
                 expected = ListType(INT),
             ),
             SuccessTestCase(
                 name = "Collection SEXP<INT>",
-                query = "SEXP ( 1, 2, 3 )",
+                key = key("collections-04"),
                 expected = SexpType(INT),
             ),
             SuccessTestCase(
                 name = "SELECT from array",
-                query = "SELECT VALUE x FROM [ 1, 2, 3 ] as x",
+                key = key("collections-05"),
                 expected = BagType(INT),
             ),
             SuccessTestCase(
                 name = "SELECT from array",
-                query = "SELECT x FROM [ 1, 2, 3 ] as x",
+                key = key("collections-06"),
                 expected = BagType(
                     StructType(
                         fields = listOf(StructType.Field("x", INT)),
@@ -557,18 +568,7 @@ class PartiQLSchemaInferencerTests {
         fun excludeCases() = listOf(
             SuccessTestCase(
                 name = "EXCLUDE SELECT star",
-                query = """SELECT * EXCLUDE c.ssn FROM [
-                    {
-                        'name': 'Alan',
-                        'custId': 1,
-                        'address': {
-                            'city': 'Seattle',
-                            'zipcode': 98109,
-                            'street': '123 Seaplane Dr.'
-                        },
-                        'ssn': 123456789
-                    }
-                ] AS c""",
+                key = key("exclude-01"),
                 expected = BagType(
                     StructType(
                         fields = mapOf(
@@ -595,18 +595,7 @@ class PartiQLSchemaInferencerTests {
             ),
             SuccessTestCase(
                 name = "EXCLUDE SELECT star multiple paths",
-                query = """SELECT * EXCLUDE c.ssn, c.address.street FROM [
-                    {
-                        'name': 'Alan',
-                        'custId': 1,
-                        'address': {
-                            'city': 'Seattle',
-                            'zipcode': 98109,
-                            'street': '123 Seaplane Dr.'
-                        },
-                        'ssn': 123456789
-                    }
-                ] AS c""",
+                key = key("exclude-02"),
                 expected = BagType(
                     StructType(
                         fields = mapOf(
@@ -632,28 +621,7 @@ class PartiQLSchemaInferencerTests {
             ),
             SuccessTestCase(
                 name = "EXCLUDE SELECT star list index and list index field",
-                query = """SELECT *
-                    EXCLUDE
-                        t.a.b.c[0],
-                        t.a.b.c[1].field
-                    FROM [{
-                        'a': {
-                            'b': {
-                                'c': [
-                                    {
-                                        'field': 0    -- c[0]
-                                    },
-                                    {
-                                        'field': 1    -- c[1]
-                                    },
-                                    {
-                                        'field': 2    -- c[2]
-                                    }
-                                ]
-                            }
-                        },
-                        'foo': 'bar'
-                    }] AS t""",
+                key = key("exclude-03"),
                 expected = BagType(
                     StructType(
                         fields = mapOf(
@@ -702,17 +670,7 @@ class PartiQLSchemaInferencerTests {
             ),
             SuccessTestCase(
                 name = "EXCLUDE SELECT star collection index as last step",
-                query = """SELECT *
-                    EXCLUDE
-                        t.a.b.c[0]
-                    FROM [{
-                        'a': {
-                            'b': {
-                                'c': [0, 1, 2]
-                            }
-                        },
-                        'foo': 'bar'
-                    }] AS t""",
+                key = key("exclude-04"),
                 expected = BagType(
                     StructType(
                         fields = mapOf(
@@ -748,12 +706,7 @@ class PartiQLSchemaInferencerTests {
             // EXCLUDE regression test (behavior subject to change pending RFC)
             SuccessTestCase(
                 name = "EXCLUDE SELECT star collection wildcard as last step",
-                query = """SELECT *
-                    EXCLUDE
-                        t.a[*]
-                    FROM [{
-                        'a': [0, 1, 2]
-                    }] AS t""",
+                key = key("exclude-05"),
                 expected = BagType(
                     StructType(
                         fields = mapOf(
@@ -772,30 +725,7 @@ class PartiQLSchemaInferencerTests {
             ),
             SuccessTestCase(
                 name = "EXCLUDE SELECT star list wildcard",
-                query = """SELECT *
-                    EXCLUDE
-                        t.a.b.c[*].field_x
-                    FROM [{
-                        'a': {
-                            'b': {
-                                'c': [
-                                    {                    -- c[0]
-                                        'field_x': 0, 
-                                        'field_y': 0
-                                    },
-                                    {                    -- c[1]
-                                        'field_x': 1,
-                                        'field_y': 1
-                                    },
-                                    {                    -- c[2]
-                                        'field_x': 2,
-                                        'field_y': 2
-                                    }
-                                ]
-                            }
-                        },
-                        'foo': 'bar'
-                    }] AS t""",
+                key = key("exclude-06"),
                 expected = BagType(
                     StructType(
                         fields = mapOf(
@@ -839,30 +769,7 @@ class PartiQLSchemaInferencerTests {
             ),
             SuccessTestCase(
                 name = "EXCLUDE SELECT star list tuple wildcard",
-                query = """SELECT *
-                    EXCLUDE
-                        t.a.b.c[*].*
-                    FROM [{
-                        'a': {
-                            'b': {
-                                'c': [
-                                    {                    -- c[0]
-                                        'field_x': 0, 
-                                        'field_y': 0
-                                    },
-                                    {                    -- c[1]
-                                        'field_x': 1,
-                                        'field_y': 1
-                                    },
-                                    {                    -- c[2]
-                                        'field_x': 2,
-                                        'field_y': 2
-                                    }
-                                ]
-                            }
-                        },
-                        'foo': 'bar'
-                    }] AS t""",
+                key = key("exclude-07"),
                 expected = BagType(
                     StructType(
                         fields = mapOf(
@@ -906,24 +813,7 @@ class PartiQLSchemaInferencerTests {
             ),
             SuccessTestCase(
                 name = "EXCLUDE SELECT star order by",
-                query = """SELECT *
-                    EXCLUDE
-                        t.a
-                    FROM [
-                        {
-                            'a': 2,
-                            'foo': 'bar2'
-                        },
-                        {
-                            'a': 1,
-                            'foo': 'bar1'
-                        },
-                        {
-                            'a': 3,
-                            'foo': 'bar3'
-                        }
-                    ] AS t
-                    ORDER BY t.a""",
+                key = key("exclude-08"),
                 expected = ListType(
                     StructType(
                         fields = mapOf(
@@ -940,17 +830,7 @@ class PartiQLSchemaInferencerTests {
             ),
             SuccessTestCase(
                 name = "EXCLUDE SELECT star with JOINs",
-                query = """SELECT *
-                    EXCLUDE bar.d
-                    FROM 
-                    <<
-                        {'a': 1, 'b': 11}, 
-                        {'a': 2, 'b': 22}
-                    >> AS foo,
-                    <<
-                        {'c': 3, 'd': 33},
-                        {'c': 4, 'd': 44}
-                    >> AS bar""",
+                key = key("exclude-09"),
                 expected = BagType(
                     StructType(
                         fields = mapOf(
@@ -969,14 +849,7 @@ class PartiQLSchemaInferencerTests {
             ),
             SuccessTestCase(
                 name = "SELECT t.b EXCLUDE ex 1",
-                query = """SELECT t.b EXCLUDE t.b[*].b_1
-                    FROM <<
-                    {
-                        'a': {'a_1':1,'a_2':2},
-                        'b': [ {'b_1':3,'b_2':4}, {'b_1':5,'b_2':6} ],
-                        'c': 7,
-                        'd': 8
-                    } >> AS t""",
+                key = key("exclude-10"),
                 expected = BagType(
                     StructType(
                         fields = mapOf(
@@ -1001,14 +874,7 @@ class PartiQLSchemaInferencerTests {
             ),
             SuccessTestCase(
                 name = "SELECT * EXCLUDE ex 2",
-                query = """SELECT * EXCLUDE t.b[*].b_1
-                    FROM <<
-                    {
-                        'a': {'a_1':1,'a_2':2},
-                        'b': [ {'b_1':3,'b_2':4}, {'b_1':5,'b_2':6} ],
-                        'c': 7,
-                        'd': 8
-                    } >> AS t""",
+                key = key("exclude-11"),
                 expected = BagType(
                     StructType(
                         fields = mapOf(
@@ -1043,14 +909,7 @@ class PartiQLSchemaInferencerTests {
             ),
             SuccessTestCase(
                 name = "SELECT VALUE t.b EXCLUDE",
-                query = """SELECT VALUE t.b EXCLUDE t.b[*].b_1
-                    FROM <<
-                    {
-                        'a': {'a_1':1,'a_2':2},
-                        'b': [ {'b_1':3,'b_2':4}, {'b_1':5,'b_2':6} ],
-                        'c': 7,
-                        'd': 8
-                    } >> AS t""",
+                key = key("exclude-12"),
                 expected = BagType(
                     ListType(
                         elementType = StructType(
@@ -1065,16 +924,7 @@ class PartiQLSchemaInferencerTests {
             ),
             SuccessTestCase(
                 name = "SELECT * EXCLUDE collection wildcard and nested tuple attr",
-                query = """SELECT * EXCLUDE t.a[*].b.c
-                    FROM <<
-                        {
-                            'a': [
-                                { 'b': { 'c': 0, 'd': 'zero' } },
-                                { 'b': { 'c': 1, 'd': 'one' } },
-                                { 'b': { 'c': 2, 'd': 'two' } }
-                            ]
-                        }
-                    >> AS t""",
+                key = key("exclude-13"),
                 expected = BagType(
                     StructType(
                         fields = mapOf(
@@ -1108,16 +958,7 @@ class PartiQLSchemaInferencerTests {
             ),
             SuccessTestCase(
                 name = "SELECT * EXCLUDE collection index and nested tuple attr",
-                query = """SELECT * EXCLUDE t.a[1].b.c
-                    FROM <<
-                        {
-                            'a': [
-                                { 'b': { 'c': 0, 'd': 'zero' } },
-                                { 'b': { 'c': 1, 'd': 'one' } },
-                                { 'b': { 'c': 2, 'd': 'two' } }
-                            ]
-                        }
-                    >> AS t""",
+                key = key("exclude-14"),
                 expected = BagType(
                     StructType(
                         fields = mapOf(
@@ -1152,16 +993,7 @@ class PartiQLSchemaInferencerTests {
             ),
             SuccessTestCase(
                 name = "SELECT * EXCLUDE collection wildcard and nested tuple wildcard",
-                query = """SELECT * EXCLUDE t.a[*].b.*
-                    FROM <<
-                        {
-                            'a': [
-                                { 'b': { 'c': 0, 'd': 'zero' } },
-                                { 'b': { 'c': 1, 'd': 'one' } },
-                                { 'b': { 'c': 2, 'd': 'two' } }
-                            ]
-                        }
-                    >> AS t""",
+                key = key("exclude-15"),
                 expected = BagType(
                     StructType(
                         fields = mapOf(
@@ -1193,16 +1025,7 @@ class PartiQLSchemaInferencerTests {
             ),
             SuccessTestCase(
                 name = "SELECT * EXCLUDE collection index and nested tuple wildcard",
-                query = """SELECT * EXCLUDE t.a[1].b.*
-                    FROM <<
-                        {
-                            'a': [
-                                { 'b': { 'c': 0, 'd': 'zero' } },
-                                { 'b': { 'c': 1, 'd': 'one' } },
-                                { 'b': { 'c': 2, 'd': 'two' } }
-                            ]
-                        }
-                    >> AS t""",
+                key = key("exclude-16"),
                 expected = BagType(
                     StructType(
                         fields = mapOf(
@@ -1237,16 +1060,7 @@ class PartiQLSchemaInferencerTests {
             ),
             SuccessTestCase(
                 name = "SELECT * EXCLUDE collection wildcard and nested collection wildcard",
-                query = """SELECT * EXCLUDE t.a[*].b.d[*].e
-                    FROM <<
-                        {
-                            'a': [
-                                { 'b': { 'c': 0, 'd': [{'e': 'zero', 'f': true}] } },
-                                { 'b': { 'c': 1, 'd': [{'e': 'one', 'f': true}] } },
-                                { 'b': { 'c': 2, 'd': [{'e': 'two', 'f': true}] } }
-                            ]
-                        }
-                    >> AS t""",
+                key = key("exclude-17"),
                 expected = BagType(
                     StructType(
                         fields = mapOf(
@@ -1292,16 +1106,7 @@ class PartiQLSchemaInferencerTests {
             ),
             SuccessTestCase(
                 name = "SELECT * EXCLUDE collection index and nested collection wildcard",
-                query = """SELECT * EXCLUDE t.a[1].b.d[*].e
-                    FROM <<
-                        {
-                            'a': [
-                                { 'b': { 'c': 0, 'd': [{'e': 'zero', 'f': true}] } },
-                                { 'b': { 'c': 1, 'd': [{'e': 'one', 'f': true}] } },
-                                { 'b': { 'c': 2, 'd': [{'e': 'two', 'f': true}] } }
-                            ]
-                        }
-                    >> AS t""",
+                key = key("exclude-18"),
                 expected = BagType(
                     StructType(
                         fields = mapOf(
@@ -1348,16 +1153,7 @@ class PartiQLSchemaInferencerTests {
             ),
             SuccessTestCase(
                 name = "SELECT * EXCLUDE collection index and nested collection index",
-                query = """SELECT * EXCLUDE t.a[1].b.d[0].e
-                    FROM <<
-                        {
-                            'a': [
-                                { 'b': { 'c': 0, 'd': [{'e': 'zero', 'f': true}] } },
-                                { 'b': { 'c': 1, 'd': [{'e': 'one', 'f': true}] } },
-                                { 'b': { 'c': 2, 'd': [{'e': 'two', 'f': true}] } }
-                            ]
-                        }
-                    >> AS t""",
+                key = key("exclude-19"),
                 expected = BagType(
                     StructType(
                         fields = mapOf(
@@ -1404,17 +1200,7 @@ class PartiQLSchemaInferencerTests {
             ),
             SuccessTestCase(
                 name = "EXCLUDE case sensitive lookup",
-                query = """SELECT * EXCLUDE t."a".b['c']
-                    FROM <<
-                        {
-                            'a': {
-                                'B': {
-                                    'c': 0,
-                                    'd': 'foo'
-                                }
-                            }
-                        }
-                    >> AS t""",
+                key = key("exclude-20"),
                 expected = BagType(
                     StructType(
                         fields = mapOf(
@@ -1446,18 +1232,7 @@ class PartiQLSchemaInferencerTests {
             ),
             SuccessTestCase(
                 name = "EXCLUDE case sensitive lookup with capitalized and uncapitalized attr",
-                query = """SELECT * EXCLUDE t."a".b['c']
-                    FROM <<
-                        {
-                            'a': {
-                                'B': {
-                                    'c': 0,
-                                    'C': true,
-                                    'd': 'foo'
-                                }
-                            }
-                        }
-                    >> AS t""",
+                key = key("exclude-21"),
                 expected = BagType(
                     StructType(
                         fields = mapOf(
@@ -1490,18 +1265,7 @@ class PartiQLSchemaInferencerTests {
             ),
             SuccessTestCase(
                 name = "EXCLUDE case sensitive lookup with both capitalized and uncapitalized removed",
-                query = """SELECT * EXCLUDE t."a".b.c
-                    FROM <<
-                        {
-                            'a': {
-                                'B': {          -- both 'c' and 'C' to be removed
-                                    'c': 0,
-                                    'C': true,
-                                    'd': 'foo'
-                                }
-                            }
-                        }
-                    >> AS t""",
+                key = key("exclude-22"),
                 expected = BagType(
                     StructType(
                         fields = mapOf(
@@ -1533,18 +1297,7 @@ class PartiQLSchemaInferencerTests {
             ),
             SuccessTestCase(
                 name = "EXCLUDE with both duplicates",
-                query = """SELECT * EXCLUDE t."a".b.c
-                    FROM <<
-                        {
-                            'a': {
-                                'B': {
-                                    'c': 0,
-                                    'c': true,
-                                    'd': 'foo'
-                                }
-                            }
-                        }
-                    >> AS t""",
+                key = key("exclude-23"),
                 expected = BagType(
                     StructType(
                         fields = mapOf(
@@ -1578,7 +1331,7 @@ class PartiQLSchemaInferencerTests {
             // EXCLUDE regression test (behavior subject to change pending RFC)
             SuccessTestCase(
                 name = "EXCLUDE with removed attribute later referenced",
-                query = "SELECT * EXCLUDE t.a, t.a.b FROM << { 'a': { 'b': 1 }, 'c': 2 } >> AS t",
+                key = key("exclude-24"),
                 expected = BagType(
                     StructType(
                         fields = mapOf(
@@ -1596,7 +1349,7 @@ class PartiQLSchemaInferencerTests {
             // EXCLUDE regression test (behavior subject to change pending RFC)
             SuccessTestCase(
                 name = "EXCLUDE with non-existent attribute reference",
-                query = "SELECT * EXCLUDE t.attr_does_not_exist FROM << { 'a': 1 } >> AS t",
+                key = key("exclude-25"),
                 expected = BagType(
                     StructType(
                         fields = mapOf(
@@ -1614,18 +1367,7 @@ class PartiQLSchemaInferencerTests {
             // EXCLUDE regression test (behavior subject to change pending RFC); could give error/warning
             SuccessTestCase(
                 name = "exclude union of types",
-                query = """SELECT t EXCLUDE t.a.b
-                    FROM <<
-                        {
-                            'a': {
-                                'b': 1,    -- `b` to be excluded
-                                'c': 'foo'
-                            }
-                        },
-                        {
-                            'a': NULL
-                        }
-                    >> AS t""",
+                key = key("exclude-26"),
                 expected = BagType(
                     StructType(
                         fields = mapOf(
@@ -1666,21 +1408,7 @@ class PartiQLSchemaInferencerTests {
             ),
             SuccessTestCase(
                 name = "exclude union of types exclude same type",
-                query = """SELECT t EXCLUDE t.a.b
-                    FROM <<
-                        {
-                            'a': {
-                                'b': 1,    -- `b` to be excluded
-                                'c': 'foo'
-                            }
-                        },
-                        {
-                            'a': {
-                                'b': 1,    -- `b` to be excluded
-                                'c': NULL
-                            }
-                        }
-                    >> AS t""",
+                key = key("exclude-27"),
                 expected = BagType(
                     StructType(
                         fields = mapOf(
@@ -1730,21 +1458,7 @@ class PartiQLSchemaInferencerTests {
             ),
             SuccessTestCase(
                 name = "exclude union of types exclude different type",
-                query = """SELECT t EXCLUDE t.a.c
-                    FROM <<
-                        {
-                            'a': {
-                                'b': 1,
-                                'c': 'foo'  -- `c` to be excluded
-                            }
-                        },
-                        {
-                            'a': {
-                                'b': 1,
-                                'c': NULL   -- `c` to be excluded
-                            }
-                        }
-                    >> AS t""",
+                key = key("exclude-28"),
                 expected = BagType(
                     StructType(
                         fields = mapOf(
@@ -1777,17 +1491,7 @@ class PartiQLSchemaInferencerTests {
             // EXCLUDE regression test (behavior subject to change pending RFC); could give error/warning
             SuccessTestCase(
                 name = "invalid exclude collection wildcard",
-                query = """SELECT * EXCLUDE t.a[*]
-                    FROM <<
-                        {
-                            'a': {
-                                'b': {
-                                    'c': 0,
-                                    'd': 'foo'
-                                }
-                            }
-                        }
-                    >> AS t""",
+                key = key("exclude-29"),
                 expected = BagType(
                     elementType = StructType(
                         fields = mapOf(
@@ -1821,17 +1525,7 @@ class PartiQLSchemaInferencerTests {
             // EXCLUDE regression test (behavior subject to change pending RFC); could give error/warning
             SuccessTestCase(
                 name = "invalid exclude collection index",
-                query = """SELECT * EXCLUDE t.a[1]
-                    FROM <<
-                        {
-                            'a': {
-                                'b': {
-                                    'c': 0,
-                                    'd': 'foo'
-                                }
-                            }
-                        }
-                    >> AS t""",
+                key = key("exclude-30"),
                 expected = BagType(
                     elementType = StructType(
                         fields = mapOf(
@@ -1865,16 +1559,7 @@ class PartiQLSchemaInferencerTests {
             // EXCLUDE regression test (behavior subject to change pending RFC); could give error/warning
             SuccessTestCase(
                 name = "invalid exclude tuple attr",
-                query = """SELECT * EXCLUDE t.a.b
-                    FROM <<
-                        {
-                            'a': [
-                                { 'b': 0 },
-                                { 'b': 1 },
-                                { 'b': 2 }
-                            ]
-                        }
-                    >> AS t""",
+                key = key("exclude-31"),
                 expected = BagType(
                     elementType = StructType(
                         fields = mapOf(
@@ -1900,16 +1585,7 @@ class PartiQLSchemaInferencerTests {
             // EXCLUDE regression test (behavior subject to change pending RFC); could give error/warning
             SuccessTestCase(
                 name = "invalid exclude tuple wildcard",
-                query = """SELECT * EXCLUDE t.a.*
-                    FROM <<
-                        {
-                            'a': [
-                                { 'b': 0 },
-                                { 'b': 1 },
-                                { 'b': 2 }
-                            ]
-                        }
-                    >> AS t""",
+                key = key("exclude-32"),
                 expected = BagType(
                     elementType = StructType(
                         fields = mapOf(
@@ -1935,16 +1611,7 @@ class PartiQLSchemaInferencerTests {
             // EXCLUDE regression test (behavior subject to change pending RFC); could give error/warning
             SuccessTestCase(
                 name = "invalid exclude tuple attr step",
-                query = """SELECT * EXCLUDE t.b   -- `t.b` does not exist
-                    FROM <<
-                        {
-                            'a': <<
-                                { 'b': 0 },
-                                { 'b': 1 },
-                                { 'b': 2 }
-                            >>
-                        }
-                    >> AS t""",
+                key = key("exclude-33"),
                 expected = BagType(
                     elementType = StructType(
                         fields = mapOf(
@@ -1968,68 +1635,41 @@ class PartiQLSchemaInferencerTests {
                 )
             ),
             // EXCLUDE regression test (behavior subject to change pending RFC); could give error/warning
-            // ErrorTestCase(
-            //     name = "invalid exclude root",
-            //     query = """SELECT * EXCLUDE nonsense.b   -- `nonsense` does not exist in binding tuples
-            //         FROM <<
-            //             {
-            //                 'a': <<
-            //                     { 'b': 0 },
-            //                     { 'b': 1 },
-            //                     { 'b': 2 }
-            //                 >>
-            //             }
-            //         >> AS t""",
-            //     expected = BagType(
-            //         elementType = StructType(
-            //             fields = mapOf(
-            //                 "a" to BagType(
-            //                     elementType = StructType(
-            //                         fields = mapOf(
-            //                             "b" to StaticType.INT
-            //                         ),
-            //                         contentClosed = true,
-            //                         constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
-            //                     )
-            //                 )
-            //             ),
-            //             contentClosed = true,
-            //             constraints = setOf(
-            //                 TupleConstraint.Open(false),
-            //                 TupleConstraint.UniqueAttrs(true),
-            //                 TupleConstraint.Ordered
-            //             )
-            //         )
-            //     ),
-            //     problemHandler = assertProblemExists {
-            //         Problem(
-            //             UNKNOWN_PROBLEM_LOCATION,
-            //             PlanningProblemDetails.UnresolvedExcludeExprRoot("nonsense")
-            //         )
-            //     }
-            // ),
+            ErrorTestCase(
+                name = "invalid exclude root",
+                key = key("exclude-34"),
+                expected = BagType(
+                    elementType = StructType(
+                        fields = mapOf(
+                            "a" to BagType(
+                                elementType = StructType(
+                                    fields = mapOf(
+                                        "b" to StaticType.INT
+                                    ),
+                                    contentClosed = true,
+                                    constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                )
+                            )
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                ),
+                problemHandler = assertProblemExists {
+                    Problem(
+                        UNKNOWN_PROBLEM_LOCATION,
+                        PlanningProblemDetails.UnresolvedExcludeExprRoot("nonsense")
+                    )
+                }
+            ),
             // EXCLUDE regression test (behavior subject to change pending RFC); could give error/warning
             SuccessTestCase(
                 name = "exclude with unions and last step collection index",
-                query = """SELECT * EXCLUDE t.a[0].c    -- `c`'s type to be unioned with `MISSING`
-                    FROM <<
-                        {
-                            'a': [
-                                {
-                                    'b': 0,
-                                    'c': 0
-                                },
-                                {
-                                    'b': 1,
-                                    'c': NULL
-                                },
-                                {
-                                    'b': 2,
-                                    'c': 0.1
-                                }
-                            ]
-                        }
-                    >> AS t""",
+                key = key("exclude-35"),
                 expected = BagType(
                     elementType = StructType(
                         fields = mapOf(
@@ -2083,7 +1723,7 @@ class PartiQLSchemaInferencerTests {
             SuccessTestCase(
                 name = "EXCLUDE using a catalog",
                 catalog = CATALOG_B,
-                query = "SELECT * EXCLUDE t.c FROM b.b.b AS t",
+                key = key("exclude-36"),
                 expected = BagType(
                     elementType = StructType(
                         fields = mapOf(
@@ -2379,9 +2019,11 @@ class PartiQLSchemaInferencerTests {
     }
 
     sealed class TestCase {
+
         class SuccessTestCase(
             val name: String,
-            val query: String,
+            val key: PartiQLTest.Key? = null,
+            val query: String? = null,
             val catalog: String? = null,
             val catalogPath: List<String> = emptyList(),
             val expected: StaticType,
@@ -2391,7 +2033,8 @@ class PartiQLSchemaInferencerTests {
 
         class ErrorTestCase(
             val name: String,
-            val query: String,
+            val key: PartiQLTest.Key? = null,
+            val query: String? = null,
             val catalog: String? = null,
             val catalogPath: List<String> = emptyList(),
             val note: String? = null,
@@ -3171,8 +2814,15 @@ class PartiQLSchemaInferencerTests {
         )
         val collector = ProblemCollector()
         val ctx = PartiQLSchemaInferencer.Context(session, PLUGINS, collector)
-        val result = PartiQLSchemaInferencer.inferInternal(tc.query, ctx)
 
+        val hasQuery = tc.query != null
+        val hasKey = tc.key != null
+        if (hasQuery == hasKey) {
+            error("Test must have one of either `query` or `key`")
+        }
+        val input = tc.query ?: provider[tc.key!!]!!.statement
+
+        val result = PartiQLSchemaInferencer.inferInternal(input, ctx)
         assert(collector.problems.isEmpty()) {
             collector.problems.toString()
         }
@@ -3200,7 +2850,15 @@ class PartiQLSchemaInferencerTests {
         )
         val collector = ProblemCollector()
         val ctx = PartiQLSchemaInferencer.Context(session, PLUGINS, collector)
-        val result = PartiQLSchemaInferencer.inferInternal(tc.query, ctx)
+
+        val hasQuery = tc.query != null
+        val hasKey = tc.key != null
+        if (hasQuery == hasKey) {
+            error("Test must have one of either `query` or `key`")
+        }
+        val input = tc.query ?: provider[tc.key!!]!!.statement
+        val result = PartiQLSchemaInferencer.inferInternal(input, ctx)
+
         assert(collector.problems.isNotEmpty()) {
             buildString {
                 appendLine("Expected to find problems, but none were found.")

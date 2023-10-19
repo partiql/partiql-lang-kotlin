@@ -1,0 +1,139 @@
+= PartiQL Test Input Queries
+:toc:
+
+This package contains many input queries to be used in various parts of testing — parsing, planning, transpiling, evaluation.
+
+== Structure
+
+Query inputs are grouped by some general category which makes up a "test group". There are many opportunities to add more structure, but the premise
+is to simply have a list of input queries, each of which has a unique identifier which is the group name along with a
+special pragma comment (ex: `--#[my-test-name]`) above the statement. File names don't matter, only a suite directory
+name is used. All statements within a group a treated as one big list regardless of file structure. You may choose
+to group multiple short statements in one file, or split each query into its own file.
+
+NOTE: I have not modified the generated TPC-DS schemas so everything is NULLABLE which isn't always the case. See
+https://www.tpc.org/tpc_documents_current_versions/pdf/tpc-ds_v2.6.0.pdf
+
+
+== Schemas
+
+Catalog and schema definition subject to change once PartiQL Value Schema is actually defined. The current version
+is an iteration of John's initial work on the local plugin and Avro IDL. I'm finding it verbose which can make things
+harder to read. Then again this is a plugin used for testing, so the input schema doesn't matter that much so long as
+we can easily parse it.
+
+.Scalar Types
+[source,ion]
+----
+// absent
+null
+missing
+
+// boolean
+bool
+
+// numeric
+int8
+int16
+int32
+int64
+int
+decimal
+(decimal p s)
+float32
+float64
+
+// char strings
+(char n)
+string
+(string n)
+
+// bit strings
+(bit n)
+binary
+(binary n)
+
+// byte strings
+(byte n)
+blob
+blob(n)
+
+// date/time types
+date
+time
+(time p)
+(time p z)
+timestamp
+(timestamp p)
+(timestamp p z)
+(interval p)
+----
+
+.Collection Types
+[source,ion]
+----
+bag::[type]   // ex: bag::[int]
+list::[type]
+sexp::[type]
+----
+
+.Struct Type
+[source,ion]
+----
+{ f_1: t_1, ..., f_n, t_n }
+
+open::{ ... }
+closed::{ ... }
+
+// Examples
+{ a: int, b: string }
+
+bag::[
+  closed::{
+    x: int32,
+    y: int32,
+  }
+]
+----
+
+.Union Types
+[source,ion]
+----
+(t1 | t2 | ... )
+
+// Examples
+(int32 | null)
+----
+
+You can place a list of constraints on a type by wrapping in an outer constraint container.
+
+.Constraints
+[source,sql]
+----
+CREATE TABLE foo (
+  location STRING PRIMARY KEY
+  x INT
+  y INT
+);
+----
+
+[source,ion]
+----
+bag::[
+  {
+    location: string,
+    x: int32,
+    y: int32,
+  },
+  _::(
+    (primary_key location)
+  )
+]
+
+(define my_num
+  (int _::(
+    (min 1)
+    (max 1)
+  ))
+)
+----

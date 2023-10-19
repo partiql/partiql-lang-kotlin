@@ -1,3 +1,5 @@
+import org.gradle.kotlin.dsl.distribution
+
 /*
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
@@ -15,10 +17,10 @@
 
 plugins {
     id(Plugins.conventions)
+    distribution
 }
 
 dependencies {
     implementation(project(":partiql-spi"))
     implementation(project(":partiql-types"))
-    implementation(Deps.gson)
 }
