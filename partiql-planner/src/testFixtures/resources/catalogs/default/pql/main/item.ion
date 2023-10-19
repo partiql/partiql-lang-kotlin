@@ -1,6 +1,7 @@
 {
   type: "struct",
   name: "item",
+  constraints: [ closed, unique, ordered ],
   fields: [
     {
       name: "i_item_sk",
@@ -20,6 +21,7 @@
       name: "i_rec",
       type: {
         type: "struct",
+        constraints: [ closed, unique, ordered ],
         fields: [
           {
             name: "i_rec_start_date",
@@ -162,6 +164,7 @@
       name: "manager_info",
       type: {
         type: "struct",
+        constraints: [ closed, unique, ordered ],
         fields: [
           {
             name: "manager_id",
@@ -179,6 +182,7 @@
               "null",
               {
                 type: "struct",
+                constraints: [ closed, unique, ordered ],
                 fields: [
                   {
                     name: "zip_code",

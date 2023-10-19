@@ -1,6 +1,7 @@
 {
   type: "struct",
   name: "employer",
+  constraints: [ closed, unique, ordered ],
   fields: [
     {
       name: "name",
@@ -14,6 +15,7 @@
       name: "address",
       type: {
         type: "struct",
+        constraints: [ closed, unique, ordered ],
         fields: [
           {
             name: "street",

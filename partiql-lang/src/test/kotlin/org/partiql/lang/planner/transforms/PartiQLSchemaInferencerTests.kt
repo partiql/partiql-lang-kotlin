@@ -35,6 +35,8 @@ import org.partiql.types.SexpType
 import org.partiql.types.StaticType
 import org.partiql.types.StaticType.Companion.DECIMAL
 import org.partiql.types.StaticType.Companion.INT
+import org.partiql.types.StaticType.Companion.INT4
+import org.partiql.types.StaticType.Companion.INT8
 import org.partiql.types.StaticType.Companion.MISSING
 import org.partiql.types.StaticType.Companion.NULL
 import org.partiql.types.StaticType.Companion.STRING
@@ -129,6 +131,10 @@ class PartiQLSchemaInferencerTests {
             "db" to ionStructOf(
                 field("connector_name", ionString("local")),
                 field("root", ionString("$root/db")),
+            ),
+            "pql" to ionStructOf(
+                field("connector_name", ionString("local")),
+                field("root", ionString("$root/pql")),
             ),
         )
 
@@ -283,6 +289,77 @@ class PartiQLSchemaInferencerTests {
                 catalog = CATALOG_AWS,
                 query = "SELECT * FROM b.b",
                 expected = TABLE_AWS_B_B
+            ),
+            SuccessTestCase(
+                name = "Select star with join",
+                key = key("sanity-05"),
+                catalog = "pql",
+                expected = BagType(
+                    StructType(
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(false),
+                            TupleConstraint.Ordered
+                        ),
+                        fields = listOf(
+                            StructType.Field(
+                                "name",
+                                StructType(
+                                    fields = listOf(
+                                        StructType.Field("first", STRING),
+                                        StructType.Field("last", STRING),
+                                    ),
+                                    contentClosed = true,
+                                    constraints = setOf(
+                                        TupleConstraint.Open(false),
+                                        TupleConstraint.UniqueAttrs(true),
+                                        TupleConstraint.Ordered
+                                    ),
+                                )
+                            ),
+                            StructType.Field("ssn", STRING),
+                            StructType.Field("employer", STRING.asNullable()),
+                            StructType.Field("name", STRING),
+                            StructType.Field("tax_id", INT8),
+                            StructType.Field(
+                                "address",
+                                StructType(
+                                    fields = listOf(
+                                        StructType.Field("street", STRING),
+                                        StructType.Field("zip", INT4),
+                                    ),
+                                    contentClosed = true,
+                                    constraints = setOf(
+                                        TupleConstraint.Open(false),
+                                        TupleConstraint.UniqueAttrs(true),
+                                        TupleConstraint.Ordered
+                                    )
+                                )
+                            ),
+                        )
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "Select star",
+                key = key("sanity-06"),
+                catalog = "pql",
+                expected = BagType(
+                    StructType(
+                        fields = listOf(
+                            StructType.Field("first", STRING),
+                            StructType.Field("last", STRING),
+                            StructType.Field("full_name", STRING),
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                )
             ),
         )
 

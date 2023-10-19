@@ -1,11 +1,13 @@
 {
   type: "struct",
   name: "person",
+  constraints: [ closed, unique, ordered ],
   fields: [
     {
       name: "name",
       type: {
         type: "struct",
+        constraints: [ closed, unique, ordered ],
         fields: [
           {
             name: "first",
@@ -23,7 +25,7 @@
       type: "string"
     },
     {
-      name: "company",
+      name: "employer",
       type: [
         "string",
         "null"

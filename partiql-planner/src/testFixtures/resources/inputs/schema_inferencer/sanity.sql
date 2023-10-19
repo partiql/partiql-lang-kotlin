@@ -35,13 +35,13 @@ FROM store_sales;
 --#[sanity-05]
 SELECT p.*, e.*
 FROM
-    pql.person AS p
+    main.person AS p
     INNER JOIN
-    pql.employer AS e
+    main.employer AS e
     ON p.employer = e.name;
 
 --#[sanity-06]
 SELECT
        p.name.*,
        (p.name."first" || ' ' || p.name."last") AS full_name
-FROM pql.person AS p;
+FROM main.person AS p;
