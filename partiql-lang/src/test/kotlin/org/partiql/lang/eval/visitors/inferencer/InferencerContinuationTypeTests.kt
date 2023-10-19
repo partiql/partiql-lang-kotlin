@@ -454,7 +454,7 @@ class InferencerContinuationTypeTests {
                         )
                     ),
                     TestCase(
-                        name = "null or missing error: NOT null -> bool",
+                        name = "null or missing warning: NOT null -> bool",
                         originalSql = "NOT nullT",
                         globals = mapOf("nullT" to StaticType.NULL),
                         handler = expectQueryOutputType(
@@ -490,7 +490,7 @@ class InferencerContinuationTypeTests {
                         )
                     ),
                     TestCase(
-                        name = "null or missing error: null BETWEEN int AND int",
+                        name = "null or missing warning: null BETWEEN int AND int",
                         originalSql = "nullT BETWEEN goodT AND goodT",
                         globals = mapOf(
                             "nullT" to StaticType.NULL,
@@ -547,7 +547,7 @@ class InferencerContinuationTypeTests {
                         )
                     ),
                     TestCase(
-                        name = "null or missing error: null IN list(string)",
+                        name = "null or missing warning: null IN list(string)",
                         originalSql = "nullT IN rhs",
                         globals = mapOf(
                             "nullT" to StaticType.NULL,
@@ -565,7 +565,7 @@ class InferencerContinuationTypeTests {
                         )
                     ),
                     TestCase(
-                        name = "null or missing error: int IN null",
+                        name = "null or missing warning: int IN null",
                         originalSql = "lhs IN nullT",
                         globals = mapOf(
                             "lhs" to StaticType.INT,
@@ -607,7 +607,7 @@ class InferencerContinuationTypeTests {
                         )
                     ),
                     TestCase(
-                        name = "null or missing error: NULLIF(union(INT, FLOAT), MISSING)",
+                        name = "null or missing warning: NULLIF(union(INT, FLOAT), MISSING)",
                         originalSql = "NULLIF(lhs, rhs)",
                         globals = mapOf(
                             "lhs" to StaticType.unionOf(StaticType.INT, StaticType.FLOAT),
@@ -624,7 +624,7 @@ class InferencerContinuationTypeTests {
                         )
                     ),
                     TestCase(
-                        name = "null or missing error: NULLIF(MISSING, union(INT, FLOAT))",
+                        name = "null or missing warning: NULLIF(MISSING, union(INT, FLOAT))",
                         originalSql = "NULLIF(lhs, rhs)",
                         globals = mapOf(
                             "lhs" to StaticType.MISSING,
