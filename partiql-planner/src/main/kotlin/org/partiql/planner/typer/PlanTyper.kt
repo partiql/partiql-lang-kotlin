@@ -979,7 +979,13 @@ internal class PlanTyper(
                     // Found a match!
                     val newAgg = aggResolved(match.signature)
                     val newArgs = rewriteFnArgs(match.mapping, args)
-                    var type = newAgg.signature.returns.toStaticType()
+                    val returns = newAgg.signature.returns
+
+                    // Return type with calculated nullability
+                    var type = when {
+                        newAgg.signature.isNullable -> returns.toStaticType()
+                        else -> returns.toNonNullStaticType()
+                    }
 
                     // Some operators can return MISSING during runtime
                     if (match.isMissable) {

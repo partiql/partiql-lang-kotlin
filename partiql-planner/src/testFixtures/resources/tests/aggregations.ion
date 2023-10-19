@@ -116,7 +116,10 @@ suite::{
           fields: [
             {
               name: "avg",
-              type: "int32"
+              type: [
+                "int32",
+                "null"
+              ],
             },
           ],
         },
@@ -150,7 +153,10 @@ suite::{
           fields: [
             {
               name: "min",
-              type: "int32"
+              type: [
+                "int32",
+                "null"
+              ],
             },
           ],
         },
@@ -167,7 +173,10 @@ suite::{
           fields: [
             {
               name: "max",
-              type: "int32"
+              type: [
+                "int32",
+                "null"
+              ],
             },
           ],
         },
@@ -184,7 +193,10 @@ suite::{
           fields: [
             {
               name: "sum",
-              type: "int32"
+              type: [
+                "int32",
+                "null"
+              ],
             },
           ],
         },
@@ -224,7 +236,10 @@ suite::{
           fields: [
             {
               name: "_1",
-              type: "float32"
+              type: [
+                "float32",
+                "null"
+              ],
             },
             {
               name: "y",
@@ -250,7 +265,10 @@ suite::{
           fields: [
             {
               name: "_1",
-              type: "float32"
+              type: [
+                "float32",
+                "null"
+              ],
             },
             {
               name: "a",
