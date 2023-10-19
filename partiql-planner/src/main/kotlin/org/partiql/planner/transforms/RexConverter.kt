@@ -24,6 +24,7 @@ import org.partiql.ast.Type
 import org.partiql.ast.visitor.AstBaseVisitor
 import org.partiql.plan.Identifier
 import org.partiql.plan.Rex
+import org.partiql.plan.builder.plan
 import org.partiql.plan.fnUnresolved
 import org.partiql.plan.identifierSymbol
 import org.partiql.plan.rex
@@ -140,20 +141,30 @@ internal object RexConverter {
 
         override fun visitExprCall(node: Expr.Call, context: Env): Rex {
             val type = (StaticType.ANY)
-            // Args
-            val args = node.args.map { visitExpr(it, context) }
             // Fn
             val id = AstToPlan.convert(node.function)
+            if (id is Identifier.Symbol && id.symbol.equals("TUPLEUNION", ignoreCase = true)) {
+                return visitExprCallTupleUnion(node, context)
+            }
             val fn = fnUnresolved(id)
+            // Args
+            val args = node.args.map { visitExpr(it, context) }
             // Rex
             val op = rexOpCall(fn, args)
             return rex(type, op)
         }
 
-        override fun visitExprCase(node: Expr.Case, context: Env): Rex {
+        private fun visitExprCallTupleUnion(node: Expr.Call, context: Env) = plan {
+            val type = (StaticType.STRUCT)
+            val args = node.args.map { visitExpr(it, context) }.toMutableList()
+            val op = rexOpTupleUnion(args)
+            rex(type, op)
+        }
+
+        override fun visitExprCase(node: Expr.Case, context: Env) = plan {
             val type = (StaticType.ANY)
             val rex = when (node.expr) {
-                null -> bool(true) // match `true`
+                null -> null
                 else -> visitExpr(node.expr!!, context) // match `rex
             }
 
@@ -161,8 +172,10 @@ internal object RexConverter {
             val id = identifierSymbol(Expr.Binary.Op.EQ.name.lowercase(), Identifier.CaseSensitivity.SENSITIVE)
             val fn = fnUnresolved(id)
             val createBranch: (Rex, Rex) -> Rex.Op.Case.Branch = { condition: Rex, result: Rex ->
-                val op = rexOpCall(fn.copy(), listOf(rex, condition))
-                val updatedCondition = rex(type, op)
+                val updatedCondition = when (rex) {
+                    null -> condition
+                    else -> rex(type, rexOpCall(fn.copy(), listOf(rex, condition)))
+                }
                 rexOpCaseBranch(updatedCondition, result)
             }
 
@@ -178,7 +191,7 @@ internal object RexConverter {
             }
             branches += rexOpCaseBranch(bool(true), defaultRex)
             val op = rexOpCase(branches)
-            return rex(type, op)
+            rex(type, op)
         }
 
         override fun visitExprCollection(node: Expr.Collection, context: Env): Rex {

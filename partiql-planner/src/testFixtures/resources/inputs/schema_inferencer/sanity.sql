@@ -33,8 +33,15 @@ SELECT ss_quantity, -- This is a nullable int32
 FROM store_sales;
 
 --#[sanity-05]
-SELECT s_store_sk
-FROM tpc_ds.store AS store
-         LEFT JOIN
-     tpc_ds.store_returns AS returns
-     ON s_store_sk = sr_store_sk;
+SELECT p.*, e.*
+FROM
+    main.person AS p
+    INNER JOIN
+    main.employer AS e
+    ON p.employer = e.name;
+
+--#[sanity-06]
+SELECT
+       p.name.*,
+       (p.name."first" || ' ' || p.name."last") AS full_name
+FROM main.person AS p;

@@ -1,0 +1,35 @@
+{
+  type: "struct",
+  name: "person",
+  constraints: [ closed, unique, ordered ],
+  fields: [
+    {
+      name: "name",
+      type: {
+        type: "struct",
+        constraints: [ closed, unique, ordered ],
+        fields: [
+          {
+            name: "first",
+            type: "string"
+          },
+          {
+            name: "last",
+            type: "string"
+          },
+        ]
+      },
+    },
+    {
+      name: "ssn",
+      type: "string"
+    },
+    {
+      name: "employer",
+      type: [
+        "string",
+        "null"
+      ]
+    }
+  ]
+}

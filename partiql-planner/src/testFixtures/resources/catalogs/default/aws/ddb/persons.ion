@@ -1,0 +1,46 @@
+{
+  type: "bag",
+  items: {
+    type: "struct",
+    constraints: [
+      closed,
+      unique,
+      ordered
+    ],
+    fields: [
+      {
+        name: "name",
+        type: [
+          "string",
+          {
+            type: "struct",
+            fields: [
+              {
+                name: "first",
+                type: "string"
+              },
+              {
+                name: "last",
+                type: "string"
+              }
+            ]
+          },
+          {
+            type: "struct",
+            constraints: [
+              closed,
+              unique,
+              ordered
+            ],
+            fields: [
+              {
+                name: "full_name",
+                type: "string"
+              },
+            ]
+          },
+        ]
+      },
+    ]
+  }
+}
