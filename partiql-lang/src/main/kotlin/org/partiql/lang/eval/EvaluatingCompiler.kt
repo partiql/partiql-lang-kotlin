@@ -2209,11 +2209,11 @@ internal open class EvaluatingCompiler(
     /**
      * Represents an instance of a compiled `EXCLUDE` expression. Notably, this expr will have redundant steps removed.
      */
-    private data class CompiledExcludeExpr(val root: PartiqlAst.Identifier, val exclusions: RemoveAndOtherSteps)
+    internal data class CompiledExcludeExpr(val root: PartiqlAst.Identifier, val exclusions: RemoveAndOtherSteps)
     /**
      * Represents all the exclusions at the current level and other nested levels.
      */
-    private data class RemoveAndOtherSteps(val remove: Set<PartiqlAst.ExcludeStep>, val steps: Map<PartiqlAst.ExcludeStep, RemoveAndOtherSteps>) {
+    internal data class RemoveAndOtherSteps(val remove: Set<PartiqlAst.ExcludeStep>, val steps: Map<PartiqlAst.ExcludeStep, RemoveAndOtherSteps>) {
         companion object {
             fun empty(): RemoveAndOtherSteps {
                 return RemoveAndOtherSteps(emptySet(), emptyMap())
@@ -2224,7 +2224,7 @@ internal open class EvaluatingCompiler(
     /**
      * Creates a list of compiled exclude expressions.
      */
-    private fun compileExcludeClause(excludeClause: PartiqlAst.ExcludeOp): List<CompiledExcludeExpr> {
+    internal fun compileExcludeClause(excludeClause: PartiqlAst.ExcludeOp): List<CompiledExcludeExpr> {
         val excludeExprs = excludeClause.exprs
         fun addToCompiledExcludeExprs(curCompiledExpr: RemoveAndOtherSteps, steps: List<PartiqlAst.ExcludeStep>): RemoveAndOtherSteps {
             // subsumption cases
@@ -2232,35 +2232,47 @@ internal open class EvaluatingCompiler(
             // when steps.size > 1: look at other steps
             val first = steps.first()
             var entryRemove = curCompiledExpr.remove.toMutableSet()
-            val entrySteps = curCompiledExpr.steps.toMutableMap()
+            var entrySteps = curCompiledExpr.steps.toMutableMap()
             if (steps.size == 1) {
                 when (first) {
                     is PartiqlAst.ExcludeStep.ExcludeTupleAttr -> {
                         if (entryRemove.contains(PartiqlAst.build { excludeTupleWildcard() })) {
                             // contains wildcard; do not add; a.b and a.* -> a[*]
                         } else {
+                            // add to entries to remove
                             entryRemove.add(first)
+                            // remove from other steps
+                            entrySteps.remove(first)
                         }
                     }
                     is PartiqlAst.ExcludeStep.ExcludeTupleWildcard -> {
                         if (entryRemove.any { it is PartiqlAst.ExcludeStep.ExcludeCollectionWildcard || it is PartiqlAst.ExcludeStep.ExcludeCollectionIndex }) {
                             // todo mistyping; and other mistyping
                         } else {
+                            // entries to remove just tuple wildcard
                             entryRemove = mutableSetOf(first)
+                            // todo: perhaps remove just the tuple attrs and tuple wildcard
+                            entrySteps = mutableMapOf()
                         }
                     }
                     is PartiqlAst.ExcludeStep.ExcludeCollectionIndex -> {
                         if (entryRemove.contains(PartiqlAst.build { excludeCollectionWildcard() })) {
                             // contains wildcard; do not add; a[*] and a[*] -> a[*]
                         } else {
+                            // add to entries to remove
                             entryRemove.add(first)
+                            // remove from other steps
+                            entrySteps.remove(first)
                         }
                     }
                     is PartiqlAst.ExcludeStep.ExcludeCollectionWildcard -> {
                         if (entryRemove.any { it is PartiqlAst.ExcludeStep.ExcludeTupleWildcard || it is PartiqlAst.ExcludeStep.ExcludeTupleAttr }) {
                             // todo mistyping; and other mistyping
                         } else {
+                            // entries to remove just collection wildcard
                             entryRemove = mutableSetOf(first)
+                            // todo: perhaps remove just the collection index and collection wildcard
+                            entrySteps = mutableMapOf()
                         }
                     }
                 }
