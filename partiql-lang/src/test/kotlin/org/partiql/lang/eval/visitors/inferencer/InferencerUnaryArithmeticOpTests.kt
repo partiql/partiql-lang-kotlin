@@ -109,11 +109,11 @@ class InferencerUnaryArithmeticOpTests {
             // data type mismatch cases below this line
             //
             listOf("+", "-").flatMap { op ->
-                // unknown -> expression always returns missing warning or null or missing error
+                // unknown -> expression always returns missing error or null or missing warning
                 ALL_UNKNOWN_TYPES.map { unknownType ->
                     if (unknownType is MissingType) {
                         createUnaryOpErrorCase(
-                            name = "unary op with unknown op error - $unknownType",
+                            name = "unary op with always missing error - $unknownType",
                             op = op,
                             argType = unknownType,
                             expectedErrors = listOf(
@@ -122,7 +122,7 @@ class InferencerUnaryArithmeticOpTests {
                         )
                     } else {
                         createSingleUnaryOpTestCase(
-                            name = "unary op with unknown op warning - $unknownType",
+                            name = "unary op with null or missing warning - $unknownType",
                             op = op,
                             argType = unknownType,
                             expectedType = unknownType,

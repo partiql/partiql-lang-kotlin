@@ -251,7 +251,7 @@ class InferencerNaryBetweenTests {
                                             )
                                         )
                                     ) +
-                                        // <comparable1> BETWEEN <unknown> AND <comparable2> -> null or missing error
+                                        // <comparable1> BETWEEN <missing> AND <comparable2> -> always missing error
                                         // <comparable1> and <comparable2> come from `comparableTypes` and are comparable with each
                                         // other
                                         createNAryBetweenProblemTest(
@@ -282,9 +282,6 @@ class InferencerNaryBetweenTests {
                                             )
                                         )
                                     ) +
-                                        // <comparable1> BETWEEN <unknown> AND <comparable2> -> null or missing error
-                                        // <comparable1> and <comparable2> come from `comparableTypes` and are comparable with each
-                                        // other
                                         createNAryBetweenProblemTest(
                                             name = "null or missing warning - x: ${comparable.first}, y: $unknownType, z: ${comparable.second}",
                                             valueType = comparable.first,

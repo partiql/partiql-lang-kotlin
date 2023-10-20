@@ -470,13 +470,13 @@ object InferencerTestUtil : VisitorTransformTestBase() {
     fun createReturnsNullOrMissingWarning(line: Long = 1, col: Long, nAryOp: String): Problem =
         Problem(
             ProblemLocation(line, col, nAryOp.length.toLong()),
-            SemanticProblemDetails.ExpressionAlwaysReturnsMissingOrNull
+            SemanticProblemDetails.ExpressionAlwaysReturnsNullOrMissing
         )
 
     fun createReturnsNullOrMissingWarning(sourceLocation: SourceLocationMeta): Problem =
         Problem(
             sourceLocation.toProblemLocation(),
-            SemanticProblemDetails.ExpressionAlwaysReturnsMissingOrNull
+            SemanticProblemDetails.ExpressionAlwaysReturnsNullOrMissing
         )
 
     fun createDataTypeMismatchError(line: Long = 1, col: Long, argTypes: List<StaticType>, nAryOp: String): Problem =

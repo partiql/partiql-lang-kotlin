@@ -209,7 +209,7 @@ class InferencerNullIfTests {
                 ).map {
                     if (it.first is MissingType || it.second is MissingType) {
                         createErrorNullIfTest(
-                            name = "null or missing error - ${it.first}, ${it.second}",
+                            name = "always missing error - ${it.first}, ${it.second}",
                             leftType = it.first,
                             rightType = it.second,
                             expectedErrors = listOf(

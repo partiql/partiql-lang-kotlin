@@ -179,11 +179,11 @@ class InferencerNaryLogicalTests {
                     )
                 )
             } +
-            // `NOT` unknown -> , null or missing error
             ALL_UNKNOWN_TYPES.map { unknownType ->
+                // `NOT` missing -> always missing error
                 if (unknownType is MissingType) {
                     createNotDataTypeMismatchTestCase(
-                        name = "NAry op NOT null or missing error - $unknownType",
+                        name = "NAry op NOT always missing error - $unknownType",
                         argType = unknownType,
                         expectedErrors = listOf(
                             createReturnsMissingError(
@@ -193,8 +193,9 @@ class InferencerNaryLogicalTests {
                         )
                     )
                 } else {
+                    // `NOT` null / `NOT` unionOf(null, missing) -> null or missing warning
                     createNotTestCase(
-                        name = "NAry op NOT null or missing error - $unknownType",
+                        name = "NAry op NOT null or missing warning - $unknownType",
                         argType = unknownType,
                         expectedType = unknownType,
                         expectedWarnings = listOf(
@@ -257,7 +258,7 @@ class InferencerNaryLogicalTests {
                         )
                     )
                 } +
-                    // non-unknown, non-boolean with unknown -> data type mismatch and null or missing error
+                    // non-unknown, non-boolean with unknown -> data type mismatch and always missing error/null or missing warning
                     generateAllUniquePairs(
                         ALL_NON_BOOL_NON_UNKNOWN_TYPES,
                         ALL_UNKNOWN_TYPES

@@ -2724,7 +2724,7 @@ class PartiQLSchemaInferencerTests {
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
-                        SemanticProblemDetails.ExpressionAlwaysReturnsMissingOrNull
+                        SemanticProblemDetails.ExpressionAlwaysReturnsNullOrMissing
                     )
                 }
             ),
@@ -2762,7 +2762,7 @@ class PartiQLSchemaInferencerTests {
                 warnings = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
-                        SemanticProblemDetails.ExpressionAlwaysReturnsMissingOrNull
+                        SemanticProblemDetails.ExpressionAlwaysReturnsNullOrMissing
                     )
                 }
             ),

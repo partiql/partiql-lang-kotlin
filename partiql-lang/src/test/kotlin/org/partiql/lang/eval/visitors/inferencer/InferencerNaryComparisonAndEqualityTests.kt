@@ -443,7 +443,7 @@ class InferencerNaryComparisonAndEqualityTests {
                                 )
                             }
                         } +
-                        // other unknown error tests
+                        // other unknown type problem tests
                         singleNAryOpErrorTestCase(
                             name = "missing, union(null, float)",
                             op = op,

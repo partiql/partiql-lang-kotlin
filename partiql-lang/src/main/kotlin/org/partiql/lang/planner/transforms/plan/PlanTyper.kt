@@ -145,8 +145,10 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
             null -> StaticType.BOOL
             else -> {
                 val predicate = typeRex(condition, newJoin, ctx)
-                // verify `JOIN` predicate is bool. If it's unknown, gives a null or missing error. If it could
-                // never be a bool, gives an incompatible data type for expression error
+                // verify `JOIN` predicate is bool.
+                // If an operand is always missing, an ExpressionAlwaysReturnsMissing error will be raised.
+                // If an operand is always NULL, or unionOf(NULL, MISSING), an ExpressionAlwaysReturnsNullOrMissing warning will be raised.
+                // If it could never be a bool, gives an incompatible data type for expression error
                 assertType(expected = StaticType.BOOL, actual = predicate.grabType() ?: handleMissingType(ctx), ctx)
 
                 // continuation type (even in the case of an error) is [StaticType.BOOL]
@@ -793,7 +795,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
             val condition = visitRex(branch.condition, ctx) as Rex
             val value = visitRex(branch.value, ctx) as Rex
             val conditionType = condition.grabType() ?: handleMissingType(ctx)
-            // comparison never succeeds if whenExpr is unknown -> null or missing error
+            // comparison never succeeds if whenExpr is unknown -> appropriate warning or error
             if (conditionType.isUnknown()) {
                 handleExpressionAlwaysReturnsUnknown(conditionType, ctx)
             }
@@ -1034,8 +1036,8 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
         val rhs = operands[1]
         var errorAdded = false
 
-        // check if any operands are unknown, then null or missing error
-        if (handleExpressionAlwaysReturnsUnknown(operands, ctx)) {
+        // check for an unknown operand type
+        if (expressionAlwaysReturnsUnknown(operands, ctx)) {
             errorAdded = true
         }
 
@@ -1540,11 +1542,13 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
      * returns false.
      *
      * If an operand is not comparable to another, the [SemanticProblemDetails.IncompatibleDatatypesForOp] error is
-     * handled by [ProblemHandler]. If an operand is unknown, the
+     * handled by [ProblemHandler].
+     *
+     * If an operand is always missing, the
      * [SemanticProblemDetails.ExpressionAlwaysReturnsMissing] error is handled by [ProblemHandler].
      *
      * If an operand is always NULL, or unionOf(NULL, MISSING), the
-     * [SemanticProblemDetails.ExpressionAlwaysReturnsMissingOrNull] **warning** is handled by [ProblemHandler]
+     * [SemanticProblemDetails.ExpressionAlwaysReturnsNullOrMissing] **warning** is handled by [ProblemHandler]
      *
      * TODO: consider if collection comparison semantics should be different (e.g. errors over warnings,
      *  more details in error message): https://github.com/partiql/partiql-lang-kotlin/issues/505
@@ -1564,7 +1568,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
         }
 
         // check for an unknown operand type
-        if (handleExpressionAlwaysReturnsUnknown(argsStaticType, ctx)) {
+        if (expressionAlwaysReturnsUnknown(argsStaticType, ctx)) {
             hasValidOperands = false
         }
         return hasValidOperands
@@ -1621,7 +1625,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
         }
 
         // check for an unknown operand type
-        handleExpressionAlwaysReturnsUnknown(operandsStaticType, ctx)
+        expressionAlwaysReturnsUnknown(operandsStaticType, ctx)
 
         return true
     }
@@ -1749,7 +1753,14 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
         )
     }
 
-    private fun handleExpressionAlwaysReturnsUnknown(types: List<StaticType>, ctx: Context): Boolean {
+    /**
+     * If an expression always returns missing, raise a [SemanticProblemDetails.ExpressionAlwaysReturnsMissing] and return true.
+     *
+     * If an expression always returns null or union(null, missing), raise a [SemanticProblemDetails.ExpressionAlwaysReturnsNullOrMissing] and return false.
+     *
+     * else returns false.
+     */
+    private fun expressionAlwaysReturnsUnknown(types: List<StaticType>, ctx: Context): Boolean {
         if (types.any { type -> type is MissingType }) {
             handleExpressionAlwaysReturnsMissingError(ctx)
             return true
@@ -1761,24 +1772,22 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
         return false
     }
 
-    private fun handleExpressionAlwaysReturnsUnknown(type: StaticType, ctx: Context): Boolean {
+    private fun handleExpressionAlwaysReturnsUnknown(type: StaticType, ctx: Context) {
         if (type is MissingType) {
             handleExpressionAlwaysReturnsMissingError(ctx)
-            return true
+            return
         }
 
         if (type is NullType || type == StaticType.NULL_OR_MISSING) {
             handleExpressionAlwaysReturnsMissingOrNullWarning(ctx)
         }
-
-        return false
     }
 
     private fun handleExpressionAlwaysReturnsMissingOrNullWarning(ctx: Context) {
         ctx.problemHandler.handleProblem(
             Problem(
                 sourceLocation = UNKNOWN_PROBLEM_LOCATION,
-                details = SemanticProblemDetails.ExpressionAlwaysReturnsMissingOrNull
+                details = SemanticProblemDetails.ExpressionAlwaysReturnsNullOrMissing
             )
         )
     }

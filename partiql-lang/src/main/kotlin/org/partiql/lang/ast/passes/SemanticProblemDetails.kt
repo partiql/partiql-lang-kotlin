@@ -53,13 +53,6 @@ sealed class SemanticProblemDetails(override val severity: ProblemSeverity, val 
             messageFormatter = { "In this context, $expectedType is expected but expression returns $actualType" }
         )
 
-    @Deprecated("Expressions that always return null will not cause a compile-time error")
-    object ExpressionAlwaysReturnsNullOrMissing :
-        SemanticProblemDetails(
-            severity = ProblemSeverity.ERROR,
-            messageFormatter = { "Expression always returns null or missing." }
-        )
-
     object ExpressionAlwaysReturnsMissing :
         SemanticProblemDetails(
             severity = ProblemSeverity.ERROR,
@@ -69,7 +62,7 @@ sealed class SemanticProblemDetails(override val severity: ProblemSeverity, val 
     /**
      * Should be used when the inferred type is always null or unionOf(null, missing)
      */
-    object ExpressionAlwaysReturnsMissingOrNull :
+    object ExpressionAlwaysReturnsNullOrMissing :
         SemanticProblemDetails(
             severity = ProblemSeverity.WARNING,
             messageFormatter = { "Expression always returns null or missing." }

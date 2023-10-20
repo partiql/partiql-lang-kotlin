@@ -418,7 +418,7 @@ class InferencerContinuationTypeTests {
                         )
                     ),
                     TestCase(
-                        name = "null or missing error: string LIKE string ESCAPE null -> bool",
+                        name = "null or missing warning: string LIKE string ESCAPE null -> bool",
                         originalSql = "goodT LIKE goodT ESCAPE badT",
                         globals = mapOf(
                             "goodT" to StaticType.STRING,

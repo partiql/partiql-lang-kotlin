@@ -122,8 +122,8 @@ class InferencerJoinPredicateTests {
                         )
                     )
                 } +
-                // unknown types for predicate expression -> null or missing error
                 ALL_UNKNOWN_TYPES.flatMap { unknownType ->
+                    // missing types for predicate expression -> always missing error
                     if (unknownType is MissingType) {
                         createJoinPredicateContinuationTypeTests(
                             predicateType = unknownType,
@@ -136,6 +136,7 @@ class InferencerJoinPredicateTests {
                     } else {
                         listOf(
                             // TODO: verify the behavior when join predicate is null or unionOf(null, missing)
+                            //  Current the inferencer will return Bag(struct(foo: int, bar: string)), which may not be correct.
 //                            TestCase(
 //                                name = "join with predicate type $unknownType",
 //                                originalSql = "SELECT * FROM a join b ON c",

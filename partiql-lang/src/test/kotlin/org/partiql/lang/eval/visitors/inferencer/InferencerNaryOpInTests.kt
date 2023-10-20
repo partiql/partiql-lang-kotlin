@@ -414,7 +414,7 @@ class InferencerNaryOpInTests {
                         )
                     }
                 } +
-                // unknown IN non-collection (non-unknown) -> data type mismatch and always returns missing error
+                // unknown IN non-collection (non-unknown) -> data type mismatch and always returns missing error/null or missing warning
                 ALL_UNKNOWN_TYPES.flatMap { unknown ->
                     if (unknown is MissingType) {
                         ALL_NON_COLLECTION_NON_UNKNOWN_TYPES.map { nonCollection ->
@@ -438,7 +438,7 @@ class InferencerNaryOpInTests {
                     } else {
                         ALL_NON_COLLECTION_NON_UNKNOWN_TYPES.map { nonCollection ->
                             createNAryOpInErrorTest(
-                                name = "$unknown IN $nonCollection - data type mismatch, null or missing error",
+                                name = "$unknown IN $nonCollection - data type mismatch, null or missing warning",
                                 leftType = unknown,
                                 rightType = nonCollection,
                                 expectedErrors = listOf(
@@ -486,7 +486,7 @@ class InferencerNaryOpInTests {
                         if (unknownType is MissingType) {
                             listOf(
                                 createNAryOpInErrorTest(
-                                    name = "$unknownType IN list($type) - unknown error",
+                                    name = "$unknownType IN list($type) - always missing error",
                                     leftType = unknownType,
                                     rightType = ListType(elementType = type),
                                     expectedErrors = listOf(
@@ -497,7 +497,7 @@ class InferencerNaryOpInTests {
                                     )
                                 ),
                                 createNAryOpInErrorTest(
-                                    name = "$unknownType IN bag($type) - unknown error",
+                                    name = "$unknownType IN bag($type) - always missing error",
                                     leftType = unknownType,
                                     rightType = BagType(elementType = type),
                                     expectedErrors = listOf(
@@ -508,7 +508,7 @@ class InferencerNaryOpInTests {
                                     )
                                 ),
                                 createNAryOpInErrorTest(
-                                    name = "$unknownType IN sexp($type) - unknown error",
+                                    name = "$unknownType IN sexp($type) - always missing error",
                                     leftType = unknownType,
                                     rightType = SexpType(elementType = type),
                                     expectedErrors = listOf(
@@ -522,7 +522,7 @@ class InferencerNaryOpInTests {
                         } else {
                             listOf(
                                 createNAryOpInTest(
-                                    name = "$unknownType IN list($type) - unknown error",
+                                    name = "$unknownType IN list($type) - null or missing warning",
                                     leftType = unknownType,
                                     rightType = ListType(elementType = type),
                                     outputType = unknownType,
@@ -534,7 +534,7 @@ class InferencerNaryOpInTests {
                                     )
                                 ),
                                 createNAryOpInTest(
-                                    name = "$unknownType IN bag($type) - unknown error",
+                                    name = "$unknownType IN bag($type) - null or missing warning",
                                     leftType = unknownType,
                                     rightType = BagType(elementType = type),
                                     outputType = unknownType,
@@ -546,7 +546,7 @@ class InferencerNaryOpInTests {
                                     )
                                 ),
                                 createNAryOpInTest(
-                                    name = "$unknownType IN sexp($type) - unknown error",
+                                    name = "$unknownType IN sexp($type) - null or missing warning",
                                     leftType = unknownType,
                                     rightType = SexpType(elementType = type),
                                     outputType = unknownType,
@@ -566,7 +566,7 @@ class InferencerNaryOpInTests {
                     ALL_UNKNOWN_TYPES.map { unknownType ->
                         if (unknownType is MissingType) {
                             createNAryOpInErrorTest(
-                                name = "$type IN $unknownType - unknown error",
+                                name = "$type IN $unknownType - always missing error",
                                 leftType = type,
                                 rightType = unknownType,
                                 expectedErrors = listOf(
@@ -579,7 +579,7 @@ class InferencerNaryOpInTests {
                         } else {
                             if (type is MissingType) {
                                 createNAryOpInErrorTest(
-                                    name = "$type IN $unknownType - unknown error",
+                                    name = "$type IN $unknownType - always missing error",
                                     leftType = type,
                                     rightType = unknownType,
                                     expectedErrors = listOf(
@@ -591,7 +591,7 @@ class InferencerNaryOpInTests {
                                 )
                             } else {
                                 createNAryOpInTest(
-                                    name = "$type IN $unknownType - unknown error",
+                                    name = "$type IN $unknownType - null or missing warning",
                                     leftType = type,
                                     rightType = unknownType,
                                     outputType = unknownType,
@@ -636,7 +636,7 @@ class InferencerNaryOpInTests {
                         )
                     ),
                     createNAryOpInTest(
-                        name = "ANY IN NULL - unknown error",
+                        name = "ANY IN NULL - null or missing warning",
                         leftType = StaticType.ANY,
                         rightType = StaticType.NULL,
                         outputType = StaticType.NULL_OR_MISSING,
