@@ -1,5 +1,6 @@
 package org.partiql.planner
 
+import org.partiql.plan.Agg
 import org.partiql.plan.Fn
 import org.partiql.plan.Global
 import org.partiql.plan.Identifier
@@ -10,7 +11,6 @@ import org.partiql.plan.identifierQualified
 import org.partiql.plan.identifierSymbol
 import org.partiql.planner.typer.FunctionResolver
 import org.partiql.planner.typer.Mapping
-import org.partiql.planner.typer.isNullOrMissing
 import org.partiql.planner.typer.toRuntimeType
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
@@ -73,7 +73,7 @@ internal class TypeEnv(
 /**
  * Result of attempting to match an unresolved function.
  */
-internal sealed class FnMatch {
+internal sealed class FnMatch<T : FunctionSignature> {
 
     /**
      * 7.1 Inputs with wrong types
@@ -83,17 +83,17 @@ internal sealed class FnMatch {
      * @property mapping
      * @property isMissable TRUE when anyone of the arguments _could_ be MISSING. We *always* propagate MISSING.
      */
-    public data class Ok(
-        public val signature: FunctionSignature,
+    public data class Ok<T : FunctionSignature>(
+        public val signature: T,
         public val mapping: Mapping,
         public val isMissable: Boolean,
-    ) : FnMatch()
+    ) : FnMatch<T>()
 
-    public data class Error(
-        public val fn: Fn.Unresolved,
+    public data class Error<T : FunctionSignature>(
+        public val identifier: Identifier,
         public val args: List<Rex>,
         public val candidates: List<FunctionSignature>,
-    ) : FnMatch()
+    ) : FnMatch<T>()
 }
 
 /**
@@ -195,21 +195,42 @@ internal class Env(
     }
 
     /**
-     * Leverages a [FunctionResolver] to find a matching function defined in the [Header].
+     * Leverages a [FunctionResolver] to find a matching function defined in the [Header] scalar function catalog.
      */
-    internal fun resolveFn(fn: Fn.Unresolved, args: List<Rex>): FnMatch {
+    internal fun resolveFn(fn: Fn.Unresolved, args: List<Rex>): FnMatch<FunctionSignature.Scalar> {
         val candidates = header.lookup(fn)
         var hadMissingArg = false
         val parameters = args.mapIndexed { i, arg ->
             if (!hadMissingArg && arg.type.isMissable()) {
                 hadMissingArg = true
             }
-            arg.type.isNullOrMissing()
             FunctionParameter("arg-$i", arg.type.toRuntimeType())
         }
         val match = functionResolver.match(candidates, parameters)
         return when (match) {
-            null -> FnMatch.Error(fn, args, candidates)
+            null -> FnMatch.Error(fn.identifier, args, candidates)
+            else -> {
+                val isMissable = hadMissingArg || header.isUnsafeCast(match.signature.specific)
+                FnMatch.Ok(match.signature, match.mapping, isMissable)
+            }
+        }
+    }
+
+    /**
+     * Leverages a [FunctionResolver] to find a matching function defined in the [Header] aggregation function catalog.
+     */
+    internal fun resolveAgg(agg: Agg.Unresolved, args: List<Rex>): FnMatch<FunctionSignature.Aggregation> {
+        val candidates = header.lookup(agg)
+        var hadMissingArg = false
+        val parameters = args.mapIndexed { i, arg ->
+            if (!hadMissingArg && arg.type.isMissable()) {
+                hadMissingArg = true
+            }
+            FunctionParameter("arg-$i", arg.type.toRuntimeType())
+        }
+        val match = functionResolver.match(candidates, parameters)
+        return when (match) {
+            null -> FnMatch.Error(agg.identifier, args, candidates)
             else -> {
                 val isMissable = hadMissingArg || header.isUnsafeCast(match.signature.specific)
                 FnMatch.Ok(match.signature, match.mapping, isMissable)

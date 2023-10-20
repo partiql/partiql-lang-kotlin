@@ -19,16 +19,19 @@ package org.partiql.planner.typer
 import org.partiql.errors.Problem
 import org.partiql.errors.ProblemCallback
 import org.partiql.errors.UNKNOWN_PROBLEM_LOCATION
+import org.partiql.plan.Agg
 import org.partiql.plan.Fn
 import org.partiql.plan.Identifier
 import org.partiql.plan.PlanNode
 import org.partiql.plan.Rel
 import org.partiql.plan.Rex
 import org.partiql.plan.Statement
+import org.partiql.plan.aggResolved
 import org.partiql.plan.fnResolved
 import org.partiql.plan.identifierSymbol
 import org.partiql.plan.rel
 import org.partiql.plan.relBinding
+import org.partiql.plan.relOpAggregateCall
 import org.partiql.plan.relOpErr
 import org.partiql.plan.relOpFilter
 import org.partiql.plan.relOpJoin
@@ -218,10 +221,6 @@ internal class PlanTyper(
             return rel(type, op)
         }
 
-        override fun visitRelOpSortSpec(node: Rel.Op.Sort.Spec, ctx: Rel.Type?): Rel {
-            TODO("Type RelOp SortSpec")
-        }
-
         override fun visitRelOpUnion(node: Rel.Op.Union, ctx: Rel.Type?): Rel {
             TODO("Type RelOp Union")
         }
@@ -269,7 +268,9 @@ internal class PlanTyper(
             val input = visitRel(node.input, ctx)
             // type sub-nodes
             val typeEnv = TypeEnv(input.type.schema, ResolutionStrategy.LOCAL)
-            val projections = node.projections.map { it.type(typeEnv) }
+            val projections = node.projections.map {
+                it.type(typeEnv)
+            }
             // compute output schema
             val schema = projections.map { it.type }
             val type = ctx!!.copyWithSchema(schema)
@@ -303,19 +304,20 @@ internal class PlanTyper(
 
         /**
          * Initial implementation of `EXCLUDE` schema inference. Until an RFC is finalized for `EXCLUDE`
-         * (https://github.com/partiql/partiql-spec/issues/39), this behavior is considered experimental and subject to
-         * change.
+         * (https://github.com/partiql/partiql-spec/issues/39),
          *
-         * So far this implementation includes
+         * This behavior is considered experimental and subject to change.
+         *
+         * This implementation includes
          *  - Excluding tuple bindings (e.g. t.a.b.c)
          *  - Excluding tuple wildcards (e.g. t.a.*.b)
          *  - Excluding collection indexes (e.g. t.a[0].b -- behavior subject to change; see below discussion)
          *  - Excluding collection wildcards (e.g. t.a[*].b)
          *
          * There are still discussion points regarding the following edge cases:
-         *  - EXCLUDE on a tuple bindingibute that doesn't exist -- give an error/warning?
+         *  - EXCLUDE on a tuple attribute that doesn't exist -- give an error/warning?
          *      - currently no error
-         *  - EXCLUDE on a tuple bindingibute that has duplicates -- give an error/warning? exclude one? exclude both?
+         *  - EXCLUDE on a tuple attribute that has duplicates -- give an error/warning? exclude one? exclude both?
          *      - currently excludes both w/ no error
          *  - EXCLUDE on a collection index as the last step -- mark element type as optional?
          *      - currently element type as-is
@@ -325,7 +327,7 @@ internal class PlanTyper(
          *      - currently a parser error
          *  - EXCLUDE on a union type -- give an error/warning? no-op? exclude on each type in union?
          *      - currently exclude on each union type
-         *  - If SELECT list includes an bindingibute that is excluded, we could consider giving an error in PlanTyper or
+         *  - If SELECT list includes an attribute that is excluded, we could consider giving an error in PlanTyper or
          * some other semantic pass
          *      - currently does not give an error
          */
@@ -343,15 +345,33 @@ internal class PlanTyper(
         }
 
         override fun visitRelOpAggregate(node: Rel.Op.Aggregate, ctx: Rel.Type?): Rel {
-            TODO("Type RelOp Aggregate")
-        }
+            // compute input schema
+            val input = visitRel(node.input, ctx)
 
-        override fun visitRelOpAggregateAgg(node: Rel.Op.Aggregate.Agg, ctx: Rel.Type?): Rel {
-            TODO("Type RelOp Agg")
-        }
+            // type the calls and groups
+            val typer = RexTyper(locals = TypeEnv(input.type.schema, ResolutionStrategy.LOCAL))
 
-        override fun visitRelBinding(node: Rel.Binding, ctx: Rel.Type?): Rel {
-            TODO("Type RelOp Binding")
+            // typing of aggregate calls is slightly more complicated because they are not expressions.
+            val calls = node.calls.mapIndexed { i, call ->
+                when (val agg = call.agg) {
+                    is Agg.Resolved -> call to ctx!!.schema[i].type
+                    is Agg.Unresolved -> typer.resolveAgg(agg, call.args)
+                }
+            }
+            val groups = node.groups.map { typer.visitRex(it, null) }
+
+            // Compute schema using order (calls...groups...)
+            val schema = mutableListOf<StaticType>()
+            schema += calls.map { it.second }
+            schema += groups.map { it.type }
+
+            // rewrite with typed calls and groups
+            val type = ctx!!.copyWithSchema(schema)
+            val op = node.copy(
+                calls = calls.map { it.first },
+                groups = groups,
+            )
+            return rel(type, op)
         }
     }
 
@@ -455,7 +475,7 @@ internal class PlanTyper(
             // 4. Invalid path reference; always MISSING
             if (type == StaticType.MISSING) {
                 handleAlwaysMissing()
-                return rex(type, rexOpErr("Unknown identifier $node"))
+                return rexErr("Unknown identifier $node")
             }
 
             // 5. Non-missing, root is resolved
@@ -463,10 +483,7 @@ internal class PlanTyper(
         }
 
         /**
-         * Typing of functions is
-         *
-         * 1. If any argument is MISSING, the function return type is MISSING
-         * 2. If all arguments are NULL
+         * Resolve and type scalar function calls.
          *
          * @param node
          * @param ctx
@@ -536,7 +553,7 @@ internal class PlanTyper(
                 }
                 is FnMatch.Error -> {
                     handleUnknownFunction(match)
-                    rex(StaticType.MISSING, rexOpErr("Unknown function $fn"))
+                    rexErr("Unknown scalar function $fn")
                 }
             }
         }
@@ -927,6 +944,63 @@ internal class PlanTyper(
                 false -> StaticType.ANY
             }
         }
+
+        /**
+         * Resolution and typing of aggregation function calls.
+         *
+         * I've chosen to place this in RexTyper because all arguments will be typed using the same locals.
+         * There's no need to create new RexTyper instances for each argument. There is no reason to limit aggregations
+         * to a single argument (covar, corr, pct, etc.) but in practice we typically only have single <value expression>.
+         *
+         * This method is _very_ similar to scalar function resolution, so it is temping to DRY these two out; but the
+         * separation is cleaner as the typing of NULLS is subtly different.
+         *
+         * SQL-99 6.16 General Rules on <set function specification>
+         *     Let TX be the single-column table that is the result of applying the <value expression>
+         *     to each row of T and eliminating null values <--- all NULL values are eliminated as inputs
+         */
+        public fun resolveAgg(agg: Agg.Unresolved, arguments: List<Rex>): Pair<Rel.Op.Aggregate.Call, StaticType> {
+            var missingArg = false
+            val args = arguments.map {
+                val arg = visitRex(it, null)
+                if (arg.type.isMissable()) missingArg = true
+                arg
+            }
+
+            //
+            if (missingArg) {
+                handleAlwaysMissing()
+                return relOpAggregateCall(agg, listOf(rexErr("MISSING"))) to MissingType
+            }
+
+            // Try to match the arguments to functions defined in the catalog
+            return when (val match = env.resolveAgg(agg, args)) {
+                is FnMatch.Ok -> {
+                    // Found a match!
+                    val newAgg = aggResolved(match.signature)
+                    val newArgs = rewriteFnArgs(match.mapping, args)
+                    val returns = newAgg.signature.returns
+
+                    // Return type with calculated nullability
+                    var type = when {
+                        newAgg.signature.isNullable -> returns.toStaticType()
+                        else -> returns.toNonNullStaticType()
+                    }
+
+                    // Some operators can return MISSING during runtime
+                    if (match.isMissable) {
+                        type = StaticType.unionOf(type, StaticType.MISSING).flatten()
+                    }
+
+                    // Finally, rewrite this node
+                    relOpAggregateCall(newAgg, newArgs) to type
+                }
+                is FnMatch.Error -> {
+                    handleUnknownFunction(match)
+                    return relOpAggregateCall(agg, listOf(rexErr("MISSING"))) to MissingType
+                }
+            }
+        }
     }
 
     // HELPERS
@@ -934,6 +1008,8 @@ internal class PlanTyper(
     private fun Rel.type(typeEnv: TypeEnv): Rel = RelTyper(typeEnv).visitRel(this, null)
 
     private fun Rex.type(typeEnv: TypeEnv) = RexTyper(typeEnv).visitRex(this, this.type)
+
+    private fun rexErr(message: String) = rex(StaticType.MISSING, rexOpErr(message))
 
     /**
      * I found decorating the tree with the binding names (for resolution) was easier than associating introduced
@@ -1026,7 +1102,7 @@ internal class PlanTyper(
     /**
      * Rewrites function arguments, wrapping in the given function if exists.
      */
-    private fun rewriteFnArgs(mapping: List<FunctionSignature?>, args: List<Rex>): List<Rex> {
+    private fun rewriteFnArgs(mapping: List<FunctionSignature.Scalar?>, args: List<Rex>): List<Rex> {
         if (mapping.size != args.size) {
             error("Fatal, malformed function mapping") // should be unreachable given how a mapping is generated.
         }
@@ -1089,12 +1165,12 @@ internal class PlanTyper(
         )
     }
 
-    private fun handleUnknownFunction(match: FnMatch.Error) {
+    private fun handleUnknownFunction(match: FnMatch.Error<*>) {
         onProblem(
             Problem(
                 sourceLocation = UNKNOWN_PROBLEM_LOCATION,
                 details = PlanningProblemDetails.UnknownFunction(
-                    match.fn.identifier.normalize(),
+                    match.identifier.normalize(),
                     match.args.map { a -> a.type },
                 )
             )

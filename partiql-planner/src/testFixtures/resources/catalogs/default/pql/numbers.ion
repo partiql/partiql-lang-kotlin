@@ -1,0 +1,114 @@
+{
+  type: "struct",
+  fields: [
+    {
+      name: "nullable_int16s",
+      type: {
+        type: "list",
+        items: [
+          "int16",
+          "null"
+        ]
+      }
+    },
+    {
+      name: "nullable_int32s",
+      type: {
+        type: "list",
+        items: [
+          "int32",
+          "null"
+        ]
+      }
+    },
+    {
+      name: "nullable_int64s",
+      type: {
+        type: "list",
+        items: [
+          "int64",
+          "null"
+        ]
+      }
+    },
+    {
+      name: "nullable_ints",
+      type: {
+        type: "list",
+        items: [
+          "int",
+          "null"
+        ]
+      }
+    },
+    {
+      name: "int16s",
+      type: {
+        type: "list",
+        items: "int16",
+      },
+    },
+    {
+      name: "int32s",
+      type: {
+        type: "list",
+        items: "int32",
+      },
+    },
+    {
+      name: "int64s",
+      type: {
+        type: "list",
+        items: "int64",
+      },
+    },
+    {
+      name: "ints",
+      type: {
+        type: "list",
+        items: "int",
+      },
+    },
+    {
+      name: "decimals",
+      type: {
+        type: "list",
+        items: "decimal",
+      },
+    },
+    {
+      name: "nullable_float32s",
+      type: {
+        type: "list",
+        items: [
+          "float32",
+          "null"
+        ]
+      }
+    },
+    {
+      name: "nullable_float64s",
+      type: {
+        type: "list",
+        items: [
+          "float64",
+          "null"
+        ]
+      }
+    },
+    {
+      name: "float32s",
+      type: {
+        type: "list",
+        items: "float32",
+      },
+    },
+    {
+      name: "float64s",
+      type: {
+        type: "list",
+        items: "float64",
+      },
+    }
+  ],
+}

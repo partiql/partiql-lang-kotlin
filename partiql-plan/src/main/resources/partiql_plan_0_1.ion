@@ -2,7 +2,8 @@ imports::{
   kotlin: [
     partiql_value::'org.partiql.value.PartiQLValue',
     static_type::'org.partiql.types.StaticType',
-    function_signature::'org.partiql.types.function.FunctionSignature',
+    scalar_signature::'org.partiql.types.function.FunctionSignature$Scalar',
+    aggregation_signature::'org.partiql.types.function.FunctionSignature$Aggregation',
   ],
 }
 
@@ -28,7 +29,16 @@ global::{
 
 fn::[
   resolved::{
-    signature: function_signature,
+    signature: scalar_signature,
+  },
+  unresolved::{
+    identifier: identifier,
+  },
+]
+
+agg::[
+  resolved::{
+    signature: aggregation_signature,
   },
   unresolved::{
     identifier: identifier,
@@ -262,11 +272,11 @@ rel::{
     aggregate::{
       input:    rel,
       strategy: [ FULL, PARTIAL ],
-      aggs:     list::[agg],
+      calls:    list::[call],
       groups:   list::[rex],
       _: [
-        agg::{
-          fn:   fn,
+        call::{
+          agg:  agg,
           args: list::[rex],
         },
       ],

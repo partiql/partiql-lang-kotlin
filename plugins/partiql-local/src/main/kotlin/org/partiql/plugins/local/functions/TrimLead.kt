@@ -15,7 +15,7 @@ import org.partiql.value.stringValue
 object TrimLead : PartiQLFunction {
 
     @OptIn(PartiQLValueExperimental::class)
-    override val signature = FunctionSignature(
+    override val signature = FunctionSignature.Scalar(
         name = "trim_lead",
         returns = PartiQLValueType.STRING,
         parameters = listOf(

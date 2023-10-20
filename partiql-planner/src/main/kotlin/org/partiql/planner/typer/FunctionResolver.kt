@@ -14,13 +14,13 @@ internal typealias Args = List<FunctionParameter>
 /**
  * Parameter mapping list tells the planner where to insert implicit casts. Null is the identity.
  */
-internal typealias Mapping = List<FunctionSignature?>
+internal typealias Mapping = List<FunctionSignature.Scalar?>
 
 /**
  * Tells us which function matched, and how the arguments are mapped.
  */
-internal class Match(
-    public val signature: FunctionSignature,
+internal class Match<T : FunctionSignature>(
+    public val signature: T,
     public val mapping: Mapping,
 )
 
@@ -33,7 +33,7 @@ internal class FunctionResolver(private val header: Header) {
     /**
      * Functions are sorted by precedence (which is not rigorously defined/specified at the moment).
      */
-    public fun match(signatures: List<FunctionSignature>, args: Args): Match? {
+    public fun <T : FunctionSignature> match(signatures: List<T>, args: Args): Match<T>? {
         for (signature in signatures) {
             val mapping = match(signature, args)
             if (mapping != null) {
@@ -52,7 +52,7 @@ internal class FunctionResolver(private val header: Header) {
         if (signature.parameters.size != args.size) {
             return null
         }
-        val mapping = ArrayList<FunctionSignature?>(args.size)
+        val mapping = ArrayList<FunctionSignature.Scalar?>(args.size)
         for (i in args.indices) {
             val a = args[i]
             val p = signature.parameters[i]

@@ -1,0 +1,286 @@
+suite::{
+  name: "aggregations",
+  session: {
+    catalog: "default",
+    path: [
+      "pql"
+    ],
+    vars: {},
+  },
+  tests: {
+    'avg(int32|null)': {
+      statement: '''
+        SELECT AVG(n) as "avg" FROM numbers.nullable_int32s AS n
+      ''',
+      schema: {
+        type: "bag",
+        items: {
+          type: "struct",
+          fields: [
+            {
+              name: "avg",
+              type: [
+                "int32",
+                "null",
+              ],
+            },
+          ],
+        },
+      },
+    },
+    'count(int32|null)': {
+      statement: '''
+        SELECT COUNT(n) as "count" FROM numbers.nullable_int32s AS n
+      ''',
+      schema: {
+        type: "bag",
+        items: {
+          type: "struct",
+          fields: [
+            {
+              name: "count",
+              type: "int32",
+            },
+          ],
+        },
+      },
+    },
+    'min(int32|null)': {
+      statement: '''
+        SELECT MIN(n) as "min" FROM numbers.nullable_int32s AS n
+      ''',
+      schema: {
+        type: "bag",
+        items: {
+          type: "struct",
+          fields: [
+            {
+              name: "min",
+              type: [
+                "int32",
+                "null",
+              ],
+            },
+          ],
+        },
+      },
+    },
+    'max(int32|null)': {
+      statement: '''
+        SELECT MAX(n) as "max" FROM numbers.nullable_int32s AS n
+      ''',
+      schema: {
+        type: "bag",
+        items: {
+          type: "struct",
+          fields: [
+            {
+              name: "max",
+              type: [
+                "int32",
+                "null",
+              ],
+            },
+          ],
+        },
+      },
+    },
+    'sum(int32|null)': {
+      statement: '''
+        SELECT SUM(n) as "sum" FROM numbers.nullable_int32s AS n
+      ''',
+      schema: {
+        type: "bag",
+        items: {
+          type: "struct",
+          fields: [
+            {
+              name: "sum",
+              type: [
+                "int32",
+                "null",
+              ],
+            },
+          ],
+        },
+      },
+    },
+    'avg(int32)': {
+      statement: '''
+        SELECT AVG(n) as "avg" FROM numbers.int32s AS n
+      ''',
+      schema: {
+        type: "bag",
+        items: {
+          type: "struct",
+          fields: [
+            {
+              name: "avg",
+              type: [
+                "int32",
+                "null"
+              ],
+            },
+          ],
+        },
+      },
+    },
+    'count(int32)': {
+      statement: '''
+        SELECT COUNT(n) as "count" FROM numbers.int32s AS n
+      ''',
+      schema: {
+        type: "bag",
+        items: {
+          type: "struct",
+          fields: [
+            {
+              name: "count",
+              type: "int32",
+            },
+          ],
+        },
+      },
+    },
+    'min(int32)': {
+      statement: '''
+        SELECT MIN(n) as "min" FROM numbers.int32s AS n
+      ''',
+      schema: {
+        type: "bag",
+        items: {
+          type: "struct",
+          fields: [
+            {
+              name: "min",
+              type: [
+                "int32",
+                "null"
+              ],
+            },
+          ],
+        },
+      },
+    },
+    'max(int32)': {
+      statement: '''
+        SELECT MAX(n) as "max" FROM numbers.int32s AS n
+      ''',
+      schema: {
+        type: "bag",
+        items: {
+          type: "struct",
+          fields: [
+            {
+              name: "max",
+              type: [
+                "int32",
+                "null"
+              ],
+            },
+          ],
+        },
+      },
+    },
+    'sum(int32)': {
+      statement: '''
+        SELECT SUM(n) as "sum" FROM numbers.int32s AS n
+      ''',
+      schema: {
+        type: "bag",
+        items: {
+          type: "struct",
+          fields: [
+            {
+              name: "sum",
+              type: [
+                "int32",
+                "null"
+              ],
+            },
+          ],
+        },
+      },
+    },
+    'group_by_key': {
+      statement: '''
+        SELECT COUNT(*) as "count", isOdd FROM numbers.int32s AS n
+        GROUP BY n % 2 = 0 AS isOdd
+      ''',
+      schema: {
+        type: "bag",
+        items: {
+          type: "struct",
+          fields: [
+            {
+              name: "count",
+              type: "int32"
+            },
+            {
+              name: "isOdd",
+              type: "bool"
+            },
+          ],
+        },
+      },
+    },
+    'group_by_keys_noalias': {
+      statement: '''
+        SELECT AVG(x), y, z FROM points
+        GROUP BY y, z
+      ''',
+      schema: {
+        type: "bag",
+        items: {
+          type: "struct",
+          fields: [
+            {
+              name: "_1",
+              type: [
+                "float32",
+                "null"
+              ],
+            },
+            {
+              name: "y",
+              type: "float32"
+            },
+            {
+              name: "z",
+              type: "float32"
+            },
+          ],
+        },
+      },
+    },
+    'group_by_keys_alias': {
+      statement: '''
+        SELECT AVG(x), a, b FROM points
+        GROUP BY y as a, z as b
+      ''',
+      schema: {
+        type: "bag",
+        items: {
+          type: "struct",
+          fields: [
+            {
+              name: "_1",
+              type: [
+                "float32",
+                "null"
+              ],
+            },
+            {
+              name: "a",
+              type: "float32"
+            },
+            {
+              name: "b",
+              type: "float32"
+            },
+          ],
+        },
+      },
+    },
+  },
+}
