@@ -607,7 +607,7 @@ class InferencerContinuationTypeTests {
                         )
                     ),
                     TestCase(
-                        name = "null or missing warning: NULLIF(union(INT, FLOAT), MISSING)",
+                        name = "always returns missing error: NULLIF(union(INT, FLOAT), MISSING)",
                         originalSql = "NULLIF(lhs, rhs)",
                         globals = mapOf(
                             "lhs" to StaticType.unionOf(StaticType.INT, StaticType.FLOAT),
