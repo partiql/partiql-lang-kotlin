@@ -11,7 +11,6 @@ import org.partiql.plan.identifierQualified
 import org.partiql.plan.identifierSymbol
 import org.partiql.planner.typer.FunctionResolver
 import org.partiql.planner.typer.Mapping
-import org.partiql.planner.typer.isNullOrMissing
 import org.partiql.planner.typer.toRuntimeType
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
@@ -205,7 +204,6 @@ internal class Env(
             if (!hadMissingArg && arg.type.isMissable()) {
                 hadMissingArg = true
             }
-            arg.type.isNullOrMissing()
             FunctionParameter("arg-$i", arg.type.toRuntimeType())
         }
         val match = functionResolver.match(candidates, parameters)
@@ -228,7 +226,6 @@ internal class Env(
             if (!hadMissingArg && arg.type.isMissable()) {
                 hadMissingArg = true
             }
-            arg.type.isNullOrMissing()
             FunctionParameter("arg-$i", arg.type.toRuntimeType())
         }
         val match = functionResolver.match(candidates, parameters)

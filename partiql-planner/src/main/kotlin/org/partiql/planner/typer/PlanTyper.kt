@@ -963,7 +963,7 @@ internal class PlanTyper(
             var missingArg = false
             val args = arguments.map {
                 val arg = visitRex(it, null)
-                if (arg.type == MissingType) missingArg = true
+                if (arg.type.isMissable()) missingArg = true
                 arg
             }
 
@@ -989,7 +989,7 @@ internal class PlanTyper(
 
                     // Some operators can return MISSING during runtime
                     if (match.isMissable) {
-                        type = StaticType.unionOf(type, StaticType.MISSING)
+                        type = StaticType.unionOf(type, StaticType.MISSING).flatten()
                     }
 
                     // Finally, rewrite this node

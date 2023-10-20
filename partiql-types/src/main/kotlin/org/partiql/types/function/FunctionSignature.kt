@@ -113,7 +113,8 @@ public sealed class FunctionSignature(
                 other.name != name ||
                 other.returns != returns ||
                 other.parameters.size != parameters.size ||
-                other.isDecomposable != isDecomposable
+                other.isDecomposable != isDecomposable ||
+                other.isNullable != isNullable
             ) {
                 return false
             }
@@ -131,11 +132,11 @@ public sealed class FunctionSignature(
             result = 31 * result + returns.hashCode()
             result = 31 * result + parameters.hashCode()
             result = 31 * result + isDecomposable.hashCode()
+            result = 31 * result + isNullable.hashCode()
             result = 31 * result + (description?.hashCode() ?: 0)
             return result
         }
     }
-
 
     // // Logic for writing a [FunctionSignature] using SQL `CREATE FUNCTION` syntax.
     //
