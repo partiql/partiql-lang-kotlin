@@ -1359,8 +1359,6 @@ internal class StaticTypeInferenceVisitorTransform(
 
         /**
          * Verifies the given [expr]'s [StaticType] has type [expectedType].
-         * If [expr] is unknown, a null or missing
-         * error is given.
          * If [expr] is always missing, the
          * [SemanticProblemDetails.ExpressionAlwaysReturnsMissing] error is handled by [ProblemHandler].
          *
