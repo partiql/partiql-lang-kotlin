@@ -277,7 +277,10 @@ class InferencerSimpleCaseWhenTests {
                     )
                 )
             ),
-            // Todo: Inferencer keeps all the `THEN` expr types even if we know the comparison will not succeed, why?
+            // Todo: Inferencer simply keeps all the then/else branch return type
+            //  even though we might have enough information to determine that the branch will never succeed.
+            //  may worth to change the inferencer algorithm to further refine the return type,
+            //  and/or given warning on branches that leads to comparison always fail.
             TestCase(
                 name = "null or missing warning (caseValue = null): CASE <null> WHEN <string> THEN <string> WHEN <symbol> THEN <symbol> END",
                 originalSql = """
@@ -329,8 +332,6 @@ class InferencerSimpleCaseWhenTests {
                     )
                 )
             ),
-            // Todo: Inferencer keeps all the `THEN` expr types even if we know the comparison will not succeed, why?
-            //  Missing Type is lost here, why?
             TestCase(
                 name = "null or missing warning (caseValue = null_or_missing): CASE <null_or_missing> WHEN <string> THEN <string> WHEN <symbol> THEN <symbol> END",
                 originalSql = """

@@ -1149,9 +1149,11 @@ internal class StaticTypeInferenceVisitorTransform(
 
             val thenExprs = simpleCase.cases.pairs.map { expr -> expr.second }
 
-            // keep all the `THEN` expr types even if the comparison doesn't succeed
+            // Inferencer simply keeps all the then/else branch return type
+            //  even though we might have enough information to determine that the branch will never succeed.
+            //  may worth to change the inferencer algorithm to further refine the return type,
+            //  and/or given warning on branches that leads to comparison always fail.
             val simpleCaseType = inferCaseWhenBranches(thenExprs, simpleCase.default)
-            // TODO: if case input expression is missing, should the simple case when always returns missing?
             return simpleCase.withStaticType(simpleCaseType)
         }
 

@@ -12,6 +12,7 @@ import org.partiql.lang.eval.visitors.inferencer.InferencerTestUtil.ALL_UNKNOWN_
 import org.partiql.lang.eval.visitors.inferencer.InferencerTestUtil.TestCase
 import org.partiql.lang.eval.visitors.inferencer.InferencerTestUtil.createIncompatibleTypesForExprError
 import org.partiql.lang.eval.visitors.inferencer.InferencerTestUtil.createReturnsMissingError
+import org.partiql.lang.eval.visitors.inferencer.InferencerTestUtil.createReturnsNullOrMissingWarning
 import org.partiql.lang.eval.visitors.inferencer.InferencerTestUtil.expectProblemsAndAssert
 import org.partiql.lang.eval.visitors.inferencer.InferencerTestUtil.expectQueryOutputType
 import org.partiql.lang.eval.visitors.inferencer.InferencerTestUtil.runTest
@@ -137,63 +138,78 @@ class InferencerJoinPredicateTests {
                         listOf(
                             // TODO: verify the behavior when join predicate is null or unionOf(null, missing)
                             //  Current the inferencer will return Bag(struct(foo: int, bar: string)), which may not be correct.
-//                            TestCase(
-//                                name = "join with predicate type $unknownType",
-//                                originalSql = "SELECT * FROM a join b ON c",
-//                                globals = mapOf(
-//                                    "a" to BagType(StructType(mapOf("foo" to StaticType.INT))),
-//                                    "b" to BagType(StructType(mapOf("bar" to StaticType.STRING))),
-//                                    "c" to unknownType
-//                                ),
-//                                handler = expectQueryOutputType(
-//                                    BagType(
-//                                        StructType(
-//                                            mapOf(
-//                                                "foo" to StaticType.NULL,
-//                                                "bar" to StaticType.NULL
-//                                            )
-//                                        )
-//                                    )
-//                                )
-//                            ),
-//                            TestCase(
-//                                name = "left join with predicate type $unknownType",
-//                                originalSql = "SELECT * FROM a left join b ON c",
-//                                globals = mapOf(
-//                                    "a" to BagType(StructType(mapOf("foo" to StaticType.INT))),
-//                                    "b" to BagType(StructType(mapOf("bar" to StaticType.STRING))),
-//                                    "c" to unknownType
-//                                ),
-//                                handler = expectQueryOutputType(
-//                                    BagType(
-//                                        StructType(
-//                                            mapOf(
-//                                                "foo" to StaticType.INT,
-//                                                "bar" to StaticType.NULL
-//                                            )
-//                                        )
-//                                    )
-//                                )
-//                            ),
-//                            TestCase(
-//                                name = "left join with predicate type $unknownType",
-//                                originalSql = "SELECT * FROM a left join b ON c",
-//                                globals = mapOf(
-//                                    "a" to BagType(StructType(mapOf("foo" to StaticType.INT))),
-//                                    "b" to BagType(StructType(mapOf("bar" to StaticType.STRING))),
-//                                    "c" to unknownType
-//                                ),
-//                                handler = expectQueryOutputType(
-//                                    BagType(
-//                                        StructType(
-//                                            mapOf(
-//                                                "foo" to StaticType.NULL,
-//                                                "bar" to StaticType.STRING
-//                                            )
-//                                        )
-//                                    )
-//                                )
-//                            )
+                            TestCase(
+                                name = "join with predicate type $unknownType",
+                                originalSql = "SELECT * FROM a join b ON c",
+                                globals = mapOf(
+                                    "a" to BagType(StructType(mapOf("foo" to StaticType.INT))),
+                                    "b" to BagType(StructType(mapOf("bar" to StaticType.STRING))),
+                                    "c" to unknownType
+                                ),
+                                handler = expectQueryOutputType(
+                                    BagType(
+                                        StructType(
+                                            mapOf(
+                                                "foo" to StaticType.INT,
+                                                "bar" to StaticType.STRING
+                                            )
+                                        )
+                                    ),
+                                    expectedWarnings = listOf(
+                                        createReturnsNullOrMissingWarning(
+                                            SourceLocationMeta(1L, 27L, 1L)
+                                        )
+                                    )
+                                )
+                            ),
+                            TestCase(
+                                name = "left join with predicate type $unknownType",
+                                originalSql = "SELECT * FROM a left join b ON c",
+                                globals = mapOf(
+                                    "a" to BagType(StructType(mapOf("foo" to StaticType.INT))),
+                                    "b" to BagType(StructType(mapOf("bar" to StaticType.STRING))),
+                                    "c" to unknownType
+                                ),
+                                handler = expectQueryOutputType(
+                                    BagType(
+                                        StructType(
+                                            mapOf(
+                                                "foo" to StaticType.INT,
+                                                "bar" to StaticType.STRING
+                                            )
+                                        )
+                                    ),
+                                    expectedWarnings = listOf(
+                                        createReturnsNullOrMissingWarning(
+                                            SourceLocationMeta(1L, 32L, 1L)
+                                        )
+                                    )
+                                )
+                            ),
+                            TestCase(
+                                name = "left join with predicate type $unknownType",
+                                originalSql = "SELECT * FROM a left join b ON c",
+                                globals = mapOf(
+                                    "a" to BagType(StructType(mapOf("foo" to StaticType.INT))),
+                                    "b" to BagType(StructType(mapOf("bar" to StaticType.STRING))),
+                                    "c" to unknownType
+                                ),
+                                handler = expectQueryOutputType(
+                                    BagType(
+                                        StructType(
+                                            mapOf(
+                                                "foo" to StaticType.INT,
+                                                "bar" to StaticType.STRING
+                                            )
+                                        )
+                                    ),
+                                    expectedWarnings = listOf(
+                                        createReturnsNullOrMissingWarning(
+                                            SourceLocationMeta(1L, 32L, 1L)
+                                        )
+                                    )
+                                )
+                            )
                         )
                     }
                 } +
