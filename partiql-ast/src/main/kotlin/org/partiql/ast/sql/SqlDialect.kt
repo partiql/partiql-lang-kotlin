@@ -18,7 +18,6 @@ import org.partiql.ast.visitor.AstBaseVisitor
 import org.partiql.value.MissingValue
 import org.partiql.value.NullValue
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.TextValue
 import org.partiql.value.io.PartiQLValueTextWriter
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
@@ -40,7 +39,8 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
         public val PARTIQL = object : SqlDialect() {}
     }
 
-    override fun defaultReturn(node: AstNode, head: SqlBlock) = throw UnsupportedOperationException("Cannot print $node")
+    override fun defaultReturn(node: AstNode, head: SqlBlock) =
+        throw UnsupportedOperationException("Cannot print $node")
 
     // STATEMENTS
 
@@ -143,7 +143,8 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
     override fun visitTypeTimeWithTz(node: Type.TimeWithTz, head: SqlBlock) =
         head concat type("TIME WITH TIMEZONE", node.precision, gap = true)
 
-    override fun visitTypeTimestamp(node: Type.Timestamp, head: SqlBlock) = head concat type("TIMESTAMP", node.precision)
+    override fun visitTypeTimestamp(node: Type.Timestamp, head: SqlBlock) =
+        head concat type("TIMESTAMP", node.precision)
 
     override fun visitTypeTimestampWithTz(node: Type.TimestampWithTz, head: SqlBlock) =
         head concat type("TIMESTAMP WITH TIMEZONE", node.precision, gap = true)
@@ -235,20 +236,13 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
     override fun visitExprPathStepSymbol(node: Expr.Path.Step.Symbol, head: SqlBlock) =
         head concat r(".${node.symbol.sql()}")
 
-    @OptIn(PartiQLValueExperimental::class)
     override fun visitExprPathStepIndex(node: Expr.Path.Step.Index, head: SqlBlock): SqlBlock {
         var h = head
         val key = node.key
-        if (key is Expr.Lit && key.value is TextValue<*>) {
-            // use . syntax
-            h = h concat r(".")
-            h = h concat r((key.value as TextValue<*>).string!!)
-        } else {
-            // use [ ] syntax
-            h = h concat r("[")
-            h = visitExpr(node.key, h)
-            h = h concat r("]")
-        }
+        // use [ ] syntax
+        h = h concat r("[")
+        h = visitExpr(key, h)
+        h = h concat r("]")
         return h
     }
 
