@@ -500,6 +500,15 @@ class SqlDialectTest {
                     )
                 }
             },
+            expect("x['y']") {
+                exprPath {
+                    root = exprVar {
+                        identifier = id("x")
+                        scope = Expr.Var.Scope.DEFAULT
+                    }
+                    steps += exprPathStepIndex(exprLit(stringValue("y")))
+                }
+            },
         )
 
         @JvmStatic
