@@ -33,6 +33,7 @@ Thank you to all who have contributed!
 - Adds public `tag` field to IR nodes for associating metadata
 
 ### Changed
+- StaticTypeInferencer and PlanTyper will not raise an error when an expression is inferred to `NULL` or `unionOf(NULL, MISSING)`. In these cases the StaticTypeInferencer and PlanTyper will still raise the Problem Code `ExpressionAlwaysReturnsNullOrMissing` but the severity of the problem has been changed to warning. In the case an expression always returns `MISSING`, problem code `ExpressionAlwaysReturnsMissing` will be raised, which will have problem severity of error.
 
 ### Deprecated
 

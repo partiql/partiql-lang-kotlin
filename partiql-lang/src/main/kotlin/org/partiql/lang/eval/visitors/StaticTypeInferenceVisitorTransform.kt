@@ -195,11 +195,50 @@ internal class StaticTypeInferenceVisitorTransform(
             )
         }
 
-        private fun handleExpressionAlwaysReturnsNullOrMissingError(sourceLocationMeta: SourceLocationMeta) {
+        /**
+         * If an expression always returns missing, raise a [SemanticProblemDetails.ExpressionAlwaysReturnsMissing] and return true.
+         *
+         * If an expression always returns null or union(null, missing), raise a [SemanticProblemDetails.ExpressionAlwaysReturnsNullOrMissing] and return false.
+         *
+         * else returns false.
+         */
+        private fun expressionAlwaysReturnsUnknown(types: List<StaticType>, sourceLocationMeta: SourceLocationMeta): Boolean {
+            if (types.any { type -> type is MissingType }) {
+                handleExpressionAlwaysReturnsMissingError(sourceLocationMeta)
+                return true
+            }
+
+            if (types.any { type -> type is NullType || type == StaticType.NULL_OR_MISSING }) {
+                handleExpressionAlwaysReturnsMissingOrNullWarning(sourceLocationMeta)
+            }
+            return false
+        }
+
+        private fun handleExpressionAlwaysReturnsUnknown(type: StaticType, sourceLocationMeta: SourceLocationMeta) {
+            if (type is MissingType) {
+                handleExpressionAlwaysReturnsMissingError(sourceLocationMeta)
+                return
+            }
+
+            if (type is NullType || type == StaticType.NULL_OR_MISSING) {
+                handleExpressionAlwaysReturnsMissingOrNullWarning(sourceLocationMeta)
+            }
+        }
+
+        private fun handleExpressionAlwaysReturnsMissingOrNullWarning(sourceLocationMeta: SourceLocationMeta) {
             problemHandler.handleProblem(
                 Problem(
                     sourceLocation = sourceLocationMeta.toProblemLocation(),
                     details = SemanticProblemDetails.ExpressionAlwaysReturnsNullOrMissing
+                )
+            )
+        }
+
+        private fun handleExpressionAlwaysReturnsMissingError(sourceLocationMeta: SourceLocationMeta) {
+            problemHandler.handleProblem(
+                Problem(
+                    sourceLocation = sourceLocationMeta.toProblemLocation(),
+                    details = SemanticProblemDetails.ExpressionAlwaysReturnsMissing
                 )
             )
         }
@@ -279,8 +318,15 @@ internal class StaticTypeInferenceVisitorTransform(
 
         /**
          * Gives [SemanticProblemDetails.IncompatibleDatatypesForOp] error when none of the non-unknown [operandsStaticType]'
-         * types satisfy [operandTypeValidator]. Also gives [SemanticProblemDetails.ExpressionAlwaysReturnsNullOrMissing]
-         * error when one of the operands is an unknown. Returns true if none of these errors are added.
+         * types satisfy [operandTypeValidator].
+         *
+         * If an operand is always missing, the
+         * [SemanticProblemDetails.ExpressionAlwaysReturnsMissing] error is handled by [ProblemHandler].
+         *
+         * If an operand is always NULL, or unionOf(NULL, MISSING), the
+         * [SemanticProblemDetails.ExpressionAlwaysReturnsNullOrMissing] **warning** is handled by [ProblemHandler]
+         *
+         * Returns true if no **error** is added.
          */
         private fun hasValidOperandTypes(
             operandsStaticType: List<StaticType>,
@@ -297,8 +343,7 @@ internal class StaticTypeInferenceVisitorTransform(
             }
 
             // check for an unknown operand type
-            if (operandsStaticType.any { operandStaticType -> operandStaticType.isUnknown() }) {
-                handleExpressionAlwaysReturnsNullOrMissingError(metas.getSourceLocation())
+            if (expressionAlwaysReturnsUnknown(operandsStaticType, metas.getSourceLocation())) {
                 hasValidOperands = false
             }
 
@@ -310,8 +355,10 @@ internal class StaticTypeInferenceVisitorTransform(
          * returns false.
          *
          * If an operand is not comparable to another, the [SemanticProblemDetails.IncompatibleDatatypesForOp] error is
-         * handled by [problemHandler]. If an operand is unknown, the
-         * [SemanticProblemDetails.ExpressionAlwaysReturnsNullOrMissing] error is handled by [problemHandler].
+         * handled by [ProblemHandler].
+         *
+         * If an operand is always missing, the
+         * [SemanticProblemDetails.ExpressionAlwaysReturnsMissing] error is handled by [ProblemHandler].
          *
          * TODO: consider if collection comparison semantics should be different (e.g. errors over warnings,
          *  more details in error message): https://github.com/partiql/partiql-lang-kotlin/issues/505
@@ -331,8 +378,7 @@ internal class StaticTypeInferenceVisitorTransform(
             }
 
             // check for an unknown operand type
-            if (argsStaticType.any { operand -> operand.isUnknown() }) {
-                handleExpressionAlwaysReturnsNullOrMissingError(metas.getSourceLocation())
+            if (expressionAlwaysReturnsUnknown(argsStaticType, metas.getSourceLocation())) {
                 hasValidOperands = false
             }
             return hasValidOperands
@@ -693,9 +739,8 @@ internal class StaticTypeInferenceVisitorTransform(
             val rhs = operands[1]
             var errorAdded = false
 
-            // check if any operands are unknown, then null or missing error
-            if (operands.any { operand -> operand.isUnknown() }) {
-                handleExpressionAlwaysReturnsNullOrMissingError(processedNode.metas.getSourceLocation())
+            // check for an unknown operand type
+            if (expressionAlwaysReturnsUnknown(operands, processedNode.metas.getSourceLocation())) {
                 errorAdded = true
             }
 
@@ -777,6 +822,10 @@ internal class StaticTypeInferenceVisitorTransform(
             argsAllTypes.cartesianProduct().forEach { argsChildType ->
                 val argsSingleType = argsChildType.map { it as SingleType }
                 when {
+                    // If any one of the operands is missing, return missing
+                    // notice since we short circuit above to handle atomic missing type
+                    // missing type here indicates one of the args is union type and in the union type we have missing
+                    argsSingleType.any() { it is MissingType } -> possibleReturnTypes.add(StaticType.MISSING)
                     // If any one of the operands is null, return NULL
                     argsSingleType.any { it is NullType } -> possibleReturnTypes.add(StaticType.NULL)
                     // Arguments for LIKE need to be text type
@@ -1075,17 +1124,17 @@ internal class StaticTypeInferenceVisitorTransform(
             val caseValue = simpleCase.expr
             val caseValueType = caseValue.getStaticType()
 
-            // comparison never succeeds if caseValue is an unknown
+            // handle unknown case value.
             if (caseValueType.isUnknown()) {
-                handleExpressionAlwaysReturnsNullOrMissingError(caseValue.getStartingSourceLocationMeta())
+                handleExpressionAlwaysReturnsUnknown(caseValueType, caseValue.getStartingSourceLocationMeta())
             }
 
             val whenExprs = simpleCase.cases.pairs.map { expr -> expr.first }
             whenExprs.forEach { whenExpr ->
                 val whenExprType = whenExpr.getStaticType()
-                // comparison never succeeds if whenExpr is unknown -> null or missing error
+                // handle unknown whenExpr.
                 if (whenExprType.isUnknown()) {
-                    handleExpressionAlwaysReturnsNullOrMissingError(whenExpr.getStartingSourceLocationMeta())
+                    handleExpressionAlwaysReturnsUnknown(whenExprType, whenExpr.getStartingSourceLocationMeta())
                 }
 
                 // if caseValueType is incomparable to whenExprType -> data type mismatch
@@ -1100,7 +1149,10 @@ internal class StaticTypeInferenceVisitorTransform(
 
             val thenExprs = simpleCase.cases.pairs.map { expr -> expr.second }
 
-            // keep all the `THEN` expr types even if the comparison doesn't succeed
+            // Inferencer simply keeps all the then/else branch return type
+            //  even though we might have enough information to determine that the branch will never succeed.
+            //  may worth to change the inferencer algorithm to further refine the return type,
+            //  and/or given warning on branches that leads to comparison always fail.
             val simpleCaseType = inferCaseWhenBranches(thenExprs, simpleCase.default)
             return simpleCase.withStaticType(simpleCaseType)
         }
@@ -1112,9 +1164,9 @@ internal class StaticTypeInferenceVisitorTransform(
             whenExprs.forEach { whenExpr ->
                 val whenExprType = whenExpr.getStaticType()
 
-                // if whenExpr is unknown -> null or missing error
+                // check for an unknown whenExpr type
                 if (whenExprType.isUnknown()) {
-                    handleExpressionAlwaysReturnsNullOrMissingError(whenExpr.getStartingSourceLocationMeta())
+                    handleExpressionAlwaysReturnsUnknown(whenExprType, whenExpr.getStartingSourceLocationMeta())
                 }
 
                 // if whenExpr can never be bool -> data type mismatch
@@ -1308,15 +1360,21 @@ internal class StaticTypeInferenceVisitorTransform(
         }
 
         /**
-         * Verifies the given [expr]'s [StaticType] has type [expectedType]. If [expr] is unknown, a null or missing
-         * error is given. If [expr]'s [StaticType] could never be [expectedType], an incompatible data types for
+         * Verifies the given [expr]'s [StaticType] has type [expectedType].
+         * If [expr] is always missing, the
+         * [SemanticProblemDetails.ExpressionAlwaysReturnsMissing] error is handled by [ProblemHandler].
+         *
+         * If [expr] is always NULL, or unionOf(NULL, MISSING), the
+         * [SemanticProblemDetails.ExpressionAlwaysReturnsNullOrMissing] **warning** is handled by [ProblemHandler]
+         *
+         * If [expr]'s [StaticType] could never be [expectedType], an incompatible data types for
          * expression error is given.
          */
         private fun verifyExpressionType(expr: PartiqlAst.Expr, expectedType: StaticType) {
             val exprType = expr.getStaticType()
 
             if (exprType.isUnknown()) {
-                handleExpressionAlwaysReturnsNullOrMissingError(expr.getStartingSourceLocationMeta())
+                handleExpressionAlwaysReturnsUnknown(exprType, expr.getStartingSourceLocationMeta())
             } else if (exprType.allTypes.none { it == expectedType }) {
                 handleIncompatibleDataTypeForExprError(
                     expectedType = expectedType,
@@ -1333,15 +1391,22 @@ internal class StaticTypeInferenceVisitorTransform(
          * though the `null` predicate is equivalent to `true`.  However, that also causes it to be skipped and not
          * assigned a `StaticType`, which is required by [EvaluatorStaticTypeTests].
          *
-         * If predicate is non-null, checks that its type could be [StaticType.BOOL]. If the type is an unknown, gives
-         * a null or missing error. If the type is not unknown and could never be [StaticType.BOOL], gives a data type
+         * If predicate is non-null, checks that its type could be [StaticType.BOOL].
+         *
+         * If predicate is always missing, the
+         * [SemanticProblemDetails.ExpressionAlwaysReturnsMissing] error is handled by [ProblemHandler].
+         *
+         * If predicate is always NULL, or unionOf(NULL, MISSING), the
+         * [SemanticProblemDetails.ExpressionAlwaysReturnsNullOrMissing] **warning** is handled by [ProblemHandler].
+         *
+         * If the type is not unknown and could never be [StaticType.BOOL], gives a data type
          * mismatch error (incompatible types for expression).
          */
         override fun transformFromSourceJoin_predicate(node: PartiqlAst.FromSource.Join): PartiqlAst.Expr? {
             return when (val predicate = super.transformFromSourceJoin_predicate(node)) {
                 null -> PartiqlAst.build { lit(ionBool(true)).withStaticType(StaticType.BOOL) }
                 else -> {
-                    // verify `JOIN` predicate is bool. If it's unknown, gives a null or missing error. If it could
+                    // verify `JOIN` predicate is bool. If it's unknown, gives appropriate error or warning. If it could
                     // never be a bool, gives an incompatible data type for expression error
                     verifyExpressionType(expr = predicate, expectedType = StaticType.BOOL)
 
@@ -1569,7 +1634,7 @@ internal class StaticTypeInferenceVisitorTransform(
             return when (val whereExpr = node.where?.let { transformExpr(it) }) {
                 null -> whereExpr
                 else -> {
-                    // verify `WHERE` clause is bool. If it's unknown, gives a null or missing error. If it could never
+                    // verify `WHERE` clause is bool. If it's unknown, gives appropriate warning or error. If it could never
                     // be a bool, gives an incompatible data type for expression error
                     verifyExpressionType(expr = whereExpr, expectedType = StaticType.BOOL)
 
