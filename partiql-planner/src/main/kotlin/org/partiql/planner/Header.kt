@@ -38,18 +38,12 @@ import org.partiql.value.PartiQLValueType.SYMBOL
 import org.partiql.value.PartiQLValueType.TIME
 import org.partiql.value.PartiQLValueType.TIMESTAMP
 
-/**
- * A structure for scalar function lookup.
- */
 private typealias FnMap<T> = Map<String, List<T>>
 
 /**
- * Map session attributes to underlying function name.
+ * Unicode non-character to be used for name sanitization
  */
-internal val ATTRIBUTES: Map<String, String> = mapOf(
-    "CURRENT_USER" to "\$__current_user",
-    "CURRENT_DATE" to "\$__current_date"
-)
+private val HIDDEN_FLAG: Char = Char(0xFDD0)
 
 /**
  * A place for type and function definitions. Eventually these will be read from Ion files.
@@ -73,7 +67,9 @@ internal class Header(
      */
     public fun lookup(ref: Fn.Unresolved): List<FunctionSignature.Scalar> {
         val name = getFnName(ref.identifier)
-        return functions.getOrDefault(name, emptyList())
+        return if (ref.isHidden)
+            functions.getOrDefault("${HIDDEN_FLAG}_$name", emptyList())
+        else functions.getOrDefault(name, emptyList())
     }
 
     /**
@@ -92,7 +88,7 @@ internal class Header(
             return null
         }
         val name = castName(targetType)
-        val casts = functions.getOrDefault(name, emptyList())
+        val casts = functions.getOrDefault("${HIDDEN_FLAG}_$name", emptyList())
         for (cast in casts) {
             if (cast.parameters.isEmpty()) {
                 break // should be unreachable
@@ -139,15 +135,18 @@ internal class Header(
             val types = TypeLattice.partiql()
             val (casts, unsafeCastSet) = Functions.casts(types)
             val functions = Functions.combine(
+                Functions.builtins()
+            )
+            val internalFunctions = Functions.combineInternal(
                 casts,
                 Functions.operators(),
-                Functions.builtins(),
+                Functions.special(),
                 Functions.system(),
             )
             val aggregations = Functions.combine(
                 Functions.aggregations(),
             )
-            return Header(namespace, types, functions, aggregations, unsafeCastSet)
+            return Header(namespace, types, functions + internalFunctions, aggregations, unsafeCastSet)
         }
 
         /**
@@ -171,11 +170,13 @@ internal class Header(
         public fun <T : FunctionSignature> combine(vararg functions: List<T>): FnMap<T> {
             return functions.flatMap { it.sortedWith(functionPrecedence) }.groupBy { it.name }
         }
+        public fun <T : FunctionSignature> combineInternal(vararg functions: List<T>): FnMap<T> {
+            return functions.flatMap { it.sortedWith(functionPrecedence) }.groupBy { "${HIDDEN_FLAG}_${it.name}" }
+        }
 
         // ====================================
         //  TYPES
         // ====================================
-
         private val allTypes = PartiQLValueType.values()
 
         private val nullableTypes = listOf(
@@ -271,11 +272,23 @@ internal class Header(
         ).flatten()
 
         /**
-         * SQL and PartiQL Scalar Builtins
+         * SQL Builtins (not special forms)
          */
         public fun builtins(): List<FunctionSignature.Scalar> = listOf(
             upper(),
             lower(),
+            coalesce(),
+            nullIf(),
+            position(),
+            substring(),
+            trim(),
+            utcNow(),
+        ).flatten()
+
+        /**
+         * SQL and PartiQL special forms
+         */
+        public fun special(): List<FunctionSignature.Scalar> = listOf(
             like(),
             between(),
             inCollection(),
@@ -283,16 +296,13 @@ internal class Header(
             isTypeSingleArg(),
             isTypeDoubleArgsInt(),
             isTypeTime(),
-            coalesce(),
-            nullIf(),
-            substring(),
             position(),
-            trim(),
+            substring(),
+            trimSpecial(),
             overlay(),
             extract(),
             dateAdd(),
             dateDiff(),
-            utcNow(),
         ).flatten()
 
         /**
@@ -521,19 +531,22 @@ internal class Header(
         // TODO
         private fun coalesce(): List<FunctionSignature.Scalar> = emptyList()
 
+        // NULLIF(x, y)
         private fun nullIf(): List<FunctionSignature.Scalar> = nullableTypes.map { t ->
             FunctionSignature.Scalar(
                 name = "null_if",
                 returns = t,
                 parameters = listOf(
                     FunctionParameter("value", t),
-                    FunctionParameter("nullifier", BOOL),
+                    FunctionParameter("nullifier", BOOL), // TODO: why is this BOOL?
                 ),
                 isNullCall = true,
                 isNullable = true,
             )
         }
 
+        // SUBSTRING (expression, start[, length]?)
+        // SUBSTRINGG(expression from start [FOR length]? )
         private fun substring(): List<FunctionSignature.Scalar> = textTypes.map { t ->
             listOf(
                 FunctionSignature.Scalar(
@@ -547,7 +560,7 @@ internal class Header(
                     isNullable = false,
                 ),
                 FunctionSignature.Scalar(
-                    name = "substring_length",
+                    name = "substring",
                     returns = t,
                     parameters = listOf(
                         FunctionParameter("value", t),
@@ -560,6 +573,8 @@ internal class Header(
             )
         }.flatten()
 
+        // position (str1, str2)
+        // position (str1 in str2)
         private fun position(): List<FunctionSignature.Scalar> = textTypes.map { t ->
             FunctionSignature.Scalar(
                 name = "position",
@@ -573,17 +588,24 @@ internal class Header(
             )
         }
 
+        // trim(str)
         private fun trim(): List<FunctionSignature.Scalar> = textTypes.map { t ->
-            listOf(
-                FunctionSignature.Scalar(
-                    name = "trim",
-                    returns = t,
-                    parameters = listOf(
-                        FunctionParameter("value", t),
-                    ),
-                    isNullCall = true,
-                    isNullable = false,
+            FunctionSignature.Scalar(
+                name = "trim",
+                returns = t,
+                parameters = listOf(
+                    FunctionParameter("value", t),
                 ),
+                isNullCall = true,
+                isNullable = false,
+            )
+        }
+
+        // TODO: We need to add a special form function for TRIM(BOTH FROM value)
+        private fun trimSpecial(): List<FunctionSignature.Scalar> = textTypes.map { t ->
+            listOf(
+                // TRIM(chars FROM value)
+                // TRIM(both chars from value)
                 FunctionSignature.Scalar(
                     name = "trim_chars",
                     returns = t,
@@ -594,6 +616,7 @@ internal class Header(
                     isNullCall = true,
                     isNullable = false,
                 ),
+                // TRIM(LEADING FROM value)
                 FunctionSignature.Scalar(
                     name = "trim_leading",
                     returns = t,
@@ -603,6 +626,7 @@ internal class Header(
                     isNullCall = true,
                     isNullable = false,
                 ),
+                // TRIM(LEADING chars FROM value)
                 FunctionSignature.Scalar(
                     name = "trim_leading_chars",
                     returns = t,
@@ -613,6 +637,7 @@ internal class Header(
                     isNullCall = true,
                     isNullable = false,
                 ),
+                // TRIM(TRAILING FROM value)
                 FunctionSignature.Scalar(
                     name = "trim_trailing",
                     returns = t,
@@ -622,6 +647,7 @@ internal class Header(
                     isNullCall = true,
                     isNullable = false,
                 ),
+                // TRIM(TRAILING chars FROM value)
                 FunctionSignature.Scalar(
                     name = "trim_trailing_chars",
                     returns = t,
@@ -641,7 +667,7 @@ internal class Header(
         // TODO
         private fun extract(): List<FunctionSignature.Scalar> = emptyList()
 
-        private fun dateArithmetic(prefix: String): List<FunctionSignature.Scalar> {
+        private fun dateAdd(): List<FunctionSignature.Scalar> {
             val operators = mutableListOf<FunctionSignature.Scalar>()
             for (type in datetimeTypes) {
                 for (field in DatetimeField.values()) {
@@ -649,7 +675,7 @@ internal class Header(
                         continue
                     }
                     val signature = FunctionSignature.Scalar(
-                        name = "${prefix}_${field.name.lowercase()}",
+                        name = "date_add_${field.name.lowercase()}",
                         returns = type,
                         parameters = listOf(
                             FunctionParameter("interval", INT),
@@ -664,9 +690,28 @@ internal class Header(
             return operators
         }
 
-        private fun dateAdd(): List<FunctionSignature.Scalar> = dateArithmetic("date_add")
-
-        private fun dateDiff(): List<FunctionSignature.Scalar> = dateArithmetic("date_diff")
+        private fun dateDiff(): List<FunctionSignature.Scalar> {
+            val operators = mutableListOf<FunctionSignature.Scalar>()
+            for (type in datetimeTypes) {
+                for (field in DatetimeField.values()) {
+                    if (field == DatetimeField.TIMEZONE_HOUR || field == DatetimeField.TIMEZONE_MINUTE) {
+                        continue
+                    }
+                    val signature = FunctionSignature.Scalar(
+                        name = "date_diff_${field.name.lowercase()}",
+                        returns = INT64,
+                        parameters = listOf(
+                            FunctionParameter("datetime1", type),
+                            FunctionParameter("datetime2", type),
+                        ),
+                        isNullCall = true,
+                        isNullable = false,
+                    )
+                    operators.add(signature)
+                }
+            }
+            return operators
+        }
 
         private fun utcNow(): List<FunctionSignature.Scalar> = listOf(
             FunctionSignature.Scalar(
@@ -678,14 +723,14 @@ internal class Header(
         )
 
         private fun currentUser() = FunctionSignature.Scalar(
-            name = "\$__current_user",
+            name = "current_user",
             returns = STRING,
             parameters = emptyList(),
             isNullable = true,
         )
 
         private fun currentDate() = FunctionSignature.Scalar(
-            name = "\$__current_date",
+            name = "current_date",
             returns = DATE,
             parameters = emptyList(),
             isNullable = false,

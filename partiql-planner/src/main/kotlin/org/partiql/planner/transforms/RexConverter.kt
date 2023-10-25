@@ -43,7 +43,6 @@ import org.partiql.plan.rexOpPathStepWildcard
 import org.partiql.plan.rexOpStruct
 import org.partiql.plan.rexOpStructField
 import org.partiql.plan.rexOpVarUnresolved
-import org.partiql.planner.ATTRIBUTES
 import org.partiql.planner.Env
 import org.partiql.planner.typer.toNonNullStaticType
 import org.partiql.planner.typer.toStaticType
@@ -51,6 +50,7 @@ import org.partiql.types.StaticType
 import org.partiql.types.TimeType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.boolValue
+import org.partiql.value.datetime.Timestamp
 import org.partiql.value.int32Value
 import org.partiql.value.int64Value
 import org.partiql.value.nullValue
@@ -65,7 +65,6 @@ internal object RexConverter {
     @OptIn(PartiQLValueExperimental::class)
     @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
     private object ToRex : AstBaseVisitor<Rex, Env>() {
-
         override fun defaultReturn(node: AstNode, context: Env): Rex =
             throw IllegalArgumentException("unsupported rex $node")
 
@@ -96,7 +95,7 @@ internal object RexConverter {
             val args = listOf(arg)
             // Fn
             val id = identifierSymbol(node.op.name.lowercase(), Identifier.CaseSensitivity.SENSITIVE)
-            val fn = fnUnresolved(id)
+            val fn = fnUnresolved(id, true)
             // Rex
             val op = rexOpCall(fn, args)
             return rex(type, op)
@@ -110,7 +109,7 @@ internal object RexConverter {
             val args = listOf(lhs, rhs)
             // Fn
             val id = identifierSymbol(node.op.name.lowercase(), Identifier.CaseSensitivity.SENSITIVE)
-            val fn = fnUnresolved(id)
+            val fn = fnUnresolved(id, true)
             // Rex
             val op = rexOpCall(fn, args)
             return rex(type, op)
@@ -146,7 +145,7 @@ internal object RexConverter {
             if (id is Identifier.Symbol && id.symbol.equals("TUPLEUNION", ignoreCase = true)) {
                 return visitExprCallTupleUnion(node, context)
             }
-            val fn = fnUnresolved(id)
+            val fn = fnUnresolved(id, false)
             // Args
             val args = node.args.map { visitExpr(it, context) }
             // Rex
@@ -170,7 +169,7 @@ internal object RexConverter {
 
             // Converts AST CASE (x) WHEN y THEN z --> Plan CASE WHEN x = y THEN z
             val id = identifierSymbol(Expr.Binary.Op.EQ.name.lowercase(), Identifier.CaseSensitivity.SENSITIVE)
-            val fn = fnUnresolved(id)
+            val fn = fnUnresolved(id, true)
             val createBranch: (Rex, Rex) -> Rex.Op.Case.Branch = { condition: Rex, result: Rex ->
                 val updatedCondition = when (rex) {
                     null -> condition
@@ -336,7 +335,7 @@ internal object RexConverter {
             // Args
             val arg0 = rex(StaticType.LIST, rexOpCollection(node.args.map { visitExpr(it, ctx) }))
             // Call
-            val call = call("coalesce", arg0)
+            val call = callNonHidden("coalesce", arg0)
             return rex(type, call)
         }
 
@@ -349,7 +348,7 @@ internal object RexConverter {
             val arg0 = visitExpr(node.value, ctx)
             val arg1 = visitExpr(node.nullifier, ctx)
             // Call
-            val call = call("null_if", arg0, arg1)
+            val call = callNonHidden("null_if", arg0, arg1)
             return rex(type, call)
         }
 
@@ -401,8 +400,9 @@ internal object RexConverter {
                     null -> call("trim_trailing", arg0)
                     else -> call("trim_trailing_chars", arg0, arg1)
                 }
+                // TODO: We may want to add a trim_both for trim(BOTH FROM arg)
                 else -> when (arg1) {
-                    null -> call("trim", arg0)
+                    null -> callNonHidden("trim", arg0)
                     else -> call("trim_chars", arg0, arg1)
                 }
             }
@@ -498,12 +498,7 @@ internal object RexConverter {
 
         override fun visitExprSessionAttribute(node: Expr.SessionAttribute, ctx: Env): Rex {
             val type = StaticType.ANY
-            val attribute = node.attribute.name.uppercase()
-            val fn = ATTRIBUTES[attribute]
-            if (fn == null) {
-                // err?
-                error("Unknown session attribute $attribute")
-            }
+            val fn = node.attribute.name.lowercase()
             val call = call(fn)
             return rex(type, call)
         }
@@ -545,16 +540,30 @@ internal object RexConverter {
         private fun negate(call: Rex.Op.Call): Rex.Op.Call {
             val name = Expr.Unary.Op.NOT.name
             val id = identifierSymbol(name.lowercase(), Identifier.CaseSensitivity.SENSITIVE)
-            val fn = fnUnresolved(id)
+            val fn = fnUnresolved(id, true)
             // wrap
             val arg = rex(StaticType.BOOL, call)
             // rewrite call
             return rexOpCall(fn, listOf(arg))
         }
 
+        /**
+         * Create a [Rex.Op.Call] node which has a hidden unresolved Function.
+         * A hidden function, will have a unicode 0xFDD0 as prefix in the key for [org.partiql.planner.FunctionMap].
+         * The purpose of having such hidden function is to prevent usage of generated function name in query text.
+         */
         private fun call(name: String, vararg args: Rex): Rex.Op.Call {
             val id = identifierSymbol(name, Identifier.CaseSensitivity.SENSITIVE)
-            val fn = fnUnresolved(id)
+            val fn = fnUnresolved(id, true)
+            return rexOpCall(fn, args.toList())
+        }
+
+        /**
+         * Create a [Rex.Op.Call] node which has a non-hidden unresolved Function.
+         */
+        private fun callNonHidden(name: String, vararg args: Rex): Rex.Op.Call {
+            val id = identifierSymbol(name, Identifier.CaseSensitivity.SENSITIVE)
+            val fn = fnUnresolved(id, false)
             return rexOpCall(fn, args.toList())
         }
 
