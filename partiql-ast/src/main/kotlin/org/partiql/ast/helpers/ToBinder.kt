@@ -22,6 +22,7 @@ public fun Expr.toBinder(index: Int): Identifier.Symbol = when (this) {
     is Expr.Var -> this.identifier.toBinder()
     is Expr.Path -> this.toBinder(index)
     is Expr.Cast -> this.value.toBinder(index)
+    is Expr.SessionAttribute -> this.attribute.name.uppercase().toBinder()
     else -> col(index).toBinder()
 }
 
