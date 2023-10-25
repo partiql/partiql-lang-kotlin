@@ -298,7 +298,7 @@ internal class Env(
             getObjectHandle(cat, catalogPath)?.let { handle ->
                 getObjectDescriptor(handle).let { type ->
                     val depth = calculateMatched(originalPath, catalogPath, handle.second.absolutePath)
-                    val match = BindingPath(originalPath.steps.subList(0, depth))
+                    val match = BindingPath(originalPath.steps.subList(0, depth)).toCaseSensitive()
                     val global = global(match.toIdentifier(), type)
                     globals.add(global)
                     // Return resolution metadata
@@ -306,6 +306,10 @@ internal class Env(
                 }
             }
         }
+    }
+
+    private fun BindingPath.toCaseSensitive(): BindingPath {
+        return this.copy(steps = this.steps.map { it.copy(bindingCase = BindingCase.SENSITIVE) })
     }
 
     /**
