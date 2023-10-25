@@ -33,6 +33,7 @@ import org.partiql.types.IntType
 import org.partiql.types.ListType
 import org.partiql.types.SexpType
 import org.partiql.types.StaticType
+import org.partiql.types.StaticType.Companion.DATE
 import org.partiql.types.StaticType.Companion.DECIMAL
 import org.partiql.types.StaticType.Companion.INT
 import org.partiql.types.StaticType.Companion.INT4
@@ -384,6 +385,35 @@ class PartiQLSchemaInferencerTests {
                 name = "Current User in WHERE",
                 query = "SELECT VALUE a FROM [ 0 ] AS a WHERE CURRENT_USER = 5",
                 expected = BagType(INT),
+            ),
+            SuccessTestCase(
+                name = "Testing CURRENT_USER and CURRENT_DATE Binders",
+                query = """
+                    SELECT
+                        CURRENT_USER,
+                        CURRENT_DATE,
+                        CURRENT_USER AS "curr_user",
+                        CURRENT_DATE AS "curr_date",
+                        CURRENT_USER || ' is my name.' AS name_desc
+                    FROM << 0, 1 >>;
+                """.trimIndent(),
+                expected = BagType(
+                    StructType(
+                        fields = listOf(
+                            StructType.Field("CURRENT_USER", STRING.asNullable()),
+                            StructType.Field("CURRENT_DATE", DATE),
+                            StructType.Field("curr_user", STRING.asNullable()),
+                            StructType.Field("curr_date", DATE),
+                            StructType.Field("name_desc", STRING.asNullable()),
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                )
             ),
             ErrorTestCase(
                 name = "Current User (String) PLUS String",
