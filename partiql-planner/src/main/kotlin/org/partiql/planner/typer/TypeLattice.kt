@@ -64,6 +64,50 @@ internal class TypeLattice private constructor(
         return graph[operand][target]?.cast == CastType.COERCION
     }
 
+    internal val all = PartiQLValueType.values()
+
+    internal val nullable = listOf(
+        NULL, // null.null
+        MISSING, // missing
+    )
+
+    internal val integer = listOf(
+        INT8,
+        INT16,
+        INT32,
+        INT64,
+        INT,
+    )
+
+    internal val numeric = listOf(
+        INT8,
+        INT16,
+        INT32,
+        INT64,
+        INT,
+        DECIMAL,
+        FLOAT32,
+        FLOAT64,
+    )
+
+    internal val text = listOf(
+        STRING,
+        SYMBOL,
+        CLOB,
+    )
+
+    internal val collections = listOf(
+        BAG,
+        LIST,
+        SEXP,
+    )
+
+    internal val datetime = listOf(
+        DATE,
+        TIME,
+        TIMESTAMP,
+    )
+
     /**
      * Dump the graph as an Asciidoc table.
      */

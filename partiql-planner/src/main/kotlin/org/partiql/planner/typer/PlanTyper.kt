@@ -59,7 +59,6 @@ import org.partiql.plan.rexOpVarResolved
 import org.partiql.plan.statementQuery
 import org.partiql.plan.util.PlanRewriter
 import org.partiql.planner.Env
-import org.partiql.planner.FnMatch
 import org.partiql.planner.PlanningProblemDetails
 import org.partiql.planner.ResolutionStrategy
 import org.partiql.planner.ResolvedVar

@@ -3,10 +3,12 @@ package org.partiql.planner.typer
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.fail
 import org.partiql.planner.Header
+import org.partiql.planner.PartiQLHeader
 import org.partiql.types.function.FunctionParameter
 import org.partiql.types.function.FunctionSignature
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
+import javax.print.DocFlavor.STRING
 
 /**
  * As far as testing is concerned, we can stub out all value related things.
@@ -19,7 +21,7 @@ class FunctionResolverTest {
     @Test
     fun sanity() {
         // 1 + 1.0 -> 2.0
-        val fn = Header.Functions.binary(
+        val fn = Header.binary(
             name = "plus",
             returns = PartiQLValueType.FLOAT64,
             lhs = PartiQLValueType.FLOAT64,
@@ -34,9 +36,39 @@ class FunctionResolverTest {
         case.assert()
     }
 
+    @Test
+    fun split() {
+        val args = listOf(
+            FunctionParameter("arg-0", PartiQLValueType.STRING),
+            FunctionParameter("arg-1", PartiQLValueType.STRING),
+        )
+        val expectedImplicitCasts = listOf(false, false)
+        val case = Case.Success(split, args, expectedImplicitCasts)
+        case.assert()
+    }
+
     companion object {
-        private val header = Header.partiql()
-        private val resolver = FunctionResolver(header)
+
+        val split = FunctionSignature.Scalar(
+            name = "split",
+            returns = PartiQLValueType.LIST,
+            parameters = listOf(
+                FunctionParameter("value", PartiQLValueType.STRING),
+                FunctionParameter("delimiter", PartiQLValueType.STRING),
+            ),
+            isNullable = false,
+        )
+
+        private val myHeader = object : Header() {
+
+            override val namespace: String = "my_header"
+
+            override val functions: List<FunctionSignature.Scalar> = listOf(
+                split
+            )
+        }
+
+        private val resolver = FnResolver(listOf(PartiQLHeader, myHeader))
     }
 
     private sealed class Case {
