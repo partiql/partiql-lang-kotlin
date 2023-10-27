@@ -102,7 +102,6 @@ class KotlinUtilsPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
 
     private fun KotlinNodeSpec.Product.rewriter(): FunSpec {
         val visit = product.ref.visitMethodName()
-        // val constructor = symbols.camel(product.ref)
         return FunSpec.builder(visit)
             .addModifiers(KModifier.OVERRIDE)
             .addParameter(ParameterSpec("node", clazz))

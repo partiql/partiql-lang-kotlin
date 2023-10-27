@@ -43,7 +43,6 @@ class KotlinBuilderPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
     private val dslName = "${symbols.rootId}Builder"
     private val dslClass = ClassName(builderPackageName, dslName)
     private val dslSpec = TypeSpec.classBuilder(dslClass)
-    // .primaryConstructor(FunSpec.constructorBuilder().build())
 
     // T : FooNode
     private val boundedT = TypeVariableName("T", symbols.base)
@@ -107,7 +106,7 @@ class KotlinBuilderPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
         val funcDsl = FunSpec.builder(builderName).returns(clazz)
         funcDsl.addStatement("val builder = %T(${props.joinToString { it.name }})", builderType)
 
-        // Java builder `build(factory: Factory = DEFAULT): T`
+        // Java builder `build(): T`
         val funcBuild = FunSpec.builder("build").returns(clazz)
         val args = mutableListOf<String>()
 

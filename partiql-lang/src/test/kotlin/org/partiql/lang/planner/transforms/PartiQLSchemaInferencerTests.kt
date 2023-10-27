@@ -14,9 +14,9 @@ import org.junit.jupiter.params.provider.ArgumentsSource
 import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.annotations.ExperimentalPartiQLSchemaInferencer
 import org.partiql.errors.Problem
+import org.partiql.errors.ProblemHandler
 import org.partiql.errors.UNKNOWN_PROBLEM_LOCATION
 import org.partiql.lang.errors.ProblemCollector
-import org.partiql.lang.planner.transforms.PartiQLSchemaInferencerTests.ProblemHandler
 import org.partiql.lang.planner.transforms.PartiQLSchemaInferencerTests.TestCase.ErrorTestCase
 import org.partiql.lang.planner.transforms.PartiQLSchemaInferencerTests.TestCase.SuccessTestCase
 import org.partiql.lang.planner.transforms.PartiQLSchemaInferencerTests.TestCase.ThrowingExceptionTestCase
@@ -2183,6 +2183,7 @@ class PartiQLSchemaInferencerTests {
             val catalog: String? = null,
             val catalogPath: List<String> = emptyList(),
             val expected: StaticType,
+            val warnings: ProblemHandler? = null
         ) : TestCase() {
             override fun toString(): String = "$name : $query"
         }

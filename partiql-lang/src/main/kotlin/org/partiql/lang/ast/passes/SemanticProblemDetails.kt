@@ -53,9 +53,18 @@ sealed class SemanticProblemDetails(override val severity: ProblemSeverity, val 
             messageFormatter = { "In this context, $expectedType is expected but expression returns $actualType" }
         )
 
-    object ExpressionAlwaysReturnsNullOrMissing :
+    object ExpressionAlwaysReturnsMissing :
         SemanticProblemDetails(
             severity = ProblemSeverity.ERROR,
+            messageFormatter = { "Expression always returns missing." }
+        )
+
+    /**
+     * Should be used when the inferred type is always null or unionOf(null, missing)
+     */
+    object ExpressionAlwaysReturnsNullOrMissing :
+        SemanticProblemDetails(
+            severity = ProblemSeverity.WARNING,
             messageFormatter = { "Expression always returns null or missing." }
         )
 
