@@ -9,9 +9,7 @@ import org.partiql.plan.Rex
 import org.partiql.plan.global
 import org.partiql.plan.identifierQualified
 import org.partiql.plan.identifierSymbol
-import org.partiql.planner.typer.FunctionResolver
-import org.partiql.planner.typer.Mapping
-import org.partiql.planner.typer.toRuntimeType
+import org.partiql.planner.typer.FnResolver
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
@@ -25,9 +23,6 @@ import org.partiql.spi.connector.Constants
 import org.partiql.types.StaticType
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
-import org.partiql.types.function.FunctionParameter
-import org.partiql.types.function.FunctionSignature
-import org.partiql.value.PartiQLValueExperimental
 
 /**
  * Handle for associating a catalog with the metadata; pair of catalog to data.
@@ -68,32 +63,6 @@ internal class TypeEnv(
         append("bindings=$bindings")
         append(")")
     }
-}
-
-/**
- * Result of attempting to match an unresolved function.
- */
-internal sealed class FnMatch<T : FunctionSignature> {
-
-    /**
-     * 7.1 Inputs with wrong types
-     *      It follows that all functions return MISSING when one of their inputs is MISSING
-     *
-     * @property signature
-     * @property mapping
-     * @property isMissable TRUE when anyone of the arguments _could_ be MISSING. We *always* propagate MISSING.
-     */
-    public data class Ok<T : FunctionSignature>(
-        public val signature: T,
-        public val mapping: Mapping,
-        public val isMissable: Boolean,
-    ) : FnMatch<T>()
-
-    public data class Error<T : FunctionSignature>(
-        public val identifier: Identifier,
-        public val args: List<Rex>,
-        public val candidates: List<FunctionSignature>,
-    ) : FnMatch<T>()
 }
 
 /**
@@ -148,13 +117,12 @@ internal enum class ResolutionStrategy {
 /**
  * PartiQL Planner Global Environment of Catalogs backed by given plugins.
  *
- * @property header         List of namespaced definitions
+ * @property headers        List of namespaced definitions
  * @property plugins        List of plugins for global resolution
  * @property session        Session details
  */
-@OptIn(PartiQLValueExperimental::class)
 internal class Env(
-    private val header: Header,
+    private val headers: List<Header>,
     private val plugins: List<Plugin>,
     private val session: PartiQLPlanner.Session,
 ) {
@@ -165,9 +133,9 @@ internal class Env(
     public val globals = mutableListOf<Global>()
 
     /**
-     * Encapsulate function matching logic in
+     * Encapsulate all function resolving logic within [FnResolver].
      */
-    public val functionResolver = FunctionResolver(header)
+    public val fnResolver = FnResolver(headers)
 
     private val connectorSession = object : ConnectorSession {
         override fun getQueryId(): String = session.queryId
@@ -197,51 +165,12 @@ internal class Env(
     /**
      * Leverages a [FunctionResolver] to find a matching function defined in the [Header] scalar function catalog.
      */
-    internal fun resolveFn(fn: Fn.Unresolved, args: List<Rex>): FnMatch<FunctionSignature.Scalar> {
-        val candidates = header.lookup(fn)
-        var hadMissingArg = false
-        val parameters = args.mapIndexed { i, arg ->
-            if (!hadMissingArg && arg.type.isMissable()) {
-                hadMissingArg = true
-            }
-            FunctionParameter("arg-$i", arg.type.toRuntimeType())
-        }
-        val match = functionResolver.match(candidates, parameters)
-        return when (match) {
-            null -> FnMatch.Error(fn.identifier, args, candidates)
-            else -> {
-                val isMissable = hadMissingArg || header.isUnsafeCast(match.signature.specific)
-                FnMatch.Ok(match.signature, match.mapping, isMissable)
-            }
-        }
-    }
+    internal fun resolveFn(fn: Fn.Unresolved, args: List<Rex>) = fnResolver.resolveFn(fn, args)
 
     /**
      * Leverages a [FunctionResolver] to find a matching function defined in the [Header] aggregation function catalog.
      */
-    internal fun resolveAgg(agg: Agg.Unresolved, args: List<Rex>): FnMatch<FunctionSignature.Aggregation> {
-        val candidates = header.lookup(agg)
-        var hadMissingArg = false
-        val parameters = args.mapIndexed { i, arg ->
-            if (!hadMissingArg && arg.type.isMissable()) {
-                hadMissingArg = true
-            }
-            FunctionParameter("arg-$i", arg.type.toRuntimeType())
-        }
-        val match = functionResolver.match(candidates, parameters)
-        return when (match) {
-            null -> FnMatch.Error(agg.identifier, args, candidates)
-            else -> {
-                val isMissable = hadMissingArg || header.isUnsafeCast(match.signature.specific)
-                FnMatch.Ok(match.signature, match.mapping, isMissable)
-            }
-        }
-    }
-
-    /**
-     * TODO
-     */
-    internal fun getFnAggHandle(identifier: Identifier): Nothing = TODO()
+    internal fun resolveAgg(agg: Agg.Unresolved, args: List<Rex>) = fnResolver.resolveAgg(agg, args)
 
     /**
      * Fetch global object metadata from the given [BindingPath].

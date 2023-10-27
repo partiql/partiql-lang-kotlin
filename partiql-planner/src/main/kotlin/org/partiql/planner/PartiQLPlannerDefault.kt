@@ -13,18 +13,20 @@ import org.partiql.spi.Plugin
  * Default PartiQL logical query planner.
  */
 internal class PartiQLPlannerDefault(
+    private val headers: List<Header>,
     private val plugins: List<Plugin>,
     private val passes: List<PartiQLPlannerPass>,
 ) : PartiQLPlanner {
 
     private val version = PartiQLVersion.VERSION_0_1
 
-    // For now, only have the default header
-    private val header = Header.partiql()
-
-    override fun plan(statement: Statement, session: PartiQLPlanner.Session, onProblem: ProblemCallback): PartiQLPlanner.Result {
+    override fun plan(
+        statement: Statement,
+        session: PartiQLPlanner.Session,
+        onProblem: ProblemCallback,
+    ): PartiQLPlanner.Result {
         // 0. Initialize the planning environment
-        val env = Env(header, plugins, session)
+        val env = Env(headers, plugins, session)
 
         // 1. Normalize
         val ast = statement.normalize()

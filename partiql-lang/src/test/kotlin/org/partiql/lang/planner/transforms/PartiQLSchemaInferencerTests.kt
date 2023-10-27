@@ -112,6 +112,11 @@ class PartiQLSchemaInferencerTests {
     @Execution(ExecutionMode.CONCURRENT)
     fun testTupleUnion(tc: TestCase) = runTest(tc)
 
+    @ParameterizedTest
+    @MethodSource("aggregationCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun testAggregations(tc: TestCase) = runTest(tc)
+
     companion object {
 
         private val root = this::class.java.getResource("/catalogs/default")!!.toURI().toPath().pathString
@@ -2123,6 +2128,50 @@ class PartiQLSchemaInferencerTests {
                 ),
             ),
         )
+
+        @JvmStatic
+        fun aggregationCases() = listOf(
+            SuccessTestCase(
+                name = "AGGREGATE over INTS",
+                query = "SELECT a, COUNT(*) AS c, SUM(a) AS s, MIN(b) AS m FROM << {'a': 1, 'b': 2} >> GROUP BY a",
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "a" to INT,
+                            "c" to INT4,
+                            "s" to INT.asNullable(),
+                            "m" to INT.asNullable(),
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "AGGREGATE over DECIMALS",
+                query = "SELECT a, COUNT(*) AS c, SUM(a) AS s, MIN(b) AS m FROM << {'a': 1.0, 'b': 2.0}, {'a': 1.0, 'b': 2.0} >> GROUP BY a",
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "a" to StaticType.DECIMAL,
+                            "c" to INT4,
+                            "s" to StaticType.DECIMAL.asNullable(),
+                            "m" to StaticType.DECIMAL.asNullable(),
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                )
+            ),
+        )
     }
 
     sealed class TestCase {
@@ -2780,46 +2829,6 @@ class PartiQLSchemaInferencerTests {
                     StructType(
                         fields = listOf(
                             StructType.Field("a", unionOf(INT, STRING))
-                        ),
-                        contentClosed = true,
-                        constraints = setOf(
-                            TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(true),
-                            TupleConstraint.Ordered
-                        )
-                    )
-                )
-            ),
-            SuccessTestCase(
-                name = "AGGREGATE over INTS",
-                query = "SELECT a, COUNT(*) AS c, SUM(a) AS s, MIN(b) AS m FROM << {'a': 1, 'b': 2} >> GROUP BY a",
-                expected = BagType(
-                    StructType(
-                        fields = mapOf(
-                            "a" to INT,
-                            "c" to INT,
-                            "s" to INT,
-                            "m" to INT,
-                        ),
-                        contentClosed = true,
-                        constraints = setOf(
-                            TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(true),
-                            TupleConstraint.Ordered
-                        )
-                    )
-                )
-            ),
-            SuccessTestCase(
-                name = "AGGREGATE over DECIMALS",
-                query = "SELECT a, COUNT(*) AS c, SUM(a) AS s, MIN(b) AS m FROM << {'a': 1.0, 'b': 2.0}, {'a': 1.0, 'b': 2.0} >> GROUP BY a",
-                expected = BagType(
-                    StructType(
-                        fields = mapOf(
-                            "a" to StaticType.DECIMAL,
-                            "c" to INT,
-                            "s" to StaticType.DECIMAL,
-                            "m" to StaticType.DECIMAL,
                         ),
                         contentClosed = true,
                         constraints = setOf(
