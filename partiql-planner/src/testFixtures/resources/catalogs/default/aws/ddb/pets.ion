@@ -6,7 +6,7 @@
     fields: [
       {
         name: "id",
-        type: "int",
+        type: "int32",
       },
       {
         name: "breed",

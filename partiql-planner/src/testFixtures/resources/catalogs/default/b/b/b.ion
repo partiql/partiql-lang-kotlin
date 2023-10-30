@@ -10,14 +10,14 @@
         fields: [
           {
             name: "b",
-            type: "int",
+            type: "int32",
           }
         ]
       }
     },
     {
       name: "c",
-      type: "int",
+      type: "int32",
     }
   ]
 }

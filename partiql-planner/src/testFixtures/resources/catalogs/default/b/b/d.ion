@@ -4,7 +4,7 @@
   fields: [
     {
       name: "e",
-      type: "int",
+      type: "int32",
     },
     {
       name: "e",
@@ -13,7 +13,7 @@
         fields: [
           {
             name: "f",
-            type: "int",
+            type: "int32",
           }
         ]
       }

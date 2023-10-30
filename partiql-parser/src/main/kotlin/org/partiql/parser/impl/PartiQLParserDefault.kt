@@ -216,6 +216,8 @@ import org.partiql.value.dateValue
 import org.partiql.value.datetime.DateTimeException
 import org.partiql.value.datetime.DateTimeValue
 import org.partiql.value.decimalValue
+import org.partiql.value.int32Value
+import org.partiql.value.int64Value
 import org.partiql.value.intValue
 import org.partiql.value.missingValue
 import org.partiql.value.nullValue
@@ -1930,9 +1932,31 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitLiteralInteger(ctx: GeneratedParser.LiteralIntegerContext) = translate(ctx) {
-            val n = ctx.LITERAL_INTEGER().text.toInt()
-            val v = intValue(n.toBigInteger())
-            exprLit(v)
+            val n = ctx.LITERAL_INTEGER().text
+
+            // 1st, try parse as int
+            try {
+                val v = n.toInt(10)
+                return@translate exprLit(int32Value(v))
+            } catch (ex: NumberFormatException) {
+                // ignore
+            }
+
+            // 2nd, try parse as long
+            try {
+                val v = n.toLong(10)
+                return@translate exprLit(int64Value(v))
+            } catch (ex: NumberFormatException) {
+                // ignore
+            }
+
+            // 3rd, try parse as BigInteger
+            try {
+                val v = BigInteger(n)
+                return@translate exprLit(intValue(v))
+            } catch (ex: NumberFormatException) {
+                throw ex
+            }
         }
 
         override fun visitLiteralDate(ctx: GeneratedParser.LiteralDateContext) = translate(ctx) {

@@ -6,11 +6,11 @@
     fields: [
       {
         name: "customer_id",
-        type: "int",
+        type: "int32",
       },
       {
         name: "marketplace_id",
-        type: "int",
+        type: "int32",
       },
       {
         name: "ship_option",
