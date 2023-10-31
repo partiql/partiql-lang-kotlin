@@ -4,17 +4,7 @@ import org.partiql.ast.DatetimeField
 import org.partiql.types.function.FunctionParameter
 import org.partiql.types.function.FunctionSignature
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType.ANY
-import org.partiql.value.PartiQLValueType.BOOL
-import org.partiql.value.PartiQLValueType.CHAR
-import org.partiql.value.PartiQLValueType.DATE
-import org.partiql.value.PartiQLValueType.DECIMAL
-import org.partiql.value.PartiQLValueType.INT
-import org.partiql.value.PartiQLValueType.INT32
-import org.partiql.value.PartiQLValueType.INT64
-import org.partiql.value.PartiQLValueType.STRING
-import org.partiql.value.PartiQLValueType.TIME
-import org.partiql.value.PartiQLValueType.TIMESTAMP
+import org.partiql.value.PartiQLValueType.*
 
 /**
  * A header which uses the PartiQL Lang Kotlin default standard library. All functions exist in a global namespace.
@@ -326,8 +316,20 @@ object PartiQLHeader : Header() {
         )
     }
 
-    // TODO
-    private fun coalesce(): List<FunctionSignature.Scalar> = emptyList()
+    // COALESCE(expression, expression, ... )
+    // Initial implementation of Coalesce.
+    // As the number of parameter can not be pre-determined, we wrap those into a list
+    private fun coalesce(): List<FunctionSignature.Scalar> = listOf(
+        FunctionSignature.Scalar(
+            name = "coalesce",
+            returns = ANY,
+            parameters = listOf(
+                FunctionParameter("values", LIST)
+            ),
+            isNullCall = false,
+            isNullable = true,
+        )
+    )
 
     // NULLIF(x, y)
     private fun nullIf(): List<FunctionSignature.Scalar> = types.nullable.map { t ->
