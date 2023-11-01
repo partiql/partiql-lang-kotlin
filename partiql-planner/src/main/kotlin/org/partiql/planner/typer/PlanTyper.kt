@@ -453,8 +453,9 @@ internal class PlanTyper(
                     // rewrite root
                     rex(type, op) to steps
                 }
-                else -> node.root to node.steps
+                else -> visitRex(node.root, node.root.type) to node.steps
             }
+
             // short-circuit if whole path was matched
             if (steps.isEmpty()) {
                 return root
