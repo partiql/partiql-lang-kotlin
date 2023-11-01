@@ -162,10 +162,7 @@ internal object RexConverter {
 
         override fun visitExprCase(node: Expr.Case, context: Env) = plan {
             val type = (StaticType.ANY)
-            val rex = when (node.expr) {
-                null -> null
-                else -> visitExpr(node.expr!!, context) // match `rex
-            }
+            val rex = node.expr?.let { visitExpr(it, context) }
 
             // Converts AST CASE (x) WHEN y THEN z --> Plan CASE WHEN x = y THEN z
             val id = identifierSymbol(Expr.Binary.Op.EQ.name.lowercase(), Identifier.CaseSensitivity.SENSITIVE)
@@ -188,8 +185,7 @@ internal object RexConverter {
                 null -> rex(type = StaticType.NULL, op = rexOpLit(value = nullValue()))
                 else -> visitExpr(default, context)
             }
-            branches += rexOpCaseBranch(bool(true), defaultRex)
-            val op = rexOpCase(branches)
+            val op = rexOpCase(branches = branches, default = defaultRex)
             rex(type, op)
         }
 

@@ -122,6 +122,7 @@ rex::{
 
     case::{
       branches: list::[branch],
+      default: rex,
       _: [
         branch::{
           condition:  rex,
