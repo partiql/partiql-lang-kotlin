@@ -115,6 +115,16 @@ class PartiQLSchemaInferencerTests {
     @Execution(ExecutionMode.CONCURRENT)
     fun testAggregations(tc: TestCase) = runTest(tc)
 
+    @ParameterizedTest
+    @MethodSource("scalarFunctions")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun testScalarFunctions(tc: TestCase) = runTest(tc)
+
+    @ParameterizedTest
+    @MethodSource("pathExpressions")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun testPathExpressions(tc: TestCase) = runTest(tc)
+
     companion object {
 
         private val root = this::class.java.getResource("/catalogs/default")!!.toURI().toPath().pathString
@@ -2124,6 +2134,139 @@ class PartiQLSchemaInferencerTests {
                         ),
                     )
                 ),
+            ),
+        )
+
+        @JvmStatic
+        fun pathExpressions() = listOf(
+            SuccessTestCase(
+                name = "Index on literal list",
+                query = """
+                    [0, 1, 2, 3][0]
+                """,
+                expected = INT4
+            ),
+            SuccessTestCase(
+                name = "Index on global list",
+                query = """
+                    dogs[0].breed
+                """,
+                catalog = "pql",
+                catalogPath = listOf("main"),
+                expected = STRING
+            ),
+            SuccessTestCase(
+                name = "Index on list attribute of global table",
+                query = """
+                    SELECT typical_allergies[0] AS main_allergy FROM dogs
+                """,
+                catalog = "pql",
+                catalogPath = listOf("main"),
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "main_allergy" to STRING,
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                )
+            ),
+        )
+
+        @JvmStatic
+        fun scalarFunctions() = listOf(
+            SuccessTestCase(
+                name = "UPPER on binding tuple of literal string",
+                query = """
+                    SELECT
+                        UPPER(some_str) AS upper_str
+                    FROM
+                        << { 'some_str': 'hello world!' } >>
+                        AS t
+                """,
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "upper_str" to STRING,
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "UPPER on literal string",
+                query = """
+                    UPPER('hello world')
+                """,
+                expected = STRING
+            ),
+            SuccessTestCase(
+                name = "UPPER on global string",
+                query = """
+                    UPPER(os)
+                """,
+                catalog = "pql",
+                catalogPath = listOf("main"),
+                expected = STRING
+            ),
+            SuccessTestCase(
+                name = "UPPER on global string",
+                query = """
+                    UPPER(os)
+                """,
+                catalog = "pql",
+                catalogPath = listOf("main"),
+                expected = STRING
+            ),
+            SuccessTestCase(
+                name = "UPPER on global struct",
+                query = """
+                    UPPER(person.ssn)
+                """,
+                catalog = "pql",
+                catalogPath = listOf("main"),
+                expected = STRING
+            ),
+            SuccessTestCase(
+                name = "UPPER on global nested struct",
+                query = """
+                    UPPER(person.name."first")
+                """,
+                catalog = "pql",
+                catalogPath = listOf("main"),
+                expected = STRING
+            ),
+            SuccessTestCase(
+                name = "UPPER on global table",
+                query = """
+                    SELECT UPPER(breed) AS upper_breed
+                    FROM dogs
+                """,
+                catalog = "pql",
+                catalogPath = listOf("main"),
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "upper_breed" to STRING,
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                )
             ),
         )
 
