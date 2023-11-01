@@ -85,5 +85,6 @@ tasks.processTestResources {
 
 tasks.shadowJar {
     archiveBaseName.set("shadow")
+    exclude("**/*.kotlin_metadata")
     archiveClassifier.set("")
 }

@@ -43,7 +43,7 @@ public abstract class Header {
      * For functions, output CREATE FUNCTION statements.
      */
     override fun toString(): String = buildString {
-        functions.groupBy { it.name }.forEach {
+        (functions + operators + aggregations).groupBy { it.name }.forEach {
             appendLine("-- [${it.key}] ---------")
             appendLine()
             it.value.forEach { fn -> appendLine(fn) }
