@@ -29,7 +29,6 @@ import org.partiql.plugins.local.LocalPlugin
 import org.partiql.types.AnyOfType
 import org.partiql.types.AnyType
 import org.partiql.types.BagType
-import org.partiql.types.IntType
 import org.partiql.types.ListType
 import org.partiql.types.SexpType
 import org.partiql.types.StaticType
@@ -42,7 +41,6 @@ import org.partiql.types.StaticType.Companion.MISSING
 import org.partiql.types.StaticType.Companion.NULL
 import org.partiql.types.StaticType.Companion.STRING
 import org.partiql.types.StaticType.Companion.unionOf
-import org.partiql.types.StringType
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
 import java.time.Instant
@@ -150,7 +148,7 @@ class PartiQLSchemaInferencerTests {
         val DB_SCHEMA_MARKETS = listOf("markets")
 
         val TYPE_BOOL = StaticType.BOOL
-        private val TYPE_AWS_DDB_PETS_ID = INT
+        private val TYPE_AWS_DDB_PETS_ID = INT4
         private val TYPE_AWS_DDB_PETS_BREED = STRING
         val TABLE_AWS_DDB_PETS = BagType(
             elementType = StructType(
@@ -193,7 +191,7 @@ class PartiQLSchemaInferencerTests {
         )
         val TABLE_AWS_B_B = BagType(
             StructType(
-                fields = mapOf("identifier" to INT),
+                fields = mapOf("identifier" to INT4),
                 contentClosed = true,
                 constraints = setOf(
                     TupleConstraint.Open(false),
@@ -202,14 +200,14 @@ class PartiQLSchemaInferencerTests {
                 )
             )
         )
-        val TYPE_B_B_B_B_B = INT
+        val TYPE_B_B_B_B_B = INT4
         private val TYPE_B_B_B_B = StructType(
             mapOf("b" to TYPE_B_B_B_B_B),
             contentClosed = true,
             constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
         )
-        val TYPE_B_B_B_C = INT
-        val TYPE_B_B_C = INT
+        val TYPE_B_B_B_C = INT4
+        val TYPE_B_B_C = INT4
         val TYPE_B_B_B =
             StructType(
                 fields = mapOf(
@@ -238,36 +236,36 @@ class PartiQLSchemaInferencerTests {
         @JvmStatic
         fun collections() = listOf<TestCase>(
             SuccessTestCase(
-                name = "Collection BAG<INT>",
+                name = "Collection BAG<INT4>",
                 key = key("collections-01"),
-                expected = BagType(INT),
+                expected = BagType(INT4),
             ),
             SuccessTestCase(
-                name = "Collection LIST<INT>",
+                name = "Collection LIST<INT4>",
                 key = key("collections-02"),
-                expected = ListType(INT),
+                expected = ListType(INT4),
             ),
             SuccessTestCase(
-                name = "Collection LIST<INT>",
+                name = "Collection LIST<INT4>",
                 key = key("collections-03"),
-                expected = ListType(INT),
+                expected = ListType(INT4),
             ),
             SuccessTestCase(
-                name = "Collection SEXP<INT>",
+                name = "Collection SEXP<INT4>",
                 key = key("collections-04"),
-                expected = SexpType(INT),
+                expected = SexpType(INT4),
             ),
             SuccessTestCase(
                 name = "SELECT from array",
                 key = key("collections-05"),
-                expected = BagType(INT),
+                expected = BagType(INT4),
             ),
             SuccessTestCase(
                 name = "SELECT from array",
                 key = key("collections-06"),
                 expected = BagType(
                     StructType(
-                        fields = listOf(StructType.Field("x", INT)),
+                        fields = listOf(StructType.Field("x", INT4)),
                         contentClosed = true,
                         constraints = setOf(
                             TupleConstraint.Open(false),
@@ -384,12 +382,12 @@ class PartiQLSchemaInferencerTests {
             SuccessTestCase(
                 name = "Current User in WHERE",
                 query = "SELECT VALUE a FROM [ 0 ] AS a WHERE CURRENT_USER = 'hello'",
-                expected = BagType(INT)
+                expected = BagType(INT4)
             ),
             SuccessTestCase(
                 name = "Current User in WHERE",
                 query = "SELECT VALUE a FROM [ 0 ] AS a WHERE CURRENT_USER = 5",
-                expected = BagType(INT),
+                expected = BagType(INT4),
             ),
             SuccessTestCase(
                 name = "Testing CURRENT_USER and CURRENT_DATE Binders",
@@ -444,7 +442,7 @@ class PartiQLSchemaInferencerTests {
             SuccessTestCase(
                 name = "BITWISE_AND_1",
                 query = "1 & 2",
-                expected = INT
+                expected = INT4
             ),
             SuccessTestCase(
                 name = "BITWISE_AND_2",
@@ -453,17 +451,17 @@ class PartiQLSchemaInferencerTests {
             ),
             SuccessTestCase(
                 name = "BITWISE_AND_3",
-                query = "CAST(1 AS INT4) & CAST(2 AS INT4)",
-                expected = StaticType.unionOf(StaticType.INT4, MISSING)
+                query = "1 & 2",
+                expected = StaticType.INT4
             ),
             SuccessTestCase(
                 name = "BITWISE_AND_4",
                 query = "CAST(1 AS INT8) & CAST(2 AS INT8)",
-                expected = StaticType.unionOf(StaticType.INT8, MISSING)
+                expected = StaticType.INT8
             ),
             SuccessTestCase(
                 name = "BITWISE_AND_5",
-                query = "CAST(1 AS INT2) & CAST(2 AS INT4)",
+                query = "CAST(1 AS INT2) & 2",
                 expected = StaticType.unionOf(StaticType.INT4, MISSING)
             ),
             SuccessTestCase(
@@ -474,22 +472,22 @@ class PartiQLSchemaInferencerTests {
             SuccessTestCase(
                 name = "BITWISE_AND_7",
                 query = "CAST(1 AS INT2) & 2",
-                expected = StaticType.unionOf(INT, MISSING)
+                expected = StaticType.unionOf(INT4, MISSING)
             ),
             SuccessTestCase(
                 name = "BITWISE_AND_8",
-                query = "CAST(1 AS INT4) & CAST(2 AS INT8)",
-                expected = StaticType.unionOf(StaticType.INT8, MISSING)
+                query = "1 & CAST(2 AS INT8)",
+                expected = StaticType.INT8
             ),
             SuccessTestCase(
                 name = "BITWISE_AND_9",
-                query = "CAST(1 AS INT4) & 2",
-                expected = StaticType.unionOf(INT, MISSING)
+                query = "1 & 2",
+                expected = StaticType.INT4
             ),
             SuccessTestCase(
                 name = "BITWISE_AND_10",
                 query = "CAST(1 AS INT8) & 2",
-                expected = StaticType.unionOf(INT, MISSING)
+                expected = INT8
             ),
             SuccessTestCase(
                 name = "BITWISE_AND_NULL_OPERAND",
@@ -514,7 +512,7 @@ class PartiQLSchemaInferencerTests {
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UnknownFunction("bitwise_and", listOf(INT, STRING))
+                        PlanningProblemDetails.UnknownFunction("bitwise_and", listOf(INT4, STRING))
                     )
                 }
             ),
@@ -525,7 +523,7 @@ class PartiQLSchemaInferencerTests {
             SuccessTestCase(
                 name = "UNPIVOT",
                 query = "SELECT VALUE v FROM UNPIVOT { 'a': 2 } AS v AT attr WHERE attr = 'a'",
-                expected = BagType(INT)
+                expected = BagType(INT4)
             ),
         )
 
@@ -537,7 +535,7 @@ class PartiQLSchemaInferencerTests {
                 expected = BagType(
                     StructType(
                         fields = mapOf(
-                            "a" to INT,
+                            "a" to INT4,
                             "b" to StaticType.DECIMAL,
                         ),
                         contentClosed = true,
@@ -555,7 +553,7 @@ class PartiQLSchemaInferencerTests {
                 expected = BagType(
                     StructType(
                         fields = mapOf(
-                            "a" to INT,
+                            "a" to INT4,
                             "b" to unionOf(NULL, DECIMAL),
                         ),
                         contentClosed = true,
@@ -574,7 +572,7 @@ class PartiQLSchemaInferencerTests {
                     StructType(
                         fields = listOf(
                             StructType.Field("b", unionOf(NULL, DECIMAL)),
-                            StructType.Field("a", INT),
+                            StructType.Field("a", INT4),
                         ),
                         contentClosed = true,
                         constraints = setOf(
@@ -591,7 +589,7 @@ class PartiQLSchemaInferencerTests {
                 expected = BagType(
                     StructType(
                         fields = listOf(
-                            StructType.Field("a", INT),
+                            StructType.Field("a", INT4),
                             StructType.Field("a", unionOf(NULL, DECIMAL)),
                         ),
                         contentClosed = true,
@@ -609,7 +607,7 @@ class PartiQLSchemaInferencerTests {
                 expected = BagType(
                     StructType(
                         fields = listOf(
-                            StructType.Field("a", INT),
+                            StructType.Field("a", INT4),
                             StructType.Field("a", unionOf(NULL, DECIMAL)),
                         ),
                         contentClosed = true,
@@ -637,7 +635,7 @@ class PartiQLSchemaInferencerTests {
                 expected = BagType(
                     StructType(
                         fields = listOf(
-                            StructType.Field("a", INT),
+                            StructType.Field("a", INT4),
                             StructType.Field("a", unionOf(DECIMAL, NULL)),
                             StructType.Field("a", unionOf(STRING, NULL)),
                         ),
@@ -656,7 +654,7 @@ class PartiQLSchemaInferencerTests {
                 expected = BagType(
                     StructType(
                         fields = listOf(
-                            StructType.Field("a", INT),
+                            StructType.Field("a", INT4),
                             StructType.Field("a", unionOf(DECIMAL, NULL)),
                         ),
                         contentClosed = true,
@@ -685,11 +683,11 @@ class PartiQLSchemaInferencerTests {
                     StructType(
                         fields = mapOf(
                             "name" to StaticType.STRING,
-                            "custId" to StaticType.INT,
+                            "custId" to StaticType.INT4,
                             "address" to StructType(
                                 fields = mapOf(
                                     "city" to StaticType.STRING,
-                                    "zipcode" to StaticType.INT,
+                                    "zipcode" to StaticType.INT4,
                                     "street" to StaticType.STRING,
                                 ),
                                 contentClosed = true,
@@ -712,11 +710,11 @@ class PartiQLSchemaInferencerTests {
                     StructType(
                         fields = mapOf(
                             "name" to StaticType.STRING,
-                            "custId" to StaticType.INT,
+                            "custId" to StaticType.INT4,
                             "address" to StructType(
                                 fields = mapOf(
                                     "city" to StaticType.STRING,
-                                    "zipcode" to StaticType.INT
+                                    "zipcode" to StaticType.INT4
                                 ),
                                 contentClosed = true,
                                 constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
@@ -746,7 +744,7 @@ class PartiQLSchemaInferencerTests {
                                                     fields = mapOf(
                                                         "field" to AnyOfType(
                                                             setOf(
-                                                                INT,
+                                                                INT4,
                                                                 MISSING // c[1]'s `field` was excluded
                                                             )
                                                         )
@@ -791,7 +789,7 @@ class PartiQLSchemaInferencerTests {
                                     "b" to StructType(
                                         fields = mapOf(
                                             "c" to ListType(
-                                                elementType = StaticType.INT
+                                                elementType = StaticType.INT4
                                             )
                                         ),
                                         contentClosed = true,
@@ -823,7 +821,7 @@ class PartiQLSchemaInferencerTests {
                     StructType(
                         fields = mapOf(
                             "a" to ListType(
-                                elementType = StaticType.INT // empty list but still preserve typing information
+                                elementType = StaticType.INT4 // empty list but still preserve typing information
                             )
                         ),
                         contentClosed = true,
@@ -848,7 +846,7 @@ class PartiQLSchemaInferencerTests {
                                             "c" to ListType(
                                                 elementType = StructType(
                                                     fields = mapOf(
-                                                        "field_y" to StaticType.INT
+                                                        "field_y" to StaticType.INT4
                                                     ),
                                                     contentClosed = true,
                                                     constraints = setOf(
@@ -946,9 +944,9 @@ class PartiQLSchemaInferencerTests {
                 expected = BagType(
                     StructType(
                         fields = mapOf(
-                            "a" to StaticType.INT,
-                            "b" to StaticType.INT,
-                            "c" to StaticType.INT
+                            "a" to StaticType.INT4,
+                            "b" to StaticType.INT4,
+                            "c" to StaticType.INT4
                         ),
                         contentClosed = true,
                         constraints = setOf(
@@ -968,7 +966,7 @@ class PartiQLSchemaInferencerTests {
                             "b" to ListType(
                                 elementType = StructType(
                                     fields = mapOf(
-                                        "b_2" to StaticType.INT
+                                        "b_2" to StaticType.INT4
                                     ),
                                     contentClosed = true,
                                     constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
@@ -992,8 +990,8 @@ class PartiQLSchemaInferencerTests {
                         fields = mapOf(
                             "a" to StructType(
                                 fields = mapOf(
-                                    "a_1" to StaticType.INT,
-                                    "a_2" to StaticType.INT
+                                    "a_1" to StaticType.INT4,
+                                    "a_2" to StaticType.INT4
                                 ),
                                 contentClosed = true,
                                 constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
@@ -1001,14 +999,14 @@ class PartiQLSchemaInferencerTests {
                             "b" to ListType(
                                 elementType = StructType(
                                     fields = mapOf(
-                                        "b_2" to StaticType.INT
+                                        "b_2" to StaticType.INT4
                                     ),
                                     contentClosed = true,
                                     constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
                                 )
                             ),
-                            "c" to StaticType.INT,
-                            "d" to StaticType.INT
+                            "c" to StaticType.INT4,
+                            "d" to StaticType.INT4
                         ),
                         contentClosed = true,
                         constraints = setOf(
@@ -1026,7 +1024,7 @@ class PartiQLSchemaInferencerTests {
                     ListType(
                         elementType = StructType(
                             fields = mapOf(
-                                "b_2" to StaticType.INT
+                                "b_2" to StaticType.INT4
                             ),
                             contentClosed = true,
                             constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
@@ -1079,7 +1077,7 @@ class PartiQLSchemaInferencerTests {
                                     fields = mapOf(
                                         "b" to StructType(
                                             fields = mapOf(
-                                                "c" to StaticType.INT.asOptional(),
+                                                "c" to StaticType.INT4.asOptional(),
                                                 "d" to StaticType.STRING
                                             ),
                                             contentClosed = true,
@@ -1146,7 +1144,7 @@ class PartiQLSchemaInferencerTests {
                                     fields = mapOf(
                                         "b" to StructType(
                                             fields = mapOf( // all fields of b optional
-                                                "c" to StaticType.INT.asOptional(),
+                                                "c" to StaticType.INT4.asOptional(),
                                                 "d" to StaticType.STRING.asOptional()
                                             ),
                                             contentClosed = true,
@@ -1181,7 +1179,7 @@ class PartiQLSchemaInferencerTests {
                                     fields = mapOf(
                                         "b" to StructType(
                                             fields = mapOf(
-                                                "c" to StaticType.INT,
+                                                "c" to StaticType.INT4,
                                                 "d" to ListType(
                                                     elementType = StructType(
                                                         fields = mapOf(
@@ -1227,7 +1225,7 @@ class PartiQLSchemaInferencerTests {
                                     fields = mapOf(
                                         "b" to StructType(
                                             fields = mapOf(
-                                                "c" to StaticType.INT,
+                                                "c" to StaticType.INT4,
                                                 "d" to ListType(
                                                     elementType = StructType(
                                                         fields = mapOf(
@@ -1274,7 +1272,7 @@ class PartiQLSchemaInferencerTests {
                                     fields = mapOf(
                                         "b" to StructType(
                                             fields = mapOf(
-                                                "c" to StaticType.INT,
+                                                "c" to StaticType.INT4,
                                                 "d" to ListType(
                                                     elementType = StructType(
                                                         fields = mapOf( // same as above
@@ -1447,7 +1445,7 @@ class PartiQLSchemaInferencerTests {
                 expected = BagType(
                     StructType(
                         fields = mapOf(
-                            "c" to StaticType.INT
+                            "c" to StaticType.INT4
                         ),
                         contentClosed = true,
                         constraints = setOf(
@@ -1465,7 +1463,7 @@ class PartiQLSchemaInferencerTests {
                 expected = BagType(
                     StructType(
                         fields = mapOf(
-                            "a" to StaticType.INT
+                            "a" to StaticType.INT4
                         ),
                         contentClosed = true,
                         constraints = setOf(
@@ -1578,7 +1576,7 @@ class PartiQLSchemaInferencerTests {
                                 fields = mapOf(
                                     "a" to StructType(
                                         fields = mapOf(
-                                            "b" to StaticType.INT
+                                            "b" to StaticType.INT4
                                         ),
                                         contentClosed = true,
                                         constraints = setOf(
@@ -1611,7 +1609,7 @@ class PartiQLSchemaInferencerTests {
                                 fields = mapOf(
                                     "b" to StructType(
                                         fields = mapOf(
-                                            "c" to StaticType.INT,
+                                            "c" to StaticType.INT4,
                                             "d" to StaticType.STRING
                                         ),
                                         contentClosed = true,
@@ -1645,7 +1643,7 @@ class PartiQLSchemaInferencerTests {
                                 fields = mapOf(
                                     "b" to StructType(
                                         fields = mapOf(
-                                            "c" to StaticType.INT,
+                                            "c" to StaticType.INT4,
                                             "d" to StaticType.STRING
                                         ),
                                         contentClosed = true,
@@ -1678,7 +1676,7 @@ class PartiQLSchemaInferencerTests {
                             "a" to ListType(
                                 elementType = StructType(
                                     fields = mapOf(
-                                        "b" to StaticType.INT
+                                        "b" to StaticType.INT4
                                     ),
                                     contentClosed = true,
                                     constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
@@ -1704,7 +1702,7 @@ class PartiQLSchemaInferencerTests {
                             "a" to ListType(
                                 elementType = StructType(
                                     fields = mapOf(
-                                        "b" to StaticType.INT
+                                        "b" to StaticType.INT4
                                     ),
                                     contentClosed = true,
                                     constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
@@ -1730,7 +1728,7 @@ class PartiQLSchemaInferencerTests {
                             "a" to BagType(
                                 elementType = StructType(
                                     fields = mapOf(
-                                        "b" to StaticType.INT
+                                        "b" to StaticType.INT4
                                     ),
                                     contentClosed = true,
                                     constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
@@ -1756,7 +1754,7 @@ class PartiQLSchemaInferencerTests {
                             "a" to BagType(
                                 elementType = StructType(
                                     fields = mapOf(
-                                        "b" to StaticType.INT
+                                        "b" to StaticType.INT4
                                     ),
                                     contentClosed = true,
                                     constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
@@ -1789,8 +1787,8 @@ class PartiQLSchemaInferencerTests {
                                 elementType = StaticType.unionOf(
                                     StructType(
                                         fields = mapOf(
-                                            "b" to StaticType.INT,
-                                            "c" to StaticType.INT.asOptional()
+                                            "b" to StaticType.INT4,
+                                            "c" to StaticType.INT4.asOptional()
                                         ),
                                         contentClosed = true,
                                         constraints = setOf(
@@ -1800,7 +1798,7 @@ class PartiQLSchemaInferencerTests {
                                     ),
                                     StructType(
                                         fields = mapOf(
-                                            "b" to StaticType.INT,
+                                            "b" to StaticType.INT4,
                                             "c" to StaticType.NULL.asOptional()
                                         ),
                                         contentClosed = true,
@@ -1811,7 +1809,7 @@ class PartiQLSchemaInferencerTests {
                                     ),
                                     StructType(
                                         fields = mapOf(
-                                            "b" to StaticType.INT,
+                                            "b" to StaticType.INT4,
                                             "c" to StaticType.DECIMAL.asOptional()
                                         ),
                                         contentClosed = true,
@@ -1841,7 +1839,7 @@ class PartiQLSchemaInferencerTests {
                         fields = mapOf(
                             "b" to StructType(
                                 fields = mapOf(
-                                    "b" to StaticType.INT
+                                    "b" to StaticType.INT4
                                 ),
                                 contentClosed = true,
                                 constraints = setOf(
@@ -1913,8 +1911,8 @@ class PartiQLSchemaInferencerTests {
                 query = "TUPLEUNION({ 'a': 1, 'b': 'hello' })",
                 expected = StructType(
                     fields = mapOf(
-                        "a" to IntType(),
-                        "b" to StringType()
+                        "a" to StaticType.INT4,
+                        "b" to StaticType.STRING,
                     ),
                     contentClosed = true,
                     constraints = setOf(
@@ -1928,7 +1926,7 @@ class PartiQLSchemaInferencerTests {
                 query = "TUPLEUNION({ 'a': 1, 'a': 'hello' })",
                 expected = StructType(
                     fields = listOf(
-                        StructType.Field("a", INT),
+                        StructType.Field("a", INT4),
                         StructType.Field("a", STRING),
                     ),
                     contentClosed = true,
@@ -1950,7 +1948,7 @@ class PartiQLSchemaInferencerTests {
                 expected = BagType(
                     StructType(
                         fields = listOf(
-                            StructType.Field("b", INT),
+                            StructType.Field("b", INT4),
                         ),
                         contentClosed = true,
                         // TODO: This shouldn't be ordered. However, this doesn't come from the TUPLEUNION. It is
@@ -1978,7 +1976,7 @@ class PartiQLSchemaInferencerTests {
                         MISSING,
                         StructType(
                             fields = listOf(
-                                StructType.Field("b", INT),
+                                StructType.Field("b", INT4),
                             ),
                             contentClosed = true,
                             constraints = setOf(
@@ -2008,7 +2006,7 @@ class PartiQLSchemaInferencerTests {
                         MISSING,
                         StructType(
                             fields = listOf(
-                                StructType.Field("b", INT),
+                                StructType.Field("b", INT4),
                             ),
                             contentClosed = true,
                             constraints = setOf(
@@ -2137,10 +2135,10 @@ class PartiQLSchemaInferencerTests {
                 expected = BagType(
                     StructType(
                         fields = mapOf(
-                            "a" to INT,
+                            "a" to INT4,
                             "c" to INT4,
-                            "s" to INT.asNullable(),
-                            "m" to INT.asNullable(),
+                            "s" to INT4.asNullable(),
+                            "m" to INT4.asNullable(),
                         ),
                         contentClosed = true,
                         constraints = setOf(
@@ -2510,7 +2508,7 @@ class PartiQLSchemaInferencerTests {
                         UNKNOWN_PROBLEM_LOCATION,
                         PlanningProblemDetails.UnknownFunction(
                             "in_collection",
-                            listOf(INT, STRING),
+                            listOf(INT4, STRING),
                         )
                     )
                 }
@@ -2534,8 +2532,8 @@ class PartiQLSchemaInferencerTests {
                         PlanningProblemDetails.UnknownFunction(
                             "between",
                             listOf(
-                                INT,
-                                INT,
+                                INT4,
+                                INT4,
                                 STRING
                             ),
                         )
@@ -2560,7 +2558,7 @@ class PartiQLSchemaInferencerTests {
                         UNKNOWN_PROBLEM_LOCATION,
                         PlanningProblemDetails.UnknownFunction(
                             "like",
-                            listOf(STRING, INT),
+                            listOf(STRING, INT4),
                         )
                     )
                 }
@@ -2631,7 +2629,7 @@ class PartiQLSchemaInferencerTests {
                         UNKNOWN_PROBLEM_LOCATION,
                         PlanningProblemDetails.UnknownFunction(
                             "and",
-                            listOf(StaticType.BOOL, INT),
+                            listOf(StaticType.BOOL, INT4),
                         )
                     )
                 }
@@ -2647,7 +2645,7 @@ class PartiQLSchemaInferencerTests {
                         UNKNOWN_PROBLEM_LOCATION,
                         PlanningProblemDetails.UnknownFunction(
                             "and",
-                            listOf(INT, StaticType.BOOL),
+                            listOf(INT4, StaticType.BOOL),
                         )
                     )
                 }
@@ -2754,7 +2752,7 @@ class PartiQLSchemaInferencerTests {
                 query = "SELECT a FROM << [ 1, 1.0 ] >> AS a",
                 expected = BagType(
                     StructType(
-                        fields = mapOf("a" to ListType(unionOf(INT, StaticType.DECIMAL))),
+                        fields = mapOf("a" to ListType(unionOf(INT4, StaticType.DECIMAL))),
                         contentClosed = true,
                         constraints = setOf(
                             TupleConstraint.Open(false),
@@ -2768,13 +2766,13 @@ class PartiQLSchemaInferencerTests {
                 name = "Non-tuples in SELECT VALUE",
                 query = "SELECT VALUE a FROM << [ 1, 1.0 ] >> AS a",
                 expected =
-                BagType(ListType(unionOf(INT, StaticType.DECIMAL)))
+                BagType(ListType(unionOf(INT4, StaticType.DECIMAL)))
             ),
             SuccessTestCase(
                 name = "SELECT VALUE",
                 query = "SELECT VALUE [1, 1.0] FROM <<>>",
                 expected =
-                BagType(ListType(unionOf(INT, StaticType.DECIMAL)))
+                BagType(ListType(unionOf(INT4, StaticType.DECIMAL)))
             ),
             SuccessTestCase(
                 name = "Duplicate fields in struct",
@@ -2787,7 +2785,7 @@ class PartiQLSchemaInferencerTests {
                 expected = BagType(
                     StructType(
                         fields = listOf(
-                            StructType.Field("a", unionOf(INT, STRING))
+                            StructType.Field("a", unionOf(INT4, STRING))
                         ),
                         contentClosed = true,
                         constraints = setOf(
@@ -2799,7 +2797,7 @@ class PartiQLSchemaInferencerTests {
                 )
             ),
             SuccessTestCase(
-                name = "Duplicate fields in ordered STRUCT. NOTE: b.b.d is an ordered struct with two attributes (e). First is INT.",
+                name = "Duplicate fields in ordered STRUCT. NOTE: b.b.d is an ordered struct with two attributes (e). First is INT4.",
                 query = """
                     SELECT d.e AS e
                     FROM << b.b.d >> AS d
@@ -2807,7 +2805,7 @@ class PartiQLSchemaInferencerTests {
                 expected = BagType(
                     StructType(
                         fields = listOf(
-                            StructType.Field("e", INT)
+                            StructType.Field("e", INT4)
                         ),
                         contentClosed = true,
                         constraints = setOf(
@@ -2829,7 +2827,7 @@ class PartiQLSchemaInferencerTests {
                 expected = BagType(
                     StructType(
                         fields = listOf(
-                            StructType.Field("a", unionOf(INT, STRING))
+                            StructType.Field("a", unionOf(INT4, STRING))
                         ),
                         contentClosed = true,
                         constraints = setOf(
@@ -2858,7 +2856,7 @@ class PartiQLSchemaInferencerTests {
             SuccessTestCase(
                 name = "Current User Concat in WHERE",
                 query = "SELECT VALUE a FROM [ 0 ] AS a WHERE CURRENT_USER = 'hello'",
-                expected = BagType(INT)
+                expected = BagType(INT4)
             ),
             SuccessTestCase(
                 name = "TRIM_2",
@@ -2884,7 +2882,7 @@ class PartiQLSchemaInferencerTests {
                         UNKNOWN_PROBLEM_LOCATION,
                         PlanningProblemDetails.UnknownFunction(
                             "trim_chars",
-                            args = listOf(STRING, INT)
+                            args = listOf(STRING, INT4)
                         )
                     )
                 }
