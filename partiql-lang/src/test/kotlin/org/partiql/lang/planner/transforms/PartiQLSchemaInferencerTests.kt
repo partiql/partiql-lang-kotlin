@@ -32,6 +32,7 @@ import org.partiql.types.BagType
 import org.partiql.types.ListType
 import org.partiql.types.SexpType
 import org.partiql.types.StaticType
+import org.partiql.types.StaticType.Companion.BOOL
 import org.partiql.types.StaticType.Companion.DATE
 import org.partiql.types.StaticType.Companion.DECIMAL
 import org.partiql.types.StaticType.Companion.INT
@@ -124,6 +125,11 @@ class PartiQLSchemaInferencerTests {
     @MethodSource("pathExpressions")
     @Execution(ExecutionMode.CONCURRENT)
     fun testPathExpressions(tc: TestCase) = runTest(tc)
+
+    @ParameterizedTest
+    @MethodSource("caseWhens")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun testCaseWhens(tc: TestCase) = runTest(tc)
 
     companion object {
 
@@ -2134,6 +2140,150 @@ class PartiQLSchemaInferencerTests {
                         ),
                     )
                 ),
+            ),
+        )
+
+        @JvmStatic
+        fun caseWhens() = listOf(
+            SuccessTestCase(
+                name = "Easy case when",
+                query = """
+                    CASE
+                        WHEN FALSE THEN 0
+                        WHEN TRUE THEN 1
+                        ELSE 2
+                    END;
+                """,
+                expected = INT4
+            ),
+            SuccessTestCase(
+                name = "Folded case when to grab the true",
+                query = """
+                    CASE
+                        WHEN FALSE THEN 0
+                        WHEN TRUE THEN 'hello'
+                    END;
+                """,
+                expected = STRING
+            ),
+            SuccessTestCase(
+                name = "Boolean case when",
+                query = """
+                    CASE 'Hello World'
+                        WHEN 'Hello World' THEN TRUE
+                        ELSE FALSE
+                    END;
+                """,
+                expected = BOOL
+            ),
+            SuccessTestCase(
+                name = "Folded out false",
+                query = """
+                    CASE
+                        WHEN FALSE THEN 'IMPOSSIBLE TO GET'
+                        ELSE TRUE
+                    END;
+                """,
+                expected = BOOL
+            ),
+            SuccessTestCase(
+                name = "Folded out false without default",
+                query = """
+                    CASE
+                        WHEN FALSE THEN 'IMPOSSIBLE TO GET'
+                    END;
+                """,
+                expected = NULL
+            ),
+            SuccessTestCase(
+                name = "Not folded gives us a nullable without default",
+                query = """
+                    CASE 1
+                        WHEN 1 THEN TRUE
+                        WHEN 2 THEN FALSE
+                    END;
+                """,
+                expected = BOOL.asNullable()
+            ),
+            SuccessTestCase(
+                name = "Not folded gives us a nullable without default for query",
+                query = """
+                    SELECT
+                        CASE breed
+                            WHEN 'golden retriever' THEN 'fluffy dog'
+                            WHEN 'pitbull' THEN 'short-haired dog'
+                        END AS breed_descriptor
+                    FROM dogs
+                """,
+                catalog = "pql",
+                catalogPath = listOf("main"),
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "breed_descriptor" to STRING.asNullable(),
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "Query",
+                query = """
+                    SELECT
+                        CASE breed
+                            WHEN 'golden retriever' THEN 'fluffy dog'
+                            WHEN 'pitbull' THEN 'short-haired dog'
+                            ELSE 'something else'
+                        END AS breed_descriptor
+                    FROM dogs
+                """,
+                catalog = "pql",
+                catalogPath = listOf("main"),
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "breed_descriptor" to STRING,
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "Query with heterogeneous data",
+                query = """
+                    SELECT
+                        CASE breed
+                            WHEN 'golden retriever' THEN 'fluffy dog'
+                            WHEN 'pitbull' THEN 2
+                            ELSE 2.0
+                        END AS breed_descriptor
+                    FROM dogs
+                """,
+                catalog = "pql",
+                catalogPath = listOf("main"),
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "breed_descriptor" to unionOf(STRING, INT4, DECIMAL),
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                )
             ),
         )
 
