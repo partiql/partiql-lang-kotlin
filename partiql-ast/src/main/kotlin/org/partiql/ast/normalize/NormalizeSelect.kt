@@ -80,7 +80,6 @@ import org.partiql.value.stringValue
  * } FROM A AS x
  * ```
  *
- * TODO: GROUP BY
  * TODO: LET
  *
  * Requires [NormalizeFromSource].

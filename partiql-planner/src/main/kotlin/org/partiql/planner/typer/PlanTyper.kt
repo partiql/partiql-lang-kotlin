@@ -635,7 +635,9 @@ internal class PlanTyper(
         private fun foldCaseBranch(condition: Rex, result: Rex): Rex.Op.Case.Branch {
             val call = condition.op as? Rex.Op.Call ?: return rexOpCaseBranch(condition, result)
             val fn = call.fn as? Fn.Resolved ?: return rexOpCaseBranch(condition, result)
-            if (fn.signature.name.equals("is_struct", ignoreCase = true).not()) { return rexOpCaseBranch(condition, result) }
+            if (fn.signature.name.equals("is_struct", ignoreCase = true).not()) {
+                return rexOpCaseBranch(condition, result)
+            }
             val ref = call.args.getOrNull(0) ?: error("IS STRUCT requires an argument.")
             val simplifiedCondition = when {
                 ref.type.allTypes.all { it is StructType } -> rex(StaticType.BOOL, rexOpLit(boolValue(true)))
@@ -715,12 +717,50 @@ internal class PlanTyper(
             TODO("Type RexOpPivot")
         }
 
-        override fun visitRexOpCollToScalar(node: Rex.Op.CollToScalar, ctx: StaticType?): Rex {
-            TODO("Type RexOpCollToScalar")
+        override fun visitRexOpSubquery(node: Rex.Op.Subquery, ctx: StaticType?): Rex {
+            val select = visitRexOpSelect(node.select, ctx).op as Rex.Op.Select
+            val subquery = node.copy(select = select)
+            return when (node.coercion) {
+                Rex.Op.Subquery.Coercion.SCALAR -> visitRexOpSubqueryScalar(subquery, select.constructor.type)
+                Rex.Op.Subquery.Coercion.ROW -> visitRexOpSubqueryRow(subquery, select.constructor.type)
+            }
         }
 
-        override fun visitRexOpCollToScalarSubquery(node: Rex.Op.CollToScalar.Subquery, ctx: StaticType?): Rex {
-            TODO("Type RexOpCollToScalarSubquery")
+        /**
+         * Calculate output type of a row-value subquery.
+         */
+        private fun visitRexOpSubqueryRow(subquery: Rex.Op.Subquery, cons: StaticType): Rex {
+            if (cons !is StructType) {
+                return rexErr("Subquery with non-SQL SELECT cannot be coerced to a row-value expression. Found constructor type: $cons")
+            }
+            // Do a simple cardinality check for the moment.
+            // TODO we can only check cardinality if we know we are in a a comparison operator.
+            // val n = coercion.columns.size
+            // val m = cons.fields.size
+            // if (n != m) {
+            //     return rexErr("Cannot coercion subquery with $m attributes to a row-value-expression with $n attributes")
+            // }
+            // If we made it this far, then we can coerce this subquery to the desired complex value
+            val type = StaticType.LIST
+            val op = subquery
+            return rex(type, op)
+        }
+
+        /**
+         * Calculate output type of a scalar subquery.
+         */
+        private fun visitRexOpSubqueryScalar(subquery: Rex.Op.Subquery, cons: StaticType): Rex {
+            if (cons !is StructType) {
+                return rexErr("Subquery with non-SQL SELECT cannot be coerced to a scalar. Found constructor type: $cons")
+            }
+            val n = cons.fields.size
+            if (n != 1) {
+                return rexErr("SELECT constructor with $n attributes cannot be coerced to a scalar. Found constructor type: $cons")
+            }
+            // If we made it this far, then we can coerce this subquery to a scalar
+            val type = cons.fields.first().value
+            val op = subquery
+            return rex(type, op)
         }
 
         override fun visitRexOpSelect(node: Rex.Op.Select, ctx: StaticType?): Rex {
@@ -819,8 +859,12 @@ internal class PlanTyper(
                         )
                         possibleOutputTypes.add(StaticType.MISSING)
                     }
-                    is NullType -> { return StaticType.NULL }
-                    else -> { return StaticType.MISSING }
+                    is NullType -> {
+                        return StaticType.NULL
+                    }
+                    else -> {
+                        return StaticType.MISSING
+                    }
                 }
             }
             uniqueAttrs = when {
@@ -879,8 +923,13 @@ internal class PlanTyper(
             return buildArgumentPermutations(flattenedArgs, accumulator = emptyList())
         }
 
-        private fun buildArgumentPermutations(args: List<List<StaticType>>, accumulator: List<StaticType>): Sequence<List<StaticType>> {
-            if (args.isEmpty()) { return sequenceOf(accumulator) }
+        private fun buildArgumentPermutations(
+            args: List<List<StaticType>>,
+            accumulator: List<StaticType>,
+        ): Sequence<List<StaticType>> {
+            if (args.isEmpty()) {
+                return sequenceOf(accumulator)
+            }
             val first = args.first()
             val rest = when (args.size) {
                 1 -> emptyList()

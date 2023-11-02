@@ -151,11 +151,9 @@ rex::{
       rel:    rel,
     },
 
-    coll_to_scalar::{
-      subquery: {
-        select: select,
-        type:   static_type // reify `select` type
-      }
+    subquery::{
+      select:   select,
+      coercion: [ SCALAR, ROW ],
     },
 
     select::{

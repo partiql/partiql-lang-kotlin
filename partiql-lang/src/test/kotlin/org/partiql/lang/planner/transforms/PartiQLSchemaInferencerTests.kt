@@ -14,7 +14,6 @@ import org.junit.jupiter.params.provider.ArgumentsSource
 import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.annotations.ExperimentalPartiQLSchemaInferencer
 import org.partiql.errors.Problem
-import org.partiql.errors.ProblemHandler
 import org.partiql.errors.UNKNOWN_PROBLEM_LOCATION
 import org.partiql.lang.errors.ProblemCollector
 import org.partiql.lang.planner.transforms.PartiQLSchemaInferencerTests.TestCase.ErrorTestCase
@@ -131,6 +130,11 @@ class PartiQLSchemaInferencerTests {
     @Execution(ExecutionMode.CONCURRENT)
     fun testCaseWhens(tc: TestCase) = runTest(tc)
 
+    @ParameterizedTest
+    @MethodSource("subqueryCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun testSubqueries(tc: TestCase) = runTest(tc)
+
     companion object {
 
         private val root = this::class.java.getResource("/catalogs/default")!!.toURI().toPath().pathString
@@ -155,6 +159,10 @@ class PartiQLSchemaInferencerTests {
             "pql" to ionStructOf(
                 field("connector_name", ionString("local")),
                 field("root", ionString("$root/pql")),
+            ),
+            "subqueries" to ionStructOf(
+                field("connector_name", ionString("local")),
+                field("root", ionString("$root/subqueries")),
             ),
         )
 
@@ -2463,6 +2471,69 @@ class PartiQLSchemaInferencerTests {
                 )
             ),
         )
+
+        @JvmStatic
+        fun subqueryCases() = listOf(
+            SuccessTestCase(
+                name = "Subquery IN collection",
+                catalog = "subqueries",
+                key = PartiQLTest.Key("subquery", "subquery-00"),
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "x" to INT4,
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "Subquery scalar coercion",
+                catalog = "subqueries",
+                key = PartiQLTest.Key("subquery", "subquery-01"),
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "x" to INT4,
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "Subquery simple JOIN",
+                catalog = "subqueries",
+                key = PartiQLTest.Key("subquery", "subquery-02"),
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "x" to INT4,
+                            "y" to INT4,
+                            "z" to INT4,
+                            "a" to INT4,
+                            "b" to INT4,
+                            "c" to INT4,
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                )
+            ),
+        )
     }
 
     sealed class TestCase {
@@ -2474,7 +2545,7 @@ class PartiQLSchemaInferencerTests {
             val catalog: String? = null,
             val catalogPath: List<String> = emptyList(),
             val expected: StaticType,
-            val warnings: ProblemHandler? = null
+            val warnings: ProblemHandler? = null,
         ) : TestCase() {
             override fun toString(): String = "$name : $query"
         }
