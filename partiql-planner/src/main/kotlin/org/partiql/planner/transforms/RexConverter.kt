@@ -345,8 +345,7 @@ internal object RexConverter {
             }.toMutableList()
 
             val defaultRex = rex(type = StaticType.NULL, op = rexOpLit(value = nullValue()))
-            branches += rexOpCaseBranch(bool(true), defaultRex)
-            val op = rexOpCase(branches)
+            val op = rexOpCase(branches, defaultRex)
             rex(type, op)
         }
 
@@ -363,9 +362,8 @@ internal object RexConverter {
             val call = rexOpCall(fn, listOf(expr1, expr2))
             val branches = listOf(
                 rexOpCaseBranch(rex(type, call), rex(type = StaticType.NULL, op = rexOpLit(value = nullValue()))),
-                rexOpCaseBranch(bool(true), expr1)
             )
-            val op = rexOpCase(branches)
+            val op = rexOpCase(branches, expr1)
             rex(type, op)
         }
 
