@@ -227,8 +227,11 @@ internal class Env(
             getObjectHandle(cat, catalogPath)?.let { handle ->
                 getObjectDescriptor(handle).let { type ->
                     val depth = calculateMatched(originalPath, catalogPath, handle.second.absolutePath)
-                    val match = BindingPath(originalPath.steps.subList(0, depth)).toCaseSensitive()
-                    val global = global(match.toIdentifier(), type)
+                    val qualifiedPath = identifierQualified(
+                        root = handle.first.toIdentifier(),
+                        steps = handle.second.absolutePath.steps.map { it.toIdentifier() }
+                    )
+                    val global = global(qualifiedPath, type)
                     globals.add(global)
                     // Return resolution metadata
                     ResolvedVar.Global(type, globals.size - 1, depth)
@@ -378,9 +381,9 @@ internal class Env(
         return originalPath.steps.size + outputCatalogPath.steps.size - inputCatalogPath.steps.size
     }
 
-    private fun BindingPath.toIdentifier() = identifierQualified(
-        root = steps[0].toIdentifier(),
-        steps = steps.subList(1, steps.size).map { it.toIdentifier() }
+    private fun String.toIdentifier() = identifierSymbol(
+        symbol = this,
+        caseSensitivity = Identifier.CaseSensitivity.SENSITIVE
     )
 
     private fun BindingName.toIdentifier() = identifierSymbol(
