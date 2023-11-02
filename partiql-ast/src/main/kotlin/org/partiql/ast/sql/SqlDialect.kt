@@ -49,12 +49,12 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
     // IDENTIFIERS & PATHS
 
     /**
-     * Default behavior is quote all SFW queries.
+     * Default behavior is to wrap all SFW queries with parentheses.
      *
      * @param node
      * @param head
      */
-    public open fun visitExprQuoted(node: Expr, head: SqlBlock) = when (node) {
+    public open fun visitExprWrapped(node: Expr, head: SqlBlock) = when (node) {
         is Expr.SFW -> {
             var h = head
             h = h concat "("
