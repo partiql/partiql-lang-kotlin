@@ -166,7 +166,7 @@ object PartiQLHeader : Header() {
 
     private fun plus(): List<FunctionSignature.Scalar> = types.numeric.map { t ->
         binary("plus", t, t, t)
-    } + listOf(binary("plus", BOOL, ANY, ANY, true))
+    } + listOf(binary("plus", ANY, ANY, ANY, true))
 
     private fun minus(): List<FunctionSignature.Scalar> = types.numeric.map { t ->
         binary("minus", t, t, t)
