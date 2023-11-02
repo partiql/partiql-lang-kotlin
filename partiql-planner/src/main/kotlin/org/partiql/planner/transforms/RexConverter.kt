@@ -363,7 +363,7 @@ internal object RexConverter {
             val branches = listOf(
                 rexOpCaseBranch(rex(type, call), rex(type = StaticType.NULL, op = rexOpLit(value = nullValue()))),
             )
-            val op = rexOpCase(branches, expr1)
+            val op = rexOpCase(branches.toMutableList(), expr1)
             rex(type, op)
         }
 
