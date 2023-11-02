@@ -58,13 +58,14 @@ public abstract class Header {
     companion object {
 
         @JvmStatic
-        internal fun unary(name: String, returns: PartiQLValueType, value: PartiQLValueType) =
+        internal fun unary(name: String, returns: PartiQLValueType, value: PartiQLValueType, isMissable: Boolean = false) =
             FunctionSignature.Scalar(
                 name = name,
                 returns = returns,
                 parameters = listOf(FunctionParameter("value", value)),
                 isNullCall = true,
                 isNullable = false,
+                isMissable = isMissable
             )
 
         @JvmStatic

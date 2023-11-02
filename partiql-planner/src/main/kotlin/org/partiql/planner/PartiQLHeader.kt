@@ -4,14 +4,23 @@ import org.partiql.ast.DatetimeField
 import org.partiql.types.function.FunctionParameter
 import org.partiql.types.function.FunctionSignature
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType.*
+import org.partiql.value.PartiQLValueType.ANY
+import org.partiql.value.PartiQLValueType.BOOL
+import org.partiql.value.PartiQLValueType.CHAR
+import org.partiql.value.PartiQLValueType.DATE
+import org.partiql.value.PartiQLValueType.DECIMAL
+import org.partiql.value.PartiQLValueType.INT
+import org.partiql.value.PartiQLValueType.INT32
+import org.partiql.value.PartiQLValueType.INT64
+import org.partiql.value.PartiQLValueType.STRING
+import org.partiql.value.PartiQLValueType.TIME
+import org.partiql.value.PartiQLValueType.TIMESTAMP
 
 /**
  * A header which uses the PartiQL Lang Kotlin default standard library. All functions exist in a global namespace.
  * Once we have catalogs with information_schema, the PartiQL Header will be fixed on a specification version and
  * user defined functions will be defined within their own schema.
  *
- * TODO: The model of ANY type in function signature is less than ideal. If we have
  */
 @OptIn(PartiQLValueExperimental::class)
 object PartiQLHeader : Header() {
@@ -105,7 +114,7 @@ object PartiQLHeader : Header() {
 
     // OPERATORS
 
-    private fun not(): List<FunctionSignature.Scalar> = listOf(unary("not", BOOL, BOOL), unary("not", ANY, ANY))
+    private fun not(): List<FunctionSignature.Scalar> = listOf(unary("not", BOOL, BOOL), unary("not", BOOL, ANY, true))
 
     private fun pos(): List<FunctionSignature.Scalar> = types.numeric.map { t ->
         unary("pos", t, t)
@@ -113,7 +122,7 @@ object PartiQLHeader : Header() {
 
     private fun neg(): List<FunctionSignature.Scalar> = types.numeric.map { t ->
         unary("neg", t, t)
-    } + listOf(unary("pos", ANY, ANY))
+    } + listOf(unary("neg", ANY, ANY))
 
     private fun eq(): List<FunctionSignature.Scalar> = types.all.map { t ->
         FunctionSignature.Scalar(
@@ -411,7 +420,7 @@ object PartiQLHeader : Header() {
             ),
             isNullCall = true,
             isNullable = false,
-            isMissable = false,
+            isMissable = true,
         ),
         FunctionSignature.Scalar(
             name = "substring",
@@ -423,7 +432,7 @@ object PartiQLHeader : Header() {
             ),
             isNullCall = true,
             isNullable = false,
-            isMissable = false
+            isMissable = true
         )
     )
 
