@@ -69,6 +69,7 @@ import org.partiql.spi.BindingPath
 import org.partiql.types.AnyOfType
 import org.partiql.types.AnyType
 import org.partiql.types.BagType
+import org.partiql.types.BoolType
 import org.partiql.types.CollectionType
 import org.partiql.types.IntType
 import org.partiql.types.ListType
@@ -564,12 +565,32 @@ internal class PlanTyper(
                 .map { visitRexOpCaseBranch(it, it.rex.type) }
                 .filterNot { isLiteralBool(it.condition, false) }
 
+            newBranches.forEach { branch ->
+                if (canBeBoolean(branch.condition.type).not()) {
+                    onProblem.invoke(
+                        Problem(
+                            UNKNOWN_PROBLEM_LOCATION,
+                            PlanningProblemDetails.IncompatibleTypesForOp(branch.condition.type.allTypes, "CASE_WHEN")
+                        )
+                    )
+                }
+            }
+            val default = visitRex(node.default, node.default.type)
+
             // Calculate final expression (short-circuit to first branch if the condition is always TRUE).
-            val resultTypes = newBranches.map { it.rex }.map { it.type }
-            val firstBranch = newBranches.firstOrNull() ?: error("CASE_WHEN has NO branches.")
-            return when (isLiteralBool(firstBranch.condition, true)) {
-                true -> firstBranch.rex
-                false -> rex(type = StaticType.unionOf(resultTypes.toSet()).flatten(), node.copy(branches = newBranches))
+            val resultTypes = newBranches.map { it.rex }.map { it.type } + listOf(default.type)
+            return when (newBranches.size) {
+                0 -> default
+                else -> when (isLiteralBool(newBranches[0].condition, true)) {
+                    true -> newBranches[0].rex
+                    false -> rex(type = StaticType.unionOf(resultTypes.toSet()).flatten(), node.copy(branches = newBranches, default = default))
+                }
+            }
+        }
+
+        private fun canBeBoolean(type: StaticType): Boolean {
+            return type.flatten().allTypes.any {
+                it is BoolType
             }
         }
 
