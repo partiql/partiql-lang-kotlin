@@ -113,7 +113,7 @@ internal object RexConverter {
         override fun visitExprUnary(node: Expr.Unary, context: Env): Rex {
             val type = (StaticType.ANY)
             // Args
-            val arg = visitExprCoerce(node, context)
+            val arg = visitExprCoerce(node.expr, context)
             val args = listOf(arg)
             // Fn
             val id = identifierSymbol(node.op.name.lowercase(), Identifier.CaseSensitivity.SENSITIVE)
