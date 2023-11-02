@@ -18,7 +18,7 @@ import org.partiql.ast.AstNode
 import org.partiql.ast.Expr
 import org.partiql.ast.From
 import org.partiql.ast.Statement
-import org.partiql.ast.builder.ast
+import org.partiql.ast.fromJoin
 import org.partiql.ast.helpers.toBinder
 import org.partiql.ast.util.AstRewriter
 
@@ -31,6 +31,7 @@ internal object NormalizeFromSource : AstPass {
 
     private object Visitor : AstRewriter<Int>() {
 
+        // Each SFW starts the ctx count again.
         override fun visitExprSFW(node: Expr.SFW, ctx: Int): AstNode = super.visitExprSFW(node, 0)
 
         override fun visitStatementDMLBatchLegacy(node: Statement.DML.BatchLegacy, ctx: Int): AstNode =
@@ -38,20 +39,25 @@ internal object NormalizeFromSource : AstPass {
 
         override fun visitFrom(node: From, ctx: Int) = super.visitFrom(node, ctx) as From
 
-        override fun visitFromJoin(node: From.Join, ctx: Int) = ast {
+        override fun visitFromJoin(node: From.Join, ctx: Int): From {
             val lhs = visitFrom(node.lhs, ctx)
             val rhs = visitFrom(node.rhs, ctx + 1)
             val condition = node.condition?.let { visitExpr(it, ctx) as Expr }
-            if (lhs !== node.lhs || rhs !== node.rhs || condition !== node.condition) {
+            return if (lhs !== node.lhs || rhs !== node.rhs || condition !== node.condition) {
                 fromJoin(lhs, rhs, node.type, condition)
             } else {
                 node
             }
         }
 
-        override fun visitFromValue(node: From.Value, ctx: Int) = when (node.asAlias) {
-            null -> node.copy(asAlias = node.expr.toBinder(ctx))
-            else -> node
+        override fun visitFromValue(node: From.Value, ctx: Int): From {
+            val expr = visitExpr(node.expr, ctx) as Expr
+            val asAlias = node.asAlias ?: expr.toBinder(ctx)
+            return if (expr !== node.expr || asAlias !== node.asAlias) {
+                node.copy(expr = expr, asAlias = asAlias)
+            } else {
+                node
+            }
         }
     }
 }

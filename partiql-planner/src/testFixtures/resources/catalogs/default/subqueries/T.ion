@@ -1,0 +1,21 @@
+{
+  type: "list",
+  items: {
+    type: "struct",
+    constraints: [ closed, unique ],
+    fields: [
+      {
+        name: "x",
+        type: "int32"
+      },
+      {
+        name: "y",
+        type: "int32"
+      },
+      {
+        name: "z",
+        type: "int32"
+      },
+    ]
+  }
+}
