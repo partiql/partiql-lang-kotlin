@@ -68,13 +68,14 @@ public abstract class Header {
             )
 
         @JvmStatic
-        internal fun binary(name: String, returns: PartiQLValueType, lhs: PartiQLValueType, rhs: PartiQLValueType) =
+        internal fun binary(name: String, returns: PartiQLValueType, lhs: PartiQLValueType, rhs: PartiQLValueType, isMissable: Boolean = false) =
             FunctionSignature.Scalar(
                 name = name,
                 returns = returns,
                 parameters = listOf(FunctionParameter("lhs", lhs), FunctionParameter("rhs", rhs)),
                 isNullCall = true,
                 isNullable = false,
+                isMissable = isMissable
             )
     }
 }

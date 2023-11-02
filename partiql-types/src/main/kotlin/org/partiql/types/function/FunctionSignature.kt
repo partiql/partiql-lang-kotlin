@@ -55,6 +55,7 @@ public sealed class FunctionSignature(
         parameters: List<FunctionParameter>,
         description: String? = null,
         isNullable: Boolean = true,
+        @JvmField public val isMissable: Boolean = false,
         @JvmField public val isDeterministic: Boolean = true,
         @JvmField public val isNullCall: Boolean = false,
     ) : FunctionSignature(name, returns, parameters, description, isNullable) {
@@ -67,7 +68,8 @@ public sealed class FunctionSignature(
                 other.parameters.size != parameters.size ||
                 other.isDeterministic != isDeterministic ||
                 other.isNullCall != isNullCall ||
-                other.isNullable != isNullable
+                other.isNullable != isNullable ||
+                other.isMissable != isMissable
             ) {
                 return false
             }
@@ -87,6 +89,7 @@ public sealed class FunctionSignature(
             result = 31 * result + isDeterministic.hashCode()
             result = 31 * result + isNullCall.hashCode()
             result = 31 * result + isNullable.hashCode()
+            result = 31 * result + isMissable.hashCode()
             result = 31 * result + (description?.hashCode() ?: 0)
             return result
         }
