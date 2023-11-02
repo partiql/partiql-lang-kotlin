@@ -20,6 +20,7 @@ import org.partiql.value.PartiQLValueType.TIMESTAMP
  * A header which uses the PartiQL Lang Kotlin default standard library. All functions exist in a global namespace.
  * Once we have catalogs with information_schema, the PartiQL Header will be fixed on a specification version and
  * user defined functions will be defined within their own schema.
+ *
  */
 @OptIn(PartiQLValueExperimental::class)
 object PartiQLHeader : Header() {
@@ -75,8 +76,6 @@ object PartiQLHeader : Header() {
     private fun scalarBuiltins(): List<FunctionSignature.Scalar> = listOf(
         upper(),
         lower(),
-        coalesce(),
-        nullIf(),
         position(),
         substring(),
         trim(),
@@ -115,15 +114,15 @@ object PartiQLHeader : Header() {
 
     // OPERATORS
 
-    private fun not(): List<FunctionSignature.Scalar> = listOf(unary("not", BOOL, BOOL))
+    private fun not(): List<FunctionSignature.Scalar> = listOf(unary("not", BOOL, BOOL), unary("not", BOOL, ANY, true))
 
     private fun pos(): List<FunctionSignature.Scalar> = types.numeric.map { t ->
         unary("pos", t, t)
-    }
+    } + listOf(unary("pos", ANY, ANY))
 
     private fun neg(): List<FunctionSignature.Scalar> = types.numeric.map { t ->
         unary("neg", t, t)
-    }
+    } + listOf(unary("neg", ANY, ANY))
 
     private fun eq(): List<FunctionSignature.Scalar> = types.all.map { t ->
         FunctionSignature.Scalar(
@@ -139,56 +138,61 @@ object PartiQLHeader : Header() {
         binary("ne", BOOL, t, t)
     }
 
-    private fun and(): List<FunctionSignature.Scalar> = listOf(binary("and", BOOL, BOOL, BOOL))
+    private fun and(): List<FunctionSignature.Scalar> = listOf(
+        binary("and", BOOL, BOOL, BOOL),
+        binary("and", BOOL, ANY, ANY, true)
+    )
 
-    private fun or(): List<FunctionSignature.Scalar> = listOf(binary("or", BOOL, BOOL, BOOL))
+    private fun or(): List<FunctionSignature.Scalar> = listOf(
+        binary("or", BOOL, BOOL, BOOL),
+        binary("or", BOOL, ANY, ANY, true)
+    )
 
     private fun lt(): List<FunctionSignature.Scalar> = types.numeric.map { t ->
         binary("lt", BOOL, t, t)
-    }
+    } + listOf(binary("lt", BOOL, ANY, ANY, true))
 
     private fun lte(): List<FunctionSignature.Scalar> = types.numeric.map { t ->
         binary("lte", BOOL, t, t)
-    }
+    } + listOf(binary("lte", BOOL, ANY, ANY, true))
 
     private fun gt(): List<FunctionSignature.Scalar> = types.numeric.map { t ->
         binary("gt", BOOL, t, t)
-    }
+    } + listOf(binary("gt", BOOL, ANY, ANY, true))
 
     private fun gte(): List<FunctionSignature.Scalar> = types.numeric.map { t ->
         binary("gte", BOOL, t, t)
-    }
+    } + listOf(binary("gte", BOOL, ANY, ANY, true))
 
     private fun plus(): List<FunctionSignature.Scalar> = types.numeric.map { t ->
         binary("plus", t, t, t)
-    }
+    } + listOf(binary("plus", ANY, ANY, ANY, true))
 
     private fun minus(): List<FunctionSignature.Scalar> = types.numeric.map { t ->
         binary("minus", t, t, t)
-    }
+    } + listOf(binary("minus", ANY, ANY, ANY, true))
 
     private fun times(): List<FunctionSignature.Scalar> = types.numeric.map { t ->
         binary("times", t, t, t)
-    }
+    } + listOf(binary("times", ANY, ANY, ANY, true))
 
     private fun div(): List<FunctionSignature.Scalar> = types.numeric.map { t ->
         binary("divide", t, t, t)
-    }
+    } + listOf(binary("divide", ANY, ANY, ANY, true))
 
     private fun mod(): List<FunctionSignature.Scalar> = types.numeric.map { t ->
         binary("modulo", t, t, t)
-    }
+    } + listOf(binary("modulo", ANY, ANY, ANY, true))
 
     private fun concat(): List<FunctionSignature.Scalar> = types.text.map { t ->
         binary("concat", t, t, t)
-    }
+    } + listOf(binary("concat", ANY, ANY, ANY, true))
 
     private fun bitwiseAnd(): List<FunctionSignature.Scalar> = types.integer.map { t ->
         binary("bitwise_and", t, t, t)
-    }
+    } + listOf(binary("bitwise_and", ANY, ANY, ANY, true))
 
-    // BUILT INTS
-
+    // BUILT INS
     private fun upper(): List<FunctionSignature.Scalar> = types.text.map { t ->
         FunctionSignature.Scalar(
             name = "upper",
@@ -197,7 +201,16 @@ object PartiQLHeader : Header() {
             isNullCall = true,
             isNullable = false,
         )
-    }
+    } + listOf(
+        FunctionSignature.Scalar(
+            name = "upper",
+            returns = ANY,
+            parameters = listOf(FunctionParameter("value", ANY)),
+            isNullCall = true,
+            isNullable = false,
+            isMissable = true
+        )
+    )
 
     private fun lower(): List<FunctionSignature.Scalar> = types.text.map { t ->
         FunctionSignature.Scalar(
@@ -207,7 +220,16 @@ object PartiQLHeader : Header() {
             isNullCall = true,
             isNullable = false,
         )
-    }
+    } + listOf(
+        FunctionSignature.Scalar(
+            name = "lower",
+            returns = ANY,
+            parameters = listOf(FunctionParameter("value", ANY)),
+            isNullCall = true,
+            isNullable = false,
+            isMissable = true
+        )
+    )
 
     // SPECIAL FORMS
 
@@ -233,6 +255,29 @@ object PartiQLHeader : Header() {
             isNullCall = true,
             isNullable = false,
         ),
+        FunctionSignature.Scalar(
+            name = "like",
+            returns = BOOL,
+            parameters = listOf(
+                FunctionParameter("value", ANY),
+                FunctionParameter("pattern", ANY),
+            ),
+            isNullCall = true,
+            isNullable = false,
+            isMissable = true
+        ),
+        FunctionSignature.Scalar(
+            name = "like_escape",
+            returns = BOOL,
+            parameters = listOf(
+                FunctionParameter("value", ANY),
+                FunctionParameter("pattern", ANY),
+                FunctionParameter("escape", ANY),
+            ),
+            isNullCall = true,
+            isNullable = false,
+            isMissable = true
+        ),
     )
 
     private fun between(): List<FunctionSignature.Scalar> = types.numeric.map { t ->
@@ -247,7 +292,20 @@ object PartiQLHeader : Header() {
             isNullCall = true,
             isNullable = false,
         )
-    }
+    } + listOf(
+        FunctionSignature.Scalar(
+            name = "between",
+            returns = BOOL,
+            parameters = listOf(
+                FunctionParameter("value", ANY),
+                FunctionParameter("lower", ANY),
+                FunctionParameter("upper", ANY),
+            ),
+            isNullCall = true,
+            isNullable = false,
+            isMissable = true
+        )
+    )
 
     private fun inCollection(): List<FunctionSignature.Scalar> = types.all.map { element ->
         types.collections.map { collection ->
@@ -326,23 +384,6 @@ object PartiQLHeader : Header() {
         )
     }
 
-    // TODO
-    private fun coalesce(): List<FunctionSignature.Scalar> = emptyList()
-
-    // NULLIF(x, y)
-    private fun nullIf(): List<FunctionSignature.Scalar> = types.nullable.map { t ->
-        FunctionSignature.Scalar(
-            name = "null_if",
-            returns = t,
-            parameters = listOf(
-                FunctionParameter("value", t),
-                FunctionParameter("nullifier", BOOL), // TODO: why is this BOOL?
-            ),
-            isNullCall = true,
-            isNullable = true,
-        )
-    }
-
     // SUBSTRING (expression, start[, length]?)
     // SUBSTRINGG(expression from start [FOR length]? )
     private fun substring(): List<FunctionSignature.Scalar> = types.text.map { t ->
@@ -369,7 +410,31 @@ object PartiQLHeader : Header() {
                 isNullable = false,
             )
         )
-    }.flatten()
+    }.flatten() + listOf(
+        FunctionSignature.Scalar(
+            name = "substring",
+            returns = ANY,
+            parameters = listOf(
+                FunctionParameter("value", ANY),
+                FunctionParameter("start", ANY),
+            ),
+            isNullCall = true,
+            isNullable = false,
+            isMissable = true,
+        ),
+        FunctionSignature.Scalar(
+            name = "substring",
+            returns = ANY,
+            parameters = listOf(
+                FunctionParameter("value", ANY),
+                FunctionParameter("start", ANY),
+                FunctionParameter("end", ANY),
+            ),
+            isNullCall = true,
+            isNullable = false,
+            isMissable = true
+        )
+    )
 
     // position (str1, str2)
     // position (str1 in str2)
@@ -384,7 +449,19 @@ object PartiQLHeader : Header() {
             isNullCall = true,
             isNullable = false,
         )
-    }
+    } + listOf(
+        FunctionSignature.Scalar(
+            name = "position",
+            returns = ANY,
+            parameters = listOf(
+                FunctionParameter("probe", ANY),
+                FunctionParameter("value", ANY),
+            ),
+            isNullCall = true,
+            isNullable = false,
+            isMissable = true,
+        )
+    )
 
     // trim(str)
     private fun trim(): List<FunctionSignature.Scalar> = types.text.map { t ->
@@ -397,7 +474,18 @@ object PartiQLHeader : Header() {
             isNullCall = true,
             isNullable = false,
         )
-    }
+    } + listOf(
+        FunctionSignature.Scalar(
+            name = "trim",
+            returns = ANY,
+            parameters = listOf(
+                FunctionParameter("value", ANY),
+            ),
+            isNullCall = true,
+            isNullable = false,
+            isMissable = true,
+        )
+    )
 
     // TODO: We need to add a special form function for TRIM(BOTH FROM value)
     private fun trimSpecial(): List<FunctionSignature.Scalar> = types.text.map { t ->
@@ -457,7 +545,67 @@ object PartiQLHeader : Header() {
                 isNullable = false,
             ),
         )
-    }.flatten()
+    }.flatten() + listOf(
+        // TRIM(chars FROM value)
+        // TRIM(both chars from value)
+        FunctionSignature.Scalar(
+            name = "trim_chars",
+            returns = ANY,
+            parameters = listOf(
+                FunctionParameter("value", ANY),
+                FunctionParameter("chars", ANY),
+            ),
+            isNullCall = true,
+            isNullable = false,
+            isMissable = true,
+        ),
+        // TRIM(LEADING FROM value)
+        FunctionSignature.Scalar(
+            name = "trim_leading",
+            returns = ANY,
+            parameters = listOf(
+                FunctionParameter("value", ANY),
+            ),
+            isNullCall = true,
+            isNullable = false,
+            isMissable = true,
+        ),
+        // TRIM(LEADING chars FROM value)
+        FunctionSignature.Scalar(
+            name = "trim_leading_chars",
+            returns = ANY,
+            parameters = listOf(
+                FunctionParameter("value", ANY),
+                FunctionParameter("chars", ANY),
+            ),
+            isNullCall = true,
+            isNullable = false,
+            isMissable = true
+        ),
+        // TRIM(TRAILING FROM value)
+        FunctionSignature.Scalar(
+            name = "trim_trailing",
+            returns = ANY,
+            parameters = listOf(
+                FunctionParameter("value", ANY),
+            ),
+            isNullCall = true,
+            isNullable = false,
+            isMissable = true
+        ),
+        // TRIM(TRAILING chars FROM value)
+        FunctionSignature.Scalar(
+            name = "trim_trailing_chars",
+            returns = ANY,
+            parameters = listOf(
+                FunctionParameter("value", ANY),
+                FunctionParameter("chars", ANY),
+            ),
+            isNullCall = true,
+            isNullable = false,
+            isMissable = true
+        ),
+    )
 
     // TODO
     private fun overlay(): List<FunctionSignature.Scalar> = emptyList()
@@ -467,8 +615,8 @@ object PartiQLHeader : Header() {
 
     private fun dateAdd(): List<FunctionSignature.Scalar> {
         val operators = mutableListOf<FunctionSignature.Scalar>()
-        for (type in types.datetime) {
-            for (field in DatetimeField.values()) {
+        for (field in DatetimeField.values()) {
+            for (type in types.datetime) {
                 if (field == DatetimeField.TIMEZONE_HOUR || field == DatetimeField.TIMEZONE_MINUTE) {
                     continue
                 }
@@ -484,14 +632,26 @@ object PartiQLHeader : Header() {
                 )
                 operators.add(signature)
             }
+            val anySignature = FunctionSignature.Scalar(
+                name = "date_diff_${field.name.lowercase()}",
+                returns = ANY,
+                parameters = listOf(
+                    FunctionParameter("interval", ANY),
+                    FunctionParameter("datetime", ANY),
+                ),
+                isNullCall = true,
+                isNullable = false,
+                isMissable = true
+            )
+            operators.add(anySignature)
         }
         return operators
     }
 
     private fun dateDiff(): List<FunctionSignature.Scalar> {
         val operators = mutableListOf<FunctionSignature.Scalar>()
-        for (type in types.datetime) {
-            for (field in DatetimeField.values()) {
+        for (field in DatetimeField.values()) {
+            for (type in types.datetime) {
                 if (field == DatetimeField.TIMEZONE_HOUR || field == DatetimeField.TIMEZONE_MINUTE) {
                     continue
                 }
@@ -507,6 +667,18 @@ object PartiQLHeader : Header() {
                 )
                 operators.add(signature)
             }
+            val anySignature = FunctionSignature.Scalar(
+                name = "date_diff_${field.name.lowercase()}",
+                returns = INT64,
+                parameters = listOf(
+                    FunctionParameter("datetime1", ANY),
+                    FunctionParameter("datetime2", ANY),
+                ),
+                isNullCall = true,
+                isNullable = false,
+                isMissable = true
+            )
+            operators.add(anySignature)
         }
         return operators
     }

@@ -326,26 +326,47 @@ internal object RexConverter {
             return rex(type, call)
         }
 
-        override fun visitExprCoalesce(node: Expr.Coalesce, ctx: Env): Rex {
+        // coalesce(expr1, expr2, ... exprN) ->
+        //   CASE
+        //     WHEN expr1 IS NOT NULL THEN EXPR1
+        //     ...
+        //     WHEN exprn is NOT NULL THEN exprn
+        //     ELSE NULL END
+        override fun visitExprCoalesce(node: Expr.Coalesce, ctx: Env): Rex = plan {
             val type = StaticType.ANY
-            // Args
-            val arg0 = rex(StaticType.LIST, rexOpCollection(node.args.map { visitExpr(it, ctx) }))
-            // Call
-            val call = callNonHidden("coalesce", arg0)
-            return rex(type, call)
+
+            val createBranch: (Rex) -> Rex.Op.Case.Branch = { expr: Rex ->
+                val updatedCondition = rex(type, negate(call("is_null", expr)))
+                rexOpCaseBranch(updatedCondition, expr)
+            }
+
+            val branches = node.args.map {
+                createBranch(visitExpr(it, ctx))
+            }.toMutableList()
+
+            val defaultRex = rex(type = StaticType.NULL, op = rexOpLit(value = nullValue()))
+            branches += rexOpCaseBranch(bool(true), defaultRex)
+            val op = rexOpCase(branches)
+            rex(type, op)
         }
 
-        /**
-         * NULLIF(<arg0>, <arg1>)
-         */
-        override fun visitExprNullIf(node: Expr.NullIf, ctx: Env): Rex {
+        // nullIf(expr1, expr2) ->
+        //   CASE
+        //     WHEN expr1 = expr2 THEN NULL
+        //     ELSE expr1 END
+        override fun visitExprNullIf(node: Expr.NullIf, ctx: Env): Rex = plan {
             val type = StaticType.ANY
-            // Args
-            val arg0 = visitExpr(node.value, ctx)
-            val arg1 = visitExpr(node.nullifier, ctx)
-            // Call
-            val call = callNonHidden("null_if", arg0, arg1)
-            return rex(type, call)
+            val expr1 = visitExpr(node.value, ctx)
+            val expr2 = visitExpr(node.nullifier, ctx)
+            val id = identifierSymbol(Expr.Binary.Op.EQ.name.lowercase(), Identifier.CaseSensitivity.SENSITIVE)
+            val fn = fnUnresolved(id, true)
+            val call = rexOpCall(fn, listOf(expr1, expr2))
+            val branches = listOf(
+                rexOpCaseBranch(rex(type, call), rex(type = StaticType.NULL, op = rexOpLit(value = nullValue()))),
+                rexOpCaseBranch(bool(true), expr1)
+            )
+            val op = rexOpCase(branches)
+            rex(type, op)
         }
 
         /**

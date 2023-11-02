@@ -43,7 +43,7 @@ public abstract class Header {
      * For functions, output CREATE FUNCTION statements.
      */
     override fun toString(): String = buildString {
-        functions.groupBy { it.name }.forEach {
+        (functions + operators + aggregations).groupBy { it.name }.forEach {
             appendLine("-- [${it.key}] ---------")
             appendLine()
             it.value.forEach { fn -> appendLine(fn) }
@@ -58,23 +58,25 @@ public abstract class Header {
     companion object {
 
         @JvmStatic
-        internal fun unary(name: String, returns: PartiQLValueType, value: PartiQLValueType) =
+        internal fun unary(name: String, returns: PartiQLValueType, value: PartiQLValueType, isMissable: Boolean = false) =
             FunctionSignature.Scalar(
                 name = name,
                 returns = returns,
                 parameters = listOf(FunctionParameter("value", value)),
                 isNullCall = true,
                 isNullable = false,
+                isMissable = isMissable
             )
 
         @JvmStatic
-        internal fun binary(name: String, returns: PartiQLValueType, lhs: PartiQLValueType, rhs: PartiQLValueType) =
+        internal fun binary(name: String, returns: PartiQLValueType, lhs: PartiQLValueType, rhs: PartiQLValueType, isMissable: Boolean = false) =
             FunctionSignature.Scalar(
                 name = name,
                 returns = returns,
                 parameters = listOf(FunctionParameter("lhs", lhs), FunctionParameter("rhs", rhs)),
                 isNullCall = true,
                 isNullable = false,
+                isMissable = isMissable
             )
     }
 }

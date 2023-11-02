@@ -153,7 +153,7 @@ internal class FnResolver(private val headers: List<Header>) {
         return when (match) {
             null -> FnMatch.Error(fn.identifier, args, candidates)
             else -> {
-                val isMissable = hadMissingArg || isUnsafeCast(match.signature.specific)
+                val isMissable = hadMissingArg || isUnsafeCast(match.signature.specific) || match.signature.isMissable
                 FnMatch.Ok(match.signature, match.mapping, isMissable)
             }
         }
