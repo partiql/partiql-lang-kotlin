@@ -636,7 +636,7 @@ object PartiQLHeader : Header() {
                 name = "date_diff_${field.name.lowercase()}",
                 returns = ANY,
                 parameters = listOf(
-                    FunctionParameter("interval", INT),
+                    FunctionParameter("interval", ANY),
                     FunctionParameter("datetime", ANY),
                 ),
                 isNullCall = true,
