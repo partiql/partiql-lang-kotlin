@@ -164,6 +164,11 @@ class SqlDialectTest {
     @Execution(ExecutionMode.CONCURRENT)
     fun testOtherClauses(case: Case) = case.assert()
 
+    @ParameterizedTest(name = "subqueries #{index}")
+    @MethodSource("subqueryCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun testSubqueries(case: Case) = case.assert()
+
     companion object {
 
         private val NULL = exprLit(nullValue())
@@ -1594,6 +1599,35 @@ class SqlDialectTest {
                                 sorts += sort(v("x"), null, null)
                             }
                         }
+                    }
+                }
+            },
+        )
+
+        // These are simple clauses
+        @JvmStatic
+        private fun subqueryCases() = listOf(
+            expect("1 = (SELECT a FROM T)") {
+                exprBinary {
+                    op = Expr.Binary.Op.EQ
+                    lhs = exprLit(int32Value(1))
+                    rhs = exprSFW {
+                        select = select("a")
+                        from = table("T")
+                    }
+                }
+            },
+            expect("(1, 2) = (SELECT a FROM T)") {
+                exprBinary {
+                    op = Expr.Binary.Op.EQ
+                    lhs = exprCollection {
+                        type = Expr.Collection.Type.LIST
+                        values += exprLit(int32Value(1))
+                        values += exprLit(int32Value(2))
+                    }
+                    rhs = exprSFW {
+                        select = select("a")
+                        from = table("T")
                     }
                 }
             },
