@@ -1,6 +1,6 @@
 {
   type: "struct",
-  constraints: [ ordered ],
+  constraints: [ closed, ordered ],
   fields: [
     {
       name: "e",
