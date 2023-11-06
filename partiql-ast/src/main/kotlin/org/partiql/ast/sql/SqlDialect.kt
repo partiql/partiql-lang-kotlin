@@ -281,8 +281,8 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
         if (f is Identifier.Symbol && f.symbol == "COUNT_STAR") {
             return h concat r("COUNT(*)")
         }
-        val start = if (node.setq != null) "(${node.setq!!.name} " else "("
-        h = h concat visitIdentifier(f, h)
+        val start = if (node.setq != null) "(${node.setq.name} " else "("
+        h = visitIdentifier(f, h)
         h = h concat list(start) { node.args }
         return h
     }
@@ -601,7 +601,7 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
     override fun visitSelectProjectItemExpression(node: Select.Project.Item.Expression, head: SqlBlock): SqlBlock {
         var h = head
         h = visitExprWrapped(node.expr, h)
-        h = if (node.asAlias != null) h concat r(" AS ${node.asAlias!!.sql()}") else h
+        h = if (node.asAlias != null) h concat r(" AS ${node.asAlias.sql()}") else h
         return h
     }
 

@@ -2533,6 +2533,12 @@ class PartiQLSchemaInferencerTests {
                     )
                 )
             ),
+            SuccessTestCase(
+                name = "Subquery scalar coercion",
+                catalog = "subqueries",
+                key = PartiQLTest.Key("subquery", "subquery-03"),
+                expected = BOOL,
+            ),
         )
     }
 

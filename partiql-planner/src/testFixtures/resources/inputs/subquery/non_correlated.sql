@@ -13,3 +13,6 @@ SELECT t.*, s.*
 FROM T AS t
          JOIN (SELECT * FROM S) AS s
               ON t.x = s.a;
+
+--#[subquery-03]
+1 = (SELECT COUNT(*) FROM T);

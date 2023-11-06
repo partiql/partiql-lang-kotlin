@@ -31,6 +31,7 @@ import org.partiql.plan.fnResolved
 import org.partiql.plan.identifierSymbol
 import org.partiql.plan.rel
 import org.partiql.plan.relBinding
+import org.partiql.plan.relOpAggregate
 import org.partiql.plan.relOpAggregateCall
 import org.partiql.plan.relOpErr
 import org.partiql.plan.relOpFilter
@@ -367,7 +368,9 @@ internal class PlanTyper(
 
             // rewrite with typed calls and groups
             val type = ctx!!.copyWithSchema(schema)
-            val op = node.copy(
+            val op = relOpAggregate(
+                input = input,
+                strategy = node.strategy,
                 calls = calls.map { it.first },
                 groups = groups,
             )
