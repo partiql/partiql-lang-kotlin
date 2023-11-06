@@ -969,6 +969,7 @@ internal class PlanTyper(
                             val results = prevTypes.map { inferPathStep(it, step) }
                             val types = results.map { it.first }
                             val firstResultStep = results.first().second
+                            // replace step only if all are disambiguated
                             val replacementStep = when (results.map { it.second }.all { it == firstResultStep }) {
                                 true -> firstResultStep
                                 false -> step
