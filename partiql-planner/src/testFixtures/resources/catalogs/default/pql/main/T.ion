@@ -1,0 +1,48 @@
+{
+  type: "bag",
+  items: {
+    type: "struct",
+    constraints: [ closed, ordered, unique ],
+    fields: [
+      {
+        name: "a",
+        type: "bool",
+      },
+      {
+        name: "b",
+        type: "int32",
+      },
+      {
+        name: "c",
+        type: "string",
+      },
+      {
+        name: "d",
+        type: {
+          type: "struct",
+          constraints: [ closed, ordered, unique ],
+          fields: [
+            {
+              name: "e",
+              type: "string"
+            }
+          ]
+        },
+      },
+      // path expression tests
+      {
+        name: "x",
+        type: "any",
+      },
+      {
+        name: "z",
+        type: "string",
+      },
+      // split
+      {
+        name: "v",
+        type: "string",
+      }
+    ]
+  }
+}

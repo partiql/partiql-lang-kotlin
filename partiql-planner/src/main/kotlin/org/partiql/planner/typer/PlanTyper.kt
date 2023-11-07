@@ -425,11 +425,12 @@ internal class PlanTyper(
          * Match path as far as possible (rewriting the steps), then infer based on resolved root and rewritten steps.
          */
         override fun visitRexOpPath(node: Rex.Op.Path, ctx: StaticType?): Rex {
+            val visitedSteps = node.steps.map { visitRexOpPathStep(it, null) as Rex.Op.Path.Step }
             // 1. Resolve path prefix
             val (root, steps) = when (val rootOp = node.root.op) {
                 is Rex.Op.Var.Unresolved -> {
                     // Rewrite the root
-                    val path = rexPathToBindingPath(rootOp, node.steps)
+                    val path = rexPathToBindingPath(rootOp, visitedSteps)
                     val resolvedVar = env.resolve(path, locals, rootOp.scope)
                     if (resolvedVar == null) {
                         handleUndefinedVariable(path.steps.last())
@@ -437,16 +438,19 @@ internal class PlanTyper(
                     }
                     val type = resolvedVar.type
                     val (op, steps) = when (resolvedVar) {
+                        // Root (and some steps) was a local. Replace the matched nodes with disambiguated steps
+                        // and return the remaining steps to continue typing.
                         is ResolvedVar.Local -> {
-                            // Root was a local; replace just the root
-                            rexOpVarResolved(resolvedVar.ordinal) to node.steps
+                            val amountRemaining = (visitedSteps.size + 1) - resolvedVar.depth
+                            val remainingSteps = visitedSteps.takeLast(amountRemaining)
+                            resolvedLocalPath(resolvedVar) to remainingSteps
                         }
                         is ResolvedVar.Global -> {
                             // Root (and some steps) was a global; replace root and re-calculate remaining steps.
                             val remainingFirstIndex = resolvedVar.depth - 1
-                            val remaining = when (remainingFirstIndex > node.steps.lastIndex) {
+                            val remaining = when (remainingFirstIndex > visitedSteps.lastIndex) {
                                 true -> emptyList()
-                                false -> node.steps.subList(remainingFirstIndex, node.steps.size)
+                                false -> visitedSteps.subList(remainingFirstIndex, visitedSteps.size)
                             }
                             rexOpGlobal(resolvedVar.ordinal) to remaining
                         }
@@ -454,7 +458,7 @@ internal class PlanTyper(
                     // rewrite root
                     rex(type, op) to steps
                 }
-                else -> visitRex(node.root, node.root.type) to node.steps
+                else -> visitRex(node.root, node.root.type) to visitedSteps
             }
 
             // short-circuit if whole path was matched
@@ -1260,7 +1264,7 @@ internal class PlanTyper(
      */
     private fun resolvedLocalPath(local: ResolvedVar.Local): Rex.Op {
         val root = rex(local.rootType, rexOpVarResolved(local.ordinal))
-        val steps = local.tail.map {
+        val steps = local.replacementSteps.map {
             val case = when (it.bindingCase) {
                 BindingCase.SENSITIVE -> Identifier.CaseSensitivity.SENSITIVE
                 BindingCase.INSENSITIVE -> Identifier.CaseSensitivity.INSENSITIVE

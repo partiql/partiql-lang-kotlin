@@ -76,15 +76,17 @@ internal sealed interface ResolvedVar {
     /**
      * Metadata for a resolved local variable.
      *
-     * @property type       Resolved StaticType
-     * @property ordinal    Index offset in [TypeEnv]
-     * @property tail       Remaining part of path (if any)
+     * @property type              Resolved StaticType
+     * @property ordinal           Index offset in [TypeEnv]
+     * @property replacementSteps  Path steps to replace.
+     * @property depth             The depth/level of the path match.
      */
     class Local(
         override val type: StaticType,
         override val ordinal: Int,
         val rootType: StaticType,
-        val tail: List<BindingName>,
+        val replacementSteps: List<BindingName>,
+        val depth: Int
     ) : ResolvedVar
 
     /**
@@ -308,9 +310,8 @@ internal class Env(
         // 1. Check locals for root
         locals.forEachIndexed { ordinal, binding ->
             val root = path.steps[0]
-            val tail = path.steps.drop(1)
             if (root.isEquivalentTo(binding.name)) {
-                return ResolvedVar.Local(binding.type, ordinal, binding.type, tail)
+                return ResolvedVar.Local(binding.type, ordinal, binding.type, emptyList(), 1)
             }
         }
 
@@ -322,7 +323,7 @@ internal class Env(
                 val varType = inferStructLookup(rootType, path)
                 if (varType != null) {
                     // we found this path within a struct!
-                    val match = ResolvedVar.Local(varType, ordinal, rootType, path.steps)
+                    val match = ResolvedVar.Local(varType.resolvedType, ordinal, rootType, varType.replacementPath.steps, varType.replacementPath.steps.size)
                     matches.add(match)
                 }
             }
@@ -340,31 +341,69 @@ internal class Env(
 
     /**
      * Searches for the path within the given struct, returning null if not found.
+     *
+     * @return a [ResolvedPath] that contains the disambiguated [ResolvedPath.replacementPath] and the path's
+     * [StaticType]. Returns NULL if unable to find the [path] given the [struct].
      */
-    private fun inferStructLookup(struct: StructType, path: BindingPath): StaticType? {
+    private fun inferStructLookup(struct: StructType, path: BindingPath): ResolvedPath? {
         var curr: StaticType = struct
-        for (step in path.steps) {
-            if (curr !is StructType) {
-                // cannot navigate into non-tuple
-                return null
-            }
+        val replacementSteps = path.steps.map { step ->
             // Assume ORDERED for now
-            curr = inferStructLookup(curr, step) ?: return null
+            val currentStruct = curr as? StructType ?: return null
+            val (replacement, stepType) = inferStructLookup(currentStruct, step) ?: return null
+            curr = stepType
+            replacement
         }
         // Lookup final field
-        return curr
+        return ResolvedPath(
+            BindingPath(replacementSteps),
+            curr
+        )
     }
 
-    private fun inferStructLookup(struct: StructType, binding: BindingName): StaticType? {
-        return when (struct.constraints.contains(TupleConstraint.Ordered)) {
-            true -> struct.fields.firstOrNull { entry -> binding.isEquivalentTo(entry.key) }?.value
-            false -> struct.fields.mapNotNull { entry ->
-                entry.value.takeIf { binding.isEquivalentTo(entry.key) }
-            }.let { valueTypes ->
-                StaticType.unionOf(valueTypes.toSet()).flatten().takeIf { valueTypes.isNotEmpty() }
+    /**
+     * Represents a disambiguated [BindingPath] and its inferred [StaticType].
+     */
+    private class ResolvedPath(
+        val replacementPath: BindingPath,
+        val resolvedType: StaticType
+    )
+
+    /**
+     * @return a disambiguated [key] and the resulting [StaticType].
+     */
+    private fun inferStructLookup(struct: StructType, key: BindingName): Pair<BindingName, StaticType>? {
+        val isClosed = struct.constraints.contains(TupleConstraint.Open(false))
+        val isOrdered = struct.constraints.contains(TupleConstraint.Ordered)
+        return when {
+            // 1. Struct is closed and ordered
+            isClosed && isOrdered -> {
+                struct.fields.firstOrNull { entry -> key.isEquivalentTo(entry.key) }?.let {
+                    (sensitive(it.key) to it.value)
+                }
             }
+            // 2. Struct is closed
+            isClosed -> {
+                val matches = struct.fields.filter { entry -> key.isEquivalentTo(entry.key) }
+                when (matches.size) {
+                    0 -> null
+                    1 -> matches.first().let { (sensitive(it.key) to it.value) }
+                    else -> {
+                        val firstKey = matches.first().key
+                        val sharedKey = when (matches.all { it.key == firstKey }) {
+                            true -> sensitive(firstKey)
+                            false -> key
+                        }
+                        sharedKey to StaticType.unionOf(matches.map { it.value }.toSet()).flatten()
+                    }
+                }
+            }
+            // 3. Struct is open
+            else -> null
         }
     }
+
+    private fun sensitive(str: String): BindingName = BindingName(str, BindingCase.SENSITIVE)
 
     /**
      * Logic for determining how many BindingNames were “matched” by the ConnectorMetadata
