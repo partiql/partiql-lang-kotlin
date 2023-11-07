@@ -28,6 +28,7 @@ dependencies {
     implementation(Deps.dotlin)
     implementation(Deps.ionElement)
     // Test
+    testImplementation(Deps.kotlinxHTML)
     testImplementation(project(":partiql-parser"))
     testImplementation(project(":plugins:partiql-local"))
     // Test Fixtures
