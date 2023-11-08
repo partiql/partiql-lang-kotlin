@@ -1,0 +1,43 @@
+[
+  {
+    type: "struct",
+    constraints: [
+      closed
+    ],
+    fields: [
+      {
+        name: "definition",
+        type: "string",
+      },
+      {
+        name: "definition",
+        type: "float32",
+      },
+      {
+        name: "DEFINITION",
+        type: "decimal"
+      }
+    ]
+  },
+  {
+    type: "struct",
+    constraints: [
+      closed,
+      ordered
+    ],
+    fields: [
+      {
+        name: "definition",
+        type: "int16",
+      },
+      {
+        name: "definition",
+        type: "int32",
+      },
+      {
+        name: "DEFINITION",
+        type: "int64"
+      }
+    ]
+  },
+]

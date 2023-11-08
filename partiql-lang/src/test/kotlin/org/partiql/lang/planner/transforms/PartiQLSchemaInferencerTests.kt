@@ -2334,6 +2334,27 @@ class PartiQLSchemaInferencerTests {
                     )
                 )
             ),
+            SuccessTestCase(
+                name = "Pathing into resolved local variable without qualification",
+                query = """
+                    SELECT address.street AS s FROM employer;
+                """,
+                catalog = "pql",
+                catalogPath = listOf("main"),
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "s" to STRING,
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                )
+            ),
         )
 
         @JvmStatic
@@ -3309,7 +3330,11 @@ class PartiQLSchemaInferencerTests {
 
         val result = PartiQLSchemaInferencer.inferInternal(input, ctx)
         assert(collector.problems.isEmpty()) {
-            collector.problems.toString()
+            buildString {
+                appendLine(collector.problems.toString())
+                appendLine()
+                PlanPrinter.append(this, result.first)
+            }
         }
         val actual = result.second
         assert(tc.expected == actual) {

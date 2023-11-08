@@ -428,11 +428,12 @@ internal class PlanTyper(
          * Match path as far as possible (rewriting the steps), then infer based on resolved root and rewritten steps.
          */
         override fun visitRexOpPath(node: Rex.Op.Path, ctx: StaticType?): Rex {
+            val visitedSteps = node.steps.map { visitRexOpPathStep(it, null) as Rex.Op.Path.Step }
             // 1. Resolve path prefix
             val (root, steps) = when (val rootOp = node.root.op) {
                 is Rex.Op.Var.Unresolved -> {
                     // Rewrite the root
-                    val path = rexPathToBindingPath(rootOp, node.steps)
+                    val path = rexPathToBindingPath(rootOp, visitedSteps)
                     val resolvedVar = env.resolve(path, locals, rootOp.scope)
                     if (resolvedVar == null) {
                         handleUndefinedVariable(path.steps.last())
@@ -440,16 +441,19 @@ internal class PlanTyper(
                     }
                     val type = resolvedVar.type
                     val (op, steps) = when (resolvedVar) {
+                        // Root (and some steps) was a local. Replace the matched nodes with disambiguated steps
+                        // and return the remaining steps to continue typing.
                         is ResolvedVar.Local -> {
-                            // Root was a local; replace just the root
-                            rexOpVarResolved(resolvedVar.ordinal) to node.steps
+                            val amountRemaining = (visitedSteps.size + 1) - resolvedVar.depth
+                            val remainingSteps = visitedSteps.takeLast(amountRemaining)
+                            resolvedLocalPath(resolvedVar) to remainingSteps
                         }
                         is ResolvedVar.Global -> {
                             // Root (and some steps) was a global; replace root and re-calculate remaining steps.
                             val remainingFirstIndex = resolvedVar.depth - 1
-                            val remaining = when (remainingFirstIndex > node.steps.lastIndex) {
+                            val remaining = when (remainingFirstIndex > visitedSteps.lastIndex) {
                                 true -> emptyList()
-                                false -> node.steps.subList(remainingFirstIndex, node.steps.size)
+                                false -> visitedSteps.subList(remainingFirstIndex, visitedSteps.size)
                             }
                             rexOpGlobal(resolvedVar.ordinal) to remaining
                         }
@@ -457,7 +461,7 @@ internal class PlanTyper(
                     // rewrite root
                     rex(type, op) to steps
                 }
-                else -> visitRex(node.root, node.root.type) to node.steps
+                else -> visitRex(node.root, node.root.type) to visitedSteps
             }
 
             // short-circuit if whole path was matched
@@ -473,8 +477,14 @@ internal class PlanTyper(
             //     } else it
             // }
 
-            // 3. Walk the steps to determine the path type.
-            val type = steps.fold(root.type) { curr, step -> inferPathStep(curr, step) }
+            // 3. Walk the steps, determine the path type, and replace each step with the disambiguated equivalent
+            //  (AKA made sensitive, if possible)
+            var type = root.type
+            val newSteps = steps.map { step ->
+                val (stepType, replacementStep) = inferPathStep(type, step)
+                type = stepType
+                replacementStep
+            }
 
             // 4. Invalid path reference; always MISSING
             if (type == StaticType.MISSING) {
@@ -483,7 +493,7 @@ internal class PlanTyper(
             }
 
             // 5. Non-missing, root is resolved
-            return rex(type, rexOpPath(root, steps))
+            return rex(type, rexOpPath(root, newSteps))
         }
 
         /**
@@ -947,28 +957,43 @@ internal class PlanTyper(
 
         // Helpers
 
-        private fun inferPathStep(type: StaticType, step: Rex.Op.Path.Step): StaticType = when (type) {
-            is AnyType -> StaticType.ANY
+        /**
+         * @return a [Pair] where the [Pair.first] represents the type of the [step] and the [Pair.second] represents
+         * the disambiguated [step].
+         */
+        private fun inferPathStep(type: StaticType, step: Rex.Op.Path.Step): Pair<StaticType, Rex.Op.Path.Step> = when (type) {
+            is AnyType -> StaticType.ANY to step
             is StructType -> inferPathStep(type, step)
-            is ListType, is SexpType -> inferPathStep(type as CollectionType, step)
+            is ListType, is SexpType -> inferPathStep(type as CollectionType, step) to step
             is AnyOfType -> {
                 when (type.types.size) {
                     0 -> throw IllegalStateException("Cannot path on an empty StaticType union")
                     else -> {
                         val prevTypes = type.allTypes
                         if (prevTypes.any { it is AnyType }) {
-                            StaticType.ANY
+                            StaticType.ANY to step
                         } else {
-                            val staticTypes = prevTypes.map { inferPathStep(it, step) }
-                            AnyOfType(staticTypes.toSet()).flatten()
+                            val results = prevTypes.map { inferPathStep(it, step) }
+                            val types = results.map { it.first }
+                            val firstResultStep = results.first().second
+                            // replace step only if all are disambiguated
+                            val replacementStep = when (results.map { it.second }.all { it == firstResultStep }) {
+                                true -> firstResultStep
+                                false -> step
+                            }
+                            AnyOfType(types.toSet()).flatten() to replacementStep
                         }
                     }
                 }
             }
-            else -> StaticType.MISSING
+            else -> StaticType.MISSING to step
         }
 
-        private fun inferPathStep(struct: StructType, step: Rex.Op.Path.Step): StaticType = when (step) {
+        /**
+         * @return a [Pair] where the [Pair.first] represents the type of the [step] and the [Pair.second] represents
+         * the disambiguated [step].
+         */
+        private fun inferPathStep(struct: StructType, step: Rex.Op.Path.Step): Pair<StaticType, Rex.Op.Path.Step> = when (step) {
             is Rex.Op.Path.Step.Index -> {
                 if (step.key.type !is StringType) {
                     error("Expected string but found: ${step.key.type}")
@@ -977,17 +1002,21 @@ internal class PlanTyper(
                     val lit = (step.key.op as Rex.Op.Lit).value
                     if (lit is TextValue<*> && !lit.isNull) {
                         val id = identifierSymbol(lit.string!!, Identifier.CaseSensitivity.SENSITIVE)
-                        inferStructLookup(struct, id)
+                        val (type, replacementId) = inferStructLookup(struct, id)
+                        type to rexOpPathStepSymbol(replacementId)
                     } else {
                         error("Expected text literal, but got $lit")
                     }
                 } else {
                     // cannot infer type of non-literal path step because we don't know its value
                     // we might improve upon this with some constant folding prior to typing
-                    StaticType.ANY
+                    StaticType.ANY to step
                 }
             }
-            is Rex.Op.Path.Step.Symbol -> inferStructLookup(struct, step.identifier)
+            is Rex.Op.Path.Step.Symbol -> {
+                val (type, replacementId) = inferStructLookup(struct, step.identifier)
+                type to rexOpPathStepSymbol(replacementId)
+            }
             is Rex.Op.Path.Step.Unpivot -> error("Unpivot not supported")
             is Rex.Op.Path.Step.Wildcard -> error("Wildcard not supported")
         }
@@ -1002,21 +1031,54 @@ internal class PlanTyper(
             return collection.elementType
         }
 
-        private fun inferStructLookup(struct: StructType, key: Identifier.Symbol): StaticType {
+        /**
+         * Logic is as follows:
+         * 1. If [struct] is closed and ordered:
+         *   - If no item is found, return [MissingType]
+         *   - Else, grab first matching item and make sensitive.
+         * 2. If [struct] is closed
+         *   - AND no item is found, return [MissingType]
+         *   - AND only one item is present -> grab item and make sensitive.
+         *   - AND more than one item is present, keep sensitivity and grab item.
+         * 3. If [struct] is open, return [AnyType]
+         *
+         * @return a [Pair] where the [Pair.first] represents the type of the [step] and the [Pair.second] represents
+         * the disambiguated [key].
+         */
+        private fun inferStructLookup(struct: StructType, key: Identifier.Symbol): Pair<StaticType, Identifier.Symbol> {
             val binding = key.toBindingName()
-            val type = when (struct.constraints.contains(TupleConstraint.Ordered)) {
-                true -> struct.fields.firstOrNull { entry -> binding.isEquivalentTo(entry.key) }?.value
-                false -> struct.fields.mapNotNull { entry ->
-                    entry.value.takeIf { binding.isEquivalentTo(entry.key) }
-                }.let { valueTypes ->
-                    StaticType.unionOf(valueTypes.toSet()).flatten().takeIf { valueTypes.isNotEmpty() }
+            val isClosed = struct.constraints.contains(TupleConstraint.Open(false))
+            val isOrdered = struct.constraints.contains(TupleConstraint.Ordered)
+            val (name, type) = when {
+                // 1. Struct is closed and ordered
+                isClosed && isOrdered -> {
+                    struct.fields.firstOrNull { entry -> binding.isEquivalentTo(entry.key) }?.let {
+                        (sensitive(it.key) to it.value)
+                    } ?: (key to StaticType.MISSING)
                 }
+                // 2. Struct is closed
+                isClosed -> {
+                    val matches = struct.fields.filter { entry -> binding.isEquivalentTo(entry.key) }
+                    when (matches.size) {
+                        0 -> (key to StaticType.MISSING)
+                        1 -> matches.first().let { (sensitive(it.key) to it.value) }
+                        else -> {
+                            val firstKey = matches.first().key
+                            val sharedKey = when (matches.all { it.key == firstKey }) {
+                                true -> sensitive(firstKey)
+                                false -> key
+                            }
+                            sharedKey to StaticType.unionOf(matches.map { it.value }.toSet()).flatten()
+                        }
+                    }
+                }
+                // 3. Struct is open
+                else -> (key to StaticType.ANY)
             }
-            return type ?: when (struct.contentClosed) {
-                true -> StaticType.MISSING
-                false -> StaticType.ANY
-            }
+            return type to name
         }
+
+        private fun sensitive(str: String): Identifier.Symbol = identifierSymbol(str, Identifier.CaseSensitivity.SENSITIVE)
 
         /**
          * Resolution and typing of aggregation function calls.
@@ -1205,7 +1267,7 @@ internal class PlanTyper(
      */
     private fun resolvedLocalPath(local: ResolvedVar.Local): Rex.Op {
         val root = rex(local.rootType, rexOpVarResolved(local.ordinal))
-        val steps = local.tail.map {
+        val steps = local.replacementSteps.map {
             val case = when (it.bindingCase) {
                 BindingCase.SENSITIVE -> Identifier.CaseSensitivity.SENSITIVE
                 BindingCase.INSENSITIVE -> Identifier.CaseSensitivity.INSENSITIVE
