@@ -264,8 +264,8 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
         if (f is Identifier.Symbol && f.symbol == "COUNT_STAR") {
             return h concat r("COUNT(*)")
         }
-        val start = if (node.setq != null) "(${node.setq!!.name} " else "("
-        h = h concat visitIdentifier(f, h)
+        val start = if (node.setq != null) "(${node.setq.name} " else "("
+        h = visitIdentifier(f, h)
         h = h concat list(start) { node.args }
         return h
     }
@@ -304,7 +304,7 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
         h = visitExpr(node.pattern, h)
         if (node.escape != null) {
             h = h concat r(" ESCAPE ")
-            h = visitExpr(node.escape!!, h)
+            h = visitExpr(node.escape, h)
         }
         return h
     }
@@ -340,7 +340,7 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
         h = h concat r("CASE")
         h = when (node.expr) {
             null -> h
-            else -> visitExpr(node.expr!!, h concat r(" "))
+            else -> visitExpr(node.expr, h concat r(" "))
         }
         // WHEN(s)
         h = node.branches.fold(h) { acc, branch -> visitExprCaseBranch(branch, acc) }
@@ -349,7 +349,7 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
             null -> h
             else -> {
                 h = h concat r(" ELSE ")
-                visitExpr(node.default!!, h)
+                visitExpr(node.default, h)
             }
         }
         h = h concat r(" END")
@@ -386,11 +386,11 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
         h = visitExpr(node.value, h)
         if (node.start != null) {
             h = h concat r(" FROM ")
-            h = visitExpr(node.start!!, h)
+            h = visitExpr(node.start, h)
         }
         if (node.length != null) {
             h = h concat r(" FOR ")
-            h = visitExpr(node.length!!, h)
+            h = visitExpr(node.length, h)
         }
         h = h concat r(")")
         return h
@@ -411,11 +411,11 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
         h = h concat r("TRIM(")
         // [LEADING|TRAILING|BOTH]
         if (node.spec != null) {
-            h = h concat r("${node.spec!!.name} ")
+            h = h concat r("${node.spec.name} ")
         }
         // [<chars> FROM]
         if (node.chars != null) {
-            h = visitExpr(node.chars!!, h)
+            h = visitExpr(node.chars, h)
             h = h concat r(" FROM ")
         }
         h = visitExpr(node.value, h)
@@ -433,7 +433,7 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
         h = visitExpr(node.start, h)
         if (node.length != null) {
             h = h concat r(" FOR ")
-            h = visitExpr(node.length!!, h)
+            h = visitExpr(node.length, h)
         }
         h = h concat r(")")
         return h
@@ -536,21 +536,21 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
         // FROM
         h = visit(node.from, h concat r(" FROM "))
         // LET
-        h = if (node.let != null) visitLet(node.let!!, h concat r(" ")) else h
+        h = if (node.let != null) visitLet(node.let, h concat r(" ")) else h
         // WHERE
-        h = if (node.where != null) visitExpr(node.where!!, h concat r(" WHERE ")) else h
+        h = if (node.where != null) visitExpr(node.where, h concat r(" WHERE ")) else h
         // GROUP BY
-        h = if (node.groupBy != null) visitGroupBy(node.groupBy!!, h concat r(" ")) else h
+        h = if (node.groupBy != null) visitGroupBy(node.groupBy, h concat r(" ")) else h
         // HAVING
-        h = if (node.having != null) visitExpr(node.having!!, h concat r(" HAVING ")) else h
+        h = if (node.having != null) visitExpr(node.having, h concat r(" HAVING ")) else h
         // SET OP
-        h = if (node.setOp != null) visitExprSFWSetOp(node.setOp!!, h concat r(" ")) else h
+        h = if (node.setOp != null) visitExprSFWSetOp(node.setOp, h concat r(" ")) else h
         // ORDER BY
-        h = if (node.orderBy != null) visitOrderBy(node.orderBy!!, h concat r(" ")) else h
+        h = if (node.orderBy != null) visitOrderBy(node.orderBy, h concat r(" ")) else h
         // LIMIT
-        h = if (node.limit != null) visitExpr(node.limit!!, h concat r(" LIMIT ")) else h
+        h = if (node.limit != null) visitExpr(node.limit, h concat r(" LIMIT ")) else h
         // OFFSET
-        h = if (node.offset != null) visitExpr(node.offset!!, h concat r(" OFFSET ")) else h
+        h = if (node.offset != null) visitExpr(node.offset, h concat r(" OFFSET ")) else h
         return h
     }
 
@@ -584,7 +584,7 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
     override fun visitSelectProjectItemExpression(node: Select.Project.Item.Expression, head: SqlBlock): SqlBlock {
         var h = head
         h = visitExpr(node.expr, h)
-        h = if (node.asAlias != null) h concat r(" AS ${node.asAlias!!.sql()}") else h
+        h = if (node.asAlias != null) h concat r(" AS ${node.asAlias.sql()}") else h
         return h
     }
 
@@ -618,9 +618,9 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
             From.Value.Type.UNPIVOT -> h concat r("UNPIVOT ")
         }
         h = visitExpr(node.expr, h)
-        h = if (node.asAlias != null) h concat r(" AS ${node.asAlias!!.sql()}") else h
-        h = if (node.atAlias != null) h concat r(" AT ${node.atAlias!!.sql()}") else h
-        h = if (node.byAlias != null) h concat r(" BY ${node.byAlias!!.sql()}") else h
+        h = if (node.asAlias != null) h concat r(" AS ${node.asAlias.sql()}") else h
+        h = if (node.atAlias != null) h concat r(" AT ${node.atAlias.sql()}") else h
+        h = if (node.byAlias != null) h concat r(" BY ${node.byAlias.sql()}") else h
         return h
     }
 
@@ -640,7 +640,7 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
             null -> r(" JOIN ")
         }
         h = visitFrom(node.rhs, h)
-        h = if (node.condition != null) visit(node.condition!!, h concat r(" ON ")) else h
+        h = if (node.condition != null) visit(node.condition, h concat r(" ON ")) else h
         return h
     }
 
@@ -664,14 +664,14 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
             GroupBy.Strategy.PARTIAL -> r("GROUP PARTIAL BY ")
         }
         h = h concat list("", "") { node.keys }
-        h = if (node.asAlias != null) h concat r(" GROUP AS ${node.asAlias!!.sql()}") else h
+        h = if (node.asAlias != null) h concat r(" GROUP AS ${node.asAlias.sql()}") else h
         return h
     }
 
     override fun visitGroupByKey(node: GroupBy.Key, head: SqlBlock): SqlBlock {
         var h = head
         h = visitExpr(node.expr, h)
-        h = if (node.asAlias != null) h concat r(" AS ${node.asAlias!!.sql()}") else h
+        h = if (node.asAlias != null) h concat r(" AS ${node.asAlias.sql()}") else h
         return h
     }
 
@@ -680,7 +680,7 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
     override fun visitSetOp(node: SetOp, head: SqlBlock): SqlBlock {
         val op = when (node.setq) {
             null -> node.type.name
-            else -> "${node.type.name} ${node.setq!!.name}"
+            else -> "${node.type.name} ${node.setq.name}"
         }
         return head concat r(op)
     }
