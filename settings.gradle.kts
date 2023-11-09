@@ -25,6 +25,7 @@ include(
     "partiql-spi",
     "partiql-types",
     "plugins:partiql-local",
+    "plugins:partiql-memory",
     "lib:isl",
     "lib:sprout",
     "test:coverage-tests",
