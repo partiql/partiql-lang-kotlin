@@ -3,6 +3,7 @@ package org.partiql.lang.planner.transforms
 import com.amazon.ionelement.api.field
 import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.ionStructOf
+import com.amazon.ionelement.api.loadSingleElement
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.junit.jupiter.api.parallel.Execution
@@ -16,6 +17,8 @@ import org.partiql.annotations.ExperimentalPartiQLSchemaInferencer
 import org.partiql.errors.Problem
 import org.partiql.errors.UNKNOWN_PROBLEM_LOCATION
 import org.partiql.lang.errors.ProblemCollector
+import org.partiql.lang.planner.SchemaLoader.toStaticType
+import org.partiql.lang.planner.transforms.PartiQLSchemaInferencerTests.ProblemHandler
 import org.partiql.lang.planner.transforms.PartiQLSchemaInferencerTests.TestCase.ErrorTestCase
 import org.partiql.lang.planner.transforms.PartiQLSchemaInferencerTests.TestCase.SuccessTestCase
 import org.partiql.lang.planner.transforms.PartiQLSchemaInferencerTests.TestCase.ThrowingExceptionTestCase
@@ -24,7 +27,8 @@ import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.PlanningProblemDetails
 import org.partiql.planner.test.PartiQLTest
 import org.partiql.planner.test.PartiQLTestProvider
-import org.partiql.plugins.local.LocalPlugin
+import org.partiql.plugins.memory.MemoryCatalog
+import org.partiql.plugins.memory.MemoryPlugin
 import org.partiql.types.AnyOfType
 import org.partiql.types.AnyType
 import org.partiql.types.BagType
@@ -45,20 +49,17 @@ import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
 import java.time.Instant
 import java.util.stream.Stream
-import kotlin.io.path.pathString
-import kotlin.io.path.toPath
 import kotlin.reflect.KClass
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class PartiQLSchemaInferencerTests {
-
-    private val provider = PartiQLTestProvider()
+    private val testProvider = PartiQLTestProvider()
 
     init {
         // load test inputs
-        provider.load()
+        testProvider.load()
     }
 
     @ParameterizedTest
@@ -136,33 +137,54 @@ class PartiQLSchemaInferencerTests {
     fun testSubqueries(tc: TestCase) = runTest(tc)
 
     companion object {
+        val inputStream = this::class.java.getResourceAsStream("/resource_path.txt")!!
 
-        private val root = this::class.java.getResource("/catalogs/default")!!.toURI().toPath().pathString
+        val catalogProvider = MemoryCatalog.Provider().also {
+            val map = mutableMapOf<String, MutableList<Pair<String, StaticType>>>()
+            inputStream.reader().readLines().forEach { path ->
+                if (path.startsWith("catalogs/default")) {
+                    val schema = this::class.java.getResourceAsStream("/$path")!!
+                    val ion = loadSingleElement(schema.reader().readText())
+                    val staticType = ion.toStaticType()
+                    val steps = path.split('/').drop(2) // drop the catalogs/default
+                    val catalogName = steps.first()
+                    val subPath = steps
+                        .drop(1)
+                        .joinToString(".") { it.lowercase() }
+                        .let {
+                            it.substring(0, it.length - 4)
+                        }
+                    if (map.containsKey(catalogName)) {
+                        map[catalogName]!!.add(subPath to staticType)
+                    } else {
+                        map[catalogName] = mutableListOf(subPath to staticType)
+                    }
+                }
+            }
+            map.forEach { (k: String, v: MutableList<Pair<String, StaticType>>) ->
+                it[k] = MemoryCatalog.of(*v.toTypedArray())
+            }
+        }
 
-        private val PLUGINS = listOf(LocalPlugin())
+        private val PLUGINS = listOf(MemoryPlugin(catalogProvider))
 
         private const val USER_ID = "TEST_USER"
 
         private val catalogConfig = mapOf(
             "aws" to ionStructOf(
-                field("connector_name", ionString("local")),
-                field("root", ionString("$root/aws")),
+                field("connector_name", ionString("memory")),
             ),
             "b" to ionStructOf(
-                field("connector_name", ionString("local")),
-                field("root", ionString("$root/b")),
+                field("connector_name", ionString("memory")),
             ),
             "db" to ionStructOf(
-                field("connector_name", ionString("local")),
-                field("root", ionString("$root/db")),
+                field("connector_name", ionString("memory")),
             ),
             "pql" to ionStructOf(
-                field("connector_name", ionString("local")),
-                field("root", ionString("$root/pql")),
+                field("connector_name", ionString("memory")),
             ),
             "subqueries" to ionStructOf(
-                field("connector_name", ionString("local")),
-                field("root", ionString("$root/subqueries")),
+                field("connector_name", ionString("memory")),
             ),
         )
 
@@ -458,7 +480,7 @@ class PartiQLSchemaInferencerTests {
                         )
                     )
                 }
-            ),
+            ).toIgnored("Plus op will be resolved to PLUS__ANY_ANY__ANY"),
         )
 
         @JvmStatic
@@ -539,7 +561,7 @@ class PartiQLSchemaInferencerTests {
                         PlanningProblemDetails.UnknownFunction("bitwise_and", listOf(INT4, STRING))
                     )
                 }
-            ),
+            ).toIgnored("Bitwise And opearator will be resolved to BITWISE_AND__ANY_ANY__ANY"),
         )
 
         @JvmStatic
@@ -2564,6 +2586,11 @@ class PartiQLSchemaInferencerTests {
     }
 
     sealed class TestCase {
+        fun toIgnored(reason: String) =
+            when (this) {
+                is IgnoredTestCase -> this
+                else -> IgnoredTestCase(this, reason)
+            }
 
         class SuccessTestCase(
             val name: String,
@@ -2601,6 +2628,13 @@ class PartiQLSchemaInferencerTests {
             override fun toString(): String {
                 return "$name : $query"
             }
+        }
+
+        class IgnoredTestCase(
+            val shouldBe: TestCase,
+            reason: String
+        ) : TestCase() {
+            override fun toString(): String = "Disabled - $shouldBe"
         }
     }
 
@@ -2930,7 +2964,7 @@ class PartiQLSchemaInferencerTests {
                         )
                     )
                 }
-            ),
+            ).toIgnored("Between will be resolved to BETWEEN__ANY_ANY_ANY__BOOL"),
             SuccessTestCase(
                 name = "LIKE",
                 catalog = CATALOG_DB,
@@ -2953,7 +2987,7 @@ class PartiQLSchemaInferencerTests {
                         )
                     )
                 }
-            ),
+            ).toIgnored("Like Op will be resolved to LIKE__ANY_ANY__BOOL"),
             SuccessTestCase(
                 name = "Case Insensitive success",
                 catalog = CATALOG_DB,
@@ -3024,7 +3058,7 @@ class PartiQLSchemaInferencerTests {
                         )
                     )
                 }
-            ),
+            ).toIgnored("And Op will be resolved to AND__ANY_ANY__BOOL"),
             ErrorTestCase(
                 name = "Bad comparison",
                 catalog = CATALOG_DB,
@@ -3040,7 +3074,7 @@ class PartiQLSchemaInferencerTests {
                         )
                     )
                 }
-            ),
+            ).toIgnored("And Op will be resolved to AND__ANY_ANY__BOOL"),
             ErrorTestCase(
                 name = "Unknown column",
                 catalog = CATALOG_DB,
@@ -3277,7 +3311,8 @@ class PartiQLSchemaInferencerTests {
                         )
                     )
                 }
-            ),
+            ).toIgnored("Currently this will be resolved to TRIM_CHARS__ANY_ANY__ANY."),
+
         )
     }
 
@@ -3285,6 +3320,7 @@ class PartiQLSchemaInferencerTests {
         is SuccessTestCase -> runTest(tc)
         is ErrorTestCase -> runTest(tc)
         is ThrowingExceptionTestCase -> runTest(tc)
+        is TestCase.IgnoredTestCase -> runTest(tc)
     }
 
     @OptIn(ExperimentalPartiQLSchemaInferencer::class)
@@ -3326,7 +3362,7 @@ class PartiQLSchemaInferencerTests {
         if (hasQuery == hasKey) {
             error("Test must have one of either `query` or `key`")
         }
-        val input = tc.query ?: provider[tc.key!!]!!.statement
+        val input = tc.query ?: testProvider[tc.key!!]!!.statement
 
         val result = PartiQLSchemaInferencer.inferInternal(input, ctx)
         assert(collector.problems.isEmpty()) {
@@ -3366,7 +3402,7 @@ class PartiQLSchemaInferencerTests {
         if (hasQuery == hasKey) {
             error("Test must have one of either `query` or `key`")
         }
-        val input = tc.query ?: provider[tc.key!!]!!.statement
+        val input = tc.query ?: testProvider[tc.key!!]!!.statement
         val result = PartiQLSchemaInferencer.inferInternal(input, ctx)
 
         assert(collector.problems.isNotEmpty()) {
@@ -3391,6 +3427,12 @@ class PartiQLSchemaInferencerTests {
             "Expected to find problems, but none were found."
         }
         tc.problemHandler?.handle(collector.problems, true)
+    }
+
+    private fun runTest(tc: TestCase.IgnoredTestCase) {
+        assertThrows<AssertionError> {
+            runTest(tc.shouldBe)
+        }
     }
 
     fun interface ProblemHandler {

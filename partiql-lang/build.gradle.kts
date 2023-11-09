@@ -44,7 +44,7 @@ dependencies {
     implementation(Deps.kotlinReflect)
 
     testImplementation(testFixtures(project(":partiql-planner")))
-    testImplementation(project(":plugins:partiql-local"))
+    testImplementation(project(":plugins:partiql-memory"))
     testImplementation(project(":lib:isl"))
     testImplementation(Deps.assertj)
     testImplementation(Deps.junit4)
@@ -80,6 +80,7 @@ tasks.processResources {
 }
 
 tasks.processTestResources {
+    dependsOn(":partiql-planner:generateResourcePath")
     from("${project(":partiql-planner").buildDir}/resources/testFixtures")
 }
 

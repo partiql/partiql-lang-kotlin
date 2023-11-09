@@ -1,3 +1,5 @@
+import org.jetbrains.dokka.utilities.relativeTo
+
 /*
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
@@ -34,6 +36,36 @@ dependencies {
     testFixturesImplementation(project(":partiql-spi"))
 }
 
+tasks.register("generateResourcePath") {
+    dependsOn("processTestFixturesResources")
+    doLast {
+        val resourceDir = file("src/testFixtures/resources")
+        val outDir = File("$buildDir/resources/testFixtures")
+        val fileName = "resource_path.txt"
+        val pathFile = File(outDir, fileName)
+        if (pathFile.exists()) {
+            pathFile.writeText("") // clean up existing text
+        }
+        resourceDir.walk().forEach { file ->
+            if (!file.isDirectory) {
+                if (file.extension == "ion" || file.extension == "sql") {
+                    val toAppend = file.toURI().relativeTo(resourceDir.toURI())
+                    pathFile.appendText("$toAppend\n")
+                }
+            }
+        }
+
+        sourceSets {
+            testFixtures {
+                resources {
+                    this.srcDirs += pathFile
+                }
+            }
+        }
+    }
+}
+
 tasks.processTestResources {
+    dependsOn("generateResourcePath")
     from("src/testFixtures/resources")
 }
