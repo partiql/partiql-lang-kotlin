@@ -15,6 +15,7 @@
 package org.partiql.planner.test
 
 import java.io.File
+import java.io.InputStream
 import java.nio.file.Path
 import kotlin.io.path.toPath
 
@@ -37,10 +38,26 @@ class PartiQLTestProvider {
      * Load test groups from a directory.
      */
     public fun load(root: Path? = null) {
-        val dir = (root ?: default).toFile()
-        dir.listFiles { f -> f.isDirectory }!!.map {
-            for (test in load(it)) {
-                map[test.key] = test
+        if (root != null) {
+            val dir = root.toFile()
+            dir.listFiles { f -> f.isDirectory }!!.map {
+                for (test in load(it)) {
+                    map[test.key] = test
+                }
+            }
+        } else {
+            // user default resources
+            val inputStream = this::class.java.getResourceAsStream("/resource_path.txt")!!
+            inputStream.reader().forEachLine { path ->
+                val pathSteps = path.split("/")
+                val outMostDir = pathSteps.first()
+                if (outMostDir == "inputs") {
+                    val group = pathSteps[pathSteps.size - 2]
+                    val resource = this::class.java.getResourceAsStream("/$path")!!
+                    for (test in load(group, resource)) {
+                        map[test.key] = test
+                    }
+                }
             }
         }
     }
@@ -66,11 +83,13 @@ class PartiQLTestProvider {
     private fun load(dir: File) = dir.listFiles()!!.flatMap { load(dir.name, it) }
 
     // load all tests in a file
-    private fun load(group: String, file: File): List<PartiQLTest> {
+    private fun load(group: String, file: File): List<PartiQLTest> = load(group, file.inputStream())
+
+    private fun load(group: String, inputStream: InputStream): List<PartiQLTest> {
         val tests = mutableListOf<PartiQLTest>()
         var name = ""
         val statement = StringBuilder()
-        for (line in file.readLines()) {
+        for (line in inputStream.reader().readLines()) {
 
             // start of test
             if (line.startsWith("--#[") and line.endsWith("]")) {
