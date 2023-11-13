@@ -44,9 +44,8 @@ import org.partiql.plan.relOpSort
 import org.partiql.plan.relOpUnpivot
 import org.partiql.plan.relType
 import org.partiql.plan.rex
-import org.partiql.plan.rexOpCall
 import org.partiql.plan.rexOpCallDynamic
-import org.partiql.plan.rexOpCallDynamicCandidate
+import org.partiql.plan.rexOpCallStatic
 import org.partiql.plan.rexOpCaseBranch
 import org.partiql.plan.rexOpCollection
 import org.partiql.plan.rexOpErr
@@ -505,7 +504,7 @@ internal class PlanTyper(
          * @param ctx
          * @return
          */
-        override fun visitRexOpCall(node: Rex.Op.Call, ctx: StaticType?): Rex {
+        override fun visitRexOpCallStatic(node: Rex.Op.Call.Static, ctx: StaticType?): Rex {
             // Already resolved; unreachable but handle gracefully.
             if (node.fn is Fn.Resolved) return rex(ctx!!, node)
 
@@ -522,7 +521,7 @@ internal class PlanTyper(
             // 7.1 All functions return MISSING when one of their inputs is MISSING (except `=`)
             if (missingArg && !isEq) {
                 handleAlwaysMissing()
-                return rex(StaticType.MISSING, rexOpCall(fn, args))
+                return rex(StaticType.MISSING, rexOpCallStatic(fn, args))
             }
 
             // Try to match the arguments to functions defined in the catalog
@@ -535,9 +534,9 @@ internal class PlanTyper(
                     }
                     val candidates = match.candidates.map { candidate ->
                         val rex = toRexCall(candidate, args, isEq)
-                        val staticCall = rex.op as? Rex.Op.Call ?: error("ToRexCall should always return a static call.")
+                        val staticCall = rex.op as? Rex.Op.Call.Static ?: error("ToRexCall should always return a static call.")
                         types.add(rex.type)
-                        rexOpCallDynamicCandidate(staticCall.fn, staticCall.args)
+                        staticCall
                     }
                     val op = rexOpCallDynamic(candidates = candidates)
                     rex(type = StaticType.unionOf(types).flatten(), op = op)
@@ -585,7 +584,7 @@ internal class PlanTyper(
             }
 
             // Finally, rewrite this node
-            val op = rexOpCall(newFn, newArgs)
+            val op = rexOpCallStatic(newFn, newArgs)
             return rex(type.flatten(), op)
         }
 
@@ -663,7 +662,7 @@ internal class PlanTyper(
          *  currently limiting the scope of this intentionally.
          */
         private fun foldCaseBranch(condition: Rex, result: Rex): Rex.Op.Case.Branch {
-            val call = condition.op as? Rex.Op.Call ?: return rexOpCaseBranch(condition, result)
+            val call = condition.op as? Rex.Op.Call.Static ?: return rexOpCaseBranch(condition, result)
             val fn = call.fn as? Fn.Resolved ?: return rexOpCaseBranch(condition, result)
             if (fn.signature.name.equals("is_struct", ignoreCase = true).not()) {
                 return rexOpCaseBranch(condition, result)
@@ -1266,7 +1265,7 @@ internal class PlanTyper(
             if (m != null) {
                 // rewrite
                 val type = m.returns.toNonNullStaticType()
-                val cast = rexOpCall(fnResolved(m), listOf(a))
+                val cast = rexOpCallStatic(fnResolved(m), listOf(a))
                 a = rex(type, cast)
             }
             newArgs.add(a)

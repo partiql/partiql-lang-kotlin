@@ -118,20 +118,15 @@ rex::{
       ],
     },
 
-    call::{
-       fn:    fn,
-       args:  list::[rex],
-    },
-
-    call_dynamic::{
-      candidates: list::[candidate],
-      _: [
-        candidate::{
-          fn: fn,
-          args: list::[rex]
-        }
-      ]
-    },
+    call::[
+      static::{
+        fn: fn,
+        args: list::[rex]
+      },
+      dynamic::{
+        candidates: list::[static]
+      }
+    ],
 
     case::{
       branches: list::[branch],
