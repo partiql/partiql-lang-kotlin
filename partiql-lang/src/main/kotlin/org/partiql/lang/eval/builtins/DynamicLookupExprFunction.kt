@@ -8,8 +8,8 @@ import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
-import org.partiql.lang.eval.physical.throwUndefinedVariableException
 import org.partiql.lang.eval.stringValue
+import org.partiql.lang.eval.throwUndefinedVariableException
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.types.StaticType
 
@@ -17,7 +17,7 @@ import org.partiql.types.StaticType
  * The name of this function is [DYNAMIC_LOOKUP_FUNCTION_NAME], which includes a unique prefix and suffix so as to
  * avoid clashes with user-defined functions.
  */
-internal const val DYNAMIC_LOOKUP_FUNCTION_NAME = "\$__dynamic_lookup__"
+const val DYNAMIC_LOOKUP_FUNCTION_NAME = "\$__dynamic_lookup__"
 
 /**
  * Performs dynamic variable resolution.  Query authors should never call this function directly (and indeed it is

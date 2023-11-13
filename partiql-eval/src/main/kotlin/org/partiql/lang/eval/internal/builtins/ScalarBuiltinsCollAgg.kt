@@ -12,12 +12,12 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.lang.eval.builtins
+package org.partiql.lang.eval.internal.builtins
 
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.createUniqueExprValueFilter
+import org.partiql.lang.eval.internal.ext.createUniqueExprValueFilter
 import org.partiql.lang.eval.stringValue
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.types.StaticType
