@@ -480,7 +480,7 @@ class PartiQLSchemaInferencerTests {
                         )
                     )
                 }
-            ).toIgnored("Plus op will be resolved to PLUS__ANY_ANY__ANY"),
+            ),
         )
 
         @JvmStatic
@@ -498,7 +498,7 @@ class PartiQLSchemaInferencerTests {
             SuccessTestCase(
                 name = "BITWISE_AND_3",
                 query = "1 & 2",
-                expected = StaticType.INT4
+                expected = INT4
             ),
             SuccessTestCase(
                 name = "BITWISE_AND_4",
@@ -561,7 +561,7 @@ class PartiQLSchemaInferencerTests {
                         PlanningProblemDetails.UnknownFunction("bitwise_and", listOf(INT4, STRING))
                     )
                 }
-            ).toIgnored("Bitwise And opearator will be resolved to BITWISE_AND__ANY_ANY__ANY"),
+            ),
         )
 
         @JvmStatic
@@ -2964,7 +2964,7 @@ class PartiQLSchemaInferencerTests {
                         )
                     )
                 }
-            ).toIgnored("Between will be resolved to BETWEEN__ANY_ANY_ANY__BOOL"),
+            ),
             SuccessTestCase(
                 name = "LIKE",
                 catalog = CATALOG_DB,
@@ -2987,7 +2987,7 @@ class PartiQLSchemaInferencerTests {
                         )
                     )
                 }
-            ).toIgnored("Like Op will be resolved to LIKE__ANY_ANY__BOOL"),
+            ),
             SuccessTestCase(
                 name = "Case Insensitive success",
                 catalog = CATALOG_DB,
@@ -3058,7 +3058,7 @@ class PartiQLSchemaInferencerTests {
                         )
                     )
                 }
-            ).toIgnored("And Op will be resolved to AND__ANY_ANY__BOOL"),
+            ),
             ErrorTestCase(
                 name = "Bad comparison",
                 catalog = CATALOG_DB,
@@ -3074,7 +3074,7 @@ class PartiQLSchemaInferencerTests {
                         )
                     )
                 }
-            ).toIgnored("And Op will be resolved to AND__ANY_ANY__BOOL"),
+            ),
             ErrorTestCase(
                 name = "Unknown column",
                 catalog = CATALOG_DB,
@@ -3311,8 +3311,7 @@ class PartiQLSchemaInferencerTests {
                         )
                     )
                 }
-            ).toIgnored("Currently this will be resolved to TRIM_CHARS__ANY_ANY__ANY."),
-
+            ),
         )
     }
 

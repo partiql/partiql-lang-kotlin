@@ -101,6 +101,15 @@ internal fun StaticType.toRuntimeType(): PartiQLValueType {
 }
 
 @OptIn(PartiQLValueExperimental::class)
+internal fun StaticType.toRuntimeTypeOrNull(): PartiQLValueType? {
+    return try {
+        this.toRuntimeType()
+    } catch (_: Throwable) {
+        null
+    }
+}
+
+@OptIn(PartiQLValueExperimental::class)
 private fun StaticType.asRuntimeType(): PartiQLValueType = when (this) {
     is AnyOfType -> PartiQLValueType.ANY
     is AnyType -> PartiQLValueType.ANY

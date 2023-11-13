@@ -35,6 +35,9 @@ fn::[
     identifier: identifier,
     isHidden: bool,
   },
+  dynamic::{
+    signatures: list::[scalar_signature],
+  }
 ]
 
 agg::[
@@ -118,6 +121,16 @@ rex::{
     call::{
        fn:    fn,
        args:  list::[rex],
+    },
+
+    call_dynamic::{
+      candidates: list::[candidate],
+      _: [
+        candidate::{
+          fn: fn,
+          args: list::[rex]
+        }
+      ]
     },
 
     case::{
