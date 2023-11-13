@@ -22,7 +22,7 @@ import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
 import org.partiql.lang.eval.exprEquals
 import org.partiql.lang.eval.isNotUnknown
 import org.partiql.lang.eval.isUnknown
-import org.partiql.lang.eval.physical.sourceLocationMeta
+import org.partiql.lang.eval.sourceLocationMeta
 import org.partiql.lang.eval.visitors.PartiqlAstSanityValidator
 import org.partiql.lang.types.TypedOpParameter
 import java.util.Stack
