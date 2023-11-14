@@ -79,6 +79,7 @@ import org.partiql.types.MissingType
 import org.partiql.types.NullType
 import org.partiql.types.SexpType
 import org.partiql.types.StaticType
+import org.partiql.types.StaticType.Companion.ANY
 import org.partiql.types.StringType
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
@@ -511,18 +512,7 @@ internal class PlanTyper(
             // Type the arguments
             val fn = node.fn as Fn.Unresolved
             val isEq = fn.isEq()
-            var missingArg = false
-            val args = node.args.map {
-                val arg = visitRex(it, null)
-                if (arg.type == MissingType) missingArg = true
-                arg
-            }
-
-            // 7.1 All functions return MISSING when one of their inputs is MISSING (except `=`)
-            if (missingArg && !isEq) {
-                handleAlwaysMissing()
-                return rex(StaticType.MISSING, rexOpCallStatic(fn, args))
-            }
+            val args = node.args.map { visitRex(it, null) }
 
             // Try to match the arguments to functions defined in the catalog
             return when (val match = env.resolveFn(fn, args)) {
@@ -546,6 +536,10 @@ internal class PlanTyper(
                     rexErr("Unknown scalar function $fn")
                 }
             }
+        }
+
+        override fun visitRexOpCallDynamic(node: Rex.Op.Call.Dynamic, ctx: StaticType?): Rex {
+            return rex(ANY, rexOpErr("Direct dynamic calls are not supported. This should have been a static call."))
         }
 
         private fun toRexCall(match: FnMatch.Ok<FunctionSignature.Scalar>, args: List<Rex>, isEq: Boolean): Rex {
@@ -690,7 +684,10 @@ internal class PlanTyper(
                 return rex(StaticType.NULL_OR_MISSING, rexOpErr("Expected collection type"))
             }
             val values = node.values.map { visitRex(it, it.type) }
-            val t = values.toUnionType()
+            val t = when (values.size) {
+                0 -> ANY
+                else -> values.toUnionType()
+            }
             val type = when (ctx as CollectionType) {
                 is BagType -> BagType(t)
                 is ListType -> ListType(t)

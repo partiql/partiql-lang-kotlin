@@ -35,6 +35,7 @@ import org.partiql.types.BagType
 import org.partiql.types.ListType
 import org.partiql.types.SexpType
 import org.partiql.types.StaticType
+import org.partiql.types.StaticType.Companion.BAG
 import org.partiql.types.StaticType.Companion.BOOL
 import org.partiql.types.StaticType.Companion.DATE
 import org.partiql.types.StaticType.Companion.DECIMAL
@@ -135,6 +136,11 @@ class PartiQLSchemaInferencerTests {
     @MethodSource("subqueryCases")
     @Execution(ExecutionMode.CONCURRENT)
     fun testSubqueries(tc: TestCase) = runTest(tc)
+
+    @ParameterizedTest
+    @MethodSource("dynamicCalls")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun testDynamicCalls(tc: TestCase) = runTest(tc)
 
     companion object {
         val inputStream = this::class.java.getResourceAsStream("/resource_path.txt")!!
@@ -546,8 +552,11 @@ class PartiQLSchemaInferencerTests {
                 expected = StaticType.MISSING,
                 problemHandler = assertProblemExists {
                     Problem(
-                        UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.ExpressionAlwaysReturnsNullOrMissing
+                        sourceLocation = UNKNOWN_PROBLEM_LOCATION,
+                        details = PlanningProblemDetails.UnknownFunction(
+                            "bitwise_and",
+                            listOf(INT4, MISSING)
+                        )
                     )
                 }
             ),
@@ -2512,6 +2521,172 @@ class PartiQLSchemaInferencerTests {
                         )
                     )
                 )
+            ),
+        )
+
+        @JvmStatic
+        fun dynamicCalls() = listOf(
+            SuccessTestCase(
+                name = "unary plus on varying numeric types -- this cannot return missing!",
+                query = """
+                    SELECT +t.a AS a
+                    FROM <<
+                        { 'a': CAST(1 AS INT8) },
+                        { 'a': CAST(1 AS INT4) }
+                    >> AS t
+                """.trimIndent(),
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "a" to unionOf(INT4, INT8),
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "unary plus on varying numeric types including missing -- this may return missing",
+                query = """
+                    SELECT +t.a AS a
+                    FROM <<
+                        { 'a': CAST(1 AS INT8) },
+                        { 'a': CAST(1 AS INT4) },
+                        { }
+                    >> AS t
+                """.trimIndent(),
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "a" to unionOf(INT4, INT8, MISSING),
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "unary plus on varying numeric types including string -- this may return missing",
+                query = """
+                    SELECT +t.a AS a
+                    FROM <<
+                        { 'a': CAST(1 AS INT8) },
+                        { 'a': CAST(1 AS INT4) },
+                        { 'a': 'hello world!' }
+                    >> AS t
+                """.trimIndent(),
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "a" to unionOf(INT4, INT8, MISSING),
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "binary plus on varying types -- this will return missing if one of the operands is not a number",
+                query = """
+                    SELECT t.a + t.b AS c
+                    FROM <<
+                        { 'a': CAST(1 AS INT8), 'b': CAST(1.0 AS DECIMAL) },
+                        { 'a': CAST(1 AS INT4), 'b': TRUE },
+                        { 'a': 'hello world!!', 'b': DATE '2023-01-01' }
+                    >> AS t
+                """.trimIndent(),
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "c" to unionOf(INT4, INT8, MISSING, DECIMAL),
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                )
+            ),
+            ErrorTestCase(
+                name = """
+                    unary plus on non-compatible type -- this cannot resolve to a dynamic call since no function
+                    will ever be invoked.
+                """.trimIndent(),
+                query = """
+                    SELECT VALUE +t.a
+                    FROM <<
+                        { 'a': 'hello world!'  }
+                    >> AS t
+                """.trimIndent(),
+                expected = BagType(MISSING),
+                problemHandler = assertProblemExists {
+                    Problem(
+                        sourceLocation = UNKNOWN_PROBLEM_LOCATION,
+                        details = PlanningProblemDetails.UnknownFunction(
+                            "pos",
+                            listOf(STRING)
+                        )
+                    )
+                }
+            ),
+            ErrorTestCase(
+                name = """
+                    unary plus on non-compatible union type -- this cannot resolve to a dynamic call since no function
+                    will ever be invoked.
+                """.trimIndent(),
+                query = """
+                    SELECT VALUE +t.a
+                    FROM <<
+                        { 'a': 'hello world!'  },
+                        { 'a': <<>> }
+                    >> AS t
+                """.trimIndent(),
+                expected = BagType(MISSING),
+                problemHandler = assertProblemExists {
+                    Problem(
+                        sourceLocation = UNKNOWN_PROBLEM_LOCATION,
+                        details = PlanningProblemDetails.UnknownFunction(
+                            "pos",
+                            listOf(unionOf(STRING, BAG))
+                        )
+                    )
+                }
+            ),
+            ErrorTestCase(
+                name = """
+                    unary plus on missing type -- this cannot resolve to a dynamic call since no function
+                    will ever be invoked.
+                """.trimIndent(),
+                query = """
+                    SELECT VALUE +t.a
+                    FROM <<
+                        { 'NOT_A': 1 }
+                    >> AS t
+                """.trimIndent(),
+                expected = BagType(MISSING),
+                problemHandler = assertProblemExists {
+                    Problem(
+                        sourceLocation = UNKNOWN_PROBLEM_LOCATION,
+                        details = PlanningProblemDetails.UnknownFunction(
+                            "pos",
+                            listOf(MISSING)
+                        )
+                    )
+                }
             ),
         )
 

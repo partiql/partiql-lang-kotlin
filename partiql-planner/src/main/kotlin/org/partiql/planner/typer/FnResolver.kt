@@ -81,8 +81,14 @@ internal sealed class FnMatch<T : FunctionSignature> {
     ) : FnMatch<T>()
 
     /**
-     * TODO
-     * @property isMissable TRUE when the argument permutations may not definitively invoke one of the candidates.
+     * This represents dynamic dispatch.
+     *
+     * @property candidates an ordered list of potentially applicable functions to dispatch dynamically.
+     * @property isMissable TRUE when the argument permutations may not definitively invoke one of the candidates. You
+     * can think of [isMissable] as being the same as "not exhaustive". For example, if we have ABS(INT | STRING), then
+     * this function call [isMissable] because there isn't an `ABS(STRING)` function signature AKA we haven't exhausted
+     * all the arguments. On the other hand, take an "exhaustive" scenario: ABS(INT | DEC). In this case, [isMissable]
+     * is false because we have functions for each potential argument AKA we have exhausted the arguments.
      */
     public data class Dynamic<T : FunctionSignature>(
         public val candidates: List<Ok<T>>,
@@ -164,9 +170,6 @@ internal class FnResolver(private val headers: List<Header>) {
             }
         }
         val potentialFunctions = parameterPermutations.mapNotNull { parameters ->
-            if (parameters.any { it.type == MISSING }) {
-                canReturnMissing = true
-            }
             when (val match = match(candidates, parameters)) {
                 null -> {
                     canReturnMissing = true
