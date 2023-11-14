@@ -90,6 +90,46 @@ public sealed class FunctionSignature(
             result = 31 * result + (description?.hashCode() ?: 0)
             return result
         }
+
+        // Logic for writing a [FunctionSignature] using SQL `CREATE FUNCTION` syntax.
+
+        /**
+         * SQL-99 p.542 <deterministic characteristic>
+         */
+        private val deterministicCharacteristic = when (isDeterministic) {
+            true -> "DETERMINISTIC"
+            else -> "NOT DETERMINISTIC"
+        }
+
+        /**
+         * SQL-99 p.543 <null-call clause>
+         */
+        private val nullCallClause = when (isNullCall) {
+            true -> "RETURNS NULL ON NULL INPUT"
+            else -> "CALLED ON NULL INPUT"
+        }
+
+        public fun sql(): String = buildString {
+            val fn = name.uppercase()
+            val indent = "  "
+            append("CREATE FUNCTION \"$fn\" (")
+            if (parameters.isNotEmpty()) {
+                val extent = parameters.maxOf { it.name.length }
+                for (i in parameters.indices) {
+                    val p = parameters[i]
+                    val ws = (extent - p.name.length) + 1
+                    appendLine()
+                    append(indent).append(p.name.uppercase()).append(" ".repeat(ws)).append(p.type.name)
+                    if (i != parameters.size - 1) append(",")
+                }
+            }
+            appendLine(" )")
+            append(indent).appendLine("RETURNS $returns")
+            append(indent).appendLine("SPECIFIC $specific")
+            append(indent).appendLine(deterministicCharacteristic)
+            append(indent).appendLine(nullCallClause)
+            append(indent).appendLine("RETURN $fn ( ${parameters.joinToString { it.name.uppercase() }} ) ;")
+        }
     }
 
     /**
@@ -137,44 +177,4 @@ public sealed class FunctionSignature(
             return result
         }
     }
-
-    // // Logic for writing a [FunctionSignature] using SQL `CREATE FUNCTION` syntax.
-    //
-    // /**
-    //  * SQL-99 p.542 <deterministic characteristic>
-    //  */
-    // private val deterministicCharacteristic = when (isDeterministic) {
-    //     true -> "DETERMINISTIC"
-    //     else -> "NOT DETERMINISTIC"
-    // }
-    //
-    // /**
-    //  * SQL-99 p.543 <null-call clause>
-    //  */
-    // private val nullCallClause = when (isNullCall) {
-    //     true -> "RETURNS NULL ON NULL INPUT"
-    //     else -> "CALLED ON NULL INPUT"
-    // }
-    //
-    // private fun sql(): String = buildString {
-    //     val fn = name.uppercase()
-    //     val indent = "  "
-    //     append("CREATE FUNCTION \"$fn\" (")
-    //     if (parameters.isNotEmpty()) {
-    //         val extent = parameters.maxOf { it.name.length }
-    //         for (i in parameters.indices) {
-    //             val p = parameters[i]
-    //             val ws = (extent - p.name.length) + 1
-    //             appendLine()
-    //             append(indent).append(p.name.uppercase()).append(" ".repeat(ws)).append(p.type.name)
-    //             if (i != parameters.size - 1) append(",")
-    //         }
-    //     }
-    //     appendLine(" )")
-    //     append(indent).appendLine("RETURNS $returns")
-    //     append(indent).appendLine("SPECIFIC $specific")
-    //     append(indent).appendLine(deterministicCharacteristic)
-    //     append(indent).appendLine(nullCallClause)
-    //     append(indent).appendLine("RETURN $fn ( ${parameters.joinToString { it.name.uppercase() }} ) ;")
-    // }
 }

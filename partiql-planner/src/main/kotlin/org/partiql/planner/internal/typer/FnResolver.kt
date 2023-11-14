@@ -20,6 +20,7 @@ import org.partiql.value.PartiQLValueType.CHAR
 import org.partiql.value.PartiQLValueType.CLOB
 import org.partiql.value.PartiQLValueType.DATE
 import org.partiql.value.PartiQLValueType.DECIMAL
+import org.partiql.value.PartiQLValueType.FIX_PRECISION_DECIMAL
 import org.partiql.value.PartiQLValueType.FLOAT32
 import org.partiql.value.PartiQLValueType.FLOAT64
 import org.partiql.value.PartiQLValueType.INT
@@ -279,8 +280,14 @@ internal class FnResolver(private val headers: List<Header>) {
                 }
             }
         }
-        // we made a match
-        return mapping
+        // if all elements requires casting, then no match
+        // because there must be another function definition that requires no casting
+        return if (mapping.contains(null) || mapping.isEmpty()) {
+            // we made a match
+            mapping
+        } else {
+            null
+        }
     }
 
     /**
@@ -426,9 +433,10 @@ internal class FnResolver(private val headers: List<Header>) {
             INT32,
             INT64,
             INT,
-            DECIMAL,
+            FIX_PRECISION_DECIMAL,
             FLOAT32,
             FLOAT64,
+            DECIMAL, // Arbitrary precision decimal has a higher precedence than FLOAT
             CHAR,
             STRING,
             CLOB,

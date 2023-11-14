@@ -12,6 +12,8 @@ import org.partiql.value.PartiQLValueType.DECIMAL
 import org.partiql.value.PartiQLValueType.INT
 import org.partiql.value.PartiQLValueType.INT32
 import org.partiql.value.PartiQLValueType.INT64
+import org.partiql.value.PartiQLValueType.MISSING
+import org.partiql.value.PartiQLValueType.NULL
 import org.partiql.value.PartiQLValueType.STRING
 import org.partiql.value.PartiQLValueType.TIME
 import org.partiql.value.PartiQLValueType.TIMESTAMP
@@ -54,7 +56,6 @@ object PartiQLHeader : Header() {
         pos(),
         neg(),
         eq(),
-        ne(),
         and(),
         or(),
         lt(),
@@ -89,6 +90,7 @@ object PartiQLHeader : Header() {
         like(),
         between(),
         inCollection(),
+        isUnknown(),
         isType(),
         isTypeSingleArg(),
         isTypeDoubleArgsInt(),
@@ -114,7 +116,22 @@ object PartiQLHeader : Header() {
 
     // OPERATORS
 
-    private fun not(): List<FunctionSignature.Scalar> = listOf(unary("not", BOOL, BOOL))
+    private fun not(): List<FunctionSignature.Scalar> = listOf(
+        FunctionSignature.Scalar(
+            name = "not",
+            returns = BOOL,
+            isNullCall = false,
+            isNullable = true,
+            parameters = listOf(FunctionParameter("value", BOOL)),
+        ),
+        FunctionSignature.Scalar(
+            name = "not",
+            returns = BOOL,
+            isNullCall = false,
+            isNullable = true,
+            parameters = listOf(FunctionParameter("value", MISSING)),
+        ),
+    )
 
     private fun pos(): List<FunctionSignature.Scalar> = types.numeric.map { t ->
         unary("pos", t, t)
@@ -130,20 +147,70 @@ object PartiQLHeader : Header() {
             returns = BOOL,
             parameters = listOf(FunctionParameter("lhs", t), FunctionParameter("rhs", t)),
             isNullable = false,
-            isNullCall = false,
+            isNullCall = true,
         )
     }
 
-    private fun ne(): List<FunctionSignature.Scalar> = types.all.map { t ->
-        binary("ne", BOOL, t, t)
-    }
-
     private fun and(): List<FunctionSignature.Scalar> = listOf(
-        binary("and", BOOL, BOOL, BOOL),
+        FunctionSignature.Scalar(
+            name = "and",
+            returns = BOOL,
+            isNullCall = false,
+            isNullable = true,
+            parameters = listOf(FunctionParameter("lhs", BOOL), FunctionParameter("rhs", BOOL)),
+        ),
+        FunctionSignature.Scalar(
+            name = "and",
+            returns = BOOL,
+            isNullCall = false,
+            isNullable = true,
+            parameters = listOf(FunctionParameter("lhs", MISSING), FunctionParameter("rhs", BOOL)),
+        ),
+        FunctionSignature.Scalar(
+            name = "and",
+            returns = BOOL,
+            isNullCall = false,
+            isNullable = true,
+            parameters = listOf(FunctionParameter("lhs", BOOL), FunctionParameter("rhs", MISSING)),
+        ),
+        FunctionSignature.Scalar(
+            name = "and",
+            returns = BOOL,
+            isNullCall = false,
+            isNullable = true,
+            parameters = listOf(FunctionParameter("lhs", MISSING), FunctionParameter("rhs", MISSING)),
+        ),
     )
 
     private fun or(): List<FunctionSignature.Scalar> = listOf(
-        binary("or", BOOL, BOOL, BOOL),
+        FunctionSignature.Scalar(
+            name = "or",
+            returns = BOOL,
+            isNullCall = false,
+            isNullable = true,
+            parameters = listOf(FunctionParameter("lhs", BOOL), FunctionParameter("rhs", BOOL)),
+        ),
+        FunctionSignature.Scalar(
+            name = "or",
+            returns = BOOL,
+            isNullCall = false,
+            isNullable = true,
+            parameters = listOf(FunctionParameter("lhs", MISSING), FunctionParameter("rhs", BOOL)),
+        ),
+        FunctionSignature.Scalar(
+            name = "or",
+            returns = BOOL,
+            isNullCall = false,
+            isNullable = true,
+            parameters = listOf(FunctionParameter("lhs", BOOL), FunctionParameter("rhs", MISSING)),
+        ),
+        FunctionSignature.Scalar(
+            name = "or",
+            returns = BOOL,
+            isNullCall = false,
+            isNullable = true,
+            parameters = listOf(FunctionParameter("lhs", MISSING), FunctionParameter("rhs", MISSING)),
+        ),
     )
 
     private fun lt(): List<FunctionSignature.Scalar> = types.numeric.map { t ->
@@ -213,29 +280,31 @@ object PartiQLHeader : Header() {
 
     // SPECIAL FORMS
 
-    private fun like(): List<FunctionSignature.Scalar> = listOf(
-        FunctionSignature.Scalar(
-            name = "like",
-            returns = BOOL,
-            parameters = listOf(
-                FunctionParameter("value", STRING),
-                FunctionParameter("pattern", STRING),
+    private fun like(): List<FunctionSignature.Scalar> = types.text.flatMap { t ->
+        listOf(
+            FunctionSignature.Scalar(
+                name = "like",
+                returns = BOOL,
+                parameters = listOf(
+                    FunctionParameter("value", t),
+                    FunctionParameter("pattern", t),
+                ),
+                isNullCall = true,
+                isNullable = false,
             ),
-            isNullable = false,
-            isNullCall = true,
-        ),
-        FunctionSignature.Scalar(
-            name = "like_escape",
-            returns = BOOL,
-            parameters = listOf(
-                FunctionParameter("value", STRING),
-                FunctionParameter("pattern", STRING),
-                FunctionParameter("escape", STRING),
+            FunctionSignature.Scalar(
+                name = "like_escape",
+                returns = BOOL,
+                parameters = listOf(
+                    FunctionParameter("value", t),
+                    FunctionParameter("pattern", t),
+                    FunctionParameter("escape", t),
+                ),
+                isNullCall = true,
+                isNullable = false,
             ),
-            isNullable = false,
-            isNullCall = true,
-        ),
-    )
+        )
+    }
 
     private fun between(): List<FunctionSignature.Scalar> = types.numeric.map { t ->
         FunctionSignature.Scalar(
@@ -272,15 +341,27 @@ object PartiQLHeader : Header() {
     // TODO: We can remove the types with parameter in this function.
     //  but, leaving out the decision to have, for example:
     //  is_decimal(null, null, value) vs is_decimal(value) later....
-    private fun isType(): List<FunctionSignature.Scalar> = types.all.map { element ->
+    private fun isType(): List<FunctionSignature.Scalar> = types.all.filterNot { it == NULL || it == MISSING }.map { element ->
         FunctionSignature.Scalar(
             name = "is_${element.name.lowercase()}",
             returns = BOOL,
             parameters = listOf(
                 FunctionParameter("value", ANY) // TODO: Decide if we need to further segment this
             ),
-            isNullable = false,
-            isNullCall = false
+            isNullCall = false,
+            isNullable = false
+        )
+    }
+
+    private fun isUnknown(): List<FunctionSignature.Scalar> = listOf(MISSING, NULL).map { element ->
+        FunctionSignature.Scalar(
+            name = "is_${element.name.lowercase()}",
+            returns = BOOL,
+            parameters = listOf(
+                FunctionParameter("value", ANY) // TODO: Decide if we need to further segment this
+            ),
+            isNullCall = false,
+            isNullable = false
         )
     }
 
@@ -323,8 +404,8 @@ object PartiQLHeader : Header() {
                 FunctionParameter("type_parameter_2", INT32),
                 FunctionParameter("value", ANY) // TODO: Decide if we need to further segment this
             ),
-            isNullable = false,
-            isNullCall = false
+            isNullCall = false,
+            isNullable = false
         )
     }
 

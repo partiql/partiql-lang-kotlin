@@ -12,6 +12,7 @@ import org.partiql.value.PartiQLValueType.CHAR
 import org.partiql.value.PartiQLValueType.CLOB
 import org.partiql.value.PartiQLValueType.DATE
 import org.partiql.value.PartiQLValueType.DECIMAL
+import org.partiql.value.PartiQLValueType.FIX_PRECISION_DECIMAL
 import org.partiql.value.PartiQLValueType.FLOAT32
 import org.partiql.value.PartiQLValueType.FLOAT64
 import org.partiql.value.PartiQLValueType.INT
@@ -181,17 +182,18 @@ internal class TypeLattice private constructor(
             )
             graph[BOOL] = relationships(
                 BOOL to coercion(),
-                INT8 to coercion(),
-                INT16 to coercion(),
-                INT32 to coercion(),
-                INT64 to coercion(),
-                INT to coercion(),
-                DECIMAL to coercion(),
-                FLOAT32 to coercion(),
-                FLOAT64 to coercion(),
-                CHAR to coercion(),
-                STRING to coercion(),
-                SYMBOL to coercion(),
+                INT8 to explicit(),
+                INT16 to explicit(),
+                INT32 to explicit(),
+                INT64 to explicit(),
+                INT to explicit(),
+                FIX_PRECISION_DECIMAL to explicit(),
+                DECIMAL to explicit(),
+                FLOAT32 to explicit(),
+                FLOAT64 to explicit(),
+                CHAR to explicit(),
+                STRING to explicit(),
+                SYMBOL to explicit(),
             )
             graph[INT8] = relationships(
                 BOOL to explicit(),
@@ -200,6 +202,7 @@ internal class TypeLattice private constructor(
                 INT32 to coercion(),
                 INT64 to coercion(),
                 INT to coercion(),
+                FIX_PRECISION_DECIMAL to explicit(),
                 DECIMAL to coercion(),
                 FLOAT32 to coercion(),
                 FLOAT64 to coercion(),
@@ -213,6 +216,7 @@ internal class TypeLattice private constructor(
                 INT32 to coercion(),
                 INT64 to coercion(),
                 INT to coercion(),
+                FIX_PRECISION_DECIMAL to explicit(),
                 DECIMAL to coercion(),
                 FLOAT32 to coercion(),
                 FLOAT64 to coercion(),
@@ -226,6 +230,7 @@ internal class TypeLattice private constructor(
                 INT32 to coercion(),
                 INT64 to coercion(),
                 INT to coercion(),
+                FIX_PRECISION_DECIMAL to explicit(),
                 DECIMAL to coercion(),
                 FLOAT32 to coercion(),
                 FLOAT64 to coercion(),
@@ -239,6 +244,7 @@ internal class TypeLattice private constructor(
                 INT32 to unsafe(),
                 INT64 to coercion(),
                 INT to coercion(),
+                FIX_PRECISION_DECIMAL to explicit(),
                 DECIMAL to coercion(),
                 FLOAT32 to coercion(),
                 FLOAT64 to coercion(),
@@ -252,22 +258,30 @@ internal class TypeLattice private constructor(
                 INT32 to unsafe(),
                 INT64 to unsafe(),
                 INT to coercion(),
+                FIX_PRECISION_DECIMAL to explicit(),
                 DECIMAL to coercion(),
                 FLOAT32 to coercion(),
                 FLOAT64 to coercion(),
                 STRING to explicit(),
                 SYMBOL to explicit(),
             )
-            graph[DECIMAL] = relationships(
+            graph[FIX_PRECISION_DECIMAL] = relationships(
+                INT8 to explicit(),
+                INT16 to explicit(),
+                INT32 to explicit(),
+                INT64 to explicit(),
                 BOOL to explicit(),
-                DECIMAL to coercion(),
-                FLOAT32 to coercion(),
-                FLOAT64 to coercion(),
+                FIX_PRECISION_DECIMAL to explicit(),
+                DECIMAL to explicit(),
+                FLOAT32 to explicit(),
+                FLOAT64 to explicit(),
                 STRING to explicit(),
                 SYMBOL to explicit(),
             )
             graph[FLOAT32] = relationships(
                 BOOL to explicit(),
+                FIX_PRECISION_DECIMAL to explicit(),
+                DECIMAL to coercion(),
                 FLOAT32 to coercion(),
                 FLOAT64 to coercion(),
                 STRING to explicit(),
@@ -275,7 +289,18 @@ internal class TypeLattice private constructor(
             )
             graph[FLOAT64] = relationships(
                 BOOL to explicit(),
+                FIX_PRECISION_DECIMAL to explicit(),
+                DECIMAL to coercion(),
                 FLOAT64 to coercion(),
+                STRING to explicit(),
+                SYMBOL to explicit(),
+            )
+            graph[DECIMAL] = relationships(
+                BOOL to explicit(),
+                FIX_PRECISION_DECIMAL to explicit(),
+                DECIMAL to coercion(),
+                FLOAT32 to explicit(),
+                FLOAT64 to explicit(),
                 STRING to explicit(),
                 SYMBOL to explicit(),
             )
@@ -293,7 +318,7 @@ internal class TypeLattice private constructor(
                 INT64 to unsafe(),
                 INT to unsafe(),
                 STRING to coercion(),
-                SYMBOL to coercion(),
+                SYMBOL to explicit(),
                 CLOB to coercion(),
             )
             graph[SYMBOL] = relationships(

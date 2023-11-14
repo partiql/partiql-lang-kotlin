@@ -83,6 +83,8 @@ import org.partiql.types.StaticType
 import org.partiql.types.StaticType.Companion.ANY
 import org.partiql.types.StaticType.Companion.MISSING
 import org.partiql.types.StaticType.Companion.STRING
+import org.partiql.types.StaticType.Companion.BOOL
+import org.partiql.types.StaticType.Companion.NULL
 import org.partiql.types.StringType
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
@@ -514,21 +516,20 @@ internal class PlanTyper(
 
             // Type the arguments
             val fn = node.fn as Fn.Unresolved
-            val isEq = fn.isEq()
+            val isNotMissable = fn.isNotMissable()
             val args = node.args.map { visitRex(it, null) }
 
             // Try to match the arguments to functions defined in the catalog
             return when (val match = env.resolveFn(fn, args)) {
-                is FnMatch.Ok -> toRexCall(match, args, isEq)
+                is FnMatch.Ok -> toRexCall(match, args, isNotMissable)
                 is FnMatch.Dynamic -> {
                     val types = mutableSetOf<StaticType>()
-                    if (match.isMissable && !isEq) {
+                    if (match.isMissable && !isNotMissable) {
                         types.add(StaticType.MISSING)
                     }
                     val candidates = match.candidates.map { candidate ->
-                        val rex = toRexCall(candidate, args, isEq)
-                        val staticCall =
-                            rex.op as? Rex.Op.Call.Static ?: error("ToRexCall should always return a static call.")
+                        val rex = toRexCall(candidate, args, isNotMissable)
+                        val staticCall = rex.op as? Rex.Op.Call.Static ?: error("ToRexCall should always return a static call.")
                         val resolvedFn = staticCall.fn as? Fn.Resolved ?: error("This should have been resolved")
                         types.add(rex.type)
                         val coercions = candidate.mapping.map { it?.let { fnResolved(it) } }
@@ -548,11 +549,27 @@ internal class PlanTyper(
             return rex(ANY, rexOpErr("Direct dynamic calls are not supported. This should have been a static call."))
         }
 
-        private fun toRexCall(match: FnMatch.Ok<FunctionSignature.Scalar>, args: List<Rex>, isEq: Boolean): Rex {
+        private fun toRexCall(match: FnMatch.Ok<FunctionSignature.Scalar>, args: List<Rex>, isNotMissable: Boolean): Rex {
             // Found a match!
             val newFn = fnResolved(match.signature)
             val newArgs = rewriteFnArgs(match.mapping, args)
             val returns = newFn.signature.returns
+
+            // 7.1 All functions return MISSING when one of their inputs is MISSING (except `=`)
+            newArgs.forEach {
+                if (it.type == MissingType && !isNotMissable) {
+                    handleAlwaysMissing()
+                    return rex(StaticType.MISSING, rexOpCallStatic(newFn, newArgs))
+                }
+            }
+            if (isNotMissable) {
+                lookUpLogicalTable(newFn.signature.name, newArgs.map { it.type }).let {
+                    // If logical functions
+                    if (it != null) {
+                        return rex(it, rexOpCallStatic(newFn, newArgs))
+                    }
+                }
+            }
 
             // Determine the nullability of the return type
             var isNull = false // True iff NULL CALL and has a NULL arg
@@ -579,7 +596,7 @@ internal class PlanTyper(
             }
 
             // Some operators can return MISSING during runtime
-            if (match.isMissable && !isEq) {
+            if (match.isMissable && !isNotMissable) {
                 type = StaticType.unionOf(type, StaticType.MISSING)
             }
 
@@ -1349,11 +1366,29 @@ internal class PlanTyper(
     }
 
     /**
-     * The equals function is the only function which NEVER returns MISSING. This function is called when typing
-     * and resolving the equals function.
+     * Indicates whether the given functions propagate Missing.
+     *
+     * Currently, Logical Functions : AND, OR, NOT, IS NULL, IS MISSING
+     * the equal function, and the in_collection function do not propagate Missing.
      */
-    private fun Fn.Unresolved.isEq(): Boolean {
-        return (identifier is Identifier.Symbol && (identifier as Identifier.Symbol).symbol == "eq")
+    private fun Fn.Unresolved.isNotMissable(): Boolean {
+        return when (identifier) {
+            is Identifier.Qualified -> false
+            is Identifier.Symbol -> when ((identifier as Identifier.Symbol).symbol) {
+                "in_collection" -> true
+                "eq" -> true
+                "and" -> true
+                "or" -> true
+                "not" -> true
+                "is_null" -> true
+                "is_missing" -> true
+                else -> false
+            }
+        }
+    }
+
+    private fun Fn.Unresolved.isTypeAssertion(): Boolean {
+        return (identifier is Identifier.Symbol && (identifier as Identifier.Symbol).symbol.startsWith("is"))
     }
 
     /**
@@ -1393,4 +1428,58 @@ internal class PlanTyper(
         Identifier.CaseSensitivity.SENSITIVE -> symbol.equals(other)
         Identifier.CaseSensitivity.INSENSITIVE -> symbol.equals(other, ignoreCase = true)
     }
+
+    /**
+     *
+     |A	        |B	        |A AND B	|A OR B	|NOT A	|
+     |---	    |---	    |---	    |---	|---	|
+     |TRUE	    |TRUE	    |TRUE	    |TRUE	|FALSE	|
+     |TRUE       |FALSE	    |FALSE	    |TRUE	|FALSE	|
+     |TRUE       |NULL	    |NULL	    |TRUE	|FALSE	|
+     |TRUE       |MISSING	|NULL	    |TRUE	|FALSE	|
+     |FALSE	    |TRUE	    |FALSE	    |TRUE	|TRUE	|
+     |FALSE	    |FALSE	    |FALSE	    |FALSE	|TRUE	|
+     |FALSE	    |NULL	    |FALSE	    |NULL	|TRUE	|
+     |FALSE	    |MISSING	|FALSE	    |NULL	|TRUE	|
+     |NULL	    |TRUE	    |NULL	    |TRUE	|NULL	|
+     |NULL	    |FALSE	    |FALSE	    |NULL	|NULL	|
+     |NULL	    |NULL	    |NULL	    |NULL	|NULL	|
+     |NULL	    |MISSING	|NULL	    |NULL	|NULL	|
+     |MISSING	|TRUE	    |NULL	    |TRUE	|NULL	|
+     |MISSING	|FALSE	    |FALSE	    |NULL	|NULL	|
+     |MISSING	|NULL	    |NULL	    |NULL	|NULL	|
+     |MISSING	|MISSING	|NULL	    |NULL	|NULL	|
+     */
+    private fun lookUpLogicalTable(fn: String, args: List<StaticType>): StaticType? =
+        when (fn) {
+            "not" -> {
+                val valueType = args[0]
+                if (valueType.isUnknown()) {
+                    StaticType.NULL
+                } else {
+                    StaticType.BOOL
+                }
+            }
+            "is_null", "is_missing" -> {
+                StaticType.BOOL
+            }
+            "and", "or" -> {
+                val arg0 = args[0]
+                val arg1 = args[1]
+                if (arg0.isUnknown()) {
+                    if (arg1.isUnknown()) {
+                        NULL
+                    } else {
+                        StaticType.unionOf(NULL, BOOL)
+                    }
+                } else {
+                    if (arg1.isUnknown()) {
+                        StaticType.unionOf(NULL, BOOL)
+                    } else {
+                        StaticType.BOOL
+                    }
+                }
+            }
+            else -> null
+        }
 }

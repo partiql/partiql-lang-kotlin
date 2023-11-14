@@ -25,7 +25,9 @@ public enum class PartiQLValueType {
     INT32,
     INT64,
     INT,
-    DECIMAL,
+    // For now, just distinguish between fixed precision and arbitrary precision
+    FIX_PRECISION_DECIMAL, // TODO: Simple enum class does not have the power to express the parameterized type
+    DECIMAL, // arbitrary precision decimal
     FLOAT32,
     FLOAT64,
     CHAR,

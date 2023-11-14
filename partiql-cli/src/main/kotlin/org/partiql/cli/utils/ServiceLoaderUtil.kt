@@ -170,6 +170,7 @@ class ServiceLoaderUtil {
                 PartiQLValueType.LIST -> StaticType.LIST.asNullable()
                 PartiQLValueType.SEXP -> StaticType.SEXP.asNullable()
                 PartiQLValueType.STRUCT -> StaticType.STRUCT.asNullable()
+                PartiQLValueType.FIX_PRECISION_DECIMAL -> TODO()
             }
         }
 
@@ -290,6 +291,8 @@ class ServiceLoaderUtil {
                         )
                     }?.let { newStruct(it, StructOrdering.ORDERED) } ?: ExprValue.nullValue
                 }
+
+                PartiQLValueType.FIX_PRECISION_DECIMAL -> TODO()
             }
         }
 
@@ -488,6 +491,8 @@ class ServiceLoaderUtil {
                         PartiQLValueType.STRUCT, ExprToPartiQLValueType(exprValue)
                     )
                 }
+
+                PartiQLValueType.FIX_PRECISION_DECIMAL -> TODO()
             }
         }
 

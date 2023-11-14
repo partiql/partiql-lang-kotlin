@@ -65,6 +65,7 @@ internal fun PartiQLValueType.toNonNullStaticType(): StaticType = when (this) {
     PartiQLValueType.INT64 -> StaticType.INT8
     PartiQLValueType.INT -> StaticType.INT
     PartiQLValueType.DECIMAL -> StaticType.DECIMAL
+    PartiQLValueType.FIX_PRECISION_DECIMAL -> TODO()
     PartiQLValueType.FLOAT32 -> StaticType.FLOAT
     PartiQLValueType.FLOAT64 -> StaticType.FLOAT
     PartiQLValueType.CHAR -> StaticType.CHAR

@@ -2749,7 +2749,7 @@ class PartiQLSchemaInferencerTests {
                 expected = BagType(
                     StructType(
                         fields = mapOf(
-                            "c" to unionOf(INT4, INT8, MISSING, DECIMAL),
+                            "c" to unionOf(MISSING, DECIMAL),
                         ),
                         contentClosed = true,
                         constraints = setOf(
@@ -3349,7 +3349,9 @@ class PartiQLSchemaInferencerTests {
                 catalog = CATALOG_DB,
                 catalogPath = DB_SCHEMA_MARKETS,
                 query = "non_existing_column = 1",
-                expected = StaticType.BOOL,
+                // Function resolves to EQ__ANY_ANY__BOOL
+                // Which can return BOOL Or NULL
+                expected = StaticType.unionOf(BOOL, NULL),
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
