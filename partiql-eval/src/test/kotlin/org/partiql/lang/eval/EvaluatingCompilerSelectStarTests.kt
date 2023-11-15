@@ -1,7 +1,7 @@
 package org.partiql.lang.eval
 
 import junitparams.Parameters
-import org.junit.jupiter.api.Test
+import org.junit.Test
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestCase
 import org.partiql.lang.util.downcast
 

@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.EvaluatorTestBase
-import org.partiql.lang.eval.FunctionNotFoundException
 import org.partiql.lang.eval.internal.builtins.SCALAR_BUILTINS_DEFAULT
 import org.partiql.types.StaticType
 
