@@ -19,14 +19,17 @@ plugins {
 }
 
 dependencies {
+    // EvaluatingCompiler / ExprValue
     implementation(project(":partiql-lang"))
+    //
     implementation(project(":partiql-ast"))
+    implementation(project(":partiql-eval"))
     implementation(project(":partiql-parser"))
     implementation(project(":partiql-plan"))
     implementation(project(":partiql-planner"))
     implementation(project(":partiql-types"))
-    implementation(project(":plugins:partiql-local"))
     implementation(project(":partiql-spi"))
+    implementation(project(":plugins:partiql-local"))
     implementation(Deps.csv)
     implementation(Deps.awsSdkBom)
     implementation(Deps.awsSdkDynamodb)
@@ -36,6 +39,7 @@ dependencies {
     implementation(Deps.joda)
     implementation(Deps.picoCli)
     implementation(Deps.kotlinReflect)
+
     testImplementation(Deps.mockito)
 }
 

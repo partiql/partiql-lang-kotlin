@@ -4,7 +4,7 @@ import com.amazon.ion.IonValue
 import com.amazon.ionelement.api.toIonElement
 import junitparams.JUnitParamsRunner
 import junitparams.Parameters
-import org.junit.jupiter.api.Test
+import org.junit.Test
 import org.junit.runner.RunWith
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.ION

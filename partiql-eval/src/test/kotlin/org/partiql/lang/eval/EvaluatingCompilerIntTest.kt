@@ -1,7 +1,8 @@
 package org.partiql.lang.eval
 
-import junitparams.Parameters
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.errors.ErrorCode
 import org.partiql.errors.Property
 import org.partiql.lang.util.propertyValueMapOf
@@ -14,24 +15,9 @@ import java.math.BigInteger
  */
 class EvaluatingCompilerIntTest : EvaluatorTestBase() {
 
-    private val closeToMaxLong = (Long.MAX_VALUE - 1)
-    private val closeToMinLong = (Long.MIN_VALUE + 1)
-
-    private val bigInt = BigInteger.valueOf(Long.MAX_VALUE).times(BigInteger.valueOf(2))
-    private val negativeBigInt = BigInteger.valueOf(Long.MIN_VALUE).times(BigInteger.valueOf(2))
-
-    @Test
-    @Parameters
+    @ParameterizedTest
+    @MethodSource("parametersForValues")
     fun values(pair: Pair<String, String>) = assertPair(pair)
-
-    fun parametersForValues(): List<Pair<String, String>> {
-        val parameters = mutableListOf<Pair<String, String>>()
-        parameters.add("$closeToMaxLong" to "$closeToMaxLong")
-        parameters.add("$closeToMinLong" to "$closeToMinLong")
-        parameters.add("`0x00ffFFffFFffFFff`" to "72057594037927935")
-
-        return parameters
-    }
 
     @Test
     fun bigInt() = runEvaluatorErrorTestCase(
@@ -47,15 +33,10 @@ class EvaluatingCompilerIntTest : EvaluatorTestBase() {
         expectedErrorContext = propertyValueMapOf(1, 2)
     )
 
-    @Test
-    @Parameters
-    fun plus(pair: Pair<String, String>) = assertPair(pair)
-
-    fun parametersForPlus(): List<Pair<String, String>> {
-        val parameters = mutableListOf<Pair<String, String>>()
-        // Deliberately kept in case we need to manually add test case in the future.
-        return parameters
-    }
+    // EMPTY
+    // @ParameterizedTest
+    // @MethodSource("parametersForPlus")
+    // fun plus(pair: Pair<String, String>) = assertPair(pair)
 
     @Test
     fun plusOverflow() = runEvaluatorErrorTestCase(
@@ -65,15 +46,10 @@ class EvaluatingCompilerIntTest : EvaluatorTestBase() {
         expectedPermissiveModeResult = "MISSING"
     )
 
-    @Test
-    @Parameters
-    fun minus(pair: Pair<String, String>) = assertPair(pair)
-
-    fun parametersForMinus(): List<Pair<String, String>> {
-        val parameters = mutableListOf<Pair<String, String>>()
-        // Deliberately kept in case we need to manually add test case in the future.
-        return parameters
-    }
+    // EMPTY
+    // @ParameterizedTest
+    // @MethodSource("parametersForMinus")
+    // fun minus(pair: Pair<String, String>) = assertPair(pair)
 
     @Test
     fun minusUnderflow() = runEvaluatorErrorTestCase(
@@ -83,17 +59,9 @@ class EvaluatingCompilerIntTest : EvaluatorTestBase() {
         expectedPermissiveModeResult = "MISSING"
     )
 
-    @Test
-    @Parameters
+    @ParameterizedTest
+    @MethodSource("parametersForTimes")
     fun times(pair: Pair<String, String>) = assertPair(pair)
-
-    fun parametersForTimes(): List<Pair<String, String>> {
-        val parameters = mutableListOf<Pair<String, String>>()
-
-        parameters.add("${Long.MAX_VALUE} * -1" to "-${Long.MAX_VALUE}")
-
-        return parameters
-    }
 
     @Test
     fun timesOverflow() = runEvaluatorErrorTestCase(
@@ -111,17 +79,9 @@ class EvaluatingCompilerIntTest : EvaluatorTestBase() {
         expectedPermissiveModeResult = "MISSING"
     )
 
-    @Test
-    @Parameters
+    @ParameterizedTest
+    @MethodSource("parametersForDivision")
     fun division(pair: Pair<String, String>) = assertPair(pair)
-
-    fun parametersForDivision(): List<Pair<String, String>> {
-        val parameters = mutableListOf<Pair<String, String>>()
-
-        parameters.add("${Long.MAX_VALUE} / -1" to "-${Long.MAX_VALUE}")
-
-        return parameters
-    }
 
     @Test
     fun divisionUnderflow() = runEvaluatorErrorTestCase(
@@ -131,26 +91,9 @@ class EvaluatingCompilerIntTest : EvaluatorTestBase() {
         expectedPermissiveModeResult = "MISSING"
     )
 
-    @Test
-    @Parameters
+    @ParameterizedTest
+    @MethodSource("parametersForBitwiseAnd")
     fun bitwiseAnd(pair: Pair<String, String>) = assertPair(pair)
-
-    fun parametersForBitwiseAnd(): List<Pair<String, String>> {
-        val parameters = mutableListOf<Pair<String, String>>()
-
-        parameters.add("1 & 2" to "0")
-        parameters.add("3 & 5" to "1")
-        parameters.add("5 & 7" to "5")
-        parameters.add("31 & 15 & 7 & 3 & 1" to "1")
-        parameters.add("1 + 5 & 5" to "4")
-        parameters.add("(1 + 5) & 5" to "4")
-        parameters.add("1 + (5 & 5)" to "6")
-        parameters.add("5 & 5 + 1" to "4")
-        parameters.add("(5 & 5) + 1" to "6")
-        parameters.add("5 & (5 + 1)" to "4")
-
-        return parameters
-    }
 
     @Test
     fun castBigInt() = runEvaluatorErrorTestCase(
@@ -201,5 +144,53 @@ class EvaluatingCompilerIntTest : EvaluatorTestBase() {
     private fun assertPair(pair: Pair<String, String>) {
         val (query, expected) = pair
         runEvaluatorTestCase(query, expectedResult = expected)
+    }
+
+    companion object {
+
+        private val closeToMaxLong = (Long.MAX_VALUE - 1)
+        private val closeToMinLong = (Long.MIN_VALUE + 1)
+
+        private val bigInt = BigInteger.valueOf(Long.MAX_VALUE).times(BigInteger.valueOf(2))
+        private val negativeBigInt = BigInteger.valueOf(Long.MIN_VALUE).times(BigInteger.valueOf(2))
+
+        @JvmStatic
+        fun parametersForValues(): List<Pair<String, String>> = listOf(
+            "$closeToMaxLong" to "$closeToMaxLong",
+            "$closeToMinLong" to "$closeToMinLong",
+            "`0x00ffFFffFFffFFff`" to "72057594037927935",
+        )
+
+        // Deliberately kept in case we need to manually add test case in the future.
+        @JvmStatic
+        fun parametersForPlus(): List<Pair<String, String>> = emptyList()
+
+        @JvmStatic
+        fun parametersForTimes(): List<Pair<String, String>> = listOf(
+            "${Long.MAX_VALUE} * -1" to "-${Long.MAX_VALUE}"
+        )
+
+        @JvmStatic
+        fun parametersForDivision(): List<Pair<String, String>> = listOf(
+            "${Long.MAX_VALUE} / -1" to "-${Long.MAX_VALUE}",
+        )
+
+        // Deliberately kept in case we need to manually add test case in the future.
+        @JvmStatic
+        fun parametersForMinus(): List<Pair<String, String>> = emptyList()
+
+        @JvmStatic
+        fun parametersForBitwiseAnd(): List<Pair<String, String>> = listOf(
+            "1 & 2" to "0",
+            "3 & 5" to "1",
+            "5 & 7" to "5",
+            "31 & 15 & 7 & 3 & 1" to "1",
+            "1 + 5 & 5" to "4",
+            "(1 + 5) & 5" to "4",
+            "1 + (5 & 5)" to "6",
+            "5 & 5 + 1" to "4",
+            "(5 & 5) + 1" to "6",
+            "5 & (5 + 1)" to "4",
+        )
     }
 }

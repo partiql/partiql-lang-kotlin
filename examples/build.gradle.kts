@@ -24,6 +24,7 @@ application {
 
 dependencies {
     implementation(project(":partiql-lang"))
+    implementation(project(":partiql-eval"))
     implementation(project(":partiql-types"))
     implementation(Deps.awsSdkS3)
 }
