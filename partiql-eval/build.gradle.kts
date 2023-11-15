@@ -27,8 +27,15 @@ dependencies {
     api(project(":partiql-types"))
     implementation(project(":partiql-lang"))
     // Test
+    testImplementation(project(":lib:isl"))
     testImplementation(project(":partiql-parser"))
     testImplementation(project(":plugins:partiql-local"))
+    testImplementation(project(":plugins:partiql-memory"))
+    testImplementation(testFixtures(project(":partiql-planner")))
+    testImplementation(testFixtures(project(":partiql-lang")))
+    testImplementation(Deps.junit4)
+    testImplementation(Deps.junit4Params)
+    testImplementation(Deps.junitVintage) // Enables JUnit4
 }
 
 // Disabled for partiql-eval project at initialization.
@@ -40,4 +47,9 @@ publish {
     artifactId = "partiql-eval"
     name = "PartiQL Lang Kotlin Evaluator"
     description = "Experimental PartiQL plan-based evaluator"
+}
+
+tasks.processTestResources {
+    dependsOn(":partiql-planner:generateResourcePath")
+    from("${project(":partiql-planner").buildDir}/resources/testFixtures")
 }

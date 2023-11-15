@@ -14,16 +14,20 @@
 
 package org.partiql.lang.eval.io
 
+import com.amazon.ion.IonType
+import com.amazon.ion.IonValue
 import org.apache.commons.csv.CSVFormat
 import org.junit.Test
 import org.partiql.lang.TestBase
+import org.partiql.lang.eval.BAG_ANNOTATION
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
-import org.partiql.lang.eval.cloneAndRemoveBagAndMissingAnnotations
+import org.partiql.lang.eval.MISSING_ANNOTATION
 import org.partiql.lang.eval.io.DelimitedValues.ConversionMode.AUTO
 import org.partiql.lang.eval.io.DelimitedValues.ConversionMode.NONE
 import org.partiql.lang.eval.orderedNamesValue
 import org.partiql.lang.eval.toIonValue
+import org.partiql.lang.util.asSequence
 import org.partiql.lang.util.newFromIonText
 import java.io.StringReader
 import java.io.StringWriter
@@ -214,4 +218,40 @@ class DelimitedValuesTest : TestBase() {
         newFromIonText("[{a:1}, {b:2}]"),
         writeHeader = false
     )
+}
+
+internal fun IonValue.removeBagAndMissingAnnotations() {
+    when (this.type) {
+        // Remove $missing annotation from NULL for assertions
+        IonType.NULL -> this.removeTypeAnnotation(MISSING_ANNOTATION)
+        // Recurse into all container types.
+        IonType.DATAGRAM, IonType.SEXP, IonType.STRUCT, IonType.LIST -> {
+            // Remove $bag annotation from LIST for assertions
+            if (this.type == IonType.LIST) {
+                this.removeTypeAnnotation(BAG_ANNOTATION)
+            }
+            // Recursively remove annotations
+            this.asSequence().forEach {
+                it.removeBagAndMissingAnnotations()
+            }
+        }
+        else -> { /* ok to do nothing. */ }
+    }
+}
+
+/**
+ * Clones and removes $bag and $missing annotations from the clone and any child values.
+ *
+ * There are many tests which were created before these annotations were present and thus do not include them
+ * in their expected values.  This function provides an alternative to having to go and update all of them.
+ * This is tech debt of the unhappy variety:  all of those test cases should really be updated and this function
+ * should be deleted.
+ *
+ * NOTE: this function does not remove $date annotations ever!  There are tests that depend on this too.
+ * $date however, was added AFTER this function was created, and so no test cases needed to remove that
+ * annotation.
+ */
+internal fun IonValue.cloneAndRemoveBagAndMissingAnnotations() = this.clone().apply {
+    removeBagAndMissingAnnotations()
+    makeReadOnly()
 }

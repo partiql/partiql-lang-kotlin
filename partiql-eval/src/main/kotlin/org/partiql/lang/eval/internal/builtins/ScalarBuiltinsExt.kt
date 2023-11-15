@@ -24,8 +24,6 @@ import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
-import org.partiql.lang.eval.internal.timestamp.TimestampParser
-import org.partiql.lang.eval.internal.timestamp.TimestampTemporalAccessor
 import org.partiql.lang.eval.internal.DateTimePart
 import org.partiql.lang.eval.internal.NANOS_PER_SECOND
 import org.partiql.lang.eval.internal.err
@@ -34,6 +32,8 @@ import org.partiql.lang.eval.internal.ext.adjustPrecisionTo
 import org.partiql.lang.eval.internal.ext.bigDecimalValue
 import org.partiql.lang.eval.internal.ext.intValue
 import org.partiql.lang.eval.internal.ext.toOffsetDateTime
+import org.partiql.lang.eval.internal.timestamp.TimestampParser
+import org.partiql.lang.eval.internal.timestamp.TimestampTemporalAccessor
 import org.partiql.lang.eval.stringValue
 import org.partiql.lang.eval.time.Time
 import org.partiql.lang.eval.timestampValue

@@ -18,6 +18,7 @@ plugins {
     id(Plugins.jmh) version Versions.jmh
     id(Plugins.library)
     id(Plugins.publish)
+    id(Plugins.testFixtures)
 }
 
 // Disabled for partiql-lang project.
@@ -42,12 +43,22 @@ dependencies {
 
     testImplementation(testFixtures(project(":partiql-planner")))
     testImplementation(project(":plugins:partiql-memory"))
-    testImplementation(project(":lib:isl"))
     testImplementation(Deps.assertj)
     testImplementation(Deps.junit4)
     testImplementation(Deps.junit4Params)
     testImplementation(Deps.junitVintage) // Enables JUnit4
     testImplementation(Deps.mockk)
+
+    testFixturesImplementation(project(":lib:isl"))
+    testFixturesImplementation(Deps.kotlinTest)
+    testFixturesImplementation(Deps.kotlinTestJunit)
+    testFixturesImplementation(Deps.assertj)
+    testFixturesImplementation(Deps.junit4)
+    testFixturesImplementation(Deps.junit4Params)
+    testFixturesImplementation(Deps.junitApi)
+    testFixturesImplementation(Deps.junitParams)
+    testFixturesImplementation(Deps.junitVintage) // Enables JUnit4
+    testFixturesImplementation(Deps.mockk)
 }
 
 publish {

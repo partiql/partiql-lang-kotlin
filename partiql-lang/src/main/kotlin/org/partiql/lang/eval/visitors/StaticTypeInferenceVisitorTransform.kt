@@ -22,7 +22,6 @@ import org.partiql.lang.ast.passes.inference.isNumeric
 import org.partiql.lang.ast.passes.inference.isText
 import org.partiql.lang.ast.passes.inference.isUnknown
 import org.partiql.lang.domains.PartiqlAst
-import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.domains.staticType
 import org.partiql.lang.domains.toBindingCase
 import org.partiql.lang.errors.ProblemThrower

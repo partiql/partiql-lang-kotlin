@@ -51,7 +51,7 @@ fun PartiqlAst.Expr.Path.extractColumnAlias(idx: Int): String {
  * Starting is defined to be the [SourceLocationMeta] with the lowest [SourceLocationMeta.lineNum] and in the event of
  * a tie, the lowest [SourceLocationMeta.charOffset].
  */
-internal fun PartiqlAst.Expr.getStartingSourceLocationMeta(): SourceLocationMeta {
+fun PartiqlAst.Expr.getStartingSourceLocationMeta(): SourceLocationMeta {
     val visitorFold = object : PartiqlAst.VisitorFold<SourceLocationMeta>() {
         override fun visitMetas(node: MetaContainer, accumulator: SourceLocationMeta): SourceLocationMeta {
             val nodeSourceLocation = node.sourceLocation

@@ -151,11 +151,11 @@ internal fun ExprValue.dateTimePartValue(): DateTimePart =
         )
     }
 
-internal fun ExprValue.intValue(): Int = this.numberValue().toInt()
+fun ExprValue.intValue(): Int = this.numberValue().toInt()
 
-internal fun ExprValue.longValue(): Long = this.numberValue().toLong()
+fun ExprValue.longValue(): Long = this.numberValue().toLong()
 
-internal fun ExprValue.bigDecimalValue(): BigDecimal = this.numberValue().toString().toBigDecimal()
+fun ExprValue.bigDecimalValue(): BigDecimal = this.numberValue().toString().toBigDecimal()
 
 /**
  * Implements the `FROM` range operation.

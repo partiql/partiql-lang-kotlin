@@ -99,7 +99,8 @@ internal class PartiQLPlannerDefault(
         }
 
         return PartiQLPlanner.Result.Success(
-            plan = plan, warnings = problemHandler.problems, details = PartiQLPlanner.PlanningDetails(
+            plan = plan, warnings = problemHandler.problems,
+            details = PartiQLPlanner.PlanningDetails(
                 ast = statement,
                 astNormalized = normalized,
                 logical = logicalPlan,

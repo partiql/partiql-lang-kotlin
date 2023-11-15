@@ -144,7 +144,7 @@ internal object ExprFunctionCeil : ExprFunctionUnaryNumeric("ceil") {
         java.lang.Double.POSITIVE_INFINITY, java.lang.Double.NEGATIVE_INFINITY, java.lang.Double.NaN -> x
         // support for numbers that are larger than 64 bits.
         else -> {
-            val d= bigDecimalOf(x).setScale(0, RoundingMode.CEILING).toBigIntegerExact()
+            val d = bigDecimalOf(x).setScale(0, RoundingMode.CEILING).toBigIntegerExact()
             d.transformIntType()
         }
     }

@@ -7,14 +7,21 @@ import com.amazon.ionschema.IonSchemaSystem
 import com.amazon.ionschema.util.CloseableIterator
 import java.io.InputStream
 
-internal class ResourceAuthority(
+/**
+ * TODO REMOVE ME, duplicate of org.partiql.ionschema.discovery
+ *
+ * @property rootPackage
+ * @property classLoader
+ * @property ion
+ */
+public class ResourceAuthority(
     private val rootPackage: String,
     private val classLoader: ClassLoader,
     val ion: IonSystem
 ) : Authority {
 
     companion object {
-        internal fun getResourceAuthority(ion: IonSystem) =
+        public fun getResourceAuthority(ion: IonSystem) =
             ResourceAuthority("org/partiql/schemas", ResourceAuthority::class.java.classLoader, ion)
     }
 

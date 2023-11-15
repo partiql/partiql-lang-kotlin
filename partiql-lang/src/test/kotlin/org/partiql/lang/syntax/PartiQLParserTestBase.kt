@@ -12,8 +12,6 @@
  *  language governing permissions and limitations under the License.
  */
 
-@file:Suppress("DEPRECATION") // Don't need warnings about ExprNode deprecation.
-
 package org.partiql.lang.syntax
 
 import com.amazon.ion.IonSexp
@@ -52,7 +50,7 @@ abstract class PartiQLParserTestBase : TestBase() {
     private fun assertSexpEquals(
         expectedValue: IonValue,
         actualValue: IonValue,
-        message: String = ""
+        message: String = "",
     ) {
         if (!expectedValue.equals(actualValue)) {
             fail(
@@ -91,7 +89,7 @@ abstract class PartiQLParserTestBase : TestBase() {
      */
     protected fun assertExpression(
         source: String,
-        expectedPigBuilder: PartiqlAst.Builder.() -> PartiqlAst.PartiqlAstNode
+        expectedPigBuilder: PartiqlAst.Builder.() -> PartiqlAst.PartiqlAstNode,
     ) {
         val expectedPigAst = PartiqlAst.build { expectedPigBuilder() }.toIonElement().toString()
 
@@ -108,7 +106,8 @@ abstract class PartiQLParserTestBase : TestBase() {
             is PartiqlAst.Statement.Query -> statement.expr.toIonElement()
             is PartiqlAst.Statement.Dml,
             is PartiqlAst.Statement.Ddl,
-            is PartiqlAst.Statement.Exec -> statement.toIonElement()
+            is PartiqlAst.Statement.Exec,
+            -> statement.toIonElement()
             is PartiqlAst.Statement.Explain -> statement.toIonElement()
         }
     }
