@@ -33,7 +33,7 @@ private val MATH_CONTEXT = MathContext(38, RoundingMode.HALF_EVEN)
  * Factory function to create a [BigDecimal] using correct precision, use it in favor of native BigDecimal constructors
  * and factory methods
  */
-internal fun bigDecimalOf(num: Number, mc: MathContext = MATH_CONTEXT): BigDecimal = when (num) {
+fun bigDecimalOf(num: Number, mc: MathContext = MATH_CONTEXT): BigDecimal = when (num) {
     is Decimal -> num
     is Int -> BigDecimal(num, mc)
     is Long -> BigDecimal(num, mc)
@@ -43,7 +43,7 @@ internal fun bigDecimalOf(num: Number, mc: MathContext = MATH_CONTEXT): BigDecim
     else -> throw IllegalArgumentException("Unsupported number type: $num, ${num.javaClass}")
 }
 
-internal fun bigDecimalOf(text: String, mc: MathContext = MATH_CONTEXT): BigDecimal = BigDecimal(text.trim(), mc)
+fun bigDecimalOf(text: String, mc: MathContext = MATH_CONTEXT): BigDecimal = BigDecimal(text.trim(), mc)
 
 private val CONVERSION_MAP = mapOf<Set<Class<*>>, Class<out Number>>(
     setOf(Long::class.javaObjectType, Long::class.javaObjectType) to Long::class.javaObjectType,

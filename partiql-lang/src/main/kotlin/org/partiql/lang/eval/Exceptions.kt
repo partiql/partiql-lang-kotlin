@@ -143,7 +143,7 @@ fun errorContextFrom(metaContainer: MetaContainer?): PropertyValueMap {
 }
 
 /** Throw a function not found error when function name matching fails */
-internal class FunctionNotFoundException(message: String) : Exception(message)
+class FunctionNotFoundException(message: String) : Exception(message)
 
 /** Throw an arity mismatch error when function arity matching fails */
 internal class ArityMismatchException(message: String, val arity: Pair<Int, Int>) : Exception(message)

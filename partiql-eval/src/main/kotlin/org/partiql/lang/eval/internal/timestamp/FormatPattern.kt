@@ -220,7 +220,7 @@ internal class FormatPattern(val formatPatternString: String, val formatItems: L
      */
     private fun checkForFieldsNotValidForParsing() {
         if (formatSymbols.filterIsInstance<MonthPatternSymbol>()
-                .any { it.format == MonthFormat.FIRST_LETTER_OF_MONTH_NAME }
+            .any { it.format == MonthFormat.FIRST_LETTER_OF_MONTH_NAME }
         ) {
             throw EvaluationException(
                 message = "timestamp format pattern missing fields",

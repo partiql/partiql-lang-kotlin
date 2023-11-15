@@ -34,7 +34,6 @@ import org.partiql.lang.ast.UniqueNameMeta
 import org.partiql.lang.ast.find
 import org.partiql.lang.ast.sourceLocation
 import org.partiql.lang.domains.PartiqlAst
-import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.domains.staticType
 import org.partiql.lang.domains.toBindingCase
 import org.partiql.lang.eval.binding.Alias
