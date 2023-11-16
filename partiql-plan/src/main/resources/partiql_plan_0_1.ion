@@ -123,8 +123,19 @@ rex::{
         fn: fn,
         args: list::[rex]
       },
+      // fn: is this needed?
+      // args: represent the original arguments.
+      // candidates:
       dynamic::{
-        candidates: list::[static]
+        fn: fn,
+        args: list::[rex],
+        candidates: list::[static],
+        _: [
+          candidate::{
+            fn: fn,
+            coercions: list::[nullable::fn]
+          }
+        ]
       }
     ],
 
