@@ -128,9 +128,9 @@ object PartiQLHeader : Header() {
         FunctionSignature.Scalar(
             name = "eq",
             returns = BOOL,
-            isNullCall = false,
-            isNullable = false,
             parameters = listOf(FunctionParameter("lhs", t), FunctionParameter("rhs", t)),
+            isNullable = false,
+            isNullCall = false,
         )
     }
 
@@ -196,8 +196,8 @@ object PartiQLHeader : Header() {
             name = "upper",
             returns = t,
             parameters = listOf(FunctionParameter("value", t)),
-            isNullCall = true,
             isNullable = false,
+            isNullCall = true,
         )
     }
 
@@ -206,8 +206,8 @@ object PartiQLHeader : Header() {
             name = "lower",
             returns = t,
             parameters = listOf(FunctionParameter("value", t)),
-            isNullCall = true,
             isNullable = false,
+            isNullCall = true,
         )
     }
 
@@ -221,8 +221,8 @@ object PartiQLHeader : Header() {
                 FunctionParameter("value", STRING),
                 FunctionParameter("pattern", STRING),
             ),
-            isNullCall = true,
             isNullable = false,
+            isNullCall = true,
         ),
         FunctionSignature.Scalar(
             name = "like_escape",
@@ -232,8 +232,8 @@ object PartiQLHeader : Header() {
                 FunctionParameter("pattern", STRING),
                 FunctionParameter("escape", STRING),
             ),
-            isNullCall = true,
             isNullable = false,
+            isNullCall = true,
         ),
     )
 
@@ -246,8 +246,8 @@ object PartiQLHeader : Header() {
                 FunctionParameter("lower", t),
                 FunctionParameter("upper", t),
             ),
-            isNullCall = true,
             isNullable = false,
+            isNullCall = true,
         )
     }
 
@@ -260,8 +260,8 @@ object PartiQLHeader : Header() {
                     FunctionParameter("value", element),
                     FunctionParameter("collection", collection),
                 ),
-                isNullCall = true,
                 isNullable = false,
+                isNullCall = true,
             )
         }
     }.flatten()
@@ -279,8 +279,8 @@ object PartiQLHeader : Header() {
             parameters = listOf(
                 FunctionParameter("value", ANY) // TODO: Decide if we need to further segment this
             ),
-            isNullCall = false,
-            isNullable = false
+            isNullable = false,
+            isNullCall = false
         )
     }
 
@@ -295,8 +295,8 @@ object PartiQLHeader : Header() {
                 FunctionParameter("type_parameter_1", INT32),
                 FunctionParameter("value", ANY) // TODO: Decide if we need to further segment this
             ),
-            isNullCall = false,
-            isNullable = false
+            isNullable = false,
+            isNullCall = false
         )
     }
 
@@ -309,8 +309,8 @@ object PartiQLHeader : Header() {
                 FunctionParameter("type_parameter_2", INT32),
                 FunctionParameter("value", ANY) // TODO: Decide if we need to further segment this
             ),
-            isNullCall = false,
-            isNullable = false
+            isNullable = false,
+            isNullCall = false
         )
     }
 
@@ -323,8 +323,8 @@ object PartiQLHeader : Header() {
                 FunctionParameter("type_parameter_2", INT32),
                 FunctionParameter("value", ANY) // TODO: Decide if we need to further segment this
             ),
-            isNullCall = false,
-            isNullable = false
+            isNullable = false,
+            isNullCall = false
         )
     }
 
@@ -339,8 +339,8 @@ object PartiQLHeader : Header() {
                     FunctionParameter("value", t),
                     FunctionParameter("start", INT64),
                 ),
-                isNullCall = true,
                 isNullable = false,
+                isNullCall = true,
             ),
             FunctionSignature.Scalar(
                 name = "substring",
@@ -350,8 +350,8 @@ object PartiQLHeader : Header() {
                     FunctionParameter("start", INT64),
                     FunctionParameter("end", INT64),
                 ),
-                isNullCall = true,
                 isNullable = false,
+                isNullCall = true,
             )
         )
     }.flatten()
@@ -366,8 +366,8 @@ object PartiQLHeader : Header() {
                 FunctionParameter("probe", t),
                 FunctionParameter("value", t),
             ),
-            isNullCall = true,
             isNullable = false,
+            isNullCall = true,
         )
     }
 
@@ -379,8 +379,8 @@ object PartiQLHeader : Header() {
             parameters = listOf(
                 FunctionParameter("value", t),
             ),
-            isNullCall = true,
             isNullable = false,
+            isNullCall = true,
         )
     }
 
@@ -396,8 +396,8 @@ object PartiQLHeader : Header() {
                     FunctionParameter("value", t),
                     FunctionParameter("chars", t),
                 ),
-                isNullCall = true,
                 isNullable = false,
+                isNullCall = true,
             ),
             // TRIM(LEADING FROM value)
             FunctionSignature.Scalar(
@@ -406,8 +406,8 @@ object PartiQLHeader : Header() {
                 parameters = listOf(
                     FunctionParameter("value", t),
                 ),
-                isNullCall = true,
                 isNullable = false,
+                isNullCall = true,
             ),
             // TRIM(LEADING chars FROM value)
             FunctionSignature.Scalar(
@@ -417,8 +417,8 @@ object PartiQLHeader : Header() {
                     FunctionParameter("value", t),
                     FunctionParameter("chars", t),
                 ),
-                isNullCall = true,
                 isNullable = false,
+                isNullCall = true,
             ),
             // TRIM(TRAILING FROM value)
             FunctionSignature.Scalar(
@@ -427,8 +427,8 @@ object PartiQLHeader : Header() {
                 parameters = listOf(
                     FunctionParameter("value", t),
                 ),
-                isNullCall = true,
                 isNullable = false,
+                isNullCall = true,
             ),
             // TRIM(TRAILING chars FROM value)
             FunctionSignature.Scalar(
@@ -438,8 +438,8 @@ object PartiQLHeader : Header() {
                     FunctionParameter("value", t),
                     FunctionParameter("chars", t),
                 ),
-                isNullCall = true,
                 isNullable = false,
+                isNullCall = true,
             ),
         )
     }.flatten()
@@ -464,8 +464,8 @@ object PartiQLHeader : Header() {
                         FunctionParameter("interval", INT),
                         FunctionParameter("datetime", type),
                     ),
-                    isNullCall = true,
                     isNullable = false,
+                    isNullCall = true,
                 )
                 operators.add(signature)
             }
@@ -487,8 +487,8 @@ object PartiQLHeader : Header() {
                         FunctionParameter("datetime1", type),
                         FunctionParameter("datetime2", type),
                     ),
-                    isNullCall = true,
                     isNullable = false,
+                    isNullCall = true,
                 )
                 operators.add(signature)
             }

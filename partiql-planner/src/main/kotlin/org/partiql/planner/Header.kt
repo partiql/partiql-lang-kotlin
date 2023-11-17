@@ -58,25 +58,23 @@ public abstract class Header {
     companion object {
 
         @JvmStatic
-        internal fun unary(name: String, returns: PartiQLValueType, value: PartiQLValueType, isMissable: Boolean = false) =
+        internal fun unary(name: String, returns: PartiQLValueType, value: PartiQLValueType) =
             FunctionSignature.Scalar(
                 name = name,
                 returns = returns,
                 parameters = listOf(FunctionParameter("value", value)),
-                isNullCall = true,
                 isNullable = false,
-                isMissable = isMissable
+                isNullCall = true
             )
 
         @JvmStatic
-        internal fun binary(name: String, returns: PartiQLValueType, lhs: PartiQLValueType, rhs: PartiQLValueType, isMissable: Boolean = false) =
+        internal fun binary(name: String, returns: PartiQLValueType, lhs: PartiQLValueType, rhs: PartiQLValueType) =
             FunctionSignature.Scalar(
                 name = name,
                 returns = returns,
                 parameters = listOf(FunctionParameter("lhs", lhs), FunctionParameter("rhs", rhs)),
-                isNullCall = true,
                 isNullable = false,
-                isMissable = isMissable
+                isNullCall = true
             )
     }
 }

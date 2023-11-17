@@ -176,7 +176,7 @@ internal class FnResolver(private val headers: List<Header>) {
                     null
                 }
                 else -> {
-                    val isMissable = canReturnMissing || isUnsafeCast(match.signature.specific) || match.signature.isMissable
+                    val isMissable = canReturnMissing || isUnsafeCast(match.signature.specific)
                     FnMatch.Ok(match.signature, match.mapping, isMissable)
                 }
             }
@@ -371,11 +371,11 @@ internal class FnResolver(private val headers: List<Header>) {
         FunctionSignature.Scalar(
             name = castName(target),
             returns = target,
-            isNullCall = true,
-            isNullable = false,
             parameters = listOf(
                 FunctionParameter("value", operand),
-            )
+            ),
+            isNullable = false,
+            isNullCall = true
         )
 
     companion object {
