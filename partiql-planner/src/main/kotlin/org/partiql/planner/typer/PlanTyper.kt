@@ -45,6 +45,7 @@ import org.partiql.plan.relOpUnpivot
 import org.partiql.plan.relType
 import org.partiql.plan.rex
 import org.partiql.plan.rexOpCallDynamic
+import org.partiql.plan.rexOpCallDynamicCandidate
 import org.partiql.plan.rexOpCallStatic
 import org.partiql.plan.rexOpCaseBranch
 import org.partiql.plan.rexOpCollection
@@ -525,10 +526,12 @@ internal class PlanTyper(
                     val candidates = match.candidates.map { candidate ->
                         val rex = toRexCall(candidate, args, isEq)
                         val staticCall = rex.op as? Rex.Op.Call.Static ?: error("ToRexCall should always return a static call.")
+                        val resolvedFn = staticCall.fn as? Fn.Resolved ?: error("This should have been resolved")
                         types.add(rex.type)
-                        staticCall
+                        val coercions = candidate.mapping.map { it?.let { fnResolved(it) } }
+                        rexOpCallDynamicCandidate(fn = resolvedFn, coercions = coercions)
                     }
-                    val op = rexOpCallDynamic(candidates = candidates)
+                    val op = rexOpCallDynamic(args = args, candidates = candidates)
                     rex(type = StaticType.unionOf(types).flatten(), op = op)
                 }
                 is FnMatch.Error -> {

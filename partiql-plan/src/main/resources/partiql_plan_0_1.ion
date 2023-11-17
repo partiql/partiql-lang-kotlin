@@ -123,17 +123,25 @@ rex::{
         fn: fn,
         args: list::[rex]
       },
-      // fn: is this needed?
-      // args: represent the original arguments.
-      // candidates:
+
+      // Represents a dynamic function call. If all candidates are exhausted, dynamic calls will return MISSING.
+      //
+      // args: represent the original typed arguments. These will eventually be wrapped by coercions from [candidates].
+      // candidates: represent the potentially applicable resolved functions with coercions. Each of these candidates
+      //  should be overloaded functions of the same name and number of arguments.
       dynamic::{
-        fn: fn,
         args: list::[rex],
-        candidates: list::[static],
+        candidates: list::[candidate],
         _: [
+
+          // Represents a viable candidate.
+          //
+          // fn: The resolved function
+          // coercions: Represents the coercion that should take place -- if not null. The first item is to be wrapped
+          //  over the first argument of dynamic.args and so on.
           candidate::{
-            fn: fn,
-            coercions: list::[nullable::fn]
+            fn: '.fn.resolved',
+            coercions: list::[optional::fn]
           }
         ]
       }
