@@ -141,7 +141,7 @@ rex::{
           //  over the first argument of dynamic.args and so on.
           candidate::{
             fn: '.fn.resolved',
-            coercions: list::[optional::fn]
+            coercions: list::[optional::'.fn.resolved']
           }
         ]
       }
