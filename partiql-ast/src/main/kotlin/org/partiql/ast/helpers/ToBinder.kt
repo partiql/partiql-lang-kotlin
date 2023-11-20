@@ -6,7 +6,7 @@ import org.partiql.ast.builder.ast
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.StringValue
 
-private val col = { index: Int -> "_${index + 1}" }
+private val col = { index: () -> Int -> "_${index()}" }
 
 /**
  * Produces a "binder" (AS alias) for an expression following the given rules:
@@ -18,13 +18,21 @@ private val col = { index: Int -> "_${index + 1}" }
  *
  *  See https://github.com/partiql/partiql-lang-kotlin/issues/1122
  */
-public fun Expr.toBinder(index: Int): Identifier.Symbol = when (this) {
+public fun Expr.toBinder(index: () -> Int): Identifier.Symbol = when (this) {
     is Expr.Var -> this.identifier.toBinder()
     is Expr.Path -> this.toBinder(index)
     is Expr.Cast -> this.value.toBinder(index)
     is Expr.SessionAttribute -> this.attribute.name.uppercase().toBinder()
     else -> col(index).toBinder()
 }
+
+/**
+ * Simple toBinder that uses an int literal rather than a closure.
+ *
+ * @param index
+ * @return
+ */
+public fun Expr.toBinder(index: Int): Identifier.Symbol = toBinder { index }
 
 private fun String.toBinder(): Identifier.Symbol = ast {
     // Every binder preserves case
@@ -40,14 +48,14 @@ private fun Identifier.toBinder(): Identifier.Symbol = when (this@toBinder) {
 }
 
 @OptIn(PartiQLValueExperimental::class)
-private fun Expr.Path.toBinder(index: Int): Identifier.Symbol {
+private fun Expr.Path.toBinder(index: () -> Int): Identifier.Symbol {
     if (steps.isEmpty()) return root.toBinder(index)
     return when (val last = steps.last()) {
         is Expr.Path.Step.Symbol -> last.symbol.toBinder()
         is Expr.Path.Step.Index -> {
             val k = last.key
             if (k is Expr.Lit && k.value is StringValue) {
-                (k.value as StringValue).value!!.toBinder()
+                k.value.value!!.toBinder()
             } else {
                 col(index).toBinder()
             }

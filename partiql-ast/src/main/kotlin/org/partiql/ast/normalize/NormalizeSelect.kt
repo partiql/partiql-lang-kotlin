@@ -30,6 +30,7 @@ import org.partiql.ast.exprStructField
 import org.partiql.ast.exprVar
 import org.partiql.ast.helpers.toBinder
 import org.partiql.ast.identifierSymbol
+import org.partiql.ast.selectProject
 import org.partiql.ast.selectProjectItemExpression
 import org.partiql.ast.selectValue
 import org.partiql.ast.typeStruct
@@ -86,9 +87,20 @@ import org.partiql.value.stringValue
  */
 internal object NormalizeSelect : AstPass {
 
-    override fun apply(statement: Statement): Statement = Visitor.visitStatement(statement, 0) as Statement
+    override fun apply(statement: Statement): Statement = Visitor.visitStatement(statement, newCtx()) as Statement
 
-    private object Visitor : AstRewriter<Int>() {
+    /**
+     * Closure for incrementing a derived binding counter
+     */
+    private fun newCtx(): () -> Int = run {
+        var i = 1;
+        { i++ }
+    }
+
+    /**
+     * The type parameter () -> Int
+     */
+    private object Visitor : AstRewriter<() -> Int>() {
 
         /**
          * This is used to give projections a name. For example:
@@ -112,7 +124,7 @@ internal object NormalizeSelect : AstPass {
          */
         private val col = { index: Int -> "_${index + 1}" }
 
-        override fun visitExprSFW(node: Expr.SFW, ctx: Int): Expr.SFW {
+        override fun visitExprSFW(node: Expr.SFW, ctx: () -> Int): Expr.SFW {
             val sfw = super.visitExprSFW(node, ctx) as Expr.SFW
             return when (val select = sfw.select) {
                 is Select.Star -> sfw.copy(select = visitSelectAll(select, sfw.from))
@@ -120,17 +132,27 @@ internal object NormalizeSelect : AstPass {
             }
         }
 
-        override fun visitSelectProject(node: Select.Project, ctx: Int): AstNode {
-            val visitedNode = super.visitSelectProject(node, ctx) as? Select.Project
-                ?: error("VisitSelectProject should have returned a Select.Project")
+        override fun visitSelectProject(node: Select.Project, ctx: () -> Int): AstNode {
+
+            // Visit items, adding a binder if necessary
+            var diff = false
+            val visitedItems = ArrayList<Select.Project.Item>(node.items.size)
+            node.items.forEach { n ->
+                val item = visitSelectProjectItem(n, ctx) as Select.Project.Item
+                if (item !== n) diff = true
+                visitedItems.add(item)
+            }
+            val visitedNode = if (diff) selectProject(visitedItems, node.setq) else node
+
+            // Rewrite selection
             return when (node.items.any { it is Select.Project.Item.All }) {
                 false -> visitSelectProjectWithoutProjectAll(visitedNode)
                 true -> visitSelectProjectWithProjectAll(visitedNode)
             }
         }
 
-        override fun visitSelectProjectItemExpression(node: Select.Project.Item.Expression, ctx: Int): Select.Project.Item.Expression {
-            val expr = visitExpr(node.expr, 0) as Expr
+        override fun visitSelectProjectItemExpression(node: Select.Project.Item.Expression, ctx: () -> Int): Select.Project.Item.Expression {
+            val expr = visitExpr(node.expr, newCtx()) as Expr
             val alias = when (node.asAlias) {
                 null -> expr.toBinder(ctx)
                 else -> node.asAlias

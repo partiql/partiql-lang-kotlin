@@ -2474,7 +2474,27 @@ class PartiQLSchemaInferencerTests {
         @JvmStatic
         fun aggregationCases() = listOf(
             SuccessTestCase(
-                name = "AGGREGATE over INTS",
+                name = "AGGREGATE over INTS, without alias",
+                query = "SELECT a, COUNT(*), SUM(a), MIN(b) FROM << {'a': 1, 'b': 2} >> GROUP BY a",
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "a" to INT4,
+                            "_1" to INT4,
+                            "_2" to INT4.asNullable(),
+                            "_3" to INT4.asNullable(),
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "AGGREGATE over INTS, with alias",
                 query = "SELECT a, COUNT(*) AS c, SUM(a) AS s, MIN(b) AS m FROM << {'a': 1, 'b': 2} >> GROUP BY a",
                 expected = BagType(
                     StructType(
@@ -2632,7 +2652,7 @@ class PartiQLSchemaInferencerTests {
 
         class IgnoredTestCase(
             val shouldBe: TestCase,
-            reason: String
+            reason: String,
         ) : TestCase() {
             override fun toString(): String = "Disabled - $shouldBe"
         }
