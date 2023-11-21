@@ -8,7 +8,6 @@ import org.partiql.types.function.FunctionParameter
 import org.partiql.types.function.FunctionSignature
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
-import javax.print.DocFlavor.STRING
 
 /**
  * As far as testing is concerned, we can stub out all value related things.

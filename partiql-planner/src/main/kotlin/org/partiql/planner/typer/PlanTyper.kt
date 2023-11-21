@@ -44,7 +44,9 @@ import org.partiql.plan.relOpSort
 import org.partiql.plan.relOpUnpivot
 import org.partiql.plan.relType
 import org.partiql.plan.rex
-import org.partiql.plan.rexOpCall
+import org.partiql.plan.rexOpCallDynamic
+import org.partiql.plan.rexOpCallDynamicCandidate
+import org.partiql.plan.rexOpCallStatic
 import org.partiql.plan.rexOpCaseBranch
 import org.partiql.plan.rexOpCollection
 import org.partiql.plan.rexOpErr
@@ -78,6 +80,7 @@ import org.partiql.types.MissingType
 import org.partiql.types.NullType
 import org.partiql.types.SexpType
 import org.partiql.types.StaticType
+import org.partiql.types.StaticType.Companion.ANY
 import org.partiql.types.StringType
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
@@ -503,73 +506,83 @@ internal class PlanTyper(
          * @param ctx
          * @return
          */
-        override fun visitRexOpCall(node: Rex.Op.Call, ctx: StaticType?): Rex {
+        override fun visitRexOpCallStatic(node: Rex.Op.Call.Static, ctx: StaticType?): Rex {
             // Already resolved; unreachable but handle gracefully.
             if (node.fn is Fn.Resolved) return rex(ctx!!, node)
 
             // Type the arguments
             val fn = node.fn as Fn.Unresolved
             val isEq = fn.isEq()
-            var missingArg = false
-            val args = node.args.map {
-                val arg = visitRex(it, null)
-                if (arg.type == MissingType) missingArg = true
-                arg
-            }
-
-            // 7.1 All functions return MISSING when one of their inputs is MISSING (except `=`)
-            if (missingArg && !isEq) {
-                handleAlwaysMissing()
-                return rex(StaticType.MISSING, rexOpCall(fn, args))
-            }
+            val args = node.args.map { visitRex(it, null) }
 
             // Try to match the arguments to functions defined in the catalog
             return when (val match = env.resolveFn(fn, args)) {
-                is FnMatch.Ok -> {
-
-                    // Found a match!
-                    val newFn = fnResolved(match.signature)
-                    val newArgs = rewriteFnArgs(match.mapping, args)
-                    val returns = newFn.signature.returns
-
-                    // Determine the nullability of the return type
-                    var isNull = false // True iff NULL CALL and has a NULL arg
-                    var isNullable = false // True iff NULL CALL and has a NULLABLE arg; or is a NULLABLE operator
-                    if (newFn.signature.isNullCall) {
-                        for (arg in newArgs) {
-                            if (arg.type is NullType) {
-                                isNull = true
-                                break
-                            }
-                            if (arg.type.isNullable()) {
-                                isNullable = true
-                                break
-                            }
-                        }
-                    }
-                    isNullable = isNullable || newFn.signature.isNullable
-
-                    // Return type with calculated nullability
-                    var type = when {
-                        isNull -> StaticType.NULL
-                        isNullable -> returns.toStaticType()
-                        else -> returns.toNonNullStaticType()
-                    }
-
-                    // Some operators can return MISSING during runtime
+                is FnMatch.Ok -> toRexCall(match, args, isEq)
+                is FnMatch.Dynamic -> {
+                    val types = mutableSetOf<StaticType>()
                     if (match.isMissable && !isEq) {
-                        type = StaticType.unionOf(type, StaticType.MISSING)
+                        types.add(StaticType.MISSING)
                     }
-
-                    // Finally, rewrite this node
-                    val op = rexOpCall(newFn, newArgs)
-                    rex(type, op)
+                    val candidates = match.candidates.map { candidate ->
+                        val rex = toRexCall(candidate, args, isEq)
+                        val staticCall = rex.op as? Rex.Op.Call.Static ?: error("ToRexCall should always return a static call.")
+                        val resolvedFn = staticCall.fn as? Fn.Resolved ?: error("This should have been resolved")
+                        types.add(rex.type)
+                        val coercions = candidate.mapping.map { it?.let { fnResolved(it) } }
+                        rexOpCallDynamicCandidate(fn = resolvedFn, coercions = coercions)
+                    }
+                    val op = rexOpCallDynamic(args = args, candidates = candidates)
+                    rex(type = StaticType.unionOf(types).flatten(), op = op)
                 }
                 is FnMatch.Error -> {
                     handleUnknownFunction(match)
                     rexErr("Unknown scalar function $fn")
                 }
             }
+        }
+
+        override fun visitRexOpCallDynamic(node: Rex.Op.Call.Dynamic, ctx: StaticType?): Rex {
+            return rex(ANY, rexOpErr("Direct dynamic calls are not supported. This should have been a static call."))
+        }
+
+        private fun toRexCall(match: FnMatch.Ok<FunctionSignature.Scalar>, args: List<Rex>, isEq: Boolean): Rex {
+            // Found a match!
+            val newFn = fnResolved(match.signature)
+            val newArgs = rewriteFnArgs(match.mapping, args)
+            val returns = newFn.signature.returns
+
+            // Determine the nullability of the return type
+            var isNull = false // True iff NULL CALL and has a NULL arg
+            var isNullable = false // True iff NULL CALL and has a NULLABLE arg; or is a NULLABLE operator
+            if (newFn.signature.isNullCall) {
+                for (arg in newArgs) {
+                    if (arg.type is NullType) {
+                        isNull = true
+                        break
+                    }
+                    if (arg.type.isNullable()) {
+                        isNullable = true
+                        break
+                    }
+                }
+            }
+            isNullable = isNullable || newFn.signature.isNullable
+
+            // Return type with calculated nullability
+            var type = when {
+                isNull -> StaticType.NULL
+                isNullable -> returns.toStaticType()
+                else -> returns.toNonNullStaticType()
+            }
+
+            // Some operators can return MISSING during runtime
+            if (match.isMissable && !isEq) {
+                type = StaticType.unionOf(type, StaticType.MISSING)
+            }
+
+            // Finally, rewrite this node
+            val op = rexOpCallStatic(newFn, newArgs)
+            return rex(type.flatten(), op)
         }
 
         override fun visitRexOpCase(node: Rex.Op.Case, ctx: StaticType?): Rex {
@@ -646,7 +659,7 @@ internal class PlanTyper(
          *  currently limiting the scope of this intentionally.
          */
         private fun foldCaseBranch(condition: Rex, result: Rex): Rex.Op.Case.Branch {
-            val call = condition.op as? Rex.Op.Call ?: return rexOpCaseBranch(condition, result)
+            val call = condition.op as? Rex.Op.Call.Static ?: return rexOpCaseBranch(condition, result)
             val fn = call.fn as? Fn.Resolved ?: return rexOpCaseBranch(condition, result)
             if (fn.signature.name.equals("is_struct", ignoreCase = true).not()) {
                 return rexOpCaseBranch(condition, result)
@@ -674,7 +687,10 @@ internal class PlanTyper(
                 return rex(StaticType.NULL_OR_MISSING, rexOpErr("Expected collection type"))
             }
             val values = node.values.map { visitRex(it, it.type) }
-            val t = values.toUnionType()
+            val t = when (values.size) {
+                0 -> ANY
+                else -> values.toUnionType()
+            }
             val type = when (ctx as CollectionType) {
                 is BagType -> BagType(t)
                 is ListType -> ListType(t)
@@ -1130,6 +1146,7 @@ internal class PlanTyper(
                     // Finally, rewrite this node
                     relOpAggregateCall(newAgg, newArgs) to type
                 }
+                is FnMatch.Dynamic -> TODO("Dynamic aggregates not yet supported.")
                 is FnMatch.Error -> {
                     handleUnknownFunction(match)
                     return relOpAggregateCall(agg, listOf(rexErr("MISSING"))) to MissingType
@@ -1248,7 +1265,7 @@ internal class PlanTyper(
             if (m != null) {
                 // rewrite
                 val type = m.returns.toNonNullStaticType()
-                val cast = rexOpCall(fnResolved(m), listOf(a))
+                val cast = rexOpCallStatic(fnResolved(m), listOf(a))
                 a = rex(type, cast)
             }
             newArgs.add(a)

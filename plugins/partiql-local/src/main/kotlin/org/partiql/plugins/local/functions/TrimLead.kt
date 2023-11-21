@@ -21,8 +21,8 @@ object TrimLead : PartiQLFunction {
         parameters = listOf(
             FunctionParameter(name = "str", type = PartiQLValueType.STRING)
         ),
-        isDeterministic = true,
-        description = "Trims leading whitespace of a [str]."
+        description = "Trims leading whitespace of a [str].",
+        isDeterministic = true
     )
 
     @OptIn(PartiQLValueExperimental::class)

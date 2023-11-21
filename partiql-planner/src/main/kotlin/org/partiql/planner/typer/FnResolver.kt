@@ -5,6 +5,7 @@ import org.partiql.plan.Fn
 import org.partiql.plan.Identifier
 import org.partiql.plan.Rex
 import org.partiql.planner.Header
+import org.partiql.types.StaticType
 import org.partiql.types.function.FunctionParameter
 import org.partiql.types.function.FunctionSignature
 import org.partiql.value.PartiQLValueExperimental
@@ -79,6 +80,21 @@ internal sealed class FnMatch<T : FunctionSignature> {
         public val isMissable: Boolean,
     ) : FnMatch<T>()
 
+    /**
+     * This represents dynamic dispatch.
+     *
+     * @property candidates an ordered list of potentially applicable functions to dispatch dynamically.
+     * @property isMissable TRUE when the argument permutations may not definitively invoke one of the candidates. You
+     * can think of [isMissable] as being the same as "not exhaustive". For example, if we have ABS(INT | STRING), then
+     * this function call [isMissable] because there isn't an `ABS(STRING)` function signature AKA we haven't exhausted
+     * all the arguments. On the other hand, take an "exhaustive" scenario: ABS(INT | DEC). In this case, [isMissable]
+     * is false because we have functions for each potential argument AKA we have exhausted the arguments.
+     */
+    public data class Dynamic<T : FunctionSignature>(
+        public val candidates: List<Ok<T>>,
+        public val isMissable: Boolean
+    ) : FnMatch<T>()
+
     public data class Error<T : FunctionSignature>(
         public val identifier: Identifier,
         public val args: List<Rex>,
@@ -142,19 +158,58 @@ internal class FnResolver(private val headers: List<Header>) {
      */
     public fun resolveFn(fn: Fn.Unresolved, args: List<Rex>): FnMatch<FunctionSignature.Scalar> {
         val candidates = lookup(fn)
-        var hadMissingArg = false
-        val parameters = args.mapIndexed { i, arg ->
-            if (!hadMissingArg && arg.type.isMissable()) {
-                hadMissingArg = true
+        var canReturnMissing = false
+        val parameterPermutations = buildArgumentPermutations(args.map { it.type }).mapNotNull { argList ->
+            argList.mapIndexed { i, arg ->
+                if (arg.isMissable()) {
+                    canReturnMissing = true
+                }
+                // Skip over if we cannot convert type to runtime type.
+                val argType = arg.toRuntimeTypeOrNull() ?: return@mapNotNull null
+                FunctionParameter("arg-$i", argType)
             }
-            FunctionParameter("arg-$i", arg.type.toRuntimeType())
         }
-        val match = match(candidates, parameters)
-        return when (match) {
-            null -> FnMatch.Error(fn.identifier, args, candidates)
-            else -> {
-                val isMissable = hadMissingArg || isUnsafeCast(match.signature.specific) || match.signature.isMissable
-                FnMatch.Ok(match.signature, match.mapping, isMissable)
+        val potentialFunctions = parameterPermutations.mapNotNull { parameters ->
+            when (val match = match(candidates, parameters)) {
+                null -> {
+                    canReturnMissing = true
+                    null
+                }
+                else -> {
+                    val isMissable = canReturnMissing || isUnsafeCast(match.signature.specific)
+                    FnMatch.Ok(match.signature, match.mapping, isMissable)
+                }
+            }
+        }
+        // Remove duplicates while maintaining order (precedence).
+        val orderedUniqueFunctions = potentialFunctions.toSet().toList()
+        return when (orderedUniqueFunctions.size) {
+            0 -> FnMatch.Error(fn.identifier, args, candidates)
+            1 -> orderedUniqueFunctions.first()
+            else -> FnMatch.Dynamic(orderedUniqueFunctions, canReturnMissing)
+        }
+    }
+
+    private fun buildArgumentPermutations(args: List<StaticType>): List<List<StaticType>> {
+        val flattenedArgs = args.map { it.flatten().allTypes }
+        return buildArgumentPermutations(flattenedArgs, accumulator = emptyList())
+    }
+
+    private fun buildArgumentPermutations(
+        args: List<List<StaticType>>,
+        accumulator: List<StaticType>,
+    ): List<List<StaticType>> {
+        if (args.isEmpty()) {
+            return listOf(accumulator)
+        }
+        val first = args.first()
+        val rest = when (args.size) {
+            1 -> emptyList()
+            else -> args.subList(1, args.size)
+        }
+        return buildList {
+            first.forEach { argSubType ->
+                addAll(buildArgumentPermutations(rest, accumulator + listOf(argSubType)))
             }
         }
     }
@@ -316,11 +371,11 @@ internal class FnResolver(private val headers: List<Header>) {
         FunctionSignature.Scalar(
             name = castName(target),
             returns = target,
-            isNullCall = true,
-            isNullable = false,
             parameters = listOf(
                 FunctionParameter("value", operand),
-            )
+            ),
+            isNullable = false,
+            isNullCall = true
         )
 
     companion object {

@@ -27,7 +27,7 @@ import org.partiql.plan.builder.plan
 import org.partiql.plan.fnUnresolved
 import org.partiql.plan.identifierSymbol
 import org.partiql.plan.rex
-import org.partiql.plan.rexOpCall
+import org.partiql.plan.rexOpCallStatic
 import org.partiql.plan.rexOpCollection
 import org.partiql.plan.rexOpLit
 import org.partiql.plan.rexOpPath
@@ -119,7 +119,7 @@ internal object RexConverter {
             val id = identifierSymbol(node.op.name.lowercase(), Identifier.CaseSensitivity.SENSITIVE)
             val fn = fnUnresolved(id, true)
             // Rex
-            val op = rexOpCall(fn, args)
+            val op = rexOpCallStatic(fn, args)
             return rex(type, op)
         }
 
@@ -133,7 +133,7 @@ internal object RexConverter {
             val id = identifierSymbol(node.op.name.lowercase(), Identifier.CaseSensitivity.SENSITIVE)
             val fn = fnUnresolved(id, true)
             // Rex
-            val op = rexOpCall(fn, args)
+            val op = rexOpCallStatic(fn, args)
             return rex(type, op)
         }
 
@@ -171,7 +171,7 @@ internal object RexConverter {
             // Args
             val args = node.args.map { visitExprCoerce(it, context) }
             // Rex
-            val op = rexOpCall(fn, args)
+            val op = rexOpCallStatic(fn, args)
             return rex(type, op)
         }
 
@@ -195,7 +195,7 @@ internal object RexConverter {
             val createBranch: (Rex, Rex) -> Rex.Op.Case.Branch = { condition: Rex, result: Rex ->
                 val updatedCondition = when (rex) {
                     null -> condition
-                    else -> rex(type, rexOpCall(fn.copy(), listOf(rex, condition)))
+                    else -> rex(type, rexOpCallStatic(fn.copy(), listOf(rex, condition)))
                 }
                 rexOpCaseBranch(updatedCondition, result)
             }
@@ -383,7 +383,7 @@ internal object RexConverter {
             val expr2 = visitExpr(node.nullifier, ctx)
             val id = identifierSymbol(Expr.Binary.Op.EQ.name.lowercase(), Identifier.CaseSensitivity.SENSITIVE)
             val fn = fnUnresolved(id, true)
-            val call = rexOpCall(fn, listOf(expr1, expr2))
+            val call = rexOpCallStatic(fn, listOf(expr1, expr2))
             val branches = listOf(
                 rexOpCaseBranch(rex(type, call), rex(type = StaticType.NULL, op = rexOpLit(value = nullValue()))),
             )
@@ -552,33 +552,33 @@ internal object RexConverter {
             return rex(type, op)
         }
 
-        private fun negate(call: Rex.Op.Call): Rex.Op.Call {
+        private fun negate(call: Rex.Op.Call.Static): Rex.Op.Call.Static {
             val name = Expr.Unary.Op.NOT.name
             val id = identifierSymbol(name.lowercase(), Identifier.CaseSensitivity.SENSITIVE)
             val fn = fnUnresolved(id, true)
             // wrap
             val arg = rex(StaticType.BOOL, call)
             // rewrite call
-            return rexOpCall(fn, listOf(arg))
+            return rexOpCallStatic(fn, listOf(arg))
         }
 
         /**
-         * Create a [Rex.Op.Call] node which has a hidden unresolved Function.
+         * Create a [Rex.Op.Call.Static] node which has a hidden unresolved Function.
          * The purpose of having such hidden function is to prevent usage of generated function name in query text.
          */
-        private fun call(name: String, vararg args: Rex): Rex.Op.Call {
+        private fun call(name: String, vararg args: Rex): Rex.Op.Call.Static {
             val id = identifierSymbol(name, Identifier.CaseSensitivity.SENSITIVE)
             val fn = fnUnresolved(id, true)
-            return rexOpCall(fn, args.toList())
+            return rexOpCallStatic(fn, args.toList())
         }
 
         /**
-         * Create a [Rex.Op.Call] node which has a non-hidden unresolved Function.
+         * Create a [Rex.Op.Call.Static] node which has a non-hidden unresolved Function.
          */
-        private fun callNonHidden(name: String, vararg args: Rex): Rex.Op.Call {
+        private fun callNonHidden(name: String, vararg args: Rex): Rex.Op.Call.Static {
             val id = identifierSymbol(name, Identifier.CaseSensitivity.SENSITIVE)
             val fn = fnUnresolved(id, false)
-            return rexOpCall(fn, args.toList())
+            return rexOpCallStatic(fn, args.toList())
         }
 
         private fun Int?.toRex() = rex(StaticType.INT4, rexOpLit(int32Value(this)))

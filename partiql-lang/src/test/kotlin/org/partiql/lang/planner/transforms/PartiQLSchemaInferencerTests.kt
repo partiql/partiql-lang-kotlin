@@ -35,6 +35,7 @@ import org.partiql.types.BagType
 import org.partiql.types.ListType
 import org.partiql.types.SexpType
 import org.partiql.types.StaticType
+import org.partiql.types.StaticType.Companion.BAG
 import org.partiql.types.StaticType.Companion.BOOL
 import org.partiql.types.StaticType.Companion.DATE
 import org.partiql.types.StaticType.Companion.DECIMAL
@@ -135,6 +136,11 @@ class PartiQLSchemaInferencerTests {
     @MethodSource("subqueryCases")
     @Execution(ExecutionMode.CONCURRENT)
     fun testSubqueries(tc: TestCase) = runTest(tc)
+
+    @ParameterizedTest
+    @MethodSource("dynamicCalls")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun testDynamicCalls(tc: TestCase) = runTest(tc)
 
     companion object {
         val inputStream = this::class.java.getResourceAsStream("/resource_path.txt")!!
@@ -480,7 +486,7 @@ class PartiQLSchemaInferencerTests {
                         )
                     )
                 }
-            ).toIgnored("Plus op will be resolved to PLUS__ANY_ANY__ANY"),
+            ),
         )
 
         @JvmStatic
@@ -498,7 +504,7 @@ class PartiQLSchemaInferencerTests {
             SuccessTestCase(
                 name = "BITWISE_AND_3",
                 query = "1 & 2",
-                expected = StaticType.INT4
+                expected = INT4
             ),
             SuccessTestCase(
                 name = "BITWISE_AND_4",
@@ -546,8 +552,11 @@ class PartiQLSchemaInferencerTests {
                 expected = StaticType.MISSING,
                 problemHandler = assertProblemExists {
                     Problem(
-                        UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.ExpressionAlwaysReturnsNullOrMissing
+                        sourceLocation = UNKNOWN_PROBLEM_LOCATION,
+                        details = PlanningProblemDetails.UnknownFunction(
+                            "bitwise_and",
+                            listOf(INT4, MISSING)
+                        )
                     )
                 }
             ),
@@ -561,7 +570,7 @@ class PartiQLSchemaInferencerTests {
                         PlanningProblemDetails.UnknownFunction("bitwise_and", listOf(INT4, STRING))
                     )
                 }
-            ).toIgnored("Bitwise And opearator will be resolved to BITWISE_AND__ANY_ANY__ANY"),
+            ),
         )
 
         @JvmStatic
@@ -2516,6 +2525,172 @@ class PartiQLSchemaInferencerTests {
         )
 
         @JvmStatic
+        fun dynamicCalls() = listOf(
+            SuccessTestCase(
+                name = "unary plus on varying numeric types -- this cannot return missing!",
+                query = """
+                    SELECT +t.a AS a
+                    FROM <<
+                        { 'a': CAST(1 AS INT8) },
+                        { 'a': CAST(1 AS INT4) }
+                    >> AS t
+                """.trimIndent(),
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "a" to unionOf(INT4, INT8),
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "unary plus on varying numeric types including missing -- this may return missing",
+                query = """
+                    SELECT +t.a AS a
+                    FROM <<
+                        { 'a': CAST(1 AS INT8) },
+                        { 'a': CAST(1 AS INT4) },
+                        { }
+                    >> AS t
+                """.trimIndent(),
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "a" to unionOf(INT4, INT8, MISSING),
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "unary plus on varying numeric types including string -- this may return missing",
+                query = """
+                    SELECT +t.a AS a
+                    FROM <<
+                        { 'a': CAST(1 AS INT8) },
+                        { 'a': CAST(1 AS INT4) },
+                        { 'a': 'hello world!' }
+                    >> AS t
+                """.trimIndent(),
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "a" to unionOf(INT4, INT8, MISSING),
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "binary plus on varying types -- this will return missing if one of the operands is not a number",
+                query = """
+                    SELECT t.a + t.b AS c
+                    FROM <<
+                        { 'a': CAST(1 AS INT8), 'b': CAST(1.0 AS DECIMAL) },
+                        { 'a': CAST(1 AS INT4), 'b': TRUE },
+                        { 'a': 'hello world!!', 'b': DATE '2023-01-01' }
+                    >> AS t
+                """.trimIndent(),
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "c" to unionOf(INT4, INT8, MISSING, DECIMAL),
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                )
+            ),
+            ErrorTestCase(
+                name = """
+                    unary plus on non-compatible type -- this cannot resolve to a dynamic call since no function
+                    will ever be invoked.
+                """.trimIndent(),
+                query = """
+                    SELECT VALUE +t.a
+                    FROM <<
+                        { 'a': 'hello world!'  }
+                    >> AS t
+                """.trimIndent(),
+                expected = BagType(MISSING),
+                problemHandler = assertProblemExists {
+                    Problem(
+                        sourceLocation = UNKNOWN_PROBLEM_LOCATION,
+                        details = PlanningProblemDetails.UnknownFunction(
+                            "pos",
+                            listOf(STRING)
+                        )
+                    )
+                }
+            ),
+            ErrorTestCase(
+                name = """
+                    unary plus on non-compatible union type -- this cannot resolve to a dynamic call since no function
+                    will ever be invoked.
+                """.trimIndent(),
+                query = """
+                    SELECT VALUE +t.a
+                    FROM <<
+                        { 'a': 'hello world!'  },
+                        { 'a': <<>> }
+                    >> AS t
+                """.trimIndent(),
+                expected = BagType(MISSING),
+                problemHandler = assertProblemExists {
+                    Problem(
+                        sourceLocation = UNKNOWN_PROBLEM_LOCATION,
+                        details = PlanningProblemDetails.UnknownFunction(
+                            "pos",
+                            listOf(unionOf(STRING, BAG))
+                        )
+                    )
+                }
+            ),
+            ErrorTestCase(
+                name = """
+                    unary plus on missing type -- this cannot resolve to a dynamic call since no function
+                    will ever be invoked.
+                """.trimIndent(),
+                query = """
+                    SELECT VALUE +t.a
+                    FROM <<
+                        { 'NOT_A': 1 }
+                    >> AS t
+                """.trimIndent(),
+                expected = BagType(MISSING),
+                problemHandler = assertProblemExists {
+                    Problem(
+                        sourceLocation = UNKNOWN_PROBLEM_LOCATION,
+                        details = PlanningProblemDetails.UnknownFunction(
+                            "pos",
+                            listOf(MISSING)
+                        )
+                    )
+                }
+            ),
+        )
+
+        @JvmStatic
         fun subqueryCases() = listOf(
             SuccessTestCase(
                 name = "Subquery IN collection",
@@ -2964,7 +3139,7 @@ class PartiQLSchemaInferencerTests {
                         )
                     )
                 }
-            ).toIgnored("Between will be resolved to BETWEEN__ANY_ANY_ANY__BOOL"),
+            ),
             SuccessTestCase(
                 name = "LIKE",
                 catalog = CATALOG_DB,
@@ -2987,7 +3162,7 @@ class PartiQLSchemaInferencerTests {
                         )
                     )
                 }
-            ).toIgnored("Like Op will be resolved to LIKE__ANY_ANY__BOOL"),
+            ),
             SuccessTestCase(
                 name = "Case Insensitive success",
                 catalog = CATALOG_DB,
@@ -3058,7 +3233,7 @@ class PartiQLSchemaInferencerTests {
                         )
                     )
                 }
-            ).toIgnored("And Op will be resolved to AND__ANY_ANY__BOOL"),
+            ),
             ErrorTestCase(
                 name = "Bad comparison",
                 catalog = CATALOG_DB,
@@ -3074,7 +3249,7 @@ class PartiQLSchemaInferencerTests {
                         )
                     )
                 }
-            ).toIgnored("And Op will be resolved to AND__ANY_ANY__BOOL"),
+            ),
             ErrorTestCase(
                 name = "Unknown column",
                 catalog = CATALOG_DB,
@@ -3311,8 +3486,7 @@ class PartiQLSchemaInferencerTests {
                         )
                     )
                 }
-            ).toIgnored("Currently this will be resolved to TRIM_CHARS__ANY_ANY__ANY."),
-
+            ),
         )
     }
 
