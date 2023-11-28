@@ -99,17 +99,17 @@ object PartiQLHeader : Header() {
     /**
      * Logical functions follows the three-valued logic truth table:
      *
-     * |A	|B	 |A AND B|A OR B |NOT A	|
+     * |A   |B   |A AND B|A OR B |NOT A |
      * |----|----|-------|-------|------|
-     * |T	|T	 |T		 |T		 |F	    |
-     * |T   |F	 |F		 |T		 |F     |
-     * |T   |U	 |U		 |T		 |F	    |
-     * |F	|T	 |F   	 |T		 |T	    |
-     * |F	|F	 |F		 |F		 |T	    |
-     * |F	|U	 |F		 |U		 |T	    |
-     * |U	|T	 |U		 |T		 |U	    |
-     * |U	|F	 |F	 	 |U		 |U	    |
-     * |U	|U	 |U	 	 |U		 |U	    |
+     * |T   |T   |T      |T      |F     |
+     * |T   |F   |F      |T      |F     |
+     * |T   |U   |U      |T      |F     |
+     * |F   |T   |F      |T      |T     |
+     * |F   |F   |F      |F      |T     |
+     * |F   |U   |F      |U      |T     |
+     * |U   |T   |U      |T      |U     |
+     * |U   |F   |F      |U      |U     |
+     * |U   |U   |U      |U      |U     |
      *
      * 1.  The `MISSING` value, when convert to a truth value, becomes a `UNKNOWN`.
      * 2. `UNKNOWN` truth value, when converting to PartiQL Value, becomes NULL of boolean type.
