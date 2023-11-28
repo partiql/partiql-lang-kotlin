@@ -282,7 +282,7 @@ internal class FnResolver(private val headers: List<Header>) {
         }
         // if all elements requires casting, then no match
         // because there must be another function definition that requires no casting
-        return if (mapping.contains(null) || mapping.isEmpty()) {
+        return if (mapping.isEmpty() || mapping.contains(null)) {
             // we made a match
             mapping
         } else {

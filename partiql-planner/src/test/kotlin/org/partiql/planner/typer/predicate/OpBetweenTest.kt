@@ -1,31 +1,33 @@
-package org.partiql.planner.typer.operator
+package org.partiql.planner.typer.predicate
 
 import org.junit.jupiter.api.DynamicContainer
 import org.junit.jupiter.api.TestFactory
 import org.partiql.planner.typer.PartiQLTyperTestBase
-import org.partiql.planner.util.CastType
 import org.partiql.planner.util.allNumberType
 import org.partiql.planner.util.allSupportedType
 import org.partiql.planner.util.cartesianProduct
-import org.partiql.planner.util.castTable
 import org.partiql.types.StaticType
 import java.util.stream.Stream
 
-class OpArithmeticTest : PartiQLTyperTestBase() {
+// TODO: Finalize the semantics for Between operator when operands contain MISSING
+//  For now, Between propagates MISSING.
+class OpBetweenTest : PartiQLTyperTestBase() {
     @TestFactory
-    fun arithmetic(): Stream<DynamicContainer> {
+    fun between(): Stream<DynamicContainer> {
         val tests = listOf(
-            "expr-37",
-            "expr-38",
-            "expr-39",
-            "expr-40",
-            "expr-41",
+            "expr-34",
         ).map { inputs.get("basics", it)!! }
 
-        val argsMap: Map<TestResult, Set<List<StaticType>>> = buildMap {
-            val successArgs = (allNumberType + listOf(StaticType.NULL))
-                .let { cartesianProduct(it, it) }
+        val argsMap = buildMap {
+            val successArgs =
+                cartesianProduct(
+                    allNumberType + listOf(StaticType.NULL),
+                    allNumberType + listOf(StaticType.NULL),
+                    allNumberType + listOf(StaticType.NULL),
+                )
+
             val failureArgs = cartesianProduct(
+                allSupportedType,
                 allSupportedType,
                 allSupportedType
             ).filterNot {
@@ -35,29 +37,21 @@ class OpArithmeticTest : PartiQLTyperTestBase() {
             successArgs.forEach { args: List<StaticType> ->
                 val arg0 = args.first()
                 val arg1 = args[1]
+                val arg2 = args[2]
                 if (args.contains(StaticType.NULL)) {
                     (this[TestResult.Success(StaticType.NULL)] ?: setOf(args)).let {
                         put(TestResult.Success(StaticType.NULL), it + setOf(args))
                     }
-                } else if (arg0 == arg1) {
-                    (this[TestResult.Success(arg1)] ?: setOf(args)).let {
-                        put(TestResult.Success(arg1), it + setOf(args))
-                    }
-                } else if (castTable(arg1, arg0) == CastType.COERCION) {
-                    (this[TestResult.Success(arg0)] ?: setOf(args)).let {
-                        put(TestResult.Success(arg0), it + setOf(args))
-                    }
                 } else {
-                    (this[TestResult.Success(arg1)] ?: setOf(args)).let {
-                        put(TestResult.Success(arg1), it + setOf(args))
+                    (this[TestResult.Success(StaticType.BOOL)] ?: setOf(args)).let {
+                        put(TestResult.Success(StaticType.BOOL), it + setOf(args))
                     }
                 }
                 Unit
             }
-
             put(TestResult.Failure, failureArgs)
         }
 
-        return super.testGen("arithmetic", tests, argsMap)
+        return super.testGen("between", tests, argsMap)
     }
 }

@@ -562,12 +562,16 @@ internal class PlanTyper(
                     return rex(StaticType.MISSING, rexOpCallStatic(newFn, newArgs))
                 }
             }
+
+            // If a function is NOT Missable (i.e., does not propagate MISSING)
+            // then treat MISSING as null.
+            var isMissing = false
+            var isMissable = false
             if (isNotMissable) {
-                lookUpLogicalTable(newFn.signature.name, newArgs.map { it.type }).let {
-                    // If logical functions
-                    if (it != null) {
-                        return rex(it, rexOpCallStatic(newFn, newArgs))
-                    }
+                if (newArgs.any { it.type is MissingType }) {
+                    isMissing = true
+                } else if (newArgs.any { it.type.isMissable() }) {
+                    isMissable = true
                 }
             }
 
@@ -575,14 +579,20 @@ internal class PlanTyper(
             var isNull = false // True iff NULL CALL and has a NULL arg
             var isNullable = false // True iff NULL CALL and has a NULLABLE arg; or is a NULLABLE operator
             if (newFn.signature.isNullCall) {
-                for (arg in newArgs) {
-                    if (arg.type is NullType) {
-                        isNull = true
-                        break
-                    }
-                    if (arg.type.isNullable()) {
-                        isNullable = true
-                        break
+                if (isMissing) {
+                    isNull = true
+                } else if (isMissable) {
+                    isNullable = true
+                } else {
+                    for (arg in newArgs) {
+                        if (arg.type is NullType) {
+                            isNull = true
+                            break
+                        }
+                        if (arg.type.isNullable()) {
+                            isNullable = true
+                            break
+                        }
                     }
                 }
             }
@@ -1369,17 +1379,16 @@ internal class PlanTyper(
      * Indicates whether the given functions propagate Missing.
      *
      * Currently, Logical Functions : AND, OR, NOT, IS NULL, IS MISSING
-     * the equal function, and the in_collection function do not propagate Missing.
+     * the equal function, function do not propagate Missing.
      */
     private fun Fn.Unresolved.isNotMissable(): Boolean {
         return when (identifier) {
             is Identifier.Qualified -> false
             is Identifier.Symbol -> when ((identifier as Identifier.Symbol).symbol) {
-                "in_collection" -> true
-                "eq" -> true
                 "and" -> true
                 "or" -> true
                 "not" -> true
+                "eq" -> true
                 "is_null" -> true
                 "is_missing" -> true
                 else -> false
@@ -1428,58 +1437,4 @@ internal class PlanTyper(
         Identifier.CaseSensitivity.SENSITIVE -> symbol.equals(other)
         Identifier.CaseSensitivity.INSENSITIVE -> symbol.equals(other, ignoreCase = true)
     }
-
-    /**
-     *
-     |A	        |B	        |A AND B	|A OR B	|NOT A	|
-     |---	    |---	    |---	    |---	|---	|
-     |TRUE	    |TRUE	    |TRUE	    |TRUE	|FALSE	|
-     |TRUE       |FALSE	    |FALSE	    |TRUE	|FALSE	|
-     |TRUE       |NULL	    |NULL	    |TRUE	|FALSE	|
-     |TRUE       |MISSING	|NULL	    |TRUE	|FALSE	|
-     |FALSE	    |TRUE	    |FALSE	    |TRUE	|TRUE	|
-     |FALSE	    |FALSE	    |FALSE	    |FALSE	|TRUE	|
-     |FALSE	    |NULL	    |FALSE	    |NULL	|TRUE	|
-     |FALSE	    |MISSING	|FALSE	    |NULL	|TRUE	|
-     |NULL	    |TRUE	    |NULL	    |TRUE	|NULL	|
-     |NULL	    |FALSE	    |FALSE	    |NULL	|NULL	|
-     |NULL	    |NULL	    |NULL	    |NULL	|NULL	|
-     |NULL	    |MISSING	|NULL	    |NULL	|NULL	|
-     |MISSING	|TRUE	    |NULL	    |TRUE	|NULL	|
-     |MISSING	|FALSE	    |FALSE	    |NULL	|NULL	|
-     |MISSING	|NULL	    |NULL	    |NULL	|NULL	|
-     |MISSING	|MISSING	|NULL	    |NULL	|NULL	|
-     */
-    private fun lookUpLogicalTable(fn: String, args: List<StaticType>): StaticType? =
-        when (fn) {
-            "not" -> {
-                val valueType = args[0]
-                if (valueType.isUnknown()) {
-                    StaticType.NULL
-                } else {
-                    StaticType.BOOL
-                }
-            }
-            "is_null", "is_missing" -> {
-                StaticType.BOOL
-            }
-            "and", "or" -> {
-                val arg0 = args[0]
-                val arg1 = args[1]
-                if (arg0.isUnknown()) {
-                    if (arg1.isUnknown()) {
-                        NULL
-                    } else {
-                        StaticType.unionOf(NULL, BOOL)
-                    }
-                } else {
-                    if (arg1.isUnknown()) {
-                        StaticType.unionOf(NULL, BOOL)
-                    } else {
-                        StaticType.BOOL
-                    }
-                }
-            }
-            else -> null
-        }
 }

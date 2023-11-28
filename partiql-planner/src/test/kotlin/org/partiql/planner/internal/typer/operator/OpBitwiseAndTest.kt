@@ -31,11 +31,7 @@ class OpBitwiseAndTest : PartiQLTyperTestBase() {
             successArgs.forEach { args: List<StaticType> ->
                 val arg0 = args.first()
                 val arg1 = args[1]
-                if (args.contains(StaticType.MISSING)) {
-                    (this[TestResult.Success(StaticType.MISSING)] ?: setOf(args)).let {
-                        put(TestResult.Success(StaticType.MISSING), it + setOf(args))
-                    }
-                } else if (args.contains(StaticType.NULL)) {
+                if (args.contains(StaticType.NULL)) {
                     (this[TestResult.Success(StaticType.NULL)] ?: setOf(args)).let {
                         put(TestResult.Success(StaticType.NULL), it + setOf(args))
                     }

@@ -101,8 +101,18 @@ abstract class PartiQLTyperTestBase {
                             val actualType = root.type
                             assert(actualType == key.expectedType) {
                                 buildString {
-                                    this.appendLine(" expected Type is : ${key.expectedType}")
+                                    this.appendLine("expected Type is : ${key.expectedType}")
                                     this.appendLine("actual Type is : $actualType")
+                                    PlanPrinter.append(this, result.plan)
+                                }
+                            }
+                            assert(pc.problems.isEmpty()) {
+                                buildString {
+                                    this.appendLine("expected success Test case to have no problem")
+                                    this.appendLine("actual problems are: ")
+                                    pc.problems.forEach {
+                                        this.appendLine(it)
+                                    }
                                     PlanPrinter.append(this, result.plan)
                                 }
                             }
@@ -114,6 +124,13 @@ abstract class PartiQLTyperTestBase {
                                 buildString {
                                     this.appendLine(" expected Type is : MISSING")
                                     this.appendLine("actual Type is : $actualType")
+                                    PlanPrinter.append(this, result.plan)
+                                }
+                            }
+                            assert(pc.problems.isNotEmpty()) {
+                                buildString {
+                                    this.appendLine("expected success Test case to have problems")
+                                    this.appendLine("but received no problems")
                                     PlanPrinter.append(this, result.plan)
                                 }
                             }
