@@ -691,26 +691,49 @@ internal class PlanTyper(
          *  currently limiting the scope of this intentionally.
          */
         private fun foldCaseBranch(condition: Rex, result: Rex): Rex.Op.Case.Branch {
-            val call = condition.op as? Rex.Op.Call.Static ?: return rexOpCaseBranch(condition, result)
-            val fn = call.fn as? Fn.Resolved ?: return rexOpCaseBranch(condition, result)
-            if (fn.signature.name.equals("is_struct", ignoreCase = true).not()) {
-                return rexOpCaseBranch(condition, result)
-            }
-            val ref = call.args.getOrNull(0) ?: error("IS STRUCT requires an argument.")
-            val simplifiedCondition = when {
-                ref.type.allTypes.all { it is StructType } -> rex(StaticType.BOOL, rexOpLit(boolValue(true)))
-                ref.type.allTypes.none { it is StructType } -> rex(StaticType.BOOL, rexOpLit(boolValue(false)))
-                else -> condition
-            }
+            val call = condition.op as? Rex.Op.Call ?: return rexOpCaseBranch(condition, result)
+            when (call) {
+                is Rex.Op.Call.Dynamic -> {
+                    val rex = call.candidates.map { candidate ->
+                        val fn = candidate.fn as? Fn.Resolved ?: return rexOpCaseBranch(condition, result)
+                        if (fn.signature.name.equals("is_struct", ignoreCase = true).not()) {
+                            return rexOpCaseBranch(condition, result)
+                        }
+                        val ref = call.args.getOrNull(0) ?: error("IS STRUCT requires an argument.")
+                        // Replace the result's type
+                        val type = AnyOfType(ref.type.allTypes.filterIsInstance<StructType>().toSet())
+                        val replacementVal = ref.copy(type = type)
+                        when (ref.op is Rex.Op.Var.Resolved) {
+                            true -> RexReplacer.replace(result, ref, replacementVal)
+                            false -> result
+                        }
+                    }
+                    val type = rex.toUnionType().flatten()
 
-            // Replace the result's type
-            val type = AnyOfType(ref.type.allTypes.filterIsInstance<StructType>().toSet())
-            val replacementVal = ref.copy(type = type)
-            val rex = when (ref.op is Rex.Op.Var.Resolved) {
-                true -> RexReplacer.replace(result, ref, replacementVal)
-                false -> result
+                    return rexOpCaseBranch(condition, result.copy(type))
+                }
+                is Rex.Op.Call.Static -> {
+                    val fn = call.fn as? Fn.Resolved ?: return rexOpCaseBranch(condition, result)
+                    if (fn.signature.name.equals("is_struct", ignoreCase = true).not()) {
+                        return rexOpCaseBranch(condition, result)
+                    }
+                    val ref = call.args.getOrNull(0) ?: error("IS STRUCT requires an argument.")
+                    val simplifiedCondition = when {
+                        ref.type.allTypes.all { it is StructType } -> rex(StaticType.BOOL, rexOpLit(boolValue(true)))
+                        ref.type.allTypes.none { it is StructType } -> rex(StaticType.BOOL, rexOpLit(boolValue(false)))
+                        else -> condition
+                    }
+
+                    // Replace the result's type
+                    val type = AnyOfType(ref.type.allTypes.filterIsInstance<StructType>().toSet())
+                    val replacementVal = ref.copy(type = type)
+                    val rex = when (ref.op is Rex.Op.Var.Resolved) {
+                        true -> RexReplacer.replace(result, ref, replacementVal)
+                        false -> result
+                    }
+                    return rexOpCaseBranch(simplifiedCondition, rex)
+                }
             }
-            return rexOpCaseBranch(simplifiedCondition, rex)
         }
 
         override fun visitRexOpCollection(node: Rex.Op.Collection, ctx: StaticType?): Rex {

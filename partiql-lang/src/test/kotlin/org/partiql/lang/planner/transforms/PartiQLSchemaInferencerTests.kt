@@ -3309,12 +3309,13 @@ class PartiQLSchemaInferencerTests {
                 query = "order_info.CUSTOMER_ID = 1",
                 expected = TYPE_BOOL
             ),
+            // MISSING = 1
             ErrorTestCase(
                 name = "Case Sensitive failure",
                 catalog = CATALOG_DB,
                 catalogPath = DB_SCHEMA_MARKETS,
                 query = "order_info.\"CUSTOMER_ID\" = 1",
-                expected = TYPE_BOOL
+                expected = NULL
             ),
             SuccessTestCase(
                 name = "Case Sensitive success",
@@ -3328,14 +3329,14 @@ class PartiQLSchemaInferencerTests {
                 catalog = CATALOG_DB,
                 catalogPath = DB_SCHEMA_MARKETS,
                 query = "(order_info.customer_id = 1) AND (order_info.marketplace_id = 2)",
-                expected = TYPE_BOOL
+                expected = StaticType.unionOf(BOOL, NULL)
             ),
             SuccessTestCase(
                 name = "2-Level Junction",
                 catalog = CATALOG_DB,
                 catalogPath = DB_SCHEMA_MARKETS,
                 query = "(order_info.customer_id = 1) AND (order_info.marketplace_id = 2) OR (order_info.customer_id = 3) AND (order_info.marketplace_id = 4)",
-                expected = TYPE_BOOL
+                expected = StaticType.unionOf(BOOL, NULL)
             ),
             SuccessTestCase(
                 name = "INT and STR Comparison",
