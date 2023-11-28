@@ -28,7 +28,7 @@ interface Named {
     val name: ExprValue
 
     /**
-     * TODO ALAN: docs
+     * The original value of the Named [ExprValue].
      */
     val value: ExprValue
 }
