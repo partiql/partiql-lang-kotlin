@@ -1,4 +1,4 @@
-package org.partiql.planner.typer
+package org.partiql.planner.internal.typer
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.fail

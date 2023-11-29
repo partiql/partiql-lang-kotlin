@@ -819,7 +819,8 @@ internal class PlanTyper(
             val args = node.args.map { visitRex(it, ctx) }
             val type = when (args.size) {
                 0 -> StructType(
-                    fields = emptyMap(), contentClosed = true, constraints = setOf(
+                    fields = emptyMap(), contentClosed = true,
+                    constraints = setOf(
                         TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered
                     )
                 )
@@ -1186,7 +1187,8 @@ internal class PlanTyper(
     private fun Identifier.Qualified.toBindingPath() = BindingPath(steps = steps.map { it.toBindingName() })
 
     private fun Identifier.Symbol.toBindingName() = BindingName(
-        name = symbol, bindingCase = when (caseSensitivity) {
+        name = symbol,
+        bindingCase = when (caseSensitivity) {
             Identifier.CaseSensitivity.SENSITIVE -> BindingCase.SENSITIVE
             Identifier.CaseSensitivity.INSENSITIVE -> BindingCase.INSENSITIVE
         }
@@ -1312,7 +1314,8 @@ internal class PlanTyper(
     private fun handleUnknownFunction(match: FnMatch.Error<*>) {
         onProblem(
             Problem(
-                sourceLocation = UNKNOWN_PROBLEM_LOCATION, details = PlanningProblemDetails.UnknownFunction(
+                sourceLocation = UNKNOWN_PROBLEM_LOCATION,
+                details = PlanningProblemDetails.UnknownFunction(
                     match.identifier.normalize(),
                     match.args.map { a -> a.type },
                 )

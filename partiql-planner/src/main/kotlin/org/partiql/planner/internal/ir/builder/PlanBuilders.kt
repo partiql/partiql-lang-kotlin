@@ -34,7 +34,8 @@ internal class PartiQlPlanBuilder(
     }
 
     internal fun build(): PartiQLPlan = PartiQLPlan(
-        version = version!!, globals = globals, statement =
+        version = version!!, globals = globals,
+        statement =
         statement!!
     )
 }
@@ -77,7 +78,8 @@ internal class FnUnresolvedBuilder(
     }
 
     internal fun build(): Fn.Unresolved = Fn.Unresolved(
-        identifier = identifier!!, isHidden =
+        identifier = identifier!!,
+        isHidden =
         isHidden!!
     )
 }
@@ -136,7 +138,8 @@ internal class IdentifierSymbolBuilder(
     }
 
     internal fun build(): Identifier.Symbol = Identifier.Symbol(
-        symbol = symbol!!, caseSensitivity =
+        symbol = symbol!!,
+        caseSensitivity =
         caseSensitivity!!
     )
 }
@@ -206,8 +209,9 @@ internal class RexOpVarUnresolvedBuilder(
     }
 
     internal fun build(): Rex.Op.Var.Unresolved = Rex.Op.Var.Unresolved(
-        identifier = identifier!!, scope
-        = scope!!
+        identifier = identifier!!,
+        scope =
+        scope!!
     )
 }
 
@@ -293,7 +297,8 @@ internal class RexOpCallDynamicBuilder(
     }
 
     internal fun build(): Rex.Op.Call.Dynamic = Rex.Op.Call.Dynamic(
-        args = args, candidates =
+        args = args,
+        candidates =
         candidates
     )
 }
@@ -680,7 +685,8 @@ internal class RelOpJoinBuilder(
     }
 
     internal fun build(): Rel.Op.Join = Rel.Op.Join(
-        lhs = lhs!!, rhs = rhs!!, rex = rex!!, type =
+        lhs = lhs!!, rhs = rhs!!, rex = rex!!,
+        type =
         type!!
     )
 }

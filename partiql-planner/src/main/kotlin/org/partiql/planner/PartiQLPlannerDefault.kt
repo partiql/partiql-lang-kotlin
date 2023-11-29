@@ -36,7 +36,7 @@ internal class PartiQLPlannerDefault(
         // 3. Resolve variables
         val typer = PlanTyper(env, onProblem)
         val internal = org.partiql.planner.internal.ir.PartiQLPlan(
-            version =  PartiQLVersion.VERSION_0_1,
+            version = PartiQLVersion.VERSION_0_1,
             globals = env.globals,
             statement = typer.resolve(root),
         )

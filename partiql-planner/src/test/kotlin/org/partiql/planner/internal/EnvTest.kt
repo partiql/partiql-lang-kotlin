@@ -1,4 +1,4 @@
-package org.partiql.planner
+package org.partiql.planner.internal
 
 import com.amazon.ionelement.api.field
 import com.amazon.ionelement.api.ionString
@@ -6,11 +6,13 @@ import com.amazon.ionelement.api.ionStructOf
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.partiql.plan.Global
-import org.partiql.plan.Identifier
-import org.partiql.plan.Rex
-import org.partiql.plan.identifierQualified
-import org.partiql.plan.identifierSymbol
+import org.partiql.planner.PartiQLHeader
+import org.partiql.planner.PartiQLPlanner
+import org.partiql.planner.internal.ir.Global
+import org.partiql.planner.internal.ir.Identifier
+import org.partiql.planner.internal.ir.Rex
+import org.partiql.planner.internal.ir.identifierQualified
+import org.partiql.planner.internal.ir.identifierSymbol
 import org.partiql.plugins.local.LocalPlugin
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName

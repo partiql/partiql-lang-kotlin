@@ -167,6 +167,10 @@ rex::{
     tuple_union::{
       args: list::[rex],
     },
+
+    err::{
+      message: string,
+    },
   ],
 }
 
@@ -291,6 +295,10 @@ rel::{
           collection_wildcard::{},
         ],
       ],
+    },
+
+    err::{
+      message: string,
     },
   ],
   _: [
