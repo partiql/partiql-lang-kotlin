@@ -26,8 +26,6 @@ internal interface PlanVisitor<R, C> {
 
     fun visitFnUnresolved(node: Fn.Unresolved, ctx: C): R
 
-    fun visitFnDynamic(node: Fn.Dynamic, ctx: C): R
-
     fun visitAgg(node: Agg, ctx: C): R
 
     fun visitAggResolved(node: Agg.Resolved, ctx: C): R

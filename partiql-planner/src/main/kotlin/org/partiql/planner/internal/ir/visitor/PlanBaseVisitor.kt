@@ -23,14 +23,11 @@ internal abstract class PlanBaseVisitor<R, C> : PlanVisitor<R, C> {
     override fun visitFn(node: Fn, ctx: C): R = when (node) {
         is Fn.Resolved -> visitFnResolved(node, ctx)
         is Fn.Unresolved -> visitFnUnresolved(node, ctx)
-        is Fn.Dynamic -> visitFnDynamic(node, ctx)
     }
 
     override fun visitFnResolved(node: Fn.Resolved, ctx: C): R = defaultVisit(node, ctx)
 
     override fun visitFnUnresolved(node: Fn.Unresolved, ctx: C): R = defaultVisit(node, ctx)
-
-    override fun visitFnDynamic(node: Fn.Dynamic, ctx: C): R = defaultVisit(node, ctx)
 
     override fun visitAgg(node: Agg, ctx: C): R = when (node) {
         is Agg.Resolved -> visitAggResolved(node, ctx)

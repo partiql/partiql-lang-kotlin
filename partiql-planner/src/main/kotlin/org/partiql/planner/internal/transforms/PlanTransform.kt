@@ -40,13 +40,11 @@ internal object PlanTransform : PlanBaseVisitor<PlanNode, ProblemCallback>() {
         return org.partiql.plan.global(path, type)
     }
 
-    override fun visitFnResolved(node: Fn.Resolved, ctx: ProblemCallback) = org.partiql.plan.fnStatic(node.signature)
+    override fun visitFnResolved(node: Fn.Resolved, ctx: ProblemCallback) = org.partiql.plan.fn(node.signature)
 
     override fun visitFnUnresolved(node: Fn.Unresolved, ctx: ProblemCallback): org.partiql.plan.Rex.Op {
         return org.partiql.plan.Rex.Op.Err("Unresolved function")
     }
-
-    override fun visitFnDynamic(node: Fn.Dynamic, ctx: ProblemCallback) = org.partiql.plan.fnDynamic(node.signatures)
 
     override fun visitAgg(node: Agg, ctx: ProblemCallback) = super.visitAgg(node, ctx) as org.partiql.plan.Agg
 

@@ -21,9 +21,6 @@ internal fun fnResolved(signature: FunctionSignature.Scalar): Fn.Resolved = Fn.R
 internal fun fnUnresolved(identifier: Identifier, isHidden: Boolean): Fn.Unresolved =
     Fn.Unresolved(identifier, isHidden)
 
-internal fun fnDynamic(signatures: List<FunctionSignature.Scalar>): Fn.Dynamic =
-    Fn.Dynamic(signatures)
-
 internal fun aggResolved(signature: FunctionSignature.Aggregation): Agg.Resolved =
     Agg.Resolved(signature)
 
@@ -39,6 +36,7 @@ internal fun identifierQualified(root: Identifier.Symbol, steps: List<Identifier
 
 internal fun rex(type: StaticType, op: Rex.Op): Rex = Rex(type, op)
 
+@OptIn(PartiQLValueExperimental::class)
 internal fun rexOpLit(`value`: PartiQLValue): Rex.Op.Lit = Rex.Op.Lit(value)
 
 internal fun rexOpVarResolved(ref: Int): Rex.Op.Var.Resolved = Rex.Op.Var.Resolved(ref)

@@ -84,17 +84,6 @@ internal class FnUnresolvedBuilder(
     )
 }
 
-internal class FnDynamicBuilder(
-    internal var signatures: MutableList<FunctionSignature.Scalar> = mutableListOf(),
-) {
-    internal fun signatures(signatures: MutableList<FunctionSignature.Scalar>): FnDynamicBuilder =
-        this.apply {
-            this.signatures = signatures
-        }
-
-    internal fun build(): Fn.Dynamic = Fn.Dynamic(signatures = signatures)
-}
-
 internal class AggResolvedBuilder(
     internal var signature: FunctionSignature.Aggregation? = null,
 ) {

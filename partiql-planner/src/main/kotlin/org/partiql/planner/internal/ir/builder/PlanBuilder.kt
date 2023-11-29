@@ -60,15 +60,6 @@ internal class PlanBuilder {
         return builder.build()
     }
 
-    internal fun fnDynamic(
-        signatures: MutableList<FunctionSignature.Scalar> = mutableListOf(),
-        block: FnDynamicBuilder.() -> Unit = {},
-    ): Fn.Dynamic {
-        val builder = FnDynamicBuilder(signatures)
-        builder.block()
-        return builder.build()
-    }
-
     internal fun aggResolved(
         signature: FunctionSignature.Aggregation? = null,
         block: AggResolvedBuilder.() -> Unit = {},
