@@ -1,8 +1,8 @@
-package org.partiql.planner.typer.operator
+package org.partiql.planner.internal.typer.operator
 
 import org.junit.jupiter.api.DynamicContainer
 import org.junit.jupiter.api.TestFactory
-import org.partiql.planner.typer.PartiQLTyperTestBase
+import org.partiql.planner.internal.typer.PartiQLTyperTestBase
 import org.partiql.planner.util.CastType
 import org.partiql.planner.util.allNumberType
 import org.partiql.planner.util.allSupportedType

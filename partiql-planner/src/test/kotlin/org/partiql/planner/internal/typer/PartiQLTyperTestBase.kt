@@ -1,4 +1,4 @@
-package org.partiql.planner.typer
+package org.partiql.planner.internal.typer
 
 import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.ionStructOf

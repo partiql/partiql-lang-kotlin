@@ -1,9 +1,9 @@
-package org.partiql.planner.typer.logical
+package org.partiql.planner.internal.typer.logical
 
 import org.junit.jupiter.api.DynamicContainer
 import org.junit.jupiter.api.TestFactory
-import org.partiql.planner.typer.PartiQLTyperTestBase
-import org.partiql.planner.typer.isUnknown
+import org.partiql.planner.internal.typer.PartiQLTyperTestBase
+import org.partiql.planner.internal.typer.isUnknown
 import org.partiql.planner.util.allSupportedType
 import org.partiql.planner.util.cartesianProduct
 import org.partiql.types.StaticType

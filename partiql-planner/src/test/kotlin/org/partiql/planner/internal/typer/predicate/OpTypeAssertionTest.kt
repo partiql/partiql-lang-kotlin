@@ -1,8 +1,8 @@
-package org.partiql.planner.typer.predicate
+package org.partiql.planner.internal.typer.predicate
 
 import org.junit.jupiter.api.DynamicContainer
 import org.junit.jupiter.api.TestFactory
-import org.partiql.planner.typer.PartiQLTyperTestBase
+import org.partiql.planner.internal.typer.PartiQLTyperTestBase
 import org.partiql.planner.util.allSupportedType
 import org.partiql.types.MissingType
 import org.partiql.types.StaticType

@@ -1,29 +1,30 @@
-package org.partiql.planner.typer.predicate
+package org.partiql.planner.internal.typer.predicate
 
 import org.junit.jupiter.api.DynamicContainer
 import org.junit.jupiter.api.TestFactory
-import org.partiql.planner.typer.PartiQLTyperTestBase
-import org.partiql.planner.util.allCollectionType
+import org.partiql.planner.internal.typer.PartiQLTyperTestBase
 import org.partiql.planner.util.allSupportedType
+import org.partiql.planner.util.allTextType
 import org.partiql.planner.util.cartesianProduct
-import org.partiql.types.MissingType
 import org.partiql.types.StaticType
 import java.util.stream.Stream
 
-class OpInTest : PartiQLTyperTestBase() {
-
+class OpLikeTest : PartiQLTyperTestBase() {
     @TestFactory
-    fun inSingleArg(): Stream<DynamicContainer> {
+    fun likeDoubleArg(): Stream<DynamicContainer> {
         val tests = listOf(
-            "expr-30", // IN ( true )
+            "expr-32", // t1 LIKE t2
         ).map { inputs.get("basics", it)!! }
 
         val argsMap = buildMap {
-            val successArgs =
+            val successArgs = (allTextType + listOf(StaticType.NULL))
+                .let { cartesianProduct(it, it) }
+            val failureArgs = cartesianProduct(
+                allSupportedType,
                 allSupportedType
-                    .filterNot { it is MissingType }
-                    .map { t -> listOf(t) }
-                    .toSet()
+            ).filterNot {
+                successArgs.contains(it)
+            }.toSet()
 
             successArgs.forEach { args: List<StaticType> ->
                 if (args.contains(StaticType.NULL)) {
@@ -37,24 +38,23 @@ class OpInTest : PartiQLTyperTestBase() {
                 }
                 Unit
             }
-            put(TestResult.Failure, emptySet<List<StaticType>>())
+            put(TestResult.Failure, failureArgs)
         }
 
-        return super.testGen("in", tests, argsMap)
+        return super.testGen("like", tests, argsMap)
     }
 
     @TestFactory
-    fun inDoubleArg(): Stream<DynamicContainer> {
+    fun likeTripleArg(): Stream<DynamicContainer> {
         val tests = listOf(
-            "expr-31", // t1 IN t2
+            "expr-33", // t1 LIKE t2 ESCAPE t3
         ).map { inputs.get("basics", it)!! }
 
         val argsMap = buildMap {
-            val successArgs = cartesianProduct(
-                allSupportedType.filterNot { it is MissingType },
-                (allCollectionType + listOf(StaticType.NULL))
-            )
+            val successArgs = (allTextType + listOf(StaticType.NULL))
+                .let { cartesianProduct(it, it, it) }
             val failureArgs = cartesianProduct(
+                allSupportedType,
                 allSupportedType,
                 allSupportedType,
             ).filterNot {
@@ -76,6 +76,6 @@ class OpInTest : PartiQLTyperTestBase() {
             put(TestResult.Failure, failureArgs)
         }
 
-        return super.testGen("in", tests, argsMap)
+        return super.testGen("like", tests, argsMap)
     }
 }

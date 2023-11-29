@@ -8,6 +8,6 @@ class HeaderTest {
     @Test
     @Disabled
     fun print() {
-        println(PartiQLHeader.toString())
+        println(PartiQLHeader)
     }
 }
