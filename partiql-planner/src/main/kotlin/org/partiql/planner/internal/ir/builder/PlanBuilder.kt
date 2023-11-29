@@ -174,6 +174,15 @@ internal class PlanBuilder {
         return builder.build()
     }
 
+    internal fun rexOpPathStepKey(
+        key: Rex? = null,
+        block: RexOpPathStepKeyBuilder.() -> Unit = {},
+    ): Rex.Op.Path.Step.Key {
+        val builder = RexOpPathStepKeyBuilder(key)
+        builder.block()
+        return builder.build()
+    }
+
     internal fun rexOpPathStepSymbol(
         identifier: Identifier.Symbol? = null,
         block: RexOpPathStepSymbolBuilder.() -> Unit = {},

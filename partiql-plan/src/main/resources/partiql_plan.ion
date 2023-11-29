@@ -83,9 +83,21 @@ rex::{
       steps:  list::[step],
       _: [
         step::[
+          // The key MUST be an integer expression. Ex: a[0], a[1 + 1]
           index::{ key: rex },
-          symbol::{ identifier: '.identifier.symbol' },
+
+          // Case-sensitive lookup. The key MUST be a string expression. Ex: a["b"], a."b", a[CAST(b AS STRING)]
+          key::{ key: rex },
+
+          // Case-insensitive lookup. The key MUST be a literal string. Ex: a.b
+          symbol::{ key: string },
+
+          // For arrays. Ex: a[*]
+          // TODO: Do we need this? According to specification: [1,2,3][*] ⇔ SELECT VALUE v FROM [1, 2, 3] AS v
           wildcard::{},
+
+          // For tuples. Ex: a.*
+          // TODO: Do we need this? According to specification: {'a':1, 'b':2}.* ⇔ SELECT VALUE v FROM UNPIVOT {'a':1, 'b':2} AS v
           unpivot::{},
         ],
       ],

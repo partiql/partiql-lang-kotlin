@@ -35,6 +35,7 @@ import org.partiql.types.BagType
 import org.partiql.types.ListType
 import org.partiql.types.SexpType
 import org.partiql.types.StaticType
+import org.partiql.types.StaticType.Companion.ANY
 import org.partiql.types.StaticType.Companion.BAG
 import org.partiql.types.StaticType.Companion.BOOL
 import org.partiql.types.StaticType.Companion.DATE
@@ -2385,6 +2386,124 @@ class PartiQLSchemaInferencerTests {
                         )
                     )
                 )
+            ),
+            SuccessTestCase(
+                name = "Pathing into resolved local variable without qualification and with sensitivity",
+                query = """
+                    SELECT address."street" AS s FROM employer;
+                """,
+                catalog = "pql",
+                catalogPath = listOf("main"),
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "s" to STRING,
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "Pathing into resolved local variable without qualification and with indexing syntax",
+                query = """
+                    SELECT address['street'] AS s FROM employer;
+                """,
+                catalog = "pql",
+                catalogPath = listOf("main"),
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "s" to STRING,
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "Pathing into resolved local variable without qualification and with indexing syntax and fully-qualified FROM",
+                query = """
+                    SELECT e.address['street'] AS s FROM "pql"."main"."employer" AS e;
+                """,
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "s" to STRING,
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                )
+            ),
+            ErrorTestCase(
+                name = "Show that we can't use [<string>] to reference a value in a schema. It can only be used on tuples.",
+                query = """
+                    SELECT VALUE 1 FROM "pql"."main"['employer'] AS e;
+                """,
+                expected = BagType(INT4),
+                problemHandler = assertProblemExists {
+                    Problem(
+                        UNKNOWN_PROBLEM_LOCATION,
+                        PlanningProblemDetails.UndefinedVariable("main", true)
+                    )
+                }
+            ),
+            ErrorTestCase(
+                name = "Show that we can't use [<string>] to reference a schema in a catalog. It can only be used on tuples.",
+                query = """
+                    SELECT VALUE 1 FROM "pql"['main']."employer" AS e;
+                """,
+                expected = BagType(INT4),
+                problemHandler = assertProblemExists {
+                    Problem(
+                        UNKNOWN_PROBLEM_LOCATION,
+                        PlanningProblemDetails.UndefinedVariable("pql", true)
+                    )
+                }
+            ),
+            SuccessTestCase(
+                name = "Tuple indexing syntax on literal tuple with literal string key",
+                query = """
+                    { 'aBc': 1, 'AbC': 2.0 }['AbC'];
+                """,
+                expected = DECIMAL
+            ),
+            // This should fail because the Spec says tuple indexing MUST use a literal string or explicit cast.
+            ErrorTestCase(
+                name = "Array indexing syntax on literal tuple with non-literal and non-cast key",
+                query = """
+                    { 'aBc': 1, 'AbC': 2.0 }['Ab' || 'C'];
+                """,
+                expected = MISSING,
+                problemHandler = assertProblemExists {
+                    Problem(
+                        sourceLocation = UNKNOWN_PROBLEM_LOCATION,
+                        details = PlanningProblemDetails.ExpressionAlwaysReturnsNullOrMissing
+                    )
+                }
+            ),
+            // The reason this is ANY is because we do not have support for constant-folding. We don't know what
+            //  CAST('Ab' || 'C' AS STRING) will evaluate to, and therefore, we don't know what the indexing operation
+            //  will return.
+            SuccessTestCase(
+                name = "Tuple indexing syntax on literal tuple with explicit cast key",
+                query = """
+                    { 'aBc': 1, 'AbC': 2.0 }[CAST('Ab' || 'C' AS STRING)];
+                """,
+                expected = ANY
             ),
         )
 

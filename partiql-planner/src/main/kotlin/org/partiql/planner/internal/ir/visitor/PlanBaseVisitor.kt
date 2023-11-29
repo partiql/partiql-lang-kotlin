@@ -100,12 +100,16 @@ internal abstract class PlanBaseVisitor<R, C> : PlanVisitor<R, C> {
 
     override fun visitRexOpPathStep(node: Rex.Op.Path.Step, ctx: C): R = when (node) {
         is Rex.Op.Path.Step.Index -> visitRexOpPathStepIndex(node, ctx)
+        is Rex.Op.Path.Step.Key -> visitRexOpPathStepKey(node, ctx)
         is Rex.Op.Path.Step.Symbol -> visitRexOpPathStepSymbol(node, ctx)
         is Rex.Op.Path.Step.Wildcard -> visitRexOpPathStepWildcard(node, ctx)
         is Rex.Op.Path.Step.Unpivot -> visitRexOpPathStepUnpivot(node, ctx)
     }
 
     override fun visitRexOpPathStepIndex(node: Rex.Op.Path.Step.Index, ctx: C): R =
+        defaultVisit(node, ctx)
+
+    override fun visitRexOpPathStepKey(node: Rex.Op.Path.Step.Key, ctx: C): R =
         defaultVisit(node, ctx)
 
     override fun visitRexOpPathStepSymbol(node: Rex.Op.Path.Step.Symbol, ctx: C): R =
