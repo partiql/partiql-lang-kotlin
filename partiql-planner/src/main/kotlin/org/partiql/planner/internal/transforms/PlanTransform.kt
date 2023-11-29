@@ -1,11 +1,8 @@
 package org.partiql.planner.internal.transforms
 
-import org.partiql.errors.Problem
 import org.partiql.errors.ProblemCallback
-import org.partiql.errors.UNKNOWN_PROBLEM_LOCATION
 import org.partiql.plan.PlanNode
 import org.partiql.plan.partiQLPlan
-import org.partiql.planner.PlanningProblemDetails
 import org.partiql.planner.internal.ir.Agg
 import org.partiql.planner.internal.ir.Fn
 import org.partiql.planner.internal.ir.Global
@@ -15,7 +12,6 @@ import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.Statement
 import org.partiql.planner.internal.ir.visitor.PlanBaseVisitor
-import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValueExperimental
 
 /**
@@ -99,13 +95,14 @@ internal object PlanTransform : PlanBaseVisitor<PlanNode, ProblemCallback>() {
     @OptIn(PartiQLValueExperimental::class)
     override fun visitRexOpLit(node: Rex.Op.Lit, ctx: ProblemCallback) = org.partiql.plan.rexOpLit(node.value)
 
-    override fun visitRexOpVar(node: Rex.Op.Var, ctx: ProblemCallback) = super.visitRexOpVar(node, ctx) as org.partiql.plan.Rex.Op
+    override fun visitRexOpVar(node: Rex.Op.Var, ctx: ProblemCallback) =
+        super.visitRexOpVar(node, ctx) as org.partiql.plan.Rex.Op
 
     override fun visitRexOpVarResolved(node: Rex.Op.Var.Resolved, ctx: ProblemCallback) =
         org.partiql.plan.Rex.Op.Var(node.ref)
 
     override fun visitRexOpVarUnresolved(node: Rex.Op.Var.Unresolved, ctx: ProblemCallback) =
-        org.partiql.plan.Rex.Op.Err("Unresolved function $node")
+        org.partiql.plan.Rex.Op.Err("Unresolved variable $node")
 
     override fun visitRexOpGlobal(node: Rex.Op.Global, ctx: ProblemCallback) = org.partiql.plan.Rex.Op.Global(node.ref)
 
@@ -381,39 +378,5 @@ internal object PlanTransform : PlanBaseVisitor<PlanNode, ProblemCallback>() {
             name = node.name,
             type = node.type,
         )
-
-        // Errors — TODO this is quick and dirty
-
-        private fun handleUndefinedVariable(onProblem: ProblemCallback, variable: Rex.Op.Var.Unresolved) {
-            onProblem(
-                Problem(
-                    sourceLocation = UNKNOWN_PROBLEM_LOCATION,
-                    details = PlanningProblemDetails.UndefinedVariable(
-                        variableName = variable.identifier.normalize(),
-                        caseSensitive = false
-                    )
-                )
-            )
-        }
-
-        private fun handleUnknownFunction(onProblem: ProblemCallback, fn: Fn.Unresolved) {
-            onProblem(
-                Problem(
-                    sourceLocation = UNKNOWN_PROBLEM_LOCATION,
-                    details = PlanningProblemDetails.UnknownFunction(
-                        identifier = fn.identifier.normalize(),
-                        args = emptyList<StaticType>(),
-                    )
-                )
-            )
-        }
-
-        private fun Identifier.normalize(): String = when (this) {
-            is Identifier.Qualified -> (listOf(root.normalize()) + steps.map { it.normalize() }).joinToString(".")
-            is Identifier.Symbol -> when (caseSensitivity) {
-                Identifier.CaseSensitivity.SENSITIVE -> symbol
-                Identifier.CaseSensitivity.INSENSITIVE -> symbol.lowercase()
-            }
-        }
     }
     
