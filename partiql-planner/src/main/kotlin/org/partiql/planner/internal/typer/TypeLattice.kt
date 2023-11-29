@@ -1,4 +1,4 @@
-package org.partiql.planner.typer
+package org.partiql.planner.internal.typer
 
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType

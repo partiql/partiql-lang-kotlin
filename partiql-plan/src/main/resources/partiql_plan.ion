@@ -8,15 +8,9 @@ imports::{
 }
 
 parti_q_l_plan::{
-  version:    parti_q_l_version,    // version :: (major minor)
   globals:    list::[global],       // (globals ...)
   statement:  statement,            // (statement ...)
 }
-
-parti_q_l_version::[
-  VERSION_0_0,
-  VERSION_0_1,  // CURRENT
-]
 
 // Globals
 
@@ -28,26 +22,17 @@ global::{
 // Functions
 
 fn::[
-  resolved::{
+  static::{
     signature: scalar_signature,
-  },
-  unresolved::{
-    identifier: identifier,
-    isHidden: bool,
   },
   dynamic::{
     signatures: list::[scalar_signature],
   }
 ]
 
-agg::[
-  resolved::{
-    signature: aggregation_signature,
-  },
-  unresolved::{
-    identifier: identifier,
-  },
-]
+agg::{
+  signature: aggregation_signature,
+}
 
 // Statements
 
@@ -85,21 +70,9 @@ rex::{
       value: partiql_value,
     },
 
-    var::[
-      resolved::{
-        ref: int,
-      },
-      unresolved::{
-        identifier: identifier,
-        scope:      scope,
-      },
-      _::[
-        scope::[
-          DEFAULT,  //  x.y.z
-          LOCAL,    // @x.y.z
-        ],
-      ],
-    ],
+    var::{
+      ref: int,
+    },
 
     global::{
       ref: int,
@@ -133,15 +106,9 @@ rex::{
         args: list::[rex],
         candidates: list::[candidate],
         _: [
-
-          // Represents a viable candidate.
-          //
-          // fn: The resolved function
-          // coercions: Represents the coercion that should take place -- if not null. The first item is to be wrapped
-          //  over the first argument of dynamic.args and so on.
           candidate::{
-            fn: '.fn.resolved',
-            coercions: list::[optional::'.fn.resolved']
+            fn: fn,
+            coercions: list::[optional::fn]
           }
         ]
       }

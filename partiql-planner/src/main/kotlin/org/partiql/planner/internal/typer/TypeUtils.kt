@@ -1,7 +1,7 @@
-package org.partiql.planner.typer
+package org.partiql.planner.internal.typer
 
-import org.partiql.plan.Identifier
-import org.partiql.plan.Rel
+import org.partiql.planner.internal.ir.Identifier
+import org.partiql.planner.internal.ir.Rel
 import org.partiql.types.AnyOfType
 import org.partiql.types.AnyType
 import org.partiql.types.BagType

@@ -12,11 +12,11 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.planner.typer
+package org.partiql.planner.internal.typer
 
-import org.partiql.plan.Rex
-import org.partiql.plan.rex
-import org.partiql.plan.util.PlanRewriter
+import org.partiql.planner.internal.ir.Rex
+import org.partiql.planner.internal.ir.rex
+import org.partiql.planner.internal.ir.util.PlanRewriter
 
 /**
  * Uses to replace [Rex]'s within an expression tree.

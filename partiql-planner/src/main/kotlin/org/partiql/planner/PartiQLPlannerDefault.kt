@@ -3,10 +3,11 @@ package org.partiql.planner
 import org.partiql.ast.Statement
 import org.partiql.ast.normalize.normalize
 import org.partiql.errors.ProblemCallback
-import org.partiql.plan.PartiQLVersion
-import org.partiql.plan.partiQLPlan
-import org.partiql.planner.transforms.AstToPlan
-import org.partiql.planner.typer.PlanTyper
+import org.partiql.planner.internal.Env
+import org.partiql.planner.internal.ir.PartiQLVersion
+import org.partiql.planner.internal.transforms.AstToPlan
+import org.partiql.planner.internal.transforms.PlanTransform
+import org.partiql.planner.internal.typer.PlanTyper
 import org.partiql.spi.Plugin
 
 /**
@@ -17,8 +18,6 @@ internal class PartiQLPlannerDefault(
     private val plugins: List<Plugin>,
     private val passes: List<PartiQLPlannerPass>,
 ) : PartiQLPlanner {
-
-    private val version = PartiQLVersion.VERSION_0_1
 
     override fun plan(
         statement: Statement,
@@ -36,13 +35,16 @@ internal class PartiQLPlannerDefault(
 
         // 3. Resolve variables
         val typer = PlanTyper(env, onProblem)
-        var plan = partiQLPlan(
-            version = version,
+        val internal = org.partiql.planner.internal.ir.PartiQLPlan(
+            version = PartiQLVersion.VERSION_0_1,
             globals = env.globals,
             statement = typer.resolve(root),
         )
 
-        // 4. Apply all passes
+        // 4. Assert plan has been resolved — translating to public API
+        var plan = PlanTransform.visitPartiQLPlan(internal, onProblem)
+
+        // 5. Apply all passes
         for (pass in passes) {
             plan = pass.apply(plan, onProblem)
         }
