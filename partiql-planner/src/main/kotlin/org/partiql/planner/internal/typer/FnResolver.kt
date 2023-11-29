@@ -1,9 +1,9 @@
-package org.partiql.planner.typer
+package org.partiql.planner.internal.typer
 
-import org.partiql.plan.Agg
-import org.partiql.plan.Fn
-import org.partiql.plan.Identifier
-import org.partiql.plan.Rex
+import org.partiql.planner.internal.ir.Agg
+import org.partiql.planner.internal.ir.Fn
+import org.partiql.planner.internal.ir.Identifier
+import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.Header
 import org.partiql.types.StaticType
 import org.partiql.types.function.FunctionParameter

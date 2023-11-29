@@ -1,6 +1,6 @@
 package org.partiql.planner
 
-import org.partiql.planner.typer.TypeLattice
+import org.partiql.planner.internal.typer.TypeLattice
 import org.partiql.types.function.FunctionParameter
 import org.partiql.types.function.FunctionSignature
 import org.partiql.value.PartiQLValueExperimental

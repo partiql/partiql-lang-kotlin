@@ -14,19 +14,19 @@
  *
  */
 
-package org.partiql.planner.transforms
+package org.partiql.planner.internal.transforms
 
 import org.partiql.ast.AstNode
 import org.partiql.ast.Expr
 import org.partiql.ast.visitor.AstBaseVisitor
-import org.partiql.plan.identifierQualified
-import org.partiql.plan.identifierSymbol
-import org.partiql.plan.statementQuery
-import org.partiql.planner.Env
+import org.partiql.planner.internal.ir.identifierQualified
+import org.partiql.planner.internal.ir.identifierSymbol
+import org.partiql.planner.internal.ir.statementQuery
+import org.partiql.planner.internal.Env
 import org.partiql.ast.Identifier as AstIdentifier
 import org.partiql.ast.Statement as AstStatement
-import org.partiql.plan.Identifier as PlanIdentifier
-import org.partiql.plan.Statement as PlanStatement
+import org.partiql.planner.internal.ir.Identifier as PlanIdentifier
+import org.partiql.planner.internal.ir.Statement as PlanStatement
 
 /**
  * Simple translation from AST to an unresolved algebraic IR.

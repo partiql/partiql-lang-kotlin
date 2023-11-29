@@ -14,58 +14,58 @@
  *
  */
 
-package org.partiql.planner.typer
+package org.partiql.planner.internal.typer
 
 import org.partiql.errors.Problem
 import org.partiql.errors.ProblemCallback
 import org.partiql.errors.UNKNOWN_PROBLEM_LOCATION
-import org.partiql.plan.Agg
-import org.partiql.plan.Fn
-import org.partiql.plan.Identifier
-import org.partiql.plan.PlanNode
-import org.partiql.plan.Rel
-import org.partiql.plan.Rex
-import org.partiql.plan.Statement
-import org.partiql.plan.aggResolved
-import org.partiql.plan.fnResolved
-import org.partiql.plan.identifierSymbol
-import org.partiql.plan.rel
-import org.partiql.plan.relBinding
-import org.partiql.plan.relOpAggregate
-import org.partiql.plan.relOpAggregateCall
-import org.partiql.plan.relOpErr
-import org.partiql.plan.relOpFilter
-import org.partiql.plan.relOpJoin
-import org.partiql.plan.relOpLimit
-import org.partiql.plan.relOpOffset
-import org.partiql.plan.relOpProject
-import org.partiql.plan.relOpScan
-import org.partiql.plan.relOpSort
-import org.partiql.plan.relOpUnpivot
-import org.partiql.plan.relType
-import org.partiql.plan.rex
-import org.partiql.plan.rexOpCallDynamic
-import org.partiql.plan.rexOpCallDynamicCandidate
-import org.partiql.plan.rexOpCallStatic
-import org.partiql.plan.rexOpCaseBranch
-import org.partiql.plan.rexOpCollection
-import org.partiql.plan.rexOpErr
-import org.partiql.plan.rexOpGlobal
-import org.partiql.plan.rexOpLit
-import org.partiql.plan.rexOpPath
-import org.partiql.plan.rexOpPathStepSymbol
-import org.partiql.plan.rexOpSelect
-import org.partiql.plan.rexOpStruct
-import org.partiql.plan.rexOpStructField
-import org.partiql.plan.rexOpTupleUnion
-import org.partiql.plan.rexOpVarResolved
-import org.partiql.plan.statementQuery
-import org.partiql.plan.util.PlanRewriter
-import org.partiql.planner.Env
 import org.partiql.planner.PlanningProblemDetails
-import org.partiql.planner.ResolutionStrategy
-import org.partiql.planner.ResolvedVar
-import org.partiql.planner.TypeEnv
+import org.partiql.planner.internal.Env
+import org.partiql.planner.internal.ResolutionStrategy
+import org.partiql.planner.internal.ResolvedVar
+import org.partiql.planner.internal.TypeEnv
+import org.partiql.planner.internal.ir.Agg
+import org.partiql.planner.internal.ir.Fn
+import org.partiql.planner.internal.ir.Identifier
+import org.partiql.planner.internal.ir.PlanNode
+import org.partiql.planner.internal.ir.Rel
+import org.partiql.planner.internal.ir.Rex
+import org.partiql.planner.internal.ir.Statement
+import org.partiql.planner.internal.ir.aggResolved
+import org.partiql.planner.internal.ir.fnResolved
+import org.partiql.planner.internal.ir.identifierSymbol
+import org.partiql.planner.internal.ir.rel
+import org.partiql.planner.internal.ir.relBinding
+import org.partiql.planner.internal.ir.relOpAggregate
+import org.partiql.planner.internal.ir.relOpAggregateCall
+import org.partiql.planner.internal.ir.relOpErr
+import org.partiql.planner.internal.ir.relOpFilter
+import org.partiql.planner.internal.ir.relOpJoin
+import org.partiql.planner.internal.ir.relOpLimit
+import org.partiql.planner.internal.ir.relOpOffset
+import org.partiql.planner.internal.ir.relOpProject
+import org.partiql.planner.internal.ir.relOpScan
+import org.partiql.planner.internal.ir.relOpSort
+import org.partiql.planner.internal.ir.relOpUnpivot
+import org.partiql.planner.internal.ir.relType
+import org.partiql.planner.internal.ir.rex
+import org.partiql.planner.internal.ir.rexOpCallDynamic
+import org.partiql.planner.internal.ir.rexOpCallDynamicCandidate
+import org.partiql.planner.internal.ir.rexOpCallStatic
+import org.partiql.planner.internal.ir.rexOpCaseBranch
+import org.partiql.planner.internal.ir.rexOpCollection
+import org.partiql.planner.internal.ir.rexOpErr
+import org.partiql.planner.internal.ir.rexOpGlobal
+import org.partiql.planner.internal.ir.rexOpLit
+import org.partiql.planner.internal.ir.rexOpPath
+import org.partiql.planner.internal.ir.rexOpPathStepSymbol
+import org.partiql.planner.internal.ir.rexOpSelect
+import org.partiql.planner.internal.ir.rexOpStruct
+import org.partiql.planner.internal.ir.rexOpStructField
+import org.partiql.planner.internal.ir.rexOpTupleUnion
+import org.partiql.planner.internal.ir.rexOpVarResolved
+import org.partiql.planner.internal.ir.statementQuery
+import org.partiql.planner.internal.ir.util.PlanRewriter
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
@@ -525,7 +525,8 @@ internal class PlanTyper(
                     }
                     val candidates = match.candidates.map { candidate ->
                         val rex = toRexCall(candidate, args, isEq)
-                        val staticCall = rex.op as? Rex.Op.Call.Static ?: error("ToRexCall should always return a static call.")
+                        val staticCall =
+                            rex.op as? Rex.Op.Call.Static ?: error("ToRexCall should always return a static call.")
                         val resolvedFn = staticCall.fn as? Fn.Resolved ?: error("This should have been resolved")
                         types.add(rex.type)
                         val coercions = candidate.mapping.map { it?.let { fnResolved(it) } }
@@ -587,8 +588,7 @@ internal class PlanTyper(
 
         override fun visitRexOpCase(node: Rex.Op.Case, ctx: StaticType?): Rex {
             // Type branches and prune branches known to never execute
-            val newBranches = node.branches
-                .map { visitRexOpCaseBranch(it, it.rex.type) }
+            val newBranches = node.branches.map { visitRexOpCaseBranch(it, it.rex.type) }
                 .filterNot { isLiteralBool(it.condition, false) }
 
             newBranches.forEach { branch ->
@@ -609,7 +609,10 @@ internal class PlanTyper(
                 0 -> default
                 else -> when (isLiteralBool(newBranches[0].condition, true)) {
                     true -> newBranches[0].rex
-                    false -> rex(type = StaticType.unionOf(resultTypes.toSet()).flatten(), node.copy(branches = newBranches, default = default))
+                    false -> rex(
+                        type = StaticType.unionOf(resultTypes.toSet()).flatten(),
+                        node.copy(branches = newBranches, default = default)
+                    )
                 }
             }
         }
@@ -816,12 +819,8 @@ internal class PlanTyper(
             val args = node.args.map { visitRex(it, ctx) }
             val type = when (args.size) {
                 0 -> StructType(
-                    fields = emptyMap(),
-                    contentClosed = true,
-                    constraints = setOf(
-                        TupleConstraint.Open(false),
-                        TupleConstraint.UniqueAttrs(true),
-                        TupleConstraint.Ordered
+                    fields = emptyMap(), contentClosed = true, constraints = setOf(
+                        TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered
                     )
                 )
                 else -> {
@@ -906,14 +905,10 @@ internal class PlanTyper(
                 false -> null
             }
             val constraints = setOfNotNull(
-                TupleConstraint.Open(!structIsClosed),
-                TupleConstraint.UniqueAttrs(uniqueAttrs),
-                orderedConstraint
+                TupleConstraint.Open(!structIsClosed), TupleConstraint.UniqueAttrs(uniqueAttrs), orderedConstraint
             )
             return StructType(
-                fields = structFields.map { it },
-                contentClosed = structIsClosed,
-                constraints = constraints
+                fields = structFields.map { it }, contentClosed = structIsClosed, constraints = constraints
             )
         }
 
@@ -977,65 +972,67 @@ internal class PlanTyper(
          * @return a [Pair] where the [Pair.first] represents the type of the [step] and the [Pair.second] represents
          * the disambiguated [step].
          */
-        private fun inferPathStep(type: StaticType, step: Rex.Op.Path.Step): Pair<StaticType, Rex.Op.Path.Step> = when (type) {
-            is AnyType -> StaticType.ANY to step
-            is StructType -> inferPathStep(type, step)
-            is ListType, is SexpType -> inferPathStep(type as CollectionType, step) to step
-            is AnyOfType -> {
-                when (type.types.size) {
-                    0 -> throw IllegalStateException("Cannot path on an empty StaticType union")
-                    else -> {
-                        val prevTypes = type.allTypes
-                        if (prevTypes.any { it is AnyType }) {
-                            StaticType.ANY to step
-                        } else {
-                            val results = prevTypes.map { inferPathStep(it, step) }
-                            val types = results.map { it.first }
-                            val firstResultStep = results.first().second
-                            // replace step only if all are disambiguated
-                            val replacementStep = when (results.map { it.second }.all { it == firstResultStep }) {
-                                true -> firstResultStep
-                                false -> step
+        private fun inferPathStep(type: StaticType, step: Rex.Op.Path.Step): Pair<StaticType, Rex.Op.Path.Step> =
+            when (type) {
+                is AnyType -> StaticType.ANY to step
+                is StructType -> inferPathStep(type, step)
+                is ListType, is SexpType -> inferPathStep(type as CollectionType, step) to step
+                is AnyOfType -> {
+                    when (type.types.size) {
+                        0 -> throw IllegalStateException("Cannot path on an empty StaticType union")
+                        else -> {
+                            val prevTypes = type.allTypes
+                            if (prevTypes.any { it is AnyType }) {
+                                StaticType.ANY to step
+                            } else {
+                                val results = prevTypes.map { inferPathStep(it, step) }
+                                val types = results.map { it.first }
+                                val firstResultStep = results.first().second
+                                // replace step only if all are disambiguated
+                                val replacementStep = when (results.map { it.second }.all { it == firstResultStep }) {
+                                    true -> firstResultStep
+                                    false -> step
+                                }
+                                AnyOfType(types.toSet()).flatten() to replacementStep
                             }
-                            AnyOfType(types.toSet()).flatten() to replacementStep
                         }
                     }
                 }
+                else -> StaticType.MISSING to step
             }
-            else -> StaticType.MISSING to step
-        }
 
         /**
          * @return a [Pair] where the [Pair.first] represents the type of the [step] and the [Pair.second] represents
          * the disambiguated [step].
          */
-        private fun inferPathStep(struct: StructType, step: Rex.Op.Path.Step): Pair<StaticType, Rex.Op.Path.Step> = when (step) {
-            is Rex.Op.Path.Step.Index -> {
-                if (step.key.type !is StringType) {
-                    error("Expected string but found: ${step.key.type}")
-                }
-                if (step.key.op is Rex.Op.Lit) {
-                    val lit = (step.key.op as Rex.Op.Lit).value
-                    if (lit is TextValue<*> && !lit.isNull) {
-                        val id = identifierSymbol(lit.string!!, Identifier.CaseSensitivity.SENSITIVE)
-                        val (type, replacementId) = inferStructLookup(struct, id)
-                        type to rexOpPathStepSymbol(replacementId)
-                    } else {
-                        error("Expected text literal, but got $lit")
+        private fun inferPathStep(struct: StructType, step: Rex.Op.Path.Step): Pair<StaticType, Rex.Op.Path.Step> =
+            when (step) {
+                is Rex.Op.Path.Step.Index -> {
+                    if (step.key.type !is StringType) {
+                        error("Expected string but found: ${step.key.type}")
                     }
-                } else {
-                    // cannot infer type of non-literal path step because we don't know its value
-                    // we might improve upon this with some constant folding prior to typing
-                    StaticType.ANY to step
+                    if (step.key.op is Rex.Op.Lit) {
+                        val lit = (step.key.op as Rex.Op.Lit).value
+                        if (lit is TextValue<*> && !lit.isNull) {
+                            val id = identifierSymbol(lit.string!!, Identifier.CaseSensitivity.SENSITIVE)
+                            val (type, replacementId) = inferStructLookup(struct, id)
+                            type to rexOpPathStepSymbol(replacementId)
+                        } else {
+                            error("Expected text literal, but got $lit")
+                        }
+                    } else {
+                        // cannot infer type of non-literal path step because we don't know its value
+                        // we might improve upon this with some constant folding prior to typing
+                        StaticType.ANY to step
+                    }
                 }
+                is Rex.Op.Path.Step.Symbol -> {
+                    val (type, replacementId) = inferStructLookup(struct, step.identifier)
+                    type to rexOpPathStepSymbol(replacementId)
+                }
+                is Rex.Op.Path.Step.Unpivot -> error("Unpivot not supported")
+                is Rex.Op.Path.Step.Wildcard -> error("Wildcard not supported")
             }
-            is Rex.Op.Path.Step.Symbol -> {
-                val (type, replacementId) = inferStructLookup(struct, step.identifier)
-                type to rexOpPathStepSymbol(replacementId)
-            }
-            is Rex.Op.Path.Step.Unpivot -> error("Unpivot not supported")
-            is Rex.Op.Path.Step.Wildcard -> error("Wildcard not supported")
-        }
 
         private fun inferPathStep(collection: CollectionType, step: Rex.Op.Path.Step): StaticType {
             if (step !is Rex.Op.Path.Step.Index) {
@@ -1094,7 +1091,8 @@ internal class PlanTyper(
             return type to name
         }
 
-        private fun sensitive(str: String): Identifier.Symbol = identifierSymbol(str, Identifier.CaseSensitivity.SENSITIVE)
+        private fun sensitive(str: String): Identifier.Symbol =
+            identifierSymbol(str, Identifier.CaseSensitivity.SENSITIVE)
 
         /**
          * Resolution and typing of aggregation function calls.
@@ -1177,9 +1175,7 @@ internal class PlanTyper(
      */
     private fun Rel.Type.copyWithSchema(types: List<StaticType>): Rel.Type {
         assert(types.size == schema.size) { "Illegal copy, types size does not matching bindings list size" }
-        return this.copy(
-            schema = schema.mapIndexed { i, binding -> binding.copy(type = types[i]) }
-        )
+        return this.copy(schema = schema.mapIndexed { i, binding -> binding.copy(type = types[i]) })
     }
 
     private fun Identifier.toBindingPath() = when (this) {
@@ -1187,13 +1183,10 @@ internal class PlanTyper(
         is Identifier.Symbol -> BindingPath(listOf(this.toBindingName()))
     }
 
-    private fun Identifier.Qualified.toBindingPath() = BindingPath(
-        steps = steps.map { it.toBindingName() }
-    )
+    private fun Identifier.Qualified.toBindingPath() = BindingPath(steps = steps.map { it.toBindingName() })
 
     private fun Identifier.Symbol.toBindingName() = BindingName(
-        name = symbol,
-        bindingCase = when (caseSensitivity) {
+        name = symbol, bindingCase = when (caseSensitivity) {
             Identifier.CaseSensitivity.SENSITIVE -> BindingCase.SENSITIVE
             Identifier.CaseSensitivity.INSENSITIVE -> BindingCase.INSENSITIVE
         }
@@ -1241,15 +1234,14 @@ internal class PlanTyper(
         return BindingPath(bindingSteps)
     }
 
-    private fun getElementTypeForFromSource(fromSourceType: StaticType): StaticType =
-        when (fromSourceType) {
-            is BagType -> fromSourceType.elementType
-            is ListType -> fromSourceType.elementType
-            is AnyType -> StaticType.ANY
-            is AnyOfType -> AnyOfType(fromSourceType.types.map { getElementTypeForFromSource(it) }.toSet())
-            // All the other types coerce into a bag of themselves (including null/missing/sexp).
-            else -> fromSourceType
-        }
+    private fun getElementTypeForFromSource(fromSourceType: StaticType): StaticType = when (fromSourceType) {
+        is BagType -> fromSourceType.elementType
+        is ListType -> fromSourceType.elementType
+        is AnyType -> StaticType.ANY
+        is AnyOfType -> AnyOfType(fromSourceType.types.map { getElementTypeForFromSource(it) }.toSet())
+        // All the other types coerce into a bag of themselves (including null/missing/sexp).
+        else -> fromSourceType
+    }
 
     /**
      * Rewrites function arguments, wrapping in the given function if exists.
@@ -1320,8 +1312,7 @@ internal class PlanTyper(
     private fun handleUnknownFunction(match: FnMatch.Error<*>) {
         onProblem(
             Problem(
-                sourceLocation = UNKNOWN_PROBLEM_LOCATION,
-                details = PlanningProblemDetails.UnknownFunction(
+                sourceLocation = UNKNOWN_PROBLEM_LOCATION, details = PlanningProblemDetails.UnknownFunction(
                     match.identifier.normalize(),
                     match.args.map { a -> a.type },
                 )
