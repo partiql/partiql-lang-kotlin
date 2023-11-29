@@ -21,14 +21,9 @@ global::{
 
 // Functions
 
-fn::[
-  static::{
-    signature: scalar_signature,
-  },
-  dynamic::{
-    signatures: list::[scalar_signature],
-  }
-]
+fn::{
+  signature: scalar_signature,
+}
 
 agg::{
   signature: aggregation_signature,
