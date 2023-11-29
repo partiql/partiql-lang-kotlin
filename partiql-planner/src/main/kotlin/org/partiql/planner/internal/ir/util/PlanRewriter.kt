@@ -121,11 +121,6 @@ internal abstract class PlanRewriter<C> : PlanBaseVisitor<PlanNode, C>() {
         }
     }
 
-    override fun visitFnDynamic(node: Fn.Dynamic, ctx: C): PlanNode {
-        val signatures = node.signatures
-        return node
-    }
-
     override fun visitAggResolved(node: Agg.Resolved, ctx: C): PlanNode {
         val signature = node.signature
         return node

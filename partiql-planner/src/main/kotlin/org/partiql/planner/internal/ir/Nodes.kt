@@ -4,7 +4,6 @@ package org.partiql.planner.internal.ir
 
 import org.partiql.planner.internal.ir.builder.AggResolvedBuilder
 import org.partiql.planner.internal.ir.builder.AggUnresolvedBuilder
-import org.partiql.planner.internal.ir.builder.FnDynamicBuilder
 import org.partiql.planner.internal.ir.builder.FnResolvedBuilder
 import org.partiql.planner.internal.ir.builder.FnUnresolvedBuilder
 import org.partiql.planner.internal.ir.builder.GlobalBuilder
@@ -126,7 +125,6 @@ internal sealed class Fn : PlanNode() {
     internal override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = when (this) {
         is Resolved -> visitor.visitFnResolved(this, ctx)
         is Unresolved -> visitor.visitFnUnresolved(this, ctx)
-        is Dynamic -> visitor.visitFnDynamic(this, ctx)
     }
 
     internal data class Resolved(
@@ -162,21 +160,6 @@ internal sealed class Fn : PlanNode() {
         internal companion object {
             @JvmStatic
             internal fun builder(): FnUnresolvedBuilder = FnUnresolvedBuilder()
-        }
-    }
-
-    internal data class Dynamic(
-        @JvmField
-        internal val signatures: List<FunctionSignature.Scalar>,
-    ) : Fn() {
-        internal override val children: List<PlanNode> = emptyList()
-
-        internal override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
-            visitor.visitFnDynamic(this, ctx)
-
-        internal companion object {
-            @JvmStatic
-            internal fun builder(): FnDynamicBuilder = FnDynamicBuilder()
         }
     }
 }
