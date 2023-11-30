@@ -14,6 +14,7 @@
 
 package org.partiql.cli.shell
 
+import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.util.ExprValueFormatter
 import java.io.PrintStream
@@ -42,11 +43,20 @@ internal class RunnableWriter(
         while (true) {
             val value = values.poll(3, TimeUnit.SECONDS)
             if (value != null) {
-                out.info(BAR_1)
-                formatter.formatTo(value, out)
-                out.println()
-                out.info(BAR_2)
-                donePrinting.set(true)
+                try {
+                    out.info(BAR_1)
+                    formatter.formatTo(value, out)
+                    out.println()
+                    out.info(BAR_2)
+                    donePrinting.set(true)
+                } catch (ex: EvaluationException) {
+                    out.error(ex.generateMessage())
+                    out.error(ex.message)
+                    donePrinting.set(true)
+                } catch (t: Throwable) {
+                    out.error(t.message ?: "ERROR encountered. However, no message was attached.")
+                    donePrinting.set(true)
+                }
             }
         }
     }

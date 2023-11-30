@@ -120,7 +120,7 @@ internal class Shell(
     private val currentUser = System.getProperty("user.name")
 
     private val inputs: BlockingQueue<RunnablePipeline.Input> = ArrayBlockingQueue(1)
-    private val results: BlockingQueue<PartiQLResult> = ArrayBlockingQueue(1)
+    private val results: BlockingQueue<RunnablePipeline.Output> = ArrayBlockingQueue(1)
     private var pipelineService: ExecutorService = Executors.newFixedThreadPool(1)
     private val values: BlockingQueue<ExprValue> = ArrayBlockingQueue(1)
     private var printingService: ExecutorService = Executors.newFixedThreadPool(1)
@@ -232,9 +232,19 @@ internal class Shell(
                                 arg,
                                 locals,
                                 exiting
-                            ) as PartiQLResult.Value
-                            globals.add(result.value.bindings)
-                            result
+                            )
+                            when (result) {
+                                is RunnablePipeline.Output.Result -> {
+                                    when (result.result) {
+                                        is PartiQLResult.Value -> {
+                                            globals.add(result.result.value.bindings)
+                                            result
+                                        }
+                                        else -> RunnablePipeline.Output.Error(IllegalStateException("Need to pass VALUE to !add_to_global_env"))
+                                    }
+                                }
+                                is RunnablePipeline.Output.Error -> { result }
+                            }
                         }
                         continue
                     }
@@ -252,7 +262,9 @@ internal class Shell(
                         continue
                     }
                     "!global_env" -> {
-                        executeAndPrint { AbstractPipeline.convertExprValue(globals.asExprValue()) }
+                        executeAndPrint {
+                            RunnablePipeline.Output.Result(AbstractPipeline.convertExprValue(globals.asExprValue()))
+                        }
                         continue
                     }
                     "!clear" -> {
@@ -328,7 +340,7 @@ internal class Shell(
         textPartiQL: String,
         bindings: Bindings<ExprValue>,
         exiting: AtomicBoolean
-    ): PartiQLResult {
+    ): RunnablePipeline.Output {
         doneCompiling.set(false)
         inputs.put(
             RunnablePipeline.Input(
@@ -343,7 +355,7 @@ internal class Shell(
             doneCompiling,
             exiting,
             pipelineService,
-            PartiQLResult.Value(value = ExprValue.newString("Compilation cancelled."))
+            RunnablePipeline.Output.Result(PartiQLResult.Value(value = ExprValue.newString("Compilation cancelled.")))
         ) {
             pipelineService = Executors.newFixedThreadPool(1)
             pipelineService.submit(RunnablePipeline(inputs, results, compiler, doneCompiling))
@@ -361,18 +373,11 @@ internal class Shell(
         }
     }
 
-    private fun executeAndPrint(func: () -> PartiQLResult) {
-        val result: PartiQLResult? = try {
-            func.invoke()
-        } catch (ex: SqlException) {
-            out.error(ex.generateMessage())
-            out.error(ex.message)
-            null // signals that there was an error
-        } catch (ex: NotImplementedError) {
-            out.error(ex.message ?: "kotlin.NotImplementedError was raised")
-            null // signals that there was an error
+    private fun executeAndPrint(func: () -> RunnablePipeline.Output) {
+        when (val output = func.invoke()) {
+            is RunnablePipeline.Output.Result -> printPartiQLResult(output.result)
+            is RunnablePipeline.Output.Error -> out.error(output.throwable.message!!)
         }
-        printPartiQLResult(result)
     }
 
     private fun printPartiQLResult(result: PartiQLResult?) {
@@ -498,7 +503,7 @@ private fun ansi(string: String, style: AttributedStyle) = AttributedString(stri
 
 private fun PrintStream.success(string: String) = this.println(ansi(string, SUCCESS))
 
-private fun PrintStream.error(string: String) = this.println(ansi(string, ERROR))
+internal fun PrintStream.error(string: String) = this.println(ansi(string, ERROR))
 
 internal fun PrintStream.info(string: String) = this.println(ansi(string, INFO))
 
