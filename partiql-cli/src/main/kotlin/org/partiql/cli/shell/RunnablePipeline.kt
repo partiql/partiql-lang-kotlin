@@ -59,7 +59,7 @@ internal class RunnablePipeline(
     )
 
     internal sealed interface Output {
-        data class Result(val result: PartiQLResult): Output
-        data class Error(val throwable: Throwable): Output
+        data class Result(val result: PartiQLResult) : Output
+        data class Error(val throwable: Throwable) : Output
     }
 }
