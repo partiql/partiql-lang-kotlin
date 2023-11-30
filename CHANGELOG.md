@@ -31,9 +31,18 @@ Thank you to all who have contributed!
 - Adds top-level IR node creation functions.
 - Adds `componentN` functions (destructuring) to IR nodes via Kotlin data classes
 - Adds public `tag` field to IR nodes for associating metadata
+- Adds AST Normalization Pass. 
+- Adds PartiQLPlanner Interface, which is responsible for translate an AST to a Plan. 
 
 ### Changed
 - StaticTypeInferencer and PlanTyper will not raise an error when an expression is inferred to `NULL` or `unionOf(NULL, MISSING)`. In these cases the StaticTypeInferencer and PlanTyper will still raise the Problem Code `ExpressionAlwaysReturnsNullOrMissing` but the severity of the problem has been changed to warning. In the case an expression always returns `MISSING`, problem code `ExpressionAlwaysReturnsMissing` will be raised, which will have problem severity of error.
+- The default integer literal type is now 32-bit. 
+- `PartiQLValueType` now distinguishes between Arbitrary Precision Decimal and Fixed Precision Decimal. 
+- Function Signature Changes. Now Function signature has two subclasses, `Scalar` and `Aggregation`. 
+- In the produced plan: 
+  - The new plan is fully resolved and typed.
+  - Operators will be converted to function call. 
+
 
 ### Deprecated
 
@@ -42,6 +51,7 @@ Thank you to all who have contributed!
 ### Removed
 - [Breaking] Removed IR factory in favor of static top-level functions. Change `Ast.foo()`
   to `foo()`
+- [Breaking] Removed `org.partiql.lang.planner.transforms.AstToPlan`. Use `org.partiql.planner.PartiQLPlanner`. 
 
 ### Security
 
