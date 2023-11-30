@@ -51,7 +51,6 @@ internal class RunnableWriter(
                     } catch (t: Throwable) { printThrowable(t) }
                     is RunnablePipeline.Output.Error -> printThrowable(value.throwable)
                 }
-                out.println()
                 out.flush()
                 donePrinting.set(true)
             }
@@ -66,6 +65,7 @@ internal class RunnableWriter(
                 formatter.formatTo(result.value, out)
                 out.println()
                 out.info(BAR_2)
+                out.success("OK!")
             }
             is PartiQLResult.Explain.Domain -> {
                 val explain = ExplainFormatter.format(result)
