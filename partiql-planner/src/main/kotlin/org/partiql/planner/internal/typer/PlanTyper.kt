@@ -81,10 +81,10 @@ import org.partiql.types.NullType
 import org.partiql.types.SexpType
 import org.partiql.types.StaticType
 import org.partiql.types.StaticType.Companion.ANY
-import org.partiql.types.StaticType.Companion.MISSING
-import org.partiql.types.StaticType.Companion.STRING
 import org.partiql.types.StaticType.Companion.BOOL
+import org.partiql.types.StaticType.Companion.MISSING
 import org.partiql.types.StaticType.Companion.NULL
+import org.partiql.types.StaticType.Companion.STRING
 import org.partiql.types.StringType
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
