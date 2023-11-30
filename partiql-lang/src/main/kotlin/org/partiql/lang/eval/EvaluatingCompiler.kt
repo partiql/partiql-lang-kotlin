@@ -2207,11 +2207,49 @@ internal open class EvaluatingCompiler(
         }
 
     /**
-     * Represents an instance of a compiled `EXCLUDE` expression. Notably, this expr will have redundant steps removed.
+     * Represents all the compiled `EXCLUDE` paths that start with the same [CompiledExcludeExpr.root]. Notably,
+     * redundant paths (i.e. exclude paths that exclude values already excluded by other paths) will be removed.
      */
     internal data class CompiledExcludeExpr(val root: PartiqlAst.Identifier, val exclusions: RemoveAndOtherSteps)
+
     /**
      * Represents all the exclusions at the current level and other nested levels.
+     *
+     * The idea behind this data structure is that at a current level (i.e. path step index), we keep track of the
+     * - Exclude paths that have a final exclude step at the current level. This set of tuple attributes and collection
+     * indexes to remove at the current level is modeled as a set of exclude steps (i.e. [RemoveAndOtherSteps.remove]).
+     * - Exclude paths that have additional steps (their final step is at a deeper level). This is modeled as a mapping
+     * of exclude steps to other [RemoveAndOtherSteps] to group all exclude paths that share the same current step.
+     *
+     * For example, let's say we have exclude paths (ignoring the exclude path root) of
+     *       a.b,
+     *       x.y.z1,
+     *       x.y.z2
+     *       ^ ^ ^
+     * Level 1 2 3
+     *
+     * These exclude paths would be converted to the following in [RemoveAndOtherSteps].
+     * ```
+     * // For demonstration purposes, the syntax '<string>' corresponds to the exclude tuple attribute step of <string>
+     * RemoveAndOtherSteps(                   // Level 1 (no exclusions at level 1)
+     *     remove = emptySet(),
+     *     steps = mapOf(
+     *         'a' to RemoveAndOtherSteps(    // Level 2 for paths that have `'a'` in Level 1
+     *             remove = setOf('b'),       // path `a.b` has final step at level 2
+     *             steps = emptyMap()
+     *         ),
+     *         'x' to RemoveAndOtherSteps(    // Level 2 for paths that have `'x'` in Level 1
+     *             remove = emptySet(),
+     *             steps = mapOf(
+     *                 'y' to RemoveAndOtherSteps(     // Level 3 for paths that have `'y'` in Level 2 and `'x'` in Level 1
+     *                     remove = setOf('z1', 'z2'), // paths `x.y.z1` and `x.y.z2` have final step at level 3
+     *                     steps = emptyMap()
+     *                 )
+     *             )
+     *         ),
+     *     )
+     * )
+     * ```
      */
     internal data class RemoveAndOtherSteps(val remove: Set<PartiqlAst.ExcludeStep>, val steps: Map<PartiqlAst.ExcludeStep, RemoveAndOtherSteps>) {
         companion object {
@@ -2222,14 +2260,15 @@ internal open class EvaluatingCompiler(
     }
 
     /**
-     * Creates a list of compiled exclude expressions.
+     * Creates a list of compiled exclude expressions with each index of the resulting list corresponding to a different
+     * exclude path root.
      */
     internal fun compileExcludeClause(excludeClause: PartiqlAst.ExcludeOp): List<CompiledExcludeExpr> {
         val excludeExprs = excludeClause.exprs
         fun addToCompiledExcludeExprs(curCompiledExpr: RemoveAndOtherSteps, steps: List<PartiqlAst.ExcludeStep>): RemoveAndOtherSteps {
             // subsumption cases
-            // when steps.size == 1: look at remove set
-            // when steps.size > 1: look at other steps
+            // when steps.size == 1: possibly add to remove set
+            // when steps.size > 1: possibly add to steps map
             val first = steps.first()
             var entryRemove = curCompiledExpr.remove.toMutableSet()
             var entrySteps = curCompiledExpr.steps.toMutableMap()
@@ -2237,51 +2276,54 @@ internal open class EvaluatingCompiler(
                 when (first) {
                     is PartiqlAst.ExcludeStep.ExcludeTupleAttr -> {
                         if (entryRemove.contains(PartiqlAst.build { excludeTupleWildcard() })) {
-                            // contains wildcard; do not add; a.b and a.* -> a[*]
+                            // contains wildcard; do not add; e.g. a.* and a.b -> keep a.*
                         } else {
                             // add to entries to remove
                             entryRemove.add(first)
-                            // remove from other steps
+                            // remove from other steps; e.g. a.b.c and a.b -> keep a.b
                             entrySteps.remove(first)
                         }
                     }
                     is PartiqlAst.ExcludeStep.ExcludeTupleWildcard -> {
-                        if (entryRemove.any { it is PartiqlAst.ExcludeStep.ExcludeCollectionWildcard || it is PartiqlAst.ExcludeStep.ExcludeCollectionIndex }) {
-                            // todo mistyping; and other mistyping
-                        } else {
-                            // entries to remove just tuple wildcard
-                            entryRemove = mutableSetOf(first)
-                            // todo: perhaps remove just the tuple attrs and tuple wildcard
-                            entrySteps = mutableMapOf()
-                        }
+                        entryRemove.add(first)
+                        // remove all tuple attribute exclude steps
+                        entryRemove = entryRemove.filterNot {
+                            it is PartiqlAst.ExcludeStep.ExcludeTupleAttr
+                        }.toMutableSet()
+                        // remove all tuple attribute/wildcard exclude steps from deeper levels
+                        entrySteps = entrySteps.filterNot {
+                            it.key is PartiqlAst.ExcludeStep.ExcludeTupleAttr || it.key is PartiqlAst.ExcludeStep.ExcludeTupleWildcard
+                        }.toMutableMap()
                     }
                     is PartiqlAst.ExcludeStep.ExcludeCollectionIndex -> {
                         if (entryRemove.contains(PartiqlAst.build { excludeCollectionWildcard() })) {
-                            // contains wildcard; do not add; a[*] and a[*] -> a[*]
+                            // contains wildcard; do not add; e.g a[*] and a[1] -> keep a[*]
                         } else {
                             // add to entries to remove
                             entryRemove.add(first)
-                            // remove from other steps
+                            // remove from other steps; e.g. a.b[2].c and a.b[2] -> keep a.b[2]
                             entrySteps.remove(first)
                         }
                     }
                     is PartiqlAst.ExcludeStep.ExcludeCollectionWildcard -> {
-                        if (entryRemove.any { it is PartiqlAst.ExcludeStep.ExcludeTupleWildcard || it is PartiqlAst.ExcludeStep.ExcludeTupleAttr }) {
-                            // todo mistyping; and other mistyping
-                        } else {
-                            // entries to remove just collection wildcard
-                            entryRemove = mutableSetOf(first)
-                            // todo: perhaps remove just the collection index and collection wildcard
-                            entrySteps = mutableMapOf()
-                        }
+                        entryRemove.add(first)
+                        // remove all collection index exclude steps
+                        entryRemove = entryRemove.filterNot {
+                            it is PartiqlAst.ExcludeStep.ExcludeCollectionIndex
+                        }.toMutableSet()
+                        // remove all collection index/wildcard exclude steps from deeper levels
+                        entrySteps = entrySteps.filterNot {
+                            it.key is PartiqlAst.ExcludeStep.ExcludeCollectionIndex || it.key is PartiqlAst.ExcludeStep.ExcludeCollectionWildcard
+                        }.toMutableMap()
                     }
                 }
             } else {
-                // remove at deeper level; need to check if first step is already removed in previous step
+                // remove at deeper level; need to check if first step is already removed in current step
                 when (first) {
                     is PartiqlAst.ExcludeStep.ExcludeTupleAttr -> {
                         if (entryRemove.contains(PartiqlAst.build { excludeTupleWildcard() }) || entryRemove.contains(first)) {
-                            // contains wildcard or first; do not add; a.b.c and a.* -> a.*
+                            // remove set contains tuple wildcard or attr; do not add to other steps;
+                            // e.g. a.* and a.b.c -> a.*
                         } else {
                             val existingEntry = entrySteps.getOrDefault(first, RemoveAndOtherSteps.empty())
                             val newEntry = addToCompiledExcludeExprs(existingEntry, steps.drop(1))
@@ -2289,21 +2331,18 @@ internal open class EvaluatingCompiler(
                         }
                     }
                     is PartiqlAst.ExcludeStep.ExcludeTupleWildcard -> {
-                        if (entryRemove.any { it is PartiqlAst.ExcludeStep.ExcludeCollectionWildcard || it is PartiqlAst.ExcludeStep.ExcludeCollectionIndex }) {
-                            // todo mistyping; and other mistyping
+                        if (entryRemove.any { it is PartiqlAst.ExcludeStep.ExcludeTupleWildcard }) {
+                            // tuple wildcard at current level; do nothing
                         } else {
-                            if (entryRemove.any { it is PartiqlAst.ExcludeStep.ExcludeTupleWildcard }) {
-                                // do nothing
-                            } else {
-                                val existingEntry = entrySteps.getOrDefault(first, RemoveAndOtherSteps.empty())
-                                val newEntry = addToCompiledExcludeExprs(existingEntry, steps.drop(1))
-                                entrySteps[first] = newEntry
-                            }
+                            val existingEntry = entrySteps.getOrDefault(first, RemoveAndOtherSteps.empty())
+                            val newEntry = addToCompiledExcludeExprs(existingEntry, steps.drop(1))
+                            entrySteps[first] = newEntry
                         }
                     }
                     is PartiqlAst.ExcludeStep.ExcludeCollectionIndex -> {
                         if (entryRemove.contains(PartiqlAst.build { excludeCollectionWildcard() }) || entryRemove.contains(first)) {
-                            // contains wildcard; do not add; a[*] and a[*][1] -> a[*]
+                            // remove set contains collection wildcard or index; do not add to other steps;
+                            // e.g. a[*] and a[*][1] -> a[*]
                         } else {
                             val existingEntry = entrySteps.getOrDefault(first, RemoveAndOtherSteps.empty())
                             val newEntry = addToCompiledExcludeExprs(existingEntry, steps.drop(1))
@@ -2311,16 +2350,12 @@ internal open class EvaluatingCompiler(
                         }
                     }
                     is PartiqlAst.ExcludeStep.ExcludeCollectionWildcard -> {
-                        if (entryRemove.any { it is PartiqlAst.ExcludeStep.ExcludeTupleWildcard || it is PartiqlAst.ExcludeStep.ExcludeTupleAttr }) {
-                            // todo mistyping; and other mistyping
+                        if (entryRemove.any { it is PartiqlAst.ExcludeStep.ExcludeCollectionWildcard }) {
+                            // collection wildcard at current level; do nothing
                         } else {
-                            if (entryRemove.any { it is PartiqlAst.ExcludeStep.ExcludeCollectionWildcard }) {
-                                // do nothing
-                            } else {
-                                val existingEntry = entrySteps.getOrDefault(first, RemoveAndOtherSteps.empty())
-                                val newEntry = addToCompiledExcludeExprs(existingEntry, steps.drop(1))
-                                entrySteps[first] = newEntry
-                            }
+                            val existingEntry = entrySteps.getOrDefault(first, RemoveAndOtherSteps.empty())
+                            val newEntry = addToCompiledExcludeExprs(existingEntry, steps.drop(1))
+                            entrySteps[first] = newEntry
                         }
                     }
                 }
