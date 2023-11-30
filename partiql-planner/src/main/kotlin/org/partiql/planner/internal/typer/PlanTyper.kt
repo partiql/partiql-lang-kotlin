@@ -81,6 +81,8 @@ import org.partiql.types.NullType
 import org.partiql.types.SexpType
 import org.partiql.types.StaticType
 import org.partiql.types.StaticType.Companion.ANY
+import org.partiql.types.StaticType.Companion.MISSING
+import org.partiql.types.StaticType.Companion.STRING
 import org.partiql.types.StringType
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
@@ -1006,34 +1008,40 @@ internal class PlanTyper(
          * @return a [Pair] where the [Pair.first] represents the type of the [step] and the [Pair.second] represents
          * the disambiguated [step].
          */
-        private fun inferPathStep(struct: StructType, step: Rex.Op.Path.Step): Pair<StaticType, Rex.Op.Path.Step> =
-            when (step) {
-                is Rex.Op.Path.Step.Index -> {
-                    if (step.key.type !is StringType) {
-                        error("Expected string but found: ${step.key.type}")
-                    }
-                    if (step.key.op is Rex.Op.Lit) {
-                        val lit = (step.key.op as Rex.Op.Lit).value
-                        if (lit is TextValue<*> && !lit.isNull) {
-                            val id = identifierSymbol(lit.string!!, Identifier.CaseSensitivity.SENSITIVE)
-                            val (type, replacementId) = inferStructLookup(struct, id)
-                            type to rexOpPathStepSymbol(replacementId)
-                        } else {
-                            error("Expected text literal, but got $lit")
-                        }
-                    } else {
-                        // cannot infer type of non-literal path step because we don't know its value
-                        // we might improve upon this with some constant folding prior to typing
-                        StaticType.ANY to step
-                    }
-                }
-                is Rex.Op.Path.Step.Symbol -> {
-                    val (type, replacementId) = inferStructLookup(struct, step.identifier)
-                    type to rexOpPathStepSymbol(replacementId)
-                }
-                is Rex.Op.Path.Step.Unpivot -> error("Unpivot not supported")
-                is Rex.Op.Path.Step.Wildcard -> error("Wildcard not supported")
+        private fun inferPathStep(struct: StructType, step: Rex.Op.Path.Step): Pair<StaticType, Rex.Op.Path.Step> = when (step) {
+            // { 'a': 1 }[0] should always return missing since tuples cannot be navigated via integer indexes
+            is Rex.Op.Path.Step.Index -> {
+                handleAlwaysMissing()
+                MISSING to step
             }
+            is Rex.Op.Path.Step.Symbol -> {
+                val (type, replacementId) = inferStructLookup(struct, step.identifier)
+                type to replacementId.toPathStep()
+            }
+            is Rex.Op.Path.Step.Key -> {
+                if (step.key.type !is StringType) {
+                    error("Expected string but found: ${step.key.type}")
+                }
+                if (step.key.op is Rex.Op.Lit) {
+                    val lit = step.key.op.value
+                    if (lit is TextValue<*> && !lit.isNull) {
+                        val id = identifierSymbol(lit.string!!, Identifier.CaseSensitivity.SENSITIVE)
+                        val (type, replacementId) = inferStructLookup(struct, id)
+                        type to replacementId.toPathStep()
+                    } else {
+                        error("Expected text literal, but got $lit")
+                    }
+                } else {
+                    // cannot infer type of non-literal path step because we don't know its value
+                    // we might improve upon this with some constant folding prior to typing
+                    ANY to step
+                }
+            }
+            is Rex.Op.Path.Step.Unpivot -> error("Unpivot not supported")
+            is Rex.Op.Path.Step.Wildcard -> error("Wildcard not supported")
+        }
+
+        private fun Identifier.Symbol.toPathStep() = rexOpPathStepSymbol(this)
 
         private fun inferPathStep(collection: CollectionType, step: Rex.Op.Path.Step): StaticType {
             if (step !is Rex.Op.Path.Step.Index) {
@@ -1211,25 +1219,13 @@ internal class PlanTyper(
         if (rootOp.identifier !is Identifier.Symbol) {
             throw IllegalArgumentException("Expected identifier symbol")
         }
-        val bindingRoot = (rootOp.identifier as Identifier.Symbol).toBindingName()
+        val bindingRoot = rootOp.identifier.toBindingName()
         val bindingSteps = mutableListOf(bindingRoot)
         for (step in steps) {
             when (step) {
-                is Rex.Op.Path.Step.Index -> {
-                    if (step.key.op is Rex.Op.Lit) {
-                        val v = (step.key.op as Rex.Op.Lit).value
-                        if (v is TextValue<*>) {
-                            // add to prefix
-                            bindingSteps.add(BindingName(v.string!!, BindingCase.SENSITIVE))
-                        } else {
-                            // short-circuit
-                            break
-                        }
-                    } else {
-                        break
-                    }
-                }
+                is Rex.Op.Path.Step.Index -> break
                 is Rex.Op.Path.Step.Symbol -> bindingSteps.add(step.identifier.toBindingName())
+                is Rex.Op.Path.Step.Key -> break
                 else -> break // short-circuit
             }
         }
@@ -1283,7 +1279,8 @@ internal class PlanTyper(
                 BindingCase.SENSITIVE -> Identifier.CaseSensitivity.SENSITIVE
                 BindingCase.INSENSITIVE -> Identifier.CaseSensitivity.INSENSITIVE
             }
-            rexOpPathStepSymbol(identifierSymbol(it.name, case))
+            val symbol = identifierSymbol(it.name, case)
+            rexOpPathStepSymbol(symbol)
         }
         return when (steps.isEmpty()) {
             true -> root.op

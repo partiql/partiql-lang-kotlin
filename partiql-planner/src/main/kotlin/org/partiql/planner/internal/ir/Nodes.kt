@@ -415,6 +415,7 @@ internal data class Rex(
                     is Symbol -> visitor.visitRexOpPathStepSymbol(this, ctx)
                     is Wildcard -> visitor.visitRexOpPathStepWildcard(this, ctx)
                     is Unpivot -> visitor.visitRexOpPathStepUnpivot(this, ctx)
+                    is Key -> visitor.visitRexOpPathStepKey(this, ctx)
                 }
 
                 internal data class Index(
@@ -436,6 +437,44 @@ internal data class Rex(
                     }
                 }
 
+                /**
+                 * This represents a case-sensitive lookup on a tuple. Ex: a['b'] or a[CAST('a' || 'b' AS STRING)].
+                 * This would normally contain the dot notation for case-sensitive lookup, however, due to
+                 * limitations -- we cannot consolidate these. See [Symbol] for more information.
+                 *
+                 * The main difference is that this does NOT include `a."b"`
+                 */
+                internal data class Key(
+                    @JvmField
+                    internal val key: Rex,
+                ) : Step() {
+                    internal override val children: List<PlanNode> by lazy {
+                        val kids = mutableListOf<PlanNode?>()
+                        kids.add(key)
+                        kids.filterNotNull()
+                    }
+
+                    internal override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                        visitor.visitRexOpPathStepKey(this, ctx)
+
+                    internal companion object {
+                        @JvmStatic
+                        internal fun builder(): RexOpPathStepIndexBuilder = RexOpPathStepIndexBuilder()
+                    }
+                }
+
+                /**
+                 * This represents a lookup on a tuple. We differentiate a [Key] and a [Symbol] at this point in the
+                 * pipeline because we NEED to retain some syntactic knowledge for the following reason: we cannot
+                 * use the syntactic index operation on a schema -- as it is not synonymous with a tuple. In other words,
+                 * `<schema-name>."<value-name>"` is not interchangeable with `<schema-name>['<value-name>']`.
+                 *
+                 * So, in order to temporarily differentiate the `a."b"` from `a['b']` (see [Key]), we need to maintain
+                 * the syntactic difference here. Note that this would potentially be mitigated by typing during the AST to Plan
+                 * transformation.
+                 *
+                 * That being said, this represents a lookup on a tuple such as `a.b` or `a."b"`.
+                 */
                 internal data class Symbol(
                     @JvmField
                     internal val identifier: Identifier.Symbol,

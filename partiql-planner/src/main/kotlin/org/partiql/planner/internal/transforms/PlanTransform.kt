@@ -3,6 +3,10 @@ package org.partiql.planner.internal.transforms
 import org.partiql.errors.ProblemCallback
 import org.partiql.plan.PlanNode
 import org.partiql.plan.partiQLPlan
+import org.partiql.plan.rex
+import org.partiql.plan.rexOpLit
+import org.partiql.plan.rexOpPathStepKey
+import org.partiql.plan.rexOpPathStepSymbol
 import org.partiql.planner.internal.ir.Agg
 import org.partiql.planner.internal.ir.Fn
 import org.partiql.planner.internal.ir.Global
@@ -12,7 +16,9 @@ import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.Statement
 import org.partiql.planner.internal.ir.visitor.PlanBaseVisitor
+import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.stringValue
 
 /**
  * This is an internal utility to translate from the internal unresolved plan used for typing to the public plan IR.
@@ -118,10 +124,15 @@ internal object PlanTransform : PlanBaseVisitor<PlanNode, ProblemCallback>() {
             key = visitRex(node.key, ctx),
         )
 
-    override fun visitRexOpPathStepSymbol(node: Rex.Op.Path.Step.Symbol, ctx: ProblemCallback) =
-        org.partiql.plan.Rex.Op.Path.Step.Symbol(
-            identifier = visitIdentifierSymbol(node.identifier, ctx),
-        )
+    @OptIn(PartiQLValueExperimental::class)
+    override fun visitRexOpPathStepSymbol(node: Rex.Op.Path.Step.Symbol, ctx: ProblemCallback) = when (node.identifier.caseSensitivity) {
+        Identifier.CaseSensitivity.SENSITIVE -> rexOpPathStepKey(rex(StaticType.STRING, rexOpLit(stringValue(node.identifier.symbol))))
+        Identifier.CaseSensitivity.INSENSITIVE -> rexOpPathStepSymbol(node.identifier.symbol)
+    }
+
+    override fun visitRexOpPathStepKey(node: Rex.Op.Path.Step.Key, ctx: ProblemCallback): PlanNode = rexOpPathStepKey(
+        key = visitRex(node.key, ctx)
+    )
 
     override fun visitRexOpPathStepWildcard(node: Rex.Op.Path.Step.Wildcard, ctx: ProblemCallback) =
         org.partiql.plan.Rex.Op.Path.Step.Wildcard()
@@ -130,7 +141,7 @@ internal object PlanTransform : PlanBaseVisitor<PlanNode, ProblemCallback>() {
         org.partiql.plan.Rex.Op.Path.Step.Unpivot()
 
     override fun visitRexOpCall(node: Rex.Op.Call, ctx: ProblemCallback) =
-        super.visitRexOpCall(node, ctx) as org.partiql.plan.Rex.Op.Call
+        super.visitRexOpCall(node, ctx) as org.partiql.plan.Rex.Op
 
     override fun visitRexOpCallStatic(node: Rex.Op.Call.Static, ctx: ProblemCallback): org.partiql.plan.Rex.Op {
         val fn = visitFn(node.fn, ctx)

@@ -53,6 +53,8 @@ internal fun rexOpPath(root: Rex, steps: List<Rex.Op.Path.Step>): Rex.Op.Path = 
 
 internal fun rexOpPathStepIndex(key: Rex): Rex.Op.Path.Step.Index = Rex.Op.Path.Step.Index(key)
 
+internal fun rexOpPathStepKey(key: Rex): Rex.Op.Path.Step.Key = Rex.Op.Path.Step.Key(key)
+
 internal fun rexOpPathStepSymbol(identifier: Identifier.Symbol): Rex.Op.Path.Step.Symbol =
     Rex.Op.Path.Step.Symbol(identifier)
 

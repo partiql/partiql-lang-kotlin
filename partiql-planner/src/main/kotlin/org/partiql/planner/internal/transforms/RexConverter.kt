@@ -33,6 +33,7 @@ import org.partiql.planner.internal.ir.rexOpCollection
 import org.partiql.planner.internal.ir.rexOpLit
 import org.partiql.planner.internal.ir.rexOpPath
 import org.partiql.planner.internal.ir.rexOpPathStepIndex
+import org.partiql.planner.internal.ir.rexOpPathStepKey
 import org.partiql.planner.internal.ir.rexOpPathStepSymbol
 import org.partiql.planner.internal.ir.rexOpPathStepUnpivot
 import org.partiql.planner.internal.ir.rexOpPathStepWildcard
@@ -46,6 +47,7 @@ import org.partiql.planner.internal.typer.toStaticType
 import org.partiql.types.StaticType
 import org.partiql.types.TimeType
 import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.StringValue
 import org.partiql.value.boolValue
 import org.partiql.value.int32Value
 import org.partiql.value.int64Value
@@ -145,7 +147,17 @@ internal object RexConverter {
                 when (it) {
                     is Expr.Path.Step.Index -> {
                         val key = visitExprCoerce(it.key, context)
-                        rexOpPathStepIndex(key)
+                        when (val astKey = it.key) {
+                            is Expr.Lit -> when (astKey.value) {
+                                is StringValue -> rexOpPathStepKey(key)
+                                else -> rexOpPathStepIndex(key)
+                            }
+                            is Expr.Cast -> when (astKey.asType is Type.String) {
+                                true -> rexOpPathStepKey(key)
+                                false -> rexOpPathStepIndex(key)
+                            }
+                            else -> rexOpPathStepIndex(key)
+                        }
                     }
                     is Expr.Path.Step.Symbol -> {
                         val identifier = AstToPlan.convert(it.symbol)

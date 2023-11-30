@@ -239,6 +239,16 @@ internal class RexOpPathStepIndexBuilder(
     internal fun build(): Rex.Op.Path.Step.Index = Rex.Op.Path.Step.Index(key = key!!)
 }
 
+internal class RexOpPathStepKeyBuilder(
+    internal var key: Rex? = null,
+) {
+    internal fun key(key: Rex?): RexOpPathStepKeyBuilder = this.apply {
+        this.key = key
+    }
+
+    internal fun build(): Rex.Op.Path.Step.Key = Rex.Op.Path.Step.Key(key = key!!)
+}
+
 internal class RexOpPathStepSymbolBuilder(
     internal var identifier: Identifier.Symbol? = null,
 ) {
