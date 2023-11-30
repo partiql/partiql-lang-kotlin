@@ -104,8 +104,8 @@ private val EXIT_DELAY: Duration = Duration(3000)
  */
 
 val exiting = AtomicBoolean(false)
-val doneCompiling = AtomicBoolean(false)
-val donePrinting = AtomicBoolean(false)
+val doneCompiling = AtomicBoolean(true)
+val donePrinting = AtomicBoolean(true)
 
 internal class Shell(
     output: OutputStream,
@@ -122,7 +122,7 @@ internal class Shell(
     private val inputs: BlockingQueue<RunnablePipeline.Input> = ArrayBlockingQueue(1)
     private val results: BlockingQueue<RunnablePipeline.Output> = ArrayBlockingQueue(1)
     private var pipelineService: ExecutorService = Executors.newFixedThreadPool(1)
-    private val values: BlockingQueue<ExprValue> = ArrayBlockingQueue(1)
+    private val values: BlockingQueue<RunnablePipeline.Output> = ArrayBlockingQueue(1)
     private var printingService: ExecutorService = Executors.newFixedThreadPool(1)
 
     fun start() {
@@ -289,6 +289,7 @@ internal class Shell(
                     val locals = refreshBindings()
                     evaluatePartiQL(line, locals, exiting)
                 }
+                waitUntil(true, donePrinting)
             }
             out.println("Thanks for using PartiQL!")
         }
@@ -374,51 +375,20 @@ internal class Shell(
     }
 
     private fun executeAndPrint(func: () -> RunnablePipeline.Output) {
-        when (val output = func.invoke()) {
-            is RunnablePipeline.Output.Result -> printPartiQLResult(output.result)
-            is RunnablePipeline.Output.Error -> out.error(output.throwable.message!!)
+        donePrinting.set(false)
+        val result = func.invoke()
+        values.put(result)
+        catchCancellation(donePrinting, exiting, printingService, 1) {
+            printingService = Executors.newFixedThreadPool(1)
+            printingService.submit(
+                RunnableWriter(
+                    out,
+                    ConfigurableExprValueFormatter.pretty,
+                    values,
+                    donePrinting
+                )
+            )
         }
-    }
-
-    private fun printPartiQLResult(result: PartiQLResult?) {
-        when (result) {
-            null -> {
-                out.error("ERROR!")
-            }
-            is PartiQLResult.Value -> {
-                try {
-                    donePrinting.set(false)
-                    values.put(result.value)
-                    catchCancellation(donePrinting, exiting, printingService, 1) {
-                        printingService = Executors.newFixedThreadPool(1)
-                        printingService.submit(
-                            RunnableWriter(
-                                out,
-                                ConfigurableExprValueFormatter.pretty,
-                                values,
-                                donePrinting
-                            )
-                        )
-                    }
-                } catch (ex: EvaluationException) { // should not need to do this here; see https://github.com/partiql/partiql-lang-kotlin/issues/1002
-                    out.error(ex.generateMessage())
-                    out.error(ex.message)
-                    return
-                }
-                out.success("OK!")
-            }
-            is PartiQLResult.Explain.Domain -> {
-                val explain = ExplainFormatter.format(result)
-                out.println(explain)
-                out.success("OK!")
-            }
-            is PartiQLResult.Insert,
-            is PartiQLResult.Replace,
-            is PartiQLResult.Delete -> {
-                out.warn("Insert/Replace/Delete are not yet supported")
-            }
-        }
-        out.flush()
     }
 
     /**
@@ -436,15 +406,7 @@ internal class Shell(
             if (exiting.get()) {
                 service.shutdown()
                 service.shutdownNow()
-                when (service.awaitTermination(2, TimeUnit.SECONDS)) {
-                    true -> {
-                        cancellationFlag.set(false)
-                        doneExecuting.set(false)
-                        resetService()
-                        return defaultReturn
-                    }
-                    false -> throw Exception("Printing service couldn't terminate")
-                }
+                cancellationFlag.set(false)
             }
         }
         return null
@@ -476,6 +438,12 @@ internal class Shell(
         }
     }
 
+    private fun waitUntil(until: Boolean, actual: AtomicBoolean) {
+        while (actual.get() != until) {
+            // Do nothing
+        }
+    }
+
     /**
      * A configuration class representing any configurations specified by the user
      * @param isMonochrome specifies the removal of syntax highlighting
@@ -501,13 +469,13 @@ private fun History.Entry.pretty(): String {
 
 private fun ansi(string: String, style: AttributedStyle) = AttributedString(string, style).toAnsi()
 
-private fun PrintStream.success(string: String) = this.println(ansi(string, SUCCESS))
+fun PrintStream.success(string: String) = this.println(ansi(string, SUCCESS))
 
 internal fun PrintStream.error(string: String) = this.println(ansi(string, ERROR))
 
 internal fun PrintStream.info(string: String) = this.println(ansi(string, INFO))
 
-private fun PrintStream.warn(string: String) = this.println(ansi(string, WARN))
+fun PrintStream.warn(string: String) = this.println(ansi(string, WARN))
 
 private class ThreadInterrupter : Closeable {
     private val thread = Thread.currentThread()

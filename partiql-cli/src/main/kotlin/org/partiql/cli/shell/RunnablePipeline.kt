@@ -42,11 +42,10 @@ internal class RunnablePipeline(
                 try {
                     val result = pipeline.compile(input.input, input.session)
                     results.put(Output.Result(result))
-                    doneCompiling.set(true)
                 } catch (t: Throwable) {
                     results.put(Output.Error(t))
-                    doneCompiling.set(true)
                 }
+                doneCompiling.set(true)
             }
         }
     }

@@ -14,8 +14,10 @@
 
 package org.partiql.cli.shell
 
+import org.partiql.cli.format.ExplainFormatter
 import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.PartiQLResult
 import org.partiql.lang.util.ExprValueFormatter
 import java.io.PrintStream
 import java.util.concurrent.BlockingQueue
@@ -29,7 +31,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 internal class RunnableWriter(
     private val out: PrintStream,
     private val formatter: ExprValueFormatter,
-    private val values: BlockingQueue<ExprValue>,
+    private val values: BlockingQueue<RunnablePipeline.Output>,
     private val donePrinting: AtomicBoolean
 ) : Runnable {
 
@@ -43,21 +45,51 @@ internal class RunnableWriter(
         while (true) {
             val value = values.poll(3, TimeUnit.SECONDS)
             if (value != null) {
-                try {
-                    out.info(BAR_1)
-                    formatter.formatTo(value, out)
-                    out.println()
-                    out.info(BAR_2)
-                    donePrinting.set(true)
-                } catch (ex: EvaluationException) {
-                    out.error(ex.generateMessage())
-                    out.error(ex.message)
-                    donePrinting.set(true)
-                } catch (t: Throwable) {
-                    out.error(t.message ?: "ERROR encountered. However, no message was attached.")
-                    donePrinting.set(true)
+                when (value) {
+                    is RunnablePipeline.Output.Result -> try {
+                        printResult(value.result)
+                    } catch (t: Throwable) {
+                        out.println()
+                        printThrowable(t)
+                    }
+                    is RunnablePipeline.Output.Error -> printThrowable(value.throwable)
                 }
+                out.println()
+                out.flush()
+                donePrinting.set(true)
             }
+        }
+    }
+
+    @Throws(Throwable::class)
+    private fun printResult(result: PartiQLResult) {
+        when (result) {
+            is PartiQLResult.Value -> {
+                out.info(BAR_1)
+                formatter.formatTo(result.value, out)
+                out.println()
+                out.info(BAR_2)
+            }
+            is PartiQLResult.Explain.Domain -> {
+                val explain = ExplainFormatter.format(result)
+                out.println(explain)
+                out.success("OK!")
+            }
+            is PartiQLResult.Insert,
+            is PartiQLResult.Replace,
+            is PartiQLResult.Delete -> {
+                out.warn("Insert/Replace/Delete are not yet supported")
+            }
+        }
+    }
+
+    private fun printThrowable(t: Throwable) = when (t) {
+        is EvaluationException -> {
+            out.error(t.generateMessage())
+            out.error(t.message)
+        }
+        else -> {
+            out.error(t.message ?: "ERROR encountered. However, no message was attached.")
         }
     }
 }
