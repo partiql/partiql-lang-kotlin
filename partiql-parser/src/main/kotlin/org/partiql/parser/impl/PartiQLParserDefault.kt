@@ -2052,6 +2052,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             val n = ctx.arg0?.text?.toInt()
             when (ctx.datatype.type) {
                 GeneratedParser.FLOAT -> when (n) {
+                    null -> typeFloat64()
                     32 -> typeFloat32()
                     64 -> typeFloat64()
                     else -> throw error(ctx.datatype, "Invalid FLOAT precision. Expected 32 or 64")

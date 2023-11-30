@@ -120,7 +120,6 @@ internal object RexConverter {
             // Fn
             val id = identifierSymbol(node.op.name.lowercase(), Identifier.CaseSensitivity.SENSITIVE)
             val fn = fnUnresolved(id, true)
-            // Rex
             val op = rexOpCallStatic(fn, args)
             return rex(type, op)
         }
@@ -131,12 +130,20 @@ internal object RexConverter {
             val lhs = visitExprCoerce(node.lhs, context)
             val rhs = visitExprCoerce(node.rhs, context)
             val args = listOf(lhs, rhs)
-            // Fn
-            val id = identifierSymbol(node.op.name.lowercase(), Identifier.CaseSensitivity.SENSITIVE)
-            val fn = fnUnresolved(id, true)
-            // Rex
-            val op = rexOpCallStatic(fn, args)
-            return rex(type, op)
+            return when (node.op) {
+                Expr.Binary.Op.NE -> {
+                    val op = negate(call("eq", lhs, rhs))
+                    rex(type, op)
+                }
+                else -> {
+                    // Fn
+                    val id = identifierSymbol(node.op.name.lowercase(), Identifier.CaseSensitivity.SENSITIVE)
+                    val fn = fnUnresolved(id, true)
+                    // Rex
+                    val op = rexOpCallStatic(fn, args)
+                    rex(type, op)
+                }
+            }
         }
 
         override fun visitExprPath(node: Expr.Path, context: Env): Rex {
@@ -276,7 +283,7 @@ internal object RexConverter {
         /**
          * <arg0> NOT? BETWEEN <arg1> AND <arg2>
          */
-        override fun visitExprBetween(node: Expr.Between, ctx: Env): Rex {
+        override fun visitExprBetween(node: Expr.Between, ctx: Env): Rex = plan {
             val type = StaticType.BOOL
             // Args
             val arg0 = visitExprCoerce(node.value, ctx)
@@ -288,17 +295,27 @@ internal object RexConverter {
             if (node.not == true) {
                 call = negate(call)
             }
-            return rex(type, call)
+            rex(type, call)
         }
 
         /**
          * <arg0> NOT? IN <arg1>
+         *
+         * SQL Spec 1999 section 8.4
+         * RVC IN IPV is equivalent to RVC = ANY IPV -> Quantified Comparison Predicate
+         * Which means:
+         * Let the expression be T in C, where C is [a1, ..., an]
+         * T in C is true iff T = a_x is true for any a_x in [a1, ...., an]
+         * T in C is false iff T = a_x is false for every a_x in [a1, ....., an ] or cardinality of the collection is 0.
+         * Otherwise, T in C is unknown.
+         *
          */
         override fun visitExprInCollection(node: Expr.InCollection, ctx: Env): Rex {
             val type = StaticType.BOOL
             // Args
             val arg0 = visitExprCoerce(node.lhs, ctx)
             val arg1 = visitExpr(node.rhs, ctx) // !! don't insert scalar subquery coercions
+
             // Call
             var call = call("in_collection", arg0, arg1)
             // NOT?
@@ -564,7 +581,7 @@ internal object RexConverter {
             return rex(type, op)
         }
 
-        private fun negate(call: Rex.Op.Call.Static): Rex.Op.Call.Static {
+        private fun negate(call: Rex.Op.Call): Rex.Op.Call.Static {
             val name = Expr.Unary.Op.NOT.name
             val id = identifierSymbol(name.lowercase(), Identifier.CaseSensitivity.SENSITIVE)
             val fn = fnUnresolved(id, true)

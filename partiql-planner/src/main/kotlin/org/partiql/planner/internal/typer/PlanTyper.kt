@@ -81,7 +81,9 @@ import org.partiql.types.NullType
 import org.partiql.types.SexpType
 import org.partiql.types.StaticType
 import org.partiql.types.StaticType.Companion.ANY
+import org.partiql.types.StaticType.Companion.BOOL
 import org.partiql.types.StaticType.Companion.MISSING
+import org.partiql.types.StaticType.Companion.NULL
 import org.partiql.types.StaticType.Companion.STRING
 import org.partiql.types.StringType
 import org.partiql.types.StructType
@@ -514,21 +516,20 @@ internal class PlanTyper(
 
             // Type the arguments
             val fn = node.fn as Fn.Unresolved
-            val isEq = fn.isEq()
+            val isNotMissable = fn.isNotMissable()
             val args = node.args.map { visitRex(it, null) }
 
             // Try to match the arguments to functions defined in the catalog
             return when (val match = env.resolveFn(fn, args)) {
-                is FnMatch.Ok -> toRexCall(match, args, isEq)
+                is FnMatch.Ok -> toRexCall(match, args, isNotMissable)
                 is FnMatch.Dynamic -> {
                     val types = mutableSetOf<StaticType>()
-                    if (match.isMissable && !isEq) {
+                    if (match.isMissable && !isNotMissable) {
                         types.add(StaticType.MISSING)
                     }
                     val candidates = match.candidates.map { candidate ->
-                        val rex = toRexCall(candidate, args, isEq)
-                        val staticCall =
-                            rex.op as? Rex.Op.Call.Static ?: error("ToRexCall should always return a static call.")
+                        val rex = toRexCall(candidate, args, isNotMissable)
+                        val staticCall = rex.op as? Rex.Op.Call.Static ?: error("ToRexCall should always return a static call.")
                         val resolvedFn = staticCall.fn as? Fn.Resolved ?: error("This should have been resolved")
                         types.add(rex.type)
                         val coercions = candidate.mapping.map { it?.let { fnResolved(it) } }
@@ -548,24 +549,50 @@ internal class PlanTyper(
             return rex(ANY, rexOpErr("Direct dynamic calls are not supported. This should have been a static call."))
         }
 
-        private fun toRexCall(match: FnMatch.Ok<FunctionSignature.Scalar>, args: List<Rex>, isEq: Boolean): Rex {
+        private fun toRexCall(match: FnMatch.Ok<FunctionSignature.Scalar>, args: List<Rex>, isNotMissable: Boolean): Rex {
             // Found a match!
             val newFn = fnResolved(match.signature)
             val newArgs = rewriteFnArgs(match.mapping, args)
             val returns = newFn.signature.returns
 
+            // 7.1 All functions return MISSING when one of their inputs is MISSING (except `=`)
+            newArgs.forEach {
+                if (it.type == MissingType && !isNotMissable) {
+                    handleAlwaysMissing()
+                    return rex(StaticType.MISSING, rexOpCallStatic(newFn, newArgs))
+                }
+            }
+
+            // If a function is NOT Missable (i.e., does not propagate MISSING)
+            // then treat MISSING as null.
+            var isMissing = false
+            var isMissable = false
+            if (isNotMissable) {
+                if (newArgs.any { it.type is MissingType }) {
+                    isMissing = true
+                } else if (newArgs.any { it.type.isMissable() }) {
+                    isMissable = true
+                }
+            }
+
             // Determine the nullability of the return type
             var isNull = false // True iff NULL CALL and has a NULL arg
             var isNullable = false // True iff NULL CALL and has a NULLABLE arg; or is a NULLABLE operator
             if (newFn.signature.isNullCall) {
-                for (arg in newArgs) {
-                    if (arg.type is NullType) {
-                        isNull = true
-                        break
-                    }
-                    if (arg.type.isNullable()) {
-                        isNullable = true
-                        break
+                if (isMissing) {
+                    isNull = true
+                } else if (isMissable) {
+                    isNullable = true
+                } else {
+                    for (arg in newArgs) {
+                        if (arg.type is NullType) {
+                            isNull = true
+                            break
+                        }
+                        if (arg.type.isNullable()) {
+                            isNullable = true
+                            break
+                        }
                     }
                 }
             }
@@ -579,7 +606,7 @@ internal class PlanTyper(
             }
 
             // Some operators can return MISSING during runtime
-            if (match.isMissable && !isEq) {
+            if (match.isMissable && !isNotMissable) {
                 type = StaticType.unionOf(type, StaticType.MISSING)
             }
 
@@ -664,26 +691,49 @@ internal class PlanTyper(
          *  currently limiting the scope of this intentionally.
          */
         private fun foldCaseBranch(condition: Rex, result: Rex): Rex.Op.Case.Branch {
-            val call = condition.op as? Rex.Op.Call.Static ?: return rexOpCaseBranch(condition, result)
-            val fn = call.fn as? Fn.Resolved ?: return rexOpCaseBranch(condition, result)
-            if (fn.signature.name.equals("is_struct", ignoreCase = true).not()) {
-                return rexOpCaseBranch(condition, result)
-            }
-            val ref = call.args.getOrNull(0) ?: error("IS STRUCT requires an argument.")
-            val simplifiedCondition = when {
-                ref.type.allTypes.all { it is StructType } -> rex(StaticType.BOOL, rexOpLit(boolValue(true)))
-                ref.type.allTypes.none { it is StructType } -> rex(StaticType.BOOL, rexOpLit(boolValue(false)))
-                else -> condition
-            }
+            val call = condition.op as? Rex.Op.Call ?: return rexOpCaseBranch(condition, result)
+            when (call) {
+                is Rex.Op.Call.Dynamic -> {
+                    val rex = call.candidates.map { candidate ->
+                        val fn = candidate.fn as? Fn.Resolved ?: return rexOpCaseBranch(condition, result)
+                        if (fn.signature.name.equals("is_struct", ignoreCase = true).not()) {
+                            return rexOpCaseBranch(condition, result)
+                        }
+                        val ref = call.args.getOrNull(0) ?: error("IS STRUCT requires an argument.")
+                        // Replace the result's type
+                        val type = AnyOfType(ref.type.allTypes.filterIsInstance<StructType>().toSet())
+                        val replacementVal = ref.copy(type = type)
+                        when (ref.op is Rex.Op.Var.Resolved) {
+                            true -> RexReplacer.replace(result, ref, replacementVal)
+                            false -> result
+                        }
+                    }
+                    val type = rex.toUnionType().flatten()
 
-            // Replace the result's type
-            val type = AnyOfType(ref.type.allTypes.filterIsInstance<StructType>().toSet())
-            val replacementVal = ref.copy(type = type)
-            val rex = when (ref.op is Rex.Op.Var.Resolved) {
-                true -> RexReplacer.replace(result, ref, replacementVal)
-                false -> result
+                    return rexOpCaseBranch(condition, result.copy(type))
+                }
+                is Rex.Op.Call.Static -> {
+                    val fn = call.fn as? Fn.Resolved ?: return rexOpCaseBranch(condition, result)
+                    if (fn.signature.name.equals("is_struct", ignoreCase = true).not()) {
+                        return rexOpCaseBranch(condition, result)
+                    }
+                    val ref = call.args.getOrNull(0) ?: error("IS STRUCT requires an argument.")
+                    val simplifiedCondition = when {
+                        ref.type.allTypes.all { it is StructType } -> rex(StaticType.BOOL, rexOpLit(boolValue(true)))
+                        ref.type.allTypes.none { it is StructType } -> rex(StaticType.BOOL, rexOpLit(boolValue(false)))
+                        else -> condition
+                    }
+
+                    // Replace the result's type
+                    val type = AnyOfType(ref.type.allTypes.filterIsInstance<StructType>().toSet())
+                    val replacementVal = ref.copy(type = type)
+                    val rex = when (ref.op is Rex.Op.Var.Resolved) {
+                        true -> RexReplacer.replace(result, ref, replacementVal)
+                        false -> result
+                    }
+                    return rexOpCaseBranch(simplifiedCondition, rex)
+                }
             }
-            return rexOpCaseBranch(simplifiedCondition, rex)
         }
 
         override fun visitRexOpCollection(node: Rex.Op.Collection, ctx: StaticType?): Rex {
@@ -1349,11 +1399,28 @@ internal class PlanTyper(
     }
 
     /**
-     * The equals function is the only function which NEVER returns MISSING. This function is called when typing
-     * and resolving the equals function.
+     * Indicates whether the given functions propagate Missing.
+     *
+     * Currently, Logical Functions : AND, OR, NOT, IS NULL, IS MISSING
+     * the equal function, function do not propagate Missing.
      */
-    private fun Fn.Unresolved.isEq(): Boolean {
-        return (identifier is Identifier.Symbol && (identifier as Identifier.Symbol).symbol == "eq")
+    private fun Fn.Unresolved.isNotMissable(): Boolean {
+        return when (identifier) {
+            is Identifier.Qualified -> false
+            is Identifier.Symbol -> when ((identifier as Identifier.Symbol).symbol) {
+                "and" -> true
+                "or" -> true
+                "not" -> true
+                "eq" -> true
+                "is_null" -> true
+                "is_missing" -> true
+                else -> false
+            }
+        }
+    }
+
+    private fun Fn.Unresolved.isTypeAssertion(): Boolean {
+        return (identifier is Identifier.Symbol && (identifier as Identifier.Symbol).symbol.startsWith("is"))
     }
 
     /**

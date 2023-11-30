@@ -12,6 +12,8 @@ import org.partiql.value.PartiQLValueType.DECIMAL
 import org.partiql.value.PartiQLValueType.INT
 import org.partiql.value.PartiQLValueType.INT32
 import org.partiql.value.PartiQLValueType.INT64
+import org.partiql.value.PartiQLValueType.MISSING
+import org.partiql.value.PartiQLValueType.NULL
 import org.partiql.value.PartiQLValueType.STRING
 import org.partiql.value.PartiQLValueType.TIME
 import org.partiql.value.PartiQLValueType.TIMESTAMP
@@ -36,6 +38,8 @@ object PartiQLHeader : Header() {
      * PartiQL Scalar Functions accessible via special form syntax (unary, binary, infix keywords, etc).
      */
     override val operators = listOf(
+        logical(),
+        predicate(),
         operators(),
         special(),
         system(),
@@ -50,17 +54,8 @@ object PartiQLHeader : Header() {
      * Generate all unary and binary operator signatures.
      */
     private fun operators(): List<FunctionSignature.Scalar> = listOf(
-        not(),
         pos(),
         neg(),
-        eq(),
-        ne(),
-        and(),
-        or(),
-        lt(),
-        lte(),
-        gt(),
-        gte(),
         plus(),
         minus(),
         times(),
@@ -68,6 +63,61 @@ object PartiQLHeader : Header() {
         mod(),
         concat(),
         bitwiseAnd(),
+    ).flatten()
+
+    /**
+     * Predicate function -- Condition that can be evaluated to a boolean value.
+     *
+     * Predicate function IS NULL, IS MISSING, `=`(Equal) does not propagate `MISSING`.
+     */
+    private fun predicate(): List<FunctionSignature.Scalar> = listOf(
+        // SQL
+        // 8.2 - comparison predicate
+        lt(),
+        lte(),
+        gt(),
+        gte(),
+        eq(),
+
+        // 8.3 - between predicate
+        between(),
+        // 8.4 - in predicate
+        inCollection(),
+        // 8.5 - like predicate
+        like(),
+        // 8.7 - null predicate
+        isNull(),
+
+        // PartiQL
+        isMissing(), // missing predication
+        isType(), // type predicate
+        isTypeSingleArg(),
+        isTypeDoubleArgsInt(),
+        isTypeTime(),
+    ).flatten()
+
+    /**
+     * Logical functions follows the three-valued logic truth table:
+     *
+     * |A   |B   |A AND B|A OR B |NOT A |
+     * |----|----|-------|-------|------|
+     * |T   |T   |T      |T      |F     |
+     * |T   |F   |F      |T      |F     |
+     * |T   |U   |U      |T      |F     |
+     * |F   |T   |F      |T      |T     |
+     * |F   |F   |F      |F      |T     |
+     * |F   |U   |F      |U      |T     |
+     * |U   |T   |U      |T      |U     |
+     * |U   |F   |F      |U      |U     |
+     * |U   |U   |U      |U      |U     |
+     *
+     * 1.  The `MISSING` value, when convert to a truth value, becomes a `UNKNOWN`.
+     * 2. `UNKNOWN` truth value, when converting to PartiQL Value, becomes NULL of boolean type.
+     */
+    private fun logical(): List<FunctionSignature.Scalar> = listOf(
+        not(),
+        and(),
+        or(),
     ).flatten()
 
     /**
@@ -86,13 +136,6 @@ object PartiQLHeader : Header() {
      * SQL and PartiQL special forms
      */
     private fun special(): List<FunctionSignature.Scalar> = listOf(
-        like(),
-        between(),
-        inCollection(),
-        isType(),
-        isTypeSingleArg(),
-        isTypeDoubleArgsInt(),
-        isTypeTime(),
         position(),
         substring(),
         trimSpecial(),
@@ -114,7 +157,22 @@ object PartiQLHeader : Header() {
 
     // OPERATORS
 
-    private fun not(): List<FunctionSignature.Scalar> = listOf(unary("not", BOOL, BOOL))
+    private fun not(): List<FunctionSignature.Scalar> = listOf(
+        FunctionSignature.Scalar(
+            name = "not",
+            returns = BOOL,
+            isNullCall = true,
+            isNullable = false,
+            parameters = listOf(FunctionParameter("value", BOOL)),
+        ),
+        FunctionSignature.Scalar(
+            name = "not",
+            returns = BOOL,
+            isNullCall = true,
+            isNullable = false,
+            parameters = listOf(FunctionParameter("value", MISSING)),
+        ),
+    )
 
     private fun pos(): List<FunctionSignature.Scalar> = types.numeric.map { t ->
         unary("pos", t, t)
@@ -130,20 +188,70 @@ object PartiQLHeader : Header() {
             returns = BOOL,
             parameters = listOf(FunctionParameter("lhs", t), FunctionParameter("rhs", t)),
             isNullable = false,
-            isNullCall = false,
+            isNullCall = true,
         )
     }
 
-    private fun ne(): List<FunctionSignature.Scalar> = types.all.map { t ->
-        binary("ne", BOOL, t, t)
-    }
-
     private fun and(): List<FunctionSignature.Scalar> = listOf(
-        binary("and", BOOL, BOOL, BOOL),
+        FunctionSignature.Scalar(
+            name = "and",
+            returns = BOOL,
+            isNullCall = false,
+            isNullable = true,
+            parameters = listOf(FunctionParameter("lhs", BOOL), FunctionParameter("rhs", BOOL)),
+        ),
+        FunctionSignature.Scalar(
+            name = "and",
+            returns = BOOL,
+            isNullCall = false,
+            isNullable = true,
+            parameters = listOf(FunctionParameter("lhs", MISSING), FunctionParameter("rhs", BOOL)),
+        ),
+        FunctionSignature.Scalar(
+            name = "and",
+            returns = BOOL,
+            isNullCall = false,
+            isNullable = true,
+            parameters = listOf(FunctionParameter("lhs", BOOL), FunctionParameter("rhs", MISSING)),
+        ),
+        FunctionSignature.Scalar(
+            name = "and",
+            returns = BOOL,
+            isNullCall = false,
+            isNullable = true,
+            parameters = listOf(FunctionParameter("lhs", MISSING), FunctionParameter("rhs", MISSING)),
+        ),
     )
 
     private fun or(): List<FunctionSignature.Scalar> = listOf(
-        binary("or", BOOL, BOOL, BOOL),
+        FunctionSignature.Scalar(
+            name = "or",
+            returns = BOOL,
+            isNullCall = false,
+            isNullable = true,
+            parameters = listOf(FunctionParameter("lhs", BOOL), FunctionParameter("rhs", BOOL)),
+        ),
+        FunctionSignature.Scalar(
+            name = "or",
+            returns = BOOL,
+            isNullCall = false,
+            isNullable = true,
+            parameters = listOf(FunctionParameter("lhs", MISSING), FunctionParameter("rhs", BOOL)),
+        ),
+        FunctionSignature.Scalar(
+            name = "or",
+            returns = BOOL,
+            isNullCall = false,
+            isNullable = true,
+            parameters = listOf(FunctionParameter("lhs", BOOL), FunctionParameter("rhs", MISSING)),
+        ),
+        FunctionSignature.Scalar(
+            name = "or",
+            returns = BOOL,
+            isNullCall = false,
+            isNullable = true,
+            parameters = listOf(FunctionParameter("lhs", MISSING), FunctionParameter("rhs", MISSING)),
+        ),
     )
 
     private fun lt(): List<FunctionSignature.Scalar> = types.numeric.map { t ->
@@ -213,29 +321,31 @@ object PartiQLHeader : Header() {
 
     // SPECIAL FORMS
 
-    private fun like(): List<FunctionSignature.Scalar> = listOf(
-        FunctionSignature.Scalar(
-            name = "like",
-            returns = BOOL,
-            parameters = listOf(
-                FunctionParameter("value", STRING),
-                FunctionParameter("pattern", STRING),
+    private fun like(): List<FunctionSignature.Scalar> = types.text.flatMap { t ->
+        listOf(
+            FunctionSignature.Scalar(
+                name = "like",
+                returns = BOOL,
+                parameters = listOf(
+                    FunctionParameter("value", t),
+                    FunctionParameter("pattern", t),
+                ),
+                isNullCall = true,
+                isNullable = false,
             ),
-            isNullable = false,
-            isNullCall = true,
-        ),
-        FunctionSignature.Scalar(
-            name = "like_escape",
-            returns = BOOL,
-            parameters = listOf(
-                FunctionParameter("value", STRING),
-                FunctionParameter("pattern", STRING),
-                FunctionParameter("escape", STRING),
+            FunctionSignature.Scalar(
+                name = "like_escape",
+                returns = BOOL,
+                parameters = listOf(
+                    FunctionParameter("value", t),
+                    FunctionParameter("pattern", t),
+                    FunctionParameter("escape", t),
+                ),
+                isNullCall = true,
+                isNullable = false,
             ),
-            isNullable = false,
-            isNullCall = true,
-        ),
-    )
+        )
+    }
 
     private fun between(): List<FunctionSignature.Scalar> = types.numeric.map { t ->
         FunctionSignature.Scalar(
@@ -266,66 +376,95 @@ object PartiQLHeader : Header() {
         }
     }.flatten()
 
-    // To model type assertion, generating a list of assertion function based on the type,
-    // and the parameter will be the value entered.
-    //  i.e., 1 is INT2  => is_int16(1)
-    // TODO: We can remove the types with parameter in this function.
-    //  but, leaving out the decision to have, for example:
-    //  is_decimal(null, null, value) vs is_decimal(value) later....
-    private fun isType(): List<FunctionSignature.Scalar> = types.all.map { element ->
+    private fun isNull(): List<FunctionSignature.Scalar> = listOf(
         FunctionSignature.Scalar(
-            name = "is_${element.name.lowercase()}",
+            name = "is_null",
             returns = BOOL,
             parameters = listOf(
                 FunctionParameter("value", ANY) // TODO: Decide if we need to further segment this
             ),
-            isNullable = false,
-            isNullCall = false
+            isNullCall = false,
+            isNullable = false
         )
+    )
+
+    private fun isMissing(): List<FunctionSignature.Scalar> = listOf(
+        FunctionSignature.Scalar(
+            name = "is_missing",
+            returns = BOOL,
+            parameters = listOf(
+                FunctionParameter("value", ANY) // TODO: Decide if we need to further segment this
+            ),
+            isNullCall = false,
+            isNullable = false
+        )
+    )
+
+    // To model type assertion, generating a list of assertion function based on the type,
+    // and the parameter will be the value entered.
+    //  i.e., 1 is INT2  => is_int16(1)
+    private fun isType(): List<FunctionSignature.Scalar> = types.all.filterNot { it == NULL || it == MISSING }.flatMap { element ->
+        types.all.filterNot { it == MISSING || it == ANY }.map { operand ->
+            FunctionSignature.Scalar(
+                name = "is_${element.name.lowercase()}",
+                returns = BOOL,
+                parameters = listOf(
+                    FunctionParameter("value", operand)
+                ),
+                isNullCall = false, // TODO: Should this be true?
+                isNullable = false
+            )
+        }
     }
 
     // In type assertion, it is possible for types to have args
     // i.e., 'a' is CHAR(2)
     // we put type parameter before value.
-    private fun isTypeSingleArg(): List<FunctionSignature.Scalar> = listOf(CHAR, STRING).map { element ->
-        FunctionSignature.Scalar(
-            name = "is_${element.name.lowercase()}",
-            returns = BOOL,
-            parameters = listOf(
-                FunctionParameter("type_parameter_1", INT32),
-                FunctionParameter("value", ANY) // TODO: Decide if we need to further segment this
-            ),
-            isNullable = false,
-            isNullCall = false
-        )
+    private fun isTypeSingleArg(): List<FunctionSignature.Scalar> = listOf(CHAR, STRING).flatMap { element ->
+        types.all.filterNot { it == MISSING }.map { operand ->
+            FunctionSignature.Scalar(
+                name = "is_${element.name.lowercase()}",
+                returns = BOOL,
+                parameters = listOf(
+                    FunctionParameter("type_parameter_1", INT32),
+                    FunctionParameter("value", operand)
+                ),
+                isNullable = false, // TODO: Should this be true?
+                isNullCall = false
+            )
+        }
     }
 
-    private fun isTypeDoubleArgsInt(): List<FunctionSignature.Scalar> = listOf(DECIMAL).map { element ->
-        FunctionSignature.Scalar(
-            name = "is_${element.name.lowercase()}",
-            returns = BOOL,
-            parameters = listOf(
-                FunctionParameter("type_parameter_1", INT32),
-                FunctionParameter("type_parameter_2", INT32),
-                FunctionParameter("value", ANY) // TODO: Decide if we need to further segment this
-            ),
-            isNullable = false,
-            isNullCall = false
-        )
+    private fun isTypeDoubleArgsInt(): List<FunctionSignature.Scalar> = listOf(DECIMAL).flatMap { element ->
+        types.all.filterNot { it == MISSING }.map { operand ->
+            FunctionSignature.Scalar(
+                name = "is_${element.name.lowercase()}",
+                returns = BOOL,
+                parameters = listOf(
+                    FunctionParameter("type_parameter_1", INT32),
+                    FunctionParameter("type_parameter_2", INT32),
+                    FunctionParameter("value", operand)
+                ),
+                isNullable = false,
+                isNullCall = false
+            )
+        }
     }
 
-    private fun isTypeTime(): List<FunctionSignature.Scalar> = listOf(TIME, TIMESTAMP).map { element ->
-        FunctionSignature.Scalar(
-            name = "is_${element.name.lowercase()}",
-            returns = BOOL,
-            parameters = listOf(
-                FunctionParameter("type_parameter_1", BOOL),
-                FunctionParameter("type_parameter_2", INT32),
-                FunctionParameter("value", ANY) // TODO: Decide if we need to further segment this
-            ),
-            isNullable = false,
-            isNullCall = false
-        )
+    private fun isTypeTime(): List<FunctionSignature.Scalar> = listOf(TIME, TIMESTAMP).flatMap { element ->
+        types.all.filterNot { it == MISSING }.map { operand ->
+            FunctionSignature.Scalar(
+                name = "is_${element.name.lowercase()}",
+                returns = BOOL,
+                parameters = listOf(
+                    FunctionParameter("type_parameter_1", BOOL),
+                    FunctionParameter("type_parameter_2", INT32),
+                    FunctionParameter("value", operand) // TODO: Decide if we need to further segment this
+                ),
+                isNullCall = false,
+                isNullable = false
+            )
+        }
     }
 
     // SUBSTRING (expression, start[, length]?)
