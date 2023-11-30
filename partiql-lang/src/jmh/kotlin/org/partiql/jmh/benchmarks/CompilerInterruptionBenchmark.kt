@@ -73,11 +73,7 @@ open class CompilerInterruptionBenchmark {
             ([1, 2, 3, 4]) as x5,
             ([1, 2, 3, 4]) as x6,
             ([1, 2, 3, 4]) as x7,
-            ([1, 2, 3, 4]) as x8,
-            ([1, 2, 3, 4]) as x9,
-            ([1, 2, 3, 4]) as x10,
-            ([1, 2, 3, 4]) as x11,
-            ([1, 2, 3, 4]) as x12
+            ([1, 2, 3, 4]) as x8
         """.trimIndent()
         val crossJoinsAst = parser.parseAstStatement(crossJoins)
 

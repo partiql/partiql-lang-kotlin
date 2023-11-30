@@ -342,25 +342,18 @@ internal class Shell(
         bindings: Bindings<ExprValue>,
         exiting: AtomicBoolean
     ): RunnablePipeline.Output {
-        doneCompiling.set(false)
-        inputs.put(
-            RunnablePipeline.Input(
-                textPartiQL,
-                EvaluationSession.build {
-                    globals(bindings)
-                    user(currentUser)
-                }
+        catchCancellation(doneCompiling, exiting, pipelineService) {
+            inputs.put(
+                RunnablePipeline.Input(
+                    textPartiQL,
+                    EvaluationSession.build {
+                        globals(bindings)
+                        user(currentUser)
+                    }
+                )
             )
-        )
-        return catchCancellation(
-            doneCompiling,
-            exiting,
-            pipelineService,
-            RunnablePipeline.Output.Result(PartiQLResult.Value(value = ExprValue.newString("Compilation cancelled.")))
-        ) {
-            pipelineService = Executors.newFixedThreadPool(1)
-            pipelineService.submit(RunnablePipeline(inputs, results, compiler, doneCompiling))
-        } ?: results.poll(5, TimeUnit.SECONDS)!!
+        }
+        return results.poll(5, TimeUnit.SECONDS)!!
     }
 
     private fun bringGraph(name: String, graphIonText: String) {
@@ -375,19 +368,8 @@ internal class Shell(
     }
 
     private fun executeAndPrint(func: () -> RunnablePipeline.Output) {
-        donePrinting.set(false)
-        val result = func.invoke()
-        values.put(result)
-        catchCancellation(donePrinting, exiting, printingService, 1) {
-            printingService = Executors.newFixedThreadPool(1)
-            printingService.submit(
-                RunnableWriter(
-                    out,
-                    ConfigurableExprValueFormatter.pretty,
-                    values,
-                    donePrinting
-                )
-            )
+        catchCancellation(donePrinting, exiting, printingService) {
+            values.put(func.invoke())
         }
     }
 
@@ -395,13 +377,14 @@ internal class Shell(
      * If nothing was caught and execution finished: return null
      * If something was caught: resets service and returns defaultReturn
      */
-    private fun <T> catchCancellation(
+    private fun catchCancellation(
         doneExecuting: AtomicBoolean,
         cancellationFlag: AtomicBoolean,
         service: ExecutorService,
-        defaultReturn: T,
-        resetService: () -> Unit
-    ): T? {
+        addToQueue: () -> Unit
+    ) {
+        doneExecuting.set(false)
+        addToQueue.invoke()
         while (!doneExecuting.get()) {
             if (exiting.get()) {
                 service.shutdown()
@@ -409,7 +392,6 @@ internal class Shell(
                 cancellationFlag.set(false)
             }
         }
-        return null
     }
 
     private fun retrievePartiQLVersionAndHash(): String {

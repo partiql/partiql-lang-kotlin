@@ -48,10 +48,7 @@ internal class RunnableWriter(
                 when (value) {
                     is RunnablePipeline.Output.Result -> try {
                         printResult(value.result)
-                    } catch (t: Throwable) {
-                        out.println()
-                        printThrowable(t)
-                    }
+                    } catch (t: Throwable) { printThrowable(t) }
                     is RunnablePipeline.Output.Error -> printThrowable(value.throwable)
                 }
                 out.println()
@@ -83,13 +80,19 @@ internal class RunnableWriter(
         }
     }
 
-    private fun printThrowable(t: Throwable) = when (t) {
-        is EvaluationException -> {
-            out.error(t.generateMessage())
-            out.error(t.message)
-        }
-        else -> {
-            out.error(t.message ?: "ERROR encountered. However, no message was attached.")
+    private fun printThrowable(t: Throwable) {
+        out.println()
+        when (t) {
+            is EvaluationException -> {
+                out.error(t.generateMessage())
+                out.error(t.message)
+            }
+            is InterruptedException -> {
+                out.info("This has been interrupted!")
+            }
+            else -> {
+                out.error(t.message ?: "ERROR encountered. However, no message was attached.")
+            }
         }
     }
 }

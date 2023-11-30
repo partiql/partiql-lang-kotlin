@@ -33,7 +33,7 @@ internal class RunnablePipeline(
 ) : Runnable {
     /**
      * When the Thread running this [Runnable] is interrupted, the underlying [AbstractPipeline] should catch the
-     * interruption and fail with some exception. Then, this will break out of [run].
+     * interruption and fail with some exception. Then, we place the error (or result) in the output queue.
      */
     override fun run() {
         while (true) {
