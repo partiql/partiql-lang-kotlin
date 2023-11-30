@@ -428,7 +428,7 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
         h = h concat r("TRIM(")
         // [LEADING|TRAILING|BOTH]
         if (node.spec != null) {
-            h = h concat r("${node.spec!!.name} ")
+            h = h concat r("${node.spec.name} ")
         }
         // [<chars> FROM]
         if (node.chars != null) {
@@ -657,7 +657,7 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
             null -> r(" JOIN ")
         }
         h = visitFrom(node.rhs, h)
-        h = if (node.condition != null) visit(node.condition!!, h concat r(" ON ")) else h
+        h = if (node.condition != null) visit(node.condition, h concat r(" ON ")) else h
         return h
     }
 
@@ -681,7 +681,7 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
             GroupBy.Strategy.PARTIAL -> r("GROUP PARTIAL BY ")
         }
         h = h concat list("", "") { node.keys }
-        h = if (node.asAlias != null) h concat r(" GROUP AS ${node.asAlias!!.sql()}") else h
+        h = if (node.asAlias != null) h concat r(" GROUP AS ${node.asAlias.sql()}") else h
         return h
     }
 
@@ -697,7 +697,7 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
     override fun visitSetOp(node: SetOp, head: SqlBlock): SqlBlock {
         val op = when (node.setq) {
             null -> node.type.name
-            else -> "${node.type.name} ${node.setq!!.name}"
+            else -> "${node.type.name} ${node.setq.name}"
         }
         return head concat r(op)
     }
