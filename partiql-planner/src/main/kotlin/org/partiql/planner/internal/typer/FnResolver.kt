@@ -20,7 +20,7 @@ import org.partiql.value.PartiQLValueType.CHAR
 import org.partiql.value.PartiQLValueType.CLOB
 import org.partiql.value.PartiQLValueType.DATE
 import org.partiql.value.PartiQLValueType.DECIMAL
-import org.partiql.value.PartiQLValueType.FIX_PRECISION_DECIMAL
+import org.partiql.value.PartiQLValueType.DECIMAL_ARBITRARY
 import org.partiql.value.PartiQLValueType.FLOAT32
 import org.partiql.value.PartiQLValueType.FLOAT64
 import org.partiql.value.PartiQLValueType.INT
@@ -433,10 +433,10 @@ internal class FnResolver(private val headers: List<Header>) {
             INT32,
             INT64,
             INT,
-            FIX_PRECISION_DECIMAL,
+            DECIMAL,
             FLOAT32,
             FLOAT64,
-            DECIMAL, // Arbitrary precision decimal has a higher precedence than FLOAT
+            DECIMAL_ARBITRARY, // Arbitrary precision decimal has a higher precedence than FLOAT
             CHAR,
             STRING,
             CLOB,

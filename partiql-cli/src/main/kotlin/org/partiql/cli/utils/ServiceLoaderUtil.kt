@@ -152,7 +152,7 @@ class ServiceLoaderUtil {
                 PartiQLValueType.INT32 -> StaticType.INT4.asNullable()
                 PartiQLValueType.INT64 -> StaticType.INT8.asNullable()
                 PartiQLValueType.INT -> StaticType.INT.asNullable()
-                PartiQLValueType.DECIMAL -> StaticType.DECIMAL.asNullable()
+                PartiQLValueType.DECIMAL_ARBITRARY -> StaticType.DECIMAL.asNullable()
                 PartiQLValueType.FLOAT32 -> StaticType.FLOAT.asNullable()
                 PartiQLValueType.FLOAT64 -> StaticType.FLOAT.asNullable()
                 PartiQLValueType.CHAR -> StaticType.STRING.asNullable()
@@ -170,7 +170,7 @@ class ServiceLoaderUtil {
                 PartiQLValueType.LIST -> StaticType.LIST.asNullable()
                 PartiQLValueType.SEXP -> StaticType.SEXP.asNullable()
                 PartiQLValueType.STRUCT -> StaticType.STRUCT.asNullable()
-                PartiQLValueType.FIX_PRECISION_DECIMAL -> TODO()
+                PartiQLValueType.DECIMAL -> TODO()
             }
         }
 
@@ -194,7 +194,7 @@ class ServiceLoaderUtil {
 
                 PartiQLValueType.INT -> (partiqlValue as? IntValue)?.long?.let { newInt(it) } ?: ExprValue.nullValue
 
-                PartiQLValueType.DECIMAL -> (partiqlValue as? DecimalValue)?.value?.let { newDecimal(it) }
+                PartiQLValueType.DECIMAL_ARBITRARY -> (partiqlValue as? DecimalValue)?.value?.let { newDecimal(it) }
                     ?: ExprValue.nullValue
 
                 PartiQLValueType.FLOAT32 -> (partiqlValue as? Float32Value)?.double?.let { newFloat(it) }
@@ -292,7 +292,7 @@ class ServiceLoaderUtil {
                     }?.let { newStruct(it, StructOrdering.ORDERED) } ?: ExprValue.nullValue
                 }
 
-                PartiQLValueType.FIX_PRECISION_DECIMAL -> TODO()
+                PartiQLValueType.DECIMAL -> TODO()
             }
         }
 
@@ -357,11 +357,11 @@ class ServiceLoaderUtil {
                         PartiQLValueType.INT, ExprToPartiQLValueType(exprValue)
                     )
                 }
-                PartiQLValueType.DECIMAL -> when (exprValue.type) {
+                PartiQLValueType.DECIMAL_ARBITRARY -> when (exprValue.type) {
                     ExprValueType.NULL -> decimalValue(null)
                     ExprValueType.DECIMAL -> decimalValue(exprValue.numberValue() as BigDecimal)
                     else -> throw ExprToPartiQLValueTypeMismatchException(
-                        PartiQLValueType.DECIMAL, ExprToPartiQLValueType(exprValue)
+                        PartiQLValueType.DECIMAL_ARBITRARY, ExprToPartiQLValueType(exprValue)
                     )
                 }
                 PartiQLValueType.FLOAT32 -> when (exprValue.type) {
@@ -492,7 +492,7 @@ class ServiceLoaderUtil {
                     )
                 }
 
-                PartiQLValueType.FIX_PRECISION_DECIMAL -> TODO()
+                PartiQLValueType.DECIMAL -> TODO()
             }
         }
 
@@ -503,7 +503,7 @@ class ServiceLoaderUtil {
                 ExprValueType.BOOL -> PartiQLValueType.BOOL
                 ExprValueType.INT -> PartiQLValueType.INT
                 ExprValueType.FLOAT -> PartiQLValueType.FLOAT32
-                ExprValueType.DECIMAL -> PartiQLValueType.DECIMAL
+                ExprValueType.DECIMAL -> PartiQLValueType.DECIMAL_ARBITRARY
                 ExprValueType.DATE -> PartiQLValueType.DATE
                 ExprValueType.TIMESTAMP -> PartiQLValueType.TIMESTAMP
                 ExprValueType.TIME -> PartiQLValueType.TIME
