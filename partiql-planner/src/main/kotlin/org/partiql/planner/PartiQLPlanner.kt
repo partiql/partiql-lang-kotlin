@@ -28,8 +28,8 @@ public interface PartiQLPlanner {
      * @property plan
      */
     public class Result(
-        val plan: PartiQLPlan,
-        val problems: List<Problem>,
+        public val plan: PartiQLPlan,
+        public val problems: List<Problem>,
     )
 
     /**

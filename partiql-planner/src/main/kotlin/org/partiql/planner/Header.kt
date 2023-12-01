@@ -15,22 +15,22 @@ public abstract class Header {
     /**
      * Definition namespace e.g. partiql, spark, redshift, ...
      */
-    abstract val namespace: String
+    public abstract val namespace: String
 
     /**
      * Scalar function signatures available via call syntax.
      */
-    open val functions: List<FunctionSignature.Scalar> = emptyList()
+    public open val functions: List<FunctionSignature.Scalar> = emptyList()
 
     /**
      * Hidden scalar function signatures available via operator or special form syntax.
      */
-    open val operators: List<FunctionSignature.Scalar> = emptyList()
+    public open val operators: List<FunctionSignature.Scalar> = emptyList()
 
     /**
      * Aggregation function signatures.
      */
-    open val aggregations: List<FunctionSignature.Aggregation> = emptyList()
+    public open val aggregations: List<FunctionSignature.Aggregation> = emptyList()
 
     /**
      * Type relationships; this is primarily a helper for defining operators.
@@ -55,7 +55,7 @@ public abstract class Header {
     //  HELPERS
     // ====================================
 
-    companion object {
+    public companion object {
 
         @JvmStatic
         internal fun unary(name: String, returns: PartiQLValueType, value: PartiQLValueType) =

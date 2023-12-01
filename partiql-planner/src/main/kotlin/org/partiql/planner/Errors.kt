@@ -10,21 +10,21 @@ import org.partiql.types.StaticType
  * This information can be used to generate end-user readable error messages and is also easy to assert
  * equivalence in unit tests.
  */
-sealed class PlanningProblemDetails(
+public sealed class PlanningProblemDetails(
     override val severity: ProblemSeverity,
-    val messageFormatter: () -> String,
+    public val messageFormatter: () -> String,
 ) : ProblemDetails {
 
-    override fun toString() = message
+    override fun toString(): String = message
     override val message: String get() = messageFormatter()
 
-    data class ParseError(val parseErrorMessage: String) :
+    public data class ParseError(val parseErrorMessage: String) :
         PlanningProblemDetails(ProblemSeverity.ERROR, { parseErrorMessage })
 
-    data class CompileError(val errorMessage: String) :
+    public data class CompileError(val errorMessage: String) :
         PlanningProblemDetails(ProblemSeverity.ERROR, { errorMessage })
 
-    data class UndefinedVariable(val variableName: String, val caseSensitive: Boolean) :
+    public data class UndefinedVariable(val variableName: String, val caseSensitive: Boolean) :
         PlanningProblemDetails(
             ProblemSeverity.ERROR,
             {
@@ -33,7 +33,7 @@ sealed class PlanningProblemDetails(
             }
         )
 
-    data class UndefinedDmlTarget(val variableName: String, val caseSensitive: Boolean) :
+    public data class UndefinedDmlTarget(val variableName: String, val caseSensitive: Boolean) :
         PlanningProblemDetails(
             ProblemSeverity.ERROR,
             {
@@ -43,25 +43,25 @@ sealed class PlanningProblemDetails(
             }
         )
 
-    data class VariablePreviouslyDefined(val variableName: String) :
+    public data class VariablePreviouslyDefined(val variableName: String) :
         PlanningProblemDetails(
             ProblemSeverity.ERROR,
             { "The variable '$variableName' was previously defined." }
         )
 
-    data class UnimplementedFeature(val featureName: String) :
+    public data class UnimplementedFeature(val featureName: String) :
         PlanningProblemDetails(
             ProblemSeverity.ERROR,
             { "The syntax at this location is valid but utilizes unimplemented PartiQL feature '$featureName'" }
         )
 
-    object InvalidDmlTarget :
+    public object InvalidDmlTarget :
         PlanningProblemDetails(
             ProblemSeverity.ERROR,
             { "Expression is not a valid DML target.  Hint: only table names are allowed here." }
         )
 
-    object InsertValueDisallowed :
+    public object InsertValueDisallowed :
         PlanningProblemDetails(
             ProblemSeverity.ERROR,
             {
@@ -70,7 +70,7 @@ sealed class PlanningProblemDetails(
             }
         )
 
-    object InsertValuesDisallowed :
+    public object InsertValuesDisallowed :
         PlanningProblemDetails(
             ProblemSeverity.ERROR,
             {
@@ -79,14 +79,14 @@ sealed class PlanningProblemDetails(
             }
         )
 
-    data class UnexpectedType(
+    public data class UnexpectedType(
         val actualType: StaticType,
         val expectedTypes: Set<StaticType>,
     ) : PlanningProblemDetails(ProblemSeverity.ERROR, {
         "Unexpected type $actualType, expected one of ${expectedTypes.joinToString()}"
     })
 
-    data class UnknownFunction(
+    public data class UnknownFunction(
         val identifier: String,
         val args: List<StaticType>,
     ) : PlanningProblemDetails(ProblemSeverity.ERROR, {
@@ -94,12 +94,12 @@ sealed class PlanningProblemDetails(
         "Unknown function `$identifier($types)"
     })
 
-    object ExpressionAlwaysReturnsNullOrMissing : PlanningProblemDetails(
+    public object ExpressionAlwaysReturnsNullOrMissing : PlanningProblemDetails(
         severity = ProblemSeverity.ERROR,
         messageFormatter = { "Expression always returns null or missing." }
     )
 
-    data class InvalidArgumentTypeForFunction(
+    public data class InvalidArgumentTypeForFunction(
         val functionName: String,
         val expectedType: StaticType,
         val actualType: StaticType,
@@ -109,7 +109,7 @@ sealed class PlanningProblemDetails(
             messageFormatter = { "Invalid argument type for $functionName. Expected $expectedType but got $actualType" }
         )
 
-    data class IncompatibleTypesForOp(
+    public data class IncompatibleTypesForOp(
         val actualTypes: List<StaticType>,
         val operator: String,
     ) :
@@ -118,7 +118,7 @@ sealed class PlanningProblemDetails(
             messageFormatter = { "${actualTypes.joinToString()} is/are incompatible data types for the '$operator' operator." }
         )
 
-    data class UnresolvedExcludeExprRoot(val root: String) :
+    public data class UnresolvedExcludeExprRoot(val root: String) :
         PlanningProblemDetails(
             ProblemSeverity.ERROR,
             { "Exclude expression given an unresolvable root '$root'" }

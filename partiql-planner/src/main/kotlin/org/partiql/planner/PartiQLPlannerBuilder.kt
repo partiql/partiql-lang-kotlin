@@ -5,13 +5,13 @@ import org.partiql.spi.Plugin
 /**
  * PartiQLPlannerBuilder
  */
-class PartiQLPlannerBuilder {
+public class PartiQLPlannerBuilder {
 
     private var headers: MutableList<Header> = mutableListOf(PartiQLHeader)
     private var plugins: List<Plugin> = emptyList()
     private var passes: List<PartiQLPlannerPass> = emptyList()
 
-    fun build(): PartiQLPlanner = PartiQLPlannerDefault(headers, plugins, passes)
+    public fun build(): PartiQLPlanner = PartiQLPlannerDefault(headers, plugins, passes)
 
     public fun plugins(plugins: List<Plugin>): PartiQLPlannerBuilder = this.apply {
         this.plugins = plugins

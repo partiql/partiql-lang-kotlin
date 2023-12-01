@@ -25,19 +25,19 @@ import org.partiql.value.PartiQLValueType.TIMESTAMP
  *
  */
 @OptIn(PartiQLValueExperimental::class)
-object PartiQLHeader : Header() {
+public object PartiQLHeader : Header() {
 
     override val namespace: String = "partiql"
 
     /**
      * PartiQL Scalar Functions accessible via call syntax.
      */
-    override val functions = scalarBuiltins()
+    override val functions: List<FunctionSignature.Scalar> = scalarBuiltins()
 
     /**
      * PartiQL Scalar Functions accessible via special form syntax (unary, binary, infix keywords, etc).
      */
-    override val operators = listOf(
+    override val operators: List<FunctionSignature.Scalar> = listOf(
         logical(),
         predicate(),
         operators(),
@@ -48,7 +48,7 @@ object PartiQLHeader : Header() {
     /**
      * PartiQL Aggregation Functions accessible via
      */
-    override val aggregations = aggBuiltins()
+    override val aggregations: List<FunctionSignature.Aggregation> = aggBuiltins()
 
     /**
      * Generate all unary and binary operator signatures.
