@@ -21,7 +21,7 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":partiql-types"))
+    api(project(":partiql-types"))
     implementation(Deps.ionElement)
     implementation(Deps.kotlinReflect)
 }
@@ -51,6 +51,7 @@ val generate = tasks.register<Exec>("generate") {
         "--poems", "visitor",
         "--poems", "builder",
         "--poems", "util",
+        "--opt-in", "org.partiql.value.PartiQLValueExperimental",
         "./src/main/resources/partiql_plan.ion"
     )
 }

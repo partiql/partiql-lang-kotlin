@@ -1,0 +1,32 @@
+{
+  type: "struct",
+  name: "employer",
+  constraints: [ closed, unique, ordered ],
+  fields: [
+    {
+      name: "name",
+      type: "string"
+    },
+    {
+      name: "tax_id",
+      type: "int64"
+    },
+    {
+      name: "address",
+      type: {
+        type: "struct",
+        constraints: [ closed, unique, ordered ],
+        fields: [
+          {
+            name: "street",
+            type: "string"
+          },
+          {
+            name: "zip",
+            type: "int32"
+          },
+        ]
+      },
+    },
+  ]
+}

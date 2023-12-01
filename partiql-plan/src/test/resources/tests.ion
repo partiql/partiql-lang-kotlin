@@ -1,0 +1,16 @@
+{
+  suite: "PartiQL Plan Ion Representation",
+  version: (0 1),
+  cases: [
+    paths::[
+      {
+        name: 'rex.path `a.b.c`',
+        expected: (path ($type 0)
+          (var ($type 0) 0) (
+            (step (lit ($type 7) b))
+            (step (lit ($type 7) c))
+        )),
+      }
+    ]
+  ]
+}

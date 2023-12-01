@@ -465,7 +465,7 @@ internal class PartiQLValueIonReader(
                             val map = mutableMapOf<String, Any?>()
                             checkRequiredFieldNameAndPut(reader, map, "hour", PartiQLValueType.INT)
                             checkRequiredFieldNameAndPut(reader, map, "minute", PartiQLValueType.INT)
-                            checkRequiredFieldNameAndPut(reader, map, "second", PartiQLValueType.DECIMAL)
+                            checkRequiredFieldNameAndPut(reader, map, "second", PartiQLValueType.DECIMAL_ARBITRARY)
                             checkOptionalFieldNameAndPut(reader, map, "offset", PartiQLValueType.INT)
                             // check remaining
                             if (reader.next() != null) {
@@ -500,7 +500,7 @@ internal class PartiQLValueIonReader(
                             checkRequiredFieldNameAndPut(reader, map, "day", PartiQLValueType.INT)
                             checkRequiredFieldNameAndPut(reader, map, "hour", PartiQLValueType.INT)
                             checkRequiredFieldNameAndPut(reader, map, "minute", PartiQLValueType.INT)
-                            checkRequiredFieldNameAndPut(reader, map, "second", PartiQLValueType.DECIMAL)
+                            checkRequiredFieldNameAndPut(reader, map, "second", PartiQLValueType.DECIMAL_ARBITRARY)
                             // check remaining
                             if (reader.next() != null) {
                                 throw IllegalArgumentException("excess field in struct")
@@ -572,7 +572,7 @@ internal class PartiQLValueIonReader(
             val v = fromIon(reader)
             when (expectedType) {
                 PartiQLValueType.INT -> destination[k] = (v as IntValue).value?.intValueExact()
-                PartiQLValueType.DECIMAL -> destination[k] = (v as DecimalValue).value
+                PartiQLValueType.DECIMAL_ARBITRARY -> destination[k] = (v as DecimalValue).value
                 else -> throw IllegalArgumentException("$expectedField should be either INT OR DECIMAL")
             }
         } else {

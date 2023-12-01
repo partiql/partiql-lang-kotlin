@@ -1,0 +1,29 @@
+income_band::{
+  type: "bag",
+  items: {
+    type: "struct",
+    fields: [
+      {
+        name: "ib_income_band_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "ib_lower_bound",
+        type: [
+          "int32",
+          "null"
+        ]
+      },
+      {
+        name: "ib_upper_bound",
+        type: [
+          "int32",
+          "null"
+        ]
+      }
+    ]
+  }
+}

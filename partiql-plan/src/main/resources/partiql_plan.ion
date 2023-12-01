@@ -1,266 +1,320 @@
-// Experimental plan representation
-
 imports::{
   kotlin: [
-    any::'kotlin.Any',
-    ion::'com.amazon.ionelement.api.IonElement',
+    partiql_value::'org.partiql.value.PartiQLValue',
     static_type::'org.partiql.types.StaticType',
+    scalar_signature::'org.partiql.types.function.FunctionSignature$Scalar',
+    aggregation_signature::'org.partiql.types.function.FunctionSignature$Aggregation',
   ],
 }
 
-// Top-Level structure for a PartiQL Plan
 parti_q_l_plan::{
-  version: [ PARTIQL_V0 ],
-  root: rex,
+  globals:    list::[global],       // (globals ...)
+  statement:  statement,            // (statement ...)
 }
 
-// Grouping of common fields without implications of interfaces or inheritance
-common::{
-  type_env: list::[attribute],
-  properties: set::[property],
-  metas: map::[string,any],
+// Globals
+
+global::{
+  path: '.identifier.qualified',
+  type: static_type,
 }
 
-attribute::{
-  name: string,
-  type: static_type
+// Functions
+
+fn::{
+  signature: scalar_signature,
 }
 
-// Relation properties
-property::[
-  ORDERED,
-]
-
-// Representation of `<rex> AS <name>` in projections
-binding::{
-  name: string,
-  value: rex,
+agg::{
+  signature: aggregation_signature,
 }
 
-// Representation of `a_i : e_i` where a and e are expressions
-field::{
-  name: rex,
-  value: rex,
-}
+// Statements
 
-// Identifier case rules
-case::[
-  SENSITIVE,
-  INSENSITIVE,
-]
-
-// Define in `_` once supported
-step::[
-  key::{
-    value: rex,
-    case: case,
-  },
-  wildcard::{},
-  unpivot::{},
-]
-
-// Define in `_` once supported
-sort_spec::{
-  value: rex,
-  dir: [ ASC, DESC ],
-  nulls: [ FIRST, LAST ],
-}
-
-// Rex.Call Arguments
-arg::[
-  value::{
-    name: optional::string,
-    value: rex,
-  },
-  type::{
-    name: optional::string,
-    type: static_type,
-  }
-]
-
-// Exclude expr and step
-exclude_expr::{
-  root: string,
-  root_case: case,
-  steps: list::[exclude_step],
-}
-
-exclude_step::[
-  tuple_attr::{
-    attr: string,
-    case: case,
-  },
-  collection_index::{
-    index: int,
-  },
-  tuple_wildcard::{},
-  collection_wildcard::{},
-]
-
-branch::{
-  condition: rex,
-  value: rex,
-}
-
-// Operators that return binding collections
-rel::[
-  // FROM <rex> [AS <string>] [AT <string>] [BY <string>]
-  scan::{
-    common: common,
-    value: rex,
-    alias: optional::string,
-    at: optional::string,
-    by: optional::string,
-  },
-  // UNPIVOT <rex> [AS <string>] [AT <string>] [BY <string>]
-  unpivot::{
-    common: common,
-    value: rex,
-    alias: optional::string,
-    at: optional::string,
-    by: optional::string,
-  },
-  // WHERE, HAVING
-  filter::{
-    common: common,
-    input: rel,
-    condition: rex,
-  },
-  // ORDER BY
-  sort::{
-    common: common,
-    input: rel,
-    specs: list::[sort_spec],
-  },
-  // UNION, INTERSECT, EXCEPT
-  bag::{
-    common: common,
-    lhs: rel,
-    rhs: rel,
-    op: [ UNION, INTERSECT, EXCEPT ],
-  },
-  // LIMIT, OFFSET, FETCH
-  fetch::{
-    common: common,
-    input: rel,
-    limit: rex,
-    offset: rex,
-  },
-  // SELECT
-  project::{
-    common: common,
-    input: rel,
-    bindings: list::[binding],
-  },
-  // FROM x, y / FROM x JOIN y
-  join::{
-    common: common,
-    lhs: rel,
-    rhs: rel,
-    condition: optional::rex,
-    type: [ INNER, LEFT, RIGHT, FULL ],
-  },
-  // SELECT <aggregate calls> [GROUP BY <groups>]
-  aggregate::{
-    common: common,
-    input: rel,
-    calls: list::[binding],
-    groups: list::[binding],
-    strategy: [ FULL, PARTIAL ],
-  },
-  exclude::{
-    common: common,
-    input: rel,
-    exprs: list::[exclude_expr],
-  }
-]
-
-// Operators that return any value
-// Perhaps "id" and "path" can be combined into a single item "ref"
-rex::[
-  id::{
-    name: string,
-    case: case,
-    qualifier: [ UNQUALIFIED, LOCALS_FIRST ],
-    type: optional::static_type
-  },
-  path::{
+statement::[
+  query::{
     root: rex,
-    steps: list::[step],
-    type: optional::static_type
   },
-  lit::{
-    value: ion,
-    type: optional::static_type
+]
+
+// Identifiers
+
+identifier::[
+  symbol::{
+    symbol:           string,
+    case_sensitivity: case_sensitivity,
   },
-  unary::{
-    value: rex,
-    op: [ NOT, POS, NEG, ],
-    type: optional::static_type
+  qualified::{
+    root:   symbol,
+    steps:  list::[symbol],
   },
-  binary::{
-    lhs: rex,
-    rhs: rex,
-    op: [
-      PLUS, MINUS, TIMES, DIV, MODULO, CONCAT, BITWISE_AND,
-      AND, OR,
-      EQ, NEQ, GTE, GT, LT, LTE,
+  _::[
+    case_sensitivity::[
+      SENSITIVE,
+      INSENSITIVE,
     ],
-    type: optional::static_type
-  },
-  call::{
-    id: string,
-    args: list::[arg],
-    type: optional::static_type,
-  },
-  switch::{
-    match: optional::rex,
-    branches: list::[branch],
-    default: optional::rex,
-    type: optional::static_type,
-  },
-  agg::{
-    id: string,
-    args: list::[rex],
-    modifier: [ ALL, DISTINCT ],
-    type: optional::static_type
-    // filter: rex — later SQL feature, not sure if we'll support this
-  },
-  collection::[
-    array::{
-      values: list::[rex],
-      type: optional::static_type,
-    },
-    bag::{
-      values: list::[rex],
-      type: optional::static_type,
-    },
-  ],
-  // - If binding.name is '*' and binding.rex is a struct, the fields of binding.rex are merged to this struct
-  // - If binding.name is '*' and binding.rex is not a struct, the field _n will be add to this struct where n
-  //   is the ordinal of the field in the final merged struct.
-  // - Else, add the pair (binding.name, binding.rex) to the final merged struct.
-  tuple::{
-    fields: list::[field],
-    type: optional::static_type
-  },
-  query::[
-    scalar::[
-      subquery::{
-        query: '.rex.query.collection', // consider changing to query.scalar.subquery
-        type: optional::static_type
-      },
-      pivot::{
-        rel: rel,
-        value: rex,
-        at: rex, // consider changing to key
-        type: optional::static_type
-      },
-    ],
-    collection::{
-      rel: rel,
-      constructor: optional::rex, // consider further dividing this into query.collection.subquery
-      type: optional::static_type
-    },
   ],
 ]
+
+// Rex
+rex::{
+  type: static_type,
+  op:[
+
+    lit::{
+      value: partiql_value,
+    },
+
+    var::{
+      ref: int,
+    },
+
+    global::{
+      ref: int,
+    },
+
+    path::{
+      root:   rex,
+      steps:  list::[step],
+      _: [
+        step::[
+          // The key MUST be an integer expression. Ex: a[0], a[1 + 1]
+          index::{ key: rex },
+
+          // Case-sensitive lookup. The key MUST be a string expression. Ex: a["b"], a."b", a[CAST(b AS STRING)]
+          key::{ key: rex },
+
+          // Case-insensitive lookup. The key MUST be a literal string. Ex: a.b
+          symbol::{ key: string },
+
+          // For arrays. Ex: a[*]
+          // TODO: Do we need this? According to specification: [1,2,3][*] ⇔ SELECT VALUE v FROM [1, 2, 3] AS v
+          wildcard::{},
+
+          // For tuples. Ex: a.*
+          // TODO: Do we need this? According to specification: {'a':1, 'b':2}.* ⇔ SELECT VALUE v FROM UNPIVOT {'a':1, 'b':2} AS v
+          unpivot::{},
+        ],
+      ],
+    },
+
+    call::[
+      static::{
+        fn: fn,
+        args: list::[rex]
+      },
+
+      // Represents a dynamic function call. If all candidates are exhausted, dynamic calls will return MISSING.
+      //
+      // args: represent the original typed arguments. These will eventually be wrapped by coercions from [candidates].
+      // candidates: represent the potentially applicable resolved functions with coercions. Each of these candidates
+      //  should be overloaded functions of the same name and number of arguments.
+      dynamic::{
+        args: list::[rex],
+        candidates: list::[candidate],
+        _: [
+          candidate::{
+            fn: fn,
+            coercions: list::[optional::fn]
+          }
+        ]
+      }
+    ],
+
+    case::{
+      branches: list::[branch],
+      default: rex,
+      _: [
+        branch::{
+          condition:  rex,
+          rex:        rex,
+        },
+      ],
+    },
+
+    collection::{
+      values: list::[rex],
+    },
+
+    struct::{
+      fields: list::[field],
+      _: [
+        field::{
+          k: rex,
+          v: rex,
+        },
+      ],
+    },
+
+    pivot::{
+      key:    rex,
+      value:  rex,
+      rel:    rel,
+    },
+
+    subquery::{
+      select:   select,
+      coercion: [ SCALAR, ROW ],
+    },
+
+    select::{
+      constructor:  rex,
+      rel:          rel,
+    },
+
+    // SELECT v1.*, e2 AS a, v3.*
+    //
+    // SELECT VALUE TUPLEUNION(
+    //   CASE WHEN v1 IS TUPLE THEN v1 ELSE {'_1': v1} END,
+    //   {'a':e2 },
+    //   CASE WHEN v3 IS TUPLE THEN v3 ELSE {'_2': v3} END
+    // )
+    //
+    // Tuple Union Function Signature: (Array<Struct>) -> Struct
+    tuple_union::{
+      args: list::[rex],
+    },
+
+    err::{
+      message: string,
+    },
+  ],
+}
+
+// Rel
+
+rel::{
+  type: {
+    schema: list::[binding],
+    props:  set::[prop],
+  },
+  op: [
+
+    scan::{
+      rex: rex,
+    },
+
+    scan_indexed::{
+      rex: rex,
+    },
+
+    unpivot::{
+      rex:  rex,
+    },
+
+    distinct::{
+      input: rel,
+    },
+
+    filter::{
+      input:      rel,
+      predicate:  rex,
+    },
+
+    sort::{
+      input: rel,
+      specs: list::[spec],
+      _: [
+        spec::{
+          rex: rex,
+          order: order,
+        },
+        order::[
+          ASC_NULLS_LAST,
+          ASC_NULLS_FIRST,
+          DESC_NULLS_LAST,
+          DESC_NULLS_FIRST,
+        ],
+      ],
+    },
+
+    union::{
+      lhs: rel,
+      rhs: rel,
+    },
+
+    intersect::{
+      lhs: rel,
+      rhs: rel,
+    },
+
+    except::{
+      lhs: rel,
+      rhs: rel,
+    },
+
+    limit::{
+      input:  rel,
+      limit:  rex,
+    },
+
+    offset::{
+      input:  rel,
+      offset: rex,
+    },
+
+    project::{
+      input:        rel,
+      projections:  list::[rex],
+    },
+
+    join::{
+      lhs: rel,
+      rhs: rel,
+      rex: rex, // The Join Expression (required) (can be set to TRUE)
+      type: [
+        INNER, // Inner Join
+        LEFT,  // Left Outer Join
+        RIGHT, // Right Outer Join
+        FULL   // Full Outer Join
+      ],
+    },
+
+    aggregate::{
+      input:    rel,
+      strategy: [ FULL, PARTIAL ],
+      calls:    list::[call],
+      groups:   list::[rex],
+      _: [
+        call::{
+          agg:  agg,
+          args: list::[rex],
+        },
+      ],
+    },
+
+    exclude::{
+      input: rel,
+      items: list::[item],
+      _: [
+        item::{
+          root: '.identifier.symbol',
+          steps: list::[step],
+        },
+        step::[
+          attr::{
+            symbol: '.identifier.symbol',
+          },
+          pos::{
+            index: int,
+          },
+          struct_wildcard::{},
+          collection_wildcard::{},
+        ],
+      ],
+    },
+
+    err::{
+      message: string,
+    },
+  ],
+  _: [
+    prop::[
+      ORDERED,
+    ],
+    binding::{
+      name: string,
+      type: static_type,
+    },
+  ]
+}

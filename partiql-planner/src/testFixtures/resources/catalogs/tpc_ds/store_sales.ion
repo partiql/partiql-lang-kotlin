@@ -1,0 +1,163 @@
+store_sales::{
+  type: "bag",
+  items: {
+    type: "struct",
+    fields: [
+      {
+        name: "ss_sold_date_sk",
+        type: [
+          "date",
+          "null"
+        ]
+      },
+      {
+        name: "ss_sold_time_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "ss_item_sk",
+        type: "string"
+      },
+      {
+        name: "ss_customer_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "ss_cdemo_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "ss_hdemo_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "ss_addr_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "ss_store_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "ss_promo_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "ss_ticket_number",
+        type: "string"
+      },
+      {
+        name: "ss_quantity",
+        type: [
+          "int32",
+          "null"
+        ]
+      },
+      {
+        name: "ss_wholesale_cost",
+        type: [
+          "float64",
+          "null"
+        ]
+      },
+      {
+        name: "ss_list_price",
+        type: [
+          "float64",
+          "null"
+        ]
+      },
+      {
+        name: "ss_sales_price",
+        type: [
+          "float64",
+          "null"
+        ]
+      },
+      {
+        name: "ss_ext_discount_amt",
+        type: [
+          "float64",
+          "null"
+        ]
+      },
+      {
+        name: "ss_ext_sales_price",
+        type: [
+          "float64",
+          "null"
+        ]
+      },
+      {
+        name: "ss_ext_wholesale_cost",
+        type: [
+          "float64",
+          "null"
+        ]
+      },
+      {
+        name: "ss_ext_list_price",
+        type: [
+          "float64",
+          "null"
+        ]
+      },
+      {
+        name: "ss_ext_tax",
+        type: [
+          "float64",
+          "null"
+        ]
+      },
+      {
+        name: "ss_coupon_amt",
+        type: [
+          "float64",
+          "null"
+        ]
+      },
+      {
+        name: "ss_net_paid",
+        type: [
+          "float64",
+          "null"
+        ]
+      },
+      {
+        name: "ss_net_paid_inc_tax",
+        type: [
+          "float64",
+          "null"
+        ]
+      },
+      {
+        name: "ss_net_profit",
+        type: [
+          "float64",
+          "null"
+        ]
+      }
+    ]
+  }
+}

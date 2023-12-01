@@ -1,6 +1,11 @@
 package org.partiql.errors
 
 /**
+ * Typeof `ProblemHandler.handleProblem`
+ */
+public typealias ProblemCallback = (Problem) -> Unit
+
+/**
  * In general, a [Problem] is a semantic error or warning encountered during compilation of a query.
  *
  * @param sourceLocation stores the location (line and column) in the query the problem occurred

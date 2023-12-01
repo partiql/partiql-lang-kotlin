@@ -1,0 +1,162 @@
+item::{
+  type: "bag",
+  items: {
+    type: "struct",
+    fields: [
+      {
+        name: "i_item_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "i_item_id",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "i_rec_start_date",
+        type: [
+          "int64",
+          "null"
+        ]
+      },
+      {
+        name: "i_rec_end_date",
+        type: [
+          "int64",
+          "null"
+        ]
+      },
+      {
+        name: "i_item_desc",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "i_current_price",
+        type: [
+          "float64",
+          "null"
+        ]
+      },
+      {
+        name: "i_wholesale_cost",
+        type: [
+          "float64",
+          "null"
+        ]
+      },
+      {
+        name: "i_brand_id",
+        type: [
+          "int32",
+          "null"
+        ]
+      },
+      {
+        name: "i_brand",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "i_class_id",
+        type: [
+          "int32",
+          "null"
+        ]
+      },
+      {
+        name: "i_class",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "i_category_id",
+        type: [
+          "int32",
+          "null"
+        ]
+      },
+      {
+        name: "i_category",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "i_manufact_id",
+        type: [
+          "int32",
+          "null"
+        ]
+      },
+      {
+        name: "i_manufact",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "i_size",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "i_formulation",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "i_color",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "i_units",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "i_container",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "i_manager_id",
+        type: [
+          "int32",
+          "null"
+        ]
+      },
+      {
+        name: "i_product_name",
+        type: [
+          "string",
+          "null"
+        ]
+      }
+    ]
+  }
+}

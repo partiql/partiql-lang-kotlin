@@ -55,6 +55,7 @@ public sealed class StaticType {
         @JvmField public val SYMBOL: SymbolType = SymbolType()
         @JvmField public val STRING: StringType = StringType()
         @JvmField public val TEXT: StaticType = unionOf(SYMBOL, STRING)
+        @JvmField public val CHAR: StaticType = StringType(StringType.StringLengthConstraint.Constrained(NumberConstraint.Equals(1)))
         @JvmField public val CLOB: ClobType = ClobType()
         @JvmField public val BLOB: BlobType = BlobType()
         @JvmField public val LIST: ListType = ListType()
@@ -151,6 +152,18 @@ public sealed class StaticType {
         when (this) {
             is AnyOfType -> types.any { it.isNullable() }
             is AnyType, is NullType -> true
+            else -> false
+        }
+
+    /**
+     * Type is missable if it is MISSING or is an AnyOfType that contains a MISSING type
+     *
+     * @return
+     */
+    public fun isMissable(): Boolean =
+        when (this) {
+            is AnyOfType -> types.any { it.isMissable() }
+            is AnyType, is MissingType -> true
             else -> false
         }
 
@@ -679,7 +692,10 @@ public sealed class TupleConstraint {
      * The presence of the [Ordered] on a [StructType] represents that the [StructType] is ORDERED. The absence of
      * this constrain represents the opposite -- AKA that the [StructType] is UNORDERED
      */
-    public object Ordered : TupleConstraint()
+    public object Ordered : TupleConstraint() {
+
+        override fun toString(): String = "Ordered"
+    }
 }
 
 /**

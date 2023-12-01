@@ -1,0 +1,141 @@
+promotion::{
+  type: "bag",
+  items: {
+    type: "struct",
+    fields: [
+      {
+        name: "p_promo_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "p_promo_id",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "p_start_date_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "p_end_date_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "p_item_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "p_cost",
+        type: [
+          "float64",
+          "null"
+        ]
+      },
+      {
+        name: "p_response_targe",
+        type: [
+          "int32",
+          "null"
+        ]
+      },
+      {
+        name: "p_promo_name",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "p_channel_dmail",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "p_channel_email",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "p_channel_catalog",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "p_channel_tv",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "p_channel_radio",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "p_channel_press",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "p_channel_event",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "p_channel_demo",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "p_channel_details",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "p_purpose",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "p_discount_active",
+        type: [
+          "string",
+          "null"
+        ]
+      }
+    ]
+  }
+}

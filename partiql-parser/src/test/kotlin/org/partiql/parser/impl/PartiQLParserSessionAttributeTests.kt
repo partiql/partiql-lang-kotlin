@@ -8,7 +8,7 @@ import org.partiql.ast.exprLit
 import org.partiql.ast.exprSessionAttribute
 import org.partiql.ast.statementQuery
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.int64Value
+import org.partiql.value.int32Value
 import kotlin.test.assertEquals
 
 @OptIn(PartiQLValueExperimental::class)
@@ -48,7 +48,7 @@ class PartiQLParserSessionAttributeTests {
         query {
             exprBinary(
                 op = Expr.Binary.Op.EQ,
-                lhs = exprLit(int64Value(1)),
+                lhs = exprLit(int32Value(1)),
                 rhs = exprSessionAttribute(Expr.SessionAttribute.Attribute.CURRENT_USER)
             )
         }

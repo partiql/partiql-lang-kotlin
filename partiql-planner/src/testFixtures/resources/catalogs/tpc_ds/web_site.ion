@@ -1,0 +1,190 @@
+web_site::{
+  type: "bag",
+  items: {
+    type: "struct",
+    fields: [
+      {
+        name: "web_site_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "web_site_id",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "web_rec_start_date",
+        type: [
+          "int64",
+          "null"
+        ]
+      },
+      {
+        name: "web_rec_end_date",
+        type: [
+          "int64",
+          "null"
+        ]
+      },
+      {
+        name: "web_name",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "web_open_date_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "web_close_date_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "web_class",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "web_manager",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "web_mkt_id",
+        type: [
+          "int32",
+          "null"
+        ]
+      },
+      {
+        name: "web_mkt_class",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "web_mkt_desc",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "web_market_manager",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "web_company_id",
+        type: [
+          "int32",
+          "null"
+        ]
+      },
+      {
+        name: "web_company_name",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "web_street_number",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "web_street_name",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "web_street_type",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "web_suite_number",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "web_city",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "web_county",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "web_state",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "web_zip",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "web_country",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "web_gmt_offset",
+        type: [
+          "float64",
+          "null"
+        ]
+      },
+      {
+        name: "web_tax_percentage",
+        type: [
+          "float64",
+          "null"
+        ]
+      }
+    ]
+  }
+}

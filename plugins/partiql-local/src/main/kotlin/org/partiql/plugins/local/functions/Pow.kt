@@ -15,15 +15,15 @@ import org.partiql.value.float64Value
 object Pow : PartiQLFunction {
 
     @OptIn(PartiQLValueExperimental::class)
-    override val signature = FunctionSignature(
+    override val signature = FunctionSignature.Scalar(
         name = "test_power",
         returns = PartiQLValueType.FLOAT64,
         parameters = listOf(
             FunctionParameter(name = "base", type = PartiQLValueType.INT8),
             FunctionParameter(name = "exponent", type = PartiQLValueType.INT8)
         ),
-        isDeterministic = true,
-        description = "Power [base] with [exponent]"
+        description = "Power [base] with [exponent]",
+        isDeterministic = true
     )
 
     @OptIn(PartiQLValueExperimental::class)

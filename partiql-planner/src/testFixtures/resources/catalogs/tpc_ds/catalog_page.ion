@@ -1,0 +1,71 @@
+catalog_page::{
+  type: "bag",
+  items: {
+    type: "struct",
+    fields: [
+      {
+        name: "cp_catalog_page_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "cp_catalog_page_id",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "cp_start_date_sk",
+        type: [
+          "int32",
+          "null"
+        ]
+      },
+      {
+        name: "cp_end_date_sk",
+        type: [
+          "int32",
+          "null"
+        ]
+      },
+      {
+        name: "cp_department",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "cp_catalog_number",
+        type: [
+          "int32",
+          "null"
+        ]
+      },
+      {
+        name: "cp_catalog_page_number",
+        type: [
+          "int32",
+          "null"
+        ]
+      },
+      {
+        name: "cp_description",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "cp_type",
+        type: [
+          "string",
+          "null"
+        ]
+      }
+    ]
+  }
+}

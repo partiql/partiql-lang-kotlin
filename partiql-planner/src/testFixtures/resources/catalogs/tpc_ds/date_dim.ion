@@ -1,0 +1,204 @@
+date_dim::{
+  type: "bag",
+  items: {
+    type: "struct",
+    fields: [
+      {
+        name: "d_date_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "d_date_id",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "d_date",
+        type: [
+          "int64",
+          "null"
+        ]
+      },
+      {
+        name: "d_month_seq",
+        type: [
+          "int32",
+          "null"
+        ]
+      },
+      {
+        name: "d_week_seq",
+        type: [
+          "int32",
+          "null"
+        ]
+      },
+      {
+        name: "d_quarter_seq",
+        type: [
+          "int32",
+          "null"
+        ]
+      },
+      {
+        name: "d_year",
+        type: [
+          "int32",
+          "null"
+        ]
+      },
+      {
+        name: "d_dow",
+        type: [
+          "int32",
+          "null"
+        ]
+      },
+      {
+        name: "d_moy",
+        type: [
+          "int32",
+          "null"
+        ]
+      },
+      {
+        name: "d_dom",
+        type: [
+          "int32",
+          "null"
+        ]
+      },
+      {
+        name: "d_qoy",
+        type: [
+          "int32",
+          "null"
+        ]
+      },
+      {
+        name: "d_fy_year",
+        type: [
+          "int32",
+          "null"
+        ]
+      },
+      {
+        name: "d_fy_quarter_seq",
+        type: [
+          "int32",
+          "null"
+        ]
+      },
+      {
+        name: "d_fy_week_seq",
+        type: [
+          "int32",
+          "null"
+        ]
+      },
+      {
+        name: "d_day_name",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "d_quarter_name",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "d_holiday",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "d_weekend",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "d_following_holiday",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "d_first_dom",
+        type: [
+          "int32",
+          "null"
+        ]
+      },
+      {
+        name: "d_last_dom",
+        type: [
+          "int32",
+          "null"
+        ]
+      },
+      {
+        name: "d_same_day_ly",
+        type: [
+          "int32",
+          "null"
+        ]
+      },
+      {
+        name: "d_same_day_lq",
+        type: [
+          "int32",
+          "null"
+        ]
+      },
+      {
+        name: "d_current_day",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "d_current_week",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "d_current_month",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "d_current_quarter",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "d_current_year",
+        type: [
+          "string",
+          "null"
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,176 @@
+web_returns::{
+  type: "bag",
+  items: {
+    type: "struct",
+    fields: [
+      {
+        name: "wr_returned_date_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "wr_returned_time_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "wr_item_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "wr_refunded_customer_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "wr_refunded_cdemo_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "wr_refunded_hdemo_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "wr_refunded_addr_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "wr_returning_customer_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "wr_returning_cdemo_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "wr_returning_hdemo_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "wr_returning_addr_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "wr_web_page_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "wr_reason_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "wr_order_number",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "wr_return_quantity",
+        type: [
+          "int32",
+          "null"
+        ]
+      },
+      {
+        name: "wr_return_amt",
+        type: [
+          "float64",
+          "null"
+        ]
+      },
+      {
+        name: "wr_return_tax",
+        type: [
+          "float64",
+          "null"
+        ]
+      },
+      {
+        name: "wr_return_amt_inc_tax",
+        type: [
+          "float64",
+          "null"
+        ]
+      },
+      {
+        name: "wr_fee",
+        type: [
+          "float64",
+          "null"
+        ]
+      },
+      {
+        name: "wr_return_ship_cost",
+        type: [
+          "float64",
+          "null"
+        ]
+      },
+      {
+        name: "wr_refunded_cash",
+        type: [
+          "float64",
+          "null"
+        ]
+      },
+      {
+        name: "wr_reversed_charge",
+        type: [
+          "float64",
+          "null"
+        ]
+      },
+      {
+        name: "wr_account_credit",
+        type: [
+          "float64",
+          "null"
+        ]
+      },
+      {
+        name: "wr_net_loss",
+        type: [
+          "float64",
+          "null"
+        ]
+      }
+    ]
+  }
+}

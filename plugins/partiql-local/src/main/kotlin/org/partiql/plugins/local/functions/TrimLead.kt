@@ -15,14 +15,14 @@ import org.partiql.value.stringValue
 object TrimLead : PartiQLFunction {
 
     @OptIn(PartiQLValueExperimental::class)
-    override val signature = FunctionSignature(
+    override val signature = FunctionSignature.Scalar(
         name = "trim_lead",
         returns = PartiQLValueType.STRING,
         parameters = listOf(
             FunctionParameter(name = "str", type = PartiQLValueType.STRING)
         ),
-        isDeterministic = true,
-        description = "Trims leading whitespace of a [str]."
+        description = "Trims leading whitespace of a [str].",
+        isDeterministic = true
     )
 
     @OptIn(PartiQLValueExperimental::class)

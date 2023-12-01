@@ -14,7 +14,7 @@
 
 package org.partiql.parser
 
-import org.partiql.ast.AstNode
+import org.partiql.ast.Statement
 
 public interface PartiQLParser {
 
@@ -23,7 +23,7 @@ public interface PartiQLParser {
 
     public data class Result(
         val source: String,
-        val root: AstNode,
+        val root: Statement,
         val locations: SourceLocations,
     )
 }

@@ -1,0 +1,29 @@
+reason::{
+  type: "bag",
+  items: {
+    type: "struct",
+    fields: [
+      {
+        name: "r_reason_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "r_reason_id",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "r_reason_desc",
+        type: [
+          "string",
+          "null"
+        ]
+      }
+    ]
+  }
+}

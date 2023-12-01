@@ -1,0 +1,142 @@
+store_returns::{
+  type: "bag",
+  items: {
+    type: "struct",
+    fields: [
+      {
+        name: "sr_returned_date_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "sr_return_time_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "sr_item_sk",
+        type: "string"
+      },
+      {
+        name: "sr_customer_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "sr_cdemo_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "sr_hdemo_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "sr_addr_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "sr_store_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "sr_reason_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "sr_ticket_number",
+        type: "string",
+      },
+      {
+        name: "sr_return_quantity",
+        type: [
+          "int32",
+          "null"
+        ]
+      },
+      {
+        name: "sr_return_amt",
+        type: [
+          "float64",
+          "null"
+        ]
+      },
+      {
+        name: "sr_return_tax",
+        type: [
+          "float64",
+          "null"
+        ]
+      },
+      {
+        name: "sr_return_amt_inc_tax",
+        type: [
+          "float64",
+          "null"
+        ]
+      },
+      {
+        name: "sr_fee",
+        type: [
+          "float64",
+          "null"
+        ]
+      },
+      {
+        name: "sr_return_ship_cost",
+        type: [
+          "float64",
+          "null"
+        ]
+      },
+      {
+        name: "sr_refunded_cash",
+        type: [
+          "float64",
+          "null"
+        ]
+      },
+      {
+        name: "sr_reversed_charge",
+        type: [
+          "float64",
+          "null"
+        ]
+      },
+      {
+        name: "sr_store_credit",
+        type: [
+          "float64",
+          "null"
+        ]
+      },
+      {
+        name: "sr_net_loss",
+        type: [
+          "float64",
+          "null"
+        ]
+      }
+    ]
+  }
+}

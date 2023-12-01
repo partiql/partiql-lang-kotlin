@@ -1,0 +1,50 @@
+ship_mode::{
+  type: "bag",
+  items: {
+    type: "struct",
+    fields: [
+      {
+        name: "sm_ship_mode_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "sm_ship_mode_id",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "sm_type",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "sm_code",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "sm_carrier",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "sm_contract",
+        type: [
+          "string",
+          "null"
+        ]
+      }
+    ]
+  }
+}

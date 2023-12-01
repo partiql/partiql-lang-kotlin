@@ -1,0 +1,17 @@
+{
+  type: "bag",
+  items: {
+    type: "struct",
+    constraints: [ closed, unique, ordered ],
+    fields: [
+      {
+        name: "id",
+        type: "int32",
+      },
+      {
+        name: "breed",
+        type: "string",
+      }
+    ]
+  }
+}

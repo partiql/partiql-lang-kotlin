@@ -31,9 +31,18 @@ Thank you to all who have contributed!
 - Adds top-level IR node creation functions.
 - Adds `componentN` functions (destructuring) to IR nodes via Kotlin data classes
 - Adds public `tag` field to IR nodes for associating metadata
+- Adds AST Normalization Pass. 
+- Adds PartiQLPlanner Interface, which is responsible for translate an AST to a Plan. 
 
 ### Changed
 - StaticTypeInferencer and PlanTyper will not raise an error when an expression is inferred to `NULL` or `unionOf(NULL, MISSING)`. In these cases the StaticTypeInferencer and PlanTyper will still raise the Problem Code `ExpressionAlwaysReturnsNullOrMissing` but the severity of the problem has been changed to warning. In the case an expression always returns `MISSING`, problem code `ExpressionAlwaysReturnsMissing` will be raised, which will have problem severity of error.
+- **Breaking** The default integer literal type is now 32-bit; if the literal can not fit in a 32-bit integer, it overflows to 64-bit. 
+- **BREAKING** `PartiQLValueType` now distinguishes between Arbitrary Precision Decimal and Fixed Precision Decimal. 
+- **BREAKING** Function Signature Changes. Now Function signature has two subclasses, `Scalar` and `Aggregation`. 
+- **BREAKING** In the produced plan: 
+  - The new plan is fully resolved and typed.
+  - Operators will be converted to function call. 
+
 
 ### Deprecated
 
@@ -41,8 +50,9 @@ Thank you to all who have contributed!
 - Fixes the CLI hanging on invalid queries. See issue #1230.
 
 ### Removed
-- [Breaking] Removed IR factory in favor of static top-level functions. Change `Ast.foo()`
+- **Breaking** Removed IR factory in favor of static top-level functions. Change `Ast.foo()`
   to `foo()`
+- **Breaking** Removed `org.partiql.lang.planner.transforms.AstToPlan`. Use `org.partiql.planner.PartiQLPlanner`. 
 
 ### Security
 
@@ -153,6 +163,8 @@ classes in `:partiql-ast` and `:partiql-plan`.
   - `org.partiql.lang.errors.ProblemSeverity` -> `org.partiql.errors.ProblemSeverity`
   - `org.partiql.lang.errors.ProblemHandler` -> `org.partiql.errors.ProblemHandler`
 - **Breaking** the `sourceLocation` field of `org.partiql.errors.Problem` was changed from `org.partiql.lang.ast.SoureceLocationMeta` to `org.partiql.errors.ProblemLocation`.
+- Removed `Nullable<Value` implementations of PartiQLValue and made the standard implementations nullable.
+- Using PartiQLValueType requires optin; this was a miss from an earlier commit.
 - **Breaking** removed redundant ValueParameter from FunctionParameter as all parameters are values.
 - Introduces `isNullCall` and `isNullable` properties to FunctionSignature.
 - Removed `Nullable...Value` implementations of PartiQLValue and made the standard implementations nullable.

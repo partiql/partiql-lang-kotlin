@@ -1,0 +1,197 @@
+catalog_returns::{
+  type: "bag",
+  items: {
+    type: "struct",
+    fields: [
+      {
+        name: "cr_returned_date_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "cr_returned_time_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "cr_item_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "cr_refunded_customer_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "cr_refunded_cdemo_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "cr_refunded_hdemo_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "cr_refunded_addr_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "cr_returning_customer_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "cr_returning_cdemo_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "cr_returning_hdemo_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "cr_returning_addr_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "cr_call_center_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "cr_catalog_page_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "cr_ship_mode_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "cr_warehouse_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "cr_reason_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "cr_order_number",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "cr_return_quantity",
+        type: [
+          "int32",
+          "null"
+        ]
+      },
+      {
+        name: "cr_return_amount",
+        type: [
+          "float64",
+          "null"
+        ]
+      },
+      {
+        name: "cr_return_tax",
+        type: [
+          "float64",
+          "null"
+        ]
+      },
+      {
+        name: "cr_return_amt_inc_tax",
+        type: [
+          "float64",
+          "null"
+        ]
+      },
+      {
+        name: "cr_fee",
+        type: [
+          "float64",
+          "null"
+        ]
+      },
+      {
+        name: "cr_return_ship_cost",
+        type: [
+          "float64",
+          "null"
+        ]
+      },
+      {
+        name: "cr_refunded_cash",
+        type: [
+          "float64",
+          "null"
+        ]
+      },
+      {
+        name: "cr_reversed_charge",
+        type: [
+          "float64",
+          "null"
+        ]
+      },
+      {
+        name: "cr_store_credit",
+        type: [
+          "float64",
+          "null"
+        ]
+      },
+      {
+        name: "cr_net_loss",
+        type: [
+          "float64",
+          "null"
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,21 @@
+{
+  type: "struct",
+  constraints: [
+    closed,
+    ordered
+  ],
+  fields: [
+    {
+      name: "definition",
+      type: "string",
+    },
+    {
+      name: "definition",
+      type: "float32",
+    },
+    {
+      name: "DEFINITION",
+      type: "decimal"
+    }
+  ]
+}

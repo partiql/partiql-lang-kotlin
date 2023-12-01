@@ -1,0 +1,19 @@
+{
+  name: "order_info",
+  constraints: [ closed, unique, ordered ],
+  type: "struct",
+  fields: [
+    {
+      name: "customer_id",
+      type: "int32",
+    },
+    {
+      name: "marketplace_id",
+      type: "int32",
+    },
+    {
+      name: "ship_option",
+      type: "string",
+    }
+  ]
+}

@@ -11,7 +11,6 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
  * language governing permissions and limitations under the License.
  */
-
 package org.partiql.value
 
 /**
@@ -26,7 +25,9 @@ public enum class PartiQLValueType {
     INT32,
     INT64,
     INT,
-    DECIMAL,
+    // For now, just distinguish between fixed precision and arbitrary precision
+    DECIMAL, // TODO: Simple enum class does not have the power to express the parameterized type
+    DECIMAL_ARBITRARY, // arbitrary precision decimal
     FLOAT32,
     FLOAT64,
     CHAR,

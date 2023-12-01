@@ -1,0 +1,210 @@
+{
+  type: "struct",
+  name: "item",
+  constraints: [ closed, unique, ordered ],
+  fields: [
+    {
+      name: "i_item_sk",
+      type: [
+        "string",
+        "null"
+      ]
+    },
+    {
+      name: "i_item_id",
+      type: [
+        "string",
+        "null"
+      ]
+    },
+    {
+      name: "i_rec",
+      type: {
+        type: "struct",
+        constraints: [ closed, unique, ordered ],
+        fields: [
+          {
+            name: "i_rec_start_date",
+            type: [
+              "int64",
+              "null"
+            ]
+          },
+          {
+            name: "i_rec_end_date",
+            type: [
+              "int64",
+              "null"
+            ]
+          },
+        ]
+      },
+    },
+    {
+      name: "i_item_desc",
+      type: [
+        "string",
+        "null"
+      ]
+    },
+    {
+      name: "pricing",
+      type: {
+        type: "struct",
+        fields: [
+          {
+            name: "i_current_price",
+            type: [
+              "float64",
+              "null"
+            ]
+          },
+          {
+            name: "i_wholesale_cost",
+            type: [
+              "float64",
+              "null"
+            ]
+          },
+        ]
+      },
+    },
+    {
+      name: "i_brand_id",
+      type: [
+        "int32",
+        "null"
+      ]
+    },
+    {
+      name: "i_brand",
+      type: [
+        "string",
+        "null"
+      ]
+    },
+    {
+      name: "i_class_id",
+      type: [
+        "int32",
+        "null"
+      ]
+    },
+    {
+      name: "i_class",
+      type: [
+        "string",
+        "null"
+      ]
+    },
+    {
+      name: "i_category_id",
+      type: [
+        "int32",
+        "null"
+      ]
+    },
+    {
+      name: "i_category",
+      type: [
+        "string",
+        "null"
+      ]
+    },
+    {
+      name: "i_manufact_id",
+      type: [
+        "int32",
+        "null"
+      ]
+    },
+    {
+      name: "i_manufact",
+      type: [
+        "string",
+        "null"
+      ]
+    },
+    {
+      name: "i_size",
+      type: [
+        "string",
+        "null"
+      ]
+    },
+    {
+      name: "i_formulation",
+      type: [
+        "string",
+        "null"
+      ]
+    },
+    {
+      name: "i_color",
+      type: [
+        "string",
+        "null"
+      ]
+    },
+    {
+      name: "i_units",
+      type: [
+        "string",
+        "null"
+      ]
+    },
+    {
+      name: "i_container",
+      type: [
+        "string",
+        "null"
+      ]
+    },
+    {
+      name: "manager_info",
+      type: {
+        type: "struct",
+        constraints: [ closed, unique, ordered ],
+        fields: [
+          {
+            name: "manager_id",
+            type: [
+              "int32"
+            ]
+          },
+          {
+            name: "manager_name",
+            type: ["string", "null"]
+          },
+          {
+            name: "manager_address",
+            type: [
+              "null",
+              {
+                type: "struct",
+                constraints: [ closed, unique, ordered ],
+                fields: [
+                  {
+                    name: "zip_code",
+                    type: "int32"
+                  },
+                  {
+                    name: "house_number",
+                    type: ["int32", "null"]
+                  }
+                ]
+              }
+            ],
+          }
+        ]
+      },
+    },
+    {
+      name: "i_product_name",
+      type: [
+        "string",
+        "null"
+      ]
+    }
+  ]
+}

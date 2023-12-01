@@ -1,0 +1,240 @@
+catalog_sales::{
+  type: "bag",
+  items: {
+    type: "struct",
+    fields: [
+      {
+        name: "cs_sold_date_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "cs_sold_time_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "cs_ship_date_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "cs_bill_customer_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "cs_bill_cdemo_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "cs_bill_hdemo_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "cs_bill_addr_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "cs_ship_customer_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "cs_ship_cdemo_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "cs_ship_hdemo_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "cs_ship_addr_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "cs_call_center_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "cs_catalog_page_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "cs_ship_mode_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "cs_warehouse_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "cs_item_sk",
+        type: "string"
+      },
+      {
+        name: "cs_promo_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "cs_order_number",
+        type: "string"
+      },
+      {
+        name: "cs_quantity",
+        type: [
+          "int32",
+          "null"
+        ]
+      },
+      {
+        name: "cs_wholesale_cost",
+        type: [
+          "float64",
+          "null"
+        ]
+      },
+      {
+        name: "cs_list_price",
+        type: [
+          "float64",
+          "null"
+        ]
+      },
+      {
+        name: "cs_sales_price",
+        type: [
+          "float64",
+          "null"
+        ]
+      },
+      {
+        name: "cs_ext_discount_amt",
+        type: [
+          "float64",
+          "null"
+        ]
+      },
+      {
+        name: "cs_ext_sales_price",
+        type: [
+          "float64",
+          "null"
+        ]
+      },
+      {
+        name: "cs_ext_wholesale_cost",
+        type: [
+          "float64",
+          "null"
+        ]
+      },
+      {
+        name: "cs_ext_list_price",
+        type: [
+          "float64",
+          "null"
+        ]
+      },
+      {
+        name: "cs_ext_tax",
+        type: [
+          "float64",
+          "null"
+        ]
+      },
+      {
+        name: "cs_coupon_amt",
+        type: [
+          "float64",
+          "null"
+        ]
+      },
+      {
+        name: "cs_ext_ship_cost",
+        type: [
+          "float64",
+          "null"
+        ]
+      },
+      {
+        name: "cs_net_paid",
+        type: [
+          "float64",
+          "null"
+        ]
+      },
+      {
+        name: "cs_net_paid_inc_tax",
+        type: [
+          "float64",
+          "null"
+        ]
+      },
+      {
+        name: "cs_net_paid_inc_ship",
+        type: [
+          "float64",
+          "null"
+        ]
+      },
+      {
+        name: "cs_net_paid_inc_ship_tax",
+        type: [
+          "float64",
+          "null"
+        ]
+      },
+      {
+        name: "cs_net_profit",
+        type: [
+          "float64",
+          "null"
+        ]
+      }
+    ]
+  }
+}

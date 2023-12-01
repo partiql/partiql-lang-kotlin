@@ -1,0 +1,24 @@
+{
+  type: "list",
+  items: {
+    type: "struct",
+    constraints: [closed],
+    fields: [
+      {
+        name: "breed",
+        type: "string",
+      },
+      {
+        name: "avg_height",
+        type: "float32",
+      },
+      {
+        name: "typical_allergies",
+        type: {
+          type: "list",
+          items: "string"
+        }
+      }
+    ]
+  }
+}

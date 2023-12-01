@@ -1,0 +1,78 @@
+time_dim::{
+  type: "bag",
+  items: {
+    type: "struct",
+    fields: [
+      {
+        name: "t_time_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "t_time_id",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "t_time",
+        type: [
+          "int32",
+          "null"
+        ]
+      },
+      {
+        name: "t_hour",
+        type: [
+          "int32",
+          "null"
+        ]
+      },
+      {
+        name: "t_minute",
+        type: [
+          "int32",
+          "null"
+        ]
+      },
+      {
+        name: "t_second",
+        type: [
+          "int32",
+          "null"
+        ]
+      },
+      {
+        name: "t_am_pm",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "t_shift",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "t_sub_shift",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "t_meal_time",
+        type: [
+          "string",
+          "null"
+        ]
+      }
+    ]
+  }
+}

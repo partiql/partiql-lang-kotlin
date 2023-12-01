@@ -454,7 +454,7 @@ fun PrintStream.success(string: String) = this.println(ansi(string, SUCCESS))
 
 internal fun PrintStream.error(string: String) = this.println(ansi(string, ERROR))
 
-internal fun PrintStream.info(string: String) = this.println(ansi(string, INFO))
+fun PrintStream.info(string: String) = this.println(ansi(string, INFO))
 
 fun PrintStream.warn(string: String) = this.println(ansi(string, WARN))
 

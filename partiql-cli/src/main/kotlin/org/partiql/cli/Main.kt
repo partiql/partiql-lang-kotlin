@@ -15,14 +15,22 @@
 
 package org.partiql.cli
 
+import AstPrinter
 import com.amazon.ion.system.IonSystemBuilder
+import com.amazon.ionelement.api.field
+import com.amazon.ionelement.api.ionString
+import com.amazon.ionelement.api.ionStructOf
 import org.partiql.cli.pico.PartiQLCommand
+import org.partiql.cli.shell.info
 import org.partiql.lang.eval.EvaluationSession
-import org.partiql.lang.planner.transforms.AstToPlan
-import org.partiql.lang.syntax.PartiQLParserBuilder
+import org.partiql.parser.PartiQLParserBuilder
 import org.partiql.plan.debug.PlanPrinter
+import org.partiql.planner.PartiQLPlanner
+import org.partiql.planner.PartiQLPlannerBuilder
+import org.partiql.plugins.local.LocalPlugin
 import picocli.CommandLine
 import java.io.PrintStream
+import java.util.UUID
 import kotlin.system.exitProcess
 
 /**
@@ -43,16 +51,41 @@ fun main(args: Array<String>) {
  */
 object Debug {
 
+    private const val USER_ID = "DEBUG_USER_ID"
+
+    private val plugins = listOf(LocalPlugin())
+    private val catalogs = mapOf(
+        "local" to ionStructOf(
+            field("connector_name", ionString("local")),
+        )
+    )
+
+    private val planner = PartiQLPlannerBuilder().plugins(plugins).build()
+    private val parser = PartiQLParserBuilder.standard().build()
+
+    // !!
+    // IMPLEMENT DEBUG BEHAVIOR HERE
+    // !!
     @Suppress("UNUSED_PARAMETER")
     @Throws(Exception::class)
     fun action(input: String, session: EvaluationSession): String {
-        // IMPLEMENT DEBUG BEHAVIOR HERE
         val out = PrintStream(System.out)
-        val parser = PartiQLParserBuilder.standard().build()
-        val ast = parser.parseAstStatement(input)
-        val plan = AstToPlan.transform(ast)
-        // print plan as tree
-        PlanPrinter.append(out, plan)
+
+        // Parse
+        val statement = parser.parse(input).root
+        out.info("-- AST ----------")
+        AstPrinter.append(out, statement)
+
+        // Plan
+        val sess = PartiQLPlanner.Session(
+            queryId = UUID.randomUUID().toString(),
+            userId = "debug",
+            catalogConfig = catalogs,
+        )
+        val result = planner.plan(statement, sess).plan
+        out.info("-- Plan ----------")
+        PlanPrinter.append(out, result.statement)
+
         return "OK"
     }
 }

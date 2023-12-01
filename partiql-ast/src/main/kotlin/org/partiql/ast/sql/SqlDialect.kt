@@ -48,6 +48,23 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
 
     // IDENTIFIERS & PATHS
 
+    /**
+     * Default behavior is to wrap all SFW queries with parentheses.
+     *
+     * @param node
+     * @param head
+     */
+    public open fun visitExprWrapped(node: Expr, head: SqlBlock) = when (node) {
+        is Expr.SFW -> {
+            var h = head
+            h = h concat "("
+            h = visitExprSFW(node, h)
+            h = h concat ")"
+            h
+        }
+        else -> visitExpr(node, head)
+    }
+
     override fun visitIdentifierSymbol(node: Identifier.Symbol, head: SqlBlock) = head concat r(node.sql())
 
     override fun visitIdentifierQualified(node: Identifier.Qualified, head: SqlBlock): SqlBlock {
@@ -186,7 +203,7 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
         }
         var h = head
         h = h concat r(op)
-        return visitExpr(node.expr, h)
+        return visitExprWrapped(node.expr, h)
     }
 
     override fun visitExprBinary(node: Expr.Binary, head: SqlBlock): SqlBlock {
@@ -208,9 +225,9 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
             Expr.Binary.Op.BITWISE_AND -> "&"
         }
         var h = head
-        h = visitExpr(node.lhs, h)
+        h = visitExprWrapped(node.lhs, h)
         h = h concat r(" $op ")
-        h = visitExpr(node.rhs, h)
+        h = visitExprWrapped(node.rhs, h)
         return h
     }
 
@@ -228,7 +245,7 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
         head concat r(node.attribute.name)
 
     override fun visitExprPath(node: Expr.Path, head: SqlBlock): SqlBlock {
-        var h = visitExpr(node.root, head)
+        var h = visitExprWrapped(node.root, head)
         h = node.steps.fold(h) { b, step -> visitExprPathStep(step, b) }
         return h
     }
@@ -241,7 +258,7 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
         val key = node.key
         // use [ ] syntax
         h = h concat r("[")
-        h = visitExpr(key, h)
+        h = visitExprWrapped(key, h)
         h = h concat r("]")
         return h
     }
@@ -291,45 +308,45 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
 
     override fun visitExprStructField(node: Expr.Struct.Field, head: SqlBlock): SqlBlock {
         var h = head
-        h = visitExpr(node.name, h)
+        h = visitExprWrapped(node.name, h)
         h = h concat r(": ")
-        h = visitExpr(node.value, h)
+        h = visitExprWrapped(node.value, h)
         return h
     }
 
     override fun visitExprLike(node: Expr.Like, head: SqlBlock): SqlBlock {
         var h = head
-        h = visitExpr(node.value, h)
+        h = visitExprWrapped(node.value, h)
         h = h concat if (node.not == true) r(" NOT LIKE ") else r(" LIKE ")
-        h = visitExpr(node.pattern, h)
+        h = visitExprWrapped(node.pattern, h)
         if (node.escape != null) {
             h = h concat r(" ESCAPE ")
-            h = visitExpr(node.escape, h)
+            h = visitExprWrapped(node.escape!!, h)
         }
         return h
     }
 
     override fun visitExprBetween(node: Expr.Between, head: SqlBlock): SqlBlock {
         var h = head
-        h = visitExpr(node.value, h)
+        h = visitExprWrapped(node.value, h)
         h = h concat if (node.not == true) r(" NOT BETWEEN ") else r(" BETWEEN ")
-        h = visitExpr(node.from, h)
+        h = visitExprWrapped(node.from, h)
         h = h concat r(" AND ")
-        h = visitExpr(node.to, h)
+        h = visitExprWrapped(node.to, h)
         return h
     }
 
     override fun visitExprInCollection(node: Expr.InCollection, head: SqlBlock): SqlBlock {
         var h = head
-        h = visitExpr(node.lhs, h)
+        h = visitExprWrapped(node.lhs, h)
         h = h concat if (node.not == true) r(" NOT IN ") else r(" IN ")
-        h = visitExpr(node.rhs, h)
+        h = visitExprWrapped(node.rhs, h)
         return h
     }
 
     override fun visitExprIsType(node: Expr.IsType, head: SqlBlock): SqlBlock {
         var h = head
-        h = visitExpr(node.value, h)
+        h = visitExprWrapped(node.value, h)
         h = h concat if (node.not == true) r(" IS NOT ") else r(" IS ")
         h = visitType(node.type, h)
         return h
@@ -340,7 +357,7 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
         h = h concat r("CASE")
         h = when (node.expr) {
             null -> h
-            else -> visitExpr(node.expr, h concat r(" "))
+            else -> visitExprWrapped(node.expr!!, h concat r(" "))
         }
         // WHEN(s)
         h = node.branches.fold(h) { acc, branch -> visitExprCaseBranch(branch, acc) }
@@ -349,7 +366,7 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
             null -> h
             else -> {
                 h = h concat r(" ELSE ")
-                visitExpr(node.default, h)
+                visitExprWrapped(node.default!!, h)
             }
         }
         h = h concat r(" END")
@@ -359,9 +376,9 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
     override fun visitExprCaseBranch(node: Expr.Case.Branch, head: SqlBlock): SqlBlock {
         var h = head
         h = h concat r(" WHEN ")
-        h = visitExpr(node.condition, h)
+        h = visitExprWrapped(node.condition, h)
         h = h concat r(" THEN ")
-        h = visitExpr(node.expr, h)
+        h = visitExprWrapped(node.expr, h)
         return h
     }
 
@@ -383,14 +400,14 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
     override fun visitExprSubstring(node: Expr.Substring, head: SqlBlock): SqlBlock {
         var h = head
         h = h concat r("SUBSTRING(")
-        h = visitExpr(node.value, h)
+        h = visitExprWrapped(node.value, h)
         if (node.start != null) {
             h = h concat r(" FROM ")
-            h = visitExpr(node.start, h)
+            h = visitExprWrapped(node.start!!, h)
         }
         if (node.length != null) {
             h = h concat r(" FOR ")
-            h = visitExpr(node.length, h)
+            h = visitExprWrapped(node.length!!, h)
         }
         h = h concat r(")")
         return h
@@ -399,9 +416,9 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
     override fun visitExprPosition(node: Expr.Position, head: SqlBlock): SqlBlock {
         var h = head
         h = h concat r("POSITION(")
-        h = visitExpr(node.lhs, h)
+        h = visitExprWrapped(node.lhs, h)
         h = h concat r(" IN ")
-        h = visitExpr(node.rhs, h)
+        h = visitExprWrapped(node.rhs, h)
         h = h concat r(")")
         return h
     }
@@ -415,10 +432,10 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
         }
         // [<chars> FROM]
         if (node.chars != null) {
-            h = visitExpr(node.chars, h)
+            h = visitExprWrapped(node.chars!!, h)
             h = h concat r(" FROM ")
         }
-        h = visitExpr(node.value, h)
+        h = visitExprWrapped(node.value, h)
         h = h concat r(")")
         return h
     }
@@ -426,14 +443,14 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
     override fun visitExprOverlay(node: Expr.Overlay, head: SqlBlock): SqlBlock {
         var h = head
         h = h concat r("OVERLAY(")
-        h = visitExpr(node.value, h)
+        h = visitExprWrapped(node.value, h)
         h = h concat r(" PLACING ")
-        h = visitExpr(node.overlay, h)
+        h = visitExprWrapped(node.overlay, h)
         h = h concat r(" FROM ")
-        h = visitExpr(node.start, h)
+        h = visitExprWrapped(node.start, h)
         if (node.length != null) {
             h = h concat r(" FOR ")
-            h = visitExpr(node.length, h)
+            h = visitExprWrapped(node.length!!, h)
         }
         h = h concat r(")")
         return h
@@ -444,7 +461,7 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
         h = h concat r("EXTRACT(")
         h = h concat r(node.field.name)
         h = h concat r(" FROM ")
-        h = visitExpr(node.source, h)
+        h = visitExprWrapped(node.source, h)
         h = h concat r(")")
         return h
     }
@@ -452,7 +469,7 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
     override fun visitExprCast(node: Expr.Cast, head: SqlBlock): SqlBlock {
         var h = head
         h = h concat r("CAST(")
-        h = visitExpr(node.value, h)
+        h = visitExprWrapped(node.value, h)
         h = h concat r(" AS ")
         h = visitType(node.asType, h)
         h = h concat r(")")
@@ -462,7 +479,7 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
     override fun visitExprCanCast(node: Expr.CanCast, head: SqlBlock): SqlBlock {
         var h = head
         h = h concat r("CAN_CAST(")
-        h = visitExpr(node.value, h)
+        h = visitExprWrapped(node.value, h)
         h = h concat r(" AS ")
         h = visitType(node.asType, h)
         h = h concat r(")")
@@ -472,7 +489,7 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
     override fun visitExprCanLosslessCast(node: Expr.CanLosslessCast, head: SqlBlock): SqlBlock {
         var h = head
         h = h concat r("CAN_LOSSLESS_CAST(")
-        h = visitExpr(node.value, h)
+        h = visitExprWrapped(node.value, h)
         h = h concat r(" AS ")
         h = visitType(node.asType, h)
         h = h concat r(")")
@@ -484,9 +501,9 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
         h = h concat r("DATE_ADD(")
         h = h concat r(node.field.name)
         h = h concat r(", ")
-        h = visitExpr(node.lhs, h)
+        h = visitExprWrapped(node.lhs, h)
         h = h concat r(", ")
-        h = visitExpr(node.rhs, h)
+        h = visitExprWrapped(node.rhs, h)
         h = h concat r(")")
         return h
     }
@@ -496,9 +513,9 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
         h = h concat r("DATE_DIFF(")
         h = h concat r(node.field.name)
         h = h concat r(", ")
-        h = visitExpr(node.lhs, h)
+        h = visitExprWrapped(node.lhs, h)
         h = h concat r(", ")
-        h = visitExpr(node.rhs, h)
+        h = visitExprWrapped(node.rhs, h)
         h = h concat r(")")
         return h
     }
@@ -521,9 +538,9 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
             null -> {}
         }
         var h = head
-        h = visitExpr(node.lhs, h)
+        h = visitExprWrapped(node.lhs, h)
         h = h concat r(" ${op.joinToString(" ")} ")
-        h = visitExpr(node.rhs, h)
+        h = visitExprWrapped(node.rhs, h)
         return h
     }
 
@@ -538,19 +555,19 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
         // LET
         h = if (node.let != null) visitLet(node.let, h concat r(" ")) else h
         // WHERE
-        h = if (node.where != null) visitExpr(node.where, h concat r(" WHERE ")) else h
+        h = if (node.where != null) visitExprWrapped(node.where, h concat r(" WHERE ")) else h
         // GROUP BY
         h = if (node.groupBy != null) visitGroupBy(node.groupBy, h concat r(" ")) else h
         // HAVING
-        h = if (node.having != null) visitExpr(node.having, h concat r(" HAVING ")) else h
+        h = if (node.having != null) visitExprWrapped(node.having, h concat r(" HAVING ")) else h
         // SET OP
         h = if (node.setOp != null) visitExprSFWSetOp(node.setOp, h concat r(" ")) else h
         // ORDER BY
         h = if (node.orderBy != null) visitOrderBy(node.orderBy, h concat r(" ")) else h
         // LIMIT
-        h = if (node.limit != null) visitExpr(node.limit, h concat r(" LIMIT ")) else h
+        h = if (node.limit != null) visitExprWrapped(node.limit, h concat r(" LIMIT ")) else h
         // OFFSET
-        h = if (node.offset != null) visitExpr(node.offset, h concat r(" OFFSET ")) else h
+        h = if (node.offset != null) visitExprWrapped(node.offset, h concat r(" OFFSET ")) else h
         return h
     }
 
@@ -576,14 +593,14 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
 
     override fun visitSelectProjectItemAll(node: Select.Project.Item.All, head: SqlBlock): SqlBlock {
         var h = head
-        h = visitExpr(node.expr, h)
+        h = visitExprWrapped(node.expr, h)
         h = h concat r(".*")
         return h
     }
 
     override fun visitSelectProjectItemExpression(node: Select.Project.Item.Expression, head: SqlBlock): SqlBlock {
         var h = head
-        h = visitExpr(node.expr, h)
+        h = visitExprWrapped(node.expr, h)
         h = if (node.asAlias != null) h concat r(" AS ${node.asAlias.sql()}") else h
         return h
     }
@@ -591,9 +608,9 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
     override fun visitSelectPivot(node: Select.Pivot, head: SqlBlock): SqlBlock {
         var h = head
         h = h concat r("PIVOT ")
-        h = visitExpr(node.key, h)
+        h = visitExprWrapped(node.key, h)
         h = h concat r(" AT ")
-        h = visitExpr(node.value, h)
+        h = visitExprWrapped(node.value, h)
         return h
     }
 
@@ -605,7 +622,7 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
         }
         var h = head
         h = h concat r(select)
-        h = visitExpr(node.constructor, h)
+        h = visitExprWrapped(node.constructor, h)
         return h
     }
 
@@ -617,10 +634,10 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
             From.Value.Type.SCAN -> h
             From.Value.Type.UNPIVOT -> h concat r("UNPIVOT ")
         }
-        h = visitExpr(node.expr, h)
-        h = if (node.asAlias != null) h concat r(" AS ${node.asAlias.sql()}") else h
-        h = if (node.atAlias != null) h concat r(" AT ${node.atAlias.sql()}") else h
-        h = if (node.byAlias != null) h concat r(" BY ${node.byAlias.sql()}") else h
+        h = visitExprWrapped(node.expr, h)
+        h = if (node.asAlias != null) h concat r(" AS ${node.asAlias!!.sql()}") else h
+        h = if (node.atAlias != null) h concat r(" AT ${node.atAlias!!.sql()}") else h
+        h = if (node.byAlias != null) h concat r(" BY ${node.byAlias!!.sql()}") else h
         return h
     }
 
@@ -650,7 +667,7 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
 
     override fun visitLetBinding(node: Let.Binding, head: SqlBlock): SqlBlock {
         var h = head
-        h = visitExpr(node.expr, h)
+        h = visitExprWrapped(node.expr, h)
         h = h concat r(" AS ${node.asAlias.sql()}")
         return h
     }
@@ -670,8 +687,8 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
 
     override fun visitGroupByKey(node: GroupBy.Key, head: SqlBlock): SqlBlock {
         var h = head
-        h = visitExpr(node.expr, h)
-        h = if (node.asAlias != null) h concat r(" AS ${node.asAlias.sql()}") else h
+        h = visitExprWrapped(node.expr, h)
+        h = if (node.asAlias != null) h concat r(" AS ${node.asAlias!!.sql()}") else h
         return h
     }
 
@@ -702,7 +719,7 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
 
     override fun visitSort(node: Sort, head: SqlBlock): SqlBlock {
         var h = head
-        h = visitExpr(node.expr, h)
+        h = visitExprWrapped(node.expr, h)
         h = when (node.dir) {
             Sort.Dir.ASC -> h concat r(" ASC")
             Sort.Dir.DESC -> h concat r(" DESC")

@@ -1,0 +1,106 @@
+warehouse::{
+  type: "bag",
+  items: {
+    type: "struct",
+    fields: [
+      {
+        name: "w_warehouse_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "w_warehouse_id",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "w_warehouse_name",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "w_warehouse_sq_ft",
+        type: [
+          "int32",
+          "null"
+        ]
+      },
+      {
+        name: "w_street_number",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "w_street_name",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "w_street_type",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "w_suite_number",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "w_city",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "w_county",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "w_state",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "w_zip",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "w_country",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "w_gmt_offset",
+        type: [
+          "float64",
+          "null"
+        ]
+      }
+    ]
+  }
+}

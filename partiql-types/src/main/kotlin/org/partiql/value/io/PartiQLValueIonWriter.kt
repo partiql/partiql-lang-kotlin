@@ -10,7 +10,7 @@ import org.partiql.value.toIon
 import java.io.OutputStream
 
 @OptIn(PartiQLValueExperimental::class)
-internal class PartiQLValueIonWriter(
+public class PartiQLValueIonWriter internal constructor(
     private val ionWriter: IonWriter,
 ) : PartiQLValueWriter {
 

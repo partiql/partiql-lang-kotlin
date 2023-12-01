@@ -1,0 +1,22 @@
+{
+  type: "struct",
+  constraints: [ closed, ordered ],
+  fields: [
+    {
+      name: "e",
+      type: "int32",
+    },
+    {
+      name: "e",
+      type: {
+        type: "struct",
+        fields: [
+          {
+            name: "f",
+            type: "int32",
+          }
+        ]
+      }
+    }
+  ]
+}

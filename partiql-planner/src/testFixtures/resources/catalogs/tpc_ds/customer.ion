@@ -1,0 +1,134 @@
+customer::{
+  type: "bag",
+  items: {
+    type: "struct",
+    fields: [
+      {
+        name: "c_customer_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "c_customer_id",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "c_current_cdemo_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "c_current_hdemo_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "c_current_addr_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "c_first_shipto_date_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "c_first_sales_date_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "c_salutation",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "c_first_name",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "c_last_name",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "c_preferred_cust_flag",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "c_birth_day",
+        type: [
+          "int32",
+          "null"
+        ]
+      },
+      {
+        name: "c_birth_month",
+        type: [
+          "int32",
+          "null"
+        ]
+      },
+      {
+        name: "c_birth_year",
+        type: [
+          "int32",
+          "null"
+        ]
+      },
+      {
+        name: "c_birth_country",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "c_login",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "c_email_address",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "c_last_review_date_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      }
+    ]
+  }
+}

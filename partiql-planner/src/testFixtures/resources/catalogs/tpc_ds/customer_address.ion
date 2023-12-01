@@ -1,0 +1,99 @@
+customer_address::{
+  type: "bag",
+  items: {
+    type: "struct",
+    fields: [
+      {
+        name: "ca_address_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "ca_address_id",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "ca_street_number",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "ca_street_name",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "ca_street_type",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "ca_suite_number",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "ca_city",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "ca_county",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "ca_state",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "ca_zip",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "ca_country",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "ca_gmt_offset",
+        type: [
+          "float64",
+          "null"
+        ]
+      },
+      {
+        name: "ca_location_type",
+        type: [
+          "string",
+          "null"
+        ]
+      }
+    ]
+  }
+}

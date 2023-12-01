@@ -1,0 +1,43 @@
+household_demographics::{
+  type: "bag",
+  items: {
+    type: "struct",
+    fields: [
+      {
+        name: "hd_demo_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "hd_income_band_sk",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "hd_buy_potential",
+        type: [
+          "string",
+          "null"
+        ]
+      },
+      {
+        name: "hd_dep_count",
+        type: [
+          "int32",
+          "null"
+        ]
+      },
+      {
+        name: "hd_vehicle_count",
+        type: [
+          "int32",
+          "null"
+        ]
+      }
+    ]
+  }
+}

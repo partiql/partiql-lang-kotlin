@@ -55,6 +55,9 @@ class LocalConnector(
 
     private val metadata = Metadata(catalogRoot)
 
+    // not yet defined in SPI
+    public fun listObjects(): List<BindingPath> = metadata.listObjects()
+
     override fun getMetadata(session: ConnectorSession): ConnectorMetadata = metadata
 
     class Factory : Connector.Factory {
@@ -97,5 +100,7 @@ class LocalConnector(
                 value = value,
             )
         }
+
+        internal fun listObjects(): List<BindingPath> = catalog.listObjects()
     }
 }

@@ -1,6 +1,5 @@
 package org.partiql.plan.debug
 
-import org.partiql.plan.Common
 import org.partiql.plan.PlanNode
 import org.partiql.plan.Rel
 import org.partiql.plan.visitor.PlanBaseVisitor
@@ -67,7 +66,7 @@ object PlanPrinter {
             }
             out.append(EOL)
             // print child nodes
-            val children = node.children.filter { it !is Common }.sortedWith(relLast)
+            val children = node.children.sortedWith(relLast)
             children.forEachIndexed { i, child ->
                 val args = Args(out, levels + !last, last = i == children.size - 1)
                 child.accept(Visitor, args)
@@ -78,12 +77,32 @@ object PlanPrinter {
         private fun PlanNode.primitives(): List<Pair<String, Any?>> = javaClass.kotlin.memberProperties
             .filter {
                 val t = it.returnType.jvmErasure
-                val notChildren = it.name != "children"
+                val notChildrenOrId = it.name != "children" && it.name != "_id"
                 val notNode = !t.isSubclassOf(PlanNode::class)
                 // not currently correct
                 val notCollectionOfNodes = !(t.isSubclassOf(Collection::class))
-                notChildren && notNode && notCollectionOfNodes && it.visibility == KVisibility.PUBLIC
+                notChildrenOrId && notNode && notCollectionOfNodes && it.visibility == KVisibility.PUBLIC
             }
             .map { it.name to it.get(this) }
+
+        // override fun visitIdentifierSymbol(node: Identifier.Symbol, ctx: Args): Unit = with(ctx) {
+        //     out.append(lead)
+        //     val sql = when (node.caseSensitivity) {
+        //         Identifier.CaseSensitivity.SENSITIVE -> "\"${node.symbol}\""
+        //         Identifier.CaseSensitivity.INSENSITIVE -> node.symbol
+        //     }
+        //     out.append(sql)
+        //     out.append(EOL)
+        // }
+        //
+        // override fun visitIdentifierQualified(node: Identifier.Qualified, ctx: Args): Unit = with(ctx) {
+        //     out.append(lead)
+        //     val root = visitIdentifierSymbol(node.root, ctx)
+        //     val args = Args(out, levels + !last, last = false)
+        //     val steps = node.steps.map { visitIdentifierSymbol(it, args) }
+        //     val sql = (listOf(root) + steps).joinToString(".")
+        //     out.append(sql)
+        //     out.append(EOL)
+        // }
     }
 }
