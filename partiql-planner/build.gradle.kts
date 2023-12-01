@@ -20,6 +20,7 @@ plugins {
     id(Plugins.conventions)
     id(Plugins.library)
     id(Plugins.testFixtures)
+    id(Plugins.publish)
 }
 
 dependencies {
@@ -69,4 +70,10 @@ tasks.register("generateResourcePath") {
 tasks.processTestResources {
     dependsOn("generateResourcePath")
     from("src/testFixtures/resources")
+}
+
+publish {
+    artifactId = "partiql-planner"
+    name = "PartiQL Planner"
+    description = "PartiQL's Experimental Planner."
 }
