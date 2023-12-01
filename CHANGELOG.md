@@ -36,7 +36,7 @@ Thank you to all who have contributed!
 
 ### Changed
 - StaticTypeInferencer and PlanTyper will not raise an error when an expression is inferred to `NULL` or `unionOf(NULL, MISSING)`. In these cases the StaticTypeInferencer and PlanTyper will still raise the Problem Code `ExpressionAlwaysReturnsNullOrMissing` but the severity of the problem has been changed to warning. In the case an expression always returns `MISSING`, problem code `ExpressionAlwaysReturnsMissing` will be raised, which will have problem severity of error.
-- **Breaking** The default integer literal type is now 32-bit; if too bit, it overflows to 64-bit. 
+- **Breaking** The default integer literal type is now 32-bit; if the literal can not fit in a 32-bit integer, it overflows to 64-bit. 
 - **BREAKING** `PartiQLValueType` now distinguishes between Arbitrary Precision Decimal and Fixed Precision Decimal. 
 - **BREAKING** Function Signature Changes. Now Function signature has two subclasses, `Scalar` and `Aggregation`. 
 - **BREAKING** In the produced plan: 
