@@ -44,7 +44,6 @@ object Versions {
     const val kasechange = "1.3.0"
     const val ktlint = "11.6.0"
     const val pig = "0.6.2"
-    const val shadow = "7.1.2"
 
     // Testing
     const val assertj = "3.11.0"
@@ -114,6 +113,5 @@ object Plugins {
     const val jmh = "me.champeau.gradle.jmh"
     const val ktlint = "org.jlleitschuh.gradle.ktlint"
     const val library = "org.gradle.java-library"
-    const val shadow = "com.github.johnrengelman.shadow"
     const val testFixtures = "org.gradle.java-test-fixtures"
 }

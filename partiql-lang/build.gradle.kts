@@ -18,7 +18,6 @@ plugins {
     id(Plugins.jmh) version Versions.jmh
     id(Plugins.library)
     id(Plugins.publish)
-    id(Plugins.shadow) version Versions.shadow
 }
 
 // Disabled for partiql-lang project.
@@ -82,10 +81,4 @@ tasks.processResources {
 tasks.processTestResources {
     dependsOn(":partiql-planner:generateResourcePath")
     from("${project(":partiql-planner").buildDir}/resources/testFixtures")
-}
-
-tasks.shadowJar {
-    archiveBaseName.set("shadow")
-    exclude("**/*.kotlin_metadata")
-    archiveClassifier.set("")
 }
