@@ -38,6 +38,7 @@ Thank you to all who have contributed!
 ### Deprecated
 
 ### Fixed
+- Fixes the CLI hanging on invalid queries. See issue #1230.
 
 ### Removed
 - [Breaking] Removed IR factory in favor of static top-level functions. Change `Ast.foo()`
@@ -48,6 +49,7 @@ Thank you to all who have contributed!
 ### Contributors
 Thank you to all who have contributed!
 - @rchowell
+- @johnedquinn
 
 ## [0.13.2-alpha] - 2023-09-29
 

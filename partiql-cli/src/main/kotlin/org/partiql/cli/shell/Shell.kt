@@ -34,7 +34,6 @@ import org.partiql.cli.format.ExplainFormatter
 import org.partiql.cli.pipeline.AbstractPipeline
 import org.partiql.lang.SqlException
 import org.partiql.lang.eval.Bindings
-import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.PartiQLResult
@@ -104,8 +103,8 @@ private val EXIT_DELAY: Duration = Duration(3000)
  */
 
 val exiting = AtomicBoolean(false)
-val doneCompiling = AtomicBoolean(false)
-val donePrinting = AtomicBoolean(false)
+val doneCompiling = AtomicBoolean(true)
+val donePrinting = AtomicBoolean(true)
 
 internal class Shell(
     output: OutputStream,
@@ -120,9 +119,9 @@ internal class Shell(
     private val currentUser = System.getProperty("user.name")
 
     private val inputs: BlockingQueue<RunnablePipeline.Input> = ArrayBlockingQueue(1)
-    private val results: BlockingQueue<PartiQLResult> = ArrayBlockingQueue(1)
+    private val results: BlockingQueue<RunnablePipeline.Output> = ArrayBlockingQueue(1)
     private var pipelineService: ExecutorService = Executors.newFixedThreadPool(1)
-    private val values: BlockingQueue<ExprValue> = ArrayBlockingQueue(1)
+    private val values: BlockingQueue<RunnablePipeline.Output> = ArrayBlockingQueue(1)
     private var printingService: ExecutorService = Executors.newFixedThreadPool(1)
 
     fun start() {
@@ -232,9 +231,19 @@ internal class Shell(
                                 arg,
                                 locals,
                                 exiting
-                            ) as PartiQLResult.Value
-                            globals.add(result.value.bindings)
-                            result
+                            )
+                            when (result) {
+                                is RunnablePipeline.Output.Result -> {
+                                    when (result.result) {
+                                        is PartiQLResult.Value -> {
+                                            globals.add(result.result.value.bindings)
+                                            result
+                                        }
+                                        else -> RunnablePipeline.Output.Error(IllegalStateException("Need to pass VALUE to !add_to_global_env"))
+                                    }
+                                }
+                                is RunnablePipeline.Output.Error -> { result }
+                            }
                         }
                         continue
                     }
@@ -252,7 +261,9 @@ internal class Shell(
                         continue
                     }
                     "!global_env" -> {
-                        executeAndPrint { AbstractPipeline.convertExprValue(globals.asExprValue()) }
+                        executeAndPrint {
+                            RunnablePipeline.Output.Result(AbstractPipeline.convertExprValue(globals.asExprValue()))
+                        }
                         continue
                     }
                     "!clear" -> {
@@ -277,6 +288,7 @@ internal class Shell(
                     val locals = refreshBindings()
                     evaluatePartiQL(line, locals, exiting)
                 }
+                waitUntil(true, donePrinting)
             }
             out.println("Thanks for using PartiQL!")
         }
@@ -328,26 +340,19 @@ internal class Shell(
         textPartiQL: String,
         bindings: Bindings<ExprValue>,
         exiting: AtomicBoolean
-    ): PartiQLResult {
-        doneCompiling.set(false)
-        inputs.put(
-            RunnablePipeline.Input(
-                textPartiQL,
-                EvaluationSession.build {
-                    globals(bindings)
-                    user(currentUser)
-                }
+    ): RunnablePipeline.Output {
+        catchCancellation(doneCompiling, exiting, pipelineService) {
+            inputs.put(
+                RunnablePipeline.Input(
+                    textPartiQL,
+                    EvaluationSession.build {
+                        globals(bindings)
+                        user(currentUser)
+                    }
+                )
             )
-        )
-        return catchCancellation(
-            doneCompiling,
-            exiting,
-            pipelineService,
-            PartiQLResult.Value(value = ExprValue.newString("Compilation cancelled."))
-        ) {
-            pipelineService = Executors.newFixedThreadPool(1)
-            pipelineService.submit(RunnablePipeline(inputs, results, compiler, doneCompiling))
-        } ?: results.poll(5, TimeUnit.SECONDS)!!
+        }
+        return results.poll(5, TimeUnit.SECONDS)!!
     }
 
     private fun bringGraph(name: String, graphIonText: String) {
@@ -361,88 +366,31 @@ internal class Shell(
         }
     }
 
-    private fun executeAndPrint(func: () -> PartiQLResult) {
-        val result: PartiQLResult? = try {
-            func.invoke()
-        } catch (ex: SqlException) {
-            out.error(ex.generateMessage())
-            out.error(ex.message)
-            null // signals that there was an error
-        } catch (ex: NotImplementedError) {
-            out.error(ex.message ?: "kotlin.NotImplementedError was raised")
-            null // signals that there was an error
+    private fun executeAndPrint(func: () -> RunnablePipeline.Output) {
+        catchCancellation(donePrinting, exiting, printingService) {
+            values.put(func.invoke())
         }
-        printPartiQLResult(result)
-    }
-
-    private fun printPartiQLResult(result: PartiQLResult?) {
-        when (result) {
-            null -> {
-                out.error("ERROR!")
-            }
-            is PartiQLResult.Value -> {
-                try {
-                    donePrinting.set(false)
-                    values.put(result.value)
-                    catchCancellation(donePrinting, exiting, printingService, 1) {
-                        printingService = Executors.newFixedThreadPool(1)
-                        printingService.submit(
-                            RunnableWriter(
-                                out,
-                                ConfigurableExprValueFormatter.pretty,
-                                values,
-                                donePrinting
-                            )
-                        )
-                    }
-                } catch (ex: EvaluationException) { // should not need to do this here; see https://github.com/partiql/partiql-lang-kotlin/issues/1002
-                    out.error(ex.generateMessage())
-                    out.error(ex.message)
-                    return
-                }
-                out.success("OK!")
-            }
-            is PartiQLResult.Explain.Domain -> {
-                val explain = ExplainFormatter.format(result)
-                out.println(explain)
-                out.success("OK!")
-            }
-            is PartiQLResult.Insert,
-            is PartiQLResult.Replace,
-            is PartiQLResult.Delete -> {
-                out.warn("Insert/Replace/Delete are not yet supported")
-            }
-        }
-        out.flush()
     }
 
     /**
      * If nothing was caught and execution finished: return null
      * If something was caught: resets service and returns defaultReturn
      */
-    private fun <T> catchCancellation(
+    private fun catchCancellation(
         doneExecuting: AtomicBoolean,
         cancellationFlag: AtomicBoolean,
         service: ExecutorService,
-        defaultReturn: T,
-        resetService: () -> Unit
-    ): T? {
+        addToQueue: () -> Unit
+    ) {
+        doneExecuting.set(false)
+        addToQueue.invoke()
         while (!doneExecuting.get()) {
             if (exiting.get()) {
                 service.shutdown()
                 service.shutdownNow()
-                when (service.awaitTermination(2, TimeUnit.SECONDS)) {
-                    true -> {
-                        cancellationFlag.set(false)
-                        doneExecuting.set(false)
-                        resetService()
-                        return defaultReturn
-                    }
-                    false -> throw Exception("Printing service couldn't terminate")
-                }
+                cancellationFlag.set(false)
             }
         }
-        return null
     }
 
     private fun retrievePartiQLVersionAndHash(): String {
@@ -471,6 +419,12 @@ internal class Shell(
         }
     }
 
+    private fun waitUntil(until: Boolean, actual: AtomicBoolean) {
+        while (actual.get() != until) {
+            // Do nothing
+        }
+    }
+
     /**
      * A configuration class representing any configurations specified by the user
      * @param isMonochrome specifies the removal of syntax highlighting
@@ -496,13 +450,13 @@ private fun History.Entry.pretty(): String {
 
 private fun ansi(string: String, style: AttributedStyle) = AttributedString(string, style).toAnsi()
 
-private fun PrintStream.success(string: String) = this.println(ansi(string, SUCCESS))
+fun PrintStream.success(string: String) = this.println(ansi(string, SUCCESS))
 
-private fun PrintStream.error(string: String) = this.println(ansi(string, ERROR))
+internal fun PrintStream.error(string: String) = this.println(ansi(string, ERROR))
 
 internal fun PrintStream.info(string: String) = this.println(ansi(string, INFO))
 
-private fun PrintStream.warn(string: String) = this.println(ansi(string, WARN))
+fun PrintStream.warn(string: String) = this.println(ansi(string, WARN))
 
 private class ThreadInterrupter : Closeable {
     private val thread = Thread.currentThread()

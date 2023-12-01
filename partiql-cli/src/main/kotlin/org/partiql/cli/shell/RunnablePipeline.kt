@@ -27,20 +27,24 @@ import java.util.concurrent.atomic.AtomicBoolean
  */
 internal class RunnablePipeline(
     private val inputs: BlockingQueue<Input>,
-    private val results: BlockingQueue<PartiQLResult>,
+    private val results: BlockingQueue<Output>,
     val pipeline: AbstractPipeline,
     private val doneCompiling: AtomicBoolean
 ) : Runnable {
     /**
      * When the Thread running this [Runnable] is interrupted, the underlying [AbstractPipeline] should catch the
-     * interruption and fail with some exception. Then, this will break out of [run].
+     * interruption and fail with some exception. Then, we place the error (or result) in the output queue.
      */
     override fun run() {
         while (true) {
             val input = inputs.poll(3, TimeUnit.SECONDS)
             if (input != null) {
-                val result = pipeline.compile(input.input, input.session)
-                results.put(result)
+                try {
+                    val result = pipeline.compile(input.input, input.session)
+                    results.put(Output.Result(result))
+                } catch (t: Throwable) {
+                    results.put(Output.Error(t))
+                }
                 doneCompiling.set(true)
             }
         }
@@ -53,4 +57,9 @@ internal class RunnablePipeline(
         val input: String,
         val session: EvaluationSession
     )
+
+    internal sealed interface Output {
+        data class Result(val result: PartiQLResult) : Output
+        data class Error(val throwable: Throwable) : Output
+    }
 }
