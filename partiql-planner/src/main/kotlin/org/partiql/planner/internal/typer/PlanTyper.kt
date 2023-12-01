@@ -646,9 +646,15 @@ internal class PlanTyper(
             }
         }
 
+        /**
+         * In this context, Boolean means PartiQLValueType Bool, which can be nullable.
+         * Hence, we permit Static Type BOOL and Static Type Null here.
+         */
         private fun canBeBoolean(type: StaticType): Boolean {
             return type.flatten().allTypes.any {
-                it is BoolType
+                // TODO: This is a quick fix to unblock the typing or case expression.
+                //  We need to model the truth value better in typer.
+                it is BoolType || it is NullType
             }
         }
 
