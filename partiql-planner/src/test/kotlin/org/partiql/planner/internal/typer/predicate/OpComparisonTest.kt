@@ -3,10 +3,8 @@ package org.partiql.planner.internal.typer.predicate
 import org.junit.jupiter.api.DynamicContainer
 import org.junit.jupiter.api.TestFactory
 import org.partiql.planner.internal.typer.PartiQLTyperTestBase
-import org.partiql.planner.util.CastType
 import org.partiql.planner.util.allSupportedType
 import org.partiql.planner.util.cartesianProduct
-import org.partiql.planner.util.castTable
 import org.partiql.types.StaticType
 import java.util.stream.Stream
 
@@ -59,6 +57,12 @@ class OpComparisonTest : PartiQLTyperTestBase() {
                 cartesianProduct(
                     StaticType.NUMERIC.allTypes + listOf(StaticType.NULL),
                     StaticType.NUMERIC.allTypes + listOf(StaticType.NULL)
+                ) + cartesianProduct(
+                    StaticType.TEXT.allTypes + listOf(StaticType.CLOB, StaticType.NULL),
+                    StaticType.TEXT.allTypes + listOf(StaticType.CLOB, StaticType.NULL)
+                ) + cartesianProduct(
+                    listOf(StaticType.BOOL, StaticType.NULL),
+                    listOf(StaticType.BOOL, StaticType.NULL)
                 )
             val failureArgs = cartesianProduct(
                 allSupportedType,
@@ -68,23 +72,9 @@ class OpComparisonTest : PartiQLTyperTestBase() {
             }.toSet()
 
             successArgs.forEach { args: List<StaticType> ->
-                val arg0 = args.first()
-                val arg1 = args[1]
-                if (args.contains(StaticType.MISSING)) {
-                    (this[TestResult.Success(StaticType.MISSING)] ?: setOf(args)).let {
-                        put(TestResult.Success(StaticType.MISSING), it + setOf(args))
-                    }
-                } else if (args.contains(StaticType.NULL)) {
+                if (args.contains(StaticType.NULL)) {
                     (this[TestResult.Success(StaticType.NULL)] ?: setOf(args)).let {
                         put(TestResult.Success(StaticType.NULL), it + setOf(args))
-                    }
-                } else if (arg0 == arg1) {
-                    (this[TestResult.Success(StaticType.BOOL)] ?: setOf(args)).let {
-                        put(TestResult.Success(StaticType.BOOL), it + setOf(args))
-                    }
-                } else if (castTable(arg1, arg0) == CastType.COERCION) {
-                    (this[TestResult.Success(StaticType.BOOL)] ?: setOf(args)).let {
-                        put(TestResult.Success(StaticType.BOOL), it + setOf(args))
                     }
                 } else {
                     (this[TestResult.Success(StaticType.BOOL)] ?: setOf(args)).let {
