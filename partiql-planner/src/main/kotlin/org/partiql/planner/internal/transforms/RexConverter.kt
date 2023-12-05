@@ -51,6 +51,7 @@ import org.partiql.value.StringValue
 import org.partiql.value.boolValue
 import org.partiql.value.int32Value
 import org.partiql.value.int64Value
+import org.partiql.value.io.PartiQLValueIonReaderBuilder
 import org.partiql.value.nullValue
 
 /**
@@ -74,6 +75,17 @@ internal object RexConverter {
             }
             val op = rexOpLit(node.value)
             return rex(type, op)
+        }
+
+        override fun visitExprIon(node: Expr.Ion, ctx: Env): Rex {
+            val value =
+                PartiQLValueIonReaderBuilder
+                    .standard().build(node.value).read()
+            val type = when (value.isNull) {
+                true -> value.type.toStaticType()
+                else -> value.type.toNonNullStaticType()
+            }
+            return rex(type, rexOpLit(value))
         }
 
         /**
