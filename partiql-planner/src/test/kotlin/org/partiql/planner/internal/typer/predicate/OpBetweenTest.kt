@@ -28,6 +28,18 @@ class OpBetweenTest : PartiQLTyperTestBase() {
                     StaticType.TEXT.allTypes + listOf(StaticType.CLOB, StaticType.NULL),
                     StaticType.TEXT.allTypes + listOf(StaticType.CLOB, StaticType.NULL),
                     StaticType.TEXT.allTypes + listOf(StaticType.CLOB, StaticType.NULL)
+                ) + cartesianProduct(
+                    listOf(StaticType.DATE, StaticType.NULL),
+                    listOf(StaticType.DATE, StaticType.NULL),
+                    listOf(StaticType.DATE, StaticType.NULL)
+                ) + cartesianProduct(
+                    listOf(StaticType.TIME, StaticType.NULL),
+                    listOf(StaticType.TIME, StaticType.NULL),
+                    listOf(StaticType.TIME, StaticType.NULL)
+                ) + cartesianProduct(
+                    listOf(StaticType.TIMESTAMP, StaticType.NULL),
+                    listOf(StaticType.TIMESTAMP, StaticType.NULL),
+                    listOf(StaticType.TIMESTAMP, StaticType.NULL)
                 )
 
             val failureArgs = cartesianProduct(

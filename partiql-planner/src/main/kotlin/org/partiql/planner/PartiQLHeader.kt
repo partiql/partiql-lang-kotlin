@@ -254,19 +254,19 @@ public object PartiQLHeader : Header() {
         ),
     )
 
-    private fun lt(): List<FunctionSignature.Scalar> = (types.numeric + types.text + BOOL).map { t ->
+    private fun lt(): List<FunctionSignature.Scalar> = (types.numeric + types.text + types.datetime + BOOL).map { t ->
         binary("lt", BOOL, t, t)
     }
 
-    private fun lte(): List<FunctionSignature.Scalar> = (types.numeric + types.text + BOOL).map { t ->
+    private fun lte(): List<FunctionSignature.Scalar> = (types.numeric + types.text + types.datetime + BOOL).map { t ->
         binary("lte", BOOL, t, t)
     }
 
-    private fun gt(): List<FunctionSignature.Scalar> = (types.numeric + types.text + BOOL).map { t ->
+    private fun gt(): List<FunctionSignature.Scalar> = (types.numeric + types.text + types.datetime + BOOL).map { t ->
         binary("gt", BOOL, t, t)
     }
 
-    private fun gte(): List<FunctionSignature.Scalar> = (types.numeric + types.text + BOOL).map { t ->
+    private fun gte(): List<FunctionSignature.Scalar> = (types.numeric + types.text + types.datetime + BOOL).map { t ->
         binary("gte", BOOL, t, t)
     }
 
@@ -347,7 +347,7 @@ public object PartiQLHeader : Header() {
         )
     }
 
-    private fun between(): List<FunctionSignature.Scalar> = (types.numeric + types.text).map { t ->
+    private fun between(): List<FunctionSignature.Scalar> = (types.numeric + types.text + types.datetime).map { t ->
         FunctionSignature.Scalar(
             name = "between",
             returns = BOOL,
