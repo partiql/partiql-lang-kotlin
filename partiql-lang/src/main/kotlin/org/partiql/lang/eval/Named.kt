@@ -34,5 +34,7 @@ interface Named {
  * An [ExprValue] that also implements [Named].
  */
 internal class NamedExprValue(override val name: ExprValue, val value: ExprValue) : ExprValue by value, Named {
-    override fun <T : Any?> asFacet(type: Class<T>?): T? = downcast(type) ?: this.asFacet(type)
+    override fun <T : Any?> asFacet(type: Class<T>?): T? = downcast(type) ?: value.asFacet(type)
+
+    override fun toString(): String = stringify()
 }
