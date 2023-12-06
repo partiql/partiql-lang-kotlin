@@ -33,6 +33,9 @@ Thank you to all who have contributed!
 - Adds public `tag` field to IR nodes for associating metadata
 - Adds AST Normalization Pass. 
 - Adds PartiQLPlanner Interface, which is responsible for translate an AST to a Plan. 
+- **EXPERIMENTAL** Evaluation of `EXCLUDE` in the `EvaluatingCompiler`
+  - This is currently marked as experimental until the RFC is approved https://github.com/partiql/partiql-lang/issues/27
+  - This will be added to the `PhysicalPlanCompiler` in an upcoming release
 
 ### Changed
 - StaticTypeInferencer and PlanTyper will not raise an error when an expression is inferred to `NULL` or `unionOf(NULL, MISSING)`. In these cases the StaticTypeInferencer and PlanTyper will still raise the Problem Code `ExpressionAlwaysReturnsNullOrMissing` but the severity of the problem has been changed to warning. In the case an expression always returns `MISSING`, problem code `ExpressionAlwaysReturnsMissing` will be raised, which will have problem severity of error.

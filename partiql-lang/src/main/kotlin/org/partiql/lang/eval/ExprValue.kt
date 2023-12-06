@@ -161,19 +161,19 @@ interface ExprValue : Iterable<ExprValue>, Faceted {
             override fun bytesValue() = value
         }
 
-        private class ListExprValue(val values: Sequence<ExprValue>) : BaseExprValue() {
+        internal class ListExprValue(val values: Sequence<ExprValue>) : BaseExprValue() {
             override val type = ExprValueType.LIST
             override val ordinalBindings by lazy { OrdinalBindings.ofList(toList()) }
             override fun iterator() = values.mapIndexed { i, v -> v.namedValue(newInt(i)) }.iterator()
         }
 
-        private class BagExprValue(val values: Sequence<ExprValue>) : BaseExprValue() {
+        internal class BagExprValue(val values: Sequence<ExprValue>) : BaseExprValue() {
             override val type = ExprValueType.BAG
             override val ordinalBindings = OrdinalBindings.EMPTY
             override fun iterator() = values.iterator()
         }
 
-        private class SexpExprValue(val values: Sequence<ExprValue>) : BaseExprValue() {
+        internal class SexpExprValue(val values: Sequence<ExprValue>) : BaseExprValue() {
             override val type = ExprValueType.SEXP
             override val ordinalBindings by lazy { OrdinalBindings.ofList(toList()) }
             override fun iterator() = values.mapIndexed { i, v -> v.namedValue(newInt(i)) }.iterator()

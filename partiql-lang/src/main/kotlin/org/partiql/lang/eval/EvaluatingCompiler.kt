@@ -20,6 +20,7 @@ import com.amazon.ion.IonValue
 import com.amazon.ion.Timestamp
 import com.amazon.ion.system.IonSystemBuilder
 import com.amazon.ionelement.api.MetaContainer
+import com.amazon.ionelement.api.emptyMetaContainer
 import com.amazon.ionelement.api.ionBool
 import com.amazon.ionelement.api.toIonValue
 import org.partiql.errors.ErrorCode
@@ -1829,6 +1830,8 @@ internal open class EvaluatingCompiler(
             val limitThunk = selectExpr.limit?.let { compileAstExpr(it) }
             val limitLocationMeta = selectExpr.limit?.metas?.sourceLocation
 
+            val excludeExprs = selectExpr.excludeClause?.let { compileExcludeClause(it) }
+
             fun <T> rowsWithOffsetAndLimit(rows: Sequence<T>, env: Environment): Sequence<T> {
                 val rowsWithOffset = when (offsetThunk) {
                     null -> rows
@@ -1863,7 +1866,16 @@ internal open class EvaluatingCompiler(
                                 else -> evalOrderBy(sourcedRows, orderByThunk, orderByLocationMeta)
                             }
 
-                            val projectedRows = orderedRows.map { (joinedValues, projectEnv) ->
+                            val excludedBindings = when (excludeExprs) {
+                                null -> orderedRows
+                                else -> {
+                                    orderedRows.map { row ->
+                                        FromProduction(values = row.values, env = evalExclude(row.env, excludeExprs))
+                                    }
+                                }
+                            }
+
+                            val projectedRows = excludedBindings.map { (joinedValues, projectEnv) ->
                                 selectProjectionThunk(projectEnv, joinedValues)
                             }
 
@@ -1929,8 +1941,17 @@ internal open class EvaluatingCompiler(
                                         else -> evalOrderBy(sourceThunks(env), orderByThunk, orderByLocationMeta)
                                     }
 
+                                    val excludedBindings = when (excludeExprs) {
+                                        null -> orderedRows
+                                        else -> {
+                                            orderedRows.map { row ->
+                                                FromProduction(values = row.values, env = evalExclude(row.env, excludeExprs))
+                                            }
+                                        }
+                                    }
+
                                     val fromProductions: Sequence<FromProduction> =
-                                        rowsWithOffsetAndLimit(orderedRows, env)
+                                        rowsWithOffsetAndLimit(excludedBindings, env)
                                     val registers = createRegisterBank()
 
                                     // note: the group key can be anything here because we only ever have a single
@@ -1976,9 +1997,6 @@ internal open class EvaluatingCompiler(
                                 }
 
                                 val havingThunk = selectExpr.having?.let { compileHaving(it) }
-
-                                val filterHavingAndProject: (Environment, Group) -> ExprValue? =
-                                    createFilterHavingAndProjectClosure(havingThunk, selectProjectionThunk)
 
                                 val getGroupEnv: (Environment, Group) -> Environment =
                                     createGetGroupEnvClosure(groupAsName)
@@ -2026,10 +2044,30 @@ internal open class EvaluatingCompiler(
                                         else -> evalOrderBy(groupByEnvValuePairs, orderByThunk, orderByLocationMeta)
                                     }
 
+                                    // apply HAVING row filter
+                                    val havingGroupEnvPairs = when (havingThunk) {
+                                        null -> orderedGroupEnvPairs
+                                        else -> {
+                                            orderedGroupEnvPairs.filter { (groupByEnv, _) ->
+                                                val havingClauseResult = havingThunk(groupByEnv)
+                                                havingClauseResult.isNotUnknown() && havingClauseResult.booleanValue()
+                                            }
+                                        }
+                                    }
+
+                                    // apply EXCLUDE expressions
+                                    val excludedBindings = when (excludeExprs) {
+                                        null -> havingGroupEnvPairs
+                                        else -> {
+                                            havingGroupEnvPairs.map { (groupByEnv, currentGroup) ->
+                                                Pair(evalExclude(groupByEnv, excludeExprs), currentGroup)
+                                            }
+                                        }
+                                    }
                                     // generate the final group by projection
-                                    val projectedRows = orderedGroupEnvPairs.mapNotNull { (groupByEnv, groupValue) ->
-                                        filterHavingAndProject(groupByEnv, groupValue)
-                                    }.asSequence().let { rowsWithOffsetAndLimit(it, env) }
+                                    val projectedRows = excludedBindings.map { (groupByEnv, currentGroup) ->
+                                        selectProjectionThunk(groupByEnv, listOf(currentGroup.key))
+                                    }.let { rowsWithOffsetAndLimit(it, env) }
 
                                     // if order by is specified, return list otherwise bag
                                     when (orderByThunk) {
@@ -2067,7 +2105,15 @@ internal open class EvaluatingCompiler(
                         val asThunk = compileAstExpr(asExpr)
                         val atThunk = compileAstExpr(atExpr)
                         thunkFactory.thunkEnv(metas) { env ->
-                            val sourceValue = rowsWithOffsetAndLimit(sourceThunks(env).asSequence(), env)
+                            val excludedBindings = when (excludeExprs) {
+                                null -> sourceThunks(env)
+                                else -> {
+                                    sourceThunks(env).map { row ->
+                                        FromProduction(values = row.values, env = evalExclude(row.env, excludeExprs))
+                                    }
+                                }
+                            }
+                            val sourceValue = rowsWithOffsetAndLimit(excludedBindings, env)
                             val seq = sourceValue
                                 .map { (_, env) -> Pair(asThunk(env), atThunk(env)) }
                                 .filter { (name, _) -> name.type.isText }
@@ -2160,6 +2206,174 @@ internal open class EvaluatingCompiler(
         }
 
     /**
+     * Represents all the compiled `EXCLUDE` paths that start with the same [CompiledExcludeExpr.root]. Notably,
+     * redundant paths (i.e. exclude paths that exclude values already excluded by other paths) will be removed.
+     */
+    internal data class CompiledExcludeExpr(val root: PartiqlAst.Identifier, val exclusions: RemoveAndOtherSteps)
+
+    /**
+     * Represents all the exclusions at the current level and other nested levels.
+     *
+     * The idea behind this data structure is that at a current level (i.e. path step index), we keep track of the
+     * - Exclude paths that have a final exclude step at the current level. This set of tuple attributes and collection
+     * indexes to remove at the current level is modeled as a set of exclude steps (i.e. [RemoveAndOtherSteps.remove]).
+     * - Exclude paths that have additional steps (their final step is at a deeper level). This is modeled as a mapping
+     * of exclude steps to other [RemoveAndOtherSteps] to group all exclude paths that share the same current step.
+     *
+     * For example, let's say we have exclude paths (ignoring the exclude path root) of
+     *       a.b,
+     *       x.y.z1,
+     *       x.y.z2
+     *       ^ ^ ^
+     * Level 1 2 3
+     *
+     * These exclude paths would be converted to the following in [RemoveAndOtherSteps].
+     * ```
+     * // For demonstration purposes, the syntax '<string>' corresponds to the exclude tuple attribute step of <string>
+     * RemoveAndOtherSteps(                   // Level 1 (no exclusions at level 1)
+     *     remove = emptySet(),
+     *     steps = mapOf(
+     *         'a' to RemoveAndOtherSteps(    // Level 2 for paths that have `'a'` in Level 1
+     *             remove = setOf('b'),       // path `a.b` has final step at level 2
+     *             steps = emptyMap()
+     *         ),
+     *         'x' to RemoveAndOtherSteps(    // Level 2 for paths that have `'x'` in Level 1
+     *             remove = emptySet(),
+     *             steps = mapOf(
+     *                 'y' to RemoveAndOtherSteps(     // Level 3 for paths that have `'y'` in Level 2 and `'x'` in Level 1
+     *                     remove = setOf('z1', 'z2'), // paths `x.y.z1` and `x.y.z2` have final step at level 3
+     *                     steps = emptyMap()
+     *                 )
+     *             )
+     *         ),
+     *     )
+     * )
+     * ```
+     */
+    internal data class RemoveAndOtherSteps(val remove: Set<PartiqlAst.ExcludeStep>, val steps: Map<PartiqlAst.ExcludeStep, RemoveAndOtherSteps>) {
+        companion object {
+            fun empty(): RemoveAndOtherSteps {
+                return RemoveAndOtherSteps(emptySet(), emptyMap())
+            }
+        }
+    }
+
+    private fun addToCompiledExcludeExprs(curCompiledExpr: RemoveAndOtherSteps, steps: List<PartiqlAst.ExcludeStep>): RemoveAndOtherSteps {
+        // subsumption cases
+        // when steps.size == 1: possibly add to remove set
+        // when steps.size > 1: possibly add to steps map
+        val first = steps.first()
+        var entryRemove = curCompiledExpr.remove.toMutableSet()
+        var entrySteps = curCompiledExpr.steps.toMutableMap()
+        if (steps.size == 1) {
+            when (first) {
+                is PartiqlAst.ExcludeStep.ExcludeTupleAttr -> {
+                    if (entryRemove.contains(PartiqlAst.build { excludeTupleWildcard() })) {
+                        // contains wildcard; do not add; e.g. a.* and a.b -> keep a.*
+                    } else {
+                        // add to entries to remove
+                        entryRemove.add(first)
+                        // remove from other steps; e.g. a.b.c and a.b -> keep a.b
+                        entrySteps.remove(first)
+                    }
+                }
+                is PartiqlAst.ExcludeStep.ExcludeTupleWildcard -> {
+                    entryRemove.add(first)
+                    // remove all tuple attribute exclude steps
+                    entryRemove = entryRemove.filterNot {
+                        it is PartiqlAst.ExcludeStep.ExcludeTupleAttr
+                    }.toMutableSet()
+                    // remove all tuple attribute/wildcard exclude steps from deeper levels
+                    entrySteps = entrySteps.filterNot {
+                        it.key is PartiqlAst.ExcludeStep.ExcludeTupleAttr || it.key is PartiqlAst.ExcludeStep.ExcludeTupleWildcard
+                    }.toMutableMap()
+                }
+                is PartiqlAst.ExcludeStep.ExcludeCollectionIndex -> {
+                    if (entryRemove.contains(PartiqlAst.build { excludeCollectionWildcard() })) {
+                        // contains wildcard; do not add; e.g a[*] and a[1] -> keep a[*]
+                    } else {
+                        // add to entries to remove
+                        entryRemove.add(first)
+                        // remove from other steps; e.g. a.b[2].c and a.b[2] -> keep a.b[2]
+                        entrySteps.remove(first)
+                    }
+                }
+                is PartiqlAst.ExcludeStep.ExcludeCollectionWildcard -> {
+                    entryRemove.add(first)
+                    // remove all collection index exclude steps
+                    entryRemove = entryRemove.filterNot {
+                        it is PartiqlAst.ExcludeStep.ExcludeCollectionIndex
+                    }.toMutableSet()
+                    // remove all collection index/wildcard exclude steps from deeper levels
+                    entrySteps = entrySteps.filterNot {
+                        it.key is PartiqlAst.ExcludeStep.ExcludeCollectionIndex || it.key is PartiqlAst.ExcludeStep.ExcludeCollectionWildcard
+                    }.toMutableMap()
+                }
+            }
+        } else {
+            // remove at deeper level; need to check if first step is already removed in current step
+            when (first) {
+                is PartiqlAst.ExcludeStep.ExcludeTupleAttr -> {
+                    if (entryRemove.contains(PartiqlAst.build { excludeTupleWildcard() }) || entryRemove.contains(first)) {
+                        // remove set contains tuple wildcard or attr; do not add to other steps;
+                        // e.g. a.* and a.b.c -> a.*
+                    } else {
+                        val existingEntry = entrySteps.getOrDefault(first, RemoveAndOtherSteps.empty())
+                        val newEntry = addToCompiledExcludeExprs(existingEntry, steps.drop(1))
+                        entrySteps[first] = newEntry
+                    }
+                }
+                is PartiqlAst.ExcludeStep.ExcludeTupleWildcard -> {
+                    if (entryRemove.any { it is PartiqlAst.ExcludeStep.ExcludeTupleWildcard }) {
+                        // tuple wildcard at current level; do nothing
+                    } else {
+                        val existingEntry = entrySteps.getOrDefault(first, RemoveAndOtherSteps.empty())
+                        val newEntry = addToCompiledExcludeExprs(existingEntry, steps.drop(1))
+                        entrySteps[first] = newEntry
+                    }
+                }
+                is PartiqlAst.ExcludeStep.ExcludeCollectionIndex -> {
+                    if (entryRemove.contains(PartiqlAst.build { excludeCollectionWildcard() }) || entryRemove.contains(first)) {
+                        // remove set contains collection wildcard or index; do not add to other steps;
+                        // e.g. a[*] and a[*][1] -> a[*]
+                    } else {
+                        val existingEntry = entrySteps.getOrDefault(first, RemoveAndOtherSteps.empty())
+                        val newEntry = addToCompiledExcludeExprs(existingEntry, steps.drop(1))
+                        entrySteps[first] = newEntry
+                    }
+                }
+                is PartiqlAst.ExcludeStep.ExcludeCollectionWildcard -> {
+                    if (entryRemove.any { it is PartiqlAst.ExcludeStep.ExcludeCollectionWildcard }) {
+                        // collection wildcard at current level; do nothing
+                    } else {
+                        val existingEntry = entrySteps.getOrDefault(first, RemoveAndOtherSteps.empty())
+                        val newEntry = addToCompiledExcludeExprs(existingEntry, steps.drop(1))
+                        entrySteps[first] = newEntry
+                    }
+                }
+            }
+        }
+        return RemoveAndOtherSteps(entryRemove, entrySteps)
+    }
+
+    /**
+     * Creates a list of compiled exclude expressions with each index of the resulting list corresponding to a different
+     * exclude path root.
+     */
+    internal fun compileExcludeClause(excludeClause: PartiqlAst.ExcludeOp): List<CompiledExcludeExpr> {
+        val excludeExprs = excludeClause.exprs
+        val compiledExcludeExprs = excludeExprs
+            .groupBy { it.root }
+            .map { (root, exclusions) ->
+                val compiledExclusions = exclusions.fold(RemoveAndOtherSteps.empty()) { acc, exclusion ->
+                    addToCompiledExcludeExprs(acc, exclusion.steps)
+                }
+                CompiledExcludeExpr(root, compiledExclusions)
+            }
+        return compiledExcludeExprs
+    }
+
+    /**
      * Create a thunk that uses the compiled GROUP BY expressions to create the group key.
      */
     private fun compileGroupKeyThunk(compiledGroupByItems: List<CompiledGroupByItem>, selectMetas: MetaContainer) =
@@ -2195,6 +2409,167 @@ internal open class EvaluatingCompiler(
 
             CompiledOrderByItem(comparator, compileAstExpr(it.expr))
         }
+
+    /**
+     * Returns an [ExprValue] created from a sequence of [seq]. Requires [type] to be a sequence type
+     * (i.e. [ExprValueType.isSequence] == true).
+     */
+    private fun newSequence(type: ExprValueType, seq: Sequence<ExprValue>): ExprValue {
+        return when (type) {
+            ExprValueType.LIST -> ExprValue.newList(seq)
+            ExprValueType.BAG -> ExprValue.newBag(seq)
+            ExprValueType.SEXP -> ExprValue.newSexp(seq)
+            else -> error("Sequence type required")
+        }
+    }
+
+    private fun excludeStructExprValue(
+        structExprValue: StructExprValue,
+        exclusions: RemoveAndOtherSteps
+    ): ExprValue {
+        val toRemove = exclusions.remove
+        val otherSteps = exclusions.steps
+        if (toRemove.any { it is PartiqlAst.ExcludeStep.ExcludeTupleWildcard }) {
+            // tuple wildcard at current level. return empty struct
+            return StructExprValue(sequence = emptySequence(), ordering = structExprValue.ordering)
+        }
+        val attrsToRemove = toRemove.filterIsInstance<PartiqlAst.ExcludeStep.ExcludeTupleAttr>()
+            .map { it.attr.name.text }
+            .toSet()
+        val sequenceWithRemoved = structExprValue.mapNotNull { structField ->
+            if (attrsToRemove.contains(structField.name?.stringValue())) {
+                null
+            } else {
+                structField as NamedExprValue
+            }
+        }
+        val finalSequence = sequenceWithRemoved.map { structField ->
+            var expr = structField.value
+            val name = structField.name
+            // apply case-sensitive tuple attr exclusions
+            val structFieldCaseSensitiveKey = PartiqlAst.build {
+                excludeTupleAttr(
+                    identifier(
+                        name.stringValue(),
+                        caseSensitive()
+                    )
+                )
+            }
+            otherSteps[structFieldCaseSensitiveKey]?.let {
+                expr = excludeExprValue(expr, it)
+            }
+            // apply case-insensitive tuple attr exclusions
+            val structFieldCaseInsensitiveKey = PartiqlAst.build {
+                excludeTupleAttr(
+                    identifier(
+                        name.stringValue(),
+                        caseInsensitive()
+                    )
+                )
+            }
+            otherSteps[structFieldCaseInsensitiveKey]?.let {
+                expr = excludeExprValue(expr, it)
+            }
+            // apply tuple wildcard exclusions
+            val tupleWildcardKey = PartiqlAst.build { excludeTupleWildcard(emptyMetaContainer()) }
+            otherSteps[tupleWildcardKey]?.let {
+                expr = excludeExprValue(expr, it)
+            }
+            expr.namedValue(name)
+        }
+        return ExprValue.newStruct(values = finalSequence, ordering = structExprValue.ordering)
+    }
+
+    private fun excludeCollectionExprValue(
+        initialExprValue: ExprValue,
+        exprValueType: ExprValueType,
+        exclusions: RemoveAndOtherSteps
+    ): ExprValue {
+        val toRemove = exclusions.remove
+        val otherSteps = exclusions.steps
+        if (toRemove.any { it is PartiqlAst.ExcludeStep.ExcludeCollectionWildcard }) {
+            // collection wildcard at current level. return empty collection
+            return newSequence(exprValueType, emptySequence())
+        } else {
+            val indexesToRemove = toRemove.filterIsInstance<PartiqlAst.ExcludeStep.ExcludeCollectionIndex>()
+                .map { it.index.value }
+                .toSet()
+            val sequenceWithRemoved = initialExprValue.mapNotNull { element ->
+                if (indexesToRemove.contains(element.name?.longValue())) {
+                    null
+                } else {
+                    element
+                }
+            }.asSequence()
+            val finalSequence = sequenceWithRemoved.map { element ->
+                var expr = element
+                if (initialExprValue is ExprValue.Companion.ListExprValue || initialExprValue is ExprValue.Companion.SexpExprValue) {
+                    element as NamedExprValue
+                    val index = element.name.longValue()
+                    // apply collection index exclusions for lists and sexps
+                    val elementKey = PartiqlAst.build {
+                        excludeCollectionIndex(
+                            index
+                        )
+                    }
+                    otherSteps[elementKey]?.let {
+                        expr = excludeExprValue(element.value, it)
+                    }
+                }
+                // apply collection wildcard exclusions for lists, bags, and sexps
+                val collectionWildcardKey = PartiqlAst.build { excludeCollectionWildcard(emptyMetaContainer()) }
+                otherSteps[collectionWildcardKey]?.let {
+                    expr = excludeExprValue(expr, it)
+                }
+                expr
+            }
+            return newSequence(exprValueType, finalSequence)
+        }
+    }
+
+    private fun excludeExprValue(initialExprValue: ExprValue, exclusions: RemoveAndOtherSteps): ExprValue {
+        return when (initialExprValue) {
+            is NamedExprValue -> excludeExprValue(initialExprValue.value, exclusions)
+            is StructExprValue -> excludeStructExprValue(initialExprValue, exclusions)
+            is ExprValue.Companion.ListExprValue -> excludeCollectionExprValue(initialExprValue, ExprValueType.LIST, exclusions)
+            is ExprValue.Companion.BagExprValue -> excludeCollectionExprValue(initialExprValue, ExprValueType.BAG, exclusions)
+            is ExprValue.Companion.SexpExprValue -> excludeCollectionExprValue(initialExprValue, ExprValueType.SEXP, exclusions)
+            else -> {
+                initialExprValue
+            }
+        }
+    }
+
+    private fun excludeBindings(
+        initialBindings: Bindings<ExprValue>,
+        root: PartiqlAst.Identifier,
+        exclusions: RemoveAndOtherSteps
+    ): Bindings<ExprValue> {
+        val bindingNameString = root.name.text
+        val bindingName = BindingName(bindingNameString, root.case.toBindingCase())
+        val bindingAtAttr = initialBindings[bindingName]
+        return if (bindingAtAttr != null) {
+            val newBindings = Bindings.buildLazyBindings<ExprValue> {
+                val newExprValue = excludeExprValue(bindingAtAttr, exclusions)
+                addBinding(bindingNameString) {
+                    newExprValue
+                }
+            }
+            newBindings.delegate(initialBindings)
+        } else {
+            initialBindings
+        }
+    }
+
+    private fun evalExclude(
+        env: Environment,
+        excludeExprs: List<CompiledExcludeExpr>
+    ): Environment {
+        val newBindings = excludeExprs.fold(env.current) { accBindings, expr ->
+            excludeBindings(accBindings, expr.root, expr.exclusions)
+        }
+        return env.nest(newLocals = newBindings)
+    }
 
     private fun <T> evalOrderBy(
         rows: Sequence<T>,
@@ -2268,33 +2643,6 @@ internal open class EvaluatingCompiler(
             }
             else -> { groupByEnv, currentGroup ->
                 groupByEnv.nest(currentGroup.key.bindings, newGroup = currentGroup)
-            }
-        }
-
-    /**
-     * Returns a closure which performs the final projection and returns the
-     * result.  If a HAVING clause was included, a different closure is returned
-     * that evaluates the HAVING clause and performs filtering.
-     */
-    private fun createFilterHavingAndProjectClosure(
-        havingThunk: ThunkEnv?,
-        selectProjectionThunk: ThunkEnvValue<List<ExprValue>>
-    ): (Environment, Group) -> ExprValue? =
-        when {
-            havingThunk != null -> { groupByEnv, currentGroup ->
-                // Create a closure that executes the HAVING clause and returns null if the
-                // HAVING criteria is not met
-                val havingClauseResult = havingThunk(groupByEnv)
-                if (havingClauseResult.isNotUnknown() && havingClauseResult.booleanValue()) {
-                    selectProjectionThunk(groupByEnv, listOf(currentGroup.key))
-                } else {
-                    null
-                }
-            }
-            else -> { groupByEnv, currentGroup ->
-                // Create a closure that simply performs the final projection and
-                // returns the result.
-                selectProjectionThunk(groupByEnv, listOf(currentGroup.key))
             }
         }
 

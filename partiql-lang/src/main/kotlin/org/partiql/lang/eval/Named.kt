@@ -14,6 +14,8 @@
 
 package org.partiql.lang.eval
 
+import org.partiql.lang.util.downcast
+
 /**
  * Facet for a value to indicate that it either has a name within some context
  * or an ordinal position.
@@ -26,4 +28,13 @@ interface Named {
      * a `struct` or an `int` for values that have some ordinal in a collection.
      */
     val name: ExprValue
+}
+
+/**
+ * An [ExprValue] that also implements [Named].
+ */
+internal class NamedExprValue(override val name: ExprValue, val value: ExprValue) : ExprValue by value, Named {
+    override fun <T : Any?> asFacet(type: Class<T>?): T? = downcast(type) ?: value.asFacet(type)
+
+    override fun toString(): String = stringify()
 }

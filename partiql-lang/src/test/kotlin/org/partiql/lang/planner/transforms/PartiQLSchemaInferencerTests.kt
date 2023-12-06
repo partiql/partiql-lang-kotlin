@@ -934,7 +934,7 @@ class PartiQLSchemaInferencerTests {
                 )
             ),
             SuccessTestCase(
-                name = "EXCLUDE SELECT star list tuple wildcard",
+                name = "EXCLUDE SELECT star tuple wildcard as last step",
                 key = key("exclude-07"),
                 expected = BagType(
                     StructType(
@@ -995,7 +995,7 @@ class PartiQLSchemaInferencerTests {
                 )
             ),
             SuccessTestCase(
-                name = "EXCLUDE SELECT star with JOINs",
+                name = "EXCLUDE SELECT star with JOIN",
                 key = key("exclude-09"),
                 expected = BagType(
                     StructType(

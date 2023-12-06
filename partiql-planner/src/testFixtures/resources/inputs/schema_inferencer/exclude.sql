@@ -234,9 +234,9 @@ SELECT * EXCLUDE t.a[*].b.d[*].e
 FROM <<
     {
     'a': [
-    { 'b': { 'c': 0, 'd': [{'e': 'zero', 'f': true}] } },
-    { 'b': { 'c': 1, 'd': [{'e': 'one', 'f': true}] } },
-    { 'b': { 'c': 2, 'd': [{'e': 'two', 'f': true}] } }
+    { 'b': { 'c': 0, 'd': [ {'e': 'zero', 'f': true}] } },
+    { 'b': { 'c': 1, 'd': [ {'e': 'one', 'f': true}] } },
+    { 'b': { 'c': 2, 'd': [ {'e': 'two', 'f': true}] } }
     ]
     }
     >> AS t;
