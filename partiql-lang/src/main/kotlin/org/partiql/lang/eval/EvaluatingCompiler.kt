@@ -74,7 +74,6 @@ import org.partiql.lang.util.take
 import org.partiql.lang.util.times
 import org.partiql.lang.util.totalMinutes
 import org.partiql.lang.util.unaryMinus
-import org.partiql.pig.runtime.LongPrimitive
 import org.partiql.pig.runtime.SymbolPrimitive
 import org.partiql.types.AnyOfType
 import org.partiql.types.AnyType
@@ -2259,109 +2258,110 @@ internal open class EvaluatingCompiler(
         }
     }
 
+    private fun addToCompiledExcludeExprs(curCompiledExpr: RemoveAndOtherSteps, steps: List<PartiqlAst.ExcludeStep>): RemoveAndOtherSteps {
+        // subsumption cases
+        // when steps.size == 1: possibly add to remove set
+        // when steps.size > 1: possibly add to steps map
+        val first = steps.first()
+        var entryRemove = curCompiledExpr.remove.toMutableSet()
+        var entrySteps = curCompiledExpr.steps.toMutableMap()
+        if (steps.size == 1) {
+            when (first) {
+                is PartiqlAst.ExcludeStep.ExcludeTupleAttr -> {
+                    if (entryRemove.contains(PartiqlAst.build { excludeTupleWildcard() })) {
+                        // contains wildcard; do not add; e.g. a.* and a.b -> keep a.*
+                    } else {
+                        // add to entries to remove
+                        entryRemove.add(first)
+                        // remove from other steps; e.g. a.b.c and a.b -> keep a.b
+                        entrySteps.remove(first)
+                    }
+                }
+                is PartiqlAst.ExcludeStep.ExcludeTupleWildcard -> {
+                    entryRemove.add(first)
+                    // remove all tuple attribute exclude steps
+                    entryRemove = entryRemove.filterNot {
+                        it is PartiqlAst.ExcludeStep.ExcludeTupleAttr
+                    }.toMutableSet()
+                    // remove all tuple attribute/wildcard exclude steps from deeper levels
+                    entrySteps = entrySteps.filterNot {
+                        it.key is PartiqlAst.ExcludeStep.ExcludeTupleAttr || it.key is PartiqlAst.ExcludeStep.ExcludeTupleWildcard
+                    }.toMutableMap()
+                }
+                is PartiqlAst.ExcludeStep.ExcludeCollectionIndex -> {
+                    if (entryRemove.contains(PartiqlAst.build { excludeCollectionWildcard() })) {
+                        // contains wildcard; do not add; e.g a[*] and a[1] -> keep a[*]
+                    } else {
+                        // add to entries to remove
+                        entryRemove.add(first)
+                        // remove from other steps; e.g. a.b[2].c and a.b[2] -> keep a.b[2]
+                        entrySteps.remove(first)
+                    }
+                }
+                is PartiqlAst.ExcludeStep.ExcludeCollectionWildcard -> {
+                    entryRemove.add(first)
+                    // remove all collection index exclude steps
+                    entryRemove = entryRemove.filterNot {
+                        it is PartiqlAst.ExcludeStep.ExcludeCollectionIndex
+                    }.toMutableSet()
+                    // remove all collection index/wildcard exclude steps from deeper levels
+                    entrySteps = entrySteps.filterNot {
+                        it.key is PartiqlAst.ExcludeStep.ExcludeCollectionIndex || it.key is PartiqlAst.ExcludeStep.ExcludeCollectionWildcard
+                    }.toMutableMap()
+                }
+            }
+        } else {
+            // remove at deeper level; need to check if first step is already removed in current step
+            when (first) {
+                is PartiqlAst.ExcludeStep.ExcludeTupleAttr -> {
+                    if (entryRemove.contains(PartiqlAst.build { excludeTupleWildcard() }) || entryRemove.contains(first)) {
+                        // remove set contains tuple wildcard or attr; do not add to other steps;
+                        // e.g. a.* and a.b.c -> a.*
+                    } else {
+                        val existingEntry = entrySteps.getOrDefault(first, RemoveAndOtherSteps.empty())
+                        val newEntry = addToCompiledExcludeExprs(existingEntry, steps.drop(1))
+                        entrySteps[first] = newEntry
+                    }
+                }
+                is PartiqlAst.ExcludeStep.ExcludeTupleWildcard -> {
+                    if (entryRemove.any { it is PartiqlAst.ExcludeStep.ExcludeTupleWildcard }) {
+                        // tuple wildcard at current level; do nothing
+                    } else {
+                        val existingEntry = entrySteps.getOrDefault(first, RemoveAndOtherSteps.empty())
+                        val newEntry = addToCompiledExcludeExprs(existingEntry, steps.drop(1))
+                        entrySteps[first] = newEntry
+                    }
+                }
+                is PartiqlAst.ExcludeStep.ExcludeCollectionIndex -> {
+                    if (entryRemove.contains(PartiqlAst.build { excludeCollectionWildcard() }) || entryRemove.contains(first)) {
+                        // remove set contains collection wildcard or index; do not add to other steps;
+                        // e.g. a[*] and a[*][1] -> a[*]
+                    } else {
+                        val existingEntry = entrySteps.getOrDefault(first, RemoveAndOtherSteps.empty())
+                        val newEntry = addToCompiledExcludeExprs(existingEntry, steps.drop(1))
+                        entrySteps[first] = newEntry
+                    }
+                }
+                is PartiqlAst.ExcludeStep.ExcludeCollectionWildcard -> {
+                    if (entryRemove.any { it is PartiqlAst.ExcludeStep.ExcludeCollectionWildcard }) {
+                        // collection wildcard at current level; do nothing
+                    } else {
+                        val existingEntry = entrySteps.getOrDefault(first, RemoveAndOtherSteps.empty())
+                        val newEntry = addToCompiledExcludeExprs(existingEntry, steps.drop(1))
+                        entrySteps[first] = newEntry
+                    }
+                }
+            }
+        }
+        return RemoveAndOtherSteps(entryRemove, entrySteps)
+    }
+
     /**
      * Creates a list of compiled exclude expressions with each index of the resulting list corresponding to a different
      * exclude path root.
      */
     internal fun compileExcludeClause(excludeClause: PartiqlAst.ExcludeOp): List<CompiledExcludeExpr> {
         val excludeExprs = excludeClause.exprs
-        fun addToCompiledExcludeExprs(curCompiledExpr: RemoveAndOtherSteps, steps: List<PartiqlAst.ExcludeStep>): RemoveAndOtherSteps {
-            // subsumption cases
-            // when steps.size == 1: possibly add to remove set
-            // when steps.size > 1: possibly add to steps map
-            val first = steps.first()
-            var entryRemove = curCompiledExpr.remove.toMutableSet()
-            var entrySteps = curCompiledExpr.steps.toMutableMap()
-            if (steps.size == 1) {
-                when (first) {
-                    is PartiqlAst.ExcludeStep.ExcludeTupleAttr -> {
-                        if (entryRemove.contains(PartiqlAst.build { excludeTupleWildcard() })) {
-                            // contains wildcard; do not add; e.g. a.* and a.b -> keep a.*
-                        } else {
-                            // add to entries to remove
-                            entryRemove.add(first)
-                            // remove from other steps; e.g. a.b.c and a.b -> keep a.b
-                            entrySteps.remove(first)
-                        }
-                    }
-                    is PartiqlAst.ExcludeStep.ExcludeTupleWildcard -> {
-                        entryRemove.add(first)
-                        // remove all tuple attribute exclude steps
-                        entryRemove = entryRemove.filterNot {
-                            it is PartiqlAst.ExcludeStep.ExcludeTupleAttr
-                        }.toMutableSet()
-                        // remove all tuple attribute/wildcard exclude steps from deeper levels
-                        entrySteps = entrySteps.filterNot {
-                            it.key is PartiqlAst.ExcludeStep.ExcludeTupleAttr || it.key is PartiqlAst.ExcludeStep.ExcludeTupleWildcard
-                        }.toMutableMap()
-                    }
-                    is PartiqlAst.ExcludeStep.ExcludeCollectionIndex -> {
-                        if (entryRemove.contains(PartiqlAst.build { excludeCollectionWildcard() })) {
-                            // contains wildcard; do not add; e.g a[*] and a[1] -> keep a[*]
-                        } else {
-                            // add to entries to remove
-                            entryRemove.add(first)
-                            // remove from other steps; e.g. a.b[2].c and a.b[2] -> keep a.b[2]
-                            entrySteps.remove(first)
-                        }
-                    }
-                    is PartiqlAst.ExcludeStep.ExcludeCollectionWildcard -> {
-                        entryRemove.add(first)
-                        // remove all collection index exclude steps
-                        entryRemove = entryRemove.filterNot {
-                            it is PartiqlAst.ExcludeStep.ExcludeCollectionIndex
-                        }.toMutableSet()
-                        // remove all collection index/wildcard exclude steps from deeper levels
-                        entrySteps = entrySteps.filterNot {
-                            it.key is PartiqlAst.ExcludeStep.ExcludeCollectionIndex || it.key is PartiqlAst.ExcludeStep.ExcludeCollectionWildcard
-                        }.toMutableMap()
-                    }
-                }
-            } else {
-                // remove at deeper level; need to check if first step is already removed in current step
-                when (first) {
-                    is PartiqlAst.ExcludeStep.ExcludeTupleAttr -> {
-                        if (entryRemove.contains(PartiqlAst.build { excludeTupleWildcard() }) || entryRemove.contains(first)) {
-                            // remove set contains tuple wildcard or attr; do not add to other steps;
-                            // e.g. a.* and a.b.c -> a.*
-                        } else {
-                            val existingEntry = entrySteps.getOrDefault(first, RemoveAndOtherSteps.empty())
-                            val newEntry = addToCompiledExcludeExprs(existingEntry, steps.drop(1))
-                            entrySteps[first] = newEntry
-                        }
-                    }
-                    is PartiqlAst.ExcludeStep.ExcludeTupleWildcard -> {
-                        if (entryRemove.any { it is PartiqlAst.ExcludeStep.ExcludeTupleWildcard }) {
-                            // tuple wildcard at current level; do nothing
-                        } else {
-                            val existingEntry = entrySteps.getOrDefault(first, RemoveAndOtherSteps.empty())
-                            val newEntry = addToCompiledExcludeExprs(existingEntry, steps.drop(1))
-                            entrySteps[first] = newEntry
-                        }
-                    }
-                    is PartiqlAst.ExcludeStep.ExcludeCollectionIndex -> {
-                        if (entryRemove.contains(PartiqlAst.build { excludeCollectionWildcard() }) || entryRemove.contains(first)) {
-                            // remove set contains collection wildcard or index; do not add to other steps;
-                            // e.g. a[*] and a[*][1] -> a[*]
-                        } else {
-                            val existingEntry = entrySteps.getOrDefault(first, RemoveAndOtherSteps.empty())
-                            val newEntry = addToCompiledExcludeExprs(existingEntry, steps.drop(1))
-                            entrySteps[first] = newEntry
-                        }
-                    }
-                    is PartiqlAst.ExcludeStep.ExcludeCollectionWildcard -> {
-                        if (entryRemove.any { it is PartiqlAst.ExcludeStep.ExcludeCollectionWildcard }) {
-                            // collection wildcard at current level; do nothing
-                        } else {
-                            val existingEntry = entrySteps.getOrDefault(first, RemoveAndOtherSteps.empty())
-                            val newEntry = addToCompiledExcludeExprs(existingEntry, steps.drop(1))
-                            entrySteps[first] = newEntry
-                        }
-                    }
-                }
-            }
-            return RemoveAndOtherSteps(entryRemove, entrySteps)
-        }
         val compiledExcludeExprs = excludeExprs
             .groupBy { it.root }
             .map { (root, exclusions) ->
@@ -2423,125 +2423,148 @@ internal open class EvaluatingCompiler(
         }
     }
 
+    private fun excludeStructExprValue(
+        structExprValue: StructExprValue,
+        exclusions: RemoveAndOtherSteps
+    ): ExprValue {
+        val toRemove = exclusions.remove
+        val otherSteps = exclusions.steps
+        if (toRemove.any { it is PartiqlAst.ExcludeStep.ExcludeTupleWildcard }) {
+            // tuple wildcard at current level. return empty struct
+            return StructExprValue(sequence = emptySequence(), ordering = structExprValue.ordering)
+        }
+        val attrsToRemove = toRemove.filterIsInstance<PartiqlAst.ExcludeStep.ExcludeTupleAttr>()
+            .map { it.attr.name.text }
+            .toSet()
+        val sequenceWithRemoved = structExprValue.mapNotNull { structField ->
+            if (attrsToRemove.contains(structField.name?.stringValue())) {
+                null
+            } else {
+                structField as NamedExprValue
+            }
+        }
+        val finalSequence = sequenceWithRemoved.map { structField ->
+            var expr = structField.value
+            val name = structField.name
+            // apply case-sensitive tuple attr exclusions
+            val structFieldCaseSensitiveKey = PartiqlAst.build {
+                excludeTupleAttr(
+                    identifier(
+                        name.stringValue(),
+                        caseSensitive()
+                    )
+                )
+            }
+            otherSteps[structFieldCaseSensitiveKey]?.let {
+                expr = excludeExprValue(expr, it)
+            }
+            // apply case-insensitive tuple attr exclusions
+            val structFieldCaseInsensitiveKey = PartiqlAst.build {
+                excludeTupleAttr(
+                    identifier(
+                        name.stringValue(),
+                        caseInsensitive()
+                    )
+                )
+            }
+            otherSteps[structFieldCaseInsensitiveKey]?.let {
+                expr = excludeExprValue(expr, it)
+            }
+            // apply tuple wildcard exclusions
+            val tupleWildcardKey = PartiqlAst.build { excludeTupleWildcard(emptyMetaContainer()) }
+            otherSteps[tupleWildcardKey]?.let {
+                expr = excludeExprValue(expr, it)
+            }
+            expr.namedValue(name)
+        }
+        return ExprValue.newStruct(values = finalSequence, ordering = structExprValue.ordering)
+    }
+
+    private fun excludeCollectionExprValue(
+        initialExprValue: ExprValue,
+        exprValueType: ExprValueType,
+        exclusions: RemoveAndOtherSteps
+    ): ExprValue {
+        val toRemove = exclusions.remove
+        val otherSteps = exclusions.steps
+        if (toRemove.any { it is PartiqlAst.ExcludeStep.ExcludeCollectionWildcard }) {
+            // collection wildcard at current level. return empty collection
+            return newSequence(exprValueType, emptySequence())
+        } else {
+            val indexesToRemove = toRemove.filterIsInstance<PartiqlAst.ExcludeStep.ExcludeCollectionIndex>()
+                .map { it.index.value }
+                .toSet()
+            val sequenceWithRemoved = initialExprValue.mapNotNull { element ->
+                if (indexesToRemove.contains(element.name?.longValue())) {
+                    null
+                } else {
+                    element
+                }
+            }.asSequence()
+            val finalSequence = sequenceWithRemoved.map { element ->
+                var expr = element
+                if (initialExprValue is ExprValue.Companion.ListExprValue || initialExprValue is ExprValue.Companion.SexpExprValue) {
+                    element as NamedExprValue
+                    val index = element.name.longValue()
+                    // apply collection index exclusions for lists and sexps
+                    val elementKey = PartiqlAst.build {
+                        excludeCollectionIndex(
+                            index
+                        )
+                    }
+                    otherSteps[elementKey]?.let {
+                        expr = excludeExprValue(element.value, it)
+                    }
+                }
+                // apply collection wildcard exclusions for lists, bags, and sexps
+                val collectionWildcardKey = PartiqlAst.build { excludeCollectionWildcard(emptyMetaContainer()) }
+                otherSteps[collectionWildcardKey]?.let {
+                    expr = excludeExprValue(expr, it)
+                }
+                expr
+            }
+            return newSequence(exprValueType, finalSequence)
+        }
+    }
+
+    private fun excludeExprValue(initialExprValue: ExprValue, exclusions: RemoveAndOtherSteps): ExprValue {
+        return when (initialExprValue) {
+            is NamedExprValue -> excludeExprValue(initialExprValue.value, exclusions)
+            is StructExprValue -> excludeStructExprValue(initialExprValue, exclusions)
+            is ExprValue.Companion.ListExprValue -> excludeCollectionExprValue(initialExprValue, ExprValueType.LIST, exclusions)
+            is ExprValue.Companion.BagExprValue -> excludeCollectionExprValue(initialExprValue, ExprValueType.BAG, exclusions)
+            is ExprValue.Companion.SexpExprValue -> excludeCollectionExprValue(initialExprValue, ExprValueType.SEXP, exclusions)
+            else -> {
+                initialExprValue
+            }
+        }
+    }
+
+    private fun excludeBindings(
+        initialBindings: Bindings<ExprValue>,
+        root: PartiqlAst.Identifier,
+        exclusions: RemoveAndOtherSteps
+    ): Bindings<ExprValue> {
+        val bindingNameString = root.name.text
+        val bindingName = BindingName(bindingNameString, root.case.toBindingCase())
+        val bindingAtAttr = initialBindings[bindingName]
+        return if (bindingAtAttr != null) {
+            val newBindings = Bindings.buildLazyBindings<ExprValue> {
+                val newExprValue = excludeExprValue(bindingAtAttr, exclusions)
+                addBinding(bindingNameString) {
+                    newExprValue
+                }
+            }
+            newBindings.delegate(initialBindings)
+        } else {
+            initialBindings
+        }
+    }
+
     private fun evalExclude(
         env: Environment,
         excludeExprs: List<CompiledExcludeExpr>
     ): Environment {
-        fun excludeExprValue(initialExprValue: ExprValue, exclusions: RemoveAndOtherSteps): ExprValue {
-            if (initialExprValue is Named) {
-                return excludeExprValue(initialExprValue.value, exclusions)
-            }
-            val toRemove = exclusions.remove
-            val otherSteps = exclusions.steps
-            when (initialExprValue.type) {
-                ExprValueType.STRUCT -> {
-                    initialExprValue as StructExprValue
-                    if (toRemove.any { it is PartiqlAst.ExcludeStep.ExcludeTupleWildcard }) {
-                        return StructExprValue(sequence = emptySequence(), ordering = initialExprValue.ordering)
-                    }
-                    val attrsToRemove = toRemove.filterIsInstance<PartiqlAst.ExcludeStep.ExcludeTupleAttr>()
-                        .map { it.attr.name.text }
-                        .toSet()
-                    val sequenceWithRemoved = initialExprValue.mapNotNull { structField ->
-                        if (attrsToRemove.contains(structField.name?.stringValue())) {
-                            null
-                        } else {
-                            structField
-                        }
-                    }
-                    val finalSequence = sequenceWithRemoved.map { structField ->
-                        var expr = structField
-                        val name = structField.name!!
-                        val structFieldKey = PartiqlAst.build {
-                            PartiqlAst.ExcludeStep.ExcludeTupleAttr(
-                                PartiqlAst.Identifier(
-                                    SymbolPrimitive(
-                                        structField.name?.stringValue()!!,
-                                        emptyMetaContainer()
-                                    ),
-                                    caseInsensitive()
-                                )
-                            )
-                        }
-                        if (otherSteps.contains(structFieldKey)) {
-                            expr = excludeExprValue(structField, otherSteps[structFieldKey]!!)
-                        }
-                        val tupleWildcardEntry =
-                            otherSteps[PartiqlAst.build { excludeTupleWildcard(emptyMetaContainer()) }]
-                        if (tupleWildcardEntry != null) {
-                            expr = excludeExprValue(expr, tupleWildcardEntry)
-                        }
-                        expr.namedValue(name)
-                    }
-                    return ExprValue.newStruct(values = finalSequence, ordering = initialExprValue.ordering)
-                }
-
-                ExprValueType.LIST, ExprValueType.BAG, ExprValueType.SEXP -> {
-                    if (toRemove.any { it is PartiqlAst.ExcludeStep.ExcludeCollectionWildcard }) {
-                        return newSequence(initialExprValue.type, emptySequence())
-                    } else {
-                        // remove some elements
-                        val indexesToRemove = toRemove.filterIsInstance<PartiqlAst.ExcludeStep.ExcludeCollectionIndex>()
-                            .map { it.index.value }
-                            .toSet()
-                        val sequenceWithRemoved = initialExprValue.mapNotNull { element ->
-                            if (indexesToRemove.contains(element.name?.longValue())) {
-                                null
-                            } else {
-                                element
-                            }
-                        }.asSequence()
-                        val finalSequence = sequenceWithRemoved.map { element ->
-                            var expr = element
-                            if (initialExprValue.type == ExprValueType.LIST || initialExprValue.type == ExprValueType.SEXP) {
-                                val elementKey = PartiqlAst.build {
-                                    PartiqlAst.ExcludeStep.ExcludeCollectionIndex(
-                                        LongPrimitive(
-                                            element.name?.longValue()!!,
-                                            emptyMetaContainer()
-                                        )
-                                    )
-                                }
-                                if (otherSteps.contains(elementKey)) {
-                                    expr = excludeExprValue(element, otherSteps[elementKey]!!)
-                                }
-                            }
-                            val collectionWildcardEntry =
-                                otherSteps[PartiqlAst.build { excludeCollectionWildcard(emptyMetaContainer()) }]
-                            if (collectionWildcardEntry != null) {
-                                expr = excludeExprValue(expr, collectionWildcardEntry)
-                            }
-                            expr
-                        }
-                        return newSequence(initialExprValue.type, finalSequence)
-                    }
-                }
-                else -> {
-                    return initialExprValue
-                }
-            }
-        }
-
-        fun excludeBindings(
-            initialBindings: Bindings<ExprValue>,
-            root: PartiqlAst.Identifier,
-            exclusions: RemoveAndOtherSteps
-        ): Bindings<ExprValue> {
-            val bindingNameString = root.name.text
-            val bindingName = BindingName(bindingNameString, BindingCase.INSENSITIVE)
-            val bindingAtAttr = initialBindings[bindingName]
-            return if (bindingAtAttr != null) {
-                val newBindings = Bindings.buildLazyBindings<ExprValue> {
-                    val newExprValue = excludeExprValue(bindingAtAttr, exclusions)
-                    addBinding(bindingNameString) {
-                        newExprValue
-                    }
-                }
-                newBindings.delegate(initialBindings)
-            } else {
-                initialBindings
-            }
-        }
         val newBindings = excludeExprs.fold(env.current) { accBindings, expr ->
             excludeBindings(accBindings, expr.root, expr.exclusions)
         }

@@ -93,17 +93,10 @@ val ExprValue.orderedNames: List<String>?
 fun ExprValue.asNamed(): Named = object : Named {
     override val name: ExprValue
         get() = this@asNamed
-    override val value = this@asNamed
 }
 
 /** Binds the given name value as a [Named] facet delegate over this [ExprValue]. */
-fun ExprValue.namedValue(nameValue: ExprValue): ExprValue = object : ExprValue by this, Named {
-    override val value = this@namedValue
-    override val name = nameValue
-    override fun <T : Any?> asFacet(type: Class<T>?): T? =
-        downcast(type) ?: this@namedValue.asFacet(type)
-    override fun toString(): String = stringify()
-}
+fun ExprValue.namedValue(nameValue: ExprValue): ExprValue = NamedExprValue(nameValue, this)
 
 /** Wraps this [ExprValue] in a delegate that always masks the [Named] facet. */
 fun ExprValue.unnamedValue(): ExprValue = when (asFacet(Named::class.java)) {
