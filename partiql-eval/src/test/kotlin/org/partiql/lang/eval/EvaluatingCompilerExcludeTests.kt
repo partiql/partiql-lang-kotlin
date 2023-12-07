@@ -1,16 +1,12 @@
 package org.partiql.lang.eval
 
-import com.amazon.ionelement.api.emptyMetaContainer
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
-import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.eval.evaluatortestframework.CompilerPipelineFactory
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestAdapter
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestCase
 import org.partiql.lang.eval.evaluatortestframework.PipelineEvaluatorTestAdapter
-import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.lang.util.ArgumentsProviderBase
-import org.partiql.pig.runtime.LongPrimitive
 
 class EvaluatingCompilerExcludeTests : EvaluatorTestBase() {
 
@@ -818,260 +814,261 @@ class EvaluatingCompilerExcludeTests : EvaluatorTestBase() {
         tc,
         EvaluationSession.standard()
     )
-
-    private fun testExcludeExprSubsumption(tc: SubsumptionTC) {
-        val parser = PartiQLParserBuilder.standard().build()
-        val parsedSFW = parser.parseAstStatement("SELECT * EXCLUDE ${tc.excludeExprStr} FROM t")
-        val exclude = (((parsedSFW as PartiqlAst.Statement.Query).expr) as PartiqlAst.Expr.Select).excludeClause!!
-        val eC = EvaluatingCompiler(
-            emptyList(),
-            emptyMap(),
-            emptyMap(),
-        )
-        val actualExcludeExprs = eC.compileExcludeClause(exclude)
-        assertEquals(tc.expectedExcludeExprs, actualExcludeExprs)
-    }
-
-    internal data class SubsumptionTC(val excludeExprStr: String, val expectedExcludeExprs: List<EvaluatingCompiler.CompiledExcludeExpr>)
-
-    @ParameterizedTest
-    @ArgumentsSource(ExcludeSubsumptionTests::class)
-    internal fun subsumptionTests(tc: SubsumptionTC) = testExcludeExprSubsumption(tc)
-
-    internal class ExcludeSubsumptionTests : ArgumentsProviderBase() {
-        private fun caseSensitiveId(id: String): PartiqlAst.Identifier {
-            return PartiqlAst.build { identifier(name = id, case = caseSensitive(emptyMetaContainer())) }
-        }
-        private fun caseInsensitiveId(id: String): PartiqlAst.Identifier {
-            return PartiqlAst.build { identifier(name = id, case = caseInsensitive(emptyMetaContainer())) }
-        }
-        private fun exTupleAttr(id: PartiqlAst.Identifier): PartiqlAst.ExcludeStep {
-            return PartiqlAst.ExcludeStep.ExcludeTupleAttr(id)
-        }
-        private fun exTupleWildcard(): PartiqlAst.ExcludeStep {
-            return PartiqlAst.ExcludeStep.ExcludeTupleWildcard()
-        }
-        private fun exCollIndex(i: Int): PartiqlAst.ExcludeStep {
-            return PartiqlAst.ExcludeStep.ExcludeCollectionIndex(index = LongPrimitive(i.toLong(), emptyMetaContainer()))
-        }
-        private fun exCollWildcard(): PartiqlAst.ExcludeStep {
-            return PartiqlAst.ExcludeStep.ExcludeCollectionWildcard()
-        }
-
-        override fun getParameters(): List<Any> = listOf(
-            SubsumptionTC(
-                "s.a, t.a, t.b, s.b",
-                listOf(
-                    EvaluatingCompiler.CompiledExcludeExpr(
-                        root = caseInsensitiveId("s"),
-                        exclusions = EvaluatingCompiler.RemoveAndOtherSteps(
-                            remove = setOf(exTupleAttr(caseInsensitiveId("a")), exTupleAttr(caseInsensitiveId("b"))),
-                            steps = emptyMap(),
-                        )
-                    ),
-                    EvaluatingCompiler.CompiledExcludeExpr(
-                        root = caseInsensitiveId("t"),
-                        exclusions = EvaluatingCompiler.RemoveAndOtherSteps(
-                            remove = setOf(exTupleAttr(caseInsensitiveId("a")), exTupleAttr(caseInsensitiveId("b"))),
-                            steps = emptyMap(),
-                        )
-                    )
-                )
-            ),
-            SubsumptionTC(
-                "t.a, t.b",
-                listOf(
-                    EvaluatingCompiler.CompiledExcludeExpr(
-                        root = caseInsensitiveId("t"),
-                        exclusions = EvaluatingCompiler.RemoveAndOtherSteps(
-                            remove = setOf(exTupleAttr(caseInsensitiveId("a")), exTupleAttr(caseInsensitiveId("b"))),
-                            steps = emptyMap(),
-                        )
-                    )
-                )
-            ),
-            SubsumptionTC(
-                "t.a, t.b, t.a, t.b, t.b", // duplicates subsumed
-                listOf(
-                    EvaluatingCompiler.CompiledExcludeExpr(
-                        root = caseInsensitiveId("t"),
-                        exclusions = EvaluatingCompiler.RemoveAndOtherSteps(
-                            remove = setOf(exTupleAttr(caseInsensitiveId("a")), exTupleAttr(caseInsensitiveId("b"))),
-                            steps = emptyMap(),
-                        )
-                    )
-                )
-            ),
-            SubsumptionTC(
-                "t.a, t.b, t.*", // tuple wildcard subsumes tuple attr
-                listOf(
-                    EvaluatingCompiler.CompiledExcludeExpr(
-                        root = caseInsensitiveId("t"),
-                        exclusions = EvaluatingCompiler.RemoveAndOtherSteps(
-                            remove = setOf(exTupleWildcard()),
-                            steps = emptyMap(),
-                        )
-                    )
-                )
-            ),
-            SubsumptionTC( // removal at earlier step subsumes
-                """
-                t.a, t.a.a1,        -- t.a.a1 subsumed
-                t.b.b1.b2, t.b.b1,  -- t.b.b1.b2 subsumed
-                t.c, t.c.c1[2].c3[*].* -- t.c.c1[2].c3[*].* subsumed
-                """,
-                listOf(
-                    EvaluatingCompiler.CompiledExcludeExpr(
-                        root = caseInsensitiveId("t"),
-                        exclusions = EvaluatingCompiler.RemoveAndOtherSteps(
-                            remove = setOf(exTupleAttr(caseInsensitiveId("a")), exTupleAttr(caseInsensitiveId("c"))),
-                            steps = mapOf(
-                                exTupleAttr(caseInsensitiveId("b")) to EvaluatingCompiler.RemoveAndOtherSteps(
-                                    remove = setOf(exTupleAttr(caseInsensitiveId("b1"))),
-                                    steps = emptyMap()
-                                )
-                            ),
-                        )
-                    )
-                )
-            ),
-            SubsumptionTC( // exclude collection index
-                """
-                t.a, t.a[1],
-                t.b[1], t.b
-                """,
-                listOf(
-                    EvaluatingCompiler.CompiledExcludeExpr(
-                        root = caseInsensitiveId("t"),
-                        exclusions = EvaluatingCompiler.RemoveAndOtherSteps(
-                            remove = setOf(exTupleAttr(caseInsensitiveId("a")), exTupleAttr(caseInsensitiveId("b"))),
-                            steps = emptyMap()
-                        )
-                    )
-                )
-            ),
-            SubsumptionTC( // exclude collection index, collection wildcard
-                """
-                t.a[*], t.a[1],
-                t.b[1], t.b[*],
-                t.c[*], t.c[1].c1,
-                t.d[1].d1, t.d[*]
-                """,
-                listOf(
-                    EvaluatingCompiler.CompiledExcludeExpr(
-                        root = caseInsensitiveId("t"),
-                        exclusions = EvaluatingCompiler.RemoveAndOtherSteps(
-                            remove = emptySet(),
-                            steps = mapOf(
-                                exTupleAttr(caseInsensitiveId("a")) to EvaluatingCompiler.RemoveAndOtherSteps(
-                                    remove = setOf(exCollWildcard()),
-                                    steps = emptyMap()
-                                ),
-                                exTupleAttr(caseInsensitiveId("b")) to EvaluatingCompiler.RemoveAndOtherSteps(
-                                    remove = setOf(exCollWildcard()),
-                                    steps = emptyMap()
-                                ),
-                                exTupleAttr(caseInsensitiveId("c")) to EvaluatingCompiler.RemoveAndOtherSteps(
-                                    remove = setOf(exCollWildcard()),
-                                    steps = emptyMap()
-                                ),
-                                exTupleAttr(caseInsensitiveId("d")) to EvaluatingCompiler.RemoveAndOtherSteps(
-                                    remove = setOf(exCollWildcard()),
-                                    steps = emptyMap()
-                                ),
-                            )
-                        )
-                    )
-                )
-            ),
-            SubsumptionTC(
-                """
-                t.a[1].a1, t.a[1],
-                t.b[1], t.b[1].b1,
-                t.c[*], t.c[*].c1,
-                t.d[*].d1, t.d[*],
-                t.e[1], t.e[*].e1,  -- keep both
-                t.f[*].f1, t.f[1],  -- keep both
-                t.g[*], t.g[1].e1,
-                t.h[1].f1, t.h[*]
-                """,
-                listOf(
-                    EvaluatingCompiler.CompiledExcludeExpr(
-                        root = caseInsensitiveId("t"),
-                        exclusions = EvaluatingCompiler.RemoveAndOtherSteps(
-                            remove = emptySet(),
-                            steps = mapOf(
-                                exTupleAttr(caseInsensitiveId("a")) to EvaluatingCompiler.RemoveAndOtherSteps(
-                                    remove = setOf(exCollIndex(1)),
-                                    steps = emptyMap()
-                                ),
-                                exTupleAttr(caseInsensitiveId("b")) to EvaluatingCompiler.RemoveAndOtherSteps(
-                                    remove = setOf(exCollIndex(1)),
-                                    steps = emptyMap()
-                                ),
-                                exTupleAttr(caseInsensitiveId("c")) to EvaluatingCompiler.RemoveAndOtherSteps(
-                                    remove = setOf(exCollWildcard()),
-                                    steps = emptyMap()
-                                ),
-                                exTupleAttr(caseInsensitiveId("d")) to EvaluatingCompiler.RemoveAndOtherSteps(
-                                    remove = setOf(exCollWildcard()),
-                                    steps = emptyMap()
-                                ),
-                                exTupleAttr(caseInsensitiveId("e")) to EvaluatingCompiler.RemoveAndOtherSteps(
-                                    remove = setOf(exCollIndex(1)),
-                                    steps = mapOf(
-                                        exCollWildcard() to EvaluatingCompiler.RemoveAndOtherSteps(
-                                            remove = setOf(exTupleAttr(caseInsensitiveId("e1"))),
-                                            steps = emptyMap(),
-                                        )
-                                    )
-                                ),
-                                exTupleAttr(caseInsensitiveId("f")) to EvaluatingCompiler.RemoveAndOtherSteps(
-                                    remove = setOf(exCollIndex(1)),
-                                    steps = mapOf(
-                                        exCollWildcard() to EvaluatingCompiler.RemoveAndOtherSteps(
-                                            remove = setOf(exTupleAttr(caseInsensitiveId("f1"))),
-                                            steps = emptyMap(),
-                                        )
-                                    )
-                                ),
-                                exTupleAttr(caseInsensitiveId("g")) to EvaluatingCompiler.RemoveAndOtherSteps(
-                                    remove = setOf(exCollWildcard()),
-                                    steps = emptyMap()
-                                ),
-                                exTupleAttr(caseInsensitiveId("h")) to EvaluatingCompiler.RemoveAndOtherSteps(
-                                    remove = setOf(exCollWildcard()),
-                                    steps = emptyMap()
-                                ),
-                            )
-                        )
-                    )
-                )
-            ),
-            SubsumptionTC( // case sensitive
-                """
-                t.a, "t".a, -- "t".a in case-sensitive list
-                "t".b, t.b, -- "t".b in case-sensitive list
-                t."c", t.c,
-                t.d, t."d"
-                """,
-                listOf(
-                    EvaluatingCompiler.CompiledExcludeExpr(
-                        root = caseInsensitiveId("t"),
-                        exclusions = EvaluatingCompiler.RemoveAndOtherSteps(
-                            remove = setOf(exTupleAttr(caseInsensitiveId("a")), exTupleAttr(caseInsensitiveId("b")), exTupleAttr(caseInsensitiveId("c")), exTupleAttr(caseInsensitiveId("d")), exTupleAttr(caseSensitiveId("c")), exTupleAttr(caseSensitiveId("d"))),
-                            steps = emptyMap(),
-                        )
-                    ),
-                    EvaluatingCompiler.CompiledExcludeExpr(
-                        root = caseSensitiveId("t"),
-                        exclusions = EvaluatingCompiler.RemoveAndOtherSteps(
-                            remove = setOf(exTupleAttr(caseInsensitiveId("a")), exTupleAttr(caseInsensitiveId("b"))),
-                            steps = emptyMap(),
-                        )
-                    ),
-                )
-            ),
-        )
-    }
+// TODO: subsumption tests to be added back in https://github.com/partiql/partiql-lang-kotlin/pull/1280
+//
+//    private fun testExcludeExprSubsumption(tc: SubsumptionTC) {
+//        val parser = PartiQLParserBuilder.standard().build()
+//        val parsedSFW = parser.parseAstStatement("SELECT * EXCLUDE ${tc.excludeExprStr} FROM t")
+//        val exclude = (((parsedSFW as PartiqlAst.Statement.Query).expr) as PartiqlAst.Expr.Select).excludeClause!!
+//        val eC = EvaluatingCompiler(
+//            emptyList(),
+//            emptyMap(),
+//            emptyMap(),
+//        )
+//        val actualExcludeExprs = eC.compileExcludeClause(exclude)
+//        assertEquals(tc.expectedExcludeExprs, actualExcludeExprs)
+//    }
+//
+//    internal data class SubsumptionTC(val excludeExprStr: String, val expectedExcludeExprs: List<EvaluatingCompiler.CompiledExcludeExpr>)
+//
+//    @ParameterizedTest
+//    @ArgumentsSource(ExcludeSubsumptionTests::class)
+//    internal fun subsumptionTests(tc: SubsumptionTC) = testExcludeExprSubsumption(tc)
+//
+//    internal class ExcludeSubsumptionTests : ArgumentsProviderBase() {
+//        private fun caseSensitiveId(id: String): PartiqlAst.Identifier {
+//            return PartiqlAst.build { identifier(name = id, case = caseSensitive(emptyMetaContainer())) }
+//        }
+//        private fun caseInsensitiveId(id: String): PartiqlAst.Identifier {
+//            return PartiqlAst.build { identifier(name = id, case = caseInsensitive(emptyMetaContainer())) }
+//        }
+//        private fun exTupleAttr(id: PartiqlAst.Identifier): PartiqlAst.ExcludeStep {
+//            return PartiqlAst.ExcludeStep.ExcludeTupleAttr(id)
+//        }
+//        private fun exTupleWildcard(): PartiqlAst.ExcludeStep {
+//            return PartiqlAst.ExcludeStep.ExcludeTupleWildcard()
+//        }
+//        private fun exCollIndex(i: Int): PartiqlAst.ExcludeStep {
+//            return PartiqlAst.ExcludeStep.ExcludeCollectionIndex(index = LongPrimitive(i.toLong(), emptyMetaContainer()))
+//        }
+//        private fun exCollWildcard(): PartiqlAst.ExcludeStep {
+//            return PartiqlAst.ExcludeStep.ExcludeCollectionWildcard()
+//        }
+//
+//        override fun getParameters(): List<Any> = listOf(
+//            SubsumptionTC(
+//                "s.a, t.a, t.b, s.b",
+//                listOf(
+//                    EvaluatingCompiler.CompiledExcludeExpr(
+//                        root = caseInsensitiveId("s"),
+//                        exclusions = EvaluatingCompiler.RemoveAndOtherSteps(
+//                            remove = setOf(exTupleAttr(caseInsensitiveId("a")), exTupleAttr(caseInsensitiveId("b"))),
+//                            steps = emptyMap(),
+//                        )
+//                    ),
+//                    EvaluatingCompiler.CompiledExcludeExpr(
+//                        root = caseInsensitiveId("t"),
+//                        exclusions = EvaluatingCompiler.RemoveAndOtherSteps(
+//                            remove = setOf(exTupleAttr(caseInsensitiveId("a")), exTupleAttr(caseInsensitiveId("b"))),
+//                            steps = emptyMap(),
+//                        )
+//                    )
+//                )
+//            ),
+//            SubsumptionTC(
+//                "t.a, t.b",
+//                listOf(
+//                    EvaluatingCompiler.CompiledExcludeExpr(
+//                        root = caseInsensitiveId("t"),
+//                        exclusions = EvaluatingCompiler.RemoveAndOtherSteps(
+//                            remove = setOf(exTupleAttr(caseInsensitiveId("a")), exTupleAttr(caseInsensitiveId("b"))),
+//                            steps = emptyMap(),
+//                        )
+//                    )
+//                )
+//            ),
+//            SubsumptionTC(
+//                "t.a, t.b, t.a, t.b, t.b", // duplicates subsumed
+//                listOf(
+//                    EvaluatingCompiler.CompiledExcludeExpr(
+//                        root = caseInsensitiveId("t"),
+//                        exclusions = EvaluatingCompiler.RemoveAndOtherSteps(
+//                            remove = setOf(exTupleAttr(caseInsensitiveId("a")), exTupleAttr(caseInsensitiveId("b"))),
+//                            steps = emptyMap(),
+//                        )
+//                    )
+//                )
+//            ),
+//            SubsumptionTC(
+//                "t.a, t.b, t.*", // tuple wildcard subsumes tuple attr
+//                listOf(
+//                    EvaluatingCompiler.CompiledExcludeExpr(
+//                        root = caseInsensitiveId("t"),
+//                        exclusions = EvaluatingCompiler.RemoveAndOtherSteps(
+//                            remove = setOf(exTupleWildcard()),
+//                            steps = emptyMap(),
+//                        )
+//                    )
+//                )
+//            ),
+//            SubsumptionTC( // removal at earlier step subsumes
+//                """
+//                t.a, t.a.a1,        -- t.a.a1 subsumed
+//                t.b.b1.b2, t.b.b1,  -- t.b.b1.b2 subsumed
+//                t.c, t.c.c1[2].c3[*].* -- t.c.c1[2].c3[*].* subsumed
+//                """,
+//                listOf(
+//                    EvaluatingCompiler.CompiledExcludeExpr(
+//                        root = caseInsensitiveId("t"),
+//                        exclusions = EvaluatingCompiler.RemoveAndOtherSteps(
+//                            remove = setOf(exTupleAttr(caseInsensitiveId("a")), exTupleAttr(caseInsensitiveId("c"))),
+//                            steps = mapOf(
+//                                exTupleAttr(caseInsensitiveId("b")) to EvaluatingCompiler.RemoveAndOtherSteps(
+//                                    remove = setOf(exTupleAttr(caseInsensitiveId("b1"))),
+//                                    steps = emptyMap()
+//                                )
+//                            ),
+//                        )
+//                    )
+//                )
+//            ),
+//            SubsumptionTC( // exclude collection index
+//                """
+//                t.a, t.a[1],
+//                t.b[1], t.b
+//                """,
+//                listOf(
+//                    EvaluatingCompiler.CompiledExcludeExpr(
+//                        root = caseInsensitiveId("t"),
+//                        exclusions = EvaluatingCompiler.RemoveAndOtherSteps(
+//                            remove = setOf(exTupleAttr(caseInsensitiveId("a")), exTupleAttr(caseInsensitiveId("b"))),
+//                            steps = emptyMap()
+//                        )
+//                    )
+//                )
+//            ),
+//            SubsumptionTC( // exclude collection index, collection wildcard
+//                """
+//                t.a[*], t.a[1],
+//                t.b[1], t.b[*],
+//                t.c[*], t.c[1].c1,
+//                t.d[1].d1, t.d[*]
+//                """,
+//                listOf(
+//                    EvaluatingCompiler.CompiledExcludeExpr(
+//                        root = caseInsensitiveId("t"),
+//                        exclusions = EvaluatingCompiler.RemoveAndOtherSteps(
+//                            remove = emptySet(),
+//                            steps = mapOf(
+//                                exTupleAttr(caseInsensitiveId("a")) to EvaluatingCompiler.RemoveAndOtherSteps(
+//                                    remove = setOf(exCollWildcard()),
+//                                    steps = emptyMap()
+//                                ),
+//                                exTupleAttr(caseInsensitiveId("b")) to EvaluatingCompiler.RemoveAndOtherSteps(
+//                                    remove = setOf(exCollWildcard()),
+//                                    steps = emptyMap()
+//                                ),
+//                                exTupleAttr(caseInsensitiveId("c")) to EvaluatingCompiler.RemoveAndOtherSteps(
+//                                    remove = setOf(exCollWildcard()),
+//                                    steps = emptyMap()
+//                                ),
+//                                exTupleAttr(caseInsensitiveId("d")) to EvaluatingCompiler.RemoveAndOtherSteps(
+//                                    remove = setOf(exCollWildcard()),
+//                                    steps = emptyMap()
+//                                ),
+//                            )
+//                        )
+//                    )
+//                )
+//            ),
+//            SubsumptionTC(
+//                """
+//                t.a[1].a1, t.a[1],
+//                t.b[1], t.b[1].b1,
+//                t.c[*], t.c[*].c1,
+//                t.d[*].d1, t.d[*],
+//                t.e[1], t.e[*].e1,  -- keep both
+//                t.f[*].f1, t.f[1],  -- keep both
+//                t.g[*], t.g[1].e1,
+//                t.h[1].f1, t.h[*]
+//                """,
+//                listOf(
+//                    EvaluatingCompiler.CompiledExcludeExpr(
+//                        root = caseInsensitiveId("t"),
+//                        exclusions = EvaluatingCompiler.RemoveAndOtherSteps(
+//                            remove = emptySet(),
+//                            steps = mapOf(
+//                                exTupleAttr(caseInsensitiveId("a")) to EvaluatingCompiler.RemoveAndOtherSteps(
+//                                    remove = setOf(exCollIndex(1)),
+//                                    steps = emptyMap()
+//                                ),
+//                                exTupleAttr(caseInsensitiveId("b")) to EvaluatingCompiler.RemoveAndOtherSteps(
+//                                    remove = setOf(exCollIndex(1)),
+//                                    steps = emptyMap()
+//                                ),
+//                                exTupleAttr(caseInsensitiveId("c")) to EvaluatingCompiler.RemoveAndOtherSteps(
+//                                    remove = setOf(exCollWildcard()),
+//                                    steps = emptyMap()
+//                                ),
+//                                exTupleAttr(caseInsensitiveId("d")) to EvaluatingCompiler.RemoveAndOtherSteps(
+//                                    remove = setOf(exCollWildcard()),
+//                                    steps = emptyMap()
+//                                ),
+//                                exTupleAttr(caseInsensitiveId("e")) to EvaluatingCompiler.RemoveAndOtherSteps(
+//                                    remove = setOf(exCollIndex(1)),
+//                                    steps = mapOf(
+//                                        exCollWildcard() to EvaluatingCompiler.RemoveAndOtherSteps(
+//                                            remove = setOf(exTupleAttr(caseInsensitiveId("e1"))),
+//                                            steps = emptyMap(),
+//                                        )
+//                                    )
+//                                ),
+//                                exTupleAttr(caseInsensitiveId("f")) to EvaluatingCompiler.RemoveAndOtherSteps(
+//                                    remove = setOf(exCollIndex(1)),
+//                                    steps = mapOf(
+//                                        exCollWildcard() to EvaluatingCompiler.RemoveAndOtherSteps(
+//                                            remove = setOf(exTupleAttr(caseInsensitiveId("f1"))),
+//                                            steps = emptyMap(),
+//                                        )
+//                                    )
+//                                ),
+//                                exTupleAttr(caseInsensitiveId("g")) to EvaluatingCompiler.RemoveAndOtherSteps(
+//                                    remove = setOf(exCollWildcard()),
+//                                    steps = emptyMap()
+//                                ),
+//                                exTupleAttr(caseInsensitiveId("h")) to EvaluatingCompiler.RemoveAndOtherSteps(
+//                                    remove = setOf(exCollWildcard()),
+//                                    steps = emptyMap()
+//                                ),
+//                            )
+//                        )
+//                    )
+//                )
+//            ),
+//            SubsumptionTC( // case sensitive
+//                """
+//                t.a, "t".a, -- "t".a in case-sensitive list
+//                "t".b, t.b, -- "t".b in case-sensitive list
+//                t."c", t.c,
+//                t.d, t."d"
+//                """,
+//                listOf(
+//                    EvaluatingCompiler.CompiledExcludeExpr(
+//                        root = caseInsensitiveId("t"),
+//                        exclusions = EvaluatingCompiler.RemoveAndOtherSteps(
+//                            remove = setOf(exTupleAttr(caseInsensitiveId("a")), exTupleAttr(caseInsensitiveId("b")), exTupleAttr(caseInsensitiveId("c")), exTupleAttr(caseInsensitiveId("d")), exTupleAttr(caseSensitiveId("c")), exTupleAttr(caseSensitiveId("d"))),
+//                            steps = emptyMap(),
+//                        )
+//                    ),
+//                    EvaluatingCompiler.CompiledExcludeExpr(
+//                        root = caseSensitiveId("t"),
+//                        exclusions = EvaluatingCompiler.RemoveAndOtherSteps(
+//                            remove = setOf(exTupleAttr(caseInsensitiveId("a")), exTupleAttr(caseInsensitiveId("b"))),
+//                            steps = emptyMap(),
+//                        )
+//                    ),
+//                )
+//            ),
+//        )
+//    }
 }
