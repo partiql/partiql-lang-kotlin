@@ -198,6 +198,7 @@ import org.partiql.ast.typeSymbol
 import org.partiql.ast.typeTime
 import org.partiql.ast.typeTimeWithTz
 import org.partiql.ast.typeTimestamp
+import org.partiql.ast.typeTimestampWithTz
 import org.partiql.ast.typeTuple
 import org.partiql.ast.typeVarchar
 import org.partiql.parser.PartiQLLexerException
@@ -2079,9 +2080,17 @@ internal class PartiQLParserDefault : PartiQLParser {
                 if (p < 0 || 9 < p) throw error(ctx.precision, "Unsupported time precision")
                 p
             }
-            when (ctx.ZONE()) {
-                null -> typeTime(precision)
-                else -> typeTimeWithTz(precision)
+
+            when (ctx.datatype.type) {
+                GeneratedParser.TIME -> when (ctx.ZONE()) {
+                    null -> typeTime(precision)
+                    else -> typeTimeWithTz(precision)
+                }
+                GeneratedParser.TIMESTAMP -> when (ctx.ZONE()) {
+                    null -> typeTimestamp(precision)
+                    else -> typeTimestampWithTz(precision)
+                }
+                else -> throw error(ctx.datatype, "Invalid datatype")
             }
         }
 
