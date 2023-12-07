@@ -1,4 +1,4 @@
-import org.jetbrains.dokka.utilities.relativeTo
+
 
 /*
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
@@ -27,8 +27,10 @@ dependencies {
     api(project(":partiql-types"))
     api(project(":partiql-spi"))
     implementation(Deps.ionElement)
+    implementation(Deps.pigRuntime)
     // Test
     testImplementation(project(":partiql-parser"))
+    testImplementation(project(":partiql-planner"))
     testImplementation(project(":plugins:partiql-local"))
     testImplementation(project(":plugins:partiql-memory"))
 }
