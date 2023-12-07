@@ -1,6 +1,7 @@
 package org.partiql.ast.sql
 
 import org.partiql.ast.AstNode
+import org.partiql.ast.Exclude
 import org.partiql.ast.Expr
 import org.partiql.ast.From
 import org.partiql.ast.GroupBy
@@ -80,6 +81,38 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
             }
         }
         return head concat r(path)
+    }
+
+    override fun visitExclude(node: Exclude, head: SqlBlock): SqlBlock {
+        var h = head
+        h = h concat " EXCLUDE "
+        h = h concat list(start = null, end = null) { node.exprs }
+        return h
+    }
+
+    override fun visitExcludeExcludeExpr(node: Exclude.ExcludeExpr, head: SqlBlock): SqlBlock {
+        var h = head
+        h = h concat visitIdentifierSymbol(node.root, SqlBlock.Nil)
+        h = h concat list(delimiter = null, start = null, end = null) { node.steps }
+        return h
+    }
+
+    override fun visitExcludeStepExcludeCollectionIndex(node: Exclude.Step.ExcludeCollectionIndex, head: SqlBlock): SqlBlock {
+        return head concat r("[${node.index}]")
+    }
+
+    override fun visitExcludeStepExcludeTupleWildcard(node: Exclude.Step.ExcludeTupleWildcard, head: SqlBlock): SqlBlock {
+        return head concat r(".*")
+    }
+
+    override fun visitExcludeStepExcludeTupleAttr(node: Exclude.Step.ExcludeTupleAttr, head: SqlBlock): SqlBlock {
+        var h = head concat r(".")
+        h = h concat visitIdentifierSymbol(node.symbol, SqlBlock.Nil)
+        return h
+    }
+
+    override fun visitExcludeStepExcludeCollectionWildcard(node: Exclude.Step.ExcludeCollectionWildcard, head: SqlBlock): SqlBlock {
+        return head concat r("[*]")
     }
 
     // cannot write path step outside the context of a path as we don't want it to reflow
@@ -550,6 +583,8 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
         var h = head
         // SELECT
         h = visit(node.select, h)
+        // EXCLUDE
+        h = node.exclude?.let { visit(it, h) } ?: h
         // FROM
         h = visit(node.from, h concat r(" FROM "))
         // LET
