@@ -799,6 +799,9 @@ may then be further optimized by selecting better implementations of each operat
 
                 // For every row of `source`, adds each specified `let_binding`.
                 (let source::bexpr bindings::(* let_binding 1))
+
+                // For every row of `source`, omits the values specified by `exclude_expr`s
+                (exclude_clause source::bexpr exprs::(* exclude_expr 1))
             )
         )
 
@@ -872,6 +875,7 @@ may then be further optimized by selecting better implementations of each operat
             column_component
             returning_mapping
             assignment
+            exclude_op
         )
     )
 )
@@ -933,6 +937,9 @@ may then be further optimized by selecting better implementations of each operat
                 (global_id uniqueId::symbol)
             )
         )
+
+        (exclude exclude_expr)
+        (include (product exclude_expr root::int steps::(* exclude_step 1)))
 
         // Replace statement.dml.target with statement.dml.uniqueId (the "resolved" corollary).
         (with statement
@@ -1007,6 +1014,8 @@ may then be further optimized by selecting better implementations of each operat
                 // Notice that the physical window operator contains a list of window expression
                 // That is because, we want to combine the window functions that are operating on the same window to a single window operator
                 (window i::impl source:: bexpr window_specification:: over window_expression_list:: (* window_expression 1))
+
+                (exclude_clause i::impl source::bexpr exprs::(* exclude_expr 1))
             )
         )
     )

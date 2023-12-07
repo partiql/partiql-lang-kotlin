@@ -19,5 +19,6 @@ enum class RelationalOperatorKind {
     LIMIT,
     LET,
     SORT,
-    AGGREGATE
+    AGGREGATE,
+    EXCLUDE,
 }

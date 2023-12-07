@@ -24,6 +24,7 @@ import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
 import org.partiql.lang.eval.internal.builtins.SCALAR_BUILTINS_DEFAULT
 import org.partiql.lang.eval.internal.builtins.definitionalBuiltins
 import org.partiql.lang.eval.physical.operators.AggregateOperatorFactoryDefault
+import org.partiql.lang.eval.physical.operators.ExcludeRelationalOperatorFactoryDefault
 import org.partiql.lang.eval.physical.operators.FilterRelationalOperatorFactoryDefault
 import org.partiql.lang.eval.physical.operators.JoinRelationalOperatorFactoryDefault
 import org.partiql.lang.eval.physical.operators.LetRelationalOperatorFactoryDefault
@@ -87,6 +88,7 @@ class PartiQLCompilerBuilder private constructor() {
             // Notice here we will not propagate the optin requirement to the user
             @OptIn(ExperimentalWindowFunctions::class)
             WindowRelationalOperatorFactoryDefault,
+            ExcludeRelationalOperatorFactoryDefault,
         )
 
         @JvmStatic

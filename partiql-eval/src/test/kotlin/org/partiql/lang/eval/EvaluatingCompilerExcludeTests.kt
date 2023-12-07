@@ -2,16 +2,10 @@ package org.partiql.lang.eval
 
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
-import org.partiql.lang.eval.evaluatortestframework.CompilerPipelineFactory
-import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestAdapter
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestCase
-import org.partiql.lang.eval.evaluatortestframework.PipelineEvaluatorTestAdapter
 import org.partiql.lang.util.ArgumentsProviderBase
 
 class EvaluatingCompilerExcludeTests : EvaluatorTestBase() {
-
-    private val testHarness: EvaluatorTestAdapter = PipelineEvaluatorTestAdapter(CompilerPipelineFactory())
-
     class ExcludeTests : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
             EvaluatorTestCase(
@@ -810,7 +804,7 @@ class EvaluatingCompilerExcludeTests : EvaluatorTestBase() {
 
     @ParameterizedTest
     @ArgumentsSource(ExcludeTests::class)
-    fun validExcludeTests(tc: EvaluatorTestCase) = testHarness.runEvaluatorTestCase(
+    fun validExcludeTests(tc: EvaluatorTestCase) = runEvaluatorTestCase(
         tc,
         EvaluationSession.standard()
     )

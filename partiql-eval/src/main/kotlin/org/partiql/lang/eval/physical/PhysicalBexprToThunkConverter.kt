@@ -14,6 +14,7 @@ import org.partiql.lang.eval.physical.operators.CompiledAggregateFunction
 import org.partiql.lang.eval.physical.operators.CompiledGroupKey
 import org.partiql.lang.eval.physical.operators.CompiledSortKey
 import org.partiql.lang.eval.physical.operators.CompiledWindowFunction
+import org.partiql.lang.eval.physical.operators.ExcludeRelationalOperatorFactory
 import org.partiql.lang.eval.physical.operators.FilterRelationalOperatorFactory
 import org.partiql.lang.eval.physical.operators.JoinRelationalOperatorFactory
 import org.partiql.lang.eval.physical.operators.LetRelationalOperatorFactory
@@ -28,6 +29,7 @@ import org.partiql.lang.eval.physical.operators.ScanRelationalOperatorFactory
 import org.partiql.lang.eval.physical.operators.SortOperatorFactory
 import org.partiql.lang.eval.physical.operators.UnpivotOperatorFactory
 import org.partiql.lang.eval.physical.operators.WindowRelationalOperatorFactory
+import org.partiql.lang.eval.physical.operators.compileExcludeClause
 import org.partiql.lang.eval.physical.operators.valueExpression
 import org.partiql.lang.eval.physical.window.createBuiltinWindowFunction
 import org.partiql.lang.util.toIntExact
@@ -321,6 +323,21 @@ internal class PhysicalBexprToThunkConverter(
 
         // create operator implementation
         val bindingsExpr = factory.create(source, compiledPartitionBy, compiledOrderBy, compiledWindowFunctions)
+        // wrap in thunk
+        return bindingsExpr.toRelationThunk(node.metas)
+    }
+
+    override fun convertExcludeClause(node: PartiqlPhysical.Bexpr.ExcludeClause): RelationThunkEnv {
+        // recurse into children
+        val sourceBexpr = this.convert(node.source)
+        val compiledBindings = compileExcludeClause(node)
+
+        // locate operator factory
+        val factory = findOperatorFactory<ExcludeRelationalOperatorFactory>(RelationalOperatorKind.EXCLUDE, node.i.name.text)
+
+        // create operator implementation
+        val bindingsExpr = factory.create(node.i, sourceBexpr, compiledBindings)
+
         // wrap in thunk
         return bindingsExpr.toRelationThunk(node.metas)
     }

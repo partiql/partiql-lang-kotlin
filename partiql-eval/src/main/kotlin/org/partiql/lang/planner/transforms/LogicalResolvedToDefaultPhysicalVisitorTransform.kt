@@ -168,6 +168,18 @@ internal class LogicalResolvedToDefaultPhysicalVisitorTransform(
         }
     }
 
+    override fun transformBexprExcludeClause(node: PartiqlLogicalResolved.Bexpr.ExcludeClause): PartiqlPhysical.Bexpr {
+        val thiz = this
+        return PartiqlPhysical.build {
+            excludeClause(
+                i = DEFAULT_IMPL,
+                source = thiz.transformBexpr(node.source),
+                exprs = node.exprs.map { transformExcludeExpr(it) },
+                metas = node.metas
+            )
+        }
+    }
+
     override fun transformStatementQuery(node: PartiqlLogicalResolved.Statement.Query): PartiqlPhysical.Statement =
         PartiqlPhysical.build { query(transformExpr(node.expr), node.metas) }
 }

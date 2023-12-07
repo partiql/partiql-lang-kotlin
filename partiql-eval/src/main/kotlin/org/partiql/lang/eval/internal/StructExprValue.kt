@@ -34,7 +34,7 @@ internal enum class StructOrdering {
  * Provides a [ExprValueType.STRUCT] implementation lazily backed by a sequence.
  */
 internal open class StructExprValue(
-    private val ordering: StructOrdering,
+    internal val ordering: StructOrdering,
     private val sequence: Sequence<ExprValue>
 ) : BaseExprValue() {
 

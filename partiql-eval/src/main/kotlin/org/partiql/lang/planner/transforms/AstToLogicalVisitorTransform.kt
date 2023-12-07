@@ -84,6 +84,10 @@ internal class AstToLogicalVisitorTransform(
         algebra = select.limit?.let { limit(transformExpr(it), algebra, it.metas) }
             ?: algebra
 
+        algebra = select.excludeClause?.let { excludeOp ->
+            excludeClause(algebra, excludeOp.exprs.map { transformExcludeExpr(it) }, excludeOp.metas)
+        } ?: algebra
+
         val expr = transformProjection(select, algebra)
         when (node.setq) {
             is PartiqlAst.SetQuantifier.Distinct -> call("filter_distinct", expr)

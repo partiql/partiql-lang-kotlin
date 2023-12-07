@@ -187,6 +187,24 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
             localId_((-1).asPrimitive(), this@asErrorId.metas)
         }
 
+    override fun transformExcludeExpr(node: PartiqlLogical.ExcludeExpr): PartiqlLogicalResolved.ExcludeExpr {
+        val root = node.root
+        val bindingName = BindingName(root.name.text, root.case.toBindingCase())
+        val index = when (val localResolutionResult = resolveLocalVariable(bindingName)) {
+            is ResolvedVariable.LocalVariable -> localResolutionResult.index
+            else -> -1
+        }
+        val steps = node.steps.map {
+            this.transformExcludeStep(it)
+        }
+        return PartiqlLogicalResolved.build {
+            excludeExpr(
+                root = index.toLong(),
+                steps = steps
+            )
+        }
+    }
+
     override fun transformPlan(node: PartiqlLogical.Plan): PartiqlLogicalResolved.Plan =
         PartiqlLogicalResolved.build {
             plan_(
@@ -241,6 +259,17 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
                     newBindings
                 }
             )
+        }
+    }
+
+    override fun transformBexprExcludeClause_exprs(node: PartiqlLogical.Bexpr.ExcludeClause): List<PartiqlLogicalResolved.ExcludeExpr> {
+        val bindings = getOutputScope(node).concatenate(this.inputScope)
+        return withInputScope(bindings) {
+            val exprs = node.exprs.map { transformExcludeExpr(it) }
+            exprs.filter { expr ->
+                // Filter out all unresolved local vars
+                expr.root.value.toInt() != -1
+            }
         }
     }
 
@@ -544,6 +573,10 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
                 val sourceScope = getOutputScope(bexpr.source)
                 val windowVariable = bexpr.windowExpressionList.map { it.decl }
                 sourceScope.concatenate(windowVariable)
+            }
+
+            is PartiqlLogical.Bexpr.ExcludeClause -> {
+                getOutputScope(bexpr.source)
             }
         }
 
