@@ -51,6 +51,7 @@ Thank you to all who have contributed!
 
 ### Fixed
 - Fixes the CLI hanging on invalid queries. See issue #1230.
+- Fixes Timestamp Type parsing issue. Previously Timestamp Type would get parsed to a Time type.
 
 ### Removed
 - **Breaking** Removed IR factory in favor of static top-level functions. Change `Ast.foo()`
