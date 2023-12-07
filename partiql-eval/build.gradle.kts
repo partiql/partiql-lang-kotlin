@@ -1,3 +1,8 @@
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> cc736ac7 (Renames org.partiql.engine to org.partiql.eval)
 /*
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *

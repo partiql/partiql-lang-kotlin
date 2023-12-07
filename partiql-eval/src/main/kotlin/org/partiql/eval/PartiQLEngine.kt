@@ -1,6 +1,6 @@
-package org.partiql.engine
+package org.partiql.eval
 
-import org.partiql.engine.impl.PartiQLEngineDefault
+import org.partiql.eval.impl.PartiQLEngineDefault
 import org.partiql.plan.PartiQLPlan
 import org.partiql.spi.Plugin
 import org.partiql.value.PartiQLValue

@@ -1,7 +1,7 @@
-package org.partiql.engine.impl
+package org.partiql.eval.impl
 
 import org.junit.jupiter.api.Test
-import org.partiql.engine.PartiQLEngine
+import org.partiql.eval.PartiQLEngine
 import org.partiql.parser.PartiQLParserBuilder
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.PartiQLPlannerBuilder

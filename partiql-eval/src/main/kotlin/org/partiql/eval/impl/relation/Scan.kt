@@ -1,7 +1,7 @@
-package org.partiql.engine.impl.relation
+package org.partiql.eval.impl.relation
 
-import org.partiql.engine.impl.PhysicalNode
-import org.partiql.engine.impl.Record
+import org.partiql.eval.impl.PhysicalNode
+import org.partiql.eval.impl.Record
 import org.partiql.value.CollectionValue
 import org.partiql.value.PartiQLValueExperimental
 
