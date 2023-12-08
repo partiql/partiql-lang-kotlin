@@ -24,7 +24,7 @@ The report is written into file `test/partiql-tests-runner/conformance_test_resu
 
 The above project property `-PconformanceReport` is checked in `test/partiql-tests-runner/build.gradle.kts`,
 to exclude the conformance test suite from executing during a normal project-build test run. 
-Unfortunately, this also disables running `ConformanceTestsReportRunner` in a UI runner. 
+Unfortunately, this also disables running `ConformanceTestReport` in a UI runner. 
 To make that possible locally, temporarily comment out the check in `test/partiql-tests-runner/build.gradle.kts`.
 
 ## Compare Conformance Reports locally
