@@ -1,6 +1,7 @@
 package org.partiql.eval.internal
 
 import org.partiql.eval.internal.operator.Operator
+import org.partiql.eval.internal.operator.rel.RelFilter
 import org.partiql.eval.internal.operator.rel.RelProject
 import org.partiql.eval.internal.operator.rel.RelScan
 import org.partiql.eval.internal.operator.rex.ExprCollection
@@ -67,6 +68,12 @@ internal object Compiler {
 
         override fun visitRel(node: Rel, ctx: Unit): Operator.Relation {
             return super.visitRelOp(node.op, ctx) as Operator.Relation
+        }
+
+        override fun visitRelOpFilter(node: Rel.Op.Filter, ctx: Unit): Operator {
+            val input = visitRel(node.input, ctx)
+            val condition = visitRex(node.predicate, ctx)
+            return RelFilter(input, condition)
         }
 
         override fun visitRex(node: Rex, ctx: Unit): Operator.Expr {
