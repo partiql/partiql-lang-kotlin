@@ -134,6 +134,11 @@ class SqlDialectTest {
     @Execution(ExecutionMode.CONCURRENT)
     fun testSelectClause(case: Case) = case.assert()
 
+    @ParameterizedTest(name = "EXCLUDE Clause #{index}")
+    @MethodSource("excludeClauseCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun testExcludeClause(case: Case) = case.assert()
+
     @ParameterizedTest(name = "FROM Clause #{index}")
     @MethodSource("fromClauseCases")
     @Execution(ExecutionMode.CONCURRENT)
@@ -1057,6 +1062,94 @@ class SqlDialectTest {
                 }
             },
         )
+
+        @JvmStatic
+        fun excludeClauseCases() = listOf(
+            expect("SELECT a EXCLUDE t.a FROM T") {
+                exprSFW {
+                    select = select("a")
+                    from = fromValue {
+                        expr = v("T")
+                        type = From.Value.Type.SCAN
+                    }
+                    exclude = exclude {
+                        exprs += excludeExcludeExpr {
+                            root = id("t", Identifier.CaseSensitivity.INSENSITIVE)
+                            steps += excludeStepExcludeTupleAttr {
+                                symbol = id("a", Identifier.CaseSensitivity.INSENSITIVE)
+                            }
+                        }
+                    }
+                }
+            },
+            expect("SELECT a EXCLUDE a.b, c.d, e.f, g.h FROM T") {
+                exprSFW {
+                    select = select("a")
+                    from = fromValue {
+                        expr = v("T")
+                        type = From.Value.Type.SCAN
+                    }
+                    exclude = exclude {
+                        exprs += excludeExcludeExpr {
+                            root = id("a", Identifier.CaseSensitivity.INSENSITIVE)
+                            steps += insensitiveExcludeTupleAttr("b")
+                        }
+                        exprs += excludeExcludeExpr {
+                            root = id("c", Identifier.CaseSensitivity.INSENSITIVE)
+                            steps += insensitiveExcludeTupleAttr("d")
+                        }
+                        exprs += excludeExcludeExpr {
+                            root = id("e", Identifier.CaseSensitivity.INSENSITIVE)
+                            steps += insensitiveExcludeTupleAttr("f")
+                        }
+                        exprs += excludeExcludeExpr {
+                            root = id("g", Identifier.CaseSensitivity.INSENSITIVE)
+                            steps += insensitiveExcludeTupleAttr("h")
+                        }
+                    }
+                }
+            },
+            expect("SELECT a EXCLUDE t.a.\"b\".*[*].c, \"s\"[0].d.\"e\"[*].f.* FROM T") {
+                exprSFW {
+                    select = select("a")
+                    from = fromValue {
+                        expr = v("T")
+                        type = From.Value.Type.SCAN
+                    }
+                    exclude = exclude {
+                        exprs += excludeExcludeExpr {
+                            root = id("t", Identifier.CaseSensitivity.INSENSITIVE)
+                            steps += mutableListOf(
+                                insensitiveExcludeTupleAttr("a"),
+                                sensitiveExcludeTupleAttr("b"),
+                                excludeStepExcludeTupleWildcard(),
+                                excludeStepExcludeCollectionWildcard(),
+                                insensitiveExcludeTupleAttr("c"),
+                            )
+                        }
+                        exprs += excludeExcludeExpr {
+                            root = id("s", Identifier.CaseSensitivity.SENSITIVE)
+                            steps += mutableListOf(
+                                excludeStepExcludeCollectionIndex(0),
+                                insensitiveExcludeTupleAttr("d"),
+                                sensitiveExcludeTupleAttr("e"),
+                                excludeStepExcludeCollectionWildcard(),
+                                insensitiveExcludeTupleAttr("f"),
+                                excludeStepExcludeTupleWildcard(),
+                            )
+                        }
+                    }
+                }
+            },
+        )
+
+        private fun AstBuilder.insensitiveExcludeTupleAttr(str: String) = excludeStepExcludeTupleAttr {
+            symbol = id(str, Identifier.CaseSensitivity.INSENSITIVE)
+        }
+
+        private fun AstBuilder.sensitiveExcludeTupleAttr(str: String) = excludeStepExcludeTupleAttr {
+            symbol = id(str, Identifier.CaseSensitivity.SENSITIVE)
+        }
 
         @JvmStatic
         fun fromClauseCases() = listOf(
