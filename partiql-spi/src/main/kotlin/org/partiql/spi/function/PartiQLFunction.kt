@@ -64,18 +64,3 @@ public sealed interface PartiQLFunction {
         public fun value(): PartiQLValue
     }
 }
-
-@OptIn(PartiQLValueExperimental::class)
-public class MyInt32Plus : PartiQLFunction.Scalar {
-
-    override val signature: FunctionSignature.Scalar = TODO("Not yet implemented")
-
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val arg0 = args[0].check<Int32Value>().value
-        val arg1 = args[1].check<Int32Value>().value
-        if (arg0 == null || arg1 == null) {
-            return int32Value(null)
-        }
-        return int32Value(arg0 + arg1)
-    }
-}
