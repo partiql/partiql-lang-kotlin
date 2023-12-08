@@ -1,10 +1,6 @@
 package org.partiql.errors
 
-import org.partiql.value.PartiQLValueType
-
 /**
- * TODO
+ * A [TypeCheckException] represents an invalid operation due to argument types.
  */
-public class TypeCheckException(
-    private val actual: PartiQLValueType,
-) : RuntimeException()
+public class TypeCheckException : RuntimeException()
