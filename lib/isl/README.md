@@ -45,7 +45,7 @@ val elements: List<AnyElement> = loadAllElements("type::{ name: foo }")
 val parsedSchemaModel: IonSchemaModel.Model = parseSchema(elements)
 ```
 
-Alternatively, users can parse `ion-schema-kotlin` [Schema](https://github.com/amzn/ion-schema-kotlin/blob/master/src/com/amazon/ionschema/Schema.kt#L36)
+Alternatively, users can parse `ion-schema-kotlin` [Schema](https://github.com/amzn/ion-schema-kotlin/blob/master/src/com/amazon/ionschema/Namespace.kt#L36)
 by first converting to `IonElement`:
 ```Kotlin
 val schema = ... // some ion-schema-kotlin Schema object

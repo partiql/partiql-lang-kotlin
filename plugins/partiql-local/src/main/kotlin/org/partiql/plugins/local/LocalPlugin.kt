@@ -14,8 +14,6 @@
 
 package org.partiql.plugins.local
 
-import org.partiql.plugins.local.functions.Pow
-import org.partiql.plugins.local.functions.TrimLead
 import org.partiql.spi.Plugin
 import org.partiql.spi.connector.Connector
 import org.partiql.spi.function.PartiQLFunction
@@ -31,7 +29,5 @@ class LocalPlugin : Plugin {
     override fun getConnectorFactories(): List<Connector.Factory> = listOf(LocalConnector.Factory())
 
     @PartiQLFunctionExperimental
-    override fun getFunctions(): List<PartiQLFunction> = listOf(
-        TrimLead, Pow
-    )
+    override fun getFunctions(): List<PartiQLFunction> = listOf()
 }

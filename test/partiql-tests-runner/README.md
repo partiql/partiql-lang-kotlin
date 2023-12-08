@@ -12,11 +12,11 @@ This package enables:
 
 ```shell
 # default, test data from partiql-tests submodule will be used
-./gradlew :test:partiql-tests-runner:test --tests "*ConformanceTestsReportRunner" -PconformanceReport
+./gradlew :test:partiql-tests-runner:test --tests "*ConformanceTestReport" -PconformanceReport
 
 # override test data location
 PARTIQL_TESTS_DATA=/path/to/partiql-tests/data \
-./gradlew :test:partiql-tests-runner:test --tests "*ConformanceTestsReportRunner" -PconformanceReport
+./gradlew :test:partiql-tests-runner:test --tests "*ConformanceTestReport" -PconformanceReport
 ```
 The report is written into file `test/partiql-tests-runner/conformance_test_results.ion`.
 
