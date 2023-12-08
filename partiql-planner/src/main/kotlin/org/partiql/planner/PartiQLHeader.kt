@@ -590,23 +590,26 @@ public object PartiQLHeader : Header() {
     private fun extract(): List<FunctionSignature.Scalar> = emptyList()
 
     private fun dateAdd(): List<FunctionSignature.Scalar> {
+        val intervals = listOf(INT32, INT64, INT)
         val operators = mutableListOf<FunctionSignature.Scalar>()
         for (field in DatetimeField.values()) {
             for (type in types.datetime) {
                 if (field == DatetimeField.TIMEZONE_HOUR || field == DatetimeField.TIMEZONE_MINUTE) {
                     continue
                 }
-                val signature = FunctionSignature.Scalar(
-                    name = "date_add_${field.name.lowercase()}",
-                    returns = type,
-                    parameters = listOf(
-                        FunctionParameter("interval", INT),
-                        FunctionParameter("datetime", type),
-                    ),
-                    isNullable = false,
-                    isNullCall = true,
-                )
-                operators.add(signature)
+                for (interval in intervals) {
+                    val signature = FunctionSignature.Scalar(
+                        name = "date_add_${field.name.lowercase()}",
+                        returns = type,
+                        parameters = listOf(
+                            FunctionParameter("interval", interval),
+                            FunctionParameter("datetime", type),
+                        ),
+                        isNullable = false,
+                        isNullCall = true,
+                    )
+                    operators.add(signature)
+                }
             }
         }
         return operators
