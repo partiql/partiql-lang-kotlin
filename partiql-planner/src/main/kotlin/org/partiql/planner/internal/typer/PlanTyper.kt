@@ -38,6 +38,7 @@ import org.partiql.planner.internal.ir.rel
 import org.partiql.planner.internal.ir.relBinding
 import org.partiql.planner.internal.ir.relOpAggregate
 import org.partiql.planner.internal.ir.relOpAggregateCall
+import org.partiql.planner.internal.ir.relOpDistinct
 import org.partiql.planner.internal.ir.relOpErr
 import org.partiql.planner.internal.ir.relOpFilter
 import org.partiql.planner.internal.ir.relOpJoin
@@ -197,7 +198,8 @@ internal class PlanTyper(
         }
 
         override fun visitRelOpDistinct(node: Rel.Op.Distinct, ctx: Rel.Type?): Rel {
-            TODO("Type RelOp Distinct")
+            val input = visitRel(node.input, ctx)
+            return rel(input.type, relOpDistinct(input))
         }
 
         override fun visitRelOpFilter(node: Rel.Op.Filter, ctx: Rel.Type?): Rel {

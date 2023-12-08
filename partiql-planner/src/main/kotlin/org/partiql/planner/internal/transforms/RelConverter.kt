@@ -24,6 +24,7 @@ import org.partiql.ast.GroupBy
 import org.partiql.ast.OrderBy
 import org.partiql.ast.Select
 import org.partiql.ast.SetOp
+import org.partiql.ast.SetQuantifier
 import org.partiql.ast.Sort
 import org.partiql.ast.builder.ast
 import org.partiql.ast.helpers.toBinder
@@ -37,6 +38,7 @@ import org.partiql.planner.internal.ir.rel
 import org.partiql.planner.internal.ir.relBinding
 import org.partiql.planner.internal.ir.relOpAggregate
 import org.partiql.planner.internal.ir.relOpAggregateCall
+import org.partiql.planner.internal.ir.relOpDistinct
 import org.partiql.planner.internal.ir.relOpErr
 import org.partiql.planner.internal.ir.relOpExcept
 import org.partiql.planner.internal.ir.relOpExclude
@@ -146,12 +148,29 @@ internal object RelConverter {
             rel = convertExclude(rel, sel.exclude)
             // append SQL projection if present
             rel = when (val projection = sel.select) {
-                is Select.Project -> visitSelectProject(projection, rel)
-                is Select.Value -> visitSelectValue(projection, rel)
+                is Select.Project -> {
+                    val project = visitSelectProject(projection, rel)
+                    visitSetQuantifier(projection.setq, project)
+                }
+                is Select.Value -> {
+                    val project = visitSelectValue(projection, rel)
+                    visitSetQuantifier(projection.setq, project)
+                }
                 is Select.Star -> error("AST not normalized, found project star")
-                else -> rel // skip PIVOT and SELECT VALUE
+                is Select.Pivot -> rel // Skip PIVOT
             }
             return rel
+        }
+
+        /**
+         * Given a non-null [setQuantifier], this will return a [Rel] of [Rel.Op.Distinct] wrapping the [input].
+         * If [setQuantifier] is null or ALL, this will return the [input].
+         */
+        private fun visitSetQuantifier(setQuantifier: SetQuantifier?, input: Rel): Rel {
+            return when (setQuantifier) {
+                SetQuantifier.DISTINCT -> rel(input.type, relOpDistinct(input))
+                SetQuantifier.ALL, null -> input
+            }
         }
 
         override fun visitSelectProject(node: Select.Project, input: Rel): Rel {
