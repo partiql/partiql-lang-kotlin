@@ -12,11 +12,11 @@ This package enables:
 
 ```shell
 # default, test data from partiql-tests submodule will be used
-./gradlew :test:partiql-tests-runner:test --tests "*ConformanceTestsReportRunner" -PconformanceReport
+./gradlew :test:partiql-tests-runner:test --tests "*ConformanceTestReport" -PconformanceReport
 
 # override test data location
 PARTIQL_TESTS_DATA=/path/to/partiql-tests/data \
-./gradlew :test:partiql-tests-runner:test --tests "*ConformanceTestsReportRunner" -PconformanceReport
+./gradlew :test:partiql-tests-runner:test --tests "*ConformanceTestReport" -PconformanceReport
 ```
 The report is written into file `test/partiql-tests-runner/conformance_test_results.ion`.
 
@@ -24,7 +24,7 @@ The report is written into file `test/partiql-tests-runner/conformance_test_resu
 
 The above project property `-PconformanceReport` is checked in `test/partiql-tests-runner/build.gradle.kts`,
 to exclude the conformance test suite from executing during a normal project-build test run. 
-Unfortunately, this also disables running `ConformanceTestsReportRunner` in a UI runner. 
+Unfortunately, this also disables running `ConformanceTestReport` in a UI runner. 
 To make that possible locally, temporarily comment out the check in `test/partiql-tests-runner/build.gradle.kts`.
 
 ## Compare Conformance Reports locally

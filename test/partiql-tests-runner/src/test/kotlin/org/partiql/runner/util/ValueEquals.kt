@@ -1,4 +1,4 @@
-package org.partiql.runner
+package org.partiql.runner.util
 
 import com.amazon.ion.IonDecimal
 import com.amazon.ion.IonList
@@ -10,6 +10,38 @@ import com.amazon.ion.IonType
 import com.amazon.ion.IonValue
 import org.partiql.lang.eval.BAG_ANNOTATION
 import org.partiql.lang.eval.MISSING_ANNOTATION
+import org.partiql.value.PartiQLValue
+import org.partiql.value.PartiQLValueExperimental
+
+/**
+ * Different methods for asserting value equality. The legacy comparator needed to compared on lowered IonValue but
+ * we now have PartiQLValue which defines its own `equals` methods.
+ *
+ * @param T
+ */
+interface ValueEquals<T> {
+
+    fun equals(left: T, right: T): Boolean
+
+    companion object {
+
+        @JvmStatic
+        val legacy: ValueEquals<IonValue> = LegacyValueEquals
+
+        @OptIn(PartiQLValueExperimental::class)
+        @JvmStatic
+        val partiql: ValueEquals<PartiQLValue> = PartiQLValueEquals
+    }
+}
+
+/**
+ * Value equality using the [PartiQLValue] equality implementation.
+ */
+@OptIn(PartiQLValueExperimental::class)
+private object PartiQLValueEquals : ValueEquals<PartiQLValue> {
+
+    override fun equals(left: PartiQLValue, right: PartiQLValue) = left.equals(right)
+}
 
 /**
  * Checks the equality of two PartiQL values defined using its [IonValue] representation. This definition first requires
@@ -18,8 +50,9 @@ import org.partiql.lang.eval.MISSING_ANNOTATION
  * 1. Bag comparison checks ignore ordering of IonLists
  * 2. Null checks check for `missing` annotation
  */
-class PartiQLEqualityChecker {
-    fun areEqual(left: IonValue, right: IonValue): Boolean {
+private object LegacyValueEquals : ValueEquals<IonValue> {
+
+    override fun equals(left: IonValue, right: IonValue): Boolean {
         if (left.type != right.type) {
             return false
         }
@@ -82,7 +115,7 @@ class PartiQLEqualityChecker {
         left.size == right.size &&
             left.asSequence()
                 .mapIndexed { index, leftElement -> index to leftElement }
-                .all { (index, leftElement) -> areEqual(leftElement, right[index]) }
+                .all { (index, leftElement) -> equals(leftElement, right[index]) }
 
     // bags can contain repeated elements, so they are equal if and only if:
     // * Same size
@@ -92,8 +125,8 @@ class PartiQLEqualityChecker {
             left.size != right.size -> false
             left.isBag() && right.isBag() -> {
                 left.all { leftEl ->
-                    val leftQtd = left.count { areEqual(leftEl, it) }
-                    val rightQtd = right.count { areEqual(leftEl, it) }
+                    val leftQtd = left.count { equals(leftEl, it) }
+                    val rightQtd = right.count { equals(leftEl, it) }
 
                     leftQtd == rightQtd
                 }
