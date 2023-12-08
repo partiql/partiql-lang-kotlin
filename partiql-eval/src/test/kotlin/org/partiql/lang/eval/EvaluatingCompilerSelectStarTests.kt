@@ -3,6 +3,8 @@ package org.partiql.lang.eval
 import junitparams.Parameters
 import org.junit.Test
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestCase
+import org.partiql.lang.eval.internal.BagExprValue
+import org.partiql.lang.eval.internal.ionValueToExprValue
 import org.partiql.lang.util.downcast
 
 class EvaluatingCompilerSelectStarTests : EvaluatorTestBase() {
@@ -11,7 +13,7 @@ class EvaluatingCompilerSelectStarTests : EvaluatorTestBase() {
         globals(
             Bindings.ofMap(
                 mapOf(
-                    "dogs" to ExprValue.newBag(
+                    "dogs" to BagExprValue(
                         sequenceOf(
                             createExprValue("""{ name: "fido" }""", 100, "addr0"),
                             createExprValue("""{ name: "bella" }""", 101, "addr1"),
@@ -36,7 +38,7 @@ class EvaluatingCompilerSelectStarTests : EvaluatorTestBase() {
 
     private fun createExprValue(ionText: String, index: Long, address: String) =
         AddressedExprValue(
-            ExprValue.of(ion.singleValue(ionText)),
+            ionValueToExprValue(ion.singleValue(ionText)),
             ExprValue.newInt(index),
             ExprValue.newString(address),
         )

@@ -9,10 +9,10 @@ import org.partiql.lang.eval.internal.ListExprValue
 import org.partiql.lang.eval.internal.NamedExprValue
 import org.partiql.lang.eval.internal.SexpExprValue
 import org.partiql.lang.eval.internal.StructExprValue
+import org.partiql.lang.eval.internal.ext.name
 import org.partiql.lang.eval.internal.ext.namedValue
 import org.partiql.lang.eval.internal.newSequenceExprValue
 import org.partiql.lang.eval.longValue
-import org.partiql.lang.eval.name
 import org.partiql.lang.eval.physical.EvaluatorState
 import org.partiql.lang.eval.relation.RelationIterator
 import org.partiql.lang.eval.relation.relation

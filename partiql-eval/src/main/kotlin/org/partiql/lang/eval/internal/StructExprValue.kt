@@ -37,6 +37,7 @@ internal open class StructExprValue(
     internal val ordering: StructOrdering,
     private val sequence: Sequence<ExprValue>
 ) : BaseExprValue() {
+    constructor(fields: List<ExprValue>, ordering: StructOrdering) : this(ordering, fields.asSequence())
 
     override val type = ExprValueType.STRUCT
 

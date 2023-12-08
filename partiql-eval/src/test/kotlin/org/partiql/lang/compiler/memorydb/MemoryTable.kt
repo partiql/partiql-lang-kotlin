@@ -6,6 +6,8 @@ import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.DEFAULT_COMPARATOR
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
+import org.partiql.lang.eval.internal.ListExprValue
+import org.partiql.lang.eval.internal.ionValueToExprValue
 import org.partiql.lang.eval.toIonValue
 import java.util.TreeMap
 
@@ -20,10 +22,10 @@ class MemoryTable(
     private val primaryKeyBindingNames = metadata.primaryKeyFields.map { BindingName(it, BindingCase.SENSITIVE) }
 
     private fun ExprValue.extractPrimaryKey(): ExprValue =
-        ExprValue.newList(
+        ListExprValue(
             primaryKeyBindingNames.map {
                 this.bindings[it] ?: error("Row missing primary key field '${it.name}' (case: ${it.bindingCase})")
-            }.asIterable()
+            }
         )
 
     fun containsKey(key: ExprValue): Boolean {
@@ -50,7 +52,7 @@ class MemoryTable(
             // whenever the value is accessed.  To do this we convert to Ion, which forces full materialization,
             // and then create a new ExprValue based off the Ion.
             val rowStruct = row.toIonValue(ION)
-            rows[primaryKeyExprValue] = ExprValue.of(rowStruct)
+            rows[primaryKeyExprValue] = ionValueToExprValue(rowStruct)
         }
     }
 

@@ -1,6 +1,8 @@
 package org.partiql.lang.eval
 
 import org.junit.Test
+import org.partiql.lang.eval.internal.BagExprValue
+import org.partiql.lang.eval.internal.ListExprValue
 
 class EvaluatingCompilerFromSourceByTests : EvaluatorTestBase() {
 
@@ -21,14 +23,14 @@ class EvaluatingCompilerFromSourceByTests : EvaluatorTestBase() {
         globals(
             Bindings.ofMap(
                 mapOf(
-                    "someList" to ExprValue.newList(
+                    "someList" to ListExprValue(
                         sequenceOf(
                             AddressedExprValue(1),
                             AddressedExprValue(2),
                             AddressedExprValue(3)
                         )
                     ),
-                    "someBag" to ExprValue.newBag(
+                    "someBag" to BagExprValue(
                         sequenceOf(
                             AddressedExprValue(11),
                             AddressedExprValue(12),

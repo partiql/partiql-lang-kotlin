@@ -4,6 +4,7 @@ import com.amazon.ion.IonSystem
 import com.amazon.ion.system.IonSystemBuilder
 import org.junit.Test
 import org.partiql.lang.CompilerPipeline
+import org.partiql.lang.eval.internal.ionValueToExprValue
 
 /**
  * The following tests demonstrate the current typed null behavior and tracks possible regressions in future commits.
@@ -16,7 +17,7 @@ class TypedNullTests : EvaluatorTestBase() {
     fun typedNullIonValueExprValueRoundTrip() {
         val ion: IonSystem = IonSystemBuilder.standard().build()
         val ionValue = ion.singleValue("null.int")
-        val exprValue = ExprValue.of(ionValue)
+        val exprValue = ionValueToExprValue(ionValue)
         val roundTripped = exprValue.toIonValue(ion)
         assertEquals(ionValue, roundTripped)
     }

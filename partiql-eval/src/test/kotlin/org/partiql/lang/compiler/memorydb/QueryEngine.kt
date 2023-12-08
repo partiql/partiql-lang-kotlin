@@ -12,7 +12,9 @@ import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.PartiQLResult
-import org.partiql.lang.eval.StructOrdering
+import org.partiql.lang.eval.internal.BagExprValue
+import org.partiql.lang.eval.internal.StructExprValue
+import org.partiql.lang.eval.internal.StructOrdering
 import org.partiql.lang.eval.namedValue
 import org.partiql.lang.planner.GlobalResolutionResult
 import org.partiql.lang.planner.GlobalVariableResolver
@@ -86,7 +88,7 @@ class QueryEngine(val db: MemoryDatabase) {
             }
 
             val tableId = UUID.fromString(bindingName.name)
-            return ExprValue.newBag(
+            return BagExprValue(
                 db.getFullScanSequence(tableId)
             )
         }
@@ -194,7 +196,7 @@ class QueryEngine(val db: MemoryDatabase) {
                     db.delete(targetTableId, it)
                     rowsEffected ++
                 }
-                ExprValue.newStruct(
+                StructExprValue(
                     listOf(
                         ExprValue.newInt(rowsEffected)
                             .namedValue(ExprValue.newString("rows_effected"))
@@ -209,7 +211,7 @@ class QueryEngine(val db: MemoryDatabase) {
                     db.insert(targetTableId, it)
                     rowsEffected ++
                 }
-                ExprValue.newStruct(
+                StructExprValue(
                     listOf(
                         ExprValue.newInt(rowsEffected)
                             .namedValue(ExprValue.newString("rows_effected"))

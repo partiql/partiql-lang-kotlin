@@ -3,9 +3,9 @@ package org.partiql.lang.eval.physical.operators
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
-import org.partiql.lang.eval.address
+import org.partiql.lang.eval.internal.ext.address
+import org.partiql.lang.eval.internal.ext.name
 import org.partiql.lang.eval.internal.ext.unnamedValue
-import org.partiql.lang.eval.name
 import org.partiql.lang.eval.physical.EvaluatorState
 import org.partiql.lang.eval.physical.SetVariableFunc
 import org.partiql.lang.eval.relation.RelationIterator

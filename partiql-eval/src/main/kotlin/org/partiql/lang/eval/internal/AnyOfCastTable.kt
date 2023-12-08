@@ -8,10 +8,9 @@ import org.partiql.lang.ast.sourceLocation
 import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
-import org.partiql.lang.eval.StructOrdering
 import org.partiql.lang.eval.internal.ext.isUnknown
+import org.partiql.lang.eval.internal.ext.name
 import org.partiql.lang.eval.internal.ext.namedValue
-import org.partiql.lang.eval.name
 import org.partiql.lang.types.StaticTypeUtils
 import org.partiql.types.AnyOfType
 import org.partiql.types.AnyType
@@ -236,11 +235,11 @@ internal class AnyOfCastTable(
                             // Should not be possible
                             throw IllegalStateException("Cannot cast from non-struct to struct")
                         }
-                        ExprValue.Companion.newStruct(
-                            children.zip(source.asSequence()).map { (child, original) ->
+                        StructExprValue(
+                            sequence = children.zip(source.asSequence()).map { (child, original) ->
                                 child.namedValue(original.name!!)
                             },
-                            StructOrdering.UNORDERED
+                            ordering = StructOrdering.UNORDERED
                         )
                     }
                     else -> throw IllegalStateException("Invalid collection target type: $targetType")

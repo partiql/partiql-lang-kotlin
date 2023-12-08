@@ -4,6 +4,7 @@ import com.amazon.ion.IonSystem
 import com.amazon.ion.system.IonSystemBuilder
 import org.junit.Test
 import org.partiql.lang.CompilerPipeline
+import org.partiql.lang.eval.internal.ionValueToExprValue
 
 /**
  * The following tests demonstrate the current IonValue annotation behavior and tracks possible regressions in future commits.
@@ -16,7 +17,7 @@ class IonAnnotationTests : EvaluatorTestBase() {
     fun ionValueWithAnnotationExprValueRoundTrip() {
         val ion: IonSystem = IonSystemBuilder.standard().build()
         val inputIonValue = ion.singleValue("annotation::1")
-        val exprValue = ExprValue.of(inputIonValue)
+        val exprValue = ionValueToExprValue(inputIonValue)
         val roundTripped = exprValue.toIonValue(ion)
         assertEquals(ion.singleValue("1"), roundTripped)
     }

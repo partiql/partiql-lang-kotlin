@@ -117,7 +117,18 @@ internal fun ExprValue.namedValue(nameValue: ExprValue): ExprValue = NamedExprVa
 /** Wraps this [ExprValue] in a delegate that always masks the [Named] facet. */
 internal fun ExprValue.unnamedValue(): ExprValue = when (this) {
     is NamedExprValue -> this.value
-    else -> this
+    else -> when (asFacet(Named::class.java)) {
+        null -> this
+        else -> object : ExprValue by this {
+            override fun <T : Any?> asFacet(type: Class<T>?): T? =
+                when (type) {
+                    // always mask the name facet
+                    Named::class.java -> null
+                    else -> this@unnamedValue.asFacet(type)
+                }
+            override fun toString(): String = stringify()
+        }
+    }
 }
 
 internal val ExprValue.name: ExprValue?
