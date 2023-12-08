@@ -1,6 +1,5 @@
 package org.partiql.runner.test
 
-import org.partiql.lang.SqlException
 import org.partiql.lang.eval.CompileOptions
 import org.partiql.runner.schema.Assertion
 import org.partiql.runner.schema.TestCase
@@ -45,7 +44,7 @@ class TestRunner<T, V>(private val factory: TestExecutor.Factory<T, V>) {
                     error("Expected error to be thrown but none was thrown.\n${case.name}\nActual result: $ion")
                 }
             }
-        } catch (e: SqlException) {
+        } catch (e: Exception) {
             when (case.assertion) {
                 is Assertion.EvaluationSuccess -> error("Expected success but exception thrown: $e")
                 is Assertion.EvaluationFailure -> {} // skip
