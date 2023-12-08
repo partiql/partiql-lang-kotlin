@@ -366,6 +366,54 @@ class PartiQLParserTest : PartiQLParserTestBase() {
     )
 
     @Test
+    fun callIsTimestamp() = assertExpression(
+        "t1 IS TIMESTAMP",
+        "(is_type (id t1 (case_insensitive) (unqualified)) (timestamp_type null))"
+    )
+
+    @Test
+    fun callIsTime() = assertExpression(
+        "t1 IS TIME",
+        "(is_type (id t1 (case_insensitive) (unqualified)) (time_type null))"
+    )
+
+    @Test
+    fun callIsTimestampWithTimeZone() = assertExpression(
+        "t1 IS TIMESTAMP WITH TIME ZONE",
+        "(is_type (id t1 (case_insensitive) (unqualified)) (timestamp_with_time_zone_type null))"
+    )
+
+    @Test
+    fun callIsTimeWithTimeZone() = assertExpression(
+        "t1 IS TIME WITH TIME ZONE",
+        "(is_type (id t1 (case_insensitive) (unqualified)) (time_with_time_zone_type null))"
+    )
+
+    @Test
+    fun callIsTimestampWithPrecision() = assertExpression(
+        "t1 IS TIMESTAMP(3)",
+        "(is_type (id t1 (case_insensitive) (unqualified)) (timestamp_type 3))"
+    )
+
+    @Test
+    fun callIsTimeWithPrecision() = assertExpression(
+        "t1 IS TIME(3)",
+        "(is_type (id t1 (case_insensitive) (unqualified)) (time_type 3))"
+    )
+
+    @Test
+    fun callIsTimestampWithTimeZoneAndPrecision() = assertExpression(
+        "t1 IS TIMESTAMP(3) WITH TIME ZONE",
+        "(is_type (id t1 (case_insensitive) (unqualified)) (timestamp_with_time_zone_type 3))"
+    )
+
+    @Test
+    fun callIsTimeWithTimeZoneAndPrecision() = assertExpression(
+        "t1 IS TIME(3) WITH TIME ZONE",
+        "(is_type (id t1 (case_insensitive) (unqualified)) (time_with_time_zone_type 3))"
+    )
+
+    @Test
     fun nullIsNotNull() = assertExpression(
         "null IS NOT NULL",
         "(not (is_type (lit null) (null_type)))"
