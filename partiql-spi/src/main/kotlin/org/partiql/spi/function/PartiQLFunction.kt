@@ -1,11 +1,8 @@
 package org.partiql.spi.function
 
 import org.partiql.types.function.FunctionSignature
-import org.partiql.value.Int32Value
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.check
-import org.partiql.value.int32Value
 
 /**
  * The [PartiQLFunction] interface is used to implement user-defined-functions (UDFs).

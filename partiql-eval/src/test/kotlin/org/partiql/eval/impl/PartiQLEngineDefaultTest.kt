@@ -39,7 +39,7 @@ class PartiQLEngineDefaultTest {
         val statement = parser.parse("SELECT VALUE t FROM <<10, 20, 30>> AS t;").root
         val session = PartiQLPlanner.Session("q", "u")
         val plan = planner.plan(statement, session)
-        
+
         val prepared = engine.prepare(plan.plan)
         val result = engine.execute(prepared) as PartiQLResult.Value
         val output = result.value as BagValue<*>
