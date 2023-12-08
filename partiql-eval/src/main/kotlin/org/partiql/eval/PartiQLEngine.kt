@@ -54,7 +54,7 @@ public interface PartiQLEngine {
             val expression = Compiler.compile(plan)
             return object : PartiQLStatement.Query {
                 override fun execute(): PartiQLValue {
-                    return expression.eval(Record(emptyList()))
+                    return expression.eval(Record.empty)
                 }
             }
         }
