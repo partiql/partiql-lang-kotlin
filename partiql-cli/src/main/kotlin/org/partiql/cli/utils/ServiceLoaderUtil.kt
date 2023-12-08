@@ -114,11 +114,12 @@ class ServiceLoaderUtil {
                 listOf()
             }
             return plugins.flatMap { plugin -> plugin.getFunctions() }
+                .filterIsInstance<PartiQLFunction.Scalar>()
                 .map { partiqlFunc -> PartiQLtoExprFunction(partiqlFunc) }
         }
 
         @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-        private fun PartiQLtoExprFunction(customFunction: PartiQLFunction): ExprFunction {
+        private fun PartiQLtoExprFunction(customFunction: PartiQLFunction.Scalar): ExprFunction {
             val name = customFunction.signature.name
             val parameters = customFunction.signature.parameters.map { it.type }
             val returnType = customFunction.signature.returns
@@ -130,8 +131,8 @@ class ServiceLoaderUtil {
                 )
 
                 override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
-                    val partiQLArguments = required.mapIndexed { i, expr -> ExprToPartiQLValue(expr, parameters[i]) }
-                    val partiQLResult = customFunction.invoke(session.toConnectorSession(), partiQLArguments)
+                    val partiQLArguments = required.mapIndexed { i, expr -> ExprToPartiQLValue(expr, parameters[i]) }.toTypedArray()
+                    val partiQLResult = customFunction.invoke(partiQLArguments)
                     return PartiQLtoExprValue(partiQLResult)
                 }
             }

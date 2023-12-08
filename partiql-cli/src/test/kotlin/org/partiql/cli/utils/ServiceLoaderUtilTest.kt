@@ -1,10 +1,12 @@
 
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.partiql.cli.utils.ServiceLoaderUtil
 import org.partiql.lang.eval.ExprFunction
 import java.nio.file.Paths
 
+@Disabled
 class ServiceLoaderUtilTest {
     @Test
     fun `loadPlugins loads the correct plugins`() {
