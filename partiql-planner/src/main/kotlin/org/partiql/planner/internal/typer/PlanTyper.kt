@@ -96,6 +96,7 @@ import org.partiql.value.BoolValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.TextValue
 import org.partiql.value.boolValue
+import java.sql.Struct
 
 /**
  * Rewrites an untyped algebraic translation of the query to be both typed and have resolved variables.

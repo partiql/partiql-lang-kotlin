@@ -38,12 +38,12 @@ import org.partiql.value.impl.Int64ValueImpl
 import org.partiql.value.impl.Int8ValueImpl
 import org.partiql.value.impl.IntValueImpl
 import org.partiql.value.impl.IntervalValueImpl
+import org.partiql.value.impl.IterableStructValueImpl
 import org.partiql.value.impl.ListValueImpl
 import org.partiql.value.impl.MapStructValueImpl
 import org.partiql.value.impl.MissingValueImpl
 import org.partiql.value.impl.MultiMapStructValueImpl
 import org.partiql.value.impl.NullValueImpl
-import org.partiql.value.impl.SequenceStructValueImpl
 import org.partiql.value.impl.SexpValueImpl
 import org.partiql.value.impl.StringValueImpl
 import org.partiql.value.impl.SymbolValueImpl
@@ -379,7 +379,7 @@ public fun <T : PartiQLValue> sexpValue(
 ): SexpValue<T> = SexpValueImpl(elements, annotations.toPersistentList())
 
 /**
- * STRUCT type value.
+ * Create a PartiQL struct value backed by an iterable of key-value field pairs.
  *
  * @param T
  * @param fields
@@ -389,12 +389,12 @@ public fun <T : PartiQLValue> sexpValue(
 @JvmOverloads
 @PartiQLValueExperimental
 public fun <T : PartiQLValue> structValue(
-    fields: Sequence<Pair<String, T>>?,
+    fields: Iterable<Pair<String, T>>?,
     annotations: Annotations = emptyList(),
-): StructValue<T> = SequenceStructValueImpl(fields, annotations.toPersistentList())
+): StructValue<T> = IterableStructValueImpl(fields, annotations.toPersistentList())
 
 /**
- * STRUCT type value.
+ * Create a PartiQL struct value backed by an iterable of key-value field pairs.
  *
  * @param T
  * @param fields
@@ -403,13 +403,30 @@ public fun <T : PartiQLValue> structValue(
  */
 @JvmOverloads
 @PartiQLValueExperimental
-public fun <T : PartiQLValue> structValueWithDuplicates(
+public fun <T : PartiQLValue> structValue(
+    vararg fields: Pair<String, T>,
+    annotations: Annotations = emptyList(),
+): StructValue<T> = IterableStructValueImpl(fields.toList(), annotations.toPersistentList())
+
+/**
+ * Create a PartiQL struct value backed by a multimap of keys with a list of values. This supports having multiple
+ * values per key, while improving lookup performance compared to using an iterable.
+ *
+ * @param T
+ * @param fields
+ * @param annotations
+ * @return
+ */
+@JvmOverloads
+@PartiQLValueExperimental
+public fun <T : PartiQLValue> structValue(
     fields: Map<String, Iterable<T>>?,
     annotations: Annotations = emptyList(),
 ): StructValue<T> = MultiMapStructValueImpl(fields, annotations.toPersistentList())
 
 /**
- * STRUCT type value.
+ * Create a PartiQL struct value backed by a map of keys with a list of values. This does not support having multiple
+ * values per key, but uses a Java HashMap for quicker lookup than an iterable backed StructValue.
  *
  * @param T
  * @param fields
@@ -418,7 +435,7 @@ public fun <T : PartiQLValue> structValueWithDuplicates(
  */
 @JvmOverloads
 @PartiQLValueExperimental
-public fun <T : PartiQLValue> structValueNoDuplicates(
+public fun <T : PartiQLValue> structValueMap(
     fields: Map<String, T>?,
     annotations: Annotations = emptyList(),
 ): StructValue<T> = MapStructValueImpl(fields, annotations.toPersistentList())

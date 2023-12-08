@@ -465,11 +465,11 @@ public abstract class SexpValue<T : PartiQLValue> : CollectionValue<T> {
 }
 
 @PartiQLValueExperimental
-public abstract class StructValue<T : PartiQLValue> : PartiQLValue, Sequence<Pair<String, T>> {
+public abstract class StructValue<T : PartiQLValue> : PartiQLValue, Iterable<Pair<String, T>> {
 
     override val type: PartiQLValueType = PartiQLValueType.STRUCT
 
-    public abstract val fields: Sequence<Pair<String, T>>?
+    public abstract val fields: Collection<Pair<String, T>>?
 
     override val isNull: Boolean
         get() = fields == null

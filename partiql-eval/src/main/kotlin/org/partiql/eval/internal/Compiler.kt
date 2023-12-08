@@ -6,9 +6,11 @@ import org.partiql.eval.internal.operator.rel.RelJoinInner
 import org.partiql.eval.internal.operator.rel.RelJoinLeft
 import org.partiql.eval.internal.operator.rel.RelProject
 import org.partiql.eval.internal.operator.rel.RelScan
+import org.partiql.eval.internal.operator.rel.RelScanIndexed
 import org.partiql.eval.internal.operator.rex.ExprCollection
 import org.partiql.eval.internal.operator.rex.ExprLiteral
 import org.partiql.eval.internal.operator.rex.ExprPathKey
+import org.partiql.eval.internal.operator.rex.ExprPivot
 import org.partiql.eval.internal.operator.rex.ExprSelect
 import org.partiql.eval.internal.operator.rex.ExprStruct
 import org.partiql.eval.internal.operator.rex.ExprVar
@@ -47,21 +49,33 @@ internal object Compiler {
             return ExprCollection(values)
         }
 
-        override fun visitRelOpProject(node: Rel.Op.Project, ctx: Unit): Operator {
-            val input = visitRel(node.input, ctx)
-            val projections = node.projections.map { visitRex(it, ctx) }
-            return RelProject(input, projections)
-        }
-
         override fun visitRexOpSelect(node: Rex.Op.Select, ctx: Unit): Operator {
             val rel = visitRel(node.rel, ctx)
             val constructor = visitRex(node.constructor, ctx)
             return ExprSelect(rel, constructor)
         }
 
+        override fun visitRexOpPivot(node: Rex.Op.Pivot, ctx: Unit): Operator {
+            val rel = visitRel(node.rel, ctx)
+            val key = visitRex(node.key, ctx)
+            val value = visitRex(node.value, ctx)
+            return ExprPivot(rel, key, value)
+        }
+
+        override fun visitRelOpProject(node: Rel.Op.Project, ctx: Unit): Operator {
+            val input = visitRel(node.input, ctx)
+            val projections = node.projections.map { visitRex(it, ctx) }
+            return RelProject(input, projections)
+        }
+
         override fun visitRelOpScan(node: Rel.Op.Scan, ctx: Unit): Operator {
             val rex = visitRex(node.rex, ctx)
             return RelScan(rex)
+        }
+
+        override fun visitRelOpScanIndexed(node: Rel.Op.ScanIndexed, ctx: Unit): Operator {
+            val rex = visitRex(node.rex, ctx)
+            return RelScanIndexed(rex)
         }
 
         @OptIn(PartiQLValueExperimental::class)

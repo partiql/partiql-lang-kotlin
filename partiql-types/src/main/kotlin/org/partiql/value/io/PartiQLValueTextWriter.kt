@@ -200,7 +200,7 @@ public class PartiQLValueTextWriter(
 
         override fun visitStruct(v: StructValue<*>, format: Format?): String = buildString {
             // null.struct
-            val fields = v.fields?.toList() ?: return "null"
+            val fields = v.fields?.asSequence()?.toList() ?: return "null"
             // {}
             if (fields.isEmpty() || format == null) {
                 format?.let { append(it.prefix) }

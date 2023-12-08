@@ -192,7 +192,7 @@ internal class PartiQLValueIonReader(
                     }
                 }
                 reader.stepOut()
-                structValue(elements.asSequence(), annotations)
+                structValue(elements, annotations)
             }
 
             IonType.DATAGRAM -> throw IllegalArgumentException("Datagram not supported")
@@ -525,7 +525,7 @@ internal class PartiQLValueIonReader(
                     PARTIQL_ANNOTATION.GRAPH_ANNOTATION -> TODO("Not yet implemented")
                     null -> {
                         if (reader.isNullValue) {
-                            val nullSequence: Sequence<Pair<String, PartiQLValue>>? = null
+                            val nullSequence: List<Pair<String, PartiQLValue>>? = null
                             structValue<PartiQLValue>(nullSequence, annotations)
                         } else {
                             reader.stepIn()
@@ -536,7 +536,7 @@ internal class PartiQLValueIonReader(
                                 }
                             }
                             reader.stepOut()
-                            structValue(elements.asSequence(), annotations)
+                            structValue(elements, annotations)
                         }
                     }
                 }

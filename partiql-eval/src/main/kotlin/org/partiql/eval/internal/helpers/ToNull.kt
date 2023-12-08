@@ -108,7 +108,7 @@ internal fun PartiQLValueType.toNull(): () -> PartiQLValue = when (this) {
         { sexpValue<PartiQLValue>(null) }
     }
     PartiQLValueType.STRUCT -> {
-        { structValue<PartiQLValue>(null) }
+        { structValue<PartiQLValue>() }
     }
     PartiQLValueType.NULL -> {
         { nullValue() }
