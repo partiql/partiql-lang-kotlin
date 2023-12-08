@@ -1,13 +1,13 @@
 package org.partiql.eval.internal
 
 import org.partiql.eval.internal.operator.Operator
+import org.partiql.eval.internal.operator.rel.RelProject
+import org.partiql.eval.internal.operator.rel.RelScan
 import org.partiql.eval.internal.operator.rex.ExprCollection
 import org.partiql.eval.internal.operator.rex.ExprLiteral
 import org.partiql.eval.internal.operator.rex.ExprSelect
 import org.partiql.eval.internal.operator.rex.ExprStruct
 import org.partiql.eval.internal.operator.rex.ExprVar
-import org.partiql.eval.internal.operator.rel.RelProject
-import org.partiql.eval.internal.operator.rel.RelScan
 import org.partiql.plan.PartiQLPlan
 import org.partiql.plan.PlanNode
 import org.partiql.plan.Rel

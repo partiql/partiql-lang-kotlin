@@ -15,8 +15,8 @@ internal class RelScan(
     override fun open() {
         val r = expr.eval(Record.empty)
         records = when (r) {
-            is CollectionValue<*> -> r.elements!!.map { Record(it) }.iterator()
-            else -> iterator { yield(Record(r)) }
+            is CollectionValue<*> -> r.elements!!.map { Record.of(it) }.iterator()
+            else -> iterator { yield(Record.of(r)) }
         }
     }
 

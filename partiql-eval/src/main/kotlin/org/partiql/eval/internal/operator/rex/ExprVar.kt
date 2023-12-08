@@ -12,7 +12,6 @@ import org.partiql.value.PartiQLValueExperimental
  */
 internal class ExprVar(private val index: Int) : Operator.Expr {
 
-
     @PartiQLValueExperimental
     override fun eval(record: Record): PartiQLValue {
         return record.values[index]
