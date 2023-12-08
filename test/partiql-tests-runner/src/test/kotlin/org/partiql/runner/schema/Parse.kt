@@ -1,4 +1,4 @@
-package org.partiql.runner
+package org.partiql.runner.schema
 
 import com.amazon.ion.IonList
 import com.amazon.ion.IonStruct
@@ -47,7 +47,7 @@ private fun parseTestCase(testStruct: IonStruct, curNamespace: Namespace): List<
 
             when (statement.type) {
                 // statement being an IonString indicates that this is an Eval test case
-                IonType.STRING -> EvalTestCase(
+                IonType.STRING -> TestCase.Eval(
                     name = name,
                     statement = statement.stringValue() ?: error("Expected `statement` to be a string"),
                     env = env.asIonStruct(),
@@ -57,7 +57,7 @@ private fun parseTestCase(testStruct: IonStruct, curNamespace: Namespace): List<
                 // statement being an IonSymbol indicates that this is an eval equivalence test case
                 IonType.SYMBOL -> {
                     val equivClassId = statement.stringValue() ?: error("Expected `statement` to be a symbol")
-                    EvalEquivTestCase(
+                    TestCase.Equiv(
                         name = name,
                         statements = curNamespace.equivClasses[equivClassId] ?: error("Equiv class $equivClassId not defined in current namespace"),
                         env = env.asIonStruct(),
