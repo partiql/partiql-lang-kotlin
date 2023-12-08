@@ -1,4 +1,4 @@
-package org.partiql.eval.impl
+package org.partiql.eval.internal
 
 import org.junit.jupiter.api.Test
 import org.partiql.eval.PartiQLEngine
@@ -9,9 +9,13 @@ import org.partiql.planner.PartiQLPlannerBuilder
 import org.partiql.value.BagValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.bagValue
+import org.partiql.value.boolValue
 import org.partiql.value.int32Value
 import kotlin.test.assertEquals
 
+/**
+ * This holds sanity tests during the development of the [PartiQLEngine.default] implementation.
+ */
 class PartiQLEngineDefaultTest {
 
     private val engine = PartiQLEngine.default()
@@ -45,6 +49,21 @@ class PartiQLEngineDefaultTest {
         val output = result.value as BagValue<*>
 
         val expected = bagValue(sequenceOf(int32Value(10), int32Value(20), int32Value(30)))
+        assertEquals(expected, output)
+    }
+
+    @OptIn(PartiQLValueExperimental::class)
+    @Test
+    fun testFilter() {
+        val statement = parser.parse("SELECT VALUE t FROM <<true, false, true, false, false, false>> AS t WHERE t;").root
+        val session = PartiQLPlanner.Session("q", "u")
+        val plan = planner.plan(statement, session)
+
+        val prepared = engine.prepare(plan.plan)
+        val result = engine.execute(prepared) as PartiQLResult.Value
+        val output = result.value as BagValue<*>
+
+        val expected = bagValue(sequenceOf(boolValue(true), boolValue(true)))
         assertEquals(expected, output)
     }
 }
