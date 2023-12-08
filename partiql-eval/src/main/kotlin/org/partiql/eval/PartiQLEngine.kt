@@ -1,5 +1,6 @@
 package org.partiql.eval
 
+
 import org.partiql.eval.internal.Compiler
 import org.partiql.eval.internal.Record
 import org.partiql.plan.PartiQLPlan
@@ -23,6 +24,7 @@ import org.partiql.value.PartiQLValueExperimental
  * under-the-hood experimentation by the PartiQL Community.
  */
 public interface PartiQLEngine {
+
 
     public fun prepare(plan: PartiQLPlan): PartiQLStatement<*>
 
