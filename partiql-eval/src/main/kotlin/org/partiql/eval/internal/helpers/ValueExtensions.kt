@@ -1,6 +1,7 @@
 package org.partiql.eval.internal.helpers
 
 import org.partiql.value.PartiQLValue
+import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
 import org.partiql.value.bagValue
 import org.partiql.value.binaryValue
@@ -32,6 +33,7 @@ import org.partiql.value.timestampValue
 /**
  * Constructor for a typed null.
  */
+@OptIn(PartiQLValueExperimental::class)
 internal fun PartiQLValueType.toNull(): () -> PartiQLValue = when (this) {
     PartiQLValueType.ANY -> {
         { nullValue() }
@@ -113,5 +115,8 @@ internal fun PartiQLValueType.toNull(): () -> PartiQLValue = when (this) {
     }
     PartiQLValueType.MISSING -> {
         { missingValue() }
+    }
+    PartiQLValueType.DECIMAL_ARBITRARY -> {
+        { decimalValue(null) }
     }
 }

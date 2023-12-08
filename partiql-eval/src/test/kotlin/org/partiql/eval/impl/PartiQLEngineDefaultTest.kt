@@ -27,8 +27,8 @@ class PartiQLEngineDefaultTest {
 
         val prepared = engine.prepare(plan.plan)
         val result = engine.execute(prepared) as PartiQLResult.Value
-
         val output = result.value as BagValue<*>
+
         val expected = bagValue(sequenceOf(int32Value(1), int32Value(1)))
         assertEquals(expected, output)
     }
@@ -42,8 +42,8 @@ class PartiQLEngineDefaultTest {
 
         val prepared = engine.prepare(plan.plan)
         val result = engine.execute(prepared) as PartiQLResult.Value
-
         val output = result.value as BagValue<*>
+
         val expected = bagValue(sequenceOf(int32Value(10), int32Value(20), int32Value(30)))
         assertEquals(expected, output)
     }
