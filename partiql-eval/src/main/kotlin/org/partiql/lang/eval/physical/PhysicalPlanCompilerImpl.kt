@@ -46,7 +46,6 @@ import org.partiql.lang.eval.Expression
 import org.partiql.lang.eval.Named
 import org.partiql.lang.eval.PartiQLResult
 import org.partiql.lang.eval.ProjectionIterationBehavior
-import org.partiql.lang.eval.StructOrdering
 import org.partiql.lang.eval.TypedOpBehavior
 import org.partiql.lang.eval.TypingMode
 import org.partiql.lang.eval.booleanValue
@@ -59,10 +58,14 @@ import org.partiql.lang.eval.errorContextFrom
 import org.partiql.lang.eval.exprEquals
 import org.partiql.lang.eval.fillErrorContext
 import org.partiql.lang.eval.internal.AnyOfCastTable
+import org.partiql.lang.eval.internal.BagExprValue
 import org.partiql.lang.eval.internal.CastFunc
 import org.partiql.lang.eval.internal.ErrorDetails
 import org.partiql.lang.eval.internal.FunctionManager
 import org.partiql.lang.eval.internal.FunctionNotFoundException
+import org.partiql.lang.eval.internal.ListExprValue
+import org.partiql.lang.eval.internal.StructExprValue
+import org.partiql.lang.eval.internal.StructOrdering
 import org.partiql.lang.eval.internal.ThunkValue
 import org.partiql.lang.eval.internal.createErrorSignaler
 import org.partiql.lang.eval.internal.createThunkFactory
@@ -74,18 +77,20 @@ import org.partiql.lang.eval.internal.ext.isNotUnknown
 import org.partiql.lang.eval.internal.ext.isUnknown
 import org.partiql.lang.eval.internal.ext.isZero
 import org.partiql.lang.eval.internal.ext.longValue
+import org.partiql.lang.eval.internal.ext.namedValue
+import org.partiql.lang.eval.internal.ext.numberValue
+import org.partiql.lang.eval.internal.ext.rangeOver
+import org.partiql.lang.eval.internal.ext.stringValue
+import org.partiql.lang.eval.internal.ext.timestampValue
 import org.partiql.lang.eval.internal.ext.toTypedOpParameter
 import org.partiql.lang.eval.internal.ext.totalMinutes
+import org.partiql.lang.eval.internal.ext.unnamedValue
+import org.partiql.lang.eval.internal.ionValueToExprValue
+import org.partiql.lang.eval.internal.newSequenceExprValue
 import org.partiql.lang.eval.internal.parsePattern
-import org.partiql.lang.eval.namedValue
-import org.partiql.lang.eval.numberValue
-import org.partiql.lang.eval.rangeOver
 import org.partiql.lang.eval.relation.RelationType
-import org.partiql.lang.eval.stringValue
 import org.partiql.lang.eval.syntheticColumnName
 import org.partiql.lang.eval.time.Time
-import org.partiql.lang.eval.timestampValue
-import org.partiql.lang.eval.unnamedValue
 import org.partiql.lang.planner.EvaluatorOptions
 import org.partiql.lang.types.StaticTypeUtils.getRuntimeType
 import org.partiql.lang.types.StaticTypeUtils.isInstance
@@ -341,8 +346,8 @@ internal class PhysicalPlanCompilerImpl(
                 }
             }
             when (relationType) {
-                RelationType.LIST -> ExprValue.newList(elements)
-                RelationType.BAG -> ExprValue.newBag(elements)
+                RelationType.LIST -> ListExprValue(elements)
+                RelationType.BAG -> BagExprValue(elements)
             }
         }
     }
@@ -665,7 +670,7 @@ internal class PhysicalPlanCompilerImpl(
             val precomputedLiteralsMap = values
                 .filterIsInstance<PartiqlPhysical.Expr.Lit>()
                 .mapTo(TreeSet<ExprValue>(DEFAULT_COMPARATOR)) {
-                    ExprValue.of(
+                    ionValueToExprValue(
                         it.value.toIonValue(ion)
                     )
                 }
@@ -906,7 +911,7 @@ internal class PhysicalPlanCompilerImpl(
     }
 
     private fun compileLit(expr: PartiqlPhysical.Expr.Lit, metas: MetaContainer): PhysicalPlanThunk {
-        val value = ExprValue.of(expr.value.toIonValue(ion))
+        val value = ionValueToExprValue(expr.value.toIonValue(ion))
 
         return thunkFactory.thunkEnv(metas) { value }
     }
@@ -1403,12 +1408,7 @@ internal class PhysicalPlanCompilerImpl(
         }
 
         return thunkFactory.thunkEnv(metas) { env ->
-            when (seqType) {
-                ExprValueType.BAG -> ExprValue.newBag(makeItemThunkSequence(env))
-                ExprValueType.LIST -> ExprValue.newList(makeItemThunkSequence(env))
-                ExprValueType.SEXP -> ExprValue.newSexp(makeItemThunkSequence(env))
-                else -> error("sequence type required")
-            }
+            newSequenceExprValue(seqType, makeItemThunkSequence(env))
         }
     }
 
@@ -1490,12 +1490,12 @@ internal class PhysicalPlanCompilerImpl(
                                     val mapped = componentValue.unpivot()
                                         .flatMap { tempThunk(env, it).rangeOver() }
                                         .asSequence()
-                                    ExprValue.newBag(mapped)
+                                    BagExprValue(mapped)
                                 }
                             }
                             else ->
                                 thunkFactory.thunkEnvValue(componentMetas) { _, componentValue ->
-                                    ExprValue.newBag(componentValue.unpivot().asSequence())
+                                    BagExprValue(componentValue.unpivot().asSequence())
                                 }
                         }
                     }
@@ -1514,7 +1514,7 @@ internal class PhysicalPlanCompilerImpl(
                                             .map { tempThunk(env, it) }
                                             .asSequence()
 
-                                        ExprValue.newBag(mapped)
+                                        BagExprValue(mapped)
                                     }
                                     else -> thunkFactory.thunkEnvValue(componentMetas) { env, componentValue ->
                                         val mapped = componentValue
@@ -1525,14 +1525,14 @@ internal class PhysicalPlanCompilerImpl(
                                             }
                                             .asSequence()
 
-                                        ExprValue.newBag(mapped)
+                                        BagExprValue(mapped)
                                     }
                                 }
                             }
                             else -> {
                                 thunkFactory.thunkEnvValue(componentMetas) { _, componentValue ->
                                     val mapped = componentValue.rangeOver().asSequence()
-                                    ExprValue.newBag(mapped)
+                                    BagExprValue(mapped)
                                 }
                             }
                         }
@@ -1628,15 +1628,15 @@ internal class PhysicalPlanCompilerImpl(
         return when {
             patternExpr is PartiqlPhysical.Expr.Lit && (escapeExpr == null || escapeExpr is PartiqlPhysical.Expr.Lit) -> {
                 val patternParts = getRegexPattern(
-                    ExprValue.of(patternExpr.value.toIonValue(ion)),
+                    ionValueToExprValue(patternExpr.value.toIonValue(ion)),
                     (escapeExpr as? PartiqlPhysical.Expr.Lit)?.value?.toIonValue(ion)
-                        ?.let { ExprValue.of(it) }
+                        ?.let { ionValueToExprValue(it) }
                 )
 
                 // If valueExpr is also a literal then we can evaluate this at compile time and return a constant.
                 if (valueExpr is PartiqlPhysical.Expr.Lit) {
                     val resultValue = matchRegexPattern(
-                        ExprValue.of(valueExpr.value.toIonValue(ion)),
+                        ionValueToExprValue(valueExpr.value.toIonValue(ion)),
                         patternParts
                     )
                     return thunkFactory.thunkEnv(metas) { resultValue }
@@ -1849,7 +1849,7 @@ internal class PhysicalPlanCompilerImpl(
                 is PartiqlPhysical.SetQuantifier.All -> op.eval(l, r)
                 is PartiqlPhysical.SetQuantifier.Distinct -> op.eval(l, r).distinct()
             }
-            ExprValue.newBag(result)
+            BagExprValue(result)
         }
     }
 
@@ -1869,7 +1869,7 @@ internal class PhysicalPlanCompilerImpl(
                     }
                 }
             }
-            ExprValue.newStruct(attributes, StructOrdering.UNORDERED)
+            StructExprValue(sequence = attributes, ordering = StructOrdering.UNORDERED)
         }
     }
 
@@ -1894,12 +1894,12 @@ internal class PhysicalPlanCompilerImpl(
     }
 
     private fun createStructExprValue(seq: Sequence<ExprValue>, ordering: StructOrdering) =
-        ExprValue.newStruct(
-            when (evaluatorOptions.projectionIteration) {
+        StructExprValue(
+            sequence = when (evaluatorOptions.projectionIteration) {
                 ProjectionIterationBehavior.FILTER_MISSING -> seq.filter { it.type != ExprValueType.MISSING }
                 ProjectionIterationBehavior.UNFILTERED -> seq
             },
-            ordering
+            ordering = ordering
         )
 }
 

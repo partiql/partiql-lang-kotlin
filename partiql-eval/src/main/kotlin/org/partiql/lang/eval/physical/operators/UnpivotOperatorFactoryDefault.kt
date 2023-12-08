@@ -17,15 +17,16 @@ package org.partiql.lang.eval.physical.operators
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.address
+import org.partiql.lang.eval.internal.BagExprValue
+import org.partiql.lang.eval.internal.ext.namedValue
+import org.partiql.lang.eval.internal.ext.unnamedValue
 import org.partiql.lang.eval.name
-import org.partiql.lang.eval.namedValue
 import org.partiql.lang.eval.physical.EvaluatorState
 import org.partiql.lang.eval.physical.SetVariableFunc
 import org.partiql.lang.eval.relation.RelationIterator
 import org.partiql.lang.eval.relation.RelationType
 import org.partiql.lang.eval.relation.relation
 import org.partiql.lang.eval.syntheticColumnName
-import org.partiql.lang.eval.unnamedValue
 import org.partiql.lang.planner.transforms.DEFAULT_IMPL_NAME
 
 internal object UnpivotOperatorFactoryDefault : UnpivotOperatorFactory(DEFAULT_IMPL_NAME) {
@@ -61,7 +62,7 @@ internal class UnpivotOperatorDefault(
 
     private fun ExprValue.unpivot(): ExprValue = when (type) {
         ExprValueType.STRUCT, ExprValueType.MISSING -> this
-        else -> ExprValue.newBag(
+        else -> BagExprValue(
             listOf(
                 this.namedValue(ExprValue.newString(syntheticColumnName(0)))
             )

@@ -4,21 +4,23 @@ import com.amazon.ionelement.api.emptyMetaContainer
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
+import org.partiql.lang.eval.internal.BagExprValue
+import org.partiql.lang.eval.internal.ListExprValue
+import org.partiql.lang.eval.internal.NamedExprValue
+import org.partiql.lang.eval.internal.SexpExprValue
 import org.partiql.lang.eval.internal.StructExprValue
-import org.partiql.lang.eval.internal.StructOrdering
+import org.partiql.lang.eval.internal.ext.namedValue
+import org.partiql.lang.eval.internal.newSequenceExprValue
 import org.partiql.lang.eval.longValue
 import org.partiql.lang.eval.name
-import org.partiql.lang.eval.namedValue
 import org.partiql.lang.eval.physical.EvaluatorState
 import org.partiql.lang.eval.relation.RelationIterator
 import org.partiql.lang.eval.relation.relation
 import org.partiql.lang.eval.stringValue
 import org.partiql.lang.planner.transforms.DEFAULT_IMPL_NAME
-import org.partiql.pig.runtime.LongPrimitive
-import org.partiql.pig.runtime.SymbolPrimitive
 
 /**
- * Provides an implementation of the [PartiqlPhysical.Bexpr.Exclude] operator.
+ * Provides an implementation of the [PartiqlPhysical.Bexpr.ExcludeClause] operator.
  *
  * @constructor
  *
@@ -72,110 +74,122 @@ internal class ExcludeOperator(
         }
     }
 
-    /**
-     * Returns an [ExprValue] created from a sequence of [seq]. Requires [type] to be a sequence type
-     * (i.e. [ExprValueType.isSequence] == true).
-     */
-    private fun newSequence(type: ExprValueType, seq: Sequence<ExprValue>): ExprValue {
-        return when (type) {
-            ExprValueType.LIST -> ExprValue.newList(seq)
-            ExprValueType.BAG -> ExprValue.newBag(seq)
-            ExprValueType.SEXP -> ExprValue.newSexp(seq)
-            else -> error("Sequence type required")
+    private fun excludeStructExprValue(
+        structExprValue: StructExprValue,
+        exclusions: RemoveAndOtherSteps
+    ): ExprValue {
+        val toRemove = exclusions.remove
+        val otherSteps = exclusions.steps
+        if (toRemove.any { it is PartiqlPhysical.ExcludeStep.ExcludeTupleWildcard }) {
+            // tuple wildcard at current level. return empty struct
+            return StructExprValue(
+                sequence = emptySequence(),
+                ordering = structExprValue.ordering
+            )
+        }
+        val attrsToRemove = toRemove.filterIsInstance<PartiqlPhysical.ExcludeStep.ExcludeTupleAttr>()
+            .map { it.attr.name.text }
+            .toSet()
+        val sequenceWithRemoved = structExprValue.mapNotNull { structField ->
+            if (attrsToRemove.contains(structField.name?.stringValue())) {
+                null
+            } else {
+                structField as NamedExprValue
+            }
+        }
+        val finalSequence = sequenceWithRemoved.map { structField ->
+            var expr = structField.value
+            val name = structField.name
+            // apply case-sensitive tuple attr exclusions
+            val structFieldCaseSensitiveKey = PartiqlPhysical.build {
+                excludeTupleAttr(
+                    identifier(
+                        name.stringValue(),
+                        caseSensitive()
+                    )
+                )
+            }
+            otherSteps[structFieldCaseSensitiveKey]?.let {
+                expr = excludeExprValue(expr, it)
+            }
+            // apply case-insensitive tuple attr exclusions
+            val structFieldCaseInsensitiveKey = PartiqlPhysical.build {
+                excludeTupleAttr(
+                    identifier(
+                        name.stringValue(),
+                        caseInsensitive()
+                    )
+                )
+            }
+            otherSteps[structFieldCaseInsensitiveKey]?.let {
+                expr = excludeExprValue(expr, it)
+            }
+            // apply tuple wildcard exclusions
+            val tupleWildcardKey = PartiqlPhysical.build { excludeTupleWildcard(emptyMetaContainer()) }
+            otherSteps[tupleWildcardKey]?.let {
+                expr = excludeExprValue(expr, it)
+            }
+            expr.namedValue(name)
+        }.asSequence()
+        return StructExprValue(sequence = finalSequence, ordering = structExprValue.ordering)
+    }
+
+    private fun excludeCollectionExprValue(
+        initialExprValue: ExprValue,
+        exprValueType: ExprValueType,
+        exclusions: RemoveAndOtherSteps
+    ): ExprValue {
+        val toRemove = exclusions.remove
+        val otherSteps = exclusions.steps
+        if (toRemove.any { it is PartiqlPhysical.ExcludeStep.ExcludeCollectionWildcard }) {
+            // collection wildcard at current level. return empty collection
+            return newSequenceExprValue(exprValueType, emptySequence())
+        } else {
+            val indexesToRemove = toRemove.filterIsInstance<PartiqlPhysical.ExcludeStep.ExcludeCollectionIndex>()
+                .map { it.index.value }
+                .toSet()
+            val sequenceWithRemoved = initialExprValue.mapNotNull { element ->
+                if (indexesToRemove.contains(element.name?.longValue())) {
+                    null
+                } else {
+                    element
+                }
+            }.asSequence()
+            val finalSequence = sequenceWithRemoved.map { element ->
+                var expr = element
+                if (initialExprValue is ListExprValue || initialExprValue is SexpExprValue) {
+                    element as NamedExprValue
+                    val index = element.name.longValue()
+                    // apply collection index exclusions for lists and sexps
+                    val elementKey = PartiqlPhysical.build {
+                        excludeCollectionIndex(
+                            index
+                        )
+                    }
+                    otherSteps[elementKey]?.let {
+                        expr = excludeExprValue(element.value, it)
+                    }
+                }
+                // apply collection wildcard exclusions for lists, bags, and sexps
+                val collectionWildcardKey = PartiqlPhysical.build { excludeCollectionWildcard(emptyMetaContainer()) }
+                otherSteps[collectionWildcardKey]?.let {
+                    expr = excludeExprValue(expr, it)
+                }
+                expr
+            }
+            return newSequenceExprValue(exprValueType, finalSequence)
         }
     }
 
     private fun excludeExprValue(initialExprValue: ExprValue, exclusions: RemoveAndOtherSteps): ExprValue {
-        val toRemove = exclusions.remove
-        val otherSteps = exclusions.steps
-        when (initialExprValue.type) {
-            ExprValueType.STRUCT -> {
-                if (toRemove.any { it is PartiqlPhysical.ExcludeStep.ExcludeTupleWildcard }) {
-                    // TODO ALAN: fix `ordering` to rely on `initialExprValue`'s ordering; need to determine which
-                    //  `StructExprValue` to use (`eval` or `eval.internal`)
-                    return StructExprValue(sequence = emptySequence(), ordering = StructOrdering.ORDERED)
-                }
-                val attrsToRemove = toRemove.filterIsInstance<PartiqlPhysical.ExcludeStep.ExcludeTupleAttr>()
-                    .map { it.attr.name.text }
-                    .toSet()
-                val sequenceWithRemoved = initialExprValue.mapNotNull { structField ->
-                    if (attrsToRemove.contains(structField.name?.stringValue())) {
-                        null
-                    } else {
-                        structField
-                    }
-                }
-                val finalSequence = sequenceWithRemoved.map { structField ->
-                    var expr = structField
-                    val name = structField.name!!
-                    val structFieldKey = PartiqlPhysical.build {
-                        PartiqlPhysical.ExcludeStep.ExcludeTupleAttr(
-                            PartiqlPhysical.Identifier(
-                                SymbolPrimitive(
-                                    structField.name?.stringValue()!!,
-                                    emptyMetaContainer()
-                                ),
-                                caseInsensitive()
-                            )
-                        )
-                    }
-                    if (otherSteps.contains(structFieldKey)) {
-                        expr = excludeExprValue(structField, otherSteps[structFieldKey]!!)
-                    }
-                    val tupleWildcardEntry =
-                        otherSteps[PartiqlPhysical.build { excludeTupleWildcard(emptyMetaContainer()) }]
-                    if (tupleWildcardEntry != null) {
-                        expr = excludeExprValue(expr, tupleWildcardEntry)
-                    }
-                    expr.namedValue(name)
-                }
-                // TODO ALAN: fix `ordering` to rely on `initialExprValue`'s ordering; need to determine which
-                //  `StructExprValue` to use (`eval` or `eval.internal`)
-                return StructExprValue(sequence = finalSequence.asSequence(), ordering = StructOrdering.ORDERED)
-            }
-
-            ExprValueType.LIST, ExprValueType.BAG, ExprValueType.SEXP -> {
-                if (toRemove.any { it is PartiqlPhysical.ExcludeStep.ExcludeCollectionWildcard }) {
-                    return newSequence(initialExprValue.type, emptySequence())
-                } else {
-                    // remove some elements
-                    val indexesToRemove = toRemove.filterIsInstance<PartiqlPhysical.ExcludeStep.ExcludeCollectionIndex>()
-                        .map { it.index.value }
-                        .toSet()
-                    val sequenceWithRemoved = initialExprValue.mapNotNull { element ->
-                        if (indexesToRemove.contains(element.name?.longValue())) {
-                            null
-                        } else {
-                            element
-                        }
-                    }.asSequence()
-                    val finalSequence = sequenceWithRemoved.map { element ->
-                        var expr = element
-                        if (initialExprValue.type == ExprValueType.LIST || initialExprValue.type == ExprValueType.SEXP) {
-                            val elementKey = PartiqlPhysical.build {
-                                PartiqlPhysical.ExcludeStep.ExcludeCollectionIndex(
-                                    LongPrimitive(
-                                        element.name?.longValue()!!,
-                                        emptyMetaContainer()
-                                    )
-                                )
-                            }
-                            if (otherSteps.contains(elementKey)) {
-                                expr = excludeExprValue(element, otherSteps[elementKey]!!)
-                            }
-                        }
-                        val collectionWildcardEntry =
-                            otherSteps[PartiqlPhysical.build { excludeCollectionWildcard(emptyMetaContainer()) }]
-                        if (collectionWildcardEntry != null) {
-                            expr = excludeExprValue(expr, collectionWildcardEntry)
-                        }
-                        expr
-                    }
-                    return newSequence(initialExprValue.type, finalSequence)
-                }
-            }
+        return when (initialExprValue) {
+            is NamedExprValue -> excludeExprValue(initialExprValue.value, exclusions)
+            is StructExprValue -> excludeStructExprValue(initialExprValue, exclusions)
+            is ListExprValue -> excludeCollectionExprValue(initialExprValue, ExprValueType.LIST, exclusions)
+            is BagExprValue -> excludeCollectionExprValue(initialExprValue, ExprValueType.BAG, exclusions)
+            is SexpExprValue -> excludeCollectionExprValue(initialExprValue, ExprValueType.SEXP, exclusions)
             else -> {
-                return initialExprValue
+                initialExprValue
             }
         }
     }

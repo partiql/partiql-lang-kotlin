@@ -16,6 +16,7 @@ package org.partiql.lang.eval.physical.operators
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.eval.DEFAULT_COMPARATOR
 import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.internal.ListExprValue
 import org.partiql.lang.eval.physical.EvaluatorState
 import org.partiql.lang.eval.physical.SetVariableFunc
 import org.partiql.lang.eval.relation.RelationIterator
@@ -78,7 +79,7 @@ internal class AggregateOperatorDefault(
 
             // Initialize the AggregationMap
             val evaluatedGroupByKeys =
-                keys.map { it.value.invoke(state) }.let { ExprValue.newList(it) }
+                ListExprValue(keys.map { it.value.invoke(state) })
             val accumulators = aggregationMap.getOrPut(evaluatedGroupByKeys) {
                 functions.map { function ->
                     Accumulator.create(function.name, function.quantifier)

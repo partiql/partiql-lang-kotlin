@@ -20,6 +20,7 @@ import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.NaturalExprValueComparators
 import org.partiql.lang.eval.booleanValue
+import org.partiql.lang.eval.internal.BagExprValue
 import org.partiql.lang.eval.internal.ExprAggregator
 import org.partiql.lang.eval.internal.errNoContext
 import org.partiql.lang.eval.internal.ext.bigDecimalOf
@@ -173,7 +174,7 @@ internal class AccumulatorGroupAs(
         exprValues.add(value)
     }
 
-    override fun compute(): ExprValue = ExprValue.newBag(exprValues)
+    override fun compute(): ExprValue = BagExprValue(exprValues)
 }
 
 private fun comparisonAccumulator(comparator: NaturalExprValueComparators): (ExprValue?, ExprValue) -> ExprValue =

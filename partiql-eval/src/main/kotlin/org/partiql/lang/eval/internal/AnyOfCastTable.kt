@@ -10,8 +10,8 @@ import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.StructOrdering
 import org.partiql.lang.eval.internal.ext.isUnknown
+import org.partiql.lang.eval.internal.ext.namedValue
 import org.partiql.lang.eval.name
-import org.partiql.lang.eval.namedValue
 import org.partiql.lang.types.StaticTypeUtils
 import org.partiql.types.AnyOfType
 import org.partiql.types.AnyType
@@ -228,9 +228,9 @@ internal class AnyOfCastTable(
                 val children = source.asSequence().map { cast(it) }
 
                 when (targetType) {
-                    ExprValueType.LIST -> ExprValue.newList(children)
-                    ExprValueType.SEXP -> ExprValue.newSexp(children)
-                    ExprValueType.BAG -> ExprValue.newBag(children)
+                    ExprValueType.LIST -> ListExprValue(children)
+                    ExprValueType.SEXP -> SexpExprValue(children)
+                    ExprValueType.BAG -> BagExprValue(children)
                     ExprValueType.STRUCT -> {
                         if (source.type != ExprValueType.STRUCT) {
                             // Should not be possible

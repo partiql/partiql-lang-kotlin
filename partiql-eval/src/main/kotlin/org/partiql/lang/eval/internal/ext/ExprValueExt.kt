@@ -34,8 +34,12 @@ import org.partiql.lang.eval.Named
 import org.partiql.lang.eval.NaturalExprValueComparators
 import org.partiql.lang.eval.OrderedBindNames
 import org.partiql.lang.eval.TypedOpBehavior
+import org.partiql.lang.eval.internal.BagExprValue
 import org.partiql.lang.eval.internal.DateTimePart
+import org.partiql.lang.eval.internal.ListExprValue
 import org.partiql.lang.eval.internal.NANOS_PER_SECOND
+import org.partiql.lang.eval.internal.NamedExprValue
+import org.partiql.lang.eval.internal.SexpExprValue
 import org.partiql.lang.eval.internal.StructExprValue
 import org.partiql.lang.eval.internal.err
 import org.partiql.lang.eval.internal.errIntOverflow
@@ -108,25 +112,12 @@ internal fun ExprValue.asNamed(): Named = object : Named {
 }
 
 /** Binds the given name value as a [Named] facet delegate over this [ExprValue]. */
-internal fun ExprValue.namedValue(nameValue: ExprValue): ExprValue = object : ExprValue by this, Named {
-    override val name = nameValue
-    override fun <T : Any?> asFacet(type: Class<T>?): T? =
-        downcast(type) ?: this@namedValue.asFacet(type)
-    override fun toString(): String = stringify()
-}
+internal fun ExprValue.namedValue(nameValue: ExprValue): ExprValue = NamedExprValue(nameValue, this)
 
 /** Wraps this [ExprValue] in a delegate that always masks the [Named] facet. */
-internal fun ExprValue.unnamedValue(): ExprValue = when (asFacet(Named::class.java)) {
-    null -> this
-    else -> object : ExprValue by this {
-        override fun <T : Any?> asFacet(type: Class<T>?): T? =
-            when (type) {
-                // always mask the name facet
-                Named::class.java -> null
-                else -> this@unnamedValue.asFacet(type)
-            }
-        override fun toString(): String = stringify()
-    }
+internal fun ExprValue.unnamedValue(): ExprValue = when (this) {
+    is NamedExprValue -> this.value
+    else -> this
 }
 
 internal val ExprValue.name: ExprValue?
@@ -615,9 +606,9 @@ internal fun ExprValue.cast(
                 is BlobType -> when {
                     type.isLob -> return ExprValue.newBlob(bytesValue())
                 }
-                is ListType -> if (type.isSequence) return ExprValue.newList(asSequence())
-                is SexpType -> if (type.isSequence) return ExprValue.newSexp(asSequence())
-                is BagType -> if (type.isSequence) return ExprValue.newBag(asSequence())
+                is ListType -> if (type.isSequence) return ListExprValue(asSequence())
+                is SexpType -> if (type.isSequence) return SexpExprValue(asSequence())
+                is BagType -> if (type.isSequence) return BagExprValue(asSequence())
                 // no support for anything else
                 else -> {}
             }

@@ -24,7 +24,9 @@ import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
+import org.partiql.lang.eval.internal.BagExprValue
 import org.partiql.lang.eval.internal.DateTimePart
+import org.partiql.lang.eval.internal.ListExprValue
 import org.partiql.lang.eval.internal.NANOS_PER_SECOND
 import org.partiql.lang.eval.internal.err
 import org.partiql.lang.eval.internal.errNoContext
@@ -32,12 +34,12 @@ import org.partiql.lang.eval.internal.ext.adjustPrecisionTo
 import org.partiql.lang.eval.internal.ext.bigDecimalValue
 import org.partiql.lang.eval.internal.ext.intValue
 import org.partiql.lang.eval.internal.ext.toOffsetDateTime
+import org.partiql.lang.eval.internal.ext.unnamedValue
 import org.partiql.lang.eval.internal.timestamp.TimestampParser
 import org.partiql.lang.eval.internal.timestamp.TimestampTemporalAccessor
 import org.partiql.lang.eval.stringValue
 import org.partiql.lang.eval.time.Time
 import org.partiql.lang.eval.timestampValue
-import org.partiql.lang.eval.unnamedValue
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.UnknownArguments
 import org.partiql.lang.util.propertyValueMapOf
@@ -134,8 +136,8 @@ internal object ExprFunctionFilterDistinct : ExprFunction {
             }
         }
         return when (argument.type) {
-            ExprValueType.LIST -> ExprValue.newList(seq)
-            else -> ExprValue.newBag(seq)
+            ExprValueType.LIST -> ListExprValue(seq)
+            else -> BagExprValue(seq)
         }
     }
 }
