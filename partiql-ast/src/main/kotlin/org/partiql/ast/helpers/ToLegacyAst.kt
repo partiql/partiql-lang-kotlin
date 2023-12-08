@@ -1333,7 +1333,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
         translate(node) { metas -> timestampType(node.precision?.toLong(), metas) }
 
     override fun visitTypeTimestampWithTz(node: Type.TimestampWithTz, ctx: Ctx) =
-        throw IllegalArgumentException("TIMESTAMP [WITH TIMEZONE] type not supported")
+        translate(node) { metas -> timestampWithTimeZoneType(node.precision?.toLong(), metas) }
 
     override fun visitTypeInterval(node: Type.Interval, ctx: Ctx) =
         throw IllegalArgumentException("INTERVAL type not supported")

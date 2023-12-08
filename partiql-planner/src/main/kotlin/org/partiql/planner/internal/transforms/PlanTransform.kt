@@ -49,7 +49,7 @@ internal object PlanTransform : PlanBaseVisitor<PlanNode, ProblemCallback>() {
     override fun visitFnResolved(node: Fn.Resolved, ctx: ProblemCallback) = org.partiql.plan.fn(node.signature)
 
     override fun visitFnUnresolved(node: Fn.Unresolved, ctx: ProblemCallback): org.partiql.plan.Rex.Op {
-        return org.partiql.plan.Rex.Op.Err("Unresolved function")
+        error("Unresolved function ${node.identifier}")
     }
 
     override fun visitAgg(node: Agg, ctx: ProblemCallback) = super.visitAgg(node, ctx) as org.partiql.plan.Agg
@@ -57,7 +57,7 @@ internal object PlanTransform : PlanBaseVisitor<PlanNode, ProblemCallback>() {
     override fun visitAggResolved(node: Agg.Resolved, ctx: ProblemCallback) = org.partiql.plan.Agg(node.signature)
 
     override fun visitAggUnresolved(node: Agg.Unresolved, ctx: ProblemCallback): org.partiql.plan.Rex.Op {
-        return org.partiql.plan.Rex.Op.Err("Unresolved aggregation")
+        error("Unresolved aggregation ${node.identifier}")
     }
 
     override fun visitStatement(node: Statement, ctx: ProblemCallback) =

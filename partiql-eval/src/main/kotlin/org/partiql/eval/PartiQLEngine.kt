@@ -1,6 +1,7 @@
 package org.partiql.eval
 
-import org.partiql.eval.impl.PartiQLEngineDefault
+import org.partiql.eval.internal.Compiler
+import org.partiql.eval.internal.Record
 import org.partiql.plan.PartiQLPlan
 import org.partiql.spi.Plugin
 import org.partiql.value.PartiQLValue
@@ -23,37 +24,51 @@ import org.partiql.value.PartiQLValueExperimental
  */
 public interface PartiQLEngine {
 
-    public fun execute(plan: PartiQLPlan): Result
+    public fun prepare(plan: PartiQLPlan): PartiQLStatement<*>
 
-    public enum class Implementation {
-        DEFAULT
-    }
+    public fun execute(statement: PartiQLStatement<*>): PartiQLResult
 
-    public sealed interface Result {
-        public data class Success @OptIn(PartiQLValueExperimental::class) constructor(
-            val output: PartiQLValue
-        ) : Result
-
-        public data class Error @OptIn(PartiQLValueExperimental::class) constructor(
-            val output: PartiQLValue
-        ) : Result
+    companion object {
+        @JvmStatic
+        @JvmOverloads
+        fun default(plugins: List<Plugin> = emptyList()) = Builder().plugins(plugins).build()
     }
 
     public class Builder {
 
         private var plugins: List<Plugin> = emptyList()
-        private var implementation: Implementation = Implementation.DEFAULT
 
-        public fun withPlugins(plugins: List<Plugin>): Builder = this.apply {
+        public fun plugins(plugins: List<Plugin>): Builder = this.apply {
             this.plugins = plugins
         }
 
-        public fun withImplementation(impl: Implementation): Builder = this.apply {
-            this.implementation = impl
+        public fun build(): PartiQLEngine = Default(plugins)
+    }
+
+    private class Default(private val plugins: List<Plugin>) : PartiQLEngine {
+
+        @OptIn(PartiQLValueExperimental::class)
+        override fun prepare(plan: PartiQLPlan): PartiQLStatement<*> {
+            // Close over the expression.
+            // Right now we are assuming we only have a query statement hence a value statement.
+            val expression = Compiler.compile(plan)
+            return object : PartiQLStatement.Query {
+                override fun execute(): PartiQLValue {
+                    return expression.eval(Record.empty)
+                }
+            }
         }
 
-        public fun build(): PartiQLEngine = when (this.implementation) {
-            Implementation.DEFAULT -> PartiQLEngineDefault()
+        @OptIn(PartiQLValueExperimental::class)
+        override fun execute(statement: PartiQLStatement<*>): PartiQLResult {
+            return when (statement) {
+                is PartiQLStatement.Query -> try {
+                    val value = statement.execute()
+                    PartiQLResult.Value(value)
+                } catch (ex: Exception) {
+                    PartiQLResult.Error(ex)
+                }
+            }
         }
     }
 }

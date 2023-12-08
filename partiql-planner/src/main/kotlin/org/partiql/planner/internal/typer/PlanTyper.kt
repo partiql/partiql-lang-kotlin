@@ -503,6 +503,17 @@ internal class PlanTyper(
             return rex(type, rexOpPath(root, newSteps))
         }
 
+        // Default returns the original node, in some case we need the resolved node.
+        // i.e., the path step is a call node
+        override fun visitRexOpPathStep(node: Rex.Op.Path.Step, ctx: StaticType?): Rex.Op.Path.Step =
+            when (node) {
+                is Rex.Op.Path.Step.Index -> Rex.Op.Path.Step.Index(visitRex(node.key, ctx))
+                is Rex.Op.Path.Step.Key -> Rex.Op.Path.Step.Key(visitRex(node.key, ctx))
+                is Rex.Op.Path.Step.Symbol -> Rex.Op.Path.Step.Symbol(node.identifier)
+                is Rex.Op.Path.Step.Unpivot -> Rex.Op.Path.Step.Unpivot()
+                is Rex.Op.Path.Step.Wildcard -> Rex.Op.Path.Step.Wildcard()
+            }
+
         /**
          * Resolve and type scalar function calls.
          *
