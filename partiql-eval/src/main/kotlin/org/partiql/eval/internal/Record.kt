@@ -10,4 +10,15 @@ internal class Record(val values: Array<PartiQLValue>) {
         val empty = Record(emptyArray())
         fun of(vararg values: PartiQLValue) = Record(arrayOf(*(values)))
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+        other as Record
+        return values.contentEquals(other.values)
+    }
+
+    override fun hashCode(): Int {
+        return values.contentHashCode()
+    }
 }
