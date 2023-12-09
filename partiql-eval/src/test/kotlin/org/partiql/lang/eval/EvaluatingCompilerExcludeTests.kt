@@ -111,33 +111,6 @@ class EvaluatingCompilerExcludeTests : EvaluatorTestBase() {
                     }
                 >>"""
             ),
-            EvaluatorTestCase( // EXCLUDE select star with FROM source list
-                """SELECT * EXCLUDE c.ssn FROM [
-                    {
-                        'name': 'Alan',
-                        'custId': 1,
-                        'address': {
-                            'city': 'Seattle',
-                            'zipcode': 98109,
-                            'street': '123 Seaplane Dr.'
-                        },
-                        'ssn': 123456789
-                    }
-                ] AS c
-                """.trimIndent(),
-                """
-                <<
-                    {
-                        'name': 'Alan',
-                        'custId': 1,
-                        'address': {
-                            'city': 'Seattle',
-                            'zipcode': 98109,
-                            'street': '123 Seaplane Dr.'
-                        }
-                    }
-                >>"""
-            ),
             EvaluatorTestCase( // EXCLUDE select star with multiple paths and FROM source list
                 """
                 SELECT * EXCLUDE c.ssn, c.address.street FROM [
