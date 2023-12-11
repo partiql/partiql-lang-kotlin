@@ -399,10 +399,6 @@ public abstract class BagValue<T : PartiQLValue> : CollectionValue<T> {
         // TODO
         return type.hashCode()
     }
-
-    override fun toString(): String {
-        return this.elements!!.toList().toString()
-    }
 }
 
 @PartiQLValueExperimental
@@ -526,22 +522,6 @@ public abstract class StructValue<T : PartiQLValue> : PartiQLValue, Sequence<Pai
     override fun hashCode(): Int {
         // TODO
         return super.hashCode()
-    }
-
-    override fun toString(): String {
-        return buildString {
-            append("{ ")
-            val fieldList = fields!!.toList()
-            fieldList.forEachIndexed { index, field ->
-                append(field.first)
-                append(": ")
-                append(field.second)
-                if (index != fieldList.lastIndex) {
-                    append(", ")
-                }
-            }
-            append(" }")
-        }
     }
 }
 
