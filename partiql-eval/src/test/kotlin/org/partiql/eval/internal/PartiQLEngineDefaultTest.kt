@@ -11,6 +11,7 @@ import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.bagValue
 import org.partiql.value.boolValue
 import org.partiql.value.int32Value
+import org.partiql.value.structValue
 import kotlin.test.assertEquals
 
 /**
@@ -64,6 +65,21 @@ class PartiQLEngineDefaultTest {
         val output = result.value as BagValue<*>
 
         val expected = bagValue(sequenceOf(boolValue(true), boolValue(true)))
+        assertEquals(expected, output)
+    }
+
+    @OptIn(PartiQLValueExperimental::class)
+    @Test
+    fun testJoinInner() {
+        val statement = parser.parse("SELECT a, b FROM << { 'a': 1 } >> t, << { 'b': 2 } >> s;").root
+        val session = PartiQLPlanner.Session("q", "u")
+        val plan = planner.plan(statement, session)
+
+        val prepared = engine.prepare(plan.plan)
+        val result = engine.execute(prepared) as PartiQLResult.Value
+        val output = result.value as BagValue<*>
+
+        val expected = bagValue(sequenceOf(structValue(sequenceOf("a" to int32Value(1), "b" to int32Value(2)))))
         assertEquals(expected, output)
     }
 }
