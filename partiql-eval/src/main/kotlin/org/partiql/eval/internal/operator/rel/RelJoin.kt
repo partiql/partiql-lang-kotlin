@@ -2,11 +2,15 @@ package org.partiql.eval.internal.operator.rel
 
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
+import org.partiql.value.BoolValue
+import org.partiql.value.PartiQLValue
+import org.partiql.value.PartiQLValueExperimental
 
 internal abstract class RelJoin : Operator.Relation {
 
     abstract val lhs: Operator.Relation
     abstract val rhs: Operator.Relation
+    abstract val condition: Operator.Expr
 
     private val lhsStored = mutableListOf<Record>()
     private val rhsStored = mutableListOf<Record>()
@@ -32,8 +36,19 @@ internal abstract class RelJoin : Operator.Relation {
         rhsIterator = rhsStored.iterator()
     }
 
+    @OptIn(PartiQLValueExperimental::class)
+    abstract fun getOutputRecord(result: Boolean, lhs: Record, rhs: Record): Record?
+
+    @OptIn(PartiQLValueExperimental::class)
     override fun next(): Record? {
-        TODO("Not yet implemented")
+        lhsIterator.forEach { lhsRecord ->
+            rhsIterator.forEach { rhsRecord ->
+                val input = lhsRecord + rhsRecord
+                val result = condition.eval(input)
+                getOutputRecord(result.isTrue(), lhsRecord, rhsRecord)?.let { return it }
+            }
+        }
+        return null
     }
 
     override fun close() {
@@ -41,5 +56,10 @@ internal abstract class RelJoin : Operator.Relation {
         lhsStored.clear()
         rhs.close()
         rhsStored.clear()
+    }
+
+    @OptIn(PartiQLValueExperimental::class)
+    private fun PartiQLValue.isTrue(): Boolean {
+        return this is BoolValue && this.value == true
     }
 }

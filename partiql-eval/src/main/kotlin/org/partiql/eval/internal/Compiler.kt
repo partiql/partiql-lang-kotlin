@@ -3,6 +3,7 @@ package org.partiql.eval.internal
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.eval.internal.operator.rel.RelFilter
 import org.partiql.eval.internal.operator.rel.RelJoinInner
+import org.partiql.eval.internal.operator.rel.RelJoinLeft
 import org.partiql.eval.internal.operator.rel.RelProject
 import org.partiql.eval.internal.operator.rel.RelScan
 import org.partiql.eval.internal.operator.rex.ExprCollection
@@ -106,7 +107,7 @@ internal object Compiler {
             val condition = visitRex(node.rex, ctx)
             return when (node.type) {
                 Rel.Op.Join.Type.INNER -> RelJoinInner(lhs, rhs, condition)
-                Rel.Op.Join.Type.LEFT -> TODO()
+                Rel.Op.Join.Type.LEFT -> RelJoinLeft(lhs, rhs, condition)
                 Rel.Op.Join.Type.RIGHT -> TODO()
                 Rel.Op.Join.Type.FULL -> TODO()
             }
