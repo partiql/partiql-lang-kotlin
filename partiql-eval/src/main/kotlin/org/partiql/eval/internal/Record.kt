@@ -21,4 +21,8 @@ internal class Record(val values: Array<PartiQLValue>) {
     override fun hashCode(): Int {
         return values.contentHashCode()
     }
+
+    public operator fun plus(rhs: Record): Record {
+        return Record(this.values + rhs.values)
+    }
 }
