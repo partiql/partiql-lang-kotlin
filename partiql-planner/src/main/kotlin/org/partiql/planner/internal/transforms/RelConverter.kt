@@ -54,6 +54,7 @@ import org.partiql.planner.internal.ir.relOpLimit
 import org.partiql.planner.internal.ir.relOpOffset
 import org.partiql.planner.internal.ir.relOpProject
 import org.partiql.planner.internal.ir.relOpScan
+import org.partiql.planner.internal.ir.relOpScanIndexed
 import org.partiql.planner.internal.ir.relOpSort
 import org.partiql.planner.internal.ir.relOpSortSpec
 import org.partiql.planner.internal.ir.relOpUnion
@@ -271,9 +272,9 @@ internal object RelConverter {
 
         private fun convertScanIndexed(rex: Rex, binding: Rel.Binding, index: Rel.Binding): Rel {
             val schema = listOf(binding, index)
-            val props = setOf(Rel.Prop.ORDERED)
+            val props = emptySet<Rel.Prop>()
             val type = relType(schema, props)
-            val op = relOpScan(rex)
+            val op = relOpScanIndexed(rex)
             return rel(type, op)
         }
 
