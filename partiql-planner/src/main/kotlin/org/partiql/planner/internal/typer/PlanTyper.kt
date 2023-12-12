@@ -38,6 +38,7 @@ import org.partiql.planner.internal.ir.rel
 import org.partiql.planner.internal.ir.relBinding
 import org.partiql.planner.internal.ir.relOpAggregate
 import org.partiql.planner.internal.ir.relOpAggregateCall
+import org.partiql.planner.internal.ir.relOpDistinct
 import org.partiql.planner.internal.ir.relOpErr
 import org.partiql.planner.internal.ir.relOpFilter
 import org.partiql.planner.internal.ir.relOpJoin
@@ -45,6 +46,7 @@ import org.partiql.planner.internal.ir.relOpLimit
 import org.partiql.planner.internal.ir.relOpOffset
 import org.partiql.planner.internal.ir.relOpProject
 import org.partiql.planner.internal.ir.relOpScan
+import org.partiql.planner.internal.ir.relOpScanIndexed
 import org.partiql.planner.internal.ir.relOpSort
 import org.partiql.planner.internal.ir.relOpUnpivot
 import org.partiql.planner.internal.ir.relType
@@ -59,6 +61,7 @@ import org.partiql.planner.internal.ir.rexOpGlobal
 import org.partiql.planner.internal.ir.rexOpLit
 import org.partiql.planner.internal.ir.rexOpPath
 import org.partiql.planner.internal.ir.rexOpPathStepSymbol
+import org.partiql.planner.internal.ir.rexOpPivot
 import org.partiql.planner.internal.ir.rexOpSelect
 import org.partiql.planner.internal.ir.rexOpStruct
 import org.partiql.planner.internal.ir.rexOpStructField
@@ -158,10 +161,10 @@ internal class PlanTyper(
             val rex = node.rex.type(outer.global())
             // compute rel type
             val valueT = getElementTypeForFromSource(rex.type)
-            val indexT = StaticType.INT
+            val indexT = StaticType.INT8
             val type = ctx!!.copyWithSchema(listOf(valueT, indexT))
             // rewrite
-            val op = relOpScan(rex)
+            val op = relOpScanIndexed(rex)
             return rel(type, op)
         }
 
@@ -197,7 +200,8 @@ internal class PlanTyper(
         }
 
         override fun visitRelOpDistinct(node: Rel.Op.Distinct, ctx: Rel.Type?): Rel {
-            TODO("Type RelOp Distinct")
+            val input = visitRel(node.input, ctx)
+            return rel(input.type, relOpDistinct(input))
         }
 
         override fun visitRelOpFilter(node: Rel.Op.Filter, ctx: Rel.Type?): Rel {
@@ -815,7 +819,16 @@ internal class PlanTyper(
         }
 
         override fun visitRexOpPivot(node: Rex.Op.Pivot, ctx: StaticType?): Rex {
-            TODO("Type RexOpPivot")
+            val rel = node.rel.type(locals)
+            val typeEnv = TypeEnv(rel.type.schema, ResolutionStrategy.LOCAL)
+            val key = node.key.type(typeEnv)
+            val value = node.value.type(typeEnv)
+            val type = StructType(
+                contentClosed = false,
+                constraints = setOf(TupleConstraint.Open(true))
+            )
+            val op = rexOpPivot(key, value, rel)
+            return rex(type, op)
         }
 
         override fun visitRexOpSubquery(node: Rex.Op.Subquery, ctx: StaticType?): Rex {

@@ -45,3 +45,6 @@ SELECT
        p.name.*,
        (p.name."first" || ' ' || p.name."last") AS full_name
 FROM main.person AS p;
+
+--#[sanity-07]
+SELECT p.name."first", i FROM main.person AS p AT i;
