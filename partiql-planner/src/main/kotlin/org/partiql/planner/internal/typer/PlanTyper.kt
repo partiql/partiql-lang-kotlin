@@ -161,7 +161,7 @@ internal class PlanTyper(
             val rex = node.rex.type(outer.global())
             // compute rel type
             val valueT = getElementTypeForFromSource(rex.type)
-            val indexT = StaticType.INT
+            val indexT = StaticType.INT8
             val type = ctx!!.copyWithSchema(listOf(valueT, indexT))
             // rewrite
             val op = relOpScanIndexed(rex)

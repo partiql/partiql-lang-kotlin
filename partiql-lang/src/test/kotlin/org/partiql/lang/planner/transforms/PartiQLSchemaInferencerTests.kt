@@ -79,6 +79,16 @@ class PartiQLSchemaInferencerTests {
     fun testSelectStar(tc: TestCase) = runTest(tc)
 
     @ParameterizedTest
+    @MethodSource("scanCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun testScan(tc: TestCase) = runTest(tc)
+
+    @ParameterizedTest
+    @MethodSource("pivotCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun testPivot(tc: TestCase) = runTest(tc)
+
+    @ParameterizedTest
     @MethodSource("sessionVariables")
     @Execution(ExecutionMode.CONCURRENT)
     fun testSessionVariables(tc: TestCase) = runTest(tc)
@@ -418,15 +428,19 @@ class PartiQLSchemaInferencerTests {
                     )
                 )
             ),
+        )
+
+        @JvmStatic
+        fun scanCases() = listOf(
             SuccessTestCase(
-                name = "Scan indexed",
+                name = "Basic Scan Indexed",
                 key = key("sanity-07"),
                 catalog = "pql",
                 expected = BagType(
                     StructType(
                         fields = listOf(
                             StructType.Field("first", STRING),
-                            StructType.Field("i", INT),
+                            StructType.Field("i", INT8),
                         ),
                         contentClosed = true,
                         constraints = setOf(
@@ -437,8 +451,12 @@ class PartiQLSchemaInferencerTests {
                     )
                 )
             ),
+        )
+
+        @JvmStatic
+        fun pivotCases() = listOf(
             SuccessTestCase(
-                name = "Scan indexed",
+                name = "Basic PIVOT",
                 key = key("pivot-00"),
                 catalog = "pql",
                 expected = StructType(
