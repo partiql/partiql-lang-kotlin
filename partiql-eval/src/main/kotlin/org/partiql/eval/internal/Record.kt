@@ -25,4 +25,8 @@ internal class Record(val values: Array<PartiQLValue>) {
     public operator fun plus(rhs: Record): Record {
         return Record(this.values + rhs.values)
     }
+
+    public fun copy(): Record {
+        return Record(this.values.copyOf())
+    }
 }

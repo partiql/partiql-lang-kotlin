@@ -4,6 +4,7 @@ import org.partiql.eval.internal.operator.Operator
 import org.partiql.eval.internal.operator.rel.RelFilter
 import org.partiql.eval.internal.operator.rel.RelJoinInner
 import org.partiql.eval.internal.operator.rel.RelJoinLeft
+import org.partiql.eval.internal.operator.rel.RelJoinOuterFull
 import org.partiql.eval.internal.operator.rel.RelJoinRight
 import org.partiql.eval.internal.operator.rel.RelProject
 import org.partiql.eval.internal.operator.rel.RelScan
@@ -110,7 +111,7 @@ internal object Compiler {
                 Rel.Op.Join.Type.INNER -> RelJoinInner(lhs, rhs, condition)
                 Rel.Op.Join.Type.LEFT -> RelJoinLeft(lhs, rhs, condition)
                 Rel.Op.Join.Type.RIGHT -> RelJoinRight(lhs, rhs, condition)
-                Rel.Op.Join.Type.FULL -> TODO()
+                Rel.Op.Join.Type.FULL -> RelJoinOuterFull(lhs, rhs, condition)
             }
         }
 

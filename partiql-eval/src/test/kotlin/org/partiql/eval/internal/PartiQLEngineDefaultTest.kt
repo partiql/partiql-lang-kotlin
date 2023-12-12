@@ -7,12 +7,15 @@ import org.partiql.parser.PartiQLParserBuilder
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.PartiQLPlannerBuilder
 import org.partiql.value.BagValue
+import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.bagValue
 import org.partiql.value.boolValue
 import org.partiql.value.int32Value
+import org.partiql.value.io.PartiQLValueIonWriterBuilder
 import org.partiql.value.nullValue
 import org.partiql.value.structValue
+import java.io.ByteArrayOutputStream
 import kotlin.test.assertEquals
 
 /**
@@ -97,5 +100,52 @@ class PartiQLEngineDefaultTest {
 
         val expected = bagValue(sequenceOf(structValue(sequenceOf("a" to int32Value(1), "b" to nullValue()))))
         assertEquals(expected, output)
+    }
+
+    @OptIn(PartiQLValueExperimental::class)
+    @Test
+    fun testJoinOuterFull() {
+        val statement = parser.parse("SELECT a, b FROM << { 'a': 1 } >> t FULL OUTER JOIN << { 'b': 2 } >> s ON false;").root
+        val session = PartiQLPlanner.Session("q", "u")
+        val plan = planner.plan(statement, session)
+
+        val prepared = engine.prepare(plan.plan)
+        val result = engine.execute(prepared)
+        if (result is PartiQLResult.Error) {
+            throw result.cause
+        }
+        result as PartiQLResult.Value
+        val output = result.value as BagValue<*>
+
+        val expected = bagValue(
+            sequenceOf(
+                structValue(
+                    sequenceOf(
+                        "a" to int32Value(1),
+                        "b" to nullValue()
+                    )
+                ),
+                structValue(
+                    sequenceOf(
+                        "a" to nullValue(),
+                        "b" to int32Value(2)
+                    )
+                ),
+            )
+        )
+        assertEquals(expected, output, comparisonString(expected, output))
+    }
+
+    @OptIn(PartiQLValueExperimental::class)
+    private fun comparisonString(expected: PartiQLValue, actual: PartiQLValue): String {
+        val expectedBuffer = ByteArrayOutputStream()
+        val expectedWriter = PartiQLValueIonWriterBuilder.standardIonTextBuilder().build(expectedBuffer)
+        expectedWriter.append(expected)
+        return buildString {
+            appendLine("Expected : $expectedBuffer")
+            expectedBuffer.reset()
+            expectedWriter.append(actual)
+            appendLine("Actual   : $expectedBuffer")
+        }
     }
 }
