@@ -59,6 +59,7 @@ Thank you to all who have contributed!
 - **Breaking** Removed IR factory in favor of static top-level functions. Change `Ast.foo()`
   to `foo()`
 - **Breaking** Removed `org.partiql.lang.planner.transforms.AstToPlan`. Use `org.partiql.planner.PartiQLPlanner`. 
+- **Breaking** Removed `org.partiql.lang.planner.transforms.PartiQLSchemaInferencer`. In order to achieve the same functionality, one would need to use the `org.partiql.planner.PartiQLPlanner`.
 
 ### Security
 
