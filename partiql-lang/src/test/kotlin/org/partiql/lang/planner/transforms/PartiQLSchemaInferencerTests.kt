@@ -418,6 +418,36 @@ class PartiQLSchemaInferencerTests {
                     )
                 )
             ),
+            SuccessTestCase(
+                name = "Scan indexed",
+                key = key("sanity-07"),
+                catalog = "pql",
+                expected = BagType(
+                    StructType(
+                        fields = listOf(
+                            StructType.Field("first", STRING),
+                            StructType.Field("i", INT),
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "Scan indexed",
+                key = key("pivot-00"),
+                catalog = "pql",
+                expected = StructType(
+                    contentClosed = false,
+                    constraints = setOf(
+                        TupleConstraint.Open(true),
+                    )
+                )
+            ),
         )
 
         @JvmStatic
