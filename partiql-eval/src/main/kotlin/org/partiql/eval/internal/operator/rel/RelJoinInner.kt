@@ -7,8 +7,11 @@ internal class RelJoinInner(
     override val lhs: Operator.Relation,
     override val rhs: Operator.Relation,
     override val condition: Operator.Expr
-) : RelJoin() {
-    override fun getOutputRecord(result: Boolean, lhs: Record, rhs: Record): Record {
-        return lhs + rhs
+) : RelJoinNestedLoop() {
+    override fun getOutputRecord(result: Boolean, lhs: Record, rhs: Record): Record? {
+        return when (result) {
+            true -> lhs + rhs
+            false -> null
+        }
     }
 }
