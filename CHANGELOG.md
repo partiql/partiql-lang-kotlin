@@ -46,13 +46,14 @@ Thank you to all who have contributed!
 - **BREAKING** In the produced plan: 
   - The new plan is fully resolved and typed.
   - Operators will be converted to function call. 
-
+- Changes the return type of `filter_distinct` to a list if input collection is list
 
 ### Deprecated
 
 ### Fixed
 - Fixes the CLI hanging on invalid queries. See issue #1230.
 - Fixes Timestamp Type parsing issue. Previously Timestamp Type would get parsed to a Time type.
+- Fixes the physical plan compiler to return list when `DISTINCT` used with `ORDER BY`
 
 ### Removed
 - **Breaking** Removed IR factory in favor of static top-level functions. Change `Ast.foo()`

@@ -477,20 +477,20 @@ EXTRACT(TIMEZONE_MINUTE FROM TIME WITH TIME ZONE '23:12:59-08:30')  -- -30
 ### `FILTER_DISTINCT` -- since v0.7.0
 
 Signature
-: `FILTER_DISTINCT: Container -> Bag`
+: `FILTER_DISTINCT: Container -> Bag|List`
 
 Header
 : `FILTER_DISTINCT(c)`
 
 Purpose
-: Returns a bag of distinct values contained within a bag, list, sexp, or struct.  If the container is a struct,
-the field names are not considered.
+: Returns a bag or list of distinct values contained within a bag, list, sexp, or struct.  If the container is a struct,
+the field names are not considered. A list will be returned if and only if the input is a list.
 
 Examples
 :
 
 ```sql
-FILTER_DISTINCT([0, 0, 1])                  -- <<0, 1>>
+FILTER_DISTINCT([0, 0, 1])                  -- [0, 1]
 FILTER_DISTINCT(<<0, 0, 1>>)                -- <<0, 1>>
 FILTER_DISTINCT(SEXP(0, 0, 1))              -- <<0, 1>>
 FILTER_DISTINCT({'a': 0, 'b': 0, 'c': 1})   -- <<0, 1>>
