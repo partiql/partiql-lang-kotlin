@@ -110,7 +110,7 @@ internal object ExprFunctionUtcNow : ExprFunction {
 }
 
 /**
- * Returns a bag of distinct values contained within a bag, list, sexp, or struct.
+ * Returns a bag or list of distinct values contained within a bag, list, sexp, or struct.
  * If the container is a struct, the field names are not considered.
  */
 internal object ExprFunctionFilterDistinct : ExprFunction {
@@ -118,23 +118,25 @@ internal object ExprFunctionFilterDistinct : ExprFunction {
     override val signature = FunctionSignature(
         name = "filter_distinct",
         requiredParameters = listOf(unionOf(StaticType.BAG, StaticType.LIST, StaticType.SEXP, StaticType.STRUCT)),
-        returnType = StaticType.BAG
+        returnType = unionOf(StaticType.BAG, StaticType.LIST)
     )
 
     override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
         val argument = required.first()
         // We cannot use a [HashSet] here because [ExprValue] does not implement .equals() and .hashCode()
         val encountered = TreeSet(DEFAULT_COMPARATOR)
-        return ExprValue.newBag(
-            sequence {
-                argument.asSequence().forEach {
-                    if (!encountered.contains(it)) {
-                        encountered.add(it.unnamedValue())
-                        yield(it)
-                    }
+        val seq = sequence {
+            argument.asSequence().forEach {
+                if (!encountered.contains(it)) {
+                    encountered.add(it.unnamedValue())
+                    yield(it)
                 }
             }
-        )
+        }
+        return when (argument.type) {
+            ExprValueType.LIST -> ExprValue.newList(seq)
+            else -> ExprValue.newBag(seq)
+        }
     }
 }
 
