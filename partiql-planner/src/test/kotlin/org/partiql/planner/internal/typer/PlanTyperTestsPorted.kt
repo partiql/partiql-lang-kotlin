@@ -88,98 +88,6 @@ class PlanTyperTestsPorted {
         }
     }
 
-<<<<<<< HEAD:partiql-lang/src/test/kotlin/org/partiql/lang/planner/transforms/PartiQLSchemaInferencerTests.kt
-    @ParameterizedTest
-    @ArgumentsSource(TestProvider::class)
-    fun test(tc: TestCase) = runTest(tc)
-
-    @ParameterizedTest
-    @MethodSource("collections")
-    @Execution(ExecutionMode.CONCURRENT)
-    fun testCollections(tc: TestCase) = runTest(tc)
-
-    @ParameterizedTest
-    @MethodSource("selectStar")
-    @Execution(ExecutionMode.CONCURRENT)
-    fun testSelectStar(tc: TestCase) = runTest(tc)
-
-    @ParameterizedTest
-    @MethodSource("scanCases")
-    @Execution(ExecutionMode.CONCURRENT)
-    fun testScan(tc: TestCase) = runTest(tc)
-
-    @ParameterizedTest
-    @MethodSource("pivotCases")
-    @Execution(ExecutionMode.CONCURRENT)
-    fun testPivot(tc: TestCase) = runTest(tc)
-
-    @ParameterizedTest
-    @MethodSource("sessionVariables")
-    @Execution(ExecutionMode.CONCURRENT)
-    fun testSessionVariables(tc: TestCase) = runTest(tc)
-
-    @ParameterizedTest
-    @MethodSource("bitwiseAnd")
-    @Execution(ExecutionMode.CONCURRENT)
-    fun testBitwiseAnd(tc: TestCase) = runTest(tc)
-
-    @ParameterizedTest
-    @MethodSource("unpivotCases")
-    @Execution(ExecutionMode.CONCURRENT)
-    fun testUnpivot(tc: TestCase) = runTest(tc)
-
-    @ParameterizedTest
-    @MethodSource("joinCases")
-    @Execution(ExecutionMode.CONCURRENT)
-    fun testJoins(tc: TestCase) = runTest(tc)
-
-    @ParameterizedTest
-    @MethodSource("excludeCases")
-    @Execution(ExecutionMode.CONCURRENT)
-    fun testExclude(tc: TestCase) = runTest(tc)
-
-    @ParameterizedTest
-    @MethodSource("orderByCases")
-    @Execution(ExecutionMode.CONCURRENT)
-    fun testOrderBy(tc: TestCase) = runTest(tc)
-
-    @ParameterizedTest
-    @MethodSource("tupleUnionCases")
-    @Execution(ExecutionMode.CONCURRENT)
-    fun testTupleUnion(tc: TestCase) = runTest(tc)
-
-    @ParameterizedTest
-    @MethodSource("aggregationCases")
-    @Execution(ExecutionMode.CONCURRENT)
-    fun testAggregations(tc: TestCase) = runTest(tc)
-
-    @ParameterizedTest
-    @MethodSource("scalarFunctions")
-    @Execution(ExecutionMode.CONCURRENT)
-    fun testScalarFunctions(tc: TestCase) = runTest(tc)
-
-    @ParameterizedTest
-    @MethodSource("pathExpressions")
-    @Execution(ExecutionMode.CONCURRENT)
-    fun testPathExpressions(tc: TestCase) = runTest(tc)
-
-    @ParameterizedTest
-    @MethodSource("caseWhens")
-    @Execution(ExecutionMode.CONCURRENT)
-    fun testCaseWhens(tc: TestCase) = runTest(tc)
-
-    @ParameterizedTest
-    @MethodSource("subqueryCases")
-    @Execution(ExecutionMode.CONCURRENT)
-    fun testSubqueries(tc: TestCase) = runTest(tc)
-
-    @ParameterizedTest
-    @MethodSource("dynamicCalls")
-    @Execution(ExecutionMode.CONCURRENT)
-    fun testDynamicCalls(tc: TestCase) = runTest(tc)
-
-=======
->>>>>>> ab7d26bf (port inferencer tests):partiql-planner/src/test/kotlin/org/partiql/planner/internal/typer/PlanTyperTestsPorted.kt
     companion object {
         private fun assertProblemExists(problem: () -> Problem) = ProblemHandler { problems, ignoreSourceLocation ->
             when (ignoreSourceLocation) {
@@ -473,8 +381,8 @@ class PlanTyperTestsPorted {
                 expected = BagType(
                     StructType(
                         fields = listOf(
-                            StructType.Field("first", STRING),
-                            StructType.Field("i", INT8),
+                            StructType.Field("first", StaticType.STRING),
+                            StructType.Field("i", StaticType.INT8),
                         ),
                         contentClosed = true,
                         constraints = setOf(
@@ -3075,6 +2983,16 @@ class PlanTyperTestsPorted {
     @MethodSource("dynamicCalls")
     @Execution(ExecutionMode.CONCURRENT)
     fun testDynamicCalls(tc: TestCase) = runTest(tc)
+
+    @ParameterizedTest
+    @MethodSource("scanCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun testScan(tc: TestCase) = runTest(tc)
+
+    @ParameterizedTest
+    @MethodSource("pivotCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun testPivot(tc: TestCase) = runTest(tc)
 
     // --------- Finish Parameterized Tests ------
 
