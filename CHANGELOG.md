@@ -46,6 +46,9 @@ Thank you to all who have contributed!
 - **BREAKING** In the produced plan: 
   - The new plan is fully resolved and typed.
   - Operators will be converted to function call. 
+- **EXPERIMENTAL** `EXCLUDE` addition to the physical plan
+  - This is currently marked as experimental until the RFC is approved https://github.com/partiql/partiql-lang/issues/27
+  - Evaluation of `EXCLUDE` in the `PlanCompiler`
 - Changes the return type of `filter_distinct` to a list if input collection is list
 
 ### Deprecated

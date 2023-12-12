@@ -75,16 +75,16 @@ private fun excludeStructExprValue(
     structExprValue: StructExprValue,
     exclusions: ExcludeNode
 ): ExprValue {
-    val toRemove = exclusions.leaves.map { leaf -> leaf.step }
-    val otherSteps = exclusions.branches
-    if (toRemove.any { it is PartiqlPhysical.ExcludeStep.ExcludeTupleWildcard }) {
+    val leavesSteps = exclusions.leaves.map { leaf -> leaf.step }
+    val branches = exclusions.branches
+    if (leavesSteps.any { it is PartiqlPhysical.ExcludeStep.ExcludeTupleWildcard }) {
         // tuple wildcard at current level. return empty struct
         return StructExprValue(
             sequence = emptySequence(),
             ordering = structExprValue.ordering
         )
     }
-    val attrsToRemove = toRemove.filterIsInstance<PartiqlPhysical.ExcludeStep.ExcludeTupleAttr>()
+    val attrsToRemove = leavesSteps.filterIsInstance<PartiqlPhysical.ExcludeStep.ExcludeTupleAttr>()
         .map { it.attr.name.text }
         .toSet()
     val sequenceWithRemoved = structExprValue.mapNotNull { structField ->
@@ -106,7 +106,7 @@ private fun excludeStructExprValue(
                 )
             )
         }
-        otherSteps.find {
+        branches.find {
             it.step == structFieldCaseSensitiveKey
         }?.let {
             expr = excludeExprValue(expr, it)
@@ -120,14 +120,14 @@ private fun excludeStructExprValue(
                 )
             )
         }
-        otherSteps.find {
+        branches.find {
             it.step == structFieldCaseInsensitiveKey
         }?.let {
             expr = excludeExprValue(expr, it)
         }
         // apply tuple wildcard exclusions
         val tupleWildcardKey = PartiqlPhysical.build { excludeTupleWildcard(emptyMetaContainer()) }
-        otherSteps.find {
+        branches.find {
             it.step == tupleWildcardKey
         }?.let {
             expr = excludeExprValue(expr, it)
@@ -142,13 +142,13 @@ private fun excludeCollectionExprValue(
     exprValueType: ExprValueType,
     exclusions: ExcludeNode
 ): ExprValue {
-    val toRemove = exclusions.leaves.map { leaf -> leaf.step }
-    val otherSteps = exclusions.branches
-    if (toRemove.any { it is PartiqlPhysical.ExcludeStep.ExcludeCollectionWildcard }) {
+    val leavesSteps = exclusions.leaves.map { leaf -> leaf.step }
+    val branches = exclusions.branches
+    if (leavesSteps.any { it is PartiqlPhysical.ExcludeStep.ExcludeCollectionWildcard }) {
         // collection wildcard at current level. return empty collection
         return newSequenceExprValue(exprValueType, emptySequence())
     } else {
-        val indexesToRemove = toRemove.filterIsInstance<PartiqlPhysical.ExcludeStep.ExcludeCollectionIndex>()
+        val indexesToRemove = leavesSteps.filterIsInstance<PartiqlPhysical.ExcludeStep.ExcludeCollectionIndex>()
             .map { it.index.value }
             .toSet()
         val sequenceWithRemoved = initialExprValue.mapNotNull { element ->
@@ -169,7 +169,7 @@ private fun excludeCollectionExprValue(
                         index
                     )
                 }
-                otherSteps.find {
+                branches.find {
                     it.step == elementKey
                 }?.let {
                     expr = excludeExprValue(element.value, it)
@@ -177,7 +177,7 @@ private fun excludeCollectionExprValue(
             }
             // apply collection wildcard exclusions for lists, bags, and sexps
             val collectionWildcardKey = PartiqlPhysical.build { excludeCollectionWildcard(emptyMetaContainer()) }
-            otherSteps.find {
+            branches.find {
                 it.step == collectionWildcardKey
             }?.let {
                 expr = excludeExprValue(expr, it)
@@ -207,7 +207,6 @@ internal class ExcludeOperator(
 ) : RelationExpression {
     override fun evaluate(state: EvaluatorState): RelationIterator {
         val rows = input.evaluate(state)
-
         return relation(rows.relType) {
             while (rows.nextRow()) {
                 val newRegisters = compiledExcludeExprs.fold(state.registers) { curRegisters, expr ->
@@ -218,21 +217,4 @@ internal class ExcludeOperator(
             }
         }
     }
-}
-
-/**
- * Creates a list of compiled exclude expressions with each index of the resulting list corresponding to a different
- * exclude path root.
- */
-internal fun compileExcludeClause(excludeClause: PartiqlPhysical.Bexpr.ExcludeClause): List<CompiledExcludeExpr> {
-    val excludeExprs = excludeClause.exprs
-    val compiledExcludeExprs = excludeExprs
-        .groupBy { it.root }
-        .map { (root, exclusions) ->
-            exclusions.fold(CompiledExcludeExpr.empty(root.value.toInt())) { acc, exclusion ->
-                acc.addSteps(exclusion.steps)
-                acc
-            }
-        }
-    return compiledExcludeExprs
 }
