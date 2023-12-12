@@ -197,8 +197,9 @@ internal class Env(
      * @return
      */
     internal fun getObjectDescriptor(handle: Handle<ConnectorObjectHandle>): StaticType {
-        val metadata = getMetadata(BindingName(handle.first, BindingCase.SENSITIVE))!!.second
-        return metadata.getObjectType(connectorSession, handle.second)!!
+        val metadata = getMetadata(BindingName(handle.first, BindingCase.SENSITIVE))?.second
+            ?: error("Unable to fetch connector metadata based on handle $handle")
+        return metadata.getObjectType(connectorSession, handle.second) ?: error("Unable to produce Static Type")
     }
 
     /**
