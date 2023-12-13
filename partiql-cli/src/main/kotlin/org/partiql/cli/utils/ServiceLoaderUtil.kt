@@ -448,7 +448,7 @@ class ServiceLoaderUtil {
                 PartiQLValueType.INTERVAL -> TODO()
                 PartiQLValueType.BAG -> when (exprValue.type) {
                     ExprValueType.NULL -> bagValue(null)
-                    ExprValueType.BAG -> bagValue(exprValue.map { ExprToPartiQLValue(it, ExprToPartiQLValueType(it)) }.asSequence())
+                    ExprValueType.BAG -> bagValue(exprValue.map { ExprToPartiQLValue(it, ExprToPartiQLValueType(it)) })
                     else -> throw ExprToPartiQLValueTypeMismatchException(
                         PartiQLValueType.BAG, ExprToPartiQLValueType(exprValue)
                     )
@@ -460,7 +460,7 @@ class ServiceLoaderUtil {
                             ExprToPartiQLValue(
                                 it, ExprToPartiQLValueType(it)
                             )
-                        }.asSequence()
+                        }
                     )
                     else -> throw ExprToPartiQLValueTypeMismatchException(
                         PartiQLValueType.LIST, ExprToPartiQLValueType(exprValue)
@@ -473,7 +473,7 @@ class ServiceLoaderUtil {
                             ExprToPartiQLValue(
                                 it, ExprToPartiQLValueType(it)
                             )
-                        }.asSequence()
+                        }
                     )
                     else -> throw ExprToPartiQLValueTypeMismatchException(
                         PartiQLValueType.SEXP, ExprToPartiQLValueType(exprValue)
@@ -486,7 +486,7 @@ class ServiceLoaderUtil {
                             Pair(
                                 it.name?.stringValue() ?: "", ExprToPartiQLValue(it, ExprToPartiQLValueType(it))
                             )
-                        }.asSequence()
+                        }
                     )
                     else -> throw ExprToPartiQLValueTypeMismatchException(
                         PartiQLValueType.STRUCT, ExprToPartiQLValueType(exprValue)

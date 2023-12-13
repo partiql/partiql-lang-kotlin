@@ -23,19 +23,19 @@ import org.partiql.value.StructValue
 import org.partiql.value.util.PartiQLValueVisitor
 
 /**
- * Implementation of a [StructValue<T>] backed by a Sequence.
+ * Implementation of a [StructValue<T>] backed by an iterator.
  *
  * @param T
  * @property delegate
  * @property annotations
  */
 @OptIn(PartiQLValueExperimental::class)
-internal class SequenceStructValueImpl<T : PartiQLValue>(
-    private val delegate: Sequence<Pair<String, T>>?,
+internal class IterableStructValueImpl<T : PartiQLValue>(
+    private val delegate: Iterable<Pair<String, T>>?,
     override val annotations: PersistentList<String>,
 ) : StructValue<T>() {
 
-    override val fields: Sequence<Pair<String, T>>? = delegate
+    override val fields: Collection<Pair<String, T>>? = delegate?.toList()
 
     override operator fun get(key: String): T? {
         if (delegate == null) {
@@ -51,7 +51,7 @@ internal class SequenceStructValueImpl<T : PartiQLValue>(
         return delegate.filter { it.first == key }.map { it.second }.asIterable()
     }
 
-    override fun copy(annotations: Annotations) = SequenceStructValueImpl(delegate, annotations.toPersistentList())
+    override fun copy(annotations: Annotations) = IterableStructValueImpl(delegate, annotations.toPersistentList())
 
     override fun withAnnotations(annotations: Annotations): StructValue<T> = _withAnnotations(annotations)
 
@@ -73,12 +73,12 @@ internal class MultiMapStructValueImpl<T : PartiQLValue>(
     override val annotations: PersistentList<String>,
 ) : StructValue<T>() {
 
-    override val fields: Sequence<Pair<String, T>>?
+    override val fields: Collection<Pair<String, T>>?
         get() {
             if (delegate == null) {
                 return null
             }
-            return delegate.asSequence().map { f -> f.value.map { v -> f.key to v } }.flatten()
+            return delegate.entries.map { f -> f.value.map { v -> f.key to v } }.flatten()
         }
 
     override operator fun get(key: String): T? = getAll(key).firstOrNull()
@@ -112,12 +112,12 @@ internal class MapStructValueImpl<T : PartiQLValue>(
     override val annotations: PersistentList<String>,
 ) : StructValue<T>() {
 
-    override val fields: Sequence<Pair<String, T>>?
+    override val fields: Collection<Pair<String, T>>?
         get() {
             if (delegate == null) {
                 return null
             }
-            return delegate.asSequence().map { f -> f.key to f.value }
+            return delegate.entries.map { f -> f.key to f.value }
         }
 
     override operator fun get(key: String): T? {

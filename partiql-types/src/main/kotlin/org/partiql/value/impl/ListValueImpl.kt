@@ -24,11 +24,13 @@ import org.partiql.value.util.PartiQLValueVisitor
 
 @OptIn(PartiQLValueExperimental::class)
 internal class ListValueImpl<T : PartiQLValue>(
-    private val delegate: Sequence<T>?,
+    private val delegate: Iterable<T>?,
     override val annotations: PersistentList<String>,
 ) : ListValue<T>() {
 
-    override val elements: Sequence<T>? = delegate
+    override val elements: Collection<T>? = delegate?.toList()
+
+    override fun iterator(): Iterator<T> = delegate!!.iterator()
 
     override fun copy(annotations: Annotations) = ListValueImpl(delegate, annotations.toPersistentList())
 

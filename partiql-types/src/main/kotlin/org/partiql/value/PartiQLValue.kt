@@ -66,14 +66,14 @@ public sealed interface ScalarValue<T> : PartiQLValue {
 }
 
 @PartiQLValueExperimental
-public sealed interface CollectionValue<T : PartiQLValue> : PartiQLValue, Sequence<T> {
+public sealed interface CollectionValue<T : PartiQLValue> : PartiQLValue, Iterable<T> {
 
-    public val elements: Sequence<T>?
+    public val elements: Collection<T>?
 
     override val isNull: Boolean
         get() = elements == null
 
-    override fun iterator(): Iterator<T> = elements!!.iterator()
+    override fun iterator(): Iterator<T>
 
     override fun copy(annotations: Annotations): CollectionValue<T>
 
@@ -389,8 +389,8 @@ public abstract class BagValue<T : PartiQLValue> : CollectionValue<T> {
         if (this.isNull || other.isNull) return this.isNull == other.isNull
 
         // both not null, compare values
-        val lhs = this.elements!!.toList()
-        val rhs = other.elements!!.toList()
+        val lhs = this.elements!!
+        val rhs = other.elements!!
         // this is incorrect as it assumes ordered-ness, but we don't have a sort or hash yet
         return lhs == rhs
     }
@@ -422,8 +422,8 @@ public abstract class ListValue<T : PartiQLValue> : CollectionValue<T> {
         if (this.isNull || other.isNull) return this.isNull == other.isNull
 
         // both not null, compare values
-        val lhs = this.elements!!.toList()
-        val rhs = other.elements!!.toList()
+        val lhs = this.elements!!
+        val rhs = other.elements!!
         return lhs == rhs
     }
 
@@ -453,8 +453,8 @@ public abstract class SexpValue<T : PartiQLValue> : CollectionValue<T> {
         if (this.isNull || other.isNull) return this.isNull == other.isNull
 
         // both not null, compare values
-        val lhs = this.elements!!.toList()
-        val rhs = other.elements!!.toList()
+        val lhs = this.elements!!
+        val rhs = other.elements!!
         return lhs == rhs
     }
 
@@ -465,11 +465,11 @@ public abstract class SexpValue<T : PartiQLValue> : CollectionValue<T> {
 }
 
 @PartiQLValueExperimental
-public abstract class StructValue<T : PartiQLValue> : PartiQLValue, Sequence<Pair<String, T>> {
+public abstract class StructValue<T : PartiQLValue> : PartiQLValue, Iterable<Pair<String, T>> {
 
     override val type: PartiQLValueType = PartiQLValueType.STRUCT
 
-    public abstract val fields: Sequence<Pair<String, T>>?
+    public abstract val fields: Collection<Pair<String, T>>?
 
     override val isNull: Boolean
         get() = fields == null

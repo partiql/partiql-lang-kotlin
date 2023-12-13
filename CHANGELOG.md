@@ -47,12 +47,14 @@ Thank you to all who have contributed!
   - The new plan is fully resolved and typed.
   - Operators will be converted to function call. 
 - Changes the return type of `filter_distinct` to a list if input collection is list
+- `PartiQLValue` collections are backed by iterables rather than just sequences.
 
 ### Deprecated
 
 ### Fixed
 - Fixes the CLI hanging on invalid queries. See issue #1230.
 - Fixes Timestamp Type parsing issue. Previously Timestamp Type would get parsed to a Time type.
+- Fixes PIVOT parsing to assign the key and value as defined by spec section 14.
 - Fixes the physical plan compiler to return list when `DISTINCT` used with `ORDER BY`
 
 ### Removed

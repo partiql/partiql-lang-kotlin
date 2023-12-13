@@ -360,24 +360,22 @@ class PartiQLValueIonSerdeTest {
         @JvmStatic
         fun collections() = listOf(
             roundTrip(
-                bagValue(emptySequence()),
+                bagValue<PartiQLValue>(),
                 ION.newEmptyList().apply { addTypeAnnotation("\$bag") },
             ),
             roundTrip(
-                listValue(emptySequence()),
+                listValue<PartiQLValue>(),
                 ION.newEmptyList()
             ),
             roundTrip(
-                sexpValue(emptySequence()),
+                sexpValue<PartiQLValue>(),
                 ION.newEmptySexp()
             ),
             oneWayTrip(
                 bagValue(
-                    sequenceOf(
-                        int32Value(1),
-                        int32Value(2),
-                        int32Value(3),
-                    )
+                    int32Value(1),
+                    int32Value(2),
+                    int32Value(3),
                 ),
                 ION.newList(
                     ION.newInt(1),
@@ -385,20 +383,16 @@ class PartiQLValueIonSerdeTest {
                     ION.newInt(3)
                 ).apply { addTypeAnnotation("\$bag") },
                 bagValue(
-                    sequenceOf(
-                        intValue(BigInteger.ONE),
-                        intValue(BigInteger.valueOf(2L)),
-                        intValue(BigInteger.valueOf(3L)),
-                    )
+                    intValue(BigInteger.ONE),
+                    intValue(BigInteger.valueOf(2L)),
+                    intValue(BigInteger.valueOf(3L)),
                 )
             ),
             roundTrip(
                 listValue(
-                    sequenceOf(
-                        stringValue("a"),
-                        stringValue("b"),
-                        stringValue("c"),
-                    )
+                    stringValue("a"),
+                    stringValue("b"),
+                    stringValue("c"),
                 ),
                 ION.newList(
                     ION.newString("a"),
@@ -408,11 +402,9 @@ class PartiQLValueIonSerdeTest {
             ),
             oneWayTrip(
                 sexpValue(
-                    sequenceOf(
-                        int32Value(1),
-                        int32Value(2),
-                        int32Value(3),
-                    )
+                    int32Value(1),
+                    int32Value(2),
+                    int32Value(3),
                 ),
                 ION.newSexp(
                     ION.newInt(1),
@@ -420,19 +412,15 @@ class PartiQLValueIonSerdeTest {
                     ION.newInt(3)
                 ),
                 sexpValue(
-                    sequenceOf(
-                        intValue(BigInteger.ONE),
-                        intValue(BigInteger.valueOf(2L)),
-                        intValue(BigInteger.valueOf(3L)),
-                    )
+                    intValue(BigInteger.ONE),
+                    intValue(BigInteger.valueOf(2L)),
+                    intValue(BigInteger.valueOf(3L)),
                 )
             ),
             oneWayTrip(
                 structValue(
-                    sequenceOf(
-                        "a" to int32Value(1),
-                        "b" to stringValue("x"),
-                    )
+                    "a" to int32Value(1),
+                    "b" to stringValue("x"),
                 ),
                 ION.newEmptyStruct()
                     .apply {
@@ -440,10 +428,8 @@ class PartiQLValueIonSerdeTest {
                         add("b", ION.newString("x"))
                     },
                 structValue(
-                    sequenceOf(
-                        "a" to intValue(BigInteger.ONE),
-                        "b" to stringValue("x"),
-                    )
+                    "a" to intValue(BigInteger.ONE),
+                    "b" to stringValue("x"),
                 ),
             )
         )
