@@ -8,7 +8,7 @@ import org.partiql.spi.function.PartiQLFunctionExperimental
 
 class MemoryPlugin(
     val provider: MemoryCatalog.Provider,
-    val data: StructElement,
+    val data: StructElement? = null,
 ) : Plugin {
 
     override val factory: Connector.Factory = MemoryConnector.Factory(provider, data)

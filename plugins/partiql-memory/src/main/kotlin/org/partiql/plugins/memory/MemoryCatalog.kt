@@ -68,6 +68,7 @@ class MemoryCatalog(
     }
 
     class Provider {
+
         private val catalogs = mutableMapOf<String, MemoryCatalog>()
 
         operator fun get(path: String): MemoryCatalog = catalogs[path] ?: error("invalid catalog path")

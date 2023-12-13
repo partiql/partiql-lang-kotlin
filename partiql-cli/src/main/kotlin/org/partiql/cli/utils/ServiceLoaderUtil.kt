@@ -113,7 +113,7 @@ class ServiceLoaderUtil {
             } else {
                 listOf()
             }
-            return plugins.flatMap { plugin -> plugin.getFunctions() }
+            return plugins.flatMap { plugin -> plugin.functions }
                 .filterIsInstance<PartiQLFunction.Scalar>()
                 .map { partiqlFunc -> PartiQLtoExprFunction(partiqlFunc) }
         }

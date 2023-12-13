@@ -31,6 +31,14 @@ internal object Compiler {
             TODO("Not yet implemented")
         }
 
+        override fun visitRexOpErr(node: Rex.Op.Err, ctx: Unit): Operator {
+            error(node.message)
+        }
+
+        override fun visitRelOpErr(node: Rel.Op.Err, ctx: Unit): Operator {
+            error(node.message)
+        }
+
         override fun visitRexOpStruct(node: Rex.Op.Struct, ctx: Unit): Operator {
             val fields = node.fields.map {
                 ExprStruct.Field(visitRex(it.k, ctx), visitRex(it.v, ctx))

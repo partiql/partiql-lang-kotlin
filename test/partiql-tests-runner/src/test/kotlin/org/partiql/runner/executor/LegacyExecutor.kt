@@ -1,4 +1,4 @@
-package org.partiql.runner.test.executor
+package org.partiql.runner.executor
 
 import com.amazon.ion.IonStruct
 import com.amazon.ion.IonValue

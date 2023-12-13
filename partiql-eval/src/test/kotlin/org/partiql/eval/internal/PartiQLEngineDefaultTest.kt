@@ -35,7 +35,7 @@ class PartiQLEngineDefaultTest {
         val result = engine.execute(prepared) as PartiQLResult.Value
         val output = result.value as BagValue<*>
 
-        val expected = bagValue(sequenceOf(int32Value(1), int32Value(1)))
+        val expected = bagValue(int32Value(1), int32Value(1))
         assertEquals(expected, output)
     }
 
@@ -50,7 +50,7 @@ class PartiQLEngineDefaultTest {
         val result = engine.execute(prepared) as PartiQLResult.Value
         val output = result.value as BagValue<*>
 
-        val expected = bagValue(sequenceOf(int32Value(10), int32Value(20), int32Value(30)))
+        val expected = bagValue(int32Value(10), int32Value(20), int32Value(30))
         assertEquals(expected, output)
     }
 
@@ -65,7 +65,7 @@ class PartiQLEngineDefaultTest {
         val result = engine.execute(prepared) as PartiQLResult.Value
         val output = result.value as BagValue<*>
 
-        val expected = bagValue(sequenceOf(boolValue(true), boolValue(true)))
+        val expected = bagValue(boolValue(true), boolValue(true))
         assertEquals(expected, output)
     }
 
@@ -80,7 +80,7 @@ class PartiQLEngineDefaultTest {
         val result = engine.execute(prepared) as PartiQLResult.Value
         val output = result.value as BagValue<*>
 
-        val expected = bagValue(sequenceOf(structValue(sequenceOf("a" to int32Value(1), "b" to int32Value(2)))))
+        val expected = bagValue(structValue("a" to int32Value(1), "b" to int32Value(2)))
         assertEquals(expected, output)
     }
 
@@ -95,7 +95,7 @@ class PartiQLEngineDefaultTest {
         val result = engine.execute(prepared) as PartiQLResult.Value
         val output = result.value as BagValue<*>
 
-        val expected = bagValue(sequenceOf(structValue(sequenceOf("a" to int32Value(1), "b" to nullValue()))))
+        val expected = bagValue(structValue("a" to int32Value(1), "b" to nullValue()))
         assertEquals(expected, output)
     }
 }

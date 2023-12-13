@@ -1,5 +1,6 @@
 package org.partiql.plugins.memory
 
+import com.amazon.ionelement.api.emptyIonStruct
 import org.junit.jupiter.api.Test
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
@@ -18,20 +19,25 @@ class InMemoryPluginTest {
     }
 
     companion object {
-        val provider = MemoryCatalog.Provider().also {
-            it["test"] = MemoryCatalog.of(
-                "a" to StaticType.INT2,
-                "struct" to StructType(
-                    fields = listOf(StructType.Field("a", StaticType.INT2))
-                ),
-                "schema.tbl" to BagType(
-                    StructType(
+
+        val plugin = MemoryPlugin(
+            MemoryCatalog.Provider().also {
+                it["test"] = MemoryCatalog.of(
+                    "a" to StaticType.INT2,
+                    "struct" to StructType(
                         fields = listOf(StructType.Field("a", StaticType.INT2))
+                    ),
+                    "schema.tbl" to BagType(
+                        StructType(
+                            fields = listOf(StructType.Field("a", StaticType.INT2))
+                        )
                     )
                 )
-            )
-        }
+            }
+        )
     }
+
+    private fun connector(catalog: String) = plugin.factory.create(catalog, emptyIonStruct()) as MemoryConnector
 
     @Test
     fun getValue() {
@@ -42,7 +48,7 @@ class InMemoryPluginTest {
         )
         val expected = StaticType.INT2
 
-        val connector = MemoryConnector(provider["test"])
+        val connector = connector("test")
 
         val metadata = connector.Metadata()
 
@@ -62,7 +68,7 @@ class InMemoryPluginTest {
             )
         )
 
-        val connector = MemoryConnector(provider["test"])
+        val connector = connector("test")
 
         val metadata = connector.Metadata()
 
@@ -80,7 +86,7 @@ class InMemoryPluginTest {
             )
         )
 
-        val connector = MemoryConnector(provider["test"])
+        val connector = connector("test")
 
         val metadata = connector.Metadata()
 
@@ -105,7 +111,7 @@ class InMemoryPluginTest {
             )
         )
 
-        val connector = MemoryConnector(provider["test"])
+        val connector = connector("test")
 
         val metadata = connector.Metadata()
 
@@ -129,7 +135,7 @@ class InMemoryPluginTest {
             )
         )
 
-        val connector = MemoryConnector(provider["test"])
+        val connector = connector("test")
 
         val metadata = connector.Metadata()
 

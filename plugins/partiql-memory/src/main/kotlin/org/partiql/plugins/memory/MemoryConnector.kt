@@ -9,15 +9,11 @@ import org.partiql.spi.connector.ConnectorObjectHandle
 import org.partiql.spi.connector.ConnectorObjectPath
 import org.partiql.spi.connector.ConnectorSession
 import org.partiql.types.StaticType
-import org.partiql.value.PartiQLValueExperimental
 
-class MemoryConnector(
+class MemoryConnector private constructor(
     val catalog: MemoryCatalog,
-    val bindings: () -> MemoryBindings,
+    val bindings: MemoryBindings,
 ) : Connector {
-
-    @OptIn(PartiQLValueExperimental::class)
-    constructor(catalog: MemoryCatalog) : this(catalog, { MemoryBindings(emptyMap()) })
 
     companion object {
         const val CONNECTOR_NAME = "memory"
@@ -25,18 +21,18 @@ class MemoryConnector(
 
     override fun getMetadata(session: ConnectorSession): ConnectorMetadata = Metadata()
 
-    override fun getBindings(): ConnectorBindings = bindings()
+    override fun getBindings(): ConnectorBindings = bindings
 
     class Factory(
         private val provider: MemoryCatalog.Provider,
-        private val data: StructElement,
+        private val data: StructElement?,
     ) : Connector.Factory {
 
         override val name: String = CONNECTOR_NAME
 
         override fun create(catalogName: String, config: StructElement): Connector {
             val catalog = provider[catalogName]
-            val bindings = { MemoryBindings.load(catalog, data) }
+            val bindings = if (data != null) MemoryBindings.load(catalog, data) else MemoryBindings.empty
             return MemoryConnector(catalog, bindings)
         }
     }

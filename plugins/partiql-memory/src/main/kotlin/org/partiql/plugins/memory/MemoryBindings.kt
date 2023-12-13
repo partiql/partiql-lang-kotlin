@@ -25,6 +25,11 @@ class MemoryBindings(
     companion object {
 
         /**
+         * No bindings.
+         */
+        val empty = MemoryBindings(emptyMap())
+
+        /**
          * Loads each declared global of the catalog from the data element.
          */
         fun load(catalog: MemoryCatalog, data: StructElement): MemoryBindings {

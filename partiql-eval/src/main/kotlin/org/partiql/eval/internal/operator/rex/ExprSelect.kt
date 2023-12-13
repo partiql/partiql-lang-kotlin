@@ -31,6 +31,6 @@ internal class ExprSelect(
             elements.add(e)
         }
         input.close()
-        return bagValue(elements.asSequence())
+        return bagValue(elements)
     }
 }
