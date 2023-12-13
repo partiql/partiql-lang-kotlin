@@ -1,17 +1,16 @@
 package org.partiql.lang.eval.internal.exclude
 
-import com.amazon.ionelement.api.emptyMetaContainer
 import org.junit.Assert.assertEquals
 import org.junit.jupiter.api.fail
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.annotations.ExperimentalPartiQLCompilerPipeline
 import org.partiql.lang.domains.PartiqlPhysical
+import org.partiql.lang.eval.physical.operators.compileExcludeClause
 import org.partiql.lang.planner.PartiQLPlanner
 import org.partiql.lang.planner.PartiQLPlannerBuilder
 import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.lang.util.ArgumentsProviderBase
-import org.partiql.pig.runtime.LongPrimitive
 
 @OptIn(ExperimentalPartiQLCompilerPipeline::class)
 class CompiledExcludeExprTest {
@@ -42,37 +41,18 @@ class CompiledExcludeExprTest {
     internal fun subsumptionTests(tc: SubsumptionTC) = testExcludeExprSubsumption(tc)
 
     internal class ExcludeSubsumptionTests : ArgumentsProviderBase() {
-        private fun caseSensitiveId(id: String): PartiqlPhysical.Identifier {
-            return PartiqlPhysical.build { identifier(name = id, case = caseSensitive(emptyMetaContainer())) }
-        }
-        private fun caseInsensitiveId(id: String): PartiqlPhysical.Identifier {
-            return PartiqlPhysical.build { identifier(name = id, case = caseInsensitive(emptyMetaContainer())) }
-        }
-        private fun exTupleAttr(id: PartiqlPhysical.Identifier): PartiqlPhysical.ExcludeStep {
-            return PartiqlPhysical.ExcludeStep.ExcludeTupleAttr(id)
-        }
-        private fun exTupleWildcard(): PartiqlPhysical.ExcludeStep {
-            return PartiqlPhysical.ExcludeStep.ExcludeTupleWildcard()
-        }
-        private fun exCollIndex(i: Int): PartiqlPhysical.ExcludeStep {
-            return PartiqlPhysical.ExcludeStep.ExcludeCollectionIndex(index = LongPrimitive(i.toLong(), emptyMetaContainer()))
-        }
-        private fun exCollWildcard(): PartiqlPhysical.ExcludeStep {
-            return PartiqlPhysical.ExcludeStep.ExcludeCollectionWildcard()
-        }
-
         override fun getParameters(): List<Any> = listOf(
             SubsumptionTC(
                 "s.a, t.a, t.b, s.b",
                 listOf(
                     CompiledExcludeExpr(
                         root = 0,
-                        leaves = mutableSetOf(ExcludeLeaf(exTupleAttr(caseInsensitiveId("a"))), ExcludeLeaf(exTupleAttr(caseInsensitiveId("b")))),
+                        leaves = mutableSetOf(ExcludeLeaf(ExcludeStep.TupleAttr("a", ExcludeTupleAttrCase.INSENSITIVE)), ExcludeLeaf(ExcludeStep.TupleAttr("b", ExcludeTupleAttrCase.INSENSITIVE))),
                         branches = mutableSetOf()
                     ),
                     CompiledExcludeExpr(
                         root = 1,
-                        leaves = mutableSetOf(ExcludeLeaf(exTupleAttr(caseInsensitiveId("a"))), ExcludeLeaf(exTupleAttr(caseInsensitiveId("b")))),
+                        leaves = mutableSetOf(ExcludeLeaf(ExcludeStep.TupleAttr("a", ExcludeTupleAttrCase.INSENSITIVE)), ExcludeLeaf(ExcludeStep.TupleAttr("b", ExcludeTupleAttrCase.INSENSITIVE))),
                         branches = mutableSetOf()
                     ),
                 )
@@ -82,7 +62,7 @@ class CompiledExcludeExprTest {
                 listOf(
                     CompiledExcludeExpr(
                         root = 1,
-                        leaves = mutableSetOf(ExcludeLeaf(exTupleAttr(caseInsensitiveId("a"))), ExcludeLeaf(exTupleAttr(caseInsensitiveId("b")))),
+                        leaves = mutableSetOf(ExcludeLeaf(ExcludeStep.TupleAttr("a", ExcludeTupleAttrCase.INSENSITIVE)), ExcludeLeaf(ExcludeStep.TupleAttr("b", ExcludeTupleAttrCase.INSENSITIVE))),
                         branches = mutableSetOf()
                     ),
                 )
@@ -92,7 +72,7 @@ class CompiledExcludeExprTest {
                 listOf(
                     CompiledExcludeExpr(
                         root = 1,
-                        leaves = mutableSetOf(ExcludeLeaf(exTupleAttr(caseInsensitiveId("a"))), ExcludeLeaf(exTupleAttr(caseInsensitiveId("b")))),
+                        leaves = mutableSetOf(ExcludeLeaf(ExcludeStep.TupleAttr("a", ExcludeTupleAttrCase.INSENSITIVE)), ExcludeLeaf(ExcludeStep.TupleAttr("b", ExcludeTupleAttrCase.INSENSITIVE))),
                         branches = mutableSetOf()
                     ),
                 )
@@ -102,7 +82,7 @@ class CompiledExcludeExprTest {
                 listOf(
                     CompiledExcludeExpr(
                         root = 1,
-                        leaves = mutableSetOf(ExcludeLeaf(exTupleWildcard())),
+                        leaves = mutableSetOf(ExcludeLeaf(ExcludeStep.TupleWildcard)),
                         branches = mutableSetOf()
                     ),
                 )
@@ -116,11 +96,11 @@ class CompiledExcludeExprTest {
                 listOf(
                     CompiledExcludeExpr(
                         root = 1,
-                        leaves = mutableSetOf(ExcludeLeaf(exTupleAttr(caseInsensitiveId("a"))), ExcludeLeaf(exTupleAttr(caseInsensitiveId("c")))),
+                        leaves = mutableSetOf(ExcludeLeaf(ExcludeStep.TupleAttr("a", ExcludeTupleAttrCase.INSENSITIVE)), ExcludeLeaf(ExcludeStep.TupleAttr("c", ExcludeTupleAttrCase.INSENSITIVE))),
                         branches = mutableSetOf(
                             ExcludeBranch(
-                                step = exTupleAttr(caseInsensitiveId("b")),
-                                leaves = mutableSetOf(ExcludeLeaf(exTupleAttr(caseInsensitiveId("b1")))),
+                                step = ExcludeStep.TupleAttr("b", ExcludeTupleAttrCase.INSENSITIVE),
+                                leaves = mutableSetOf(ExcludeLeaf(ExcludeStep.TupleAttr("b1", ExcludeTupleAttrCase.INSENSITIVE))),
                                 branches = mutableSetOf()
                             )
                         )
@@ -135,7 +115,7 @@ class CompiledExcludeExprTest {
                 listOf(
                     CompiledExcludeExpr(
                         root = 1,
-                        leaves = mutableSetOf(ExcludeLeaf(exTupleAttr(caseInsensitiveId("a"))), ExcludeLeaf(exTupleAttr(caseInsensitiveId("b")))),
+                        leaves = mutableSetOf(ExcludeLeaf(ExcludeStep.TupleAttr("a", ExcludeTupleAttrCase.INSENSITIVE)), ExcludeLeaf(ExcludeStep.TupleAttr("b", ExcludeTupleAttrCase.INSENSITIVE))),
                         branches = mutableSetOf()
                     )
                 )
@@ -153,23 +133,23 @@ class CompiledExcludeExprTest {
                         leaves = mutableSetOf(),
                         branches = mutableSetOf(
                             ExcludeBranch(
-                                step = exTupleAttr(caseInsensitiveId("a")),
-                                leaves = mutableSetOf(ExcludeLeaf(exCollWildcard())),
+                                step = ExcludeStep.TupleAttr("a", ExcludeTupleAttrCase.INSENSITIVE),
+                                leaves = mutableSetOf(ExcludeLeaf(ExcludeStep.CollectionWildcard)),
                                 branches = mutableSetOf()
                             ),
                             ExcludeBranch(
-                                step = exTupleAttr(caseInsensitiveId("b")),
-                                leaves = mutableSetOf(ExcludeLeaf(exCollWildcard())),
+                                step = ExcludeStep.TupleAttr("b", ExcludeTupleAttrCase.INSENSITIVE),
+                                leaves = mutableSetOf(ExcludeLeaf(ExcludeStep.CollectionWildcard)),
                                 branches = mutableSetOf()
                             ),
                             ExcludeBranch(
-                                step = exTupleAttr(caseInsensitiveId("c")),
-                                leaves = mutableSetOf(ExcludeLeaf(exCollWildcard())),
+                                step = ExcludeStep.TupleAttr("c", ExcludeTupleAttrCase.INSENSITIVE),
+                                leaves = mutableSetOf(ExcludeLeaf(ExcludeStep.CollectionWildcard)),
                                 branches = mutableSetOf()
                             ),
                             ExcludeBranch(
-                                step = exTupleAttr(caseInsensitiveId("d")),
-                                leaves = mutableSetOf(ExcludeLeaf(exCollWildcard())),
+                                step = ExcludeStep.TupleAttr("d", ExcludeTupleAttrCase.INSENSITIVE),
+                                leaves = mutableSetOf(ExcludeLeaf(ExcludeStep.CollectionWildcard)),
                                 branches = mutableSetOf()
                             )
                         )
@@ -193,55 +173,55 @@ class CompiledExcludeExprTest {
                         leaves = mutableSetOf(),
                         branches = mutableSetOf(
                             ExcludeBranch(
-                                step = exTupleAttr(caseInsensitiveId("a")),
-                                leaves = mutableSetOf(ExcludeLeaf(exCollIndex(1))),
+                                step = ExcludeStep.TupleAttr("a", ExcludeTupleAttrCase.INSENSITIVE),
+                                leaves = mutableSetOf(ExcludeLeaf(ExcludeStep.CollIndex(1))),
                                 branches = mutableSetOf(),
                             ),
                             ExcludeBranch(
-                                step = exTupleAttr(caseInsensitiveId("b")),
-                                leaves = mutableSetOf(ExcludeLeaf(exCollIndex(1))),
+                                step = ExcludeStep.TupleAttr("b", ExcludeTupleAttrCase.INSENSITIVE),
+                                leaves = mutableSetOf(ExcludeLeaf(ExcludeStep.CollIndex(1))),
                                 branches = mutableSetOf(),
                             ),
                             ExcludeBranch(
-                                step = exTupleAttr(caseInsensitiveId("c")),
-                                leaves = mutableSetOf(ExcludeLeaf(exCollWildcard())),
+                                step = ExcludeStep.TupleAttr("c", ExcludeTupleAttrCase.INSENSITIVE),
+                                leaves = mutableSetOf(ExcludeLeaf(ExcludeStep.CollectionWildcard)),
                                 branches = mutableSetOf(),
                             ),
                             ExcludeBranch(
-                                step = exTupleAttr(caseInsensitiveId("d")),
-                                leaves = mutableSetOf(ExcludeLeaf(exCollWildcard())),
+                                step = ExcludeStep.TupleAttr("d", ExcludeTupleAttrCase.INSENSITIVE),
+                                leaves = mutableSetOf(ExcludeLeaf(ExcludeStep.CollectionWildcard)),
                                 branches = mutableSetOf(),
                             ),
                             ExcludeBranch(
-                                step = exTupleAttr(caseInsensitiveId("e")),
-                                leaves = mutableSetOf(ExcludeLeaf(exCollIndex(1))),
+                                step = ExcludeStep.TupleAttr("e", ExcludeTupleAttrCase.INSENSITIVE),
+                                leaves = mutableSetOf(ExcludeLeaf(ExcludeStep.CollIndex(1))),
                                 branches = mutableSetOf(
                                     ExcludeBranch(
-                                        step = exCollWildcard(),
-                                        leaves = mutableSetOf(ExcludeLeaf(exTupleAttr(caseInsensitiveId("e1")))),
+                                        step = ExcludeStep.CollectionWildcard,
+                                        leaves = mutableSetOf(ExcludeLeaf(ExcludeStep.TupleAttr("e1", ExcludeTupleAttrCase.INSENSITIVE))),
                                         branches = mutableSetOf(),
                                     )
                                 ),
                             ),
                             ExcludeBranch(
-                                step = exTupleAttr(caseInsensitiveId("f")),
-                                leaves = mutableSetOf(ExcludeLeaf(exCollIndex(1))),
+                                step = ExcludeStep.TupleAttr("f", ExcludeTupleAttrCase.INSENSITIVE),
+                                leaves = mutableSetOf(ExcludeLeaf(ExcludeStep.CollIndex(1))),
                                 branches = mutableSetOf(
                                     ExcludeBranch(
-                                        step = exCollWildcard(),
-                                        leaves = mutableSetOf(ExcludeLeaf(exTupleAttr(caseInsensitiveId("f1")))),
+                                        step = ExcludeStep.CollectionWildcard,
+                                        leaves = mutableSetOf(ExcludeLeaf(ExcludeStep.TupleAttr("f1", ExcludeTupleAttrCase.INSENSITIVE))),
                                         branches = mutableSetOf(),
                                     )
                                 ),
                             ),
                             ExcludeBranch(
-                                step = exTupleAttr(caseInsensitiveId("g")),
-                                leaves = mutableSetOf(ExcludeLeaf(exCollWildcard())),
+                                step = ExcludeStep.TupleAttr("g", ExcludeTupleAttrCase.INSENSITIVE),
+                                leaves = mutableSetOf(ExcludeLeaf(ExcludeStep.CollectionWildcard)),
                                 branches = mutableSetOf(),
                             ),
                             ExcludeBranch(
-                                step = exTupleAttr(caseInsensitiveId("h")),
-                                leaves = mutableSetOf(ExcludeLeaf(exCollWildcard())),
+                                step = ExcludeStep.TupleAttr("h", ExcludeTupleAttrCase.INSENSITIVE),
+                                leaves = mutableSetOf(ExcludeLeaf(ExcludeStep.CollectionWildcard)),
                                 branches = mutableSetOf(),
                             ),
                         ),
@@ -259,12 +239,12 @@ class CompiledExcludeExprTest {
                     CompiledExcludeExpr(
                         root = 1,
                         leaves = mutableSetOf(
-                            ExcludeLeaf(exTupleAttr(caseInsensitiveId("a"))),
-                            ExcludeLeaf(exTupleAttr(caseInsensitiveId("b"))),
-                            ExcludeLeaf(exTupleAttr(caseInsensitiveId("c"))),
-                            ExcludeLeaf(exTupleAttr(caseInsensitiveId("d"))),
-                            ExcludeLeaf(exTupleAttr(caseSensitiveId("c"))),
-                            ExcludeLeaf(exTupleAttr(caseSensitiveId("d")))
+                            ExcludeLeaf(ExcludeStep.TupleAttr("a", ExcludeTupleAttrCase.INSENSITIVE)),
+                            ExcludeLeaf(ExcludeStep.TupleAttr("b", ExcludeTupleAttrCase.INSENSITIVE)),
+                            ExcludeLeaf(ExcludeStep.TupleAttr("c", ExcludeTupleAttrCase.INSENSITIVE)),
+                            ExcludeLeaf(ExcludeStep.TupleAttr("d", ExcludeTupleAttrCase.INSENSITIVE)),
+                            ExcludeLeaf(ExcludeStep.TupleAttr("c", ExcludeTupleAttrCase.SENSITIVE)),
+                            ExcludeLeaf(ExcludeStep.TupleAttr("d", ExcludeTupleAttrCase.SENSITIVE)),
                         ),
                         branches = mutableSetOf(),
                     ),

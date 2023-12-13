@@ -1,6 +1,5 @@
 package org.partiql.lang.eval.physical.operators
 
-import com.amazon.ionelement.api.emptyMetaContainer
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
@@ -11,6 +10,8 @@ import org.partiql.lang.eval.internal.SexpExprValue
 import org.partiql.lang.eval.internal.StructExprValue
 import org.partiql.lang.eval.internal.exclude.CompiledExcludeExpr
 import org.partiql.lang.eval.internal.exclude.ExcludeNode
+import org.partiql.lang.eval.internal.exclude.ExcludeStep
+import org.partiql.lang.eval.internal.exclude.ExcludeTupleAttrCase
 import org.partiql.lang.eval.internal.ext.name
 import org.partiql.lang.eval.internal.ext.namedValue
 import org.partiql.lang.eval.internal.newSequenceExprValue
@@ -77,15 +78,15 @@ private fun excludeStructExprValue(
 ): ExprValue {
     val leavesSteps = exclusions.leaves.map { leaf -> leaf.step }
     val branches = exclusions.branches
-    if (leavesSteps.any { it is PartiqlPhysical.ExcludeStep.ExcludeTupleWildcard }) {
+    if (leavesSteps.any { it is ExcludeStep.TupleWildcard }) {
         // tuple wildcard at current level. return empty struct
         return StructExprValue(
             sequence = emptySequence(),
             ordering = structExprValue.ordering
         )
     }
-    val attrsToRemove = leavesSteps.filterIsInstance<PartiqlPhysical.ExcludeStep.ExcludeTupleAttr>()
-        .map { it.attr.name.text }
+    val attrsToRemove = leavesSteps.filterIsInstance<ExcludeStep.TupleAttr>()
+        .map { it.attr }
         .toSet()
     val sequenceWithRemoved = structExprValue.mapNotNull { structField ->
         if (attrsToRemove.contains(structField.name?.stringValue())) {
@@ -98,35 +99,21 @@ private fun excludeStructExprValue(
         var expr = structField.value
         val name = structField.name
         // apply case-sensitive tuple attr exclusions
-        val structFieldCaseSensitiveKey = PartiqlPhysical.build {
-            excludeTupleAttr(
-                identifier(
-                    name.stringValue(),
-                    caseSensitive()
-                )
-            )
-        }
+        val structFieldCaseSensitiveKey = ExcludeStep.TupleAttr(name.stringValue(), ExcludeTupleAttrCase.SENSITIVE)
         branches.find {
             it.step == structFieldCaseSensitiveKey
         }?.let {
             expr = excludeExprValue(expr, it)
         }
         // apply case-insensitive tuple attr exclusions
-        val structFieldCaseInsensitiveKey = PartiqlPhysical.build {
-            excludeTupleAttr(
-                identifier(
-                    name.stringValue(),
-                    caseInsensitive()
-                )
-            )
-        }
+        val structFieldCaseInsensitiveKey = ExcludeStep.TupleAttr(name.stringValue(), ExcludeTupleAttrCase.INSENSITIVE)
         branches.find {
             it.step == structFieldCaseInsensitiveKey
         }?.let {
             expr = excludeExprValue(expr, it)
         }
         // apply tuple wildcard exclusions
-        val tupleWildcardKey = PartiqlPhysical.build { excludeTupleWildcard(emptyMetaContainer()) }
+        val tupleWildcardKey = ExcludeStep.TupleWildcard
         branches.find {
             it.step == tupleWildcardKey
         }?.let {
@@ -144,15 +131,15 @@ private fun excludeCollectionExprValue(
 ): ExprValue {
     val leavesSteps = exclusions.leaves.map { leaf -> leaf.step }
     val branches = exclusions.branches
-    if (leavesSteps.any { it is PartiqlPhysical.ExcludeStep.ExcludeCollectionWildcard }) {
+    if (leavesSteps.any { it is ExcludeStep.CollectionWildcard }) {
         // collection wildcard at current level. return empty collection
         return newSequenceExprValue(exprValueType, emptySequence())
     } else {
-        val indexesToRemove = leavesSteps.filterIsInstance<PartiqlPhysical.ExcludeStep.ExcludeCollectionIndex>()
-            .map { it.index.value }
+        val indexesToRemove = leavesSteps.filterIsInstance<ExcludeStep.CollIndex>()
+            .map { it.index }
             .toSet()
         val sequenceWithRemoved = initialExprValue.mapNotNull { element ->
-            if (indexesToRemove.contains(element.name?.longValue())) {
+            if (indexesToRemove.contains(element.name?.longValue()?.toInt())) {
                 null
             } else {
                 element
@@ -162,13 +149,9 @@ private fun excludeCollectionExprValue(
             var expr = element
             if (initialExprValue is ListExprValue || initialExprValue is SexpExprValue) {
                 element as NamedExprValue
-                val index = element.name.longValue()
+                val index = element.name.longValue().toInt()
                 // apply collection index exclusions for lists and sexps
-                val elementKey = PartiqlPhysical.build {
-                    excludeCollectionIndex(
-                        index
-                    )
-                }
+                val elementKey = ExcludeStep.CollIndex(index)
                 branches.find {
                     it.step == elementKey
                 }?.let {
@@ -176,7 +159,7 @@ private fun excludeCollectionExprValue(
                 }
             }
             // apply collection wildcard exclusions for lists, bags, and sexps
-            val collectionWildcardKey = PartiqlPhysical.build { excludeCollectionWildcard(emptyMetaContainer()) }
+            val collectionWildcardKey = ExcludeStep.CollectionWildcard
             branches.find {
                 it.step == collectionWildcardKey
             }?.let {
@@ -216,5 +199,38 @@ internal class ExcludeOperator(
                 yield()
             }
         }
+    }
+}
+
+/**
+ * Creates a list of [CompiledExcludeExpr] with each index of the resulting list corresponding to a different
+ * exclude path root.
+ */
+internal fun compileExcludeClause(excludeClause: PartiqlPhysical.Bexpr.ExcludeClause): List<CompiledExcludeExpr> {
+    val excludeExprs = excludeClause.exprs
+    val compiledExcludeExprs = excludeExprs
+        .groupBy { it.root }
+        .map { (root, exclusions) ->
+            exclusions.fold(CompiledExcludeExpr.empty(root.value.toInt())) { acc, exclusion ->
+                acc.addNode(exclusion.steps.map { it.toCompiledExcludeStep() })
+                acc
+            }
+        }
+    return compiledExcludeExprs
+}
+
+private fun PartiqlPhysical.ExcludeStep.toCompiledExcludeStep(): ExcludeStep {
+    return when (this) {
+        is PartiqlPhysical.ExcludeStep.ExcludeTupleAttr -> ExcludeStep.TupleAttr(this.attr.name.text, this.attr.case.toCompiledExcludeStepCase())
+        is PartiqlPhysical.ExcludeStep.ExcludeTupleWildcard -> ExcludeStep.TupleWildcard
+        is PartiqlPhysical.ExcludeStep.ExcludeCollectionIndex -> ExcludeStep.CollIndex(this.index.value.toInt())
+        is PartiqlPhysical.ExcludeStep.ExcludeCollectionWildcard -> ExcludeStep.CollectionWildcard
+    }
+}
+
+private fun PartiqlPhysical.CaseSensitivity.toCompiledExcludeStepCase(): ExcludeTupleAttrCase {
+    return when (this) {
+        is PartiqlPhysical.CaseSensitivity.CaseSensitive -> ExcludeTupleAttrCase.SENSITIVE
+        is PartiqlPhysical.CaseSensitivity.CaseInsensitive -> ExcludeTupleAttrCase.INSENSITIVE
     }
 }

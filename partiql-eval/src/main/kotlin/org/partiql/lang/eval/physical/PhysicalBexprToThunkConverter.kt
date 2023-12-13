@@ -9,7 +9,6 @@ import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.NaturalExprValueComparators
 import org.partiql.lang.eval.internal.Thunk
 import org.partiql.lang.eval.internal.ThunkValue
-import org.partiql.lang.eval.internal.exclude.compileExcludeClause
 import org.partiql.lang.eval.physical.operators.AggregateOperatorFactory
 import org.partiql.lang.eval.physical.operators.CompiledAggregateFunction
 import org.partiql.lang.eval.physical.operators.CompiledGroupKey
@@ -30,6 +29,7 @@ import org.partiql.lang.eval.physical.operators.ScanRelationalOperatorFactory
 import org.partiql.lang.eval.physical.operators.SortOperatorFactory
 import org.partiql.lang.eval.physical.operators.UnpivotOperatorFactory
 import org.partiql.lang.eval.physical.operators.WindowRelationalOperatorFactory
+import org.partiql.lang.eval.physical.operators.compileExcludeClause
 import org.partiql.lang.eval.physical.operators.valueExpression
 import org.partiql.lang.eval.physical.window.createBuiltinWindowFunction
 import org.partiql.lang.util.toIntExact

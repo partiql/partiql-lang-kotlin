@@ -1,6 +1,21 @@
 package org.partiql.lang.eval.internal.exclude
 
-import org.partiql.lang.domains.PartiqlPhysical
+/**
+ * Internal representation of an `EXCLUDE` expr step.
+ */
+internal sealed class ExcludeStep {
+    internal data class TupleAttr(val attr: String, val caseSensitivity: ExcludeTupleAttrCase) : ExcludeStep()
+    internal object TupleWildcard : ExcludeStep()
+    internal data class CollIndex(val index: Int) : ExcludeStep()
+    internal object CollectionWildcard : ExcludeStep()
+}
+
+/**
+ * Internal representation of an `EXCLUDE` tuple attribute case-sensitivity.
+ */
+internal enum class ExcludeTupleAttrCase {
+    INSENSITIVE, SENSITIVE
+}
 
 /**
  * Represents all the compiled `EXCLUDE` paths that start with the same [CompiledExcludeExpr.root]. This variant of
@@ -26,12 +41,12 @@ internal data class CompiledExcludeExpr(
  * nodes of the exclude tree.
  */
 internal data class ExcludeBranch(
-    val step: PartiqlPhysical.ExcludeStep,
+    val step: ExcludeStep,
     override val leaves: MutableSet<ExcludeLeaf>,
     override val branches: MutableSet<ExcludeBranch>
 ) : ExcludeNode(leaves, branches) {
     companion object {
-        fun empty(step: PartiqlPhysical.ExcludeStep): ExcludeBranch {
+        fun empty(step: ExcludeStep): ExcludeBranch {
             return ExcludeBranch(step, mutableSetOf(), mutableSetOf())
         }
     }
@@ -42,7 +57,7 @@ internal data class ExcludeBranch(
  * represents the leaves in our exclude tree.
  */
 internal data class ExcludeLeaf(
-    val step: PartiqlPhysical.ExcludeStep,
+    val step: ExcludeStep,
 ) : ExcludeNode(mutableSetOf(), mutableSetOf())
 
 /**
@@ -91,10 +106,10 @@ internal sealed class ExcludeNode(
     open val leaves: MutableSet<ExcludeLeaf>,
     open val branches: MutableSet<ExcludeBranch>
 ) {
-    private fun addLeaf(step: PartiqlPhysical.ExcludeStep) {
+    private fun addLeaf(step: ExcludeStep) {
         when (step) {
-            is PartiqlPhysical.ExcludeStep.ExcludeTupleAttr -> {
-                if (leaves.contains(ExcludeLeaf(PartiqlPhysical.build { excludeTupleWildcard() }))) {
+            is ExcludeStep.TupleAttr -> {
+                if (leaves.contains(ExcludeLeaf(ExcludeStep.TupleWildcard))) {
                     // leaves contain wildcard; do not add; e.g. a.* and a.b -> keep a.*
                 } else {
                     // add to leaves
@@ -105,19 +120,19 @@ internal sealed class ExcludeNode(
                     }
                 }
             }
-            is PartiqlPhysical.ExcludeStep.ExcludeTupleWildcard -> {
+            is ExcludeStep.TupleWildcard -> {
                 leaves.add(ExcludeLeaf(step))
                 // remove all tuple attribute exclude steps from leaves
                 leaves.removeIf { subLeaf ->
-                    subLeaf.step is PartiqlPhysical.ExcludeStep.ExcludeTupleAttr
+                    subLeaf.step is ExcludeStep.TupleAttr
                 }
                 // remove all tuple attribute/wildcard exclude steps from branches
                 branches.removeIf { subBranch ->
-                    subBranch.step is PartiqlPhysical.ExcludeStep.ExcludeTupleAttr || subBranch.step is PartiqlPhysical.ExcludeStep.ExcludeTupleWildcard
+                    subBranch.step is ExcludeStep.TupleAttr || subBranch.step is ExcludeStep.TupleWildcard
                 }
             }
-            is PartiqlPhysical.ExcludeStep.ExcludeCollectionIndex -> {
-                if (leaves.contains(ExcludeLeaf(PartiqlPhysical.build { excludeCollectionWildcard() }))) {
+            is ExcludeStep.CollIndex -> {
+                if (leaves.contains(ExcludeLeaf(ExcludeStep.CollectionWildcard))) {
                     // leaves contains wildcard; do not add; e.g a[*] and a[1] -> keep a[*]
                 } else {
                     // add to leaves
@@ -128,26 +143,26 @@ internal sealed class ExcludeNode(
                     }
                 }
             }
-            is PartiqlPhysical.ExcludeStep.ExcludeCollectionWildcard -> {
+            is ExcludeStep.CollectionWildcard -> {
                 leaves.add(ExcludeLeaf(step))
                 // remove all collection index exclude steps from leaves
                 leaves.removeIf { subLeaf ->
-                    subLeaf.step is PartiqlPhysical.ExcludeStep.ExcludeCollectionIndex
+                    subLeaf.step is ExcludeStep.CollIndex
                 }
                 // remove all collection index/wildcard exclude steps from branches
                 branches.removeIf { subBranch ->
-                    subBranch.step is PartiqlPhysical.ExcludeStep.ExcludeCollectionIndex || subBranch.step is PartiqlPhysical.ExcludeStep.ExcludeCollectionWildcard
+                    subBranch.step is ExcludeStep.CollIndex || subBranch.step is ExcludeStep.CollectionWildcard
                 }
             }
         }
     }
 
-    private fun addBranch(steps: List<PartiqlPhysical.ExcludeStep>) {
+    private fun addBranch(steps: List<ExcludeStep>) {
         val head = steps.first()
         val tail = steps.drop(1)
         when (head) {
-            is PartiqlPhysical.ExcludeStep.ExcludeTupleAttr -> {
-                if (leaves.contains(ExcludeLeaf(PartiqlPhysical.build { excludeTupleWildcard() })) || leaves.contains(
+            is ExcludeStep.TupleAttr -> {
+                if (leaves.contains(ExcludeLeaf(ExcludeStep.TupleWildcard)) || leaves.contains(
                         ExcludeLeaf(head)
                     )
                 ) {
@@ -162,8 +177,8 @@ internal sealed class ExcludeNode(
                     branches.add(existingBranch)
                 }
             }
-            is PartiqlPhysical.ExcludeStep.ExcludeTupleWildcard -> {
-                if (leaves.any { it.step is PartiqlPhysical.ExcludeStep.ExcludeTupleWildcard }) {
+            is ExcludeStep.TupleWildcard -> {
+                if (leaves.any { it.step is ExcludeStep.TupleWildcard }) {
                     // tuple wildcard in leaves; do nothing
                 } else {
                     val existingBranch = branches.find { subBranch ->
@@ -174,8 +189,8 @@ internal sealed class ExcludeNode(
                     branches.add(existingBranch)
                 }
             }
-            is PartiqlPhysical.ExcludeStep.ExcludeCollectionIndex -> {
-                if (leaves.contains(ExcludeLeaf(PartiqlPhysical.build { excludeCollectionWildcard() })) || leaves.contains(
+            is ExcludeStep.CollIndex -> {
+                if (leaves.contains(ExcludeLeaf(ExcludeStep.CollectionWildcard)) || leaves.contains(
                         ExcludeLeaf(head)
                     )
                 ) {
@@ -190,8 +205,8 @@ internal sealed class ExcludeNode(
                     branches.add(existingBranch)
                 }
             }
-            is PartiqlPhysical.ExcludeStep.ExcludeCollectionWildcard -> {
-                if (leaves.any { it.step is PartiqlPhysical.ExcludeStep.ExcludeCollectionWildcard }) {
+            is ExcludeStep.CollectionWildcard -> {
+                if (leaves.any { it.step is ExcludeStep.CollectionWildcard }) {
                     // collection wildcard in leaves; do nothing
                 } else {
                     val existingBranch = branches.find { subBranch ->
@@ -205,27 +220,10 @@ internal sealed class ExcludeNode(
         }
     }
 
-    internal fun addNode(steps: List<PartiqlPhysical.ExcludeStep>) {
+    internal fun addNode(steps: List<ExcludeStep>) {
         when (steps.size) {
             1 -> this.addLeaf(steps.first())
             else -> this.addBranch(steps)
         }
     }
-}
-
-/**
- * Creates a list of [CompiledExcludeExpr] with each index of the resulting list corresponding to a different
- * exclude path root.
- */
-internal fun compileExcludeClause(excludeClause: PartiqlPhysical.Bexpr.ExcludeClause): List<CompiledExcludeExpr> {
-    val excludeExprs = excludeClause.exprs
-    val compiledExcludeExprs = excludeExprs
-        .groupBy { it.root }
-        .map { (root, exclusions) ->
-            exclusions.fold(CompiledExcludeExpr.empty(root.value.toInt())) { acc, exclusion ->
-                acc.addNode(exclusion.steps)
-                acc
-            }
-        }
-    return compiledExcludeExprs
 }
