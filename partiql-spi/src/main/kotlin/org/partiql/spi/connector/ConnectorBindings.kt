@@ -12,23 +12,13 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.spi
+package org.partiql.spi.connector
 
-import org.partiql.spi.connector.Connector
-import org.partiql.spi.function.PartiQLFunction
+import org.partiql.value.PartiQLValue
+import org.partiql.value.PartiQLValueExperimental
 
-/**
- * A singular unit of external logic.
- */
-public interface Plugin {
+@OptIn(PartiQLValueExperimental::class)
+public interface ConnectorBindings {
 
-    /**
-     * A [Connector.Factory] is used to instantiate a connector.
-     */
-    public val factory: Connector.Factory
-
-    /**
-     * Functions defined by this plugin.
-     */
-    public val functions: List<PartiQLFunction>
+    public fun getValue(handle: ConnectorObjectHandle): PartiQLValue
 }

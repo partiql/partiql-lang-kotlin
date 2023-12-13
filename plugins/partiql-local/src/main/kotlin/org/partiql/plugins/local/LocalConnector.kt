@@ -17,6 +17,7 @@ package org.partiql.plugins.local
 import com.amazon.ionelement.api.StructElement
 import org.partiql.spi.BindingPath
 import org.partiql.spi.connector.Connector
+import org.partiql.spi.connector.ConnectorBindings
 import org.partiql.spi.connector.ConnectorMetadata
 import org.partiql.spi.connector.ConnectorObjectHandle
 import org.partiql.spi.connector.ConnectorObjectPath
@@ -38,33 +39,42 @@ import kotlin.io.path.notExists
  * }
  * ```
  *
- * @property catalogRoot    Catalog root path
- * @property catalogName    Catalog name
- * @property config         Catalog configuration
+ * @property root       Catalog root path
+ * @property catalog    Catalog name
+ * @property format     Catalog format
+ * @property config     Catalog configuration
  */
 class LocalConnector(
-    private val catalogRoot: Path,
-    private val catalogName: String,
+    private val root: Path,
+    private val catalog: String,
+    private val format: LocalFormat,
     private val config: StructElement,
 ) : Connector {
 
     companion object {
         const val CONNECTOR_NAME = "local"
         const val ROOT_KEY = "root"
+        const val FORMAT_KEY = "format"
     }
 
-    private val metadata = Metadata(catalogRoot)
+    private val metadata = Metadata(root)
+
+    private val bindings = LocalBindings(root, format)
 
     // not yet defined in SPI
     public fun listObjects(): List<BindingPath> = metadata.listObjects()
 
     override fun getMetadata(session: ConnectorSession): ConnectorMetadata = metadata
 
+    override fun getBindings(): ConnectorBindings {
+        TODO("Not yet implemented")
+    }
+
     class Factory : Connector.Factory {
 
         private val default: Path = Paths.get(System.getProperty("user.home")).resolve(".partiql/local")
 
-        override fun getName(): String = CONNECTOR_NAME
+        override val name: String = CONNECTOR_NAME
 
         override fun create(catalogName: String, config: StructElement): Connector {
             val root = config.getOptional(ROOT_KEY)?.stringValueOrNull?.let { Paths.get(it) }
@@ -72,7 +82,12 @@ class LocalConnector(
             if (catalogRoot.notExists()) {
                 error("Invalid catalog `$catalogRoot`")
             }
-            return LocalConnector(catalogRoot, catalogName, config)
+            var catalogFormat = LocalFormat.ION
+            val format = config.getOptional(FORMAT_KEY)?.stringValueOrNull
+            if (format != null) {
+                catalogFormat = LocalFormat.safeValueOf(format) ?: error("Invalid format $format")
+            }
+            return LocalConnector(catalogRoot, catalogName, catalogFormat, config)
         }
     }
 

@@ -24,3 +24,7 @@ dependencies {
     implementation(project(":partiql-spi"))
     implementation(project(":partiql-types"))
 }
+
+tasks.test {
+    useJUnitPlatform()
+}

@@ -154,12 +154,12 @@ internal class Env(
     // Initialize connectors
     init {
         val catalogs = mutableMapOf<String, Connector>()
-        val connectors = plugins.flatMap { it.getConnectorFactories() }
+        val connectors = plugins.map { it.factory }
         // map catalogs to connectors
         for ((catalog, config) in session.catalogConfig) {
             // find corresponding connector
             val connectorName = config[Constants.CONFIG_KEY_CONNECTOR_NAME].stringValue
-            val connector = connectors.first { it.getName() == connectorName }
+            val connector = connectors.first { it.name == connectorName }
             // initialize connector with given config
             catalogs[catalog] = connector.create(catalog, config)
         }

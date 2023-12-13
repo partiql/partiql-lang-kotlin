@@ -26,8 +26,8 @@ import org.partiql.spi.function.PartiQLFunctionExperimental
  */
 class LocalPlugin : Plugin {
 
-    override fun getConnectorFactories(): List<Connector.Factory> = listOf(LocalConnector.Factory())
+    override val factory: Connector.Factory = LocalConnector.Factory()
 
     @PartiQLFunctionExperimental
-    override fun getFunctions(): List<PartiQLFunction> = listOf()
+    override val functions: List<PartiQLFunction> = listOf()
 }

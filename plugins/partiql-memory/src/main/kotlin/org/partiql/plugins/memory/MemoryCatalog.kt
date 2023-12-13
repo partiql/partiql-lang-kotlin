@@ -6,9 +6,12 @@ import org.partiql.spi.connector.ConnectorObjectPath
 import org.partiql.types.StaticType
 
 class MemoryCatalog(
-    private val map: Map<String, StaticType>
+    private val map: Map<String, StaticType>,
 ) {
-    operator fun get(key: String): StaticType? = map[key]
+
+    public operator fun get(key: String): StaticType? = map[key]
+
+    public fun keys(): Iterator<String> = map.keys.iterator()
 
     public fun lookup(path: BindingPath): MemoryObject? {
         val kPath = ConnectorObjectPath(
