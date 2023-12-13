@@ -84,10 +84,7 @@ import org.partiql.types.NullType
 import org.partiql.types.SexpType
 import org.partiql.types.StaticType
 import org.partiql.types.StaticType.Companion.ANY
-import org.partiql.types.StaticType.Companion.BOOL
 import org.partiql.types.StaticType.Companion.MISSING
-import org.partiql.types.StaticType.Companion.NULL
-import org.partiql.types.StaticType.Companion.STRING
 import org.partiql.types.StringType
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
@@ -96,7 +93,6 @@ import org.partiql.value.BoolValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.TextValue
 import org.partiql.value.boolValue
-import java.sql.Struct
 
 /**
  * Rewrites an untyped algebraic translation of the query to be both typed and have resolved variables.

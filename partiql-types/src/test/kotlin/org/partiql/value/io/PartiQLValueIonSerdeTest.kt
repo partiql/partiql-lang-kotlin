@@ -147,7 +147,7 @@ class PartiQLValueIonSerdeTest {
             ),
             // struct.null
             roundTrip(
-                structValue<PartiQLValue>(null),
+                structValue(null as Iterable<Pair<String, PartiQLValue>>?),
                 ION.newNullStruct()
             ),
             // $bag::list.null
@@ -429,10 +429,8 @@ class PartiQLValueIonSerdeTest {
             ),
             oneWayTrip(
                 structValue(
-                    sequenceOf(
-                        "a" to int32Value(1),
-                        "b" to stringValue("x"),
-                    )
+                    "a" to int32Value(1),
+                    "b" to stringValue("x"),
                 ),
                 ION.newEmptyStruct()
                     .apply {
@@ -440,10 +438,8 @@ class PartiQLValueIonSerdeTest {
                         add("b", ION.newString("x"))
                     },
                 structValue(
-                    sequenceOf(
-                        "a" to intValue(BigInteger.ONE),
-                        "b" to stringValue("x"),
-                    )
+                    "a" to intValue(BigInteger.ONE),
+                    "b" to stringValue("x"),
                 ),
             )
         )

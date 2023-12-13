@@ -480,13 +480,13 @@ class ServiceLoaderUtil {
                     )
                 }
                 PartiQLValueType.STRUCT -> when (exprValue.type) {
-                    ExprValueType.NULL -> structValue(null)
+                    ExprValueType.NULL -> structValue(null as Iterable<Pair<String, PartiQLValue>>?)
                     ExprValueType.STRUCT -> structValue(
                         exprValue.map {
                             Pair(
                                 it.name?.stringValue() ?: "", ExprToPartiQLValue(it, ExprToPartiQLValueType(it))
                             )
-                        }.asSequence()
+                        }
                     )
                     else -> throw ExprToPartiQLValueTypeMismatchException(
                         PartiQLValueType.STRUCT, ExprToPartiQLValueType(exprValue)
