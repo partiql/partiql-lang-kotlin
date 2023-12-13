@@ -322,44 +322,38 @@ class PartiQLValueTextWriterTest {
         @JvmStatic
         fun collections() = listOf(
             case(
-                value = bagValue(emptySequence()),
+                value = bagValue<PartiQLValue>(),
                 expected = "<<>>",
             ),
             case(
-                value = listValue(emptySequence()),
+                value = listValue<PartiQLValue>(),
                 expected = "[]",
             ),
             case(
-                value = sexpValue(emptySequence()),
+                value = sexpValue<PartiQLValue>(),
                 expected = "()",
             ),
             case(
                 value = bagValue(
-                    sequenceOf(
-                        int32Value(1),
-                        int32Value(2),
-                        int32Value(3),
-                    )
+                    int32Value(1),
+                    int32Value(2),
+                    int32Value(3),
                 ),
                 expected = "<<1,2,3>>",
             ),
             case(
                 value = listValue(
-                    sequenceOf(
-                        stringValue("a"),
-                        stringValue("b"),
-                        stringValue("c"),
-                    )
+                    stringValue("a"),
+                    stringValue("b"),
+                    stringValue("c"),
                 ),
                 expected = "['a','b','c']",
             ),
             case(
                 value = sexpValue(
-                    sequenceOf(
-                        int32Value(1),
-                        int32Value(2),
-                        int32Value(3),
-                    )
+                    int32Value(1),
+                    int32Value(2),
+                    int32Value(3),
                 ),
                 expected = "(1 2 3)",
             ),
@@ -385,15 +379,13 @@ class PartiQLValueTextWriterTest {
         @JvmStatic
         fun struct() = listOf(
             case(
-                value = structValue<PartiQLValue>(emptySequence()),
+                value = structValue<PartiQLValue>(),
                 expected = "{}",
             ),
             case(
                 value = structValue(
-                    sequenceOf(
-                        "a" to int32Value(1),
-                        "b" to stringValue("x"),
-                    )
+                    "a" to int32Value(1),
+                    "b" to stringValue("x"),
                 ),
                 expected = "{a:1,b:'x'}",
             ),
@@ -403,11 +395,9 @@ class PartiQLValueTextWriterTest {
         fun collectionsFormatted() = listOf(
             formatted(
                 value = bagValue(
-                    sequenceOf(
-                        int32Value(1),
-                        int32Value(2),
-                        int32Value(3),
-                    )
+                    int32Value(1),
+                    int32Value(2),
+                    int32Value(3),
                 ),
                 expected = """
                     |<<
@@ -419,11 +409,9 @@ class PartiQLValueTextWriterTest {
             ),
             formatted(
                 value = listValue(
-                    sequenceOf(
-                        stringValue("a"),
-                        stringValue("b"),
-                        stringValue("c"),
-                    )
+                    stringValue("a"),
+                    stringValue("b"),
+                    stringValue("c"),
                 ),
                 expected = """
                     |[
@@ -435,11 +423,9 @@ class PartiQLValueTextWriterTest {
             ),
             formatted(
                 value = sexpValue(
-                    sequenceOf(
-                        int32Value(1),
-                        int32Value(2),
-                        int32Value(3),
-                    )
+                    int32Value(1),
+                    int32Value(2),
+                    int32Value(3),
                 ),
                 expected = """
                     |(
@@ -454,15 +440,13 @@ class PartiQLValueTextWriterTest {
         @JvmStatic
         fun structFormatted() = listOf(
             formatted(
-                value = structValue<PartiQLValue>(emptySequence()),
+                value = structValue<PartiQLValue>(),
                 expected = "{}",
             ),
             formatted(
                 value = structValue(
-                    sequenceOf(
-                        "a" to int32Value(1),
-                        "b" to stringValue("x"),
-                    )
+                    "a" to int32Value(1),
+                    "b" to stringValue("x"),
                 ),
                 expected = """
                     |{
@@ -477,29 +461,21 @@ class PartiQLValueTextWriterTest {
         fun nestedCollectionsFormatted() = listOf(
             formatted(
                 value = structValue(
-                    sequenceOf(
-                        "bag" to bagValue(
-                            sequenceOf(
-                                int32Value(1),
-                                int32Value(2),
-                                int32Value(3),
-                            )
-                        ),
-                        "list" to listValue(
-                            sequenceOf(
-                                stringValue("a"),
-                                stringValue("b"),
-                                stringValue("c"),
-                            )
-                        ),
-                        "sexp" to sexpValue(
-                            sequenceOf(
-                                int32Value(1),
-                                int32Value(2),
-                                int32Value(3),
-                            )
-                        ),
-                    )
+                    "bag" to bagValue(
+                        int32Value(1),
+                        int32Value(2),
+                        int32Value(3),
+                    ),
+                    "list" to listValue(
+                        stringValue("a"),
+                        stringValue("b"),
+                        stringValue("c"),
+                    ),
+                    "sexp" to sexpValue(
+                        int32Value(1),
+                        int32Value(2),
+                        int32Value(3),
+                    ),
                 ),
                 expected = """
                     |{
@@ -523,28 +499,20 @@ class PartiQLValueTextWriterTest {
             ),
             formatted(
                 value = bagValue(
-                    sequenceOf(
-                        listValue(
-                            sequenceOf(
-                                stringValue("a"),
-                                stringValue("b"),
-                                stringValue("c"),
-                            )
-                        ),
-                        sexpValue(
-                            sequenceOf(
-                                int32Value(1),
-                                int32Value(2),
-                                int32Value(3),
-                            )
-                        ),
-                        structValue(
-                            sequenceOf(
-                                "a" to int32Value(1),
-                                "b" to stringValue("x"),
-                            )
-                        ),
-                    )
+                    listValue(
+                        stringValue("a"),
+                        stringValue("b"),
+                        stringValue("c"),
+                    ),
+                    sexpValue(
+                        int32Value(1),
+                        int32Value(2),
+                        int32Value(3),
+                    ),
+                    structValue(
+                        "a" to int32Value(1),
+                        "b" to stringValue("x"),
+                    ),
                 ),
                 expected = """
                     |<<
@@ -567,11 +535,9 @@ class PartiQLValueTextWriterTest {
             ),
             formatted(
                 value = structValue(
-                    sequenceOf(
-                        "bag" to bagValue<PartiQLValue>(emptySequence()),
-                        "list" to listValue<PartiQLValue>(emptySequence()),
-                        "sexp" to sexpValue<PartiQLValue>(emptySequence()),
-                    )
+                    "bag" to bagValue<PartiQLValue>(),
+                    "list" to listValue<PartiQLValue>(),
+                    "sexp" to sexpValue<PartiQLValue>(),
                 ),
                 expected = """
                     |{
@@ -583,11 +549,9 @@ class PartiQLValueTextWriterTest {
             ),
             formatted(
                 value = bagValue(
-                    sequenceOf(
-                        listValue<PartiQLValue>(emptySequence()),
-                        sexpValue<PartiQLValue>(emptySequence()),
-                        structValue<PartiQLValue>(emptySequence()),
-                    )
+                    listValue<PartiQLValue>(),
+                    sexpValue<PartiQLValue>(),
+                    structValue<PartiQLValue>(),
                 ),
                 expected = """
                     |<<
@@ -690,39 +654,31 @@ class PartiQLValueTextWriterTest {
             // TODO TIMESTAMP
             // TODO INTERVAL
             case(
-                value = bagValue(emptySequence(), annotations),
+                value = bagValue<PartiQLValue>(annotations = annotations),
                 expected = "x::y::<<>>",
             ),
             case(
-                value = listValue(emptySequence(), annotations),
+                value = listValue<PartiQLValue>(annotations = annotations),
                 expected = "x::y::[]",
             ),
             case(
-                value = sexpValue(emptySequence(), annotations),
+                value = sexpValue<PartiQLValue>(annotations = annotations),
                 expected = "x::y::()",
             ),
             formatted(
                 value = bagValue(
-                    sequenceOf(
-                        listValue(
-                            sequenceOf(
-                                stringValue("a", listOf("x")),
-                            ),
-                            listOf("list")
-                        ),
-                        sexpValue(
-                            sequenceOf(
-                                int32Value(1, listOf("y")),
-                            ),
-                            listOf("sexp")
-                        ),
-                        structValue(
-                            sequenceOf(
-                                "a" to int32Value(1, listOf("z")),
-                            ),
-                            listOf("struct")
-                        ),
-                    )
+                    listValue(
+                        stringValue("a", listOf("x")),
+                        annotations = listOf("list")
+                    ),
+                    sexpValue(
+                        int32Value(1, listOf("y")),
+                        annotations = listOf("sexp")
+                    ),
+                    structValue(
+                        "a" to int32Value(1, listOf("z")),
+                        annotations = listOf("struct")
+                    ),
                 ),
                 expected = """
                     |<<

@@ -167,7 +167,7 @@ internal class PartiQLValueIonReader(
                     }
                 }
                 reader.stepOut()
-                listValue(elements.asSequence(), annotations)
+                listValue(elements, annotations)
             }
 
             IonType.SEXP -> {
@@ -179,7 +179,7 @@ internal class PartiQLValueIonReader(
                     }
                 }
                 reader.stepOut()
-                sexpValue(elements.asSequence(), annotation)
+                sexpValue(elements, annotation)
             }
 
             IonType.STRUCT -> {
@@ -192,7 +192,7 @@ internal class PartiQLValueIonReader(
                     }
                 }
                 reader.stepOut()
-                structValue(elements.asSequence(), annotations)
+                structValue(elements, annotations)
             }
 
             IonType.DATAGRAM -> throw IllegalArgumentException("Datagram not supported")
@@ -394,7 +394,7 @@ internal class PartiQLValueIonReader(
                                 }
                             }
                             reader.stepOut()
-                            bagValue(elements.asSequence(), annotations.dropLast(1))
+                            bagValue(elements, annotations.dropLast(1))
                         }
                     }
                     PARTIQL_ANNOTATION.DATE_ANNOTATION -> throw IllegalArgumentException("DATE_ANNOTATION with List Value")
@@ -412,7 +412,7 @@ internal class PartiQLValueIonReader(
                                 }
                             }
                             reader.stepOut()
-                            listValue(elements.asSequence(), annotations)
+                            listValue(elements, annotations)
                         }
                     }
                 }
@@ -437,7 +437,7 @@ internal class PartiQLValueIonReader(
                                 }
                             }
                             reader.stepOut()
-                            sexpValue(elements.asSequence(), annotations)
+                            sexpValue(elements, annotations)
                         }
                     }
                 }
@@ -525,8 +525,7 @@ internal class PartiQLValueIonReader(
                     PARTIQL_ANNOTATION.GRAPH_ANNOTATION -> TODO("Not yet implemented")
                     null -> {
                         if (reader.isNullValue) {
-                            val nullSequence: Sequence<Pair<String, PartiQLValue>>? = null
-                            structValue<PartiQLValue>(nullSequence, annotations)
+                            structValue(null, annotations)
                         } else {
                             reader.stepIn()
                             val elements = mutableListOf<Pair<String, PartiQLValue>>().also { elements ->
@@ -536,7 +535,7 @@ internal class PartiQLValueIonReader(
                                 }
                             }
                             reader.stepOut()
-                            structValue(elements.asSequence(), annotations)
+                            structValue(elements, annotations)
                         }
                     }
                 }
