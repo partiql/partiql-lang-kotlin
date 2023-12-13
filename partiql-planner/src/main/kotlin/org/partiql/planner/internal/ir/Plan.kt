@@ -46,21 +46,18 @@ internal fun rexOpVarUnresolved(identifier: Identifier, scope: Rex.Op.Var.Scope)
 
 internal fun rexOpGlobal(ref: Int): Rex.Op.Global = Rex.Op.Global(ref)
 
-internal fun rexOpPath(root: Rex, steps: List<Rex.Op.Path.Step>): Rex.Op.Path = Rex.Op.Path(
+internal fun rexOpPathIndex(root: Rex, key: Rex): Rex.Op.Path.Index = Rex.Op.Path.Index(root, key)
+
+internal fun rexOpPathKey(root: Rex, key: Rex): Rex.Op.Path.Key = Rex.Op.Path.Key(root, key)
+
+internal fun rexOpPathSymbol(root: Rex, key: String): Rex.Op.Path.Symbol = Rex.Op.Path.Symbol(
     root,
-    steps
+    key
 )
 
-internal fun rexOpPathStepIndex(key: Rex): Rex.Op.Path.Step.Index = Rex.Op.Path.Step.Index(key)
+internal fun rexOpPathWildcard(root: Rex): Rex.Op.Path.Wildcard = Rex.Op.Path.Wildcard(root)
 
-internal fun rexOpPathStepKey(key: Rex): Rex.Op.Path.Step.Key = Rex.Op.Path.Step.Key(key)
-
-internal fun rexOpPathStepSymbol(identifier: Identifier.Symbol): Rex.Op.Path.Step.Symbol =
-    Rex.Op.Path.Step.Symbol(identifier)
-
-internal fun rexOpPathStepWildcard(): Rex.Op.Path.Step.Wildcard = Rex.Op.Path.Step.Wildcard()
-
-internal fun rexOpPathStepUnpivot(): Rex.Op.Path.Step.Unpivot = Rex.Op.Path.Step.Unpivot()
+internal fun rexOpPathUnpivot(root: Rex): Rex.Op.Path.Unpivot = Rex.Op.Path.Unpivot(root)
 
 internal fun rexOpCallStatic(fn: Fn, args: List<Rex>): Rex.Op.Call.Static = Rex.Op.Call.Static(
     fn,

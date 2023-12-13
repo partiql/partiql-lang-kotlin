@@ -56,19 +56,17 @@ internal interface PlanVisitor<R, C> {
 
     fun visitRexOpGlobal(node: Rex.Op.Global, ctx: C): R
 
-    fun visitRexOpPath(node: Rex.Op.Path, ctx: C): R
+    public fun visitRexOpPath(node: Rex.Op.Path, ctx: C): R
 
-    fun visitRexOpPathStep(node: Rex.Op.Path.Step, ctx: C): R
+    public fun visitRexOpPathIndex(node: Rex.Op.Path.Index, ctx: C): R
 
-    fun visitRexOpPathStepIndex(node: Rex.Op.Path.Step.Index, ctx: C): R
+    public fun visitRexOpPathKey(node: Rex.Op.Path.Key, ctx: C): R
 
-    fun visitRexOpPathStepKey(node: Rex.Op.Path.Step.Key, ctx: C): R
+    public fun visitRexOpPathSymbol(node: Rex.Op.Path.Symbol, ctx: C): R
 
-    fun visitRexOpPathStepSymbol(node: Rex.Op.Path.Step.Symbol, ctx: C): R
+    public fun visitRexOpPathWildcard(node: Rex.Op.Path.Wildcard, ctx: C): R
 
-    fun visitRexOpPathStepWildcard(node: Rex.Op.Path.Step.Wildcard, ctx: C): R
-
-    fun visitRexOpPathStepUnpivot(node: Rex.Op.Path.Step.Unpivot, ctx: C): R
+    public fun visitRexOpPathUnpivot(node: Rex.Op.Path.Unpivot, ctx: C): R
 
     fun visitRexOpCall(node: Rex.Op.Call, ctx: C): R
 

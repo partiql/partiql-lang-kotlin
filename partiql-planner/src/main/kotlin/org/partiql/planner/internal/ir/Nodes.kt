@@ -2,6 +2,11 @@
 
 package org.partiql.planner.internal.ir
 
+import org.partiql.plan.builder.RexOpPathIndexBuilder
+import org.partiql.plan.builder.RexOpPathKeyBuilder
+import org.partiql.plan.builder.RexOpPathSymbolBuilder
+import org.partiql.plan.builder.RexOpPathUnpivotBuilder
+import org.partiql.plan.builder.RexOpPathWildcardBuilder
 import org.partiql.planner.internal.ir.builder.AggResolvedBuilder
 import org.partiql.planner.internal.ir.builder.AggUnresolvedBuilder
 import org.partiql.planner.internal.ir.builder.FnResolvedBuilder
@@ -46,11 +51,6 @@ import org.partiql.planner.internal.ir.builder.RexOpCollectionBuilder
 import org.partiql.planner.internal.ir.builder.RexOpErrBuilder
 import org.partiql.planner.internal.ir.builder.RexOpGlobalBuilder
 import org.partiql.planner.internal.ir.builder.RexOpLitBuilder
-import org.partiql.planner.internal.ir.builder.RexOpPathBuilder
-import org.partiql.planner.internal.ir.builder.RexOpPathStepIndexBuilder
-import org.partiql.planner.internal.ir.builder.RexOpPathStepSymbolBuilder
-import org.partiql.planner.internal.ir.builder.RexOpPathStepUnpivotBuilder
-import org.partiql.planner.internal.ir.builder.RexOpPathStepWildcardBuilder
 import org.partiql.planner.internal.ir.builder.RexOpPivotBuilder
 import org.partiql.planner.internal.ir.builder.RexOpSelectBuilder
 import org.partiql.planner.internal.ir.builder.RexOpStructBuilder
@@ -393,141 +393,116 @@ internal data class Rex(
             }
         }
 
-        internal data class Path(
-            @JvmField
-            internal val root: Rex,
-            @JvmField
-            internal val steps: List<Step>,
-        ) : Op() {
-            internal override val children: List<PlanNode> by lazy {
-                val kids = mutableListOf<PlanNode?>()
-                kids.add(root)
-                kids.addAll(steps)
-                kids.filterNotNull()
+        public sealed class Path : Op() {
+            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = when (this) {
+                is Index -> visitor.visitRexOpPathIndex(this, ctx)
+                is Key -> visitor.visitRexOpPathKey(this, ctx)
+                is Symbol -> visitor.visitRexOpPathSymbol(this, ctx)
+                is Wildcard -> visitor.visitRexOpPathWildcard(this, ctx)
+                is Unpivot -> visitor.visitRexOpPathUnpivot(this, ctx)
             }
 
-            internal override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
-                visitor.visitRexOpPath(this, ctx)
-
-            internal sealed class Step : PlanNode() {
-                internal override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = when (this) {
-                    is Index -> visitor.visitRexOpPathStepIndex(this, ctx)
-                    is Symbol -> visitor.visitRexOpPathStepSymbol(this, ctx)
-                    is Wildcard -> visitor.visitRexOpPathStepWildcard(this, ctx)
-                    is Unpivot -> visitor.visitRexOpPathStepUnpivot(this, ctx)
-                    is Key -> visitor.visitRexOpPathStepKey(this, ctx)
+            public data class Index(
+                @JvmField
+                public val root: Rex,
+                @JvmField
+                public val key: Rex,
+            ) : Path() {
+                public override val children: List<PlanNode> by lazy {
+                    val kids = mutableListOf<PlanNode?>()
+                    kids.add(root)
+                    kids.add(key)
+                    kids.filterNotNull()
                 }
 
-                internal data class Index(
-                    @JvmField
-                    internal val key: Rex,
-                ) : Step() {
-                    internal override val children: List<PlanNode> by lazy {
-                        val kids = mutableListOf<PlanNode?>()
-                        kids.add(key)
-                        kids.filterNotNull()
-                    }
+                public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                    visitor.visitRexOpPathIndex(this, ctx)
 
-                    internal override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
-                        visitor.visitRexOpPathStepIndex(this, ctx)
-
-                    internal companion object {
-                        @JvmStatic
-                        internal fun builder(): RexOpPathStepIndexBuilder = RexOpPathStepIndexBuilder()
-                    }
-                }
-
-                /**
-                 * This represents a case-sensitive lookup on a tuple. Ex: a['b'] or a[CAST('a' || 'b' AS STRING)].
-                 * This would normally contain the dot notation for case-sensitive lookup, however, due to
-                 * limitations -- we cannot consolidate these. See [Symbol] for more information.
-                 *
-                 * The main difference is that this does NOT include `a."b"`
-                 */
-                internal data class Key(
-                    @JvmField
-                    internal val key: Rex,
-                ) : Step() {
-                    internal override val children: List<PlanNode> by lazy {
-                        val kids = mutableListOf<PlanNode?>()
-                        kids.add(key)
-                        kids.filterNotNull()
-                    }
-
-                    internal override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
-                        visitor.visitRexOpPathStepKey(this, ctx)
-
-                    internal companion object {
-                        @JvmStatic
-                        internal fun builder(): RexOpPathStepIndexBuilder = RexOpPathStepIndexBuilder()
-                    }
-                }
-
-                /**
-                 * This represents a lookup on a tuple. We differentiate a [Key] and a [Symbol] at this point in the
-                 * pipeline because we NEED to retain some syntactic knowledge for the following reason: we cannot
-                 * use the syntactic index operation on a schema -- as it is not synonymous with a tuple. In other words,
-                 * `<schema-name>."<value-name>"` is not interchangeable with `<schema-name>['<value-name>']`.
-                 *
-                 * So, in order to temporarily differentiate the `a."b"` from `a['b']` (see [Key]), we need to maintain
-                 * the syntactic difference here. Note that this would potentially be mitigated by typing during the AST to Plan
-                 * transformation.
-                 *
-                 * That being said, this represents a lookup on a tuple such as `a.b` or `a."b"`.
-                 */
-                internal data class Symbol(
-                    @JvmField
-                    internal val identifier: Identifier.Symbol,
-                ) : Step() {
-                    internal override val children: List<PlanNode> by lazy {
-                        val kids = mutableListOf<PlanNode?>()
-                        kids.add(identifier)
-                        kids.filterNotNull()
-                    }
-
-                    internal override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
-                        visitor.visitRexOpPathStepSymbol(this, ctx)
-
-                    internal companion object {
-                        @JvmStatic
-                        internal fun builder(): RexOpPathStepSymbolBuilder = RexOpPathStepSymbolBuilder()
-                    }
-                }
-
-                internal data class Wildcard(
-                    @JvmField
-                    internal val ` `: Char = ' ',
-                ) : Step() {
-                    internal override val children: List<PlanNode> = emptyList()
-
-                    internal override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
-                        visitor.visitRexOpPathStepWildcard(this, ctx)
-
-                    internal companion object {
-                        @JvmStatic
-                        internal fun builder(): RexOpPathStepWildcardBuilder = RexOpPathStepWildcardBuilder()
-                    }
-                }
-
-                internal data class Unpivot(
-                    @JvmField
-                    internal val ` `: Char = ' ',
-                ) : Step() {
-                    internal override val children: List<PlanNode> = emptyList()
-
-                    internal override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
-                        visitor.visitRexOpPathStepUnpivot(this, ctx)
-
-                    internal companion object {
-                        @JvmStatic
-                        internal fun builder(): RexOpPathStepUnpivotBuilder = RexOpPathStepUnpivotBuilder()
-                    }
+                public companion object {
+                    @JvmStatic
+                    public fun builder(): RexOpPathIndexBuilder = RexOpPathIndexBuilder()
                 }
             }
 
-            internal companion object {
-                @JvmStatic
-                internal fun builder(): RexOpPathBuilder = RexOpPathBuilder()
+            public data class Key(
+                @JvmField
+                public val root: Rex,
+                @JvmField
+                public val key: Rex,
+            ) : Path() {
+                public override val children: List<PlanNode> by lazy {
+                    val kids = mutableListOf<PlanNode?>()
+                    kids.add(root)
+                    kids.add(key)
+                    kids.filterNotNull()
+                }
+
+                public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                    visitor.visitRexOpPathKey(this, ctx)
+
+                public companion object {
+                    @JvmStatic
+                    public fun builder(): RexOpPathKeyBuilder = RexOpPathKeyBuilder()
+                }
+            }
+
+            public data class Symbol(
+                @JvmField
+                public val root: Rex,
+                @JvmField
+                public val key: String,
+            ) : Path() {
+                public override val children: List<PlanNode> by lazy {
+                    val kids = mutableListOf<PlanNode?>()
+                    kids.add(root)
+                    kids.filterNotNull()
+                }
+
+                public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                    visitor.visitRexOpPathSymbol(this, ctx)
+
+                public companion object {
+                    @JvmStatic
+                    public fun builder(): RexOpPathSymbolBuilder = RexOpPathSymbolBuilder()
+                }
+            }
+
+            public data class Wildcard(
+                @JvmField
+                public val root: Rex,
+            ) : Path() {
+                public override val children: List<PlanNode> by lazy {
+                    val kids = mutableListOf<PlanNode?>()
+                    kids.add(root)
+                    kids.filterNotNull()
+                }
+
+                public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                    visitor.visitRexOpPathWildcard(this, ctx)
+
+                public companion object {
+                    @JvmStatic
+                    public fun builder(): RexOpPathWildcardBuilder = RexOpPathWildcardBuilder()
+                }
+            }
+
+            public data class Unpivot(
+                @JvmField
+                public val root: Rex,
+            ) : Path() {
+                public override val children: List<PlanNode> by lazy {
+                    val kids = mutableListOf<PlanNode?>()
+                    kids.add(root)
+                    kids.filterNotNull()
+                }
+
+                public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                    visitor.visitRexOpPathUnpivot(this, ctx)
+
+                public companion object {
+                    @JvmStatic
+                    public fun builder(): RexOpPathUnpivotBuilder = RexOpPathUnpivotBuilder()
+                }
             }
         }
 

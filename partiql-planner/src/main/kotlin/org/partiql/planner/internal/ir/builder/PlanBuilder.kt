@@ -146,51 +146,46 @@ internal class PlanBuilder {
         return builder.build()
     }
 
-    internal fun rexOpPath(
+    public fun rexOpPathIndex(
         root: Rex? = null,
-        steps: MutableList<Rex.Op.Path.Step> = mutableListOf(),
-        block: RexOpPathBuilder.() -> Unit = {},
-    ): Rex.Op.Path {
-        val builder = RexOpPathBuilder(root, steps)
-        builder.block()
-        return builder.build()
-    }
-
-    internal fun rexOpPathStepIndex(
         key: Rex? = null,
-        block: RexOpPathStepIndexBuilder.() -> Unit = {},
-    ): Rex.Op.Path.Step.Index {
-        val builder = RexOpPathStepIndexBuilder(key)
+        block: RexOpPathIndexBuilder.() -> Unit = {},
+    ): Rex.Op.Path.Index {
+        val builder = RexOpPathIndexBuilder(root, key)
         builder.block()
         return builder.build()
     }
 
-    internal fun rexOpPathStepKey(
+    public fun rexOpPathKey(
+        root: Rex? = null,
         key: Rex? = null,
-        block: RexOpPathStepKeyBuilder.() -> Unit = {},
-    ): Rex.Op.Path.Step.Key {
-        val builder = RexOpPathStepKeyBuilder(key)
+        block: RexOpPathKeyBuilder.() -> Unit = {},
+    ): Rex.Op.Path.Key {
+        val builder = RexOpPathKeyBuilder(root, key)
         builder.block()
         return builder.build()
     }
 
-    internal fun rexOpPathStepSymbol(
-        identifier: Identifier.Symbol? = null,
-        block: RexOpPathStepSymbolBuilder.() -> Unit = {},
-    ): Rex.Op.Path.Step.Symbol {
-        val builder = RexOpPathStepSymbolBuilder(identifier)
+    public fun rexOpPathSymbol(
+        root: Rex? = null,
+        key: String? = null,
+        block: RexOpPathSymbolBuilder.() -> Unit = {},
+    ): Rex.Op.Path.Symbol {
+        val builder = RexOpPathSymbolBuilder(root, key)
         builder.block()
         return builder.build()
     }
 
-    internal fun rexOpPathStepWildcard(block: RexOpPathStepWildcardBuilder.() -> Unit = {}): Rex.Op.Path.Step.Wildcard {
-        val builder = RexOpPathStepWildcardBuilder()
+    public fun rexOpPathWildcard(root: Rex? = null, block: RexOpPathWildcardBuilder.() -> Unit = {}):
+        Rex.Op.Path.Wildcard {
+        val builder = RexOpPathWildcardBuilder(root)
         builder.block()
         return builder.build()
     }
 
-    internal fun rexOpPathStepUnpivot(block: RexOpPathStepUnpivotBuilder.() -> Unit = {}): Rex.Op.Path.Step.Unpivot {
-        val builder = RexOpPathStepUnpivotBuilder()
+    public fun rexOpPathUnpivot(root: Rex? = null, block: RexOpPathUnpivotBuilder.() -> Unit = {}):
+        Rex.Op.Path.Unpivot {
+        val builder = RexOpPathUnpivotBuilder(root)
         builder.block()
         return builder.build()
     }

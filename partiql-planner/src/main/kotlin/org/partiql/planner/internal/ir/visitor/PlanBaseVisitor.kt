@@ -93,29 +93,30 @@ internal abstract class PlanBaseVisitor<R, C> : PlanVisitor<R, C> {
 
     override fun visitRexOpGlobal(node: Rex.Op.Global, ctx: C): R = defaultVisit(node, ctx)
 
-    override fun visitRexOpPath(node: Rex.Op.Path, ctx: C): R = defaultVisit(node, ctx)
-
-    override fun visitRexOpPathStep(node: Rex.Op.Path.Step, ctx: C): R = when (node) {
-        is Rex.Op.Path.Step.Index -> visitRexOpPathStepIndex(node, ctx)
-        is Rex.Op.Path.Step.Key -> visitRexOpPathStepKey(node, ctx)
-        is Rex.Op.Path.Step.Symbol -> visitRexOpPathStepSymbol(node, ctx)
-        is Rex.Op.Path.Step.Wildcard -> visitRexOpPathStepWildcard(node, ctx)
-        is Rex.Op.Path.Step.Unpivot -> visitRexOpPathStepUnpivot(node, ctx)
+    public override fun visitRexOpPath(node: Rex.Op.Path, ctx: C): R = when (node) {
+        is Rex.Op.Path.Index -> visitRexOpPathIndex(node, ctx)
+        is Rex.Op.Path.Key -> visitRexOpPathKey(node, ctx)
+        is Rex.Op.Path.Symbol -> visitRexOpPathSymbol(node, ctx)
+        is Rex.Op.Path.Wildcard -> visitRexOpPathWildcard(node, ctx)
+        is Rex.Op.Path.Unpivot -> visitRexOpPathUnpivot(node, ctx)
     }
 
-    override fun visitRexOpPathStepIndex(node: Rex.Op.Path.Step.Index, ctx: C): R =
+    public override fun visitRexOpPathIndex(node: Rex.Op.Path.Index, ctx: C): R = defaultVisit(
+        node,
+        ctx
+    )
+
+    public override fun visitRexOpPathKey(node: Rex.Op.Path.Key, ctx: C): R = defaultVisit(node, ctx)
+
+    public override fun visitRexOpPathSymbol(node: Rex.Op.Path.Symbol, ctx: C): R = defaultVisit(
+        node,
+        ctx
+    )
+
+    public override fun visitRexOpPathWildcard(node: Rex.Op.Path.Wildcard, ctx: C): R =
         defaultVisit(node, ctx)
 
-    override fun visitRexOpPathStepKey(node: Rex.Op.Path.Step.Key, ctx: C): R =
-        defaultVisit(node, ctx)
-
-    override fun visitRexOpPathStepSymbol(node: Rex.Op.Path.Step.Symbol, ctx: C): R =
-        defaultVisit(node, ctx)
-
-    override fun visitRexOpPathStepWildcard(node: Rex.Op.Path.Step.Wildcard, ctx: C): R =
-        defaultVisit(node, ctx)
-
-    override fun visitRexOpPathStepUnpivot(node: Rex.Op.Path.Step.Unpivot, ctx: C): R =
+    public override fun visitRexOpPathUnpivot(node: Rex.Op.Path.Unpivot, ctx: C): R =
         defaultVisit(node, ctx)
 
     override fun visitRexOpCall(node: Rex.Op.Call, ctx: C): R = when (node) {

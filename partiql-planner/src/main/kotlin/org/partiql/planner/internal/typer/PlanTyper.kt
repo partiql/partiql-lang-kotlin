@@ -59,8 +59,9 @@ import org.partiql.planner.internal.ir.rexOpCollection
 import org.partiql.planner.internal.ir.rexOpErr
 import org.partiql.planner.internal.ir.rexOpGlobal
 import org.partiql.planner.internal.ir.rexOpLit
-import org.partiql.planner.internal.ir.rexOpPath
-import org.partiql.planner.internal.ir.rexOpPathStepSymbol
+import org.partiql.planner.internal.ir.rexOpPathIndex
+import org.partiql.planner.internal.ir.rexOpPathKey
+import org.partiql.planner.internal.ir.rexOpPathSymbol
 import org.partiql.planner.internal.ir.rexOpPivot
 import org.partiql.planner.internal.ir.rexOpSelect
 import org.partiql.planner.internal.ir.rexOpStruct
@@ -84,10 +85,10 @@ import org.partiql.types.NullType
 import org.partiql.types.SexpType
 import org.partiql.types.StaticType
 import org.partiql.types.StaticType.Companion.ANY
-import org.partiql.types.StaticType.Companion.BOOL
 import org.partiql.types.StaticType.Companion.MISSING
 import org.partiql.types.StaticType.Companion.NULL
 import org.partiql.types.StaticType.Companion.STRING
+import org.partiql.types.StaticType.Companion.unionOf
 import org.partiql.types.StringType
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
@@ -96,6 +97,8 @@ import org.partiql.value.BoolValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.TextValue
 import org.partiql.value.boolValue
+import org.partiql.value.missingValue
+import org.partiql.value.stringValue
 
 /**
  * Rewrites an untyped algebraic translation of the query to be both typed and have resolved variables.
@@ -419,14 +422,26 @@ internal class PlanTyper(
 
             if (resolvedVar == null) {
                 handleUndefinedVariable(path.steps.last())
-                return rex(StaticType.ANY, rexOpErr("Undefined variable ${node.identifier}"))
+                return rex(ANY, rexOpErr("Undefined variable ${node.identifier}"))
             }
             val type = resolvedVar.type
             val op = when (resolvedVar) {
                 is ResolvedVar.Global -> rexOpGlobal(resolvedVar.ordinal)
-                is ResolvedVar.Local -> resolvedLocalPath(resolvedVar)
+                is ResolvedVar.Local -> rexOpVarResolved(resolvedVar.ordinal) // resolvedLocalPath(resolvedVar)
             }
-            return rex(type, op)
+            val variable = rex(type, op)
+            return when (resolvedVar.depth) {
+                path.steps.size -> variable
+                else -> {
+                    val foldedPath = path.steps.subList(resolvedVar.depth, path.steps.size).fold(variable) { current, step ->
+                        when (step.bindingCase) {
+                            BindingCase.SENSITIVE -> rex(ANY, rexOpPathKey(current, rex(STRING, rexOpLit(stringValue(step.name)))))
+                            BindingCase.INSENSITIVE -> rex(ANY, rexOpPathSymbol(current, step.name))
+                        }
+                    }
+                    visitRex(foldedPath, ctx)
+                }
+            }
         }
 
         override fun visitRexOpGlobal(node: Rex.Op.Global, ctx: StaticType?): Rex {
@@ -435,88 +450,114 @@ internal class PlanTyper(
             return rex(type, node)
         }
 
-        /**
-         * Match path as far as possible (rewriting the steps), then infer based on resolved root and rewritten steps.
-         */
-        override fun visitRexOpPath(node: Rex.Op.Path, ctx: StaticType?): Rex {
-            val visitedSteps = node.steps.map { visitRexOpPathStep(it, null) as Rex.Op.Path.Step }
-            // 1. Resolve path prefix
-            val (root, steps) = when (val rootOp = node.root.op) {
-                is Rex.Op.Var.Unresolved -> {
-                    // Rewrite the root
-                    val path = rexPathToBindingPath(rootOp, visitedSteps)
-                    val resolvedVar = env.resolve(path, locals, rootOp.scope)
-                    if (resolvedVar == null) {
-                        handleUndefinedVariable(path.steps.last())
-                        return rex(StaticType.ANY, node)
-                    }
-                    val type = resolvedVar.type
-                    val (op, steps) = when (resolvedVar) {
-                        // Root (and some steps) was a local. Replace the matched nodes with disambiguated steps
-                        // and return the remaining steps to continue typing.
-                        is ResolvedVar.Local -> {
-                            val amountRemaining = (visitedSteps.size + 1) - resolvedVar.depth
-                            val remainingSteps = visitedSteps.takeLast(amountRemaining)
-                            resolvedLocalPath(resolvedVar) to remainingSteps
-                        }
-                        is ResolvedVar.Global -> {
-                            // Root (and some steps) was a global; replace root and re-calculate remaining steps.
-                            val remainingFirstIndex = resolvedVar.depth - 1
-                            val remaining = when (remainingFirstIndex > visitedSteps.lastIndex) {
-                                true -> emptyList()
-                                false -> visitedSteps.subList(remainingFirstIndex, visitedSteps.size)
-                            }
-                            rexOpGlobal(resolvedVar.ordinal) to remaining
-                        }
-                    }
-                    // rewrite root
-                    rex(type, op) to steps
-                }
-                else -> visitRex(node.root, node.root.type) to visitedSteps
-            }
-
-            // short-circuit if whole path was matched
-            if (steps.isEmpty()) {
-                return root
-            }
-
-            // 2. TODO rewrite and type the steps containing expressions
-            // val typedSteps = steps.map {
-            //     if (it is Rex.Op.Path.Step.Index) {
-            //         val key = visitRex(it.key, null)
-            //         rexOpPathStepIndex(key)
-            //     } else it
-            // }
-
-            // 3. Walk the steps, determine the path type, and replace each step with the disambiguated equivalent
-            //  (AKA made sensitive, if possible)
-            var type = root.type
-            val newSteps = steps.map { step ->
-                val (stepType, replacementStep) = inferPathStep(type, step)
-                type = stepType
-                replacementStep
-            }
-
-            // 4. Invalid path reference; always MISSING
-            if (type == StaticType.MISSING) {
+        override fun visitRexOpPathIndex(node: Rex.Op.Path.Index, ctx: StaticType?): Rex {
+            val root = visitRex(node.root, node.root.type)
+            val key = visitRex(node.key, node.key.type)
+            if (key.type !is IntType) {
                 handleAlwaysMissing()
-                return rexErr("Unknown identifier $node")
+                return rex(MISSING, rexOpErr("Collections must be indexed with integers, found ${key.type}"))
             }
-
-            // 5. Non-missing, root is resolved
-            return rex(type, rexOpPath(root, newSteps))
+            val elementTypes = root.type.allTypes.map { type ->
+                val rootType = type as? CollectionType ?: return@map MISSING
+                if (rootType !is ListType && rootType !is SexpType) {
+                    return@map MISSING
+                }
+                rootType.elementType
+            }.toSet()
+            val finalType = unionOf(elementTypes).flatten()
+            return rex(finalType.swallowAny(), rexOpPathIndex(root, key))
         }
 
-        // Default returns the original node, in some case we need the resolved node.
-        // i.e., the path step is a call node
-        override fun visitRexOpPathStep(node: Rex.Op.Path.Step, ctx: StaticType?): Rex.Op.Path.Step =
-            when (node) {
-                is Rex.Op.Path.Step.Index -> Rex.Op.Path.Step.Index(visitRex(node.key, ctx))
-                is Rex.Op.Path.Step.Key -> Rex.Op.Path.Step.Key(visitRex(node.key, ctx))
-                is Rex.Op.Path.Step.Symbol -> Rex.Op.Path.Step.Symbol(node.identifier)
-                is Rex.Op.Path.Step.Unpivot -> Rex.Op.Path.Step.Unpivot()
-                is Rex.Op.Path.Step.Wildcard -> Rex.Op.Path.Step.Wildcard()
+        override fun visitRexOpPathKey(node: Rex.Op.Path.Key, ctx: StaticType?): Rex {
+            val root = visitRex(node.root, node.root.type)
+            val key = visitRex(node.key, node.key.type)
+
+            // Check Key Type
+            val toAddTypes = key.type.allTypes.mapNotNull { keyType ->
+                when (keyType) {
+                    is StringType -> null
+                    is NullType -> NULL
+                    else -> MISSING
+                }
             }
+            if (toAddTypes.size == key.type.allTypes.size && toAddTypes.all { it is MissingType }) {
+                handleAlwaysMissing()
+                return rex(MISSING, rexOpErr("Expected string but found: ${key.type}"))
+            }
+
+            val pathTypes = root.type.allTypes.map { type ->
+                val struct = type as? StructType ?: return@map MISSING
+
+                if (key.op is Rex.Op.Lit) {
+                    val lit = key.op.value
+                    if (lit is TextValue<*> && !lit.isNull) {
+                        val id = identifierSymbol(lit.string!!, Identifier.CaseSensitivity.SENSITIVE)
+                        inferStructLookup(struct, id).first
+                    } else {
+                        error("Expected text literal, but got $lit")
+                    }
+                } else {
+                    // cannot infer type of non-literal path step because we don't know its value
+                    // we might improve upon this with some constant folding prior to typing
+                    ANY
+                }
+            }.toSet()
+            val finalType = unionOf(pathTypes + toAddTypes).flatten()
+            return rex(finalType.swallowAny(), rexOpPathKey(root, key))
+        }
+
+        override fun visitRexOpPathUnpivot(node: Rex.Op.Path.Unpivot, ctx: StaticType?): PlanNode {
+            error("Unpivot path not supported yet")
+        }
+
+        override fun visitRexOpPathWildcard(node: Rex.Op.Path.Wildcard, ctx: StaticType?): PlanNode {
+            error("Wildcard path not supported yet")
+        }
+
+        override fun visitRexOpPathSymbol(node: Rex.Op.Path.Symbol, ctx: StaticType?): Rex {
+            val root = visitRex(node.root, node.root.type)
+
+            val paths = root.type.allTypes.map { type ->
+                val struct = type as? StructType ?: return@map rex(MISSING, rexOpLit(missingValue()))
+                val (pathType, replacementId) = inferStructLookup(struct, identifierSymbol(node.key, Identifier.CaseSensitivity.INSENSITIVE))
+                when (replacementId.caseSensitivity) {
+                    Identifier.CaseSensitivity.INSENSITIVE -> rex(pathType, rexOpPathSymbol(root, replacementId.symbol))
+                    Identifier.CaseSensitivity.SENSITIVE -> rex(pathType, rexOpPathKey(root, rexString(replacementId.symbol)))
+                }
+            }
+            val type = unionOf(paths.map { it.type }.toSet()).flatten()
+
+            // replace step only if all are disambiguated
+            val firstPathOp = paths.first().op
+            val replacementOp = when (paths.map { it.op }.all { it == firstPathOp }) {
+                true -> firstPathOp
+                false -> rexOpPathSymbol(root, node.key)
+            }
+            return rex(type.swallowAny(), replacementOp)
+        }
+
+        /**
+         * "Swallows" ANY. If ANY is one of the types in the UNION type, we return ANY. If not, we flatten and return
+         * the [type].
+         */
+        private fun StaticType.swallowAny(): StaticType {
+            val flattened = this.flatten()
+            return when (flattened.allTypes.any { it is AnyType }) {
+                true -> ANY
+                false -> flattened
+            }
+        }
+
+        private fun rexString(str: String) = rex(STRING, rexOpLit(stringValue(str)))
+
+        override fun visitRexOpPath(node: Rex.Op.Path, ctx: StaticType?): Rex {
+            val path = super.visitRexOpPath(node, ctx) as Rex
+            if (path.type == MISSING) {
+                handleAlwaysMissing()
+                return rexErr("Path always returns missing $node")
+            }
+            return path
+        }
 
         /**
          * Resolve and type scalar function calls.
@@ -1052,88 +1093,6 @@ internal class PlanTyper(
         // Helpers
 
         /**
-         * @return a [Pair] where the [Pair.first] represents the type of the [step] and the [Pair.second] represents
-         * the disambiguated [step].
-         */
-        private fun inferPathStep(type: StaticType, step: Rex.Op.Path.Step): Pair<StaticType, Rex.Op.Path.Step> =
-            when (type) {
-                is AnyType -> StaticType.ANY to step
-                is StructType -> inferPathStep(type, step)
-                is ListType, is SexpType -> inferPathStep(type as CollectionType, step) to step
-                is AnyOfType -> {
-                    when (type.types.size) {
-                        0 -> throw IllegalStateException("Cannot path on an empty StaticType union")
-                        else -> {
-                            val prevTypes = type.allTypes
-                            if (prevTypes.any { it is AnyType }) {
-                                StaticType.ANY to step
-                            } else {
-                                val results = prevTypes.map { inferPathStep(it, step) }
-                                val types = results.map { it.first }
-                                val firstResultStep = results.first().second
-                                // replace step only if all are disambiguated
-                                val replacementStep = when (results.map { it.second }.all { it == firstResultStep }) {
-                                    true -> firstResultStep
-                                    false -> step
-                                }
-                                AnyOfType(types.toSet()).flatten() to replacementStep
-                            }
-                        }
-                    }
-                }
-                else -> StaticType.MISSING to step
-            }
-
-        /**
-         * @return a [Pair] where the [Pair.first] represents the type of the [step] and the [Pair.second] represents
-         * the disambiguated [step].
-         */
-        private fun inferPathStep(struct: StructType, step: Rex.Op.Path.Step): Pair<StaticType, Rex.Op.Path.Step> = when (step) {
-            // { 'a': 1 }[0] should always return missing since tuples cannot be navigated via integer indexes
-            is Rex.Op.Path.Step.Index -> {
-                handleAlwaysMissing()
-                MISSING to step
-            }
-            is Rex.Op.Path.Step.Symbol -> {
-                val (type, replacementId) = inferStructLookup(struct, step.identifier)
-                type to replacementId.toPathStep()
-            }
-            is Rex.Op.Path.Step.Key -> {
-                if (step.key.type !is StringType) {
-                    error("Expected string but found: ${step.key.type}")
-                }
-                if (step.key.op is Rex.Op.Lit) {
-                    val lit = step.key.op.value
-                    if (lit is TextValue<*> && !lit.isNull) {
-                        val id = identifierSymbol(lit.string!!, Identifier.CaseSensitivity.SENSITIVE)
-                        val (type, replacementId) = inferStructLookup(struct, id)
-                        type to replacementId.toPathStep()
-                    } else {
-                        error("Expected text literal, but got $lit")
-                    }
-                } else {
-                    // cannot infer type of non-literal path step because we don't know its value
-                    // we might improve upon this with some constant folding prior to typing
-                    ANY to step
-                }
-            }
-            is Rex.Op.Path.Step.Unpivot -> error("Unpivot not supported")
-            is Rex.Op.Path.Step.Wildcard -> error("Wildcard not supported")
-        }
-
-        private fun Identifier.Symbol.toPathStep() = rexOpPathStepSymbol(this)
-
-        private fun inferPathStep(collection: CollectionType, step: Rex.Op.Path.Step): StaticType {
-            if (step !is Rex.Op.Path.Step.Index) {
-                error("Path step on a collection must be an expression")
-            }
-            if (step.key.type !is IntType) {
-                error("Collections must be indexed with integers, found ${step.key.type}")
-            }
-            return collection.elementType
-        }
-
-        /**
          * Logic is as follows:
          * 1. If [struct] is closed and ordered:
          *   - If no item is found, return [MissingType]
@@ -1272,7 +1231,7 @@ internal class PlanTyper(
         is Identifier.Symbol -> BindingPath(listOf(this.toBindingName()))
     }
 
-    private fun Identifier.Qualified.toBindingPath() = BindingPath(steps = steps.map { it.toBindingName() })
+    private fun Identifier.Qualified.toBindingPath() = BindingPath(steps = listOf(this.root.toBindingName()) + steps.map { it.toBindingName() })
 
     private fun Identifier.Symbol.toBindingName() = BindingName(
         name = symbol,
@@ -1288,29 +1247,6 @@ internal class PlanTyper(
      * Produce a union type from all the
      */
     private fun List<Rex>.toUnionType(): StaticType = AnyOfType(map { it.type }.toSet()).flatten()
-
-    /**
-     * Helper function which returns the literal string/symbol steps of a path expression as a [BindingPath].
-     *
-     * TODO this does not handle constant expressions in `[]`, only literals
-     */
-    @OptIn(PartiQLValueExperimental::class)
-    private fun rexPathToBindingPath(rootOp: Rex.Op.Var.Unresolved, steps: List<Rex.Op.Path.Step>): BindingPath {
-        if (rootOp.identifier !is Identifier.Symbol) {
-            throw IllegalArgumentException("Expected identifier symbol")
-        }
-        val bindingRoot = rootOp.identifier.toBindingName()
-        val bindingSteps = mutableListOf(bindingRoot)
-        for (step in steps) {
-            when (step) {
-                is Rex.Op.Path.Step.Index -> break
-                is Rex.Op.Path.Step.Symbol -> bindingSteps.add(step.identifier.toBindingName())
-                is Rex.Op.Path.Step.Key -> break
-                else -> break // short-circuit
-            }
-        }
-        return BindingPath(bindingSteps)
-    }
 
     private fun getElementTypeForFromSource(fromSourceType: StaticType): StaticType = when (fromSourceType) {
         is BagType -> fromSourceType.elementType
@@ -1349,24 +1285,24 @@ internal class PlanTyper(
         }
     }
 
-    /**
-     * Constructs a Rex.Op.Path from a resolved local
-     */
-    private fun resolvedLocalPath(local: ResolvedVar.Local): Rex.Op {
-        val root = rex(local.rootType, rexOpVarResolved(local.ordinal))
-        val steps = local.replacementSteps.map {
-            val case = when (it.bindingCase) {
-                BindingCase.SENSITIVE -> Identifier.CaseSensitivity.SENSITIVE
-                BindingCase.INSENSITIVE -> Identifier.CaseSensitivity.INSENSITIVE
-            }
-            val symbol = identifierSymbol(it.name, case)
-            rexOpPathStepSymbol(symbol)
-        }
-        return when (steps.isEmpty()) {
-            true -> root.op
-            false -> rexOpPath(root, steps)
-        }
-    }
+//    /**
+//     * Constructs a Rex.Op.Path from a resolved local
+//     */
+//    private fun resolvedLocalPath(local: ResolvedVar.Local): Rex.Op {
+//        val root = rex(local.rootType, rexOpVarResolved(local.ordinal))
+//        val steps = local.replacementSteps.map {
+//            when (it.bindingCase) {
+//                BindingCase.SENSITIVE -> rexOpPathKey(root, rexString(it.name))
+//                BindingCase.INSENSITIVE -> rexOpPathSymbol(root, it.name)
+//            }
+//        }
+//        return when (steps.isEmpty()) {
+//            true -> root.op
+//            false -> rexOpPath(root, steps)
+//        }
+//    }
+
+    private fun rexString(str: String) = rex(STRING, rexOpLit(stringValue(str)))
 
     // ERRORS
 

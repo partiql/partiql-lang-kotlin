@@ -26,17 +26,17 @@ import org.partiql.planner.internal.ir.Identifier
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.builder.plan
 import org.partiql.planner.internal.ir.fnUnresolved
+import org.partiql.planner.internal.ir.identifierQualified
 import org.partiql.planner.internal.ir.identifierSymbol
 import org.partiql.planner.internal.ir.rex
 import org.partiql.planner.internal.ir.rexOpCallStatic
 import org.partiql.planner.internal.ir.rexOpCollection
 import org.partiql.planner.internal.ir.rexOpLit
-import org.partiql.planner.internal.ir.rexOpPath
-import org.partiql.planner.internal.ir.rexOpPathStepIndex
-import org.partiql.planner.internal.ir.rexOpPathStepKey
-import org.partiql.planner.internal.ir.rexOpPathStepSymbol
-import org.partiql.planner.internal.ir.rexOpPathStepUnpivot
-import org.partiql.planner.internal.ir.rexOpPathStepWildcard
+import org.partiql.planner.internal.ir.rexOpPathIndex
+import org.partiql.planner.internal.ir.rexOpPathKey
+import org.partiql.planner.internal.ir.rexOpPathSymbol
+import org.partiql.planner.internal.ir.rexOpPathUnpivot
+import org.partiql.planner.internal.ir.rexOpPathWildcard
 import org.partiql.planner.internal.ir.rexOpStruct
 import org.partiql.planner.internal.ir.rexOpStructField
 import org.partiql.planner.internal.ir.rexOpSubquery
@@ -53,6 +53,7 @@ import org.partiql.value.int32Value
 import org.partiql.value.int64Value
 import org.partiql.value.io.PartiQLValueIonReaderBuilder
 import org.partiql.value.nullValue
+import org.partiql.value.stringValue
 
 /**
  * Converts an AST expression node to a Plan Rex node; ignoring any typing.
@@ -158,38 +159,86 @@ internal object RexConverter {
             }
         }
 
-        override fun visitExprPath(node: Expr.Path, context: Env): Rex {
-            val type = (StaticType.ANY)
-            // Args
-            val root = visitExprCoerce(node.root, context)
-            val steps = node.steps.map {
-                when (it) {
-                    is Expr.Path.Step.Index -> {
-                        val key = visitExprCoerce(it.key, context)
-                        when (val astKey = it.key) {
-                            is Expr.Lit -> when (astKey.value) {
-                                is StringValue -> rexOpPathStepKey(key)
-                                else -> rexOpPathStepIndex(key)
-                            }
-                            is Expr.Cast -> when (astKey.asType is Type.String) {
-                                true -> rexOpPathStepKey(key)
-                                false -> rexOpPathStepIndex(key)
-                            }
-                            else -> rexOpPathStepIndex(key)
-                        }
-                    }
-                    is Expr.Path.Step.Symbol -> {
-                        val identifier = AstToPlan.convert(it.symbol)
-                        rexOpPathStepSymbol(identifier)
-                    }
-                    is Expr.Path.Step.Unpivot -> rexOpPathStepUnpivot()
-                    is Expr.Path.Step.Wildcard -> rexOpPathStepWildcard()
+        private fun mergeIdentifiers(root: Identifier, steps: List<Identifier>): Identifier {
+            if (steps.isEmpty()) {
+                return root
+            }
+            val (newRoot, firstSteps) = when (root) {
+                is Identifier.Symbol -> root to emptyList()
+                is Identifier.Qualified -> root.root to root.steps
+            }
+            val followingSteps = steps.flatMap { step ->
+                when (step) {
+                    is Identifier.Symbol -> listOf(step)
+                    is Identifier.Qualified -> listOf(step.root) + step.steps
                 }
             }
-            // Rex
-            val op = rexOpPath(root, steps)
-            return rex(type, op)
+            return identifierQualified(newRoot, firstSteps + followingSteps)
         }
+
+        override fun visitExprPath(node: Expr.Path, context: Env): Rex {
+            // Args
+            val root = visitExprCoerce(node.root, context)
+
+            // Attempt to create qualified identifier
+            val (newRoot, newSteps) = when (val op = root.op) {
+                is Rex.Op.Var.Unresolved -> {
+                    val identifierSteps = mutableListOf<Identifier>()
+                    run {
+                        node.steps.forEach { step ->
+                            if (step !is Expr.Path.Step.Symbol) {
+                                return@run
+                            }
+                            identifierSteps.add(AstToPlan.convert(step.symbol))
+                        }
+                    }
+                    when (identifierSteps.size) {
+                        0 -> root to node.steps
+                        else -> {
+                            val newRoot = rex(StaticType.ANY, rexOpVarUnresolved(mergeIdentifiers(op.identifier, identifierSteps), op.scope))
+                            val newSteps = node.steps.subList(identifierSteps.size, node.steps.size)
+                            newRoot to newSteps
+                        }
+                    }
+                }
+                else -> root to node.steps
+            }
+
+            // Return wrapped path
+            return when (newSteps.isEmpty()) {
+                true -> newRoot
+                false -> newSteps.fold(newRoot) { current, step ->
+                    val path = when (step) {
+                        is Expr.Path.Step.Index -> {
+                            val key = visitExprCoerce(step.key, context)
+                            when (val astKey = step.key) {
+                                is Expr.Lit -> when (astKey.value) {
+                                    is StringValue -> rexOpPathKey(current, key)
+                                    else -> rexOpPathIndex(current, key)
+                                }
+                                is Expr.Cast -> when (astKey.asType is Type.String) {
+                                    true -> rexOpPathKey(current, key)
+                                    false -> rexOpPathIndex(current, key)
+                                }
+                                else -> rexOpPathIndex(current, key)
+                            }
+                        }
+                        is Expr.Path.Step.Symbol -> {
+                            val identifier = AstToPlan.convert(step.symbol)
+                            when (identifier.caseSensitivity) {
+                                Identifier.CaseSensitivity.SENSITIVE -> rexOpPathKey(current, rexString(identifier.symbol))
+                                Identifier.CaseSensitivity.INSENSITIVE -> rexOpPathSymbol(current, identifier.symbol)
+                            }
+                        }
+                        is Expr.Path.Step.Unpivot -> rexOpPathUnpivot(current)
+                        is Expr.Path.Step.Wildcard -> rexOpPathWildcard(current)
+                    }
+                    rex(StaticType.ANY, path)
+                }
+            }
+        }
+
+        private fun rexString(str: String) = rex(StaticType.STRING, rexOpLit(stringValue(str)))
 
         override fun visitExprCall(node: Expr.Call, context: Env): Rex {
             val type = (StaticType.ANY)
