@@ -536,10 +536,14 @@ class ToLegacyAstTest {
                     }
                 }
             },
-            expect("(project_pivot (lit 1) (lit 2))") {
+            expect("(project_pivot (lit 2) (lit 1))") {
                 selectPivot {
-                    value = exprLit(int32Value(1))
+                    // PIVOT 1 AT 2
+                    //  - 1 is the VALUE
+                    //  - 2 is the KEY
+                    // In the legacy implementation these were accidentally flipped
                     key = exprLit(int32Value(2))
+                    value = exprLit(int32Value(1))
                 }
             },
             expect("(project_value (lit null))") {
