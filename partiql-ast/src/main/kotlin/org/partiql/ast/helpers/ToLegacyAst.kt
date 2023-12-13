@@ -708,9 +708,12 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
             projectExpr(expr, alias, metas)
         }
 
+    // !!
+    // Legacy AST mislabels key and value in PIVOT, swapping the order here to recreate bug for compatibility.
+    // !!
     override fun visitSelectPivot(node: Select.Pivot, ctx: Ctx) = translate(node) { metas ->
-        val value = visitExpr(node.value, ctx)
-        val key = visitExpr(node.key, ctx)
+        val key = visitExpr(node.value, ctx) // SWAP val -> key
+        val value = visitExpr(node.key, ctx) // SWAP key -> val
         projectPivot(value, key, metas)
     }
 
