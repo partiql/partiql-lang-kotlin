@@ -939,8 +939,8 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitSelectPivot(ctx: GeneratedParser.SelectPivotContext) = translate(ctx) {
-            val key = visitExpr(ctx.pivot)
-            val value = visitExpr(ctx.at)
+            val key = visitExpr(ctx.at)
+            val value = visitExpr(ctx.pivot)
             selectPivot(key, value)
         }
 
