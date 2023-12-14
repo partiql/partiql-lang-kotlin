@@ -60,6 +60,7 @@ Thank you to all who have contributed!
   to `foo()`
 - **Breaking** Removed `org.partiql.lang.planner.transforms.AstToPlan`. Use `org.partiql.planner.PartiQLPlanner`. 
 - **Breaking** Removed `org.partiql.lang.planner.transforms.PartiQLSchemaInferencer`. In order to achieve the same functionality, one would need to use the `org.partiql.planner.PartiQLPlanner`.
+  - To get the inferred type of the query result, one can do: `(plan.statement as Statement.Query).root.type`
 
 ### Security
 
