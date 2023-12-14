@@ -4,9 +4,7 @@ import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.ionStructOf
 import org.junit.jupiter.api.DynamicContainer
 import org.junit.jupiter.api.DynamicTest
-import org.partiql.errors.Problem
 import org.partiql.errors.ProblemCallback
-import org.partiql.errors.ProblemSeverity
 import org.partiql.parser.PartiQLParserBuilder
 import org.partiql.plan.Statement
 import org.partiql.plan.debug.PlanPrinter
@@ -14,6 +12,7 @@ import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.PartiQLPlannerBuilder
 import org.partiql.planner.test.PartiQLTest
 import org.partiql.planner.test.PartiQLTestProvider
+import org.partiql.planner.util.ProblemCollector
 import org.partiql.plugins.memory.MemoryCatalog
 import org.partiql.plugins.memory.MemoryPlugin
 import org.partiql.types.StaticType
@@ -28,23 +27,6 @@ abstract class PartiQLTyperTestBase {
 
         object Failure : TestResult() {
             override fun toString(): String = "Failure"
-        }
-    }
-
-    internal class ProblemCollector : ProblemCallback {
-        private val problemList = mutableListOf<Problem>()
-
-        val problems: List<Problem>
-            get() = problemList
-
-        val hasErrors: Boolean
-            get() = problemList.any { it.details.severity == ProblemSeverity.ERROR }
-
-        val hasWarnings: Boolean
-            get() = problemList.any { it.details.severity == ProblemSeverity.WARNING }
-
-        override fun invoke(problem: Problem) {
-            problemList.add(problem)
         }
     }
 

@@ -4,10 +4,6 @@ import com.amazon.ionelement.api.field
 import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.ionStructOf
 import org.junit.jupiter.api.Test
-import org.partiql.errors.Problem
-import org.partiql.errors.ProblemCallback
-import org.partiql.errors.ProblemHandler
-import org.partiql.errors.ProblemSeverity
 import org.partiql.planner.PartiQLHeader
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.internal.Env
@@ -23,6 +19,7 @@ import org.partiql.planner.internal.ir.rexOpStruct
 import org.partiql.planner.internal.ir.rexOpStructField
 import org.partiql.planner.internal.ir.rexOpVarUnresolved
 import org.partiql.planner.internal.ir.statementQuery
+import org.partiql.planner.util.ProblemCollector
 import org.partiql.plugins.local.LocalPlugin
 import org.partiql.types.StaticType
 import org.partiql.types.StructType
@@ -544,29 +541,5 @@ class PlanTyperTest {
         )
         val actual = typer.resolve(input)
         assertEquals(expected, actual)
-    }
-
-    /**
-     * A [ProblemHandler] that collects all the encountered [Problem]s without throwing.
-     *
-     * This is intended to be used when wanting to collect multiple problems that may be encountered (e.g. a static type
-     * inference pass that can result in multiple errors and/or warnings). This handler does not collect other exceptions
-     * that may be thrown.
-     */
-    internal class ProblemCollector : ProblemCallback {
-        private val problemList = mutableListOf<Problem>()
-
-        val problems: List<Problem>
-            get() = problemList
-
-        val hasErrors: Boolean
-            get() = problemList.any { it.details.severity == ProblemSeverity.ERROR }
-
-        val hasWarnings: Boolean
-            get() = problemList.any { it.details.severity == ProblemSeverity.WARNING }
-
-        override fun invoke(problem: Problem) {
-            problemList.add(problem)
-        }
     }
 }
