@@ -12,25 +12,24 @@ import org.partiql.types.StructType
 
 class InMemoryPluginTest {
 
-    private val session = object : ConnectorSession {
-        override fun getQueryId(): String = "mock_query_id"
-        override fun getUserId(): String = "mock_user"
-    }
-
     companion object {
-        val provider = MemoryCatalog.Provider().also {
-            it["test"] = MemoryCatalog.of(
-                "a" to StaticType.INT2,
-                "struct" to StructType(
+
+        private val session = object : ConnectorSession {
+            override fun getQueryId(): String = "mock_query_id"
+            override fun getUserId(): String = "mock_user"
+        }
+
+        private val metadata = MemoryConnector.Metadata.of(
+            "a" to StaticType.INT2,
+            "struct" to StructType(
+                fields = listOf(StructType.Field("a", StaticType.INT2))
+            ),
+            "schema.tbl" to BagType(
+                StructType(
                     fields = listOf(StructType.Field("a", StaticType.INT2))
-                ),
-                "schema.tbl" to BagType(
-                    StructType(
-                        fields = listOf(StructType.Field("a", StaticType.INT2))
-                    )
                 )
             )
-        }
+        )
     }
 
     @Test
@@ -41,13 +40,7 @@ class InMemoryPluginTest {
             )
         )
         val expected = StaticType.INT2
-
-        val connector = MemoryConnector(provider["test"])
-
-        val metadata = connector.Metadata()
-
         val handle = metadata.getObjectHandle(session, requested)
-
         val descriptor = metadata.getObjectType(session, handle!!)
 
         assert(requested.isEquivalentTo(handle.absolutePath))
@@ -61,11 +54,6 @@ class InMemoryPluginTest {
                 BindingName("A", BindingCase.SENSITIVE)
             )
         )
-
-        val connector = MemoryConnector(provider["test"])
-
-        val metadata = connector.Metadata()
-
         val handle = metadata.getObjectHandle(session, requested)
 
         assert(null == handle)
@@ -79,17 +67,9 @@ class InMemoryPluginTest {
                 BindingName("a", BindingCase.INSENSITIVE)
             )
         )
-
-        val connector = MemoryConnector(provider["test"])
-
-        val metadata = connector.Metadata()
-
         val handle = metadata.getObjectHandle(session, requested)
-
         val descriptor = metadata.getObjectType(session, handle!!)
-
         val expectConnectorPath = ConnectorObjectPath(listOf("struct"))
-
         val expectedObjectType = StructType(fields = listOf(StructType.Field("a", StaticType.INT2)))
 
         assert(expectConnectorPath == handle.absolutePath)
@@ -104,15 +84,8 @@ class InMemoryPluginTest {
                 BindingName("tbl", BindingCase.INSENSITIVE)
             )
         )
-
-        val connector = MemoryConnector(provider["test"])
-
-        val metadata = connector.Metadata()
-
         val handle = metadata.getObjectHandle(session, requested)
-
         val descriptor = metadata.getObjectType(session, handle!!)
-
         val expectedObjectType = BagType(StructType(fields = listOf(StructType.Field("a", StaticType.INT2))))
 
         assert(requested.isEquivalentTo(handle.absolutePath))
@@ -128,17 +101,9 @@ class InMemoryPluginTest {
                 BindingName("a", BindingCase.INSENSITIVE)
             )
         )
-
-        val connector = MemoryConnector(provider["test"])
-
-        val metadata = connector.Metadata()
-
         val handle = metadata.getObjectHandle(session, requested)
-
         val descriptor = metadata.getObjectType(session, handle!!)
-
         val expectedObjectType = BagType(StructType(fields = listOf(StructType.Field("a", StaticType.INT2))))
-
         val expectConnectorPath = ConnectorObjectPath(listOf("schema", "tbl"))
 
         assert(expectConnectorPath == handle.absolutePath)

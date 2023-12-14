@@ -15,6 +15,7 @@
 package org.partiql.parser
 
 import org.partiql.ast.Statement
+import org.partiql.parser.impl.PartiQLParserDefault
 
 public interface PartiQLParser {
 
@@ -26,4 +27,13 @@ public interface PartiQLParser {
         val root: Statement,
         val locations: SourceLocations,
     )
+
+    public companion object {
+
+        @JvmStatic
+        public fun builder(): PartiQLParserBuilder = PartiQLParserBuilder()
+
+        @JvmStatic
+        public fun default(): PartiQLParser = PartiQLParserDefault()
+    }
 }

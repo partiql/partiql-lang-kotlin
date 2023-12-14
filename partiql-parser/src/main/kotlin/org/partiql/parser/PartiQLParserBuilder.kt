@@ -21,14 +21,6 @@ import org.partiql.parser.impl.PartiQLParserDefault
  */
 public class PartiQLParserBuilder {
 
-    public companion object {
-
-        @JvmStatic
-        public fun standard(): PartiQLParserBuilder {
-            return PartiQLParserBuilder()
-        }
-    }
-
     public fun build(): PartiQLParser {
         return PartiQLParserDefault()
     }
