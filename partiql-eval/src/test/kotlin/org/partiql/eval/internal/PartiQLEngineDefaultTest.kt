@@ -137,6 +137,34 @@ class PartiQLEngineDefaultTest {
     }
 
     @OptIn(PartiQLValueExperimental::class)
+    @Test
+    fun testJoinOuterFullOnTrue() {
+        val statement = parser.parse("SELECT a, b FROM << { 'a': 1 } >> t FULL OUTER JOIN << { 'b': 2 } >> s ON TRUE;").root
+        val session = PartiQLPlanner.Session("q", "u")
+        val plan = planner.plan(statement, session)
+
+        val prepared = engine.prepare(plan.plan)
+        val result = engine.execute(prepared)
+        if (result is PartiQLResult.Error) {
+            throw result.cause
+        }
+        result as PartiQLResult.Value
+        val output = result.value as BagValue<*>
+
+        val expected = bagValue(
+            sequenceOf(
+                structValue(
+                    sequenceOf(
+                        "a" to int32Value(1),
+                        "b" to int32Value(2)
+                    )
+                ),
+            )
+        )
+        assertEquals(expected, output, comparisonString(expected, output))
+    }
+
+    @OptIn(PartiQLValueExperimental::class)
     private fun comparisonString(expected: PartiQLValue, actual: PartiQLValue): String {
         val expectedBuffer = ByteArrayOutputStream()
         val expectedWriter = PartiQLValueIonWriterBuilder.standardIonTextBuilder().build(expectedBuffer)
