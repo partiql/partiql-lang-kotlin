@@ -35,7 +35,16 @@ internal class IterableStructValueImpl<T : PartiQLValue>(
     override val annotations: PersistentList<String>,
 ) : StructValue<T>() {
 
-    override val fields: Collection<Pair<String, T>>? = delegate?.toList()
+    override val isNull: Boolean = delegate == null
+
+    override val fields: Iterable<String>
+        get() = delegate!!.map { it.first }
+
+    override val values: Iterable<T>
+        get() = delegate!!.map { it.second }
+
+    override val entries: Iterable<Pair<String, T>>
+        get() = delegate!!
 
     override operator fun get(key: String): T? {
         if (delegate == null) {
@@ -73,13 +82,14 @@ internal class MultiMapStructValueImpl<T : PartiQLValue>(
     override val annotations: PersistentList<String>,
 ) : StructValue<T>() {
 
-    override val fields: Collection<Pair<String, T>>?
-        get() {
-            if (delegate == null) {
-                return null
-            }
-            return delegate.entries.map { f -> f.value.map { v -> f.key to v } }.flatten()
-        }
+    override val isNull: Boolean = delegate == null
+
+    override val fields: Iterable<String> = delegate!!.map { it.key }
+
+    override val values: Iterable<T> = delegate!!.flatMap { it.value }
+
+    override val entries: Iterable<Pair<String, T>> =
+        delegate!!.entries.map { f -> f.value.map { v -> f.key to v } }.flatten()
 
     override operator fun get(key: String): T? = getAll(key).firstOrNull()
 
@@ -112,13 +122,13 @@ internal class MapStructValueImpl<T : PartiQLValue>(
     override val annotations: PersistentList<String>,
 ) : StructValue<T>() {
 
-    override val fields: Collection<Pair<String, T>>?
-        get() {
-            if (delegate == null) {
-                return null
-            }
-            return delegate.entries.map { f -> f.key to f.value }
-        }
+    override val isNull: Boolean = delegate == null
+
+    override val fields: Iterable<String> = delegate!!.map { it.key }
+
+    override val values: Iterable<T> = delegate!!.map { it.value }
+
+    override val entries: Iterable<Pair<String, T>> = delegate!!.entries.map { it.key to it.value }
 
     override operator fun get(key: String): T? {
         if (delegate == null) {

@@ -258,31 +258,31 @@ internal object ToIon : PartiQLValueBaseVisitor<IonElement, Unit>() {
     override fun visitInterval(v: IntervalValue, ctx: Unit): IonElement = TODO("Not Yet supported")
 
     override fun visitBag(v: BagValue<*>, ctx: Unit): IonElement = v.annotate {
-        when (val elements = v.elements) {
-            null -> ionNull(ElementType.LIST)
-            else -> ionListOf(elements.map { it.accept(ToIon, Unit) }.toList())
+        when (v.isNull) {
+            true -> ionNull(ElementType.LIST)
+            else -> ionListOf(v.map { it.accept(ToIon, Unit) }.toList())
         }
     }.withAnnotations(BAG_ANNOTATION)
 
     override fun visitList(v: ListValue<*>, ctx: Unit): IonElement = v.annotate {
-        when (val elements = v.elements) {
-            null -> ionNull(ElementType.LIST)
-            else -> ionListOf(elements.map { it.accept(ToIon, Unit) }.toList())
+        when (v.isNull) {
+            true -> ionNull(ElementType.LIST)
+            else -> ionListOf(v.map { it.accept(ToIon, Unit) }.toList())
         }
     }
 
     override fun visitSexp(v: SexpValue<*>, ctx: Unit): IonElement = v.annotate {
-        when (val elements = v.elements) {
-            null -> ionNull(ElementType.SEXP)
-            else -> ionSexpOf(elements.map { it.accept(ToIon, Unit) }.toList())
+        when (v.isNull) {
+            true -> ionNull(ElementType.SEXP)
+            else -> ionSexpOf(v.map { it.accept(ToIon, Unit) }.toList())
         }
     }
 
     override fun visitStruct(v: StructValue<*>, ctx: Unit): IonElement = v.annotate {
-        when (val fields = v.fields) {
-            null -> ionNull(ElementType.STRUCT)
+        when (v.isNull) {
+            true -> ionNull(ElementType.STRUCT)
             else -> {
-                val ionFields = fields.map {
+                val ionFields = entries.map {
                     val fk = it.first
                     val fv = it.second.accept(ToIon, ctx)
                     field(fk, fv)

@@ -47,7 +47,7 @@ Thank you to all who have contributed!
   - The new plan is fully resolved and typed.
   - Operators will be converted to function call. 
 - Changes the return type of `filter_distinct` to a list if input collection is list
-- `PartiQLValue` collections are backed by iterables rather than just sequences.
+- Changes the `PartiQLValue` collections to implement Iterable rather than Sequence, allowing for multiple consumption.
 
 ### Deprecated
 

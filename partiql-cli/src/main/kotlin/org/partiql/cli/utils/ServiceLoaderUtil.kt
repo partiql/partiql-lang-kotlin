@@ -268,28 +268,42 @@ class ServiceLoaderUtil {
                 PartiQLValueType.INTERVAL -> TODO()
 
                 PartiQLValueType.BAG -> {
-                    (partiqlValue as? BagValue<*>)?.elements?.map { PartiQLtoExprValue(it) }?.let { newBag(it) }
-                        ?: ExprValue.nullValue
+                    if (partiqlValue.isNull) {
+                        ExprValue.nullValue
+                    } else {
+                        newBag((partiqlValue as? BagValue<*>)!!.map { PartiQLtoExprValue(it) })
+                    }
                 }
 
                 PartiQLValueType.LIST -> {
-                    (partiqlValue as? ListValue<*>)?.elements?.map { PartiQLtoExprValue(it) }?.let { newList(it) }
-                        ?: ExprValue.nullValue
+                    if (partiqlValue.isNull) {
+                        ExprValue.nullValue
+                    } else {
+                        newList((partiqlValue as? ListValue<*>)!!.map { PartiQLtoExprValue(it) })
+                    }
                 }
 
                 PartiQLValueType.SEXP -> {
-                    (partiqlValue as? SexpValue<*>)?.elements?.map { PartiQLtoExprValue(it) }?.let { newSexp(it) }
-                        ?: ExprValue.nullValue
+                    if (partiqlValue.isNull) {
+                        ExprValue.nullValue
+                    } else {
+                        newSexp((partiqlValue as? SexpValue<*>)!!.map { PartiQLtoExprValue(it) })
+                    }
                 }
 
                 PartiQLValueType.STRUCT -> {
-                    (partiqlValue as? StructValue<*>)?.fields?.map {
-                        PartiQLtoExprValue(it.second).namedValue(
-                            newString(
-                                it.first
+                    if (partiqlValue.isNull) {
+                        ExprValue.nullValue
+                    } else {
+                        val entries = (partiqlValue as? StructValue<*>)!!.entries
+                        entries.map {
+                            PartiQLtoExprValue(it.second).namedValue(
+                                newString(
+                                    it.first
+                                )
                             )
-                        )
-                    }?.let { newStruct(it, StructOrdering.ORDERED) } ?: ExprValue.nullValue
+                        }.let { newStruct(it, StructOrdering.ORDERED) }
+                    }
                 }
 
                 PartiQLValueType.DECIMAL -> TODO()

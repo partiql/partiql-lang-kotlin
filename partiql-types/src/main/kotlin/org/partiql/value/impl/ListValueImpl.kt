@@ -28,7 +28,7 @@ internal class ListValueImpl<T : PartiQLValue>(
     override val annotations: PersistentList<String>,
 ) : ListValue<T>() {
 
-    override val elements: Collection<T>? = delegate?.toList()
+    override val isNull: Boolean = delegate == null
 
     override fun iterator(): Iterator<T> = delegate!!.iterator()
 
