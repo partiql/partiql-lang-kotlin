@@ -9,7 +9,7 @@ internal class RelJoinLeft(
     override val condition: Operator.Expr
 ) : RelJoinNestedLoop() {
 
-    override fun getOutputRecord(result: Boolean, lhs: Record, rhs: Record): Record {
+    override fun join(result: Boolean, lhs: Record, rhs: Record): Record {
         if (result.not()) {
             rhs.padNull()
         }

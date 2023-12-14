@@ -23,8 +23,7 @@ internal abstract class RelJoinNestedLoop : Operator.Relation {
         rhsRecord = rhs.next()
     }
 
-    @OptIn(PartiQLValueExperimental::class)
-    abstract fun getOutputRecord(result: Boolean, lhs: Record, rhs: Record): Record?
+    abstract fun join(result: Boolean, lhs: Record, rhs: Record): Record?
 
     @OptIn(PartiQLValueExperimental::class)
     override fun next(): Record? {
@@ -42,7 +41,7 @@ internal abstract class RelJoinNestedLoop : Operator.Relation {
             if (lhsRecord != null && rhsRecord != null) {
                 val input = lhsRecord + rhsRecord!!
                 val result = condition.eval(input)
-                toReturn = getOutputRecord(result.isTrue(), lhsRecord, rhsRecord!!)
+                toReturn = join(result.isTrue(), lhsRecord, rhsRecord!!)
             }
         }
         while (toReturn == null)

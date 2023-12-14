@@ -12,7 +12,7 @@ internal class RelJoinRight(
     override val lhs: Operator.Relation = rhs
     override val rhs: Operator.Relation = lhs
 
-    override fun getOutputRecord(result: Boolean, lhs: Record, rhs: Record): Record {
+    override fun join(result: Boolean, lhs: Record, rhs: Record): Record {
         if (result.not()) {
             lhs.padNull()
         }
