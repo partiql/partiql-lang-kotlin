@@ -389,8 +389,8 @@ public abstract class BagValue<T : PartiQLValue> : CollectionValue<T> {
         if (this.isNull || other.isNull) return this.isNull == other.isNull
 
         // both not null, compare values
-        val lhs = this.elements!!.toList()
-        val rhs = other.elements!!.toList()
+        val lhs = this.elements!!.groupingBy { it }.eachCount()
+        val rhs = other.elements!!.groupingBy { it }.eachCount()
         // this is incorrect as it assumes ordered-ness, but we don't have a sort or hash yet
         return lhs == rhs
     }
@@ -471,10 +471,13 @@ public abstract class StructValue<T : PartiQLValue> : PartiQLValue, Sequence<Pai
 
     public abstract val fields: Sequence<Pair<String, T>>?
 
+    // TODO: This is a temporary solution to not exhaust the underlying fields upon evaluation
+    private lateinit var _fields: List<Pair<String, T>>
+
     override val isNull: Boolean
         get() = fields == null
 
-    override fun iterator(): Iterator<Pair<String, T>> = fields!!.iterator()
+    override fun iterator(): Iterator<Pair<String, T>> = getFields()!!.iterator()
 
     public abstract operator fun get(key: String): T?
 
@@ -503,8 +506,8 @@ public abstract class StructValue<T : PartiQLValue> : PartiQLValue, Sequence<Pai
         if (this.isNull || other.isNull) return this.isNull == other.isNull
 
         // both not null, compare fields
-        val lhs = this.fields!!.groupBy({ it.first }, { it.second })
-        val rhs = other.fields!!.groupBy({ it.first }, { it.second })
+        val lhs = this.getFields()!!.groupBy({ it.first }, { it.second })
+        val rhs = other.getFields()!!.groupBy({ it.first }, { it.second })
 
         // check size
         if (lhs.size != rhs.size) return false
@@ -521,7 +524,17 @@ public abstract class StructValue<T : PartiQLValue> : PartiQLValue, Sequence<Pai
 
     override fun hashCode(): Int {
         // TODO
-        return super.hashCode()
+        return getFields().hashCode()
+    }
+
+    private fun getFields(): List<Pair<String, T>>? {
+        if (fields == null) {
+            return null
+        }
+        if (this::_fields.isInitialized.not()) {
+            _fields = fields?.toList() ?: emptyList()
+        }
+        return _fields
     }
 }
 

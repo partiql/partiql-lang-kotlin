@@ -41,7 +41,7 @@ internal class SequenceStructValueImpl<T : PartiQLValue>(
         if (delegate == null) {
             return null
         }
-        return delegate.first { it.first == key }.second
+        return delegate.firstOrNull { it.first == key }?.second
     }
 
     override fun getAll(key: String): Iterable<T> {
