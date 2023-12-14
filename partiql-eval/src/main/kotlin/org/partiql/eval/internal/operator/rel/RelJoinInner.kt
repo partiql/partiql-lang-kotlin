@@ -8,8 +8,8 @@ internal class RelJoinInner(
     override val rhs: Operator.Relation,
     override val condition: Operator.Expr
 ) : RelJoinNestedLoop() {
-    override fun join(result: Boolean, lhs: Record, rhs: Record): Record? {
-        return when (result) {
+    override fun join(condition: Boolean, lhs: Record, rhs: Record): Record? {
+        return when (condition) {
             true -> lhs + rhs
             false -> null
         }

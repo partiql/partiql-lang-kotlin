@@ -12,8 +12,8 @@ internal class RelJoinRight(
     override val lhs: Operator.Relation = rhs
     override val rhs: Operator.Relation = lhs
 
-    override fun join(result: Boolean, lhs: Record, rhs: Record): Record {
-        if (result.not()) {
+    override fun join(condition: Boolean, lhs: Record, rhs: Record): Record {
+        if (condition.not()) {
             lhs.padNull()
         }
         return lhs + rhs

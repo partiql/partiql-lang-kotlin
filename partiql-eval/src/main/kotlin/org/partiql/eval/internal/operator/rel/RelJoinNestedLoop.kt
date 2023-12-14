@@ -23,7 +23,7 @@ internal abstract class RelJoinNestedLoop : Operator.Relation {
         rhsRecord = rhs.next()
     }
 
-    abstract fun join(result: Boolean, lhs: Record, rhs: Record): Record?
+    abstract fun join(condition: Boolean, lhs: Record, rhs: Record): Record?
 
     @OptIn(PartiQLValueExperimental::class)
     override fun next(): Record? {

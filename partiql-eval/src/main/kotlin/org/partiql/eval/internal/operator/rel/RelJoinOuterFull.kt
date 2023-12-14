@@ -40,12 +40,12 @@ internal class RelJoinOuterFull(
     }
 
     /**
-     * Specifically, for FULL OUTER JOIN, when the JOIN Condition ([result]) is TRUE, we need to return the
-     * rows merged (without modification). When the JOIN Condition ([result]) is FALSE, we need to return
+     * Specifically, for FULL OUTER JOIN, when the JOIN Condition ([condition]) is TRUE, we need to return the
+     * rows merged (without modification). When the JOIN Condition ([condition]) is FALSE, we need to return
      * the LHS padded (and merged with RHS not padded) and the RHS padded (merged with the LHS not padded).
      */
-    override fun join(result: Boolean, lhs: Record, rhs: Record): Record {
-        when (result) {
+    override fun join(condition: Boolean, lhs: Record, rhs: Record): Record {
+        when (condition) {
             true -> {
                 previousLhs = null
                 previousRhs = null
