@@ -10,11 +10,16 @@ import org.partiql.value.PartiQLValueExperimental
 
 internal fun partiQLPlan(
     version: PartiQLVersion,
-    globals: List<Global>,
+    catalogs: List<Catalog>,
     statement: Statement,
-): PartiQLPlan = PartiQLPlan(version, globals, statement)
+): PartiQLPlan = PartiQLPlan(version, catalogs, statement)
 
-internal fun global(path: Identifier.Qualified, type: StaticType): Global = Global(path, type)
+internal fun catalog(name: String, values: List<Catalog.Value>): Catalog = Catalog(name, values)
+
+internal fun catalogValue(path: List<String>, type: StaticType): Catalog.Value = Catalog.Value(
+    path,
+    type
+)
 
 internal fun fnResolved(signature: FunctionSignature.Scalar): Fn.Resolved = Fn.Resolved(signature)
 
@@ -44,7 +49,10 @@ internal fun rexOpVarResolved(ref: Int): Rex.Op.Var.Resolved = Rex.Op.Var.Resolv
 internal fun rexOpVarUnresolved(identifier: Identifier, scope: Rex.Op.Var.Scope):
     Rex.Op.Var.Unresolved = Rex.Op.Var.Unresolved(identifier, scope)
 
-internal fun rexOpGlobal(ref: Int): Rex.Op.Global = Rex.Op.Global(ref)
+internal fun rexOpGlobal(catalogRef: Int, valueRef: Int): Rex.Op.Global = Rex.Op.Global(
+    catalogRef,
+    valueRef
+)
 
 internal fun rexOpPath(root: Rex, steps: List<Rex.Op.Path.Step>): Rex.Op.Path = Rex.Op.Path(
     root,

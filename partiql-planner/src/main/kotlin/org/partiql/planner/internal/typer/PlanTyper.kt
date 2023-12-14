@@ -84,10 +84,7 @@ import org.partiql.types.NullType
 import org.partiql.types.SexpType
 import org.partiql.types.StaticType
 import org.partiql.types.StaticType.Companion.ANY
-import org.partiql.types.StaticType.Companion.BOOL
 import org.partiql.types.StaticType.Companion.MISSING
-import org.partiql.types.StaticType.Companion.NULL
-import org.partiql.types.StaticType.Companion.STRING
 import org.partiql.types.StringType
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
@@ -423,15 +420,15 @@ internal class PlanTyper(
             }
             val type = resolvedVar.type
             val op = when (resolvedVar) {
-                is ResolvedVar.Global -> rexOpGlobal(resolvedVar.ordinal)
+                is ResolvedVar.Global -> rexOpGlobal(resolvedVar.ordinal, resolvedVar.position)
                 is ResolvedVar.Local -> resolvedLocalPath(resolvedVar)
             }
             return rex(type, op)
         }
 
         override fun visitRexOpGlobal(node: Rex.Op.Global, ctx: StaticType?): Rex {
-            val global = env.globals[node.ref]
-            val type = global.type
+            val catalog = env.catalogs[node.catalogRef]
+            val type = catalog.values[node.valueRef].type
             return rex(type, node)
         }
 
@@ -466,7 +463,7 @@ internal class PlanTyper(
                                 true -> emptyList()
                                 false -> visitedSteps.subList(remainingFirstIndex, visitedSteps.size)
                             }
-                            rexOpGlobal(resolvedVar.ordinal) to remaining
+                            rexOpGlobal(resolvedVar.ordinal, resolvedVar.position) to remaining
                         }
                     }
                     // rewrite root

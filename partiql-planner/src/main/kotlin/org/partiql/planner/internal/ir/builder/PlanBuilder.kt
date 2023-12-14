@@ -3,8 +3,8 @@
 package org.partiql.planner.internal.ir.builder
 
 import org.partiql.planner.internal.ir.Agg
+import org.partiql.planner.internal.ir.Catalog
 import org.partiql.planner.internal.ir.Fn
-import org.partiql.planner.internal.ir.Global
 import org.partiql.planner.internal.ir.Identifier
 import org.partiql.planner.internal.ir.PartiQLPlan
 import org.partiql.planner.internal.ir.PartiQLVersion
@@ -22,21 +22,31 @@ internal fun <T : PlanNode> plan(block: PlanBuilder.() -> T) = PlanBuilder().blo
 internal class PlanBuilder {
     internal fun partiQLPlan(
         version: PartiQLVersion? = null,
-        globals: MutableList<Global> = mutableListOf(),
+        catalogs: MutableList<Catalog> = mutableListOf(),
         statement: Statement? = null,
         block: PartiQlPlanBuilder.() -> Unit = {},
     ): PartiQLPlan {
-        val builder = PartiQlPlanBuilder(version, globals, statement)
+        val builder = PartiQlPlanBuilder(version, catalogs, statement)
         builder.block()
         return builder.build()
     }
 
-    internal fun global(
-        path: Identifier.Qualified? = null,
+    public fun catalog(
+        name: String? = null,
+        values: MutableList<Catalog.Value> = mutableListOf(),
+        block: CatalogBuilder.() -> Unit = {},
+    ): Catalog {
+        val builder = CatalogBuilder(name, values)
+        builder.block()
+        return builder.build()
+    }
+
+    public fun catalogValue(
+        path: MutableList<String> = mutableListOf(),
         type: StaticType? = null,
-        block: GlobalBuilder.() -> Unit = {},
-    ): Global {
-        val builder = GlobalBuilder(path, type)
+        block: CatalogValueBuilder.() -> Unit = {},
+    ): Catalog.Value {
+        val builder = CatalogValueBuilder(path, type)
         builder.block()
         return builder.build()
     }
@@ -140,8 +150,12 @@ internal class PlanBuilder {
         return builder.build()
     }
 
-    internal fun rexOpGlobal(ref: Int? = null, block: RexOpGlobalBuilder.() -> Unit = {}): Rex.Op.Global {
-        val builder = RexOpGlobalBuilder(ref)
+    public fun rexOpGlobal(
+        catalogRef: Int? = null,
+        valueRef: Int? = null,
+        block: RexOpGlobalBuilder.() -> Unit = {},
+    ): Rex.Op.Global {
+        val builder = RexOpGlobalBuilder(catalogRef, valueRef)
         builder.block()
         return builder.build()
     }

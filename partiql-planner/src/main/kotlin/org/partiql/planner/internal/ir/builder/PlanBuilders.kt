@@ -3,8 +3,8 @@
 package org.partiql.planner.internal.ir.builder
 
 import org.partiql.planner.internal.ir.Agg
+import org.partiql.planner.internal.ir.Catalog
 import org.partiql.planner.internal.ir.Fn
-import org.partiql.planner.internal.ir.Global
 import org.partiql.planner.internal.ir.Identifier
 import org.partiql.planner.internal.ir.PartiQLPlan
 import org.partiql.planner.internal.ir.PartiQLVersion
@@ -18,15 +18,15 @@ import org.partiql.value.PartiQLValueExperimental
 
 internal class PartiQlPlanBuilder(
     internal var version: PartiQLVersion? = null,
-    internal var globals: MutableList<Global> = mutableListOf(),
+    internal var catalogs: MutableList<Catalog> = mutableListOf(),
     internal var statement: Statement? = null,
 ) {
     internal fun version(version: PartiQLVersion?): PartiQlPlanBuilder = this.apply {
         this.version = version
     }
 
-    internal fun globals(globals: MutableList<Global>): PartiQlPlanBuilder = this.apply {
-        this.globals = globals
+    internal fun catalogs(catalogs: MutableList<Catalog>): PartiQlPlanBuilder = this.apply {
+        this.catalogs = catalogs
     }
 
     internal fun statement(statement: Statement?): PartiQlPlanBuilder = this.apply {
@@ -34,25 +34,40 @@ internal class PartiQlPlanBuilder(
     }
 
     internal fun build(): PartiQLPlan = PartiQLPlan(
-        version = version!!, globals = globals,
+        version = version!!, catalogs = catalogs,
         statement =
         statement!!
     )
 }
 
-internal class GlobalBuilder(
-    internal var path: Identifier.Qualified? = null,
-    internal var type: StaticType? = null,
+internal class CatalogBuilder(
+    public var name: String? = null,
+    public var values: MutableList<Catalog.Value> = mutableListOf(),
 ) {
-    internal fun path(path: Identifier.Qualified?): GlobalBuilder = this.apply {
+    public fun name(name: String?): CatalogBuilder = this.apply {
+        this.name = name
+    }
+
+    public fun values(values: MutableList<Catalog.Value>): CatalogBuilder = this.apply {
+        this.values = values
+    }
+
+    public fun build(): Catalog = Catalog(name = name!!, values = values)
+}
+
+internal class CatalogValueBuilder(
+    public var path: MutableList<String> = mutableListOf(),
+    public var type: StaticType? = null,
+) {
+    public fun path(path: MutableList<String>): CatalogValueBuilder = this.apply {
         this.path = path
     }
 
-    internal fun type(type: StaticType?): GlobalBuilder = this.apply {
+    public fun type(type: StaticType?): CatalogValueBuilder = this.apply {
         this.type = type
     }
 
-    internal fun build(): Global = Global(path = path!!, type = type!!)
+    public fun build(): Catalog.Value = Catalog.Value(path = path, type = type!!)
 }
 
 internal class FnResolvedBuilder(
@@ -205,13 +220,22 @@ internal class RexOpVarUnresolvedBuilder(
 }
 
 internal class RexOpGlobalBuilder(
-    internal var ref: Int? = null,
+    public var catalogRef: Int? = null,
+    public var valueRef: Int? = null,
 ) {
-    internal fun ref(ref: Int?): RexOpGlobalBuilder = this.apply {
-        this.ref = ref
+    public fun catalogRef(catalogRef: Int?): RexOpGlobalBuilder = this.apply {
+        this.catalogRef = catalogRef
     }
 
-    internal fun build(): Rex.Op.Global = Rex.Op.Global(ref = ref!!)
+    public fun valueRef(valueRef: Int?): RexOpGlobalBuilder = this.apply {
+        this.valueRef = valueRef
+    }
+
+    public fun build(): Rex.Op.Global = Rex.Op.Global(
+        catalogRef = catalogRef!!,
+        valueRef =
+        valueRef!!
+    )
 }
 
 internal class RexOpPathBuilder(

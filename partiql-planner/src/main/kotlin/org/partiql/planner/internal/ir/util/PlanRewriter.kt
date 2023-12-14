@@ -6,8 +6,8 @@
 package org.partiql.planner.internal.ir.util
 
 import org.partiql.planner.internal.ir.Agg
+import org.partiql.planner.internal.ir.Catalog
 import org.partiql.planner.internal.ir.Fn
-import org.partiql.planner.internal.ir.Global
 import org.partiql.planner.internal.ir.Identifier
 import org.partiql.planner.internal.ir.PartiQLPlan
 import org.partiql.planner.internal.ir.PlanNode
@@ -87,23 +87,29 @@ internal abstract class PlanRewriter<C> : PlanBaseVisitor<PlanNode, C>() {
 
     override fun visitPartiQLPlan(node: PartiQLPlan, ctx: C): PlanNode {
         val version = node.version
-        val globals = _visitList(node.globals, ctx, ::visitGlobal)
+        val globals = _visitList(node.catalogs, ctx, ::visitCatalog)
         val statement = visitStatement(node.statement, ctx) as Statement
-        return if (version !== node.version || globals !== node.globals || statement !== node.statement) {
+        return if (version !== node.version || globals !== node.catalogs || statement !== node.statement) {
             PartiQLPlan(version, globals, statement)
         } else {
             node
         }
     }
 
-    override fun visitGlobal(node: Global, ctx: C): PlanNode {
-        val path = visitIdentifierQualified(node.path, ctx) as Identifier.Qualified
-        val type = node.type
-        return if (path !== node.path || type !== node.type) {
-            Global(path, type)
+    public override fun visitCatalog(node: Catalog, ctx: C): PlanNode {
+        val name = node.name
+        val values = _visitList(node.values, ctx, ::visitCatalogValue)
+        return if (name !== node.name || values !== node.values) {
+            Catalog(name, values)
         } else {
             node
         }
+    }
+
+    public override fun visitCatalogValue(node: Catalog.Value, ctx: C): PlanNode {
+        val path = node.path
+        val type = node.type
+        return node
     }
 
     override fun visitFnResolved(node: Fn.Resolved, ctx: C): PlanNode {
@@ -191,8 +197,9 @@ internal abstract class PlanRewriter<C> : PlanBaseVisitor<PlanNode, C>() {
         }
     }
 
-    override fun visitRexOpGlobal(node: Rex.Op.Global, ctx: C): PlanNode {
-        val ref = node.ref
+    public override fun visitRexOpGlobal(node: Rex.Op.Global, ctx: C): PlanNode {
+        val catalogRef = node.catalogRef
+        val valueRef = node.valueRef
         return node
     }
 

@@ -3,13 +3,11 @@ package org.partiql.planner.internal
 import org.partiql.planner.Header
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.internal.ir.Agg
+import org.partiql.planner.internal.ir.Catalog
 import org.partiql.planner.internal.ir.Fn
-import org.partiql.planner.internal.ir.Global
 import org.partiql.planner.internal.ir.Identifier
 import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
-import org.partiql.planner.internal.ir.global
-import org.partiql.planner.internal.ir.identifierQualified
 import org.partiql.planner.internal.ir.identifierSymbol
 import org.partiql.planner.internal.typer.FnResolver
 import org.partiql.spi.BindingCase
@@ -95,13 +93,15 @@ internal sealed interface ResolvedVar {
      * Metadata for a resolved global variable
      *
      * @property type       Resolved StaticType
-     * @property ordinal    Index offset in the environment `globals` list
+     * @property ordinal    The relevant catalog's index offset in the [Env.catalogs] list
      * @property depth      The depth/level of the path match.
+     * @property position   The relevant value's index offset in the [Catalog.values] list
      */
     class Global(
         override val type: StaticType,
         override val ordinal: Int,
         val depth: Int,
+        val position: Int
     ) : ResolvedVar
 }
 
@@ -134,7 +134,7 @@ internal class Env(
     /**
      * Collect the list of all referenced globals during planning.
      */
-    public val globals = mutableListOf<Global>()
+    public val catalogs = mutableListOf<Catalog>()
 
     /**
      * Encapsulate all function resolving logic within [FnResolver].
@@ -149,7 +149,7 @@ internal class Env(
     /**
      * Map of catalog names to its underlying connector
      */
-    private val catalogs: Map<String, Connector>
+    private val connectors: Map<String, Connector>
 
     // Initialize connectors
     init {
@@ -163,7 +163,7 @@ internal class Env(
             // initialize connector with given config
             catalogs[catalog] = connector.create(catalog, config)
         }
-        this.catalogs = catalogs.toMap()
+        this.connectors = catalogs.toMap()
     }
 
     /**
@@ -209,8 +209,8 @@ internal class Env(
      * @return
      */
     private fun getMetadata(catalogName: BindingName): Handle<ConnectorMetadata>? {
-        val catalogKey = catalogs.keys.firstOrNull { catalogName.isEquivalentTo(it) } ?: return null
-        val connector = catalogs[catalogKey] ?: return null
+        val catalogKey = connectors.keys.firstOrNull { catalogName.isEquivalentTo(it) } ?: return null
+        val connector = connectors[catalogKey] ?: return null
         val metadata = connector.getMetadata(connectorSession)
         return catalogKey to metadata
     }
@@ -232,15 +232,47 @@ internal class Env(
             getObjectHandle(cat, catalogPath)?.let { handle ->
                 getObjectDescriptor(handle).let { type ->
                     val depth = calculateMatched(originalPath, catalogPath, handle.second.absolutePath)
-                    val qualifiedPath = identifierQualified(
-                        root = handle.first.toIdentifier(),
-                        steps = handle.second.absolutePath.steps.map { it.toIdentifier() }
-                    )
-                    val global = global(qualifiedPath, type)
-                    globals.add(global)
+                    val (catalogIndex, valueIndex) = getOrAddCatalogValue(handle.first, handle.second.absolutePath.steps, type)
                     // Return resolution metadata
-                    ResolvedVar.Global(type, globals.size - 1, depth)
+                    ResolvedVar.Global(type, catalogIndex, depth, valueIndex)
                 }
+            }
+        }
+    }
+
+    /**
+     * @return a [Pair] where [Pair.first] is the catalog index and [Pair.second] is the value index within that catalog
+     */
+    private fun getOrAddCatalogValue(catalogName: String, valuePath: List<String>, valueType: StaticType): Pair<Int, Int> {
+        val catalogIndex = getOrAddCatalog(catalogName)
+        val values = catalogs[catalogIndex].values
+        return values.indexOfFirst { value ->
+            value.path == valuePath
+        }.let { index ->
+            when (index) {
+                -1 -> {
+                    catalogs[catalogIndex] = catalogs[catalogIndex].copy(
+                        values = values + listOf(Catalog.Value(valuePath, valueType))
+                    )
+                    catalogIndex to 0
+                }
+                else -> {
+                    catalogIndex to index
+                }
+            }
+        }
+    }
+
+    private fun getOrAddCatalog(catalogName: String): Int {
+        return catalogs.indexOfFirst { catalog ->
+            catalog.name == catalogName
+        }.let {
+            when (it) {
+                -1 -> {
+                    catalogs.add(Catalog(catalogName, emptyList()))
+                    catalogs.lastIndex
+                }
+                else -> it
             }
         }
     }

@@ -3,8 +3,8 @@
 package org.partiql.planner.internal.ir.visitor
 
 import org.partiql.planner.internal.ir.Agg
+import org.partiql.planner.internal.ir.Catalog
 import org.partiql.planner.internal.ir.Fn
-import org.partiql.planner.internal.ir.Global
 import org.partiql.planner.internal.ir.Identifier
 import org.partiql.planner.internal.ir.PartiQLPlan
 import org.partiql.planner.internal.ir.PlanNode
@@ -18,7 +18,9 @@ internal interface PlanVisitor<R, C> {
 
     fun visitPartiQLPlan(node: PartiQLPlan, ctx: C): R
 
-    fun visitGlobal(node: Global, ctx: C): R
+    public fun visitCatalog(node: Catalog, ctx: C): R
+
+    public fun visitCatalogValue(node: Catalog.Value, ctx: C): R
 
     fun visitFn(node: Fn, ctx: C): R
 

@@ -258,7 +258,7 @@ class PlanTyperTest {
                 op = rexOpPath(
                     root = rex(
                         ORDERED_DUPLICATES_STRUCT,
-                        rexOpGlobal(0)
+                        rexOpGlobal(0, 0)
                     ),
                     steps = listOf(
                         rexOpPathStepSymbol(identifierSymbol("definition", Identifier.CaseSensitivity.SENSITIVE)),
@@ -297,7 +297,7 @@ class PlanTyperTest {
                 op = rexOpPath(
                     root = rex(
                         ORDERED_DUPLICATES_STRUCT,
-                        rexOpGlobal(0)
+                        rexOpGlobal(0, 0)
                     ),
                     steps = listOf(
                         rexOpPathStepSymbol(identifierSymbol("DEFINITION", Identifier.CaseSensitivity.SENSITIVE)),
@@ -336,7 +336,7 @@ class PlanTyperTest {
                 op = rexOpPath(
                     root = rex(
                         DUPLICATES_STRUCT,
-                        rexOpGlobal(0)
+                        rexOpGlobal(0, 0)
                     ),
                     steps = listOf(
                         rexOpPathStepSymbol(identifierSymbol("DEFINITION", Identifier.CaseSensitivity.INSENSITIVE)),
@@ -375,7 +375,7 @@ class PlanTyperTest {
                 op = rexOpPath(
                     root = rex(
                         DUPLICATES_STRUCT,
-                        rexOpGlobal(0)
+                        rexOpGlobal(0, 0)
                     ),
                     steps = listOf(
                         rexOpPathStepSymbol(identifierSymbol("DEFINITION", Identifier.CaseSensitivity.SENSITIVE)),
@@ -414,7 +414,7 @@ class PlanTyperTest {
                 op = rexOpPath(
                     root = rex(
                         DUPLICATES_STRUCT,
-                        rexOpGlobal(0)
+                        rexOpGlobal(0, 0)
                     ),
                     steps = listOf(
                         rexOpPathStepSymbol(identifierSymbol("definition", Identifier.CaseSensitivity.SENSITIVE)),
@@ -453,7 +453,7 @@ class PlanTyperTest {
                 op = rexOpPath(
                     root = rex(
                         OPEN_DUPLICATES_STRUCT,
-                        rexOpGlobal(0)
+                        rexOpGlobal(0, 0)
                     ),
                     steps = listOf(
                         rexOpPathStepSymbol(identifierSymbol("definition", Identifier.CaseSensitivity.SENSITIVE)),
@@ -492,7 +492,7 @@ class PlanTyperTest {
                 op = rexOpPath(
                     root = rex(
                         CLOSED_UNION_DUPLICATES_STRUCT,
-                        rexOpGlobal(0)
+                        rexOpGlobal(0, 0)
                     ),
                     steps = listOf(
                         rexOpPathStepSymbol(identifierSymbol("definition", Identifier.CaseSensitivity.INSENSITIVE)),
@@ -531,7 +531,7 @@ class PlanTyperTest {
                 op = rexOpPath(
                     root = rex(
                         CLOSED_UNION_DUPLICATES_STRUCT,
-                        rexOpGlobal(0)
+                        rexOpGlobal(0, 0)
                     ),
                     steps = listOf(
                         rexOpPathStepSymbol(identifierSymbol("definition", Identifier.CaseSensitivity.SENSITIVE)),

@@ -8,15 +8,22 @@ imports::{
 }
 
 parti_q_l_plan::{
-  globals:    list::[global],       // (globals ...)
+  catalogs:   list::[catalog],      // (catalogs ...)
   statement:  statement,            // (statement ...)
 }
 
-// Globals
-
-global::{
-  path: '.identifier.qualified',
-  type: static_type,
+// Represent an instance of a database.
+// - Currently, `values` represents all values from this catalog to be used in this plan.
+// - Eventually, TODO functions may be resolved to a specific namespace within a catalog.
+catalog::{
+  name: string,
+  values: list::[value],
+  _: [
+    value::{
+      path: list::[string], // This should NOT be empty.
+      type: static_type
+    }
+  ]
 }
 
 // Functions
@@ -70,7 +77,8 @@ rex::{
     },
 
     global::{
-      ref: int,
+      catalog_ref: int,  // The index of the relevant catalog in the plan's catalogs list
+      value_ref: Int     // The index of the relevant value in a catalog's values list
     },
 
     path::{

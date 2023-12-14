@@ -8,11 +8,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.partiql.planner.PartiQLHeader
 import org.partiql.planner.PartiQLPlanner
-import org.partiql.planner.internal.ir.Global
-import org.partiql.planner.internal.ir.Identifier
+import org.partiql.planner.internal.ir.Catalog
 import org.partiql.planner.internal.ir.Rex
-import org.partiql.planner.internal.ir.identifierQualified
-import org.partiql.planner.internal.ir.identifierSymbol
 import org.partiql.plugins.local.LocalPlugin
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
@@ -38,15 +35,11 @@ class EnvTest {
 
         private val EMPTY_TYPE_ENV = TypeEnv(schema = emptyList(), ResolutionStrategy.GLOBAL)
 
-        private val GLOBAL_OS = Global(
-            path = identifierQualified(
-                root = identifierSymbol("pql", Identifier.CaseSensitivity.SENSITIVE),
-                steps = listOf(
-                    identifierSymbol("main", Identifier.CaseSensitivity.SENSITIVE),
-                    identifierSymbol("os", Identifier.CaseSensitivity.SENSITIVE)
-                )
-            ),
-            type = StaticType.STRING
+        private val GLOBAL_OS = Catalog(
+            name = "pql",
+            values = listOf(
+                Catalog.Value(path = listOf("main", "os"), type = StaticType.STRING)
+            )
         )
     }
 
@@ -71,29 +64,29 @@ class EnvTest {
     fun testGlobalMatchingSensitiveName() {
         val path = BindingPath(listOf(BindingName("os", BindingCase.SENSITIVE)))
         assertNotNull(env.resolve(path, EMPTY_TYPE_ENV, Rex.Op.Var.Scope.DEFAULT))
-        assertEquals(1, env.globals.size)
-        assert(env.globals.contains(GLOBAL_OS))
+        assertEquals(1, env.catalogs.size)
+        assert(env.catalogs.contains(GLOBAL_OS))
     }
 
     @Test
     fun testGlobalMatchingInsensitiveName() {
         val path = BindingPath(listOf(BindingName("oS", BindingCase.INSENSITIVE)))
         assertNotNull(env.resolve(path, EMPTY_TYPE_ENV, Rex.Op.Var.Scope.DEFAULT))
-        assertEquals(1, env.globals.size)
-        assert(env.globals.contains(GLOBAL_OS))
+        assertEquals(1, env.catalogs.size)
+        assert(env.catalogs.contains(GLOBAL_OS))
     }
 
     @Test
     fun testGlobalNotMatchingSensitiveName() {
         val path = BindingPath(listOf(BindingName("oS", BindingCase.SENSITIVE)))
         assertNull(env.resolve(path, EMPTY_TYPE_ENV, Rex.Op.Var.Scope.DEFAULT))
-        assert(env.globals.isEmpty())
+        assert(env.catalogs.isEmpty())
     }
 
     @Test
     fun testGlobalNotMatchingInsensitiveName() {
         val path = BindingPath(listOf(BindingName("nonexistent", BindingCase.INSENSITIVE)))
         assertNull(env.resolve(path, EMPTY_TYPE_ENV, Rex.Op.Var.Scope.DEFAULT))
-        assert(env.globals.isEmpty())
+        assert(env.catalogs.isEmpty())
     }
 }

@@ -4,9 +4,10 @@ package org.partiql.planner.internal.ir
 
 import org.partiql.planner.internal.ir.builder.AggResolvedBuilder
 import org.partiql.planner.internal.ir.builder.AggUnresolvedBuilder
+import org.partiql.planner.internal.ir.builder.CatalogBuilder
+import org.partiql.planner.internal.ir.builder.CatalogValueBuilder
 import org.partiql.planner.internal.ir.builder.FnResolvedBuilder
 import org.partiql.planner.internal.ir.builder.FnUnresolvedBuilder
-import org.partiql.planner.internal.ir.builder.GlobalBuilder
 import org.partiql.planner.internal.ir.builder.IdentifierQualifiedBuilder
 import org.partiql.planner.internal.ir.builder.IdentifierSymbolBuilder
 import org.partiql.planner.internal.ir.builder.PartiQlPlanBuilder
@@ -80,13 +81,13 @@ internal data class PartiQLPlan(
     @JvmField
     internal val version: PartiQLVersion,
     @JvmField
-    internal val globals: List<Global>,
+    internal val catalogs: List<Catalog>,
     @JvmField
     internal val statement: Statement,
 ) : PlanNode() {
     internal override val children: List<PlanNode> by lazy {
         val kids = mutableListOf<PlanNode?>()
-        kids.addAll(globals)
+        kids.addAll(catalogs)
         kids.add(statement)
         kids.filterNotNull()
     }
@@ -100,24 +101,41 @@ internal data class PartiQLPlan(
     }
 }
 
-internal data class Global(
+internal data class Catalog(
     @JvmField
-    internal val path: Identifier.Qualified,
+    public val name: String,
     @JvmField
-    internal val type: StaticType,
+    public val values: List<Value>,
 ) : PlanNode() {
-    internal override val children: List<PlanNode> by lazy {
+    public override val children: List<PlanNode> by lazy {
         val kids = mutableListOf<PlanNode?>()
-        kids.add(path)
+        kids.addAll(values)
         kids.filterNotNull()
     }
 
-    internal override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
-        visitor.visitGlobal(this, ctx)
+    public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+        visitor.visitCatalog(this, ctx)
 
-    internal companion object {
+    public data class Value(
+        @JvmField
+        public val path: List<String>,
+        @JvmField
+        public val type: StaticType,
+    ) : PlanNode() {
+        public override val children: List<PlanNode> = emptyList()
+
+        public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+            visitor.visitCatalogValue(this, ctx)
+
+        public companion object {
+            @JvmStatic
+            public fun builder(): CatalogValueBuilder = CatalogValueBuilder()
+        }
+    }
+
+    public companion object {
         @JvmStatic
-        internal fun builder(): GlobalBuilder = GlobalBuilder()
+        public fun builder(): CatalogBuilder = CatalogBuilder()
     }
 }
 
@@ -380,16 +398,18 @@ internal data class Rex(
 
         internal data class Global(
             @JvmField
-            internal val ref: Int,
+            public val catalogRef: Int,
+            @JvmField
+            public val valueRef: Int,
         ) : Op() {
-            internal override val children: List<PlanNode> = emptyList()
+            public override val children: List<PlanNode> = emptyList()
 
-            internal override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
                 visitor.visitRexOpGlobal(this, ctx)
 
-            internal companion object {
+            public companion object {
                 @JvmStatic
-                internal fun builder(): RexOpGlobalBuilder = RexOpGlobalBuilder()
+                public fun builder(): RexOpGlobalBuilder = RexOpGlobalBuilder()
             }
         }
 
