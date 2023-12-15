@@ -43,7 +43,7 @@ Thank you to all who have contributed!
 Thank you to all who have contributed!
 - @<your-username>
 
-## [0.14.0-alpha] - 2023-12-01
+## [0.14.0-alpha] - 2023-12-15
 
 ### Added
 - Adds top-level IR node creation functions.
@@ -91,6 +91,7 @@ Thank you to all who have contributed!
 Thank you to all who have contributed!
 - @rchowell
 - @johnedquinn
+- @yliuuuu
 - @alancai98
 
 ## [0.13.2-alpha] - 2023-09-29
