@@ -288,18 +288,14 @@ rel::{
       items: list::[item],
       _: [
         item::{
-          root: '.identifier.symbol',
+          root: '.rex.op.var',
           steps: list::[step],
         },
         step::[
-          attr::{
-            symbol: '.identifier.symbol',
-          },
-          pos::{
-            index: int,
-          },
+          struct_field::{ symbol: '.identifier.symbol' },
+          coll_index::{ index: int },
           struct_wildcard::{},
-          collection_wildcard::{},
+          coll_wildcard::{},
         ],
       ],
     },

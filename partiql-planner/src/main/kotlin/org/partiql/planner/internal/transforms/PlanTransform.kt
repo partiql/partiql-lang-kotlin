@@ -352,22 +352,27 @@ internal object PlanTransform : PlanBaseVisitor<PlanNode, ProblemCallback>() {
             items = node.items.map { visitRelOpExcludeItem(it, ctx) },
         )
 
-        override fun visitRelOpExcludeItem(node: Rel.Op.Exclude.Item, ctx: ProblemCallback) =
-            org.partiql.plan.Rel.Op.Exclude.Item(
-                root = visitIdentifierSymbol(node.root, ctx),
+        override fun visitRelOpExcludeItem(node: Rel.Op.Exclude.Item, ctx: ProblemCallback): org.partiql.plan.Rel.Op.Exclude.Item {
+            val root = when (node.root) {
+                is Rex.Op.Var.Resolved -> visitRexOpVar(node.root, ctx) as org.partiql.plan.Rex.Op.Var
+                is Rex.Op.Var.Unresolved -> org.partiql.plan.Rex.Op.Var(-1) // unresolved in `PlanTyper` results in error
+            }
+            return org.partiql.plan.Rel.Op.Exclude.Item(
+                root = root,
                 steps = node.steps.map { visitRelOpExcludeStep(it, ctx) },
             )
+        }
 
         override fun visitRelOpExcludeStep(node: Rel.Op.Exclude.Step, ctx: ProblemCallback) =
             super.visit(node, ctx) as org.partiql.plan.Rel.Op.Exclude.Step
 
-        override fun visitRelOpExcludeStepAttr(node: Rel.Op.Exclude.Step.Attr, ctx: ProblemCallback) =
-            org.partiql.plan.Rel.Op.Exclude.Step.Attr(
+        override fun visitRelOpExcludeStepStructField(node: Rel.Op.Exclude.Step.StructField, ctx: ProblemCallback) =
+            org.partiql.plan.Rel.Op.Exclude.Step.StructField(
                 symbol = visitIdentifierSymbol(node.symbol, ctx),
             )
 
-        override fun visitRelOpExcludeStepPos(node: Rel.Op.Exclude.Step.Pos, ctx: ProblemCallback) =
-            org.partiql.plan.Rel.Op.Exclude.Step.Pos(
+        override fun visitRelOpExcludeStepCollIndex(node: Rel.Op.Exclude.Step.CollIndex, ctx: ProblemCallback) =
+            org.partiql.plan.Rel.Op.Exclude.Step.CollIndex(
                 index = node.index,
             )
 
@@ -376,10 +381,10 @@ internal object PlanTransform : PlanBaseVisitor<PlanNode, ProblemCallback>() {
             ctx: ProblemCallback,
         ) = org.partiql.plan.Rel.Op.Exclude.Step.StructWildcard()
 
-        override fun visitRelOpExcludeStepCollectionWildcard(
-            node: Rel.Op.Exclude.Step.CollectionWildcard,
+        override fun visitRelOpExcludeStepCollWildcard(
+            node: Rel.Op.Exclude.Step.CollWildcard,
             ctx: ProblemCallback,
-        ) = org.partiql.plan.Rel.Op.Exclude.Step.CollectionWildcard()
+        ) = org.partiql.plan.Rel.Op.Exclude.Step.CollWildcard()
 
         override fun visitRelOpErr(node: Rel.Op.Err, ctx: ProblemCallback) = org.partiql.plan.Rel.Op.Err(node.message)
 

@@ -142,19 +142,14 @@ internal interface PlanVisitor<R, C> {
 
     fun visitRelOpExcludeStep(node: Rel.Op.Exclude.Step, ctx: C): R
 
-    fun visitRelOpExcludeStepAttr(node: Rel.Op.Exclude.Step.Attr, ctx: C): R
+    fun visitRelOpExcludeStepStructField(node: Rel.Op.Exclude.Step.StructField, ctx: C): R
 
-    fun visitRelOpExcludeStepPos(node: Rel.Op.Exclude.Step.Pos, ctx: C): R
+    fun visitRelOpExcludeStepCollIndex(node: Rel.Op.Exclude.Step.CollIndex, ctx: C): R
 
     fun visitRelOpExcludeStepStructWildcard(node: Rel.Op.Exclude.Step.StructWildcard, ctx: C):
         R
 
-    fun visitRelOpExcludeStepCollectionWildcard(
-        node: Rel.Op.Exclude.Step.CollectionWildcard,
-        ctx: C,
-    ): R
-
-    fun visitRelOpErr(node: Rel.Op.Err, ctx: C): R
+    fun visitRelOpExcludeStepCollWildcard(node: Rel.Op.Exclude.Step.CollWildcard, ctx: C): R fun visitRelOpErr(node: Rel.Op.Err, ctx: C): R
 
     fun visitRelBinding(node: Rel.Binding, ctx: C): R
 }

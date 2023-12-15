@@ -281,7 +281,7 @@ internal class Env(
     /**
      * Check locals, else search structs.
      */
-    private fun resolveLocalBind(path: BindingPath, locals: List<Rel.Binding>): ResolvedVar? {
+    internal fun resolveLocalBind(path: BindingPath, locals: List<Rel.Binding>): ResolvedVar? {
         if (path.steps.isEmpty()) {
             return null
         }

@@ -50,6 +50,7 @@ Thank you to all who have contributed!
 - Changes the return type of `filter_distinct` to a list if input collection is list
 - Changes the `PartiQLValue` collections to implement Iterable rather than Sequence, allowing for multiple consumption.
 - **BREAKING** Moves PartiQLParserBuilder.standard().build() to be PartiQLParser.default().
+- **BREAKING** Changed modeling of `EXCLUDE` in `partiql-ast`
 
 ### Deprecated
 
@@ -72,6 +73,7 @@ Thank you to all who have contributed!
 Thank you to all who have contributed!
 - @rchowell
 - @johnedquinn
+- @alancai98
 
 ## [0.13.2-alpha] - 2023-09-29
 

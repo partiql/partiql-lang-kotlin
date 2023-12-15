@@ -163,19 +163,20 @@ internal fun relOpAggregateCall(agg: Agg, args: List<Rex>): Rel.Op.Aggregate.Cal
 internal fun relOpExclude(input: Rel, items: List<Rel.Op.Exclude.Item>): Rel.Op.Exclude =
     Rel.Op.Exclude(input, items)
 
-internal fun relOpExcludeItem(root: Identifier.Symbol, steps: List<Rel.Op.Exclude.Step>):
-    Rel.Op.Exclude.Item = Rel.Op.Exclude.Item(root, steps)
+internal fun relOpExcludeItem(root: Rex.Op.Var, steps: List<Rel.Op.Exclude.Step>): Rel.Op.Exclude.Item =
+    Rel.Op.Exclude.Item(root, steps)
 
-internal fun relOpExcludeStepAttr(symbol: Identifier.Symbol): Rel.Op.Exclude.Step.Attr =
-    Rel.Op.Exclude.Step.Attr(symbol)
+internal fun relOpExcludeStepStructField(symbol: Identifier.Symbol): Rel.Op.Exclude.Step.StructField =
+    Rel.Op.Exclude.Step.StructField(symbol)
 
-internal fun relOpExcludeStepPos(index: Int): Rel.Op.Exclude.Step.Pos = Rel.Op.Exclude.Step.Pos(index)
+internal fun relOpExcludeStepCollIndex(index: Int): Rel.Op.Exclude.Step.CollIndex =
+    Rel.Op.Exclude.Step.CollIndex(index)
 
 internal fun relOpExcludeStepStructWildcard(): Rel.Op.Exclude.Step.StructWildcard =
     Rel.Op.Exclude.Step.StructWildcard()
 
-internal fun relOpExcludeStepCollectionWildcard(): Rel.Op.Exclude.Step.CollectionWildcard =
-    Rel.Op.Exclude.Step.CollectionWildcard()
+internal fun relOpExcludeStepCollWildcard(): Rel.Op.Exclude.Step.CollWildcard =
+    Rel.Op.Exclude.Step.CollWildcard()
 
 internal fun relOpErr(message: String): Rel.Op.Err = Rel.Op.Err(message)
 

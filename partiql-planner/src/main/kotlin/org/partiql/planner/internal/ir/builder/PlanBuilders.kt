@@ -749,10 +749,10 @@ internal class RelOpExcludeBuilder(
 }
 
 internal class RelOpExcludeItemBuilder(
-    internal var root: Identifier.Symbol? = null,
+    internal var root: Rex.Op.Var? = null,
     internal var steps: MutableList<Rel.Op.Exclude.Step> = mutableListOf(),
 ) {
-    internal fun root(root: Identifier.Symbol?): RelOpExcludeItemBuilder = this.apply {
+    internal fun root(root: Rex.Op.Var?): RelOpExcludeItemBuilder = this.apply {
         this.root = root
     }
 
@@ -763,33 +763,35 @@ internal class RelOpExcludeItemBuilder(
     internal fun build(): Rel.Op.Exclude.Item = Rel.Op.Exclude.Item(root = root!!, steps = steps)
 }
 
-internal class RelOpExcludeStepAttrBuilder(
+internal class RelOpExcludeStepStructFieldBuilder(
     internal var symbol: Identifier.Symbol? = null,
 ) {
-    internal fun symbol(symbol: Identifier.Symbol?): RelOpExcludeStepAttrBuilder = this.apply {
+    internal fun symbol(symbol: Identifier.Symbol?): RelOpExcludeStepStructFieldBuilder = this.apply {
         this.symbol = symbol
     }
 
-    internal fun build(): Rel.Op.Exclude.Step.Attr = Rel.Op.Exclude.Step.Attr(symbol = symbol!!)
+    internal fun build(): Rel.Op.Exclude.Step.StructField = Rel.Op.Exclude.Step.StructField(
+        symbol =
+        symbol!!
+    )
 }
 
-internal class RelOpExcludeStepPosBuilder(
+internal class RelOpExcludeStepCollIndexBuilder(
     internal var index: Int? = null,
 ) {
-    internal fun index(index: Int?): RelOpExcludeStepPosBuilder = this.apply {
+    internal fun index(index: Int?): RelOpExcludeStepCollIndexBuilder = this.apply {
         this.index = index
     }
 
-    internal fun build(): Rel.Op.Exclude.Step.Pos = Rel.Op.Exclude.Step.Pos(index = index!!)
+    internal fun build(): Rel.Op.Exclude.Step.CollIndex = Rel.Op.Exclude.Step.CollIndex(index = index!!)
 }
 
 internal class RelOpExcludeStepStructWildcardBuilder() {
     internal fun build(): Rel.Op.Exclude.Step.StructWildcard = Rel.Op.Exclude.Step.StructWildcard()
 }
 
-internal class RelOpExcludeStepCollectionWildcardBuilder() {
-    internal fun build(): Rel.Op.Exclude.Step.CollectionWildcard =
-        Rel.Op.Exclude.Step.CollectionWildcard()
+internal class RelOpExcludeStepCollWildcardBuilder() {
+    internal fun build(): Rel.Op.Exclude.Step.CollWildcard = Rel.Op.Exclude.Step.CollWildcard()
 }
 
 internal class RelOpErrBuilder(

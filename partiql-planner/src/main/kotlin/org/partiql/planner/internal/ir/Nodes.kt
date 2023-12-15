@@ -19,9 +19,9 @@ import org.partiql.planner.internal.ir.builder.RelOpErrBuilder
 import org.partiql.planner.internal.ir.builder.RelOpExceptBuilder
 import org.partiql.planner.internal.ir.builder.RelOpExcludeBuilder
 import org.partiql.planner.internal.ir.builder.RelOpExcludeItemBuilder
-import org.partiql.planner.internal.ir.builder.RelOpExcludeStepAttrBuilder
-import org.partiql.planner.internal.ir.builder.RelOpExcludeStepCollectionWildcardBuilder
-import org.partiql.planner.internal.ir.builder.RelOpExcludeStepPosBuilder
+import org.partiql.planner.internal.ir.builder.RelOpExcludeStepCollIndexBuilder
+import org.partiql.planner.internal.ir.builder.RelOpExcludeStepCollWildcardBuilder
+import org.partiql.planner.internal.ir.builder.RelOpExcludeStepStructFieldBuilder
 import org.partiql.planner.internal.ir.builder.RelOpExcludeStepStructWildcardBuilder
 import org.partiql.planner.internal.ir.builder.RelOpFilterBuilder
 import org.partiql.planner.internal.ir.builder.RelOpIntersectBuilder
@@ -1272,7 +1272,7 @@ internal data class Rel(
 
             internal data class Item(
                 @JvmField
-                internal val root: Identifier.Symbol,
+                internal val root: Rex.Op.Var,
                 @JvmField
                 internal val steps: List<Step>,
             ) : PlanNode() {
@@ -1294,13 +1294,13 @@ internal data class Rel(
 
             internal sealed class Step : PlanNode() {
                 internal override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = when (this) {
-                    is Attr -> visitor.visitRelOpExcludeStepAttr(this, ctx)
-                    is Pos -> visitor.visitRelOpExcludeStepPos(this, ctx)
+                    is StructField -> visitor.visitRelOpExcludeStepStructField(this, ctx)
+                    is CollIndex -> visitor.visitRelOpExcludeStepCollIndex(this, ctx)
                     is StructWildcard -> visitor.visitRelOpExcludeStepStructWildcard(this, ctx)
-                    is CollectionWildcard -> visitor.visitRelOpExcludeStepCollectionWildcard(this, ctx)
+                    is CollWildcard -> visitor.visitRelOpExcludeStepCollWildcard(this, ctx)
                 }
 
-                internal data class Attr(
+                internal data class StructField(
                     @JvmField
                     internal val symbol: Identifier.Symbol,
                 ) : Step() {
@@ -1311,26 +1311,28 @@ internal data class Rel(
                     }
 
                     internal override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
-                        visitor.visitRelOpExcludeStepAttr(this, ctx)
+                        visitor.visitRelOpExcludeStepStructField(this, ctx)
 
                     internal companion object {
                         @JvmStatic
-                        internal fun builder(): RelOpExcludeStepAttrBuilder = RelOpExcludeStepAttrBuilder()
+                        internal fun builder(): RelOpExcludeStepStructFieldBuilder =
+                            RelOpExcludeStepStructFieldBuilder()
                     }
                 }
 
-                internal data class Pos(
+                internal data class CollIndex(
                     @JvmField
                     internal val index: Int,
                 ) : Step() {
                     internal override val children: List<PlanNode> = emptyList()
 
                     internal override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
-                        visitor.visitRelOpExcludeStepPos(this, ctx)
+                        visitor.visitRelOpExcludeStepCollIndex(this, ctx)
 
                     internal companion object {
                         @JvmStatic
-                        internal fun builder(): RelOpExcludeStepPosBuilder = RelOpExcludeStepPosBuilder()
+                        internal fun builder(): RelOpExcludeStepCollIndexBuilder =
+                            RelOpExcludeStepCollIndexBuilder()
                     }
                 }
 
@@ -1350,19 +1352,19 @@ internal data class Rel(
                     }
                 }
 
-                internal data class CollectionWildcard(
+                internal data class CollWildcard(
                     @JvmField
                     internal val ` `: Char = ' ',
                 ) : Step() {
                     internal override val children: List<PlanNode> = emptyList()
 
                     internal override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
-                        visitor.visitRelOpExcludeStepCollectionWildcard(this, ctx)
+                        visitor.visitRelOpExcludeStepCollWildcard(this, ctx)
 
                     internal companion object {
                         @JvmStatic
-                        internal fun builder(): RelOpExcludeStepCollectionWildcardBuilder =
-                            RelOpExcludeStepCollectionWildcardBuilder()
+                        internal fun builder(): RelOpExcludeStepCollWildcardBuilder =
+                            RelOpExcludeStepCollWildcardBuilder()
                     }
                 }
             }

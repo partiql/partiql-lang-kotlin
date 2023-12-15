@@ -501,7 +501,7 @@ internal class PlanBuilder {
     }
 
     internal fun relOpExcludeItem(
-        root: Identifier.Symbol? = null,
+        root: Rex.Op.Var? = null,
         steps: MutableList<Rel.Op.Exclude.Step> = mutableListOf(),
         block: RelOpExcludeItemBuilder.() -> Unit = {},
     ): Rel.Op.Exclude.Item {
@@ -510,36 +510,38 @@ internal class PlanBuilder {
         return builder.build()
     }
 
-    internal fun relOpExcludeStepAttr(
+    internal fun relOpExcludeStepStructField(
         symbol: Identifier.Symbol? = null,
-        block: RelOpExcludeStepAttrBuilder.() -> Unit = {},
-    ): Rel.Op.Exclude.Step.Attr {
-        val builder = RelOpExcludeStepAttrBuilder(symbol)
+        block: RelOpExcludeStepStructFieldBuilder.() -> Unit = {}
+    ): Rel.Op.Exclude.Step.StructField {
+        val builder = RelOpExcludeStepStructFieldBuilder(symbol)
         builder.block()
         return builder.build()
     }
 
-    internal fun relOpExcludeStepPos(
+    internal fun relOpExcludeStepCollIndex(
         index: Int? = null,
-        block: RelOpExcludeStepPosBuilder.() -> Unit = {},
-    ): Rel.Op.Exclude.Step.Pos {
-        val builder = RelOpExcludeStepPosBuilder(index)
+        block: RelOpExcludeStepCollIndexBuilder.() -> Unit = {}
+    ): Rel.Op.Exclude.Step.CollIndex {
+        val builder = RelOpExcludeStepCollIndexBuilder(index)
         builder.block()
         return builder.build()
     }
 
     internal fun relOpExcludeStepStructWildcard(
-        block: RelOpExcludeStepStructWildcardBuilder.() -> Unit = {},
+        block: RelOpExcludeStepStructWildcardBuilder.() -> Unit =
+            {}
     ): Rel.Op.Exclude.Step.StructWildcard {
         val builder = RelOpExcludeStepStructWildcardBuilder()
         builder.block()
         return builder.build()
     }
 
-    internal fun relOpExcludeStepCollectionWildcard(
-        block: RelOpExcludeStepCollectionWildcardBuilder.() -> Unit = {},
-    ): Rel.Op.Exclude.Step.CollectionWildcard {
-        val builder = RelOpExcludeStepCollectionWildcardBuilder()
+    internal fun relOpExcludeStepCollWildcard(
+        block: RelOpExcludeStepCollWildcardBuilder.() -> Unit =
+            {}
+    ): Rel.Op.Exclude.Step.CollWildcard {
+        val builder = RelOpExcludeStepCollWildcardBuilder()
         builder.block()
         return builder.build()
     }
