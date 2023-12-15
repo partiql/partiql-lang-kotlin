@@ -14,24 +14,20 @@
 
 package org.partiql.plugins.local
 
-import org.partiql.plugins.local.functions.Pow
-import org.partiql.plugins.local.functions.TrimLead
 import org.partiql.spi.Plugin
 import org.partiql.spi.connector.Connector
 import org.partiql.spi.function.PartiQLFunction
 import org.partiql.spi.function.PartiQLFunctionExperimental
 
 /**
- * FsPlugin is a PartiQL plugin that provides schemas written in PartiQL Value Schema.
+ * LocalPlugin is a PartiQL plugin that provides schemas written in PartiQL Value Schema.
  *
  * Backed by a memoized catalog tree from the given root dir; global bindings are files.
  */
 class LocalPlugin : Plugin {
 
-    override fun getConnectorFactories(): List<Connector.Factory> = listOf(LocalConnector.Factory())
+    override val factory: Connector.Factory = LocalConnector.Factory()
 
-    @PartiQLFunctionExperimental
-    override fun getFunctions(): List<PartiQLFunction> = listOf(
-        TrimLead, Pow
-    )
+    @OptIn(PartiQLFunctionExperimental::class)
+    override val functions: List<PartiQLFunction> = listOf()
 }

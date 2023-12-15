@@ -23,7 +23,7 @@ public class MemoryConnector(private val metadata: ConnectorMetadata) : Connecto
 
     class Factory(private val catalogs: Map<String, MemoryConnector>) : Connector.Factory {
 
-        override fun getName(): String = CONNECTOR_NAME
+        override val name: String = CONNECTOR_NAME
 
         override fun create(catalogName: String, config: StructElement?): Connector {
             return catalogs[catalogName] ?: error("Catalog $catalogName is not registered in the MemoryPlugin")

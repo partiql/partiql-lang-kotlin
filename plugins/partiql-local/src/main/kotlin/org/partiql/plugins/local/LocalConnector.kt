@@ -64,7 +64,7 @@ class LocalConnector(
 
         private val default: Path = Paths.get(System.getProperty("user.home")).resolve(".partiql/local")
 
-        override fun getName(): String = CONNECTOR_NAME
+        override val name: String = CONNECTOR_NAME
 
         override fun create(catalogName: String, config: StructElement?): Connector {
             assert(config != null) { "Local plugin requires non-null config" }
