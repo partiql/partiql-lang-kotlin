@@ -97,8 +97,6 @@ internal abstract class PlanBaseVisitor<R, C> : PlanVisitor<R, C> {
         is Rex.Op.Path.Index -> visitRexOpPathIndex(node, ctx)
         is Rex.Op.Path.Key -> visitRexOpPathKey(node, ctx)
         is Rex.Op.Path.Symbol -> visitRexOpPathSymbol(node, ctx)
-        is Rex.Op.Path.Wildcard -> visitRexOpPathWildcard(node, ctx)
-        is Rex.Op.Path.Unpivot -> visitRexOpPathUnpivot(node, ctx)
     }
 
     public override fun visitRexOpPathIndex(node: Rex.Op.Path.Index, ctx: C): R = defaultVisit(
@@ -112,12 +110,6 @@ internal abstract class PlanBaseVisitor<R, C> : PlanVisitor<R, C> {
         node,
         ctx
     )
-
-    public override fun visitRexOpPathWildcard(node: Rex.Op.Path.Wildcard, ctx: C): R =
-        defaultVisit(node, ctx)
-
-    public override fun visitRexOpPathUnpivot(node: Rex.Op.Path.Unpivot, ctx: C): R =
-        defaultVisit(node, ctx)
 
     override fun visitRexOpCall(node: Rex.Op.Call, ctx: C): R = when (node) {
         is Rex.Op.Call.Static -> visitRexOpCallStatic(node, ctx)

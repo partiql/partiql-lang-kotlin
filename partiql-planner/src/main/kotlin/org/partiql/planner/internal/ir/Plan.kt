@@ -55,10 +55,6 @@ internal fun rexOpPathSymbol(root: Rex, key: String): Rex.Op.Path.Symbol = Rex.O
     key
 )
 
-internal fun rexOpPathWildcard(root: Rex): Rex.Op.Path.Wildcard = Rex.Op.Path.Wildcard(root)
-
-internal fun rexOpPathUnpivot(root: Rex): Rex.Op.Path.Unpivot = Rex.Op.Path.Unpivot(root)
-
 internal fun rexOpCallStatic(fn: Fn, args: List<Rex>): Rex.Op.Call.Static = Rex.Op.Call.Static(
     fn,
     args

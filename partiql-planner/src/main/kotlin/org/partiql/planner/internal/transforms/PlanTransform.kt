@@ -121,16 +121,6 @@ internal object PlanTransform : PlanBaseVisitor<PlanNode, ProblemCallback>() {
         return org.partiql.plan.Rex.Op.Path.Symbol(root, node.key)
     }
 
-    override fun visitRexOpPathUnpivot(node: Rex.Op.Path.Unpivot, ctx: ProblemCallback): PlanNode {
-        val root = visitRex(node.root, ctx)
-        return org.partiql.plan.Rex.Op.Path.Unpivot(root)
-    }
-
-    override fun visitRexOpPathWildcard(node: Rex.Op.Path.Wildcard, ctx: ProblemCallback): PlanNode {
-        val root = visitRex(node.root, ctx)
-        return org.partiql.plan.Rex.Op.Path.Wildcard(root)
-    }
-
     override fun visitRexOpCall(node: Rex.Op.Call, ctx: ProblemCallback) =
         super.visitRexOpCall(node, ctx) as org.partiql.plan.Rex.Op
 

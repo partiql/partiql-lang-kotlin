@@ -64,10 +64,6 @@ internal interface PlanVisitor<R, C> {
 
     public fun visitRexOpPathSymbol(node: Rex.Op.Path.Symbol, ctx: C): R
 
-    public fun visitRexOpPathWildcard(node: Rex.Op.Path.Wildcard, ctx: C): R
-
-    public fun visitRexOpPathUnpivot(node: Rex.Op.Path.Unpivot, ctx: C): R
-
     fun visitRexOpCall(node: Rex.Op.Call, ctx: C): R
 
     fun visitRexOpCallStatic(node: Rex.Op.Call.Static, ctx: C): R

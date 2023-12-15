@@ -218,65 +218,45 @@ internal class RexOpPathIndexBuilder(
     internal var root: Rex? = null,
     internal var key: Rex? = null,
 ) {
-    public fun root(root: Rex?): RexOpPathIndexBuilder = this.apply {
+    internal fun root(root: Rex?): RexOpPathIndexBuilder = this.apply {
         this.root = root
     }
 
-    public fun key(key: Rex?): RexOpPathIndexBuilder = this.apply {
+    internal fun key(key: Rex?): RexOpPathIndexBuilder = this.apply {
         this.key = key
     }
 
-    public fun build(): Rex.Op.Path.Index = Rex.Op.Path.Index(root = root!!, key = key!!)
+    internal fun build(): Rex.Op.Path.Index = Rex.Op.Path.Index(root = root!!, key = key!!)
 }
 
 internal class RexOpPathKeyBuilder(
     internal var root: Rex? = null,
     internal var key: Rex? = null,
 ) {
-    public fun root(root: Rex?): RexOpPathKeyBuilder = this.apply {
+    internal fun root(root: Rex?): RexOpPathKeyBuilder = this.apply {
         this.root = root
     }
 
-    public fun key(key: Rex?): RexOpPathKeyBuilder = this.apply {
+    internal fun key(key: Rex?): RexOpPathKeyBuilder = this.apply {
         this.key = key
     }
 
-    public fun build(): Rex.Op.Path.Key = Rex.Op.Path.Key(root = root!!, key = key!!)
+    internal fun build(): Rex.Op.Path.Key = Rex.Op.Path.Key(root = root!!, key = key!!)
 }
 
 internal class RexOpPathSymbolBuilder(
     internal var root: Rex? = null,
     internal var key: String? = null,
 ) {
-    public fun root(root: Rex?): RexOpPathSymbolBuilder = this.apply {
+    internal fun root(root: Rex?): RexOpPathSymbolBuilder = this.apply {
         this.root = root
     }
 
-    public fun key(key: String?): RexOpPathSymbolBuilder = this.apply {
+    internal fun key(key: String?): RexOpPathSymbolBuilder = this.apply {
         this.key = key
     }
 
-    public fun build(): Rex.Op.Path.Symbol = Rex.Op.Path.Symbol(root = root!!, key = key!!)
-}
-
-internal class RexOpPathWildcardBuilder(
-    internal var root: Rex? = null,
-) {
-    public fun root(root: Rex?): RexOpPathWildcardBuilder = this.apply {
-        this.root = root
-    }
-
-    public fun build(): Rex.Op.Path.Wildcard = Rex.Op.Path.Wildcard(root = root!!)
-}
-
-internal class RexOpPathUnpivotBuilder(
-    internal var root: Rex? = null,
-) {
-    public fun root(root: Rex?): RexOpPathUnpivotBuilder = this.apply {
-        this.root = root
-    }
-
-    public fun build(): Rex.Op.Path.Unpivot = Rex.Op.Path.Unpivot(root = root!!)
+    internal fun build(): Rex.Op.Path.Symbol = Rex.Op.Path.Symbol(root = root!!, key = key!!)
 }
 
 internal class RexOpCallStaticBuilder(

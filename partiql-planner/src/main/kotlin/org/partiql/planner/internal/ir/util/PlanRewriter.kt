@@ -196,7 +196,7 @@ internal abstract class PlanRewriter<C> : PlanBaseVisitor<PlanNode, C>() {
         return node
     }
 
-    public override fun visitRexOpPathIndex(node: Rex.Op.Path.Index, ctx: C): PlanNode {
+    override fun visitRexOpPathIndex(node: Rex.Op.Path.Index, ctx: C): PlanNode {
         val root = visitRex(node.root, ctx) as Rex
         val key = visitRex(node.key, ctx) as Rex
         return if (root !== node.root || key !== node.key) {
@@ -206,7 +206,7 @@ internal abstract class PlanRewriter<C> : PlanBaseVisitor<PlanNode, C>() {
         }
     }
 
-    public override fun visitRexOpPathKey(node: Rex.Op.Path.Key, ctx: C): PlanNode {
+    override fun visitRexOpPathKey(node: Rex.Op.Path.Key, ctx: C): PlanNode {
         val root = visitRex(node.root, ctx) as Rex
         val key = visitRex(node.key, ctx) as Rex
         return if (root !== node.root || key !== node.key) {
@@ -216,29 +216,11 @@ internal abstract class PlanRewriter<C> : PlanBaseVisitor<PlanNode, C>() {
         }
     }
 
-    public override fun visitRexOpPathSymbol(node: Rex.Op.Path.Symbol, ctx: C): PlanNode {
+    override fun visitRexOpPathSymbol(node: Rex.Op.Path.Symbol, ctx: C): PlanNode {
         val root = visitRex(node.root, ctx) as Rex
         val key = node.key
         return if (root !== node.root || key !== node.key) {
             Rex.Op.Path.Symbol(root, key)
-        } else {
-            node
-        }
-    }
-
-    public override fun visitRexOpPathWildcard(node: Rex.Op.Path.Wildcard, ctx: C): PlanNode {
-        val root = visitRex(node.root, ctx) as Rex
-        return if (root !== node.root) {
-            Rex.Op.Path.Wildcard(root)
-        } else {
-            node
-        }
-    }
-
-    public override fun visitRexOpPathUnpivot(node: Rex.Op.Path.Unpivot, ctx: C): PlanNode {
-        val root = visitRex(node.root, ctx) as Rex
-        return if (root !== node.root) {
-            Rex.Op.Path.Unpivot(root)
         } else {
             node
         }

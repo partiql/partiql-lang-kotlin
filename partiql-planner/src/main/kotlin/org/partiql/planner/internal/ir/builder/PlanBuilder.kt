@@ -146,7 +146,7 @@ internal class PlanBuilder {
         return builder.build()
     }
 
-    public fun rexOpPathIndex(
+    internal fun rexOpPathIndex(
         root: Rex? = null,
         key: Rex? = null,
         block: RexOpPathIndexBuilder.() -> Unit = {},
@@ -156,7 +156,7 @@ internal class PlanBuilder {
         return builder.build()
     }
 
-    public fun rexOpPathKey(
+    internal fun rexOpPathKey(
         root: Rex? = null,
         key: Rex? = null,
         block: RexOpPathKeyBuilder.() -> Unit = {},
@@ -166,26 +166,12 @@ internal class PlanBuilder {
         return builder.build()
     }
 
-    public fun rexOpPathSymbol(
+    internal fun rexOpPathSymbol(
         root: Rex? = null,
         key: String? = null,
         block: RexOpPathSymbolBuilder.() -> Unit = {},
     ): Rex.Op.Path.Symbol {
         val builder = RexOpPathSymbolBuilder(root, key)
-        builder.block()
-        return builder.build()
-    }
-
-    public fun rexOpPathWildcard(root: Rex? = null, block: RexOpPathWildcardBuilder.() -> Unit = {}):
-        Rex.Op.Path.Wildcard {
-        val builder = RexOpPathWildcardBuilder(root)
-        builder.block()
-        return builder.build()
-    }
-
-    public fun rexOpPathUnpivot(root: Rex? = null, block: RexOpPathUnpivotBuilder.() -> Unit = {}):
-        Rex.Op.Path.Unpivot {
-        val builder = RexOpPathUnpivotBuilder(root)
         builder.block()
         return builder.build()
     }

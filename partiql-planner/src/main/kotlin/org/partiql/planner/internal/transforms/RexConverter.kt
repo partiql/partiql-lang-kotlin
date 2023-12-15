@@ -35,8 +35,6 @@ import org.partiql.planner.internal.ir.rexOpLit
 import org.partiql.planner.internal.ir.rexOpPathIndex
 import org.partiql.planner.internal.ir.rexOpPathKey
 import org.partiql.planner.internal.ir.rexOpPathSymbol
-import org.partiql.planner.internal.ir.rexOpPathUnpivot
-import org.partiql.planner.internal.ir.rexOpPathWildcard
 import org.partiql.planner.internal.ir.rexOpStruct
 import org.partiql.planner.internal.ir.rexOpStructField
 import org.partiql.planner.internal.ir.rexOpSubquery
@@ -230,8 +228,8 @@ internal object RexConverter {
                                 Identifier.CaseSensitivity.INSENSITIVE -> rexOpPathSymbol(current, identifier.symbol)
                             }
                         }
-                        is Expr.Path.Step.Unpivot -> rexOpPathUnpivot(current)
-                        is Expr.Path.Step.Wildcard -> rexOpPathWildcard(current)
+                        is Expr.Path.Step.Unpivot -> error("Unpivot path not supported yet")
+                        is Expr.Path.Step.Wildcard -> error("Wildcard path not supported yet")
                     }
                     rex(StaticType.ANY, path)
                 }

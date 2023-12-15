@@ -506,14 +506,6 @@ internal class PlanTyper(
             return rex(finalType.swallowAny(), rexOpPathKey(root, key))
         }
 
-        override fun visitRexOpPathUnpivot(node: Rex.Op.Path.Unpivot, ctx: StaticType?): PlanNode {
-            error("Unpivot path not supported yet")
-        }
-
-        override fun visitRexOpPathWildcard(node: Rex.Op.Path.Wildcard, ctx: StaticType?): PlanNode {
-            error("Wildcard path not supported yet")
-        }
-
         override fun visitRexOpPathSymbol(node: Rex.Op.Path.Symbol, ctx: StaticType?): Rex {
             val root = visitRex(node.root, node.root.type)
 
@@ -1284,25 +1276,6 @@ internal class PlanTyper(
             handleUnexpectedType(type, setOf(StaticType.INT))
         }
     }
-
-//    /**
-//     * Constructs a Rex.Op.Path from a resolved local
-//     */
-//    private fun resolvedLocalPath(local: ResolvedVar.Local): Rex.Op {
-//        val root = rex(local.rootType, rexOpVarResolved(local.ordinal))
-//        val steps = local.replacementSteps.map {
-//            when (it.bindingCase) {
-//                BindingCase.SENSITIVE -> rexOpPathKey(root, rexString(it.name))
-//                BindingCase.INSENSITIVE -> rexOpPathSymbol(root, it.name)
-//            }
-//        }
-//        return when (steps.isEmpty()) {
-//            true -> root.op
-//            false -> rexOpPath(root, steps)
-//        }
-//    }
-
-    private fun rexString(str: String) = rex(STRING, rexOpLit(stringValue(str)))
 
     // ERRORS
 

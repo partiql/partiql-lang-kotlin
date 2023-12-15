@@ -5,8 +5,6 @@ package org.partiql.planner.internal.ir
 import org.partiql.plan.builder.RexOpPathIndexBuilder
 import org.partiql.plan.builder.RexOpPathKeyBuilder
 import org.partiql.plan.builder.RexOpPathSymbolBuilder
-import org.partiql.plan.builder.RexOpPathUnpivotBuilder
-import org.partiql.plan.builder.RexOpPathWildcardBuilder
 import org.partiql.planner.internal.ir.builder.AggResolvedBuilder
 import org.partiql.planner.internal.ir.builder.AggUnresolvedBuilder
 import org.partiql.planner.internal.ir.builder.FnResolvedBuilder
@@ -393,115 +391,75 @@ internal data class Rex(
             }
         }
 
-        public sealed class Path : Op() {
-            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = when (this) {
+        internal sealed class Path : Op() {
+            internal override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = when (this) {
                 is Index -> visitor.visitRexOpPathIndex(this, ctx)
                 is Key -> visitor.visitRexOpPathKey(this, ctx)
                 is Symbol -> visitor.visitRexOpPathSymbol(this, ctx)
-                is Wildcard -> visitor.visitRexOpPathWildcard(this, ctx)
-                is Unpivot -> visitor.visitRexOpPathUnpivot(this, ctx)
             }
 
-            public data class Index(
+            internal data class Index(
                 @JvmField
-                public val root: Rex,
+                internal val root: Rex,
                 @JvmField
-                public val key: Rex,
+                internal val key: Rex,
             ) : Path() {
-                public override val children: List<PlanNode> by lazy {
+                internal override val children: List<PlanNode> by lazy {
                     val kids = mutableListOf<PlanNode?>()
                     kids.add(root)
                     kids.add(key)
                     kids.filterNotNull()
                 }
 
-                public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                internal override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
                     visitor.visitRexOpPathIndex(this, ctx)
 
-                public companion object {
+                internal companion object {
                     @JvmStatic
-                    public fun builder(): RexOpPathIndexBuilder = RexOpPathIndexBuilder()
+                    internal fun builder(): RexOpPathIndexBuilder = RexOpPathIndexBuilder()
                 }
             }
 
-            public data class Key(
+            internal data class Key(
                 @JvmField
-                public val root: Rex,
+                internal val root: Rex,
                 @JvmField
-                public val key: Rex,
+                internal val key: Rex,
             ) : Path() {
-                public override val children: List<PlanNode> by lazy {
+                internal override val children: List<PlanNode> by lazy {
                     val kids = mutableListOf<PlanNode?>()
                     kids.add(root)
                     kids.add(key)
                     kids.filterNotNull()
                 }
 
-                public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                internal override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
                     visitor.visitRexOpPathKey(this, ctx)
 
-                public companion object {
+                internal companion object {
                     @JvmStatic
                     public fun builder(): RexOpPathKeyBuilder = RexOpPathKeyBuilder()
                 }
             }
 
-            public data class Symbol(
+            internal data class Symbol(
                 @JvmField
-                public val root: Rex,
+                internal val root: Rex,
                 @JvmField
-                public val key: String,
+                internal val key: String,
             ) : Path() {
-                public override val children: List<PlanNode> by lazy {
+                internal override val children: List<PlanNode> by lazy {
                     val kids = mutableListOf<PlanNode?>()
                     kids.add(root)
                     kids.filterNotNull()
                 }
 
-                public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                internal override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
                     visitor.visitRexOpPathSymbol(this, ctx)
 
-                public companion object {
+                internal companion object {
                     @JvmStatic
-                    public fun builder(): RexOpPathSymbolBuilder = RexOpPathSymbolBuilder()
-                }
-            }
-
-            public data class Wildcard(
-                @JvmField
-                public val root: Rex,
-            ) : Path() {
-                public override val children: List<PlanNode> by lazy {
-                    val kids = mutableListOf<PlanNode?>()
-                    kids.add(root)
-                    kids.filterNotNull()
-                }
-
-                public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
-                    visitor.visitRexOpPathWildcard(this, ctx)
-
-                public companion object {
-                    @JvmStatic
-                    public fun builder(): RexOpPathWildcardBuilder = RexOpPathWildcardBuilder()
-                }
-            }
-
-            public data class Unpivot(
-                @JvmField
-                public val root: Rex,
-            ) : Path() {
-                public override val children: List<PlanNode> by lazy {
-                    val kids = mutableListOf<PlanNode?>()
-                    kids.add(root)
-                    kids.filterNotNull()
-                }
-
-                public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
-                    visitor.visitRexOpPathUnpivot(this, ctx)
-
-                public companion object {
-                    @JvmStatic
-                    public fun builder(): RexOpPathUnpivotBuilder = RexOpPathUnpivotBuilder()
+                    internal fun builder(): RexOpPathSymbolBuilder = RexOpPathSymbolBuilder()
                 }
             }
         }
