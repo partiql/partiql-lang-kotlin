@@ -113,12 +113,13 @@ class ServiceLoaderUtil {
             } else {
                 listOf()
             }
-            return plugins.flatMap { plugin -> plugin.getFunctions() }
+            return plugins.flatMap { plugin -> plugin.functions }
+                .filterIsInstance<PartiQLFunction.Scalar>()
                 .map { partiqlFunc -> PartiQLtoExprFunction(partiqlFunc) }
         }
 
         @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-        private fun PartiQLtoExprFunction(customFunction: PartiQLFunction): ExprFunction {
+        private fun PartiQLtoExprFunction(customFunction: PartiQLFunction.Scalar): ExprFunction {
             val name = customFunction.signature.name
             val parameters = customFunction.signature.parameters.map { it.type }
             val returnType = customFunction.signature.returns
@@ -130,8 +131,8 @@ class ServiceLoaderUtil {
                 )
 
                 override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
-                    val partiQLArguments = required.mapIndexed { i, expr -> ExprToPartiQLValue(expr, parameters[i]) }
-                    val partiQLResult = customFunction.invoke(session.toConnectorSession(), partiQLArguments)
+                    val partiQLArguments = required.mapIndexed { i, expr -> ExprToPartiQLValue(expr, parameters[i]) }.toTypedArray()
+                    val partiQLResult = customFunction.invoke(partiQLArguments)
                     return PartiQLtoExprValue(partiQLResult)
                 }
             }
@@ -268,28 +269,42 @@ class ServiceLoaderUtil {
                 PartiQLValueType.INTERVAL -> TODO()
 
                 PartiQLValueType.BAG -> {
-                    (partiqlValue as? BagValue<*>)?.elements?.map { PartiQLtoExprValue(it) }?.let { newBag(it) }
-                        ?: ExprValue.nullValue
+                    if (partiqlValue.isNull) {
+                        ExprValue.nullValue
+                    } else {
+                        newBag((partiqlValue as? BagValue<*>)!!.map { PartiQLtoExprValue(it) })
+                    }
                 }
 
                 PartiQLValueType.LIST -> {
-                    (partiqlValue as? ListValue<*>)?.elements?.map { PartiQLtoExprValue(it) }?.let { newList(it) }
-                        ?: ExprValue.nullValue
+                    if (partiqlValue.isNull) {
+                        ExprValue.nullValue
+                    } else {
+                        newList((partiqlValue as? ListValue<*>)!!.map { PartiQLtoExprValue(it) })
+                    }
                 }
 
                 PartiQLValueType.SEXP -> {
-                    (partiqlValue as? SexpValue<*>)?.elements?.map { PartiQLtoExprValue(it) }?.let { newSexp(it) }
-                        ?: ExprValue.nullValue
+                    if (partiqlValue.isNull) {
+                        ExprValue.nullValue
+                    } else {
+                        newSexp((partiqlValue as? SexpValue<*>)!!.map { PartiQLtoExprValue(it) })
+                    }
                 }
 
                 PartiQLValueType.STRUCT -> {
-                    (partiqlValue as? StructValue<*>)?.fields?.map {
-                        PartiQLtoExprValue(it.second).namedValue(
-                            newString(
-                                it.first
+                    if (partiqlValue.isNull) {
+                        ExprValue.nullValue
+                    } else {
+                        val entries = (partiqlValue as? StructValue<*>)!!.entries
+                        entries.map {
+                            PartiQLtoExprValue(it.second).namedValue(
+                                newString(
+                                    it.first
+                                )
                             )
-                        )
-                    }?.let { newStruct(it, StructOrdering.ORDERED) } ?: ExprValue.nullValue
+                        }.let { newStruct(it, StructOrdering.ORDERED) }
+                    }
                 }
 
                 PartiQLValueType.DECIMAL -> TODO()
@@ -447,7 +462,7 @@ class ServiceLoaderUtil {
                 PartiQLValueType.INTERVAL -> TODO()
                 PartiQLValueType.BAG -> when (exprValue.type) {
                     ExprValueType.NULL -> bagValue(null)
-                    ExprValueType.BAG -> bagValue(exprValue.map { ExprToPartiQLValue(it, ExprToPartiQLValueType(it)) }.asSequence())
+                    ExprValueType.BAG -> bagValue(exprValue.map { ExprToPartiQLValue(it, ExprToPartiQLValueType(it)) })
                     else -> throw ExprToPartiQLValueTypeMismatchException(
                         PartiQLValueType.BAG, ExprToPartiQLValueType(exprValue)
                     )
@@ -459,7 +474,7 @@ class ServiceLoaderUtil {
                             ExprToPartiQLValue(
                                 it, ExprToPartiQLValueType(it)
                             )
-                        }.asSequence()
+                        }
                     )
                     else -> throw ExprToPartiQLValueTypeMismatchException(
                         PartiQLValueType.LIST, ExprToPartiQLValueType(exprValue)
@@ -472,7 +487,7 @@ class ServiceLoaderUtil {
                             ExprToPartiQLValue(
                                 it, ExprToPartiQLValueType(it)
                             )
-                        }.asSequence()
+                        }
                     )
                     else -> throw ExprToPartiQLValueTypeMismatchException(
                         PartiQLValueType.SEXP, ExprToPartiQLValueType(exprValue)
@@ -485,7 +500,7 @@ class ServiceLoaderUtil {
                             Pair(
                                 it.name?.stringValue() ?: "", ExprToPartiQLValue(it, ExprToPartiQLValueType(it))
                             )
-                        }.asSequence()
+                        }
                     )
                     else -> throw ExprToPartiQLValueTypeMismatchException(
                         PartiQLValueType.STRUCT, ExprToPartiQLValueType(exprValue)

@@ -43,10 +43,13 @@ Thank you to all who have contributed!
 - **Breaking** The default integer literal type is now 32-bit; if the literal can not fit in a 32-bit integer, it overflows to 64-bit. 
 - **BREAKING** `PartiQLValueType` now distinguishes between Arbitrary Precision Decimal and Fixed Precision Decimal. 
 - **BREAKING** Function Signature Changes. Now Function signature has two subclasses, `Scalar` and `Aggregation`. 
+- **BREAKING** Plugin Changes. Only return one Connector.Factory, use Kotlin fields. JVM signature remains the same.
 - **BREAKING** In the produced plan: 
   - The new plan is fully resolved and typed.
   - Operators will be converted to function call. 
 - Changes the return type of `filter_distinct` to a list if input collection is list
+- Changes the `PartiQLValue` collections to implement Iterable rather than Sequence, allowing for multiple consumption.
+- **BREAKING** Moves PartiQLParserBuilder.standard().build() to be PartiQLParser.default().
 
 ### Deprecated
 

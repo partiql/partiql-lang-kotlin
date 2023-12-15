@@ -10,27 +10,27 @@ import org.partiql.value.PartiQLValueType
  * A (temporary) place for function definitions; there are whispers of loading this as information_schema.
  */
 @OptIn(PartiQLValueExperimental::class)
-public abstract class Header {
+internal abstract class Header {
 
     /**
      * Definition namespace e.g. partiql, spark, redshift, ...
      */
-    public abstract val namespace: String
+    abstract val namespace: String
 
     /**
      * Scalar function signatures available via call syntax.
      */
-    public open val functions: List<FunctionSignature.Scalar> = emptyList()
+    open val functions: List<FunctionSignature.Scalar> = emptyList()
 
     /**
      * Hidden scalar function signatures available via operator or special form syntax.
      */
-    public open val operators: List<FunctionSignature.Scalar> = emptyList()
+    open val operators: List<FunctionSignature.Scalar> = emptyList()
 
     /**
      * Aggregation function signatures.
      */
-    public open val aggregations: List<FunctionSignature.Aggregation> = emptyList()
+    open val aggregations: List<FunctionSignature.Aggregation> = emptyList()
 
     /**
      * Type relationships; this is primarily a helper for defining operators.
@@ -55,7 +55,7 @@ public abstract class Header {
     //  HELPERS
     // ====================================
 
-    public companion object {
+    companion object {
 
         @JvmStatic
         internal fun unary(name: String, returns: PartiQLValueType, value: PartiQLValueType) =

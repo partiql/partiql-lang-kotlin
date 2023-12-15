@@ -85,6 +85,7 @@ import org.partiql.types.NullType
 import org.partiql.types.SexpType
 import org.partiql.types.StaticType
 import org.partiql.types.StaticType.Companion.ANY
+import org.partiql.types.StaticType.Companion.BOOL
 import org.partiql.types.StaticType.Companion.MISSING
 import org.partiql.types.StaticType.Companion.NULL
 import org.partiql.types.StaticType.Companion.STRING
@@ -115,7 +116,7 @@ internal class PlanTyper(
     /**
      * Rewrite the statement with inferred types and resolved variables
      */
-    public fun resolve(statement: Statement): Statement {
+    fun resolve(statement: Statement): Statement {
         if (statement !is Statement.Query) {
             throw IllegalArgumentException("PartiQLPlanner only supports Query statements")
         }
@@ -185,15 +186,15 @@ internal class PlanTyper(
             }
 
             // compute element type
-            val t = rex.type as StructType
+            val t = rex.type
             val e = if (t.contentClosed) {
                 StaticType.unionOf(t.fields.map { it.value }.toSet()).flatten()
             } else {
-                StaticType.ANY
+                ANY
             }
 
             // compute rel type
-            val kType = StaticType.STRING
+            val kType = STRING
             val vType = e
             val type = ctx!!.copyWithSchema(listOf(kType, vType))
 
@@ -573,7 +574,7 @@ internal class PlanTyper(
                 is FnMatch.Dynamic -> {
                     val types = mutableSetOf<StaticType>()
                     if (match.isMissable && !isNotMissable) {
-                        types.add(StaticType.MISSING)
+                        types.add(MISSING)
                     }
                     val candidates = match.candidates.map { candidate ->
                         val rex = toRexCall(candidate, args, isNotMissable)
@@ -607,7 +608,7 @@ internal class PlanTyper(
             newArgs.forEach {
                 if (it.type == MissingType && !isNotMissable) {
                     handleAlwaysMissing()
-                    return rex(StaticType.MISSING, rexOpCallStatic(newFn, newArgs))
+                    return rex(MISSING, rexOpCallStatic(newFn, newArgs))
                 }
             }
 
@@ -648,14 +649,14 @@ internal class PlanTyper(
 
             // Return type with calculated nullability
             var type = when {
-                isNull -> StaticType.NULL
+                isNull -> NULL
                 isNullable -> returns.toStaticType()
                 else -> returns.toNonNullStaticType()
             }
 
             // Some operators can return MISSING during runtime
             if (match.isMissable && !isNotMissable) {
-                type = StaticType.unionOf(type, StaticType.MISSING)
+                type = StaticType.unionOf(type, MISSING)
             }
 
             // Finally, rewrite this node
@@ -773,8 +774,8 @@ internal class PlanTyper(
                     }
                     val ref = call.args.getOrNull(0) ?: error("IS STRUCT requires an argument.")
                     val simplifiedCondition = when {
-                        ref.type.allTypes.all { it is StructType } -> rex(StaticType.BOOL, rexOpLit(boolValue(true)))
-                        ref.type.allTypes.none { it is StructType } -> rex(StaticType.BOOL, rexOpLit(boolValue(false)))
+                        ref.type.allTypes.all { it is StructType } -> rex(BOOL, rexOpLit(boolValue(true)))
+                        ref.type.allTypes.none { it is StructType } -> rex(BOOL, rexOpLit(boolValue(false)))
                         else -> condition
                     }
 
@@ -822,9 +823,9 @@ internal class PlanTyper(
                 when (field.k.op) {
                     is Rex.Op.Lit -> {
                         // A field is only included in the StructType if its key is a text literal
-                        val key = field.k.op as Rex.Op.Lit
+                        val key = field.k.op
                         if (key.value is TextValue<*>) {
-                            val name = (key.value as TextValue<*>).string!!
+                            val name = key.value.string!!
                             val type = field.v.type
                             structKeysSeent.add(name)
                             structTypeFields.add(StructType.Field(name, type))
@@ -952,7 +953,7 @@ internal class PlanTyper(
         }
 
         override fun visitRexOpErr(node: Rex.Op.Err, ctx: StaticType?): PlanNode {
-            val type = ctx ?: StaticType.ANY
+            val type = ctx ?: ANY
             return rex(type, node)
         }
 
@@ -1001,13 +1002,13 @@ internal class PlanTyper(
                                 PlanningProblemDetails.CompileError("TupleUnion wasn't normalized to exclude union types.")
                             )
                         )
-                        possibleOutputTypes.add(StaticType.MISSING)
+                        possibleOutputTypes.add(MISSING)
                     }
                     is NullType -> {
-                        return StaticType.NULL
+                        return NULL
                     }
                     else -> {
-                        return StaticType.MISSING
+                        return MISSING
                     }
                 }
             }
@@ -1107,13 +1108,13 @@ internal class PlanTyper(
                 isClosed && isOrdered -> {
                     struct.fields.firstOrNull { entry -> binding.isEquivalentTo(entry.key) }?.let {
                         (sensitive(it.key) to it.value)
-                    } ?: (key to StaticType.MISSING)
+                    } ?: (key to MISSING)
                 }
                 // 2. Struct is closed
                 isClosed -> {
                     val matches = struct.fields.filter { entry -> binding.isEquivalentTo(entry.key) }
                     when (matches.size) {
-                        0 -> (key to StaticType.MISSING)
+                        0 -> (key to MISSING)
                         1 -> matches.first().let { (sensitive(it.key) to it.value) }
                         else -> {
                             val firstKey = matches.first().key
@@ -1126,7 +1127,7 @@ internal class PlanTyper(
                     }
                 }
                 // 3. Struct is open
-                else -> (key to StaticType.ANY)
+                else -> (key to ANY)
             }
             return type to name
         }
@@ -1148,7 +1149,7 @@ internal class PlanTyper(
          *     Let TX be the single-column table that is the result of applying the <value expression>
          *     to each row of T and eliminating null values <--- all NULL values are eliminated as inputs
          */
-        public fun resolveAgg(agg: Agg.Unresolved, arguments: List<Rex>): Pair<Rel.Op.Aggregate.Call, StaticType> {
+        fun resolveAgg(agg: Agg.Unresolved, arguments: List<Rex>): Pair<Rel.Op.Aggregate.Call, StaticType> {
             var missingArg = false
             val args = arguments.map {
                 val arg = visitRex(it, null)
@@ -1178,7 +1179,7 @@ internal class PlanTyper(
 
                     // Some operators can return MISSING during runtime
                     if (match.isMissable) {
-                        type = StaticType.unionOf(type, StaticType.MISSING).flatten()
+                        type = StaticType.unionOf(type, MISSING).flatten()
                     }
 
                     // Finally, rewrite this node
@@ -1199,7 +1200,7 @@ internal class PlanTyper(
 
     private fun Rex.type(typeEnv: TypeEnv) = RexTyper(typeEnv).visitRex(this, this.type)
 
-    private fun rexErr(message: String) = rex(StaticType.MISSING, rexOpErr(message))
+    private fun rexErr(message: String) = rex(MISSING, rexOpErr(message))
 
     /**
      * I found decorating the tree with the binding names (for resolution) was easier than associating introduced
@@ -1243,7 +1244,7 @@ internal class PlanTyper(
     private fun getElementTypeForFromSource(fromSourceType: StaticType): StaticType = when (fromSourceType) {
         is BagType -> fromSourceType.elementType
         is ListType -> fromSourceType.elementType
-        is AnyType -> StaticType.ANY
+        is AnyType -> ANY
         is AnyOfType -> AnyOfType(fromSourceType.types.map { getElementTypeForFromSource(it) }.toSet())
         // All the other types coerce into a bag of themselves (including null/missing/sexp).
         else -> fromSourceType
@@ -1346,7 +1347,7 @@ internal class PlanTyper(
     private fun Fn.Unresolved.isNotMissable(): Boolean {
         return when (identifier) {
             is Identifier.Qualified -> false
-            is Identifier.Symbol -> when ((identifier as Identifier.Symbol).symbol) {
+            is Identifier.Symbol -> when (identifier.symbol) {
                 "and" -> true
                 "or" -> true
                 "not" -> true
@@ -1359,7 +1360,7 @@ internal class PlanTyper(
     }
 
     private fun Fn.Unresolved.isTypeAssertion(): Boolean {
-        return (identifier is Identifier.Symbol && (identifier as Identifier.Symbol).symbol.startsWith("is"))
+        return (identifier is Identifier.Symbol && identifier.symbol.startsWith("is"))
     }
 
     /**

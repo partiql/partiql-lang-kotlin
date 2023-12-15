@@ -1,8 +1,5 @@
 package org.partiql.planner.internal.typer
 
-import com.amazon.ionelement.api.field
-import com.amazon.ionelement.api.ionString
-import com.amazon.ionelement.api.ionStructOf
 import org.junit.jupiter.api.Test
 import org.partiql.planner.PartiQLHeader
 import org.partiql.planner.PartiQLPlanner
@@ -20,7 +17,7 @@ import org.partiql.planner.internal.ir.rexOpStructField
 import org.partiql.planner.internal.ir.rexOpVarUnresolved
 import org.partiql.planner.internal.ir.statementQuery
 import org.partiql.planner.util.ProblemCollector
-import org.partiql.plugins.local.LocalPlugin
+import org.partiql.plugins.local.LocalConnector
 import org.partiql.types.StaticType
 import org.partiql.types.StaticType.Companion.ANY
 import org.partiql.types.StaticType.Companion.DECIMAL
@@ -34,21 +31,14 @@ import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.int32Value
 import org.partiql.value.stringValue
 import java.util.Random
-import kotlin.io.path.pathString
 import kotlin.io.path.toPath
 import kotlin.test.assertEquals
 
 class PlanTyperTest {
 
     companion object {
-        private val root = this::class.java.getResource("/catalogs/default")!!.toURI().toPath().pathString
 
-        private val catalogConfig = mapOf(
-            "pql" to ionStructOf(
-                field("connector_name", ionString("local")),
-                field("root", ionString("$root/pql")),
-            )
-        )
+        private val root = this::class.java.getResource("/catalogs/default/pql")!!.toURI().toPath()
 
         @OptIn(PartiQLValueExperimental::class)
         private val LITERAL_STRUCT_1 = rex(
@@ -184,13 +174,14 @@ class PlanTyperTest {
             val collector = ProblemCollector()
             val env = Env(
                 listOf(PartiQLHeader),
-                listOf(LocalPlugin()),
+                mapOf(
+                    "pql" to LocalConnector.Metadata(root)
+                ),
                 PartiQLPlanner.Session(
                     queryId = Random().nextInt().toString(),
                     userId = "test-user",
                     currentCatalog = "pql",
                     currentDirectory = listOf("main"),
-                    catalogConfig = catalogConfig
                 )
             )
             return PlanTyperWrapper(PlanTyper(env, collector), collector)
