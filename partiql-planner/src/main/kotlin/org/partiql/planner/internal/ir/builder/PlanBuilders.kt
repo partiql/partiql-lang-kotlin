@@ -41,33 +41,52 @@ internal class PartiQlPlanBuilder(
 }
 
 internal class CatalogBuilder(
-    public var name: String? = null,
-    public var values: MutableList<Catalog.Value> = mutableListOf(),
+    internal var name: String? = null,
+    internal var symbols: MutableList<Catalog.Symbol> = mutableListOf(),
 ) {
-    public fun name(name: String?): CatalogBuilder = this.apply {
+    internal fun name(name: String?): CatalogBuilder = this.apply {
         this.name = name
     }
 
-    public fun values(values: MutableList<Catalog.Value>): CatalogBuilder = this.apply {
-        this.values = values
+    internal fun symbols(symbols: MutableList<Catalog.Symbol>): CatalogBuilder = this.apply {
+        this.symbols = symbols
     }
 
-    public fun build(): Catalog = Catalog(name = name!!, values = values)
+    internal fun build(): Catalog = Catalog(name = name!!, symbols = symbols)
 }
 
-internal class CatalogValueBuilder(
-    public var path: MutableList<String> = mutableListOf(),
-    public var type: StaticType? = null,
+internal class CatalogSymbolBuilder(
+    internal var path: MutableList<String> = mutableListOf(),
+    internal var type: StaticType? = null,
 ) {
-    public fun path(path: MutableList<String>): CatalogValueBuilder = this.apply {
+    internal fun path(path: MutableList<String>): CatalogSymbolBuilder = this.apply {
         this.path = path
     }
 
-    public fun type(type: StaticType?): CatalogValueBuilder = this.apply {
+    internal fun type(type: StaticType?): CatalogSymbolBuilder = this.apply {
         this.type = type
     }
 
-    public fun build(): Catalog.Value = Catalog.Value(path = path, type = type!!)
+    internal fun build(): Catalog.Symbol = Catalog.Symbol(path = path, type = type!!)
+}
+
+internal class CatalogSymbolRefBuilder(
+    internal var catalog: Int? = null,
+    internal var symbol: Int? = null,
+) {
+    internal fun catalog(catalog: Int?): CatalogSymbolRefBuilder = this.apply {
+        this.catalog = catalog
+    }
+
+    internal fun symbol(symbol: Int?): CatalogSymbolRefBuilder = this.apply {
+        this.symbol = symbol
+    }
+
+    internal fun build(): Catalog.Symbol.Ref = Catalog.Symbol.Ref(
+        catalog = catalog!!,
+        symbol =
+        symbol!!
+    )
 }
 
 internal class FnResolvedBuilder(
@@ -220,22 +239,13 @@ internal class RexOpVarUnresolvedBuilder(
 }
 
 internal class RexOpGlobalBuilder(
-    public var catalogRef: Int? = null,
-    public var valueRef: Int? = null,
+    internal var ref: Catalog.Symbol.Ref? = null,
 ) {
-    public fun catalogRef(catalogRef: Int?): RexOpGlobalBuilder = this.apply {
-        this.catalogRef = catalogRef
+    internal fun ref(ref: Catalog.Symbol.Ref?): RexOpGlobalBuilder = this.apply {
+        this.ref = ref
     }
 
-    public fun valueRef(valueRef: Int?): RexOpGlobalBuilder = this.apply {
-        this.valueRef = valueRef
-    }
-
-    public fun build(): Rex.Op.Global = Rex.Op.Global(
-        catalogRef = catalogRef!!,
-        valueRef =
-        valueRef!!
-    )
+    internal fun build(): Rex.Op.Global = Rex.Op.Global(ref = ref!!)
 }
 
 internal class RexOpPathBuilder(

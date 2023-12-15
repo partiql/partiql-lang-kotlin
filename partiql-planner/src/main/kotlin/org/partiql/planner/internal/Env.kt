@@ -245,14 +245,14 @@ internal class Env(
      */
     private fun getOrAddCatalogValue(catalogName: String, valuePath: List<String>, valueType: StaticType): Pair<Int, Int> {
         val catalogIndex = getOrAddCatalog(catalogName)
-        val values = catalogs[catalogIndex].values
-        return values.indexOfFirst { value ->
+        val symbols = catalogs[catalogIndex].symbols
+        return symbols.indexOfFirst { value ->
             value.path == valuePath
         }.let { index ->
             when (index) {
                 -1 -> {
                     catalogs[catalogIndex] = catalogs[catalogIndex].copy(
-                        values = values + listOf(Catalog.Value(valuePath, valueType))
+                        symbols = symbols + listOf(Catalog.Symbol(valuePath, valueType))
                     )
                     catalogIndex to 0
                 }

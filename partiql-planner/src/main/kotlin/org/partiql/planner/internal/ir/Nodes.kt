@@ -5,7 +5,8 @@ package org.partiql.planner.internal.ir
 import org.partiql.planner.internal.ir.builder.AggResolvedBuilder
 import org.partiql.planner.internal.ir.builder.AggUnresolvedBuilder
 import org.partiql.planner.internal.ir.builder.CatalogBuilder
-import org.partiql.planner.internal.ir.builder.CatalogValueBuilder
+import org.partiql.planner.internal.ir.builder.CatalogSymbolBuilder
+import org.partiql.planner.internal.ir.builder.CatalogSymbolRefBuilder
 import org.partiql.planner.internal.ir.builder.FnResolvedBuilder
 import org.partiql.planner.internal.ir.builder.FnUnresolvedBuilder
 import org.partiql.planner.internal.ir.builder.IdentifierQualifiedBuilder
@@ -103,39 +104,56 @@ internal data class PartiQLPlan(
 
 internal data class Catalog(
     @JvmField
-    public val name: String,
+    internal val name: String,
     @JvmField
-    public val values: List<Value>,
+    internal val symbols: List<Symbol>,
 ) : PlanNode() {
-    public override val children: List<PlanNode> by lazy {
+    internal override val children: List<PlanNode> by lazy {
         val kids = mutableListOf<PlanNode?>()
-        kids.addAll(values)
+        kids.addAll(symbols)
         kids.filterNotNull()
     }
 
-    public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+    internal override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
         visitor.visitCatalog(this, ctx)
 
-    public data class Value(
+    internal data class Symbol(
         @JvmField
-        public val path: List<String>,
+        internal val path: List<String>,
         @JvmField
-        public val type: StaticType,
+        internal val type: StaticType,
     ) : PlanNode() {
-        public override val children: List<PlanNode> = emptyList()
+        internal override val children: List<PlanNode> = emptyList()
 
-        public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
-            visitor.visitCatalogValue(this, ctx)
+        internal override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+            visitor.visitCatalogSymbol(this, ctx)
 
-        public companion object {
+        internal data class Ref(
+            @JvmField
+            internal val catalog: Int,
+            @JvmField
+            internal val symbol: Int,
+        ) : PlanNode() {
+            internal override val children: List<PlanNode> = emptyList()
+
+            internal override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitCatalogSymbolRef(this, ctx)
+
+            internal companion object {
+                @JvmStatic
+                internal fun builder(): CatalogSymbolRefBuilder = CatalogSymbolRefBuilder()
+            }
+        }
+
+        internal companion object {
             @JvmStatic
-            public fun builder(): CatalogValueBuilder = CatalogValueBuilder()
+            internal fun builder(): CatalogSymbolBuilder = CatalogSymbolBuilder()
         }
     }
 
-    public companion object {
+    internal companion object {
         @JvmStatic
-        public fun builder(): CatalogBuilder = CatalogBuilder()
+        internal fun builder(): CatalogBuilder = CatalogBuilder()
     }
 }
 
@@ -398,18 +416,20 @@ internal data class Rex(
 
         internal data class Global(
             @JvmField
-            public val catalogRef: Int,
-            @JvmField
-            public val valueRef: Int,
+            internal val ref: Catalog.Symbol.Ref,
         ) : Op() {
-            public override val children: List<PlanNode> = emptyList()
+            internal override val children: List<PlanNode> by lazy {
+                val kids = mutableListOf<PlanNode?>()
+                kids.add(ref)
+                kids.filterNotNull()
+            }
 
-            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+            internal override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
                 visitor.visitRexOpGlobal(this, ctx)
 
-            public companion object {
+            internal companion object {
                 @JvmStatic
-                public fun builder(): RexOpGlobalBuilder = RexOpGlobalBuilder()
+                internal fun builder(): RexOpGlobalBuilder = RexOpGlobalBuilder()
             }
         }
 

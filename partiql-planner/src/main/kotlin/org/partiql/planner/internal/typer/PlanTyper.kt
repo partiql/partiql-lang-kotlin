@@ -32,6 +32,7 @@ import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.Statement
 import org.partiql.planner.internal.ir.aggResolved
+import org.partiql.planner.internal.ir.catalogSymbolRef
 import org.partiql.planner.internal.ir.fnResolved
 import org.partiql.planner.internal.ir.identifierSymbol
 import org.partiql.planner.internal.ir.rel
@@ -420,15 +421,15 @@ internal class PlanTyper(
             }
             val type = resolvedVar.type
             val op = when (resolvedVar) {
-                is ResolvedVar.Global -> rexOpGlobal(resolvedVar.ordinal, resolvedVar.position)
+                is ResolvedVar.Global -> rexOpGlobal(catalogSymbolRef(resolvedVar.ordinal, resolvedVar.position))
                 is ResolvedVar.Local -> resolvedLocalPath(resolvedVar)
             }
             return rex(type, op)
         }
 
         override fun visitRexOpGlobal(node: Rex.Op.Global, ctx: StaticType?): Rex {
-            val catalog = env.catalogs[node.catalogRef]
-            val type = catalog.values[node.valueRef].type
+            val catalog = env.catalogs[node.ref.catalog]
+            val type = catalog.symbols[node.ref.symbol].type
             return rex(type, node)
         }
 
@@ -463,7 +464,7 @@ internal class PlanTyper(
                                 true -> emptyList()
                                 false -> visitedSteps.subList(remainingFirstIndex, visitedSteps.size)
                             }
-                            rexOpGlobal(resolvedVar.ordinal, resolvedVar.position) to remaining
+                            rexOpGlobal(catalogSymbolRef(resolvedVar.ordinal, resolvedVar.position)) to remaining
                         }
                     }
                     // rewrite root

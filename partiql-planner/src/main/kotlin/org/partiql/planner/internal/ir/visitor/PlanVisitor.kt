@@ -20,7 +20,9 @@ internal interface PlanVisitor<R, C> {
 
     public fun visitCatalog(node: Catalog, ctx: C): R
 
-    public fun visitCatalogValue(node: Catalog.Value, ctx: C): R
+    public fun visitCatalogSymbol(node: Catalog.Symbol, ctx: C): R
+
+    public fun visitCatalogSymbolRef(node: Catalog.Symbol.Ref, ctx: C): R
 
     fun visitFn(node: Fn, ctx: C): R
 

@@ -37,8 +37,8 @@ class EnvTest {
 
         private val GLOBAL_OS = Catalog(
             name = "pql",
-            values = listOf(
-                Catalog.Value(path = listOf("main", "os"), type = StaticType.STRING)
+            symbols = listOf(
+                Catalog.Symbol(path = listOf("main", "os"), type = StaticType.STRING)
             )
         )
     }

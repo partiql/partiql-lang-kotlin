@@ -20,7 +20,10 @@ internal abstract class PlanBaseVisitor<R, C> : PlanVisitor<R, C> {
 
     public override fun visitCatalog(node: Catalog, ctx: C): R = defaultVisit(node, ctx)
 
-    public override fun visitCatalogValue(node: Catalog.Value, ctx: C): R = defaultVisit(node, ctx)
+    public override fun visitCatalogSymbol(node: Catalog.Symbol, ctx: C): R = defaultVisit(node, ctx)
+
+    public override fun visitCatalogSymbolRef(node: Catalog.Symbol.Ref, ctx: C): R =
+        defaultVisit(node, ctx)
 
     override fun visitFn(node: Fn, ctx: C): R = when (node) {
         is Fn.Resolved -> visitFnResolved(node, ctx)

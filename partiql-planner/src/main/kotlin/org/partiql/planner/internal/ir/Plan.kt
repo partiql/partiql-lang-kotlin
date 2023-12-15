@@ -14,12 +14,13 @@ internal fun partiQLPlan(
     statement: Statement,
 ): PartiQLPlan = PartiQLPlan(version, catalogs, statement)
 
-internal fun catalog(name: String, values: List<Catalog.Value>): Catalog = Catalog(name, values)
+internal fun catalog(name: String, symbols: List<Catalog.Symbol>): Catalog = Catalog(name, symbols)
 
-internal fun catalogValue(path: List<String>, type: StaticType): Catalog.Value = Catalog.Value(
-    path,
-    type
-)
+internal fun catalogSymbol(path: List<String>, type: StaticType): Catalog.Symbol =
+    Catalog.Symbol(path, type)
+
+internal fun catalogSymbolRef(catalog: Int, symbol: Int): Catalog.Symbol.Ref =
+    Catalog.Symbol.Ref(catalog, symbol)
 
 internal fun fnResolved(signature: FunctionSignature.Scalar): Fn.Resolved = Fn.Resolved(signature)
 
@@ -49,10 +50,7 @@ internal fun rexOpVarResolved(ref: Int): Rex.Op.Var.Resolved = Rex.Op.Var.Resolv
 internal fun rexOpVarUnresolved(identifier: Identifier, scope: Rex.Op.Var.Scope):
     Rex.Op.Var.Unresolved = Rex.Op.Var.Unresolved(identifier, scope)
 
-internal fun rexOpGlobal(catalogRef: Int, valueRef: Int): Rex.Op.Global = Rex.Op.Global(
-    catalogRef,
-    valueRef
-)
+internal fun rexOpGlobal(ref: Catalog.Symbol.Ref): Rex.Op.Global = Rex.Op.Global(ref)
 
 internal fun rexOpPath(root: Rex, steps: List<Rex.Op.Path.Step>): Rex.Op.Path = Rex.Op.Path(
     root,

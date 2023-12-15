@@ -41,12 +41,16 @@ internal object PlanTransform : PlanBaseVisitor<PlanNode, ProblemCallback>() {
     }
 
     override fun visitCatalog(node: Catalog, ctx: ProblemCallback): org.partiql.plan.Catalog {
-        val values = node.values.map { visitCatalogValue(it, ctx) }
-        return org.partiql.plan.Catalog(node.name, values)
+        val symbols = node.symbols.map { visitCatalogSymbol(it, ctx) }
+        return org.partiql.plan.Catalog(node.name, symbols)
     }
 
-    override fun visitCatalogValue(node: Catalog.Value, ctx: ProblemCallback): org.partiql.plan.Catalog.Symbol {
+    override fun visitCatalogSymbol(node: Catalog.Symbol, ctx: ProblemCallback): org.partiql.plan.Catalog.Symbol {
         return org.partiql.plan.Catalog.Symbol(node.path, node.type)
+    }
+
+    override fun visitCatalogSymbolRef(node: Catalog.Symbol.Ref, ctx: ProblemCallback): org.partiql.plan.Catalog.Symbol.Ref {
+        return org.partiql.plan.Catalog.Symbol.Ref(node.catalog, node.symbol)
     }
 
     override fun visitFnResolved(node: Fn.Resolved, ctx: ProblemCallback) = org.partiql.plan.fn(node.signature)
@@ -112,7 +116,7 @@ internal object PlanTransform : PlanBaseVisitor<PlanNode, ProblemCallback>() {
         org.partiql.plan.Rex.Op.Err("Unresolved variable $node")
 
     override fun visitRexOpGlobal(node: Rex.Op.Global, ctx: ProblemCallback) = org.partiql.plan.Rex.Op.Global(
-        ref = org.partiql.plan.Catalog.Symbol.Ref(catalog = node.catalogRef, symbol = node.valueRef)
+        ref = visitCatalogSymbolRef(node.ref, ctx)
     )
 
     override fun visitRexOpPath(node: Rex.Op.Path, ctx: ProblemCallback): org.partiql.plan.Rex.Op.Path {

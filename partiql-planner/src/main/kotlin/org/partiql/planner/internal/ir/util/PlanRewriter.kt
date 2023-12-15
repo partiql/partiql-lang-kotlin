@@ -96,19 +96,25 @@ internal abstract class PlanRewriter<C> : PlanBaseVisitor<PlanNode, C>() {
         }
     }
 
-    public override fun visitCatalog(node: Catalog, ctx: C): PlanNode {
+    override fun visitCatalog(node: Catalog, ctx: C): PlanNode {
         val name = node.name
-        val values = _visitList(node.values, ctx, ::visitCatalogValue)
-        return if (name !== node.name || values !== node.values) {
-            Catalog(name, values)
+        val symbols = _visitList(node.symbols, ctx, ::visitCatalogSymbol)
+        return if (name !== node.name || symbols !== node.symbols) {
+            Catalog(name, symbols)
         } else {
             node
         }
     }
 
-    public override fun visitCatalogValue(node: Catalog.Value, ctx: C): PlanNode {
+    override fun visitCatalogSymbol(node: Catalog.Symbol, ctx: C): PlanNode {
         val path = node.path
         val type = node.type
+        return node
+    }
+
+    override fun visitCatalogSymbolRef(node: Catalog.Symbol.Ref, ctx: C): PlanNode {
+        val catalog = node.catalog
+        val symbol = node.symbol
         return node
     }
 
@@ -197,10 +203,13 @@ internal abstract class PlanRewriter<C> : PlanBaseVisitor<PlanNode, C>() {
         }
     }
 
-    public override fun visitRexOpGlobal(node: Rex.Op.Global, ctx: C): PlanNode {
-        val catalogRef = node.catalogRef
-        val valueRef = node.valueRef
-        return node
+    override fun visitRexOpGlobal(node: Rex.Op.Global, ctx: C): PlanNode {
+        val ref = visitCatalogSymbolRef(node.ref, ctx) as Catalog.Symbol.Ref
+        return if (ref !== node.ref) {
+            Rex.Op.Global(ref)
+        } else {
+            node
+        }
     }
 
     override fun visitRexOpPath(node: Rex.Op.Path, ctx: C): PlanNode {

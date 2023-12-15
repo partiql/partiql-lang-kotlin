@@ -9,6 +9,7 @@ import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.ir.Identifier
 import org.partiql.planner.internal.ir.Rex
+import org.partiql.planner.internal.ir.catalogSymbolRef
 import org.partiql.planner.internal.ir.identifierSymbol
 import org.partiql.planner.internal.ir.rex
 import org.partiql.planner.internal.ir.rexOpGlobal
@@ -542,4 +543,8 @@ class PlanTyperTest {
         val actual = typer.resolve(input)
         assertEquals(expected, actual)
     }
+
+    private fun rexOpGlobal(catalog: Int, ref: Int) = rexOpGlobal(
+        catalogSymbolRef(catalog, ref)
+    )
 }

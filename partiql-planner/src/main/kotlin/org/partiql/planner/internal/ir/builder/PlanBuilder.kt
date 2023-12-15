@@ -31,22 +31,32 @@ internal class PlanBuilder {
         return builder.build()
     }
 
-    public fun catalog(
+    internal fun catalog(
         name: String? = null,
-        values: MutableList<Catalog.Value> = mutableListOf(),
+        symbols: MutableList<Catalog.Symbol> = mutableListOf(),
         block: CatalogBuilder.() -> Unit = {},
     ): Catalog {
-        val builder = CatalogBuilder(name, values)
+        val builder = CatalogBuilder(name, symbols)
         builder.block()
         return builder.build()
     }
 
-    public fun catalogValue(
+    internal fun catalogSymbol(
         path: MutableList<String> = mutableListOf(),
         type: StaticType? = null,
-        block: CatalogValueBuilder.() -> Unit = {},
-    ): Catalog.Value {
-        val builder = CatalogValueBuilder(path, type)
+        block: CatalogSymbolBuilder.() -> Unit = {},
+    ): Catalog.Symbol {
+        val builder = CatalogSymbolBuilder(path, type)
+        builder.block()
+        return builder.build()
+    }
+
+    internal fun catalogSymbolRef(
+        catalog: Int? = null,
+        symbol: Int? = null,
+        block: CatalogSymbolRefBuilder.() -> Unit = {},
+    ): Catalog.Symbol.Ref {
+        val builder = CatalogSymbolRefBuilder(catalog, symbol)
         builder.block()
         return builder.build()
     }
@@ -150,12 +160,11 @@ internal class PlanBuilder {
         return builder.build()
     }
 
-    public fun rexOpGlobal(
-        catalogRef: Int? = null,
-        valueRef: Int? = null,
-        block: RexOpGlobalBuilder.() -> Unit = {},
+    internal fun rexOpGlobal(
+        ref: Catalog.Symbol.Ref? = null,
+        block: RexOpGlobalBuilder.() -> Unit = {}
     ): Rex.Op.Global {
-        val builder = RexOpGlobalBuilder(catalogRef, valueRef)
+        val builder = RexOpGlobalBuilder(ref)
         builder.block()
         return builder.build()
     }
