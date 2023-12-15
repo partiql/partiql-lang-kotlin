@@ -29,7 +29,7 @@ import org.partiql.jmh.utils.MEASUREMENT_ITERATION_VALUE_RECOMMENDED
 import org.partiql.jmh.utils.MEASUREMENT_TIME_VALUE_RECOMMENDED
 import org.partiql.jmh.utils.WARMUP_ITERATION_VALUE_RECOMMENDED
 import org.partiql.jmh.utils.WARMUP_TIME_VALUE_RECOMMENDED
-import org.partiql.parser.PartiQLParserBuilder
+import org.partiql.parser.PartiQLParser
 import org.partiql.parser.PartiQLParserException
 import java.util.concurrent.TimeUnit
 
@@ -854,7 +854,7 @@ internal open class PartiQLParserBenchmark {
     @State(Scope.Thread)
     open class MyState {
 
-        val parser = PartiQLParserBuilder.standard().build()
+        val parser = PartiQLParser.default()
 
         val query15OrsAndLikes = """
             SELECT * 
