@@ -40,10 +40,11 @@ Thank you to all who have contributed!
 
 ### Changed
 - StaticTypeInferencer and PlanTyper will not raise an error when an expression is inferred to `NULL` or `unionOf(NULL, MISSING)`. In these cases the StaticTypeInferencer and PlanTyper will still raise the Problem Code `ExpressionAlwaysReturnsNullOrMissing` but the severity of the problem has been changed to warning. In the case an expression always returns `MISSING`, problem code `ExpressionAlwaysReturnsMissing` will be raised, which will have problem severity of error.
-- **BREAKING**: The default integer literal type is now 32-bit; if the literal can not fit in a 32-bit integer, it overflows to 64-bit. 
-- **BREAKING**: `PartiQLValueType` now distinguishes between Arbitrary Precision Decimal and Fixed Precision Decimal. 
-- **BREAKING**: Function Signature Changes. Now Function signature has two subclasses, `Scalar` and `Aggregation`. 
-- **BREAKING**: In the produced plan: 
+- **Breaking** The default integer literal type is now 32-bit; if the literal can not fit in a 32-bit integer, it overflows to 64-bit. 
+- **BREAKING** `PartiQLValueType` now distinguishes between Arbitrary Precision Decimal and Fixed Precision Decimal. 
+- **BREAKING** Function Signature Changes. Now Function signature has two subclasses, `Scalar` and `Aggregation`. 
+- **BREAKING** Plugin Changes. Only return one Connector.Factory, use Kotlin fields. JVM signature remains the same.
+- **BREAKING** In the produced plan: 
   - The new plan is fully resolved and typed.
   - Operators will be converted to function call. 
 - Changes the return type of `filter_distinct` to a list if input collection is list
