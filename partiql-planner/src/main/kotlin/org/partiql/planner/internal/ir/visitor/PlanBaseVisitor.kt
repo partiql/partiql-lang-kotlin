@@ -93,20 +93,20 @@ internal abstract class PlanBaseVisitor<R, C> : PlanVisitor<R, C> {
 
     override fun visitRexOpGlobal(node: Rex.Op.Global, ctx: C): R = defaultVisit(node, ctx)
 
-    public override fun visitRexOpPath(node: Rex.Op.Path, ctx: C): R = when (node) {
+    override fun visitRexOpPath(node: Rex.Op.Path, ctx: C): R = when (node) {
         is Rex.Op.Path.Index -> visitRexOpPathIndex(node, ctx)
         is Rex.Op.Path.Key -> visitRexOpPathKey(node, ctx)
         is Rex.Op.Path.Symbol -> visitRexOpPathSymbol(node, ctx)
     }
 
-    public override fun visitRexOpPathIndex(node: Rex.Op.Path.Index, ctx: C): R = defaultVisit(
+    override fun visitRexOpPathIndex(node: Rex.Op.Path.Index, ctx: C): R = defaultVisit(
         node,
         ctx
     )
 
-    public override fun visitRexOpPathKey(node: Rex.Op.Path.Key, ctx: C): R = defaultVisit(node, ctx)
+    override fun visitRexOpPathKey(node: Rex.Op.Path.Key, ctx: C): R = defaultVisit(node, ctx)
 
-    public override fun visitRexOpPathSymbol(node: Rex.Op.Path.Symbol, ctx: C): R = defaultVisit(
+    override fun visitRexOpPathSymbol(node: Rex.Op.Path.Symbol, ctx: C): R = defaultVisit(
         node,
         ctx
     )

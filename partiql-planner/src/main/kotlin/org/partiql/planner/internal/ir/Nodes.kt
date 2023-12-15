@@ -2,9 +2,6 @@
 
 package org.partiql.planner.internal.ir
 
-import org.partiql.plan.builder.RexOpPathIndexBuilder
-import org.partiql.plan.builder.RexOpPathKeyBuilder
-import org.partiql.plan.builder.RexOpPathSymbolBuilder
 import org.partiql.planner.internal.ir.builder.AggResolvedBuilder
 import org.partiql.planner.internal.ir.builder.AggUnresolvedBuilder
 import org.partiql.planner.internal.ir.builder.FnResolvedBuilder
@@ -49,6 +46,9 @@ import org.partiql.planner.internal.ir.builder.RexOpCollectionBuilder
 import org.partiql.planner.internal.ir.builder.RexOpErrBuilder
 import org.partiql.planner.internal.ir.builder.RexOpGlobalBuilder
 import org.partiql.planner.internal.ir.builder.RexOpLitBuilder
+import org.partiql.planner.internal.ir.builder.RexOpPathIndexBuilder
+import org.partiql.planner.internal.ir.builder.RexOpPathKeyBuilder
+import org.partiql.planner.internal.ir.builder.RexOpPathSymbolBuilder
 import org.partiql.planner.internal.ir.builder.RexOpPivotBuilder
 import org.partiql.planner.internal.ir.builder.RexOpSelectBuilder
 import org.partiql.planner.internal.ir.builder.RexOpStructBuilder
@@ -438,7 +438,7 @@ internal data class Rex(
 
                 internal companion object {
                     @JvmStatic
-                    public fun builder(): RexOpPathKeyBuilder = RexOpPathKeyBuilder()
+                    fun builder(): RexOpPathKeyBuilder = RexOpPathKeyBuilder()
                 }
             }
 
