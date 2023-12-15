@@ -25,7 +25,7 @@ import org.partiql.value.PartiQLValueType.TIMESTAMP
  *
  */
 @OptIn(PartiQLValueExperimental::class)
-public object PartiQLHeader : Header() {
+internal object PartiQLHeader : Header() {
 
     override val namespace: String = "partiql"
 

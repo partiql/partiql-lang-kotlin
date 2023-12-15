@@ -17,19 +17,16 @@ package org.partiql.cli
 
 import AstPrinter
 import com.amazon.ion.system.IonSystemBuilder
-import com.amazon.ionelement.api.field
-import com.amazon.ionelement.api.ionString
-import com.amazon.ionelement.api.ionStructOf
 import org.partiql.cli.pico.PartiQLCommand
 import org.partiql.cli.shell.info
 import org.partiql.lang.eval.EvaluationSession
-import org.partiql.parser.PartiQLParserBuilder
+import org.partiql.parser.PartiQLParser
 import org.partiql.plan.debug.PlanPrinter
 import org.partiql.planner.PartiQLPlanner
-import org.partiql.planner.PartiQLPlannerBuilder
-import org.partiql.plugins.local.LocalPlugin
+import org.partiql.plugins.local.LocalConnector
 import picocli.CommandLine
 import java.io.PrintStream
+import java.nio.file.Paths
 import java.util.UUID
 import kotlin.system.exitProcess
 
@@ -53,15 +50,14 @@ object Debug {
 
     private const val USER_ID = "DEBUG_USER_ID"
 
-    private val plugins = listOf(LocalPlugin())
-    private val catalogs = mapOf(
-        "local" to ionStructOf(
-            field("connector_name", ionString("local")),
-        )
-    )
+    private val root = Paths.get(System.getProperty("user.home")).resolve(".partiql/local")
 
-    private val planner = PartiQLPlannerBuilder().plugins(plugins).build()
-    private val parser = PartiQLParserBuilder.standard().build()
+    private val planner = PartiQLPlanner.builder()
+        .catalogs(
+            "local" to LocalConnector.Metadata(root)
+        )
+        .build()
+    private val parser = PartiQLParser.default()
 
     // !!
     // IMPLEMENT DEBUG BEHAVIOR HERE
@@ -80,7 +76,6 @@ object Debug {
         val sess = PartiQLPlanner.Session(
             queryId = UUID.randomUUID().toString(),
             userId = "debug",
-            catalogConfig = catalogs,
         )
         val result = planner.plan(statement, sess).plan
         out.info("-- Plan ----------")

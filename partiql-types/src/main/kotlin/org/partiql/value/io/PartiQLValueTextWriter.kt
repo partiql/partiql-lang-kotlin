@@ -199,14 +199,17 @@ public class PartiQLValueTextWriter(
         override fun visitSexp(v: SexpValue<*>, format: Format?) = collection(v, format, "(" to ")", " ")
 
         override fun visitStruct(v: StructValue<*>, format: Format?): String = buildString {
+            if (v.isNull) {
+                return "null"
+            }
             // null.struct
-            val fields = v.fields?.toList() ?: return "null"
+            val entries = v.entries.toList()
             // {}
-            if (fields.isEmpty() || format == null) {
+            if (entries.isEmpty() || format == null) {
                 format?.let { append(it.prefix) }
                 annotate(v, this)
                 append("{")
-                val items = fields.map {
+                val items = entries.map {
                     val fk = it.first
                     val fv = it.second.accept(ToString, null) // it.toString()
                     "$fk:$fv"
@@ -219,10 +222,10 @@ public class PartiQLValueTextWriter(
             append(format.prefix)
             annotate(v, this)
             appendLine("{")
-            fields.forEachIndexed { i, e ->
+            entries.forEachIndexed { i, e ->
                 val fk = e.first
                 val fv = e.second.accept(ToString, format.nest()).trimStart() // e.toString(format)
-                val suffix = if (i == fields.size - 1) "" else ","
+                val suffix = if (i == entries.size - 1) "" else ","
                 append(format.prefix + format.indent)
                 append("$fk: $fv")
                 appendLine(suffix)
@@ -238,7 +241,10 @@ public class PartiQLValueTextWriter(
             separator: CharSequence = ",",
         ) = buildString {
             // null.bag, null.list, null.sexp
-            val elements = v.elements?.toList() ?: return "null"
+            if (v.isNull) {
+                return "null"
+            }
+            val elements = v.toList()
             // skip empty
             if (elements.isEmpty() || format == null) {
                 format?.let { append(it.prefix) }

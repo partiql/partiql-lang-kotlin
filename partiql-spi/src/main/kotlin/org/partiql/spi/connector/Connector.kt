@@ -24,6 +24,6 @@ public interface Connector {
 
     public interface Factory {
         public fun getName(): String
-        public fun create(catalogName: String, config: StructElement): Connector
+        public fun create(catalogName: String, config: StructElement? = null): Connector
     }
 }

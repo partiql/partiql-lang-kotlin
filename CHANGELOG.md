@@ -48,6 +48,8 @@ Thank you to all who have contributed!
   - Operators will be converted to function call. 
 - Changes the return type of `filter_distinct` to a list if input collection is list
 - **BREAKING**: Globals within the logical plan are now represented in a structured manner to reflect the existence of catalogs. Each value is now mandated to be case-sensitive (we have moved from Identifiers to string literals).
+- Changes the `PartiQLValue` collections to implement Iterable rather than Sequence, allowing for multiple consumption.
+- **BREAKING** Moves PartiQLParserBuilder.standard().build() to be PartiQLParser.default().
 
 ### Deprecated
 

@@ -44,7 +44,7 @@ class PartiQLParserBuilder {
             val builder = PartiQLParserBuilder()
             builder.constructor = { _ ->
                 // currently don't pass custom types
-                val delegate = org.partiql.parser.PartiQLParserBuilder.standard().build()
+                val delegate = org.partiql.parser.PartiQLParser.default()
                 PartiQLShimParser(delegate)
             }
             return builder

@@ -65,14 +65,11 @@ public sealed interface ScalarValue<T> : PartiQLValue {
 }
 
 @PartiQLValueExperimental
-public sealed interface CollectionValue<T : PartiQLValue> : PartiQLValue, Sequence<T> {
-
-    public val elements: Sequence<T>?
+public sealed interface CollectionValue<T : PartiQLValue> : PartiQLValue, Iterable<T> {
 
     override val isNull: Boolean
-        get() = elements == null
 
-    override fun iterator(): Iterator<T> = elements!!.iterator()
+    override fun iterator(): Iterator<T>
 
     override fun copy(annotations: Annotations): CollectionValue<T>
 
@@ -388,8 +385,8 @@ public abstract class BagValue<T : PartiQLValue> : CollectionValue<T> {
         if (this.isNull || other.isNull) return this.isNull == other.isNull
 
         // both not null, compare values
-        val lhs = this.elements!!.toList()
-        val rhs = other.elements!!.toList()
+        val lhs = this.toList()
+        val rhs = other.toList()
         // this is incorrect as it assumes ordered-ness, but we don't have a sort or hash yet
         return lhs == rhs
     }
@@ -421,8 +418,8 @@ public abstract class ListValue<T : PartiQLValue> : CollectionValue<T> {
         if (this.isNull || other.isNull) return this.isNull == other.isNull
 
         // both not null, compare values
-        val lhs = this.elements!!.toList()
-        val rhs = other.elements!!.toList()
+        val lhs = this.toList()
+        val rhs = other.toList()
         return lhs == rhs
     }
 
@@ -452,8 +449,8 @@ public abstract class SexpValue<T : PartiQLValue> : CollectionValue<T> {
         if (this.isNull || other.isNull) return this.isNull == other.isNull
 
         // both not null, compare values
-        val lhs = this.elements!!.toList()
-        val rhs = other.elements!!.toList()
+        val lhs = this.toList()
+        val rhs = other.toList()
         return lhs == rhs
     }
 
@@ -464,16 +461,15 @@ public abstract class SexpValue<T : PartiQLValue> : CollectionValue<T> {
 }
 
 @PartiQLValueExperimental
-public abstract class StructValue<T : PartiQLValue> : PartiQLValue, Sequence<Pair<String, T>> {
+public abstract class StructValue<T : PartiQLValue> : PartiQLValue {
 
     override val type: PartiQLValueType = PartiQLValueType.STRUCT
 
-    public abstract val fields: Sequence<Pair<String, T>>?
+    public abstract val fields: Iterable<String>
 
-    override val isNull: Boolean
-        get() = fields == null
+    public abstract val values: Iterable<T>
 
-    override fun iterator(): Iterator<Pair<String, T>> = fields!!.iterator()
+    public abstract val entries: Iterable<Pair<String, T>>
 
     public abstract operator fun get(key: String): T?
 
@@ -486,9 +482,7 @@ public abstract class StructValue<T : PartiQLValue> : PartiQLValue, Sequence<Pai
     abstract override fun withoutAnnotations(): StructValue<T>
 
     /**
-     * See equality of IonElement StructElementImpl
-     *
-     * https://github.com/amazon-ion/ion-element-kotlin/blob/master/src/com/amazon/ionelement/impl/StructElementImpl.kt
+     * Checks equality of struct entries, ignoring ordering.
      *
      * @param other
      * @return
@@ -502,15 +496,15 @@ public abstract class StructValue<T : PartiQLValue> : PartiQLValue, Sequence<Pai
         if (this.isNull || other.isNull) return this.isNull == other.isNull
 
         // both not null, compare fields
-        val lhs = this.fields!!.groupBy({ it.first }, { it.second })
-        val rhs = other.fields!!.groupBy({ it.first }, { it.second })
+        val lhs = this.entries.asIterable().groupBy({ it.first }, { it.second })
+        val rhs = other.entries.asIterable().groupBy({ it.first }, { it.second })
 
         // check size
         if (lhs.size != rhs.size) return false
         if (lhs.keys != rhs.keys) return false
 
         // check values
-        lhs.forEach { (key, values) ->
+        lhs.entries.forEach { (key, values) ->
             val lGroup: Map<PartiQLValue, Int> = values.groupingBy { it }.eachCount()
             val rGroup: Map<PartiQLValue, Int> = rhs[key]!!.groupingBy { it }.eachCount()
             if (lGroup != rGroup) return false

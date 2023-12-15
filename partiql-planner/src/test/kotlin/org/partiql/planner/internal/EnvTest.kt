@@ -1,8 +1,5 @@
 package org.partiql.planner.internal
 
-import com.amazon.ionelement.api.field
-import com.amazon.ionelement.api.ionString
-import com.amazon.ionelement.api.ionStructOf
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -10,13 +7,12 @@ import org.partiql.planner.PartiQLHeader
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.internal.ir.Catalog
 import org.partiql.planner.internal.ir.Rex
-import org.partiql.plugins.local.LocalPlugin
+import org.partiql.plugins.local.LocalConnector
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
 import org.partiql.types.StaticType
 import java.util.Random
-import kotlin.io.path.pathString
 import kotlin.io.path.toPath
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -24,14 +20,8 @@ import kotlin.test.assertNotNull
 class EnvTest {
 
     companion object {
-        private val root = this::class.java.getResource("/catalogs/default")!!.toURI().toPath().pathString
 
-        val catalogConfig = mapOf(
-            "pql" to ionStructOf(
-                field("connector_name", ionString("local")),
-                field("root", ionString("$root/pql")),
-            )
-        )
+        private val root = this::class.java.getResource("/catalogs/default/pql")!!.toURI().toPath()
 
         private val EMPTY_TYPE_ENV = TypeEnv(schema = emptyList(), ResolutionStrategy.GLOBAL)
 
@@ -49,13 +39,14 @@ class EnvTest {
     fun init() {
         env = Env(
             listOf(PartiQLHeader),
-            listOf(LocalPlugin()),
+            mapOf(
+                "pql" to LocalConnector.Metadata(root)
+            ),
             PartiQLPlanner.Session(
                 queryId = Random().nextInt().toString(),
                 userId = "test-user",
                 currentCatalog = "pql",
                 currentDirectory = listOf("main"),
-                catalogConfig = catalogConfig
             )
         )
     }

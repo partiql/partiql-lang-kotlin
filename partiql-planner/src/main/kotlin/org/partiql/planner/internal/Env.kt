@@ -13,19 +13,16 @@ import org.partiql.planner.internal.typer.FnResolver
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
-import org.partiql.spi.Plugin
-import org.partiql.spi.connector.Connector
 import org.partiql.spi.connector.ConnectorMetadata
 import org.partiql.spi.connector.ConnectorObjectHandle
 import org.partiql.spi.connector.ConnectorObjectPath
 import org.partiql.spi.connector.ConnectorSession
-import org.partiql.spi.connector.Constants
 import org.partiql.types.StaticType
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
 
 /**
- * Handle for associating a catalog with the metadata; pair of catalog to data.
+ * Handle for associating a catalog name with catalog related metadata objects.
  */
 internal typealias Handle<T> = Pair<String, T>
 
@@ -122,12 +119,12 @@ internal enum class ResolutionStrategy {
  * PartiQL Planner Global Environment of Catalogs backed by given plugins.
  *
  * @property headers        List of namespaced definitions
- * @property plugins        List of plugins for global resolution
+ * @property catalogs       List of plugins for global resolution
  * @property session        Session details
  */
 internal class Env(
     private val headers: List<Header>,
-    private val plugins: List<Plugin>,
+    private val connectors: Map<String, ConnectorMetadata>,
     private val session: PartiQLPlanner.Session,
 ) {
 
@@ -147,26 +144,7 @@ internal class Env(
     }
 
     /**
-     * Map of catalog names to its underlying connector
-     */
-    private val connectors: Map<String, Connector>
 
-    // Initialize connectors
-    init {
-        val catalogs = mutableMapOf<String, Connector>()
-        val connectors = plugins.flatMap { it.getConnectorFactories() }
-        // map catalogs to connectors
-        for ((catalog, config) in session.catalogConfig) {
-            // find corresponding connector
-            val connectorName = config[Constants.CONFIG_KEY_CONNECTOR_NAME].stringValue
-            val connector = connectors.first { it.getName() == connectorName }
-            // initialize connector with given config
-            catalogs[catalog] = connector.create(catalog, config)
-        }
-        this.connectors = catalogs.toMap()
-    }
-
-    /**
      * Leverages a [FunctionResolver] to find a matching function defined in the [Header] scalar function catalog.
      */
     internal fun resolveFn(fn: Fn.Unresolved, args: List<Rex>) = fnResolver.resolveFn(fn, args)
@@ -210,8 +188,7 @@ internal class Env(
      */
     private fun getMetadata(catalogName: BindingName): Handle<ConnectorMetadata>? {
         val catalogKey = connectors.keys.firstOrNull { catalogName.isEquivalentTo(it) } ?: return null
-        val connector = connectors[catalogKey] ?: return null
-        val metadata = connector.getMetadata(connectorSession)
+        val metadata = connectors[catalogKey] ?: return null
         return catalogKey to metadata
     }
 
