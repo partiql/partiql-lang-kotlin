@@ -45,8 +45,8 @@ internal object PlanTransform : PlanBaseVisitor<PlanNode, ProblemCallback>() {
         return org.partiql.plan.Catalog(node.name, values)
     }
 
-    override fun visitCatalogValue(node: Catalog.Value, ctx: ProblemCallback): org.partiql.plan.Catalog.Value {
-        return org.partiql.plan.Catalog.Value(node.path, node.type)
+    override fun visitCatalogValue(node: Catalog.Value, ctx: ProblemCallback): org.partiql.plan.Catalog.Symbol {
+        return org.partiql.plan.Catalog.Symbol(node.path, node.type)
     }
 
     override fun visitFnResolved(node: Fn.Resolved, ctx: ProblemCallback) = org.partiql.plan.fn(node.signature)
@@ -112,8 +112,7 @@ internal object PlanTransform : PlanBaseVisitor<PlanNode, ProblemCallback>() {
         org.partiql.plan.Rex.Op.Err("Unresolved variable $node")
 
     override fun visitRexOpGlobal(node: Rex.Op.Global, ctx: ProblemCallback) = org.partiql.plan.Rex.Op.Global(
-        node.catalogRef,
-        node.valueRef
+        ref = org.partiql.plan.Catalog.Symbol.Ref(catalog = node.catalogRef, symbol = node.valueRef)
     )
 
     override fun visitRexOpPath(node: Rex.Op.Path, ctx: ProblemCallback): org.partiql.plan.Rex.Op.Path {

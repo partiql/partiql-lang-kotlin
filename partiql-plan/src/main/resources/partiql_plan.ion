@@ -13,15 +13,25 @@ parti_q_l_plan::{
 }
 
 // Represent an instance of a database.
-// - Currently, `values` represents all values from this catalog to be used in this plan.
+// - Currently, `symbols` represents all values from this catalog to be used in this plan.
 // - Eventually, TODO functions may be resolved to a specific namespace within a catalog.
 catalog::{
   name: string,
-  values: list::[value],
+  symbols: list::[symbol],
   _: [
-    value::{
-      path: list::[string], // This should NOT be empty.
-      type: static_type
+    // A reference to a value contained within a catalog.
+    symbol::{
+      // The path to a value WITHIN a catalog. Note: This should not start with the catalog's name. Also, this
+      //  should not be empty
+      path: list::[string],
+      type: static_type,
+      _: [
+        // A reference to a symbol
+        ref::{
+          catalog: int,
+          symbol: int
+        }
+      ]
     }
   ]
 }
@@ -77,8 +87,7 @@ rex::{
     },
 
     global::{
-      catalog_ref: int,  // The index of the relevant catalog in the plan's catalogs list
-      value_ref: Int     // The index of the relevant value in a catalog's values list
+      ref: '.catalog.symbol.ref'
     },
 
     path::{
