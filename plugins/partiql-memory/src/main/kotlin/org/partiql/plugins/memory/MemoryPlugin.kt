@@ -9,6 +9,6 @@ class MemoryPlugin(private val catalogs: Map<String, MemoryConnector>) : Plugin 
 
     override val factory: Connector.Factory = MemoryConnector.Factory(catalogs)
 
-    @PartiQLFunctionExperimental
+    @OptIn(PartiQLFunctionExperimental::class)
     override val functions: List<PartiQLFunction> = emptyList()
 }

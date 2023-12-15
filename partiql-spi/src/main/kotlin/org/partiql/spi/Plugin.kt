@@ -21,7 +21,6 @@ import org.partiql.spi.function.PartiQLFunctionExperimental
 /**
  * A singular unit of external logic.
  */
-@OptIn(PartiQLFunctionExperimental::class)
 public interface Plugin {
 
     /**
@@ -32,5 +31,6 @@ public interface Plugin {
     /**
      * Functions defined by this plugin.
      */
+    @PartiQLFunctionExperimental
     public val functions: List<PartiQLFunction>
 }

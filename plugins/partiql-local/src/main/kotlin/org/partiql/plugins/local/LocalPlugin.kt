@@ -28,6 +28,6 @@ class LocalPlugin : Plugin {
 
     override val factory: Connector.Factory = LocalConnector.Factory()
 
-    @PartiQLFunctionExperimental
+    @OptIn(PartiQLFunctionExperimental::class)
     override val functions: List<PartiQLFunction> = listOf()
 }
