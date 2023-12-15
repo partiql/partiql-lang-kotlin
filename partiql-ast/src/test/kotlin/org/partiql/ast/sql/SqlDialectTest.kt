@@ -1073,11 +1073,9 @@ class SqlDialectTest {
                         type = From.Value.Type.SCAN
                     }
                     exclude = exclude {
-                        exprs += excludeExcludeExpr {
-                            root = id("t", Identifier.CaseSensitivity.INSENSITIVE)
-                            steps += excludeStepExcludeTupleAttr {
-                                symbol = id("a", Identifier.CaseSensitivity.INSENSITIVE)
-                            }
+                        items += excludeItem {
+                            root = v("t")
+                            steps += insensitiveExcludeStructField("a")
                         }
                     }
                 }
@@ -1090,21 +1088,21 @@ class SqlDialectTest {
                         type = From.Value.Type.SCAN
                     }
                     exclude = exclude {
-                        exprs += excludeExcludeExpr {
-                            root = id("a", Identifier.CaseSensitivity.INSENSITIVE)
-                            steps += insensitiveExcludeTupleAttr("b")
+                        items += excludeItem {
+                            root = v("a")
+                            steps += insensitiveExcludeStructField("b")
                         }
-                        exprs += excludeExcludeExpr {
-                            root = id("c", Identifier.CaseSensitivity.INSENSITIVE)
-                            steps += insensitiveExcludeTupleAttr("d")
+                        items += excludeItem {
+                            root = v("c")
+                            steps += insensitiveExcludeStructField("d")
                         }
-                        exprs += excludeExcludeExpr {
-                            root = id("e", Identifier.CaseSensitivity.INSENSITIVE)
-                            steps += insensitiveExcludeTupleAttr("f")
+                        items += excludeItem {
+                            root = v("e")
+                            steps += insensitiveExcludeStructField("f")
                         }
-                        exprs += excludeExcludeExpr {
-                            root = id("g", Identifier.CaseSensitivity.INSENSITIVE)
-                            steps += insensitiveExcludeTupleAttr("h")
+                        items += excludeItem {
+                            root = v("g")
+                            steps += insensitiveExcludeStructField("h")
                         }
                     }
                 }
@@ -1117,25 +1115,25 @@ class SqlDialectTest {
                         type = From.Value.Type.SCAN
                     }
                     exclude = exclude {
-                        exprs += excludeExcludeExpr {
-                            root = id("t", Identifier.CaseSensitivity.INSENSITIVE)
+                        items += excludeItem {
+                            root = v("t")
                             steps += mutableListOf(
-                                insensitiveExcludeTupleAttr("a"),
-                                sensitiveExcludeTupleAttr("b"),
-                                excludeStepExcludeTupleWildcard(),
-                                excludeStepExcludeCollectionWildcard(),
-                                insensitiveExcludeTupleAttr("c"),
+                                insensitiveExcludeStructField("a"),
+                                sensitiveExcludeStructField("b"),
+                                excludeStepStructWildcard(),
+                                excludeStepCollWildcard(),
+                                insensitiveExcludeStructField("c"),
                             )
                         }
-                        exprs += excludeExcludeExpr {
-                            root = id("s", Identifier.CaseSensitivity.SENSITIVE)
+                        items += excludeItem {
+                            root = exprVar(id("s", Identifier.CaseSensitivity.SENSITIVE), Expr.Var.Scope.DEFAULT)
                             steps += mutableListOf(
-                                excludeStepExcludeCollectionIndex(0),
-                                insensitiveExcludeTupleAttr("d"),
-                                sensitiveExcludeTupleAttr("e"),
-                                excludeStepExcludeCollectionWildcard(),
-                                insensitiveExcludeTupleAttr("f"),
-                                excludeStepExcludeTupleWildcard(),
+                                excludeStepCollIndex(0),
+                                insensitiveExcludeStructField("d"),
+                                sensitiveExcludeStructField("e"),
+                                excludeStepCollWildcard(),
+                                insensitiveExcludeStructField("f"),
+                                excludeStepStructWildcard(),
                             )
                         }
                     }
@@ -1143,11 +1141,11 @@ class SqlDialectTest {
             },
         )
 
-        private fun AstBuilder.insensitiveExcludeTupleAttr(str: String) = excludeStepExcludeTupleAttr {
+        private fun AstBuilder.insensitiveExcludeStructField(str: String) = excludeStepStructField {
             symbol = id(str, Identifier.CaseSensitivity.INSENSITIVE)
         }
 
-        private fun AstBuilder.sensitiveExcludeTupleAttr(str: String) = excludeStepExcludeTupleAttr {
+        private fun AstBuilder.sensitiveExcludeStructField(str: String) = excludeStepStructField {
             symbol = id(str, Identifier.CaseSensitivity.SENSITIVE)
         }
 

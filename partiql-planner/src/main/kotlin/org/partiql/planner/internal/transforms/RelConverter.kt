@@ -43,9 +43,9 @@ import org.partiql.planner.internal.ir.relOpErr
 import org.partiql.planner.internal.ir.relOpExcept
 import org.partiql.planner.internal.ir.relOpExclude
 import org.partiql.planner.internal.ir.relOpExcludeItem
-import org.partiql.planner.internal.ir.relOpExcludeStepAttr
-import org.partiql.planner.internal.ir.relOpExcludeStepCollectionWildcard
-import org.partiql.planner.internal.ir.relOpExcludeStepPos
+import org.partiql.planner.internal.ir.relOpExcludeStepCollIndex
+import org.partiql.planner.internal.ir.relOpExcludeStepCollWildcard
+import org.partiql.planner.internal.ir.relOpExcludeStepStructField
 import org.partiql.planner.internal.ir.relOpExcludeStepStructWildcard
 import org.partiql.planner.internal.ir.relOpFilter
 import org.partiql.planner.internal.ir.relOpIntersect
@@ -483,22 +483,22 @@ internal object RelConverter {
                 return input
             }
             val type = input.type // PlanTyper handles typing the exclusion
-            val items = exclude.exprs.map { convertExcludeItem(it) }
+            val items = exclude.items.map { convertExcludeItem(it) }
             val op = relOpExclude(input, items)
             return rel(type, op)
         }
 
-        private fun convertExcludeItem(expr: Exclude.ExcludeExpr): Rel.Op.Exclude.Item {
-            val root = AstToPlan.convert(expr.root)
+        private fun convertExcludeItem(expr: Exclude.Item): Rel.Op.Exclude.Item {
+            val root = (expr.root.toRex(env)).op as Rex.Op.Var
             val steps = expr.steps.map { convertExcludeStep(it) }
             return relOpExcludeItem(root, steps)
         }
 
         private fun convertExcludeStep(step: Exclude.Step): Rel.Op.Exclude.Step = when (step) {
-            is Exclude.Step.ExcludeTupleAttr -> relOpExcludeStepAttr(AstToPlan.convert(step.symbol))
-            is Exclude.Step.ExcludeCollectionIndex -> relOpExcludeStepPos(step.index)
-            is Exclude.Step.ExcludeCollectionWildcard -> relOpExcludeStepCollectionWildcard()
-            is Exclude.Step.ExcludeTupleWildcard -> relOpExcludeStepStructWildcard()
+            is Exclude.Step.StructField -> relOpExcludeStepStructField(AstToPlan.convert(step.symbol))
+            is Exclude.Step.CollIndex -> relOpExcludeStepCollIndex(step.index)
+            is Exclude.Step.StructWildcard -> relOpExcludeStepStructWildcard()
+            is Exclude.Step.CollWildcard -> relOpExcludeStepCollWildcard()
         }
 
         // /**

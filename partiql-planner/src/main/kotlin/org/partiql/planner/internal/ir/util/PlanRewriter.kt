@@ -542,7 +542,7 @@ internal abstract class PlanRewriter<C> : PlanBaseVisitor<PlanNode, C>() {
     }
 
     override fun visitRelOpExcludeItem(node: Rel.Op.Exclude.Item, ctx: C): PlanNode {
-        val root = visitIdentifierSymbol(node.root, ctx) as Identifier.Symbol
+        val root = visitRexOpVar(node.root, ctx) as Rex.Op.Var
         val steps = _visitList(node.steps, ctx, ::visitRelOpExcludeStep)
         return if (root !== node.root || steps !== node.steps) {
             Rel.Op.Exclude.Item(root, steps)
@@ -551,28 +551,32 @@ internal abstract class PlanRewriter<C> : PlanBaseVisitor<PlanNode, C>() {
         }
     }
 
-    override fun visitRelOpExcludeStepAttr(node: Rel.Op.Exclude.Step.Attr, ctx: C): PlanNode {
+    override fun visitRelOpExcludeStepStructField(
+        node: Rel.Op.Exclude.Step.StructField,
+        ctx: C
+    ): PlanNode {
         val symbol = visitIdentifierSymbol(node.symbol, ctx) as Identifier.Symbol
         return if (symbol !== node.symbol) {
-            Rel.Op.Exclude.Step.Attr(symbol)
+            Rel.Op.Exclude.Step.StructField(symbol)
         } else {
             node
         }
     }
 
-    override fun visitRelOpExcludeStepPos(node: Rel.Op.Exclude.Step.Pos, ctx: C): PlanNode {
+    override fun visitRelOpExcludeStepCollIndex(node: Rel.Op.Exclude.Step.CollIndex, ctx: C):
+        PlanNode {
         val index = node.index
         return node
     }
 
     override fun visitRelOpExcludeStepStructWildcard(
         node: Rel.Op.Exclude.Step.StructWildcard,
-        ctx: C,
+        ctx: C
     ): PlanNode = node
 
-    override fun visitRelOpExcludeStepCollectionWildcard(
-        node: Rel.Op.Exclude.Step.CollectionWildcard,
-        ctx: C,
+    override fun visitRelOpExcludeStepCollWildcard(
+        node: Rel.Op.Exclude.Step.CollWildcard,
+        ctx: C
     ): PlanNode = node
 
     override fun visitRelOpErr(node: Rel.Op.Err, ctx: C): PlanNode {

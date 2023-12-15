@@ -236,27 +236,28 @@ internal abstract class PlanBaseVisitor<R, C> : PlanVisitor<R, C> {
         defaultVisit(node, ctx)
 
     override fun visitRelOpExcludeStep(node: Rel.Op.Exclude.Step, ctx: C): R = when (node) {
-        is Rel.Op.Exclude.Step.Attr -> visitRelOpExcludeStepAttr(node, ctx)
-        is Rel.Op.Exclude.Step.Pos -> visitRelOpExcludeStepPos(node, ctx)
+        is Rel.Op.Exclude.Step.StructField -> visitRelOpExcludeStepStructField(node, ctx)
+        is Rel.Op.Exclude.Step.CollIndex -> visitRelOpExcludeStepCollIndex(node, ctx)
         is Rel.Op.Exclude.Step.StructWildcard -> visitRelOpExcludeStepStructWildcard(node, ctx)
-        is Rel.Op.Exclude.Step.CollectionWildcard -> visitRelOpExcludeStepCollectionWildcard(node, ctx)
+        is Rel.Op.Exclude.Step.CollWildcard -> visitRelOpExcludeStepCollWildcard(node, ctx)
     }
 
-    override fun visitRelOpExcludeStepAttr(node: Rel.Op.Exclude.Step.Attr, ctx: C): R =
-        defaultVisit(node, ctx)
+    override fun visitRelOpExcludeStepStructField(
+        node: Rel.Op.Exclude.Step.StructField,
+        ctx: C
+    ): R = defaultVisit(node, ctx)
 
-    override fun visitRelOpExcludeStepPos(node: Rel.Op.Exclude.Step.Pos, ctx: C): R =
+    override fun visitRelOpExcludeStepCollIndex(node: Rel.Op.Exclude.Step.CollIndex, ctx: C): R =
         defaultVisit(node, ctx)
 
     override fun visitRelOpExcludeStepStructWildcard(
         node: Rel.Op.Exclude.Step.StructWildcard,
-        ctx: C,
+        ctx: C
     ): R = defaultVisit(node, ctx)
 
-    override
-    fun visitRelOpExcludeStepCollectionWildcard(
-        node: Rel.Op.Exclude.Step.CollectionWildcard,
-        ctx: C,
+    override fun visitRelOpExcludeStepCollWildcard(
+        node: Rel.Op.Exclude.Step.CollWildcard,
+        ctx: C
     ): R = defaultVisit(node, ctx)
 
     override fun visitRelOpErr(node: Rel.Op.Err, ctx: C): R = defaultVisit(node, ctx)
