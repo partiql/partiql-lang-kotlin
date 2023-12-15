@@ -3,13 +3,11 @@ package org.partiql.planner.internal
 import org.partiql.planner.Header
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.internal.ir.Agg
+import org.partiql.planner.internal.ir.Catalog
 import org.partiql.planner.internal.ir.Fn
-import org.partiql.planner.internal.ir.Global
 import org.partiql.planner.internal.ir.Identifier
 import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
-import org.partiql.planner.internal.ir.global
-import org.partiql.planner.internal.ir.identifierQualified
 import org.partiql.planner.internal.ir.identifierSymbol
 import org.partiql.planner.internal.typer.FnResolver
 import org.partiql.spi.BindingCase
@@ -94,13 +92,15 @@ internal sealed interface ResolvedVar {
      * Metadata for a resolved global variable
      *
      * @property type       Resolved StaticType
-     * @property ordinal    Index offset in the environment `globals` list
+     * @property ordinal    The relevant catalog's index offset in the [Env.catalogs] list
      * @property depth      The depth/level of the path match.
+     * @property position   The relevant value's index offset in the [Catalog.values] list
      */
     class Global(
         override val type: StaticType,
         override val ordinal: Int,
         override val depth: Int,
+        val position: Int
     ) : ResolvedVar
 }
 
@@ -126,14 +126,14 @@ internal enum class ResolutionStrategy {
  */
 internal class Env(
     private val headers: List<Header>,
-    private val catalogs: Map<String, ConnectorMetadata>,
+    private val connectors: Map<String, ConnectorMetadata>,
     private val session: PartiQLPlanner.Session,
 ) {
 
     /**
      * Collect the list of all referenced globals during planning.
      */
-    public val globals = mutableListOf<Global>()
+    public val catalogs = mutableListOf<Catalog>()
 
     /**
      * Encapsulate all function resolving logic within [FnResolver].
@@ -146,6 +146,7 @@ internal class Env(
     }
 
     /**
+
      * Leverages a [FunctionResolver] to find a matching function defined in the [Header] scalar function catalog.
      */
     internal fun resolveFn(fn: Fn.Unresolved, args: List<Rex>) = fnResolver.resolveFn(fn, args)
@@ -188,8 +189,8 @@ internal class Env(
      * @return
      */
     private fun getMetadata(catalogName: BindingName): Handle<ConnectorMetadata>? {
-        val catalogKey = catalogs.keys.firstOrNull { catalogName.isEquivalentTo(it) } ?: return null
-        val metadata = catalogs[catalogKey] ?: return null
+        val catalogKey = connectors.keys.firstOrNull { catalogName.isEquivalentTo(it) } ?: return null
+        val metadata = connectors[catalogKey] ?: return null
         return catalogKey to metadata
     }
 
@@ -210,15 +211,47 @@ internal class Env(
             getObjectHandle(cat, catalogPath)?.let { handle ->
                 getObjectDescriptor(handle).let { type ->
                     val depth = calculateMatched(originalPath, catalogPath, handle.second.absolutePath)
-                    val qualifiedPath = identifierQualified(
-                        root = handle.first.toIdentifier(),
-                        steps = handle.second.absolutePath.steps.map { it.toIdentifier() }
-                    )
-                    val global = global(qualifiedPath, type)
-                    globals.add(global)
+                    val (catalogIndex, valueIndex) = getOrAddCatalogValue(handle.first, handle.second.absolutePath.steps, type)
                     // Return resolution metadata
-                    ResolvedVar.Global(type, globals.size - 1, depth)
+                    ResolvedVar.Global(type, catalogIndex, depth, valueIndex)
                 }
+            }
+        }
+    }
+
+    /**
+     * @return a [Pair] where [Pair.first] is the catalog index and [Pair.second] is the value index within that catalog
+     */
+    private fun getOrAddCatalogValue(catalogName: String, valuePath: List<String>, valueType: StaticType): Pair<Int, Int> {
+        val catalogIndex = getOrAddCatalog(catalogName)
+        val symbols = catalogs[catalogIndex].symbols
+        return symbols.indexOfFirst { value ->
+            value.path == valuePath
+        }.let { index ->
+            when (index) {
+                -1 -> {
+                    catalogs[catalogIndex] = catalogs[catalogIndex].copy(
+                        symbols = symbols + listOf(Catalog.Symbol(valuePath, valueType))
+                    )
+                    catalogIndex to 0
+                }
+                else -> {
+                    catalogIndex to index
+                }
+            }
+        }
+    }
+
+    private fun getOrAddCatalog(catalogName: String): Int {
+        return catalogs.indexOfFirst { catalog ->
+            catalog.name == catalogName
+        }.let {
+            when (it) {
+                -1 -> {
+                    catalogs.add(Catalog(catalogName, emptyList()))
+                    catalogs.lastIndex
+                }
+                else -> it
             }
         }
     }
@@ -283,7 +316,7 @@ internal class Env(
     /**
      * Check locals, else search structs.
      */
-    private fun resolveLocalBind(path: BindingPath, locals: List<Rel.Binding>): ResolvedVar? {
+    internal fun resolveLocalBind(path: BindingPath, locals: List<Rel.Binding>): ResolvedVar? {
         if (path.steps.isEmpty()) {
             return null
         }

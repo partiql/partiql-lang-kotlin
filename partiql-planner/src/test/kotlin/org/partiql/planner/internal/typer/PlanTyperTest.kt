@@ -6,6 +6,7 @@ import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.ir.Identifier
 import org.partiql.planner.internal.ir.Rex
+import org.partiql.planner.internal.ir.catalogSymbolRef
 import org.partiql.planner.internal.ir.identifierSymbol
 import org.partiql.planner.internal.ir.rex
 import org.partiql.planner.internal.ir.rexOpGlobal
@@ -323,10 +324,10 @@ class PlanTyperTest {
         )
     }
 
-    private fun global(type: StaticType, index: Int = 0): Rex {
+    private fun global(type: StaticType, catalogIndex: Int = 0, symbolIndex: Int = 0): Rex {
         return rex(
             type,
-            rexOpGlobal(index)
+            rexOpGlobal(catalogSymbolRef(catalogIndex, symbolIndex))
         )
     }
 }

@@ -6,8 +6,8 @@
 package org.partiql.planner.internal.ir.util
 
 import org.partiql.planner.internal.ir.Agg
+import org.partiql.planner.internal.ir.Catalog
 import org.partiql.planner.internal.ir.Fn
-import org.partiql.planner.internal.ir.Global
 import org.partiql.planner.internal.ir.Identifier
 import org.partiql.planner.internal.ir.PartiQLPlan
 import org.partiql.planner.internal.ir.PlanNode
@@ -87,23 +87,35 @@ internal abstract class PlanRewriter<C> : PlanBaseVisitor<PlanNode, C>() {
 
     override fun visitPartiQLPlan(node: PartiQLPlan, ctx: C): PlanNode {
         val version = node.version
-        val globals = _visitList(node.globals, ctx, ::visitGlobal)
+        val globals = _visitList(node.catalogs, ctx, ::visitCatalog)
         val statement = visitStatement(node.statement, ctx) as Statement
-        return if (version !== node.version || globals !== node.globals || statement !== node.statement) {
+        return if (version !== node.version || globals !== node.catalogs || statement !== node.statement) {
             PartiQLPlan(version, globals, statement)
         } else {
             node
         }
     }
 
-    override fun visitGlobal(node: Global, ctx: C): PlanNode {
-        val path = visitIdentifierQualified(node.path, ctx) as Identifier.Qualified
-        val type = node.type
-        return if (path !== node.path || type !== node.type) {
-            Global(path, type)
+    override fun visitCatalog(node: Catalog, ctx: C): PlanNode {
+        val name = node.name
+        val symbols = _visitList(node.symbols, ctx, ::visitCatalogSymbol)
+        return if (name !== node.name || symbols !== node.symbols) {
+            Catalog(name, symbols)
         } else {
             node
         }
+    }
+
+    override fun visitCatalogSymbol(node: Catalog.Symbol, ctx: C): PlanNode {
+        val path = node.path
+        val type = node.type
+        return node
+    }
+
+    override fun visitCatalogSymbolRef(node: Catalog.Symbol.Ref, ctx: C): PlanNode {
+        val catalog = node.catalog
+        val symbol = node.symbol
+        return node
     }
 
     override fun visitFnResolved(node: Fn.Resolved, ctx: C): PlanNode {
@@ -192,8 +204,12 @@ internal abstract class PlanRewriter<C> : PlanBaseVisitor<PlanNode, C>() {
     }
 
     override fun visitRexOpGlobal(node: Rex.Op.Global, ctx: C): PlanNode {
-        val ref = node.ref
-        return node
+        val ref = visitCatalogSymbolRef(node.ref, ctx) as Catalog.Symbol.Ref
+        return if (ref !== node.ref) {
+            Rex.Op.Global(ref)
+        } else {
+            node
+        }
     }
 
     override fun visitRexOpPathIndex(node: Rex.Op.Path.Index, ctx: C): PlanNode {
@@ -540,7 +556,7 @@ internal abstract class PlanRewriter<C> : PlanBaseVisitor<PlanNode, C>() {
     }
 
     override fun visitRelOpExcludeItem(node: Rel.Op.Exclude.Item, ctx: C): PlanNode {
-        val root = visitIdentifierSymbol(node.root, ctx) as Identifier.Symbol
+        val root = visitRexOpVar(node.root, ctx) as Rex.Op.Var
         val steps = _visitList(node.steps, ctx, ::visitRelOpExcludeStep)
         return if (root !== node.root || steps !== node.steps) {
             Rel.Op.Exclude.Item(root, steps)
@@ -549,28 +565,32 @@ internal abstract class PlanRewriter<C> : PlanBaseVisitor<PlanNode, C>() {
         }
     }
 
-    override fun visitRelOpExcludeStepAttr(node: Rel.Op.Exclude.Step.Attr, ctx: C): PlanNode {
+    override fun visitRelOpExcludeStepStructField(
+        node: Rel.Op.Exclude.Step.StructField,
+        ctx: C
+    ): PlanNode {
         val symbol = visitIdentifierSymbol(node.symbol, ctx) as Identifier.Symbol
         return if (symbol !== node.symbol) {
-            Rel.Op.Exclude.Step.Attr(symbol)
+            Rel.Op.Exclude.Step.StructField(symbol)
         } else {
             node
         }
     }
 
-    override fun visitRelOpExcludeStepPos(node: Rel.Op.Exclude.Step.Pos, ctx: C): PlanNode {
+    override fun visitRelOpExcludeStepCollIndex(node: Rel.Op.Exclude.Step.CollIndex, ctx: C):
+        PlanNode {
         val index = node.index
         return node
     }
 
     override fun visitRelOpExcludeStepStructWildcard(
         node: Rel.Op.Exclude.Step.StructWildcard,
-        ctx: C,
+        ctx: C
     ): PlanNode = node
 
-    override fun visitRelOpExcludeStepCollectionWildcard(
-        node: Rel.Op.Exclude.Step.CollectionWildcard,
-        ctx: C,
+    override fun visitRelOpExcludeStepCollWildcard(
+        node: Rel.Op.Exclude.Step.CollWildcard,
+        ctx: C
     ): PlanNode = node
 
     override fun visitRelOpErr(node: Rel.Op.Err, ctx: C): PlanNode {

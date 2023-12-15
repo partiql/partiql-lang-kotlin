@@ -3,8 +3,8 @@
 package org.partiql.planner.internal.ir.builder
 
 import org.partiql.planner.internal.ir.Agg
+import org.partiql.planner.internal.ir.Catalog
 import org.partiql.planner.internal.ir.Fn
-import org.partiql.planner.internal.ir.Global
 import org.partiql.planner.internal.ir.Identifier
 import org.partiql.planner.internal.ir.PartiQLPlan
 import org.partiql.planner.internal.ir.PartiQLVersion
@@ -18,15 +18,15 @@ import org.partiql.value.PartiQLValueExperimental
 
 internal class PartiQlPlanBuilder(
     internal var version: PartiQLVersion? = null,
-    internal var globals: MutableList<Global> = mutableListOf(),
+    internal var catalogs: MutableList<Catalog> = mutableListOf(),
     internal var statement: Statement? = null,
 ) {
     internal fun version(version: PartiQLVersion?): PartiQlPlanBuilder = this.apply {
         this.version = version
     }
 
-    internal fun globals(globals: MutableList<Global>): PartiQlPlanBuilder = this.apply {
-        this.globals = globals
+    internal fun catalogs(catalogs: MutableList<Catalog>): PartiQlPlanBuilder = this.apply {
+        this.catalogs = catalogs
     }
 
     internal fun statement(statement: Statement?): PartiQlPlanBuilder = this.apply {
@@ -34,25 +34,59 @@ internal class PartiQlPlanBuilder(
     }
 
     internal fun build(): PartiQLPlan = PartiQLPlan(
-        version = version!!, globals = globals,
+        version = version!!, catalogs = catalogs,
         statement =
         statement!!
     )
 }
 
-internal class GlobalBuilder(
-    internal var path: Identifier.Qualified? = null,
+internal class CatalogBuilder(
+    internal var name: String? = null,
+    internal var symbols: MutableList<Catalog.Symbol> = mutableListOf(),
+) {
+    internal fun name(name: String?): CatalogBuilder = this.apply {
+        this.name = name
+    }
+
+    internal fun symbols(symbols: MutableList<Catalog.Symbol>): CatalogBuilder = this.apply {
+        this.symbols = symbols
+    }
+
+    internal fun build(): Catalog = Catalog(name = name!!, symbols = symbols)
+}
+
+internal class CatalogSymbolBuilder(
+    internal var path: MutableList<String> = mutableListOf(),
     internal var type: StaticType? = null,
 ) {
-    internal fun path(path: Identifier.Qualified?): GlobalBuilder = this.apply {
+    internal fun path(path: MutableList<String>): CatalogSymbolBuilder = this.apply {
         this.path = path
     }
 
-    internal fun type(type: StaticType?): GlobalBuilder = this.apply {
+    internal fun type(type: StaticType?): CatalogSymbolBuilder = this.apply {
         this.type = type
     }
 
-    internal fun build(): Global = Global(path = path!!, type = type!!)
+    internal fun build(): Catalog.Symbol = Catalog.Symbol(path = path, type = type!!)
+}
+
+internal class CatalogSymbolRefBuilder(
+    internal var catalog: Int? = null,
+    internal var symbol: Int? = null,
+) {
+    internal fun catalog(catalog: Int?): CatalogSymbolRefBuilder = this.apply {
+        this.catalog = catalog
+    }
+
+    internal fun symbol(symbol: Int?): CatalogSymbolRefBuilder = this.apply {
+        this.symbol = symbol
+    }
+
+    internal fun build(): Catalog.Symbol.Ref = Catalog.Symbol.Ref(
+        catalog = catalog!!,
+        symbol =
+        symbol!!
+    )
 }
 
 internal class FnResolvedBuilder(
@@ -205,9 +239,9 @@ internal class RexOpVarUnresolvedBuilder(
 }
 
 internal class RexOpGlobalBuilder(
-    internal var ref: Int? = null,
+    internal var ref: Catalog.Symbol.Ref? = null,
 ) {
-    internal fun ref(ref: Int?): RexOpGlobalBuilder = this.apply {
+    internal fun ref(ref: Catalog.Symbol.Ref?): RexOpGlobalBuilder = this.apply {
         this.ref = ref
     }
 
@@ -741,10 +775,10 @@ internal class RelOpExcludeBuilder(
 }
 
 internal class RelOpExcludeItemBuilder(
-    internal var root: Identifier.Symbol? = null,
+    internal var root: Rex.Op.Var? = null,
     internal var steps: MutableList<Rel.Op.Exclude.Step> = mutableListOf(),
 ) {
-    internal fun root(root: Identifier.Symbol?): RelOpExcludeItemBuilder = this.apply {
+    internal fun root(root: Rex.Op.Var?): RelOpExcludeItemBuilder = this.apply {
         this.root = root
     }
 
@@ -755,33 +789,35 @@ internal class RelOpExcludeItemBuilder(
     internal fun build(): Rel.Op.Exclude.Item = Rel.Op.Exclude.Item(root = root!!, steps = steps)
 }
 
-internal class RelOpExcludeStepAttrBuilder(
+internal class RelOpExcludeStepStructFieldBuilder(
     internal var symbol: Identifier.Symbol? = null,
 ) {
-    internal fun symbol(symbol: Identifier.Symbol?): RelOpExcludeStepAttrBuilder = this.apply {
+    internal fun symbol(symbol: Identifier.Symbol?): RelOpExcludeStepStructFieldBuilder = this.apply {
         this.symbol = symbol
     }
 
-    internal fun build(): Rel.Op.Exclude.Step.Attr = Rel.Op.Exclude.Step.Attr(symbol = symbol!!)
+    internal fun build(): Rel.Op.Exclude.Step.StructField = Rel.Op.Exclude.Step.StructField(
+        symbol =
+        symbol!!
+    )
 }
 
-internal class RelOpExcludeStepPosBuilder(
+internal class RelOpExcludeStepCollIndexBuilder(
     internal var index: Int? = null,
 ) {
-    internal fun index(index: Int?): RelOpExcludeStepPosBuilder = this.apply {
+    internal fun index(index: Int?): RelOpExcludeStepCollIndexBuilder = this.apply {
         this.index = index
     }
 
-    internal fun build(): Rel.Op.Exclude.Step.Pos = Rel.Op.Exclude.Step.Pos(index = index!!)
+    internal fun build(): Rel.Op.Exclude.Step.CollIndex = Rel.Op.Exclude.Step.CollIndex(index = index!!)
 }
 
 internal class RelOpExcludeStepStructWildcardBuilder() {
     internal fun build(): Rel.Op.Exclude.Step.StructWildcard = Rel.Op.Exclude.Step.StructWildcard()
 }
 
-internal class RelOpExcludeStepCollectionWildcardBuilder() {
-    internal fun build(): Rel.Op.Exclude.Step.CollectionWildcard =
-        Rel.Op.Exclude.Step.CollectionWildcard()
+internal class RelOpExcludeStepCollWildcardBuilder() {
+    internal fun build(): Rel.Op.Exclude.Step.CollWildcard = Rel.Op.Exclude.Step.CollWildcard()
 }
 
 internal class RelOpErrBuilder(

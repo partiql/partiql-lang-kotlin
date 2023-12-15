@@ -52,11 +52,11 @@ import org.partiql.ast.Statement
 import org.partiql.ast.TableDefinition
 import org.partiql.ast.Type
 import org.partiql.ast.exclude
-import org.partiql.ast.excludeExcludeExpr
-import org.partiql.ast.excludeStepExcludeCollectionIndex
-import org.partiql.ast.excludeStepExcludeCollectionWildcard
-import org.partiql.ast.excludeStepExcludeTupleAttr
-import org.partiql.ast.excludeStepExcludeTupleWildcard
+import org.partiql.ast.excludeItem
+import org.partiql.ast.excludeStepCollIndex
+import org.partiql.ast.excludeStepCollWildcard
+import org.partiql.ast.excludeStepStructField
+import org.partiql.ast.excludeStepStructWildcard
 import org.partiql.ast.exprAgg
 import org.partiql.ast.exprBagOp
 import org.partiql.ast.exprBetween
@@ -1058,20 +1058,21 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitExcludeExpr(ctx: GeneratedParser.ExcludeExprContext) = translate(ctx) {
-            val root = visitSymbolPrimitive(ctx.symbolPrimitive())
+            val rootId = visitSymbolPrimitive(ctx.symbolPrimitive())
+            val root = exprVar(rootId, Expr.Var.Scope.DEFAULT)
             val steps = visitOrEmpty<Exclude.Step>(ctx.excludeExprSteps())
-            excludeExcludeExpr(root, steps)
+            excludeItem(root, steps)
         }
 
         override fun visitExcludeExprTupleAttr(ctx: GeneratedParser.ExcludeExprTupleAttrContext) = translate(ctx) {
             val identifier = visitSymbolPrimitive(ctx.symbolPrimitive())
-            excludeStepExcludeTupleAttr(identifier)
+            excludeStepStructField(identifier)
         }
 
         override fun visitExcludeExprCollectionIndex(ctx: GeneratedParser.ExcludeExprCollectionIndexContext) =
             translate(ctx) {
                 val index = ctx.index.text.toInt()
-                excludeStepExcludeCollectionIndex(index)
+                excludeStepCollIndex(index)
             }
 
         override fun visitExcludeExprCollectionAttr(ctx: GeneratedParser.ExcludeExprCollectionAttrContext) =
@@ -1081,17 +1082,17 @@ internal class PartiQLParserDefault : PartiQLParser {
                     attr,
                     Identifier.CaseSensitivity.SENSITIVE,
                 )
-                excludeStepExcludeTupleAttr(identifier)
+                excludeStepStructField(identifier)
             }
 
         override fun visitExcludeExprCollectionWildcard(ctx: org.partiql.parser.antlr.PartiQLParser.ExcludeExprCollectionWildcardContext) =
             translate(ctx) {
-                excludeStepExcludeCollectionWildcard()
+                excludeStepCollWildcard()
             }
 
         override fun visitExcludeExprTupleWildcard(ctx: org.partiql.parser.antlr.PartiQLParser.ExcludeExprTupleWildcardContext) =
             translate(ctx) {
-                excludeStepExcludeTupleWildcard()
+                excludeStepStructWildcard()
             }
 
         /**

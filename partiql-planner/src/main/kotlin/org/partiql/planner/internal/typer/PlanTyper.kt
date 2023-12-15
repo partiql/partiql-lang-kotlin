@@ -32,6 +32,7 @@ import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.Statement
 import org.partiql.planner.internal.ir.aggResolved
+import org.partiql.planner.internal.ir.catalogSymbolRef
 import org.partiql.planner.internal.ir.fnResolved
 import org.partiql.planner.internal.ir.identifierSymbol
 import org.partiql.planner.internal.ir.rel
@@ -40,6 +41,8 @@ import org.partiql.planner.internal.ir.relOpAggregate
 import org.partiql.planner.internal.ir.relOpAggregateCall
 import org.partiql.planner.internal.ir.relOpDistinct
 import org.partiql.planner.internal.ir.relOpErr
+import org.partiql.planner.internal.ir.relOpExclude
+import org.partiql.planner.internal.ir.relOpExcludeItem
 import org.partiql.planner.internal.ir.relOpFilter
 import org.partiql.planner.internal.ir.relOpJoin
 import org.partiql.planner.internal.ir.relOpLimit
@@ -357,7 +360,29 @@ internal class PlanTyper(
 
             // rewrite
             val type = ctx!!.copy(schema)
-            return rel(type, node)
+
+            // resolve exclude path roots
+            val newItems = node.items.map { item ->
+                val resolvedRoot = when (val root = item.root) {
+                    is Rex.Op.Var.Unresolved -> {
+                        // resolve `root` to local binding
+                        val bindingPath = root.identifier.toBindingPath()
+                        when (val resolved = env.resolveLocalBind(bindingPath, init)) {
+                            null -> {
+                                handleUnresolvedExcludeRoot(root.identifier)
+                                root
+                            }
+                            else -> rexOpVarResolved(resolved.ordinal)
+                        }
+                    }
+                    is Rex.Op.Var.Resolved -> root
+                }
+                val steps = item.steps
+                relOpExcludeItem(resolvedRoot, steps)
+            }
+
+            val op = relOpExclude(input, newItems)
+            return rel(type, op)
         }
 
         override fun visitRelOpAggregate(node: Rel.Op.Aggregate, ctx: Rel.Type?): Rel {
@@ -427,7 +452,7 @@ internal class PlanTyper(
             }
             val type = resolvedVar.type
             val op = when (resolvedVar) {
-                is ResolvedVar.Global -> rexOpGlobal(resolvedVar.ordinal)
+                is ResolvedVar.Global -> rexOpGlobal(catalogSymbolRef(resolvedVar.ordinal, resolvedVar.position))
                 is ResolvedVar.Local -> rexOpVarResolved(resolvedVar.ordinal) // resolvedLocalPath(resolvedVar)
             }
             val variable = rex(type, op)
@@ -446,8 +471,8 @@ internal class PlanTyper(
         }
 
         override fun visitRexOpGlobal(node: Rex.Op.Global, ctx: StaticType?): Rex {
-            val global = env.globals[node.ref]
-            val type = global.type
+            val catalog = env.catalogs[node.ref.catalog]
+            val type = catalog.symbols[node.ref.symbol].type
             return rex(type, node)
         }
 
@@ -1319,11 +1344,16 @@ internal class PlanTyper(
         )
     }
 
-    private fun handleUnresolvedExcludeRoot(root: String) {
+    private fun handleUnresolvedExcludeRoot(root: Identifier) {
         onProblem(
             Problem(
                 sourceLocation = UNKNOWN_PROBLEM_LOCATION,
-                details = PlanningProblemDetails.UnresolvedExcludeExprRoot(root)
+                details = PlanningProblemDetails.UnresolvedExcludeExprRoot(
+                    when (root) {
+                        is Identifier.Symbol -> root.symbol
+                        is Identifier.Qualified -> root.toString()
+                    }
+                )
             )
         )
     }
@@ -1383,16 +1413,26 @@ internal class PlanTyper(
     private fun excludeBindings(input: List<Rel.Binding>, item: Rel.Op.Exclude.Item): List<Rel.Binding> {
         var matchedRoot = false
         val output = input.map {
-            if (item.root.isEquivalentTo(it.name)) {
-                matchedRoot = true
-                // recompute the StaticType of this binding after apply the exclusions
-                val type = it.type.exclude(item.steps, false)
-                it.copy(type = type)
-            } else {
-                it
+            when (val root = item.root) {
+                is Rex.Op.Var.Unresolved -> {
+                    when (val id = root.identifier) {
+                        is Identifier.Symbol -> {
+                            if (id.isEquivalentTo(it.name)) {
+                                matchedRoot = true
+                                // recompute the StaticType of this binding after apply the exclusions
+                                val type = it.type.exclude(item.steps, false)
+                                it.copy(type = type)
+                            } else {
+                                it
+                            }
+                        }
+                        is Identifier.Qualified -> it
+                    }
+                }
+                is Rex.Op.Var.Resolved -> it
             }
         }
-        if (!matchedRoot) handleUnresolvedExcludeRoot(item.root.symbol)
+        if (!matchedRoot && item.root is Rex.Op.Var.Unresolved) handleUnresolvedExcludeRoot(item.root.identifier)
         return output
     }
 
