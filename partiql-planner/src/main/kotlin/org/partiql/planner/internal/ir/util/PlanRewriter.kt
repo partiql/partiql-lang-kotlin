@@ -212,37 +212,35 @@ internal abstract class PlanRewriter<C> : PlanBaseVisitor<PlanNode, C>() {
         }
     }
 
-    override fun visitRexOpPath(node: Rex.Op.Path, ctx: C): PlanNode {
+    override fun visitRexOpPathIndex(node: Rex.Op.Path.Index, ctx: C): PlanNode {
         val root = visitRex(node.root, ctx) as Rex
-        val steps = _visitList(node.steps, ctx, ::visitRexOpPathStep)
-        return if (root !== node.root || steps !== node.steps) {
-            Rex.Op.Path(root, steps)
-        } else {
-            node
-        }
-    }
-
-    override fun visitRexOpPathStepIndex(node: Rex.Op.Path.Step.Index, ctx: C): PlanNode {
         val key = visitRex(node.key, ctx) as Rex
-        return if (key !== node.key) {
-            Rex.Op.Path.Step.Index(key)
+        return if (root !== node.root || key !== node.key) {
+            Rex.Op.Path.Index(root, key)
         } else {
             node
         }
     }
 
-    override fun visitRexOpPathStepSymbol(node: Rex.Op.Path.Step.Symbol, ctx: C): PlanNode {
-        val identifier = visitIdentifierSymbol(node.identifier, ctx) as Identifier.Symbol
-        return if (identifier !== node.identifier) {
-            Rex.Op.Path.Step.Symbol(identifier)
+    override fun visitRexOpPathKey(node: Rex.Op.Path.Key, ctx: C): PlanNode {
+        val root = visitRex(node.root, ctx) as Rex
+        val key = visitRex(node.key, ctx) as Rex
+        return if (root !== node.root || key !== node.key) {
+            Rex.Op.Path.Key(root, key)
         } else {
             node
         }
     }
 
-    override fun visitRexOpPathStepWildcard(node: Rex.Op.Path.Step.Wildcard, ctx: C): PlanNode = node
-
-    override fun visitRexOpPathStepUnpivot(node: Rex.Op.Path.Step.Unpivot, ctx: C): PlanNode = node
+    override fun visitRexOpPathSymbol(node: Rex.Op.Path.Symbol, ctx: C): PlanNode {
+        val root = visitRex(node.root, ctx) as Rex
+        val key = node.key
+        return if (root !== node.root || key !== node.key) {
+            Rex.Op.Path.Symbol(root, key)
+        } else {
+            node
+        }
+    }
 
     override fun visitRexOpCallStatic(node: Rex.Op.Call.Static, ctx: C): PlanNode {
         val fn = visitFn(node.fn, ctx) as Fn

@@ -248,57 +248,49 @@ internal class RexOpGlobalBuilder(
     internal fun build(): Rex.Op.Global = Rex.Op.Global(ref = ref!!)
 }
 
-internal class RexOpPathBuilder(
+internal class RexOpPathIndexBuilder(
     internal var root: Rex? = null,
-    internal var steps: MutableList<Rex.Op.Path.Step> = mutableListOf(),
+    internal var key: Rex? = null,
 ) {
-    internal fun root(root: Rex?): RexOpPathBuilder = this.apply {
+    internal fun root(root: Rex?): RexOpPathIndexBuilder = this.apply {
         this.root = root
     }
 
-    internal fun steps(steps: MutableList<Rex.Op.Path.Step>): RexOpPathBuilder = this.apply {
-        this.steps = steps
-    }
-
-    internal fun build(): Rex.Op.Path = Rex.Op.Path(root = root!!, steps = steps)
-}
-
-internal class RexOpPathStepIndexBuilder(
-    internal var key: Rex? = null,
-) {
-    internal fun key(key: Rex?): RexOpPathStepIndexBuilder = this.apply {
+    internal fun key(key: Rex?): RexOpPathIndexBuilder = this.apply {
         this.key = key
     }
 
-    internal fun build(): Rex.Op.Path.Step.Index = Rex.Op.Path.Step.Index(key = key!!)
+    internal fun build(): Rex.Op.Path.Index = Rex.Op.Path.Index(root = root!!, key = key!!)
 }
 
-internal class RexOpPathStepKeyBuilder(
+internal class RexOpPathKeyBuilder(
+    internal var root: Rex? = null,
     internal var key: Rex? = null,
 ) {
-    internal fun key(key: Rex?): RexOpPathStepKeyBuilder = this.apply {
+    internal fun root(root: Rex?): RexOpPathKeyBuilder = this.apply {
+        this.root = root
+    }
+
+    internal fun key(key: Rex?): RexOpPathKeyBuilder = this.apply {
         this.key = key
     }
 
-    internal fun build(): Rex.Op.Path.Step.Key = Rex.Op.Path.Step.Key(key = key!!)
+    internal fun build(): Rex.Op.Path.Key = Rex.Op.Path.Key(root = root!!, key = key!!)
 }
 
-internal class RexOpPathStepSymbolBuilder(
-    internal var identifier: Identifier.Symbol? = null,
+internal class RexOpPathSymbolBuilder(
+    internal var root: Rex? = null,
+    internal var key: String? = null,
 ) {
-    internal fun identifier(identifier: Identifier.Symbol?): RexOpPathStepSymbolBuilder = this.apply {
-        this.identifier = identifier
+    internal fun root(root: Rex?): RexOpPathSymbolBuilder = this.apply {
+        this.root = root
     }
 
-    internal fun build(): Rex.Op.Path.Step.Symbol = Rex.Op.Path.Step.Symbol(identifier = identifier!!)
-}
+    internal fun key(key: String?): RexOpPathSymbolBuilder = this.apply {
+        this.key = key
+    }
 
-internal class RexOpPathStepWildcardBuilder() {
-    internal fun build(): Rex.Op.Path.Step.Wildcard = Rex.Op.Path.Step.Wildcard()
-}
-
-internal class RexOpPathStepUnpivotBuilder() {
-    internal fun build(): Rex.Op.Path.Step.Unpivot = Rex.Op.Path.Step.Unpivot()
+    internal fun build(): Rex.Op.Path.Symbol = Rex.Op.Path.Symbol(root = root!!, key = key!!)
 }
 
 internal class RexOpCallStaticBuilder(

@@ -64,11 +64,13 @@ internal class TypeEnv(
 
 /**
  * Metadata regarding a resolved variable.
+ * @property depth      The depth/level of the path match.
  */
 internal sealed interface ResolvedVar {
 
     public val type: StaticType
     public val ordinal: Int
+    public val depth: Int
 
     /**
      * Metadata for a resolved local variable.
@@ -83,7 +85,7 @@ internal sealed interface ResolvedVar {
         override val ordinal: Int,
         val rootType: StaticType,
         val replacementSteps: List<BindingName>,
-        val depth: Int
+        override val depth: Int
     ) : ResolvedVar
 
     /**
@@ -97,7 +99,7 @@ internal sealed interface ResolvedVar {
     class Global(
         override val type: StaticType,
         override val ordinal: Int,
-        val depth: Int,
+        override val depth: Int,
         val position: Int
     ) : ResolvedVar
 }
