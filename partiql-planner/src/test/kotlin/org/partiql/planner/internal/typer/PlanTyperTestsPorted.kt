@@ -1,8 +1,5 @@
 package org.partiql.planner.internal.typer
 
-import com.amazon.ionelement.api.field
-import com.amazon.ionelement.api.ionString
-import com.amazon.ionelement.api.ionStructOf
 import com.amazon.ionelement.api.loadSingleElement
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtensionContext
@@ -15,7 +12,7 @@ import org.junit.jupiter.params.provider.ArgumentsSource
 import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.errors.Problem
 import org.partiql.errors.UNKNOWN_PROBLEM_LOCATION
-import org.partiql.parser.PartiQLParserBuilder
+import org.partiql.parser.PartiQLParser
 import org.partiql.plan.PartiQLPlan
 import org.partiql.plan.Statement
 import org.partiql.plan.debug.PlanPrinter
@@ -29,8 +26,8 @@ import org.partiql.planner.test.PartiQLTest
 import org.partiql.planner.test.PartiQLTestProvider
 import org.partiql.planner.util.ProblemCollector
 import org.partiql.plugins.local.toStaticType
-import org.partiql.plugins.memory.MemoryCatalog
-import org.partiql.plugins.memory.MemoryPlugin
+import org.partiql.plugins.memory.MemoryConnector
+import org.partiql.spi.connector.ConnectorMetadata
 import org.partiql.types.AnyOfType
 import org.partiql.types.AnyType
 import org.partiql.types.BagType
@@ -39,7 +36,6 @@ import org.partiql.types.SexpType
 import org.partiql.types.StaticType
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
-import java.time.Instant
 import java.util.stream.Stream
 import kotlin.reflect.KClass
 import kotlin.test.assertEquals
@@ -89,6 +85,7 @@ class PlanTyperTestsPorted {
     }
 
     companion object {
+
         private fun assertProblemExists(problem: () -> Problem) = ProblemHandler { problems, ignoreSourceLocation ->
             when (ignoreSourceLocation) {
                 true -> assertTrue("Expected to find ${problem.invoke()} in $problems") { problems.any { it.details == problem.invoke().details } }
@@ -96,12 +93,11 @@ class PlanTyperTestsPorted {
             }
         }
 
-        //
-        // loader utility
-        //
-        val inputStream = this::class.java.getResourceAsStream("/resource_path.txt")!!
-
-        val catalogProvider = MemoryCatalog.Provider().also {
+        /**
+         * MemoryConnector.Factory from reading the resources in /resource_path.txt for Github CI/CD.
+         */
+        val catalogs: List<Pair<String, ConnectorMetadata>> by lazy {
+            val inputStream = this::class.java.getResourceAsStream("/resource_path.txt")!!
             val map = mutableMapOf<String, MutableList<Pair<String, StaticType>>>()
             inputStream.reader().readLines().forEach { path ->
                 if (path.startsWith("catalogs/default")) {
@@ -123,32 +119,12 @@ class PlanTyperTestsPorted {
                     }
                 }
             }
-            map.forEach { (k: String, v: MutableList<Pair<String, StaticType>>) ->
-                it[k] = MemoryCatalog.of(*v.toTypedArray())
+            map.entries.map {
+                it.key to MemoryConnector.Metadata.of(*it.value.toTypedArray())
             }
         }
 
-        private val PLUGINS = listOf(MemoryPlugin(catalogProvider))
-
         private const val USER_ID = "TEST_USER"
-
-        private val catalogConfig = mapOf(
-            "aws" to ionStructOf(
-                field("connector_name", ionString("memory")),
-            ),
-            "b" to ionStructOf(
-                field("connector_name", ionString("memory")),
-            ),
-            "db" to ionStructOf(
-                field("connector_name", ionString("memory")),
-            ),
-            "pql" to ionStructOf(
-                field("connector_name", ionString("memory")),
-            ),
-            "subqueries" to ionStructOf(
-                field("connector_name", ionString("memory")),
-            ),
-        )
 
         private fun key(name: String) = PartiQLTest.Key("schema_inferencer", name)
 
@@ -3004,9 +2980,9 @@ class PlanTyperTestsPorted {
         session: PartiQLPlanner.Session,
         problemCollector: ProblemCollector
     ): PartiQLPlan {
-        val parser = PartiQLParserBuilder.standard().build()
+        val parser = PartiQLParser.default()
         val planner = PartiQLPlannerBuilder()
-            .plugins(PLUGINS)
+            .catalogs(*catalogs.toTypedArray())
             .build()
         val ast = parser.parse(query).root
         return planner.plan(ast, session, problemCollector).plan
@@ -3024,8 +3000,6 @@ class PlanTyperTestsPorted {
             USER_ID,
             tc.catalog,
             tc.catalogPath,
-            catalogConfig,
-            Instant.now()
         )
 
         val hasQuery = tc.query != null
@@ -3066,8 +3040,6 @@ class PlanTyperTestsPorted {
             USER_ID,
             tc.catalog,
             tc.catalogPath,
-            catalogConfig,
-            Instant.now()
         )
         val collector = ProblemCollector()
 
@@ -3113,8 +3085,6 @@ class PlanTyperTestsPorted {
             USER_ID,
             tc.catalog,
             tc.catalogPath,
-            catalogConfig,
-            Instant.now()
         )
         val collector = ProblemCollector()
         val exception = assertThrows<Throwable> {
