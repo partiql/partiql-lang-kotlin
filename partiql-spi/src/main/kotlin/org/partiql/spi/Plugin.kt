@@ -21,12 +21,16 @@ import org.partiql.spi.function.PartiQLFunctionExperimental
 /**
  * A singular unit of external logic.
  */
+@OptIn(PartiQLFunctionExperimental::class)
 public interface Plugin {
-    public fun getConnectorFactories(): List<Connector.Factory>
 
     /**
-     * Represents custom built-in functions to be accessed during execution.
-     **/
-    @OptIn(PartiQLFunctionExperimental::class)
-    public fun getFunctions(): List<PartiQLFunction>
+     * A [Connector.Factory] is used to instantiate a connector.
+     */
+    public val factory: Connector.Factory
+
+    /**
+     * Functions defined by this plugin.
+     */
+    public val functions: List<PartiQLFunction>
 }
