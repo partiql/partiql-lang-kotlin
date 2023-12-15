@@ -8,8 +8,8 @@ import org.partiql.plan.rexOpLit
 import org.partiql.plan.rexOpPathStepKey
 import org.partiql.plan.rexOpPathStepSymbol
 import org.partiql.planner.internal.ir.Agg
+import org.partiql.planner.internal.ir.Catalog
 import org.partiql.planner.internal.ir.Fn
-import org.partiql.planner.internal.ir.Global
 import org.partiql.planner.internal.ir.Identifier
 import org.partiql.planner.internal.ir.PartiQLPlan
 import org.partiql.planner.internal.ir.Rel
@@ -35,15 +35,22 @@ internal object PlanTransform : PlanBaseVisitor<PlanNode, ProblemCallback>() {
     }
 
     override fun visitPartiQLPlan(node: PartiQLPlan, ctx: ProblemCallback): org.partiql.plan.PartiQLPlan {
-        val globals = node.globals.map { visitGlobal(it, ctx) }
+        val catalogs = node.catalogs.map { visitCatalog(it, ctx) }
         val statement = visitStatement(node.statement, ctx)
-        return partiQLPlan(globals, statement)
+        return partiQLPlan(catalogs, statement)
     }
 
-    override fun visitGlobal(node: Global, ctx: ProblemCallback): org.partiql.plan.Global {
-        val path = visitIdentifierQualified(node.path, ctx)
-        val type = node.type
-        return org.partiql.plan.global(path, type)
+    override fun visitCatalog(node: Catalog, ctx: ProblemCallback): org.partiql.plan.Catalog {
+        val symbols = node.symbols.map { visitCatalogSymbol(it, ctx) }
+        return org.partiql.plan.Catalog(node.name, symbols)
+    }
+
+    override fun visitCatalogSymbol(node: Catalog.Symbol, ctx: ProblemCallback): org.partiql.plan.Catalog.Symbol {
+        return org.partiql.plan.Catalog.Symbol(node.path, node.type)
+    }
+
+    override fun visitCatalogSymbolRef(node: Catalog.Symbol.Ref, ctx: ProblemCallback): org.partiql.plan.Catalog.Symbol.Ref {
+        return org.partiql.plan.Catalog.Symbol.Ref(node.catalog, node.symbol)
     }
 
     override fun visitFnResolved(node: Fn.Resolved, ctx: ProblemCallback) = org.partiql.plan.fn(node.signature)
@@ -108,7 +115,9 @@ internal object PlanTransform : PlanBaseVisitor<PlanNode, ProblemCallback>() {
     override fun visitRexOpVarUnresolved(node: Rex.Op.Var.Unresolved, ctx: ProblemCallback) =
         org.partiql.plan.Rex.Op.Err("Unresolved variable $node")
 
-    override fun visitRexOpGlobal(node: Rex.Op.Global, ctx: ProblemCallback) = org.partiql.plan.Rex.Op.Global(node.ref)
+    override fun visitRexOpGlobal(node: Rex.Op.Global, ctx: ProblemCallback) = org.partiql.plan.Rex.Op.Global(
+        ref = visitCatalogSymbolRef(node.ref, ctx)
+    )
 
     override fun visitRexOpPath(node: Rex.Op.Path, ctx: ProblemCallback): org.partiql.plan.Rex.Op.Path {
         val root = visitRex(node.root, ctx)

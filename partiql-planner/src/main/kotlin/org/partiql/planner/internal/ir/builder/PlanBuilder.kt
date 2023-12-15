@@ -3,8 +3,8 @@
 package org.partiql.planner.internal.ir.builder
 
 import org.partiql.planner.internal.ir.Agg
+import org.partiql.planner.internal.ir.Catalog
 import org.partiql.planner.internal.ir.Fn
-import org.partiql.planner.internal.ir.Global
 import org.partiql.planner.internal.ir.Identifier
 import org.partiql.planner.internal.ir.PartiQLPlan
 import org.partiql.planner.internal.ir.PartiQLVersion
@@ -22,21 +22,41 @@ internal fun <T : PlanNode> plan(block: PlanBuilder.() -> T) = PlanBuilder().blo
 internal class PlanBuilder {
     internal fun partiQLPlan(
         version: PartiQLVersion? = null,
-        globals: MutableList<Global> = mutableListOf(),
+        catalogs: MutableList<Catalog> = mutableListOf(),
         statement: Statement? = null,
         block: PartiQlPlanBuilder.() -> Unit = {},
     ): PartiQLPlan {
-        val builder = PartiQlPlanBuilder(version, globals, statement)
+        val builder = PartiQlPlanBuilder(version, catalogs, statement)
         builder.block()
         return builder.build()
     }
 
-    internal fun global(
-        path: Identifier.Qualified? = null,
+    internal fun catalog(
+        name: String? = null,
+        symbols: MutableList<Catalog.Symbol> = mutableListOf(),
+        block: CatalogBuilder.() -> Unit = {},
+    ): Catalog {
+        val builder = CatalogBuilder(name, symbols)
+        builder.block()
+        return builder.build()
+    }
+
+    internal fun catalogSymbol(
+        path: MutableList<String> = mutableListOf(),
         type: StaticType? = null,
-        block: GlobalBuilder.() -> Unit = {},
-    ): Global {
-        val builder = GlobalBuilder(path, type)
+        block: CatalogSymbolBuilder.() -> Unit = {},
+    ): Catalog.Symbol {
+        val builder = CatalogSymbolBuilder(path, type)
+        builder.block()
+        return builder.build()
+    }
+
+    internal fun catalogSymbolRef(
+        catalog: Int? = null,
+        symbol: Int? = null,
+        block: CatalogSymbolRefBuilder.() -> Unit = {},
+    ): Catalog.Symbol.Ref {
+        val builder = CatalogSymbolRefBuilder(catalog, symbol)
         builder.block()
         return builder.build()
     }
@@ -140,7 +160,10 @@ internal class PlanBuilder {
         return builder.build()
     }
 
-    internal fun rexOpGlobal(ref: Int? = null, block: RexOpGlobalBuilder.() -> Unit = {}): Rex.Op.Global {
+    internal fun rexOpGlobal(
+        ref: Catalog.Symbol.Ref? = null,
+        block: RexOpGlobalBuilder.() -> Unit = {}
+    ): Rex.Op.Global {
         val builder = RexOpGlobalBuilder(ref)
         builder.block()
         return builder.build()

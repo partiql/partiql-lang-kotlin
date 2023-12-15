@@ -3,8 +3,8 @@
 package org.partiql.planner.internal.ir.visitor
 
 import org.partiql.planner.internal.ir.Agg
+import org.partiql.planner.internal.ir.Catalog
 import org.partiql.planner.internal.ir.Fn
-import org.partiql.planner.internal.ir.Global
 import org.partiql.planner.internal.ir.Identifier
 import org.partiql.planner.internal.ir.PartiQLPlan
 import org.partiql.planner.internal.ir.PlanNode
@@ -18,7 +18,12 @@ internal abstract class PlanBaseVisitor<R, C> : PlanVisitor<R, C> {
 
     override fun visitPartiQLPlan(node: PartiQLPlan, ctx: C): R = defaultVisit(node, ctx)
 
-    override fun visitGlobal(node: Global, ctx: C): R = defaultVisit(node, ctx)
+    public override fun visitCatalog(node: Catalog, ctx: C): R = defaultVisit(node, ctx)
+
+    public override fun visitCatalogSymbol(node: Catalog.Symbol, ctx: C): R = defaultVisit(node, ctx)
+
+    public override fun visitCatalogSymbolRef(node: Catalog.Symbol.Ref, ctx: C): R =
+        defaultVisit(node, ctx)
 
     override fun visitFn(node: Fn, ctx: C): R = when (node) {
         is Fn.Resolved -> visitFnResolved(node, ctx)

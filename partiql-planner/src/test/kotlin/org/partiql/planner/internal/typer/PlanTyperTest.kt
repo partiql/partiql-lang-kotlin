@@ -6,6 +6,7 @@ import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.ir.Identifier
 import org.partiql.planner.internal.ir.Rex
+import org.partiql.planner.internal.ir.catalogSymbolRef
 import org.partiql.planner.internal.ir.identifierSymbol
 import org.partiql.planner.internal.ir.rex
 import org.partiql.planner.internal.ir.rexOpGlobal
@@ -249,7 +250,7 @@ class PlanTyperTest {
                 op = rexOpPath(
                     root = rex(
                         ORDERED_DUPLICATES_STRUCT,
-                        rexOpGlobal(0)
+                        rexOpGlobal(0, 0)
                     ),
                     steps = listOf(
                         rexOpPathStepSymbol(identifierSymbol("definition", Identifier.CaseSensitivity.SENSITIVE)),
@@ -288,7 +289,7 @@ class PlanTyperTest {
                 op = rexOpPath(
                     root = rex(
                         ORDERED_DUPLICATES_STRUCT,
-                        rexOpGlobal(0)
+                        rexOpGlobal(0, 0)
                     ),
                     steps = listOf(
                         rexOpPathStepSymbol(identifierSymbol("DEFINITION", Identifier.CaseSensitivity.SENSITIVE)),
@@ -327,7 +328,7 @@ class PlanTyperTest {
                 op = rexOpPath(
                     root = rex(
                         DUPLICATES_STRUCT,
-                        rexOpGlobal(0)
+                        rexOpGlobal(0, 0)
                     ),
                     steps = listOf(
                         rexOpPathStepSymbol(identifierSymbol("DEFINITION", Identifier.CaseSensitivity.INSENSITIVE)),
@@ -366,7 +367,7 @@ class PlanTyperTest {
                 op = rexOpPath(
                     root = rex(
                         DUPLICATES_STRUCT,
-                        rexOpGlobal(0)
+                        rexOpGlobal(0, 0)
                     ),
                     steps = listOf(
                         rexOpPathStepSymbol(identifierSymbol("DEFINITION", Identifier.CaseSensitivity.SENSITIVE)),
@@ -405,7 +406,7 @@ class PlanTyperTest {
                 op = rexOpPath(
                     root = rex(
                         DUPLICATES_STRUCT,
-                        rexOpGlobal(0)
+                        rexOpGlobal(0, 0)
                     ),
                     steps = listOf(
                         rexOpPathStepSymbol(identifierSymbol("definition", Identifier.CaseSensitivity.SENSITIVE)),
@@ -444,7 +445,7 @@ class PlanTyperTest {
                 op = rexOpPath(
                     root = rex(
                         OPEN_DUPLICATES_STRUCT,
-                        rexOpGlobal(0)
+                        rexOpGlobal(0, 0)
                     ),
                     steps = listOf(
                         rexOpPathStepSymbol(identifierSymbol("definition", Identifier.CaseSensitivity.SENSITIVE)),
@@ -483,7 +484,7 @@ class PlanTyperTest {
                 op = rexOpPath(
                     root = rex(
                         CLOSED_UNION_DUPLICATES_STRUCT,
-                        rexOpGlobal(0)
+                        rexOpGlobal(0, 0)
                     ),
                     steps = listOf(
                         rexOpPathStepSymbol(identifierSymbol("definition", Identifier.CaseSensitivity.INSENSITIVE)),
@@ -522,7 +523,7 @@ class PlanTyperTest {
                 op = rexOpPath(
                     root = rex(
                         CLOSED_UNION_DUPLICATES_STRUCT,
-                        rexOpGlobal(0)
+                        rexOpGlobal(0, 0)
                     ),
                     steps = listOf(
                         rexOpPathStepSymbol(identifierSymbol("definition", Identifier.CaseSensitivity.SENSITIVE)),
@@ -533,4 +534,8 @@ class PlanTyperTest {
         val actual = typer.resolve(input)
         assertEquals(expected, actual)
     }
+
+    private fun rexOpGlobal(catalog: Int, ref: Int) = rexOpGlobal(
+        catalogSymbolRef(catalog, ref)
+    )
 }
