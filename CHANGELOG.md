@@ -947,6 +947,7 @@ breaking changes if migrating from v0.9.2. The breaking changes accidentally int
 Initial alpha release of PartiQL.
 
 [Unreleased]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.13.2-alpha...HEAD
+[0.14.0-alpha]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.13.2-alpha...v0.14.0-alpha
 [0.13.2-alpha]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.13.1-alpha...v0.13.2-alpha
 [0.13.1-alpha]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.13.0-alpha...v0.13.1-alpha
 [0.13.0-alpha]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.12.0-alpha...v0.13.0-alpha
