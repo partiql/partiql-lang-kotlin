@@ -32,8 +32,6 @@ dependencies {
     api(project(":partiql-planner"))
     api(project(":partiql-spi"))
     api(project(":partiql-types"))
-    api(project(":partiql-plan"))
-    api(project(":partiql-planner"))
     //
     api(Deps.ionElement)
     api(Deps.ionJava)
