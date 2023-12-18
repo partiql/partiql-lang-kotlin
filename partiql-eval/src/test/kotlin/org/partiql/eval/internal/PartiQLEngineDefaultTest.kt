@@ -14,7 +14,9 @@ import org.partiql.value.bagValue
 import org.partiql.value.boolValue
 import org.partiql.value.int32Value
 import org.partiql.value.io.PartiQLValueIonWriterBuilder
+import org.partiql.value.missingValue
 import org.partiql.value.nullValue
+import org.partiql.value.stringValue
 import org.partiql.value.structValue
 import java.io.ByteArrayOutputStream
 import kotlin.test.assertEquals
@@ -112,10 +114,12 @@ class PartiQLEngineDefaultTest {
     fun testJoinOuterFull() {
         val statement =
             parser.parse("SELECT a, b FROM << { 'a': 1 } >> t FULL OUTER JOIN << { 'b': 2 } >> s ON false;").root
+
         val session = PartiQLPlanner.Session("q", "u")
         val plan = planner.plan(statement, session)
 
         val prepared = engine.prepare(plan.plan)
+
         val result = engine.execute(prepared)
         if (result is PartiQLResult.Error) {
             throw result.cause
@@ -138,13 +142,41 @@ class PartiQLEngineDefaultTest {
 
     @OptIn(PartiQLValueExperimental::class)
     @Test
-    fun testJoinOuterFullOnTrue() {
-        val statement =
-            parser.parse("SELECT a, b FROM << { 'a': 1 } >> t FULL OUTER JOIN << { 'b': 2 } >> s ON TRUE;").root
+    fun testTupleUnion() {
+        val source = """
+            TUPLEUNION(
+                { 'a': 1 },
+                { 'b': TRUE },
+                { 'c': 'hello' }
+            );
+        """.trimIndent()
+        val statement = parser.parse(source).root
         val session = PartiQLPlanner.Session("q", "u")
         val plan = planner.plan(statement, session)
 
         val prepared = engine.prepare(plan.plan)
+        val result = engine.execute(prepared) as PartiQLResult.Value
+        val output = result.value
+
+        val expected = structValue(
+            "a" to int32Value(1),
+            "b" to boolValue(true),
+            "c" to stringValue("hello")
+        )
+        assertEquals(expected, output)
+    }
+
+    @OptIn(PartiQLValueExperimental::class)
+    @Test
+    fun testJoinOuterFullOnTrue() {
+        val statement =
+            parser.parse("SELECT a, b FROM << { 'a': 1 } >> t FULL OUTER JOIN << { 'b': 2 } >> s ON TRUE;").root
+
+        val session = PartiQLPlanner.Session("q", "u")
+        val plan = planner.plan(statement, session)
+
+        val prepared = engine.prepare(plan.plan)
+
         val result = engine.execute(prepared)
         if (result is PartiQLResult.Error) {
             throw result.cause
@@ -162,6 +194,28 @@ class PartiQLEngineDefaultTest {
     }
 
     @OptIn(PartiQLValueExperimental::class)
+    @Test
+    fun testTupleUnionNullInput() {
+        val source = """
+            TUPLEUNION(
+                { 'a': 1 },
+                NULL,
+                { 'c': 'hello' }
+            );
+        """.trimIndent()
+        val statement = parser.parse(source).root
+        val session = PartiQLPlanner.Session("q", "u")
+        val plan = planner.plan(statement, session)
+
+        val prepared = engine.prepare(plan.plan)
+        val result = engine.execute(prepared) as PartiQLResult.Value
+        val output = result.value
+
+        val expected = structValue<PartiQLValue>(null)
+        assertEquals(expected, output)
+    }
+
+    @OptIn(PartiQLValueExperimental::class)
     private fun comparisonString(expected: PartiQLValue, actual: PartiQLValue): String {
         val expectedBuffer = ByteArrayOutputStream()
         val expectedWriter = PartiQLValueIonWriterBuilder.standardIonTextBuilder().build(expectedBuffer)
@@ -172,5 +226,85 @@ class PartiQLEngineDefaultTest {
             expectedWriter.append(actual)
             appendLine("Actual   : $expectedBuffer")
         }
+    }
+
+    @OptIn(PartiQLValueExperimental::class)
+    @Test
+    fun testTupleUnionBadInput() {
+        val source = """
+            TUPLEUNION(
+                { 'a': 1 },
+                5,
+                { 'c': 'hello' }
+            );
+        """.trimIndent()
+        val statement = parser.parse(source).root
+        val session = PartiQLPlanner.Session("q", "u")
+        val plan = planner.plan(statement, session)
+
+        val prepared = engine.prepare(plan.plan)
+        val result = engine.execute(prepared) as PartiQLResult.Value
+        val output = result.value
+
+        val expected = missingValue()
+        assertEquals(expected, output)
+    }
+
+    @OptIn(PartiQLValueExperimental::class)
+    @Test
+    fun testTupleUnionDuplicates() {
+        val source = """
+            TUPLEUNION(
+                { 'a': 1, 'b': FALSE },
+                { 'b': TRUE },
+                { 'c': 'hello' }
+            );
+        """.trimIndent()
+        val statement = parser.parse(source).root
+        val session = PartiQLPlanner.Session("q", "u")
+        val plan = planner.plan(statement, session)
+
+        val prepared = engine.prepare(plan.plan)
+        val result = engine.execute(prepared) as PartiQLResult.Value
+        val output = result.value
+
+        val expected = structValue(
+            "a" to int32Value(1),
+            "b" to boolValue(false),
+            "b" to boolValue(true),
+            "c" to stringValue("hello")
+        )
+        assertEquals(expected, output)
+    }
+
+    @OptIn(PartiQLValueExperimental::class)
+    @Test
+    fun testSelectStarTupleUnion() {
+        // As SELECT * gets converted to TUPLEUNION, this is a sanity check
+        val source = """
+            SELECT * FROM
+            <<
+                { 'a': 1, 'b': FALSE }
+            >> AS t,
+            <<
+                { 'b': TRUE }
+            >> AS s
+        """.trimIndent()
+        val statement = parser.parse(source).root
+        val session = PartiQLPlanner.Session("q", "u")
+        val plan = planner.plan(statement, session)
+
+        val prepared = engine.prepare(plan.plan)
+        val result = engine.execute(prepared) as PartiQLResult.Value
+        val output = result.value
+
+        val expected = bagValue(
+            structValue(
+                "a" to int32Value(1),
+                "b" to boolValue(false),
+                "b" to boolValue(true)
+            )
+        )
+        assertEquals(expected, output)
     }
 }

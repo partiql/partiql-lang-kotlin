@@ -12,6 +12,7 @@ import org.partiql.eval.internal.operator.rex.ExprCollection
 import org.partiql.eval.internal.operator.rex.ExprLiteral
 import org.partiql.eval.internal.operator.rex.ExprSelect
 import org.partiql.eval.internal.operator.rex.ExprStruct
+import org.partiql.eval.internal.operator.rex.ExprTupleUnion
 import org.partiql.eval.internal.operator.rex.ExprVar
 import org.partiql.plan.PartiQLPlan
 import org.partiql.plan.PlanNode
@@ -82,6 +83,11 @@ internal object Compiler {
 
         override fun visitRex(node: Rex, ctx: Unit): Operator.Expr {
             return super.visitRexOp(node.op, ctx) as Operator.Expr
+        }
+
+        override fun visitRexOpTupleUnion(node: Rex.Op.TupleUnion, ctx: Unit): Operator {
+            val args = node.args.map { visitRex(it, ctx) }.toTypedArray()
+            return ExprTupleUnion(args)
         }
 
         override fun visitRelOpJoin(node: Rel.Op.Join, ctx: Unit): Operator {
