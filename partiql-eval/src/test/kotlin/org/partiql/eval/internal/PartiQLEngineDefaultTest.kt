@@ -25,6 +25,10 @@ import kotlin.test.assertEquals
 
 /**
  * This holds sanity tests during the development of the [PartiQLEngine.default] implementation.
+<<<<<<< HEAD
+=======
+ *
+>>>>>>> 1772f0ed (Updates JOIN tests)
  */
 class PartiQLEngineDefaultTest {
 
@@ -113,7 +117,6 @@ class PartiQLEngineDefaultTest {
     fun testJoinOuterFull() {
         val statement =
             parser.parse("SELECT t.a, s.b FROM << { 'a': 1 } >> t FULL OUTER JOIN << { 'b': 2 } >> s ON false;").root
-
         val session = PartiQLPlanner.Session("q", "u")
         val plan = planner.plan(statement, session)
 
