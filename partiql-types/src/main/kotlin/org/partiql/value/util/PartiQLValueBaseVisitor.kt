@@ -53,10 +53,14 @@ public abstract class PartiQLValueBaseVisitor<R, C> : PartiQLValueVisitor<R, C> 
     public open fun defaultVisit(v: PartiQLValue, ctx: C): R {
         when (v) {
             is CollectionValue<*> -> {
-                v.elements?.forEach { it?.accept(this, ctx) }
+                if (!v.isNull) {
+                    v.forEach { it.accept(this, ctx) }
+                }
             }
             is StructValue<*> -> {
-                v.fields?.forEach { it.second.accept(this, ctx) }
+                if (!v.isNull) {
+                    v.entries.forEach { it.second.accept(this, ctx) }
+                }
             }
             else -> {}
         }

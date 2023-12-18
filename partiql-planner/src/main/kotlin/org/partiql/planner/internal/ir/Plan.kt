@@ -10,11 +10,17 @@ import org.partiql.value.PartiQLValueExperimental
 
 internal fun partiQLPlan(
     version: PartiQLVersion,
-    globals: List<Global>,
+    catalogs: List<Catalog>,
     statement: Statement,
-): PartiQLPlan = PartiQLPlan(version, globals, statement)
+): PartiQLPlan = PartiQLPlan(version, catalogs, statement)
 
-internal fun global(path: Identifier.Qualified, type: StaticType): Global = Global(path, type)
+internal fun catalog(name: String, symbols: List<Catalog.Symbol>): Catalog = Catalog(name, symbols)
+
+internal fun catalogSymbol(path: List<String>, type: StaticType): Catalog.Symbol =
+    Catalog.Symbol(path, type)
+
+internal fun catalogSymbolRef(catalog: Int, symbol: Int): Catalog.Symbol.Ref =
+    Catalog.Symbol.Ref(catalog, symbol)
 
 internal fun fnResolved(signature: FunctionSignature.Scalar): Fn.Resolved = Fn.Resolved(signature)
 
@@ -44,23 +50,16 @@ internal fun rexOpVarResolved(ref: Int): Rex.Op.Var.Resolved = Rex.Op.Var.Resolv
 internal fun rexOpVarUnresolved(identifier: Identifier, scope: Rex.Op.Var.Scope):
     Rex.Op.Var.Unresolved = Rex.Op.Var.Unresolved(identifier, scope)
 
-internal fun rexOpGlobal(ref: Int): Rex.Op.Global = Rex.Op.Global(ref)
+internal fun rexOpGlobal(ref: Catalog.Symbol.Ref): Rex.Op.Global = Rex.Op.Global(ref)
 
-internal fun rexOpPath(root: Rex, steps: List<Rex.Op.Path.Step>): Rex.Op.Path = Rex.Op.Path(
+internal fun rexOpPathIndex(root: Rex, key: Rex): Rex.Op.Path.Index = Rex.Op.Path.Index(root, key)
+
+internal fun rexOpPathKey(root: Rex, key: Rex): Rex.Op.Path.Key = Rex.Op.Path.Key(root, key)
+
+internal fun rexOpPathSymbol(root: Rex, key: String): Rex.Op.Path.Symbol = Rex.Op.Path.Symbol(
     root,
-    steps
+    key
 )
-
-internal fun rexOpPathStepIndex(key: Rex): Rex.Op.Path.Step.Index = Rex.Op.Path.Step.Index(key)
-
-internal fun rexOpPathStepKey(key: Rex): Rex.Op.Path.Step.Key = Rex.Op.Path.Step.Key(key)
-
-internal fun rexOpPathStepSymbol(identifier: Identifier.Symbol): Rex.Op.Path.Step.Symbol =
-    Rex.Op.Path.Step.Symbol(identifier)
-
-internal fun rexOpPathStepWildcard(): Rex.Op.Path.Step.Wildcard = Rex.Op.Path.Step.Wildcard()
-
-internal fun rexOpPathStepUnpivot(): Rex.Op.Path.Step.Unpivot = Rex.Op.Path.Step.Unpivot()
 
 internal fun rexOpCallStatic(fn: Fn, args: List<Rex>): Rex.Op.Call.Static = Rex.Op.Call.Static(
     fn,
@@ -163,19 +162,20 @@ internal fun relOpAggregateCall(agg: Agg, args: List<Rex>): Rel.Op.Aggregate.Cal
 internal fun relOpExclude(input: Rel, items: List<Rel.Op.Exclude.Item>): Rel.Op.Exclude =
     Rel.Op.Exclude(input, items)
 
-internal fun relOpExcludeItem(root: Identifier.Symbol, steps: List<Rel.Op.Exclude.Step>):
-    Rel.Op.Exclude.Item = Rel.Op.Exclude.Item(root, steps)
+internal fun relOpExcludeItem(root: Rex.Op.Var, steps: List<Rel.Op.Exclude.Step>): Rel.Op.Exclude.Item =
+    Rel.Op.Exclude.Item(root, steps)
 
-internal fun relOpExcludeStepAttr(symbol: Identifier.Symbol): Rel.Op.Exclude.Step.Attr =
-    Rel.Op.Exclude.Step.Attr(symbol)
+internal fun relOpExcludeStepStructField(symbol: Identifier.Symbol): Rel.Op.Exclude.Step.StructField =
+    Rel.Op.Exclude.Step.StructField(symbol)
 
-internal fun relOpExcludeStepPos(index: Int): Rel.Op.Exclude.Step.Pos = Rel.Op.Exclude.Step.Pos(index)
+internal fun relOpExcludeStepCollIndex(index: Int): Rel.Op.Exclude.Step.CollIndex =
+    Rel.Op.Exclude.Step.CollIndex(index)
 
 internal fun relOpExcludeStepStructWildcard(): Rel.Op.Exclude.Step.StructWildcard =
     Rel.Op.Exclude.Step.StructWildcard()
 
-internal fun relOpExcludeStepCollectionWildcard(): Rel.Op.Exclude.Step.CollectionWildcard =
-    Rel.Op.Exclude.Step.CollectionWildcard()
+internal fun relOpExcludeStepCollWildcard(): Rel.Op.Exclude.Step.CollWildcard =
+    Rel.Op.Exclude.Step.CollWildcard()
 
 internal fun relOpErr(message: String): Rel.Op.Err = Rel.Op.Err(message)
 

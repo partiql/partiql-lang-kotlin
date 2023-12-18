@@ -10,7 +10,6 @@ import org.partiql.eval.internal.operator.rel.RelProject
 import org.partiql.eval.internal.operator.rel.RelScan
 import org.partiql.eval.internal.operator.rex.ExprCollection
 import org.partiql.eval.internal.operator.rex.ExprLiteral
-import org.partiql.eval.internal.operator.rex.ExprPathKey
 import org.partiql.eval.internal.operator.rex.ExprSelect
 import org.partiql.eval.internal.operator.rex.ExprStruct
 import org.partiql.eval.internal.operator.rex.ExprVar
@@ -83,24 +82,6 @@ internal object Compiler {
 
         override fun visitRex(node: Rex, ctx: Unit): Operator.Expr {
             return super.visitRexOp(node.op, ctx) as Operator.Expr
-        }
-
-        override fun visitRexOpPath(node: Rex.Op.Path, ctx: Unit): Operator {
-            val root = visitRex(node.root, ctx)
-            var path = root
-            node.steps.forEach {
-                when (it) {
-                    is Rex.Op.Path.Step.Key -> {
-                        val key = visitRex(it.key, ctx)
-                        path = ExprPathKey(path, key)
-                    }
-                    is Rex.Op.Path.Step.Index -> TODO()
-                    is Rex.Op.Path.Step.Symbol -> TODO()
-                    is Rex.Op.Path.Step.Unpivot -> TODO()
-                    is Rex.Op.Path.Step.Wildcard -> TODO()
-                }
-            }
-            return path
         }
 
         override fun visitRelOpJoin(node: Rel.Op.Join, ctx: Unit): Operator {

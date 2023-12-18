@@ -1,21 +1,18 @@
 package org.partiql.planner.internal.typer
 
-import com.amazon.ionelement.api.ionString
-import com.amazon.ionelement.api.ionStructOf
 import org.junit.jupiter.api.DynamicContainer
 import org.junit.jupiter.api.DynamicTest
-import org.partiql.errors.Problem
 import org.partiql.errors.ProblemCallback
-import org.partiql.errors.ProblemSeverity
-import org.partiql.parser.PartiQLParserBuilder
+import org.partiql.parser.PartiQLParser
 import org.partiql.plan.Statement
 import org.partiql.plan.debug.PlanPrinter
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.PartiQLPlannerBuilder
 import org.partiql.planner.test.PartiQLTest
 import org.partiql.planner.test.PartiQLTestProvider
-import org.partiql.plugins.memory.MemoryCatalog
-import org.partiql.plugins.memory.MemoryPlugin
+import org.partiql.planner.util.ProblemCollector
+import org.partiql.plugins.memory.MemoryConnector
+import org.partiql.spi.connector.ConnectorMetadata
 import org.partiql.types.StaticType
 import java.util.Random
 import java.util.stream.Stream
@@ -31,43 +28,23 @@ abstract class PartiQLTyperTestBase {
         }
     }
 
-    internal class ProblemCollector : ProblemCallback {
-        private val problemList = mutableListOf<Problem>()
-
-        val problems: List<Problem>
-            get() = problemList
-
-        val hasErrors: Boolean
-            get() = problemList.any { it.details.severity == ProblemSeverity.ERROR }
-
-        val hasWarnings: Boolean
-            get() = problemList.any { it.details.severity == ProblemSeverity.WARNING }
-
-        override fun invoke(problem: Problem) {
-            problemList.add(problem)
-        }
-    }
-
     companion object {
         internal val session: ((String) -> PartiQLPlanner.Session) = { catalog ->
             PartiQLPlanner.Session(
                 queryId = Random().nextInt().toString(),
                 userId = "test-user",
                 currentCatalog = catalog,
-                catalogConfig = mapOf(
-                    catalog to ionStructOf(
-                        "connector_name" to ionString("memory")
-                    )
-                )
             )
         }
     }
 
     val inputs = PartiQLTestProvider().apply { load() }
 
-    val testingPipeline: ((String, String, MemoryCatalog.Provider, ProblemCallback) -> PartiQLPlanner.Result) = { query, catalog, catalogProvider, collector ->
-        val ast = PartiQLParserBuilder.standard().build().parse(query).root
-        val planner = PartiQLPlannerBuilder().plugins(listOf(MemoryPlugin(catalogProvider))).build()
+    val testingPipeline: ((String, String, ConnectorMetadata, ProblemCallback) -> PartiQLPlanner.Result) = { query, catalog, metadata, collector ->
+        val ast = PartiQLParser.default().parse(query).root
+        val planner = PartiQLPlannerBuilder()
+            .addCatalog(catalog, metadata)
+            .build()
         planner.plan(ast, session(catalog), collector)
     }
 
@@ -76,14 +53,13 @@ abstract class PartiQLTyperTestBase {
         tests: List<PartiQLTest>,
         argsMap: Map<TestResult, Set<List<StaticType>>>,
     ): Stream<DynamicContainer> {
-        val catalogProvider = MemoryCatalog.Provider()
 
         return tests.map { test ->
             val group = test.statement
             val children = argsMap.flatMap { (key, value) ->
                 value.mapIndexed { index: Int, types: List<StaticType> ->
                     val testName = "${testCategory}_${key}_$index"
-                    catalogProvider[testName] = MemoryCatalog.of(
+                    val metadata = MemoryConnector.Metadata.of(
                         *(
                             types.mapIndexed { i, t ->
                                 "t${i + 1}" to t
@@ -96,7 +72,7 @@ abstract class PartiQLTyperTestBase {
                     DynamicTest.dynamicTest(displayName) {
                         val pc = ProblemCollector()
                         if (key is TestResult.Success) {
-                            val result = testingPipeline(statement, testName, catalogProvider, pc)
+                            val result = testingPipeline(statement, testName, metadata, pc)
                             val root = (result.plan.statement as Statement.Query).root
                             val actualType = root.type
                             assert(actualType == key.expectedType) {
@@ -117,7 +93,7 @@ abstract class PartiQLTyperTestBase {
                                 }
                             }
                         } else {
-                            val result = testingPipeline(statement, testName, catalogProvider, pc)
+                            val result = testingPipeline(statement, testName, metadata, pc)
                             val root = (result.plan.statement as Statement.Query).root
                             val actualType = root.type
                             assert(actualType == StaticType.MISSING) {

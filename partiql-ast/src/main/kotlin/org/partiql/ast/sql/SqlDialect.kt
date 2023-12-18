@@ -86,32 +86,32 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
     override fun visitExclude(node: Exclude, head: SqlBlock): SqlBlock {
         var h = head
         h = h concat " EXCLUDE "
-        h = h concat list(start = null, end = null) { node.exprs }
+        h = h concat list(start = null, end = null) { node.items }
         return h
     }
 
-    override fun visitExcludeExcludeExpr(node: Exclude.ExcludeExpr, head: SqlBlock): SqlBlock {
+    override fun visitExcludeItem(node: Exclude.Item, head: SqlBlock): SqlBlock {
         var h = head
-        h = h concat visitIdentifierSymbol(node.root, SqlBlock.Nil)
+        h = h concat visitExprVar(node.root, SqlBlock.Nil)
         h = h concat list(delimiter = null, start = null, end = null) { node.steps }
         return h
     }
 
-    override fun visitExcludeStepExcludeCollectionIndex(node: Exclude.Step.ExcludeCollectionIndex, head: SqlBlock): SqlBlock {
+    override fun visitExcludeStepCollIndex(node: Exclude.Step.CollIndex, head: SqlBlock): SqlBlock {
         return head concat r("[${node.index}]")
     }
 
-    override fun visitExcludeStepExcludeTupleWildcard(node: Exclude.Step.ExcludeTupleWildcard, head: SqlBlock): SqlBlock {
+    override fun visitExcludeStepStructWildcard(node: Exclude.Step.StructWildcard, head: SqlBlock): SqlBlock {
         return head concat r(".*")
     }
 
-    override fun visitExcludeStepExcludeTupleAttr(node: Exclude.Step.ExcludeTupleAttr, head: SqlBlock): SqlBlock {
+    override fun visitExcludeStepStructField(node: Exclude.Step.StructField, head: SqlBlock): SqlBlock {
         var h = head concat r(".")
         h = h concat visitIdentifierSymbol(node.symbol, SqlBlock.Nil)
         return h
     }
 
-    override fun visitExcludeStepExcludeCollectionWildcard(node: Exclude.Step.ExcludeCollectionWildcard, head: SqlBlock): SqlBlock {
+    override fun visitExcludeStepCollWildcard(node: Exclude.Step.CollWildcard, head: SqlBlock): SqlBlock {
         return head concat r("[*]")
     }
 

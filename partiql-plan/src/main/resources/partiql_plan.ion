@@ -8,15 +8,32 @@ imports::{
 }
 
 parti_q_l_plan::{
-  globals:    list::[global],       // (globals ...)
+  catalogs:   list::[catalog],      // (catalogs ...)
   statement:  statement,            // (statement ...)
 }
 
-// Globals
-
-global::{
-  path: '.identifier.qualified',
-  type: static_type,
+// Represent an instance of a database.
+// - Currently, `symbols` represents all values from this catalog to be used in this plan.
+// - Eventually, TODO functions may be resolved to a specific namespace within a catalog.
+catalog::{
+  name: string,
+  symbols: list::[symbol],
+  _: [
+    // A reference to a value contained within a catalog.
+    symbol::{
+      // The path to a value WITHIN a catalog. Note: This should not start with the catalog's name. Also, this
+      //  should not be empty
+      path: list::[string],
+      type: static_type,
+      _: [
+        // A reference to a symbol
+        ref::{
+          catalog: int,
+          symbol: int
+        }
+      ]
+    }
+  ]
 }
 
 // Functions
@@ -70,33 +87,19 @@ rex::{
     },
 
     global::{
-      ref: int,
+      ref: '.catalog.symbol.ref'
     },
 
-    path::{
-      root:   rex,
-      steps:  list::[step],
-      _: [
-        step::[
-          // The key MUST be an integer expression. Ex: a[0], a[1 + 1]
-          index::{ key: rex },
+    path::[
+      // The key MUST be an integer expression. Ex: a[0], a[1 + 1]
+      index::{ root: rex, key: rex },
 
-          // Case-sensitive lookup. The key MUST be a string expression. Ex: a["b"], a."b", a[CAST(b AS STRING)]
-          key::{ key: rex },
+      // Case-sensitive lookup. The key MUST be a string expression. Ex: a["b"], a."b", a[CAST(b AS STRING)]
+      key::{ root: rex, key: rex },
 
-          // Case-insensitive lookup. The key MUST be a literal string. Ex: a.b
-          symbol::{ key: string },
-
-          // For arrays. Ex: a[*]
-          // TODO: Do we need this? According to specification: [1,2,3][*] ⇔ SELECT VALUE v FROM [1, 2, 3] AS v
-          wildcard::{},
-
-          // For tuples. Ex: a.*
-          // TODO: Do we need this? According to specification: {'a':1, 'b':2}.* ⇔ SELECT VALUE v FROM UNPIVOT {'a':1, 'b':2} AS v
-          unpivot::{},
-        ],
-      ],
-    },
+      // Case-insensitive lookup. The key MUST be a literal string. Ex: a.b
+      symbol::{ root: rex, key: string },
+    ],
 
     call::[
       static::{
@@ -288,18 +291,14 @@ rel::{
       items: list::[item],
       _: [
         item::{
-          root: '.identifier.symbol',
+          root: '.rex.op.var',
           steps: list::[step],
         },
         step::[
-          attr::{
-            symbol: '.identifier.symbol',
-          },
-          pos::{
-            index: int,
-          },
+          struct_field::{ symbol: '.identifier.symbol' },
+          coll_index::{ index: int },
           struct_wildcard::{},
-          collection_wildcard::{},
+          coll_wildcard::{},
         ],
       ],
     },

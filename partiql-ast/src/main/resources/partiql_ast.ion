@@ -563,17 +563,17 @@ select::[
 ]
 
 exclude::{
-  exprs: list::[exclude_expr],
+  items: list::[item],
   _: [
-    exclude_expr::{
-      root: '.identifier.symbol',
+    item::{
+      root: '.expr.var',
       steps: list::[step],
     },
     step::[
-      exclude_tuple_attr::{ symbol: '.identifier.symbol' },
-      exclude_collection_index::{ index: int },
-      exclude_tuple_wildcard::{},
-      exclude_collection_wildcard::{},
+      struct_field::{ symbol: '.identifier.symbol' },
+      coll_index::{ index: int },
+      struct_wildcard::{},
+      coll_wildcard::{},
     ]
   ]
 }

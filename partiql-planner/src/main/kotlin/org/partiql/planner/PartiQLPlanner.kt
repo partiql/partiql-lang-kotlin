@@ -1,6 +1,5 @@
 package org.partiql.planner
 
-import com.amazon.ionelement.api.StructElement
 import org.partiql.ast.Statement
 import org.partiql.errors.Problem
 import org.partiql.errors.ProblemCallback
@@ -39,7 +38,6 @@ public interface PartiQLPlanner {
      * @property userId
      * @property currentCatalog
      * @property currentDirectory
-     * @property catalogConfig
      * @property instant
      */
     public class Session(
@@ -47,7 +45,15 @@ public interface PartiQLPlanner {
         public val userId: String,
         public val currentCatalog: String? = null,
         public val currentDirectory: List<String> = emptyList(),
-        public val catalogConfig: Map<String, StructElement> = emptyMap(),
         public val instant: Instant = Instant.now(),
     )
+
+    public companion object {
+
+        @JvmStatic
+        public fun builder(): PartiQLPlannerBuilder = PartiQLPlannerBuilder()
+
+        @JvmStatic
+        public fun default(): PartiQLPlanner = PartiQLPlannerBuilder().build()
+    }
 }

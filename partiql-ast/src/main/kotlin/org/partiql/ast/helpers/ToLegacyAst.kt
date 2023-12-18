@@ -708,9 +708,12 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
             projectExpr(expr, alias, metas)
         }
 
+    // !!
+    // Legacy AST mislabels key and value in PIVOT, swapping the order here to recreate bug for compatibility.
+    // !!
     override fun visitSelectPivot(node: Select.Pivot, ctx: Ctx) = translate(node) { metas ->
-        val value = visitExpr(node.value, ctx)
-        val key = visitExpr(node.key, ctx)
+        val key = visitExpr(node.value, ctx) // SWAP val -> key
+        val value = visitExpr(node.key, ctx) // SWAP key -> val
         projectPivot(value, key, metas)
     }
 
@@ -753,42 +756,42 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
     }
 
     override fun visitExclude(node: Exclude, ctx: Ctx): PartiqlAst.ExcludeOp = translate(node) { metas ->
-        val excludeExprs = node.exprs.translate<PartiqlAst.ExcludeExpr>(ctx)
+        val excludeExprs = node.items.translate<PartiqlAst.ExcludeExpr>(ctx)
         excludeOp(excludeExprs, metas)
     }
 
-    override fun visitExcludeExcludeExpr(node: Exclude.ExcludeExpr, ctx: Ctx) = translate(node) { metas ->
-        val root = visitIdentifierSymbol(node.root, ctx)
+    override fun visitExcludeItem(node: Exclude.Item, ctx: Ctx) = translate(node) { metas ->
+        val root = visitExprVar(node.root, ctx)
         val steps = node.steps.translate<PartiqlAst.ExcludeStep>(ctx)
-        excludeExpr(root = root, steps = steps, metas)
+        excludeExpr(root = identifier_(root.name, root.case), steps = steps, metas)
     }
 
     override fun visitExcludeStep(node: Exclude.Step, ctx: Ctx) =
         super.visitExcludeStep(node, ctx) as PartiqlAst.ExcludeStep
 
-    override fun visitExcludeStepExcludeTupleAttr(node: Exclude.Step.ExcludeTupleAttr, ctx: Ctx) = translate(node) { metas ->
+    override fun visitExcludeStepStructField(node: Exclude.Step.StructField, ctx: Ctx) = translate(node) { metas ->
         val attr = node.symbol.symbol
         val case = node.symbol.caseSensitivity.toLegacyCaseSensitivity()
         excludeTupleAttr(identifier(attr, case), metas)
     }
 
-    override fun visitExcludeStepExcludeCollectionIndex(
-        node: Exclude.Step.ExcludeCollectionIndex,
+    override fun visitExcludeStepCollIndex(
+        node: Exclude.Step.CollIndex,
         ctx: Ctx
     ) = translate(node) { metas ->
         val index = node.index.toLong()
         excludeCollectionIndex(index, metas)
     }
 
-    override fun visitExcludeStepExcludeTupleWildcard(
-        node: Exclude.Step.ExcludeTupleWildcard,
+    override fun visitExcludeStepStructWildcard(
+        node: Exclude.Step.StructWildcard,
         ctx: Ctx
     ) = translate(node) { metas ->
         excludeTupleWildcard(metas)
     }
 
-    override fun visitExcludeStepExcludeCollectionWildcard(
-        node: Exclude.Step.ExcludeCollectionWildcard,
+    override fun visitExcludeStepCollWildcard(
+        node: Exclude.Step.CollWildcard,
         ctx: Ctx
     ) = translate(node) { metas ->
         excludeCollectionWildcard(metas)

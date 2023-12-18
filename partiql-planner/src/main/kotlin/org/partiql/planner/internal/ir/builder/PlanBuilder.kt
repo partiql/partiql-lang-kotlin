@@ -3,8 +3,8 @@
 package org.partiql.planner.internal.ir.builder
 
 import org.partiql.planner.internal.ir.Agg
+import org.partiql.planner.internal.ir.Catalog
 import org.partiql.planner.internal.ir.Fn
-import org.partiql.planner.internal.ir.Global
 import org.partiql.planner.internal.ir.Identifier
 import org.partiql.planner.internal.ir.PartiQLPlan
 import org.partiql.planner.internal.ir.PartiQLVersion
@@ -22,21 +22,41 @@ internal fun <T : PlanNode> plan(block: PlanBuilder.() -> T) = PlanBuilder().blo
 internal class PlanBuilder {
     internal fun partiQLPlan(
         version: PartiQLVersion? = null,
-        globals: MutableList<Global> = mutableListOf(),
+        catalogs: MutableList<Catalog> = mutableListOf(),
         statement: Statement? = null,
         block: PartiQlPlanBuilder.() -> Unit = {},
     ): PartiQLPlan {
-        val builder = PartiQlPlanBuilder(version, globals, statement)
+        val builder = PartiQlPlanBuilder(version, catalogs, statement)
         builder.block()
         return builder.build()
     }
 
-    internal fun global(
-        path: Identifier.Qualified? = null,
+    internal fun catalog(
+        name: String? = null,
+        symbols: MutableList<Catalog.Symbol> = mutableListOf(),
+        block: CatalogBuilder.() -> Unit = {},
+    ): Catalog {
+        val builder = CatalogBuilder(name, symbols)
+        builder.block()
+        return builder.build()
+    }
+
+    internal fun catalogSymbol(
+        path: MutableList<String> = mutableListOf(),
         type: StaticType? = null,
-        block: GlobalBuilder.() -> Unit = {},
-    ): Global {
-        val builder = GlobalBuilder(path, type)
+        block: CatalogSymbolBuilder.() -> Unit = {},
+    ): Catalog.Symbol {
+        val builder = CatalogSymbolBuilder(path, type)
+        builder.block()
+        return builder.build()
+    }
+
+    internal fun catalogSymbolRef(
+        catalog: Int? = null,
+        symbol: Int? = null,
+        block: CatalogSymbolRefBuilder.() -> Unit = {},
+    ): Catalog.Symbol.Ref {
+        val builder = CatalogSymbolRefBuilder(catalog, symbol)
         builder.block()
         return builder.build()
     }
@@ -140,57 +160,41 @@ internal class PlanBuilder {
         return builder.build()
     }
 
-    internal fun rexOpGlobal(ref: Int? = null, block: RexOpGlobalBuilder.() -> Unit = {}): Rex.Op.Global {
+    internal fun rexOpGlobal(
+        ref: Catalog.Symbol.Ref? = null,
+        block: RexOpGlobalBuilder.() -> Unit = {}
+    ): Rex.Op.Global {
         val builder = RexOpGlobalBuilder(ref)
         builder.block()
         return builder.build()
     }
 
-    internal fun rexOpPath(
+    internal fun rexOpPathIndex(
         root: Rex? = null,
-        steps: MutableList<Rex.Op.Path.Step> = mutableListOf(),
-        block: RexOpPathBuilder.() -> Unit = {},
-    ): Rex.Op.Path {
-        val builder = RexOpPathBuilder(root, steps)
-        builder.block()
-        return builder.build()
-    }
-
-    internal fun rexOpPathStepIndex(
         key: Rex? = null,
-        block: RexOpPathStepIndexBuilder.() -> Unit = {},
-    ): Rex.Op.Path.Step.Index {
-        val builder = RexOpPathStepIndexBuilder(key)
+        block: RexOpPathIndexBuilder.() -> Unit = {},
+    ): Rex.Op.Path.Index {
+        val builder = RexOpPathIndexBuilder(root, key)
         builder.block()
         return builder.build()
     }
 
-    internal fun rexOpPathStepKey(
+    internal fun rexOpPathKey(
+        root: Rex? = null,
         key: Rex? = null,
-        block: RexOpPathStepKeyBuilder.() -> Unit = {},
-    ): Rex.Op.Path.Step.Key {
-        val builder = RexOpPathStepKeyBuilder(key)
+        block: RexOpPathKeyBuilder.() -> Unit = {},
+    ): Rex.Op.Path.Key {
+        val builder = RexOpPathKeyBuilder(root, key)
         builder.block()
         return builder.build()
     }
 
-    internal fun rexOpPathStepSymbol(
-        identifier: Identifier.Symbol? = null,
-        block: RexOpPathStepSymbolBuilder.() -> Unit = {},
-    ): Rex.Op.Path.Step.Symbol {
-        val builder = RexOpPathStepSymbolBuilder(identifier)
-        builder.block()
-        return builder.build()
-    }
-
-    internal fun rexOpPathStepWildcard(block: RexOpPathStepWildcardBuilder.() -> Unit = {}): Rex.Op.Path.Step.Wildcard {
-        val builder = RexOpPathStepWildcardBuilder()
-        builder.block()
-        return builder.build()
-    }
-
-    internal fun rexOpPathStepUnpivot(block: RexOpPathStepUnpivotBuilder.() -> Unit = {}): Rex.Op.Path.Step.Unpivot {
-        val builder = RexOpPathStepUnpivotBuilder()
+    internal fun rexOpPathSymbol(
+        root: Rex? = null,
+        key: String? = null,
+        block: RexOpPathSymbolBuilder.() -> Unit = {},
+    ): Rex.Op.Path.Symbol {
+        val builder = RexOpPathSymbolBuilder(root, key)
         builder.block()
         return builder.build()
     }
@@ -501,7 +505,7 @@ internal class PlanBuilder {
     }
 
     internal fun relOpExcludeItem(
-        root: Identifier.Symbol? = null,
+        root: Rex.Op.Var? = null,
         steps: MutableList<Rel.Op.Exclude.Step> = mutableListOf(),
         block: RelOpExcludeItemBuilder.() -> Unit = {},
     ): Rel.Op.Exclude.Item {
@@ -510,36 +514,38 @@ internal class PlanBuilder {
         return builder.build()
     }
 
-    internal fun relOpExcludeStepAttr(
+    internal fun relOpExcludeStepStructField(
         symbol: Identifier.Symbol? = null,
-        block: RelOpExcludeStepAttrBuilder.() -> Unit = {},
-    ): Rel.Op.Exclude.Step.Attr {
-        val builder = RelOpExcludeStepAttrBuilder(symbol)
+        block: RelOpExcludeStepStructFieldBuilder.() -> Unit = {}
+    ): Rel.Op.Exclude.Step.StructField {
+        val builder = RelOpExcludeStepStructFieldBuilder(symbol)
         builder.block()
         return builder.build()
     }
 
-    internal fun relOpExcludeStepPos(
+    internal fun relOpExcludeStepCollIndex(
         index: Int? = null,
-        block: RelOpExcludeStepPosBuilder.() -> Unit = {},
-    ): Rel.Op.Exclude.Step.Pos {
-        val builder = RelOpExcludeStepPosBuilder(index)
+        block: RelOpExcludeStepCollIndexBuilder.() -> Unit = {}
+    ): Rel.Op.Exclude.Step.CollIndex {
+        val builder = RelOpExcludeStepCollIndexBuilder(index)
         builder.block()
         return builder.build()
     }
 
     internal fun relOpExcludeStepStructWildcard(
-        block: RelOpExcludeStepStructWildcardBuilder.() -> Unit = {},
+        block: RelOpExcludeStepStructWildcardBuilder.() -> Unit =
+            {}
     ): Rel.Op.Exclude.Step.StructWildcard {
         val builder = RelOpExcludeStepStructWildcardBuilder()
         builder.block()
         return builder.build()
     }
 
-    internal fun relOpExcludeStepCollectionWildcard(
-        block: RelOpExcludeStepCollectionWildcardBuilder.() -> Unit = {},
-    ): Rel.Op.Exclude.Step.CollectionWildcard {
-        val builder = RelOpExcludeStepCollectionWildcardBuilder()
+    internal fun relOpExcludeStepCollWildcard(
+        block: RelOpExcludeStepCollWildcardBuilder.() -> Unit =
+            {}
+    ): Rel.Op.Exclude.Step.CollWildcard {
+        val builder = RelOpExcludeStepCollWildcardBuilder()
         builder.block()
         return builder.build()
     }
