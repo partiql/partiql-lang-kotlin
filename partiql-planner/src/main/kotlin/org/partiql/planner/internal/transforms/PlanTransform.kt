@@ -121,7 +121,7 @@ internal object PlanTransform : PlanBaseVisitor<PlanNode, ProblemCallback>() {
 
     override fun visitRexOpPathKey(node: Rex.Op.Path.Key, ctx: ProblemCallback): PlanNode {
         val root = visitRex(node.root, ctx)
-        val key = visitRex(node.root, ctx)
+        val key = visitRex(node.key, ctx)
         return org.partiql.plan.Rex.Op.Path.Key(root, key)
     }
 

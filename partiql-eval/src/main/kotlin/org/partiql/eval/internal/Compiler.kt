@@ -8,9 +8,12 @@ import org.partiql.eval.internal.operator.rel.RelJoinOuterFull
 import org.partiql.eval.internal.operator.rel.RelJoinRight
 import org.partiql.eval.internal.operator.rel.RelProject
 import org.partiql.eval.internal.operator.rel.RelScan
+import org.partiql.eval.internal.operator.rel.RelScanIndexed
 import org.partiql.eval.internal.operator.rex.ExprCase
 import org.partiql.eval.internal.operator.rex.ExprCollection
 import org.partiql.eval.internal.operator.rex.ExprLiteral
+import org.partiql.eval.internal.operator.rex.ExprPathKey
+import org.partiql.eval.internal.operator.rex.ExprPivot
 import org.partiql.eval.internal.operator.rex.ExprSelect
 import org.partiql.eval.internal.operator.rex.ExprStruct
 import org.partiql.eval.internal.operator.rex.ExprTupleUnion
@@ -30,9 +33,12 @@ internal object Compiler {
     }
 
     private object PlanToCodeTransformer : PlanBaseVisitor<Operator, Unit>() {
+
         override fun defaultReturn(node: PlanNode, ctx: Unit): Operator {
             TODO("Not yet implemented")
         }
+
+        // REX
 
         override fun visitRexOpStruct(node: Rex.Op.Struct, ctx: Unit): Operator {
             val fields = node.fields.map {
@@ -45,15 +51,15 @@ internal object Compiler {
             return ExprVar(node.ref)
         }
 
+        override fun visitRexOpPathKey(node: Rex.Op.Path.Key, ctx: Unit): Operator {
+            val root = visitRex(node.root, ctx)
+            val key = visitRex(node.key, ctx)
+            return ExprPathKey(root, key)
+        }
+
         override fun visitRexOpCollection(node: Rex.Op.Collection, ctx: Unit): Operator {
             val values = node.values.map { visitRex(it, ctx) }
             return ExprCollection(values)
-        }
-
-        override fun visitRelOpProject(node: Rel.Op.Project, ctx: Unit): Operator {
-            val input = visitRel(node.input, ctx)
-            val projections = node.projections.map { visitRex(it, ctx) }
-            return RelProject(input, projections)
         }
 
         override fun visitRexOpSelect(node: Rex.Op.Select, ctx: Unit): Operator {
@@ -62,14 +68,34 @@ internal object Compiler {
             return ExprSelect(rel, constructor)
         }
 
-        override fun visitRelOpScan(node: Rel.Op.Scan, ctx: Unit): Operator {
-            val rex = visitRex(node.rex, ctx)
-            return RelScan(rex)
+        override fun visitRexOpPivot(node: Rex.Op.Pivot, ctx: Unit): Operator {
+            val rel = visitRel(node.rel, ctx)
+            val key = visitRex(node.key, ctx)
+            val value = visitRex(node.value, ctx)
+            return ExprPivot(rel, key, value)
         }
 
         @OptIn(PartiQLValueExperimental::class)
         override fun visitRexOpLit(node: Rex.Op.Lit, ctx: Unit): Operator {
             return ExprLiteral(node.value)
+        }
+
+        // REL
+
+        override fun visitRelOpScan(node: Rel.Op.Scan, ctx: Unit): Operator {
+            val rex = visitRex(node.rex, ctx)
+            return RelScan(rex)
+        }
+
+        override fun visitRelOpProject(node: Rel.Op.Project, ctx: Unit): Operator {
+            val input = visitRel(node.input, ctx)
+            val projections = node.projections.map { visitRex(it, ctx) }
+            return RelProject(input, projections)
+        }
+
+        override fun visitRelOpScanIndexed(node: Rel.Op.ScanIndexed, ctx: Unit): Operator {
+            val rex = visitRex(node.rex, ctx)
+            return RelScanIndexed(rex)
         }
 
         override fun visitRel(node: Rel, ctx: Unit): Operator.Relation {
