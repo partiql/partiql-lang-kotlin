@@ -20,10 +20,33 @@ import com.amazon.ionelement.api.StructElement
  * A mechanism by which PartiQL can access a Catalog.
  */
 public interface Connector {
+
+    /**
+     * Returns a [ConnectorMetadata] for the given [ConnectorSession]. The [ConnectorMetadata] is responsible
+     * for accessing catalog metadata.
+     *
+     * @param session
+     * @return
+     */
     public fun getMetadata(session: ConnectorSession): ConnectorMetadata
 
+    /**
+     * A Plugin leverages a [Factory] to produce a [Connector] which is used for catalog metadata and data access.
+     */
     public interface Factory {
-        public fun getName(): String
-        public fun create(catalogName: String, config: StructElement): Connector
+
+        /**
+         * The connector name used to register the factory.
+         */
+        public val name: String
+
+        /**
+         * The connector factory method.
+         *
+         * @param catalogName
+         * @param config
+         * @return
+         */
+        public fun create(catalogName: String, config: StructElement? = null): Connector
     }
 }

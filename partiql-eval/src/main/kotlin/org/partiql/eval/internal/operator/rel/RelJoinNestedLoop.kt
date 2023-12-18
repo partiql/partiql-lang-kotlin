@@ -69,7 +69,7 @@ internal abstract class RelJoinNestedLoop : Operator.Relation {
     private fun PartiQLValue.padNull(): PartiQLValue {
         return when (this) {
             is StructValue<*> -> {
-                val newFields = this.fields?.map { it.first to nullValue() }
+                val newFields = this.entries.map { it.first to nullValue() }
                 structValue(newFields)
             }
             else -> nullValue()

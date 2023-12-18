@@ -66,14 +66,11 @@ public sealed interface ScalarValue<T> : PartiQLValue {
 }
 
 @PartiQLValueExperimental
-public sealed interface CollectionValue<T : PartiQLValue> : PartiQLValue, Sequence<T> {
-
-    public val elements: Sequence<T>?
+public sealed interface CollectionValue<T : PartiQLValue> : PartiQLValue, Iterable<T> {
 
     override val isNull: Boolean
-        get() = elements == null
 
-    override fun iterator(): Iterator<T> = elements!!.iterator()
+    override fun iterator(): Iterator<T>
 
     override fun copy(annotations: Annotations): CollectionValue<T>
 
@@ -389,8 +386,8 @@ public abstract class BagValue<T : PartiQLValue> : CollectionValue<T> {
         if (this.isNull || other.isNull) return this.isNull == other.isNull
 
         // both not null, compare values
-        val lhs = this.elements!!.groupingBy { it }.eachCount()
-        val rhs = other.elements!!.groupingBy { it }.eachCount()
+        val lhs = this.toList()
+        val rhs = other.toList()
         // this is incorrect as it assumes ordered-ness, but we don't have a sort or hash yet
         return lhs == rhs
     }
@@ -422,8 +419,8 @@ public abstract class ListValue<T : PartiQLValue> : CollectionValue<T> {
         if (this.isNull || other.isNull) return this.isNull == other.isNull
 
         // both not null, compare values
-        val lhs = this.elements!!.toList()
-        val rhs = other.elements!!.toList()
+        val lhs = this.toList()
+        val rhs = other.toList()
         return lhs == rhs
     }
 
@@ -453,8 +450,8 @@ public abstract class SexpValue<T : PartiQLValue> : CollectionValue<T> {
         if (this.isNull || other.isNull) return this.isNull == other.isNull
 
         // both not null, compare values
-        val lhs = this.elements!!.toList()
-        val rhs = other.elements!!.toList()
+        val lhs = this.toList()
+        val rhs = other.toList()
         return lhs == rhs
     }
 
@@ -465,19 +462,15 @@ public abstract class SexpValue<T : PartiQLValue> : CollectionValue<T> {
 }
 
 @PartiQLValueExperimental
-public abstract class StructValue<T : PartiQLValue> : PartiQLValue, Sequence<Pair<String, T>> {
+public abstract class StructValue<T : PartiQLValue> : PartiQLValue {
 
     override val type: PartiQLValueType = PartiQLValueType.STRUCT
 
-    public abstract val fields: Sequence<Pair<String, T>>?
+    public abstract val fields: Iterable<String>
 
-    // TODO: This is a temporary solution to not exhaust the underlying fields upon evaluation
-    private lateinit var _fields: List<Pair<String, T>>
+    public abstract val values: Iterable<T>
 
-    override val isNull: Boolean
-        get() = fields == null
-
-    override fun iterator(): Iterator<Pair<String, T>> = getFields()!!.iterator()
+    public abstract val entries: Iterable<Pair<String, T>>
 
     public abstract operator fun get(key: String): T?
 
@@ -490,9 +483,7 @@ public abstract class StructValue<T : PartiQLValue> : PartiQLValue, Sequence<Pai
     abstract override fun withoutAnnotations(): StructValue<T>
 
     /**
-     * See equality of IonElement StructElementImpl
-     *
-     * https://github.com/amazon-ion/ion-element-kotlin/blob/master/src/com/amazon/ionelement/impl/StructElementImpl.kt
+     * Checks equality of struct entries, ignoring ordering.
      *
      * @param other
      * @return
@@ -506,15 +497,15 @@ public abstract class StructValue<T : PartiQLValue> : PartiQLValue, Sequence<Pai
         if (this.isNull || other.isNull) return this.isNull == other.isNull
 
         // both not null, compare fields
-        val lhs = this.getFields()!!.groupBy({ it.first }, { it.second })
-        val rhs = other.getFields()!!.groupBy({ it.first }, { it.second })
+        val lhs = this.entries.asIterable().groupBy({ it.first }, { it.second })
+        val rhs = other.entries.asIterable().groupBy({ it.first }, { it.second })
 
         // check size
         if (lhs.size != rhs.size) return false
         if (lhs.keys != rhs.keys) return false
 
         // check values
-        lhs.forEach { (key, values) ->
+        lhs.entries.forEach { (key, values) ->
             val lGroup: Map<PartiQLValue, Int> = values.groupingBy { it }.eachCount()
             val rGroup: Map<PartiQLValue, Int> = rhs[key]!!.groupingBy { it }.eachCount()
             if (lGroup != rGroup) return false
@@ -524,17 +515,14 @@ public abstract class StructValue<T : PartiQLValue> : PartiQLValue, Sequence<Pai
 
     override fun hashCode(): Int {
         // TODO
-        return getFields().hashCode()
+        return entries.hashCode()
     }
 
-    private fun getFields(): List<Pair<String, T>>? {
-        if (fields == null) {
-            return null
+    override fun toString(): String {
+        if (isNull) {
+            return "null"
         }
-        if (this::_fields.isInitialized.not()) {
-            _fields = fields?.toList() ?: emptyList()
-        }
-        return _fields
+        return super.toString()
     }
 }
 

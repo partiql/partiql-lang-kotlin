@@ -64,10 +64,11 @@ class LocalConnector(
 
         private val default: Path = Paths.get(System.getProperty("user.home")).resolve(".partiql/local")
 
-        override fun getName(): String = CONNECTOR_NAME
+        override val name: String = CONNECTOR_NAME
 
-        override fun create(catalogName: String, config: StructElement): Connector {
-            val root = config.getOptional(ROOT_KEY)?.stringValueOrNull?.let { Paths.get(it) }
+        override fun create(catalogName: String, config: StructElement?): Connector {
+            assert(config != null) { "Local plugin requires non-null config" }
+            val root = config!!.getOptional(ROOT_KEY)?.stringValueOrNull?.let { Paths.get(it) }
             val catalogRoot = root ?: default
             if (catalogRoot.notExists()) {
                 error("Invalid catalog `$catalogRoot`")

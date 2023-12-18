@@ -3,22 +3,16 @@ package org.partiql.planner.internal.transforms
 import org.partiql.errors.ProblemCallback
 import org.partiql.plan.PlanNode
 import org.partiql.plan.partiQLPlan
-import org.partiql.plan.rex
-import org.partiql.plan.rexOpLit
-import org.partiql.plan.rexOpPathStepKey
-import org.partiql.plan.rexOpPathStepSymbol
 import org.partiql.planner.internal.ir.Agg
+import org.partiql.planner.internal.ir.Catalog
 import org.partiql.planner.internal.ir.Fn
-import org.partiql.planner.internal.ir.Global
 import org.partiql.planner.internal.ir.Identifier
 import org.partiql.planner.internal.ir.PartiQLPlan
 import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.Statement
 import org.partiql.planner.internal.ir.visitor.PlanBaseVisitor
-import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.stringValue
 
 /**
  * This is an internal utility to translate from the internal unresolved plan used for typing to the public plan IR.
@@ -35,15 +29,22 @@ internal object PlanTransform : PlanBaseVisitor<PlanNode, ProblemCallback>() {
     }
 
     override fun visitPartiQLPlan(node: PartiQLPlan, ctx: ProblemCallback): org.partiql.plan.PartiQLPlan {
-        val globals = node.globals.map { visitGlobal(it, ctx) }
+        val catalogs = node.catalogs.map { visitCatalog(it, ctx) }
         val statement = visitStatement(node.statement, ctx)
-        return partiQLPlan(globals, statement)
+        return partiQLPlan(catalogs, statement)
     }
 
-    override fun visitGlobal(node: Global, ctx: ProblemCallback): org.partiql.plan.Global {
-        val path = visitIdentifierQualified(node.path, ctx)
-        val type = node.type
-        return org.partiql.plan.global(path, type)
+    override fun visitCatalog(node: Catalog, ctx: ProblemCallback): org.partiql.plan.Catalog {
+        val symbols = node.symbols.map { visitCatalogSymbol(it, ctx) }
+        return org.partiql.plan.Catalog(node.name, symbols)
+    }
+
+    override fun visitCatalogSymbol(node: Catalog.Symbol, ctx: ProblemCallback): org.partiql.plan.Catalog.Symbol {
+        return org.partiql.plan.Catalog.Symbol(node.path, node.type)
+    }
+
+    override fun visitCatalogSymbolRef(node: Catalog.Symbol.Ref, ctx: ProblemCallback): org.partiql.plan.Catalog.Symbol.Ref {
+        return org.partiql.plan.Catalog.Symbol.Ref(node.catalog, node.symbol)
     }
 
     override fun visitFnResolved(node: Fn.Resolved, ctx: ProblemCallback) = org.partiql.plan.fn(node.signature)
@@ -108,37 +109,26 @@ internal object PlanTransform : PlanBaseVisitor<PlanNode, ProblemCallback>() {
     override fun visitRexOpVarUnresolved(node: Rex.Op.Var.Unresolved, ctx: ProblemCallback) =
         org.partiql.plan.Rex.Op.Err("Unresolved variable $node")
 
-    override fun visitRexOpGlobal(node: Rex.Op.Global, ctx: ProblemCallback) = org.partiql.plan.Rex.Op.Global(node.ref)
-
-    override fun visitRexOpPath(node: Rex.Op.Path, ctx: ProblemCallback): org.partiql.plan.Rex.Op.Path {
-        val root = visitRex(node.root, ctx)
-        val steps = node.steps.map { visitRexOpPathStep(it, ctx) }
-        return org.partiql.plan.Rex.Op.Path(root, steps)
-    }
-
-    override fun visitRexOpPathStep(node: Rex.Op.Path.Step, ctx: ProblemCallback) =
-        super.visit(node, ctx) as org.partiql.plan.Rex.Op.Path.Step
-
-    override fun visitRexOpPathStepIndex(node: Rex.Op.Path.Step.Index, ctx: ProblemCallback) =
-        org.partiql.plan.Rex.Op.Path.Step.Index(
-            key = visitRex(node.key, ctx),
-        )
-
-    @OptIn(PartiQLValueExperimental::class)
-    override fun visitRexOpPathStepSymbol(node: Rex.Op.Path.Step.Symbol, ctx: ProblemCallback) = when (node.identifier.caseSensitivity) {
-        Identifier.CaseSensitivity.SENSITIVE -> rexOpPathStepKey(rex(StaticType.STRING, rexOpLit(stringValue(node.identifier.symbol))))
-        Identifier.CaseSensitivity.INSENSITIVE -> rexOpPathStepSymbol(node.identifier.symbol)
-    }
-
-    override fun visitRexOpPathStepKey(node: Rex.Op.Path.Step.Key, ctx: ProblemCallback): PlanNode = rexOpPathStepKey(
-        key = visitRex(node.key, ctx)
+    override fun visitRexOpGlobal(node: Rex.Op.Global, ctx: ProblemCallback) = org.partiql.plan.Rex.Op.Global(
+        ref = visitCatalogSymbolRef(node.ref, ctx)
     )
 
-    override fun visitRexOpPathStepWildcard(node: Rex.Op.Path.Step.Wildcard, ctx: ProblemCallback) =
-        org.partiql.plan.Rex.Op.Path.Step.Wildcard()
+    override fun visitRexOpPathIndex(node: Rex.Op.Path.Index, ctx: ProblemCallback): PlanNode {
+        val root = visitRex(node.root, ctx)
+        val key = visitRex(node.root, ctx)
+        return org.partiql.plan.Rex.Op.Path.Index(root, key)
+    }
 
-    override fun visitRexOpPathStepUnpivot(node: Rex.Op.Path.Step.Unpivot, ctx: ProblemCallback) =
-        org.partiql.plan.Rex.Op.Path.Step.Unpivot()
+    override fun visitRexOpPathKey(node: Rex.Op.Path.Key, ctx: ProblemCallback): PlanNode {
+        val root = visitRex(node.root, ctx)
+        val key = visitRex(node.root, ctx)
+        return org.partiql.plan.Rex.Op.Path.Key(root, key)
+    }
+
+    override fun visitRexOpPathSymbol(node: Rex.Op.Path.Symbol, ctx: ProblemCallback): PlanNode {
+        val root = visitRex(node.root, ctx)
+        return org.partiql.plan.Rex.Op.Path.Symbol(root, node.key)
+    }
 
     override fun visitRexOpCall(node: Rex.Op.Call, ctx: ProblemCallback) =
         super.visitRexOpCall(node, ctx) as org.partiql.plan.Rex.Op
@@ -352,22 +342,27 @@ internal object PlanTransform : PlanBaseVisitor<PlanNode, ProblemCallback>() {
             items = node.items.map { visitRelOpExcludeItem(it, ctx) },
         )
 
-        override fun visitRelOpExcludeItem(node: Rel.Op.Exclude.Item, ctx: ProblemCallback) =
-            org.partiql.plan.Rel.Op.Exclude.Item(
-                root = visitIdentifierSymbol(node.root, ctx),
+        override fun visitRelOpExcludeItem(node: Rel.Op.Exclude.Item, ctx: ProblemCallback): org.partiql.plan.Rel.Op.Exclude.Item {
+            val root = when (node.root) {
+                is Rex.Op.Var.Resolved -> visitRexOpVar(node.root, ctx) as org.partiql.plan.Rex.Op.Var
+                is Rex.Op.Var.Unresolved -> org.partiql.plan.Rex.Op.Var(-1) // unresolved in `PlanTyper` results in error
+            }
+            return org.partiql.plan.Rel.Op.Exclude.Item(
+                root = root,
                 steps = node.steps.map { visitRelOpExcludeStep(it, ctx) },
             )
+        }
 
         override fun visitRelOpExcludeStep(node: Rel.Op.Exclude.Step, ctx: ProblemCallback) =
             super.visit(node, ctx) as org.partiql.plan.Rel.Op.Exclude.Step
 
-        override fun visitRelOpExcludeStepAttr(node: Rel.Op.Exclude.Step.Attr, ctx: ProblemCallback) =
-            org.partiql.plan.Rel.Op.Exclude.Step.Attr(
+        override fun visitRelOpExcludeStepStructField(node: Rel.Op.Exclude.Step.StructField, ctx: ProblemCallback) =
+            org.partiql.plan.Rel.Op.Exclude.Step.StructField(
                 symbol = visitIdentifierSymbol(node.symbol, ctx),
             )
 
-        override fun visitRelOpExcludeStepPos(node: Rel.Op.Exclude.Step.Pos, ctx: ProblemCallback) =
-            org.partiql.plan.Rel.Op.Exclude.Step.Pos(
+        override fun visitRelOpExcludeStepCollIndex(node: Rel.Op.Exclude.Step.CollIndex, ctx: ProblemCallback) =
+            org.partiql.plan.Rel.Op.Exclude.Step.CollIndex(
                 index = node.index,
             )
 
@@ -376,10 +371,10 @@ internal object PlanTransform : PlanBaseVisitor<PlanNode, ProblemCallback>() {
             ctx: ProblemCallback,
         ) = org.partiql.plan.Rel.Op.Exclude.Step.StructWildcard()
 
-        override fun visitRelOpExcludeStepCollectionWildcard(
-            node: Rel.Op.Exclude.Step.CollectionWildcard,
+        override fun visitRelOpExcludeStepCollWildcard(
+            node: Rel.Op.Exclude.Step.CollWildcard,
             ctx: ProblemCallback,
-        ) = org.partiql.plan.Rel.Op.Exclude.Step.CollectionWildcard()
+        ) = org.partiql.plan.Rel.Op.Exclude.Step.CollWildcard()
 
         override fun visitRelOpErr(node: Rel.Op.Err, ctx: ProblemCallback) = org.partiql.plan.Rel.Op.Err(node.message)
 

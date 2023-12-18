@@ -4,9 +4,11 @@ package org.partiql.planner.internal.ir
 
 import org.partiql.planner.internal.ir.builder.AggResolvedBuilder
 import org.partiql.planner.internal.ir.builder.AggUnresolvedBuilder
+import org.partiql.planner.internal.ir.builder.CatalogBuilder
+import org.partiql.planner.internal.ir.builder.CatalogSymbolBuilder
+import org.partiql.planner.internal.ir.builder.CatalogSymbolRefBuilder
 import org.partiql.planner.internal.ir.builder.FnResolvedBuilder
 import org.partiql.planner.internal.ir.builder.FnUnresolvedBuilder
-import org.partiql.planner.internal.ir.builder.GlobalBuilder
 import org.partiql.planner.internal.ir.builder.IdentifierQualifiedBuilder
 import org.partiql.planner.internal.ir.builder.IdentifierSymbolBuilder
 import org.partiql.planner.internal.ir.builder.PartiQlPlanBuilder
@@ -19,9 +21,9 @@ import org.partiql.planner.internal.ir.builder.RelOpErrBuilder
 import org.partiql.planner.internal.ir.builder.RelOpExceptBuilder
 import org.partiql.planner.internal.ir.builder.RelOpExcludeBuilder
 import org.partiql.planner.internal.ir.builder.RelOpExcludeItemBuilder
-import org.partiql.planner.internal.ir.builder.RelOpExcludeStepAttrBuilder
-import org.partiql.planner.internal.ir.builder.RelOpExcludeStepCollectionWildcardBuilder
-import org.partiql.planner.internal.ir.builder.RelOpExcludeStepPosBuilder
+import org.partiql.planner.internal.ir.builder.RelOpExcludeStepCollIndexBuilder
+import org.partiql.planner.internal.ir.builder.RelOpExcludeStepCollWildcardBuilder
+import org.partiql.planner.internal.ir.builder.RelOpExcludeStepStructFieldBuilder
 import org.partiql.planner.internal.ir.builder.RelOpExcludeStepStructWildcardBuilder
 import org.partiql.planner.internal.ir.builder.RelOpFilterBuilder
 import org.partiql.planner.internal.ir.builder.RelOpIntersectBuilder
@@ -46,11 +48,9 @@ import org.partiql.planner.internal.ir.builder.RexOpCollectionBuilder
 import org.partiql.planner.internal.ir.builder.RexOpErrBuilder
 import org.partiql.planner.internal.ir.builder.RexOpGlobalBuilder
 import org.partiql.planner.internal.ir.builder.RexOpLitBuilder
-import org.partiql.planner.internal.ir.builder.RexOpPathBuilder
-import org.partiql.planner.internal.ir.builder.RexOpPathStepIndexBuilder
-import org.partiql.planner.internal.ir.builder.RexOpPathStepSymbolBuilder
-import org.partiql.planner.internal.ir.builder.RexOpPathStepUnpivotBuilder
-import org.partiql.planner.internal.ir.builder.RexOpPathStepWildcardBuilder
+import org.partiql.planner.internal.ir.builder.RexOpPathIndexBuilder
+import org.partiql.planner.internal.ir.builder.RexOpPathKeyBuilder
+import org.partiql.planner.internal.ir.builder.RexOpPathSymbolBuilder
 import org.partiql.planner.internal.ir.builder.RexOpPivotBuilder
 import org.partiql.planner.internal.ir.builder.RexOpSelectBuilder
 import org.partiql.planner.internal.ir.builder.RexOpStructBuilder
@@ -80,13 +80,13 @@ internal data class PartiQLPlan(
     @JvmField
     internal val version: PartiQLVersion,
     @JvmField
-    internal val globals: List<Global>,
+    internal val catalogs: List<Catalog>,
     @JvmField
     internal val statement: Statement,
 ) : PlanNode() {
     internal override val children: List<PlanNode> by lazy {
         val kids = mutableListOf<PlanNode?>()
-        kids.addAll(globals)
+        kids.addAll(catalogs)
         kids.add(statement)
         kids.filterNotNull()
     }
@@ -100,24 +100,58 @@ internal data class PartiQLPlan(
     }
 }
 
-internal data class Global(
+internal data class Catalog(
     @JvmField
-    internal val path: Identifier.Qualified,
+    internal val name: String,
     @JvmField
-    internal val type: StaticType,
+    internal val symbols: List<Symbol>,
 ) : PlanNode() {
     internal override val children: List<PlanNode> by lazy {
         val kids = mutableListOf<PlanNode?>()
-        kids.add(path)
+        kids.addAll(symbols)
         kids.filterNotNull()
     }
 
     internal override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
-        visitor.visitGlobal(this, ctx)
+        visitor.visitCatalog(this, ctx)
+
+    internal data class Symbol(
+        @JvmField
+        internal val path: List<String>,
+        @JvmField
+        internal val type: StaticType,
+    ) : PlanNode() {
+        internal override val children: List<PlanNode> = emptyList()
+
+        internal override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+            visitor.visitCatalogSymbol(this, ctx)
+
+        internal data class Ref(
+            @JvmField
+            internal val catalog: Int,
+            @JvmField
+            internal val symbol: Int,
+        ) : PlanNode() {
+            internal override val children: List<PlanNode> = emptyList()
+
+            internal override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitCatalogSymbolRef(this, ctx)
+
+            internal companion object {
+                @JvmStatic
+                internal fun builder(): CatalogSymbolRefBuilder = CatalogSymbolRefBuilder()
+            }
+        }
+
+        internal companion object {
+            @JvmStatic
+            internal fun builder(): CatalogSymbolBuilder = CatalogSymbolBuilder()
+        }
+    }
 
     internal companion object {
         @JvmStatic
-        internal fun builder(): GlobalBuilder = GlobalBuilder()
+        internal fun builder(): CatalogBuilder = CatalogBuilder()
     }
 }
 
@@ -380,9 +414,13 @@ internal data class Rex(
 
         internal data class Global(
             @JvmField
-            internal val ref: Int,
+            internal val ref: Catalog.Symbol.Ref,
         ) : Op() {
-            internal override val children: List<PlanNode> = emptyList()
+            internal override val children: List<PlanNode> by lazy {
+                val kids = mutableListOf<PlanNode?>()
+                kids.add(ref)
+                kids.filterNotNull()
+            }
 
             internal override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
                 visitor.visitRexOpGlobal(this, ctx)
@@ -393,141 +431,76 @@ internal data class Rex(
             }
         }
 
-        internal data class Path(
-            @JvmField
-            internal val root: Rex,
-            @JvmField
-            internal val steps: List<Step>,
-        ) : Op() {
-            internal override val children: List<PlanNode> by lazy {
-                val kids = mutableListOf<PlanNode?>()
-                kids.add(root)
-                kids.addAll(steps)
-                kids.filterNotNull()
+        internal sealed class Path : Op() {
+            internal override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = when (this) {
+                is Index -> visitor.visitRexOpPathIndex(this, ctx)
+                is Key -> visitor.visitRexOpPathKey(this, ctx)
+                is Symbol -> visitor.visitRexOpPathSymbol(this, ctx)
             }
 
-            internal override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
-                visitor.visitRexOpPath(this, ctx)
-
-            internal sealed class Step : PlanNode() {
-                internal override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = when (this) {
-                    is Index -> visitor.visitRexOpPathStepIndex(this, ctx)
-                    is Symbol -> visitor.visitRexOpPathStepSymbol(this, ctx)
-                    is Wildcard -> visitor.visitRexOpPathStepWildcard(this, ctx)
-                    is Unpivot -> visitor.visitRexOpPathStepUnpivot(this, ctx)
-                    is Key -> visitor.visitRexOpPathStepKey(this, ctx)
+            internal data class Index(
+                @JvmField
+                internal val root: Rex,
+                @JvmField
+                internal val key: Rex,
+            ) : Path() {
+                internal override val children: List<PlanNode> by lazy {
+                    val kids = mutableListOf<PlanNode?>()
+                    kids.add(root)
+                    kids.add(key)
+                    kids.filterNotNull()
                 }
 
-                internal data class Index(
-                    @JvmField
-                    internal val key: Rex,
-                ) : Step() {
-                    internal override val children: List<PlanNode> by lazy {
-                        val kids = mutableListOf<PlanNode?>()
-                        kids.add(key)
-                        kids.filterNotNull()
-                    }
+                internal override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                    visitor.visitRexOpPathIndex(this, ctx)
 
-                    internal override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
-                        visitor.visitRexOpPathStepIndex(this, ctx)
-
-                    internal companion object {
-                        @JvmStatic
-                        internal fun builder(): RexOpPathStepIndexBuilder = RexOpPathStepIndexBuilder()
-                    }
-                }
-
-                /**
-                 * This represents a case-sensitive lookup on a tuple. Ex: a['b'] or a[CAST('a' || 'b' AS STRING)].
-                 * This would normally contain the dot notation for case-sensitive lookup, however, due to
-                 * limitations -- we cannot consolidate these. See [Symbol] for more information.
-                 *
-                 * The main difference is that this does NOT include `a."b"`
-                 */
-                internal data class Key(
-                    @JvmField
-                    internal val key: Rex,
-                ) : Step() {
-                    internal override val children: List<PlanNode> by lazy {
-                        val kids = mutableListOf<PlanNode?>()
-                        kids.add(key)
-                        kids.filterNotNull()
-                    }
-
-                    internal override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
-                        visitor.visitRexOpPathStepKey(this, ctx)
-
-                    internal companion object {
-                        @JvmStatic
-                        internal fun builder(): RexOpPathStepIndexBuilder = RexOpPathStepIndexBuilder()
-                    }
-                }
-
-                /**
-                 * This represents a lookup on a tuple. We differentiate a [Key] and a [Symbol] at this point in the
-                 * pipeline because we NEED to retain some syntactic knowledge for the following reason: we cannot
-                 * use the syntactic index operation on a schema -- as it is not synonymous with a tuple. In other words,
-                 * `<schema-name>."<value-name>"` is not interchangeable with `<schema-name>['<value-name>']`.
-                 *
-                 * So, in order to temporarily differentiate the `a."b"` from `a['b']` (see [Key]), we need to maintain
-                 * the syntactic difference here. Note that this would potentially be mitigated by typing during the AST to Plan
-                 * transformation.
-                 *
-                 * That being said, this represents a lookup on a tuple such as `a.b` or `a."b"`.
-                 */
-                internal data class Symbol(
-                    @JvmField
-                    internal val identifier: Identifier.Symbol,
-                ) : Step() {
-                    internal override val children: List<PlanNode> by lazy {
-                        val kids = mutableListOf<PlanNode?>()
-                        kids.add(identifier)
-                        kids.filterNotNull()
-                    }
-
-                    internal override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
-                        visitor.visitRexOpPathStepSymbol(this, ctx)
-
-                    internal companion object {
-                        @JvmStatic
-                        internal fun builder(): RexOpPathStepSymbolBuilder = RexOpPathStepSymbolBuilder()
-                    }
-                }
-
-                internal data class Wildcard(
-                    @JvmField
-                    internal val ` `: Char = ' ',
-                ) : Step() {
-                    internal override val children: List<PlanNode> = emptyList()
-
-                    internal override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
-                        visitor.visitRexOpPathStepWildcard(this, ctx)
-
-                    internal companion object {
-                        @JvmStatic
-                        internal fun builder(): RexOpPathStepWildcardBuilder = RexOpPathStepWildcardBuilder()
-                    }
-                }
-
-                internal data class Unpivot(
-                    @JvmField
-                    internal val ` `: Char = ' ',
-                ) : Step() {
-                    internal override val children: List<PlanNode> = emptyList()
-
-                    internal override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
-                        visitor.visitRexOpPathStepUnpivot(this, ctx)
-
-                    internal companion object {
-                        @JvmStatic
-                        internal fun builder(): RexOpPathStepUnpivotBuilder = RexOpPathStepUnpivotBuilder()
-                    }
+                internal companion object {
+                    @JvmStatic
+                    internal fun builder(): RexOpPathIndexBuilder = RexOpPathIndexBuilder()
                 }
             }
 
-            internal companion object {
-                @JvmStatic
-                internal fun builder(): RexOpPathBuilder = RexOpPathBuilder()
+            internal data class Key(
+                @JvmField
+                internal val root: Rex,
+                @JvmField
+                internal val key: Rex,
+            ) : Path() {
+                internal override val children: List<PlanNode> by lazy {
+                    val kids = mutableListOf<PlanNode?>()
+                    kids.add(root)
+                    kids.add(key)
+                    kids.filterNotNull()
+                }
+
+                internal override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                    visitor.visitRexOpPathKey(this, ctx)
+
+                internal companion object {
+                    @JvmStatic
+                    fun builder(): RexOpPathKeyBuilder = RexOpPathKeyBuilder()
+                }
+            }
+
+            internal data class Symbol(
+                @JvmField
+                internal val root: Rex,
+                @JvmField
+                internal val key: String,
+            ) : Path() {
+                internal override val children: List<PlanNode> by lazy {
+                    val kids = mutableListOf<PlanNode?>()
+                    kids.add(root)
+                    kids.filterNotNull()
+                }
+
+                internal override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                    visitor.visitRexOpPathSymbol(this, ctx)
+
+                internal companion object {
+                    @JvmStatic
+                    internal fun builder(): RexOpPathSymbolBuilder = RexOpPathSymbolBuilder()
+                }
             }
         }
 
@@ -1272,7 +1245,7 @@ internal data class Rel(
 
             internal data class Item(
                 @JvmField
-                internal val root: Identifier.Symbol,
+                internal val root: Rex.Op.Var,
                 @JvmField
                 internal val steps: List<Step>,
             ) : PlanNode() {
@@ -1294,13 +1267,13 @@ internal data class Rel(
 
             internal sealed class Step : PlanNode() {
                 internal override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = when (this) {
-                    is Attr -> visitor.visitRelOpExcludeStepAttr(this, ctx)
-                    is Pos -> visitor.visitRelOpExcludeStepPos(this, ctx)
+                    is StructField -> visitor.visitRelOpExcludeStepStructField(this, ctx)
+                    is CollIndex -> visitor.visitRelOpExcludeStepCollIndex(this, ctx)
                     is StructWildcard -> visitor.visitRelOpExcludeStepStructWildcard(this, ctx)
-                    is CollectionWildcard -> visitor.visitRelOpExcludeStepCollectionWildcard(this, ctx)
+                    is CollWildcard -> visitor.visitRelOpExcludeStepCollWildcard(this, ctx)
                 }
 
-                internal data class Attr(
+                internal data class StructField(
                     @JvmField
                     internal val symbol: Identifier.Symbol,
                 ) : Step() {
@@ -1311,26 +1284,28 @@ internal data class Rel(
                     }
 
                     internal override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
-                        visitor.visitRelOpExcludeStepAttr(this, ctx)
+                        visitor.visitRelOpExcludeStepStructField(this, ctx)
 
                     internal companion object {
                         @JvmStatic
-                        internal fun builder(): RelOpExcludeStepAttrBuilder = RelOpExcludeStepAttrBuilder()
+                        internal fun builder(): RelOpExcludeStepStructFieldBuilder =
+                            RelOpExcludeStepStructFieldBuilder()
                     }
                 }
 
-                internal data class Pos(
+                internal data class CollIndex(
                     @JvmField
                     internal val index: Int,
                 ) : Step() {
                     internal override val children: List<PlanNode> = emptyList()
 
                     internal override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
-                        visitor.visitRelOpExcludeStepPos(this, ctx)
+                        visitor.visitRelOpExcludeStepCollIndex(this, ctx)
 
                     internal companion object {
                         @JvmStatic
-                        internal fun builder(): RelOpExcludeStepPosBuilder = RelOpExcludeStepPosBuilder()
+                        internal fun builder(): RelOpExcludeStepCollIndexBuilder =
+                            RelOpExcludeStepCollIndexBuilder()
                     }
                 }
 
@@ -1350,19 +1325,19 @@ internal data class Rel(
                     }
                 }
 
-                internal data class CollectionWildcard(
+                internal data class CollWildcard(
                     @JvmField
                     internal val ` `: Char = ' ',
                 ) : Step() {
                     internal override val children: List<PlanNode> = emptyList()
 
                     internal override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
-                        visitor.visitRelOpExcludeStepCollectionWildcard(this, ctx)
+                        visitor.visitRelOpExcludeStepCollWildcard(this, ctx)
 
                     internal companion object {
                         @JvmStatic
-                        internal fun builder(): RelOpExcludeStepCollectionWildcardBuilder =
-                            RelOpExcludeStepCollectionWildcardBuilder()
+                        internal fun builder(): RelOpExcludeStepCollWildcardBuilder =
+                            RelOpExcludeStepCollWildcardBuilder()
                     }
                 }
             }

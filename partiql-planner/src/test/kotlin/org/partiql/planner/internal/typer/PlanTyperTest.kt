@@ -1,51 +1,115 @@
 package org.partiql.planner.internal.typer
 
-import com.amazon.ionelement.api.field
-import com.amazon.ionelement.api.ionString
-import com.amazon.ionelement.api.ionStructOf
 import org.junit.jupiter.api.Test
-import org.partiql.errors.Problem
-import org.partiql.errors.ProblemCallback
-import org.partiql.errors.ProblemHandler
-import org.partiql.errors.ProblemSeverity
 import org.partiql.planner.PartiQLHeader
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.ir.Identifier
 import org.partiql.planner.internal.ir.Rex
+import org.partiql.planner.internal.ir.catalogSymbolRef
 import org.partiql.planner.internal.ir.identifierSymbol
 import org.partiql.planner.internal.ir.rex
 import org.partiql.planner.internal.ir.rexOpGlobal
 import org.partiql.planner.internal.ir.rexOpLit
-import org.partiql.planner.internal.ir.rexOpPath
-import org.partiql.planner.internal.ir.rexOpPathStepSymbol
+import org.partiql.planner.internal.ir.rexOpPathKey
+import org.partiql.planner.internal.ir.rexOpPathSymbol
 import org.partiql.planner.internal.ir.rexOpStruct
 import org.partiql.planner.internal.ir.rexOpStructField
 import org.partiql.planner.internal.ir.rexOpVarUnresolved
 import org.partiql.planner.internal.ir.statementQuery
-import org.partiql.plugins.local.LocalPlugin
+import org.partiql.planner.util.ProblemCollector
+import org.partiql.plugins.local.LocalConnector
 import org.partiql.types.StaticType
+import org.partiql.types.StaticType.Companion.ANY
+import org.partiql.types.StaticType.Companion.DECIMAL
+import org.partiql.types.StaticType.Companion.FLOAT
+import org.partiql.types.StaticType.Companion.INT2
+import org.partiql.types.StaticType.Companion.INT4
+import org.partiql.types.StaticType.Companion.STRING
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.int32Value
 import org.partiql.value.stringValue
 import java.util.Random
-import kotlin.io.path.pathString
 import kotlin.io.path.toPath
 import kotlin.test.assertEquals
 
 class PlanTyperTest {
 
     companion object {
-        private val root = this::class.java.getResource("/catalogs/default")!!.toURI().toPath().pathString
 
-        private val catalogConfig = mapOf(
-            "pql" to ionStructOf(
-                field("connector_name", ionString("local")),
-                field("root", ionString("$root/pql")),
+        private val root = this::class.java.getResource("/catalogs/default/pql")!!.toURI().toPath()
+
+        @OptIn(PartiQLValueExperimental::class)
+        private val LITERAL_STRUCT_1 = rex(
+            ANY,
+            rexOpStruct(
+                fields = listOf(
+                    rexOpStructField(
+                        k = rex(STRING, rexOpLit(stringValue("FiRsT_KeY"))),
+                        v = rex(
+                            ANY,
+                            rexOpStruct(
+                                fields = listOf(
+                                    rexOpStructField(
+                                        k = rex(STRING, rexOpLit(stringValue("sEcoNd_KEY"))),
+                                        v = rex(INT4, rexOpLit(int32Value(5)))
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
             )
         )
+
+        private val LITERAL_STRUCT_1_FIRST_KEY_TYPE = StructType(
+            fields = mapOf(
+                "sEcoNd_KEY" to INT4
+            ),
+            contentClosed = true,
+            constraints = setOf(
+                TupleConstraint.UniqueAttrs(true),
+                TupleConstraint.Open(false)
+            )
+        )
+
+        @OptIn(PartiQLValueExperimental::class)
+        private val LITERAL_STRUCT_1_TYPED: Rex
+            get() {
+                val topLevelStruct = StructType(
+                    fields = mapOf(
+                        "FiRsT_KeY" to LITERAL_STRUCT_1_FIRST_KEY_TYPE
+                    ),
+                    contentClosed = true,
+                    constraints = setOf(
+                        TupleConstraint.UniqueAttrs(true),
+                        TupleConstraint.Open(false)
+                    )
+                )
+                return rex(
+                    type = topLevelStruct,
+                    rexOpStruct(
+                        fields = listOf(
+                            rexOpStructField(
+                                k = rex(STRING, rexOpLit(stringValue("FiRsT_KeY"))),
+                                v = rex(
+                                    type = LITERAL_STRUCT_1_FIRST_KEY_TYPE,
+                                    rexOpStruct(
+                                        fields = listOf(
+                                            rexOpStructField(
+                                                k = rex(STRING, rexOpLit(stringValue("sEcoNd_KEY"))),
+                                                v = rex(INT4, rexOpLit(int32Value(5)))
+                                            )
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            }
 
         private val ORDERED_DUPLICATES_STRUCT = StructType(
             fields = listOf(
@@ -111,13 +175,14 @@ class PlanTyperTest {
             val collector = ProblemCollector()
             val env = Env(
                 listOf(PartiQLHeader),
-                listOf(LocalPlugin()),
+                mapOf(
+                    "pql" to LocalConnector.Metadata(root)
+                ),
                 PartiQLPlanner.Session(
                     queryId = Random().nextInt().toString(),
                     userId = "test-user",
                     currentCatalog = "pql",
                     currentDirectory = listOf("main"),
-                    catalogConfig = catalogConfig
                 )
             )
             return PlanTyperWrapper(PlanTyper(env, collector), collector)
@@ -142,94 +207,12 @@ class PlanTyperTest {
      * It also checks that we type it all correctly as well.
      */
     @Test
-    @OptIn(PartiQLValueExperimental::class)
     fun testReplacingStructs() {
         val wrapper = getTyper()
         val typer = wrapper.typer
-        val input = statementQuery(
-            root = rex(
-                type = StaticType.ANY,
-                op = rexOpPath(
-                    root = rex(
-                        StaticType.ANY,
-                        rexOpStruct(
-                            fields = listOf(
-                                rexOpStructField(
-                                    k = rex(StaticType.STRING, rexOpLit(stringValue("FiRsT_KeY"))),
-                                    v = rex(
-                                        StaticType.ANY,
-                                        rexOpStruct(
-                                            fields = listOf(
-                                                rexOpStructField(
-                                                    k = rex(StaticType.STRING, rexOpLit(stringValue("sEcoNd_KEY"))),
-                                                    v = rex(StaticType.INT4, rexOpLit(int32Value(5)))
-                                                )
-                                            )
-                                        )
-                                    )
-                                )
-                            )
-                        )
-                    ),
-                    steps = listOf(
-                        rexOpPathStepSymbol(identifierSymbol("first_key", Identifier.CaseSensitivity.INSENSITIVE)),
-                        rexOpPathStepSymbol(identifierSymbol("sEcoNd_KEY", Identifier.CaseSensitivity.SENSITIVE)),
-                    )
-                )
-            )
-        )
-        val firstKeyStruct = StructType(
-            fields = mapOf(
-                "sEcoNd_KEY" to StaticType.INT4
-            ),
-            contentClosed = true,
-            constraints = setOf(
-                TupleConstraint.UniqueAttrs(true),
-                TupleConstraint.Open(false)
-            )
-        )
-        val topLevelStruct = StructType(
-            fields = mapOf(
-                "FiRsT_KeY" to firstKeyStruct
-            ),
-            contentClosed = true,
-            constraints = setOf(
-                TupleConstraint.UniqueAttrs(true),
-                TupleConstraint.Open(false)
-            )
-        )
-        val expected = statementQuery(
-            root = rex(
-                type = StaticType.INT4,
-                op = rexOpPath(
-                    root = rex(
-                        type = topLevelStruct,
-                        rexOpStruct(
-                            fields = listOf(
-                                rexOpStructField(
-                                    k = rex(StaticType.STRING, rexOpLit(stringValue("FiRsT_KeY"))),
-                                    v = rex(
-                                        type = firstKeyStruct,
-                                        rexOpStruct(
-                                            fields = listOf(
-                                                rexOpStructField(
-                                                    k = rex(StaticType.STRING, rexOpLit(stringValue("sEcoNd_KEY"))),
-                                                    v = rex(StaticType.INT4, rexOpLit(int32Value(5)))
-                                                )
-                                            )
-                                        )
-                                    )
-                                )
-                            )
-                        )
-                    ),
-                    steps = listOf(
-                        rexOpPathStepSymbol(identifierSymbol("FiRsT_KeY", Identifier.CaseSensitivity.SENSITIVE)),
-                        rexOpPathStepSymbol(identifierSymbol("sEcoNd_KEY", Identifier.CaseSensitivity.SENSITIVE)),
-                    )
-                )
-            )
-        )
+        val input = statementQuery(LITERAL_STRUCT_1.pathSymbol("first_key").pathKey("sEcoNd_KEY"))
+        val expected = statementQuery(LITERAL_STRUCT_1_TYPED.pathKey("FiRsT_KeY", LITERAL_STRUCT_1_FIRST_KEY_TYPE).pathKey("sEcoNd_KEY", INT4))
+
         val actual = typer.resolve(input)
         assertEquals(expected, actual)
     }
@@ -239,36 +222,10 @@ class PlanTyperTest {
         val wrapper = getTyper()
         val typer = wrapper.typer
         val input = statementQuery(
-            root = rex(
-                type = StaticType.ANY,
-                op = rexOpPath(
-                    root = rex(
-                        StaticType.ANY,
-                        rexOpVarUnresolved(
-                            identifierSymbol("closed_ordered_duplicates_struct", Identifier.CaseSensitivity.SENSITIVE),
-                            Rex.Op.Var.Scope.DEFAULT
-                        )
-                    ),
-                    steps = listOf(
-                        rexOpPathStepSymbol(identifierSymbol("DEFINITION", Identifier.CaseSensitivity.INSENSITIVE)),
-                    )
-                )
-            )
+            unresolvedSensitiveVar("closed_ordered_duplicates_struct").pathSymbol("DEFINITION")
         )
-        val expected = statementQuery(
-            root = rex(
-                type = StaticType.STRING,
-                op = rexOpPath(
-                    root = rex(
-                        ORDERED_DUPLICATES_STRUCT,
-                        rexOpGlobal(0)
-                    ),
-                    steps = listOf(
-                        rexOpPathStepSymbol(identifierSymbol("definition", Identifier.CaseSensitivity.SENSITIVE)),
-                    )
-                )
-            )
-        )
+        val expected = statementQuery(global(ORDERED_DUPLICATES_STRUCT).pathKey("definition", STRING))
+
         val actual = typer.resolve(input)
         assertEquals(expected, actual)
     }
@@ -277,37 +234,9 @@ class PlanTyperTest {
     fun testOrderedDuplicatesWithSensitivity() {
         val wrapper = getTyper()
         val typer = wrapper.typer
-        val input = statementQuery(
-            root = rex(
-                type = StaticType.ANY,
-                op = rexOpPath(
-                    root = rex(
-                        StaticType.ANY,
-                        rexOpVarUnresolved(
-                            identifierSymbol("closed_ordered_duplicates_struct", Identifier.CaseSensitivity.SENSITIVE),
-                            Rex.Op.Var.Scope.DEFAULT
-                        )
-                    ),
-                    steps = listOf(
-                        rexOpPathStepSymbol(identifierSymbol("DEFINITION", Identifier.CaseSensitivity.SENSITIVE)),
-                    )
-                )
-            )
-        )
-        val expected = statementQuery(
-            root = rex(
-                type = StaticType.DECIMAL,
-                op = rexOpPath(
-                    root = rex(
-                        ORDERED_DUPLICATES_STRUCT,
-                        rexOpGlobal(0)
-                    ),
-                    steps = listOf(
-                        rexOpPathStepSymbol(identifierSymbol("DEFINITION", Identifier.CaseSensitivity.SENSITIVE)),
-                    )
-                )
-            )
-        )
+        val input = statementQuery(unresolvedSensitiveVar("closed_ordered_duplicates_struct").pathKey("DEFINITION"))
+        val expected = statementQuery(global(ORDERED_DUPLICATES_STRUCT).pathKey("DEFINITION", DECIMAL))
+
         val actual = typer.resolve(input)
         assertEquals(expected, actual)
     }
@@ -316,37 +245,9 @@ class PlanTyperTest {
     fun testUnorderedDuplicates() {
         val wrapper = getTyper()
         val typer = wrapper.typer
-        val input = statementQuery(
-            root = rex(
-                type = StaticType.ANY,
-                op = rexOpPath(
-                    root = rex(
-                        StaticType.ANY,
-                        rexOpVarUnresolved(
-                            identifierSymbol("closed_duplicates_struct", Identifier.CaseSensitivity.SENSITIVE),
-                            Rex.Op.Var.Scope.DEFAULT
-                        )
-                    ),
-                    steps = listOf(
-                        rexOpPathStepSymbol(identifierSymbol("DEFINITION", Identifier.CaseSensitivity.INSENSITIVE)),
-                    )
-                )
-            )
-        )
-        val expected = statementQuery(
-            root = rex(
-                type = StaticType.unionOf(StaticType.STRING, StaticType.FLOAT, StaticType.DECIMAL),
-                op = rexOpPath(
-                    root = rex(
-                        DUPLICATES_STRUCT,
-                        rexOpGlobal(0)
-                    ),
-                    steps = listOf(
-                        rexOpPathStepSymbol(identifierSymbol("DEFINITION", Identifier.CaseSensitivity.INSENSITIVE)),
-                    )
-                )
-            )
-        )
+        val input = statementQuery(unresolvedSensitiveVar("closed_duplicates_struct").pathSymbol("DEFINITION"))
+        val expected = statementQuery(global(DUPLICATES_STRUCT).pathSymbol("DEFINITION", StaticType.unionOf(STRING, FLOAT, DECIMAL)))
+
         val actual = typer.resolve(input)
         assertEquals(expected, actual)
     }
@@ -355,37 +256,9 @@ class PlanTyperTest {
     fun testUnorderedDuplicatesWithSensitivity() {
         val wrapper = getTyper()
         val typer = wrapper.typer
-        val input = statementQuery(
-            root = rex(
-                type = StaticType.ANY,
-                op = rexOpPath(
-                    root = rex(
-                        StaticType.ANY,
-                        rexOpVarUnresolved(
-                            identifierSymbol("closed_duplicates_struct", Identifier.CaseSensitivity.SENSITIVE),
-                            Rex.Op.Var.Scope.DEFAULT
-                        )
-                    ),
-                    steps = listOf(
-                        rexOpPathStepSymbol(identifierSymbol("DEFINITION", Identifier.CaseSensitivity.SENSITIVE)),
-                    )
-                )
-            )
-        )
-        val expected = statementQuery(
-            root = rex(
-                type = StaticType.DECIMAL,
-                op = rexOpPath(
-                    root = rex(
-                        DUPLICATES_STRUCT,
-                        rexOpGlobal(0)
-                    ),
-                    steps = listOf(
-                        rexOpPathStepSymbol(identifierSymbol("DEFINITION", Identifier.CaseSensitivity.SENSITIVE)),
-                    )
-                )
-            )
-        )
+        val input = statementQuery(unresolvedSensitiveVar("closed_duplicates_struct").pathKey("DEFINITION"))
+        val expected = statementQuery(global(DUPLICATES_STRUCT).pathKey("DEFINITION", DECIMAL))
+
         val actual = typer.resolve(input)
         assertEquals(expected, actual)
     }
@@ -394,37 +267,9 @@ class PlanTyperTest {
     fun testUnorderedDuplicatesWithSensitivityAndDuplicateResults() {
         val wrapper = getTyper()
         val typer = wrapper.typer
-        val input = statementQuery(
-            root = rex(
-                type = StaticType.ANY,
-                op = rexOpPath(
-                    root = rex(
-                        StaticType.ANY,
-                        rexOpVarUnresolved(
-                            identifierSymbol("closed_duplicates_struct", Identifier.CaseSensitivity.SENSITIVE),
-                            Rex.Op.Var.Scope.DEFAULT
-                        )
-                    ),
-                    steps = listOf(
-                        rexOpPathStepSymbol(identifierSymbol("definition", Identifier.CaseSensitivity.SENSITIVE)),
-                    )
-                )
-            )
-        )
-        val expected = statementQuery(
-            root = rex(
-                type = StaticType.unionOf(StaticType.STRING, StaticType.FLOAT),
-                op = rexOpPath(
-                    root = rex(
-                        DUPLICATES_STRUCT,
-                        rexOpGlobal(0)
-                    ),
-                    steps = listOf(
-                        rexOpPathStepSymbol(identifierSymbol("definition", Identifier.CaseSensitivity.SENSITIVE)),
-                    )
-                )
-            )
-        )
+        val input = statementQuery(unresolvedSensitiveVar("closed_duplicates_struct").pathKey("definition"))
+        val expected = statementQuery(global(DUPLICATES_STRUCT).pathKey("definition", StaticType.unionOf(StaticType.STRING, StaticType.FLOAT)))
+
         val actual = typer.resolve(input)
         assertEquals(expected, actual)
     }
@@ -433,37 +278,9 @@ class PlanTyperTest {
     fun testOpenDuplicates() {
         val wrapper = getTyper()
         val typer = wrapper.typer
-        val input = statementQuery(
-            root = rex(
-                type = StaticType.ANY,
-                op = rexOpPath(
-                    root = rex(
-                        StaticType.ANY,
-                        rexOpVarUnresolved(
-                            identifierSymbol("open_duplicates_struct", Identifier.CaseSensitivity.SENSITIVE),
-                            Rex.Op.Var.Scope.DEFAULT
-                        )
-                    ),
-                    steps = listOf(
-                        rexOpPathStepSymbol(identifierSymbol("definition", Identifier.CaseSensitivity.SENSITIVE)),
-                    )
-                )
-            )
-        )
-        val expected = statementQuery(
-            root = rex(
-                type = StaticType.ANY,
-                op = rexOpPath(
-                    root = rex(
-                        OPEN_DUPLICATES_STRUCT,
-                        rexOpGlobal(0)
-                    ),
-                    steps = listOf(
-                        rexOpPathStepSymbol(identifierSymbol("definition", Identifier.CaseSensitivity.SENSITIVE)),
-                    )
-                )
-            )
-        )
+        val input = statementQuery(unresolvedSensitiveVar("open_duplicates_struct").pathKey("definition"))
+        val expected = statementQuery(global(OPEN_DUPLICATES_STRUCT).pathKey("definition"))
+
         val actual = typer.resolve(input)
         assertEquals(expected, actual)
     }
@@ -472,37 +289,9 @@ class PlanTyperTest {
     fun testUnionClosedDuplicates() {
         val wrapper = getTyper()
         val typer = wrapper.typer
-        val input = statementQuery(
-            root = rex(
-                type = StaticType.ANY,
-                op = rexOpPath(
-                    root = rex(
-                        StaticType.ANY,
-                        rexOpVarUnresolved(
-                            identifierSymbol("closed_union_duplicates_struct", Identifier.CaseSensitivity.SENSITIVE),
-                            Rex.Op.Var.Scope.DEFAULT
-                        )
-                    ),
-                    steps = listOf(
-                        rexOpPathStepSymbol(identifierSymbol("definition", Identifier.CaseSensitivity.INSENSITIVE)),
-                    )
-                )
-            )
-        )
-        val expected = statementQuery(
-            root = rex(
-                type = StaticType.unionOf(StaticType.STRING, StaticType.FLOAT, StaticType.DECIMAL, StaticType.INT2),
-                op = rexOpPath(
-                    root = rex(
-                        CLOSED_UNION_DUPLICATES_STRUCT,
-                        rexOpGlobal(0)
-                    ),
-                    steps = listOf(
-                        rexOpPathStepSymbol(identifierSymbol("definition", Identifier.CaseSensitivity.INSENSITIVE)),
-                    )
-                )
-            )
-        )
+        val input = statementQuery(unresolvedSensitiveVar("closed_union_duplicates_struct").pathSymbol("definition"))
+        val expected = statementQuery(global(CLOSED_UNION_DUPLICATES_STRUCT).pathSymbol("definition", StaticType.unionOf(STRING, FLOAT, DECIMAL, INT2)))
+
         val actual = typer.resolve(input)
         assertEquals(expected, actual)
     }
@@ -511,62 +300,34 @@ class PlanTyperTest {
     fun testUnionClosedDuplicatesWithSensitivity() {
         val wrapper = getTyper()
         val typer = wrapper.typer
-        val input = statementQuery(
-            root = rex(
-                type = StaticType.ANY,
-                op = rexOpPath(
-                    root = rex(
-                        StaticType.ANY,
-                        rexOpVarUnresolved(
-                            identifierSymbol("closed_union_duplicates_struct", Identifier.CaseSensitivity.SENSITIVE),
-                            Rex.Op.Var.Scope.DEFAULT
-                        )
-                    ),
-                    steps = listOf(
-                        rexOpPathStepSymbol(identifierSymbol("definition", Identifier.CaseSensitivity.SENSITIVE)),
-                    )
-                )
-            )
-        )
-        val expected = statementQuery(
-            root = rex(
-                type = StaticType.unionOf(StaticType.STRING, StaticType.FLOAT, StaticType.INT2),
-                op = rexOpPath(
-                    root = rex(
-                        CLOSED_UNION_DUPLICATES_STRUCT,
-                        rexOpGlobal(0)
-                    ),
-                    steps = listOf(
-                        rexOpPathStepSymbol(identifierSymbol("definition", Identifier.CaseSensitivity.SENSITIVE)),
-                    )
-                )
-            )
-        )
+        val input = statementQuery(unresolvedSensitiveVar("closed_union_duplicates_struct").pathKey("definition"))
+        val expected = statementQuery(global(CLOSED_UNION_DUPLICATES_STRUCT).pathKey("definition", StaticType.unionOf(STRING, FLOAT, INT2)))
+
         val actual = typer.resolve(input)
         assertEquals(expected, actual)
     }
 
-    /**
-     * A [ProblemHandler] that collects all the encountered [Problem]s without throwing.
-     *
-     * This is intended to be used when wanting to collect multiple problems that may be encountered (e.g. a static type
-     * inference pass that can result in multiple errors and/or warnings). This handler does not collect other exceptions
-     * that may be thrown.
-     */
-    internal class ProblemCollector : ProblemCallback {
-        private val problemList = mutableListOf<Problem>()
+    @OptIn(PartiQLValueExperimental::class)
+    private fun rexString(str: String) = rex(STRING, rexOpLit(stringValue(str)))
 
-        val problems: List<Problem>
-            get() = problemList
+    private fun Rex.pathKey(key: String, type: StaticType = ANY): Rex = Rex(type, rexOpPathKey(this, rexString(key)))
 
-        val hasErrors: Boolean
-            get() = problemList.any { it.details.severity == ProblemSeverity.ERROR }
+    private fun Rex.pathSymbol(key: String, type: StaticType = ANY): Rex = Rex(type, rexOpPathSymbol(this, key))
 
-        val hasWarnings: Boolean
-            get() = problemList.any { it.details.severity == ProblemSeverity.WARNING }
+    private fun unresolvedSensitiveVar(name: String, type: StaticType = ANY): Rex {
+        return rex(
+            type,
+            rexOpVarUnresolved(
+                identifierSymbol(name, Identifier.CaseSensitivity.SENSITIVE),
+                Rex.Op.Var.Scope.DEFAULT
+            )
+        )
+    }
 
-        override fun invoke(problem: Problem) {
-            problemList.add(problem)
-        }
+    private fun global(type: StaticType, catalogIndex: Int = 0, symbolIndex: Int = 0): Rex {
+        return rex(
+            type,
+            rexOpGlobal(catalogSymbolRef(catalogIndex, symbolIndex))
+        )
     }
 }

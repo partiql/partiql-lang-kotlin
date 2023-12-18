@@ -24,11 +24,13 @@ import org.partiql.value.util.PartiQLValueVisitor
 
 @OptIn(PartiQLValueExperimental::class)
 internal class SexpValueImpl<T : PartiQLValue>(
-    private val delegate: Sequence<T>?,
+    private val delegate: Iterable<T>?,
     override val annotations: PersistentList<String>,
 ) : SexpValue<T>() {
 
-    override val elements: Sequence<T>? = delegate
+    override val isNull: Boolean = delegate == null
+
+    override fun iterator(): Iterator<T> = delegate!!.iterator()
 
     override fun copy(annotations: Annotations) = SexpValueImpl(delegate, annotations.toPersistentList())
 

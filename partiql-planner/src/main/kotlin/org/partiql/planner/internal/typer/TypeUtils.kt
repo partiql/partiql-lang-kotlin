@@ -178,7 +178,7 @@ internal fun StructType.exclude(steps: List<Rel.Op.Exclude.Step>, lastStepOption
             StructType.Field(k, v)
         }
         when (step) {
-            is Rel.Op.Exclude.Step.Attr -> {
+            is Rel.Op.Exclude.Step.StructField -> {
                 if (step.symbol.isEquivalentTo(field.key)) {
                     newField
                 } else {
@@ -202,12 +202,12 @@ internal fun StructType.exclude(steps: List<Rel.Op.Exclude.Step>, lastStepOption
 internal fun CollectionType.exclude(steps: List<Rel.Op.Exclude.Step>, lastStepOptional: Boolean = true): StaticType {
     var e = this.elementType
     when (steps.first()) {
-        is Rel.Op.Exclude.Step.Pos -> {
+        is Rel.Op.Exclude.Step.CollIndex -> {
             if (steps.size > 1) {
                 e = e.exclude(steps.drop(1), true)
             }
         }
-        is Rel.Op.Exclude.Step.CollectionWildcard -> {
+        is Rel.Op.Exclude.Step.CollWildcard -> {
             if (steps.size > 1) {
                 e = e.exclude(steps.drop(1), lastStepOptional)
             }

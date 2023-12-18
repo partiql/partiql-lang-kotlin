@@ -5,11 +5,12 @@ import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.helpers.toNull
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.spi.function.PartiQLFunction
+import org.partiql.spi.function.PartiQLFunctionExperimental
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.missingValue
 
-@OptIn(PartiQLValueExperimental::class)
+@OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
 internal class ExprCall(
     private val fn: PartiQLFunction.Scalar,
     private val inputs: Array<Operator.Expr>,

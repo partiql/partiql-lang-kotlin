@@ -23,19 +23,28 @@ import org.partiql.value.StructValue
 import org.partiql.value.util.PartiQLValueVisitor
 
 /**
- * Implementation of a [StructValue<T>] backed by a Sequence.
+ * Implementation of a [StructValue<T>] backed by an iterator.
  *
  * @param T
  * @property delegate
  * @property annotations
  */
 @OptIn(PartiQLValueExperimental::class)
-internal class SequenceStructValueImpl<T : PartiQLValue>(
-    private val delegate: Sequence<Pair<String, T>>?,
+internal class IterableStructValueImpl<T : PartiQLValue>(
+    private val delegate: Iterable<Pair<String, T>>?,
     override val annotations: PersistentList<String>,
 ) : StructValue<T>() {
 
-    override val fields: Sequence<Pair<String, T>>? = delegate
+    override val isNull: Boolean = delegate == null
+
+    override val fields: Iterable<String>
+        get() = delegate!!.map { it.first }
+
+    override val values: Iterable<T>
+        get() = delegate!!.map { it.second }
+
+    override val entries: Iterable<Pair<String, T>>
+        get() = delegate!!
 
     override operator fun get(key: String): T? {
         if (delegate == null) {
@@ -51,7 +60,7 @@ internal class SequenceStructValueImpl<T : PartiQLValue>(
         return delegate.filter { it.first == key }.map { it.second }.asIterable()
     }
 
-    override fun copy(annotations: Annotations) = SequenceStructValueImpl(delegate, annotations.toPersistentList())
+    override fun copy(annotations: Annotations) = IterableStructValueImpl(delegate, annotations.toPersistentList())
 
     override fun withAnnotations(annotations: Annotations): StructValue<T> = _withAnnotations(annotations)
 
@@ -73,13 +82,14 @@ internal class MultiMapStructValueImpl<T : PartiQLValue>(
     override val annotations: PersistentList<String>,
 ) : StructValue<T>() {
 
-    override val fields: Sequence<Pair<String, T>>?
-        get() {
-            if (delegate == null) {
-                return null
-            }
-            return delegate.asSequence().map { f -> f.value.map { v -> f.key to v } }.flatten()
-        }
+    override val isNull: Boolean = delegate == null
+
+    override val fields: Iterable<String> = delegate!!.map { it.key }
+
+    override val values: Iterable<T> = delegate!!.flatMap { it.value }
+
+    override val entries: Iterable<Pair<String, T>> =
+        delegate!!.entries.map { f -> f.value.map { v -> f.key to v } }.flatten()
 
     override operator fun get(key: String): T? = getAll(key).firstOrNull()
 
@@ -112,13 +122,13 @@ internal class MapStructValueImpl<T : PartiQLValue>(
     override val annotations: PersistentList<String>,
 ) : StructValue<T>() {
 
-    override val fields: Sequence<Pair<String, T>>?
-        get() {
-            if (delegate == null) {
-                return null
-            }
-            return delegate.asSequence().map { f -> f.key to f.value }
-        }
+    override val isNull: Boolean = delegate == null
+
+    override val fields: Iterable<String> = delegate!!.map { it.key }
+
+    override val values: Iterable<T> = delegate!!.map { it.value }
+
+    override val entries: Iterable<Pair<String, T>> = delegate!!.entries.map { it.key to it.value }
 
     override operator fun get(key: String): T? {
         if (delegate == null) {

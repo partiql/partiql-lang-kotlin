@@ -28,6 +28,24 @@ Thank you to all who have contributed!
 ## [Unreleased]
 
 ### Added
+
+### Changed
+
+### Deprecated
+
+### Fixed
+
+### Removed
+
+### Security
+
+### Contributors
+Thank you to all who have contributed!
+- @<your-username>
+
+## [0.14.0-alpha] - 2023-12-15
+
+### Added
 - Adds top-level IR node creation functions.
 - Adds `componentN` functions (destructuring) to IR nodes via Kotlin data classes
 - Adds public `tag` field to IR nodes for associating metadata
@@ -43,22 +61,29 @@ Thank you to all who have contributed!
 - **Breaking** The default integer literal type is now 32-bit; if the literal can not fit in a 32-bit integer, it overflows to 64-bit. 
 - **BREAKING** `PartiQLValueType` now distinguishes between Arbitrary Precision Decimal and Fixed Precision Decimal. 
 - **BREAKING** Function Signature Changes. Now Function signature has two subclasses, `Scalar` and `Aggregation`. 
+- **BREAKING** Plugin Changes. Only return one Connector.Factory, use Kotlin fields. JVM signature remains the same.
 - **BREAKING** In the produced plan: 
   - The new plan is fully resolved and typed.
   - Operators will be converted to function call. 
 - Changes the return type of `filter_distinct` to a list if input collection is list
+- Changes the `PartiQLValue` collections to implement Iterable rather than Sequence, allowing for multiple consumption.
+- **BREAKING** Moves PartiQLParserBuilder.standard().build() to be PartiQLParser.default().
+- **BREAKING** Changed modeling of `EXCLUDE` in `partiql-ast`
 
 ### Deprecated
 
 ### Fixed
 - Fixes the CLI hanging on invalid queries. See issue #1230.
 - Fixes Timestamp Type parsing issue. Previously Timestamp Type would get parsed to a Time type.
+- Fixes PIVOT parsing to assign the key and value as defined by spec section 14.
 - Fixes the physical plan compiler to return list when `DISTINCT` used with `ORDER BY`
 
 ### Removed
 - **Breaking** Removed IR factory in favor of static top-level functions. Change `Ast.foo()`
   to `foo()`
 - **Breaking** Removed `org.partiql.lang.planner.transforms.AstToPlan`. Use `org.partiql.planner.PartiQLPlanner`. 
+- **Breaking** Removed `org.partiql.lang.planner.transforms.PartiQLSchemaInferencer`. In order to achieve the same functionality, one would need to use the `org.partiql.planner.PartiQLPlanner`.
+  - To get the inferred type of the query result, one can do: `(plan.statement as Statement.Query).root.type`
 
 ### Security
 
@@ -66,6 +91,8 @@ Thank you to all who have contributed!
 Thank you to all who have contributed!
 - @rchowell
 - @johnedquinn
+- @yliuuuu
+- @alancai98
 
 ## [0.13.2-alpha] - 2023-09-29
 
@@ -920,6 +947,7 @@ breaking changes if migrating from v0.9.2. The breaking changes accidentally int
 Initial alpha release of PartiQL.
 
 [Unreleased]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.13.2-alpha...HEAD
+[0.14.0-alpha]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.13.2-alpha...v0.14.0-alpha
 [0.13.2-alpha]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.13.1-alpha...v0.13.2-alpha
 [0.13.1-alpha]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.13.0-alpha...v0.13.1-alpha
 [0.13.0-alpha]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.12.0-alpha...v0.13.0-alpha

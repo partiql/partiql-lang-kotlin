@@ -3,8 +3,8 @@
 package org.partiql.planner.internal.ir.visitor
 
 import org.partiql.planner.internal.ir.Agg
+import org.partiql.planner.internal.ir.Catalog
 import org.partiql.planner.internal.ir.Fn
-import org.partiql.planner.internal.ir.Global
 import org.partiql.planner.internal.ir.Identifier
 import org.partiql.planner.internal.ir.PartiQLPlan
 import org.partiql.planner.internal.ir.PlanNode
@@ -18,7 +18,12 @@ internal abstract class PlanBaseVisitor<R, C> : PlanVisitor<R, C> {
 
     override fun visitPartiQLPlan(node: PartiQLPlan, ctx: C): R = defaultVisit(node, ctx)
 
-    override fun visitGlobal(node: Global, ctx: C): R = defaultVisit(node, ctx)
+    public override fun visitCatalog(node: Catalog, ctx: C): R = defaultVisit(node, ctx)
+
+    public override fun visitCatalogSymbol(node: Catalog.Symbol, ctx: C): R = defaultVisit(node, ctx)
+
+    public override fun visitCatalogSymbolRef(node: Catalog.Symbol.Ref, ctx: C): R =
+        defaultVisit(node, ctx)
 
     override fun visitFn(node: Fn, ctx: C): R = when (node) {
         is Fn.Resolved -> visitFnResolved(node, ctx)
@@ -93,30 +98,23 @@ internal abstract class PlanBaseVisitor<R, C> : PlanVisitor<R, C> {
 
     override fun visitRexOpGlobal(node: Rex.Op.Global, ctx: C): R = defaultVisit(node, ctx)
 
-    override fun visitRexOpPath(node: Rex.Op.Path, ctx: C): R = defaultVisit(node, ctx)
-
-    override fun visitRexOpPathStep(node: Rex.Op.Path.Step, ctx: C): R = when (node) {
-        is Rex.Op.Path.Step.Index -> visitRexOpPathStepIndex(node, ctx)
-        is Rex.Op.Path.Step.Key -> visitRexOpPathStepKey(node, ctx)
-        is Rex.Op.Path.Step.Symbol -> visitRexOpPathStepSymbol(node, ctx)
-        is Rex.Op.Path.Step.Wildcard -> visitRexOpPathStepWildcard(node, ctx)
-        is Rex.Op.Path.Step.Unpivot -> visitRexOpPathStepUnpivot(node, ctx)
+    override fun visitRexOpPath(node: Rex.Op.Path, ctx: C): R = when (node) {
+        is Rex.Op.Path.Index -> visitRexOpPathIndex(node, ctx)
+        is Rex.Op.Path.Key -> visitRexOpPathKey(node, ctx)
+        is Rex.Op.Path.Symbol -> visitRexOpPathSymbol(node, ctx)
     }
 
-    override fun visitRexOpPathStepIndex(node: Rex.Op.Path.Step.Index, ctx: C): R =
-        defaultVisit(node, ctx)
+    override fun visitRexOpPathIndex(node: Rex.Op.Path.Index, ctx: C): R = defaultVisit(
+        node,
+        ctx
+    )
 
-    override fun visitRexOpPathStepKey(node: Rex.Op.Path.Step.Key, ctx: C): R =
-        defaultVisit(node, ctx)
+    override fun visitRexOpPathKey(node: Rex.Op.Path.Key, ctx: C): R = defaultVisit(node, ctx)
 
-    override fun visitRexOpPathStepSymbol(node: Rex.Op.Path.Step.Symbol, ctx: C): R =
-        defaultVisit(node, ctx)
-
-    override fun visitRexOpPathStepWildcard(node: Rex.Op.Path.Step.Wildcard, ctx: C): R =
-        defaultVisit(node, ctx)
-
-    override fun visitRexOpPathStepUnpivot(node: Rex.Op.Path.Step.Unpivot, ctx: C): R =
-        defaultVisit(node, ctx)
+    override fun visitRexOpPathSymbol(node: Rex.Op.Path.Symbol, ctx: C): R = defaultVisit(
+        node,
+        ctx
+    )
 
     override fun visitRexOpCall(node: Rex.Op.Call, ctx: C): R = when (node) {
         is Rex.Op.Call.Static -> visitRexOpCallStatic(node, ctx)
@@ -236,27 +234,28 @@ internal abstract class PlanBaseVisitor<R, C> : PlanVisitor<R, C> {
         defaultVisit(node, ctx)
 
     override fun visitRelOpExcludeStep(node: Rel.Op.Exclude.Step, ctx: C): R = when (node) {
-        is Rel.Op.Exclude.Step.Attr -> visitRelOpExcludeStepAttr(node, ctx)
-        is Rel.Op.Exclude.Step.Pos -> visitRelOpExcludeStepPos(node, ctx)
+        is Rel.Op.Exclude.Step.StructField -> visitRelOpExcludeStepStructField(node, ctx)
+        is Rel.Op.Exclude.Step.CollIndex -> visitRelOpExcludeStepCollIndex(node, ctx)
         is Rel.Op.Exclude.Step.StructWildcard -> visitRelOpExcludeStepStructWildcard(node, ctx)
-        is Rel.Op.Exclude.Step.CollectionWildcard -> visitRelOpExcludeStepCollectionWildcard(node, ctx)
+        is Rel.Op.Exclude.Step.CollWildcard -> visitRelOpExcludeStepCollWildcard(node, ctx)
     }
 
-    override fun visitRelOpExcludeStepAttr(node: Rel.Op.Exclude.Step.Attr, ctx: C): R =
-        defaultVisit(node, ctx)
+    override fun visitRelOpExcludeStepStructField(
+        node: Rel.Op.Exclude.Step.StructField,
+        ctx: C
+    ): R = defaultVisit(node, ctx)
 
-    override fun visitRelOpExcludeStepPos(node: Rel.Op.Exclude.Step.Pos, ctx: C): R =
+    override fun visitRelOpExcludeStepCollIndex(node: Rel.Op.Exclude.Step.CollIndex, ctx: C): R =
         defaultVisit(node, ctx)
 
     override fun visitRelOpExcludeStepStructWildcard(
         node: Rel.Op.Exclude.Step.StructWildcard,
-        ctx: C,
+        ctx: C
     ): R = defaultVisit(node, ctx)
 
-    override
-    fun visitRelOpExcludeStepCollectionWildcard(
-        node: Rel.Op.Exclude.Step.CollectionWildcard,
-        ctx: C,
+    override fun visitRelOpExcludeStepCollWildcard(
+        node: Rel.Op.Exclude.Step.CollWildcard,
+        ctx: C
     ): R = defaultVisit(node, ctx)
 
     override fun visitRelOpErr(node: Rel.Op.Err, ctx: C): R = defaultVisit(node, ctx)

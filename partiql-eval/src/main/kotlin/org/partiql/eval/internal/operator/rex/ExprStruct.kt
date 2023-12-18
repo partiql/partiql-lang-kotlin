@@ -16,7 +16,7 @@ internal class ExprStruct(val fields: List<Field>) : Operator.Expr {
             val value = it.value.eval(record)
             key.value!! to value
         }
-        return structValue(fields.asSequence())
+        return structValue(fields)
     }
 
     internal class Field(val key: Operator.Expr, val value: Operator.Expr)

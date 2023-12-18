@@ -13,7 +13,7 @@ internal class ExprCollection(
     @PartiQLValueExperimental
     override fun eval(record: Record): PartiQLValue {
         return bagValue(
-            values.map { it.eval(record) }.asSequence()
+            values.map { it.eval(record) }
         )
     }
 }

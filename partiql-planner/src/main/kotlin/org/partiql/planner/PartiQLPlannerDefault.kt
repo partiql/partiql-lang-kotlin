@@ -8,14 +8,14 @@ import org.partiql.planner.internal.ir.PartiQLVersion
 import org.partiql.planner.internal.transforms.AstToPlan
 import org.partiql.planner.internal.transforms.PlanTransform
 import org.partiql.planner.internal.typer.PlanTyper
-import org.partiql.spi.Plugin
+import org.partiql.spi.connector.ConnectorMetadata
 
 /**
  * Default PartiQL logical query planner.
  */
 internal class PartiQLPlannerDefault(
     private val headers: List<Header>,
-    private val plugins: List<Plugin>,
+    private val catalogs: Map<String, ConnectorMetadata>,
     private val passes: List<PartiQLPlannerPass>,
 ) : PartiQLPlanner {
 
@@ -25,7 +25,7 @@ internal class PartiQLPlannerDefault(
         onProblem: ProblemCallback,
     ): PartiQLPlanner.Result {
         // 0. Initialize the planning environment
-        val env = Env(headers, plugins, session)
+        val env = Env(headers, catalogs, session)
 
         // 1. Normalize
         val ast = statement.normalize()
@@ -37,7 +37,7 @@ internal class PartiQLPlannerDefault(
         val typer = PlanTyper(env, onProblem)
         val internal = org.partiql.planner.internal.ir.PartiQLPlan(
             version = PartiQLVersion.VERSION_0_1,
-            globals = env.globals,
+            catalogs = env.catalogs,
             statement = typer.resolve(root),
         )
 
