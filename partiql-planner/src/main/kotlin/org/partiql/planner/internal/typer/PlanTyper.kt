@@ -451,23 +451,45 @@ internal class PlanTyper(
                 return rex(ANY, rexOpErr("Undefined variable ${node.identifier}"))
             }
             val type = resolvedVar.type
-            val op = when (resolvedVar) {
-                is ResolvedVar.Global -> rexOpGlobal(catalogSymbolRef(resolvedVar.ordinal, resolvedVar.position))
-                is ResolvedVar.Local -> rexOpVarResolved(resolvedVar.ordinal) // resolvedLocalPath(resolvedVar)
-            }
-            val variable = rex(type, op)
-            return when (resolvedVar.depth) {
-                path.steps.size -> variable
-                else -> {
-                    val foldedPath = path.steps.subList(resolvedVar.depth, path.steps.size).fold(variable) { current, step ->
-                        when (step.bindingCase) {
-                            BindingCase.SENSITIVE -> rex(ANY, rexOpPathKey(current, rex(STRING, rexOpLit(stringValue(step.name)))))
-                            BindingCase.INSENSITIVE -> rex(ANY, rexOpPathSymbol(current, step.name))
+            return when (resolvedVar) {
+                is ResolvedVar.Global -> {
+                    val variable = rex(type, rexOpGlobal(catalogSymbolRef(resolvedVar.ordinal, resolvedVar.position)))
+                    when (resolvedVar.depth) {
+                        path.steps.size -> variable
+                        else -> {
+                            val foldedPath = foldPath(path.steps, resolvedVar.depth, path.steps.size, variable)
+                            visitRex(foldedPath, ctx)
                         }
                     }
-                    visitRex(foldedPath, ctx)
+                }
+                is ResolvedVar.Local -> {
+                    val variable = rex(type, rexOpVarResolved(resolvedVar.ordinal))
+                    when {
+                        path.isEquivalentTo(resolvedVar.resolvedSteps) && path.steps.size == resolvedVar.depth -> variable
+                        else -> {
+                            val foldedPath = foldPath(resolvedVar.resolvedSteps, resolvedVar.depth, resolvedVar.resolvedSteps.size, variable)
+                            visitRex(foldedPath, ctx)
+                        }
+                    }
                 }
             }
+        }
+
+        private fun foldPath(path: List<BindingName>, start: Int, end: Int, global: Rex) =
+            path.subList(start, end).fold(global) { current, step ->
+                when (step.bindingCase) {
+                    BindingCase.SENSITIVE -> rex(ANY, rexOpPathKey(current, rex(STRING, rexOpLit(stringValue(step.name)))))
+                    BindingCase.INSENSITIVE -> rex(ANY, rexOpPathSymbol(current, step.name))
+                }
+            }
+
+        private fun BindingPath.isEquivalentTo(other: List<BindingName>): Boolean {
+            this.steps.forEachIndexed { index, bindingName ->
+                if (bindingName != other[index]) {
+                    return false
+                }
+            }
+            return true
         }
 
         override fun visitRexOpGlobal(node: Rex.Op.Global, ctx: StaticType?): Rex {
