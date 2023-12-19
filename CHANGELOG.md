@@ -28,6 +28,7 @@ Thank you to all who have contributed!
 ## [Unreleased]
 
 ### Added
+- Adds the ability to pass a user-defined-function signature to the planner.
 
 ### Changed
 
