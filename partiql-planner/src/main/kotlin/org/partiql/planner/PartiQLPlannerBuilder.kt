@@ -67,7 +67,7 @@ public class PartiQLPlannerBuilder {
     }
 
     /**
-     * Kotlin style method for adding a user-defined-function.
+     * Kotlin style method for setting the user-defined functions. This replaces all existing user-defined functions previously passed to the builder.
      *
      * @param function
      * @return
