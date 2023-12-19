@@ -8,6 +8,7 @@ import org.partiql.eval.internal.operator.rel.RelJoinOuterFull
 import org.partiql.eval.internal.operator.rel.RelJoinRight
 import org.partiql.eval.internal.operator.rel.RelProject
 import org.partiql.eval.internal.operator.rel.RelScan
+import org.partiql.eval.internal.operator.rex.ExprCase
 import org.partiql.eval.internal.operator.rex.ExprCollection
 import org.partiql.eval.internal.operator.rex.ExprLiteral
 import org.partiql.eval.internal.operator.rex.ExprSelect
@@ -100,6 +101,14 @@ internal object Compiler {
                 Rel.Op.Join.Type.RIGHT -> RelJoinRight(lhs, rhs, condition)
                 Rel.Op.Join.Type.FULL -> RelJoinOuterFull(lhs, rhs, condition)
             }
+        }
+
+        override fun visitRexOpCase(node: Rex.Op.Case, ctx: Unit): Operator {
+            val branches = node.branches.map { branch ->
+                visitRex(branch.condition, ctx) to visitRex(branch.rex, ctx)
+            }
+            val default = visitRex(node.default, ctx)
+            return ExprCase(branches, default)
         }
 
         // TODO: Re-look at

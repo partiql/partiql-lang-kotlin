@@ -168,6 +168,30 @@ class PartiQLEngineDefaultTest {
 
     @OptIn(PartiQLValueExperimental::class)
     @Test
+    fun testCaseLiteral00() {
+        val source = """
+            CASE
+                WHEN NULL THEN 'isNull'
+                WHEN MISSING THEN 'isMissing'
+                WHEN FALSE THEN 'isFalse'
+                WHEN TRUE THEN 'isTrue'
+            END
+            ;
+        """.trimIndent()
+        val statement = parser.parse(source).root
+        val session = PartiQLPlanner.Session("q", "u")
+        val plan = planner.plan(statement, session)
+
+        val prepared = engine.prepare(plan.plan)
+        val result = engine.execute(prepared) as PartiQLResult.Value
+        val output = result.value
+
+        val expected = stringValue("isTrue")
+        assertEquals(expected, output)
+    }
+
+    @OptIn(PartiQLValueExperimental::class)
+    @Test
     fun testJoinOuterFullOnTrue() {
         val statement =
             parser.parse("SELECT a, b FROM << { 'a': 1 } >> t FULL OUTER JOIN << { 'b': 2 } >> s ON TRUE;").root
@@ -212,6 +236,31 @@ class PartiQLEngineDefaultTest {
         val output = result.value
 
         val expected = structValue<PartiQLValue>(null)
+
+        assertEquals(expected, output)
+    }
+
+    @OptIn(PartiQLValueExperimental::class)
+    @Test
+    fun testCaseLiteral01() {
+        val source = """
+            CASE
+                WHEN NULL THEN 'isNull'
+                WHEN MISSING THEN 'isMissing'
+                WHEN FALSE THEN 'isFalse'
+            END
+            ;
+        """.trimIndent()
+        val statement = parser.parse(source).root
+        val session = PartiQLPlanner.Session("q", "u")
+        val plan = planner.plan(statement, session)
+
+        val prepared = engine.prepare(plan.plan)
+
+        val result = engine.execute(prepared) as PartiQLResult.Value
+        val output = result.value
+
+        val expected = nullValue()
         assertEquals(expected, output)
     }
 
@@ -245,8 +294,32 @@ class PartiQLEngineDefaultTest {
         val prepared = engine.prepare(plan.plan)
         val result = engine.execute(prepared) as PartiQLResult.Value
         val output = result.value
-
         val expected = missingValue()
+        assertEquals(expected, output)
+    }
+
+    @Disabled("This is disabled because FN EQUALS is not yet implemented.")
+    @OptIn(PartiQLValueExperimental::class)
+    @Test
+    fun testCaseLiteral02() {
+        val source = """
+            CASE (1)
+                WHEN NULL THEN 'isNull'
+                WHEN MISSING THEN 'isMissing'
+                WHEN 2 THEN 'isTwo'
+                WHEN 1 THEN 'isOne'
+            END
+            ;
+        """.trimIndent()
+        val statement = parser.parse(source).root
+        val session = PartiQLPlanner.Session("q", "u")
+        val plan = planner.plan(statement, session)
+
+        val prepared = engine.prepare(plan.plan)
+        val result = engine.execute(prepared) as PartiQLResult.Value
+        val output = result.value
+
+        val expected = stringValue("isOne")
         assertEquals(expected, output)
     }
 
@@ -259,6 +332,7 @@ class PartiQLEngineDefaultTest {
                 { 'b': TRUE },
                 { 'c': 'hello' }
             );
+            
         """.trimIndent()
         val statement = parser.parse(source).root
         val session = PartiQLPlanner.Session("q", "u")
@@ -274,6 +348,29 @@ class PartiQLEngineDefaultTest {
             "b" to boolValue(true),
             "c" to stringValue("hello")
         )
+        assertEquals(expected, output)
+    }
+
+    @Disabled("This is disabled because FN EQUALS is not yet implemented.")
+    @OptIn(PartiQLValueExperimental::class)
+    @Test
+    fun testCaseLiteral03() {
+        val source = """
+            CASE (1)
+                WHEN NULL THEN 'isNull'
+                WHEN MISSING THEN 'isMissing'
+                WHEN 2 THEN 'isTwo'
+            END
+            ;
+        """.trimIndent()
+        val statement = parser.parse(source).root
+        val session = PartiQLPlanner.Session("q", "u")
+        val plan = planner.plan(statement, session)
+
+        val prepared = engine.prepare(plan.plan)
+        val result = engine.execute(prepared) as PartiQLResult.Value
+        val output = result.value
+        val expected = nullValue()
         assertEquals(expected, output)
     }
 
