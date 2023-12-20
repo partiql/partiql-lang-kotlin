@@ -404,4 +404,35 @@ class PartiQLEngineDefaultTest {
         )
         assertEquals(expected, output)
     }
+
+    @OptIn(PartiQLValueExperimental::class)
+    @Test
+    fun testStruct() {
+        val source = """
+            SELECT VALUE {
+                'a': 1,
+                'b': NULL,
+                c : d
+            }
+            FROM <<
+                { 'c': 'hello', 'd': 'world' }
+            >>
+        """.trimIndent()
+        val statement = parser.parse(source).root
+        val session = PartiQLPlanner.Session("q", "u")
+        val plan = planner.plan(statement, session)
+
+        val prepared = engine.prepare(plan.plan)
+        val result = engine.execute(prepared) as PartiQLResult.Value
+        val output = result.value
+
+        val expected: PartiQLValue = bagValue(
+            structValue(
+                "a" to int32Value(1),
+                "b" to nullValue(),
+                "hello" to stringValue("world")
+            )
+        )
+        assertEquals(expected, output)
+    }
 }
