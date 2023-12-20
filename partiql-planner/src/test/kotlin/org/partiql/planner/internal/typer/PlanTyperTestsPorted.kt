@@ -372,6 +372,98 @@ class PlanTyperTestsPorted {
         )
 
         @JvmStatic
+        fun distinctClauseCases() = listOf<TestCase>(
+            SuccessTestCase(
+                name = "Distinct SQL Select",
+                catalog = CATALOG_AWS,
+                query = "SELECT DISTINCT a, b FROM << { 'a': 1, 'b': 'Hello, world!' } >>;",
+                expected = BagType(
+                    StructType(
+                        fields = listOf(
+                            StructType.Field("a", StaticType.INT4),
+                            StructType.Field("b", StaticType.STRING),
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "Distinct SQL Select with Ordering",
+                catalog = CATALOG_AWS,
+                query = "SELECT DISTINCT a, b FROM << { 'a': 1, 'b': 'Hello, world!' } >> ORDER BY a;",
+                expected = ListType(
+                    StructType(
+                        fields = listOf(
+                            StructType.Field("a", StaticType.INT4),
+                            StructType.Field("b", StaticType.STRING),
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "Distinct SQL Select *",
+                catalog = CATALOG_AWS,
+                query = "SELECT DISTINCT * FROM << { 'a': 1, 'b': 'Hello, world!' } >>;",
+                expected = BagType(
+                    StructType(
+                        fields = listOf(
+                            StructType.Field("a", StaticType.INT4),
+                            StructType.Field("b", StaticType.STRING),
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "Distinct SQL Select * with Ordering",
+                catalog = CATALOG_AWS,
+                query = "SELECT DISTINCT * FROM << { 'a': 1, 'b': 'Hello, world!' } >> ORDER BY a;",
+                expected = ListType(
+                    StructType(
+                        fields = listOf(
+                            StructType.Field("a", StaticType.INT4),
+                            StructType.Field("b", StaticType.STRING),
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "Distinct PartiQL Select Value *",
+                catalog = CATALOG_AWS,
+                query = "SELECT DISTINCT VALUE a FROM << { 'a': 1, 'b': 'Hello, world!' } >>;",
+                expected = BagType(StaticType.INT4)
+            ),
+            SuccessTestCase(
+                name = "Distinct PartiQL Select Value * with Ordering",
+                catalog = CATALOG_AWS,
+                query = "SELECT DISTINCT VALUE a FROM << { 'a': 1, 'b': 'Hello, world!' } >> ORDER BY a;",
+                expected = ListType(StaticType.INT4)
+            ),
+        )
+
+        @JvmStatic
         fun pivotCases() = listOf(
             SuccessTestCase(
                 name = "Basic PIVOT",
@@ -2939,6 +3031,11 @@ class PlanTyperTestsPorted {
     @MethodSource("scalarFunctions")
     @Execution(ExecutionMode.CONCURRENT)
     fun testScalarFunctions(tc: TestCase) = runTest(tc)
+
+    @ParameterizedTest
+    @MethodSource("distinctClauseCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun testDistinctClause(tc: TestCase) = runTest(tc)
 
     @ParameterizedTest
     @MethodSource("pathExpressions")

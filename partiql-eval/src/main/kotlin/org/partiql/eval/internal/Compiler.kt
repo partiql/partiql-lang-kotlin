@@ -1,6 +1,7 @@
 package org.partiql.eval.internal
 
 import org.partiql.eval.internal.operator.Operator
+import org.partiql.eval.internal.operator.rel.RelDistinct
 import org.partiql.eval.internal.operator.rel.RelFilter
 import org.partiql.eval.internal.operator.rel.RelJoinInner
 import org.partiql.eval.internal.operator.rel.RelJoinLeft
@@ -172,6 +173,11 @@ internal class Compiler(
     @OptIn(PartiQLValueExperimental::class)
     override fun visitRexOpLit(node: Rex.Op.Lit, ctx: Unit): Operator {
         return ExprLiteral(node.value)
+    }
+
+    override fun visitRelOpDistinct(node: Rel.Op.Distinct, ctx: Unit): Operator {
+        val input = visitRel(node.input, ctx)
+        return RelDistinct(input)
     }
 
     override fun visitRelOpFilter(node: Rel.Op.Filter, ctx: Unit): Operator {
