@@ -13,7 +13,6 @@ import org.partiql.planner.test.PartiQLTestProvider
 import org.partiql.planner.util.PlanNodeEquivalentVisitor
 import org.partiql.planner.util.ProblemCollector
 import org.partiql.plugins.memory.MemoryConnector
-import org.partiql.spi.connector.ConnectorSession
 import org.partiql.types.BagType
 import org.partiql.types.StaticType
 import org.partiql.types.StructType
@@ -48,7 +47,7 @@ class PlanTest {
     }
 
     val metadata = MemoryConnector.Metadata.of(
-        "t" to BagType(
+        "default.t" to BagType(
             StructType(
                 listOf(
                     StructType.Field("a", StaticType.BOOL),
@@ -75,11 +74,6 @@ class PlanTest {
             )
         )
     )
-
-    val connectorSession = object : ConnectorSession {
-        override fun getQueryId(): String = ""
-        override fun getUserId(): String = ""
-    }
 
     val pipeline: (PartiQLTest) -> PartiQLPlanner.Result = { test ->
         val problemCollector = ProblemCollector()
