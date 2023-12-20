@@ -2,6 +2,7 @@ package org.partiql.runner.executor
 
 import com.amazon.ion.IonStruct
 import com.amazon.ion.IonValue
+import com.amazon.ionelement.api.IonElement
 import com.amazon.ionelement.api.StructElement
 import com.amazon.ionelement.api.toIonElement
 import com.amazon.ionelement.api.toIonValue
@@ -19,6 +20,7 @@ import org.partiql.runner.test.TestExecutor
 import org.partiql.spi.connector.Connector
 import org.partiql.spi.connector.ConnectorSession
 import org.partiql.types.StaticType
+import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.io.PartiQLValueIonReaderBuilder
 import org.partiql.value.toIon
@@ -103,8 +105,29 @@ class EvalExecutor(
                 map[it.name] = StaticType.ANY
             }
             val metadata = MemoryConnector.Metadata(map)
-            val bindings = MemoryBindings.load(metadata, env)
+            val globals = load(metadata, env)
+            val bindings = MemoryBindings(globals)
             return MemoryConnector(metadata, bindings)
+        }
+
+        /**
+         * Loads each declared global of the catalog from the data element.
+         */
+        private fun load(metadata: MemoryConnector.Metadata, data: StructElement): Map<String, PartiQLValue> {
+            val bindings = mutableMapOf<String, PartiQLValue>()
+            for ((key, _) in metadata.entries) {
+                var ion: IonElement = data
+                val steps = key.split(".")
+                steps.forEach { s ->
+                    if (ion is StructElement) {
+                        ion = (ion as StructElement).getOptional(s) ?: error("No value for binding $key")
+                    } else {
+                        error("No value for binding $key")
+                    }
+                }
+                bindings[key] = PartiQLValueIonReaderBuilder.standard().build(ion).read()
+            }
+            return bindings
         }
     }
 }

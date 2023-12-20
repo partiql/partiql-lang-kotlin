@@ -13,10 +13,10 @@ import org.partiql.eval.internal.operator.rex.ExprCase
 import org.partiql.eval.internal.operator.rex.ExprCollection
 import org.partiql.eval.internal.operator.rex.ExprGlobal
 import org.partiql.eval.internal.operator.rex.ExprLiteral
-import org.partiql.eval.internal.operator.rex.ExprPivot
 import org.partiql.eval.internal.operator.rex.ExprPathIndex
 import org.partiql.eval.internal.operator.rex.ExprPathKey
 import org.partiql.eval.internal.operator.rex.ExprPathSymbol
+import org.partiql.eval.internal.operator.rex.ExprPivot
 import org.partiql.eval.internal.operator.rex.ExprSelect
 import org.partiql.eval.internal.operator.rex.ExprStruct
 import org.partiql.eval.internal.operator.rex.ExprTupleUnion
