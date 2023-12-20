@@ -10,9 +10,11 @@ import org.partiql.planner.PartiQLPlannerBuilder
 import org.partiql.value.BagValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.StructValue
 import org.partiql.value.bagValue
 import org.partiql.value.boolValue
 import org.partiql.value.int32Value
+import org.partiql.value.int64Value
 import org.partiql.value.io.PartiQLValueIonWriterBuilder
 import org.partiql.value.missingValue
 import org.partiql.value.nullValue
@@ -23,10 +25,11 @@ import kotlin.test.assertEquals
 
 /**
  * This holds sanity tests during the development of the [PartiQLEngine.default] implementation.
+<<<<<<< HEAD
+=======
  *
- * TODO need to update implementations
+>>>>>>> 1772f0ed (Updates JOIN tests)
  */
-@Disabled
 class PartiQLEngineDefaultTest {
 
     private val engine = PartiQLEngine.default()
@@ -82,7 +85,7 @@ class PartiQLEngineDefaultTest {
     @OptIn(PartiQLValueExperimental::class)
     @Test
     fun testJoinInner() {
-        val statement = parser.parse("SELECT a, b FROM << { 'a': 1 } >> t, << { 'b': 2 } >> s;").root
+        val statement = parser.parse("SELECT t.a, s.b FROM << { 'a': 1 } >> t, << { 'b': 2 } >> s;").root
         val session = PartiQLPlanner.Session("q", "u")
         val plan = planner.plan(statement, session)
 
@@ -97,7 +100,7 @@ class PartiQLEngineDefaultTest {
     @OptIn(PartiQLValueExperimental::class)
     @Test
     fun testJoinLeft() {
-        val statement = parser.parse("SELECT a, b FROM << { 'a': 1 } >> t LEFT JOIN << { 'b': 2 } >> s ON false;").root
+        val statement = parser.parse("SELECT t.a, s.b FROM << { 'a': 1 } >> t LEFT JOIN << { 'b': 2 } >> s ON false;").root
         val session = PartiQLPlanner.Session("q", "u")
         val plan = planner.plan(statement, session)
 
@@ -113,8 +116,7 @@ class PartiQLEngineDefaultTest {
     @Test
     fun testJoinOuterFull() {
         val statement =
-            parser.parse("SELECT a, b FROM << { 'a': 1 } >> t FULL OUTER JOIN << { 'b': 2 } >> s ON false;").root
-
+            parser.parse("SELECT t.a, s.b FROM << { 'a': 1 } >> t FULL OUTER JOIN << { 'b': 2 } >> s ON false;").root
         val session = PartiQLPlanner.Session("q", "u")
         val plan = planner.plan(statement, session)
 
@@ -129,12 +131,12 @@ class PartiQLEngineDefaultTest {
 
         val expected = bagValue(
             structValue(
-                "a" to int32Value(1),
-                "b" to nullValue()
-            ),
-            structValue(
                 "a" to nullValue(),
                 "b" to int32Value(2)
+            ),
+            structValue(
+                "a" to int32Value(1),
+                "b" to nullValue()
             ),
         )
         assertEquals(expected, output, comparisonString(expected, output))
@@ -194,7 +196,7 @@ class PartiQLEngineDefaultTest {
     @Test
     fun testJoinOuterFullOnTrue() {
         val statement =
-            parser.parse("SELECT a, b FROM << { 'a': 1 } >> t FULL OUTER JOIN << { 'b': 2 } >> s ON TRUE;").root
+            parser.parse("SELECT t.a, s.b FROM << { 'a': 1 } >> t FULL OUTER JOIN << { 'b': 2 } >> s ON TRUE;").root
 
         val session = PartiQLPlanner.Session("q", "u")
         val plan = planner.plan(statement, session)
@@ -412,19 +414,22 @@ class PartiQLEngineDefaultTest {
             SELECT VALUE {
                 'a': 1,
                 'b': NULL,
-                c : d
+                t.c : t.d
             }
             FROM <<
                 { 'c': 'hello', 'd': 'world' }
-            >>
+            >> AS t
         """.trimIndent()
         val statement = parser.parse(source).root
         val session = PartiQLPlanner.Session("q", "u")
         val plan = planner.plan(statement, session)
 
         val prepared = engine.prepare(plan.plan)
-        val result = engine.execute(prepared) as PartiQLResult.Value
-        val output = result.value
+        val result = engine.execute(prepared)
+        if (result is PartiQLResult.Error) {
+            throw result.cause
+        }
+        val output = (result as PartiQLResult.Value).value
 
         val expected: PartiQLValue = bagValue(
             structValue(
@@ -434,5 +439,64 @@ class PartiQLEngineDefaultTest {
             )
         )
         assertEquals(expected, output)
+    }
+
+    @OptIn(PartiQLValueExperimental::class)
+    @Test
+    fun testScanIndexed() {
+        val statement = parser.parse("SELECT v, i FROM << 'a', 'b', 'c' >> AS v AT i").root
+        val session = PartiQLPlanner.Session("q", "u")
+        val plan = planner.plan(statement, session)
+
+        val prepared = engine.prepare(plan.plan)
+        val result = engine.execute(prepared) as PartiQLResult.Value
+        val output = result.value
+
+        val expected = bagValue(
+            structValue(
+                "v" to stringValue("a"),
+                "i" to int64Value(0),
+            ),
+            structValue(
+                "v" to stringValue("b"),
+                "i" to int64Value(1),
+            ),
+            structValue(
+                "v" to stringValue("c"),
+                "i" to int64Value(2),
+            ),
+        )
+        assertEquals(expected, output, comparisonString(expected, output))
+    }
+
+    @OptIn(PartiQLValueExperimental::class)
+    @Test
+    fun testPivot() {
+        val statement = parser.parse(
+            """
+           PIVOT x.v AT x.k FROM << 
+                { 'k': 'a', 'v': 'x' },
+                { 'k': 'b', 'v': 'y' },
+                { 'k': 'c', 'v': 'z' }
+           >> AS x
+            """.trimIndent()
+        ).root
+        val session = PartiQLPlanner.Session("q", "u")
+        val plan = planner.plan(statement, session)
+
+        val prepared = engine.prepare(plan.plan)
+        val result = engine.execute(prepared)
+        if (result is PartiQLResult.Error) {
+            throw result.cause
+        }
+        result as PartiQLResult.Value
+        val output = result.value as StructValue<*>
+
+        val expected = structValue(
+            "a" to stringValue("x"),
+            "b" to stringValue("y"),
+            "c" to stringValue("z"),
+        )
+        assertEquals(expected, output, comparisonString(expected, output))
     }
 }

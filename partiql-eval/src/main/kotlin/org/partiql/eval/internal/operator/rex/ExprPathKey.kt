@@ -10,8 +10,8 @@ import org.partiql.value.check
 import org.partiql.value.missingValue
 
 internal class ExprPathKey(
-    val root: Operator.Expr,
-    val key: Operator.Expr
+    @JvmField val root: Operator.Expr,
+    @JvmField val key: Operator.Expr
 ) : Operator.Expr {
 
     @OptIn(PartiQLValueExperimental::class)
