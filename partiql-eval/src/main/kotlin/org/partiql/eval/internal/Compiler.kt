@@ -2,6 +2,7 @@ package org.partiql.eval.internal
 
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.eval.internal.operator.rel.RelDistinct
+import org.partiql.eval.internal.operator.rel.RelExclude
 import org.partiql.eval.internal.operator.rel.RelFilter
 import org.partiql.eval.internal.operator.rel.RelJoinInner
 import org.partiql.eval.internal.operator.rel.RelJoinLeft
@@ -10,6 +11,7 @@ import org.partiql.eval.internal.operator.rel.RelJoinRight
 import org.partiql.eval.internal.operator.rel.RelProject
 import org.partiql.eval.internal.operator.rel.RelScan
 import org.partiql.eval.internal.operator.rel.RelScanIndexed
+import org.partiql.eval.internal.operator.rel.compileExcludeItems
 import org.partiql.eval.internal.operator.rex.ExprCase
 import org.partiql.eval.internal.operator.rex.ExprCollection
 import org.partiql.eval.internal.operator.rex.ExprGlobal
@@ -184,5 +186,11 @@ internal class Compiler(
         val input = visitRel(node.input, ctx)
         val condition = visitRex(node.predicate, ctx)
         return RelFilter(input, condition)
+    }
+
+    override fun visitRelOpExclude(node: Rel.Op.Exclude, ctx: Unit): Operator {
+        val input = visitRel(node.input, ctx)
+        val compiledExcludeExprs = compileExcludeItems(node.items)
+        return RelExclude(input, compiledExcludeExprs)
     }
 }

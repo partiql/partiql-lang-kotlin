@@ -226,6 +226,26 @@ class PartiQLEngineDefaultTest {
                     "c" to stringValue("z"),
                 )
             ),
+            SuccessTestCase(
+                input = """
+                    SELECT t
+                    EXCLUDE t.a.b
+                    FROM <<
+                        {'a': {'b': 2}, 'foo': 'bar', 'foo2': 'bar2'}
+                    >> AS t
+                """.trimIndent(),
+                expected = bagValue(
+                    structValue(
+                        "t" to structValue(
+                            "a" to structValue<PartiQLValue>(
+                                // field `b` excluded
+                            ),
+                            "foo" to stringValue("bar"),
+                            "foo2" to stringValue("bar2")
+                        )
+                    ),
+                )
+            )
         )
     }
     public class SuccessTestCase @OptIn(PartiQLValueExperimental::class) constructor(
