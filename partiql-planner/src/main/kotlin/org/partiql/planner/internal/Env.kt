@@ -77,16 +77,18 @@ internal sealed interface ResolvedVar {
      *
      * @property type              Resolved StaticType
      * @property ordinal           Index offset in [TypeEnv]
-     * @property replacementSteps  Path steps to replace.
-     * @property depth             The depth/level of the path match.
+     * @property resolvedSteps     The fully resolved path steps.s
      */
     class Local(
         override val type: StaticType,
         override val ordinal: Int,
         val rootType: StaticType,
-        val replacementSteps: List<BindingName>,
-        override val depth: Int
-    ) : ResolvedVar
+        val resolvedSteps: List<BindingName>,
+    ) : ResolvedVar {
+        // the depth are always going to be 1 because this is local variable.
+        // the global path, however the path length maybe, going to be replaced by a binding name.
+        override val depth: Int = 1
+    }
 
     /**
      * Metadata for a resolved global variable
@@ -233,7 +235,7 @@ internal class Env(
                     catalogs[catalogIndex] = catalogs[catalogIndex].copy(
                         symbols = symbols + listOf(Catalog.Symbol(valuePath, valueType))
                     )
-                    catalogIndex to 0
+                    catalogIndex to catalogs[catalogIndex].symbols.lastIndex
                 }
                 else -> {
                     catalogIndex to index
@@ -325,7 +327,7 @@ internal class Env(
         locals.forEachIndexed { ordinal, binding ->
             val root = path.steps[0]
             if (root.isEquivalentTo(binding.name)) {
-                return ResolvedVar.Local(binding.type, ordinal, binding.type, emptyList(), 1)
+                return ResolvedVar.Local(binding.type, ordinal, binding.type, path.steps)
             }
         }
 
@@ -333,11 +335,17 @@ internal class Env(
         val matches = mutableListOf<ResolvedVar.Local>()
         for (ordinal in locals.indices) {
             val rootType = locals[ordinal].type
+            val pathPrefix = BindingName(locals[ordinal].name, BindingCase.SENSITIVE)
             if (rootType is StructType) {
                 val varType = inferStructLookup(rootType, path)
                 if (varType != null) {
                     // we found this path within a struct!
-                    val match = ResolvedVar.Local(varType.resolvedType, ordinal, rootType, varType.replacementPath.steps, varType.replacementPath.steps.size)
+                    val match = ResolvedVar.Local(
+                        varType.resolvedType,
+                        ordinal,
+                        rootType,
+                        listOf(pathPrefix) + varType.replacementPath.steps,
+                    )
                     matches.add(match)
                 }
             }
@@ -413,7 +421,7 @@ internal class Env(
                 }
             }
             // 3. Struct is open
-            else -> null
+            else -> key to StaticType.ANY
         }
     }
 
