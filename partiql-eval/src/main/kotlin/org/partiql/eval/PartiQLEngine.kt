@@ -1,11 +1,6 @@
 package org.partiql.eval
 
-import org.partiql.eval.internal.Compiler
-import org.partiql.eval.internal.Record
 import org.partiql.plan.PartiQLPlan
-import org.partiql.spi.Plugin
-import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
 
 /**
  * PartiQL's Experimental Engine.
@@ -29,46 +24,11 @@ public interface PartiQLEngine {
     public fun execute(statement: PartiQLStatement<*>): PartiQLResult
 
     companion object {
+
         @JvmStatic
-        @JvmOverloads
-        fun default(plugins: List<Plugin> = emptyList()) = Builder().plugins(plugins).build()
-    }
+        public fun builder(): PartiQLEngineBuilder = PartiQLEngineBuilder()
 
-    public class Builder {
-
-        private var plugins: List<Plugin> = emptyList()
-
-        public fun plugins(plugins: List<Plugin>): Builder = this.apply {
-            this.plugins = plugins
-        }
-
-        public fun build(): PartiQLEngine = Default(plugins)
-    }
-
-    private class Default(private val plugins: List<Plugin>) : PartiQLEngine {
-
-        @OptIn(PartiQLValueExperimental::class)
-        override fun prepare(plan: PartiQLPlan): PartiQLStatement<*> {
-            // Close over the expression.
-            // Right now we are assuming we only have a query statement hence a value statement.
-            val expression = Compiler.compile(plan)
-            return object : PartiQLStatement.Query {
-                override fun execute(): PartiQLValue {
-                    return expression.eval(Record.empty)
-                }
-            }
-        }
-
-        @OptIn(PartiQLValueExperimental::class)
-        override fun execute(statement: PartiQLStatement<*>): PartiQLResult {
-            return when (statement) {
-                is PartiQLStatement.Query -> try {
-                    val value = statement.execute()
-                    PartiQLResult.Value(value)
-                } catch (ex: Exception) {
-                    PartiQLResult.Error(ex)
-                }
-            }
-        }
+        @JvmStatic
+        fun default() = PartiQLEngineBuilder().build()
     }
 }

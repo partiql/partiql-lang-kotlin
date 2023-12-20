@@ -31,6 +31,13 @@ public interface Connector {
     public fun getMetadata(session: ConnectorSession): ConnectorMetadata
 
     /**
+     * Returns a [ConnectorBindings] which the engine uses to load values.
+     *
+     * @return
+     */
+    public fun getBindings(): ConnectorBindings
+
+    /**
      * A Plugin leverages a [Factory] to produce a [Connector] which is used for catalog metadata and data access.
      */
     public interface Factory {

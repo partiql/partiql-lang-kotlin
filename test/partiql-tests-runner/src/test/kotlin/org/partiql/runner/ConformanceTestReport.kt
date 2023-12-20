@@ -3,11 +3,11 @@ package org.partiql.runner
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
+import org.partiql.runner.executor.LegacyExecutor
 import org.partiql.runner.report.ReportGenerator
 import org.partiql.runner.schema.TestCase
 import org.partiql.runner.test.TestProvider
 import org.partiql.runner.test.TestRunner
-import org.partiql.runner.test.executor.LegacyExecutor
 
 /**
  * Runs the conformance tests without a fail list, so we can document the passing/failing tests in the conformance

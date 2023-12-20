@@ -4,6 +4,7 @@ import com.amazon.ionelement.api.StructElement
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingPath
 import org.partiql.spi.connector.Connector
+import org.partiql.spi.connector.ConnectorBindings
 import org.partiql.spi.connector.ConnectorMetadata
 import org.partiql.spi.connector.ConnectorObjectHandle
 import org.partiql.spi.connector.ConnectorObjectPath
@@ -13,13 +14,18 @@ import org.partiql.types.StaticType
 /**
  * This is a plugin used for testing and is not a versioned API per semver.
  */
-public class MemoryConnector(private val metadata: ConnectorMetadata) : Connector {
+public class MemoryConnector(
+    private val metadata: ConnectorMetadata,
+    private val bindings: ConnectorBindings,
+) : Connector {
 
     companion object {
         const val CONNECTOR_NAME = "memory"
     }
 
     override fun getMetadata(session: ConnectorSession): ConnectorMetadata = metadata
+
+    override fun getBindings(): ConnectorBindings = bindings
 
     class Factory(private val catalogs: Map<String, MemoryConnector>) : Connector.Factory {
 
@@ -36,6 +42,9 @@ public class MemoryConnector(private val metadata: ConnectorMetadata) : Connecto
      * @property map
      */
     class Metadata(private val map: Map<String, StaticType>) : ConnectorMetadata {
+
+        public val entries: List<Pair<String, StaticType>>
+            get() = map.entries.map { it.key to it.value }
 
         companion object {
             @JvmStatic

@@ -17,6 +17,7 @@ package org.partiql.plugins.local
 import com.amazon.ionelement.api.StructElement
 import org.partiql.spi.BindingPath
 import org.partiql.spi.connector.Connector
+import org.partiql.spi.connector.ConnectorBindings
 import org.partiql.spi.connector.ConnectorMetadata
 import org.partiql.spi.connector.ConnectorObjectHandle
 import org.partiql.spi.connector.ConnectorObjectPath
@@ -59,6 +60,10 @@ class LocalConnector(
     public fun listObjects(): List<BindingPath> = metadata.listObjects()
 
     override fun getMetadata(session: ConnectorSession): ConnectorMetadata = metadata
+
+    override fun getBindings(): ConnectorBindings {
+        TODO("Not yet implemented")
+    }
 
     class Factory : Connector.Factory {
 
