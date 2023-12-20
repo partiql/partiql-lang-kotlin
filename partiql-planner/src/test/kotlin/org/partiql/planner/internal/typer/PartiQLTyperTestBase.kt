@@ -7,7 +7,6 @@ import org.partiql.parser.PartiQLParser
 import org.partiql.plan.Statement
 import org.partiql.plan.debug.PlanPrinter
 import org.partiql.planner.PartiQLPlanner
-import org.partiql.planner.PartiQLPlannerBuilder
 import org.partiql.planner.test.PartiQLTest
 import org.partiql.planner.test.PartiQLTestProvider
 import org.partiql.planner.util.ProblemCollector
@@ -29,11 +28,18 @@ abstract class PartiQLTyperTestBase {
     }
 
     companion object {
-        internal val session: ((String) -> PartiQLPlanner.Session) = { catalog ->
+
+        public val parser = PartiQLParser.default()
+        public val planner = PartiQLPlanner.default()
+
+        internal val session: ((String, ConnectorMetadata) -> PartiQLPlanner.Session) = { catalog, metadata ->
             PartiQLPlanner.Session(
                 queryId = Random().nextInt().toString(),
                 userId = "test-user",
                 currentCatalog = catalog,
+                catalogs = mapOf(
+                    catalog to metadata
+                )
             )
         }
     }
@@ -41,11 +47,8 @@ abstract class PartiQLTyperTestBase {
     val inputs = PartiQLTestProvider().apply { load() }
 
     val testingPipeline: ((String, String, ConnectorMetadata, ProblemCallback) -> PartiQLPlanner.Result) = { query, catalog, metadata, collector ->
-        val ast = PartiQLParser.default().parse(query).root
-        val planner = PartiQLPlannerBuilder()
-            .addCatalog(catalog, metadata)
-            .build()
-        planner.plan(ast, session(catalog), collector)
+        val ast = parser.parse(query).root
+        planner.plan(ast, session(catalog, metadata), collector)
     }
 
     fun testGen(

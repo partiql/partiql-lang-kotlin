@@ -3,7 +3,6 @@ package org.partiql.planner.internal
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.partiql.planner.PartiQLHeader
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.internal.ir.Catalog
 import org.partiql.planner.internal.ir.Rex
@@ -38,15 +37,14 @@ class EnvTest {
     @BeforeEach
     fun init() {
         env = Env(
-            listOf(PartiQLHeader),
-            mapOf(
-                "pql" to LocalConnector.Metadata(root)
-            ),
             PartiQLPlanner.Session(
                 queryId = Random().nextInt().toString(),
                 userId = "test-user",
                 currentCatalog = "pql",
                 currentDirectory = listOf("main"),
+                catalogs = mapOf(
+                    "pql" to LocalConnector.Metadata(root)
+                ),
             )
         )
     }

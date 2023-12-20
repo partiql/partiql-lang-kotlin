@@ -1,82 +1,41 @@
 package org.partiql.planner
 
-import org.partiql.spi.connector.ConnectorMetadata
-import org.partiql.types.function.FunctionSignature
-
 /**
  * PartiQLPlannerBuilder is used to programmatically construct a [PartiQLPlanner] implementation.
  *
  * Usage:
  *      PartiQLPlanner.builder()
- *                    .addCatalog("foo", FooConnector())
- *                    .addCatalog("bar", BarConnector())
- *                    .builder()
+ *                    .addPass(myPass)
+ *                    .build()
  */
 public class PartiQLPlannerBuilder {
 
-    private var fns: MutableList<FunctionSignature.Scalar> = mutableListOf()
-    private var catalogs: MutableMap<String, ConnectorMetadata> = mutableMapOf()
-    private var passes: List<PartiQLPlannerPass> = emptyList()
+    private val passes: MutableList<PartiQLPlannerPass> = mutableListOf()
 
     /**
      * Build the builder, return an implementation of a [PartiQLPlanner].
      *
      * @return
      */
-    public fun build(): PartiQLPlanner {
-        val headers = mutableListOf<Header>(PartiQLHeader)
-        if (fns.isNotEmpty()) {
-            val h = object : Header() {
-                override val namespace: String = "UDF"
-                override val functions = fns
-            }
-            headers.add(h)
-        }
-        return PartiQLPlannerDefault(headers, catalogs, passes)
+    public fun build(): PartiQLPlanner = PartiQLPlannerDefault(passes)
+
+    /**
+     * Java style method for adding a planner pass to this planner builder.
+     *
+     * @param pass
+     * @return
+     */
+    public fun addPass(pass: PartiQLPlannerPass): PartiQLPlannerBuilder = this.apply {
+        this.passes.add(pass)
     }
 
     /**
-     * Java style method for assigning a Catalog name to [ConnectorMetadata].
+     * Kotlin style method for adding a list of planner passes to this planner builder.
      *
-     * @param catalog
-     * @param metadata
+     * @param passes
      * @return
      */
-    public fun addCatalog(catalog: String, metadata: ConnectorMetadata): PartiQLPlannerBuilder = this.apply {
-        this.catalogs[catalog] = metadata
-    }
-
-    /**
-     * Kotlin style method for assigning Catalog names to [ConnectorMetadata].
-     *
-     * @param catalogs
-     * @return
-     */
-    public fun catalogs(vararg catalogs: Pair<String, ConnectorMetadata>): PartiQLPlannerBuilder = this.apply {
-        this.catalogs = mutableMapOf(*catalogs)
-    }
-
-    /**
-     * Java style method for adding a user-defined-function.
-     *
-     * @param function
-     * @return
-     */
-    public fun addFunction(function: FunctionSignature.Scalar): PartiQLPlannerBuilder = this.apply {
-        this.fns.add(function)
-    }
-
-    /**
-     * Kotlin style method for setting the user-defined functions. This replaces all existing user-defined functions previously passed to the builder.
-     *
-     * @param function
-     * @return
-     */
-    public fun functions(vararg functions: FunctionSignature.Scalar): PartiQLPlannerBuilder = this.apply {
-        this.fns = mutableListOf(*functions)
-    }
-
-    public fun passes(passes: List<PartiQLPlannerPass>): PartiQLPlannerBuilder = this.apply {
-        this.passes = passes
+    public fun addPasses(vararg passes: PartiQLPlannerPass): PartiQLPlannerBuilder = this.apply {
+        this.passes.addAll(passes)
     }
 }
