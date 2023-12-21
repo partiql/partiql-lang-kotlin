@@ -11,10 +11,10 @@ import org.partiql.value.PartiQLValueType.*
 
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnAnd0 : PartiQLFunction.Scalar {
+internal object FnOr0 : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
-        name = "and",
+        name = "or",
         returns = BOOL,
         parameters = listOf(FunctionParameter("lhs", BOOL), FunctionParameter("rhs", BOOL)),
         isNullCall = false,
@@ -22,17 +22,17 @@ internal object FnAnd0 : PartiQLFunction.Scalar {
     )
     
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function and not implemented")
+        TODO("Function or not implemented")
     }
 }
 
 
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnAnd1 : PartiQLFunction.Scalar {
+internal object FnOr1 : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
-        name = "and",
+        name = "or",
         returns = BOOL,
         parameters = listOf(FunctionParameter("lhs", MISSING), FunctionParameter("rhs", BOOL)),
         isNullCall = false,
@@ -40,17 +40,17 @@ internal object FnAnd1 : PartiQLFunction.Scalar {
     )
     
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function and not implemented")
+        TODO("Function or not implemented")
     }
 }
 
 
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnAnd2 : PartiQLFunction.Scalar {
+internal object FnOr2 : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
-        name = "and",
+        name = "or",
         returns = BOOL,
         parameters = listOf(FunctionParameter("lhs", BOOL), FunctionParameter("rhs", MISSING)),
         isNullCall = false,
@@ -58,17 +58,17 @@ internal object FnAnd2 : PartiQLFunction.Scalar {
     )
     
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function and not implemented")
+        TODO("Function or not implemented")
     }
 }
 
 
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnAnd3 : PartiQLFunction.Scalar {
+internal object FnOr3 : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
-        name = "and",
+        name = "or",
         returns = BOOL,
         parameters = listOf(FunctionParameter("lhs", MISSING), FunctionParameter("rhs", MISSING)),
         isNullCall = false,
@@ -76,7 +76,7 @@ internal object FnAnd3 : PartiQLFunction.Scalar {
     )
     
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function and not implemented")
+        TODO("Function or not implemented")
     }
 }
 

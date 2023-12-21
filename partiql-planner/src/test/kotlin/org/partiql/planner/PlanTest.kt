@@ -79,8 +79,7 @@ class PlanTest {
     val pipeline: (PartiQLTest) -> PartiQLPlanner.Result = { test ->
         val problemCollector = ProblemCollector()
         val ast = PartiQLParser.default().parse(test.statement).root
-        val planner = PartiQLPlannerBuilder()
-            .build()
+        val planner = PartiQLPlanner.default()
         planner.plan(ast, session(test.key), problemCollector)
     }
 
