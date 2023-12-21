@@ -36,16 +36,6 @@ class PlanTest {
 
     val input = PartiQLTestProvider().apply { load() }
 
-    val session: (PartiQLTest.Key) -> PartiQLPlanner.Session = { key ->
-        PartiQLPlanner.Session(
-            queryId = key.toString(),
-            userId = "user_id",
-            currentCatalog = "default",
-            currentDirectory = listOf(),
-            instant = Instant.now(),
-        )
-    }
-
     val metadata = MemoryConnector.Metadata.of(
         "default.t" to BagType(
             StructType(
@@ -75,11 +65,21 @@ class PlanTest {
         )
     )
 
+    val session: (PartiQLTest.Key) -> PartiQLPlanner.Session = { key ->
+        PartiQLPlanner.Session(
+            queryId = key.toString(),
+            userId = "user_id",
+            currentCatalog = "default",
+            currentDirectory = listOf(),
+            catalogs = mapOf("default" to metadata),
+            instant = Instant.now(),
+        )
+    }
+
     val pipeline: (PartiQLTest) -> PartiQLPlanner.Result = { test ->
         val problemCollector = ProblemCollector()
         val ast = PartiQLParser.default().parse(test.statement).root
         val planner = PartiQLPlannerBuilder()
-            .addCatalog("default", metadata)
             .build()
         planner.plan(ast, session(test.key), problemCollector)
     }
