@@ -3,7 +3,7 @@ package org.partiql.eval.internal.exclude
 import org.junit.Assert.assertEquals
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
-import org.partiql.eval.internal.operator.rel.compileExcludeItems
+import org.partiql.eval.internal.Compiler
 import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.parser.PartiQLParser
 import org.partiql.plan.Rel
@@ -24,9 +24,10 @@ class CompiledExcludeItemTest {
     private fun testExcludeExprSubsumption(tc: SubsumptionTC) {
         val statement = parser.parse("SELECT * EXCLUDE ${tc.excludeExprStr} FROM <<>> AS s, <<>> AS t;").root
         val session = PartiQLPlanner.Session("q", "u")
-        val plan = planner.plan(statement, session)
-        val excludeClause = getExcludeClause(plan.plan.statement)
-        val actualExcludeExprs = compileExcludeItems(excludeClause.items)
+        val plan = planner.plan(statement, session).plan
+        val compiler = Compiler(plan, emptyMap())
+        val excludeClause = getExcludeClause(plan.statement)
+        val actualExcludeExprs = compiler.compileExcludeItems(excludeClause.items)
         assertEquals(tc.expectedExcludeExprs, actualExcludeExprs)
     }
 

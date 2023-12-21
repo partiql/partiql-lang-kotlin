@@ -1,5 +1,8 @@
 package org.partiql.eval.internal
 
+import org.partiql.eval.internal.exclude.CompiledExcludeItem
+import org.partiql.eval.internal.exclude.ExcludeFieldCase
+import org.partiql.eval.internal.exclude.ExcludeStep
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.eval.internal.operator.rel.RelDistinct
 import org.partiql.eval.internal.operator.rel.RelExclude
@@ -11,7 +14,6 @@ import org.partiql.eval.internal.operator.rel.RelJoinRight
 import org.partiql.eval.internal.operator.rel.RelProject
 import org.partiql.eval.internal.operator.rel.RelScan
 import org.partiql.eval.internal.operator.rel.RelScanIndexed
-import org.partiql.eval.internal.operator.rel.compileExcludeItems
 import org.partiql.eval.internal.operator.rex.ExprCase
 import org.partiql.eval.internal.operator.rex.ExprCollection
 import org.partiql.eval.internal.operator.rex.ExprGlobal
@@ -24,6 +26,7 @@ import org.partiql.eval.internal.operator.rex.ExprSelect
 import org.partiql.eval.internal.operator.rex.ExprStruct
 import org.partiql.eval.internal.operator.rex.ExprTupleUnion
 import org.partiql.eval.internal.operator.rex.ExprVar
+import org.partiql.plan.Identifier
 import org.partiql.plan.PartiQLPlan
 import org.partiql.plan.PlanNode
 import org.partiql.plan.Rel
@@ -186,6 +189,38 @@ internal class Compiler(
         val input = visitRel(node.input, ctx)
         val condition = visitRex(node.predicate, ctx)
         return RelFilter(input, condition)
+    }
+
+    /**
+     * Creates a list of [CompiledExcludeItem] with each index of the resulting list corresponding to a different
+     * exclude path root.
+     */
+    internal fun compileExcludeItems(excludeExprs: List<Rel.Op.Exclude.Item>): List<CompiledExcludeItem> {
+        val compiledExcludeItems = excludeExprs
+            .groupBy { it.root }
+            .map { (root, exclusions) ->
+                exclusions.fold(CompiledExcludeItem.empty(root.ref)) { acc, exclusion ->
+                    acc.addNode(exclusion.steps.map { it.toCompiledExcludeStep() })
+                    acc
+                }
+            }
+        return compiledExcludeItems
+    }
+
+    private fun Rel.Op.Exclude.Step.toCompiledExcludeStep(): ExcludeStep {
+        return when (this) {
+            is Rel.Op.Exclude.Step.StructField -> ExcludeStep.StructField(this.symbol.symbol, this.symbol.caseSensitivity.toCompiledExcludeStepCase())
+            is Rel.Op.Exclude.Step.StructWildcard -> ExcludeStep.StructWildcard
+            is Rel.Op.Exclude.Step.CollIndex -> ExcludeStep.CollIndex(this.index)
+            is Rel.Op.Exclude.Step.CollWildcard -> ExcludeStep.CollWildcard
+        }
+    }
+
+    private fun Identifier.CaseSensitivity.toCompiledExcludeStepCase(): ExcludeFieldCase {
+        return when (this) {
+            Identifier.CaseSensitivity.SENSITIVE -> ExcludeFieldCase.SENSITIVE
+            Identifier.CaseSensitivity.INSENSITIVE -> ExcludeFieldCase.INSENSITIVE
+        }
     }
 
     override fun visitRelOpExclude(node: Rel.Op.Exclude, ctx: Unit): Operator {
