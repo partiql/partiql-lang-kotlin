@@ -1,7 +1,6 @@
 package org.partiql.planner.internal.typer
 
 import org.junit.jupiter.api.Test
-import org.partiql.planner.PartiQLHeader
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.ir.Identifier
@@ -174,15 +173,14 @@ class PlanTyperTest {
         private fun getTyper(): PlanTyperWrapper {
             val collector = ProblemCollector()
             val env = Env(
-                listOf(PartiQLHeader),
-                mapOf(
-                    "pql" to LocalConnector.Metadata(root)
-                ),
                 PartiQLPlanner.Session(
                     queryId = Random().nextInt().toString(),
                     userId = "test-user",
                     currentCatalog = "pql",
                     currentDirectory = listOf("main"),
+                    catalogs = mapOf(
+                        "pql" to LocalConnector.Metadata(root)
+                    ),
                 )
             )
             return PlanTyperWrapper(PlanTyper(env, collector), collector)

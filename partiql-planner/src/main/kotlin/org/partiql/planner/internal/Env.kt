@@ -1,6 +1,5 @@
 package org.partiql.planner.internal
 
-import org.partiql.planner.Header
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.internal.ir.Agg
 import org.partiql.planner.internal.ir.Catalog
@@ -20,6 +19,7 @@ import org.partiql.spi.connector.ConnectorSession
 import org.partiql.types.StaticType
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
+import org.partiql.types.function.FunctionSignature
 
 /**
  * Handle for associating a catalog name with catalog related metadata objects.
@@ -102,7 +102,7 @@ internal sealed interface ResolvedVar {
         override val type: StaticType,
         override val ordinal: Int,
         override val depth: Int,
-        val position: Int
+        val position: Int,
     ) : ResolvedVar
 }
 
@@ -122,13 +122,9 @@ internal enum class ResolutionStrategy {
 /**
  * PartiQL Planner Global Environment of Catalogs backed by given plugins.
  *
- * @property headers        List of namespaced definitions
- * @property catalogs       List of plugins for global resolution
  * @property session        Session details
  */
 internal class Env(
-    private val headers: List<Header>,
-    private val connectors: Map<String, ConnectorMetadata>,
     private val session: PartiQLPlanner.Session,
 ) {
 
@@ -138,9 +134,30 @@ internal class Env(
     public val catalogs = mutableListOf<Catalog>()
 
     /**
-     * Encapsulate all function resolving logic within [FnResolver].
+     * Catalog Metadata for this query session.
      */
-    public val fnResolver = FnResolver(headers)
+    private val connectors = session.catalogs
+
+    /**
+     * Encapsulate all function resolving logic within [FnResolver].
+     *
+     * TODO we should be using a search_path for resolving functions. This is not possible at the moment, so we flatten
+     *      all builtin functions to live at the top-level. At the moment, we could technically use this to have
+     *      single-level `catalog`.`function`() syntax but that is out-of-scope for this commit.
+     */
+    public val fnResolver = FnResolver(object : Header() {
+
+        override val namespace: String = "builtins"
+
+        override val functions: List<FunctionSignature.Scalar> =
+            PartiQLHeader.functions + connectors.values.flatMap { it.functions }
+
+        override val operators: List<FunctionSignature.Scalar> =
+            PartiQLHeader.operators + connectors.values.flatMap { it.operators }
+
+        override val aggregations: List<FunctionSignature.Aggregation> =
+            PartiQLHeader.aggregations + connectors.values.flatMap { it.aggregations }
+    })
 
     private val connectorSession = object : ConnectorSession {
         override fun getQueryId(): String = session.queryId
@@ -148,13 +165,12 @@ internal class Env(
     }
 
     /**
-
-     * Leverages a [FunctionResolver] to find a matching function defined in the [Header] scalar function catalog.
+     * Leverages a [FnResolver] to find a matching function defined in the [Header] scalar function catalog.
      */
     internal fun resolveFn(fn: Fn.Unresolved, args: List<Rex>) = fnResolver.resolveFn(fn, args)
 
     /**
-     * Leverages a [FunctionResolver] to find a matching function defined in the [Header] aggregation function catalog.
+     * Leverages a [FnResolver] to find a matching function defined in the [Header] aggregation function catalog.
      */
     internal fun resolveAgg(agg: Agg.Unresolved, args: List<Rex>) = fnResolver.resolveAgg(agg, args)
 
@@ -213,7 +229,11 @@ internal class Env(
             getObjectHandle(cat, catalogPath)?.let { handle ->
                 getObjectDescriptor(handle).let { type ->
                     val depth = calculateMatched(originalPath, catalogPath, handle.second.absolutePath)
-                    val (catalogIndex, valueIndex) = getOrAddCatalogValue(handle.first, handle.second.absolutePath.steps, type)
+                    val (catalogIndex, valueIndex) = getOrAddCatalogValue(
+                        handle.first,
+                        handle.second.absolutePath.steps,
+                        type
+                    )
                     // Return resolution metadata
                     ResolvedVar.Global(type, catalogIndex, depth, valueIndex)
                 }
@@ -224,7 +244,11 @@ internal class Env(
     /**
      * @return a [Pair] where [Pair.first] is the catalog index and [Pair.second] is the value index within that catalog
      */
-    private fun getOrAddCatalogValue(catalogName: String, valuePath: List<String>, valueType: StaticType): Pair<Int, Int> {
+    private fun getOrAddCatalogValue(
+        catalogName: String,
+        valuePath: List<String>,
+        valueType: StaticType,
+    ): Pair<Int, Int> {
         val catalogIndex = getOrAddCatalog(catalogName)
         val symbols = catalogs[catalogIndex].symbols
         return symbols.indexOfFirst { value ->
@@ -388,7 +412,7 @@ internal class Env(
      */
     private class ResolvedPath(
         val replacementPath: BindingPath,
-        val resolvedType: StaticType
+        val resolvedType: StaticType,
     )
 
     /**

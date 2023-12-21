@@ -28,7 +28,8 @@ Thank you to all who have contributed!
 ## [Unreleased]
 
 ### Added
-- Adds the ability to pass a user-defined-function signature to the planner.
+- Adds the ability to define a user-defined-function in ConnectorMetadata
+- Move ConnectorMetadata map from PartiQLPlanner to PartiQLPlanner.Session for planner re-use.
 
 ### Changed
 
@@ -42,7 +43,7 @@ Thank you to all who have contributed!
 
 ### Contributors
 Thank you to all who have contributed!
-- @<your-username>
+- @rchowell
 
 ## [0.14.0-alpha] - 2023-12-15
 

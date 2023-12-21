@@ -52,12 +52,8 @@ object Debug {
 
     private val root = Paths.get(System.getProperty("user.home")).resolve(".partiql/local")
 
-    private val planner = PartiQLPlanner.builder()
-        .catalogs(
-            "local" to LocalConnector.Metadata(root)
-        )
-        .build()
     private val parser = PartiQLParser.default()
+    private val planner = PartiQLPlanner.default()
 
     // !!
     // IMPLEMENT DEBUG BEHAVIOR HERE
@@ -76,6 +72,9 @@ object Debug {
         val sess = PartiQLPlanner.Session(
             queryId = UUID.randomUUID().toString(),
             userId = "debug",
+            catalogs = mapOf(
+                "local" to LocalConnector.Metadata(root)
+            )
         )
         val result = planner.plan(statement, sess).plan
         out.info("-- Plan ----------")
