@@ -245,6 +245,52 @@ class PartiQLEngineDefaultTest {
                         )
                     ),
                 )
+            ),
+            SuccessTestCase(
+                input = """
+                    SELECT *
+                    EXCLUDE
+                        t.a.b.c[*].field_x
+                    FROM [{
+                        'a': {
+                            'b': {
+                                'c': [
+                                    {                    -- c[0]; field_x to be removed
+                                        'field_x': 0, 
+                                        'field_y': 0
+                                    },
+                                    {                    -- c[1]; field_x to be removed
+                                        'field_x': 1,
+                                        'field_y': 1
+                                    },
+                                    {                    -- c[2]; field_x to be removed
+                                        'field_x': 2,
+                                        'field_y': 2
+                                    }
+                                ]
+                            }
+                        }
+                    }] AS t
+                """.trimIndent(),
+                expected = bagValue(
+                    structValue(
+                        "a" to structValue(
+                            "b" to structValue(
+                                "c" to bagValue( // TODO: should be ListValue; currently, Rex.ExprCollection doesn't return lists
+                                    structValue(
+                                        "field_y" to int32Value(0)
+                                    ),
+                                    structValue(
+                                        "field_y" to int32Value(1)
+                                    ),
+                                    structValue(
+                                        "field_y" to int32Value(2)
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
             )
         )
     }
