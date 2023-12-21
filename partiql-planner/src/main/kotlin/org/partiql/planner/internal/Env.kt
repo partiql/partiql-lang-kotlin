@@ -4,10 +4,8 @@ import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.internal.ir.Agg
 import org.partiql.planner.internal.ir.Catalog
 import org.partiql.planner.internal.ir.Fn
-import org.partiql.planner.internal.ir.Identifier
 import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
-import org.partiql.planner.internal.ir.identifierSymbol
 import org.partiql.planner.internal.typer.FnResolver
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
@@ -19,7 +17,6 @@ import org.partiql.spi.connector.ConnectorSession
 import org.partiql.types.StaticType
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
-import org.partiql.types.function.FunctionSignature
 
 /**
  * Handle for associating a catalog name with catalog related metadata objects.
@@ -145,19 +142,7 @@ internal class Env(
      *      all builtin functions to live at the top-level. At the moment, we could technically use this to have
      *      single-level `catalog`.`function`() syntax but that is out-of-scope for this commit.
      */
-    public val fnResolver = FnResolver(object : Header() {
-
-        override val namespace: String = "builtins"
-
-        override val functions: List<FunctionSignature.Scalar> =
-            PartiQLHeader.functions + connectors.values.flatMap { it.functions }
-
-        override val operators: List<FunctionSignature.Scalar> =
-            PartiQLHeader.operators + connectors.values.flatMap { it.operators }
-
-        override val aggregations: List<FunctionSignature.Aggregation> =
-            PartiQLHeader.aggregations + connectors.values.flatMap { it.aggregations }
-    })
+    private val fnResolver = FnResolver(connectors.values.mapNotNull { it.functions })
 
     private val connectorSession = object : ConnectorSession {
         override fun getQueryId(): String = session.queryId
@@ -181,7 +166,7 @@ internal class Env(
      * @param path      Global identifier path
      * @return
      */
-    internal fun getObjectHandle(catalog: BindingName, path: BindingPath): Handle<ConnectorObjectHandle>? {
+    private fun getObjectHandle(catalog: BindingName, path: BindingPath): Handle<ConnectorObjectHandle>? {
         val metadata = getMetadata(catalog) ?: return null
         return metadata.second.getObjectHandle(connectorSession, path)?.let {
             metadata.first to it
@@ -194,7 +179,7 @@ internal class Env(
      * @param handle
      * @return
      */
-    internal fun getObjectDescriptor(handle: Handle<ConnectorObjectHandle>): StaticType {
+    private fun getObjectDescriptor(handle: Handle<ConnectorObjectHandle>): StaticType {
         val metadata = getMetadata(BindingName(handle.first, BindingCase.SENSITIVE))?.second
             ?: error("Unable to fetch connector metadata based on handle $handle")
         return metadata.getObjectType(connectorSession, handle.second) ?: error("Unable to produce Static Type")
@@ -465,17 +450,4 @@ internal class Env(
     ): Int {
         return originalPath.steps.size + outputCatalogPath.steps.size - inputCatalogPath.steps.size
     }
-
-    private fun String.toIdentifier() = identifierSymbol(
-        symbol = this,
-        caseSensitivity = Identifier.CaseSensitivity.SENSITIVE
-    )
-
-    private fun BindingName.toIdentifier() = identifierSymbol(
-        symbol = name,
-        caseSensitivity = when (bindingCase) {
-            BindingCase.SENSITIVE -> Identifier.CaseSensitivity.SENSITIVE
-            BindingCase.INSENSITIVE -> Identifier.CaseSensitivity.INSENSITIVE
-        }
-    )
 }

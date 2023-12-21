@@ -3,6 +3,7 @@ package org.partiql.planner.internal.typer
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.fail
 import org.partiql.planner.internal.Header
+import org.partiql.spi.connector.ConnectorFunctions
 import org.partiql.types.function.FunctionParameter
 import org.partiql.types.function.FunctionSignature
 import org.partiql.value.PartiQLValueExperimental
@@ -57,16 +58,12 @@ class FunctionResolverTest {
             isNullable = false,
         )
 
-        private val myHeader = object : Header() {
+        private val myFunctions = object : ConnectorFunctions() {
 
-            override val namespace: String = "my_header"
-
-            override val functions: List<FunctionSignature.Scalar> = listOf(
-                split
-            )
+            override val functions: List<FunctionSignature.Scalar> = listOf(split)
         }
 
-        private val resolver = FnResolver(myHeader)
+        private val resolver = FnResolver(listOf(myFunctions))
     }
 
     private sealed class Case {

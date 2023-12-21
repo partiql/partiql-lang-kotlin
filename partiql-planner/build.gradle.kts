@@ -28,6 +28,7 @@ dependencies {
     api(project(":partiql-types"))
     implementation(project(":partiql-ast"))
     implementation(project(":partiql-spi"))
+    implementation(project(":plugins:partiql-plugin"))
     implementation(Deps.dotlin)
     implementation(Deps.ionElement)
     // Test

@@ -9,6 +9,6 @@ class TypeLatticeTest {
     @Disabled
     fun latticeAsciidocDump() {
         // this test only exists for dumping the type lattice as Asciidoc
-        println(TypeLattice.partiql())
+        println(TypeCasts.partiql())
     }
 }

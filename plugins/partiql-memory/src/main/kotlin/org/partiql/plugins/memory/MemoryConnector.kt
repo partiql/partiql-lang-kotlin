@@ -5,6 +5,7 @@ import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingPath
 import org.partiql.spi.connector.Connector
 import org.partiql.spi.connector.ConnectorBindings
+import org.partiql.spi.connector.ConnectorFunctions
 import org.partiql.spi.connector.ConnectorMetadata
 import org.partiql.spi.connector.ConnectorObjectHandle
 import org.partiql.spi.connector.ConnectorObjectPath
@@ -42,6 +43,8 @@ public class MemoryConnector(
      * @property map
      */
     class Metadata(private val map: Map<String, StaticType>) : ConnectorMetadata {
+
+        override val functions: ConnectorFunctions? = null
 
         public val entries: List<Pair<String, StaticType>>
             get() = map.entries.map { it.key to it.value }

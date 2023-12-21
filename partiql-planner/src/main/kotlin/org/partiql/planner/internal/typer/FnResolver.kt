@@ -1,48 +1,16 @@
 package org.partiql.planner.internal.typer
 
-import org.partiql.planner.internal.Header
 import org.partiql.planner.internal.ir.Agg
 import org.partiql.planner.internal.ir.Fn
 import org.partiql.planner.internal.ir.Identifier
 import org.partiql.planner.internal.ir.Rex
+import org.partiql.spi.connector.ConnectorFunctions
 import org.partiql.types.StaticType
 import org.partiql.types.function.FunctionParameter
 import org.partiql.types.function.FunctionSignature
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType
 import org.partiql.value.PartiQLValueType.ANY
-import org.partiql.value.PartiQLValueType.BAG
-import org.partiql.value.PartiQLValueType.BINARY
-import org.partiql.value.PartiQLValueType.BLOB
-import org.partiql.value.PartiQLValueType.BOOL
-import org.partiql.value.PartiQLValueType.BYTE
-import org.partiql.value.PartiQLValueType.CHAR
-import org.partiql.value.PartiQLValueType.CLOB
-import org.partiql.value.PartiQLValueType.DATE
-import org.partiql.value.PartiQLValueType.DECIMAL
-import org.partiql.value.PartiQLValueType.DECIMAL_ARBITRARY
-import org.partiql.value.PartiQLValueType.FLOAT32
-import org.partiql.value.PartiQLValueType.FLOAT64
-import org.partiql.value.PartiQLValueType.INT
-import org.partiql.value.PartiQLValueType.INT16
-import org.partiql.value.PartiQLValueType.INT32
-import org.partiql.value.PartiQLValueType.INT64
-import org.partiql.value.PartiQLValueType.INT8
-import org.partiql.value.PartiQLValueType.INTERVAL
-import org.partiql.value.PartiQLValueType.LIST
-import org.partiql.value.PartiQLValueType.MISSING
 import org.partiql.value.PartiQLValueType.NULL
-import org.partiql.value.PartiQLValueType.SEXP
-import org.partiql.value.PartiQLValueType.STRING
-import org.partiql.value.PartiQLValueType.STRUCT
-import org.partiql.value.PartiQLValueType.SYMBOL
-import org.partiql.value.PartiQLValueType.TIME
-import org.partiql.value.PartiQLValueType.TIMESTAMP
-
-/**
- * Function signature lookup by name.
- */
-internal typealias FnMap<T> = Map<String, List<T>>
 
 /**
  * Function arguments list. The planner is responsible for mapping arguments to parameters.
@@ -109,56 +77,18 @@ internal sealed class FnMatch<T : FunctionSignature> {
  * at the moment to keep that information (derived from the current TypeLattice) with the [FnResolver].
  */
 @OptIn(PartiQLValueExperimental::class)
-internal class FnResolver(private val header: Header) {
+internal class FnResolver(private val metadata: Collection<ConnectorFunctions>) {
 
     /**
-     * All headers use the same type lattice (we don't have a design for plugging type systems at the moment).
+     * FnRegistry holds
      */
-    private val types = TypeLattice.partiql()
+    private val registry = FnRegistry(metadata)
 
     /**
-     * Calculate a queryable map of scalar function signatures.
-     */
-    private val functions: FnMap<FunctionSignature.Scalar>
-
-    /**
-     * Calculate a queryable map of scalar function signatures from special forms.
-     */
-    private val operators: FnMap<FunctionSignature.Scalar>
-
-    /**
-     * Calculate a queryable map of aggregation function signatures
-     */
-    private val aggregations: FnMap<FunctionSignature.Aggregation>
-
-    /**
-     * A place to quickly lookup a cast can return missing; lookup by "SPECIFIC"
-     */
-    private val unsafeCastSet: Set<String>
-
-    init {
-        val (casts, unsafeCasts) = casts()
-        unsafeCastSet = unsafeCasts
-        // combine all header definitions
-        val fns = header.functions
-        functions = fns.toFnMap()
-        operators = (header.operators + casts).toFnMap()
-        aggregations = header.aggregations.toFnMap()
-    }
-
-    /**
-     * Group list of [FunctionSignature] by name.
-     */
-    private fun <T : FunctionSignature> List<T>.toFnMap(): FnMap<T> = this
-        .distinctBy { it.specific }
-        .sortedWith(fnPrecedence)
-        .groupBy { it.name }
-
-    /**
-     * Leverages a [FnResolver] to find a matching function defined in the [Header] scalar function catalog.
+     * Leverages a [FnResolver] to find a matching function defined in ConnectorFunctions.
      */
     public fun resolveFn(fn: Fn.Unresolved, args: List<Rex>): FnMatch<FunctionSignature.Scalar> {
-        val candidates = lookup(fn)
+        val candidates = registry.lookup(fn)
         var canReturnMissing = false
         val parameterPermutations = buildArgumentPermutations(args.map { it.type }).mapNotNull { argList ->
             argList.mapIndexed { i, arg ->
@@ -177,7 +107,7 @@ internal class FnResolver(private val header: Header) {
                     null
                 }
                 else -> {
-                    val isMissable = canReturnMissing || isUnsafeCast(match.signature.specific)
+                    val isMissable = canReturnMissing || registry.isUnsafeCast(match.signature.specific)
                     FnMatch.Ok(match.signature, match.mapping, isMissable)
                 }
             }
@@ -219,7 +149,7 @@ internal class FnResolver(private val header: Header) {
      * Leverages a [FnResolver] to find a matching function defined in the [Header] aggregation function catalog.
      */
     public fun resolveAgg(agg: Agg.Unresolved, args: List<Rex>): FnMatch<FunctionSignature.Aggregation> {
-        val candidates = lookup(agg)
+        val candidates = registry.lookup(agg)
         var hadMissingArg = false
         val parameters = args.mapIndexed { i, arg ->
             if (!hadMissingArg && arg.type.isMissable()) {
@@ -231,7 +161,7 @@ internal class FnResolver(private val header: Header) {
         return when (match) {
             null -> FnMatch.Error(agg.identifier, args, candidates)
             else -> {
-                val isMissable = hadMissingArg || isUnsafeCast(match.signature.specific)
+                val isMissable = hadMissingArg || registry.isUnsafeCast(match.signature.specific)
                 FnMatch.Ok(match.signature, match.mapping, isMissable)
             }
         }
@@ -272,7 +202,7 @@ internal class FnResolver(private val header: Header) {
                 a.type == NULL -> mapping.add(null)
                 // 4. Check for a coercion
                 else -> {
-                    val coercion = lookupCoercion(a.type, p.type)
+                    val coercion = registry.lookupCoercion(a.type, p.type)
                     when (coercion) {
                         null -> return null // short-circuit
                         else -> mapping.add(coercion)
@@ -288,171 +218,5 @@ internal class FnResolver(private val header: Header) {
         } else {
             null
         }
-    }
-
-    /**
-     * Return a list of all scalar function signatures matching the given identifier.
-     */
-    private fun lookup(ref: Fn.Unresolved): List<FunctionSignature.Scalar> {
-        val name = getFnName(ref.identifier)
-        return when (ref.isHidden) {
-            true -> operators.getOrDefault(name, emptyList())
-            else -> functions.getOrDefault(name, emptyList())
-        }
-    }
-
-    /**
-     * Return a list of all aggregation function signatures matching the given identifier.
-     */
-    private fun lookup(ref: Agg.Unresolved): List<FunctionSignature.Aggregation> {
-        val name = getFnName(ref.identifier)
-        return aggregations.getOrDefault(name, emptyList())
-    }
-
-    /**
-     * Return a normalized function identifier for lookup in our list of function definitions.
-     */
-    private fun getFnName(identifier: Identifier): String = when (identifier) {
-        is Identifier.Qualified -> throw IllegalArgumentException("Qualified function identifiers not supported")
-        is Identifier.Symbol -> identifier.symbol.lowercase()
-    }
-
-    // ====================================
-    //  CASTS and COERCIONS
-    // ====================================
-
-    /**
-     * Returns the CAST function if exists, else null.
-     */
-    private fun lookupCoercion(valueType: PartiQLValueType, targetType: PartiQLValueType): FunctionSignature.Scalar? {
-        if (!types.canCoerce(valueType, targetType)) {
-            return null
-        }
-        val name = castName(targetType)
-        val casts = operators.getOrDefault(name, emptyList())
-        for (cast in casts) {
-            if (cast.parameters.isEmpty()) {
-                break // should be unreachable
-            }
-            if (valueType == cast.parameters[0].type) return cast
-        }
-        return null
-    }
-
-    /**
-     * Easy lookup of whether this CAST can return MISSING.
-     */
-    private fun isUnsafeCast(specific: String): Boolean = unsafeCastSet.contains(specific)
-
-    /**
-     * Generate all CAST functions from the given lattice.
-     *
-     * @return Pair(0) is the function list, Pair(1) represents the unsafe cast specifics
-     */
-    private fun casts(): Pair<List<FunctionSignature.Scalar>, Set<String>> {
-        val casts = mutableListOf<FunctionSignature.Scalar>()
-        val unsafeCastSet = mutableSetOf<String>()
-        for (t1 in types.types) {
-            for (t2 in types.types) {
-                val r = types.graph[t1.ordinal][t2.ordinal]
-                if (r != null) {
-                    val fn = cast(t1, t2)
-                    casts.add(fn)
-                    if (r.cast == CastType.UNSAFE) unsafeCastSet.add(fn.specific)
-                }
-            }
-        }
-        return casts to unsafeCastSet
-    }
-
-    /**
-     * Define CASTS with some mangled name; CAST(x AS T) -> cast_t(x)
-     *
-     * CAST(x AS INT8) -> cast_int64(x)
-     *
-     * But what about parameterized types? Are the parameters dropped in casts, or do parameters become arguments?
-     */
-    private fun castName(type: PartiQLValueType) = "cast_${type.name.lowercase()}"
-
-    internal fun cast(operand: PartiQLValueType, target: PartiQLValueType) =
-        FunctionSignature.Scalar(
-            name = castName(target),
-            returns = target,
-            parameters = listOf(
-                FunctionParameter("value", operand),
-            ),
-            isNullable = false,
-            isNullCall = true
-        )
-
-    companion object {
-
-        // ====================================
-        //  SORTING
-        // ====================================
-
-        // Function precedence comparator
-        // 1. Fewest args first
-        // 2. Parameters are compared left-to-right
-        @JvmStatic
-        private val fnPrecedence = Comparator<FunctionSignature> { fn1, fn2 ->
-            // Compare number of arguments
-            if (fn1.parameters.size != fn2.parameters.size) {
-                return@Comparator fn1.parameters.size - fn2.parameters.size
-            }
-            // Compare operand type precedence
-            for (i in fn1.parameters.indices) {
-                val p1 = fn1.parameters[i]
-                val p2 = fn2.parameters[i]
-                val comparison = p1.compareTo(p2)
-                if (comparison != 0) return@Comparator comparison
-            }
-            // unreachable?
-            0
-        }
-
-        private fun FunctionParameter.compareTo(other: FunctionParameter): Int =
-            comparePrecedence(this.type, other.type)
-
-        private fun comparePrecedence(t1: PartiQLValueType, t2: PartiQLValueType): Int {
-            if (t1 == t2) return 0
-            val p1 = precedence[t1]!!
-            val p2 = precedence[t2]!!
-            return p1 - p2
-        }
-
-        // This simply describes some precedence for ordering functions.
-        // This is not explicitly defined in the PartiQL Specification!!
-        // This does not imply the ability to CAST; this defines function resolution behavior.
-        private val precedence: Map<PartiQLValueType, Int> = listOf(
-            NULL,
-            MISSING,
-            BOOL,
-            INT8,
-            INT16,
-            INT32,
-            INT64,
-            INT,
-            DECIMAL,
-            FLOAT32,
-            FLOAT64,
-            DECIMAL_ARBITRARY, // Arbitrary precision decimal has a higher precedence than FLOAT
-            CHAR,
-            STRING,
-            CLOB,
-            SYMBOL,
-            BINARY,
-            BYTE,
-            BLOB,
-            DATE,
-            TIME,
-            TIMESTAMP,
-            INTERVAL,
-            LIST,
-            SEXP,
-            BAG,
-            STRUCT,
-            ANY,
-        ).mapIndexed { precedence, type -> type to precedence }.toMap()
     }
 }

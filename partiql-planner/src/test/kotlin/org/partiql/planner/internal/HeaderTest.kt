@@ -1,6 +1,7 @@
 package org.partiql.planner.internal
 
 import net.pearx.kasechange.toPascalCase
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.partiql.types.function.FunctionSignature
 import org.partiql.value.PartiQLValueExperimental
@@ -69,7 +70,7 @@ internal object %s : PartiQLFunction.Aggregation {
 }
 """
 
-// @Disabled
+@Disabled
 @OptIn(PartiQLValueExperimental::class)
 class HeaderTest {
 

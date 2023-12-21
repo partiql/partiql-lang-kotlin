@@ -16,7 +16,6 @@ package org.partiql.spi.connector
 
 import org.partiql.spi.BindingPath
 import org.partiql.types.StaticType
-import org.partiql.types.function.FunctionSignature
 
 /**
  * Aids in retrieving relevant Catalog metadata for the purpose of planning and execution.
@@ -24,22 +23,9 @@ import org.partiql.types.function.FunctionSignature
 public interface ConnectorMetadata {
 
     /**
-     * Scalar function signatures available via call syntax.
+     * A reference to this catalog's function signatures.
      */
-    public val functions: List<FunctionSignature.Scalar>
-        get() = emptyList()
-
-    /**
-     * Scalar function signatures available via operator or special form syntax.
-     */
-    public val operators: List<FunctionSignature.Scalar>
-        get() = emptyList()
-
-    /**
-     * Aggregation function signatures.
-     */
-    public val aggregations: List<FunctionSignature.Aggregation>
-        get() = emptyList()
+    public val functions: ConnectorFunctions?
 
     /**
      * Returns the descriptor of an object. If the handle is unable to produce a [StaticType], implementers should

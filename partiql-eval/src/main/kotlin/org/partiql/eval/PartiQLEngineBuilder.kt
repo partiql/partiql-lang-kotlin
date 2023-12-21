@@ -17,7 +17,7 @@ class PartiQLEngineBuilder {
      * Java style method for assigning a Catalog name to [ConnectorBindings].
      *
      * @param catalog
-     * @param metadata
+     * @param bindings
      * @return
      */
     public fun addCatalog(catalog: String, bindings: ConnectorBindings): PartiQLEngineBuilder = this.apply {

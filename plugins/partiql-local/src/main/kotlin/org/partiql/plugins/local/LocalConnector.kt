@@ -18,6 +18,7 @@ import com.amazon.ionelement.api.StructElement
 import org.partiql.spi.BindingPath
 import org.partiql.spi.connector.Connector
 import org.partiql.spi.connector.ConnectorBindings
+import org.partiql.spi.connector.ConnectorFunctions
 import org.partiql.spi.connector.ConnectorMetadata
 import org.partiql.spi.connector.ConnectorObjectHandle
 import org.partiql.spi.connector.ConnectorObjectPath
@@ -83,6 +84,8 @@ class LocalConnector(
     }
 
     class Metadata(private val root: Path) : ConnectorMetadata {
+
+        override val functions: ConnectorFunctions? = null
 
         /**
          * TODO watch root for changes and rebuild catalog if needed.
