@@ -16,7 +16,12 @@
 package org.partiql.value.datetime
 
 import org.partiql.value.datetime.DateTimeUtil.toBigDecimal
+import org.partiql.value.datetime.impl.OffsetTimeLowPrecision
+import org.partiql.value.datetime.impl.OffsetTimestampLowPrecision.Companion.forDateTime
+import org.partiql.value.datetime.impl.SqlDate
 import java.math.BigDecimal
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import kotlin.jvm.Throws
 
 /**
@@ -528,6 +533,17 @@ public abstract class TimestampWithTimeZone : Timestamp {
 
     public final override fun toString(): String =
         "${this.javaClass.simpleName}(year=$year, month=$month, day=$day, hour=$hour, minute=$minute, second=$decimalSecond, timeZone=$timeZone)"
+
+    public companion object {
+
+        @JvmStatic
+        public fun nowZ(): TimestampWithTimeZone {
+            val javaNowZ = OffsetDateTime.now(ZoneOffset.UTC)
+            val date = SqlDate.of(javaNowZ.year, javaNowZ.monthValue, javaNowZ.dayOfMonth)
+            val time = OffsetTimeLowPrecision.of(javaNowZ.hour, javaNowZ.minute, javaNowZ.second, javaNowZ.nano, TimeZone.UtcOffset.of(0))
+            return forDateTime(date, time)
+        }
+    }
 }
 
 /**

@@ -11,6 +11,8 @@ import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType.ANY
 import org.partiql.value.PartiQLValueType.BOOL
+import org.partiql.value.StructValue
+import org.partiql.value.boolValue
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
 internal object Fn_IS_STRUCT__ANY__BOOL : PartiQLFunction.Scalar {
@@ -24,6 +26,6 @@ internal object Fn_IS_STRUCT__ANY__BOOL : PartiQLFunction.Scalar {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function is_struct not implemented")
+        return boolValue(args[0] is StructValue<*>)
     }
 }

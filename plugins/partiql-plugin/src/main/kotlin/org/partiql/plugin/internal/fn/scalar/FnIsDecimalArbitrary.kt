@@ -7,10 +7,12 @@ import org.partiql.spi.function.PartiQLFunction
 import org.partiql.spi.function.PartiQLFunctionExperimental
 import org.partiql.types.function.FunctionParameter
 import org.partiql.types.function.FunctionSignature
+import org.partiql.value.DecimalValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType.ANY
 import org.partiql.value.PartiQLValueType.BOOL
+import org.partiql.value.boolValue
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
 internal object Fn_IS_DECIMAL_ARBITRARY__ANY__BOOL : PartiQLFunction.Scalar {
@@ -24,6 +26,6 @@ internal object Fn_IS_DECIMAL_ARBITRARY__ANY__BOOL : PartiQLFunction.Scalar {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function is_decimal_arbitrary not implemented")
+        return boolValue(args[0] is DecimalValue)
     }
 }

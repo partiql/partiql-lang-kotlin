@@ -252,7 +252,6 @@ object PartiQLPlugin : Plugin {
         Fn_LIKE_ESCAPE__CLOB_CLOB_CLOB__BOOL,
         Fn_IS_NULL__ANY__BOOL,
         Fn_IS_MISSING__ANY__BOOL,
-        Fn_IS_ANY__ANY__BOOL,
         Fn_IS_BOOL__ANY__BOOL,
         Fn_IS_INT8__ANY__BOOL,
         Fn_IS_INT16__ANY__BOOL,
