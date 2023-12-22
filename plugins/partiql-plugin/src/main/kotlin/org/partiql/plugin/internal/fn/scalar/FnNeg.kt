@@ -17,6 +17,9 @@ import org.partiql.value.PartiQLValueType.INT16
 import org.partiql.value.PartiQLValueType.INT32
 import org.partiql.value.PartiQLValueType.INT64
 import org.partiql.value.PartiQLValueType.INT8
+import org.partiql.value.*
+import java.math.BigDecimal
+import java.math.BigInteger
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
 internal object Fn_NEG__INT8__INT8 : PartiQLFunction.Scalar {
@@ -30,7 +33,8 @@ internal object Fn_NEG__INT8__INT8 : PartiQLFunction.Scalar {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function neg not implemented")
+        val value = args[0].check<Int8Value>().value!!
+        return int8Value(value.times(-1).toByte())
     }
 }
 
@@ -46,7 +50,8 @@ internal object Fn_NEG__INT16__INT16 : PartiQLFunction.Scalar {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function neg not implemented")
+        val value = args[0].check<Int16Value>().value!!
+        return int16Value(value.times(-1).toShort())
     }
 }
 
@@ -62,7 +67,8 @@ internal object Fn_NEG__INT32__INT32 : PartiQLFunction.Scalar {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function neg not implemented")
+        val value = args[0].check<Int32Value>().value!!
+        return int32Value(value.times(-1))
     }
 }
 
@@ -78,7 +84,8 @@ internal object Fn_NEG__INT64__INT64 : PartiQLFunction.Scalar {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function neg not implemented")
+        val value = args[0].check<Int64Value>().value!!
+        return int64Value(value.times(-1L))
     }
 }
 
@@ -94,7 +101,8 @@ internal object Fn_NEG__INT__INT : PartiQLFunction.Scalar {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function neg not implemented")
+        val value = args[0].check<IntValue>().value!!
+        return intValue(value.times(-BigInteger.ONE))
     }
 }
 
@@ -110,7 +118,8 @@ internal object Fn_NEG__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY : PartiQLFunction.S
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function neg not implemented")
+        val value = args[0].check<DecimalValue>().value!!
+        return decimalValue(value.times(-BigDecimal.ONE))
     }
 }
 
@@ -126,7 +135,8 @@ internal object Fn_NEG__FLOAT32__FLOAT32 : PartiQLFunction.Scalar {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function neg not implemented")
+        val value = args[0].check<Float32Value>().value!!
+        return float32Value(value.times(-1))
     }
 }
 
@@ -142,6 +152,7 @@ internal object Fn_NEG__FLOAT64__FLOAT64 : PartiQLFunction.Scalar {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function neg not implemented")
+        val value = args[0].check<Float64Value>().value!!
+        return float64Value(value.times(-1))
     }
 }
