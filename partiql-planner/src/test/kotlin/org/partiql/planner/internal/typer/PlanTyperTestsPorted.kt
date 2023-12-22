@@ -17,7 +17,6 @@ import org.partiql.plan.PartiQLPlan
 import org.partiql.plan.Statement
 import org.partiql.plan.debug.PlanPrinter
 import org.partiql.planner.PartiQLPlanner
-import org.partiql.planner.PartiQLPlannerBuilder
 import org.partiql.planner.PlanningProblemDetails
 import org.partiql.planner.internal.typer.PlanTyperTestsPorted.TestCase.ErrorTestCase
 import org.partiql.planner.internal.typer.PlanTyperTestsPorted.TestCase.SuccessTestCase
@@ -85,6 +84,9 @@ class PlanTyperTestsPorted {
     }
 
     companion object {
+
+        private val parser = PartiQLParser.default()
+        private val planner = PartiQLPlanner.default()
 
         private fun assertProblemExists(problem: () -> Problem) = ProblemHandler { problems, ignoreSourceLocation ->
             when (ignoreSourceLocation) {
@@ -3077,10 +3079,6 @@ class PlanTyperTestsPorted {
         session: PartiQLPlanner.Session,
         problemCollector: ProblemCollector
     ): PartiQLPlan {
-        val parser = PartiQLParser.default()
-        val planner = PartiQLPlannerBuilder()
-            .catalogs(*catalogs.toTypedArray())
-            .build()
         val ast = parser.parse(query).root
         return planner.plan(ast, session, problemCollector).plan
     }
@@ -3097,6 +3095,7 @@ class PlanTyperTestsPorted {
             USER_ID,
             tc.catalog,
             tc.catalogPath,
+            catalogs = mapOf(*catalogs.toTypedArray())
         )
 
         val hasQuery = tc.query != null
@@ -3137,6 +3136,7 @@ class PlanTyperTestsPorted {
             USER_ID,
             tc.catalog,
             tc.catalogPath,
+            catalogs = mapOf(*catalogs.toTypedArray())
         )
         val collector = ProblemCollector()
 
@@ -3182,6 +3182,7 @@ class PlanTyperTestsPorted {
             USER_ID,
             tc.catalog,
             tc.catalogPath,
+            catalogs = mapOf(*catalogs.toTypedArray())
         )
         val collector = ProblemCollector()
         val exception = assertThrows<Throwable> {

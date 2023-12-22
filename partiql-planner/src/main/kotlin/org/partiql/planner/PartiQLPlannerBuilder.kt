@@ -1,51 +1,41 @@
 package org.partiql.planner
 
-import org.partiql.spi.connector.ConnectorMetadata
-
 /**
  * PartiQLPlannerBuilder is used to programmatically construct a [PartiQLPlanner] implementation.
  *
  * Usage:
  *      PartiQLPlanner.builder()
- *                    .addCatalog("foo", FooConnector())
- *                    .addCatalog("bar", BarConnector())
- *                    .builder()
+ *                    .addPass(myPass)
+ *                    .build()
  */
 public class PartiQLPlannerBuilder {
 
-    private var headers: MutableList<Header> = mutableListOf(PartiQLHeader)
-    private var catalogs: MutableMap<String, ConnectorMetadata> = mutableMapOf()
-    private var passes: List<PartiQLPlannerPass> = emptyList()
+    private val passes: MutableList<PartiQLPlannerPass> = mutableListOf()
 
     /**
      * Build the builder, return an implementation of a [PartiQLPlanner].
      *
      * @return
      */
-    public fun build(): PartiQLPlanner = PartiQLPlannerDefault(headers, catalogs, passes)
+    public fun build(): PartiQLPlanner = PartiQLPlannerDefault(passes)
 
     /**
-     * Java style method for assigning a Catalog name to [ConnectorMetadata].
+     * Java style method for adding a planner pass to this planner builder.
      *
-     * @param catalog
-     * @param metadata
+     * @param pass
      * @return
      */
-    public fun addCatalog(catalog: String, metadata: ConnectorMetadata): PartiQLPlannerBuilder = this.apply {
-        this.catalogs[catalog] = metadata
+    public fun addPass(pass: PartiQLPlannerPass): PartiQLPlannerBuilder = this.apply {
+        this.passes.add(pass)
     }
 
     /**
-     * Kotlin style method for assigning Catalog names to [ConnectorMetadata].
+     * Kotlin style method for adding a list of planner passes to this planner builder.
      *
-     * @param catalogs
+     * @param passes
      * @return
      */
-    public fun catalogs(vararg catalogs: Pair<String, ConnectorMetadata>): PartiQLPlannerBuilder = this.apply {
-        this.catalogs = mutableMapOf(*catalogs)
-    }
-
-    public fun passes(passes: List<PartiQLPlannerPass>): PartiQLPlannerBuilder = this.apply {
-        this.passes = passes
+    public fun addPasses(vararg passes: PartiQLPlannerPass): PartiQLPlannerBuilder = this.apply {
+        this.passes.addAll(passes)
     }
 }

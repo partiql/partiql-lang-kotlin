@@ -1,6 +1,6 @@
 package org.partiql.planner.internal.typer
 
-import org.partiql.planner.Header
+import org.partiql.planner.internal.Header
 import org.partiql.planner.internal.ir.Agg
 import org.partiql.planner.internal.ir.Fn
 import org.partiql.planner.internal.ir.Identifier
@@ -109,7 +109,7 @@ internal sealed class FnMatch<T : FunctionSignature> {
  * at the moment to keep that information (derived from the current TypeLattice) with the [FnResolver].
  */
 @OptIn(PartiQLValueExperimental::class)
-internal class FnResolver(private val headers: List<Header>) {
+internal class FnResolver(private val header: Header) {
 
     /**
      * All headers use the same type lattice (we don't have a design for plugging type systems at the moment).
@@ -140,10 +140,10 @@ internal class FnResolver(private val headers: List<Header>) {
         val (casts, unsafeCasts) = casts()
         unsafeCastSet = unsafeCasts
         // combine all header definitions
-        val fns = headers.flatMap { it.functions }
+        val fns = header.functions
         functions = fns.toFnMap()
-        operators = (headers.flatMap { it.operators } + casts).toFnMap()
-        aggregations = headers.flatMap { it.aggregations }.toFnMap()
+        operators = (header.operators + casts).toFnMap()
+        aggregations = header.aggregations.toFnMap()
     }
 
     /**
