@@ -1,6 +1,7 @@
 package org.partiql.plugin
 
 /* ktlint-disable no-wildcard-imports */
+import com.amazon.ionelement.api.StructElement
 import org.partiql.plugin.internal.fn.agg.*
 import org.partiql.plugin.internal.fn.scalar.*
 import org.partiql.plugin.internal.fn.scalar.FnUtcnow
@@ -14,12 +15,16 @@ import org.partiql.spi.function.PartiQLFunctionExperimental
  */
 object PartiQLPlugin : Plugin {
 
-    override val factory: Connector.Factory = error("Cannot instantiate a PartiQLConnector via Factory")
+    override val factory: Connector.Factory = object : Connector.Factory {
+
+        override val name: String = "partiql"
+
+        override fun create(catalogName: String, config: StructElement?): Connector {
+            error("Cannot instantiate a PartiQL Plugin connector")
+        }
+    }
 
     @PartiQLFunctionExperimental
-    override val functions: List<PartiQLFunction> = scalars + operators + aggregations
-
-    @OptIn(PartiQLFunctionExperimental::class)
     internal val scalars = listOf(
         FnUpper0,
         FnUpper1,
@@ -42,8 +47,8 @@ object PartiQLPlugin : Plugin {
         FnUtcnow
     )
 
-    @OptIn(PartiQLFunctionExperimental::class)
-    internal val operators = listOf(
+    @PartiQLFunctionExperimental
+    internal val operators = listOf<PartiQLFunction.Scalar>(
         FnNot0,
         FnNot1,
         FnAnd0,
@@ -443,7 +448,7 @@ object PartiQLPlugin : Plugin {
         FnCurrentDate
     )
 
-    @OptIn(PartiQLFunctionExperimental::class)
+    @PartiQLFunctionExperimental
     internal val aggregations = listOf(
         AggEvery,
         AggAny,
@@ -483,4 +488,7 @@ object PartiQLPlugin : Plugin {
         AggAvg6,
         AggAvg7
     )
+
+    @PartiQLFunctionExperimental
+    override val functions: List<PartiQLFunction> = scalars + operators + aggregations
 }

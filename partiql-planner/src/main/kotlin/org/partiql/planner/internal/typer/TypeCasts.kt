@@ -301,22 +301,22 @@ internal class TypeCasts private constructor(
         }
     }
 
-    private class RelationshipBuilder(val source: PartiQLValueType) {
+    private class RelationshipBuilder(val operand: PartiQLValueType) {
 
         private val relationships = arrayOfNulls<TypeRelationship?>(N)
 
         fun build() = relationships
 
         fun coercion(target: PartiQLValueType) {
-            relationships[target] = TypeRelationship(CastType.COERCION, cast(source, target))
+            relationships[target] = TypeRelationship(CastType.COERCION, cast(operand, target))
         }
 
         fun explicit(target: PartiQLValueType) {
-            relationships[target] = TypeRelationship(CastType.EXPLICIT, cast(source, target))
+            relationships[target] = TypeRelationship(CastType.EXPLICIT, cast(operand, target))
         }
 
         fun unsafe(target: PartiQLValueType) {
-            relationships[target] = TypeRelationship(CastType.UNSAFE, cast(source, target))
+            relationships[target] = TypeRelationship(CastType.UNSAFE, cast(operand, target))
         }
 
         private fun cast(operand: PartiQLValueType, target: PartiQLValueType) =
