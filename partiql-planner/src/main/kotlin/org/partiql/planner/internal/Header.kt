@@ -1,4 +1,4 @@
-package org.partiql.planner
+package org.partiql.planner.internal
 
 import org.partiql.planner.internal.typer.TypeLattice
 import org.partiql.types.function.FunctionParameter

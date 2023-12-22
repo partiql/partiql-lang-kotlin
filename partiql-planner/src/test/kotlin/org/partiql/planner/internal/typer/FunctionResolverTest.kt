@@ -2,8 +2,7 @@ package org.partiql.planner.internal.typer
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.fail
-import org.partiql.planner.Header
-import org.partiql.planner.PartiQLHeader
+import org.partiql.planner.internal.Header
 import org.partiql.types.function.FunctionParameter
 import org.partiql.types.function.FunctionSignature
 import org.partiql.value.PartiQLValueExperimental
@@ -67,7 +66,7 @@ class FunctionResolverTest {
             )
         }
 
-        private val resolver = FnResolver(listOf(PartiQLHeader, myHeader))
+        private val resolver = FnResolver(myHeader)
     }
 
     private sealed class Case {
