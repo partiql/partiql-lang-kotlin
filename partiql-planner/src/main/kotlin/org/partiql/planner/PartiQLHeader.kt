@@ -411,8 +411,8 @@ internal object PartiQLHeader : Header() {
                 parameters = listOf(
                     FunctionParameter("value", ANY)
                 ),
-                isNullCall = false, // TODO: Should this be true?
-                isNullable = false
+                isNullable = false,
+                isNullCall = false,
             )
         }
 
@@ -427,7 +427,7 @@ internal object PartiQLHeader : Header() {
                 FunctionParameter("type_parameter_1", INT32),
                 FunctionParameter("value", ANY)
             ),
-            isNullable = false, // TODO: Should this be true?
+            isNullable = false,
             isNullCall = false
         )
     }
@@ -455,8 +455,8 @@ internal object PartiQLHeader : Header() {
                 FunctionParameter("type_parameter_2", INT32),
                 FunctionParameter("value", ANY) // TODO: Decide if we need to further segment this
             ),
-            isNullCall = false,
-            isNullable = false
+            isNullable = false,
+            isNullCall = false
         )
     }
 
