@@ -17,6 +17,10 @@ import org.partiql.value.PartiQLValueType.INT16
 import org.partiql.value.PartiQLValueType.INT32
 import org.partiql.value.PartiQLValueType.INT64
 import org.partiql.value.PartiQLValueType.INT8
+import org.partiql.value.*
+import org.partiql.value.PartiQLValueType.*
+import java.math.BigDecimal
+import java.math.BigInteger
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
 internal object Fn_TIMES__INT8_INT8__INT8 : PartiQLFunction.Scalar {
@@ -32,9 +36,7 @@ internal object Fn_TIMES__INT8_INT8__INT8 : PartiQLFunction.Scalar {
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function times not implemented")
-    }
+    override fun invoke(args: Array<PartiQLValue>): Int8Value = binaryOpInt8(args[0], args[1], Byte::times)
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
@@ -51,9 +53,7 @@ internal object Fn_TIMES__INT16_INT16__INT16 : PartiQLFunction.Scalar {
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function times not implemented")
-    }
+    override fun invoke(args: Array<PartiQLValue>): Int16Value = binaryOpInt16(args[0], args[1], Short::times)
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
@@ -70,9 +70,7 @@ internal object Fn_TIMES__INT32_INT32__INT32 : PartiQLFunction.Scalar {
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function times not implemented")
-    }
+    override fun invoke(args: Array<PartiQLValue>): Int32Value = binaryOpInt32(args[0], args[1], Int::times)
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
@@ -89,9 +87,7 @@ internal object Fn_TIMES__INT64_INT64__INT64 : PartiQLFunction.Scalar {
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function times not implemented")
-    }
+    override fun invoke(args: Array<PartiQLValue>): Int64Value = binaryOpInt64(args[0], args[1], Long::minus)
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
@@ -108,9 +104,7 @@ internal object Fn_TIMES__INT_INT__INT : PartiQLFunction.Scalar {
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function times not implemented")
-    }
+    override fun invoke(args: Array<PartiQLValue>): IntValue = binaryOpInt(args[0], args[1], BigInteger::times)
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
@@ -127,9 +121,7 @@ internal object Fn_TIMES__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__DECIMAL_ARBITRARY
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function times not implemented")
-    }
+    override fun invoke(args: Array<PartiQLValue>): DecimalValue = binaryOpDecimal(args[0], args[1], BigDecimal::times)
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
@@ -146,9 +138,7 @@ internal object Fn_TIMES__FLOAT32_FLOAT32__FLOAT32 : PartiQLFunction.Scalar {
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function times not implemented")
-    }
+    override fun invoke(args: Array<PartiQLValue>): Float32Value = binaryOpFloat32(args[0], args[1], Float::times)
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
@@ -165,7 +155,5 @@ internal object Fn_TIMES__FLOAT64_FLOAT64__FLOAT64 : PartiQLFunction.Scalar {
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function times not implemented")
-    }
+    override fun invoke(args: Array<PartiQLValue>): Float64Value = binaryOpFloat64(args[0], args[1], Double::times)
 }

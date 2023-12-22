@@ -17,6 +17,10 @@ import org.partiql.value.PartiQLValueType.INT16
 import org.partiql.value.PartiQLValueType.INT32
 import org.partiql.value.PartiQLValueType.INT64
 import org.partiql.value.PartiQLValueType.INT8
+import org.partiql.value.*
+import org.partiql.value.PartiQLValueType.*
+import java.math.BigDecimal
+import java.math.BigInteger
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
 internal object Fn_MODULO__INT8_INT8__INT8 : PartiQLFunction.Scalar {
@@ -32,9 +36,8 @@ internal object Fn_MODULO__INT8_INT8__INT8 : PartiQLFunction.Scalar {
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function modulo not implemented")
-    }
+    // TODO: This is untested and may be wrong. Java's mod operation does not match SQL's.
+    override fun invoke(args: Array<PartiQLValue>): Int8Value = binaryOpInt8(args[0], args[1], Byte::mod)
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
@@ -51,9 +54,8 @@ internal object Fn_MODULO__INT16_INT16__INT16 : PartiQLFunction.Scalar {
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function modulo not implemented")
-    }
+    // TODO: This is untested and may be wrong. Java's mod operation does not match SQL's.
+    override fun invoke(args: Array<PartiQLValue>): Int16Value = binaryOpInt16(args[0], args[1], Short::mod)
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
@@ -70,9 +72,8 @@ internal object Fn_MODULO__INT32_INT32__INT32 : PartiQLFunction.Scalar {
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function modulo not implemented")
-    }
+    // TODO: This is untested and may be wrong. Java's mod operation does not match SQL's.
+    override fun invoke(args: Array<PartiQLValue>): Int32Value = binaryOpInt32(args[0], args[1], Int::mod)
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
@@ -89,9 +90,8 @@ internal object Fn_MODULO__INT64_INT64__INT64 : PartiQLFunction.Scalar {
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function modulo not implemented")
-    }
+    // TODO: This is untested and may be wrong. Java's mod operation does not match SQL's.
+    override fun invoke(args: Array<PartiQLValue>): Int64Value = binaryOpInt64(args[0], args[1], Long::mod)
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
@@ -108,9 +108,8 @@ internal object Fn_MODULO__INT_INT__INT : PartiQLFunction.Scalar {
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function modulo not implemented")
-    }
+    // TODO: This is untested and may be wrong. Java's mod operation does not match SQL's.
+    override fun invoke(args: Array<PartiQLValue>): IntValue = binaryOpInt(args[0], args[1], BigInteger::mod)
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
@@ -127,9 +126,8 @@ internal object Fn_MODULO__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__DECIMAL_ARBITRAR
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function modulo not implemented")
-    }
+    // TODO: This is untested and may be wrong. Java's mod operation does not match SQL's.
+    override fun invoke(args: Array<PartiQLValue>): DecimalValue = binaryOpDecimal(args[0], args[1], BigDecimal::remainder)
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
@@ -146,9 +144,8 @@ internal object Fn_MODULO__FLOAT32_FLOAT32__FLOAT32 : PartiQLFunction.Scalar {
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function modulo not implemented")
-    }
+    // TODO: This is untested and may be wrong. Java's mod operation does not match SQL's.
+    override fun invoke(args: Array<PartiQLValue>): Float32Value = binaryOpFloat32(args[0], args[1], Float::mod)
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
@@ -165,7 +162,6 @@ internal object Fn_MODULO__FLOAT64_FLOAT64__FLOAT64 : PartiQLFunction.Scalar {
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function modulo not implemented")
-    }
+    // TODO: This is untested and may be wrong. Java's mod operation does not match SQL's.
+    override fun invoke(args: Array<PartiQLValue>): Float64Value = binaryOpFloat64(args[0], args[1], Double::mod)
 }
