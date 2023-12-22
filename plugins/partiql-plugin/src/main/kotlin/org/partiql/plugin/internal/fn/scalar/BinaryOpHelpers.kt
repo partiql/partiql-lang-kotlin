@@ -1,5 +1,6 @@
 package org.partiql.plugin.internal.fn.scalar
 
+import org.partiql.value.ClobValue
 import org.partiql.value.DecimalValue
 import org.partiql.value.Float32Value
 import org.partiql.value.Float64Value
@@ -10,7 +11,10 @@ import org.partiql.value.Int8Value
 import org.partiql.value.IntValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.StringValue
+import org.partiql.value.SymbolValue
 import org.partiql.value.check
+import org.partiql.value.clobValue
 import org.partiql.value.decimalValue
 import org.partiql.value.float32Value
 import org.partiql.value.float64Value
@@ -19,6 +23,8 @@ import org.partiql.value.int32Value
 import org.partiql.value.int64Value
 import org.partiql.value.int8Value
 import org.partiql.value.intValue
+import org.partiql.value.stringValue
+import org.partiql.value.symbolValue
 import java.math.BigDecimal
 import java.math.BigInteger
 
@@ -90,4 +96,27 @@ internal inline fun binaryOpFloat64(lhs: PartiQLValue, rhs: PartiQLValue, op: (D
     val lhsValue = lhs.check<Float64Value>().value!!
     val rhsValue = rhs.check<Float64Value>().value!!
     return float64Value((op(lhsValue, rhsValue)))
+}
+
+@OptIn(PartiQLValueExperimental::class)
+internal inline fun binaryOpString(lhs: PartiQLValue, rhs: PartiQLValue, op: (String, String) -> String): StringValue {
+    val lhsValue = lhs.check<StringValue>().value!!
+    val rhsValue = rhs.check<StringValue>().value!!
+    return stringValue((op(lhsValue, rhsValue)))
+}
+
+// TODO: We are still debating on whether symbol is a value. It looks like it may not be, and therefore, this
+//  will be removed.
+@OptIn(PartiQLValueExperimental::class)
+internal inline fun binaryOpSymbol(lhs: PartiQLValue, rhs: PartiQLValue, op: (String, String) -> String): SymbolValue {
+    val lhsValue = lhs.check<SymbolValue>().value!!
+    val rhsValue = rhs.check<SymbolValue>().value!!
+    return symbolValue((op(lhsValue, rhsValue)))
+}
+
+@OptIn(PartiQLValueExperimental::class)
+internal inline fun binaryOpClob(lhs: PartiQLValue, rhs: PartiQLValue, op: (ByteArray, ByteArray) -> ByteArray): ClobValue {
+    val lhsValue = lhs.check<ClobValue>().value!!
+    val rhsValue = rhs.check<ClobValue>().value!!
+    return clobValue((op(lhsValue, rhsValue)))
 }
