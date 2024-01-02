@@ -28,8 +28,9 @@ Thank you to all who have contributed!
 ## [Unreleased]
 
 ### Added
-- Adds the ability to define a user-defined-function in ConnectorMetadata
-- Move ConnectorMetadata map from PartiQLPlanner to PartiQLPlanner.Session for planner re-use.
+- Adds the ability to define a user-defined-function in `ConnectorMetadata`
+- Move `ConnectorMetadata` map from `PartiQLPlanner` to `PartiQLPlanner.Session` for planner re-use.
+  - Deprecates 2 APIs in `org.partiql.planner.PartiQLPlannerBuilder` in favor of using the ConnectorMetadata map in `PartiQLPlanner.Session`.
 
 ### Changed
 
@@ -44,6 +45,7 @@ Thank you to all who have contributed!
 ### Contributors
 Thank you to all who have contributed!
 - @rchowell
+- @johnedquinn
 
 ## [0.14.0-alpha] - 2023-12-15
 
