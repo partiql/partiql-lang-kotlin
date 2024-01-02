@@ -389,6 +389,66 @@ class PlanTyperTestsPorted {
         )
 
         @JvmStatic
+        fun isTypeCases() = listOf(
+            SuccessTestCase(
+                name = "IS BOOL",
+                key = key("is-type-00"),
+                catalog = "pql",
+                catalogPath = listOf("main"),
+                expected = StaticType.BOOL
+            ),
+            SuccessTestCase(
+                name = "IS INT",
+                key = key("is-type-01"),
+                catalog = "pql",
+                catalogPath = listOf("main"),
+                expected = StaticType.BOOL
+            ),
+            SuccessTestCase(
+                name = "IS STRING",
+                key = key("is-type-02"),
+                catalog = "pql",
+                catalogPath = listOf("main"),
+                expected = StaticType.BOOL
+            ),
+            SuccessTestCase(
+                name = "IS NULL",
+                key = key("is-type-03"),
+                catalog = "pql",
+                expected = StaticType.BOOL,
+            ),
+            SuccessTestCase(
+                name = "MISSING IS NULL",
+                key = key("is-type-04"),
+                catalog = "pql",
+                expected = StaticType.BOOL,
+            ),
+            SuccessTestCase(
+                name = "NULL IS NULL",
+                key = key("is-type-05"),
+                catalog = "pql",
+                expected = StaticType.BOOL,
+            ),
+            SuccessTestCase(
+                name = "MISSING IS MISSING",
+                key = key("is-type-06"),
+                catalog = "pql",
+                expected = StaticType.BOOL,
+            ),
+            SuccessTestCase(
+                name = "NULL IS MISSING",
+                key = key("is-type-07"),
+                catalog = "pql",
+                expected = StaticType.BOOL,
+            ),
+            ErrorTestCase(
+                name = "ERROR always MISSING",
+                key = key("is-type-08"),
+                catalog = "pql",
+            ),
+        )
+
+        @JvmStatic
         fun sessionVariables() = listOf(
             SuccessTestCase(
                 name = "Current User",
@@ -536,7 +596,10 @@ class PlanTyperTestsPorted {
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UnknownFunction("bitwise_and", listOf(StaticType.INT4, StaticType.STRING))
+                        PlanningProblemDetails.UnknownFunction(
+                            "bitwise_and",
+                            listOf(StaticType.INT4, StaticType.STRING)
+                        )
                     )
                 }
             ),
@@ -2972,6 +3035,11 @@ class PlanTyperTestsPorted {
     @Execution(ExecutionMode.CONCURRENT)
     fun testPivot(tc: TestCase) = runTest(tc)
 
+    @ParameterizedTest
+    @MethodSource("isTypeCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun testIsType(tc: TestCase) = runTest(tc)
+
     // --------- Finish Parameterized Tests ------
 
     //
@@ -2980,7 +3048,7 @@ class PlanTyperTestsPorted {
     private fun infer(
         query: String,
         session: PartiQLPlanner.Session,
-        problemCollector: ProblemCollector
+        problemCollector: ProblemCollector,
     ): PartiQLPlan {
         val ast = parser.parse(query).root
         return planner.plan(ast, session, problemCollector).plan
