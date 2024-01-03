@@ -24,7 +24,7 @@ class FnScalarTest {
 
         @JvmStatic
         fun fnGt() = listOf(
-            FnGt0.tests {
+            Fn_GT__INT8_INT8__BOOL.tests {
                 case(arrayOf(int8Value(1), int8Value(0)), result = boolValue(true))
                 case(arrayOf(int8Value(0), int8Value(1)), result = boolValue(false))
                 case(arrayOf(int8Value(0), int8Value(0)), result = boolValue(false))
