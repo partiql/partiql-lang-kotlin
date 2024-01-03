@@ -25,6 +25,24 @@ Thank you to all who have contributed!
 
 -->
 
+## [Unreleased]
+
+### Added
+
+### Changed
+
+### Deprecated
+
+### Fixed
+
+### Removed
+
+### Security
+
+### Contributors
+Thank you to all who have contributed!
+- @<your-username>
+
 ## [0.14.1] - 2024-01-03
 
 ### Added
