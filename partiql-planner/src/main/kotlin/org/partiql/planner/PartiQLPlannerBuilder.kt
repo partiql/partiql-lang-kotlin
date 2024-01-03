@@ -48,7 +48,7 @@ public class PartiQLPlannerBuilder {
      * @param metadata
      * @return
      */
-    @Deprecated("This will be removed in v0.15.0+.", ReplaceWith("Please use org.partiql.planner.PartiQLPlanner.Session"))
+    @Deprecated("This will be removed in version 1.0", ReplaceWith("Please use org.partiql.planner.PartiQLPlanner.Session"))
     public fun addCatalog(catalog: String, metadata: ConnectorMetadata): PartiQLPlannerBuilder = this
 
     /**
