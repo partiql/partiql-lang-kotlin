@@ -1,3 +1,6 @@
+// ktlint-disable filename
+@file:Suppress("ClassName")
+
 package org.partiql.plugin.internal.fn.scalar
 
 import org.partiql.spi.function.PartiQLFunction
@@ -8,7 +11,7 @@ import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType.STRING
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnCurrentUser : PartiQLFunction.Scalar {
+internal object Fn_CURRENT_USER____STRING : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "current_user",

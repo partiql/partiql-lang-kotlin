@@ -1,3 +1,6 @@
+// ktlint-disable filename
+@file:Suppress("ClassName")
+
 package org.partiql.plugin.internal.fn.scalar
 
 import org.partiql.spi.function.PartiQLFunction
@@ -23,12 +26,15 @@ import org.partiql.value.PartiQLValueType.TIME
 import org.partiql.value.PartiQLValueType.TIMESTAMP
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnGte0 : PartiQLFunction.Scalar {
+internal object Fn_GTE__INT8_INT8__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "gte",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("lhs", INT8), FunctionParameter("rhs", INT8)),
+        parameters = listOf(
+            FunctionParameter("lhs", INT8),
+            FunctionParameter("rhs", INT8),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -39,12 +45,15 @@ internal object FnGte0 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnGte1 : PartiQLFunction.Scalar {
+internal object Fn_GTE__INT16_INT16__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "gte",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("lhs", INT16), FunctionParameter("rhs", INT16)),
+        parameters = listOf(
+            FunctionParameter("lhs", INT16),
+            FunctionParameter("rhs", INT16),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -55,12 +64,15 @@ internal object FnGte1 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnGte2 : PartiQLFunction.Scalar {
+internal object Fn_GTE__INT32_INT32__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "gte",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("lhs", INT32), FunctionParameter("rhs", INT32)),
+        parameters = listOf(
+            FunctionParameter("lhs", INT32),
+            FunctionParameter("rhs", INT32),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -71,12 +83,15 @@ internal object FnGte2 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnGte3 : PartiQLFunction.Scalar {
+internal object Fn_GTE__INT64_INT64__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "gte",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("lhs", INT64), FunctionParameter("rhs", INT64)),
+        parameters = listOf(
+            FunctionParameter("lhs", INT64),
+            FunctionParameter("rhs", INT64),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -87,12 +102,15 @@ internal object FnGte3 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnGte4 : PartiQLFunction.Scalar {
+internal object Fn_GTE__INT_INT__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "gte",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("lhs", INT), FunctionParameter("rhs", INT)),
+        parameters = listOf(
+            FunctionParameter("lhs", INT),
+            FunctionParameter("rhs", INT),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -103,12 +121,15 @@ internal object FnGte4 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnGte5 : PartiQLFunction.Scalar {
+internal object Fn_GTE__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "gte",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("lhs", DECIMAL_ARBITRARY), FunctionParameter("rhs", DECIMAL_ARBITRARY)),
+        parameters = listOf(
+            FunctionParameter("lhs", DECIMAL_ARBITRARY),
+            FunctionParameter("rhs", DECIMAL_ARBITRARY),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -119,12 +140,15 @@ internal object FnGte5 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnGte6 : PartiQLFunction.Scalar {
+internal object Fn_GTE__FLOAT32_FLOAT32__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "gte",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("lhs", FLOAT32), FunctionParameter("rhs", FLOAT32)),
+        parameters = listOf(
+            FunctionParameter("lhs", FLOAT32),
+            FunctionParameter("rhs", FLOAT32),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -135,12 +159,15 @@ internal object FnGte6 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnGte7 : PartiQLFunction.Scalar {
+internal object Fn_GTE__FLOAT64_FLOAT64__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "gte",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("lhs", FLOAT64), FunctionParameter("rhs", FLOAT64)),
+        parameters = listOf(
+            FunctionParameter("lhs", FLOAT64),
+            FunctionParameter("rhs", FLOAT64),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -151,12 +178,15 @@ internal object FnGte7 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnGte8 : PartiQLFunction.Scalar {
+internal object Fn_GTE__STRING_STRING__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "gte",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("lhs", STRING), FunctionParameter("rhs", STRING)),
+        parameters = listOf(
+            FunctionParameter("lhs", STRING),
+            FunctionParameter("rhs", STRING),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -167,12 +197,15 @@ internal object FnGte8 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnGte9 : PartiQLFunction.Scalar {
+internal object Fn_GTE__SYMBOL_SYMBOL__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "gte",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("lhs", SYMBOL), FunctionParameter("rhs", SYMBOL)),
+        parameters = listOf(
+            FunctionParameter("lhs", SYMBOL),
+            FunctionParameter("rhs", SYMBOL),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -183,12 +216,15 @@ internal object FnGte9 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnGte10 : PartiQLFunction.Scalar {
+internal object Fn_GTE__CLOB_CLOB__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "gte",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("lhs", CLOB), FunctionParameter("rhs", CLOB)),
+        parameters = listOf(
+            FunctionParameter("lhs", CLOB),
+            FunctionParameter("rhs", CLOB),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -199,12 +235,15 @@ internal object FnGte10 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnGte11 : PartiQLFunction.Scalar {
+internal object Fn_GTE__DATE_DATE__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "gte",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("lhs", DATE), FunctionParameter("rhs", DATE)),
+        parameters = listOf(
+            FunctionParameter("lhs", DATE),
+            FunctionParameter("rhs", DATE),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -215,12 +254,15 @@ internal object FnGte11 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnGte12 : PartiQLFunction.Scalar {
+internal object Fn_GTE__TIME_TIME__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "gte",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("lhs", TIME), FunctionParameter("rhs", TIME)),
+        parameters = listOf(
+            FunctionParameter("lhs", TIME),
+            FunctionParameter("rhs", TIME),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -231,12 +273,15 @@ internal object FnGte12 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnGte13 : PartiQLFunction.Scalar {
+internal object Fn_GTE__TIMESTAMP_TIMESTAMP__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "gte",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("lhs", TIMESTAMP), FunctionParameter("rhs", TIMESTAMP)),
+        parameters = listOf(
+            FunctionParameter("lhs", TIMESTAMP),
+            FunctionParameter("rhs", TIMESTAMP),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -247,12 +292,15 @@ internal object FnGte13 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnGte14 : PartiQLFunction.Scalar {
+internal object Fn_GTE__BOOL_BOOL__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "gte",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("lhs", BOOL), FunctionParameter("rhs", BOOL)),
+        parameters = listOf(
+            FunctionParameter("lhs", BOOL),
+            FunctionParameter("rhs", BOOL),
+        ),
         isNullCall = true,
         isNullable = false,
     )

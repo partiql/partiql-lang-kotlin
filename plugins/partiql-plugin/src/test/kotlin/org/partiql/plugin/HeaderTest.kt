@@ -1,4 +1,4 @@
-package org.partiql.planner.internal
+package org.partiql.plugin
 
 import net.pearx.kasechange.toPascalCase
 import org.junit.jupiter.api.Disabled
@@ -76,13 +76,13 @@ class HeaderTest {
 
     @Test
     fun scalars() {
-        generate("package org.partiql.eval.internal.fn.scalar", TEMPLATE_SCALAR, "fn", PartiQLHeader.functions)
-        generate("package org.partiql.eval.internal.fn.scalar", TEMPLATE_SCALAR, "fn", PartiQLHeader.operators)
+        generate("package org.partiql.plugin.internal.fn.scalar", TEMPLATE_SCALAR, "Fn", PartiQLHeader.functions)
+        generate("package org.partiql.plugin.internal.fn.scalar", TEMPLATE_SCALAR, "Fn", PartiQLHeader.operators)
     }
 
     @Test
     fun aggregations() {
-        generate("package org.partiql.eval.internal.fn.agg", TEMPLATE_AGG, "agg", PartiQLHeader.aggregations)
+        generate("package org.partiql.plugin.internal.fn.agg", TEMPLATE_AGG, "Agg", PartiQLHeader.aggregations)
     }
 
     /**
@@ -100,26 +100,20 @@ class HeaderTest {
             val pre = "${prefix}_$name".toPascalCase()
             val file = File("/Users/howero/Desktop/out/$pre.kt")
             file.printWriter().use {
+                it.appendLine("// ktlint-disable filename")
+                it.appendLine("@file:Suppress(\"ClassName\")")
+                it.appendLine()
                 it.appendLine(packageName)
                 it.appendLine()
                 it.appendLine(imports)
                 it.appendLine()
-                if (fns.size == 1) {
-                    val clazz = pre
-                    val params = toParams(clazz, fns.first())
+                fns.forEach { sig ->
+                    val clazz = "${prefix}_${sig.specific}"
+                    val params = toParams(clazz, sig)
                     val code = String.format(template, *params)
                     it.appendLine(code)
                     it.appendLine()
                     clazzes.add(clazz)
-                } else {
-                    fns.forEachIndexed { index, sig ->
-                        val clazz = "${pre}$index"
-                        val params = toParams(clazz, sig)
-                        val code = String.format(template, *params)
-                        it.appendLine(code)
-                        it.appendLine()
-                        clazzes.add(clazz)
-                    }
                 }
             }
         }
@@ -138,16 +132,17 @@ class HeaderTest {
         val returns = fn.returns.name
         val parameters = fn.parameters.mapIndexed { i, p ->
             "FunctionParameter(\"${p.name}\", ${p.type.name})"
-        }.joinToString()
+        }.joinToString(",\n", postfix = ",")
         return arrayOf(clazz, snake, returns, parameters, fn.isNullCall, fn.isNullable, snake)
     }
 
     private fun toParams(clazz: String, fn: FunctionSignature.Aggregation): Array<out Any?> {
         val snake = fn.name
         val returns = fn.returns.name
-        val parameters = fn.parameters.mapIndexed { i, p ->
-            "FunctionParameter(\"${p.name}\", ${p.type.name})"
-        }.joinToString()
+        var parameters = ""
+        for (p in fn.parameters) {
+            parameters += "FunctionParameter(\"${p.name}\", ${p.type.name}),\n"
+        }
         return arrayOf(clazz, snake, returns, parameters, fn.isNullable, fn.isDecomposable, snake)
     }
 }

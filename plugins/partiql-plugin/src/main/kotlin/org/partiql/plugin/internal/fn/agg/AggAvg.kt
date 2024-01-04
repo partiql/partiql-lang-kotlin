@@ -1,3 +1,6 @@
+// ktlint-disable filename
+@file:Suppress("ClassName")
+
 package org.partiql.plugin.internal.fn.agg
 
 import org.partiql.spi.function.PartiQLFunction
@@ -15,7 +18,7 @@ import org.partiql.value.PartiQLValueType.INT64
 import org.partiql.value.PartiQLValueType.INT8
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object AggAvg0 : PartiQLFunction.Aggregation {
+internal object Agg_AVG__INT8__INT8 : PartiQLFunction.Aggregation {
 
     override val signature = FunctionSignature.Aggregation(
         name = "avg",
@@ -31,7 +34,7 @@ internal object AggAvg0 : PartiQLFunction.Aggregation {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object AggAvg1 : PartiQLFunction.Aggregation {
+internal object Agg_AVG__INT16__INT16 : PartiQLFunction.Aggregation {
 
     override val signature = FunctionSignature.Aggregation(
         name = "avg",
@@ -47,7 +50,7 @@ internal object AggAvg1 : PartiQLFunction.Aggregation {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object AggAvg2 : PartiQLFunction.Aggregation {
+internal object Agg_AVG__INT32__INT32 : PartiQLFunction.Aggregation {
 
     override val signature = FunctionSignature.Aggregation(
         name = "avg",
@@ -63,7 +66,7 @@ internal object AggAvg2 : PartiQLFunction.Aggregation {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object AggAvg3 : PartiQLFunction.Aggregation {
+internal object Agg_AVG__INT64__INT64 : PartiQLFunction.Aggregation {
 
     override val signature = FunctionSignature.Aggregation(
         name = "avg",
@@ -79,7 +82,7 @@ internal object AggAvg3 : PartiQLFunction.Aggregation {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object AggAvg4 : PartiQLFunction.Aggregation {
+internal object Agg_AVG__INT__INT : PartiQLFunction.Aggregation {
 
     override val signature = FunctionSignature.Aggregation(
         name = "avg",
@@ -95,7 +98,7 @@ internal object AggAvg4 : PartiQLFunction.Aggregation {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object AggAvg5 : PartiQLFunction.Aggregation {
+internal object Agg_AVG__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY : PartiQLFunction.Aggregation {
 
     override val signature = FunctionSignature.Aggregation(
         name = "avg",
@@ -111,7 +114,7 @@ internal object AggAvg5 : PartiQLFunction.Aggregation {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object AggAvg6 : PartiQLFunction.Aggregation {
+internal object Agg_AVG__FLOAT32__FLOAT32 : PartiQLFunction.Aggregation {
 
     override val signature = FunctionSignature.Aggregation(
         name = "avg",
@@ -127,7 +130,7 @@ internal object AggAvg6 : PartiQLFunction.Aggregation {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object AggAvg7 : PartiQLFunction.Aggregation {
+internal object Agg_AVG__FLOAT64__FLOAT64 : PartiQLFunction.Aggregation {
 
     override val signature = FunctionSignature.Aggregation(
         name = "avg",

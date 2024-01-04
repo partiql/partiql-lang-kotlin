@@ -1,3 +1,6 @@
+// ktlint-disable filename
+@file:Suppress("ClassName")
+
 package org.partiql.plugin.internal.fn.scalar
 
 import org.partiql.spi.function.PartiQLFunction
@@ -11,12 +14,15 @@ import org.partiql.value.PartiQLValueType.STRING
 import org.partiql.value.PartiQLValueType.SYMBOL
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnTrimLeadingChars0 : PartiQLFunction.Scalar {
+internal object Fn_TRIM_LEADING_CHARS__STRING_STRING__STRING : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "trim_leading_chars",
         returns = STRING,
-        parameters = listOf(FunctionParameter("value", STRING), FunctionParameter("chars", STRING)),
+        parameters = listOf(
+            FunctionParameter("value", STRING),
+            FunctionParameter("chars", STRING),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -27,12 +33,15 @@ internal object FnTrimLeadingChars0 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnTrimLeadingChars1 : PartiQLFunction.Scalar {
+internal object Fn_TRIM_LEADING_CHARS__SYMBOL_SYMBOL__SYMBOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "trim_leading_chars",
         returns = SYMBOL,
-        parameters = listOf(FunctionParameter("value", SYMBOL), FunctionParameter("chars", SYMBOL)),
+        parameters = listOf(
+            FunctionParameter("value", SYMBOL),
+            FunctionParameter("chars", SYMBOL),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -43,12 +52,15 @@ internal object FnTrimLeadingChars1 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnTrimLeadingChars2 : PartiQLFunction.Scalar {
+internal object Fn_TRIM_LEADING_CHARS__CLOB_CLOB__CLOB : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "trim_leading_chars",
         returns = CLOB,
-        parameters = listOf(FunctionParameter("value", CLOB), FunctionParameter("chars", CLOB)),
+        parameters = listOf(
+            FunctionParameter("value", CLOB),
+            FunctionParameter("chars", CLOB),
+        ),
         isNullCall = true,
         isNullable = false,
     )

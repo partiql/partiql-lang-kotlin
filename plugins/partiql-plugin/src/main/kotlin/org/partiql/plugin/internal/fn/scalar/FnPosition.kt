@@ -1,3 +1,6 @@
+// ktlint-disable filename
+@file:Suppress("ClassName")
+
 package org.partiql.plugin.internal.fn.scalar
 
 import org.partiql.spi.function.PartiQLFunction
@@ -12,12 +15,15 @@ import org.partiql.value.PartiQLValueType.STRING
 import org.partiql.value.PartiQLValueType.SYMBOL
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnPosition0 : PartiQLFunction.Scalar {
+internal object Fn_POSITION__STRING_STRING__INT64 : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "position",
         returns = INT64,
-        parameters = listOf(FunctionParameter("probe", STRING), FunctionParameter("value", STRING)),
+        parameters = listOf(
+            FunctionParameter("probe", STRING),
+            FunctionParameter("value", STRING),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -28,12 +34,15 @@ internal object FnPosition0 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnPosition1 : PartiQLFunction.Scalar {
+internal object Fn_POSITION__SYMBOL_SYMBOL__INT64 : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "position",
         returns = INT64,
-        parameters = listOf(FunctionParameter("probe", SYMBOL), FunctionParameter("value", SYMBOL)),
+        parameters = listOf(
+            FunctionParameter("probe", SYMBOL),
+            FunctionParameter("value", SYMBOL),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -44,12 +53,15 @@ internal object FnPosition1 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnPosition2 : PartiQLFunction.Scalar {
+internal object Fn_POSITION__CLOB_CLOB__INT64 : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "position",
         returns = INT64,
-        parameters = listOf(FunctionParameter("probe", CLOB), FunctionParameter("value", CLOB)),
+        parameters = listOf(
+            FunctionParameter("probe", CLOB),
+            FunctionParameter("value", CLOB),
+        ),
         isNullCall = true,
         isNullable = false,
     )

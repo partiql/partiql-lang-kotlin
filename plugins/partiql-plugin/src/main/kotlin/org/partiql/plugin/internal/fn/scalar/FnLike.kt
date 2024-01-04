@@ -1,3 +1,6 @@
+// ktlint-disable filename
+@file:Suppress("ClassName")
+
 package org.partiql.plugin.internal.fn.scalar
 
 import org.partiql.spi.function.PartiQLFunction
@@ -12,12 +15,15 @@ import org.partiql.value.PartiQLValueType.STRING
 import org.partiql.value.PartiQLValueType.SYMBOL
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnLike0 : PartiQLFunction.Scalar {
+internal object Fn_LIKE__STRING_STRING__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "like",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", STRING), FunctionParameter("pattern", STRING)),
+        parameters = listOf(
+            FunctionParameter("value", STRING),
+            FunctionParameter("pattern", STRING),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -28,12 +34,15 @@ internal object FnLike0 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnLike1 : PartiQLFunction.Scalar {
+internal object Fn_LIKE__SYMBOL_SYMBOL__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "like",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", SYMBOL), FunctionParameter("pattern", SYMBOL)),
+        parameters = listOf(
+            FunctionParameter("value", SYMBOL),
+            FunctionParameter("pattern", SYMBOL),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -44,12 +53,15 @@ internal object FnLike1 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnLike2 : PartiQLFunction.Scalar {
+internal object Fn_LIKE__CLOB_CLOB__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "like",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", CLOB), FunctionParameter("pattern", CLOB)),
+        parameters = listOf(
+            FunctionParameter("value", CLOB),
+            FunctionParameter("pattern", CLOB),
+        ),
         isNullCall = true,
         isNullable = false,
     )

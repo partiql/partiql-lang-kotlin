@@ -1,3 +1,6 @@
+// ktlint-disable filename
+@file:Suppress("ClassName")
+
 package org.partiql.plugin.internal.fn.scalar
 
 import org.partiql.spi.function.PartiQLFunction
@@ -16,7 +19,7 @@ import org.partiql.value.PartiQLValueType.INT64
 import org.partiql.value.PartiQLValueType.INT8
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnPos0 : PartiQLFunction.Scalar {
+internal object Fn_POS__INT8__INT8 : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "pos",
@@ -32,7 +35,7 @@ internal object FnPos0 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnPos1 : PartiQLFunction.Scalar {
+internal object Fn_POS__INT16__INT16 : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "pos",
@@ -48,7 +51,7 @@ internal object FnPos1 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnPos2 : PartiQLFunction.Scalar {
+internal object Fn_POS__INT32__INT32 : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "pos",
@@ -64,7 +67,7 @@ internal object FnPos2 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnPos3 : PartiQLFunction.Scalar {
+internal object Fn_POS__INT64__INT64 : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "pos",
@@ -80,7 +83,7 @@ internal object FnPos3 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnPos4 : PartiQLFunction.Scalar {
+internal object Fn_POS__INT__INT : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "pos",
@@ -96,7 +99,7 @@ internal object FnPos4 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnPos5 : PartiQLFunction.Scalar {
+internal object Fn_POS__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "pos",
@@ -112,7 +115,7 @@ internal object FnPos5 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnPos6 : PartiQLFunction.Scalar {
+internal object Fn_POS__FLOAT32__FLOAT32 : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "pos",
@@ -128,7 +131,7 @@ internal object FnPos6 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnPos7 : PartiQLFunction.Scalar {
+internal object Fn_POS__FLOAT64__FLOAT64 : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "pos",

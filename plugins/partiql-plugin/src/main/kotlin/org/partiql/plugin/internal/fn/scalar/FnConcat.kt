@@ -1,3 +1,6 @@
+// ktlint-disable filename
+@file:Suppress("ClassName")
+
 package org.partiql.plugin.internal.fn.scalar
 
 import org.partiql.spi.function.PartiQLFunction
@@ -11,12 +14,15 @@ import org.partiql.value.PartiQLValueType.STRING
 import org.partiql.value.PartiQLValueType.SYMBOL
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnConcat0 : PartiQLFunction.Scalar {
+internal object Fn_CONCAT__STRING_STRING__STRING : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "concat",
         returns = STRING,
-        parameters = listOf(FunctionParameter("lhs", STRING), FunctionParameter("rhs", STRING)),
+        parameters = listOf(
+            FunctionParameter("lhs", STRING),
+            FunctionParameter("rhs", STRING),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -27,12 +33,15 @@ internal object FnConcat0 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnConcat1 : PartiQLFunction.Scalar {
+internal object Fn_CONCAT__SYMBOL_SYMBOL__SYMBOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "concat",
         returns = SYMBOL,
-        parameters = listOf(FunctionParameter("lhs", SYMBOL), FunctionParameter("rhs", SYMBOL)),
+        parameters = listOf(
+            FunctionParameter("lhs", SYMBOL),
+            FunctionParameter("rhs", SYMBOL),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -43,12 +52,15 @@ internal object FnConcat1 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnConcat2 : PartiQLFunction.Scalar {
+internal object Fn_CONCAT__CLOB_CLOB__CLOB : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "concat",
         returns = CLOB,
-        parameters = listOf(FunctionParameter("lhs", CLOB), FunctionParameter("rhs", CLOB)),
+        parameters = listOf(
+            FunctionParameter("lhs", CLOB),
+            FunctionParameter("rhs", CLOB),
+        ),
         isNullCall = true,
         isNullable = false,
     )

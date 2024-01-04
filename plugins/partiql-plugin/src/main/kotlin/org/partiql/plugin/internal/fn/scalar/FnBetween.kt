@@ -1,3 +1,6 @@
+// ktlint-disable filename
+@file:Suppress("ClassName")
+
 package org.partiql.plugin.internal.fn.scalar
 
 import org.partiql.spi.function.PartiQLFunction
@@ -23,7 +26,7 @@ import org.partiql.value.PartiQLValueType.TIME
 import org.partiql.value.PartiQLValueType.TIMESTAMP
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnBetween0 : PartiQLFunction.Scalar {
+internal object Fn_BETWEEN__INT8_INT8_INT8__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "between",
@@ -31,7 +34,7 @@ internal object FnBetween0 : PartiQLFunction.Scalar {
         parameters = listOf(
             FunctionParameter("value", INT8),
             FunctionParameter("lower", INT8),
-            FunctionParameter("upper", INT8)
+            FunctionParameter("upper", INT8),
         ),
         isNullCall = true,
         isNullable = false,
@@ -43,7 +46,7 @@ internal object FnBetween0 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnBetween1 : PartiQLFunction.Scalar {
+internal object Fn_BETWEEN__INT16_INT16_INT16__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "between",
@@ -51,7 +54,7 @@ internal object FnBetween1 : PartiQLFunction.Scalar {
         parameters = listOf(
             FunctionParameter("value", INT16),
             FunctionParameter("lower", INT16),
-            FunctionParameter("upper", INT16)
+            FunctionParameter("upper", INT16),
         ),
         isNullCall = true,
         isNullable = false,
@@ -63,7 +66,7 @@ internal object FnBetween1 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnBetween2 : PartiQLFunction.Scalar {
+internal object Fn_BETWEEN__INT32_INT32_INT32__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "between",
@@ -71,7 +74,7 @@ internal object FnBetween2 : PartiQLFunction.Scalar {
         parameters = listOf(
             FunctionParameter("value", INT32),
             FunctionParameter("lower", INT32),
-            FunctionParameter("upper", INT32)
+            FunctionParameter("upper", INT32),
         ),
         isNullCall = true,
         isNullable = false,
@@ -83,7 +86,7 @@ internal object FnBetween2 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnBetween3 : PartiQLFunction.Scalar {
+internal object Fn_BETWEEN__INT64_INT64_INT64__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "between",
@@ -91,7 +94,7 @@ internal object FnBetween3 : PartiQLFunction.Scalar {
         parameters = listOf(
             FunctionParameter("value", INT64),
             FunctionParameter("lower", INT64),
-            FunctionParameter("upper", INT64)
+            FunctionParameter("upper", INT64),
         ),
         isNullCall = true,
         isNullable = false,
@@ -103,7 +106,7 @@ internal object FnBetween3 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnBetween4 : PartiQLFunction.Scalar {
+internal object Fn_BETWEEN__INT_INT_INT__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "between",
@@ -111,7 +114,7 @@ internal object FnBetween4 : PartiQLFunction.Scalar {
         parameters = listOf(
             FunctionParameter("value", INT),
             FunctionParameter("lower", INT),
-            FunctionParameter("upper", INT)
+            FunctionParameter("upper", INT),
         ),
         isNullCall = true,
         isNullable = false,
@@ -123,7 +126,7 @@ internal object FnBetween4 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnBetween5 : PartiQLFunction.Scalar {
+internal object Fn_BETWEEN__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "between",
@@ -131,7 +134,7 @@ internal object FnBetween5 : PartiQLFunction.Scalar {
         parameters = listOf(
             FunctionParameter("value", DECIMAL_ARBITRARY),
             FunctionParameter("lower", DECIMAL_ARBITRARY),
-            FunctionParameter("upper", DECIMAL_ARBITRARY)
+            FunctionParameter("upper", DECIMAL_ARBITRARY),
         ),
         isNullCall = true,
         isNullable = false,
@@ -143,7 +146,7 @@ internal object FnBetween5 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnBetween6 : PartiQLFunction.Scalar {
+internal object Fn_BETWEEN__FLOAT32_FLOAT32_FLOAT32__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "between",
@@ -151,7 +154,7 @@ internal object FnBetween6 : PartiQLFunction.Scalar {
         parameters = listOf(
             FunctionParameter("value", FLOAT32),
             FunctionParameter("lower", FLOAT32),
-            FunctionParameter("upper", FLOAT32)
+            FunctionParameter("upper", FLOAT32),
         ),
         isNullCall = true,
         isNullable = false,
@@ -163,7 +166,7 @@ internal object FnBetween6 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnBetween7 : PartiQLFunction.Scalar {
+internal object Fn_BETWEEN__FLOAT64_FLOAT64_FLOAT64__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "between",
@@ -171,7 +174,7 @@ internal object FnBetween7 : PartiQLFunction.Scalar {
         parameters = listOf(
             FunctionParameter("value", FLOAT64),
             FunctionParameter("lower", FLOAT64),
-            FunctionParameter("upper", FLOAT64)
+            FunctionParameter("upper", FLOAT64),
         ),
         isNullCall = true,
         isNullable = false,
@@ -183,7 +186,7 @@ internal object FnBetween7 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnBetween8 : PartiQLFunction.Scalar {
+internal object Fn_BETWEEN__STRING_STRING_STRING__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "between",
@@ -191,7 +194,7 @@ internal object FnBetween8 : PartiQLFunction.Scalar {
         parameters = listOf(
             FunctionParameter("value", STRING),
             FunctionParameter("lower", STRING),
-            FunctionParameter("upper", STRING)
+            FunctionParameter("upper", STRING),
         ),
         isNullCall = true,
         isNullable = false,
@@ -203,7 +206,7 @@ internal object FnBetween8 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnBetween9 : PartiQLFunction.Scalar {
+internal object Fn_BETWEEN__SYMBOL_SYMBOL_SYMBOL__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "between",
@@ -211,7 +214,7 @@ internal object FnBetween9 : PartiQLFunction.Scalar {
         parameters = listOf(
             FunctionParameter("value", SYMBOL),
             FunctionParameter("lower", SYMBOL),
-            FunctionParameter("upper", SYMBOL)
+            FunctionParameter("upper", SYMBOL),
         ),
         isNullCall = true,
         isNullable = false,
@@ -223,7 +226,7 @@ internal object FnBetween9 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnBetween10 : PartiQLFunction.Scalar {
+internal object Fn_BETWEEN__CLOB_CLOB_CLOB__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "between",
@@ -231,7 +234,7 @@ internal object FnBetween10 : PartiQLFunction.Scalar {
         parameters = listOf(
             FunctionParameter("value", CLOB),
             FunctionParameter("lower", CLOB),
-            FunctionParameter("upper", CLOB)
+            FunctionParameter("upper", CLOB),
         ),
         isNullCall = true,
         isNullable = false,
@@ -243,7 +246,7 @@ internal object FnBetween10 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnBetween11 : PartiQLFunction.Scalar {
+internal object Fn_BETWEEN__DATE_DATE_DATE__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "between",
@@ -251,7 +254,7 @@ internal object FnBetween11 : PartiQLFunction.Scalar {
         parameters = listOf(
             FunctionParameter("value", DATE),
             FunctionParameter("lower", DATE),
-            FunctionParameter("upper", DATE)
+            FunctionParameter("upper", DATE),
         ),
         isNullCall = true,
         isNullable = false,
@@ -263,7 +266,7 @@ internal object FnBetween11 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnBetween12 : PartiQLFunction.Scalar {
+internal object Fn_BETWEEN__TIME_TIME_TIME__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "between",
@@ -271,7 +274,7 @@ internal object FnBetween12 : PartiQLFunction.Scalar {
         parameters = listOf(
             FunctionParameter("value", TIME),
             FunctionParameter("lower", TIME),
-            FunctionParameter("upper", TIME)
+            FunctionParameter("upper", TIME),
         ),
         isNullCall = true,
         isNullable = false,
@@ -283,7 +286,7 @@ internal object FnBetween12 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnBetween13 : PartiQLFunction.Scalar {
+internal object Fn_BETWEEN__TIMESTAMP_TIMESTAMP_TIMESTAMP__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "between",
@@ -291,7 +294,7 @@ internal object FnBetween13 : PartiQLFunction.Scalar {
         parameters = listOf(
             FunctionParameter("value", TIMESTAMP),
             FunctionParameter("lower", TIMESTAMP),
-            FunctionParameter("upper", TIMESTAMP)
+            FunctionParameter("upper", TIMESTAMP),
         ),
         isNullCall = true,
         isNullable = false,

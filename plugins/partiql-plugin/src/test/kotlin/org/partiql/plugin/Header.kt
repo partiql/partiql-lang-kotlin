@@ -1,6 +1,5 @@
-package org.partiql.planner.internal
+package org.partiql.plugin
 
-import org.partiql.planner.internal.typer.TypeCasts
 import org.partiql.types.function.FunctionParameter
 import org.partiql.types.function.FunctionSignature
 import org.partiql.value.PartiQLValueExperimental
@@ -31,11 +30,6 @@ internal abstract class Header {
      * Aggregation function signatures.
      */
     open val aggregations: List<FunctionSignature.Aggregation> = emptyList()
-
-    /**
-     * Type relationships; this is primarily a helper for defining operators.
-     */
-    internal val types: TypeCasts = TypeCasts.partiql()
 
     /**
      * Dump the Header as SQL commands

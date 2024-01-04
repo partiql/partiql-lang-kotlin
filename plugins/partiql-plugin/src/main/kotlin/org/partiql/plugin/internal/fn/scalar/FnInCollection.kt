@@ -1,3 +1,6 @@
+// ktlint-disable filename
+@file:Suppress("ClassName")
+
 package org.partiql.plugin.internal.fn.scalar
 
 import org.partiql.spi.function.PartiQLFunction
@@ -36,12 +39,15 @@ import org.partiql.value.PartiQLValueType.TIME
 import org.partiql.value.PartiQLValueType.TIMESTAMP
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection0 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__ANY_BAG__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", ANY), FunctionParameter("collection", BAG)),
+        parameters = listOf(
+            FunctionParameter("value", ANY),
+            FunctionParameter("collection", BAG),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -52,12 +58,15 @@ internal object FnInCollection0 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection1 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__ANY_LIST__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", ANY), FunctionParameter("collection", LIST)),
+        parameters = listOf(
+            FunctionParameter("value", ANY),
+            FunctionParameter("collection", LIST),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -68,12 +77,15 @@ internal object FnInCollection1 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection2 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__ANY_SEXP__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", ANY), FunctionParameter("collection", SEXP)),
+        parameters = listOf(
+            FunctionParameter("value", ANY),
+            FunctionParameter("collection", SEXP),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -84,12 +96,15 @@ internal object FnInCollection2 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection3 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__BOOL_BAG__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", BOOL), FunctionParameter("collection", BAG)),
+        parameters = listOf(
+            FunctionParameter("value", BOOL),
+            FunctionParameter("collection", BAG),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -100,12 +115,15 @@ internal object FnInCollection3 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection4 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__BOOL_LIST__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", BOOL), FunctionParameter("collection", LIST)),
+        parameters = listOf(
+            FunctionParameter("value", BOOL),
+            FunctionParameter("collection", LIST),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -116,12 +134,15 @@ internal object FnInCollection4 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection5 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__BOOL_SEXP__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", BOOL), FunctionParameter("collection", SEXP)),
+        parameters = listOf(
+            FunctionParameter("value", BOOL),
+            FunctionParameter("collection", SEXP),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -132,12 +153,15 @@ internal object FnInCollection5 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection6 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__INT8_BAG__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", INT8), FunctionParameter("collection", BAG)),
+        parameters = listOf(
+            FunctionParameter("value", INT8),
+            FunctionParameter("collection", BAG),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -148,12 +172,15 @@ internal object FnInCollection6 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection7 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__INT8_LIST__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", INT8), FunctionParameter("collection", LIST)),
+        parameters = listOf(
+            FunctionParameter("value", INT8),
+            FunctionParameter("collection", LIST),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -164,12 +191,15 @@ internal object FnInCollection7 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection8 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__INT8_SEXP__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", INT8), FunctionParameter("collection", SEXP)),
+        parameters = listOf(
+            FunctionParameter("value", INT8),
+            FunctionParameter("collection", SEXP),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -180,12 +210,15 @@ internal object FnInCollection8 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection9 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__INT16_BAG__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", INT16), FunctionParameter("collection", BAG)),
+        parameters = listOf(
+            FunctionParameter("value", INT16),
+            FunctionParameter("collection", BAG),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -196,12 +229,15 @@ internal object FnInCollection9 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection10 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__INT16_LIST__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", INT16), FunctionParameter("collection", LIST)),
+        parameters = listOf(
+            FunctionParameter("value", INT16),
+            FunctionParameter("collection", LIST),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -212,12 +248,15 @@ internal object FnInCollection10 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection11 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__INT16_SEXP__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", INT16), FunctionParameter("collection", SEXP)),
+        parameters = listOf(
+            FunctionParameter("value", INT16),
+            FunctionParameter("collection", SEXP),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -228,12 +267,15 @@ internal object FnInCollection11 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection12 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__INT32_BAG__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", INT32), FunctionParameter("collection", BAG)),
+        parameters = listOf(
+            FunctionParameter("value", INT32),
+            FunctionParameter("collection", BAG),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -244,12 +286,15 @@ internal object FnInCollection12 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection13 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__INT32_LIST__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", INT32), FunctionParameter("collection", LIST)),
+        parameters = listOf(
+            FunctionParameter("value", INT32),
+            FunctionParameter("collection", LIST),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -260,12 +305,15 @@ internal object FnInCollection13 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection14 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__INT32_SEXP__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", INT32), FunctionParameter("collection", SEXP)),
+        parameters = listOf(
+            FunctionParameter("value", INT32),
+            FunctionParameter("collection", SEXP),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -276,12 +324,15 @@ internal object FnInCollection14 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection15 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__INT64_BAG__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", INT64), FunctionParameter("collection", BAG)),
+        parameters = listOf(
+            FunctionParameter("value", INT64),
+            FunctionParameter("collection", BAG),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -292,12 +343,15 @@ internal object FnInCollection15 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection16 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__INT64_LIST__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", INT64), FunctionParameter("collection", LIST)),
+        parameters = listOf(
+            FunctionParameter("value", INT64),
+            FunctionParameter("collection", LIST),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -308,12 +362,15 @@ internal object FnInCollection16 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection17 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__INT64_SEXP__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", INT64), FunctionParameter("collection", SEXP)),
+        parameters = listOf(
+            FunctionParameter("value", INT64),
+            FunctionParameter("collection", SEXP),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -324,12 +381,15 @@ internal object FnInCollection17 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection18 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__INT_BAG__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", INT), FunctionParameter("collection", BAG)),
+        parameters = listOf(
+            FunctionParameter("value", INT),
+            FunctionParameter("collection", BAG),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -340,12 +400,15 @@ internal object FnInCollection18 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection19 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__INT_LIST__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", INT), FunctionParameter("collection", LIST)),
+        parameters = listOf(
+            FunctionParameter("value", INT),
+            FunctionParameter("collection", LIST),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -356,12 +419,15 @@ internal object FnInCollection19 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection20 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__INT_SEXP__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", INT), FunctionParameter("collection", SEXP)),
+        parameters = listOf(
+            FunctionParameter("value", INT),
+            FunctionParameter("collection", SEXP),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -372,12 +438,15 @@ internal object FnInCollection20 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection21 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__DECIMAL_BAG__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", DECIMAL), FunctionParameter("collection", BAG)),
+        parameters = listOf(
+            FunctionParameter("value", DECIMAL),
+            FunctionParameter("collection", BAG),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -388,12 +457,15 @@ internal object FnInCollection21 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection22 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__DECIMAL_LIST__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", DECIMAL), FunctionParameter("collection", LIST)),
+        parameters = listOf(
+            FunctionParameter("value", DECIMAL),
+            FunctionParameter("collection", LIST),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -404,12 +476,15 @@ internal object FnInCollection22 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection23 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__DECIMAL_SEXP__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", DECIMAL), FunctionParameter("collection", SEXP)),
+        parameters = listOf(
+            FunctionParameter("value", DECIMAL),
+            FunctionParameter("collection", SEXP),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -420,12 +495,15 @@ internal object FnInCollection23 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection24 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__DECIMAL_ARBITRARY_BAG__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", DECIMAL_ARBITRARY), FunctionParameter("collection", BAG)),
+        parameters = listOf(
+            FunctionParameter("value", DECIMAL_ARBITRARY),
+            FunctionParameter("collection", BAG),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -436,12 +514,15 @@ internal object FnInCollection24 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection25 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__DECIMAL_ARBITRARY_LIST__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", DECIMAL_ARBITRARY), FunctionParameter("collection", LIST)),
+        parameters = listOf(
+            FunctionParameter("value", DECIMAL_ARBITRARY),
+            FunctionParameter("collection", LIST),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -452,12 +533,15 @@ internal object FnInCollection25 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection26 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__DECIMAL_ARBITRARY_SEXP__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", DECIMAL_ARBITRARY), FunctionParameter("collection", SEXP)),
+        parameters = listOf(
+            FunctionParameter("value", DECIMAL_ARBITRARY),
+            FunctionParameter("collection", SEXP),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -468,12 +552,15 @@ internal object FnInCollection26 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection27 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__FLOAT32_BAG__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", FLOAT32), FunctionParameter("collection", BAG)),
+        parameters = listOf(
+            FunctionParameter("value", FLOAT32),
+            FunctionParameter("collection", BAG),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -484,12 +571,15 @@ internal object FnInCollection27 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection28 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__FLOAT32_LIST__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", FLOAT32), FunctionParameter("collection", LIST)),
+        parameters = listOf(
+            FunctionParameter("value", FLOAT32),
+            FunctionParameter("collection", LIST),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -500,12 +590,15 @@ internal object FnInCollection28 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection29 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__FLOAT32_SEXP__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", FLOAT32), FunctionParameter("collection", SEXP)),
+        parameters = listOf(
+            FunctionParameter("value", FLOAT32),
+            FunctionParameter("collection", SEXP),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -516,12 +609,15 @@ internal object FnInCollection29 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection30 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__FLOAT64_BAG__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", FLOAT64), FunctionParameter("collection", BAG)),
+        parameters = listOf(
+            FunctionParameter("value", FLOAT64),
+            FunctionParameter("collection", BAG),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -532,12 +628,15 @@ internal object FnInCollection30 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection31 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__FLOAT64_LIST__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", FLOAT64), FunctionParameter("collection", LIST)),
+        parameters = listOf(
+            FunctionParameter("value", FLOAT64),
+            FunctionParameter("collection", LIST),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -548,12 +647,15 @@ internal object FnInCollection31 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection32 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__FLOAT64_SEXP__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", FLOAT64), FunctionParameter("collection", SEXP)),
+        parameters = listOf(
+            FunctionParameter("value", FLOAT64),
+            FunctionParameter("collection", SEXP),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -564,12 +666,15 @@ internal object FnInCollection32 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection33 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__CHAR_BAG__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", CHAR), FunctionParameter("collection", BAG)),
+        parameters = listOf(
+            FunctionParameter("value", CHAR),
+            FunctionParameter("collection", BAG),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -580,12 +685,15 @@ internal object FnInCollection33 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection34 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__CHAR_LIST__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", CHAR), FunctionParameter("collection", LIST)),
+        parameters = listOf(
+            FunctionParameter("value", CHAR),
+            FunctionParameter("collection", LIST),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -596,12 +704,15 @@ internal object FnInCollection34 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection35 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__CHAR_SEXP__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", CHAR), FunctionParameter("collection", SEXP)),
+        parameters = listOf(
+            FunctionParameter("value", CHAR),
+            FunctionParameter("collection", SEXP),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -612,12 +723,15 @@ internal object FnInCollection35 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection36 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__STRING_BAG__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", STRING), FunctionParameter("collection", BAG)),
+        parameters = listOf(
+            FunctionParameter("value", STRING),
+            FunctionParameter("collection", BAG),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -628,12 +742,15 @@ internal object FnInCollection36 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection37 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__STRING_LIST__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", STRING), FunctionParameter("collection", LIST)),
+        parameters = listOf(
+            FunctionParameter("value", STRING),
+            FunctionParameter("collection", LIST),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -644,12 +761,15 @@ internal object FnInCollection37 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection38 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__STRING_SEXP__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", STRING), FunctionParameter("collection", SEXP)),
+        parameters = listOf(
+            FunctionParameter("value", STRING),
+            FunctionParameter("collection", SEXP),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -660,12 +780,15 @@ internal object FnInCollection38 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection39 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__SYMBOL_BAG__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", SYMBOL), FunctionParameter("collection", BAG)),
+        parameters = listOf(
+            FunctionParameter("value", SYMBOL),
+            FunctionParameter("collection", BAG),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -676,12 +799,15 @@ internal object FnInCollection39 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection40 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__SYMBOL_LIST__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", SYMBOL), FunctionParameter("collection", LIST)),
+        parameters = listOf(
+            FunctionParameter("value", SYMBOL),
+            FunctionParameter("collection", LIST),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -692,12 +818,15 @@ internal object FnInCollection40 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection41 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__SYMBOL_SEXP__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", SYMBOL), FunctionParameter("collection", SEXP)),
+        parameters = listOf(
+            FunctionParameter("value", SYMBOL),
+            FunctionParameter("collection", SEXP),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -708,12 +837,15 @@ internal object FnInCollection41 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection42 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__BINARY_BAG__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", BINARY), FunctionParameter("collection", BAG)),
+        parameters = listOf(
+            FunctionParameter("value", BINARY),
+            FunctionParameter("collection", BAG),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -724,12 +856,15 @@ internal object FnInCollection42 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection43 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__BINARY_LIST__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", BINARY), FunctionParameter("collection", LIST)),
+        parameters = listOf(
+            FunctionParameter("value", BINARY),
+            FunctionParameter("collection", LIST),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -740,12 +875,15 @@ internal object FnInCollection43 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection44 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__BINARY_SEXP__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", BINARY), FunctionParameter("collection", SEXP)),
+        parameters = listOf(
+            FunctionParameter("value", BINARY),
+            FunctionParameter("collection", SEXP),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -756,12 +894,15 @@ internal object FnInCollection44 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection45 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__BYTE_BAG__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", BYTE), FunctionParameter("collection", BAG)),
+        parameters = listOf(
+            FunctionParameter("value", BYTE),
+            FunctionParameter("collection", BAG),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -772,12 +913,15 @@ internal object FnInCollection45 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection46 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__BYTE_LIST__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", BYTE), FunctionParameter("collection", LIST)),
+        parameters = listOf(
+            FunctionParameter("value", BYTE),
+            FunctionParameter("collection", LIST),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -788,12 +932,15 @@ internal object FnInCollection46 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection47 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__BYTE_SEXP__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", BYTE), FunctionParameter("collection", SEXP)),
+        parameters = listOf(
+            FunctionParameter("value", BYTE),
+            FunctionParameter("collection", SEXP),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -804,12 +951,15 @@ internal object FnInCollection47 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection48 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__BLOB_BAG__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", BLOB), FunctionParameter("collection", BAG)),
+        parameters = listOf(
+            FunctionParameter("value", BLOB),
+            FunctionParameter("collection", BAG),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -820,12 +970,15 @@ internal object FnInCollection48 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection49 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__BLOB_LIST__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", BLOB), FunctionParameter("collection", LIST)),
+        parameters = listOf(
+            FunctionParameter("value", BLOB),
+            FunctionParameter("collection", LIST),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -836,12 +989,15 @@ internal object FnInCollection49 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection50 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__BLOB_SEXP__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", BLOB), FunctionParameter("collection", SEXP)),
+        parameters = listOf(
+            FunctionParameter("value", BLOB),
+            FunctionParameter("collection", SEXP),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -852,12 +1008,15 @@ internal object FnInCollection50 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection51 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__CLOB_BAG__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", CLOB), FunctionParameter("collection", BAG)),
+        parameters = listOf(
+            FunctionParameter("value", CLOB),
+            FunctionParameter("collection", BAG),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -868,12 +1027,15 @@ internal object FnInCollection51 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection52 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__CLOB_LIST__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", CLOB), FunctionParameter("collection", LIST)),
+        parameters = listOf(
+            FunctionParameter("value", CLOB),
+            FunctionParameter("collection", LIST),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -884,12 +1046,15 @@ internal object FnInCollection52 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection53 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__CLOB_SEXP__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", CLOB), FunctionParameter("collection", SEXP)),
+        parameters = listOf(
+            FunctionParameter("value", CLOB),
+            FunctionParameter("collection", SEXP),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -900,12 +1065,15 @@ internal object FnInCollection53 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection54 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__DATE_BAG__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", DATE), FunctionParameter("collection", BAG)),
+        parameters = listOf(
+            FunctionParameter("value", DATE),
+            FunctionParameter("collection", BAG),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -916,12 +1084,15 @@ internal object FnInCollection54 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection55 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__DATE_LIST__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", DATE), FunctionParameter("collection", LIST)),
+        parameters = listOf(
+            FunctionParameter("value", DATE),
+            FunctionParameter("collection", LIST),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -932,12 +1103,15 @@ internal object FnInCollection55 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection56 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__DATE_SEXP__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", DATE), FunctionParameter("collection", SEXP)),
+        parameters = listOf(
+            FunctionParameter("value", DATE),
+            FunctionParameter("collection", SEXP),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -948,12 +1122,15 @@ internal object FnInCollection56 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection57 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__TIME_BAG__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", TIME), FunctionParameter("collection", BAG)),
+        parameters = listOf(
+            FunctionParameter("value", TIME),
+            FunctionParameter("collection", BAG),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -964,12 +1141,15 @@ internal object FnInCollection57 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection58 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__TIME_LIST__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", TIME), FunctionParameter("collection", LIST)),
+        parameters = listOf(
+            FunctionParameter("value", TIME),
+            FunctionParameter("collection", LIST),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -980,12 +1160,15 @@ internal object FnInCollection58 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection59 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__TIME_SEXP__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", TIME), FunctionParameter("collection", SEXP)),
+        parameters = listOf(
+            FunctionParameter("value", TIME),
+            FunctionParameter("collection", SEXP),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -996,12 +1179,15 @@ internal object FnInCollection59 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection60 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__TIMESTAMP_BAG__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", TIMESTAMP), FunctionParameter("collection", BAG)),
+        parameters = listOf(
+            FunctionParameter("value", TIMESTAMP),
+            FunctionParameter("collection", BAG),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -1012,12 +1198,15 @@ internal object FnInCollection60 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection61 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__TIMESTAMP_LIST__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", TIMESTAMP), FunctionParameter("collection", LIST)),
+        parameters = listOf(
+            FunctionParameter("value", TIMESTAMP),
+            FunctionParameter("collection", LIST),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -1028,12 +1217,15 @@ internal object FnInCollection61 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection62 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__TIMESTAMP_SEXP__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", TIMESTAMP), FunctionParameter("collection", SEXP)),
+        parameters = listOf(
+            FunctionParameter("value", TIMESTAMP),
+            FunctionParameter("collection", SEXP),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -1044,12 +1236,15 @@ internal object FnInCollection62 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection63 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__INTERVAL_BAG__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", INTERVAL), FunctionParameter("collection", BAG)),
+        parameters = listOf(
+            FunctionParameter("value", INTERVAL),
+            FunctionParameter("collection", BAG),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -1060,12 +1255,15 @@ internal object FnInCollection63 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection64 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__INTERVAL_LIST__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", INTERVAL), FunctionParameter("collection", LIST)),
+        parameters = listOf(
+            FunctionParameter("value", INTERVAL),
+            FunctionParameter("collection", LIST),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -1076,12 +1274,15 @@ internal object FnInCollection64 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection65 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__INTERVAL_SEXP__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", INTERVAL), FunctionParameter("collection", SEXP)),
+        parameters = listOf(
+            FunctionParameter("value", INTERVAL),
+            FunctionParameter("collection", SEXP),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -1092,12 +1293,15 @@ internal object FnInCollection65 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection66 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__BAG_BAG__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", BAG), FunctionParameter("collection", BAG)),
+        parameters = listOf(
+            FunctionParameter("value", BAG),
+            FunctionParameter("collection", BAG),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -1108,12 +1312,15 @@ internal object FnInCollection66 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection67 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__BAG_LIST__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", BAG), FunctionParameter("collection", LIST)),
+        parameters = listOf(
+            FunctionParameter("value", BAG),
+            FunctionParameter("collection", LIST),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -1124,12 +1331,15 @@ internal object FnInCollection67 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection68 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__BAG_SEXP__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", BAG), FunctionParameter("collection", SEXP)),
+        parameters = listOf(
+            FunctionParameter("value", BAG),
+            FunctionParameter("collection", SEXP),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -1140,12 +1350,15 @@ internal object FnInCollection68 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection69 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__LIST_BAG__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", LIST), FunctionParameter("collection", BAG)),
+        parameters = listOf(
+            FunctionParameter("value", LIST),
+            FunctionParameter("collection", BAG),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -1156,12 +1369,15 @@ internal object FnInCollection69 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection70 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__LIST_LIST__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", LIST), FunctionParameter("collection", LIST)),
+        parameters = listOf(
+            FunctionParameter("value", LIST),
+            FunctionParameter("collection", LIST),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -1172,12 +1388,15 @@ internal object FnInCollection70 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection71 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__LIST_SEXP__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", LIST), FunctionParameter("collection", SEXP)),
+        parameters = listOf(
+            FunctionParameter("value", LIST),
+            FunctionParameter("collection", SEXP),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -1188,12 +1407,15 @@ internal object FnInCollection71 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection72 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__SEXP_BAG__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", SEXP), FunctionParameter("collection", BAG)),
+        parameters = listOf(
+            FunctionParameter("value", SEXP),
+            FunctionParameter("collection", BAG),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -1204,12 +1426,15 @@ internal object FnInCollection72 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection73 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__SEXP_LIST__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", SEXP), FunctionParameter("collection", LIST)),
+        parameters = listOf(
+            FunctionParameter("value", SEXP),
+            FunctionParameter("collection", LIST),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -1220,12 +1445,15 @@ internal object FnInCollection73 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection74 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__SEXP_SEXP__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", SEXP), FunctionParameter("collection", SEXP)),
+        parameters = listOf(
+            FunctionParameter("value", SEXP),
+            FunctionParameter("collection", SEXP),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -1236,12 +1464,15 @@ internal object FnInCollection74 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection75 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__STRUCT_BAG__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", STRUCT), FunctionParameter("collection", BAG)),
+        parameters = listOf(
+            FunctionParameter("value", STRUCT),
+            FunctionParameter("collection", BAG),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -1252,12 +1483,15 @@ internal object FnInCollection75 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection76 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__STRUCT_LIST__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", STRUCT), FunctionParameter("collection", LIST)),
+        parameters = listOf(
+            FunctionParameter("value", STRUCT),
+            FunctionParameter("collection", LIST),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -1268,12 +1502,15 @@ internal object FnInCollection76 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection77 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__STRUCT_SEXP__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", STRUCT), FunctionParameter("collection", SEXP)),
+        parameters = listOf(
+            FunctionParameter("value", STRUCT),
+            FunctionParameter("collection", SEXP),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -1284,12 +1521,15 @@ internal object FnInCollection77 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection78 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__NULL_BAG__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", NULL), FunctionParameter("collection", BAG)),
+        parameters = listOf(
+            FunctionParameter("value", NULL),
+            FunctionParameter("collection", BAG),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -1300,12 +1540,15 @@ internal object FnInCollection78 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection79 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__NULL_LIST__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", NULL), FunctionParameter("collection", LIST)),
+        parameters = listOf(
+            FunctionParameter("value", NULL),
+            FunctionParameter("collection", LIST),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -1316,12 +1559,15 @@ internal object FnInCollection79 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection80 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__NULL_SEXP__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", NULL), FunctionParameter("collection", SEXP)),
+        parameters = listOf(
+            FunctionParameter("value", NULL),
+            FunctionParameter("collection", SEXP),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -1332,12 +1578,15 @@ internal object FnInCollection80 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection81 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__MISSING_BAG__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", MISSING), FunctionParameter("collection", BAG)),
+        parameters = listOf(
+            FunctionParameter("value", MISSING),
+            FunctionParameter("collection", BAG),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -1348,12 +1597,15 @@ internal object FnInCollection81 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection82 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__MISSING_LIST__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", MISSING), FunctionParameter("collection", LIST)),
+        parameters = listOf(
+            FunctionParameter("value", MISSING),
+            FunctionParameter("collection", LIST),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -1364,12 +1616,15 @@ internal object FnInCollection82 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnInCollection83 : PartiQLFunction.Scalar {
+internal object Fn_IN_COLLECTION__MISSING_SEXP__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "in_collection",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("value", MISSING), FunctionParameter("collection", SEXP)),
+        parameters = listOf(
+            FunctionParameter("value", MISSING),
+            FunctionParameter("collection", SEXP),
+        ),
         isNullCall = true,
         isNullable = false,
     )

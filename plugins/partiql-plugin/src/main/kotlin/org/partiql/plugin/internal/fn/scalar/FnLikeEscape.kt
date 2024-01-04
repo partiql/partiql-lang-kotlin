@@ -1,3 +1,6 @@
+// ktlint-disable filename
+@file:Suppress("ClassName")
+
 package org.partiql.plugin.internal.fn.scalar
 
 import org.partiql.spi.function.PartiQLFunction
@@ -12,7 +15,7 @@ import org.partiql.value.PartiQLValueType.STRING
 import org.partiql.value.PartiQLValueType.SYMBOL
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnLikeEscape0 : PartiQLFunction.Scalar {
+internal object Fn_LIKE_ESCAPE__STRING_STRING_STRING__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "like_escape",
@@ -20,7 +23,7 @@ internal object FnLikeEscape0 : PartiQLFunction.Scalar {
         parameters = listOf(
             FunctionParameter("value", STRING),
             FunctionParameter("pattern", STRING),
-            FunctionParameter("escape", STRING)
+            FunctionParameter("escape", STRING),
         ),
         isNullCall = true,
         isNullable = false,
@@ -32,7 +35,7 @@ internal object FnLikeEscape0 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnLikeEscape1 : PartiQLFunction.Scalar {
+internal object Fn_LIKE_ESCAPE__SYMBOL_SYMBOL_SYMBOL__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "like_escape",
@@ -40,7 +43,7 @@ internal object FnLikeEscape1 : PartiQLFunction.Scalar {
         parameters = listOf(
             FunctionParameter("value", SYMBOL),
             FunctionParameter("pattern", SYMBOL),
-            FunctionParameter("escape", SYMBOL)
+            FunctionParameter("escape", SYMBOL),
         ),
         isNullCall = true,
         isNullable = false,
@@ -52,7 +55,7 @@ internal object FnLikeEscape1 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnLikeEscape2 : PartiQLFunction.Scalar {
+internal object Fn_LIKE_ESCAPE__CLOB_CLOB_CLOB__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "like_escape",
@@ -60,7 +63,7 @@ internal object FnLikeEscape2 : PartiQLFunction.Scalar {
         parameters = listOf(
             FunctionParameter("value", CLOB),
             FunctionParameter("pattern", CLOB),
-            FunctionParameter("escape", CLOB)
+            FunctionParameter("escape", CLOB),
         ),
         isNullCall = true,
         isNullable = false,

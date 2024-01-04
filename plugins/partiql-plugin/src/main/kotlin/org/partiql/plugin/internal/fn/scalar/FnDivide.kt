@@ -1,3 +1,6 @@
+// ktlint-disable filename
+@file:Suppress("ClassName")
+
 package org.partiql.plugin.internal.fn.scalar
 
 import org.partiql.spi.function.PartiQLFunction
@@ -16,12 +19,15 @@ import org.partiql.value.PartiQLValueType.INT64
 import org.partiql.value.PartiQLValueType.INT8
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnDivide0 : PartiQLFunction.Scalar {
+internal object Fn_DIVIDE__INT8_INT8__INT8 : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "divide",
         returns = INT8,
-        parameters = listOf(FunctionParameter("lhs", INT8), FunctionParameter("rhs", INT8)),
+        parameters = listOf(
+            FunctionParameter("lhs", INT8),
+            FunctionParameter("rhs", INT8),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -32,12 +38,15 @@ internal object FnDivide0 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnDivide1 : PartiQLFunction.Scalar {
+internal object Fn_DIVIDE__INT16_INT16__INT16 : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "divide",
         returns = INT16,
-        parameters = listOf(FunctionParameter("lhs", INT16), FunctionParameter("rhs", INT16)),
+        parameters = listOf(
+            FunctionParameter("lhs", INT16),
+            FunctionParameter("rhs", INT16),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -48,12 +57,15 @@ internal object FnDivide1 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnDivide2 : PartiQLFunction.Scalar {
+internal object Fn_DIVIDE__INT32_INT32__INT32 : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "divide",
         returns = INT32,
-        parameters = listOf(FunctionParameter("lhs", INT32), FunctionParameter("rhs", INT32)),
+        parameters = listOf(
+            FunctionParameter("lhs", INT32),
+            FunctionParameter("rhs", INT32),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -64,12 +76,15 @@ internal object FnDivide2 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnDivide3 : PartiQLFunction.Scalar {
+internal object Fn_DIVIDE__INT64_INT64__INT64 : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "divide",
         returns = INT64,
-        parameters = listOf(FunctionParameter("lhs", INT64), FunctionParameter("rhs", INT64)),
+        parameters = listOf(
+            FunctionParameter("lhs", INT64),
+            FunctionParameter("rhs", INT64),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -80,12 +95,15 @@ internal object FnDivide3 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnDivide4 : PartiQLFunction.Scalar {
+internal object Fn_DIVIDE__INT_INT__INT : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "divide",
         returns = INT,
-        parameters = listOf(FunctionParameter("lhs", INT), FunctionParameter("rhs", INT)),
+        parameters = listOf(
+            FunctionParameter("lhs", INT),
+            FunctionParameter("rhs", INT),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -96,12 +114,15 @@ internal object FnDivide4 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnDivide5 : PartiQLFunction.Scalar {
+internal object Fn_DIVIDE__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__DECIMAL_ARBITRARY : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "divide",
         returns = DECIMAL_ARBITRARY,
-        parameters = listOf(FunctionParameter("lhs", DECIMAL_ARBITRARY), FunctionParameter("rhs", DECIMAL_ARBITRARY)),
+        parameters = listOf(
+            FunctionParameter("lhs", DECIMAL_ARBITRARY),
+            FunctionParameter("rhs", DECIMAL_ARBITRARY),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -112,12 +133,15 @@ internal object FnDivide5 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnDivide6 : PartiQLFunction.Scalar {
+internal object Fn_DIVIDE__FLOAT32_FLOAT32__FLOAT32 : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "divide",
         returns = FLOAT32,
-        parameters = listOf(FunctionParameter("lhs", FLOAT32), FunctionParameter("rhs", FLOAT32)),
+        parameters = listOf(
+            FunctionParameter("lhs", FLOAT32),
+            FunctionParameter("rhs", FLOAT32),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -128,12 +152,15 @@ internal object FnDivide6 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnDivide7 : PartiQLFunction.Scalar {
+internal object Fn_DIVIDE__FLOAT64_FLOAT64__FLOAT64 : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "divide",
         returns = FLOAT64,
-        parameters = listOf(FunctionParameter("lhs", FLOAT64), FunctionParameter("rhs", FLOAT64)),
+        parameters = listOf(
+            FunctionParameter("lhs", FLOAT64),
+            FunctionParameter("rhs", FLOAT64),
+        ),
         isNullCall = true,
         isNullable = false,
     )

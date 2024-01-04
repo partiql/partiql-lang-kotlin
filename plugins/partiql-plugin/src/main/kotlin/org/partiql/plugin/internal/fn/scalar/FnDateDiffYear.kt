@@ -1,3 +1,6 @@
+// ktlint-disable filename
+@file:Suppress("ClassName")
+
 package org.partiql.plugin.internal.fn.scalar
 
 import org.partiql.spi.function.PartiQLFunction
@@ -12,12 +15,15 @@ import org.partiql.value.PartiQLValueType.TIME
 import org.partiql.value.PartiQLValueType.TIMESTAMP
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnDateDiffYear0 : PartiQLFunction.Scalar {
+internal object Fn_DATE_DIFF_YEAR__DATE_DATE__INT64 : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "date_diff_year",
         returns = INT64,
-        parameters = listOf(FunctionParameter("datetime1", DATE), FunctionParameter("datetime2", DATE)),
+        parameters = listOf(
+            FunctionParameter("datetime1", DATE),
+            FunctionParameter("datetime2", DATE),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -28,12 +34,15 @@ internal object FnDateDiffYear0 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnDateDiffYear1 : PartiQLFunction.Scalar {
+internal object Fn_DATE_DIFF_YEAR__TIME_TIME__INT64 : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "date_diff_year",
         returns = INT64,
-        parameters = listOf(FunctionParameter("datetime1", TIME), FunctionParameter("datetime2", TIME)),
+        parameters = listOf(
+            FunctionParameter("datetime1", TIME),
+            FunctionParameter("datetime2", TIME),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -44,12 +53,15 @@ internal object FnDateDiffYear1 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnDateDiffYear2 : PartiQLFunction.Scalar {
+internal object Fn_DATE_DIFF_YEAR__TIMESTAMP_TIMESTAMP__INT64 : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "date_diff_year",
         returns = INT64,
-        parameters = listOf(FunctionParameter("datetime1", TIMESTAMP), FunctionParameter("datetime2", TIMESTAMP)),
+        parameters = listOf(
+            FunctionParameter("datetime1", TIMESTAMP),
+            FunctionParameter("datetime2", TIMESTAMP),
+        ),
         isNullCall = true,
         isNullable = false,
     )

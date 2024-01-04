@@ -1,3 +1,6 @@
+// ktlint-disable filename
+@file:Suppress("ClassName")
+
 package org.partiql.plugin.internal.fn.scalar
 
 import org.partiql.spi.function.PartiQLFunction
@@ -14,12 +17,15 @@ import org.partiql.value.PartiQLValueType.TIME
 import org.partiql.value.PartiQLValueType.TIMESTAMP
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnDateAddHour0 : PartiQLFunction.Scalar {
+internal object Fn_DATE_ADD_HOUR__INT32_DATE__DATE : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "date_add_hour",
         returns = DATE,
-        parameters = listOf(FunctionParameter("interval", INT32), FunctionParameter("datetime", DATE)),
+        parameters = listOf(
+            FunctionParameter("interval", INT32),
+            FunctionParameter("datetime", DATE),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -30,12 +36,15 @@ internal object FnDateAddHour0 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnDateAddHour1 : PartiQLFunction.Scalar {
+internal object Fn_DATE_ADD_HOUR__INT64_DATE__DATE : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "date_add_hour",
         returns = DATE,
-        parameters = listOf(FunctionParameter("interval", INT64), FunctionParameter("datetime", DATE)),
+        parameters = listOf(
+            FunctionParameter("interval", INT64),
+            FunctionParameter("datetime", DATE),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -46,12 +55,15 @@ internal object FnDateAddHour1 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnDateAddHour2 : PartiQLFunction.Scalar {
+internal object Fn_DATE_ADD_HOUR__INT_DATE__DATE : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "date_add_hour",
         returns = DATE,
-        parameters = listOf(FunctionParameter("interval", INT), FunctionParameter("datetime", DATE)),
+        parameters = listOf(
+            FunctionParameter("interval", INT),
+            FunctionParameter("datetime", DATE),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -62,12 +74,15 @@ internal object FnDateAddHour2 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnDateAddHour3 : PartiQLFunction.Scalar {
+internal object Fn_DATE_ADD_HOUR__INT32_TIME__TIME : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "date_add_hour",
         returns = TIME,
-        parameters = listOf(FunctionParameter("interval", INT32), FunctionParameter("datetime", TIME)),
+        parameters = listOf(
+            FunctionParameter("interval", INT32),
+            FunctionParameter("datetime", TIME),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -78,12 +93,15 @@ internal object FnDateAddHour3 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnDateAddHour4 : PartiQLFunction.Scalar {
+internal object Fn_DATE_ADD_HOUR__INT64_TIME__TIME : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "date_add_hour",
         returns = TIME,
-        parameters = listOf(FunctionParameter("interval", INT64), FunctionParameter("datetime", TIME)),
+        parameters = listOf(
+            FunctionParameter("interval", INT64),
+            FunctionParameter("datetime", TIME),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -94,12 +112,15 @@ internal object FnDateAddHour4 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnDateAddHour5 : PartiQLFunction.Scalar {
+internal object Fn_DATE_ADD_HOUR__INT_TIME__TIME : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "date_add_hour",
         returns = TIME,
-        parameters = listOf(FunctionParameter("interval", INT), FunctionParameter("datetime", TIME)),
+        parameters = listOf(
+            FunctionParameter("interval", INT),
+            FunctionParameter("datetime", TIME),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -110,12 +131,15 @@ internal object FnDateAddHour5 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnDateAddHour6 : PartiQLFunction.Scalar {
+internal object Fn_DATE_ADD_HOUR__INT32_TIMESTAMP__TIMESTAMP : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "date_add_hour",
         returns = TIMESTAMP,
-        parameters = listOf(FunctionParameter("interval", INT32), FunctionParameter("datetime", TIMESTAMP)),
+        parameters = listOf(
+            FunctionParameter("interval", INT32),
+            FunctionParameter("datetime", TIMESTAMP),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -126,12 +150,15 @@ internal object FnDateAddHour6 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnDateAddHour7 : PartiQLFunction.Scalar {
+internal object Fn_DATE_ADD_HOUR__INT64_TIMESTAMP__TIMESTAMP : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "date_add_hour",
         returns = TIMESTAMP,
-        parameters = listOf(FunctionParameter("interval", INT64), FunctionParameter("datetime", TIMESTAMP)),
+        parameters = listOf(
+            FunctionParameter("interval", INT64),
+            FunctionParameter("datetime", TIMESTAMP),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -142,12 +169,15 @@ internal object FnDateAddHour7 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnDateAddHour8 : PartiQLFunction.Scalar {
+internal object Fn_DATE_ADD_HOUR__INT_TIMESTAMP__TIMESTAMP : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "date_add_hour",
         returns = TIMESTAMP,
-        parameters = listOf(FunctionParameter("interval", INT), FunctionParameter("datetime", TIMESTAMP)),
+        parameters = listOf(
+            FunctionParameter("interval", INT),
+            FunctionParameter("datetime", TIMESTAMP),
+        ),
         isNullCall = true,
         isNullable = false,
     )

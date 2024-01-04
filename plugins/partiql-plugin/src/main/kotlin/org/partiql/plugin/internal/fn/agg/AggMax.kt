@@ -1,3 +1,6 @@
+// ktlint-disable filename
+@file:Suppress("ClassName")
+
 package org.partiql.plugin.internal.fn.agg
 
 import org.partiql.spi.function.PartiQLFunction
@@ -15,7 +18,7 @@ import org.partiql.value.PartiQLValueType.INT64
 import org.partiql.value.PartiQLValueType.INT8
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object AggMax0 : PartiQLFunction.Aggregation {
+internal object Agg_MAX__INT8__INT8 : PartiQLFunction.Aggregation {
 
     override val signature = FunctionSignature.Aggregation(
         name = "max",
@@ -31,7 +34,7 @@ internal object AggMax0 : PartiQLFunction.Aggregation {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object AggMax1 : PartiQLFunction.Aggregation {
+internal object Agg_MAX__INT16__INT16 : PartiQLFunction.Aggregation {
 
     override val signature = FunctionSignature.Aggregation(
         name = "max",
@@ -47,7 +50,7 @@ internal object AggMax1 : PartiQLFunction.Aggregation {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object AggMax2 : PartiQLFunction.Aggregation {
+internal object Agg_MAX__INT32__INT32 : PartiQLFunction.Aggregation {
 
     override val signature = FunctionSignature.Aggregation(
         name = "max",
@@ -63,7 +66,7 @@ internal object AggMax2 : PartiQLFunction.Aggregation {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object AggMax3 : PartiQLFunction.Aggregation {
+internal object Agg_MAX__INT64__INT64 : PartiQLFunction.Aggregation {
 
     override val signature = FunctionSignature.Aggregation(
         name = "max",
@@ -79,7 +82,7 @@ internal object AggMax3 : PartiQLFunction.Aggregation {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object AggMax4 : PartiQLFunction.Aggregation {
+internal object Agg_MAX__INT__INT : PartiQLFunction.Aggregation {
 
     override val signature = FunctionSignature.Aggregation(
         name = "max",
@@ -95,7 +98,7 @@ internal object AggMax4 : PartiQLFunction.Aggregation {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object AggMax5 : PartiQLFunction.Aggregation {
+internal object Agg_MAX__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY : PartiQLFunction.Aggregation {
 
     override val signature = FunctionSignature.Aggregation(
         name = "max",
@@ -111,7 +114,7 @@ internal object AggMax5 : PartiQLFunction.Aggregation {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object AggMax6 : PartiQLFunction.Aggregation {
+internal object Agg_MAX__FLOAT32__FLOAT32 : PartiQLFunction.Aggregation {
 
     override val signature = FunctionSignature.Aggregation(
         name = "max",
@@ -127,7 +130,7 @@ internal object AggMax6 : PartiQLFunction.Aggregation {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object AggMax7 : PartiQLFunction.Aggregation {
+internal object Agg_MAX__FLOAT64__FLOAT64 : PartiQLFunction.Aggregation {
 
     override val signature = FunctionSignature.Aggregation(
         name = "max",

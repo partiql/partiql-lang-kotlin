@@ -23,4 +23,8 @@ plugins {
 dependencies {
     implementation(project(":partiql-spi"))
     implementation(project(":partiql-types"))
+
+    // Header Generation
+    testImplementation(project(":partiql-ast"))
+    testImplementation(Deps.kasechange)
 }

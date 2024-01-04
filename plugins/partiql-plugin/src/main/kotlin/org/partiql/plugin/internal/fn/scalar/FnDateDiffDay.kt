@@ -1,3 +1,6 @@
+// ktlint-disable filename
+@file:Suppress("ClassName")
+
 package org.partiql.plugin.internal.fn.scalar
 
 import org.partiql.spi.function.PartiQLFunction
@@ -12,12 +15,15 @@ import org.partiql.value.PartiQLValueType.TIME
 import org.partiql.value.PartiQLValueType.TIMESTAMP
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnDateDiffDay0 : PartiQLFunction.Scalar {
+internal object Fn_DATE_DIFF_DAY__DATE_DATE__INT64 : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "date_diff_day",
         returns = INT64,
-        parameters = listOf(FunctionParameter("datetime1", DATE), FunctionParameter("datetime2", DATE)),
+        parameters = listOf(
+            FunctionParameter("datetime1", DATE),
+            FunctionParameter("datetime2", DATE),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -28,12 +34,15 @@ internal object FnDateDiffDay0 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnDateDiffDay1 : PartiQLFunction.Scalar {
+internal object Fn_DATE_DIFF_DAY__TIME_TIME__INT64 : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "date_diff_day",
         returns = INT64,
-        parameters = listOf(FunctionParameter("datetime1", TIME), FunctionParameter("datetime2", TIME)),
+        parameters = listOf(
+            FunctionParameter("datetime1", TIME),
+            FunctionParameter("datetime2", TIME),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -44,12 +53,15 @@ internal object FnDateDiffDay1 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnDateDiffDay2 : PartiQLFunction.Scalar {
+internal object Fn_DATE_DIFF_DAY__TIMESTAMP_TIMESTAMP__INT64 : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "date_diff_day",
         returns = INT64,
-        parameters = listOf(FunctionParameter("datetime1", TIMESTAMP), FunctionParameter("datetime2", TIMESTAMP)),
+        parameters = listOf(
+            FunctionParameter("datetime1", TIMESTAMP),
+            FunctionParameter("datetime2", TIMESTAMP),
+        ),
         isNullCall = true,
         isNullable = false,
     )

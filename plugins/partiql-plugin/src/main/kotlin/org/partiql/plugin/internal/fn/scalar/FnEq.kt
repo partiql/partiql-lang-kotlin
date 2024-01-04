@@ -1,3 +1,6 @@
+// ktlint-disable filename
+@file:Suppress("ClassName")
+
 package org.partiql.plugin.internal.fn.scalar
 
 import org.partiql.spi.function.PartiQLFunction
@@ -36,12 +39,15 @@ import org.partiql.value.PartiQLValueType.TIME
 import org.partiql.value.PartiQLValueType.TIMESTAMP
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnEq0 : PartiQLFunction.Scalar {
+internal object Fn_EQ__ANY_ANY__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "eq",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("lhs", ANY), FunctionParameter("rhs", ANY)),
+        parameters = listOf(
+            FunctionParameter("lhs", ANY),
+            FunctionParameter("rhs", ANY),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -52,12 +58,15 @@ internal object FnEq0 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnEq1 : PartiQLFunction.Scalar {
+internal object Fn_EQ__BOOL_BOOL__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "eq",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("lhs", BOOL), FunctionParameter("rhs", BOOL)),
+        parameters = listOf(
+            FunctionParameter("lhs", BOOL),
+            FunctionParameter("rhs", BOOL),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -68,12 +77,15 @@ internal object FnEq1 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnEq2 : PartiQLFunction.Scalar {
+internal object Fn_EQ__INT8_INT8__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "eq",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("lhs", INT8), FunctionParameter("rhs", INT8)),
+        parameters = listOf(
+            FunctionParameter("lhs", INT8),
+            FunctionParameter("rhs", INT8),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -84,12 +96,15 @@ internal object FnEq2 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnEq3 : PartiQLFunction.Scalar {
+internal object Fn_EQ__INT16_INT16__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "eq",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("lhs", INT16), FunctionParameter("rhs", INT16)),
+        parameters = listOf(
+            FunctionParameter("lhs", INT16),
+            FunctionParameter("rhs", INT16),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -100,12 +115,15 @@ internal object FnEq3 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnEq4 : PartiQLFunction.Scalar {
+internal object Fn_EQ__INT32_INT32__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "eq",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("lhs", INT32), FunctionParameter("rhs", INT32)),
+        parameters = listOf(
+            FunctionParameter("lhs", INT32),
+            FunctionParameter("rhs", INT32),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -116,12 +134,15 @@ internal object FnEq4 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnEq5 : PartiQLFunction.Scalar {
+internal object Fn_EQ__INT64_INT64__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "eq",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("lhs", INT64), FunctionParameter("rhs", INT64)),
+        parameters = listOf(
+            FunctionParameter("lhs", INT64),
+            FunctionParameter("rhs", INT64),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -132,12 +153,15 @@ internal object FnEq5 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnEq6 : PartiQLFunction.Scalar {
+internal object Fn_EQ__INT_INT__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "eq",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("lhs", INT), FunctionParameter("rhs", INT)),
+        parameters = listOf(
+            FunctionParameter("lhs", INT),
+            FunctionParameter("rhs", INT),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -148,12 +172,15 @@ internal object FnEq6 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnEq7 : PartiQLFunction.Scalar {
+internal object Fn_EQ__DECIMAL_DECIMAL__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "eq",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("lhs", DECIMAL), FunctionParameter("rhs", DECIMAL)),
+        parameters = listOf(
+            FunctionParameter("lhs", DECIMAL),
+            FunctionParameter("rhs", DECIMAL),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -164,12 +191,15 @@ internal object FnEq7 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnEq8 : PartiQLFunction.Scalar {
+internal object Fn_EQ__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "eq",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("lhs", DECIMAL_ARBITRARY), FunctionParameter("rhs", DECIMAL_ARBITRARY)),
+        parameters = listOf(
+            FunctionParameter("lhs", DECIMAL_ARBITRARY),
+            FunctionParameter("rhs", DECIMAL_ARBITRARY),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -180,12 +210,15 @@ internal object FnEq8 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnEq9 : PartiQLFunction.Scalar {
+internal object Fn_EQ__FLOAT32_FLOAT32__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "eq",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("lhs", FLOAT32), FunctionParameter("rhs", FLOAT32)),
+        parameters = listOf(
+            FunctionParameter("lhs", FLOAT32),
+            FunctionParameter("rhs", FLOAT32),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -196,12 +229,15 @@ internal object FnEq9 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnEq10 : PartiQLFunction.Scalar {
+internal object Fn_EQ__FLOAT64_FLOAT64__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "eq",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("lhs", FLOAT64), FunctionParameter("rhs", FLOAT64)),
+        parameters = listOf(
+            FunctionParameter("lhs", FLOAT64),
+            FunctionParameter("rhs", FLOAT64),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -212,12 +248,15 @@ internal object FnEq10 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnEq11 : PartiQLFunction.Scalar {
+internal object Fn_EQ__CHAR_CHAR__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "eq",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("lhs", CHAR), FunctionParameter("rhs", CHAR)),
+        parameters = listOf(
+            FunctionParameter("lhs", CHAR),
+            FunctionParameter("rhs", CHAR),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -228,12 +267,15 @@ internal object FnEq11 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnEq12 : PartiQLFunction.Scalar {
+internal object Fn_EQ__STRING_STRING__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "eq",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("lhs", STRING), FunctionParameter("rhs", STRING)),
+        parameters = listOf(
+            FunctionParameter("lhs", STRING),
+            FunctionParameter("rhs", STRING),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -244,12 +286,15 @@ internal object FnEq12 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnEq13 : PartiQLFunction.Scalar {
+internal object Fn_EQ__SYMBOL_SYMBOL__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "eq",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("lhs", SYMBOL), FunctionParameter("rhs", SYMBOL)),
+        parameters = listOf(
+            FunctionParameter("lhs", SYMBOL),
+            FunctionParameter("rhs", SYMBOL),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -260,12 +305,15 @@ internal object FnEq13 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnEq14 : PartiQLFunction.Scalar {
+internal object Fn_EQ__BINARY_BINARY__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "eq",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("lhs", BINARY), FunctionParameter("rhs", BINARY)),
+        parameters = listOf(
+            FunctionParameter("lhs", BINARY),
+            FunctionParameter("rhs", BINARY),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -276,12 +324,15 @@ internal object FnEq14 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnEq15 : PartiQLFunction.Scalar {
+internal object Fn_EQ__BYTE_BYTE__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "eq",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("lhs", BYTE), FunctionParameter("rhs", BYTE)),
+        parameters = listOf(
+            FunctionParameter("lhs", BYTE),
+            FunctionParameter("rhs", BYTE),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -292,12 +343,15 @@ internal object FnEq15 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnEq16 : PartiQLFunction.Scalar {
+internal object Fn_EQ__BLOB_BLOB__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "eq",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("lhs", BLOB), FunctionParameter("rhs", BLOB)),
+        parameters = listOf(
+            FunctionParameter("lhs", BLOB),
+            FunctionParameter("rhs", BLOB),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -308,12 +362,15 @@ internal object FnEq16 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnEq17 : PartiQLFunction.Scalar {
+internal object Fn_EQ__CLOB_CLOB__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "eq",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("lhs", CLOB), FunctionParameter("rhs", CLOB)),
+        parameters = listOf(
+            FunctionParameter("lhs", CLOB),
+            FunctionParameter("rhs", CLOB),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -324,12 +381,15 @@ internal object FnEq17 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnEq18 : PartiQLFunction.Scalar {
+internal object Fn_EQ__DATE_DATE__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "eq",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("lhs", DATE), FunctionParameter("rhs", DATE)),
+        parameters = listOf(
+            FunctionParameter("lhs", DATE),
+            FunctionParameter("rhs", DATE),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -340,12 +400,15 @@ internal object FnEq18 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnEq19 : PartiQLFunction.Scalar {
+internal object Fn_EQ__TIME_TIME__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "eq",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("lhs", TIME), FunctionParameter("rhs", TIME)),
+        parameters = listOf(
+            FunctionParameter("lhs", TIME),
+            FunctionParameter("rhs", TIME),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -356,12 +419,15 @@ internal object FnEq19 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnEq20 : PartiQLFunction.Scalar {
+internal object Fn_EQ__TIMESTAMP_TIMESTAMP__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "eq",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("lhs", TIMESTAMP), FunctionParameter("rhs", TIMESTAMP)),
+        parameters = listOf(
+            FunctionParameter("lhs", TIMESTAMP),
+            FunctionParameter("rhs", TIMESTAMP),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -372,12 +438,15 @@ internal object FnEq20 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnEq21 : PartiQLFunction.Scalar {
+internal object Fn_EQ__INTERVAL_INTERVAL__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "eq",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("lhs", INTERVAL), FunctionParameter("rhs", INTERVAL)),
+        parameters = listOf(
+            FunctionParameter("lhs", INTERVAL),
+            FunctionParameter("rhs", INTERVAL),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -388,12 +457,15 @@ internal object FnEq21 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnEq22 : PartiQLFunction.Scalar {
+internal object Fn_EQ__BAG_BAG__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "eq",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("lhs", BAG), FunctionParameter("rhs", BAG)),
+        parameters = listOf(
+            FunctionParameter("lhs", BAG),
+            FunctionParameter("rhs", BAG),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -404,12 +476,15 @@ internal object FnEq22 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnEq23 : PartiQLFunction.Scalar {
+internal object Fn_EQ__LIST_LIST__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "eq",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("lhs", LIST), FunctionParameter("rhs", LIST)),
+        parameters = listOf(
+            FunctionParameter("lhs", LIST),
+            FunctionParameter("rhs", LIST),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -420,12 +495,15 @@ internal object FnEq23 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnEq24 : PartiQLFunction.Scalar {
+internal object Fn_EQ__SEXP_SEXP__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "eq",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("lhs", SEXP), FunctionParameter("rhs", SEXP)),
+        parameters = listOf(
+            FunctionParameter("lhs", SEXP),
+            FunctionParameter("rhs", SEXP),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -436,12 +514,15 @@ internal object FnEq24 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnEq25 : PartiQLFunction.Scalar {
+internal object Fn_EQ__STRUCT_STRUCT__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "eq",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("lhs", STRUCT), FunctionParameter("rhs", STRUCT)),
+        parameters = listOf(
+            FunctionParameter("lhs", STRUCT),
+            FunctionParameter("rhs", STRUCT),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -452,12 +533,15 @@ internal object FnEq25 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnEq26 : PartiQLFunction.Scalar {
+internal object Fn_EQ__NULL_NULL__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "eq",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("lhs", NULL), FunctionParameter("rhs", NULL)),
+        parameters = listOf(
+            FunctionParameter("lhs", NULL),
+            FunctionParameter("rhs", NULL),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -468,12 +552,15 @@ internal object FnEq26 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnEq27 : PartiQLFunction.Scalar {
+internal object Fn_EQ__MISSING_MISSING__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "eq",
         returns = BOOL,
-        parameters = listOf(FunctionParameter("lhs", MISSING), FunctionParameter("rhs", MISSING)),
+        parameters = listOf(
+            FunctionParameter("lhs", MISSING),
+            FunctionParameter("rhs", MISSING),
+        ),
         isNullCall = true,
         isNullable = false,
     )

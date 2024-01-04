@@ -1,3 +1,6 @@
+// ktlint-disable filename
+@file:Suppress("ClassName")
+
 package org.partiql.plugin.internal.fn.scalar
 
 import org.partiql.spi.function.PartiQLFunction
@@ -11,7 +14,7 @@ import org.partiql.value.PartiQLValueType.STRING
 import org.partiql.value.PartiQLValueType.SYMBOL
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnUpper0 : PartiQLFunction.Scalar {
+internal object Fn_UPPER__STRING__STRING : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "upper",
@@ -27,7 +30,7 @@ internal object FnUpper0 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnUpper1 : PartiQLFunction.Scalar {
+internal object Fn_UPPER__SYMBOL__SYMBOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "upper",
@@ -43,7 +46,7 @@ internal object FnUpper1 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnUpper2 : PartiQLFunction.Scalar {
+internal object Fn_UPPER__CLOB__CLOB : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "upper",

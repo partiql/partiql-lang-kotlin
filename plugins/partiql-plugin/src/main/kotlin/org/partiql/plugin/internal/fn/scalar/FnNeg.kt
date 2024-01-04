@@ -1,3 +1,6 @@
+// ktlint-disable filename
+@file:Suppress("ClassName")
+
 package org.partiql.plugin.internal.fn.scalar
 
 import org.partiql.spi.function.PartiQLFunction
@@ -16,7 +19,7 @@ import org.partiql.value.PartiQLValueType.INT64
 import org.partiql.value.PartiQLValueType.INT8
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnNeg0 : PartiQLFunction.Scalar {
+internal object Fn_NEG__INT8__INT8 : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "neg",
@@ -32,7 +35,7 @@ internal object FnNeg0 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnNeg1 : PartiQLFunction.Scalar {
+internal object Fn_NEG__INT16__INT16 : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "neg",
@@ -48,7 +51,7 @@ internal object FnNeg1 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnNeg2 : PartiQLFunction.Scalar {
+internal object Fn_NEG__INT32__INT32 : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "neg",
@@ -64,7 +67,7 @@ internal object FnNeg2 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnNeg3 : PartiQLFunction.Scalar {
+internal object Fn_NEG__INT64__INT64 : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "neg",
@@ -80,7 +83,7 @@ internal object FnNeg3 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnNeg4 : PartiQLFunction.Scalar {
+internal object Fn_NEG__INT__INT : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "neg",
@@ -96,7 +99,7 @@ internal object FnNeg4 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnNeg5 : PartiQLFunction.Scalar {
+internal object Fn_NEG__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "neg",
@@ -112,7 +115,7 @@ internal object FnNeg5 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnNeg6 : PartiQLFunction.Scalar {
+internal object Fn_NEG__FLOAT32__FLOAT32 : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "neg",
@@ -128,7 +131,7 @@ internal object FnNeg6 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnNeg7 : PartiQLFunction.Scalar {
+internal object Fn_NEG__FLOAT64__FLOAT64 : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "neg",

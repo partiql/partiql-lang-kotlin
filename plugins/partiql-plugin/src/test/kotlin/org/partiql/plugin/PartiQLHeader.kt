@@ -1,4 +1,4 @@
-package org.partiql.planner.internal
+package org.partiql.plugin
 
 import org.partiql.ast.DatetimeField
 import org.partiql.types.function.FunctionParameter

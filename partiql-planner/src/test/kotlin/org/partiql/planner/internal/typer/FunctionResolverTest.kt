@@ -2,7 +2,6 @@ package org.partiql.planner.internal.typer
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.fail
-import org.partiql.planner.internal.Header
 import org.partiql.spi.connector.ConnectorFunctions
 import org.partiql.types.function.FunctionParameter
 import org.partiql.types.function.FunctionSignature
@@ -16,24 +15,6 @@ import org.partiql.value.PartiQLValueType
  */
 @OptIn(PartiQLValueExperimental::class)
 class FunctionResolverTest {
-
-    @Test
-    fun sanity() {
-        // 1 + 1.0 -> 2.0
-        val fn = Header.binary(
-            name = "plus",
-            returns = PartiQLValueType.FLOAT64,
-            lhs = PartiQLValueType.FLOAT64,
-            rhs = PartiQLValueType.FLOAT64,
-        )
-        val args = listOf(
-            FunctionParameter("arg-0", PartiQLValueType.INT32),
-            FunctionParameter("arg-1", PartiQLValueType.FLOAT64),
-        )
-        val expectedImplicitCasts = listOf(true, false)
-        val case = Case.Success(fn, args, expectedImplicitCasts)
-        case.assert()
-    }
 
     @Test
     fun split() {

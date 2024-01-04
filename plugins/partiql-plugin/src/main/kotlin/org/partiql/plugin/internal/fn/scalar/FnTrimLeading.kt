@@ -1,3 +1,6 @@
+// ktlint-disable filename
+@file:Suppress("ClassName")
+
 package org.partiql.plugin.internal.fn.scalar
 
 import org.partiql.spi.function.PartiQLFunction
@@ -11,7 +14,7 @@ import org.partiql.value.PartiQLValueType.STRING
 import org.partiql.value.PartiQLValueType.SYMBOL
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnTrimLeading0 : PartiQLFunction.Scalar {
+internal object Fn_TRIM_LEADING__STRING__STRING : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "trim_leading",
@@ -27,7 +30,7 @@ internal object FnTrimLeading0 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnTrimLeading1 : PartiQLFunction.Scalar {
+internal object Fn_TRIM_LEADING__SYMBOL__SYMBOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "trim_leading",
@@ -43,7 +46,7 @@ internal object FnTrimLeading1 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnTrimLeading2 : PartiQLFunction.Scalar {
+internal object Fn_TRIM_LEADING__CLOB__CLOB : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "trim_leading",

@@ -1,3 +1,6 @@
+// ktlint-disable filename
+@file:Suppress("ClassName")
+
 package org.partiql.plugin.internal.fn.scalar
 
 import org.partiql.spi.function.PartiQLFunction
@@ -16,12 +19,15 @@ import org.partiql.value.PartiQLValueType.INT64
 import org.partiql.value.PartiQLValueType.INT8
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnPlus0 : PartiQLFunction.Scalar {
+internal object Fn_PLUS__INT8_INT8__INT8 : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "plus",
         returns = INT8,
-        parameters = listOf(FunctionParameter("lhs", INT8), FunctionParameter("rhs", INT8)),
+        parameters = listOf(
+            FunctionParameter("lhs", INT8),
+            FunctionParameter("rhs", INT8),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -32,12 +38,15 @@ internal object FnPlus0 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnPlus1 : PartiQLFunction.Scalar {
+internal object Fn_PLUS__INT16_INT16__INT16 : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "plus",
         returns = INT16,
-        parameters = listOf(FunctionParameter("lhs", INT16), FunctionParameter("rhs", INT16)),
+        parameters = listOf(
+            FunctionParameter("lhs", INT16),
+            FunctionParameter("rhs", INT16),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -48,12 +57,15 @@ internal object FnPlus1 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnPlus2 : PartiQLFunction.Scalar {
+internal object Fn_PLUS__INT32_INT32__INT32 : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "plus",
         returns = INT32,
-        parameters = listOf(FunctionParameter("lhs", INT32), FunctionParameter("rhs", INT32)),
+        parameters = listOf(
+            FunctionParameter("lhs", INT32),
+            FunctionParameter("rhs", INT32),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -64,12 +76,15 @@ internal object FnPlus2 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnPlus3 : PartiQLFunction.Scalar {
+internal object Fn_PLUS__INT64_INT64__INT64 : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "plus",
         returns = INT64,
-        parameters = listOf(FunctionParameter("lhs", INT64), FunctionParameter("rhs", INT64)),
+        parameters = listOf(
+            FunctionParameter("lhs", INT64),
+            FunctionParameter("rhs", INT64),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -80,12 +95,15 @@ internal object FnPlus3 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnPlus4 : PartiQLFunction.Scalar {
+internal object Fn_PLUS__INT_INT__INT : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "plus",
         returns = INT,
-        parameters = listOf(FunctionParameter("lhs", INT), FunctionParameter("rhs", INT)),
+        parameters = listOf(
+            FunctionParameter("lhs", INT),
+            FunctionParameter("rhs", INT),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -96,12 +114,15 @@ internal object FnPlus4 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnPlus5 : PartiQLFunction.Scalar {
+internal object Fn_PLUS__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__DECIMAL_ARBITRARY : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "plus",
         returns = DECIMAL_ARBITRARY,
-        parameters = listOf(FunctionParameter("lhs", DECIMAL_ARBITRARY), FunctionParameter("rhs", DECIMAL_ARBITRARY)),
+        parameters = listOf(
+            FunctionParameter("lhs", DECIMAL_ARBITRARY),
+            FunctionParameter("rhs", DECIMAL_ARBITRARY),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -112,12 +133,15 @@ internal object FnPlus5 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnPlus6 : PartiQLFunction.Scalar {
+internal object Fn_PLUS__FLOAT32_FLOAT32__FLOAT32 : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "plus",
         returns = FLOAT32,
-        parameters = listOf(FunctionParameter("lhs", FLOAT32), FunctionParameter("rhs", FLOAT32)),
+        parameters = listOf(
+            FunctionParameter("lhs", FLOAT32),
+            FunctionParameter("rhs", FLOAT32),
+        ),
         isNullCall = true,
         isNullable = false,
     )
@@ -128,12 +152,15 @@ internal object FnPlus6 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnPlus7 : PartiQLFunction.Scalar {
+internal object Fn_PLUS__FLOAT64_FLOAT64__FLOAT64 : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "plus",
         returns = FLOAT64,
-        parameters = listOf(FunctionParameter("lhs", FLOAT64), FunctionParameter("rhs", FLOAT64)),
+        parameters = listOf(
+            FunctionParameter("lhs", FLOAT64),
+            FunctionParameter("rhs", FLOAT64),
+        ),
         isNullCall = true,
         isNullable = false,
     )

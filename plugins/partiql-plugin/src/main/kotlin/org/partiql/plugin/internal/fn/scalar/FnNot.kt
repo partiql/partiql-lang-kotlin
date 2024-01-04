@@ -1,3 +1,6 @@
+// ktlint-disable filename
+@file:Suppress("ClassName")
+
 package org.partiql.plugin.internal.fn.scalar
 
 import org.partiql.spi.function.PartiQLFunction
@@ -10,7 +13,7 @@ import org.partiql.value.PartiQLValueType.BOOL
 import org.partiql.value.PartiQLValueType.MISSING
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnNot0 : PartiQLFunction.Scalar {
+internal object Fn_NOT__BOOL__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "not",
@@ -26,7 +29,7 @@ internal object FnNot0 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnNot1 : PartiQLFunction.Scalar {
+internal object Fn_NOT__MISSING__BOOL : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "not",

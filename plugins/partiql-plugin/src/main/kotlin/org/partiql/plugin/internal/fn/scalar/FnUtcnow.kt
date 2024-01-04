@@ -1,3 +1,6 @@
+// ktlint-disable filename
+@file:Suppress("ClassName")
+
 package org.partiql.plugin.internal.fn.scalar
 
 import org.partiql.spi.function.PartiQLFunction
@@ -8,7 +11,7 @@ import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType.TIMESTAMP
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object FnUtcnow : PartiQLFunction.Scalar {
+internal object Fn_UTCNOW____TIMESTAMP : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
         name = "utcnow",

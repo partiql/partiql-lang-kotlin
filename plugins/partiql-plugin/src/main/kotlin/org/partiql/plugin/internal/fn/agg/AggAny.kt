@@ -1,3 +1,6 @@
+// ktlint-disable filename
+@file:Suppress("ClassName")
+
 package org.partiql.plugin.internal.fn.agg
 
 import org.partiql.spi.function.PartiQLFunction
@@ -8,7 +11,7 @@ import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType.BOOL
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object AggAny : PartiQLFunction.Aggregation {
+internal object Agg_ANY__BOOL__BOOL : PartiQLFunction.Aggregation {
 
     override val signature = FunctionSignature.Aggregation(
         name = "any",
