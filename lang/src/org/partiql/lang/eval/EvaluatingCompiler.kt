@@ -66,6 +66,23 @@ internal class EvaluatingCompiler(
         get() = compilationContextStack.peek() ?: throw EvaluationException(
             "compilationContextStack was empty.", internal = true)
 
+
+    /**
+     * This checks whether the thread has been interrupted. Specifically, it currently checks during the compilation
+     * of aggregations and joins, the "evaluation" of aggregations and joins, and the materialization of joins
+     * and from source scans.
+     *
+     * Note: This is essentially a way to avoid constantly checking [CompileOptions.interruptible]. By writing it this
+     * way, we statically determine whether to introduce checks. If the compiler has specified
+     * [CompileOptions.interruptible], the invocation of this function will insert a Thread interruption check. If not
+     * specified, it will not perform the check during compilation/evaluation/materialization.
+     */
+    private val interruptionCheck: () -> Unit = {
+            if (Thread.interrupted()) {
+                throw InterruptedException()
+            }
+    }
+
     //Note: please don't make this inline -- it messes up [EvaluationException] stack traces and
     //isn't a huge benefit because this is only used at SQL-compile time anyway.
     private fun <R> nestCompilationContext(expressionContext: ExpressionContext,
@@ -981,7 +998,12 @@ internal class EvaluatingCompiler(
                         // Grouping is not needed -- simply project the results from the FROM clause directly.
                         thunkFactory.thunkEnv(metas) { env ->
 
-                            val projectedRows = sourceThunks(env).map { (joinedValues, projectEnv) ->
+                            val sourcedRows = sourceThunks(env).map {
+                                interruptionCheck()
+                                it
+                            }
+
+                            val projectedRows = sourcedRows.map { (joinedValues, projectEnv) ->
                                 selectProjectionThunk(projectEnv, joinedValues)
                             }
 
@@ -1051,6 +1073,7 @@ internal class EvaluatingCompiler(
                                     // iterate over the values from the FROM clause and populate our
                                     // aggregate register values.
                                     fromProductions.forEach { fromProduction ->
+                                        interruptionCheck()
                                         compiledAggregates?.forEachIndexed { index, ca ->
                                             registers[index].aggregator.next(ca.argThunk(fromProduction.env))
                                         }
@@ -1459,6 +1482,7 @@ internal class EvaluatingCompiler(
             // compute the join over the data sources
             var seq = compiledSources
                 .foldLeftProduct({ env: Environment -> env }) { bindEnv: (Environment) -> Environment, source: CompiledFromSource ->
+                    interruptionCheck()
                     fun correlatedBind(value: ExprValue): Pair<(Environment) -> Environment, ExprValue> {
                         // add the correlated binding environment thunk
                         val alias = source.alias
@@ -1517,6 +1541,7 @@ internal class EvaluatingCompiler(
                 }
                 .asSequence()
                 .map { joinedValues ->
+                    interruptionCheck()
                     // bind the joined value to the bindings for the filter/project
                     FromProduction(joinedValues, fromEnv.nest(localsBinder.bindLocals(joinedValues)))
                 }
