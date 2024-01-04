@@ -21,11 +21,16 @@ internal object Fn_IS_BYTE__ANY__BOOL : PartiQLFunction.Scalar {
         name = "is_byte",
         returns = BOOL,
         parameters = listOf(FunctionParameter("value", ANY)),
-        isNullCall = false,
+        isNullCall = true,
         isNullable = false,
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        return boolValue(args[0] is ByteValue)
+        val arg = args[0]
+        return if (arg.isNull) {
+            boolValue(null)
+        } else {
+            boolValue(arg is ByteValue)
+        }
     }
 }

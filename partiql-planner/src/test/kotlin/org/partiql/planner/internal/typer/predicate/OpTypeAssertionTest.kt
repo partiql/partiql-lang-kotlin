@@ -5,6 +5,8 @@ import org.junit.jupiter.api.TestFactory
 import org.partiql.planner.internal.typer.PartiQLTyperTestBase
 import org.partiql.planner.util.allSupportedType
 import org.partiql.types.MissingType
+import org.partiql.types.NullType
+import org.partiql.types.SingleType
 import org.partiql.types.StaticType
 import java.util.stream.Stream
 
@@ -18,11 +20,14 @@ class OpTypeAssertionTest : PartiQLTyperTestBase() {
         }.map { inputs.get("basics", it)!! }
 
         val argsMap = buildMap {
-            val successArgs = allSupportedType.filterNot { it is MissingType }.flatMap { t ->
+            val successArgs = allSupportedType.filterNot {
+                it is MissingType || it is NullType
+            }.flatMap { t ->
                 setOf(listOf(t))
             }.toSet()
             val failureArgs = setOf(listOf(MissingType))
             put(TestResult.Success(StaticType.BOOL), successArgs)
+            put(TestResult.Success(StaticType.NULL), setOf(listOf<SingleType>(StaticType.NULL)))
             put(TestResult.Failure, failureArgs)
         }
 

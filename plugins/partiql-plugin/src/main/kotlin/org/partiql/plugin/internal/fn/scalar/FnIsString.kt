@@ -25,12 +25,17 @@ internal object Fn_IS_STRING__ANY__BOOL : PartiQLFunction.Scalar {
         name = "is_string",
         returns = BOOL,
         parameters = listOf(FunctionParameter("value", ANY)),
-        isNullCall = false,
+        isNullCall = true,
         isNullable = false,
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        return boolValue(args[0] is StringValue)
+        val arg = args[0]
+        return if (arg.isNull) {
+            boolValue(null)
+        } else {
+            boolValue(arg is StringValue)
+        }
     }
 }
 
@@ -44,7 +49,7 @@ internal object Fn_IS_STRING__INT32_ANY__BOOL : PartiQLFunction.Scalar {
             FunctionParameter("length", INT32),
             FunctionParameter("value", ANY),
         ),
-        isNullCall = false,
+        isNullCall = true,
         isNullable = false,
     )
 
@@ -53,14 +58,11 @@ internal object Fn_IS_STRING__INT32_ANY__BOOL : PartiQLFunction.Scalar {
         if (length == null || length < 0) {
             throw TypeCheckException()
         }
-        val value = args[1]
-        if (value !is StringValue) {
-            return boolValue(false)
+        val v = args[1]
+        return when {
+            v.isNull -> boolValue(null)
+            v !is StringValue -> boolValue(false)
+            else -> boolValue(v.value!!.length <= length)
         }
-        val string = value.string
-        if (string == null) {
-            return boolValue(null)
-        }
-        return boolValue(string.length <= length)
     }
 }

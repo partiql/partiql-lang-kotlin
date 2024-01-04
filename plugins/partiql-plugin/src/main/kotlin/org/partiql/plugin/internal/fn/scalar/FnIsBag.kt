@@ -21,11 +21,16 @@ internal object Fn_IS_BAG__ANY__BOOL : PartiQLFunction.Scalar {
         name = "is_bag",
         returns = BOOL,
         parameters = listOf(FunctionParameter("value", ANY)),
-        isNullCall = false,
+        isNullCall = true,
         isNullable = false,
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        return boolValue(args[0] is BagValue<*>)
+        val arg = args[0]
+        return if (arg.isNull) {
+            boolValue(null)
+        } else {
+            boolValue(arg is BagValue<*>)
+        }
     }
 }

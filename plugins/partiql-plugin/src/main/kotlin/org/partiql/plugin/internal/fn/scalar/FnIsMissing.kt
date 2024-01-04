@@ -26,6 +26,11 @@ internal object Fn_IS_MISSING__ANY__BOOL : PartiQLFunction.Scalar {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        return boolValue(args[0] is MissingValue)
+        val arg = args[0]
+        return if (arg.isNull) {
+            boolValue(false)
+        } else {
+            boolValue(arg is MissingValue)
+        }
     }
 }

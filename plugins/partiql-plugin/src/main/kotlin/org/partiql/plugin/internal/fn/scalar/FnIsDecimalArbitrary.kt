@@ -21,11 +21,16 @@ internal object Fn_IS_DECIMAL_ARBITRARY__ANY__BOOL : PartiQLFunction.Scalar {
         name = "is_decimal_arbitrary",
         returns = BOOL,
         parameters = listOf(FunctionParameter("value", ANY)),
-        isNullCall = false,
+        isNullCall = true,
         isNullable = false,
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        return boolValue(args[0] is DecimalValue)
+        val arg = args[0]
+        return if (arg.isNull) {
+            boolValue(null)
+        } else {
+            boolValue(arg is DecimalValue)
+        }
     }
 }

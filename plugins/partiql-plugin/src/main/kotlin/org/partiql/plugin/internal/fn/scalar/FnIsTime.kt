@@ -22,12 +22,17 @@ internal object Fn_IS_TIME__ANY__BOOL : PartiQLFunction.Scalar {
         name = "is_time",
         returns = BOOL,
         parameters = listOf(FunctionParameter("value", ANY)),
-        isNullCall = false,
+        isNullCall = true,
         isNullable = false,
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        return boolValue(args[0] is TimeValue)
+        val arg = args[0]
+        return if (arg.isNull) {
+            boolValue(null)
+        } else {
+            boolValue(arg is TimeValue)
+        }
     }
 }
 
@@ -42,7 +47,7 @@ internal object Fn_IS_TIME__BOOL_INT32_ANY__BOOL : PartiQLFunction.Scalar {
             FunctionParameter("type_parameter_2", INT32),
             FunctionParameter("value", ANY),
         ),
-        isNullCall = false,
+        isNullCall = true,
         isNullable = false,
     )
 
