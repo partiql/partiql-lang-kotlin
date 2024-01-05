@@ -466,7 +466,7 @@ internal object PartiQLHeader : Header() {
                 parameters = listOf(
                     FunctionParameter("value", ANY)
                 ),
-                isNullCall = false, // TODO: Should this be true?
+                isNullCall = true,
                 isNullable = false
             )
         }

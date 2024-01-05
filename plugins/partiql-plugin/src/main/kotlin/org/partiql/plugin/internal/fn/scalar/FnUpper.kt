@@ -7,11 +7,16 @@ import org.partiql.spi.function.PartiQLFunction
 import org.partiql.spi.function.PartiQLFunctionExperimental
 import org.partiql.types.function.FunctionParameter
 import org.partiql.types.function.FunctionSignature
+import org.partiql.value.ClobValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType.CLOB
 import org.partiql.value.PartiQLValueType.STRING
 import org.partiql.value.PartiQLValueType.SYMBOL
+import org.partiql.value.StringValue
+import org.partiql.value.SymbolValue
+import org.partiql.value.check
+import org.partiql.value.stringValue
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
 internal object Fn_UPPER__STRING__STRING : PartiQLFunction.Scalar {
@@ -25,7 +30,9 @@ internal object Fn_UPPER__STRING__STRING : PartiQLFunction.Scalar {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function upper not implemented")
+        val string = args[0].check<StringValue>().string
+        val result = string?.uppercase()
+        return stringValue(result)
     }
 }
 
@@ -41,7 +48,9 @@ internal object Fn_UPPER__SYMBOL__SYMBOL : PartiQLFunction.Scalar {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function upper not implemented")
+        val string = args[0].check<SymbolValue>().string
+        val result = string?.uppercase()
+        return stringValue(result)
     }
 }
 
@@ -57,6 +66,8 @@ internal object Fn_UPPER__CLOB__CLOB : PartiQLFunction.Scalar {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function upper not implemented")
+        val string = args[0].check<ClobValue>().string
+        val result = string?.uppercase()
+        return stringValue(result)
     }
 }

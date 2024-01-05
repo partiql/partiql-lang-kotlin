@@ -3,15 +3,21 @@
 
 package org.partiql.plugin.internal.fn.scalar
 
+import org.partiql.plugin.internal.extensions.codepointTrim
 import org.partiql.spi.function.PartiQLFunction
 import org.partiql.spi.function.PartiQLFunctionExperimental
 import org.partiql.types.function.FunctionParameter
 import org.partiql.types.function.FunctionSignature
+import org.partiql.value.ClobValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType.CLOB
 import org.partiql.value.PartiQLValueType.STRING
 import org.partiql.value.PartiQLValueType.SYMBOL
+import org.partiql.value.StringValue
+import org.partiql.value.SymbolValue
+import org.partiql.value.check
+import org.partiql.value.stringValue
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
 internal object Fn_TRIM_CHARS__STRING_STRING__STRING : PartiQLFunction.Scalar {
@@ -28,7 +34,13 @@ internal object Fn_TRIM_CHARS__STRING_STRING__STRING : PartiQLFunction.Scalar {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function trim_chars not implemented")
+        val value = args[0].check<StringValue>().string
+        val chars = args[1].check<StringValue>().string
+        if (value == null || chars == null) {
+            return stringValue(null)
+        }
+        val result = value.codepointTrim(chars)
+        return stringValue(result)
     }
 }
 
@@ -47,7 +59,13 @@ internal object Fn_TRIM_CHARS__SYMBOL_SYMBOL__SYMBOL : PartiQLFunction.Scalar {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function trim_chars not implemented")
+        val value = args[0].check<SymbolValue>().string
+        val chars = args[1].check<SymbolValue>().string
+        if (value == null || chars == null) {
+            return stringValue(null)
+        }
+        val result = value.codepointTrim(chars)
+        return stringValue(result)
     }
 }
 
@@ -66,6 +84,12 @@ internal object Fn_TRIM_CHARS__CLOB_CLOB__CLOB : PartiQLFunction.Scalar {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function trim_chars not implemented")
+        val value = args[0].check<ClobValue>().string
+        val chars = args[1].check<ClobValue>().string
+        if (value == null || chars == null) {
+            return stringValue(null)
+        }
+        val result = value.codepointTrim(chars)
+        return stringValue(result)
     }
 }

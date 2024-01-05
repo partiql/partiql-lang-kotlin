@@ -7,10 +7,12 @@ import org.partiql.spi.function.PartiQLFunction
 import org.partiql.spi.function.PartiQLFunctionExperimental
 import org.partiql.types.function.FunctionParameter
 import org.partiql.types.function.FunctionSignature
+import org.partiql.value.BlobValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType.ANY
 import org.partiql.value.PartiQLValueType.BOOL
+import org.partiql.value.boolValue
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
 internal object Fn_IS_BLOB__ANY__BOOL : PartiQLFunction.Scalar {
@@ -19,11 +21,16 @@ internal object Fn_IS_BLOB__ANY__BOOL : PartiQLFunction.Scalar {
         name = "is_blob",
         returns = BOOL,
         parameters = listOf(FunctionParameter("value", ANY)),
-        isNullCall = false,
+        isNullCall = true,
         isNullable = false,
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function is_blob not implemented")
+        val arg = args[0]
+        return if (arg.isNull) {
+            boolValue(null)
+        } else {
+            boolValue(arg is BlobValue)
+        }
     }
 }

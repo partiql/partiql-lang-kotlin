@@ -7,10 +7,16 @@ import org.partiql.spi.function.PartiQLFunction
 import org.partiql.spi.function.PartiQLFunctionExperimental
 import org.partiql.types.function.FunctionParameter
 import org.partiql.types.function.FunctionSignature
+import org.partiql.value.Int16Value
+import org.partiql.value.Int32Value
+import org.partiql.value.Int64Value
+import org.partiql.value.Int8Value
+import org.partiql.value.IntValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType.ANY
 import org.partiql.value.PartiQLValueType.BOOL
+import org.partiql.value.boolValue
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
 internal object Fn_IS_INT__ANY__BOOL : PartiQLFunction.Scalar {
@@ -19,11 +25,23 @@ internal object Fn_IS_INT__ANY__BOOL : PartiQLFunction.Scalar {
         name = "is_int",
         returns = BOOL,
         parameters = listOf(FunctionParameter("value", ANY)),
-        isNullCall = false,
+        isNullCall = true,
         isNullable = false,
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function is_int not implemented")
+        val arg = args[0]
+        if (arg.isNull) {
+            return boolValue(null)
+        }
+        return when (arg) {
+            is Int8Value,
+            is Int16Value,
+            is Int32Value,
+            is Int64Value,
+            is IntValue,
+            -> boolValue(true)
+            else -> boolValue(false)
+        }
     }
 }

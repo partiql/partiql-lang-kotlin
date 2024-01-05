@@ -12,6 +12,8 @@ import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType.ANY
 import org.partiql.value.PartiQLValueType.BOOL
 import org.partiql.value.PartiQLValueType.INT32
+import org.partiql.value.TimeValue
+import org.partiql.value.boolValue
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
 internal object Fn_IS_TIME__ANY__BOOL : PartiQLFunction.Scalar {
@@ -20,12 +22,17 @@ internal object Fn_IS_TIME__ANY__BOOL : PartiQLFunction.Scalar {
         name = "is_time",
         returns = BOOL,
         parameters = listOf(FunctionParameter("value", ANY)),
-        isNullCall = false,
+        isNullCall = true,
         isNullable = false,
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function is_time not implemented")
+        val arg = args[0]
+        return if (arg.isNull) {
+            boolValue(null)
+        } else {
+            boolValue(arg is TimeValue)
+        }
     }
 }
 
@@ -40,7 +47,7 @@ internal object Fn_IS_TIME__BOOL_INT32_ANY__BOOL : PartiQLFunction.Scalar {
             FunctionParameter("type_parameter_2", INT32),
             FunctionParameter("value", ANY),
         ),
-        isNullCall = false,
+        isNullCall = true,
         isNullable = false,
     )
 
