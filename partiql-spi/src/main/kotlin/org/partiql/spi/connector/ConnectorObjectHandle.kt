@@ -18,9 +18,9 @@ package org.partiql.spi.connector
  * Holds a  Catalog and its location within the Catalog.
  *
  * @property path   The absolute path to this object in the catalog
- * @property obj    Arbitrary metadata associated with this object.
+ * @property type   Arbitrary type metadata associated with this object.
  */
-public class ConnectorObjectHandle(
+public data class ConnectorObjectHandle(
     public val path: ConnectorPath,
-    public val obj: ConnectorObject,
+    public val type: ConnectorObjectType,
 )

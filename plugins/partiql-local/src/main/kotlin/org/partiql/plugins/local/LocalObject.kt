@@ -14,7 +14,7 @@
 
 package org.partiql.plugins.local
 
-import org.partiql.spi.connector.ConnectorObject
+import org.partiql.spi.connector.ConnectorObjectType
 import org.partiql.types.StaticType
 
 /**
@@ -26,6 +26,6 @@ import org.partiql.types.StaticType
 class LocalObject(
     val path: List<String>,
     val type: StaticType,
-) : ConnectorObject {
+) : ConnectorObjectType {
     fun getDescriptor(): StaticType = type
 }

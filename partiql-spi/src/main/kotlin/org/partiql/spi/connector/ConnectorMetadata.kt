@@ -15,7 +15,6 @@
 package org.partiql.spi.connector
 
 import org.partiql.spi.BindingPath
-import org.partiql.types.StaticType
 
 /**
  * Aids in retrieving relevant Catalog metadata for the purpose of planning and execution.
@@ -23,26 +22,20 @@ import org.partiql.types.StaticType
 public interface ConnectorMetadata {
 
     /**
-     * Returns the descriptor of an object. If the handle is unable to produce a [StaticType], implementers should
-     * return null.
-     */
-    public fun getObjectType(handle: ConnectorObjectHandle): StaticType?
-
-    /**
      * Given a [BindingPath], returns a [ConnectorObjectHandle] that corresponds to the longest-available requested path.
      * For example, given an object named "Object" located within Catalog "AWS" and Namespace "a".b"."c", a user could
-     * call [getObjectHandle] with the [path] of "a"."b"."c"."Object". The returned [ConnectorObjectHandle] will contain
+     * call [getObject] with the [path] of "a"."b"."c"."Object". The returned [ConnectorObjectHandle] will contain
      * the object representation and the matching path: "a"."b"."c"."Object"
      *
      * As another example, consider an object within a Namespace that may be a Struct with nested attributes. A user could
-     * call [getObjectHandle] with the [path] of "a"."b"."c"."Object"."x". In the Namespace, only object "Object" exists.
+     * call [getObject] with the [path] of "a"."b"."c"."Object"."x". In the Namespace, only object "Object" exists.
      * Therefore, this method will return a [ConnectorObjectHandle] with the "Object" representation and the matching
      * path: "a"."b"."c"."Object". The returned [ConnectorObjectHandle.path] must be correct for correct
      * evaluation.
      *
-     * If the [path] does not correspond to an existing [ConnectorObject], implementers should return null.
+     * If the [path] does not correspond to an existing [ConnectorObjectType], implementers should return null.
      */
-    public fun getObjectHandle(path: BindingPath): ConnectorObjectHandle?
+    public fun getObject(path: BindingPath): ConnectorObjectHandle?
 
     /**
      * Returns all matching scalar functions (potentially overloaded) at the given path.

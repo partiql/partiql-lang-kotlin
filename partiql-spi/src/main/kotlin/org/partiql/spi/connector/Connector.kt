@@ -44,6 +44,7 @@ public interface Connector {
      *
      * @return
      */
+    @OptIn(ConnectorFunctionExperimental::class)
     public fun getFunctions(): ConnectorFunctions
 
     /**
