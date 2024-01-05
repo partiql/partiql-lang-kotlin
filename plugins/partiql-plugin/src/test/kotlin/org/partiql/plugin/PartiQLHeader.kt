@@ -224,7 +224,7 @@ internal object PartiQLHeader : Header() {
             name = "not",
             returns = BOOL,
             isNullCall = true,
-            isNullable = false,
+            isNullable = true,
             parameters = listOf(FunctionParameter("value", MISSING)),
         ),
     )
