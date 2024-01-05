@@ -17,6 +17,4 @@ package org.partiql.spi.connector
 /**
  * The path to an object within the current Catalog.
  */
-public data class ConnectorObjectPath(
-    val steps: List<String>
-)
+public data class ConnectorPath(public val steps: List<String>)

@@ -17,13 +17,16 @@ package org.partiql.spi
 /**
  * Encapsulates the data necessary to perform a binding lookup.
  */
-public data class BindingName(val name: String, val bindingCase: BindingCase) {
-    val loweredName: String by lazy(LazyThreadSafetyMode.PUBLICATION) { name.lowercase() }
+public data class BindingName(
+    public val name: String,
+    public val case: BindingCase,
+) {
 
     /**
-     * Compares [name] to [otherName] using the rules specified by [bindingCase].
+     * Compares [name] to [otherName] using the rules specified by [case].
      */
-    public fun isEquivalentTo(otherName: String?): Boolean = otherName != null && name.isBindingNameEquivalent(otherName, bindingCase)
+    public fun isEquivalentTo(otherName: String?): Boolean =
+        otherName != null && name.isBindingNameEquivalent(otherName, case)
 
     /**
      * Compares this string to [other] using the rules specified by [case].

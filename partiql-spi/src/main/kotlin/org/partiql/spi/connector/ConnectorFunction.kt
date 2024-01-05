@@ -1,15 +1,15 @@
-package org.partiql.spi.function
+package org.partiql.spi.connector
 
 import org.partiql.types.function.FunctionSignature
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 
 /**
- * The [PartiQLFunction] interface is used to implement user-defined-functions (UDFs).
+ * The [ConnectorFunction] interface is used to implement user-defined-functions (UDFs).
  * UDFs can be registered to a plugin for use in the query planner and evaluator.
  */
-@PartiQLFunctionExperimental
-public sealed interface PartiQLFunction {
+@ConnectorFunctionExperimental
+public sealed interface ConnectorFunction {
 
     /**
      * Defines the function's parameters and argument handling.
@@ -19,7 +19,7 @@ public sealed interface PartiQLFunction {
     /**
      * Represents an SQL row-value expression call.
      */
-    public interface Scalar : PartiQLFunction {
+    public interface Scalar : ConnectorFunction {
 
         /**
          * Scalar function signature.
@@ -39,7 +39,7 @@ public sealed interface PartiQLFunction {
     /**
      * Represents an SQL table-value expression call.
      */
-    public interface Aggregation : PartiQLFunction {
+    public interface Aggregation : ConnectorFunction {
 
         /**
          * Aggregation function signature.

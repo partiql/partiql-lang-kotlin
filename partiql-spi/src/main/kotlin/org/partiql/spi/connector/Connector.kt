@@ -14,7 +14,9 @@
 
 package org.partiql.spi.connector
 
-import com.amazon.ionelement.api.StructElement
+import org.partiql.value.PartiQLValue
+import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.StructValue
 
 /**
  * A mechanism by which PartiQL can access a Catalog.
@@ -38,6 +40,14 @@ public interface Connector {
     public fun getBindings(): ConnectorBindings
 
     /**
+     * Returns a [ConnectorFunctions] which the engine uses to load user-defined-function implementations.
+     *
+     * @return
+     */
+    @OptIn(ConnectorFunctionExperimental::class)
+    public fun getFunctions(): ConnectorFunctions
+
+    /**
      * A Plugin leverages a [Factory] to produce a [Connector] which is used for catalog metadata and data access.
      */
     public interface Factory {
@@ -50,10 +60,11 @@ public interface Connector {
         /**
          * The connector factory method.
          *
-         * @param catalogName
-         * @param config
+         * @param catalogName   The name of the catalog to be backed by this [Connector] instance.
+         * @param config        Configuration
          * @return
          */
-        public fun create(catalogName: String, config: StructElement? = null): Connector
+        @OptIn(PartiQLValueExperimental::class)
+        public fun create(catalogName: String, config: StructValue<PartiQLValue>? = null): Connector
     }
 }

@@ -14,6 +14,9 @@
 
 package org.partiql.spi
 
-public data class BindingPath(
-    val steps: List<BindingName>
-)
+/**
+ * A [BindingPath] represents an SQL-qualified identifier which is composed of case-sensitive and case-insensitive steps.
+ *
+ * @property steps
+ */
+public data class BindingPath(public val steps: List<BindingName>)

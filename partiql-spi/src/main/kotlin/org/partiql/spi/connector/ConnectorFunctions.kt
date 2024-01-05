@@ -1,24 +1,12 @@
 package org.partiql.spi.connector
 
-import org.partiql.types.function.FunctionSignature
-
 /**
- * ConnectorFunctions holds the function signatures for a catalogs builtins.
+ * A [ConnectorFunctions] implementation is responsible for linking a handle to a function implementation for execution.
  */
-public abstract class ConnectorFunctions {
+@ConnectorFunctionExperimental
+public interface ConnectorFunctions {
 
-    /**
-     * Scalar function signatures available via call syntax.
-     */
-    public open val functions: List<FunctionSignature.Scalar> = emptyList()
+    public fun getScalarFunction(handle: ConnectorFunctionHandle.Scalar): ConnectorFunction.Scalar
 
-    /**
-     * Scalar function signatures available via operator or special form syntax.
-     */
-    public open val operators: List<FunctionSignature.Scalar> = emptyList()
-
-    /**
-     * Aggregation function signatures.
-     */
-    public open val aggregations: List<FunctionSignature.Aggregation> = emptyList()
+    public fun getAggregationFunction(handle: ConnectorFunctionHandle.Aggregation): ConnectorFunction.Aggregation
 }

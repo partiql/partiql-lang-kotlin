@@ -15,11 +15,9 @@
 package org.partiql.spi
 
 import org.partiql.spi.connector.Connector
-import org.partiql.spi.function.PartiQLFunction
-import org.partiql.spi.function.PartiQLFunctionExperimental
 
 /**
- * A singular unit of external logic.
+ * A plugin provides a [Connector] implementation for a catalog of the PartiQL system.
  */
 public interface Plugin {
 
@@ -27,10 +25,4 @@ public interface Plugin {
      * A [Connector.Factory] is used to instantiate a connector.
      */
     public val factory: Connector.Factory
-
-    /**
-     * Functions defined by this plugin.
-     */
-    @PartiQLFunctionExperimental
-    public val functions: List<PartiQLFunction>
 }
