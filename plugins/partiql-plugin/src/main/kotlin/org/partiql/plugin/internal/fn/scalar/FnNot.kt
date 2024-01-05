@@ -29,11 +29,7 @@ internal object Fn_NOT__BOOL__BOOL : PartiQLFunction.Scalar {
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val value = args[0].check<BoolValue>().value
-        return if (value == null) {
-            boolValue(null)
-        } else {
-            boolValue(!value)
-        }
+        return boolValue(value!!.not())
     }
 }
 
@@ -45,7 +41,7 @@ internal object Fn_NOT__MISSING__BOOL : PartiQLFunction.Scalar {
         returns = BOOL,
         parameters = listOf(FunctionParameter("value", MISSING)),
         isNullCall = true,
-        isNullable = false,
+        isNullable = true,
     )
 
     // TODO determine what this behavior should be

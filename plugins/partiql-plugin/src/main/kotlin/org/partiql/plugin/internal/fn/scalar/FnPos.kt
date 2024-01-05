@@ -30,7 +30,7 @@ internal object Fn_POS__INT8__INT8 : PartiQLFunction.Scalar {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function pos not implemented")
+        return args[0]
     }
 }
 
@@ -46,7 +46,7 @@ internal object Fn_POS__INT16__INT16 : PartiQLFunction.Scalar {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function pos not implemented")
+        return args[0]
     }
 }
 
@@ -62,7 +62,7 @@ internal object Fn_POS__INT32__INT32 : PartiQLFunction.Scalar {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function pos not implemented")
+        return args[0]
     }
 }
 
@@ -78,7 +78,7 @@ internal object Fn_POS__INT64__INT64 : PartiQLFunction.Scalar {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function pos not implemented")
+        return args[0]
     }
 }
 
@@ -94,7 +94,7 @@ internal object Fn_POS__INT__INT : PartiQLFunction.Scalar {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function pos not implemented")
+        return args[0]
     }
 }
 
@@ -110,7 +110,7 @@ internal object Fn_POS__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY : PartiQLFunction.S
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function pos not implemented")
+        return args[0]
     }
 }
 
@@ -126,7 +126,7 @@ internal object Fn_POS__FLOAT32__FLOAT32 : PartiQLFunction.Scalar {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function pos not implemented")
+        return args[0]
     }
 }
 
@@ -142,6 +142,6 @@ internal object Fn_POS__FLOAT64__FLOAT64 : PartiQLFunction.Scalar {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function pos not implemented")
+        return args[0]
     }
 }

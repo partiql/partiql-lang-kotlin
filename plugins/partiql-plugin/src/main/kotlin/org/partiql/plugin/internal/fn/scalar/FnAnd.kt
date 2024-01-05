@@ -7,10 +7,13 @@ import org.partiql.spi.function.PartiQLFunction
 import org.partiql.spi.function.PartiQLFunctionExperimental
 import org.partiql.types.function.FunctionParameter
 import org.partiql.types.function.FunctionSignature
+import org.partiql.value.BoolValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType.BOOL
 import org.partiql.value.PartiQLValueType.MISSING
+import org.partiql.value.boolValue
+import org.partiql.value.check
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
 internal object Fn_AND__BOOL_BOOL__BOOL : PartiQLFunction.Scalar {
@@ -27,7 +30,14 @@ internal object Fn_AND__BOOL_BOOL__BOOL : PartiQLFunction.Scalar {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function and not implemented")
+        val lhs = args[0].check<BoolValue>().value
+        val rhs = args[1].check<BoolValue>().value
+        val toReturn = when {
+            lhs == false || rhs == false -> false
+            lhs == null || rhs == null -> null
+            else -> true
+        }
+        return boolValue(toReturn)
     }
 }
 
@@ -46,7 +56,11 @@ internal object Fn_AND__MISSING_BOOL__BOOL : PartiQLFunction.Scalar {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function and not implemented")
+        val rhs = args[1].check<BoolValue>().value
+        return when (rhs) {
+            false -> boolValue(false)
+            else -> boolValue(null)
+        }
     }
 }
 
@@ -65,7 +79,11 @@ internal object Fn_AND__BOOL_MISSING__BOOL : PartiQLFunction.Scalar {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function and not implemented")
+        val lhs = args[0].check<BoolValue>().value
+        return when (lhs) {
+            false -> boolValue(false)
+            else -> boolValue(null)
+        }
     }
 }
 
@@ -84,6 +102,6 @@ internal object Fn_AND__MISSING_MISSING__BOOL : PartiQLFunction.Scalar {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function and not implemented")
+        return boolValue(null)
     }
 }

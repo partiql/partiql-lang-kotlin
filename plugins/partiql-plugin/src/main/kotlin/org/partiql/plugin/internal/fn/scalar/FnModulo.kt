@@ -7,6 +7,14 @@ import org.partiql.spi.function.PartiQLFunction
 import org.partiql.spi.function.PartiQLFunctionExperimental
 import org.partiql.types.function.FunctionParameter
 import org.partiql.types.function.FunctionSignature
+import org.partiql.value.DecimalValue
+import org.partiql.value.Float32Value
+import org.partiql.value.Float64Value
+import org.partiql.value.Int16Value
+import org.partiql.value.Int32Value
+import org.partiql.value.Int64Value
+import org.partiql.value.Int8Value
+import org.partiql.value.IntValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType.DECIMAL_ARBITRARY
@@ -17,6 +25,15 @@ import org.partiql.value.PartiQLValueType.INT16
 import org.partiql.value.PartiQLValueType.INT32
 import org.partiql.value.PartiQLValueType.INT64
 import org.partiql.value.PartiQLValueType.INT8
+import org.partiql.value.check
+import org.partiql.value.decimalValue
+import org.partiql.value.float32Value
+import org.partiql.value.float64Value
+import org.partiql.value.int16Value
+import org.partiql.value.int32Value
+import org.partiql.value.int64Value
+import org.partiql.value.int8Value
+import org.partiql.value.intValue
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
 internal object Fn_MODULO__INT8_INT8__INT8 : PartiQLFunction.Scalar {
@@ -32,8 +49,11 @@ internal object Fn_MODULO__INT8_INT8__INT8 : PartiQLFunction.Scalar {
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function modulo not implemented")
+    // TODO: This is untested and may be wrong. Java's mod operation does not match SQL's.
+    override fun invoke(args: Array<PartiQLValue>): Int8Value {
+        val arg0 = args[0].check<Int8Value>().value!!
+        val arg1 = args[1].check<Int8Value>().value!!
+        return int8Value((arg0 % arg1).toByte())
     }
 }
 
@@ -51,8 +71,11 @@ internal object Fn_MODULO__INT16_INT16__INT16 : PartiQLFunction.Scalar {
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function modulo not implemented")
+    // TODO: This is untested and may be wrong. Java's mod operation does not match SQL's.
+    override fun invoke(args: Array<PartiQLValue>): Int16Value {
+        val arg0 = args[0].check<Int16Value>().value!!
+        val arg1 = args[1].check<Int16Value>().value!!
+        return int16Value((arg0 % arg1).toShort())
     }
 }
 
@@ -70,8 +93,11 @@ internal object Fn_MODULO__INT32_INT32__INT32 : PartiQLFunction.Scalar {
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function modulo not implemented")
+    // TODO: This is untested and may be wrong. Java's mod operation does not match SQL's.
+    override fun invoke(args: Array<PartiQLValue>): Int32Value {
+        val arg0 = args[0].check<Int32Value>().value!!
+        val arg1 = args[1].check<Int32Value>().value!!
+        return int32Value(arg0 % arg1)
     }
 }
 
@@ -89,8 +115,11 @@ internal object Fn_MODULO__INT64_INT64__INT64 : PartiQLFunction.Scalar {
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function modulo not implemented")
+    // TODO: This is untested and may be wrong. Java's mod operation does not match SQL's.
+    override fun invoke(args: Array<PartiQLValue>): Int64Value {
+        val arg0 = args[0].check<Int64Value>().value!!
+        val arg1 = args[1].check<Int64Value>().value!!
+        return int64Value(arg0 % arg1)
     }
 }
 
@@ -108,8 +137,11 @@ internal object Fn_MODULO__INT_INT__INT : PartiQLFunction.Scalar {
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function modulo not implemented")
+    // TODO: This is untested and may be wrong. Java's mod operation does not match SQL's.
+    override fun invoke(args: Array<PartiQLValue>): IntValue {
+        val arg0 = args[0].check<IntValue>().value!!
+        val arg1 = args[1].check<IntValue>().value!!
+        return intValue(arg0 % arg1)
     }
 }
 
@@ -127,8 +159,11 @@ internal object Fn_MODULO__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__DECIMAL_ARBITRAR
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function modulo not implemented")
+    // TODO: This is untested and may be wrong. Java's mod operation does not match SQL's.
+    override fun invoke(args: Array<PartiQLValue>): DecimalValue {
+        val arg0 = args[0].check<DecimalValue>().value!!
+        val arg1 = args[1].check<DecimalValue>().value!!
+        return decimalValue(arg0 % arg1)
     }
 }
 
@@ -146,8 +181,11 @@ internal object Fn_MODULO__FLOAT32_FLOAT32__FLOAT32 : PartiQLFunction.Scalar {
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function modulo not implemented")
+    // TODO: This is untested and may be wrong. Java's mod operation does not match SQL's.
+    override fun invoke(args: Array<PartiQLValue>): Float32Value {
+        val arg0 = args[0].check<Float32Value>().value!!
+        val arg1 = args[1].check<Float32Value>().value!!
+        return float32Value(arg0 % arg1)
     }
 }
 
@@ -165,7 +203,10 @@ internal object Fn_MODULO__FLOAT64_FLOAT64__FLOAT64 : PartiQLFunction.Scalar {
         isNullable = false,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function modulo not implemented")
+    // TODO: This is untested and may be wrong. Java's mod operation does not match SQL's.
+    override fun invoke(args: Array<PartiQLValue>): Float64Value {
+        val arg0 = args[0].check<Float64Value>().value!!
+        val arg1 = args[1].check<Float64Value>().value!!
+        return float64Value(arg0 % arg1)
     }
 }
