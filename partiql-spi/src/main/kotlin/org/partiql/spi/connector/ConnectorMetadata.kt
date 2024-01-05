@@ -45,9 +45,11 @@ public interface ConnectorMetadata {
     public fun getObjectHandle(path: BindingPath): ConnectorObjectHandle?
 
     /**
-     * Returns a list of scalar functions at the given path.
+     * Returns all matching scalar functions (potentially overloaded) at the given path.
+     * For example, if the [path] is `catalog.schema.foo`, and `foo` has two implementations, this should return both implementations in any order. If it only has a single implementation, this should return a list containing the single implementation.
+     * If there is not a matching function, return an empty list.
      *
-     * @param path
+     * @param path : the [BindingPath] that ends with a function's name. Example: `catalog.schema.foo` where `foo` is the function name.
      * @return
      */
     public fun getScalarFunctions(path: BindingPath): List<ConnectorFunctionHandle.Scalar>
