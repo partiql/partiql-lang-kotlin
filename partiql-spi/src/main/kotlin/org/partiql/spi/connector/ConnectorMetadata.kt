@@ -63,14 +63,10 @@ public interface ConnectorMetadata {
     /**
      * Returns a list of aggregation functions at the given path.
      *
-     * @param session
      * @param path
      * @return
      */
-    public fun getAggregationFunctions(
-        session: ConnectorSession,
-        path: BindingPath,
-    ): List<ConnectorFunctionHandle.Aggregation>
+    public fun getAggregationFunctions(path: BindingPath): List<ConnectorFunctionHandle.Aggregation>
 
     /**
      * A base implementation of ConnectorMetadata for use in Java as the generated interface DefaultImpls is final.
@@ -83,9 +79,7 @@ public interface ConnectorMetadata {
         override fun getScalarOperators(path: BindingPath): List<ConnectorFunctionHandle.Scalar> =
             emptyList()
 
-        override fun getAggregationFunctions(
-            session: ConnectorSession,
-            path: BindingPath,
-        ): List<ConnectorFunctionHandle.Aggregation> = emptyList()
+        override fun getAggregationFunctions(path: BindingPath): List<ConnectorFunctionHandle.Aggregation> =
+            emptyList()
     }
 }
