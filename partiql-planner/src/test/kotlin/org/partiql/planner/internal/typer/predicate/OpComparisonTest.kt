@@ -52,14 +52,17 @@ class OpComparisonTest : PartiQLTyperTestBase() {
 
         ).map { inputs.get("basics", it)!! }
 
+        /**
+         * 8.2 Comparison Predicate — SQL-99 page 287
+         */
         val argsMap = buildMap {
             val successArgs =
                 cartesianProduct(
                     StaticType.NUMERIC.allTypes + listOf(StaticType.NULL),
                     StaticType.NUMERIC.allTypes + listOf(StaticType.NULL)
                 ) + cartesianProduct(
-                    StaticType.TEXT.allTypes + listOf(StaticType.CLOB, StaticType.NULL),
-                    StaticType.TEXT.allTypes + listOf(StaticType.CLOB, StaticType.NULL)
+                    StaticType.TEXT.allTypes + listOf(StaticType.NULL),
+                    StaticType.TEXT.allTypes + listOf(StaticType.NULL)
                 ) + cartesianProduct(
                     listOf(StaticType.BOOL, StaticType.NULL),
                     listOf(StaticType.BOOL, StaticType.NULL)
