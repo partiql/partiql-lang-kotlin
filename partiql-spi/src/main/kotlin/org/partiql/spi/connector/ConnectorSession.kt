@@ -18,6 +18,6 @@ package org.partiql.spi.connector
  * Session details that are exposed to plugin implementers.
  */
 public interface ConnectorSession {
-    public fun getQueryId(): String
-    public fun getUserId(): String
+    public val queryId: String
+    public val userId: String
 }

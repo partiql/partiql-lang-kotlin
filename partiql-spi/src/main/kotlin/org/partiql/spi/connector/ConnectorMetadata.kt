@@ -16,7 +16,6 @@ package org.partiql.spi.connector
 
 import org.partiql.spi.BindingPath
 import org.partiql.types.StaticType
-import org.partiql.types.function.FunctionSignature
 
 /**
  * Aids in retrieving relevant Catalog metadata for the purpose of planning and execution.
@@ -24,28 +23,10 @@ import org.partiql.types.function.FunctionSignature
 public interface ConnectorMetadata {
 
     /**
-     * Scalar function signatures available via call syntax.
-     */
-    public val functions: List<FunctionSignature.Scalar>
-        get() = emptyList()
-
-    /**
-     * Scalar function signatures available via operator or special form syntax.
-     */
-    public val operators: List<FunctionSignature.Scalar>
-        get() = emptyList()
-
-    /**
-     * Aggregation function signatures.
-     */
-    public val aggregations: List<FunctionSignature.Aggregation>
-        get() = emptyList()
-
-    /**
      * Returns the descriptor of an object. If the handle is unable to produce a [StaticType], implementers should
      * return null.
      */
-    public fun getObjectType(session: ConnectorSession, handle: ConnectorObjectHandle): StaticType?
+    public fun getObjectType(handle: ConnectorObjectHandle): StaticType?
 
     /**
      * Given a [BindingPath], returns a [ConnectorObjectHandle] that corresponds to the longest-available requested path.
@@ -56,10 +37,55 @@ public interface ConnectorMetadata {
      * As another example, consider an object within a Namespace that may be a Struct with nested attributes. A user could
      * call [getObjectHandle] with the [path] of "a"."b"."c"."Object"."x". In the Namespace, only object "Object" exists.
      * Therefore, this method will return a [ConnectorObjectHandle] with the "Object" representation and the matching
-     * path: "a"."b"."c"."Object". The returned [ConnectorObjectHandle.absolutePath] must be correct for correct
+     * path: "a"."b"."c"."Object". The returned [ConnectorObjectHandle.path] must be correct for correct
      * evaluation.
      *
      * If the [path] does not correspond to an existing [ConnectorObject], implementers should return null.
      */
-    public fun getObjectHandle(session: ConnectorSession, path: BindingPath): ConnectorObjectHandle?
+    public fun getObjectHandle(path: BindingPath): ConnectorObjectHandle?
+
+    /**
+     * Returns a list of scalar functions at the given path.
+     *
+     * @param path
+     * @return
+     */
+    public fun getScalarFunctions(path: BindingPath): List<ConnectorFunctionHandle.Scalar>
+
+    /**
+     * Returns a list of scalar operators at the given path.
+     *
+     * @param path
+     * @return
+     */
+    public fun getScalarOperators(path: BindingPath): List<ConnectorFunctionHandle.Scalar>
+
+    /**
+     * Returns a list of aggregation functions at the given path.
+     *
+     * @param session
+     * @param path
+     * @return
+     */
+    public fun getAggregationFunctions(
+        session: ConnectorSession,
+        path: BindingPath,
+    ): List<ConnectorFunctionHandle.Aggregation>
+
+    /**
+     * A base implementation of ConnectorMetadata for use in Java as the generated interface DefaultImpls is final.
+     */
+    public abstract class Base : ConnectorMetadata {
+
+        override fun getScalarFunctions(path: BindingPath): List<ConnectorFunctionHandle.Scalar> =
+            emptyList()
+
+        override fun getScalarOperators(path: BindingPath): List<ConnectorFunctionHandle.Scalar> =
+            emptyList()
+
+        override fun getAggregationFunctions(
+            session: ConnectorSession,
+            path: BindingPath,
+        ): List<ConnectorFunctionHandle.Aggregation> = emptyList()
+    }
 }

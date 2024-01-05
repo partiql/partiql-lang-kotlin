@@ -14,6 +14,7 @@
 
 package org.partiql.spi.connector
 
-public object Constants {
-    public const val CONFIG_KEY_CONNECTOR_NAME: String = "connector_name"
-}
+/**
+ * The path to an object within the current Catalog.
+ */
+public data class ConnectorPath(public val steps: List<String>)

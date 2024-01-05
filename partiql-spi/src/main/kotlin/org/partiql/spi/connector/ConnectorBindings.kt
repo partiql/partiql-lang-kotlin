@@ -14,9 +14,11 @@
 
 package org.partiql.spi.connector
 
-/**
- * The path to an object within the current Catalog.
- */
-public data class ConnectorObjectPath(
-    val steps: List<String>
-)
+import org.partiql.value.PartiQLValue
+import org.partiql.value.PartiQLValueExperimental
+
+@OptIn(PartiQLValueExperimental::class)
+public interface ConnectorBindings {
+
+    public fun getValue(path: ConnectorPath): PartiQLValue
+}
