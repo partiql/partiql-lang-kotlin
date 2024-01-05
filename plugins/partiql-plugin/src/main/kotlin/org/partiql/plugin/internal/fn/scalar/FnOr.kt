@@ -29,7 +29,7 @@ internal object Fn_OR__BOOL_BOOL__BOOL : PartiQLFunction.Scalar {
         isNullable = true,
     )
 
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
+    override fun invoke(args: Array<PartiQLValue>): BoolValue {
         val lhs = args[0].check<BoolValue>().value
         val rhs = args[1].check<BoolValue>().value
         val toReturn = when {

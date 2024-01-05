@@ -25,8 +25,15 @@ import org.partiql.value.PartiQLValueType.INT16
 import org.partiql.value.PartiQLValueType.INT32
 import org.partiql.value.PartiQLValueType.INT64
 import org.partiql.value.PartiQLValueType.INT8
-import java.math.BigDecimal
-import java.math.BigInteger
+import org.partiql.value.check
+import org.partiql.value.decimalValue
+import org.partiql.value.float32Value
+import org.partiql.value.float64Value
+import org.partiql.value.int16Value
+import org.partiql.value.int32Value
+import org.partiql.value.int64Value
+import org.partiql.value.int8Value
+import org.partiql.value.intValue
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
 internal object Fn_MODULO__INT8_INT8__INT8 : PartiQLFunction.Scalar {
@@ -43,7 +50,11 @@ internal object Fn_MODULO__INT8_INT8__INT8 : PartiQLFunction.Scalar {
     )
 
     // TODO: This is untested and may be wrong. Java's mod operation does not match SQL's.
-    override fun invoke(args: Array<PartiQLValue>): Int8Value = binaryOpInt8(args[0], args[1], Byte::mod)
+    override fun invoke(args: Array<PartiQLValue>): Int8Value {
+        val arg0 = args[0].check<Int8Value>().value!!
+        val arg1 = args[1].check<Int8Value>().value!!
+        return int8Value((arg0 % arg1).toByte())
+    }
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
@@ -61,7 +72,11 @@ internal object Fn_MODULO__INT16_INT16__INT16 : PartiQLFunction.Scalar {
     )
 
     // TODO: This is untested and may be wrong. Java's mod operation does not match SQL's.
-    override fun invoke(args: Array<PartiQLValue>): Int16Value = binaryOpInt16(args[0], args[1], Short::mod)
+    override fun invoke(args: Array<PartiQLValue>): Int16Value {
+        val arg0 = args[0].check<Int16Value>().value!!
+        val arg1 = args[1].check<Int16Value>().value!!
+        return int16Value((arg0 % arg1).toShort())
+    }
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
@@ -79,7 +94,11 @@ internal object Fn_MODULO__INT32_INT32__INT32 : PartiQLFunction.Scalar {
     )
 
     // TODO: This is untested and may be wrong. Java's mod operation does not match SQL's.
-    override fun invoke(args: Array<PartiQLValue>): Int32Value = binaryOpInt32(args[0], args[1], Int::mod)
+    override fun invoke(args: Array<PartiQLValue>): Int32Value {
+        val arg0 = args[0].check<Int32Value>().value!!
+        val arg1 = args[1].check<Int32Value>().value!!
+        return int32Value(arg0 % arg1)
+    }
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
@@ -97,7 +116,11 @@ internal object Fn_MODULO__INT64_INT64__INT64 : PartiQLFunction.Scalar {
     )
 
     // TODO: This is untested and may be wrong. Java's mod operation does not match SQL's.
-    override fun invoke(args: Array<PartiQLValue>): Int64Value = binaryOpInt64(args[0], args[1], Long::mod)
+    override fun invoke(args: Array<PartiQLValue>): Int64Value {
+        val arg0 = args[0].check<Int64Value>().value!!
+        val arg1 = args[1].check<Int64Value>().value!!
+        return int64Value(arg0 % arg1)
+    }
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
@@ -115,7 +138,11 @@ internal object Fn_MODULO__INT_INT__INT : PartiQLFunction.Scalar {
     )
 
     // TODO: This is untested and may be wrong. Java's mod operation does not match SQL's.
-    override fun invoke(args: Array<PartiQLValue>): IntValue = binaryOpInt(args[0], args[1], BigInteger::mod)
+    override fun invoke(args: Array<PartiQLValue>): IntValue {
+        val arg0 = args[0].check<IntValue>().value!!
+        val arg1 = args[1].check<IntValue>().value!!
+        return intValue(arg0 % arg1)
+    }
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
@@ -133,7 +160,11 @@ internal object Fn_MODULO__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__DECIMAL_ARBITRAR
     )
 
     // TODO: This is untested and may be wrong. Java's mod operation does not match SQL's.
-    override fun invoke(args: Array<PartiQLValue>): DecimalValue = binaryOpDecimal(args[0], args[1], BigDecimal::remainder)
+    override fun invoke(args: Array<PartiQLValue>): DecimalValue {
+        val arg0 = args[0].check<DecimalValue>().value!!
+        val arg1 = args[1].check<DecimalValue>().value!!
+        return decimalValue(arg0 % arg1)
+    }
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
@@ -151,7 +182,11 @@ internal object Fn_MODULO__FLOAT32_FLOAT32__FLOAT32 : PartiQLFunction.Scalar {
     )
 
     // TODO: This is untested and may be wrong. Java's mod operation does not match SQL's.
-    override fun invoke(args: Array<PartiQLValue>): Float32Value = binaryOpFloat32(args[0], args[1], Float::mod)
+    override fun invoke(args: Array<PartiQLValue>): Float32Value {
+        val arg0 = args[0].check<Float32Value>().value!!
+        val arg1 = args[1].check<Float32Value>().value!!
+        return float32Value(arg0 % arg1)
+    }
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
@@ -169,5 +204,9 @@ internal object Fn_MODULO__FLOAT64_FLOAT64__FLOAT64 : PartiQLFunction.Scalar {
     )
 
     // TODO: This is untested and may be wrong. Java's mod operation does not match SQL's.
-    override fun invoke(args: Array<PartiQLValue>): Float64Value = binaryOpFloat64(args[0], args[1], Double::mod)
+    override fun invoke(args: Array<PartiQLValue>): Float64Value {
+        val arg0 = args[0].check<Float64Value>().value!!
+        val arg1 = args[1].check<Float64Value>().value!!
+        return float64Value(arg0 % arg1)
+    }
 }
