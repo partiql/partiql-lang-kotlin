@@ -7,6 +7,11 @@ import org.partiql.spi.function.PartiQLFunction
 import org.partiql.spi.function.PartiQLFunctionExperimental
 import org.partiql.types.function.FunctionParameter
 import org.partiql.types.function.FunctionSignature
+import org.partiql.value.Int16Value
+import org.partiql.value.Int32Value
+import org.partiql.value.Int64Value
+import org.partiql.value.Int8Value
+import org.partiql.value.IntValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType.INT
@@ -14,7 +19,6 @@ import org.partiql.value.PartiQLValueType.INT16
 import org.partiql.value.PartiQLValueType.INT32
 import org.partiql.value.PartiQLValueType.INT64
 import org.partiql.value.PartiQLValueType.INT8
-import org.partiql.value.*
 import java.math.BigInteger
 import kotlin.experimental.and
 

@@ -29,6 +29,7 @@ import java.math.BigDecimal
 import java.math.BigInteger
 
 @OptIn(PartiQLValueExperimental::class)
+@JvmName("binaryOpInt8ByteToInt")
 internal inline fun binaryOpInt8(lhs: PartiQLValue, rhs: PartiQLValue, op: (Byte, Byte) -> Int): Int8Value {
     val lhsValue = lhs.check<Int8Value>().value!!
     val rhsValue = rhs.check<Int8Value>().value!!
@@ -36,6 +37,7 @@ internal inline fun binaryOpInt8(lhs: PartiQLValue, rhs: PartiQLValue, op: (Byte
 }
 
 @OptIn(PartiQLValueExperimental::class)
+@JvmName("binaryOpInt8ByteToByte")
 internal inline fun binaryOpInt8(lhs: PartiQLValue, rhs: PartiQLValue, op: (Byte, Byte) -> Byte): Int8Value {
     val lhsValue = lhs.check<Int8Value>().value!!
     val rhsValue = rhs.check<Int8Value>().value!!
@@ -43,6 +45,7 @@ internal inline fun binaryOpInt8(lhs: PartiQLValue, rhs: PartiQLValue, op: (Byte
 }
 
 @OptIn(PartiQLValueExperimental::class)
+@JvmName("binaryOpInt16ShortToInt")
 internal inline fun binaryOpInt16(lhs: PartiQLValue, rhs: PartiQLValue, op: (Short, Short) -> Int): Int16Value {
     val lhsValue = lhs.check<Int16Value>().value!!
     val rhsValue = rhs.check<Int16Value>().value!!
@@ -50,6 +53,7 @@ internal inline fun binaryOpInt16(lhs: PartiQLValue, rhs: PartiQLValue, op: (Sho
 }
 
 @OptIn(PartiQLValueExperimental::class)
+@JvmName("binaryOpInt16ShortToShort")
 internal inline fun binaryOpInt16(lhs: PartiQLValue, rhs: PartiQLValue, op: (Short, Short) -> Short): Int16Value {
     val lhsValue = lhs.check<Int16Value>().value!!
     val rhsValue = rhs.check<Int16Value>().value!!
