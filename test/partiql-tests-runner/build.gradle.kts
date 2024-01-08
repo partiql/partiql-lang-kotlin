@@ -43,10 +43,31 @@ tasks.test {
     environment(Env.PARTIQL_EQUIV, file("$tests/eval-equiv/").absolutePath)
 
     // To make it possible to run ConformanceTestReport in unit test UI runner, comment out this check:
-    if (!project.hasProperty("conformanceReport")) {
-        exclude("org/partiql/runner/ConformanceTestReport.class")
-    }
+    exclude("org/partiql/runner/ConformanceTestEval.class", "org/partiql/runner/ConformanceTestLegacy.class")
 
     // May 2023: Disabled conformance testing during regular project build, because fail lists are out of date.
     exclude("org/partiql/runner/ConformanceTest.class")
+}
+
+tasks.register<Test>("ConformanceTestReport") {
+    val reportDir = file("$buildDir/conformance-test-report").absolutePath
+    if (File(reportDir).exists()) {
+        delete(File(reportDir))
+    }
+    useJUnitPlatform()
+    environment(Env.PARTIQL_EVAL, file("$tests/eval/").absolutePath)
+    environment(Env.PARTIQL_EQUIV, file("$tests/eval-equiv/").absolutePath)
+    environment("conformanceReportDir", reportDir)
+    mkdir(reportDir)
+    include("org/partiql/runner/ConformanceTestEval.class", "org/partiql/runner/ConformanceTestLegacy.class")
+    if (project.hasProperty("Engine")) {
+        val engine = property("Engine")!! as String
+        if (engine.toLowerCase() == "legacy") {
+            exclude("org/partiql/runner/ConformanceTestEval.class")
+        } else if (engine.toLowerCase() == "eval") {
+            exclude("org/partiql/runner/ConformanceTestLegacy.class")
+        } else {
+            throw InvalidUserDataException("Expect engine property to be either Legacy or Eval, received $engine")
+        }
+    }
 }
