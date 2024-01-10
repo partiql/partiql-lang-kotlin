@@ -17,7 +17,6 @@ import org.partiql.value.PartiQLValueType.DATE
 import org.partiql.value.PartiQLValueType.INT
 import org.partiql.value.PartiQLValueType.INT32
 import org.partiql.value.PartiQLValueType.INT64
-import org.partiql.value.PartiQLValueType.TIME
 import org.partiql.value.PartiQLValueType.TIMESTAMP
 import org.partiql.value.TimestampValue
 import org.partiql.value.check

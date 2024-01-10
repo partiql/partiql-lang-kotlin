@@ -642,7 +642,7 @@ internal object PartiQLHeader : Header() {
         val operators = mutableListOf<FunctionSignature.Scalar>()
         for (field in DatetimeField.values()) {
             for (type in datetime) {
-                when(field) {
+                when (field) {
                     DatetimeField.YEAR, DatetimeField.MONTH, DatetimeField.DAY ->
                         if (type == TIME) continue
                     DatetimeField.HOUR, DatetimeField.MINUTE, DatetimeField.SECOND ->
@@ -673,7 +673,7 @@ internal object PartiQLHeader : Header() {
         val operators = mutableListOf<FunctionSignature.Scalar>()
         for (field in DatetimeField.values()) {
             for (type in datetime) {
-                when(field) {
+                when (field) {
                     DatetimeField.YEAR, DatetimeField.MONTH, DatetimeField.DAY ->
                         if (type == TIME) continue
                     DatetimeField.HOUR, DatetimeField.MINUTE, DatetimeField.SECOND ->

@@ -12,7 +12,6 @@ import org.partiql.value.Int64Value
 import org.partiql.value.IntValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType.DATE
 import org.partiql.value.PartiQLValueType.INT
 import org.partiql.value.PartiQLValueType.INT32
 import org.partiql.value.PartiQLValueType.INT64
@@ -23,7 +22,6 @@ import org.partiql.value.TimestampValue
 import org.partiql.value.check
 import org.partiql.value.timeValue
 import org.partiql.value.timestampValue
-import java.sql.Timestamp
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
 internal object Fn_DATE_ADD_MINUTE__INT32_TIME__TIME : PartiQLFunction.Scalar {

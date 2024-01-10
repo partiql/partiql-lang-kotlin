@@ -9,7 +9,6 @@ import org.partiql.types.function.FunctionParameter
 import org.partiql.types.function.FunctionSignature
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType.DATE
 import org.partiql.value.PartiQLValueType.INT64
 import org.partiql.value.PartiQLValueType.TIME
 import org.partiql.value.PartiQLValueType.TIMESTAMP

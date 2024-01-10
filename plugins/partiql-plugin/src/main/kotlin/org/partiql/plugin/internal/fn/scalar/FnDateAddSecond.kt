@@ -12,7 +12,6 @@ import org.partiql.value.Int64Value
 import org.partiql.value.IntValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType.DATE
 import org.partiql.value.PartiQLValueType.INT
 import org.partiql.value.PartiQLValueType.INT32
 import org.partiql.value.PartiQLValueType.INT64
