@@ -29,5 +29,5 @@ public interface ConnectorBindings {
      * @param handle
      * @return
      */
-    public fun getValue(handle: ConnectorObjectHandle): PartiQLValue
+    public fun getValue(handle: ConnectorHandle<ConnectorObject>): PartiQLValue
 }

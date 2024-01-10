@@ -29,6 +29,14 @@ public data class BindingName(
         otherName != null && name.isBindingNameEquivalent(otherName, case)
 
     /**
+     * Compares [name] to [target] using the rules specified by [case].
+     */
+    public fun matches(target: String): Boolean = when (case) {
+        BindingCase.SENSITIVE -> target == name
+        BindingCase.INSENSITIVE -> target.equals(name, ignoreCase = true)
+    }
+
+    /**
      * Compares this string to [other] using the rules specified by [case].
      */
     private fun String.isBindingNameEquivalent(other: String, case: BindingCase): Boolean =

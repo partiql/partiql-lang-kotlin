@@ -4,11 +4,12 @@ import org.partiql.planner.internal.ir.Agg
 import org.partiql.planner.internal.ir.Fn
 import org.partiql.planner.internal.ir.Identifier
 import org.partiql.planner.internal.ir.Rex
-import org.partiql.spi.connector.ConnectorFunctions
+import org.partiql.spi.connector.ConnectorMetadata
 import org.partiql.types.StaticType
 import org.partiql.types.function.FunctionParameter
 import org.partiql.types.function.FunctionSignature
 import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.PartiQLValueType
 import org.partiql.value.PartiQLValueType.ANY
 import org.partiql.value.PartiQLValueType.NULL
 
@@ -77,7 +78,7 @@ internal sealed class FnMatch<T : FunctionSignature> {
  * at the moment to keep that information (derived from the current TypeLattice) with the [FnResolver].
  */
 @OptIn(PartiQLValueExperimental::class)
-internal class FnResolver(private val metadata: Collection<ConnectorFunctions>) {
+internal class FnResolver(private val metadata: Collection<ConnectorMetadata>) {
 
     /**
      * FnRegistry holds
@@ -218,5 +219,65 @@ internal class FnResolver(private val metadata: Collection<ConnectorFunctions>) 
         } else {
             null
         }
+    }
+
+    /**
+     * Return a list of all scalar function signatures matching the given identifier.
+     */
+    internal fun lookup(ref: Fn.Unresolved): List<FunctionSignature.Scalar> {
+        val name = getFnName(ref.identifier)
+        // builtin
+        val  = if (ref.isHidden) pOps else pFns
+        val pFns = pMap.getOrDefault(name, emptyList())
+        // user-defined
+        val uMap = if (ref.isHidden) uFns else uOps
+        val uFns = uMap[name]
+        if (uFns.isNullOrEmpty()) {
+            return pFns
+        }
+        return pFns + uFns
+    }
+
+
+
+    /**
+     * Return a list of all aggregation function signatures matching the given identifier.
+     */
+    internal fun lookup(ref: Agg.Unresolved): List<FunctionSignature.Aggregation> {
+        val name = getFnName(ref.identifier)
+        // builtin
+        val pFns = pAggs.getOrDefault(name, emptyList())
+        // user-defined
+        val uFns = uAggs[name]
+        if (uFns.isNullOrEmpty()) {
+            return pFns
+        }
+        return pFns + uFns
+    }
+
+    /**
+     * Returns the CAST function if exists, else null.
+     */
+    internal fun lookupCoercion(operand: PartiQLValueType, target: PartiQLValueType): FunctionSignature.Scalar? {
+        val i = operand.ordinal
+        val j = target.ordinal
+        val rel = casts.graph[i][j] ?: return null
+        return if (rel.castType == CastType.COERCION) rel.castFn else null
+    }
+
+    internal fun isUnsafeCast(specific: String): Boolean = casts.unsafeCastSet.contains(specific)
+
+    /**
+     * Return a normalized function identifier for lookup in our list of function definitions.
+     */
+    private fun getFnName(identifier: Identifier): String = when (identifier) {
+        is Identifier.Qualified -> throw IllegalArgumentException("Qualified function identifiers not supported")
+        is Identifier.Symbol -> identifier.symbol.lowercase()
+    }
+
+    companion object {
+
+        @JvmStatic
+        private val casts = TypeCasts.partiql()
     }
 }

@@ -20,6 +20,10 @@ plugins {
 
 dependencies {
     api(project(":partiql-types"))
+
+    // Header Generation
+    testImplementation(project(":partiql-ast"))
+    testImplementation(Deps.kasechange)
 }
 
 publish {

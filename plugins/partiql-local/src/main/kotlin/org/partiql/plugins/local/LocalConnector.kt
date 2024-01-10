@@ -20,7 +20,7 @@ import org.partiql.spi.connector.Connector
 import org.partiql.spi.connector.ConnectorBindings
 import org.partiql.spi.connector.ConnectorFunctions
 import org.partiql.spi.connector.ConnectorMetadata
-import org.partiql.spi.connector.ConnectorObjectHandle
+import org.partiql.spi.connector.ConnectorHandle
 import org.partiql.spi.connector.ConnectorObjectPath
 import org.partiql.spi.connector.ConnectorSession
 import org.partiql.types.StaticType
@@ -97,14 +97,14 @@ class LocalConnector(
          */
         private var catalog = LocalCatalog.load(root)
 
-        override fun getObjectType(session: ConnectorSession, handle: ConnectorObjectHandle): StaticType {
+        override fun getObjectType(session: ConnectorSession, handle: ConnectorHandle): StaticType {
             val obj = handle.value as LocalObject
             return obj.getDescriptor()
         }
 
-        override fun getObjectHandle(session: ConnectorSession, path: BindingPath): ConnectorObjectHandle? {
+        override fun getObjectHandle(session: ConnectorSession, path: BindingPath): ConnectorHandle? {
             val value = catalog.lookup(path) ?: return null
-            return ConnectorObjectHandle(
+            return ConnectorHandle(
                 absolutePath = ConnectorObjectPath(value.path),
                 value = value,
             )

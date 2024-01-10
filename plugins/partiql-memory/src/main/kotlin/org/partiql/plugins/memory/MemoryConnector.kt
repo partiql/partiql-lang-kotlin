@@ -7,9 +7,14 @@ import org.partiql.spi.connector.Connector
 import org.partiql.spi.connector.ConnectorBindings
 import org.partiql.spi.connector.ConnectorFunctions
 import org.partiql.spi.connector.ConnectorMetadata
-import org.partiql.spi.connector.ConnectorObjectHandle
+import org.partiql.spi.connector.ConnectorHandle
+import org.partiql.spi.connector.ConnectorObject
 import org.partiql.spi.connector.ConnectorObjectPath
+import org.partiql.spi.connector.ConnectorPath
 import org.partiql.spi.connector.ConnectorSession
+import org.partiql.spi.connector.base.BaseConnector
+import org.partiql.spi.connector.base.BaseConnectorMetadata
+import org.partiql.spi.connector.base.BaseMetadata
 import org.partiql.types.StaticType
 
 /**
@@ -18,7 +23,7 @@ import org.partiql.types.StaticType
 public class MemoryConnector(
     private val metadata: ConnectorMetadata,
     private val bindings: ConnectorBindings,
-) : Connector {
+) : BaseConnector() {
 
     companion object {
         const val CONNECTOR_NAME = "memory"
@@ -42,48 +47,33 @@ public class MemoryConnector(
      *
      * @property map
      */
-    class Metadata(private val map: Map<String, StaticType>) : ConnectorMetadata {
+    class Metadata(private val map: Map<String, StaticType>) : BaseMetadata() {
 
-        override val functions: ConnectorFunctions? = null
-
-        public val entries: List<Pair<String, StaticType>>
-            get() = map.entries.map { it.key to it.value }
+        public val entries: List<Pair<String, StaticType>> = map.entries.map { it.key to it.value }
 
         companion object {
             @JvmStatic
             fun of(vararg entities: Pair<String, StaticType>) = Metadata(mapOf(*entities))
         }
 
-        override fun getObjectType(session: ConnectorSession, handle: ConnectorObjectHandle): StaticType {
-            val obj = handle.value as MemoryObject
-            return obj.type
-        }
-
-        override fun getObjectHandle(session: ConnectorSession, path: BindingPath): ConnectorObjectHandle? {
+        override fun getObject(path: BindingPath): ConnectorHandle<ConnectorObject>? {
             val value = lookup(path) ?: return null
-            return ConnectorObjectHandle(
-                absolutePath = ConnectorObjectPath(value.path),
-                value = value,
+            return ConnectorHandle(
+                path = ConnectorPath(value.path),
+                entity = value,
             )
         }
 
         operator fun get(key: String): StaticType? = map[key]
 
         public fun lookup(path: BindingPath): MemoryObject? {
-            val kPath = ConnectorObjectPath(
-                path.steps.map {
-                    when (it.bindingCase) {
-                        BindingCase.SENSITIVE -> it.name
-                        BindingCase.INSENSITIVE -> it.loweredName
-                    }
-                }
-            )
-            val k = kPath.steps.joinToString(".")
+            val kPath = path.normalized
+            val k = path.key
             if (this[k] != null) {
-                return this[k]?.let { MemoryObject(kPath.steps, it) }
+                return this[k]?.let { MemoryObject(kPath, it) }
             } else {
                 val candidatePath = this.map.keys.map { it.split(".") }
-                val kPathIter = kPath.steps.listIterator()
+                val kPathIter = kPath.listIterator()
                 while (kPathIter.hasNext()) {
                     val currKPath = kPathIter.next()
                     candidatePath.forEach {
@@ -92,7 +82,7 @@ public class MemoryConnector(
                         while (candidateIterator.hasNext()) {
                             if (candidateIterator.next() == currKPath) {
                                 match.add(currKPath)
-                                val pathIteratorCopy = kPath.steps.listIterator(kPathIter.nextIndex())
+                                val pathIteratorCopy = kPath.listIterator(kPathIter.nextIndex())
                                 candidateIterator.forEachRemaining {
                                     val nextPath = pathIteratorCopy.next()
                                     if (it != nextPath) {

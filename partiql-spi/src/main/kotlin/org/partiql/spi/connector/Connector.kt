@@ -19,7 +19,7 @@ import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.StructValue
 
 /**
- * A mechanism by which PartiQL can access a Catalog.
+ * A [Connector] encapsulates a Catalog's implementation logic.
  */
 public interface Connector {
 
@@ -40,7 +40,7 @@ public interface Connector {
     public fun getBindings(): ConnectorBindings
 
     /**
-     * Returns a [ConnectorFunctions] which the engine uses to load user-defined-function implementations.
+     * Returns a [ConnectorFunctions] which the engine uses to load function implementations.
      *
      * @return
      */

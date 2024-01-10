@@ -33,14 +33,6 @@ import org.partiql.value.PartiQLValueType.SYMBOL
 import org.partiql.value.PartiQLValueType.TIME
 import org.partiql.value.PartiQLValueType.TIMESTAMP
 
-/**
- * Group all function implementations by their name, sorting by precedence.
- */
-internal fun <T : FunctionSignature> List<T>.toFnMap(): FnMap<T> = this
-    .distinctBy { it.specific }
-    .sortedWith(fnPrecedence)
-    .groupBy { it.name }
-
 // Function precedence comparator
 // 1. Fewest args first
 // 2. Parameters are compared left-to-right

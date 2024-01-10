@@ -11,8 +11,8 @@ import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
 import org.partiql.spi.connector.ConnectorMetadata
-import org.partiql.spi.connector.ConnectorObjectHandle
-import org.partiql.spi.connector.ConnectorObjectPath
+import org.partiql.spi.connector.ConnectorHandle
+import org.partiql.spi.connector.ConnectorPath
 import org.partiql.spi.connector.ConnectorSession
 import org.partiql.types.StaticType
 import org.partiql.types.StructType
@@ -142,7 +142,7 @@ internal class Env(
      *      all builtin functions to live at the top-level. At the moment, we could technically use this to have
      *      single-level `catalog`.`function`() syntax but that is out-of-scope for this commit.
      */
-    private val fnResolver = FnResolver(connectors.values.mapNotNull { it.functions })
+    private val fnResolver = FnResolver(connectors.values)
 
     private val connectorSession = object : ConnectorSession {
         override fun getQueryId(): String = session.queryId
@@ -166,7 +166,7 @@ internal class Env(
      * @param path      Global identifier path
      * @return
      */
-    private fun getObjectHandle(catalog: BindingName, path: BindingPath): Handle<ConnectorObjectHandle>? {
+    private fun getObjectHandle(catalog: BindingName, path: BindingPath): Handle<ConnectorHandle>? {
         val metadata = getMetadata(catalog) ?: return null
         return metadata.second.getObjectHandle(connectorSession, path)?.let {
             metadata.first to it
@@ -179,7 +179,7 @@ internal class Env(
      * @param handle
      * @return
      */
-    private fun getObjectDescriptor(handle: Handle<ConnectorObjectHandle>): StaticType {
+    private fun getObjectDescriptor(handle: Handle<ConnectorHandle>): StaticType {
         val metadata = getMetadata(BindingName(handle.first, BindingCase.SENSITIVE))?.second
             ?: error("Unable to fetch connector metadata based on handle $handle")
         return metadata.getObjectType(connectorSession, handle.second) ?: error("Unable to produce Static Type")
@@ -446,7 +446,7 @@ internal class Env(
     private fun calculateMatched(
         originalPath: BindingPath,
         inputCatalogPath: BindingPath,
-        outputCatalogPath: ConnectorObjectPath,
+        outputCatalogPath: ConnectorPath,
     ): Int {
         return originalPath.steps.size + outputCatalogPath.steps.size - inputCatalogPath.steps.size
     }
