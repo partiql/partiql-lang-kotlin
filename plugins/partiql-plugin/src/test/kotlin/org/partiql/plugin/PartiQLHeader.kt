@@ -642,9 +642,15 @@ internal object PartiQLHeader : Header() {
         val operators = mutableListOf<FunctionSignature.Scalar>()
         for (field in DatetimeField.values()) {
             for (type in datetime) {
-                if (field == DatetimeField.TIMEZONE_HOUR || field == DatetimeField.TIMEZONE_MINUTE) {
-                    continue
+                when(field) {
+                    DatetimeField.YEAR, DatetimeField.MONTH, DatetimeField.DAY ->
+                        if (type == TIME) continue
+                    DatetimeField.HOUR, DatetimeField.MINUTE, DatetimeField.SECOND ->
+                        if (type == DATE) continue
+                    DatetimeField.TIMEZONE_HOUR -> continue
+                    DatetimeField.TIMEZONE_MINUTE -> continue
                 }
+
                 for (interval in intervals) {
                     val signature = FunctionSignature.Scalar(
                         name = "date_add_${field.name.lowercase()}",
@@ -667,8 +673,13 @@ internal object PartiQLHeader : Header() {
         val operators = mutableListOf<FunctionSignature.Scalar>()
         for (field in DatetimeField.values()) {
             for (type in datetime) {
-                if (field == DatetimeField.TIMEZONE_HOUR || field == DatetimeField.TIMEZONE_MINUTE) {
-                    continue
+                when(field) {
+                    DatetimeField.YEAR, DatetimeField.MONTH, DatetimeField.DAY ->
+                        if (type == TIME) continue
+                    DatetimeField.HOUR, DatetimeField.MINUTE, DatetimeField.SECOND ->
+                        if (type == DATE) continue
+                    DatetimeField.TIMEZONE_HOUR -> continue
+                    DatetimeField.TIMEZONE_MINUTE -> continue
                 }
                 val signature = FunctionSignature.Scalar(
                     name = "date_diff_${field.name.lowercase()}",

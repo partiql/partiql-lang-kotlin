@@ -7,6 +7,9 @@ import org.partiql.spi.function.PartiQLFunction
 import org.partiql.spi.function.PartiQLFunctionExperimental
 import org.partiql.types.function.FunctionParameter
 import org.partiql.types.function.FunctionSignature
+import org.partiql.value.Int32Value
+import org.partiql.value.Int64Value
+import org.partiql.value.IntValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType.DATE
@@ -15,63 +18,12 @@ import org.partiql.value.PartiQLValueType.INT32
 import org.partiql.value.PartiQLValueType.INT64
 import org.partiql.value.PartiQLValueType.TIME
 import org.partiql.value.PartiQLValueType.TIMESTAMP
-
-@OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object Fn_DATE_ADD_MINUTE__INT32_DATE__DATE : PartiQLFunction.Scalar {
-
-    override val signature = FunctionSignature.Scalar(
-        name = "date_add_minute",
-        returns = DATE,
-        parameters = listOf(
-            FunctionParameter("interval", INT32),
-            FunctionParameter("datetime", DATE),
-        ),
-        isNullCall = true,
-        isNullable = false,
-    )
-
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function date_add_minute not implemented")
-    }
-}
-
-@OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object Fn_DATE_ADD_MINUTE__INT64_DATE__DATE : PartiQLFunction.Scalar {
-
-    override val signature = FunctionSignature.Scalar(
-        name = "date_add_minute",
-        returns = DATE,
-        parameters = listOf(
-            FunctionParameter("interval", INT64),
-            FunctionParameter("datetime", DATE),
-        ),
-        isNullCall = true,
-        isNullable = false,
-    )
-
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function date_add_minute not implemented")
-    }
-}
-
-@OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object Fn_DATE_ADD_MINUTE__INT_DATE__DATE : PartiQLFunction.Scalar {
-
-    override val signature = FunctionSignature.Scalar(
-        name = "date_add_minute",
-        returns = DATE,
-        parameters = listOf(
-            FunctionParameter("interval", INT),
-            FunctionParameter("datetime", DATE),
-        ),
-        isNullCall = true,
-        isNullable = false,
-    )
-
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function date_add_minute not implemented")
-    }
-}
+import org.partiql.value.TimeValue
+import org.partiql.value.TimestampValue
+import org.partiql.value.check
+import org.partiql.value.timeValue
+import org.partiql.value.timestampValue
+import java.sql.Timestamp
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
 internal object Fn_DATE_ADD_MINUTE__INT32_TIME__TIME : PartiQLFunction.Scalar {
@@ -88,7 +40,15 @@ internal object Fn_DATE_ADD_MINUTE__INT32_TIME__TIME : PartiQLFunction.Scalar {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function date_add_minute not implemented")
+        val interval = args[0].check<Int32Value>()
+        val datetime = args[1].check<TimeValue>()
+        return if (datetime.value == null || interval.value == null) {
+            timeValue(null)
+        } else {
+            val datetimeValue = datetime.value!!
+            val intervalValue = interval.long!!
+            timeValue(datetimeValue.plusMinutes(intervalValue))
+        }
     }
 }
 
@@ -107,7 +67,15 @@ internal object Fn_DATE_ADD_MINUTE__INT64_TIME__TIME : PartiQLFunction.Scalar {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function date_add_minute not implemented")
+        val interval = args[0].check<Int64Value>()
+        val datetime = args[1].check<TimeValue>()
+        return if (datetime.value == null || interval.value == null) {
+            timeValue(null)
+        } else {
+            val datetimeValue = datetime.value!!
+            val intervalValue = interval.long!!
+            timeValue(datetimeValue.plusMinutes(intervalValue))
+        }
     }
 }
 
@@ -126,7 +94,16 @@ internal object Fn_DATE_ADD_MINUTE__INT_TIME__TIME : PartiQLFunction.Scalar {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function date_add_minute not implemented")
+        val interval = args[0].check<IntValue>()
+        val datetime = args[1].check<TimeValue>()
+        return if (datetime.value == null || interval.value == null) {
+            timeValue(null)
+        } else {
+            val datetimeValue = datetime.value!!
+            // TODO: We need to consider overflow here
+            val intervalValue = interval.long!!
+            timeValue(datetimeValue.plusMinutes(intervalValue))
+        }
     }
 }
 
@@ -145,7 +122,15 @@ internal object Fn_DATE_ADD_MINUTE__INT32_TIMESTAMP__TIMESTAMP : PartiQLFunction
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function date_add_minute not implemented")
+        val interval = args[0].check<Int32Value>()
+        val datetime = args[1].check<TimestampValue>()
+        return if (datetime.value == null || interval.value == null) {
+            timestampValue(null)
+        } else {
+            val datetimeValue = datetime.value!!
+            val intervalValue = interval.long!!
+            timestampValue(datetimeValue.plusMinutes(intervalValue))
+        }
     }
 }
 
@@ -164,7 +149,15 @@ internal object Fn_DATE_ADD_MINUTE__INT64_TIMESTAMP__TIMESTAMP : PartiQLFunction
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function date_add_minute not implemented")
+        val interval = args[0].check<Int64Value>()
+        val datetime = args[1].check<TimestampValue>()
+        return if (datetime.value == null || interval.value == null) {
+            timestampValue(null)
+        } else {
+            val datetimeValue = datetime.value!!
+            val intervalValue = interval.long!!
+            timestampValue(datetimeValue.plusMinutes(intervalValue))
+        }
     }
 }
 
@@ -183,6 +176,15 @@ internal object Fn_DATE_ADD_MINUTE__INT_TIMESTAMP__TIMESTAMP : PartiQLFunction.S
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function date_add_minute not implemented")
+        val interval = args[0].check<IntValue>()
+        val datetime = args[1].check<TimestampValue>()
+        return if (datetime.value == null || interval.value == null) {
+            timestampValue(null)
+        } else {
+            val datetimeValue = datetime.value!!
+            // TODO: We need to consider overflow here
+            val intervalValue = interval.long!!
+            timestampValue(datetimeValue.plusMinutes(intervalValue))
+        }
     }
 }

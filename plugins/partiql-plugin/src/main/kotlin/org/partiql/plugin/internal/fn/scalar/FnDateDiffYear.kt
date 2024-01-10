@@ -34,25 +34,6 @@ internal object Fn_DATE_DIFF_YEAR__DATE_DATE__INT64 : PartiQLFunction.Scalar {
 }
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal object Fn_DATE_DIFF_YEAR__TIME_TIME__INT64 : PartiQLFunction.Scalar {
-
-    override val signature = FunctionSignature.Scalar(
-        name = "date_diff_year",
-        returns = INT64,
-        parameters = listOf(
-            FunctionParameter("datetime1", TIME),
-            FunctionParameter("datetime2", TIME),
-        ),
-        isNullCall = true,
-        isNullable = false,
-    )
-
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function date_diff_year not implemented")
-    }
-}
-
-@OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
 internal object Fn_DATE_DIFF_YEAR__TIMESTAMP_TIMESTAMP__INT64 : PartiQLFunction.Scalar {
 
     override val signature = FunctionSignature.Scalar(
