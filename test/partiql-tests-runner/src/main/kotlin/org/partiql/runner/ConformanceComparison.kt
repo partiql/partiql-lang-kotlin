@@ -4,9 +4,9 @@ import com.amazon.ionelement.api.loadSingleElement
 import java.io.File
 
 fun main(args: Array<String>) {
-    if (args.size != 5) {
+    if (args.size < 5) {
         error(
-            "Expected 5 args: pathToFirstConformanceTestResults, pathToSecondConformanceTestResults" +
+            "Expected at least 5 args: pathToFirstConformanceTestResults, pathToSecondConformanceTestResults" +
                 "firstCommitId, secondCommitId, pathToComparisonReport"
         )
     }
@@ -20,18 +20,20 @@ fun main(args: Array<String>) {
     val oldReports = loadReport(old, oldCommitId)
     val newReports = loadReport(new, newCommitId)
     val comparisonReportFile = File(args[4])
+    val limit = if (args.size == 6) args[5].toInt() else Int.MAX_VALUE
 
     comparisonReportFile.createNewFile()
 
-    analyze(comparisonReportFile, newReports)
+    // cross engine
+    analyze(comparisonReportFile, newReports, limit)
 
     val all = oldReports + newReports
 
-    // cross commit comparsion
+    // cross commit comparison
     all
         .groupBy { it.engine }
         .forEach { (_, reports) ->
-            analyze(comparisonReportFile, reports)
+            analyze(comparisonReportFile, reports, limit)
         }
 }
 data class Report(
@@ -42,11 +44,11 @@ data class Report(
     val ignoredSet: Set<String>
 )
 
-fun analyze(file: File, reports: List<Report>) {
+fun analyze(file: File, reports: List<Report>, limit: Int) {
     var first = 0
     var second = first + 1
     while (first < second && second < reports.size) {
-        val report = ReportAnalyzer.build(reports[first], reports[second]).generateComparisonReport()
+        val report = ReportAnalyzer.build(reports[first], reports[second]).generateComparisonReport(limit)
         file.appendText(report)
         file.appendText("\n")
         if (second < reports.size - 1) {
@@ -59,12 +61,14 @@ fun analyze(file: File, reports: List<Report>) {
 }
 
 fun loadReport(dir: File, commitId: String) =
-    dir.listFiles()?.map { sub ->
-        val engine = sub.name
-        val report =
-            (sub.listFiles() ?: throw IllegalArgumentException("sub-dir ${sub.absolutePath} not exist")).first().readText()
-        loadReport(report, engine, commitId)
-    } ?: throw IllegalArgumentException("dir ${dir.absolutePath} not exist")
+    dir.listFiles()
+        ?.filter { it.isDirectory }
+        ?.map { sub ->
+            val engine = sub.name
+            val report =
+                (sub.listFiles() ?: throw IllegalArgumentException("sub-dir ${sub.absolutePath} not exist")).first().readText()
+            loadReport(report, engine, commitId)
+        } ?: throw IllegalArgumentException("dir ${dir.absolutePath} not exist")
 
 fun loadReport(report: String, engine: String, commitId: String): Report {
     val inputStruct = loadSingleElement(report).asStruct()
@@ -101,13 +105,13 @@ abstract class ReportAnalyzer(first: Report, second: Report) {
     val secondPassingPercent = secondPassingSize.toDouble() / secondTotalSize * 100
 
     abstract val reportTitle: String
-    abstract fun generateComparisonReport(): String
+    abstract fun generateComparisonReport(limit: Int): String
 }
 
 class CrossCommitReportAnalyzer(private val first: Report, private val second: Report) :
     ReportAnalyzer(first, second) {
     override val reportTitle: String = "Conformance comparison report-Cross Commit-${first.engine.uppercase()}"
-    override fun generateComparisonReport() =
+    override fun generateComparisonReport(limit: Int) =
         buildString {
             this.appendLine(
                 """### $reportTitle
@@ -134,7 +138,7 @@ Number failing in Base (${first.commitId}) but now pass: ${failureFirstPassingSe
             if (passingFirstFailingSecond.isNotEmpty()) {
                 // character count limitation with comments in GitHub
                 // also, not ideal to list out hundreds of test names
-                if (passingFirstFailingSecond.size < 10) {
+                if (passingFirstFailingSecond.size < limit) {
                     this.appendLine(":interrobang: CONFORMANCE REPORT REGRESSION DETECTED :interrobang:. The following test(s) were previously passing but now fail:\n<details><summary>Click here to see</summary>\n\n")
 
                     passingFirstFailingSecond.forEach { testName ->
@@ -143,11 +147,12 @@ Number failing in Base (${first.commitId}) but now pass: ${failureFirstPassingSe
                     this.appendLine("</details>")
                 } else {
                     this.appendLine(":interrobang: CONFORMANCE REPORT REGRESSION DETECTED :interrobang:")
+                    this.appendLine("Download Artifact from Summary to view the complete list")
                 }
             }
 
             if (failureFirstPassingSecond.isNotEmpty()) {
-                if (failureFirstPassingSecond.size < 10) {
+                if (failureFirstPassingSecond.size < limit) {
                     this.appendLine(
                         "The following test(s) were previously failing but now pass. Before merging, confirm they are intended to pass: \n<details><summary>Click here to see</summary>\n\n"
                     )
@@ -157,6 +162,7 @@ Number failing in Base (${first.commitId}) but now pass: ${failureFirstPassingSe
                     this.appendLine("</details>")
                 } else {
                     this.appendLine("${failureFirstPassingSecond.size} test(s) were previously failing but now pass. Before merging, confirm they are intended to pass")
+                    this.appendLine("Download Artifact from Summary to view the complete list")
                 }
             }
         }
@@ -164,7 +170,7 @@ Number failing in Base (${first.commitId}) but now pass: ${failureFirstPassingSe
 
 class CrossEngineReportAnalyzer(private val first: Report, private val second: Report) : ReportAnalyzer(first, second) {
     override val reportTitle: String = "Conformance comparison report-Cross Engine"
-    override fun generateComparisonReport() =
+    override fun generateComparisonReport(limit: Int) =
         buildString {
             this.appendLine(
                 """### $reportTitle
@@ -189,7 +195,7 @@ Number failing in ${first.engine} engine but pass in ${second.engine} engine: ${
                 """.trimIndent()
             )
             if (passingFirstFailingSecond.isNotEmpty()) {
-                if (passingFirstFailingSecond.size < 10) {
+                if (passingFirstFailingSecond.size < limit) {
                     this.appendLine(":interrobang: CONFORMANCE REPORT REGRESSION DETECTED :interrobang:. The following test(s) are passing in ${first.engine} but fail in ${second.engine}:\n<details><summary>Click here to see</summary>\n\n")
 
                     passingFirstFailingSecond.forEach { testName ->
@@ -198,6 +204,7 @@ Number failing in ${first.engine} engine but pass in ${second.engine} engine: ${
                     this.appendLine("</details>")
                 } else {
                     this.appendLine(":interrobang: CONFORMANCE REPORT REGRESSION DETECTED :interrobang:")
+                    this.appendLine("Download Artifact from Summary to view the complete list")
                 }
             }
 
@@ -212,6 +219,7 @@ Number failing in ${first.engine} engine but pass in ${second.engine} engine: ${
                     this.appendLine("</details>")
                 } else {
                     this.appendLine("${failureFirstPassingSecond.size} test(s) were failing in ${first.engine} but now pass in ${second.engine}. Before merging, confirm they are intended to pass.")
+                    this.appendLine("Download Artifact from Summary to view the complete list")
                 }
             }
         }

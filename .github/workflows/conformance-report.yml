@@ -5,6 +5,8 @@ env:
   PATH_TO_TEST_RUNNER: test/partiql-tests-runner
   CONFORMANCE_REPORT_RELATIVE_PATH: build/conformance-test-report
   COMPARISON_REPORT_NAME: comparison_report.md
+  COMPARISON_REPORT_NAME_WITH_LIMIT: comparison_report_limited.md
+  COMMENT_SIZE_LIMIT: 10
 
 jobs:
   conformance-report:
@@ -95,7 +97,7 @@ jobs:
           mkdir -p $GITHUB_WORKSPACE/artifact
           cp -r $GITHUB_WORKSPACE/${{ github.event.pull_request.base.sha }}/$PATH_TO_TEST_RUNNER/$CONFORMANCE_REPORT_RELATIVE_PATH $GITHUB_WORKSPACE/artifact/$CONFORMANCE_REPORT_RELATIVE_PATH
       # Run conformance report comparison. Generates `comparison_report.md`
-      - name: Run conformance report comparison. Generates `comparison_report.md`
+      - name: Run conformance report comparison for artifact. Generates `comparison_report.md`
         continue-on-error: true
         run: |
           ARGS="$GITHUB_WORKSPACE/artifact $CONFORMANCE_REPORT_RELATIVE_PATH ${{ github.event.pull_request.base.sha }} $GITHUB_SHA $COMPARISON_REPORT_NAME"
@@ -104,6 +106,17 @@ jobs:
       - name: Print markdown in run
         continue-on-error: true
         run: echo $PATH_TO_TEST_RUNNER/$COMPARISON_REPORT_NAME >> $GITHUB_STEP_SUMMARY
+      # Uploaded the full comparison report to artifact
+      - name: Upload `comparison_report.md`
+        uses: actions/upload-artifact@v3
+        with:
+          path: ${{ env.PATH_TO_TEST_RUNNER }}/$COMPARISON_REPORT_NAME
+      # Rebuild the test report with a size limit for comment
+      - name: Run conformance report comparison for comment. Generates `comparison_report_limited.md`
+        continue-on-error: true
+        run: |
+          ARGS="$GITHUB_WORKSPACE/artifact $CONFORMANCE_REPORT_RELATIVE_PATH ${{ github.event.pull_request.base.sha }} $GITHUB_SHA $COMPARISON_REPORT_NAME_WITH_LIMIT $COMMENT_SIZE_LIMIT"
+          gradle :test:partiql-tests-runner:run --args="$ARGS"
       # Find comment w/ conformance comparison if previous comment published
       - name: Find Comment
         uses: peter-evans/find-comment@v2
@@ -120,5 +133,5 @@ jobs:
         with:
           comment-id: ${{ steps.fc.outputs.comment-id }}
           issue-number: ${{ github.event.pull_request.number }}
-          body-file: ${{ env.PATH_TO_TEST_RUNNER }}/${{ env.COMPARISON_REPORT_NAME }}
+          body-file: ${{ env.PATH_TO_TEST_RUNNER }}/${{ env.COMPARISON_REPORT_NAME_WITH_LIMIT }}
           edit-mode: replace

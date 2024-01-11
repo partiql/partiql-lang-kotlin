@@ -1,3 +1,5 @@
+
+
 /*
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
@@ -31,6 +33,7 @@ dependencies {
 }
 
 val tests = System.getenv()["PARTIQL_TESTS_DATA"] ?: "../partiql-tests/partiql-tests-data"
+val reportDir = file("$buildDir/conformance-test-report").absolutePath
 
 object Env {
     const val PARTIQL_EVAL = "PARTIQL_EVAL_TESTS_DATA"
@@ -49,16 +52,19 @@ tasks.test {
     exclude("org/partiql/runner/ConformanceTest.class")
 }
 
-tasks.register<Test>("ConformanceTestReport") {
-    val reportDir = file("$buildDir/conformance-test-report").absolutePath
+val createReportDir by tasks.registering {
     if (File(reportDir).exists()) {
         delete(File(reportDir))
     }
+    mkdir(reportDir)
+}
+
+val generateTestReport by tasks.registering(Test::class) {
+    dependsOn(createReportDir)
     useJUnitPlatform()
     environment(Env.PARTIQL_EVAL, file("$tests/eval/").absolutePath)
     environment(Env.PARTIQL_EQUIV, file("$tests/eval-equiv/").absolutePath)
     environment("conformanceReportDir", reportDir)
-    mkdir(reportDir)
     include("org/partiql/runner/ConformanceTestEval.class", "org/partiql/runner/ConformanceTestLegacy.class")
     if (project.hasProperty("Engine")) {
         val engine = property("Engine")!! as String
