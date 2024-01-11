@@ -106,7 +106,7 @@ jobs:
       - name: Print markdown in run
         continue-on-error: true
         run: cat $PATH_TO_TEST_RUNNER/$COMPARISON_REPORT_NAME >> $GITHUB_STEP_SUMMARY
-      # Uploaded the full comparison report to artifact
+      # Upload the full comparison report to CI artifact
       - name: Upload `comparison_report.md`
         uses: actions/upload-artifact@v3
         with:
