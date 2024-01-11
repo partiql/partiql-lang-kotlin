@@ -105,12 +105,12 @@ jobs:
       # Print conformance report to GitHub actions workflow summary page
       - name: Print markdown in run
         continue-on-error: true
-        run: echo $PATH_TO_TEST_RUNNER/$COMPARISON_REPORT_NAME >> $GITHUB_STEP_SUMMARY
+        run: cat $PATH_TO_TEST_RUNNER/$COMPARISON_REPORT_NAME >> $GITHUB_STEP_SUMMARY
       # Uploaded the full comparison report to artifact
       - name: Upload `comparison_report.md`
         uses: actions/upload-artifact@v3
         with:
-          path: ${{ env.PATH_TO_TEST_RUNNER }}/$COMPARISON_REPORT_NAME
+          path: ${{ env.PATH_TO_TEST_RUNNER }}/comparison_report.md
       # Rebuild the test report with a size limit for comment
       - name: Run conformance report comparison for comment. Generates `comparison_report_limited.md`
         continue-on-error: true
