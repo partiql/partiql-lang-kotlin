@@ -190,7 +190,7 @@ Number failing in ${first.engine} engine but pass in ${second.engine} engine: ${
             )
             if (passingFirstFailingSecond.isNotEmpty()) {
                 if (passingFirstFailingSecond.size < 10) {
-                    this.appendLine(":interrobang: CONFORMANCE REPORT REGRESSION DETECTED :interrobang:. The following test(s) were previously passing in ${first.engine} but fail in ${second.engine}:\n<details><summary>Click here to see</summary>\n\n")
+                    this.appendLine(":interrobang: CONFORMANCE REPORT REGRESSION DETECTED :interrobang:. The following test(s) are passing in ${first.engine} but fail in ${second.engine}:\n<details><summary>Click here to see</summary>\n\n")
 
                     passingFirstFailingSecond.forEach { testName ->
                         this.appendLine("- $testName")
