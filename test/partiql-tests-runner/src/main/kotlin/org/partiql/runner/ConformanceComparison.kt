@@ -168,7 +168,7 @@ class CrossEngineReportAnalyzer(private val first: Report, private val second: R
         buildString {
             this.appendLine(
                 """### $reportTitle
-| | Base ${first.engine} | ${second.engine} | +/- |
+| | Base (${first.engine}) | ${second.engine} | +/- |
 | --- | ---: | ---: | ---: |
 | % Passing | ${"%.2f".format(firstPassingPercent)}% | ${"%.2f".format(secondPassingPercent)}% | ${"%.2f".format(secondPassingPercent - firstPassingPercent)}% |
 | :white_check_mark: Passing | $firstPassingSize | $secondPassingSize | ${secondPassingSize - firstPassingSize} |
