@@ -339,42 +339,48 @@ internal object PlanTransform : PlanBaseVisitor<PlanNode, ProblemCallback>() {
 
         override fun visitRelOpExclude(node: Rel.Op.Exclude, ctx: ProblemCallback) = org.partiql.plan.Rel.Op.Exclude(
             input = visitRel(node.input, ctx),
-            items = node.items.map { visitRelOpExcludeItem(it, ctx) },
+            paths = node.paths.map { visitRelOpExcludePath(it, ctx) },
         )
 
-        override fun visitRelOpExcludeItem(node: Rel.Op.Exclude.Item, ctx: ProblemCallback): org.partiql.plan.Rel.Op.Exclude.Item {
+        override fun visitRelOpExcludePath(node: Rel.Op.Exclude.Path, ctx: ProblemCallback): org.partiql.plan.Rel.Op.Exclude.Path {
             val root = when (node.root) {
                 is Rex.Op.Var.Resolved -> visitRexOpVar(node.root, ctx) as org.partiql.plan.Rex.Op.Var
                 is Rex.Op.Var.Unresolved -> org.partiql.plan.Rex.Op.Var(-1) // unresolved in `PlanTyper` results in error
             }
-            return org.partiql.plan.Rel.Op.Exclude.Item(
+            return org.partiql.plan.Rel.Op.Exclude.Path(
                 root = root,
                 steps = node.steps.map { visitRelOpExcludeStep(it, ctx) },
             )
         }
 
-        override fun visitRelOpExcludeStep(node: Rel.Op.Exclude.Step, ctx: ProblemCallback) =
-            super.visit(node, ctx) as org.partiql.plan.Rel.Op.Exclude.Step
-
-        override fun visitRelOpExcludeStepStructField(node: Rel.Op.Exclude.Step.StructField, ctx: ProblemCallback) =
-            org.partiql.plan.Rel.Op.Exclude.Step.StructField(
-                symbol = visitIdentifierSymbol(node.symbol, ctx),
+        override fun visitRelOpExcludeStep(node: Rel.Op.Exclude.Step, ctx: ProblemCallback): org.partiql.plan.Rel.Op.Exclude.Step {
+            return org.partiql.plan.Rel.Op.Exclude.Step(
+                type = visitRelOpExcludeType(node.type, ctx),
+                substeps = node.substeps.map { visitRelOpExcludeStep(it, ctx) }
             )
+        }
 
-        override fun visitRelOpExcludeStepCollIndex(node: Rel.Op.Exclude.Step.CollIndex, ctx: ProblemCallback) =
-            org.partiql.plan.Rel.Op.Exclude.Step.CollIndex(
-                index = node.index,
-            )
+        override fun visitRelOpExcludeType(node: Rel.Op.Exclude.Type, ctx: ProblemCallback) =
+            super.visitRelOpExcludeType(node, ctx) as org.partiql.plan.Rel.Op.Exclude.Type
 
-        override fun visitRelOpExcludeStepStructWildcard(
-            node: Rel.Op.Exclude.Step.StructWildcard,
+        override fun visitRelOpExcludeTypeStructSymbol(node: Rel.Op.Exclude.Type.StructSymbol, ctx: ProblemCallback) =
+            org.partiql.plan.Rel.Op.Exclude.Type.StructSymbol(symbol = node.symbol)
+
+        override fun visitRelOpExcludeTypeStructKey(node: Rel.Op.Exclude.Type.StructKey, ctx: ProblemCallback) =
+            org.partiql.plan.Rel.Op.Exclude.Type.StructKey(key = node.key)
+
+        override fun visitRelOpExcludeTypeCollIndex(node: Rel.Op.Exclude.Type.CollIndex, ctx: ProblemCallback) =
+            org.partiql.plan.Rel.Op.Exclude.Type.CollIndex(index = node.index,)
+
+        override fun visitRelOpExcludeTypeStructWildcard(
+            node: Rel.Op.Exclude.Type.StructWildcard,
             ctx: ProblemCallback,
-        ) = org.partiql.plan.Rel.Op.Exclude.Step.StructWildcard()
+        ) = org.partiql.plan.Rel.Op.Exclude.Type.StructWildcard()
 
-        override fun visitRelOpExcludeStepCollWildcard(
-            node: Rel.Op.Exclude.Step.CollWildcard,
+        override fun visitRelOpExcludeTypeCollWildcard(
+            node: Rel.Op.Exclude.Type.CollWildcard,
             ctx: ProblemCallback,
-        ) = org.partiql.plan.Rel.Op.Exclude.Step.CollWildcard()
+        ) = org.partiql.plan.Rel.Op.Exclude.Type.CollWildcard()
 
         override fun visitRelOpErr(node: Rel.Op.Err, ctx: ProblemCallback) = org.partiql.plan.Rel.Op.Err(node.message)
 

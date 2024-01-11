@@ -18,11 +18,11 @@ internal abstract class PlanBaseVisitor<R, C> : PlanVisitor<R, C> {
 
     override fun visitPartiQLPlan(node: PartiQLPlan, ctx: C): R = defaultVisit(node, ctx)
 
-    public override fun visitCatalog(node: Catalog, ctx: C): R = defaultVisit(node, ctx)
+    override fun visitCatalog(node: Catalog, ctx: C): R = defaultVisit(node, ctx)
 
-    public override fun visitCatalogSymbol(node: Catalog.Symbol, ctx: C): R = defaultVisit(node, ctx)
+    override fun visitCatalogSymbol(node: Catalog.Symbol, ctx: C): R = defaultVisit(node, ctx)
 
-    public override fun visitCatalogSymbolRef(node: Catalog.Symbol.Ref, ctx: C): R =
+    override fun visitCatalogSymbolRef(node: Catalog.Symbol.Ref, ctx: C): R =
         defaultVisit(node, ctx)
 
     override fun visitFn(node: Fn, ctx: C): R = when (node) {
@@ -230,31 +230,38 @@ internal abstract class PlanBaseVisitor<R, C> : PlanVisitor<R, C> {
 
     override fun visitRelOpExclude(node: Rel.Op.Exclude, ctx: C): R = defaultVisit(node, ctx)
 
-    override fun visitRelOpExcludeItem(node: Rel.Op.Exclude.Item, ctx: C): R =
+    override fun visitRelOpExcludePath(node: Rel.Op.Exclude.Path, ctx: C): R =
         defaultVisit(node, ctx)
 
-    override fun visitRelOpExcludeStep(node: Rel.Op.Exclude.Step, ctx: C): R = when (node) {
-        is Rel.Op.Exclude.Step.StructField -> visitRelOpExcludeStepStructField(node, ctx)
-        is Rel.Op.Exclude.Step.CollIndex -> visitRelOpExcludeStepCollIndex(node, ctx)
-        is Rel.Op.Exclude.Step.StructWildcard -> visitRelOpExcludeStepStructWildcard(node, ctx)
-        is Rel.Op.Exclude.Step.CollWildcard -> visitRelOpExcludeStepCollWildcard(node, ctx)
+    override fun visitRelOpExcludeStep(node: Rel.Op.Exclude.Step, ctx: C): R =
+        defaultVisit(node, ctx)
+
+    override fun visitRelOpExcludeType(node: Rel.Op.Exclude.Type, ctx: C): R = when (node) {
+        is Rel.Op.Exclude.Type.StructSymbol -> visitRelOpExcludeTypeStructSymbol(node, ctx)
+        is Rel.Op.Exclude.Type.StructKey -> visitRelOpExcludeTypeStructKey(node, ctx)
+        is Rel.Op.Exclude.Type.CollIndex -> visitRelOpExcludeTypeCollIndex(node, ctx)
+        is Rel.Op.Exclude.Type.StructWildcard -> visitRelOpExcludeTypeStructWildcard(node, ctx)
+        is Rel.Op.Exclude.Type.CollWildcard -> visitRelOpExcludeTypeCollWildcard(node, ctx)
     }
 
-    override fun visitRelOpExcludeStepStructField(
-        node: Rel.Op.Exclude.Step.StructField,
+    override fun visitRelOpExcludeTypeStructSymbol(
+        node: Rel.Op.Exclude.Type.StructSymbol,
         ctx: C
     ): R = defaultVisit(node, ctx)
 
-    override fun visitRelOpExcludeStepCollIndex(node: Rel.Op.Exclude.Step.CollIndex, ctx: C): R =
+    override fun visitRelOpExcludeTypeStructKey(node: Rel.Op.Exclude.Type.StructKey, ctx: C): R =
         defaultVisit(node, ctx)
 
-    override fun visitRelOpExcludeStepStructWildcard(
-        node: Rel.Op.Exclude.Step.StructWildcard,
+    override fun visitRelOpExcludeTypeCollIndex(node: Rel.Op.Exclude.Type.CollIndex, ctx: C): R =
+        defaultVisit(node, ctx)
+
+    override fun visitRelOpExcludeTypeStructWildcard(
+        node: Rel.Op.Exclude.Type.StructWildcard,
         ctx: C
     ): R = defaultVisit(node, ctx)
 
-    override fun visitRelOpExcludeStepCollWildcard(
-        node: Rel.Op.Exclude.Step.CollWildcard,
+    override fun visitRelOpExcludeTypeCollWildcard(
+        node: Rel.Op.Exclude.Type.CollWildcard,
         ctx: C
     ): R = defaultVisit(node, ctx)
 

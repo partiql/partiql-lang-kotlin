@@ -20,11 +20,13 @@ import org.partiql.planner.internal.ir.builder.RelOpDistinctBuilder
 import org.partiql.planner.internal.ir.builder.RelOpErrBuilder
 import org.partiql.planner.internal.ir.builder.RelOpExceptBuilder
 import org.partiql.planner.internal.ir.builder.RelOpExcludeBuilder
-import org.partiql.planner.internal.ir.builder.RelOpExcludeItemBuilder
-import org.partiql.planner.internal.ir.builder.RelOpExcludeStepCollIndexBuilder
-import org.partiql.planner.internal.ir.builder.RelOpExcludeStepCollWildcardBuilder
-import org.partiql.planner.internal.ir.builder.RelOpExcludeStepStructFieldBuilder
-import org.partiql.planner.internal.ir.builder.RelOpExcludeStepStructWildcardBuilder
+import org.partiql.planner.internal.ir.builder.RelOpExcludePathBuilder
+import org.partiql.planner.internal.ir.builder.RelOpExcludeStepBuilder
+import org.partiql.planner.internal.ir.builder.RelOpExcludeTypeCollIndexBuilder
+import org.partiql.planner.internal.ir.builder.RelOpExcludeTypeCollWildcardBuilder
+import org.partiql.planner.internal.ir.builder.RelOpExcludeTypeStructKeyBuilder
+import org.partiql.planner.internal.ir.builder.RelOpExcludeTypeStructSymbolBuilder
+import org.partiql.planner.internal.ir.builder.RelOpExcludeTypeStructWildcardBuilder
 import org.partiql.planner.internal.ir.builder.RelOpFilterBuilder
 import org.partiql.planner.internal.ir.builder.RelOpIntersectBuilder
 import org.partiql.planner.internal.ir.builder.RelOpJoinBuilder
@@ -1231,19 +1233,19 @@ internal data class Rel(
             @JvmField
             internal val input: Rel,
             @JvmField
-            internal val items: List<Item>,
+            internal val paths: List<Path>,
         ) : Op() {
             internal override val children: List<PlanNode> by lazy {
                 val kids = mutableListOf<PlanNode?>()
                 kids.add(input)
-                kids.addAll(items)
+                kids.addAll(paths)
                 kids.filterNotNull()
             }
 
             internal override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
                 visitor.visitRelOpExclude(this, ctx)
 
-            internal data class Item(
+            internal data class Path(
                 @JvmField
                 internal val root: Rex.Op.Var,
                 @JvmField
@@ -1257,87 +1259,139 @@ internal data class Rel(
                 }
 
                 internal override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
-                    visitor.visitRelOpExcludeItem(this, ctx)
+                    visitor.visitRelOpExcludePath(this, ctx)
 
                 internal companion object {
                     @JvmStatic
-                    internal fun builder(): RelOpExcludeItemBuilder = RelOpExcludeItemBuilder()
+                    internal fun builder(): RelOpExcludePathBuilder = RelOpExcludePathBuilder()
                 }
             }
 
-            internal sealed class Step : PlanNode() {
-                internal override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = when (this) {
-                    is StructField -> visitor.visitRelOpExcludeStepStructField(this, ctx)
-                    is CollIndex -> visitor.visitRelOpExcludeStepCollIndex(this, ctx)
-                    is StructWildcard -> visitor.visitRelOpExcludeStepStructWildcard(this, ctx)
-                    is CollWildcard -> visitor.visitRelOpExcludeStepCollWildcard(this, ctx)
+            internal data class Step(
+                @JvmField
+                internal val type: Type,
+                @JvmField
+                internal val substeps: List<Step>,
+            ) : PlanNode() {
+                internal override val children: List<PlanNode> by lazy {
+                    val kids = mutableListOf<PlanNode?>()
+                    kids.add(type)
+                    kids.addAll(substeps)
+                    kids.filterNotNull()
                 }
 
-                internal data class StructField(
+                internal override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                    visitor.visitRelOpExcludeStep(this, ctx)
+
+                internal companion object {
+                    @JvmStatic
+                    internal fun builder(): RelOpExcludeStepBuilder = RelOpExcludeStepBuilder()
+                }
+            }
+
+            internal sealed class Type : PlanNode() {
+                internal override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = when (this) {
+                    is StructSymbol -> visitor.visitRelOpExcludeTypeStructSymbol(this, ctx)
+                    is StructKey -> visitor.visitRelOpExcludeTypeStructKey(this, ctx)
+                    is CollIndex -> visitor.visitRelOpExcludeTypeCollIndex(this, ctx)
+                    is StructWildcard -> visitor.visitRelOpExcludeTypeStructWildcard(this, ctx)
+                    is CollWildcard -> visitor.visitRelOpExcludeTypeCollWildcard(this, ctx)
+                }
+
+                internal data class StructSymbol(
                     @JvmField
-                    internal val symbol: Identifier.Symbol,
-                ) : Step() {
-                    internal override val children: List<PlanNode> by lazy {
-                        val kids = mutableListOf<PlanNode?>()
-                        kids.add(symbol)
-                        kids.filterNotNull()
-                    }
+                    internal val symbol: String,
+                ) : Type() {
+                    internal override val children: List<PlanNode> = emptyList()
 
                     internal override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
-                        visitor.visitRelOpExcludeStepStructField(this, ctx)
+                        visitor.visitRelOpExcludeTypeStructSymbol(this, ctx)
 
                     internal companion object {
                         @JvmStatic
-                        internal fun builder(): RelOpExcludeStepStructFieldBuilder =
-                            RelOpExcludeStepStructFieldBuilder()
+                        internal fun builder(): RelOpExcludeTypeStructSymbolBuilder =
+                            RelOpExcludeTypeStructSymbolBuilder()
+                    }
+
+                    // Explicitly override `equals` and `hashcode` for case-insensitivity
+                    override fun equals(other: Any?): Boolean {
+                        if (this === other) return true
+                        if (javaClass != other?.javaClass) return false
+
+                        other as StructSymbol
+
+                        if (!symbol.equals(other.symbol, ignoreCase = true)) return false
+                        if (children != other.children) return false
+
+                        return true
+                    }
+
+                    override fun hashCode(): Int {
+                        return symbol.lowercase().hashCode()
+                    }
+                }
+
+                internal data class StructKey(
+                    @JvmField
+                    internal val key: String,
+                ) : Type() {
+                    internal override val children: List<PlanNode> = emptyList()
+
+                    internal override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                        visitor.visitRelOpExcludeTypeStructKey(this, ctx)
+
+                    internal companion object {
+                        @JvmStatic
+                        internal fun builder(): RelOpExcludeTypeStructKeyBuilder =
+                            RelOpExcludeTypeStructKeyBuilder()
                     }
                 }
 
                 internal data class CollIndex(
                     @JvmField
                     internal val index: Int,
-                ) : Step() {
+                ) : Type() {
                     internal override val children: List<PlanNode> = emptyList()
 
                     internal override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
-                        visitor.visitRelOpExcludeStepCollIndex(this, ctx)
+                        visitor.visitRelOpExcludeTypeCollIndex(this, ctx)
 
                     internal companion object {
                         @JvmStatic
-                        internal fun builder(): RelOpExcludeStepCollIndexBuilder =
-                            RelOpExcludeStepCollIndexBuilder()
+                        internal fun builder(): RelOpExcludeTypeCollIndexBuilder =
+                            RelOpExcludeTypeCollIndexBuilder()
                     }
                 }
 
                 internal data class StructWildcard(
                     @JvmField
                     internal val ` `: Char = ' ',
-                ) : Step() {
+                ) : Type() {
                     internal override val children: List<PlanNode> = emptyList()
 
                     internal override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
-                        visitor.visitRelOpExcludeStepStructWildcard(this, ctx)
+                        visitor.visitRelOpExcludeTypeStructWildcard(this, ctx)
 
                     internal companion object {
                         @JvmStatic
-                        internal fun builder(): RelOpExcludeStepStructWildcardBuilder =
-                            RelOpExcludeStepStructWildcardBuilder()
+                        internal fun builder(): RelOpExcludeTypeStructWildcardBuilder =
+                            RelOpExcludeTypeStructWildcardBuilder()
                     }
                 }
 
                 internal data class CollWildcard(
                     @JvmField
                     internal val ` `: Char = ' ',
-                ) : Step() {
+                ) : Type() {
                     internal override val children: List<PlanNode> = emptyList()
 
                     internal override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
-                        visitor.visitRelOpExcludeStepCollWildcard(this, ctx)
+                        visitor.visitRelOpExcludeTypeCollWildcard(this, ctx)
 
                     internal companion object {
                         @JvmStatic
-                        internal fun builder(): RelOpExcludeStepCollWildcardBuilder =
-                            RelOpExcludeStepCollWildcardBuilder()
+                        internal fun builder(): RelOpExcludeTypeCollWildcardBuilder =
+                            RelOpExcludeTypeCollWildcardBuilder()
                     }
                 }
             }

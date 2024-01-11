@@ -1,11 +1,13 @@
 package org.partiql.eval.internal.operator.rel
 
 import org.partiql.eval.internal.Record
-import org.partiql.eval.internal.exclude.CompiledExcludeItem
-import org.partiql.eval.internal.exclude.ExcludeFieldCase
-import org.partiql.eval.internal.exclude.ExcludeNode
-import org.partiql.eval.internal.exclude.ExcludeStep
 import org.partiql.eval.internal.operator.Operator
+import org.partiql.plan.Rel
+import org.partiql.plan.relOpExcludeTypeCollIndex
+import org.partiql.plan.relOpExcludeTypeCollWildcard
+import org.partiql.plan.relOpExcludeTypeStructKey
+import org.partiql.plan.relOpExcludeTypeStructSymbol
+import org.partiql.plan.relOpExcludeTypeStructWildcard
 import org.partiql.value.BagValue
 import org.partiql.value.CollectionValue
 import org.partiql.value.ListValue
@@ -21,7 +23,7 @@ import org.partiql.value.structValue
 
 internal class RelExclude(
     private val input: Operator.Relation,
-    private val exclusions: List<CompiledExcludeItem>
+    private val exclusions: List<Rel.Op.Exclude.Path>
 ) : Operator.Relation {
 
     override fun open() {
@@ -45,12 +47,12 @@ internal class RelExclude(
     @OptIn(PartiQLValueExperimental::class)
     private fun excludeOnRecord(
         record: Record,
-        exclusions: CompiledExcludeItem
+        path: Rel.Op.Exclude.Path
     ): Record {
         val values = record.values
-        val value = values.getOrNull(exclusions.root)
+        val value = values.getOrNull(path.root.ref)
         val newValues = if (value != null) {
-            values[exclusions.root] = excludeOnPartiQLValue(value, exclusions)
+            values[path.root.ref] = excludeOnPartiQLValue(value, path.steps)
             values
         } else {
             values
@@ -61,49 +63,57 @@ internal class RelExclude(
     @OptIn(PartiQLValueExperimental::class)
     private fun excludeOnStructValue(
         structValue: StructValue<*>,
-        exclusions: ExcludeNode
+        exclusions: List<Rel.Op.Exclude.Step>
     ): PartiQLValue {
-        val attrsToRemove = exclusions.leaves.mapNotNull { leaf ->
-            when (val leafStep = leaf.step) {
-                is ExcludeStep.StructWildcard -> {
-                    // tuple wildcard at current level. return empty struct
-                    return structValue<PartiQLValue>()
+        val attrSymbolsToRemove = mutableSetOf<String>()
+        val attrKeysToRemove = mutableSetOf<String>()
+        val branches = mutableMapOf<Rel.Op.Exclude.Type, List<Rel.Op.Exclude.Step>>()
+        exclusions.forEach { exclusion ->
+            when (exclusion.substeps.isEmpty()) {
+                true -> {
+                    when (val leafType = exclusion.type) {
+                        is Rel.Op.Exclude.Type.StructWildcard -> {
+                            // tuple wildcard at current level. return empty struct
+                            return structValue<PartiQLValue>()
+                        }
+                        is Rel.Op.Exclude.Type.StructSymbol -> attrSymbolsToRemove.add(leafType.symbol)
+                        is Rel.Op.Exclude.Type.StructKey -> attrKeysToRemove.add(leafType.key.lowercase())
+                        else -> { /* non-coll step; do nothing */ }
+                    }
                 }
-                is ExcludeStep.StructField -> leafStep.attr
-                is ExcludeStep.CollIndex, is ExcludeStep.CollWildcard -> null
+                false -> {
+                    when (exclusion.type) {
+                        is Rel.Op.Exclude.Type.StructWildcard, is Rel.Op.Exclude.Type.StructSymbol, is Rel.Op.Exclude.Type.StructKey -> branches[exclusion.type] =
+                            exclusion.substeps
+                        else -> { /* non-coll step; do nothing */ }
+                    }
+                }
             }
-        }.toSet()
-        val branches = exclusions.branches
+        }
         val finalStruct = structValue.entries.mapNotNull { structField ->
-            if (attrsToRemove.contains(structField.first)) {
+            if (attrSymbolsToRemove.contains(structField.first) || attrKeysToRemove.contains(structField.first.lowercase())) {
                 // struct attr is to be removed at current level
                 null
             } else {
                 // deeper level exclusions
                 val name = structField.first
-                var expr = structField.second
+                var value = structField.second
                 // apply case-sensitive tuple attr exclusions at deeper levels
-                val structFieldCaseSensitiveKey = ExcludeStep.StructField(name, ExcludeFieldCase.SENSITIVE)
-                branches.find {
-                    it.step == structFieldCaseSensitiveKey
-                }?.let {
-                    expr = excludeOnPartiQLValue(expr, it)
+                val structFieldCaseSensitiveKey = relOpExcludeTypeStructKey(name)
+                branches[structFieldCaseSensitiveKey]?.let {
+                    value = excludeOnPartiQLValue(value, it)
                 }
                 // apply case-insensitive tuple attr exclusions at deeper levels
-                val structFieldCaseInsensitiveKey = ExcludeStep.StructField(name, ExcludeFieldCase.INSENSITIVE)
-                branches.find {
-                    it.step == structFieldCaseInsensitiveKey
-                }?.let {
-                    expr = excludeOnPartiQLValue(expr, it)
+                val structFieldCaseInsensitiveKey = relOpExcludeTypeStructSymbol(name)
+                branches[structFieldCaseInsensitiveKey]?.let {
+                    value = excludeOnPartiQLValue(value, it)
                 }
                 // apply tuple wildcard exclusions at deeper levels
-                val tupleWildcardKey = ExcludeStep.StructWildcard
-                branches.find {
-                    it.step == tupleWildcardKey
-                }?.let {
-                    expr = excludeOnPartiQLValue(expr, it)
+                val tupleWildcardKey = relOpExcludeTypeStructWildcard()
+                branches[tupleWildcardKey]?.let {
+                    value = excludeOnPartiQLValue(value, it)
                 }
-                Pair(name, expr)
+                Pair(name, value)
             }
         }
         return structValue(finalStruct)
@@ -127,50 +137,60 @@ internal class RelExclude(
     private fun excludeOnCollValue(
         coll: CollectionValue<*>,
         type: PartiQLValueType,
-        exclusions: ExcludeNode
+        exclusions: List<Rel.Op.Exclude.Step>
     ): PartiQLValue {
-        val indexesToRemove = exclusions.leaves.mapNotNull { leaf ->
-            when (val leafStep = leaf.step) {
-                is ExcludeStep.CollWildcard -> {
-                    // collection wildcard at current level. return empty collection
-                    return newCollValue(type, emptyList())
+        val indexesToRemove = mutableSetOf<Int>()
+        val branches = mutableMapOf<Rel.Op.Exclude.Type, List<Rel.Op.Exclude.Step>>()
+        exclusions.forEach { exclusion ->
+            when (exclusion.substeps.isEmpty()) {
+                true -> {
+                    when (val leafType = exclusion.type) {
+                        is Rel.Op.Exclude.Type.CollWildcard -> {
+                            // collection wildcard at current level. return empty collection
+                            return newCollValue(type, emptyList())
+                        }
+                        is Rel.Op.Exclude.Type.CollIndex -> {
+                            indexesToRemove.add(leafType.index)
+                        }
+                        else -> { /* non-coll step; do nothing */ }
+                    }
                 }
-                is ExcludeStep.CollIndex -> leafStep.index
-                is ExcludeStep.StructField, is ExcludeStep.StructWildcard -> null
+                false -> {
+                    when (exclusion.type) {
+                        is Rel.Op.Exclude.Type.CollWildcard, is Rel.Op.Exclude.Type.CollIndex -> branches[exclusion.type] =
+                            exclusion.substeps
+                        else -> { /* non-coll step; do nothing */ }
+                    }
+                }
             }
-        }.toSet()
-        val branches = exclusions.branches
+        }
         val finalColl = coll.mapIndexedNotNull { index, element ->
             if (indexesToRemove.contains(index)) {
                 // coll index is to be removed at current level
                 null
             } else {
                 // deeper level exclusions
-                var expr = element
+                var value = element
                 if (coll is ListValue || coll is SexpValue) {
                     // apply collection index exclusions at deeper levels for lists and sexps
-                    val elementKey = ExcludeStep.CollIndex(index)
-                    branches.find {
-                        it.step == elementKey
-                    }?.let {
-                        expr = excludeOnPartiQLValue(element, it)
+                    val elementKey = relOpExcludeTypeCollIndex(index)
+                    branches[elementKey]?.let {
+                        value = excludeOnPartiQLValue(element, it)
                     }
                 }
                 // apply collection wildcard exclusions at deeper levels for lists, bags, and sexps
-                val collectionWildcardKey = ExcludeStep.CollWildcard
-                branches.find {
-                    it.step == collectionWildcardKey
-                }?.let {
-                    expr = excludeOnPartiQLValue(expr, it)
+                val collectionWildcardKey = relOpExcludeTypeCollWildcard()
+                branches[collectionWildcardKey]?.let {
+                    value = excludeOnPartiQLValue(value, it)
                 }
-                expr
+                value
             }
         }
         return newCollValue(type, finalColl)
     }
 
     @OptIn(PartiQLValueExperimental::class)
-    private fun excludeOnPartiQLValue(initialPartiQLValue: PartiQLValue, exclusions: ExcludeNode): PartiQLValue {
+    private fun excludeOnPartiQLValue(initialPartiQLValue: PartiQLValue, exclusions: List<Rel.Op.Exclude.Step>): PartiQLValue {
         return when (initialPartiQLValue) {
             is StructValue<*> -> excludeOnStructValue(initialPartiQLValue, exclusions)
             is BagValue<*> -> excludeOnCollValue(initialPartiQLValue, PartiQLValueType.BAG, exclusions)
