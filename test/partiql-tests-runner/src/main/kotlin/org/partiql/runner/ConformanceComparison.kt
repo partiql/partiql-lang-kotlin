@@ -204,7 +204,7 @@ Number failing in ${first.engine} engine but pass in ${second.engine} engine: ${
             if (failureFirstPassingSecond.isNotEmpty()) {
                 if (failureFirstPassingSecond.size < 10) {
                     this.appendLine(
-                        "The following test(s) were failing in ${first.engine} but now pass in ${second.engine}. Before merging, confirm they are intended to pass: \n<details><summary>Click here to see</summary>\n\n"
+                        "The following test(s) are failing in ${first.engine} but pass in ${second.engine}. Before merging, confirm they are intended to pass: \n<details><summary>Click here to see</summary>\n\n"
                     )
                     failureFirstPassingSecond.forEach { testName ->
                         this.appendLine("- ${testName}\n")
