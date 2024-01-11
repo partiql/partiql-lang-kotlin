@@ -147,7 +147,7 @@ Number failing in Base (${first.commitId}) but now pass: ${failureFirstPassingSe
                     this.appendLine("</details>")
                 } else {
                     this.appendLine(":interrobang: CONFORMANCE REPORT REGRESSION DETECTED :interrobang:")
-                    this.appendLine("Download Artifact from Summary to view the complete list")
+                    this.appendLine("The complete list can be found in GitHub CI summary, either from Step Summary or in the Artifact.")
                 }
             }
 
@@ -162,7 +162,7 @@ Number failing in Base (${first.commitId}) but now pass: ${failureFirstPassingSe
                     this.appendLine("</details>")
                 } else {
                     this.appendLine("${failureFirstPassingSecond.size} test(s) were previously failing but now pass. Before merging, confirm they are intended to pass")
-                    this.appendLine("Download Artifact from Summary to view the complete list")
+                    this.appendLine("The complete list can be found in GitHub CI summary, either from Step Summary or in the Artifact.")
                 }
             }
         }
@@ -204,7 +204,7 @@ Number failing in ${first.engine} engine but pass in ${second.engine} engine: ${
                     this.appendLine("</details>")
                 } else {
                     this.appendLine(":interrobang: CONFORMANCE REPORT REGRESSION DETECTED :interrobang:")
-                    this.appendLine("Download Artifact from Summary to view the complete list")
+                    this.appendLine("The complete list can be found in GitHub CI summary, either from Step Summary or in the Artifact.")
                 }
             }
 
@@ -219,7 +219,7 @@ Number failing in ${first.engine} engine but pass in ${second.engine} engine: ${
                     this.appendLine("</details>")
                 } else {
                     this.appendLine("${failureFirstPassingSecond.size} test(s) were failing in ${first.engine} but now pass in ${second.engine}. Before merging, confirm they are intended to pass.")
-                    this.appendLine("Download Artifact from Summary to view the complete list")
+                    this.appendLine("The complete list can be found in GitHub CI summary, either from Step Summary or in the Artifact.")
                 }
             }
         }
