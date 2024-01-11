@@ -6,8 +6,10 @@ import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.junit.jupiter.api.extension.TestWatcher
 import java.io.File
+import java.nio.file.Files
+import kotlin.io.path.Path
 
-class ReportGenerator : TestWatcher, AfterAllCallback {
+class ReportGenerator(val engine: String) : TestWatcher, AfterAllCallback {
     var failingTests = emptySet<String>()
     var passingTests = emptySet<String>()
     var ignoredTests = emptySet<String>()
@@ -22,7 +24,9 @@ class ReportGenerator : TestWatcher, AfterAllCallback {
     }
 
     override fun afterAll(p0: ExtensionContext?) {
-        val file = File("./conformance_test_results.ion")
+        val basePath = System.getenv("conformanceReportDir")
+        val dir = Files.createDirectory(Path("$basePath/$engine")).toFile()
+        val file = File(dir, "conformance_test_results.ion")
         val outputStream = file.outputStream()
         val writer = IonTextWriterBuilder.pretty().build(outputStream)
         writer.stepIn(IonType.STRUCT) // in: outer struct
