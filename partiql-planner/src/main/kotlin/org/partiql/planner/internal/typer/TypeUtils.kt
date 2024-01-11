@@ -183,7 +183,7 @@ internal fun StructType.exclude(step: Rel.Op.Exclude.Step, lastStepOptional: Boo
         }
         when (type) {
             is Rel.Op.Exclude.Type.StructSymbol -> {
-                if (type.symbol == field.key) {
+                if (type.symbol.equals(field.key, ignoreCase = true)) {
                     newField
                 } else {
                     field
