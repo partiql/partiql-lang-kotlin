@@ -12,21 +12,18 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.spi
+package org.partiql.spi.connector
 
-/**
- * Encapsulates the data necessary to perform a binding lookup.
- */
-public data class BindingName(
-    public val name: String,
-    public val case: BindingCase,
-) {
+import org.partiql.spi.fn.FnExperimental
+import org.partiql.spi.fn.FnSignature
+
+@OptIn(FnExperimental::class)
+public interface ConnectorFn {
 
     /**
-     * Compares [name] to [target] using the rules specified by [case].
+     * Returns a function's type.
+     *
+     * @return
      */
-    public fun matches(target: String): Boolean = when (case) {
-        BindingCase.SENSITIVE -> target == name
-        BindingCase.INSENSITIVE -> target.equals(name, ignoreCase = true)
-    }
+    public fun getType(): FnSignature
 }

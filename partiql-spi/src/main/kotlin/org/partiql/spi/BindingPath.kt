@@ -14,6 +14,49 @@
 
 package org.partiql.spi
 
-public data class BindingPath(
-    val steps: List<BindingName>
-)
+/**
+ * A [BindingPath] represents an SQL-qualified identifier which is composed of case-sensitive and case-insensitive steps.
+ *
+ * @property steps
+ */
+public class BindingPath(public val steps: List<BindingName>) {
+
+    /**
+     * SQL-99 CNF — Case Normal Form.
+     */
+    public val normalized: List<String> = steps.map {
+        when (it.case) {
+            BindingCase.SENSITIVE -> it.name
+            BindingCase.INSENSITIVE -> it.name.uppercase()
+        }
+    }
+
+    /**
+     * SQL-99 CNF as string.
+     */
+    public val key: String = normalized.joinToString(".")
+
+    /**
+     * Memoized hashCode for hashing data structures.
+     */
+    private val hashCode = key.hashCode()
+
+    override fun equals(other: Any?): Boolean = (other is BindingPath && other.key == key)
+
+    override fun hashCode(): Int = hashCode
+
+    override fun toString(): String = key
+
+    public fun startsWith(vararg symbols: String): Boolean {
+        if (symbols.size > steps.size) {
+            return false
+        }
+        for (i in symbols.indices) {
+            val t = symbols[i]
+            if (!steps[i].matches(t)) {
+                return false
+            }
+        }
+        return true
+    }
+}

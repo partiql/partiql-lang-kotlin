@@ -12,21 +12,19 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.spi
+package org.partiql.spi.connector
+
+import org.partiql.spi.fn.FnAggregation
+import org.partiql.spi.fn.FnExperimental
+import org.partiql.spi.fn.FnScalar
 
 /**
- * Encapsulates the data necessary to perform a binding lookup.
+ * A [ConnectorFnProvider] implementation is responsible for providing a function implementation given a handle.
  */
-public data class BindingName(
-    public val name: String,
-    public val case: BindingCase,
-) {
+@FnExperimental
+public interface ConnectorFnProvider {
 
-    /**
-     * Compares [name] to [target] using the rules specified by [case].
-     */
-    public fun matches(target: String): Boolean = when (case) {
-        BindingCase.SENSITIVE -> target == name
-        BindingCase.INSENSITIVE -> target.equals(name, ignoreCase = true)
-    }
+    public fun getFnScalar(handle: ConnectorHandle.Fn): FnScalar?
+
+    public fun getFnAggregation(handle: ConnectorHandle.Fn): FnAggregation?
 }
