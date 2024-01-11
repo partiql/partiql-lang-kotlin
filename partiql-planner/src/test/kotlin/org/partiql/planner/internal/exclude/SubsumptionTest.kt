@@ -1,8 +1,12 @@
 package org.partiql.planner.internal.exclude
 
+import org.junit.jupiter.api.extension.ExtensionContext
+import org.junit.jupiter.api.parallel.Execution
+import org.junit.jupiter.api.parallel.ExecutionMode
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.ArgumentsProvider
 import org.junit.jupiter.params.provider.ArgumentsSource
-import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.parser.PartiQLParser
 import org.partiql.plan.Rel
 import org.partiql.plan.Rex
@@ -16,6 +20,7 @@ import org.partiql.plan.relOpExcludeTypeStructSymbol
 import org.partiql.plan.relOpExcludeTypeStructWildcard
 import org.partiql.plan.rexOpVar
 import org.partiql.planner.PartiQLPlanner
+import java.util.stream.Stream
 import kotlin.test.assertEquals
 
 class SubsumptionTest {
@@ -37,14 +42,19 @@ class SubsumptionTest {
         assertEquals(tc.expectedExcludeExprs, excludeClause)
     }
 
-    internal data class SubsumptionTC(val excludeExprStr: String, val expectedExcludeExprs: List<Rel.Op.Exclude.Path>)
+    data class SubsumptionTC(val excludeExprStr: String, val expectedExcludeExprs: List<Rel.Op.Exclude.Path>)
 
     @ParameterizedTest
     @ArgumentsSource(ExcludeSubsumptionTests::class)
-    internal fun subsumptionTests(tc: SubsumptionTC) = testExcludeExprSubsumption(tc)
+    @Execution(ExecutionMode.CONCURRENT)
+    fun subsumptionTests(tc: SubsumptionTC) = testExcludeExprSubsumption(tc)
 
-    internal class ExcludeSubsumptionTests : ArgumentsProviderBase() {
-        override fun getParameters(): List<Any> = listOf(
+    internal class ExcludeSubsumptionTests : ArgumentsProvider {
+        override fun provideArguments(context: ExtensionContext?): Stream<out Arguments> {
+            return parameters.map { Arguments.of(it) }.stream()
+        }
+
+        private val parameters = listOf(
             SubsumptionTC(
                 "s.a, t.a", // different roots
                 listOf(
@@ -126,7 +136,7 @@ class SubsumptionTest {
                 )
             ),
             SubsumptionTC(
-                """             -- duplicates subsumed
+                """-- duplicates subsumed
                 t.a, t.a,
                 t.b, t.b, t.b,
                 t.c.*, t.c.*,

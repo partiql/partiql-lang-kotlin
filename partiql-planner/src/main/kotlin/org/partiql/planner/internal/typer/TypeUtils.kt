@@ -139,13 +139,18 @@ private fun StaticType.asRuntimeType(): PartiQLValueType = when (this) {
 }
 
 /**
- * Applies the given exclusion path to produce the reduced StaticType
+ * Applies the given exclusion path to produce the reduced [StaticType]. [lastStepOptional] indicates if a previous
+ * step in the exclude path includes a collection index exclude step. Currently, for paths with the last step as
+ * a struct symbol/key, the type inference will define that struct value as optional if [lastStepOptional] is true.
+ * Note, this specific behavior could change depending on `EXCLUDE`'s static typing behavior in a future RFC.
+ *
+ * e.g. EXCLUDE t.a[1].field_x will define the struct value `field_x` as optional
  *
  * @param steps
  * @param lastStepOptional
  * @return
  */
-internal fun StaticType.exclude(steps: List<Rel.Op.Exclude.Step>, lastStepOptional: Boolean = true): StaticType {
+internal fun StaticType.exclude(steps: List<Rel.Op.Exclude.Step>, lastStepOptional: Boolean = false): StaticType {
     val type = this
     return steps.fold(type) { acc, step ->
         when (acc) {
@@ -166,7 +171,7 @@ internal fun StaticType.exclude(steps: List<Rel.Op.Exclude.Step>, lastStepOption
  * @param lastStepOptional
  * @return
  */
-internal fun StructType.exclude(step: Rel.Op.Exclude.Step, lastStepOptional: Boolean = true): StaticType {
+internal fun StructType.exclude(step: Rel.Op.Exclude.Step, lastStepOptional: Boolean = false): StaticType {
     val type = step.type
     val substeps = step.substeps
     val output = fields.mapNotNull { field ->
@@ -211,13 +216,13 @@ internal fun StructType.exclude(step: Rel.Op.Exclude.Step, lastStepOptional: Boo
  * @param lastStepOptional
  * @return
  */
-internal fun CollectionType.exclude(step: Rel.Op.Exclude.Step, lastStepOptional: Boolean = true): StaticType {
+internal fun CollectionType.exclude(step: Rel.Op.Exclude.Step, lastStepOptional: Boolean = false): StaticType {
     var e = this.elementType
     val substeps = step.substeps
     when (step.type) {
         is Rel.Op.Exclude.Type.CollIndex -> {
             if (substeps.isNotEmpty()) {
-                e = e.exclude(substeps, true)
+                e = e.exclude(substeps, lastStepOptional = true)
             }
         }
         is Rel.Op.Exclude.Type.CollWildcard -> {

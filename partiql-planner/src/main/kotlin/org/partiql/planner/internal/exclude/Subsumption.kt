@@ -7,6 +7,8 @@ import org.partiql.planner.internal.ir.relOpExcludeTypeStructSymbol
 import org.partiql.planner.internal.ir.relOpExcludeTypeStructWildcard
 
 /**
+ * An internal data structure of exclude steps that makes it a bit easier to remove any redundant exclude steps.
+ *
  * Store as a map of exclude type to its substeps; previous representation as a set of `Rel.Op.Exclude.Step` didn't
  * work since retrieval of element in set required looping through the whole list.
  */
@@ -27,12 +29,14 @@ internal class ExcludeRepr(val steps: Map<Rel.Op.Exclude.Type, ExcludeRepr>) {
         }
     }
 
+    internal fun isLeaf(): Boolean = steps.isEmpty()
+
     internal fun removeRedundantSteps(): ExcludeRepr {
         val newSubsteps = mutableMapOf<Rel.Op.Exclude.Type, ExcludeRepr>()
         val collIndexSteps = mutableMapOf<Rel.Op.Exclude.Type, ExcludeRepr>()
         val structSymbolSteps = mutableMapOf<Rel.Op.Exclude.Type, ExcludeRepr>()
         val structKeySteps = mutableMapOf<Rel.Op.Exclude.Type, ExcludeRepr>()
-        // Group the steps by their type and add wildcards to `substeps`
+        // Group the steps by their type and first add wildcards to `substeps`
         steps.forEach { (type, substeps) ->
             when (type) {
                 is Rel.Op.Exclude.Type.StructWildcard -> {
@@ -48,7 +52,7 @@ internal class ExcludeRepr(val steps: Map<Rel.Op.Exclude.Type, ExcludeRepr>) {
                 is Rel.Op.Exclude.Type.StructKey -> structKeySteps[type] = substeps.removeRedundantSteps()
             }
         }
-        // Next add non-wildcard steps
+        // Next add non-wildcard steps and check if they are subsumed by previously added steps
         stepsSubsume(newSubsteps, collIndexSteps)?.let {
             newSubsteps.putAll(it)
         }
@@ -62,6 +66,7 @@ internal class ExcludeRepr(val steps: Map<Rel.Op.Exclude.Type, ExcludeRepr>) {
     }
 }
 
+// null indicates all the steps on rhs are subsumed by the lhs
 private fun stepsSubsume(lhs: Map<Rel.Op.Exclude.Type, ExcludeRepr>, rhs: Map<Rel.Op.Exclude.Type, ExcludeRepr>?): Map<Rel.Op.Exclude.Type, ExcludeRepr>? {
     if (rhs == null) {
         return null
@@ -72,7 +77,7 @@ private fun stepsSubsume(lhs: Map<Rel.Op.Exclude.Type, ExcludeRepr>, rhs: Map<Re
             is Rel.Op.Exclude.Type.CollWildcard -> {
                 val lhsCollWildcard = lhs[relOpExcludeTypeCollWildcard()]
                 if (lhsCollWildcard != null) {
-                    newSubsteps = if (lhsCollWildcard.steps.isEmpty()) {
+                    newSubsteps = if (lhsCollWildcard.isLeaf()) {
                         // coll wildcard leaf in lhs
                         null
                     } else {
@@ -83,7 +88,7 @@ private fun stepsSubsume(lhs: Map<Rel.Op.Exclude.Type, ExcludeRepr>, rhs: Map<Re
             is Rel.Op.Exclude.Type.CollIndex -> {
                 val lhsCollWildcard = lhs[relOpExcludeTypeCollWildcard()]
                 if (lhsCollWildcard != null) {
-                    newSubsteps = if (lhsCollWildcard.steps.isEmpty()) {
+                    newSubsteps = if (lhsCollWildcard.isLeaf()) {
                         // coll wildcard leaf in lhs
                         null
                     } else {
@@ -92,7 +97,7 @@ private fun stepsSubsume(lhs: Map<Rel.Op.Exclude.Type, ExcludeRepr>, rhs: Map<Re
                 }
                 val lhsCollIndex = lhs[type]
                 if (lhsCollIndex != null) {
-                    newSubsteps = if (lhsCollIndex.steps.isEmpty()) {
+                    newSubsteps = if (lhsCollIndex.isLeaf()) {
                         // coll index leaf in lhs
                         null
                     } else {
@@ -103,7 +108,7 @@ private fun stepsSubsume(lhs: Map<Rel.Op.Exclude.Type, ExcludeRepr>, rhs: Map<Re
             is Rel.Op.Exclude.Type.StructWildcard -> {
                 val lhsStructWildcard = lhs[relOpExcludeTypeStructWildcard()]
                 if (lhsStructWildcard != null) {
-                    newSubsteps = if (lhsStructWildcard.steps.isEmpty()) {
+                    newSubsteps = if (lhsStructWildcard.isLeaf()) {
                         // struct wildcard leaf in lhs
                         null
                     } else {
@@ -114,7 +119,7 @@ private fun stepsSubsume(lhs: Map<Rel.Op.Exclude.Type, ExcludeRepr>, rhs: Map<Re
             is Rel.Op.Exclude.Type.StructSymbol -> {
                 val lhsStructWildcard = lhs[relOpExcludeTypeStructWildcard()]
                 if (lhsStructWildcard != null) {
-                    newSubsteps = if (lhsStructWildcard.steps.isEmpty()) {
+                    newSubsteps = if (lhsStructWildcard.isLeaf()) {
                         // struct wildcard leaf in lhs
                         null
                     } else {
@@ -123,7 +128,7 @@ private fun stepsSubsume(lhs: Map<Rel.Op.Exclude.Type, ExcludeRepr>, rhs: Map<Re
                 }
                 val lhsStructSymbol = lhs[type]
                 if (lhsStructSymbol != null) {
-                    newSubsteps = if (lhsStructSymbol.steps.isEmpty()) {
+                    newSubsteps = if (lhsStructSymbol.isLeaf()) {
                         // struct symbol leaf in lhs
                         null
                     } else {
@@ -134,7 +139,7 @@ private fun stepsSubsume(lhs: Map<Rel.Op.Exclude.Type, ExcludeRepr>, rhs: Map<Re
             is Rel.Op.Exclude.Type.StructKey -> {
                 val lhsStructWildcard = lhs[relOpExcludeTypeStructWildcard()]
                 if (lhsStructWildcard != null) {
-                    newSubsteps = if (lhsStructWildcard.steps.isEmpty()) {
+                    newSubsteps = if (lhsStructWildcard.isLeaf()) {
                         // struct wildcard leaf in lhs
                         null
                     } else {
@@ -144,7 +149,7 @@ private fun stepsSubsume(lhs: Map<Rel.Op.Exclude.Type, ExcludeRepr>, rhs: Map<Re
                 val keyAsSymbol = relOpExcludeTypeStructSymbol(type.key)
                 val lhsStructSymbol = lhs[keyAsSymbol]
                 if (lhsStructSymbol != null) {
-                    newSubsteps = if (lhsStructSymbol.steps.isEmpty()) {
+                    newSubsteps = if (lhsStructSymbol.isLeaf()) {
                         // struct symbol leaf in lhs
                         null
                     } else {
@@ -153,7 +158,7 @@ private fun stepsSubsume(lhs: Map<Rel.Op.Exclude.Type, ExcludeRepr>, rhs: Map<Re
                 }
                 val lhsStructKey = lhs[type]
                 if (lhsStructKey != null) {
-                    newSubsteps = if (lhsStructKey.steps.isEmpty()) {
+                    newSubsteps = if (lhsStructKey.isLeaf()) {
                         // struct key leaf in lhs
                         null
                     } else {

@@ -34,7 +34,6 @@ dependencies {
     testImplementation(project(":partiql-parser"))
     testImplementation(project(":plugins:partiql-local"))
     testImplementation(project(":plugins:partiql-memory"))
-    testImplementation(testFixtures(project(":partiql-lang"))) // TODO replace usage of `partiql-lang` test fixture
     // Test Fixtures
     testFixturesImplementation(project(":partiql-spi"))
 }

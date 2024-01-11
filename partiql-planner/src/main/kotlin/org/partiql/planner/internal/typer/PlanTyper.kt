@@ -1425,7 +1425,7 @@ internal class PlanTyper(
                             if (id.isEquivalentTo(it.name)) {
                                 matchedRoot = true
                                 // recompute the StaticType of this binding after applying the exclusions
-                                val type = it.type.exclude(item.steps, false)
+                                val type = it.type.exclude(item.steps, lastStepOptional = false)
                                 it.copy(type = type)
                             } else {
                                 it
