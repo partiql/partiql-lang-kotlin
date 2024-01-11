@@ -77,10 +77,13 @@ internal class EvaluatingCompiler(
      * [CompileOptions.interruptible], the invocation of this function will insert a Thread interruption check. If not
      * specified, it will not perform the check during compilation/evaluation/materialization.
      */
-    private val interruptionCheck: () -> Unit = {
+    private val interruptionCheck: () -> Unit = when (compileOptions.interruptible) {
+        true -> { ->
             if (Thread.interrupted()) {
                 throw InterruptedException()
             }
+        }
+        false -> { -> Unit }
     }
 
     //Note: please don't make this inline -- it messes up [EvaluationException] stack traces and

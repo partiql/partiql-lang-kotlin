@@ -59,12 +59,18 @@ enum class VisitorTransformMode {
 
 /**
  * Specifies options that effect the behavior of the PartiQL compiler.
+ * @property interruptible specifies whether the compilation and execution of the compiled statement is interruptible. If
+ * set to true, the compilation and execution of statements will check [Thread.interrupted] frequently. If set to
+ * false, the compilation and execution of statements is not guaranteed to be interruptible. It *may* still be interrupted,
+ * however, it is not guaranteed. The default is false.
  */
 data class CompileOptions private constructor (
         val undefinedVariable: UndefinedVariableBehavior,
         val projectionIteration: ProjectionIterationBehavior = ProjectionIterationBehavior.FILTER_MISSING,
         val visitorTransformMode: VisitorTransformMode = VisitorTransformMode.DEFAULT,
-        val thunkOptions: ThunkOptions = ThunkOptions.standard()
+        val thunkOptions: ThunkOptions = ThunkOptions.standard(),
+        @Deprecated("This will be removed in v0.3.0. However, this is re-added in v0.13.1.", level = DeprecationLevel.WARNING)
+        val interruptible: Boolean = false
 ) {
 
     companion object {
@@ -97,6 +103,10 @@ data class CompileOptions private constructor (
         fun projectionIteration(value: ProjectionIterationBehavior) = set { copy(projectionIteration = value) }
         fun visitorTransformMode(value: VisitorTransformMode) = set { copy(visitorTransformMode = value) }
         fun thunkOptions(value: ThunkOptions) = set { copy(thunkOptions = value)}
+
+        @Deprecated("This will be removed in v0.3.0. However, this is re-added in v0.13.1.", level = DeprecationLevel.WARNING)
+        fun isInterruptible(value: Boolean) = set { copy(interruptible = value) }
+
         private inline fun set(block: CompileOptions.() -> CompileOptions) : Builder {
             options = block(options)
             return this

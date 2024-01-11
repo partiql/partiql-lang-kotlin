@@ -29,7 +29,8 @@ class EvaluatingCompilerInterruptTests {
     private val ion = IonSystemBuilder.standard().build()
     private val factory = ExprValueFactory.standard(ion)
     private val session = EvaluationSession.standard()
-    private val pipeline = CompilerPipeline.standard(ion)
+    private val options = CompileOptions.Builder().isInterruptible(true).build()
+    private val pipeline = CompilerPipeline.Builder(factory).compileOptions(options).build()
 
     companion object {
         /** How long (in millis) to wait after starting a thread to set the interrupted flag. */
