@@ -21,6 +21,7 @@ plugins {
 dependencies {
     api(Deps.ionElement)
     api(project(":partiql-types"))
+    testImplementation(Deps.kasechange)
 }
 
 publish {
