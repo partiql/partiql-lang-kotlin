@@ -76,6 +76,8 @@ import org.partiql.planner.internal.ir.util.PlanRewriter
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
+import org.partiql.spi.fn.FnExperimental
+import org.partiql.spi.fn.FnSignature
 import org.partiql.types.AnyOfType
 import org.partiql.types.AnyType
 import org.partiql.types.BagType
@@ -96,7 +98,6 @@ import org.partiql.types.StaticType.Companion.unionOf
 import org.partiql.types.StringType
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
-import org.partiql.types.function.FunctionSignature
 import org.partiql.value.BoolValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.TextValue
@@ -191,7 +192,7 @@ internal class PlanTyper(
             // compute element type
             val t = rex.type
             val e = if (t.contentClosed) {
-                StaticType.unionOf(t.fields.map { it.value }.toSet()).flatten()
+                unionOf(t.fields.map { it.value }.toSet()).flatten()
             } else {
                 ANY
             }
@@ -477,7 +478,7 @@ internal class PlanTyper(
 
         private fun foldPath(path: List<BindingName>, start: Int, end: Int, global: Rex) =
             path.subList(start, end).fold(global) { current, step ->
-                when (step.bindingCase) {
+                when (step.case) {
                     BindingCase.SENSITIVE -> rex(ANY, rexOpPathKey(current, rex(STRING, rexOpLit(stringValue(step.name)))))
                     BindingCase.INSENSITIVE -> rex(ANY, rexOpPathSymbol(current, step.name))
                 }
@@ -493,7 +494,7 @@ internal class PlanTyper(
         }
 
         override fun visitRexOpGlobal(node: Rex.Op.Global, ctx: StaticType?): Rex {
-            val catalog = env.catalogs[node.ref.catalog]
+            val catalog = env.symbols[node.ref.catalog]
             val type = catalog.symbols[node.ref.symbol].type
             return rex(type, node)
         }
@@ -606,6 +607,7 @@ internal class PlanTyper(
          * @param ctx
          * @return
          */
+        @OptIn(FnExperimental::class)
         override fun visitRexOpCallStatic(node: Rex.Op.Call.Static, ctx: StaticType?): Rex {
             // Already resolved; unreachable but handle gracefully.
             if (node.fn is Fn.Resolved) return rex(ctx!!, node)
@@ -632,7 +634,7 @@ internal class PlanTyper(
                         rexOpCallDynamicCandidate(fn = resolvedFn, coercions = coercions)
                     }
                     val op = rexOpCallDynamic(args = args, candidates = candidates)
-                    rex(type = StaticType.unionOf(types).flatten(), op = op)
+                    rex(type = unionOf(types).flatten(), op = op)
                 }
                 is FnMatch.Error -> {
                     handleUnknownFunction(match)
@@ -645,7 +647,8 @@ internal class PlanTyper(
             return rex(ANY, rexOpErr("Direct dynamic calls are not supported. This should have been a static call."))
         }
 
-        private fun toRexCall(match: FnMatch.Ok<FunctionSignature.Scalar>, args: List<Rex>, isNotMissable: Boolean): Rex {
+        @OptIn(FnExperimental::class)
+        private fun toRexCall(match: FnMatch.Ok<FnSignature.Scalar>, args: List<Rex>, isNotMissable: Boolean): Rex {
             // Found a match!
             val newFn = fnResolved(match.signature)
             val newArgs = rewriteFnArgs(match.mapping, args)
@@ -695,7 +698,7 @@ internal class PlanTyper(
             isNullable = isNullable || newFn.signature.isNullable
 
             // Return type with calculated nullability
-            var type = when {
+            var type: StaticType = when {
                 isNull -> NULL
                 isNullable -> returns.toStaticType()
                 else -> returns.toNonNullStaticType()
@@ -703,7 +706,7 @@ internal class PlanTyper(
 
             // Some operators can return MISSING during runtime
             if (match.isMissable && !isNotMissable) {
-                type = StaticType.unionOf(type, MISSING)
+                type = unionOf(type, MISSING)
             }
 
             // Finally, rewrite this node
@@ -735,7 +738,7 @@ internal class PlanTyper(
                 else -> when (isLiteralBool(newBranches[0].condition, true)) {
                     true -> newBranches[0].rex
                     false -> rex(
-                        type = StaticType.unionOf(resultTypes.toSet()).flatten(),
+                        type = unionOf(resultTypes.toSet()).flatten(),
                         node.copy(branches = newBranches, default = default)
                     )
                 }
@@ -992,7 +995,7 @@ internal class PlanTyper(
                     val potentialTypes = buildArgumentPermutations(argTypes).map { argumentList ->
                         calculateTupleUnionOutputType(argumentList)
                     }
-                    StaticType.unionOf(potentialTypes.toSet()).flatten()
+                    unionOf(potentialTypes.toSet()).flatten()
                 }
             }
             val op = rexOpTupleUnion(args)
@@ -1153,13 +1156,13 @@ internal class PlanTyper(
             val (name, type) = when {
                 // 1. Struct is closed and ordered
                 isClosed && isOrdered -> {
-                    struct.fields.firstOrNull { entry -> binding.isEquivalentTo(entry.key) }?.let {
+                    struct.fields.firstOrNull { entry -> binding.matches(entry.key) }?.let {
                         (sensitive(it.key) to it.value)
                     } ?: (key to MISSING)
                 }
                 // 2. Struct is closed
                 isClosed -> {
-                    val matches = struct.fields.filter { entry -> binding.isEquivalentTo(entry.key) }
+                    val matches = struct.fields.filter { entry -> binding.matches(entry.key) }
                     when (matches.size) {
                         0 -> (key to MISSING)
                         1 -> matches.first().let { (sensitive(it.key) to it.value) }
@@ -1169,7 +1172,7 @@ internal class PlanTyper(
                                 true -> sensitive(firstKey)
                                 false -> key
                             }
-                            sharedKey to StaticType.unionOf(matches.map { it.value }.toSet()).flatten()
+                            sharedKey to unionOf(matches.map { it.value }.toSet()).flatten()
                         }
                     }
                 }
@@ -1196,6 +1199,7 @@ internal class PlanTyper(
          *     Let TX be the single-column table that is the result of applying the <value expression>
          *     to each row of T and eliminating null values <--- all NULL values are eliminated as inputs
          */
+        @OptIn(FnExperimental::class)
         fun resolveAgg(agg: Agg.Unresolved, arguments: List<Rex>): Pair<Rel.Op.Aggregate.Call, StaticType> {
             var missingArg = false
             val args = arguments.map {
@@ -1226,7 +1230,7 @@ internal class PlanTyper(
 
                     // Some operators can return MISSING during runtime
                     if (match.isMissable) {
-                        type = StaticType.unionOf(type, MISSING).flatten()
+                        type = unionOf(type, MISSING).flatten()
                     }
 
                     // Finally, rewrite this node
@@ -1275,7 +1279,7 @@ internal class PlanTyper(
 
     private fun Identifier.Symbol.toBindingName() = BindingName(
         name = symbol,
-        bindingCase = when (caseSensitivity) {
+        case = when (caseSensitivity) {
             Identifier.CaseSensitivity.SENSITIVE -> BindingCase.SENSITIVE
             Identifier.CaseSensitivity.INSENSITIVE -> BindingCase.INSENSITIVE
         }
@@ -1300,7 +1304,8 @@ internal class PlanTyper(
     /**
      * Rewrites function arguments, wrapping in the given function if exists.
      */
-    private fun rewriteFnArgs(mapping: List<FunctionSignature.Scalar?>, args: List<Rex>): List<Rex> {
+    @OptIn(FnExperimental::class)
+    private fun rewriteFnArgs(mapping: List<FnSignature.Scalar?>, args: List<Rex>): List<Rex> {
         if (mapping.size != args.size) {
             error("Fatal, malformed function mapping") // should be unreachable given how a mapping is generated.
         }
@@ -1331,7 +1336,7 @@ internal class PlanTyper(
         onProblem(
             Problem(
                 sourceLocation = UNKNOWN_PROBLEM_LOCATION,
-                details = PlanningProblemDetails.UndefinedVariable(name.name, name.bindingCase == BindingCase.SENSITIVE)
+                details = PlanningProblemDetails.UndefinedVariable(name.name, name.case == BindingCase.SENSITIVE)
             )
         )
     }
@@ -1409,10 +1414,6 @@ internal class PlanTyper(
                 else -> false
             }
         }
-    }
-
-    private fun Fn.Unresolved.isTypeAssertion(): Boolean {
-        return (identifier is Identifier.Symbol && identifier.symbol.startsWith("is"))
     }
 
     /**

@@ -35,7 +35,7 @@ internal class PartiQLPlannerDefault(
         val typer = PlanTyper(env, onProblem)
         val internal = org.partiql.planner.internal.ir.PartiQLPlan(
             version = PartiQLVersion.VERSION_0_1,
-            catalogs = env.catalogs,
+            catalogs = env.symbols,
             statement = typer.resolve(root),
         )
 

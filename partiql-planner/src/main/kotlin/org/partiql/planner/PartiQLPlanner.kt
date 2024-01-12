@@ -39,12 +39,13 @@ public interface PartiQLPlanner {
      * @property userId
      * @property currentCatalog
      * @property currentDirectory
+     * @property catalogs
      * @property instant
      */
     public class Session(
         public val queryId: String,
         public val userId: String,
-        public val currentCatalog: String? = null,
+        public val currentCatalog: String,
         public val currentDirectory: List<String> = emptyList(),
         public val catalogs: Map<String, ConnectorMetadata> = emptyMap(),
         public val instant: Instant = Instant.now(),

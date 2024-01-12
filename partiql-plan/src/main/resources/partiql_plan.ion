@@ -15,6 +15,9 @@ parti_q_l_plan::{
 // Represent an instance of a database.
 // - Currently, `symbols` represents all values from this catalog to be used in this plan.
 // - Eventually, TODO functions may be resolved to a specific namespace within a catalog.
+
+//
+
 catalog::{
   name: string,
   symbols: list::[symbol],

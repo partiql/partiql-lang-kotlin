@@ -53,29 +53,29 @@ class EnvTest {
     fun testGlobalMatchingSensitiveName() {
         val path = BindingPath(listOf(BindingName("os", BindingCase.SENSITIVE)))
         assertNotNull(env.resolve(path, EMPTY_TYPE_ENV, Rex.Op.Var.Scope.DEFAULT))
-        assertEquals(1, env.catalogs.size)
-        assert(env.catalogs.contains(GLOBAL_OS))
+        assertEquals(1, env.symbols.size)
+        assert(env.symbols.contains(GLOBAL_OS))
     }
 
     @Test
     fun testGlobalMatchingInsensitiveName() {
         val path = BindingPath(listOf(BindingName("oS", BindingCase.INSENSITIVE)))
         assertNotNull(env.resolve(path, EMPTY_TYPE_ENV, Rex.Op.Var.Scope.DEFAULT))
-        assertEquals(1, env.catalogs.size)
-        assert(env.catalogs.contains(GLOBAL_OS))
+        assertEquals(1, env.symbols.size)
+        assert(env.symbols.contains(GLOBAL_OS))
     }
 
     @Test
     fun testGlobalNotMatchingSensitiveName() {
         val path = BindingPath(listOf(BindingName("oS", BindingCase.SENSITIVE)))
         assertNull(env.resolve(path, EMPTY_TYPE_ENV, Rex.Op.Var.Scope.DEFAULT))
-        assert(env.catalogs.isEmpty())
+        assert(env.symbols.isEmpty())
     }
 
     @Test
     fun testGlobalNotMatchingInsensitiveName() {
         val path = BindingPath(listOf(BindingName("nonexistent", BindingCase.INSENSITIVE)))
         assertNull(env.resolve(path, EMPTY_TYPE_ENV, Rex.Op.Var.Scope.DEFAULT))
-        assert(env.catalogs.isEmpty())
+        assert(env.symbols.isEmpty())
     }
 }

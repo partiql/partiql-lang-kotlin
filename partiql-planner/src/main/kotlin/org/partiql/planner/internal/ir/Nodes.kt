@@ -179,8 +179,6 @@ internal sealed class Fn : PlanNode() {
     internal data class Unresolved(
         @JvmField
         internal val identifier: Identifier,
-        @JvmField
-        internal val isHidden: Boolean,
     ) : Fn() {
         internal override val children: List<PlanNode> by lazy {
             val kids = mutableListOf<PlanNode?>()

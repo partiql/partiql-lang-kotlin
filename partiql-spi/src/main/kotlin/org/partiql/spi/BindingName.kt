@@ -23,6 +23,14 @@ public data class BindingName(
 ) {
 
     /**
+     * SQL-99 CNF — Case Normal Form.
+     */
+    public val normalized: String = when (case) {
+        BindingCase.SENSITIVE -> name
+        BindingCase.INSENSITIVE -> name.uppercase()
+    }
+
+    /**
      * Compares [name] to [target] using the rules specified by [case].
      */
     public fun matches(target: String): Boolean = when (case) {

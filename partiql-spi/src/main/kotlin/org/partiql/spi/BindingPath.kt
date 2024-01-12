@@ -24,12 +24,7 @@ public class BindingPath(public val steps: List<BindingName>) {
     /**
      * SQL-99 CNF — Case Normal Form.
      */
-    public val normalized: List<String> = steps.map {
-        when (it.case) {
-            BindingCase.SENSITIVE -> it.name
-            BindingCase.INSENSITIVE -> it.name.uppercase()
-        }
-    }
+    public val normalized: List<String> = steps.map {it.normalized }
 
     /**
      * SQL-99 CNF as string.
