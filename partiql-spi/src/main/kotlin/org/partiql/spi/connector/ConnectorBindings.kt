@@ -12,21 +12,22 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.spi
+package org.partiql.spi.connector
+
+import org.partiql.value.PartiQLValue
+import org.partiql.value.PartiQLValueExperimental
 
 /**
- * Encapsulates the data necessary to perform a binding lookup.
+ * [ConnectorBindings] is responsible for managing value bindings in a catalog.
  */
-public data class BindingName(
-    public val name: String,
-    public val case: BindingCase,
-) {
+@OptIn(PartiQLValueExperimental::class)
+public interface ConnectorBindings {
 
     /**
-     * Compares [name] to [target] using the rules specified by [case].
+     * Retrieves a value for the given handle.
+     *
+     * @param handle
+     * @return
      */
-    public fun matches(target: String): Boolean = when (case) {
-        BindingCase.SENSITIVE -> target == name
-        BindingCase.INSENSITIVE -> target.equals(name, ignoreCase = true)
-    }
+    public fun getValue(handle: ConnectorHandle.Obj): PartiQLValue
 }

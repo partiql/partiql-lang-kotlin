@@ -1,7 +1,7 @@
-package org.partiql.spi.function
+package org.partiql.spi.fn
 
 @RequiresOptIn(
     message = "PartiQLFunction requires explicit opt-in",
     level = RequiresOptIn.Level.ERROR,
 )
-public annotation class PartiQLFunctionExperimental
+public annotation class FnExperimental

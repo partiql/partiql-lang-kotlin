@@ -15,8 +15,27 @@
 package org.partiql.spi.connector
 
 /**
- * The path to an object within the current Catalog.
+ * A handle holds a reference to an entity within a catalog.
  */
-public data class ConnectorObjectPath(
-    val steps: List<String>
-)
+public sealed class ConnectorHandle<T> {
+
+    /**
+     * The case-normal-form path to an entity in a catalog.
+     */
+    public abstract val path: List<String>
+
+    /**
+     * The catalog entity's metadata.
+     */
+    public abstract val entity: T
+
+    public data class Obj(
+        override val path: List<String>,
+        override val entity: ConnectorObject,
+    ) : ConnectorHandle<ConnectorObject>()
+
+    public data class Fn(
+        override val path: List<String>,
+        override val entity: ConnectorFn,
+    ) : ConnectorHandle<ConnectorFn>()
+}

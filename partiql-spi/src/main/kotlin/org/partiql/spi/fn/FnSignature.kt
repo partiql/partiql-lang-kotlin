@@ -1,4 +1,4 @@
-package org.partiql.types.function
+package org.partiql.spi.fn
 
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
@@ -16,10 +16,11 @@ import org.partiql.value.PartiQLValueType
  * @property isNullable         Flag indicating this function's operator may return a NULL value.
  */
 @OptIn(PartiQLValueExperimental::class)
-public sealed class FunctionSignature(
+@FnExperimental
+public sealed class FnSignature(
     @JvmField public val name: String,
     @JvmField public val returns: PartiQLValueType,
-    @JvmField public val parameters: List<FunctionParameter>,
+    @JvmField public val parameters: List<FnParameter>,
     @JvmField public val description: String? = null,
     @JvmField public val isNullable: Boolean = true,
 ) {
@@ -52,12 +53,12 @@ public sealed class FunctionSignature(
     public class Scalar(
         name: String,
         returns: PartiQLValueType,
-        parameters: List<FunctionParameter>,
+        parameters: List<FnParameter>,
         description: String? = null,
         isNullable: Boolean = true,
         @JvmField public val isDeterministic: Boolean = true,
         @JvmField public val isNullCall: Boolean = false,
-    ) : FunctionSignature(name, returns, parameters, description, isNullable) {
+    ) : FnSignature(name, returns, parameters, description, isNullable) {
 
         override fun equals(other: Any?): Boolean {
             if (other !is Scalar) return false
@@ -141,11 +142,11 @@ public sealed class FunctionSignature(
     public class Aggregation(
         name: String,
         returns: PartiQLValueType,
-        parameters: List<FunctionParameter>,
+        parameters: List<FnParameter>,
         description: String? = null,
         isNullable: Boolean = true,
         @JvmField public val isDecomposable: Boolean = true,
-    ) : FunctionSignature(name, returns, parameters, description, isNullable) {
+    ) : FnSignature(name, returns, parameters, description, isNullable) {
 
         override fun equals(other: Any?): Boolean {
             if (other !is Aggregation) return false

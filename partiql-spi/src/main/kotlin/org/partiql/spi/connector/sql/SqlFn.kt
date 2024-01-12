@@ -12,12 +12,21 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.spi.connector
+package org.partiql.spi.connector.sql
+
+import org.partiql.spi.connector.ConnectorFn
+import org.partiql.spi.fn.FnExperimental
+import org.partiql.spi.fn.FnSignature
 
 /**
- * Holds a PartiQL Value's representation within a Catalog and its location within the Catalog.
+ * Simple [ConnectorFn] implementation wrapping a signature.
+ *
+ * @property signature
  */
-public class ConnectorObjectHandle(
-    public val absolutePath: ConnectorObjectPath,
-    public val value: ConnectorObject
-)
+@OptIn(FnExperimental::class)
+public class SqlFn(
+    private val signature: FnSignature,
+) : ConnectorFn {
+
+    override fun getType(): FnSignature = signature
+}

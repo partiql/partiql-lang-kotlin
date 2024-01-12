@@ -15,8 +15,7 @@
 package org.partiql.spi.connector
 
 import org.partiql.spi.BindingPath
-import org.partiql.types.StaticType
-import org.partiql.types.function.FunctionSignature
+import org.partiql.spi.fn.FnExperimental
 
 /**
  * Aids in retrieving relevant Catalog metadata for the purpose of planning and execution.
@@ -24,42 +23,27 @@ import org.partiql.types.function.FunctionSignature
 public interface ConnectorMetadata {
 
     /**
-     * Scalar function signatures available via call syntax.
-     */
-    public val functions: List<FunctionSignature.Scalar>
-        get() = emptyList()
-
-    /**
-     * Scalar function signatures available via operator or special form syntax.
-     */
-    public val operators: List<FunctionSignature.Scalar>
-        get() = emptyList()
-
-    /**
-     * Aggregation function signatures.
-     */
-    public val aggregations: List<FunctionSignature.Aggregation>
-        get() = emptyList()
-
-    /**
-     * Returns the descriptor of an object. If the handle is unable to produce a [StaticType], implementers should
-     * return null.
-     */
-    public fun getObjectType(session: ConnectorSession, handle: ConnectorObjectHandle): StaticType?
-
-    /**
-     * Given a [BindingPath], returns a [ConnectorObjectHandle] that corresponds to the longest-available requested path.
+     * Given a [BindingPath], returns a [ConnectorHandle] that corresponds to the longest-available requested path.
      * For example, given an object named "Object" located within Catalog "AWS" and Namespace "a".b"."c", a user could
-     * call [getObjectHandle] with the [path] of "a"."b"."c"."Object". The returned [ConnectorObjectHandle] will contain
+     * call [getObject] with the [path] of "a"."b"."c"."Object". The returned [ConnectorHandle] will contain
      * the object representation and the matching path: "a"."b"."c"."Object"
      *
      * As another example, consider an object within a Namespace that may be a Struct with nested attributes. A user could
-     * call [getObjectHandle] with the [path] of "a"."b"."c"."Object"."x". In the Namespace, only object "Object" exists.
-     * Therefore, this method will return a [ConnectorObjectHandle] with the "Object" representation and the matching
-     * path: "a"."b"."c"."Object". The returned [ConnectorObjectHandle.absolutePath] must be correct for correct
+     * call [getObject] with the [path] of "a"."b"."c"."Object"."x". In the Namespace, only object "Object" exists.
+     * Therefore, this method will return a [ConnectorHandle] with the "Object" representation and the matching
+     * path: "a"."b"."c"."Object". The returned [ConnectorHandle.path] must be correct for correct
      * evaluation.
      *
      * If the [path] does not correspond to an existing [ConnectorObject], implementers should return null.
      */
-    public fun getObjectHandle(session: ConnectorSession, path: BindingPath): ConnectorObjectHandle?
+    public fun getObject(path: BindingPath): ConnectorHandle.Obj?
+
+    /**
+     * Returns all function signatures matching the given path.
+     *
+     * @param path
+     * @return
+     */
+    @FnExperimental
+    public fun getFunctions(path: BindingPath): List<ConnectorHandle.Fn>
 }

@@ -1,0 +1,52 @@
+/*
+ * Copyright Amazon.com, Inc. or its affiliates.  All rights reserved.
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License").
+ *  You may not use this file except in compliance with the License.
+ *  A copy of the License is located at:
+ *
+ *       http://aws.amazon.com/apache2.0/
+ *
+ *  or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
+ *  language governing permissions and limitations under the License.
+ */
+
+package org.partiql.spi.connector.sql
+
+import org.partiql.spi.BindingPath
+import org.partiql.spi.connector.ConnectorHandle
+import org.partiql.spi.connector.ConnectorMetadata
+import org.partiql.spi.connector.ConnectorSession
+import org.partiql.spi.connector.sql.info.InfoSchema
+import org.partiql.spi.fn.FnExperimental
+
+/**
+ * An instance of [SqlMetadata]
+ *
+ * @property session
+ * @property info
+ * @property delegate
+ */
+public class SqlMetadata(
+    private val session: ConnectorSession,
+    private val info: InfoSchema,
+    private val delegate: ConnectorMetadata,
+) : ConnectorMetadata {
+
+    /**
+     * TODO provide schemas from `info`.
+     *
+     * @param path
+     * @return
+     */
+    override fun getObject(path: BindingPath): ConnectorHandle.Obj? = delegate.getObject(path)
+
+    @FnExperimental
+    override fun getFunctions(path: BindingPath): List<ConnectorHandle.Fn> {
+        val cnf = path.normalized
+        return info.functions.list(cnf).map {
+            ConnectorHandle.Fn(cnf, SqlFn(it.signature))
+        }
+    }
+}

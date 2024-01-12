@@ -12,21 +12,21 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.spi
+package org.partiql.spi.connector.sql
+
+import org.partiql.spi.connector.ConnectorBindings
+import org.partiql.spi.connector.ConnectorHandle
+import org.partiql.spi.connector.sql.info.InfoSchema
+import org.partiql.value.PartiQLValue
+import org.partiql.value.PartiQLValueExperimental
 
 /**
- * Encapsulates the data necessary to perform a binding lookup.
+ * An implementation of [ConnectorBindings] including the INFORMATION_SCHEMA.
  */
-public data class BindingName(
-    public val name: String,
-    public val case: BindingCase,
-) {
+public class SqlBindings(private val info: InfoSchema) : ConnectorBindings {
 
-    /**
-     * Compares [name] to [target] using the rules specified by [case].
-     */
-    public fun matches(target: String): Boolean = when (case) {
-        BindingCase.SENSITIVE -> target == name
-        BindingCase.INSENSITIVE -> target.equals(name, ignoreCase = true)
+    @OptIn(PartiQLValueExperimental::class)
+    public override fun getValue(handle: ConnectorHandle.Obj): PartiQLValue {
+        TODO("Not yet implemented")
     }
 }
