@@ -22,6 +22,7 @@ plugins {
 
 dependencies {
     api(project(":partiql-types"))
+    api(project(":partiql-spi"))
     implementation(Deps.ionElement)
     implementation(Deps.kotlinReflect)
 }

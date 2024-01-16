@@ -1,3 +1,5 @@
+@file:OptIn(FnExperimental::class)
+
 package org.partiql.planner.internal.typer
 
 import org.partiql.spi.fn.FnExperimental
@@ -62,9 +64,20 @@ internal enum class CastType { COERCION, EXPLICIT, UNSAFE }
  */
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal class TypeCasts private constructor(
-    public val types: Array<PartiQLValueType>,
-    public val graph: TypeGraph,
+    private val types: Array<PartiQLValueType>,
+    private val graph: TypeGraph,
 ) {
+
+    private fun relationships(): Sequence<TypeRelationship> = sequence {
+        for (t1 in types) {
+            for (t2 in types) {
+                val r = graph[t1][t2]
+                if (r != null) {
+                    yield(r)
+                }
+            }
+        }
+    }
 
     /**
      * Cache a list of unsafe cast SPECIFIC for easy typing lookup
@@ -79,15 +92,14 @@ internal class TypeCasts private constructor(
         set
     }
 
-    private fun relationships(): Sequence<TypeRelationship> = sequence {
-        for (t1 in types) {
-            for (t2 in types) {
-                val r = graph[t1][t2]
-                if (r != null) {
-                    yield(r)
-                }
-            }
-        }
+    /**
+     * Returns the CAST function if exists, else null.
+     */
+    internal fun lookupCoercion(operand: PartiQLValueType, target: PartiQLValueType): FnSignature.Scalar? {
+        val i = operand.ordinal
+        val j = target.ordinal
+        val rel = graph[i][j] ?: return null
+        return if (rel.castType == CastType.COERCION) rel.castFn else null
     }
 
     /**
@@ -95,36 +107,8 @@ internal class TypeCasts private constructor(
      */
     internal fun isUnsafeCast(specific: String): Boolean = unsafeCastSet.contains(specific)
 
+
     private operator fun <T> Array<T>.get(t: PartiQLValueType): T = get(t.ordinal)
-
-    /**
-     * Returns the CAST function if exists, else null.
-     */
-    @OptIn(PartiQLValueExperimental::class)
-    private fun lookupCoercion(valueType: PartiQLValueType, targetType: PartiQLValueType): FnSignature.Scalar? {
-        if (!casts.canCoerce(valueType, targetType)) {
-            return null
-        }
-        val name = castName(targetType)
-        val casts = operators.getOrDefault(name, emptyList())
-        for (cast in casts) {
-            if (cast.parameters.isEmpty()) {
-                break // should be unreachable
-            }
-            if (valueType == cast.parameters[0].type) return cast
-        }
-        return null
-    }
-
-    /**
-     * Define CASTS with some mangled name; CAST(x AS T) -> cast_t(x)
-     *
-     * CAST(x AS INT8) -> cast_int64(x)
-     *
-     * But what about parameterized types? Are the parameters dropped in casts, or do parameters become arguments?
-     */
-    @OptIn(PartiQLValueExperimental::class)
-    private fun castName(type: PartiQLValueType) = "cast_${type.name.lowercase()}"
 
     companion object {
 
@@ -366,33 +350,5 @@ internal class TypeCasts private constructor(
                 isNullable = false,
                 isNullCall = true
             )
-    }
-
-    /**
-     * Dump the graph as an Asciidoc table.
-     */
-    override fun toString(): String = buildString {
-        appendLine("|===")
-        appendLine()
-        // Header
-        append("| | ").appendLine(types.joinToString("| "))
-        // Body
-        for (t1 in types) {
-            append("| $t1 ")
-            for (t2 in types) {
-                val symbol = when (val r = graph[t1][t2]) {
-                    null -> "X"
-                    else -> when (r.castType) {
-                        CastType.COERCION -> "⬤"
-                        CastType.EXPLICIT -> "◯"
-                        CastType.UNSAFE -> "!!"
-                    }
-                }
-                append("| $symbol ")
-            }
-            appendLine()
-        }
-        appendLine()
-        appendLine("|===")
     }
 }

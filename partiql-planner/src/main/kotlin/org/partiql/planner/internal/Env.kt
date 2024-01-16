@@ -19,100 +19,6 @@ import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
 
 /**
- * TypeEnv represents the environment in which we type expressions and resolve variables while planning.
- *
- * TODO TypeEnv should be a stack of locals; also the strategy has been kept here because it's easier to
- *  pass through the traversal like this, but is conceptually odd to associate with the TypeEnv.
- * @property schema
- * @property strategy
- */
-internal class TypeEnv(
-    val schema: List<Rel.Binding>,
-    val strategy: ResolutionStrategy,
-) {
-
-    /**
-     * Return a copy with GLOBAL lookup strategy
-     */
-    fun global() = TypeEnv(schema, ResolutionStrategy.GLOBAL)
-
-    /**
-     * Return a copy with LOCAL lookup strategy
-     */
-    fun local() = TypeEnv(schema, ResolutionStrategy.LOCAL)
-
-    /**
-     * Debug string
-     */
-    override fun toString() = buildString {
-        append("(")
-        append("strategy=$strategy")
-        append(", ")
-        val bindings = "< " + schema.joinToString { "${it.name}: ${it.type}" } + " >"
-        append("bindings=$bindings")
-        append(")")
-    }
-}
-
-/**
- * Metadata regarding a resolved variable.
- *
- * @property depth      The depth/level of the path match.
- */
-internal sealed interface ResolvedVar {
-
-    public val type: StaticType
-    public val ordinal: Int
-    public val depth: Int
-
-    /**
-     * Metadata for a resolved local variable.
-     *
-     * @property type              Resolved StaticType
-     * @property ordinal           Index offset in [TypeEnv]
-     * @property resolvedSteps     The fully resolved path steps.s
-     */
-    class Local(
-        override val type: StaticType,
-        override val ordinal: Int,
-        val rootType: StaticType,
-        val resolvedSteps: List<BindingName>,
-    ) : ResolvedVar {
-        // the depth are always going to be 1 because this is local variable.
-        // the global path, however the path length maybe, going to be replaced by a binding name.
-        override val depth: Int = 1
-    }
-
-    /**
-     * Metadata for a resolved global variable
-     *
-     * @property type       Resolved StaticType
-     * @property ordinal    The relevant catalog's index offset in the [Env.symbols] list
-     * @property depth      The depth/level of the path match.
-     * @property position   The relevant value's index offset in the [Catalog.values] list
-     */
-    class Global(
-        override val type: StaticType,
-        override val ordinal: Int,
-        override val depth: Int,
-        val position: Int,
-    ) : ResolvedVar
-}
-
-/**
- * Variable resolution strategies — https://partiql.org/assets/PartiQL-Specification.pdf#page=35
- *
- * | Value      | Strategy              | Scoping Rules |
- * |------------+-----------------------+---------------|
- * | LOCAL      | local-first lookup    | Rules 1, 2    |
- * | GLOBAL     | global-first lookup   | Rule 3        |
- */
-internal enum class ResolutionStrategy {
-    LOCAL,
-    GLOBAL,
-}
-
-/**
  * PartiQL Planner Global Environment of Catalogs backed by given plugins.
  *
  * @property session        Session details
@@ -137,16 +43,10 @@ internal class Env(
      */
     private val fnResolver = FnResolver(catalog, session)
 
-    /**
-     * Leverages a [FnResolver] to find a matching function defined in the [Header] scalar function catalog.
-     */
     @OptIn(FnExperimental::class)
     internal fun resolveFn(fn: Fn.Unresolved, args: List<Rex>): FnMatch<FnSignature.Scalar> =
         fnResolver.resolveFn(fn, args)
 
-    /**
-     * Leverages a [FnResolver] to find a matching function defined in the [Header] aggregation function catalog.
-     */
     @OptIn(FnExperimental::class)
     internal fun resolveAgg(agg: Agg.Unresolved, args: List<Rex>): FnMatch<FnSignature.Aggregation> =
         fnResolver.resolveAgg(agg, args)
