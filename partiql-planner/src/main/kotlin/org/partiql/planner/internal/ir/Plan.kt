@@ -159,23 +159,29 @@ internal fun relOpAggregate(
 internal fun relOpAggregateCall(agg: Agg, args: List<Rex>): Rel.Op.Aggregate.Call =
     Rel.Op.Aggregate.Call(agg, args)
 
-internal fun relOpExclude(input: Rel, items: List<Rel.Op.Exclude.Item>): Rel.Op.Exclude =
-    Rel.Op.Exclude(input, items)
+internal fun relOpExclude(input: Rel, paths: List<Rel.Op.Exclude.Path>): Rel.Op.Exclude =
+    Rel.Op.Exclude(input, paths)
 
-internal fun relOpExcludeItem(root: Rex.Op.Var, steps: List<Rel.Op.Exclude.Step>): Rel.Op.Exclude.Item =
-    Rel.Op.Exclude.Item(root, steps)
+internal fun relOpExcludePath(root: Rex.Op.Var, steps: List<Rel.Op.Exclude.Step>): Rel.Op.Exclude.Path =
+    Rel.Op.Exclude.Path(root, steps)
 
-internal fun relOpExcludeStepStructField(symbol: Identifier.Symbol): Rel.Op.Exclude.Step.StructField =
-    Rel.Op.Exclude.Step.StructField(symbol)
+internal fun relOpExcludeStep(type: Rel.Op.Exclude.Type, substeps: List<Rel.Op.Exclude.Step>):
+    Rel.Op.Exclude.Step = Rel.Op.Exclude.Step(type, substeps)
 
-internal fun relOpExcludeStepCollIndex(index: Int): Rel.Op.Exclude.Step.CollIndex =
-    Rel.Op.Exclude.Step.CollIndex(index)
+internal fun relOpExcludeTypeStructSymbol(symbol: String): Rel.Op.Exclude.Type.StructSymbol =
+    Rel.Op.Exclude.Type.StructSymbol(symbol)
 
-internal fun relOpExcludeStepStructWildcard(): Rel.Op.Exclude.Step.StructWildcard =
-    Rel.Op.Exclude.Step.StructWildcard()
+internal fun relOpExcludeTypeStructKey(key: String): Rel.Op.Exclude.Type.StructKey =
+    Rel.Op.Exclude.Type.StructKey(key)
 
-internal fun relOpExcludeStepCollWildcard(): Rel.Op.Exclude.Step.CollWildcard =
-    Rel.Op.Exclude.Step.CollWildcard()
+internal fun relOpExcludeTypeCollIndex(index: Int): Rel.Op.Exclude.Type.CollIndex =
+    Rel.Op.Exclude.Type.CollIndex(index)
+
+internal fun relOpExcludeTypeStructWildcard(): Rel.Op.Exclude.Type.StructWildcard =
+    Rel.Op.Exclude.Type.StructWildcard()
+
+internal fun relOpExcludeTypeCollWildcard(): Rel.Op.Exclude.Type.CollWildcard =
+    Rel.Op.Exclude.Type.CollWildcard()
 
 internal fun relOpErr(message: String): Rel.Op.Err = Rel.Op.Err(message)
 

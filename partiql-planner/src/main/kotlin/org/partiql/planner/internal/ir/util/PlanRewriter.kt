@@ -547,49 +547,61 @@ internal abstract class PlanRewriter<C> : PlanBaseVisitor<PlanNode, C>() {
 
     override fun visitRelOpExclude(node: Rel.Op.Exclude, ctx: C): PlanNode {
         val input = visitRel(node.input, ctx) as Rel
-        val items = _visitList(node.items, ctx, ::visitRelOpExcludeItem)
-        return if (input !== node.input || items !== node.items) {
-            Rel.Op.Exclude(input, items)
+        val paths = _visitList(node.paths, ctx, ::visitRelOpExcludePath)
+        return if (input !== node.input || paths !== node.paths) {
+            Rel.Op.Exclude(input, paths)
         } else {
             node
         }
     }
 
-    override fun visitRelOpExcludeItem(node: Rel.Op.Exclude.Item, ctx: C): PlanNode {
+    override fun visitRelOpExcludePath(node: Rel.Op.Exclude.Path, ctx: C): PlanNode {
         val root = visitRexOpVar(node.root, ctx) as Rex.Op.Var
         val steps = _visitList(node.steps, ctx, ::visitRelOpExcludeStep)
         return if (root !== node.root || steps !== node.steps) {
-            Rel.Op.Exclude.Item(root, steps)
+            Rel.Op.Exclude.Path(root, steps)
         } else {
             node
         }
     }
 
-    override fun visitRelOpExcludeStepStructField(
-        node: Rel.Op.Exclude.Step.StructField,
+    override fun visitRelOpExcludeStep(node: Rel.Op.Exclude.Step, ctx: C): PlanNode {
+        val type = visitRelOpExcludeType(node.type, ctx) as Rel.Op.Exclude.Type
+        val substeps = _visitList(node.substeps, ctx, ::visitRelOpExcludeStep)
+        return if (type !== node.type || substeps !== node.substeps) {
+            Rel.Op.Exclude.Step(type, substeps)
+        } else {
+            node
+        }
+    }
+
+    override fun visitRelOpExcludeTypeStructSymbol(
+        node: Rel.Op.Exclude.Type.StructSymbol,
         ctx: C
     ): PlanNode {
-        val symbol = visitIdentifierSymbol(node.symbol, ctx) as Identifier.Symbol
-        return if (symbol !== node.symbol) {
-            Rel.Op.Exclude.Step.StructField(symbol)
-        } else {
-            node
-        }
+        val symbol = node.symbol
+        return node
     }
 
-    override fun visitRelOpExcludeStepCollIndex(node: Rel.Op.Exclude.Step.CollIndex, ctx: C):
+    override fun visitRelOpExcludeTypeStructKey(node: Rel.Op.Exclude.Type.StructKey, ctx: C):
+        PlanNode {
+        val key = node.key
+        return node
+    }
+
+    override fun visitRelOpExcludeTypeCollIndex(node: Rel.Op.Exclude.Type.CollIndex, ctx: C):
         PlanNode {
         val index = node.index
         return node
     }
 
-    override fun visitRelOpExcludeStepStructWildcard(
-        node: Rel.Op.Exclude.Step.StructWildcard,
+    override fun visitRelOpExcludeTypeStructWildcard(
+        node: Rel.Op.Exclude.Type.StructWildcard,
         ctx: C
     ): PlanNode = node
 
-    override fun visitRelOpExcludeStepCollWildcard(
-        node: Rel.Op.Exclude.Step.CollWildcard,
+    override fun visitRelOpExcludeTypeCollWildcard(
+        node: Rel.Op.Exclude.Type.CollWildcard,
         ctx: C
     ): PlanNode = node
 

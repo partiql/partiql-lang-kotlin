@@ -18,11 +18,11 @@ internal interface PlanVisitor<R, C> {
 
     fun visitPartiQLPlan(node: PartiQLPlan, ctx: C): R
 
-    public fun visitCatalog(node: Catalog, ctx: C): R
+    fun visitCatalog(node: Catalog, ctx: C): R
 
-    public fun visitCatalogSymbol(node: Catalog.Symbol, ctx: C): R
+    fun visitCatalogSymbol(node: Catalog.Symbol, ctx: C): R
 
-    public fun visitCatalogSymbolRef(node: Catalog.Symbol.Ref, ctx: C): R
+    fun visitCatalogSymbolRef(node: Catalog.Symbol.Ref, ctx: C): R
 
     fun visitFn(node: Fn, ctx: C): R
 
@@ -136,18 +136,24 @@ internal interface PlanVisitor<R, C> {
 
     fun visitRelOpExclude(node: Rel.Op.Exclude, ctx: C): R
 
-    fun visitRelOpExcludeItem(node: Rel.Op.Exclude.Item, ctx: C): R
+    fun visitRelOpExcludePath(node: Rel.Op.Exclude.Path, ctx: C): R
 
     fun visitRelOpExcludeStep(node: Rel.Op.Exclude.Step, ctx: C): R
 
-    fun visitRelOpExcludeStepStructField(node: Rel.Op.Exclude.Step.StructField, ctx: C): R
+    fun visitRelOpExcludeType(node: Rel.Op.Exclude.Type, ctx: C): R
 
-    fun visitRelOpExcludeStepCollIndex(node: Rel.Op.Exclude.Step.CollIndex, ctx: C): R
+    fun visitRelOpExcludeTypeStructSymbol(node: Rel.Op.Exclude.Type.StructSymbol, ctx: C): R
 
-    fun visitRelOpExcludeStepStructWildcard(node: Rel.Op.Exclude.Step.StructWildcard, ctx: C):
+    fun visitRelOpExcludeTypeStructKey(node: Rel.Op.Exclude.Type.StructKey, ctx: C): R
+
+    fun visitRelOpExcludeTypeCollIndex(node: Rel.Op.Exclude.Type.CollIndex, ctx: C): R
+
+    fun visitRelOpExcludeTypeStructWildcard(node: Rel.Op.Exclude.Type.StructWildcard, ctx: C):
         R
 
-    fun visitRelOpExcludeStepCollWildcard(node: Rel.Op.Exclude.Step.CollWildcard, ctx: C): R fun visitRelOpErr(node: Rel.Op.Err, ctx: C): R
+    fun visitRelOpExcludeTypeCollWildcard(node: Rel.Op.Exclude.Type.CollWildcard, ctx: C): R
+
+    fun visitRelOpErr(node: Rel.Op.Err, ctx: C): R
 
     fun visitRelBinding(node: Rel.Binding, ctx: C): R
 }

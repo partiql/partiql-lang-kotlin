@@ -496,56 +496,76 @@ internal class PlanBuilder {
 
     internal fun relOpExclude(
         input: Rel? = null,
-        items: MutableList<Rel.Op.Exclude.Item> = mutableListOf(),
+        paths: MutableList<Rel.Op.Exclude.Path> = mutableListOf(),
         block: RelOpExcludeBuilder.() -> Unit = {},
     ): Rel.Op.Exclude {
-        val builder = RelOpExcludeBuilder(input, items)
+        val builder = RelOpExcludeBuilder(input, paths)
         builder.block()
         return builder.build()
     }
 
-    internal fun relOpExcludeItem(
+    internal fun relOpExcludePath(
         root: Rex.Op.Var? = null,
         steps: MutableList<Rel.Op.Exclude.Step> = mutableListOf(),
-        block: RelOpExcludeItemBuilder.() -> Unit = {},
-    ): Rel.Op.Exclude.Item {
-        val builder = RelOpExcludeItemBuilder(root, steps)
+        block: RelOpExcludePathBuilder.() -> Unit = {},
+    ): Rel.Op.Exclude.Path {
+        val builder = RelOpExcludePathBuilder(root, steps)
         builder.block()
         return builder.build()
     }
 
-    internal fun relOpExcludeStepStructField(
-        symbol: Identifier.Symbol? = null,
-        block: RelOpExcludeStepStructFieldBuilder.() -> Unit = {}
-    ): Rel.Op.Exclude.Step.StructField {
-        val builder = RelOpExcludeStepStructFieldBuilder(symbol)
+    internal fun relOpExcludeStep(
+        type: Rel.Op.Exclude.Type? = null,
+        substeps: MutableList<Rel.Op.Exclude.Step> = mutableListOf(),
+        block: RelOpExcludeStepBuilder.() -> Unit = {},
+    ): Rel.Op.Exclude.Step {
+        val builder = RelOpExcludeStepBuilder(type, substeps)
         builder.block()
         return builder.build()
     }
 
-    internal fun relOpExcludeStepCollIndex(
+    internal fun relOpExcludeTypeStructSymbol(
+        symbol: String? = null,
+        block: RelOpExcludeTypeStructSymbolBuilder.() -> Unit = {}
+    ):
+        Rel.Op.Exclude.Type.StructSymbol {
+        val builder = RelOpExcludeTypeStructSymbolBuilder(symbol)
+        builder.block()
+        return builder.build()
+    }
+
+    internal fun relOpExcludeTypeStructKey(
+        key: String? = null,
+        block: RelOpExcludeTypeStructKeyBuilder.() -> Unit = {}
+    ): Rel.Op.Exclude.Type.StructKey {
+        val builder = RelOpExcludeTypeStructKeyBuilder(key)
+        builder.block()
+        return builder.build()
+    }
+
+    internal fun relOpExcludeTypeCollIndex(
         index: Int? = null,
-        block: RelOpExcludeStepCollIndexBuilder.() -> Unit = {}
-    ): Rel.Op.Exclude.Step.CollIndex {
-        val builder = RelOpExcludeStepCollIndexBuilder(index)
+        block: RelOpExcludeTypeCollIndexBuilder.() -> Unit = {}
+    ): Rel.Op.Exclude.Type.CollIndex {
+        val builder = RelOpExcludeTypeCollIndexBuilder(index)
         builder.block()
         return builder.build()
     }
 
-    internal fun relOpExcludeStepStructWildcard(
-        block: RelOpExcludeStepStructWildcardBuilder.() -> Unit =
+    internal fun relOpExcludeTypeStructWildcard(
+        block: RelOpExcludeTypeStructWildcardBuilder.() -> Unit =
             {}
-    ): Rel.Op.Exclude.Step.StructWildcard {
-        val builder = RelOpExcludeStepStructWildcardBuilder()
+    ): Rel.Op.Exclude.Type.StructWildcard {
+        val builder = RelOpExcludeTypeStructWildcardBuilder()
         builder.block()
         return builder.build()
     }
 
-    internal fun relOpExcludeStepCollWildcard(
-        block: RelOpExcludeStepCollWildcardBuilder.() -> Unit =
+    internal fun relOpExcludeTypeCollWildcard(
+        block: RelOpExcludeTypeCollWildcardBuilder.() -> Unit =
             {}
-    ): Rel.Op.Exclude.Step.CollWildcard {
-        val builder = RelOpExcludeStepCollWildcardBuilder()
+    ): Rel.Op.Exclude.Type.CollWildcard {
+        val builder = RelOpExcludeTypeCollWildcardBuilder()
         builder.block()
         return builder.build()
     }

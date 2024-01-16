@@ -21,6 +21,7 @@ import org.partiql.ast.Exclude
 import org.partiql.ast.Expr
 import org.partiql.ast.From
 import org.partiql.ast.GroupBy
+import org.partiql.ast.Identifier
 import org.partiql.ast.OrderBy
 import org.partiql.ast.Select
 import org.partiql.ast.SetOp
@@ -42,11 +43,13 @@ import org.partiql.planner.internal.ir.relOpDistinct
 import org.partiql.planner.internal.ir.relOpErr
 import org.partiql.planner.internal.ir.relOpExcept
 import org.partiql.planner.internal.ir.relOpExclude
-import org.partiql.planner.internal.ir.relOpExcludeItem
-import org.partiql.planner.internal.ir.relOpExcludeStepCollIndex
-import org.partiql.planner.internal.ir.relOpExcludeStepCollWildcard
-import org.partiql.planner.internal.ir.relOpExcludeStepStructField
-import org.partiql.planner.internal.ir.relOpExcludeStepStructWildcard
+import org.partiql.planner.internal.ir.relOpExcludePath
+import org.partiql.planner.internal.ir.relOpExcludeStep
+import org.partiql.planner.internal.ir.relOpExcludeTypeCollIndex
+import org.partiql.planner.internal.ir.relOpExcludeTypeCollWildcard
+import org.partiql.planner.internal.ir.relOpExcludeTypeStructKey
+import org.partiql.planner.internal.ir.relOpExcludeTypeStructSymbol
+import org.partiql.planner.internal.ir.relOpExcludeTypeStructWildcard
 import org.partiql.planner.internal.ir.relOpFilter
 import org.partiql.planner.internal.ir.relOpIntersect
 import org.partiql.planner.internal.ir.relOpJoin
@@ -482,23 +485,45 @@ internal object RelConverter {
             if (exclude == null) {
                 return input
             }
-            val type = input.type // PlanTyper handles typing the exclusion
-            val items = exclude.items.map { convertExcludeItem(it) }
-            val op = relOpExclude(input, items)
+            val type = input.type // PlanTyper handles typing the exclusion and removing redundant exclude paths
+            val paths = exclude.items
+                .groupBy(keySelector = { it.root }, valueTransform = { it.steps })
+                .map { (root, exclusions) ->
+                    val rootVar = (root.toRex(env)).op as Rex.Op.Var
+                    val steps = exclusionsToSteps(exclusions)
+                    relOpExcludePath(rootVar, steps)
+                }
+            val op = relOpExclude(input, paths)
             return rel(type, op)
         }
 
-        private fun convertExcludeItem(expr: Exclude.Item): Rel.Op.Exclude.Item {
-            val root = (expr.root.toRex(env)).op as Rex.Op.Var
-            val steps = expr.steps.map { convertExcludeStep(it) }
-            return relOpExcludeItem(root, steps)
+        private fun exclusionsToSteps(exclusions: List<List<Exclude.Step>>): List<Rel.Op.Exclude.Step> {
+            if (exclusions.any { it.isEmpty() }) {
+                // if there exists a path with no further steps, can remove the longer paths
+                // e.g. t.a.b, t.a.b.c, t.a.b.d[*].*.e -> can keep just t.a.b
+                return emptyList()
+            }
+            return exclusions
+                .groupBy(keySelector = { it.first() }, valueTransform = { it.drop(1) })
+                .map { (head, steps) ->
+                    val type = stepToExcludeType(head)
+                    val substeps = exclusionsToSteps(steps)
+                    relOpExcludeStep(type, substeps)
+                }
         }
 
-        private fun convertExcludeStep(step: Exclude.Step): Rel.Op.Exclude.Step = when (step) {
-            is Exclude.Step.StructField -> relOpExcludeStepStructField(AstToPlan.convert(step.symbol))
-            is Exclude.Step.CollIndex -> relOpExcludeStepCollIndex(step.index)
-            is Exclude.Step.StructWildcard -> relOpExcludeStepStructWildcard()
-            is Exclude.Step.CollWildcard -> relOpExcludeStepCollWildcard()
+        private fun stepToExcludeType(step: Exclude.Step): Rel.Op.Exclude.Type {
+            return when (step) {
+                is Exclude.Step.StructField -> {
+                    when (step.symbol.caseSensitivity) {
+                        Identifier.CaseSensitivity.INSENSITIVE -> relOpExcludeTypeStructSymbol(step.symbol.symbol)
+                        Identifier.CaseSensitivity.SENSITIVE -> relOpExcludeTypeStructKey(step.symbol.symbol)
+                    }
+                }
+                is Exclude.Step.CollIndex -> relOpExcludeTypeCollIndex(step.index)
+                is Exclude.Step.StructWildcard -> relOpExcludeTypeStructWildcard()
+                is Exclude.Step.CollWildcard -> relOpExcludeTypeCollWildcard()
+            }
         }
 
         // /**

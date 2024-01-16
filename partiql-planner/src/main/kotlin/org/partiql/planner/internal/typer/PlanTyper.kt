@@ -24,6 +24,7 @@ import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.ResolutionStrategy
 import org.partiql.planner.internal.ResolvedVar
 import org.partiql.planner.internal.TypeEnv
+import org.partiql.planner.internal.exclude.ExcludeRepr
 import org.partiql.planner.internal.ir.Agg
 import org.partiql.planner.internal.ir.Fn
 import org.partiql.planner.internal.ir.Identifier
@@ -42,7 +43,7 @@ import org.partiql.planner.internal.ir.relOpAggregateCall
 import org.partiql.planner.internal.ir.relOpDistinct
 import org.partiql.planner.internal.ir.relOpErr
 import org.partiql.planner.internal.ir.relOpExclude
-import org.partiql.planner.internal.ir.relOpExcludeItem
+import org.partiql.planner.internal.ir.relOpExcludePath
 import org.partiql.planner.internal.ir.relOpFilter
 import org.partiql.planner.internal.ir.relOpJoin
 import org.partiql.planner.internal.ir.relOpLimit
@@ -356,14 +357,14 @@ internal class PlanTyper(
 
             // apply exclusions to the input schema
             val init = input.type.schema.map { it.copy() }
-            val schema = node.items.fold((init)) { bindings, item -> excludeBindings(bindings, item) }
+            val schema = node.paths.fold((init)) { bindings, path -> excludeBindings(bindings, path) }
 
             // rewrite
             val type = ctx!!.copy(schema)
 
             // resolve exclude path roots
-            val newItems = node.items.map { item ->
-                val resolvedRoot = when (val root = item.root) {
+            val newPaths = node.paths.map { path ->
+                val resolvedRoot = when (val root = path.root) {
                     is Rex.Op.Var.Unresolved -> {
                         // resolve `root` to local binding
                         val bindingPath = root.identifier.toBindingPath()
@@ -377,11 +378,15 @@ internal class PlanTyper(
                     }
                     is Rex.Op.Var.Resolved -> root
                 }
-                val steps = item.steps
-                relOpExcludeItem(resolvedRoot, steps)
+                relOpExcludePath(resolvedRoot, path.steps)
             }
-
-            val op = relOpExclude(input, newItems)
+            val subsumedPaths = newPaths
+                .groupBy(keySelector = { it.root }, valueTransform = { it.steps }) // combine exclude paths with the same resolved root before subsumption
+                .map { (root, allSteps) ->
+                    val nonRedundant = ExcludeRepr.toExcludeRepr(allSteps.flatten()).removeRedundantSteps()
+                    relOpExcludePath(root, nonRedundant.toPlanRepr())
+                }
+            val op = relOpExclude(input, subsumedPaths)
             return rel(type, op)
         }
 
@@ -1432,7 +1437,7 @@ internal class PlanTyper(
         return copy(fields.map { it.copy(value = it.value.asNullable()) })
     }
 
-    private fun excludeBindings(input: List<Rel.Binding>, item: Rel.Op.Exclude.Item): List<Rel.Binding> {
+    private fun excludeBindings(input: List<Rel.Binding>, item: Rel.Op.Exclude.Path): List<Rel.Binding> {
         var matchedRoot = false
         val output = input.map {
             when (val root = item.root) {
@@ -1441,8 +1446,8 @@ internal class PlanTyper(
                         is Identifier.Symbol -> {
                             if (id.isEquivalentTo(it.name)) {
                                 matchedRoot = true
-                                // recompute the StaticType of this binding after apply the exclusions
-                                val type = it.type.exclude(item.steps, false)
+                                // recompute the StaticType of this binding after applying the exclusions
+                                val type = it.type.exclude(item.steps, lastStepOptional = false)
                                 it.copy(type = type)
                             } else {
                                 it

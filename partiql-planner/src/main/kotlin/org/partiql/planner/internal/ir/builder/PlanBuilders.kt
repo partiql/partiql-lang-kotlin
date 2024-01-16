@@ -761,63 +761,89 @@ internal class RelOpAggregateCallBuilder(
 
 internal class RelOpExcludeBuilder(
     internal var input: Rel? = null,
-    internal var items: MutableList<Rel.Op.Exclude.Item> = mutableListOf(),
+    internal var paths: MutableList<Rel.Op.Exclude.Path> = mutableListOf(),
 ) {
     internal fun input(input: Rel?): RelOpExcludeBuilder = this.apply {
         this.input = input
     }
 
-    internal fun items(items: MutableList<Rel.Op.Exclude.Item>): RelOpExcludeBuilder = this.apply {
-        this.items = items
+    internal fun paths(paths: MutableList<Rel.Op.Exclude.Path>): RelOpExcludeBuilder = this.apply {
+        this.paths = paths
     }
 
-    internal fun build(): Rel.Op.Exclude = Rel.Op.Exclude(input = input!!, items = items)
+    internal fun build(): Rel.Op.Exclude = Rel.Op.Exclude(input = input!!, paths = paths)
 }
 
-internal class RelOpExcludeItemBuilder(
+internal class RelOpExcludePathBuilder(
     internal var root: Rex.Op.Var? = null,
     internal var steps: MutableList<Rel.Op.Exclude.Step> = mutableListOf(),
 ) {
-    internal fun root(root: Rex.Op.Var?): RelOpExcludeItemBuilder = this.apply {
+    internal fun root(root: Rex.Op.Var?): RelOpExcludePathBuilder = this.apply {
         this.root = root
     }
 
-    internal fun steps(steps: MutableList<Rel.Op.Exclude.Step>): RelOpExcludeItemBuilder = this.apply {
+    internal fun steps(steps: MutableList<Rel.Op.Exclude.Step>): RelOpExcludePathBuilder = this.apply {
         this.steps = steps
     }
 
-    internal fun build(): Rel.Op.Exclude.Item = Rel.Op.Exclude.Item(root = root!!, steps = steps)
+    internal fun build(): Rel.Op.Exclude.Path = Rel.Op.Exclude.Path(root = root!!, steps = steps)
 }
 
-internal class RelOpExcludeStepStructFieldBuilder(
-    internal var symbol: Identifier.Symbol? = null,
+internal class RelOpExcludeStepBuilder(
+    internal var type: Rel.Op.Exclude.Type? = null,
+    internal var substeps: MutableList<Rel.Op.Exclude.Step> = mutableListOf(),
 ) {
-    internal fun symbol(symbol: Identifier.Symbol?): RelOpExcludeStepStructFieldBuilder = this.apply {
+    internal fun type(type: Rel.Op.Exclude.Type?): RelOpExcludeStepBuilder = this.apply {
+        this.type = type
+    }
+
+    internal fun substeps(substeps: MutableList<Rel.Op.Exclude.Step>): RelOpExcludeStepBuilder =
+        this.apply {
+            this.substeps = substeps
+        }
+
+    internal fun build(): Rel.Op.Exclude.Step = Rel.Op.Exclude.Step(type = type!!, substeps = substeps)
+}
+
+internal class RelOpExcludeTypeStructSymbolBuilder(
+    internal var symbol: String? = null,
+) {
+    internal fun symbol(symbol: String?): RelOpExcludeTypeStructSymbolBuilder = this.apply {
         this.symbol = symbol
     }
 
-    internal fun build(): Rel.Op.Exclude.Step.StructField = Rel.Op.Exclude.Step.StructField(
+    internal fun build(): Rel.Op.Exclude.Type.StructSymbol = Rel.Op.Exclude.Type.StructSymbol(
         symbol =
         symbol!!
     )
 }
 
-internal class RelOpExcludeStepCollIndexBuilder(
+internal class RelOpExcludeTypeStructKeyBuilder(
+    internal var key: String? = null,
+) {
+    internal fun key(key: String?): RelOpExcludeTypeStructKeyBuilder = this.apply {
+        this.key = key
+    }
+
+    internal fun build(): Rel.Op.Exclude.Type.StructKey = Rel.Op.Exclude.Type.StructKey(key = key!!)
+}
+
+internal class RelOpExcludeTypeCollIndexBuilder(
     internal var index: Int? = null,
 ) {
-    internal fun index(index: Int?): RelOpExcludeStepCollIndexBuilder = this.apply {
+    internal fun index(index: Int?): RelOpExcludeTypeCollIndexBuilder = this.apply {
         this.index = index
     }
 
-    internal fun build(): Rel.Op.Exclude.Step.CollIndex = Rel.Op.Exclude.Step.CollIndex(index = index!!)
+    internal fun build(): Rel.Op.Exclude.Type.CollIndex = Rel.Op.Exclude.Type.CollIndex(index = index!!)
 }
 
-internal class RelOpExcludeStepStructWildcardBuilder() {
-    internal fun build(): Rel.Op.Exclude.Step.StructWildcard = Rel.Op.Exclude.Step.StructWildcard()
+internal class RelOpExcludeTypeStructWildcardBuilder() {
+    internal fun build(): Rel.Op.Exclude.Type.StructWildcard = Rel.Op.Exclude.Type.StructWildcard()
 }
 
-internal class RelOpExcludeStepCollWildcardBuilder() {
-    internal fun build(): Rel.Op.Exclude.Step.CollWildcard = Rel.Op.Exclude.Step.CollWildcard()
+internal class RelOpExcludeTypeCollWildcardBuilder() {
+    internal fun build(): Rel.Op.Exclude.Type.CollWildcard = Rel.Op.Exclude.Type.CollWildcard()
 }
 
 internal class RelOpErrBuilder(

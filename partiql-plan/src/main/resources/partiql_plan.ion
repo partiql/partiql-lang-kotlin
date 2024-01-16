@@ -288,18 +288,23 @@ rel::{
 
     exclude::{
       input: rel,
-      items: list::[item],
+      paths: list::[path],
       _: [
-        item::{
+        path::{
           root: '.rex.op.var',
           steps: list::[step],
         },
-        step::[
-          struct_field::{ symbol: '.identifier.symbol' },
+        step::{
+          type: type,
+          substeps: list::[step],
+        },
+        type::[
+          struct_symbol::{ symbol: string },
+          struct_key::{ key: string },
           coll_index::{ index: int },
           struct_wildcard::{},
           coll_wildcard::{},
-        ],
+        ]
       ],
     },
 
