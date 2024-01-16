@@ -12,8 +12,9 @@ import org.partiql.planner.internal.ir.PlanNode
 import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.Statement
+import org.partiql.spi.fn.FnExperimental
+import org.partiql.spi.fn.FnSignature
 import org.partiql.types.StaticType
-import org.partiql.types.function.FunctionSignature
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 
@@ -61,8 +62,9 @@ internal class PlanBuilder {
         return builder.build()
     }
 
+    @OptIn(FnExperimental::class)
     internal fun fnResolved(
-        signature: FunctionSignature.Scalar? = null,
+        signature: FnSignature.Scalar? = null,
         block: FnResolvedBuilder.() -> Unit = {},
     ): Fn.Resolved {
         val builder = FnResolvedBuilder(signature)
@@ -72,16 +74,16 @@ internal class PlanBuilder {
 
     internal fun fnUnresolved(
         identifier: Identifier? = null,
-        isHidden: Boolean? = null,
         block: FnUnresolvedBuilder.() -> Unit = {},
     ): Fn.Unresolved {
-        val builder = FnUnresolvedBuilder(identifier, isHidden)
+        val builder = FnUnresolvedBuilder(identifier)
         builder.block()
         return builder.build()
     }
 
+    @OptIn(FnExperimental::class)
     internal fun aggResolved(
-        signature: FunctionSignature.Aggregation? = null,
+        signature: FnSignature.Aggregation? = null,
         block: AggResolvedBuilder.() -> Unit = {},
     ): Agg.Resolved {
         val builder = AggResolvedBuilder(signature)
@@ -162,7 +164,7 @@ internal class PlanBuilder {
 
     internal fun rexOpGlobal(
         ref: Catalog.Symbol.Ref? = null,
-        block: RexOpGlobalBuilder.() -> Unit = {}
+        block: RexOpGlobalBuilder.() -> Unit = {},
     ): Rex.Op.Global {
         val builder = RexOpGlobalBuilder(ref)
         builder.block()
@@ -516,7 +518,7 @@ internal class PlanBuilder {
 
     internal fun relOpExcludeStepStructField(
         symbol: Identifier.Symbol? = null,
-        block: RelOpExcludeStepStructFieldBuilder.() -> Unit = {}
+        block: RelOpExcludeStepStructFieldBuilder.() -> Unit = {},
     ): Rel.Op.Exclude.Step.StructField {
         val builder = RelOpExcludeStepStructFieldBuilder(symbol)
         builder.block()
@@ -525,7 +527,7 @@ internal class PlanBuilder {
 
     internal fun relOpExcludeStepCollIndex(
         index: Int? = null,
-        block: RelOpExcludeStepCollIndexBuilder.() -> Unit = {}
+        block: RelOpExcludeStepCollIndexBuilder.() -> Unit = {},
     ): Rel.Op.Exclude.Step.CollIndex {
         val builder = RelOpExcludeStepCollIndexBuilder(index)
         builder.block()
@@ -534,7 +536,7 @@ internal class PlanBuilder {
 
     internal fun relOpExcludeStepStructWildcard(
         block: RelOpExcludeStepStructWildcardBuilder.() -> Unit =
-            {}
+            {},
     ): Rel.Op.Exclude.Step.StructWildcard {
         val builder = RelOpExcludeStepStructWildcardBuilder()
         builder.block()
@@ -543,7 +545,7 @@ internal class PlanBuilder {
 
     internal fun relOpExcludeStepCollWildcard(
         block: RelOpExcludeStepCollWildcardBuilder.() -> Unit =
-            {}
+            {},
     ): Rel.Op.Exclude.Step.CollWildcard {
         val builder = RelOpExcludeStepCollWildcardBuilder()
         builder.block()

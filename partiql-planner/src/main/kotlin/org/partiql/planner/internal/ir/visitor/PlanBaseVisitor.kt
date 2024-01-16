@@ -1,5 +1,3 @@
-@file:OptIn(PartiQLValueExperimental::class)
-
 package org.partiql.planner.internal.ir.visitor
 
 import org.partiql.planner.internal.ir.Agg
@@ -11,18 +9,17 @@ import org.partiql.planner.internal.ir.PlanNode
 import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.Statement
-import org.partiql.value.PartiQLValueExperimental
 
 internal abstract class PlanBaseVisitor<R, C> : PlanVisitor<R, C> {
     override fun visit(node: PlanNode, ctx: C): R = node.accept(this, ctx)
 
     override fun visitPartiQLPlan(node: PartiQLPlan, ctx: C): R = defaultVisit(node, ctx)
 
-    public override fun visitCatalog(node: Catalog, ctx: C): R = defaultVisit(node, ctx)
+    override fun visitCatalog(node: Catalog, ctx: C): R = defaultVisit(node, ctx)
 
-    public override fun visitCatalogSymbol(node: Catalog.Symbol, ctx: C): R = defaultVisit(node, ctx)
+    override fun visitCatalogSymbol(node: Catalog.Symbol, ctx: C): R = defaultVisit(node, ctx)
 
-    public override fun visitCatalogSymbolRef(node: Catalog.Symbol.Ref, ctx: C): R =
+    override fun visitCatalogSymbolRef(node: Catalog.Symbol.Ref, ctx: C): R =
         defaultVisit(node, ctx)
 
     override fun visitFn(node: Fn, ctx: C): R = when (node) {
@@ -242,7 +239,7 @@ internal abstract class PlanBaseVisitor<R, C> : PlanVisitor<R, C> {
 
     override fun visitRelOpExcludeStepStructField(
         node: Rel.Op.Exclude.Step.StructField,
-        ctx: C
+        ctx: C,
     ): R = defaultVisit(node, ctx)
 
     override fun visitRelOpExcludeStepCollIndex(node: Rel.Op.Exclude.Step.CollIndex, ctx: C): R =
@@ -250,12 +247,12 @@ internal abstract class PlanBaseVisitor<R, C> : PlanVisitor<R, C> {
 
     override fun visitRelOpExcludeStepStructWildcard(
         node: Rel.Op.Exclude.Step.StructWildcard,
-        ctx: C
+        ctx: C,
     ): R = defaultVisit(node, ctx)
 
     override fun visitRelOpExcludeStepCollWildcard(
         node: Rel.Op.Exclude.Step.CollWildcard,
-        ctx: C
+        ctx: C,
     ): R = defaultVisit(node, ctx)
 
     override fun visitRelOpErr(node: Rel.Op.Err, ctx: C): R = defaultVisit(node, ctx)

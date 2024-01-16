@@ -15,6 +15,7 @@ import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.Statement
 import org.partiql.planner.internal.ir.visitor.PlanBaseVisitor
+import org.partiql.spi.fn.FnExperimental
 import org.partiql.value.PartiQLValueExperimental
 
 internal abstract class PlanRewriter<C> : PlanBaseVisitor<PlanNode, C>() {
@@ -118,6 +119,7 @@ internal abstract class PlanRewriter<C> : PlanBaseVisitor<PlanNode, C>() {
         return node
     }
 
+    @OptIn(FnExperimental::class)
     override fun visitFnResolved(node: Fn.Resolved, ctx: C): PlanNode {
         val signature = node.signature
         return node
@@ -125,14 +127,14 @@ internal abstract class PlanRewriter<C> : PlanBaseVisitor<PlanNode, C>() {
 
     override fun visitFnUnresolved(node: Fn.Unresolved, ctx: C): PlanNode {
         val identifier = visitIdentifier(node.identifier, ctx) as Identifier
-        val isHidden = node.isHidden
-        return if (identifier !== node.identifier || isHidden !== node.isHidden) {
-            Fn.Unresolved(identifier, isHidden)
+        return if (identifier !== node.identifier) {
+            Fn.Unresolved(identifier)
         } else {
             node
         }
     }
 
+    @OptIn(FnExperimental::class)
     override fun visitAggResolved(node: Agg.Resolved, ctx: C): PlanNode {
         val signature = node.signature
         return node
@@ -567,7 +569,7 @@ internal abstract class PlanRewriter<C> : PlanBaseVisitor<PlanNode, C>() {
 
     override fun visitRelOpExcludeStepStructField(
         node: Rel.Op.Exclude.Step.StructField,
-        ctx: C
+        ctx: C,
     ): PlanNode {
         val symbol = visitIdentifierSymbol(node.symbol, ctx) as Identifier.Symbol
         return if (symbol !== node.symbol) {
@@ -585,12 +587,12 @@ internal abstract class PlanRewriter<C> : PlanBaseVisitor<PlanNode, C>() {
 
     override fun visitRelOpExcludeStepStructWildcard(
         node: Rel.Op.Exclude.Step.StructWildcard,
-        ctx: C
+        ctx: C,
     ): PlanNode = node
 
     override fun visitRelOpExcludeStepCollWildcard(
         node: Rel.Op.Exclude.Step.CollWildcard,
-        ctx: C
+        ctx: C,
     ): PlanNode = node
 
     override fun visitRelOpErr(node: Rel.Op.Err, ctx: C): PlanNode {

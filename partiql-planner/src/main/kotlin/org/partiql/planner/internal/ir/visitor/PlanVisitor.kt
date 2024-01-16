@@ -18,11 +18,11 @@ internal interface PlanVisitor<R, C> {
 
     fun visitPartiQLPlan(node: PartiQLPlan, ctx: C): R
 
-    public fun visitCatalog(node: Catalog, ctx: C): R
+    fun visitCatalog(node: Catalog, ctx: C): R
 
-    public fun visitCatalogSymbol(node: Catalog.Symbol, ctx: C): R
+    fun visitCatalogSymbol(node: Catalog.Symbol, ctx: C): R
 
-    public fun visitCatalogSymbolRef(node: Catalog.Symbol.Ref, ctx: C): R
+    fun visitCatalogSymbolRef(node: Catalog.Symbol.Ref, ctx: C): R
 
     fun visitFn(node: Fn, ctx: C): R
 
@@ -147,7 +147,8 @@ internal interface PlanVisitor<R, C> {
     fun visitRelOpExcludeStepStructWildcard(node: Rel.Op.Exclude.Step.StructWildcard, ctx: C):
         R
 
-    fun visitRelOpExcludeStepCollWildcard(node: Rel.Op.Exclude.Step.CollWildcard, ctx: C): R fun visitRelOpErr(node: Rel.Op.Err, ctx: C): R
+    fun visitRelOpExcludeStepCollWildcard(node: Rel.Op.Exclude.Step.CollWildcard, ctx: C): R
+    fun visitRelOpErr(node: Rel.Op.Err, ctx: C): R
 
     fun visitRelBinding(node: Rel.Binding, ctx: C): R
 }

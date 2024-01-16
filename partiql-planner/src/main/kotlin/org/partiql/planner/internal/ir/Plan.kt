@@ -3,8 +3,9 @@
 
 package org.partiql.planner.internal.ir
 
+import org.partiql.spi.fn.FnExperimental
+import org.partiql.spi.fn.FnSignature
 import org.partiql.types.StaticType
-import org.partiql.types.function.FunctionSignature
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 
@@ -22,13 +23,13 @@ internal fun catalogSymbol(path: List<String>, type: StaticType): Catalog.Symbol
 internal fun catalogSymbolRef(catalog: Int, symbol: Int): Catalog.Symbol.Ref =
     Catalog.Symbol.Ref(catalog, symbol)
 
-internal fun fnResolved(signature: FunctionSignature.Scalar): Fn.Resolved = Fn.Resolved(signature)
+@OptIn(FnExperimental::class)
+internal fun fnResolved(signature: FnSignature.Scalar): Fn.Resolved = Fn.Resolved(signature)
 
-internal fun fnUnresolved(identifier: Identifier, isHidden: Boolean): Fn.Unresolved =
-    Fn.Unresolved(identifier, isHidden)
+internal fun fnUnresolved(identifier: Identifier): Fn.Unresolved = Fn.Unresolved(identifier)
 
-internal fun aggResolved(signature: FunctionSignature.Aggregation): Agg.Resolved =
-    Agg.Resolved(signature)
+@OptIn(FnExperimental::class)
+internal fun aggResolved(signature: FnSignature.Aggregation): Agg.Resolved = Agg.Resolved(signature)
 
 internal fun aggUnresolved(identifier: Identifier): Agg.Unresolved = Agg.Unresolved(identifier)
 

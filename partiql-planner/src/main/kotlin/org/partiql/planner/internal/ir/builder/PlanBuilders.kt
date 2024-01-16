@@ -11,8 +11,9 @@ import org.partiql.planner.internal.ir.PartiQLVersion
 import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.Statement
+import org.partiql.spi.fn.FnExperimental
+import org.partiql.spi.fn.FnSignature
 import org.partiql.types.StaticType
-import org.partiql.types.function.FunctionSignature
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 
@@ -89,10 +90,11 @@ internal class CatalogSymbolRefBuilder(
     )
 }
 
+@OptIn(FnExperimental::class)
 internal class FnResolvedBuilder(
-    internal var signature: FunctionSignature.Scalar? = null,
+    internal var signature: FnSignature.Scalar? = null,
 ) {
-    internal fun signature(signature: FunctionSignature.Scalar?): FnResolvedBuilder = this.apply {
+    internal fun signature(signature: FnSignature.Scalar?): FnResolvedBuilder = this.apply {
         this.signature = signature
     }
 
@@ -101,27 +103,21 @@ internal class FnResolvedBuilder(
 
 internal class FnUnresolvedBuilder(
     internal var identifier: Identifier? = null,
-    internal var isHidden: Boolean? = null,
 ) {
     internal fun identifier(identifier: Identifier?): FnUnresolvedBuilder = this.apply {
         this.identifier = identifier
     }
 
-    internal fun isHidden(isHidden: Boolean?): FnUnresolvedBuilder = this.apply {
-        this.isHidden = isHidden
-    }
-
     internal fun build(): Fn.Unresolved = Fn.Unresolved(
         identifier = identifier!!,
-        isHidden =
-        isHidden!!
     )
 }
 
+@OptIn(FnExperimental::class)
 internal class AggResolvedBuilder(
-    internal var signature: FunctionSignature.Aggregation? = null,
+    internal var signature: FnSignature.Aggregation? = null,
 ) {
-    internal fun signature(signature: FunctionSignature.Aggregation?): AggResolvedBuilder = this.apply {
+    internal fun signature(signature: FnSignature.Aggregation?): AggResolvedBuilder = this.apply {
         this.signature = signature
     }
 
@@ -812,11 +808,11 @@ internal class RelOpExcludeStepCollIndexBuilder(
     internal fun build(): Rel.Op.Exclude.Step.CollIndex = Rel.Op.Exclude.Step.CollIndex(index = index!!)
 }
 
-internal class RelOpExcludeStepStructWildcardBuilder() {
+internal class RelOpExcludeStepStructWildcardBuilder {
     internal fun build(): Rel.Op.Exclude.Step.StructWildcard = Rel.Op.Exclude.Step.StructWildcard()
 }
 
-internal class RelOpExcludeStepCollWildcardBuilder() {
+internal class RelOpExcludeStepCollWildcardBuilder {
     internal fun build(): Rel.Op.Exclude.Step.CollWildcard = Rel.Op.Exclude.Step.CollWildcard()
 }
 
