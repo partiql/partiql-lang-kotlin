@@ -12,38 +12,28 @@ parti_q_l_plan::{
   statement:  statement,            // (statement ...)
 }
 
-// Represent an instance of a database.
-// - Currently, `symbols` represents all values from this catalog to be used in this plan.
-// - Eventually, TODO functions may be resolved to a specific namespace within a catalog.
 catalog::{
-  name: string,
-  symbols: list::[symbol],
+  name:   string,
+  items:  list::[item],
   _: [
-    // A reference to a value contained within a catalog.
-    symbol::{
-      // The path to a value WITHIN a catalog. Note: This should not start with the catalog's name. Also, this
-      //  should not be empty
-      path: list::[string],
-      type: static_type,
-      _: [
-        // A reference to a symbol
-        ref::{
-          catalog: int,
-          symbol: int
-        }
-      ]
-    }
+    item::[
+      value::{
+        path: list::[string],
+        type: static_type,
+      },
+      fn::{
+        path:     list::[string],
+        specific: string,
+      },
+    ]
   ]
 }
 
-// Functions
+// Reference to some item in a catalog.
 
-fn::{
-  signature: scalar_signature,
-}
-
-agg::{
-  signature: aggregation_signature,
+ref::{
+  catalog: int,
+  symbol: int
 }
 
 // Statements
@@ -87,7 +77,7 @@ rex::{
     },
 
     global::{
-      ref: '.catalog.symbol.ref'
+      ref: ref,
     },
 
     path::[
@@ -103,7 +93,7 @@ rex::{
 
     call::[
       static::{
-        fn: fn,
+        fn:   ref,
         args: list::[rex]
       },
 
@@ -117,8 +107,8 @@ rex::{
         candidates: list::[candidate],
         _: [
           candidate::{
-            fn: fn,
-            coercions: list::[optional::fn]
+            fn: ref,
+            coercions: list::[optional::ref]
           }
         ]
       }
@@ -280,7 +270,7 @@ rel::{
       groups:   list::[rex],
       _: [
         call::{
-          agg:  agg,
+          fn:   ref,
           args: list::[rex],
         },
       ],
