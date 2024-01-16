@@ -1,4 +1,4 @@
-package org.partiql.parser.impl
+package org.partiql.parser.internal
 
 import org.junit.jupiter.api.Test
 import org.partiql.ast.AstNode
