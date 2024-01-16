@@ -66,7 +66,20 @@ internal class TypeCasts private constructor(
     public val graph: TypeGraph,
 ) {
 
-    internal fun relationships(): Sequence<TypeRelationship> = sequence {
+    /**
+     * Cache a list of unsafe cast SPECIFIC for easy typing lookup
+     */
+    private val unsafeCastSet: Set<String> by lazy {
+        val set = mutableSetOf<String>()
+        relationships().forEach {
+            if (it.castType == CastType.UNSAFE) {
+                set.add(it.castFn.specific)
+            }
+        }
+        set
+    }
+
+    private fun relationships(): Sequence<TypeRelationship> = sequence {
         for (t1 in types) {
             for (t2 in types) {
                 val r = graph[t1][t2]
@@ -78,19 +91,40 @@ internal class TypeCasts private constructor(
     }
 
     /**
-     * Cache a list of unsafe cast SPECIFIC for easy typing lookup
+     * Easy lookup of whether this CAST can return MISSING.
      */
-    val unsafeCastSet: Set<String> by lazy {
-        val set = mutableSetOf<String>()
-        relationships().forEach {
-            if (it.castType == CastType.UNSAFE) {
-                set.add(it.castFn.specific)
-            }
-        }
-        set
-    }
+    internal fun isUnsafeCast(specific: String): Boolean = unsafeCastSet.contains(specific)
 
     private operator fun <T> Array<T>.get(t: PartiQLValueType): T = get(t.ordinal)
+
+    /**
+     * Returns the CAST function if exists, else null.
+     */
+    @OptIn(PartiQLValueExperimental::class)
+    private fun lookupCoercion(valueType: PartiQLValueType, targetType: PartiQLValueType): FnSignature.Scalar? {
+        if (!casts.canCoerce(valueType, targetType)) {
+            return null
+        }
+        val name = castName(targetType)
+        val casts = operators.getOrDefault(name, emptyList())
+        for (cast in casts) {
+            if (cast.parameters.isEmpty()) {
+                break // should be unreachable
+            }
+            if (valueType == cast.parameters[0].type) return cast
+        }
+        return null
+    }
+
+    /**
+     * Define CASTS with some mangled name; CAST(x AS T) -> cast_t(x)
+     *
+     * CAST(x AS INT8) -> cast_int64(x)
+     *
+     * But what about parameterized types? Are the parameters dropped in casts, or do parameters become arguments?
+     */
+    @OptIn(PartiQLValueExperimental::class)
+    private fun castName(type: PartiQLValueType) = "cast_${type.name.lowercase()}"
 
     companion object {
 

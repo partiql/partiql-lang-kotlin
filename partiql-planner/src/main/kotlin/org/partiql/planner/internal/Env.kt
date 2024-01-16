@@ -6,11 +6,14 @@ import org.partiql.planner.internal.ir.Catalog
 import org.partiql.planner.internal.ir.Fn
 import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
+import org.partiql.planner.internal.typer.FnMatch
 import org.partiql.planner.internal.typer.FnResolver
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
+import org.partiql.spi.connector.ConnectorMetadata
 import org.partiql.spi.fn.FnExperimental
+import org.partiql.spi.fn.FnSignature
 import org.partiql.types.StaticType
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
@@ -114,8 +117,8 @@ internal enum class ResolutionStrategy {
  *
  * @property session        Session details
  */
-@OptIn(FnExperimental::class)
 internal class Env(
+    private val catalog: ConnectorMetadata,
     private val session: PartiQLPlanner.Session,
 ) {
 
@@ -132,17 +135,21 @@ internal class Env(
     /**
      * Function resolution logic.
      */
-    private val fnResolver = FnResolver(session, catalogs)
+    private val fnResolver = FnResolver(catalog, session)
 
     /**
      * Leverages a [FnResolver] to find a matching function defined in the [Header] scalar function catalog.
      */
-    internal fun resolveFn(fn: Fn.Unresolved, args: List<Rex>) = fnResolver.resolveFn(fn, args)
+    @OptIn(FnExperimental::class)
+    internal fun resolveFn(fn: Fn.Unresolved, args: List<Rex>): FnMatch<FnSignature.Scalar> =
+        fnResolver.resolveFn(fn, args)
 
     /**
      * Leverages a [FnResolver] to find a matching function defined in the [Header] aggregation function catalog.
      */
-    internal fun resolveAgg(agg: Agg.Unresolved, args: List<Rex>) = fnResolver.resolveAgg(agg, args)
+    @OptIn(FnExperimental::class)
+    internal fun resolveAgg(agg: Agg.Unresolved, args: List<Rex>): FnMatch<FnSignature.Aggregation> =
+        fnResolver.resolveAgg(agg, args)
 
     /**
      * Lookup a global using a [BindingName] as the catalog name.
@@ -156,7 +163,7 @@ internal class Env(
         catalog: BindingName,
         originalPath: BindingPath,
         catalogPath: BindingPath,
-    ) : ResolvedVar? {
+    ): ResolvedVar? {
         val cat = catalogs.keys.firstOrNull { catalog.matches(it) } ?: return null
         return getGlobalType(cat, originalPath, catalogPath)
     }

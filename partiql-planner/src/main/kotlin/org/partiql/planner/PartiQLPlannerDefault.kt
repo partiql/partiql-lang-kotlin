@@ -23,7 +23,9 @@ internal class PartiQLPlannerDefault(
     ): PartiQLPlanner.Result {
 
         // 0. Initialize the planning environment
-        val env = Env(session)
+        val catalog = session.catalogs[session.currentCatalog]
+            ?: error("Invalid current catalog ${session.currentCatalog}, session is missing ConnectorMetadata")
+        val env = Env(catalog, session)
 
         // 1. Normalize
         val ast = statement.normalize()

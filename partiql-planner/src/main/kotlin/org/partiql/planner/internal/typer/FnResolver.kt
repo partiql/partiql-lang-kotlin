@@ -1,10 +1,13 @@
 package org.partiql.planner.internal.typer
 
 import org.partiql.planner.PartiQLPlanner
-import org.partiql.planner.internal.Header
 import org.partiql.planner.internal.ir.Agg
 import org.partiql.planner.internal.ir.Fn
+import org.partiql.planner.internal.ir.Identifier
 import org.partiql.planner.internal.ir.Rex
+import org.partiql.spi.BindingCase
+import org.partiql.spi.BindingName
+import org.partiql.spi.BindingPath
 import org.partiql.spi.connector.ConnectorMetadata
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnParameter
@@ -63,23 +66,39 @@ internal class Match<T : FnSignature>(
 )
 
 /**
+ * PartiQL type relationships and casts.
+ */
+private val casts = TypeCasts.partiql()
+
+/**
  * Logic for matching signatures to arguments — this class contains all cast/coercion logic. In my opinion, casts
  * and coercions should come along with the type lattice. Considering we don't really have this, it is simple enough
  * at the moment to keep that information (derived from the current TypeLattice) with the [FnResolver].
  */
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal class FnResolver(
-    private val session: PartiQLPlanner.Session,
-    private val catalogs: Map<String, ConnectorMetadata>,
-) {
+    catalog: ConnectorMetadata,
+    session: PartiQLPlanner.Session,
+) : PathResolver<List<FnSignature>>(catalog, session) {
 
-    /**
-     * The place to lookup functions.
-     */
-    private val registry = FnRegistry(session, catalogs)
+    override fun get(metadata: ConnectorMetadata, path: BindingPath): List<FnSignature> =
+        metadata.getFunctions(path).map {
+            it.entity.getType()
+        }
 
     internal fun resolveFn(fn: Fn.Unresolved, args: List<Rex>): FnMatch<FnSignature.Scalar> {
-        val candidates = registry.lookup(fn)
+
+        val path = fn.identifier.toBindingPath()
+        val entity = resolve(path)
+            ?: return FnMatch.Error(
+                identifier = fn.identifier,
+                args = args,
+                candidates = emptyList(),
+            )
+        val candidates = entity.metadata
+            .filterIsInstance<FnSignature.Scalar>()
+            .sortedWith(fnPrecedence)
+
         var canReturnMissing = false
         val parameterPermutations = buildArgumentPermutations(args.map { it.type }).mapNotNull { argList ->
             argList.mapIndexed { i, arg ->
@@ -98,7 +117,7 @@ internal class FnResolver(
                     null
                 }
                 else -> {
-                    val isMissable = canReturnMissing || registry.isUnsafeCast(match.signature.specific)
+                    val isMissable = canReturnMissing || casts.isUnsafeCast(match.signature.specific)
                     FnMatch.Ok(match.signature, match.mapping, isMissable)
                 }
             }
@@ -109,6 +128,89 @@ internal class FnResolver(
             0 -> FnMatch.Error(fn.identifier, args, candidates)
             1 -> orderedUniqueFns.first()
             else -> FnMatch.Dynamic(orderedUniqueFns, canReturnMissing)
+        }
+    }
+
+    internal fun resolveAgg(agg: Agg.Unresolved, args: List<Rex>): FnMatch<FnSignature.Aggregation> {
+
+        val path = agg.identifier.toBindingPath()
+        val entity = resolve(path)
+            ?: return FnMatch.Error(
+                identifier = agg.identifier,
+                args = args,
+                candidates = emptyList(),
+            )
+        val candidates = entity.metadata
+            .filterIsInstance<FnSignature.Aggregation>()
+            .sortedWith(fnPrecedence)
+
+        var hadMissingArg = false
+        val parameters = args.mapIndexed { i, arg ->
+            if (!hadMissingArg && arg.type.isMissable()) {
+                hadMissingArg = true
+            }
+            FnParameter("arg-$i", arg.type.toRuntimeType())
+        }
+        val match = match(candidates, parameters)
+        return when (match) {
+            null -> FnMatch.Error(agg.identifier, args, candidates)
+            else -> {
+                val isMissable = hadMissingArg || casts.isUnsafeCast(match.signature.specific)
+                FnMatch.Ok(match.signature, match.mapping, isMissable)
+            }
+        }
+    }
+
+    /**
+     * Fns are sorted by precedence (which is not rigorously defined/specified at the moment).
+     */
+    private fun <T : FnSignature> match(signatures: List<T>, args: Args): Match<T>? {
+        for (signature in signatures) {
+            val mapping = match(signature, args)
+            if (mapping != null) {
+                return Match(signature, mapping)
+            }
+        }
+        return null
+    }
+
+    /**
+     * Attempt to match arguments to the parameters; return the implicit casts if necessary.
+     *
+     * TODO we need to constrain the allowable runtime types for an ANY typed parameter.
+     */
+    private fun match(signature: FnSignature, args: Args): Mapping? {
+        if (signature.parameters.size != args.size) {
+            return null
+        }
+        val mapping = ArrayList<FnSignature.Scalar?>(args.size)
+        for (i in args.indices) {
+            val a = args[i]
+            val p = signature.parameters[i]
+            when {
+                // 1. Exact match
+                a.type == p.type -> mapping.add(null)
+                // 2. Match ANY, no coercion needed
+                p.type == ANY -> mapping.add(null)
+                // 3. Match NULL argument
+                a.type == NULL -> mapping.add(null)
+                // 4. Check for a coercion
+                else -> {
+                    val coercion = casts.lookupCoercion(a.type, p.type)
+                    when (coercion) {
+                        null -> return null // short-circuit
+                        else -> mapping.add(coercion)
+                    }
+                }
+            }
+        }
+        // if all elements requires casting, then no match
+        // because there must be another function definition that requires no casting
+        return if (mapping.isEmpty() || mapping.contains(null)) {
+            // we made a match
+            mapping
+        } else {
+            null
         }
     }
 
@@ -136,80 +238,20 @@ internal class FnResolver(
         }
     }
 
-    /**
-     * Leverages a [FnResolver] to find a matching function defined in the [Header] aggregation function catalog.
-     */
-    public fun resolveAgg(agg: Agg.Unresolved, args: List<Rex>): FnMatch<FnSignature.Aggregation> {
-        val candidates = registry.lookup(agg)
-        var hadMissingArg = false
-        val parameters = args.mapIndexed { i, arg ->
-            if (!hadMissingArg && arg.type.isMissable()) {
-                hadMissingArg = true
-            }
-            FnParameter("arg-$i", arg.type.toRuntimeType())
-        }
-        val match = match(candidates, parameters)
-        return when (match) {
-            null -> FnMatch.Error(agg.identifier, args, candidates)
-            else -> {
-                val isMissable = hadMissingArg || registry.isUnsafeCast(match.signature.specific)
-                FnMatch.Ok(match.signature, match.mapping, isMissable)
-            }
-        }
+    private fun Identifier.toBindingPath() = when (this) {
+        is Identifier.Qualified -> this.toBindingPath()
+        is Identifier.Symbol -> BindingPath(listOf(this.toBindingName()))
     }
 
-    /**
-     * Fns are sorted by precedence (which is not rigorously defined/specified at the moment).
-     */
-    private fun <T : FnSignature> match(signatures: List<T>, args: Args): Match<T>? {
-        for (signature in signatures) {
-            val mapping = match(signature, args)
-            if (mapping != null) {
-                return Match(signature, mapping)
-            }
-        }
-        return null
-    }
+    private fun Identifier.Qualified.toBindingPath() = BindingPath(steps = listOf(this.root.toBindingName()) + steps.map { it.toBindingName() })
 
-    /**
-     * Attempt to match arguments to the parameters; return the implicit casts if necessary.
-     *
-     * TODO we need to constrain the allowable runtime types for an ANY typed parameter.
-     */
-    fun match(signature: FnSignature, args: Args): Mapping? {
-        if (signature.parameters.size != args.size) {
-            return null
+    private fun Identifier.Symbol.toBindingName() = BindingName(
+        name = symbol,
+        case = when (caseSensitivity) {
+            Identifier.CaseSensitivity.SENSITIVE -> BindingCase.SENSITIVE
+            Identifier.CaseSensitivity.INSENSITIVE -> BindingCase.INSENSITIVE
         }
-        val mapping = ArrayList<FnSignature.Scalar?>(args.size)
-        for (i in args.indices) {
-            val a = args[i]
-            val p = signature.parameters[i]
-            when {
-                // 1. Exact match
-                a.type == p.type -> mapping.add(null)
-                // 2. Match ANY, no coercion needed
-                p.type == ANY -> mapping.add(null)
-                // 3. Match NULL argument
-                a.type == NULL -> mapping.add(null)
-                // 4. Check for a coercion
-                else -> {
-                    val coercion = registry.lookupCoercion(a.type, p.type)
-                    when (coercion) {
-                        null -> return null // short-circuit
-                        else -> mapping.add(coercion)
-                    }
-                }
-            }
-        }
-        // if all elements requires casting, then no match
-        // because there must be another function definition that requires no casting
-        return if (mapping.isEmpty() || mapping.contains(null)) {
-            // we made a match
-            mapping
-        } else {
-            null
-        }
-    }
+    )
 
     companion object {
 

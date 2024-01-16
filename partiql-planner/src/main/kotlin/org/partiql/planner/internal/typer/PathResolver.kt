@@ -41,7 +41,7 @@ internal abstract class PathResolver<T>(
      * @param path  The absolute path within a catalog.
      * @return
      */
-    abstract fun get(metadata: ConnectorMetadata, path: BindingPath): PathEntry<T>?
+    abstract fun get(metadata: ConnectorMetadata, path: BindingPath): T?
 
     /**
      * Resolution rules for a given name.
@@ -54,23 +54,43 @@ internal abstract class PathResolver<T>(
         val absPath = BindingPath(schema + path.steps)
         return when (n) {
             0 -> null
-            1 -> get(catalog, absPath)
-            2 -> get(catalog, absPath) ?: get(catalog, path)
-            else -> get(catalog, absPath) ?: get(catalog, path) ?: get(path)
+            1 -> get(absPath)
+            2 -> get(absPath) ?: get(path)
+            else -> get(absPath) ?: get(path) ?: lookup(path)
         }
     }
 
     /**
-     * This checks for an absolute path in the current system, using the session to lookup catalogs.
+     * This gets the path in the current catalog.
+     *
+     * @param path
+     * @return
+     */
+    private fun get(path: BindingPath): PathEntry<T>? = when (val entity = get(catalog, path)) {
+        null -> null
+        else -> PathEntry(
+            catalog = session.currentCatalog,
+            path = path.normalized,
+            metadata = entity,
+        )
+    }
+
+    /**
+     * This looks for an absolute path in the current system, using the session to lookup catalogs.
      *
      * @param path
      */
-    private fun get(path: BindingPath): PathEntry<T>? {
+    private fun lookup(path: BindingPath): PathEntry<T>? {
         val head = path.steps.first()
         val tail = BindingPath(path.steps.drop(1))
-        for ((catalog, connector) in session.catalogs) {
+        for ((catalog, metadata) in session.catalogs) {
             if (head.matches(catalog)) {
-                return get(connector, tail)
+                val resolved = get(metadata, tail) ?: return null
+                return PathEntry(
+                    catalog = catalog,
+                    path = path.normalized,
+                    metadata = resolved,
+                )
             }
         }
         return null
