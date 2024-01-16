@@ -14,7 +14,7 @@
 
 package org.partiql.parser
 
-import org.partiql.parser.impl.PartiQLParserDefault
+import org.partiql.parser.internal.PartiQLParserDefault
 
 /**
  * A builder class to instantiate a [PartiQLParser].

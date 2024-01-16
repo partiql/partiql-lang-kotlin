@@ -12,7 +12,7 @@
  * language governing permissions and limitations under the License.
  */
 
-package org.partiql.parser.impl
+package org.partiql.parser.internal
 
 import com.amazon.ionelement.api.IntElement
 import com.amazon.ionelement.api.IntElementSize
@@ -118,6 +118,7 @@ import org.partiql.ast.graphMatchSelectorShortestK
 import org.partiql.ast.graphMatchSelectorShortestKGroup
 import org.partiql.ast.groupBy
 import org.partiql.ast.groupByKey
+import org.partiql.ast.identifierQualified
 import org.partiql.ast.identifierSymbol
 import org.partiql.ast.let
 import org.partiql.ast.letBinding
@@ -208,7 +209,7 @@ import org.partiql.parser.PartiQLSyntaxException
 import org.partiql.parser.SourceLocation
 import org.partiql.parser.SourceLocations
 import org.partiql.parser.antlr.PartiQLBaseVisitor
-import org.partiql.parser.impl.util.DateTimeUtils
+import org.partiql.parser.internal.util.DateTimeUtils
 import org.partiql.value.NumericValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.StringValue
@@ -1723,16 +1724,34 @@ internal class PartiQLParserDefault : PartiQLParser {
             exprCanLosslessCast(expr, type)
         }
 
-        override fun visitFunctionCallIdent(ctx: GeneratedParser.FunctionCallIdentContext) = translate(ctx) {
-            val function = visitSymbolPrimitive(ctx.name)
+        override fun visitFunctionCall(ctx: GeneratedParser.FunctionCallContext) = translate(ctx) {
+            val function = visit(ctx.functionName()) as Identifier
             val args = visitOrEmpty<Expr>(ctx.expr())
             exprCall(function, args)
         }
 
-        override fun visitFunctionCallReserved(ctx: GeneratedParser.FunctionCallReservedContext) = translate(ctx) {
-            val function = ctx.name.text.toIdentifier()
-            val args = visitOrEmpty<Expr>(ctx.expr())
-            exprCall(function, args)
+        override fun visitFunctionNameReserved(ctx: GeneratedParser.FunctionNameReservedContext): Identifier {
+            val path = ctx.qualifier.map { visitSymbolPrimitive(it) }
+            val name = identifierSymbol(ctx.name.text, Identifier.CaseSensitivity.INSENSITIVE)
+            return if (path.isEmpty()) {
+                name
+            } else {
+                val root = path.first()
+                val steps = path.drop(1) + listOf(name)
+                identifierQualified(root, steps)
+            }
+        }
+
+        override fun visitFunctionNameSymbol(ctx: GeneratedParser.FunctionNameSymbolContext): Identifier {
+            val path = ctx.qualifier.map { visitSymbolPrimitive(it) }
+            val name = visitSymbolPrimitive(ctx.name)
+            return if (path.isEmpty()) {
+                name
+            } else {
+                val root = path.first()
+                val steps = path.drop(1) + listOf(name)
+                identifierQualified(root, steps)
+            }
         }
 
         /**
