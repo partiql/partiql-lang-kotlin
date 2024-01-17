@@ -5,8 +5,8 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.ArgumentsProvider
 import java.util.stream.Stream
 
-private val PARTIQL_EVAL_TEST_DATA_DIR = System.getenv("PARTIQL_EVAL_TESTS_DATA") ?: "../partiql-tests/partiql-tests-data/eval"
-private val PARTIQL_EVAL_EQUIV_TEST_DATA_DIR = System.getenv("PARTIQL_EVAL_EQUIV_TESTS_DATA") ?: "../partiql-tests/partiql-tests-data/eval-equiv"
+private val PARTIQL_EVAL_TEST_DATA_DIR = System.getenv("PARTIQL_EVAL_TESTS_DATA")
+private val PARTIQL_EVAL_EQUIV_TEST_DATA_DIR = System.getenv("PARTIQL_EVAL_EQUIV_TESTS_DATA")
 
 /**
  * Reduces some of the boilerplate associated with the style of parameterized testing frequently

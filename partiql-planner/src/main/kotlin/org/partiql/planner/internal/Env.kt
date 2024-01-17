@@ -344,8 +344,9 @@ internal class Env(
         // 2. Check if this variable is referencing a struct field, carrying ordinals
         val matches = mutableListOf<ResolvedVar.Local>()
         for (ordinal in locals.indices) {
-            val rootType = locals[ordinal].type
-            val pathPrefix = BindingName(locals[ordinal].name, BindingCase.SENSITIVE)
+            val root = locals[ordinal]
+            val rootType = root.type
+            val pathPrefix = BindingName(root.name, BindingCase.SENSITIVE)
             if (rootType is StructType) {
                 val varType = inferStructLookup(rootType, path)
                 if (varType != null) {
@@ -359,6 +360,7 @@ internal class Env(
                     matches.add(match)
                 }
             }
+            // TODO: Verify if this is the correct behavior
             if (rootType is AnyType) {
                 val match = ResolvedVar.Local( StaticType.ANY, ordinal, rootType, listOf(pathPrefix) + path.steps)
                 matches.add(match)
