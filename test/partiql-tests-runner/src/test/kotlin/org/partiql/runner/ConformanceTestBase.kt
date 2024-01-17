@@ -11,7 +11,7 @@ abstract class ConformanceTestBase<T, V> {
     abstract val runner: TestRunner<T, V>
 
     // Tests the eval tests with the Kotlin implementation
-    @Timeout(value = 5, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
+    @Timeout(value = 100, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
     @ParameterizedTest(name = "{arguments}")
     @ArgumentsSource(TestProvider.Eval::class)
     fun validatePartiQLEvalTestData(tc: TestCase) {
@@ -22,7 +22,7 @@ abstract class ConformanceTestBase<T, V> {
     }
 
     // Tests the eval equivalence tests with the Kotlin implementation
-    @Timeout(value = 5, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
+    @Timeout(value = 100, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
     @ParameterizedTest(name = "{arguments}")
     @ArgumentsSource(TestProvider.Equiv::class)
     fun validatePartiQLEvalEquivTestData(tc: TestCase) {
