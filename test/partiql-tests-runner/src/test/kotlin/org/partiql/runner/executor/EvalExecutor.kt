@@ -1,15 +1,12 @@
 package org.partiql.runner.executor
 
-import com.amazon.ion.IonInt
 import com.amazon.ion.IonStruct
 import com.amazon.ion.IonValue
 import com.amazon.ionelement.api.ElementType
-import com.amazon.ionelement.api.IntElement
 import com.amazon.ionelement.api.IonElement
 import com.amazon.ionelement.api.StructElement
 import com.amazon.ionelement.api.toIonElement
 import com.amazon.ionelement.api.toIonValue
-import org.partiql.errors.TypeCheckException
 import org.partiql.eval.PartiQLEngine
 import org.partiql.eval.PartiQLResult
 import org.partiql.eval.PartiQLStatement
@@ -25,21 +22,10 @@ import org.partiql.spi.connector.Connector
 import org.partiql.spi.connector.ConnectorSession
 import org.partiql.spi.function.PartiQLFunctionExperimental
 import org.partiql.types.StaticType
-import org.partiql.value.BoolValue
-import org.partiql.value.CharValue
-import org.partiql.value.DecimalValue
-import org.partiql.value.Float32Value
-import org.partiql.value.Float64Value
-import org.partiql.value.IntValue
-import org.partiql.value.NumericValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType
-import org.partiql.value.ScalarValue
-import org.partiql.value.check
 import org.partiql.value.io.PartiQLValueIonReaderBuilder
 import org.partiql.value.toIon
-import java.math.BigInteger
 
 @OptIn(PartiQLValueExperimental::class)
 class EvalExecutor(

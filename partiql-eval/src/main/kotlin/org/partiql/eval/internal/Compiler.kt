@@ -24,7 +24,6 @@ import org.partiql.eval.internal.operator.rex.ExprSelect
 import org.partiql.eval.internal.operator.rex.ExprStruct
 import org.partiql.eval.internal.operator.rex.ExprTupleUnion
 import org.partiql.eval.internal.operator.rex.ExprVar
-import org.partiql.lang.eval.internal.builtins.ExprFunctionMakeDate
 import org.partiql.plan.PartiQLPlan
 import org.partiql.plan.PlanNode
 import org.partiql.plan.Rel
@@ -32,7 +31,6 @@ import org.partiql.plan.Rex
 import org.partiql.plan.Statement
 import org.partiql.plan.debug.PlanPrinter
 import org.partiql.plan.visitor.PlanBaseVisitor
-import org.partiql.spi.connector.ConnectorBindings
 import org.partiql.spi.connector.ConnectorObjectPath
 import org.partiql.spi.function.PartiQLFunction
 import org.partiql.spi.function.PartiQLFunctionExperimental
@@ -136,14 +134,14 @@ internal class Compiler(
     @OptIn(PartiQLFunctionExperimental::class, PartiQLValueExperimental::class)
     override fun visitRexOpCallStatic(node: Rex.Op.Call.Static, ctx: Unit): Operator {
         val fn = node.fn.signature
-        val args = node.args.map { visitRex(it, ctx )}
+        val args = node.args.map { visitRex(it, ctx) }
         val matches = session.functions
             .flatMap { it.value }
             .filter { it.signature == fn }
         return when (matches.size) {
             0 -> error("no match")
             1 -> {
-                when(val call = matches.first()) {
+                when (val call = matches.first()) {
                     is PartiQLFunction.Aggregation -> error("expect scalar func")
                     is PartiQLFunction.Scalar -> ExprCall(call, args.toTypedArray())
                 }

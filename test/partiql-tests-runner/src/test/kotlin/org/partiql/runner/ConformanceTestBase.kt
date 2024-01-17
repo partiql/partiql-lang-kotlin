@@ -6,7 +6,6 @@ import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.runner.schema.TestCase
 import org.partiql.runner.test.TestProvider
 import org.partiql.runner.test.TestRunner
-import java.util.concurrent.TimeUnit
 
 abstract class ConformanceTestBase<T, V> {
     abstract val runner: TestRunner<T, V>

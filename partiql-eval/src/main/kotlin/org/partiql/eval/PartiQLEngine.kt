@@ -2,11 +2,8 @@ package org.partiql.eval
 
 import org.partiql.plan.PartiQLPlan
 import org.partiql.spi.connector.ConnectorBindings
-import org.partiql.spi.connector.ConnectorFunctions
-import org.partiql.spi.connector.ConnectorMetadata
 import org.partiql.spi.function.PartiQLFunction
 import org.partiql.spi.function.PartiQLFunctionExperimental
-import java.time.Instant
 
 /**
  * PartiQL's Experimental Engine.
@@ -39,7 +36,7 @@ public interface PartiQLEngine {
     }
 
     public class Session @OptIn(PartiQLFunctionExperimental::class) constructor(
-        var bindings : MutableMap<String, ConnectorBindings>,
+        var bindings: MutableMap<String, ConnectorBindings>,
         val functions: MutableMap<String, List<PartiQLFunction>>
     )
 }

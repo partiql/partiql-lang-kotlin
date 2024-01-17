@@ -362,7 +362,7 @@ internal class Env(
             }
             // TODO: Verify if this is the correct behavior
             if (rootType is AnyType) {
-                val match = ResolvedVar.Local( StaticType.ANY, ordinal, rootType, listOf(pathPrefix) + path.steps)
+                val match = ResolvedVar.Local(StaticType.ANY, ordinal, rootType, listOf(pathPrefix) + path.steps)
                 matches.add(match)
             }
         }

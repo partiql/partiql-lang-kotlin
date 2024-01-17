@@ -3,7 +3,6 @@ package org.partiql.eval
 import org.partiql.eval.internal.Compiler
 import org.partiql.eval.internal.Record
 import org.partiql.plan.PartiQLPlan
-import org.partiql.spi.connector.ConnectorBindings
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 
