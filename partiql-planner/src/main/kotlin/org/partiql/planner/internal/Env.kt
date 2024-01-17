@@ -14,6 +14,7 @@ import org.partiql.spi.connector.ConnectorMetadata
 import org.partiql.spi.connector.ConnectorObjectHandle
 import org.partiql.spi.connector.ConnectorObjectPath
 import org.partiql.spi.connector.ConnectorSession
+import org.partiql.types.AnyType
 import org.partiql.types.StaticType
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
@@ -357,6 +358,10 @@ internal class Env(
                     )
                     matches.add(match)
                 }
+            }
+            if (rootType is AnyType) {
+                val match = ResolvedVar.Local( StaticType.ANY, ordinal, rootType, listOf(pathPrefix) + path.steps)
+                matches.add(match)
             }
         }
 

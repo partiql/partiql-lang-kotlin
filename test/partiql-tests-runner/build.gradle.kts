@@ -28,6 +28,7 @@ dependencies {
     testImplementation(project(":partiql-lang"))
     testImplementation(project(":partiql-eval"))
     testImplementation(project(":plugins:partiql-memory"))
+    testImplementation(project(":plugins:partiql-plugin"))
 }
 
 val tests = System.getenv()["PARTIQL_TESTS_DATA"] ?: "../partiql-tests/partiql-tests-data"
