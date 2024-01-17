@@ -89,10 +89,6 @@ public abstract class BoolValue : ScalarValue<Boolean?> {
     abstract override fun withAnnotations(annotations: Annotations): BoolValue
 
     abstract override fun withoutAnnotations(): BoolValue
-
-    override fun hashCode(): Int {
-        return super.hashCode()
-    }
 }
 
 @PartiQLValueExperimental

@@ -24,7 +24,7 @@ class ReportGenerator(val engine: String) : TestWatcher, AfterAllCallback {
     }
 
     override fun afterAll(p0: ExtensionContext?) {
-        val basePath = System.getenv("conformanceReportDir")
+        val basePath = System.getenv("conformanceReportDir") ?: "."
         val dir = Files.createDirectory(Path("$basePath/$engine")).toFile()
         val file = File(dir, "conformance_test_results.ion")
         val outputStream = file.outputStream()
