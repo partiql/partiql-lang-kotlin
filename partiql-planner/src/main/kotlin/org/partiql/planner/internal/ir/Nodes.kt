@@ -2,16 +2,15 @@
 
 package org.partiql.planner.`internal`.ir
 
-import org.partiql.planner.internal.ir.builder.AggResolvedBuilder
-import org.partiql.planner.internal.ir.builder.AggUnresolvedBuilder
 import org.partiql.planner.internal.ir.builder.CatalogBuilder
-import org.partiql.planner.internal.ir.builder.CatalogSymbolBuilder
-import org.partiql.planner.internal.ir.builder.CatalogSymbolRefBuilder
+import org.partiql.planner.internal.ir.builder.CatalogItemFnBuilder
+import org.partiql.planner.internal.ir.builder.CatalogItemValueBuilder
 import org.partiql.planner.internal.ir.builder.FnResolvedBuilder
 import org.partiql.planner.internal.ir.builder.FnUnresolvedBuilder
 import org.partiql.planner.internal.ir.builder.IdentifierQualifiedBuilder
 import org.partiql.planner.internal.ir.builder.IdentifierSymbolBuilder
 import org.partiql.planner.internal.ir.builder.PartiQlPlanBuilder
+import org.partiql.planner.internal.ir.builder.RefBuilder
 import org.partiql.planner.internal.ir.builder.RelBindingBuilder
 import org.partiql.planner.internal.ir.builder.RelBuilder
 import org.partiql.planner.internal.ir.builder.RelOpAggregateBuilder
@@ -62,7 +61,6 @@ import org.partiql.planner.internal.ir.builder.RexOpVarUnresolvedBuilder
 import org.partiql.planner.internal.ir.builder.StatementQueryBuilder
 import org.partiql.planner.internal.ir.visitor.PlanVisitor
 import org.partiql.types.StaticType
-import org.partiql.types.function.FunctionSignature
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import kotlin.random.Random
@@ -97,47 +95,70 @@ internal data class PartiQLPlan(
 
 internal data class Catalog(
     @JvmField internal val name: String,
-    @JvmField internal val symbols: List<Symbol>,
+    @JvmField internal val items: List<Item>,
 ) : PlanNode() {
     override val children: List<PlanNode> by lazy {
         val kids = mutableListOf<PlanNode?>()
-        kids.addAll(symbols)
+        kids.addAll(items)
         kids.filterNotNull()
     }
 
     override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitCatalog(this, ctx)
 
-    internal data class Symbol(
-        @JvmField internal val path: List<String>,
-        @JvmField internal val type: StaticType,
-    ) : PlanNode() {
-        override val children: List<PlanNode> = emptyList()
+    internal sealed class Item : PlanNode() {
+        override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = when (this) {
+            is Value -> visitor.visitCatalogItemValue(this, ctx)
+            is Fn -> visitor.visitCatalogItemFn(this, ctx)
+        }
 
-        override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitCatalogSymbol(this, ctx)
-
-        internal data class Ref(
-            @JvmField internal val catalog: Int,
-            @JvmField internal val symbol: Int,
-        ) : PlanNode() {
+        internal data class Value(
+            @JvmField internal val path: List<String>,
+            @JvmField internal val type: StaticType,
+        ) : Item() {
             override val children: List<PlanNode> = emptyList()
 
-            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitCatalogSymbolRef(this, ctx)
+            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitCatalogItemValue(this, ctx)
 
             internal companion object {
                 @JvmStatic
-                internal fun builder(): CatalogSymbolRefBuilder = CatalogSymbolRefBuilder()
+                internal fun builder(): CatalogItemValueBuilder = CatalogItemValueBuilder()
             }
         }
 
-        internal companion object {
-            @JvmStatic
-            internal fun builder(): CatalogSymbolBuilder = CatalogSymbolBuilder()
+        internal data class Fn(
+            @JvmField internal val path: List<String>,
+            @JvmField internal val specific: String,
+        ) : Item() {
+            override val children: List<PlanNode> = emptyList()
+
+            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitCatalogItemFn(this, ctx)
+
+            internal companion object {
+                @JvmStatic
+                internal fun builder(): CatalogItemFnBuilder = CatalogItemFnBuilder()
+            }
         }
     }
 
     internal companion object {
         @JvmStatic
         internal fun builder(): CatalogBuilder = CatalogBuilder()
+    }
+}
+
+internal data class Ref(
+    @JvmField internal val catalog: Int,
+    @JvmField internal val symbol: Int,
+) : PlanNode() {
+    override val children: List<PlanNode> = emptyList()
+
+    override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitRef(
+        this, ctx
+    )
+
+    internal companion object {
+        @JvmStatic
+        internal fun builder(): RefBuilder = RefBuilder()
     }
 }
 
@@ -148,9 +169,13 @@ internal sealed class Fn : PlanNode() {
     }
 
     internal data class Resolved(
-        @JvmField internal val signature: FunctionSignature.Scalar,
+        @JvmField internal val ref: Ref,
     ) : Fn() {
-        override val children: List<PlanNode> = emptyList()
+        override val children: List<PlanNode> by lazy {
+            val kids = mutableListOf<PlanNode?>()
+            kids.add(ref)
+            kids.filterNotNull()
+        }
 
         override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitFnResolved(this, ctx)
 
@@ -162,7 +187,6 @@ internal sealed class Fn : PlanNode() {
 
     internal data class Unresolved(
         @JvmField internal val identifier: Identifier,
-        @JvmField internal val isHidden: Boolean,
     ) : Fn() {
         override val children: List<PlanNode> by lazy {
             val kids = mutableListOf<PlanNode?>()
@@ -175,43 +199,6 @@ internal sealed class Fn : PlanNode() {
         internal companion object {
             @JvmStatic
             internal fun builder(): FnUnresolvedBuilder = FnUnresolvedBuilder()
-        }
-    }
-}
-
-internal sealed class Agg : PlanNode() {
-    override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = when (this) {
-        is Resolved -> visitor.visitAggResolved(this, ctx)
-        is Unresolved -> visitor.visitAggUnresolved(this, ctx)
-    }
-
-    internal data class Resolved(
-        @JvmField internal val signature: FunctionSignature.Aggregation,
-    ) : Agg() {
-        override val children: List<PlanNode> = emptyList()
-
-        override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitAggResolved(this, ctx)
-
-        internal companion object {
-            @JvmStatic
-            internal fun builder(): AggResolvedBuilder = AggResolvedBuilder()
-        }
-    }
-
-    internal data class Unresolved(
-        @JvmField internal val identifier: Identifier,
-    ) : Agg() {
-        override val children: List<PlanNode> by lazy {
-            val kids = mutableListOf<PlanNode?>()
-            kids.add(identifier)
-            kids.filterNotNull()
-        }
-
-        override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitAggUnresolved(this, ctx)
-
-        internal companion object {
-            @JvmStatic
-            internal fun builder(): AggUnresolvedBuilder = AggUnresolvedBuilder()
         }
     }
 }
@@ -372,7 +359,7 @@ internal data class Rex(
         }
 
         internal data class Global(
-            @JvmField internal val ref: Catalog.Symbol.Ref,
+            @JvmField internal val ref: Ref,
         ) : Op() {
             override val children: List<PlanNode> by lazy {
                 val kids = mutableListOf<PlanNode?>()
@@ -1060,7 +1047,7 @@ internal data class Rel(
             }
 
             internal data class Call(
-                @JvmField internal val agg: Agg,
+                @JvmField internal val agg: Fn,
                 @JvmField internal val args: List<Rex>,
             ) : PlanNode() {
                 override val children: List<PlanNode> by lazy {

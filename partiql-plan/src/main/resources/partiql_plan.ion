@@ -270,7 +270,7 @@ rel::{
       groups:   list::[rex],
       _: [
         call::{
-          fn:   ref,
+          agg:  ref,
           args: list::[rex],
         },
       ],
