@@ -1,4 +1,5 @@
 import org.gradle.kotlin.dsl.distribution
+import org.jetbrains.kotlin.gradle.dsl.ExplicitApiMode
 
 /*
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
@@ -23,4 +24,8 @@ plugins {
 dependencies {
     implementation(project(":partiql-spi"))
     implementation(project(":partiql-types"))
+}
+
+kotlin {
+    explicitApi = ExplicitApiMode.Strict
 }
