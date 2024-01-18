@@ -4,32 +4,32 @@ import org.junit.jupiter.api.Test
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
-import org.partiql.spi.connector.ConnectorObjectPath
-import org.partiql.spi.connector.ConnectorSession
 import org.partiql.types.BagType
 import org.partiql.types.StaticType
 import org.partiql.types.StructType
 
-class InMemoryPluginTest {
+class MemoryCatalogTest {
 
     companion object {
 
-        private val session = object : ConnectorSession {
-            override fun getQueryId(): String = "mock_query_id"
-            override fun getUserId(): String = "mock_user"
-        }
-
-        private val metadata = MemoryConnector.Metadata.of(
-            "a" to StaticType.INT2,
-            "struct" to StructType(
-                fields = listOf(StructType.Field("a", StaticType.INT2))
-            ),
-            "schema.tbl" to BagType(
+        private val catalog = MemoryCatalog.builder()
+            .name("test")
+            .define("a", StaticType.INT2)
+            .define(
+                "struct",
                 StructType(
                     fields = listOf(StructType.Field("a", StaticType.INT2))
                 )
             )
-        )
+            .define(
+                "schema.tbl",
+                BagType(
+                    StructType(
+                        fields = listOf(StructType.Field("a", StaticType.INT2))
+                    )
+                )
+            )
+            .build()
     }
 
     @Test
@@ -40,10 +40,9 @@ class InMemoryPluginTest {
             )
         )
         val expected = StaticType.INT2
-        val handle = metadata.getObjectHandle(session, requested)
-        val descriptor = metadata.getObjectType(session, handle!!)
-
-        assert(requested.isEquivalentTo(handle.absolutePath))
+        val handle = catalog.find(requested)
+        val descriptor = handle!!.entity.getType()
+        assert(requested.matches(handle.path))
         assert(expected == descriptor)
     }
 
@@ -54,8 +53,7 @@ class InMemoryPluginTest {
                 BindingName("A", BindingCase.SENSITIVE)
             )
         )
-        val handle = metadata.getObjectHandle(session, requested)
-
+        val handle = catalog.find(requested)
         assert(null == handle)
     }
 
@@ -67,12 +65,12 @@ class InMemoryPluginTest {
                 BindingName("a", BindingCase.INSENSITIVE)
             )
         )
-        val handle = metadata.getObjectHandle(session, requested)
-        val descriptor = metadata.getObjectType(session, handle!!)
-        val expectConnectorPath = ConnectorObjectPath(listOf("struct"))
+        val handle = catalog.find(requested)
+        val descriptor = handle!!.entity.getType()
+        val expectConnectorPath = listOf("struct")
         val expectedObjectType = StructType(fields = listOf(StructType.Field("a", StaticType.INT2)))
 
-        assert(expectConnectorPath == handle.absolutePath)
+        assert(expectConnectorPath == handle.path)
         assert(expectedObjectType == descriptor)
     }
 
@@ -84,11 +82,11 @@ class InMemoryPluginTest {
                 BindingName("tbl", BindingCase.INSENSITIVE)
             )
         )
-        val handle = metadata.getObjectHandle(session, requested)
-        val descriptor = metadata.getObjectType(session, handle!!)
+        val handle = catalog.find(requested)
+        val descriptor = handle!!.entity.getType()
         val expectedObjectType = BagType(StructType(fields = listOf(StructType.Field("a", StaticType.INT2))))
 
-        assert(requested.isEquivalentTo(handle.absolutePath))
+        assert(requested.matches(handle.path))
         assert(expectedObjectType == descriptor)
     }
 
@@ -101,24 +99,12 @@ class InMemoryPluginTest {
                 BindingName("a", BindingCase.INSENSITIVE)
             )
         )
-        val handle = metadata.getObjectHandle(session, requested)
-        val descriptor = metadata.getObjectType(session, handle!!)
+        val handle = catalog.find(requested)
+        val descriptor = handle!!.entity.getType()
         val expectedObjectType = BagType(StructType(fields = listOf(StructType.Field("a", StaticType.INT2))))
-        val expectConnectorPath = ConnectorObjectPath(listOf("schema", "tbl"))
+        val expectConnectorPath = listOf("schema", "tbl")
 
-        assert(expectConnectorPath == handle.absolutePath)
+        assert(expectConnectorPath == handle.path)
         assert(expectedObjectType == descriptor)
-    }
-
-    private fun BindingPath.isEquivalentTo(other: ConnectorObjectPath): Boolean {
-        if (this.steps.size != other.steps.size) {
-            return false
-        }
-        this.steps.forEachIndexed { index, step ->
-            if (step.isEquivalentTo(other.steps[index]).not()) {
-                return false
-            }
-        }
-        return true
     }
 }
