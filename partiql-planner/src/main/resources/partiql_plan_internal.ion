@@ -1,0 +1,342 @@
+imports::{
+  kotlin: [
+    partiql_value::'org.partiql.value.PartiQLValue',
+    static_type::'org.partiql.types.StaticType',
+    scalar_signature::'org.partiql.types.function.FunctionSignature$Scalar',
+    aggregation_signature::'org.partiql.types.function.FunctionSignature$Aggregation',
+  ],
+}
+
+parti_q_l_plan::{
+  catalogs:   list::[catalog],      // (catalogs ...)
+  statement:  statement,            // (statement ...)
+}
+
+// Represent an instance of a database.
+// - Currently, `symbols` represents all values from this catalog to be used in this plan.
+// - Eventually, TODO functions may be resolved to a specific namespace within a catalog.
+catalog::{
+  name: string,
+  symbols: list::[symbol],
+  _: [
+    // A reference to a value contained within a catalog.
+    symbol::{
+      // The path to a value WITHIN a catalog. Note: This should not start with the catalog's name. Also, this
+      //  should not be empty
+      path: list::[string],
+      type: static_type,
+      _: [
+        // A reference to a symbol
+        ref::{
+          catalog: int,
+          symbol: int
+        }
+      ]
+    }
+  ]
+}
+
+// Functions
+
+fn::[
+  resolved::{
+    signature: scalar_signature,
+  },
+  unresolved::{
+    identifier: identifier,
+    isHidden: bool,
+  },
+]
+
+agg::[
+  resolved::{
+    signature: aggregation_signature,
+  },
+  unresolved::{
+    identifier: identifier,
+  },
+]
+
+// Statements
+
+statement::[
+  query::{
+    root: rex,
+  },
+]
+
+// Identifiers
+
+identifier::[
+  symbol::{
+    symbol:           string,
+    case_sensitivity: case_sensitivity,
+  },
+  qualified::{
+    root:   symbol,
+    steps:  list::[symbol],
+  },
+  _::[
+    case_sensitivity::[
+      SENSITIVE,
+      INSENSITIVE,
+    ],
+  ],
+]
+
+// Rex
+rex::{
+  type: static_type,
+  op:[
+
+    lit::{
+      value: partiql_value,
+    },
+
+    var::[
+      resolved::{
+        ref: int,
+      },
+      unresolved::{
+        identifier: identifier,
+        scope: scope,
+      },
+      _::[
+        scope::[
+          DEFAULT,  //  x.y.z
+          LOCAL,    // @x.y.z
+        ],
+      ],
+    ],
+
+    global::{
+      ref: '.catalog.symbol.ref'
+    },
+
+    path::[
+      // The key MUST be an integer expression. Ex: a[0], a[1 + 1]
+      index::{ root: rex, key: rex },
+
+      // Case-sensitive lookup. The key MUST be a string expression. Ex: a["b"], a."b", a[CAST(b AS STRING)]
+      key::{ root: rex, key: rex },
+
+      // Case-insensitive lookup. The key MUST be a literal string. Ex: a.b
+      symbol::{ root: rex, key: string },
+    ],
+
+    call::[
+      static::{
+        fn: fn,
+        args: list::[rex]
+      },
+
+      // Represents a dynamic function call. If all candidates are exhausted, dynamic calls will return MISSING.
+      //
+      // args: represent the original typed arguments. These will eventually be wrapped by coercions from [candidates].
+      // candidates: represent the potentially applicable resolved functions with coercions. Each of these candidates
+      //  should be overloaded functions of the same name and number of arguments.
+      dynamic::{
+        args: list::[rex],
+        candidates: list::[candidate],
+        _: [
+          candidate::{
+            fn: fn,
+            coercions: list::[optional::fn]
+          }
+        ]
+      }
+    ],
+
+    case::{
+      branches: list::[branch],
+      default: rex,
+      _: [
+        branch::{
+          condition:  rex,
+          rex:        rex,
+        },
+      ],
+    },
+
+    collection::{
+      values: list::[rex],
+    },
+
+    struct::{
+      fields: list::[field],
+      _: [
+        field::{
+          k: rex,
+          v: rex,
+        },
+      ],
+    },
+
+    pivot::{
+      key:    rex,
+      value:  rex,
+      rel:    rel,
+    },
+
+    subquery::{
+      select:   select,
+      coercion: [ SCALAR, ROW ],
+    },
+
+    select::{
+      constructor:  rex,
+      rel:          rel,
+    },
+
+    // SELECT v1.*, e2 AS a, v3.*
+    //
+    // SELECT VALUE TUPLEUNION(
+    //   CASE WHEN v1 IS TUPLE THEN v1 ELSE {'_1': v1} END,
+    //   {'a':e2 },
+    //   CASE WHEN v3 IS TUPLE THEN v3 ELSE {'_2': v3} END
+    // )
+    //
+    // Tuple Union Function Signature: (Array<Struct>) -> Struct
+    tuple_union::{
+      args: list::[rex],
+    },
+
+    err::{
+      message: string,
+    },
+  ],
+}
+
+// Rel
+
+rel::{
+  type: {
+    schema: list::[binding],
+    props:  set::[prop],
+  },
+  op: [
+
+    scan::{
+      rex: rex,
+    },
+
+    scan_indexed::{
+      rex: rex,
+    },
+
+    unpivot::{
+      rex:  rex,
+    },
+
+    distinct::{
+      input: rel,
+    },
+
+    filter::{
+      input:      rel,
+      predicate:  rex,
+    },
+
+    sort::{
+      input: rel,
+      specs: list::[spec],
+      _: [
+        spec::{
+          rex: rex,
+          order: order,
+        },
+        order::[
+          ASC_NULLS_LAST,
+          ASC_NULLS_FIRST,
+          DESC_NULLS_LAST,
+          DESC_NULLS_FIRST,
+        ],
+      ],
+    },
+
+    union::{
+      lhs: rel,
+      rhs: rel,
+    },
+
+    intersect::{
+      lhs: rel,
+      rhs: rel,
+    },
+
+    except::{
+      lhs: rel,
+      rhs: rel,
+    },
+
+    limit::{
+      input:  rel,
+      limit:  rex,
+    },
+
+    offset::{
+      input:  rel,
+      offset: rex,
+    },
+
+    project::{
+      input:        rel,
+      projections:  list::[rex],
+    },
+
+    join::{
+      lhs: rel,
+      rhs: rel,
+      rex: rex, // The Join Expression (required) (can be set to TRUE)
+      type: [
+        INNER, // Inner Join
+        LEFT,  // Left Outer Join
+        RIGHT, // Right Outer Join
+        FULL   // Full Outer Join
+      ],
+    },
+
+    aggregate::{
+      input:    rel,
+      strategy: [ FULL, PARTIAL ],
+      calls:    list::[call],
+      groups:   list::[rex],
+      _: [
+        call::{
+          agg:  agg,
+          args: list::[rex],
+        },
+      ],
+    },
+
+    exclude::{
+      input: rel,
+      items: list::[item],
+      _: [
+        item::{
+          root: '.rex.op.var',
+          steps: list::[step],
+        },
+        step::[
+          struct_field::{ symbol: '.identifier.symbol' },
+          coll_index::{ index: int },
+          struct_wildcard::{},
+          coll_wildcard::{},
+        ],
+      ],
+    },
+
+    err::{
+      message: string,
+    },
+  ],
+  _: [
+    prop::[
+      ORDERED,
+    ],
+    binding::{
+      name: string,
+      type: static_type,
+    },
+  ]
+}
