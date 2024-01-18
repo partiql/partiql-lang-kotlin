@@ -4,6 +4,7 @@ import org.partiql.ast.Statement
 import org.partiql.ast.normalize.normalize
 import org.partiql.errors.ProblemCallback
 import org.partiql.planner.internal.Env
+import org.partiql.planner.internal.ir.PartiQLVersion
 import org.partiql.planner.internal.transforms.AstToPlan
 import org.partiql.planner.internal.transforms.PlanTransform
 import org.partiql.planner.internal.typer.PlanTyper
@@ -22,7 +23,9 @@ internal class PartiQLPlannerDefault(
     ): PartiQLPlanner.Result {
 
         // 0. Initialize the planning environment
-        val env = Env(session)
+        val catalog = session.catalogs[session.currentCatalog]
+            ?: error("Invalid current catalog ${session.currentCatalog}, session is missing ConnectorMetadata")
+        val env = Env(catalog, session)
 
         // 1. Normalize
         val ast = statement.normalize()
@@ -33,7 +36,8 @@ internal class PartiQLPlannerDefault(
         // 3. Resolve variables
         val typer = PlanTyper(env, onProblem)
         val internal = org.partiql.planner.internal.ir.PartiQLPlan(
-            catalogs = env.catalogs,
+            version = PartiQLVersion.VERSION_0_1,
+            catalogs = env.symbols,
             statement = typer.resolve(root),
         )
 

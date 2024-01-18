@@ -130,7 +130,7 @@ internal object RexConverter {
             val args = listOf(arg)
             // Fn
             val id = identifierSymbol(node.op.name.lowercase(), Identifier.CaseSensitivity.SENSITIVE)
-            val fn = fnUnresolved(id, true)
+            val fn = fnUnresolved(id)
             val op = rexOpCallStatic(fn, args)
             return rex(type, op)
         }
@@ -149,7 +149,7 @@ internal object RexConverter {
                 else -> {
                     // Fn
                     val id = identifierSymbol(node.op.name.lowercase(), Identifier.CaseSensitivity.SENSITIVE)
-                    val fn = fnUnresolved(id, true)
+                    val fn = fnUnresolved(id)
                     // Rex
                     val op = rexOpCallStatic(fn, args)
                     rex(type, op)
@@ -245,7 +245,7 @@ internal object RexConverter {
             if (id is Identifier.Symbol && id.symbol.equals("TUPLEUNION", ignoreCase = true)) {
                 return visitExprCallTupleUnion(node, context)
             }
-            val fn = fnUnresolved(id, false)
+            val fn = fnUnresolved(id)
             // Args
             val args = node.args.map { visitExprCoerce(it, context) }
             // Rex
@@ -269,7 +269,7 @@ internal object RexConverter {
 
             // Converts AST CASE (x) WHEN y THEN z --> Plan CASE WHEN x = y THEN z
             val id = identifierSymbol(Expr.Binary.Op.EQ.name.lowercase(), Identifier.CaseSensitivity.SENSITIVE)
-            val fn = fnUnresolved(id, true)
+            val fn = fnUnresolved(id)
             val createBranch: (Rex, Rex) -> Rex.Op.Case.Branch = { condition: Rex, result: Rex ->
                 val updatedCondition = when (rex) {
                     null -> condition
@@ -470,7 +470,7 @@ internal object RexConverter {
             val expr1 = visitExpr(node.value, ctx)
             val expr2 = visitExpr(node.nullifier, ctx)
             val id = identifierSymbol(Expr.Binary.Op.EQ.name.lowercase(), Identifier.CaseSensitivity.SENSITIVE)
-            val fn = fnUnresolved(id, true)
+            val fn = fnUnresolved(id)
             val call = rexOpCallStatic(fn, listOf(expr1, expr2))
             val branches = listOf(
                 rexOpCaseBranch(rex(type, call), rex(type = StaticType.NULL, op = rexOpLit(value = nullValue()))),
@@ -643,7 +643,7 @@ internal object RexConverter {
         private fun negate(call: Rex.Op.Call): Rex.Op.Call.Static {
             val name = Expr.Unary.Op.NOT.name
             val id = identifierSymbol(name.lowercase(), Identifier.CaseSensitivity.SENSITIVE)
-            val fn = fnUnresolved(id, true)
+            val fn = fnUnresolved(id)
             // wrap
             val arg = rex(StaticType.BOOL, call)
             // rewrite call
@@ -656,7 +656,7 @@ internal object RexConverter {
          */
         private fun call(name: String, vararg args: Rex): Rex.Op.Call.Static {
             val id = identifierSymbol(name, Identifier.CaseSensitivity.SENSITIVE)
-            val fn = fnUnresolved(id, true)
+            val fn = fnUnresolved(id)
             return rexOpCallStatic(fn, args.toList())
         }
 
@@ -665,7 +665,7 @@ internal object RexConverter {
          */
         private fun callNonHidden(name: String, vararg args: Rex): Rex.Op.Call.Static {
             val id = identifierSymbol(name, Identifier.CaseSensitivity.SENSITIVE)
-            val fn = fnUnresolved(id, false)
+            val fn = fnUnresolved(id)
             return rexOpCallStatic(fn, args.toList())
         }
 
