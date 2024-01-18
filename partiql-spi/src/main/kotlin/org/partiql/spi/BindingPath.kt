@@ -47,13 +47,14 @@ public class BindingPath(public val steps: List<BindingName>) {
 
     override fun toString(): String = key
 
-    public fun startsWith(vararg symbols: String): Boolean {
-        if (symbols.size > steps.size) {
+    public fun matches(path: List<String>): Boolean {
+        if (path.size != steps.size) {
             return false
         }
-        for (i in symbols.indices) {
-            val t = symbols[i]
-            if (!steps[i].matches(t)) {
+        for (i in path.indices) {
+            val t = path[i]
+            val s = steps[i]
+            if (!s.matches(t)) {
                 return false
             }
         }
