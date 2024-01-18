@@ -27,9 +27,9 @@ public class BindingPath(public val steps: List<BindingName>) {
     public val normalized: List<String> = steps.map {it.normalized }
 
     /**
-     * SQL-99 CNF as string.
+     * A case-sensitive key.
      */
-    public val key: String = normalized.joinToString(".")
+    public val key: String = steps.joinToString(".") { it.name }
 
     /**
      * Memoized hashCode for hashing data structures.
@@ -49,6 +49,20 @@ public class BindingPath(public val steps: List<BindingName>) {
         for (i in symbols.indices) {
             val t = symbols[i]
             if (!steps[i].matches(t)) {
+                return false
+            }
+        }
+        return true
+    }
+
+    public fun matches(path: List<String>): Boolean {
+        if (steps.size != path.size) {
+            return false
+        }
+        for (i in path.indices) {
+            val t = path[i]
+            val s = steps[i]
+            if (!s.matches(t)) {
                 return false
             }
         }

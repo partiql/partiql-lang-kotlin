@@ -196,8 +196,7 @@ internal class FnResolver(
                 a.type == NULL -> mapping.add(null)
                 // 4. Check for a coercion
                 else -> {
-                    val coercion = casts.lookupCoercion(a.type, p.type)
-                    when (coercion) {
+                    when (val coercion = casts.lookupCoercion(a.type, p.type)) {
                         null -> return null // short-circuit
                         else -> mapping.add(coercion)
                     }
