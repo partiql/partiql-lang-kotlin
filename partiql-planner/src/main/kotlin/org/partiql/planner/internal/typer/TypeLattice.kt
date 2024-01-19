@@ -266,13 +266,28 @@ internal class TypeLattice private constructor(
                 SYMBOL to explicit(),
             )
             graph[DECIMAL] = relationships(
+                BOOL to explicit(),
                 INT8 to explicit(),
                 INT16 to explicit(),
                 INT32 to explicit(),
                 INT64 to explicit(),
+                INT to explicit(),
+                DECIMAL to coercion(),
+                DECIMAL_ARBITRARY to coercion(),
+                FLOAT32 to explicit(),
+                FLOAT64 to explicit(),
+                STRING to explicit(),
+                SYMBOL to explicit(),
+            )
+            graph[DECIMAL_ARBITRARY] = relationships(
                 BOOL to explicit(),
-                DECIMAL to explicit(),
-                DECIMAL_ARBITRARY to explicit(),
+                INT8 to explicit(),
+                INT16 to explicit(),
+                INT32 to explicit(),
+                INT64 to explicit(),
+                INT to explicit(),
+                DECIMAL to coercion(),
+                DECIMAL_ARBITRARY to coercion(),
                 FLOAT32 to explicit(),
                 FLOAT64 to explicit(),
                 STRING to explicit(),
@@ -280,7 +295,12 @@ internal class TypeLattice private constructor(
             )
             graph[FLOAT32] = relationships(
                 BOOL to explicit(),
-                DECIMAL to explicit(),
+                INT8 to unsafe(),
+                INT16 to unsafe(),
+                INT32 to unsafe(),
+                INT64 to unsafe(),
+                INT to unsafe(),
+                DECIMAL to unsafe(),
                 DECIMAL_ARBITRARY to coercion(),
                 FLOAT32 to coercion(),
                 FLOAT64 to coercion(),
@@ -289,18 +309,14 @@ internal class TypeLattice private constructor(
             )
             graph[FLOAT64] = relationships(
                 BOOL to explicit(),
-                DECIMAL to explicit(),
+                INT8 to unsafe(),
+                INT16 to unsafe(),
+                INT32 to unsafe(),
+                INT64 to unsafe(),
+                INT to unsafe(),
+                DECIMAL to unsafe(),
                 DECIMAL_ARBITRARY to coercion(),
                 FLOAT64 to coercion(),
-                STRING to explicit(),
-                SYMBOL to explicit(),
-            )
-            graph[DECIMAL_ARBITRARY] = relationships(
-                BOOL to explicit(),
-                DECIMAL to explicit(),
-                DECIMAL_ARBITRARY to coercion(),
-                FLOAT32 to explicit(),
-                FLOAT64 to explicit(),
                 STRING to explicit(),
                 SYMBOL to explicit(),
             )
