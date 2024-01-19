@@ -102,7 +102,7 @@ internal object SqlHeader {
     /**
      * Generate all unary and binary operator signatures.
      */
-    private fun operators(): List<FnSignature.Scalar> = listOf(
+    public fun operators(): List<FnSignature.Scalar> = listOf(
         pos(),
         neg(),
         plus(),
@@ -175,8 +175,6 @@ internal object SqlHeader {
     private fun builtins(): List<FnSignature.Scalar> = listOf(
         upper(),
         lower(),
-        position(),
-        substring(),
         trim(),
         utcNow(),
     ).flatten()
@@ -427,17 +425,21 @@ internal object SqlHeader {
 
     private fun isNull(): List<FnSignature.Scalar> = listOf(
         FnSignature.Scalar(
-            name = "is_null", returns = BOOL, parameters = listOf(
+            name = "is_null", returns = BOOL,
+            parameters = listOf(
                 FnParameter("value", ANY) // TODO: Decide if we need to further segment this
-            ), isNullCall = false, isNullable = false
+            ),
+            isNullCall = false, isNullable = false
         )
     )
 
     private fun isMissing(): List<FnSignature.Scalar> = listOf(
         FnSignature.Scalar(
-            name = "is_missing", returns = BOOL, parameters = listOf(
+            name = "is_missing", returns = BOOL,
+            parameters = listOf(
                 FnParameter("value", ANY) // TODO: Decide if we need to further segment this
-            ), isNullCall = false, isNullable = false
+            ),
+            isNullCall = false, isNullable = false
         )
     )
 
@@ -461,29 +463,35 @@ internal object SqlHeader {
     // we put type parameter before value.
     private fun isTypeSingleArg(): List<FnSignature.Scalar> = listOf(CHAR, STRING).map { element ->
         FnSignature.Scalar(
-            name = "is_${element.name.lowercase()}", returns = BOOL, parameters = listOf(
+            name = "is_${element.name.lowercase()}", returns = BOOL,
+            parameters = listOf(
                 FnParameter("type_parameter_1", INT32), FnParameter("value", ANY)
-            ), isNullable = false, isNullCall = false
+            ),
+            isNullable = false, isNullCall = false
         )
     }
 
     private fun isTypeDoubleArgsInt(): List<FnSignature.Scalar> = listOf(DECIMAL).map { element ->
         FnSignature.Scalar(
-            name = "is_${element.name.lowercase()}", returns = BOOL, parameters = listOf(
+            name = "is_${element.name.lowercase()}", returns = BOOL,
+            parameters = listOf(
                 FnParameter("type_parameter_1", INT32),
                 FnParameter("type_parameter_2", INT32),
                 FnParameter("value", ANY)
-            ), isNullable = false, isNullCall = false
+            ),
+            isNullable = false, isNullCall = false
         )
     }
 
     private fun isTypeTime(): List<FnSignature.Scalar> = listOf(TIME, TIMESTAMP).map { element ->
         FnSignature.Scalar(
-            name = "is_${element.name.lowercase()}", returns = BOOL, parameters = listOf(
+            name = "is_${element.name.lowercase()}", returns = BOOL,
+            parameters = listOf(
                 FnParameter("type_parameter_1", BOOL),
                 FnParameter("type_parameter_2", INT32),
                 FnParameter("value", ANY) // TODO: Decide if we need to further segment this
-            ), isNullable = false, isNullCall = false
+            ),
+            isNullable = false, isNullCall = false
         )
     }
 
@@ -500,7 +508,8 @@ internal object SqlHeader {
                 ),
                 isNullable = false,
                 isNullCall = true,
-            ), FnSignature.Scalar(
+            ),
+            FnSignature.Scalar(
                 name = "substring",
                 returns = t,
                 parameters = listOf(
