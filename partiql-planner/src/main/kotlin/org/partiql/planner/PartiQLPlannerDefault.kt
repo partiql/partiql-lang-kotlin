@@ -32,8 +32,15 @@ internal class PartiQLPlannerDefault(
 
         // 3. Resolve variables
         val typer = PlanTyper(env, onProblem)
+<<<<<<< HEAD
         val typed = typer.resolve(root)
         val internal = org.partiql.planner.internal.ir.PartiQLPlan(typed)
+=======
+        val internal = org.partiql.planner.internal.ir.PartiQLPlan(
+            catalogs = env.catalogs,
+            statement = typer.resolve(root),
+        )
+>>>>>>> d37369e8 (Generate internalized planning IR (#1339))
 
         // 4. Assert plan has been resolved — translating to public API
         var plan = PlanTransform.transform(internal, onProblem)
