@@ -455,37 +455,37 @@ class PlanTyperTestsPorted {
                 name = "DECIMAL AS INT2",
                 key = key("cast-00"),
                 catalog = "pql",
-                expected = unionOf(StaticType.MISSING, StaticType.INT2),
+                expected = StaticType.INT2,
             ),
             SuccessTestCase(
                 name = "DECIMAL AS INT4",
                 key = key("cast-01"),
                 catalog = "pql",
-                expected = unionOf(StaticType.MISSING, StaticType.INT4),
+                expected = StaticType.INT4,
             ),
             SuccessTestCase(
                 name = "DECIMAL AS INT8",
                 key = key("cast-02"),
                 catalog = "pql",
-                expected = unionOf(StaticType.MISSING, StaticType.INT8),
+                expected = StaticType.INT8,
             ),
             SuccessTestCase(
                 name = "DECIMAL AS INT",
                 key = key("cast-03"),
                 catalog = "pql",
-                expected = unionOf(StaticType.MISSING, StaticType.INT),
+                expected = StaticType.INT,
             ),
             SuccessTestCase(
                 name = "DECIMAL AS BIGINT",
                 key = key("cast-04"),
                 catalog = "pql",
-                expected = unionOf(StaticType.MISSING, StaticType.INT8),
+                expected = StaticType.INT8,
             ),
             SuccessTestCase(
                 name = "DECIMAL_ARBITRARY AS DECIMAL",
                 key = key("cast-05"),
                 catalog = "pql",
-                expected = unionOf(StaticType.MISSING, StaticType.DECIMAL),
+                expected = StaticType.DECIMAL,
             ),
         )
 
