@@ -3,15 +3,20 @@
 
 package org.partiql.spi.connector.sql.internal.builtins.scalar
 
-
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnScalar
 import org.partiql.spi.fn.FnSignature
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType.*
-
+import org.partiql.value.PartiQLValueType.DECIMAL_ARBITRARY
+import org.partiql.value.PartiQLValueType.FLOAT32
+import org.partiql.value.PartiQLValueType.FLOAT64
+import org.partiql.value.PartiQLValueType.INT
+import org.partiql.value.PartiQLValueType.INT16
+import org.partiql.value.PartiQLValueType.INT32
+import org.partiql.value.PartiQLValueType.INT64
+import org.partiql.value.PartiQLValueType.INT8
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_POS__INT8__INT8 : FnScalar {
@@ -23,13 +28,11 @@ internal object Fn_POS__INT8__INT8 : FnScalar {
         isNullCall = true,
         isNullable = false,
     )
-    
+
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         TODO("Function pos not implemented")
     }
 }
-
-
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_POS__INT16__INT16 : FnScalar {
@@ -41,13 +44,11 @@ internal object Fn_POS__INT16__INT16 : FnScalar {
         isNullCall = true,
         isNullable = false,
     )
-    
+
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         TODO("Function pos not implemented")
     }
 }
-
-
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_POS__INT32__INT32 : FnScalar {
@@ -59,13 +60,11 @@ internal object Fn_POS__INT32__INT32 : FnScalar {
         isNullCall = true,
         isNullable = false,
     )
-    
+
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         TODO("Function pos not implemented")
     }
 }
-
-
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_POS__INT64__INT64 : FnScalar {
@@ -77,13 +76,11 @@ internal object Fn_POS__INT64__INT64 : FnScalar {
         isNullCall = true,
         isNullable = false,
     )
-    
+
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         TODO("Function pos not implemented")
     }
 }
-
-
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_POS__INT__INT : FnScalar {
@@ -95,13 +92,11 @@ internal object Fn_POS__INT__INT : FnScalar {
         isNullCall = true,
         isNullable = false,
     )
-    
+
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         TODO("Function pos not implemented")
     }
 }
-
-
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_POS__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY : FnScalar {
@@ -113,13 +108,11 @@ internal object Fn_POS__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY : FnScalar {
         isNullCall = true,
         isNullable = false,
     )
-    
+
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         TODO("Function pos not implemented")
     }
 }
-
-
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_POS__FLOAT32__FLOAT32 : FnScalar {
@@ -131,13 +124,11 @@ internal object Fn_POS__FLOAT32__FLOAT32 : FnScalar {
         isNullCall = true,
         isNullable = false,
     )
-    
+
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         TODO("Function pos not implemented")
     }
 }
-
-
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_POS__FLOAT64__FLOAT64 : FnScalar {
@@ -149,10 +140,8 @@ internal object Fn_POS__FLOAT64__FLOAT64 : FnScalar {
         isNullCall = true,
         isNullable = false,
     )
-    
+
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         TODO("Function pos not implemented")
     }
 }
-
-

@@ -9,7 +9,9 @@ import org.partiql.spi.fn.FnScalar
 import org.partiql.spi.fn.FnSignature
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType.*
+import org.partiql.value.PartiQLValueType.CLOB
+import org.partiql.value.PartiQLValueType.STRING
+import org.partiql.value.PartiQLValueType.SYMBOL
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_CONCAT__STRING_STRING__STRING : FnScalar {

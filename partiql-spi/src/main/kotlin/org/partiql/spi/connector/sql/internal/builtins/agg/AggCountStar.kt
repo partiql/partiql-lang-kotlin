@@ -7,7 +7,7 @@ import org.partiql.spi.fn.FnAggregation
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnSignature
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType.*
+import org.partiql.value.PartiQLValueType.INT32
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Agg_COUNT_STAR____INT32 : FnAggregation {

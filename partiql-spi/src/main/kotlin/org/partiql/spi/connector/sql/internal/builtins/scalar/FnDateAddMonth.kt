@@ -9,7 +9,12 @@ import org.partiql.spi.fn.FnScalar
 import org.partiql.spi.fn.FnSignature
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType.*
+import org.partiql.value.PartiQLValueType.DATE
+import org.partiql.value.PartiQLValueType.INT
+import org.partiql.value.PartiQLValueType.INT32
+import org.partiql.value.PartiQLValueType.INT64
+import org.partiql.value.PartiQLValueType.TIME
+import org.partiql.value.PartiQLValueType.TIMESTAMP
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_DATE_ADD_MONTH__INT32_DATE__DATE : FnScalar {

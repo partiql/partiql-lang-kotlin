@@ -9,7 +9,14 @@ import org.partiql.spi.fn.FnScalar
 import org.partiql.spi.fn.FnSignature
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType.*
+import org.partiql.value.PartiQLValueType.DECIMAL_ARBITRARY
+import org.partiql.value.PartiQLValueType.FLOAT32
+import org.partiql.value.PartiQLValueType.FLOAT64
+import org.partiql.value.PartiQLValueType.INT
+import org.partiql.value.PartiQLValueType.INT16
+import org.partiql.value.PartiQLValueType.INT32
+import org.partiql.value.PartiQLValueType.INT64
+import org.partiql.value.PartiQLValueType.INT8
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_DIVIDE__INT8_INT8__INT8 : FnScalar {
