@@ -77,3 +77,54 @@ publish {
     name = "PartiQL Planner"
     description = "PartiQL's Experimental Planner."
 }
+
+// Generate internal IR
+tasks.register<Exec>("codegen") {
+    dependsOn(":lib:sprout:install")
+    workingDir(projectDir)
+    commandLine(
+        "../lib/sprout/build/install/sprout/bin/sprout",
+        "generate",
+        "kotlin",
+        "-o", "$buildDir/tmp",
+        "-p", "org.partiql.planner.internal.ir",
+        "-u", "Plan",
+        "--poems", "factory",
+        "--poems", "visitor",
+        "--poems", "builder",
+        "--poems", "util",
+        "--opt-in", "org.partiql.value.PartiQLValueExperimental",
+        "./src/main/resources/partiql_plan_internal.ion"
+    )
+}
+
+// Copy generated utilities to generated-src
+tasks.register<Copy>("copyUtils") {
+    includeEmptyDirs = false
+    dependsOn("codegen")
+    filter { it.replace(Regex("public (?!(override|(fun visit)))"), "internal ") }
+    from("$buildDir/tmp")
+    exclude("**/Nodes.kt")
+    into("$buildDir/generated-src")
+}
+
+// Copy generated Nodes.kt to src
+//
+// !! IMPORTANT !! — only run manually, as this will overwrite the existing ir/Nodes.kt.
+//
+tasks.register<Copy>("copyNodes") {
+    includeEmptyDirs = false
+    dependsOn("codegen")
+    filter { it.replace(Regex("public (?!(override|(fun visit)))"), "internal ") }
+    from("$buildDir/tmp")
+    include("**/Nodes.kt")
+    into("src/main/kotlin")
+}
+
+tasks.register("generate") {
+    dependsOn("codegen", "copyUtils")
+}
+
+tasks.compileKotlin {
+    dependsOn("generate")
+}

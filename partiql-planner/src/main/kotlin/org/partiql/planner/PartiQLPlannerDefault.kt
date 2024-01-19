@@ -4,7 +4,6 @@ import org.partiql.ast.Statement
 import org.partiql.ast.normalize.normalize
 import org.partiql.errors.ProblemCallback
 import org.partiql.planner.internal.Env
-import org.partiql.planner.internal.ir.PartiQLVersion
 import org.partiql.planner.internal.transforms.AstToPlan
 import org.partiql.planner.internal.transforms.PlanTransform
 import org.partiql.planner.internal.typer.PlanTyper
@@ -34,7 +33,6 @@ internal class PartiQLPlannerDefault(
         // 3. Resolve variables
         val typer = PlanTyper(env, onProblem)
         val internal = org.partiql.planner.internal.ir.PartiQLPlan(
-            version = PartiQLVersion.VERSION_0_1,
             catalogs = env.catalogs,
             statement = typer.resolve(root),
         )
