@@ -38,6 +38,7 @@ import org.partiql.types.BagType
 import org.partiql.types.ListType
 import org.partiql.types.SexpType
 import org.partiql.types.StaticType
+import org.partiql.types.StaticType.Companion.unionOf
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
 import java.util.stream.Stream
