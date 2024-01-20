@@ -1,15 +1,15 @@
 package org.partiql.planner.internal.typer
 
+import org.partiql.spi.connector.ConnectorHandle
+
 /**
- *
+ * A simple catalog to metadata pair.
  *
  * @param T
- * @property catalog    The resolved entity's catalog name in case-normal-form.
- * @property path       The resolved entity's path (within its catalog) in case-normal-form.
- * @property metadata   The resolved entity's type information.
+ * @property catalog    The resolved entity's catalog name.
+ * @property handle     The resolved entity's catalog path and type information.
  */
 internal data class PathEntry<T>(
-    val catalog: String,
-    val path: List<String>,
-    val metadata: T,
+    @JvmField val catalog: String,
+    @JvmField val handle: ConnectorHandle<T>,
 )

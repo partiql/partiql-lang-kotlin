@@ -4,6 +4,7 @@ import org.partiql.planner.PartiQLPlanner
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
+import org.partiql.spi.connector.ConnectorHandle
 import org.partiql.spi.connector.ConnectorMetadata
 
 /**
@@ -41,7 +42,7 @@ internal abstract class PathResolver<T>(
      * @param path  The absolute path within a catalog.
      * @return
      */
-    abstract fun get(metadata: ConnectorMetadata, path: BindingPath): T?
+    abstract fun get(metadata: ConnectorMetadata, path: BindingPath): ConnectorHandle<T>?
 
     /**
      * Resolution rules for a given name.
@@ -66,14 +67,8 @@ internal abstract class PathResolver<T>(
      * @param path
      * @return
      */
-    private fun get(path: BindingPath): PathEntry<T>? = when (val entity = get(catalog, path)) {
-        null -> null
-        else -> PathEntry(
-            catalog = session.currentCatalog,
-            path = path.normalized,
-            metadata = entity,
-        )
-    }
+    private fun get(path: BindingPath): PathEntry<T>? =
+        get(catalog, path)?.let { PathEntry(session.currentCatalog, it) }
 
     /**
      * This looks for an absolute path in the current system, using the session to lookup catalogs.
@@ -85,12 +80,7 @@ internal abstract class PathResolver<T>(
         val tail = BindingPath(path.steps.drop(1))
         for ((catalog, metadata) in session.catalogs) {
             if (head.matches(catalog)) {
-                val resolved = get(metadata, tail) ?: return null
-                return PathEntry(
-                    catalog = catalog,
-                    path = path.normalized,
-                    metadata = resolved,
-                )
+                return get(metadata, tail)?.let { PathEntry(catalog, it) }
             }
         }
         return null

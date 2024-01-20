@@ -46,7 +46,6 @@ import org.partiql.types.StaticType
 import org.partiql.types.TimeType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.StringValue
-import org.partiql.value.boolValue
 import org.partiql.value.int32Value
 import org.partiql.value.int64Value
 import org.partiql.value.io.PartiQLValueIonReaderBuilder
@@ -107,7 +106,7 @@ internal object RexConverter {
         private fun visitExprCoerce(node: Expr, ctx: Env, coercion: Rex.Op.Subquery.Coercion = Rex.Op.Subquery.Coercion.SCALAR): Rex {
             val rex = super.visitExpr(node, ctx)
             return when (rex.op is Rex.Op.Select) {
-                true -> rex(StaticType.ANY, rexOpSubquery(rex.op as Rex.Op.Select, coercion))
+                true -> rex(StaticType.ANY, rexOpSubquery(rex.op, coercion))
                 else -> rex
             }
         }
@@ -529,7 +528,7 @@ internal object RexConverter {
                 }
                 // TODO: We may want to add a trim_both for trim(BOTH FROM arg)
                 else -> when (arg1) {
-                    null -> callNonHidden("trim", arg0)
+                    null -> call("trim", arg0)
                     else -> call("trim_chars", arg0, arg1)
                 }
             }
@@ -634,12 +633,6 @@ internal object RexConverter {
 
         // Helpers
 
-        private fun bool(v: Boolean): Rex {
-            val type = StaticType.BOOL
-            val op = rexOpLit(boolValue(v))
-            return rex(type, op)
-        }
-
         private fun negate(call: Rex.Op.Call): Rex.Op.Call.Static {
             val name = Expr.Unary.Op.NOT.name
             val id = identifierSymbol(name.lowercase(), Identifier.CaseSensitivity.SENSITIVE)
@@ -655,15 +648,6 @@ internal object RexConverter {
          * The purpose of having such hidden function is to prevent usage of generated function name in query text.
          */
         private fun call(name: String, vararg args: Rex): Rex.Op.Call.Static {
-            val id = identifierSymbol(name, Identifier.CaseSensitivity.SENSITIVE)
-            val fn = fnUnresolved(id)
-            return rexOpCallStatic(fn, args.toList())
-        }
-
-        /**
-         * Create a [Rex.Op.Call.Static] node which has a non-hidden unresolved Function.
-         */
-        private fun callNonHidden(name: String, vararg args: Rex): Rex.Op.Call.Static {
             val id = identifierSymbol(name, Identifier.CaseSensitivity.SENSITIVE)
             val fn = fnUnresolved(id)
             return rexOpCallStatic(fn, args.toList())

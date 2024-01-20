@@ -1,7 +1,6 @@
 package org.partiql.planner.internal.typer
 
 import org.partiql.planner.PartiQLPlanner
-import org.partiql.planner.internal.ir.Agg
 import org.partiql.planner.internal.ir.Fn
 import org.partiql.planner.internal.ir.Identifier
 import org.partiql.planner.internal.ir.Rex

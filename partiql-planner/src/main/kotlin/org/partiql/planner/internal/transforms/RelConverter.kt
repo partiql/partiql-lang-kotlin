@@ -33,7 +33,7 @@ import org.partiql.ast.visitor.AstBaseVisitor
 import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
-import org.partiql.planner.internal.ir.aggUnresolved
+import org.partiql.planner.internal.ir.fnUnresolved
 import org.partiql.planner.internal.ir.rel
 import org.partiql.planner.internal.ir.relBinding
 import org.partiql.planner.internal.ir.relOpAggregate
@@ -362,7 +362,7 @@ internal object RelConverter {
                 schema.add(binding)
                 val args = expr.args.map { arg -> arg.toRex(env) }
                 val id = AstToPlan.convert(expr.function)
-                val fn = aggUnresolved(id)
+                val fn = fnUnresolved(id)
                 relOpAggregateCall(fn, args)
             }
             var groups = emptyList<Rex>()

@@ -1,316 +1,160 @@
 package org.partiql.planner.internal
 
 import org.partiql.planner.PartiQLPlanner
-import org.partiql.planner.internal.ir.Agg
 import org.partiql.planner.internal.ir.Catalog
 import org.partiql.planner.internal.ir.Fn
-import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
-import org.partiql.planner.internal.typer.FnMatch
-import org.partiql.planner.internal.typer.FnResolver
+import org.partiql.planner.internal.ir.rex
+import org.partiql.planner.internal.ir.rexOpLit
+import org.partiql.planner.internal.ir.rexOpPathKey
+import org.partiql.planner.internal.ir.rexOpPathSymbol
+import org.partiql.planner.internal.ir.rexOpVarResolved
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
-import org.partiql.spi.connector.ConnectorMetadata
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnSignature
 import org.partiql.types.StaticType
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
+import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.stringValue
 
 /**
  * PartiQL Planner Global Environment of Catalogs backed by given plugins.
  *
- * @property session        Session details
+ * @property session    Session details
  */
-internal class Env(
-    private val catalog: ConnectorMetadata,
-    private val session: PartiQLPlanner.Session,
-) {
+internal class Env(private val session: PartiQLPlanner.Session) {
 
     /**
      * Collect the list of all referenced catalog symbols during planning.
      */
-    public val symbols = mutableListOf<Catalog>()
-
-    /**
-     * ConnectorMetadata for this query session.
-     */
-    private val catalogs = session.catalogs
-
-    /**
-     * Function resolution logic.
-     */
-    private val fnResolver = FnResolver(catalog, session)
+    private val catalogs = mutableListOf<Catalog>()
 
     @OptIn(FnExperimental::class)
-    internal fun resolveFn(fn: Fn.Unresolved, args: List<Rex>): FnMatch<FnSignature.Scalar> =
-        fnResolver.resolveFn(fn, args)
-
-    @OptIn(FnExperimental::class)
-    internal fun resolveAgg(agg: Agg.Unresolved, args: List<Rex>): FnMatch<FnSignature.Aggregation> =
-        fnResolver.resolveAgg(agg, args)
+    public fun resolve(fn: Fn.Unresolved): FnSignature {
+        TODO()
+    }
 
     /**
-     * Lookup a global using a [BindingName] as the catalog name.
+     * The PlanTyper
      *
-     * @param catalog
-     * @param originalPath
-     * @param catalogPath
+     * @param path
+     * @param locals
+     * @param strategy
      * @return
      */
-    private fun getGlobalType(
-        catalog: BindingName,
-        originalPath: BindingPath,
-        catalogPath: BindingPath,
-    ): ResolvedVar? {
-        val cat = catalogs.keys.firstOrNull { catalog.matches(it) } ?: return null
-        return getGlobalType(cat, originalPath, catalogPath)
+    public fun resolve(path: BindingPath, locals: TypeEnv, strategy: ResolutionStrategy): Rex? = when (strategy) {
+        ResolutionStrategy.LOCAL -> local(path, locals) ?: global(path)
+        ResolutionStrategy.GLOBAL -> global(path) ?: local(path, locals)
     }
 
     /**
-     * TODO optimization, check known globals before calling out to connector again
+     * We resolve a local with the following rules.
      *
-     * @param catalog
-     * @param originalPath
-     * @param catalogPath
+     *  1) Check if the path root unambiguously matches a local variable name, set as root.
+     *  2) Else, check if path root unambiguously matches a struct field in a local value struct.
+     *
+     * Convert any remaining binding names (tail) to a path expression.
+     *
+     * @param path
+     * @param locals
      * @return
      */
-    private fun getGlobalType(
-        catalog: String,
-        originalPath: BindingPath,
-        catalogPath: BindingPath,
-    ): ResolvedVar? {
-        return catalogs[catalog]?.let { metadata ->
-            metadata.getObject(catalogPath)?.let { obj ->
-                obj.entity.getType()?.let { type ->
-                    val depth = calculateMatched(originalPath, catalogPath, obj.path)
-                    val (catalogIndex, valueIndex) = getOrAddCatalogValue(catalog, obj.path, type)
-                    // Return resolution metadata
-                    ResolvedVar.Global(type, catalogIndex, depth, valueIndex)
+    private fun local(path: BindingPath, locals: TypeEnv): Rex? {
+        val head: BindingName = path.steps[0]
+        var tail: List<BindingName> = path.steps.drop(1)
+
+        // 1) Check locals
+        var r: Rex? = null
+        for (i in locals.indices) {
+            val local = locals[i]
+            val type = local.type
+            if (head.matches(local.name)) {
+                if (r != null) {
+                    // TODO root was already matched, emit ambiguous error.
+                    return null
                 }
-            }
-        }
-    }
-
-    /**
-     * @return a [Pair] where [Pair.first] is the catalog index and [Pair.second] is the value index within that catalog
-     */
-    private fun getOrAddCatalogValue(
-        catalogName: String,
-        valuePath: List<String>,
-        valueType: StaticType,
-    ): Pair<Int, Int> {
-        val catalogIndex = getOrAddCatalog(catalogName)
-        val symbols = symbols[catalogIndex].symbols
-        return symbols.indexOfFirst { value ->
-            value.path == valuePath
-        }.let { index ->
-            when (index) {
-                -1 -> {
-                    this.symbols[catalogIndex] = this.symbols[catalogIndex].copy(
-                        symbols = symbols + listOf(Catalog.Symbol(valuePath, valueType))
-                    )
-                    catalogIndex to this.symbols[catalogIndex].symbols.lastIndex
-                }
-                else -> {
-                    catalogIndex to index
-                }
-            }
-        }
-    }
-
-    private fun getOrAddCatalog(catalogName: String): Int {
-        return symbols.indexOfFirst { catalog ->
-            catalog.name == catalogName
-        }.let {
-            when (it) {
-                -1 -> {
-                    symbols.add(Catalog(catalogName, emptyList()))
-                    symbols.lastIndex
-                }
-                else -> it
-            }
-        }
-    }
-
-    /**
-     * Attempt to resolve a [BindingPath] in the global + local type environments.
-     */
-    fun resolve(path: BindingPath, locals: TypeEnv, scope: Rex.Op.Var.Scope): ResolvedVar? {
-        val strategy = when (scope) {
-            Rex.Op.Var.Scope.DEFAULT -> locals.strategy
-            Rex.Op.Var.Scope.LOCAL -> ResolutionStrategy.LOCAL
-        }
-        return when (strategy) {
-            ResolutionStrategy.LOCAL -> {
-                var type: ResolvedVar? = null
-                type = type ?: resolveLocalBind(path, locals.schema)
-                type = type ?: resolveGlobalBind(path)
-                type
-            }
-            ResolutionStrategy.GLOBAL -> {
-                var type: ResolvedVar? = null
-                type = type ?: resolveGlobalBind(path)
-                type = type ?: resolveLocalBind(path, locals.schema)
-                type
-            }
-        }
-    }
-
-    /**
-     * Logic is as follows:
-     * 1. If Current Catalog and Schema are set, create a Path to the object and attempt to grab handle and schema.
-     *   a. If not found, just try to find the object in the catalog.
-     * 2. If Current Catalog is not set:
-     *   a. Loop through all catalogs and try to find the object.
-     *
-     * TODO: Replace paths with global variable references if found
-     */
-    private fun resolveGlobalBind(path: BindingPath): ResolvedVar? {
-        val currentCatalog = session.currentCatalog
-        val currentCatalogPath = BindingPath(session.currentDirectory.map { BindingName(it, BindingCase.SENSITIVE) })
-        val absoluteCatalogPath = BindingPath(currentCatalogPath.steps + path.steps)
-        val resolvedVar = when (path.steps.size) {
-            0 -> null
-            1 -> getGlobalType(currentCatalog, path, absoluteCatalogPath)
-            2 -> getGlobalType(currentCatalog, path, path) ?: getGlobalType(currentCatalog, path, absoluteCatalogPath)
-            else -> {
-                val inferredCatalog = path.steps[0]
-                val newPath = BindingPath(path.steps.subList(1, path.steps.size))
-                getGlobalType(inferredCatalog, path, newPath)
-                    ?: getGlobalType(currentCatalog, path, path)
-                    ?: getGlobalType(currentCatalog, path, absoluteCatalogPath)
-            }
-        }
-        return resolvedVar
-    }
-
-    /**
-     * Check locals, else search within structs.
-     */
-    internal fun resolveLocalBind(path: BindingPath, locals: List<Rel.Binding>): ResolvedVar? {
-        if (path.steps.isEmpty()) {
-            return null
-        }
-
-        // 1. Check locals for root
-        locals.forEachIndexed { ordinal, binding ->
-            val root = path.steps[0]
-            if (root.matches(binding.name)) {
-                return ResolvedVar.Local(binding.type, ordinal, binding.type, path.steps)
+                r = rex(type, rexOpVarResolved(i))
             }
         }
 
-        // 2. Check if this variable is referencing a struct field, carrying ordinals
-        val matches = mutableListOf<ResolvedVar.Local>()
-        for (ordinal in locals.indices) {
-            val rootType = locals[ordinal].type
-            val pathPrefix = BindingName(locals[ordinal].name, BindingCase.SENSITIVE)
-            if (rootType is StructType) {
-                val varType = inferStructLookup(rootType, path)
-                if (varType != null) {
-                    // we found this path within a struct!
-                    val match = ResolvedVar.Local(
-                        varType.resolvedType,
-                        ordinal,
-                        rootType,
-                        listOf(pathPrefix) + varType.replacementPath.steps,
-                    )
-                    matches.add(match)
-                }
-            }
-        }
-
-        // 0 -> no match
-        // 1 -> resolved
-        // N -> ambiguous
-        return when (matches.size) {
-            0 -> null
-            1 -> matches.single()
-            else -> null // TODO emit ambiguous error
-        }
-    }
-
-    /**
-     * Searches for the path within the given struct, returning null if not found.
-     *
-     * @return a [ResolvedPath] that contains the disambiguated [ResolvedPath.replacementPath] and the path's
-     * [StaticType]. Returns NULL if unable to find the [path] given the [struct].
-     */
-    private fun inferStructLookup(struct: StructType, path: BindingPath): ResolvedPath? {
-        var curr: StaticType = struct
-        val replacementSteps = path.steps.map { step ->
-            // Assume ORDERED for now
-            val currentStruct = curr as? StructType ?: return null
-            val (replacement, stepType) = inferStructLookup(currentStruct, step) ?: return null
-            curr = stepType
-            replacement
-        }
-        // Lookup final field
-        return ResolvedPath(
-            BindingPath(replacementSteps),
-            curr
-        )
-    }
-
-    /**
-     * Represents a disambiguated [BindingPath] and its inferred [StaticType].
-     */
-    private class ResolvedPath(
-        val replacementPath: BindingPath,
-        val resolvedType: StaticType,
-    )
-
-    /**
-     * @return a disambiguated [key] and the resulting [StaticType].
-     */
-    private fun inferStructLookup(struct: StructType, key: BindingName): Pair<BindingName, StaticType>? {
-        val isClosed = struct.constraints.contains(TupleConstraint.Open(false))
-        val isOrdered = struct.constraints.contains(TupleConstraint.Ordered)
-        return when {
-            // 1. Struct is closed and ordered
-            isClosed && isOrdered -> {
-                struct.fields.firstOrNull { entry -> key.matches(entry.key) }?.let {
-                    (sensitive(it.key) to it.value)
-                }
-            }
-            // 2. Struct is closed
-            isClosed -> {
-                val matches = struct.fields.filter { entry -> key.matches(entry.key) }
-                when (matches.size) {
-                    0 -> null
-                    1 -> matches.first().let { (sensitive(it.key) to it.value) }
-                    else -> {
-                        val firstKey = matches.first().key
-                        val sharedKey = when (matches.all { it.key == firstKey }) {
-                            true -> sensitive(firstKey)
-                            false -> key
+        // 2) Check struct fields
+        if (r == null) {
+            var c: Rex? = null
+            var known = false
+            for (i in locals.indices) {
+                val local = locals[i]
+                val type = local.type
+                if (type is StructType) {
+                    when (type.containsKey(head)) {
+                        true -> {
+                            if (c != null && known) {
+                                // TODO root was already definitively matched, emit ambiguous error.
+                                return null
+                            }
+                            c = rex(type, rexOpVarResolved(i))
+                            known = true
                         }
-                        sharedKey to StaticType.unionOf(matches.map { it.value }.toSet()).flatten()
+                        null -> {
+                            if (c != null) {
+                                if (known) {
+                                    continue
+                                } else {
+                                    // TODO we have more than one possible match, emit ambiguous error.
+                                    return null
+                                }
+                            }
+                            c = rex(type, rexOpVarResolved(i))
+                            known = false
+                        }
+                        false -> continue
                     }
                 }
             }
-            // 3. Struct is open
-            else -> key to StaticType.ANY
+            if (c == null) {
+                return null
+            }
+            r = c
+            tail = path.steps
         }
+
+        // Convert any remaining binding names (tail) to an untyped path expression.
+        return if (tail.isEmpty()) r else r.toPath(tail)
     }
 
-    private fun sensitive(str: String): BindingName = BindingName(str, BindingCase.SENSITIVE)
+    private fun global(path: BindingPath): Rex? {
+        TODO()
+    }
+
+    @OptIn(PartiQLValueExperimental::class)
+    private fun Rex.toPath(steps: List<BindingName>): Rex = steps.fold(this) { curr, step ->
+        val op = when (step.case) {
+            BindingCase.SENSITIVE -> rexOpPathKey(curr, rex(StaticType.STRING, rexOpLit(stringValue(step.name))))
+            BindingCase.INSENSITIVE -> rexOpPathSymbol(curr, step.name)
+        }
+        rex(StaticType.ANY, op)
+    }
 
     /**
-     * Logic for determining how many BindingNames were “matched” by the ConnectorMetadata
+     * Searches for the [BindingName] withing the given [StructType].
      *
-     * 1. Matched = RelativePath - Not Found
-     * 2. Not Found = Input CatalogPath - Output CatalogPath
-     * 3. Matched = RelativePath - (Input CatalogPath - Output CatalogPath)
-     * 4. Matched = RelativePath + Output CatalogPath - Input CatalogPath
+     * Returns
+     *  - true  iff known to contain key
+     *  - false iff known to NOT contain key
+     *  - null  iff NOT known to contain key
+     *
+     * @param name
+     * @return
      */
-    private fun calculateMatched(
-        originalPath: BindingPath,
-        inputCatalogPath: BindingPath,
-        outputCatalogPath: List<String>,
-    ): Int {
-        return originalPath.steps.size + outputCatalogPath.size - inputCatalogPath.steps.size
+    private fun StructType.containsKey(name: BindingName): Boolean? {
+        for (f in fields) {
+            if (name.matches(f.key)) {
+                return true
+            }
+        }
+        val closed = constraints.contains(TupleConstraint.Open(false))
+        return if (closed) false else null
     }
 }
