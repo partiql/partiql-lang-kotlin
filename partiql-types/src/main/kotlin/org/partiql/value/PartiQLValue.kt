@@ -267,12 +267,9 @@ public abstract class SymbolValue : TextValue<String>() {
 }
 
 @PartiQLValueExperimental
-public abstract class ClobValue : TextValue<ByteArray>() {
+public abstract class ClobValue : ScalarValue<ByteArray> {
 
     override val type: PartiQLValueType = PartiQLValueType.CLOB
-
-    override val string: String?
-        get() = value?.toString(Charsets.UTF_8)
 
     abstract override fun copy(annotations: Annotations): ClobValue
 

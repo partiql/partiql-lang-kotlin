@@ -18,6 +18,7 @@ import org.partiql.value.boolValue
 import org.partiql.value.int32Value
 import org.partiql.value.int64Value
 import org.partiql.value.io.PartiQLValueIonWriterBuilder
+import org.partiql.value.listValue
 import org.partiql.value.missingValue
 import org.partiql.value.nullValue
 import org.partiql.value.stringValue
@@ -276,7 +277,7 @@ class PartiQLEngineDefaultTest {
                     structValue(
                         "a" to structValue(
                             "b" to structValue(
-                                "c" to bagValue( // TODO: should be ListValue; currently, Rex.ExprCollection doesn't return lists
+                                "c" to listValue(
                                     structValue(
                                         "field_y" to int32Value(0)
                                     ),
@@ -291,7 +292,53 @@ class PartiQLEngineDefaultTest {
                         )
                     )
                 )
-            )
+            ),
+            SuccessTestCase(
+                input = "SELECT * FROM <<{'a': 10, 'b': 1}, {'a': 1, 'b': 2}>> AS t ORDER BY t.a;",
+                expected = listValue(
+                    structValue("a" to int32Value(1), "b" to int32Value(2)),
+                    structValue("a" to int32Value(10), "b" to int32Value(1))
+                )
+            ),
+            SuccessTestCase(
+                input = "SELECT * FROM <<{'a': 10, 'b': 1}, {'a': 1, 'b': 2}>> AS t ORDER BY t.a DESC;",
+                expected = listValue(
+                    structValue("a" to int32Value(10), "b" to int32Value(1)),
+                    structValue("a" to int32Value(1), "b" to int32Value(2))
+                )
+            ),
+            SuccessTestCase(
+                input = "SELECT * FROM <<{'a': NULL, 'b': 1}, {'a': 1, 'b': 2}, {'a': 3, 'b': 4}>> AS t ORDER BY t.a NULLS LAST;",
+                expected = listValue(
+                    structValue("a" to int32Value(1), "b" to int32Value(2)),
+                    structValue("a" to int32Value(3), "b" to int32Value(4)),
+                    structValue("a" to nullValue(), "b" to int32Value(1))
+                )
+            ),
+            SuccessTestCase(
+                input = "SELECT * FROM <<{'a': NULL, 'b': 1}, {'a': 1, 'b': 2}, {'a': 3, 'b': 4}>> AS t ORDER BY t.a NULLS FIRST;",
+                expected = listValue(
+                    structValue("a" to nullValue(), "b" to int32Value(1)),
+                    structValue("a" to int32Value(1), "b" to int32Value(2)),
+                    structValue("a" to int32Value(3), "b" to int32Value(4))
+                )
+            ),
+            SuccessTestCase(
+                input = "SELECT * FROM <<{'a': NULL, 'b': 1}, {'a': 1, 'b': 2}, {'a': 3, 'b': 4}>> AS t ORDER BY t.a DESC NULLS LAST;",
+                expected = listValue(
+                    structValue("a" to int32Value(3), "b" to int32Value(4)),
+                    structValue("a" to int32Value(1), "b" to int32Value(2)),
+                    structValue("a" to nullValue(), "b" to int32Value(1))
+                )
+            ),
+            SuccessTestCase(
+                input = "SELECT * FROM <<{'a': NULL, 'b': 1}, {'a': 1, 'b': 2}, {'a': 3, 'b': 4}>> AS t ORDER BY t.a DESC NULLS FIRST;",
+                expected = listValue(
+                    structValue("a" to nullValue(), "b" to int32Value(1)),
+                    structValue("a" to int32Value(3), "b" to int32Value(4)),
+                    structValue("a" to int32Value(1), "b" to int32Value(2))
+                )
+            ),
         )
     }
     public class SuccessTestCase @OptIn(PartiQLValueExperimental::class) constructor(
