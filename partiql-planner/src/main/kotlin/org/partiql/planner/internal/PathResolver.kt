@@ -1,6 +1,7 @@
-package org.partiql.planner.internal.typer
+package org.partiql.planner.internal
 
 import org.partiql.planner.PartiQLPlanner
+import org.partiql.planner.internal.typer.PathEntry
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath

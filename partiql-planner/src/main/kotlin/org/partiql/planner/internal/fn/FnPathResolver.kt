@@ -1,4 +1,4 @@
-package org.partiql.planner.internal.typer
+package org.partiql.planner.internal.fn
 
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.internal.ir.Fn
@@ -47,13 +47,13 @@ import org.partiql.value.PartiQLValueType.TIMESTAMP
  * Fn arguments list. The planner is responsible for mapping arguments to parameters.
  */
 @OptIn(FnExperimental::class)
-internal typealias Args = List<FnParameter>
+internal typealias FnParams = List<FnParameter>
 
 /**
  * Parameter mapping list tells the planner where to insert implicit casts. Null is the identity.
  */
 @OptIn(FnExperimental::class)
-internal typealias Mapping = List<FnSignature.Scalar?>
+internal typealias FnMapping = List<FnSignature.Scalar?>
 
 /**
  * Tells us which function matched, and how the arguments are mapped.
@@ -61,7 +61,7 @@ internal typealias Mapping = List<FnSignature.Scalar?>
 @OptIn(FnExperimental::class)
 internal class Match<T : FnSignature>(
     public val signature: T,
-    public val mapping: Mapping,
+    public val mapping: FnMapping,
 )
 
 /**
@@ -163,7 +163,7 @@ internal class FnResolver(
     /**
      * Fns are sorted by precedence (which is not rigorously defined/specified at the moment).
      */
-    private fun <T : FnSignature> match(signatures: List<T>, args: Args): Match<T>? {
+    private fun <T : FnSignature> match(signatures: List<T>, args: FnParams): Match<T>? {
         for (signature in signatures) {
             val mapping = match(signature, args)
             if (mapping != null) {
@@ -178,7 +178,7 @@ internal class FnResolver(
      *
      * TODO we need to constrain the allowable runtime types for an ANY typed parameter.
      */
-    private fun match(signature: FnSignature, args: Args): Mapping? {
+    private fun match(signature: FnSignature, args: FnParams): FnMapping? {
         if (signature.parameters.size != args.size) {
             return null
         }

@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.internal.ir.Catalog
 import org.partiql.planner.internal.ir.Rex
+import org.partiql.planner.internal.typer.TypeEnv
 import org.partiql.plugins.local.LocalConnector
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName

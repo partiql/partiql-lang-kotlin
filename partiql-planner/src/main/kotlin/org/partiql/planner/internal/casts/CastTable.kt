@@ -1,6 +1,6 @@
 @file:OptIn(FnExperimental::class)
 
-package org.partiql.planner.internal.typer
+package org.partiql.planner.internal.casts
 
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnParameter
@@ -37,38 +37,18 @@ import org.partiql.value.PartiQLValueType.TIME
 import org.partiql.value.PartiQLValueType.TIMESTAMP
 
 /**
- * Going with a matrix here (using enum ordinals) as it's simple and avoids walking.
- */
-internal typealias TypeGraph = Array<Array<TypeRelationship?>>
-
-/**
- * Each edge represents a type relationship
- */
-@OptIn(FnExperimental::class)
-internal data class TypeRelationship(
-    val castType: CastType,
-    val castFn: FnSignature.Scalar,
-)
-
-/**
- * An COERCION will be inserted by the compiler during function resolution, an EXPLICIT CAST will never be inserted.
- *
- * COERCION: Lossless CAST(V AS T) -> T
- * EXPLICIT: Lossy    CAST(V AS T) -> T
- * UNSAFE:            CAST(V AS T) -> T|MISSING
- */
-internal enum class CastType { COERCION, EXPLICIT, UNSAFE }
-
-/**
  * A place to model type relationships (for now this is to answer CAST inquiries).
+ *
+ * @property types
+ * @property graph      Going with a matrix here (using enum ordinals) as it's simple and avoids walking.
  */
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
-internal class TypeCasts private constructor(
+internal class CastTable private constructor(
     private val types: Array<PartiQLValueType>,
-    private val graph: TypeGraph,
+    private val graph: Array<Array<CastInfo?>>,
 ) {
 
-    private fun relationships(): Sequence<TypeRelationship> = sequence {
+    private fun relationships(): Sequence<CastInfo> = sequence {
         for (t1 in types) {
             for (t2 in types) {
                 val r = graph[t1][t2]
@@ -116,7 +96,7 @@ internal class TypeCasts private constructor(
 
         private operator fun <T> Array<T>.set(t: PartiQLValueType, value: T): Unit = this.set(t.ordinal, value)
 
-        private fun PartiQLValueType.relationships(block: RelationshipBuilder.() -> Unit): Array<TypeRelationship?> {
+        private fun PartiQLValueType.relationships(block: RelationshipBuilder.() -> Unit): Array<CastInfo?> {
             return with(RelationshipBuilder(this)) {
                 block()
                 build()
@@ -128,9 +108,9 @@ internal class TypeCasts private constructor(
          *
          * TODO this is incomplete.
          */
-        public fun partiql(): TypeCasts {
+        public fun partiql(): CastTable {
             val types = PartiQLValueType.values()
-            val graph = arrayOfNulls<Array<TypeRelationship?>>(N)
+            val graph = arrayOfNulls<Array<CastInfo?>>(N)
             for (type in types) {
                 // initialize all with empty relationships
                 graph[type] = arrayOfNulls(N)
@@ -317,27 +297,27 @@ internal class TypeCasts private constructor(
             graph[STRUCT] = STRUCT.relationships {
                 coercion(STRUCT)
             }
-            return TypeCasts(types, graph.requireNoNulls())
+            return CastTable(types, graph.requireNoNulls())
         }
     }
 
     @OptIn(FnExperimental::class)
     private class RelationshipBuilder(val operand: PartiQLValueType) {
 
-        private val relationships = arrayOfNulls<TypeRelationship?>(N)
+        private val relationships = arrayOfNulls<CastInfo?>(N)
 
         fun build() = relationships
 
         fun coercion(target: PartiQLValueType) {
-            relationships[target] = TypeRelationship(CastType.COERCION, cast(operand, target))
+            relationships[target] = CastInfo(CastType.COERCION, cast(operand, target))
         }
 
         fun explicit(target: PartiQLValueType) {
-            relationships[target] = TypeRelationship(CastType.EXPLICIT, cast(operand, target))
+            relationships[target] = CastInfo(CastType.EXPLICIT, cast(operand, target))
         }
 
         fun unsafe(target: PartiQLValueType) {
-            relationships[target] = TypeRelationship(CastType.UNSAFE, cast(operand, target))
+            relationships[target] = CastInfo(CastType.UNSAFE, cast(operand, target))
         }
 
         private fun cast(operand: PartiQLValueType, target: PartiQLValueType) =

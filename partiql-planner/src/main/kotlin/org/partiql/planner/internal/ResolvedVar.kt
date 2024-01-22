@@ -18,7 +18,7 @@ internal sealed interface ResolvedVar {
      * Metadata for a resolved local variable.
      *
      * @property type              Resolved StaticType
-     * @property ordinal           Index offset in [TypeEnv]
+     * @property ordinal           Index offset in [TypeEnvLocal]
      * @property resolvedSteps     The fully resolved path steps.s
      */
     class Local(

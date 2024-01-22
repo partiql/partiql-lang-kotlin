@@ -22,7 +22,6 @@ import org.partiql.errors.UNKNOWN_PROBLEM_LOCATION
 import org.partiql.planner.PlanningProblemDetails
 import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.ResolutionStrategy
-import org.partiql.planner.internal.TypeEnv
 import org.partiql.planner.internal.ir.Fn
 import org.partiql.planner.internal.ir.Identifier
 import org.partiql.planner.internal.ir.PlanNode

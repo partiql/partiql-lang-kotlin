@@ -1,4 +1,4 @@
-package org.partiql.planner.internal.typer
+package org.partiql.planner.internal
 
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.internal.ResolvedVar

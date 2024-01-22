@@ -1,5 +1,6 @@
 package org.partiql.planner.internal.typer
 
+import org.partiql.planner.internal.fn.FnMapping
 import org.partiql.planner.internal.ir.Identifier
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.spi.fn.FnExperimental
@@ -21,7 +22,7 @@ internal sealed class FnMatch<T : FnSignature> {
      */
     public data class Ok<T : FnSignature>(
         public val signature: T,
-        public val mapping: Mapping,
+        public val mapping: FnMapping,
         public val isMissable: Boolean,
     ) : FnMatch<T>()
 
