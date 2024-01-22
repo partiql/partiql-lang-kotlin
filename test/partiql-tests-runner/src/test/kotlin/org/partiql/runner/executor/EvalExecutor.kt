@@ -12,7 +12,6 @@ import org.partiql.eval.PartiQLStatement
 import org.partiql.lang.eval.CompileOptions
 import org.partiql.parser.PartiQLParser
 import org.partiql.planner.PartiQLPlanner
-import org.partiql.planner.PartiQLPlannerBuilder
 import org.partiql.plugins.memory.MemoryBindings
 import org.partiql.plugins.memory.MemoryConnector
 import org.partiql.runner.ION
@@ -27,19 +26,8 @@ import org.partiql.value.toIon
 
 @OptIn(PartiQLValueExperimental::class)
 class EvalExecutor(
-    private val connector: Connector,
     private val session: PartiQLPlanner.Session,
 ) : TestExecutor<PartiQLStatement<*>, PartiQLResult> {
-
-    private val planner = PartiQLPlannerBuilder()
-        .addCatalog(
-            "test",
-            connector.getMetadata(object : ConnectorSession {
-                override fun getQueryId(): String = session.queryId
-                override fun getUserId(): String = session.userId
-            })
-        )
-        .build()
 
     override fun prepare(statement: String): PartiQLStatement<*> {
         val stmt = parser.parse(statement).root
@@ -53,6 +41,7 @@ class EvalExecutor(
 
     override fun fromIon(value: IonValue): PartiQLResult {
         val partiql = PartiQLValueIonReaderBuilder.standard().build(value.toIonElement()).read()
+
         return PartiQLResult.Value(partiql)
     }
 
@@ -72,6 +61,7 @@ class EvalExecutor(
 
     companion object {
         val parser = PartiQLParser.default()
+        val planner = PartiQLPlanner.default()
         val engine = PartiQLEngine.default()
     }
 
@@ -88,8 +78,14 @@ class EvalExecutor(
                 queryId = "query",
                 userId = "user",
                 currentCatalog = catalog,
+                catalogs = mapOf(
+                    "test" to connector.getMetadata(object : ConnectorSession {
+                        override fun getQueryId(): String = "query"
+                        override fun getUserId(): String = "user"
+                    })
+                )
             )
-            return EvalExecutor(connector, session)
+            return EvalExecutor(session)
         }
 
         /**
