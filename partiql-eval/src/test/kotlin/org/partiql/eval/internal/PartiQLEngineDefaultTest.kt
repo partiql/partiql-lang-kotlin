@@ -339,6 +339,14 @@ class PartiQLEngineDefaultTest {
                     structValue("a" to int32Value(1), "b" to int32Value(2))
                 )
             ),
+            SuccessTestCase( // use multiple sort specs
+                input = "SELECT * FROM <<{'a': NULL, 'b': 1}, {'a': 1, 'b': 2}, {'a': 1, 'b': 4}>> AS t ORDER BY t.a DESC NULLS FIRST, t.b DESC;",
+                expected = listValue(
+                    structValue("a" to nullValue(), "b" to int32Value(1)),
+                    structValue("a" to int32Value(1), "b" to int32Value(4)),
+                    structValue("a" to int32Value(1), "b" to int32Value(2))
+                )
+            ),
         )
     }
     public class SuccessTestCase @OptIn(PartiQLValueExperimental::class) constructor(

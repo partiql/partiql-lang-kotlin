@@ -30,6 +30,8 @@ internal class RelSort(
                 val lVal = spec.first.eval(l)
                 val rVal = spec.first.eval(r)
 
+                // DESC_NULLS_FIRST(l, r) == ASC_NULLS_LAST(r, l)
+                // DESC_NULLS_LAST(l, r) == ASC_NULLS_FIRST(r, l)
                 val cmpResult = when (spec.second) {
                     Rel.Op.Sort.Order.ASC_NULLS_FIRST -> nullsFirstComparator.compare(lVal, rVal)
                     Rel.Op.Sort.Order.ASC_NULLS_LAST -> nullsLastComparator.compare(lVal, rVal)

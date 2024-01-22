@@ -45,12 +45,13 @@ internal fun bigDecimalOf(num: Number, mc: MathContext = MATH_CONTEXT): BigDecim
 private val CONVERSION_MAP = mapOf<Set<Class<*>>, Class<out Number>>(
     setOf(Int::class.javaObjectType, Int::class.javaObjectType) to Int::class.javaObjectType,
     setOf(Int::class.javaObjectType, Long::class.javaObjectType) to Long::class.javaObjectType,
-    setOf(Int::class.javaObjectType, Float::class.javaObjectType) to Float::class.javaObjectType,
+    // Int w/ Float -> Double
+    setOf(Int::class.javaObjectType, Float::class.javaObjectType) to Double::class.javaObjectType,
     setOf(Int::class.javaObjectType, Double::class.javaObjectType) to Double::class.javaObjectType,
     setOf(Int::class.javaObjectType, BigDecimal::class.javaObjectType) to BigDecimal::class.javaObjectType,
 
     setOf(Float::class.javaObjectType, Float::class.javaObjectType) to Float::class.javaObjectType,
-    // Float w/ long -> Double
+    // Float w/ Long -> Double
     setOf(Float::class.javaObjectType, Long::class.javaObjectType) to Double::class.javaObjectType,
     setOf(Float::class.javaObjectType, Double::class.javaObjectType) to Double::class.javaObjectType,
     setOf(Float::class.javaObjectType, BigDecimal::class.javaObjectType) to BigDecimal::class.javaObjectType,

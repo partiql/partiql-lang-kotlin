@@ -93,6 +93,8 @@ class PartiQLValueComparatorTest {
         }
     }
 
+    // [EquivValues] in this list are sorted from ascending order per the less-than-order-by operator defined in spec
+    // section 12.2. Values within each [EquivValues] are equivalent.
     private val nullValues = listOf(
         EquivValues(
             nullValue(), // null
@@ -106,12 +108,12 @@ class PartiQLValueComparatorTest {
 
     private val nonNullPartiQLValue = listOf(
         EquivValues(
-            boolValue(false),
-            boolValue(false, annotations = listOf("b"))
+            boolValue(false), // false
+            boolValue(false, annotations = listOf("b")) // `b::false`
         ),
         EquivValues(
-            boolValue(true, annotations = listOf("c")),
-            boolValue(true)
+            boolValue(true, annotations = listOf("c")), // `c::true`
+            boolValue(true) // true
         ),
         EquivValues(
             // make sure there are at least two nan
@@ -119,13 +121,13 @@ class PartiQLValueComparatorTest {
             float64Value(Double.NaN),
         ),
         EquivValues(
-            // make sure there are at least two nan
+            // make sure there are at least two -inf
             float32Value(Float.NEGATIVE_INFINITY),
             float64Value(Double.NEGATIVE_INFINITY),
         ),
         EquivValues(
-            float32Value(-1e1000f),
-            float64Value(-1e1000)
+            float32Value(-1e1000f), // -inf
+            float64Value(-1e1000) // -inf
         ),
         EquivValues(
             float32Value(-5e-1f),
@@ -169,6 +171,8 @@ class PartiQLValueComparatorTest {
         EquivValues(
             dateValue(date(year = 2021, month = 8, day = 22))
         ),
+        // Set a [timeZone] for every [TimeValue] and [TimestampValue] since comparison between time types without
+        // a timezone results in an error. TODO: add a way to compare between time and timestamp types
         EquivValues(
             timeValue(time(hour = 12, minute = 12, second = 12, timeZone = TimeZone.UnknownTimeZone)),
             timeValue(time(hour = 12, minute = 12, second = 12, nano = 0, timeZone = TimeZone.UnknownTimeZone)),
@@ -276,8 +280,8 @@ class PartiQLValueComparatorTest {
             sexpValue(emptyList(), annotations = listOf("a", "b", "c")) // `a::b::c::()`
         ),
         EquivValues(
-            sexpValue(float32Value(1f)), // "`a::b::c::(1e0)`"
-            sexpValue(float64Value(1.0), annotations = listOf("a", "b", "c")), // "`a::b::c::(1e0)`"
+            sexpValue(float32Value(1f)), // `a::b::c::(1e0)`
+            sexpValue(float64Value(1.0), annotations = listOf("a", "b", "c")), // `a::b::c::(1e0)`
             sexpValue(int32Value(1)), // `(1)`
             sexpValue(decimalValue(BigDecimal("1.0000000000000"))) // `(1.0000000000000)`
         ),
@@ -362,7 +366,7 @@ class PartiQLValueComparatorTest {
         ),
         EquivValues(
             structValue( // { 'm': [2, 2], 'n': [2, 2]}
-                "m" to listValue(int32Value(1), int32Value(2)),
+                "m" to listValue(int32Value(2), int32Value(2)),
                 "n" to listValue(int32Value(2), int32Value(2))
             )
         ),
