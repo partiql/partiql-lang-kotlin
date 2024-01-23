@@ -71,76 +71,52 @@ import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_CURRENT_DATE___
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_CURRENT_USER____STRING
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_ADD_DAY__INT32_DATE__DATE
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_ADD_DAY__INT32_TIMESTAMP__TIMESTAMP
-import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_ADD_DAY__INT32_TIME__TIME
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_ADD_DAY__INT64_DATE__DATE
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_ADD_DAY__INT64_TIMESTAMP__TIMESTAMP
-import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_ADD_DAY__INT64_TIME__TIME
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_ADD_DAY__INT_DATE__DATE
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_ADD_DAY__INT_TIMESTAMP__TIMESTAMP
-import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_ADD_DAY__INT_TIME__TIME
-import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_ADD_HOUR__INT32_DATE__DATE
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_ADD_HOUR__INT32_TIMESTAMP__TIMESTAMP
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_ADD_HOUR__INT32_TIME__TIME
-import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_ADD_HOUR__INT64_DATE__DATE
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_ADD_HOUR__INT64_TIMESTAMP__TIMESTAMP
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_ADD_HOUR__INT64_TIME__TIME
-import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_ADD_HOUR__INT_DATE__DATE
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_ADD_HOUR__INT_TIMESTAMP__TIMESTAMP
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_ADD_HOUR__INT_TIME__TIME
-import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_ADD_MINUTE__INT32_DATE__DATE
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_ADD_MINUTE__INT32_TIMESTAMP__TIMESTAMP
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_ADD_MINUTE__INT32_TIME__TIME
-import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_ADD_MINUTE__INT64_DATE__DATE
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_ADD_MINUTE__INT64_TIMESTAMP__TIMESTAMP
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_ADD_MINUTE__INT64_TIME__TIME
-import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_ADD_MINUTE__INT_DATE__DATE
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_ADD_MINUTE__INT_TIMESTAMP__TIMESTAMP
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_ADD_MINUTE__INT_TIME__TIME
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_ADD_MONTH__INT32_DATE__DATE
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_ADD_MONTH__INT32_TIMESTAMP__TIMESTAMP
-import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_ADD_MONTH__INT32_TIME__TIME
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_ADD_MONTH__INT64_DATE__DATE
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_ADD_MONTH__INT64_TIMESTAMP__TIMESTAMP
-import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_ADD_MONTH__INT64_TIME__TIME
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_ADD_MONTH__INT_DATE__DATE
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_ADD_MONTH__INT_TIMESTAMP__TIMESTAMP
-import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_ADD_MONTH__INT_TIME__TIME
-import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_ADD_SECOND__INT32_DATE__DATE
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_ADD_SECOND__INT32_TIMESTAMP__TIMESTAMP
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_ADD_SECOND__INT32_TIME__TIME
-import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_ADD_SECOND__INT64_DATE__DATE
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_ADD_SECOND__INT64_TIMESTAMP__TIMESTAMP
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_ADD_SECOND__INT64_TIME__TIME
-import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_ADD_SECOND__INT_DATE__DATE
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_ADD_SECOND__INT_TIMESTAMP__TIMESTAMP
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_ADD_SECOND__INT_TIME__TIME
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_ADD_YEAR__INT32_DATE__DATE
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_ADD_YEAR__INT32_TIMESTAMP__TIMESTAMP
-import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_ADD_YEAR__INT32_TIME__TIME
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_ADD_YEAR__INT64_DATE__DATE
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_ADD_YEAR__INT64_TIMESTAMP__TIMESTAMP
-import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_ADD_YEAR__INT64_TIME__TIME
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_ADD_YEAR__INT_DATE__DATE
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_ADD_YEAR__INT_TIMESTAMP__TIMESTAMP
-import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_ADD_YEAR__INT_TIME__TIME
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_DIFF_DAY__DATE_DATE__INT64
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_DIFF_DAY__TIMESTAMP_TIMESTAMP__INT64
-import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_DIFF_DAY__TIME_TIME__INT64
-import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_DIFF_HOUR__DATE_DATE__INT64
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_DIFF_HOUR__TIMESTAMP_TIMESTAMP__INT64
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_DIFF_HOUR__TIME_TIME__INT64
-import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_DIFF_MINUTE__DATE_DATE__INT64
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_DIFF_MINUTE__TIMESTAMP_TIMESTAMP__INT64
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_DIFF_MINUTE__TIME_TIME__INT64
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_DIFF_MONTH__DATE_DATE__INT64
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_DIFF_MONTH__TIMESTAMP_TIMESTAMP__INT64
-import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_DIFF_MONTH__TIME_TIME__INT64
-import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_DIFF_SECOND__DATE_DATE__INT64
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_DIFF_SECOND__TIMESTAMP_TIMESTAMP__INT64
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_DIFF_SECOND__TIME_TIME__INT64
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_DIFF_YEAR__DATE_DATE__INT64
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_DIFF_YEAR__TIMESTAMP_TIMESTAMP__INT64
-import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DATE_DIFF_YEAR__TIME_TIME__INT64
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DIVIDE__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__DECIMAL_ARBITRARY
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DIVIDE__FLOAT32_FLOAT32__FLOAT32
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_DIVIDE__FLOAT64_FLOAT64__FLOAT64
@@ -178,7 +154,6 @@ import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_EQ__SYMBOL_SYMB
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_EQ__TIMESTAMP_TIMESTAMP__BOOL
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_EQ__TIME_TIME__BOOL
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_GTE__BOOL_BOOL__BOOL
-import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_GTE__CLOB_CLOB__BOOL
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_GTE__DATE_DATE__BOOL
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_GTE__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__BOOL
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_GTE__FLOAT32_FLOAT32__BOOL
@@ -193,7 +168,6 @@ import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_GTE__SYMBOL_SYM
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_GTE__TIMESTAMP_TIMESTAMP__BOOL
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_GTE__TIME_TIME__BOOL
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_GT__BOOL_BOOL__BOOL
-import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_GT__CLOB_CLOB__BOOL
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_GT__DATE_DATE__BOOL
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_GT__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__BOOL
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_GT__FLOAT32_FLOAT32__BOOL
@@ -334,7 +308,6 @@ import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_LOWER__CLOB__CL
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_LOWER__STRING__STRING
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_LOWER__SYMBOL__SYMBOL
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_LTE__BOOL_BOOL__BOOL
-import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_LTE__CLOB_CLOB__BOOL
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_LTE__DATE_DATE__BOOL
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_LTE__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__BOOL
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_LTE__FLOAT32_FLOAT32__BOOL
@@ -349,7 +322,6 @@ import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_LTE__SYMBOL_SYM
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_LTE__TIMESTAMP_TIMESTAMP__BOOL
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_LTE__TIME_TIME__BOOL
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_LT__BOOL_BOOL__BOOL
-import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_LT__CLOB_CLOB__BOOL
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_LT__DATE_DATE__BOOL
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_LT__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__BOOL
 import org.partiql.spi.connector.sql.internal.builtins.scalar.Fn_LT__FLOAT32_FLOAT32__BOOL
@@ -573,7 +545,6 @@ internal object SqlBuiltins {
         Fn_LT__FLOAT64_FLOAT64__BOOL,
         Fn_LT__STRING_STRING__BOOL,
         Fn_LT__SYMBOL_SYMBOL__BOOL,
-        Fn_LT__CLOB_CLOB__BOOL,
         Fn_LT__DATE_DATE__BOOL,
         Fn_LT__TIME_TIME__BOOL,
         Fn_LT__TIMESTAMP_TIMESTAMP__BOOL,
@@ -588,7 +559,6 @@ internal object SqlBuiltins {
         Fn_LTE__FLOAT64_FLOAT64__BOOL,
         Fn_LTE__STRING_STRING__BOOL,
         Fn_LTE__SYMBOL_SYMBOL__BOOL,
-        Fn_LTE__CLOB_CLOB__BOOL,
         Fn_LTE__DATE_DATE__BOOL,
         Fn_LTE__TIME_TIME__BOOL,
         Fn_LTE__TIMESTAMP_TIMESTAMP__BOOL,
@@ -603,7 +573,6 @@ internal object SqlBuiltins {
         Fn_GT__FLOAT64_FLOAT64__BOOL,
         Fn_GT__STRING_STRING__BOOL,
         Fn_GT__SYMBOL_SYMBOL__BOOL,
-        Fn_GT__CLOB_CLOB__BOOL,
         Fn_GT__DATE_DATE__BOOL,
         Fn_GT__TIME_TIME__BOOL,
         Fn_GT__TIMESTAMP_TIMESTAMP__BOOL,
@@ -618,7 +587,6 @@ internal object SqlBuiltins {
         Fn_GTE__FLOAT64_FLOAT64__BOOL,
         Fn_GTE__STRING_STRING__BOOL,
         Fn_GTE__SYMBOL_SYMBOL__BOOL,
-        Fn_GTE__CLOB_CLOB__BOOL,
         Fn_GTE__DATE_DATE__BOOL,
         Fn_GTE__TIME_TIME__BOOL,
         Fn_GTE__TIMESTAMP_TIMESTAMP__BOOL,
@@ -870,51 +838,33 @@ internal object SqlBuiltins {
         Fn_DATE_ADD_YEAR__INT32_DATE__DATE,
         Fn_DATE_ADD_YEAR__INT64_DATE__DATE,
         Fn_DATE_ADD_YEAR__INT_DATE__DATE,
-        Fn_DATE_ADD_YEAR__INT32_TIME__TIME,
-        Fn_DATE_ADD_YEAR__INT64_TIME__TIME,
-        Fn_DATE_ADD_YEAR__INT_TIME__TIME,
         Fn_DATE_ADD_YEAR__INT32_TIMESTAMP__TIMESTAMP,
         Fn_DATE_ADD_YEAR__INT64_TIMESTAMP__TIMESTAMP,
         Fn_DATE_ADD_YEAR__INT_TIMESTAMP__TIMESTAMP,
         Fn_DATE_ADD_MONTH__INT32_DATE__DATE,
         Fn_DATE_ADD_MONTH__INT64_DATE__DATE,
         Fn_DATE_ADD_MONTH__INT_DATE__DATE,
-        Fn_DATE_ADD_MONTH__INT32_TIME__TIME,
-        Fn_DATE_ADD_MONTH__INT64_TIME__TIME,
-        Fn_DATE_ADD_MONTH__INT_TIME__TIME,
         Fn_DATE_ADD_MONTH__INT32_TIMESTAMP__TIMESTAMP,
         Fn_DATE_ADD_MONTH__INT64_TIMESTAMP__TIMESTAMP,
         Fn_DATE_ADD_MONTH__INT_TIMESTAMP__TIMESTAMP,
         Fn_DATE_ADD_DAY__INT32_DATE__DATE,
         Fn_DATE_ADD_DAY__INT64_DATE__DATE,
         Fn_DATE_ADD_DAY__INT_DATE__DATE,
-        Fn_DATE_ADD_DAY__INT32_TIME__TIME,
-        Fn_DATE_ADD_DAY__INT64_TIME__TIME,
-        Fn_DATE_ADD_DAY__INT_TIME__TIME,
         Fn_DATE_ADD_DAY__INT32_TIMESTAMP__TIMESTAMP,
         Fn_DATE_ADD_DAY__INT64_TIMESTAMP__TIMESTAMP,
         Fn_DATE_ADD_DAY__INT_TIMESTAMP__TIMESTAMP,
-        Fn_DATE_ADD_HOUR__INT32_DATE__DATE,
-        Fn_DATE_ADD_HOUR__INT64_DATE__DATE,
-        Fn_DATE_ADD_HOUR__INT_DATE__DATE,
         Fn_DATE_ADD_HOUR__INT32_TIME__TIME,
         Fn_DATE_ADD_HOUR__INT64_TIME__TIME,
         Fn_DATE_ADD_HOUR__INT_TIME__TIME,
         Fn_DATE_ADD_HOUR__INT32_TIMESTAMP__TIMESTAMP,
         Fn_DATE_ADD_HOUR__INT64_TIMESTAMP__TIMESTAMP,
         Fn_DATE_ADD_HOUR__INT_TIMESTAMP__TIMESTAMP,
-        Fn_DATE_ADD_MINUTE__INT32_DATE__DATE,
-        Fn_DATE_ADD_MINUTE__INT64_DATE__DATE,
-        Fn_DATE_ADD_MINUTE__INT_DATE__DATE,
         Fn_DATE_ADD_MINUTE__INT32_TIME__TIME,
         Fn_DATE_ADD_MINUTE__INT64_TIME__TIME,
         Fn_DATE_ADD_MINUTE__INT_TIME__TIME,
         Fn_DATE_ADD_MINUTE__INT32_TIMESTAMP__TIMESTAMP,
         Fn_DATE_ADD_MINUTE__INT64_TIMESTAMP__TIMESTAMP,
         Fn_DATE_ADD_MINUTE__INT_TIMESTAMP__TIMESTAMP,
-        Fn_DATE_ADD_SECOND__INT32_DATE__DATE,
-        Fn_DATE_ADD_SECOND__INT64_DATE__DATE,
-        Fn_DATE_ADD_SECOND__INT_DATE__DATE,
         Fn_DATE_ADD_SECOND__INT32_TIME__TIME,
         Fn_DATE_ADD_SECOND__INT64_TIME__TIME,
         Fn_DATE_ADD_SECOND__INT_TIME__TIME,
@@ -922,21 +872,15 @@ internal object SqlBuiltins {
         Fn_DATE_ADD_SECOND__INT64_TIMESTAMP__TIMESTAMP,
         Fn_DATE_ADD_SECOND__INT_TIMESTAMP__TIMESTAMP,
         Fn_DATE_DIFF_YEAR__DATE_DATE__INT64,
-        Fn_DATE_DIFF_YEAR__TIME_TIME__INT64,
         Fn_DATE_DIFF_YEAR__TIMESTAMP_TIMESTAMP__INT64,
         Fn_DATE_DIFF_MONTH__DATE_DATE__INT64,
-        Fn_DATE_DIFF_MONTH__TIME_TIME__INT64,
         Fn_DATE_DIFF_MONTH__TIMESTAMP_TIMESTAMP__INT64,
         Fn_DATE_DIFF_DAY__DATE_DATE__INT64,
-        Fn_DATE_DIFF_DAY__TIME_TIME__INT64,
         Fn_DATE_DIFF_DAY__TIMESTAMP_TIMESTAMP__INT64,
-        Fn_DATE_DIFF_HOUR__DATE_DATE__INT64,
         Fn_DATE_DIFF_HOUR__TIME_TIME__INT64,
         Fn_DATE_DIFF_HOUR__TIMESTAMP_TIMESTAMP__INT64,
-        Fn_DATE_DIFF_MINUTE__DATE_DATE__INT64,
         Fn_DATE_DIFF_MINUTE__TIME_TIME__INT64,
         Fn_DATE_DIFF_MINUTE__TIMESTAMP_TIMESTAMP__INT64,
-        Fn_DATE_DIFF_SECOND__DATE_DATE__INT64,
         Fn_DATE_DIFF_SECOND__TIME_TIME__INT64,
         Fn_DATE_DIFF_SECOND__TIMESTAMP_TIMESTAMP__INT64,
         Fn_CURRENT_USER____STRING,
