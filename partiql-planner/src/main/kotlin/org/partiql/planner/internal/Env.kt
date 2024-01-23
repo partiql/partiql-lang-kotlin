@@ -4,9 +4,15 @@ import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.internal.ir.Agg
 import org.partiql.planner.internal.ir.Catalog
 import org.partiql.planner.internal.ir.Fn
-import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
+import org.partiql.planner.internal.ir.catalogSymbolRef
+import org.partiql.planner.internal.ir.rex
+import org.partiql.planner.internal.ir.rexOpGlobal
+import org.partiql.planner.internal.ir.rexOpLit
+import org.partiql.planner.internal.ir.rexOpPathKey
+import org.partiql.planner.internal.ir.rexOpPathSymbol
 import org.partiql.planner.internal.typer.FnResolver
+import org.partiql.planner.internal.typer.TypeEnv
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
@@ -15,8 +21,9 @@ import org.partiql.spi.connector.ConnectorObjectHandle
 import org.partiql.spi.connector.ConnectorObjectPath
 import org.partiql.spi.connector.ConnectorSession
 import org.partiql.types.StaticType
-import org.partiql.types.StructType
-import org.partiql.types.TupleConstraint
+import org.partiql.types.function.FunctionSignature
+import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.stringValue
 
 /**
  * Handle for associating a catalog name with catalog related metadata objects.
@@ -24,84 +31,19 @@ import org.partiql.types.TupleConstraint
 internal typealias Handle<T> = Pair<String, T>
 
 /**
- * TypeEnv represents the environment in which we type expressions and resolve variables while planning.
+ * Metadata for a resolved global variable
  *
- * TODO TypeEnv should be a stack of locals; also the strategy has been kept here because it's easier to
- *  pass through the traversal like this, but is conceptually odd to associate with the TypeEnv.
- * @property schema
- * @property strategy
- */
-internal class TypeEnv(
-    val schema: List<Rel.Binding>,
-    val strategy: ResolutionStrategy,
-) {
-
-    /**
-     * Return a copy with GLOBAL lookup strategy
-     */
-    fun global() = TypeEnv(schema, ResolutionStrategy.GLOBAL)
-
-    /**
-     * Return a copy with LOCAL lookup strategy
-     */
-    fun local() = TypeEnv(schema, ResolutionStrategy.LOCAL)
-
-    /**
-     * Debug string
-     */
-    override fun toString() = buildString {
-        append("(")
-        append("strategy=$strategy")
-        append(", ")
-        val bindings = "< " + schema.joinToString { "${it.name}: ${it.type}" } + " >"
-        append("bindings=$bindings")
-        append(")")
-    }
-}
-
-/**
- * Metadata regarding a resolved variable.
+ * @property type       Resolved StaticType
+ * @property ordinal    The relevant catalog's index offset in the [Env.catalogs] list
  * @property depth      The depth/level of the path match.
+ * @property position   The relevant value's index offset in the [Catalog.values] list
  */
-internal sealed interface ResolvedVar {
-
-    public val type: StaticType
-    public val ordinal: Int
-    public val depth: Int
-
-    /**
-     * Metadata for a resolved local variable.
-     *
-     * @property type              Resolved StaticType
-     * @property ordinal           Index offset in [TypeEnv]
-     * @property resolvedSteps     The fully resolved path steps.s
-     */
-    class Local(
-        override val type: StaticType,
-        override val ordinal: Int,
-        val rootType: StaticType,
-        val resolvedSteps: List<BindingName>,
-    ) : ResolvedVar {
-        // the depth are always going to be 1 because this is local variable.
-        // the global path, however the path length maybe, going to be replaced by a binding name.
-        override val depth: Int = 1
-    }
-
-    /**
-     * Metadata for a resolved global variable
-     *
-     * @property type       Resolved StaticType
-     * @property ordinal    The relevant catalog's index offset in the [Env.catalogs] list
-     * @property depth      The depth/level of the path match.
-     * @property position   The relevant value's index offset in the [Catalog.values] list
-     */
-    class Global(
-        override val type: StaticType,
-        override val ordinal: Int,
-        override val depth: Int,
-        val position: Int,
-    ) : ResolvedVar
-}
+internal class ResolvedVar(
+    val type: StaticType,
+    val ordinal: Int,
+    val depth: Int,
+    val position: Int,
+)
 
 /**
  * Variable resolution strategies — https://partiql.org/assets/PartiQL-Specification.pdf#page=35
@@ -220,7 +162,7 @@ internal class Env(
                         type
                     )
                     // Return resolution metadata
-                    ResolvedVar.Global(type, catalogIndex, depth, valueIndex)
+                    ResolvedVar(type, catalogIndex, depth, valueIndex)
                 }
             }
         }
@@ -267,31 +209,13 @@ internal class Env(
         }
     }
 
-    private fun BindingPath.toCaseSensitive(): BindingPath {
-        return this.copy(steps = this.steps.map { it.copy(bindingCase = BindingCase.SENSITIVE) })
-    }
-
     /**
      * Attempt to resolve a [BindingPath] in the global + local type environments.
      */
-    fun resolve(path: BindingPath, locals: TypeEnv, scope: Rex.Op.Var.Scope): ResolvedVar? {
-        val strategy = when (scope) {
-            Rex.Op.Var.Scope.DEFAULT -> locals.strategy
-            Rex.Op.Var.Scope.LOCAL -> ResolutionStrategy.LOCAL
-        }
+    fun resolve(path: BindingPath, locals: TypeEnv, strategy: ResolutionStrategy): Rex? {
         return when (strategy) {
-            ResolutionStrategy.LOCAL -> {
-                var type: ResolvedVar? = null
-                type = type ?: resolveLocalBind(path, locals.schema)
-                type = type ?: resolveGlobalBind(path)
-                type
-            }
-            ResolutionStrategy.GLOBAL -> {
-                var type: ResolvedVar? = null
-                type = type ?: resolveGlobalBind(path)
-                type = type ?: resolveLocalBind(path, locals.schema)
-                type
-            }
+            ResolutionStrategy.LOCAL -> locals.resolve(path) ?: resolveGlobalBind(path)
+            ResolutionStrategy.GLOBAL -> resolveGlobalBind(path) ?: locals.resolve(path)
         }
     }
 
@@ -305,7 +229,7 @@ internal class Env(
      * TODO: Add global bindings
      * TODO: Replace paths with global variable references if found
      */
-    private fun resolveGlobalBind(path: BindingPath): ResolvedVar? {
+    private fun resolveGlobalBind(path: BindingPath): Rex? {
         val currentCatalog = session.currentCatalog?.let { BindingName(it, BindingCase.SENSITIVE) }
         val currentCatalogPath = BindingPath(session.currentDirectory.map { BindingName(it, BindingCase.SENSITIVE) })
         val absoluteCatalogPath = BindingPath(currentCatalogPath.steps + path.steps)
@@ -320,121 +244,12 @@ internal class Env(
                     ?: getGlobalType(currentCatalog, path, path)
                     ?: getGlobalType(currentCatalog, path, absoluteCatalogPath)
             }
-        }
-        return resolvedVar
+        } ?: return null
+        // rewrite as path expression for any remaining steps.
+        val root = rex(resolvedVar.type, rexOpGlobal(catalogSymbolRef(resolvedVar.ordinal, resolvedVar.position)))
+        val tail = path.steps.drop(resolvedVar.depth)
+        return if (tail.isEmpty()) root else root.toPath(tail)
     }
-
-    /**
-     * Check locals, else search structs.
-     */
-    internal fun resolveLocalBind(path: BindingPath, locals: List<Rel.Binding>): ResolvedVar? {
-        if (path.steps.isEmpty()) {
-            return null
-        }
-
-        // 1. Check locals for root
-        locals.forEachIndexed { ordinal, binding ->
-            val root = path.steps[0]
-            if (root.isEquivalentTo(binding.name)) {
-                return ResolvedVar.Local(binding.type, ordinal, binding.type, path.steps)
-            }
-        }
-
-        // 2. Check if this variable is referencing a struct field, carrying ordinals
-        val matches = mutableListOf<ResolvedVar.Local>()
-        for (ordinal in locals.indices) {
-            val rootType = locals[ordinal].type
-            val pathPrefix = BindingName(locals[ordinal].name, BindingCase.SENSITIVE)
-            if (rootType is StructType) {
-                val varType = inferStructLookup(rootType, path)
-                if (varType != null) {
-                    // we found this path within a struct!
-                    val match = ResolvedVar.Local(
-                        varType.resolvedType,
-                        ordinal,
-                        rootType,
-                        listOf(pathPrefix) + varType.replacementPath.steps,
-                    )
-                    matches.add(match)
-                }
-            }
-        }
-
-        // 0 -> no match
-        // 1 -> resolved
-        // N -> ambiguous
-        return when (matches.size) {
-            0 -> null
-            1 -> matches.single()
-            else -> null // TODO emit ambiguous error
-        }
-    }
-
-    /**
-     * Searches for the path within the given struct, returning null if not found.
-     *
-     * @return a [ResolvedPath] that contains the disambiguated [ResolvedPath.replacementPath] and the path's
-     * [StaticType]. Returns NULL if unable to find the [path] given the [struct].
-     */
-    private fun inferStructLookup(struct: StructType, path: BindingPath): ResolvedPath? {
-        var curr: StaticType = struct
-        val replacementSteps = path.steps.map { step ->
-            // Assume ORDERED for now
-            val currentStruct = curr as? StructType ?: return null
-            val (replacement, stepType) = inferStructLookup(currentStruct, step) ?: return null
-            curr = stepType
-            replacement
-        }
-        // Lookup final field
-        return ResolvedPath(
-            BindingPath(replacementSteps),
-            curr
-        )
-    }
-
-    /**
-     * Represents a disambiguated [BindingPath] and its inferred [StaticType].
-     */
-    private class ResolvedPath(
-        val replacementPath: BindingPath,
-        val resolvedType: StaticType,
-    )
-
-    /**
-     * @return a disambiguated [key] and the resulting [StaticType].
-     */
-    private fun inferStructLookup(struct: StructType, key: BindingName): Pair<BindingName, StaticType>? {
-        val isClosed = struct.constraints.contains(TupleConstraint.Open(false))
-        val isOrdered = struct.constraints.contains(TupleConstraint.Ordered)
-        return when {
-            // 1. Struct is closed and ordered
-            isClosed && isOrdered -> {
-                struct.fields.firstOrNull { entry -> key.isEquivalentTo(entry.key) }?.let {
-                    (sensitive(it.key) to it.value)
-                }
-            }
-            // 2. Struct is closed
-            isClosed -> {
-                val matches = struct.fields.filter { entry -> key.isEquivalentTo(entry.key) }
-                when (matches.size) {
-                    0 -> null
-                    1 -> matches.first().let { (sensitive(it.key) to it.value) }
-                    else -> {
-                        val firstKey = matches.first().key
-                        val sharedKey = when (matches.all { it.key == firstKey }) {
-                            true -> sensitive(firstKey)
-                            false -> key
-                        }
-                        sharedKey to StaticType.unionOf(matches.map { it.value }.toSet()).flatten()
-                    }
-                }
-            }
-            // 3. Struct is open
-            else -> key to StaticType.ANY
-        }
-    }
-
-    private fun sensitive(str: String): BindingName = BindingName(str, BindingCase.SENSITIVE)
 
     /**
      * Logic for determining how many BindingNames were “matched” by the ConnectorMetadata
@@ -449,5 +264,14 @@ internal class Env(
         outputCatalogPath: ConnectorObjectPath,
     ): Int {
         return originalPath.steps.size + outputCatalogPath.steps.size - inputCatalogPath.steps.size
+    }
+
+    @OptIn(PartiQLValueExperimental::class)
+    private fun Rex.toPath(steps: List<BindingName>): Rex = steps.fold(this) { curr, step ->
+        val op = when (step.bindingCase) {
+            BindingCase.SENSITIVE -> rexOpPathKey(curr, rex(StaticType.STRING, rexOpLit(stringValue(step.name))))
+            BindingCase.INSENSITIVE -> rexOpPathSymbol(curr, step.name)
+        }
+        rex(StaticType.ANY, op)
     }
 }
