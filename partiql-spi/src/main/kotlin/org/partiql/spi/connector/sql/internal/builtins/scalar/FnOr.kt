@@ -7,10 +7,13 @@ import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnScalar
 import org.partiql.spi.fn.FnSignature
+import org.partiql.value.BoolValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType.BOOL
 import org.partiql.value.PartiQLValueType.MISSING
+import org.partiql.value.boolValue
+import org.partiql.value.check
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_OR__BOOL_BOOL__BOOL : FnScalar {
@@ -27,7 +30,14 @@ internal object Fn_OR__BOOL_BOOL__BOOL : FnScalar {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function or not implemented")
+        val lhs = args[0].check<BoolValue>().value
+        val rhs = args[1].check<BoolValue>().value
+        val toReturn = when {
+            lhs == true || rhs == true -> true
+            lhs == null || rhs == null -> null
+            else -> false
+        }
+        return boolValue(toReturn)
     }
 }
 
@@ -46,7 +56,11 @@ internal object Fn_OR__MISSING_BOOL__BOOL : FnScalar {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function or not implemented")
+        val rhs = args[1].check<BoolValue>().value
+        return when (rhs) {
+            true -> boolValue(true)
+            else -> boolValue(null)
+        }
     }
 }
 
@@ -65,7 +79,11 @@ internal object Fn_OR__BOOL_MISSING__BOOL : FnScalar {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function or not implemented")
+        val lhs = args[0].check<BoolValue>().value
+        return when (lhs) {
+            true -> boolValue(true)
+            else -> boolValue(null)
+        }
     }
 }
 
@@ -84,6 +102,6 @@ internal object Fn_OR__MISSING_MISSING__BOOL : FnScalar {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function or not implemented")
+        return boolValue(null)
     }
 }

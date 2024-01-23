@@ -9,6 +9,8 @@ import org.partiql.spi.fn.FnSignature
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType.TIMESTAMP
+import org.partiql.value.datetime.TimestampWithTimeZone
+import org.partiql.value.timestampValue
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_UTCNOW____TIMESTAMP : FnScalar {
@@ -22,6 +24,7 @@ internal object Fn_UTCNOW____TIMESTAMP : FnScalar {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function utcnow not implemented")
+        val now = TimestampWithTimeZone.nowZ()
+        return timestampValue(now)
     }
 }

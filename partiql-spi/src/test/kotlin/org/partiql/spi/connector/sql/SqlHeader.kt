@@ -622,9 +622,15 @@ internal object SqlHeader {
         val operators = mutableListOf<FnSignature.Scalar>()
         for (field in DatetimeField.values()) {
             for (type in datetime) {
-                if (field == DatetimeField.TIMEZONE_HOUR || field == DatetimeField.TIMEZONE_MINUTE) {
-                    continue
+                when (field) {
+                    DatetimeField.YEAR, DatetimeField.MONTH, DatetimeField.DAY ->
+                        if (type == TIME) continue
+                    DatetimeField.HOUR, DatetimeField.MINUTE, DatetimeField.SECOND ->
+                        if (type == DATE) continue
+                    DatetimeField.TIMEZONE_HOUR -> continue
+                    DatetimeField.TIMEZONE_MINUTE -> continue
                 }
+
                 for (interval in intervals) {
                     val signature = FnSignature.Scalar(
                         name = "date_add_${field.name.lowercase()}",
@@ -647,8 +653,13 @@ internal object SqlHeader {
         val operators = mutableListOf<FnSignature.Scalar>()
         for (field in DatetimeField.values()) {
             for (type in datetime) {
-                if (field == DatetimeField.TIMEZONE_HOUR || field == DatetimeField.TIMEZONE_MINUTE) {
-                    continue
+                when (field) {
+                    DatetimeField.YEAR, DatetimeField.MONTH, DatetimeField.DAY ->
+                        if (type == TIME) continue
+                    DatetimeField.HOUR, DatetimeField.MINUTE, DatetimeField.SECOND ->
+                        if (type == DATE) continue
+                    DatetimeField.TIMEZONE_HOUR -> continue
+                    DatetimeField.TIMEZONE_MINUTE -> continue
                 }
                 val signature = FnSignature.Scalar(
                     name = "date_diff_${field.name.lowercase()}",

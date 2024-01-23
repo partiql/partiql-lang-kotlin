@@ -11,6 +11,8 @@ import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType.ANY
 import org.partiql.value.PartiQLValueType.BOOL
+import org.partiql.value.SexpValue
+import org.partiql.value.boolValue
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_IS_SEXP__ANY__BOOL : FnScalar {
@@ -24,6 +26,6 @@ internal object Fn_IS_SEXP__ANY__BOOL : FnScalar {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function is_sexp not implemented")
+        return boolValue(args[0] is SexpValue<*>)
     }
 }

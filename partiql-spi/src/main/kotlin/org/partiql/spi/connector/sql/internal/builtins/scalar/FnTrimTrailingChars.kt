@@ -3,15 +3,23 @@
 
 package org.partiql.spi.connector.sql.internal.builtins.scalar
 
+import org.partiql.spi.connector.sql.internal.codepointTrimTrailing
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnScalar
 import org.partiql.spi.fn.FnSignature
+import org.partiql.value.ClobValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType.CLOB
 import org.partiql.value.PartiQLValueType.STRING
 import org.partiql.value.PartiQLValueType.SYMBOL
+import org.partiql.value.StringValue
+import org.partiql.value.SymbolValue
+import org.partiql.value.check
+import org.partiql.value.clobValue
+import org.partiql.value.stringValue
+import org.partiql.value.symbolValue
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_TRIM_TRAILING_CHARS__STRING_STRING__STRING : FnScalar {
@@ -28,7 +36,10 @@ internal object Fn_TRIM_TRAILING_CHARS__STRING_STRING__STRING : FnScalar {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function trim_trailing_chars not implemented")
+        val value = args[0].check<StringValue>().string!!
+        val chars = args[1].check<StringValue>().string!!
+        val result = value.codepointTrimTrailing(chars)
+        return stringValue(result)
     }
 }
 
@@ -47,7 +58,10 @@ internal object Fn_TRIM_TRAILING_CHARS__SYMBOL_SYMBOL__SYMBOL : FnScalar {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function trim_trailing_chars not implemented")
+        val value = args[0].check<SymbolValue>().string!!
+        val chars = args[1].check<SymbolValue>().string!!
+        val result = value.codepointTrimTrailing(chars)
+        return symbolValue(result)
     }
 }
 
@@ -66,6 +80,9 @@ internal object Fn_TRIM_TRAILING_CHARS__CLOB_CLOB__CLOB : FnScalar {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function trim_trailing_chars not implemented")
+        val value = args[0].check<ClobValue>().string!!
+        val chars = args[1].check<ClobValue>().string!!
+        val result = value.codepointTrimTrailing(chars)
+        return clobValue(result.toByteArray())
     }
 }

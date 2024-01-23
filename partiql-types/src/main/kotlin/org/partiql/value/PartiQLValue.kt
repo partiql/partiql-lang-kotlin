@@ -15,6 +15,7 @@
 package org.partiql.value
 
 import com.amazon.ionelement.api.IonElement
+import org.partiql.errors.TypeCheckException
 import org.partiql.value.datetime.Date
 import org.partiql.value.datetime.Time
 import org.partiql.value.datetime.Timestamp
@@ -514,7 +515,14 @@ public abstract class StructValue<T : PartiQLValue> : PartiQLValue {
 
     override fun hashCode(): Int {
         // TODO
-        return super.hashCode()
+        return entries.hashCode()
+    }
+
+    override fun toString(): String {
+        if (isNull) {
+            return "null"
+        }
+        return super.toString()
     }
 }
 
@@ -548,3 +556,9 @@ public abstract class MissingValue : PartiQLValue {
 
 @PartiQLValueExperimental
 public fun PartiQLValue.toIon(): IonElement = accept(ToIon, Unit)
+
+@PartiQLValueExperimental
+@Throws(TypeCheckException::class)
+public inline fun <reified T : PartiQLValue> PartiQLValue.check(): T {
+    if (this is T) return this else throw TypeCheckException()
+}

@@ -12,6 +12,9 @@ import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType.CLOB
 import org.partiql.value.PartiQLValueType.STRING
 import org.partiql.value.PartiQLValueType.SYMBOL
+import org.partiql.value.StringValue
+import org.partiql.value.check
+import org.partiql.value.stringValue
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_LOWER__STRING__STRING : FnScalar {
@@ -25,7 +28,9 @@ internal object Fn_LOWER__STRING__STRING : FnScalar {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function lower not implemented")
+        val string = args[0].check<StringValue>().string!!
+        val result = string.lowercase()
+        return stringValue(result)
     }
 }
 
@@ -41,7 +46,9 @@ internal object Fn_LOWER__SYMBOL__SYMBOL : FnScalar {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function lower not implemented")
+        val string = args[0].check<StringValue>().string!!
+        val result = string.lowercase()
+        return stringValue(result)
     }
 }
 
@@ -57,6 +64,8 @@ internal object Fn_LOWER__CLOB__CLOB : FnScalar {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function lower not implemented")
+        val string = args[0].check<StringValue>().string!!
+        val result = string.lowercase()
+        return stringValue(result)
     }
 }

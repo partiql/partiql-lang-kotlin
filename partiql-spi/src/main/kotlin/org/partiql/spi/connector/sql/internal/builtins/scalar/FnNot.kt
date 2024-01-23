@@ -3,14 +3,18 @@
 
 package org.partiql.spi.connector.sql.internal.builtins.scalar
 
+import org.partiql.errors.TypeCheckException
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnScalar
 import org.partiql.spi.fn.FnSignature
+import org.partiql.value.BoolValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType.BOOL
 import org.partiql.value.PartiQLValueType.MISSING
+import org.partiql.value.boolValue
+import org.partiql.value.check
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_NOT__BOOL__BOOL : FnScalar {
@@ -24,7 +28,8 @@ internal object Fn_NOT__BOOL__BOOL : FnScalar {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function not not implemented")
+        val value = args[0].check<BoolValue>().value!!
+        return boolValue(value.not())
     }
 }
 
@@ -39,7 +44,8 @@ internal object Fn_NOT__MISSING__BOOL : FnScalar {
         isNullable = false,
     )
 
+    // TODO: determine what this behavior should be
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function not not implemented")
+        throw TypeCheckException()
     }
 }

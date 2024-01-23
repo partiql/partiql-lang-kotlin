@@ -12,6 +12,8 @@ import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType.ANY
 import org.partiql.value.PartiQLValueType.BOOL
 import org.partiql.value.PartiQLValueType.INT32
+import org.partiql.value.TimeValue
+import org.partiql.value.boolValue
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_IS_TIME__ANY__BOOL : FnScalar {
@@ -25,7 +27,7 @@ internal object Fn_IS_TIME__ANY__BOOL : FnScalar {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function is_time not implemented")
+        return boolValue(args[0] is TimeValue)
     }
 }
 
