@@ -1,6 +1,7 @@
 package org.partiql.spi.connector.sql
 
 import net.pearx.kasechange.toPascalCase
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnSignature
@@ -74,22 +75,24 @@ internal object %s : FnAggregation {
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 class HeaderCodeGen {
-
     @Test
+    @Disabled
     fun scalars() {
-        generate("package org.partiql.spi.connector.sql.internal.builtins.scalar", TEMPLATE_SCALAR, "Fn", SqlHeader.functions)
-        generate("package org.partiql.spi.connector.sql.internal.builtins.scalar", TEMPLATE_SCALAR, "Fn", SqlHeader.operators())
+        generate("scalar", "package org.partiql.spi.connector.sql.internal.builtins.scalar", TEMPLATE_SCALAR, "Fn", SqlHeader.functions)
+        generate("scalar", "package org.partiql.spi.connector.sql.internal.builtins.scalar", TEMPLATE_SCALAR, "Fn", SqlHeader.operators())
     }
 
     @Test
+    @Disabled
     fun aggregations() {
-        generate("package org.partiql.spi.connector.sql.internal.builtins.agg", TEMPLATE_AGG, "Agg", SqlHeader.aggregations)
+        generate("agg", "package org.partiql.spi.connector.sql.internal.builtins.agg", TEMPLATE_AGG, "Agg", SqlHeader.aggregations)
     }
 
     /**
      * Writes function implementation to file, prints list of classes
      */
     private fun generate(
+        destination: String,
         packageName: String,
         template: String,
         prefix: String,
@@ -97,7 +100,7 @@ class HeaderCodeGen {
     ) {
         val clazzes = mutableListOf<String>()
         val funcs = signatures.groupBy { it.name }
-        val pathToDir = "./src/main/kotlin/org/partiql/spi/connector/sql/internal/builtins/agg"
+        val pathToDir = "./src/main/kotlin/org/partiql/spi/connector/sql/internal/builtins/$destination"
         for ((name, fns) in funcs) {
             val pre = "${prefix}_$name".toPascalCase()
             val file = File("$pathToDir/$pre.kt")
