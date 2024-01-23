@@ -2,10 +2,12 @@ package org.partiql.eval.internal.operator.rel
 
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
-import org.partiql.eval.internal.util.PartiQLValueComparator
 import org.partiql.plan.Rel
+import org.partiql.value.NullOrder
+import org.partiql.value.PartiQLValueComparator
 import org.partiql.value.PartiQLValueExperimental
 
+@OptIn(PartiQLValueExperimental::class)
 internal class RelSort(
     val input: Operator.Relation,
     val specs: List<Pair<Operator.Expr, Rel.Op.Sort.Order>>
@@ -14,8 +16,8 @@ internal class RelSort(
     private var records: MutableList<Record> = mutableListOf()
     private var init: Boolean = false
 
-    private val nullsFirstComparator = PartiQLValueComparator(nullOrder = PartiQLValueComparator.NullOrder.FIRST)
-    private val nullsLastComparator = PartiQLValueComparator(nullOrder = PartiQLValueComparator.NullOrder.LAST)
+    private val nullsFirstComparator = PartiQLValueComparator.comparator(NullOrder.FIRST)
+    private val nullsLastComparator = PartiQLValueComparator.comparator(NullOrder.LAST)
 
     override fun open() {
         input.open()
@@ -23,8 +25,7 @@ internal class RelSort(
         records = mutableListOf()
     }
 
-    @OptIn(PartiQLValueExperimental::class)
-    val comparator = object : Comparator<Record> {
+    private val comparator = object : Comparator<Record> {
         override fun compare(l: Record, r: Record): Int {
             specs.forEach { spec ->
                 val lVal = spec.first.eval(l)

@@ -1,36 +1,11 @@
-package org.partiql.eval.internal.util
+package org.partiql.value
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import org.partiql.value.BagValue
-import org.partiql.value.ListValue
-import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.StructValue
-import org.partiql.value.bagValue
-import org.partiql.value.blobValue
-import org.partiql.value.boolValue
-import org.partiql.value.clobValue
-import org.partiql.value.dateValue
 import org.partiql.value.datetime.DateTimeValue.date
 import org.partiql.value.datetime.DateTimeValue.time
 import org.partiql.value.datetime.DateTimeValue.timestamp
 import org.partiql.value.datetime.TimeZone
-import org.partiql.value.decimalValue
-import org.partiql.value.float32Value
-import org.partiql.value.float64Value
-import org.partiql.value.int32Value
-import org.partiql.value.int64Value
-import org.partiql.value.listValue
-import org.partiql.value.missingValue
-import org.partiql.value.nullValue
-import org.partiql.value.sexpValue
-import org.partiql.value.stringValue
-import org.partiql.value.structValue
-import org.partiql.value.symbolValue
-import org.partiql.value.timeValue
-import org.partiql.value.timestampValue
-import org.partiql.value.toIon
 import java.math.BigDecimal
 import java.util.Base64
 import java.util.Random
@@ -39,8 +14,8 @@ import java.util.Random
 class PartiQLValueComparatorTest {
     class EquivValues(vararg val values: PartiQLValue)
 
-    private val nullsFirstComparator = PartiQLValueComparator(nullOrder = PartiQLValueComparator.NullOrder.FIRST)
-    private val nullsLastComparator = PartiQLValueComparator(nullOrder = PartiQLValueComparator.NullOrder.LAST)
+    private val nullsFirstComparator = PartiQLValueComparator.comparator(nullOrder = NullOrder.FIRST)
+    private val nullsLastComparator = PartiQLValueComparator.comparator(nullOrder = NullOrder.LAST)
 
     // TODO consider replacing linear congruential generator with something else (e.g. xorshift)
     // RNG for fuzz testing the sort orders, the seed is arbitrary but static for determinism
@@ -53,7 +28,7 @@ class PartiQLValueComparatorTest {
     private fun base64Decode(s: String): ByteArray = Base64.getDecoder().decode(s)
 
     // Checks that [allValues], when shuffled and sorted using [comparator], follow same ordering as [allValues]
-    private fun checkAllEquivalent(allValues: List<PartiQLValue>, comparator: PartiQLValueComparator) {
+    private fun checkAllEquivalent(allValues: List<PartiQLValue>, comparator: Comparator<PartiQLValue>) {
         val shuffledValues = allValues.shuffled(Random(SEED))
         val sortedAfterShuffle = shuffledValues.sortedWith(comparator)
         assertEquals(allValues.size, sortedAfterShuffle.size)

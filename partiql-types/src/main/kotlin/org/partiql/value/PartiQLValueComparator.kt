@@ -1,22 +1,10 @@
-package org.partiql.eval.internal.util
+package org.partiql.value
 
-import org.partiql.value.BagValue
-import org.partiql.value.BlobValue
-import org.partiql.value.BoolValue
-import org.partiql.value.ClobValue
-import org.partiql.value.DateValue
-import org.partiql.value.ListValue
-import org.partiql.value.MissingValue
-import org.partiql.value.NullValue
-import org.partiql.value.NumericValue
-import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.ScalarValue
-import org.partiql.value.SexpValue
-import org.partiql.value.StructValue
-import org.partiql.value.TextValue
-import org.partiql.value.TimeValue
-import org.partiql.value.TimestampValue
+import org.partiql.value.util.compareTo
+import org.partiql.value.util.isNaN
+import org.partiql.value.util.isNegInf
+import org.partiql.value.util.isPosInf
+import org.partiql.value.util.isZero
 
 /**
  * Provides a total, natural ordering over [PartiQLValue] as defined by section 12.2 of the PartiQL specification
@@ -48,17 +36,25 @@ import org.partiql.value.TimestampValue
  *    (as defined by this definition) members, as pairs of field name and the member value.
  *  * [BagValue] values come finally (except with [NullOrder.LAST]), and their values
  *    compare lexicographically based on the *sorted* child elements.
- *
- *  @param nullOrder that places [NullValue], [MissingValue], and typed Ion null values first or last
  */
 @OptIn(PartiQLValueExperimental::class)
-internal class PartiQLValueComparator(private val nullOrder: NullOrder) : Comparator<PartiQLValue> {
-    /** Whether null values come first or last. */
-    enum class NullOrder {
-        FIRST,
-        LAST
+public class PartiQLValueComparator {
+    public companion object {
+        /**
+         * @param nullOrder that places [NullValue], [MissingValue], and typed Ion null values first or last
+         */
+        public fun comparator(nullOrder: NullOrder): Comparator<PartiQLValue> = PartiQLValueComparatorInternal(nullOrder)
     }
+}
 
+/** Whether null values come first or last. */
+public enum class NullOrder {
+    FIRST,
+    LAST
+}
+
+@OptIn(PartiQLValueExperimental::class)
+internal class PartiQLValueComparatorInternal(private val nullOrder: NullOrder) : Comparator<PartiQLValue> {
     private val EQUAL = 0
     private val LESS = -1
     private val GREATER = 1
