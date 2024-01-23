@@ -24,6 +24,7 @@ public interface PartiQLEngine {
 
     public fun prepare(plan: PartiQLPlan, session: Session): PartiQLStatement<*>
 
+    // TODO: Pass session variable during statement execution once we finalize data structure for session.
     public fun execute(statement: PartiQLStatement<*>): PartiQLResult
 
     companion object {

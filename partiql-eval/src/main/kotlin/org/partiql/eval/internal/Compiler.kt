@@ -131,7 +131,7 @@ internal class Compiler(
         return ExprPathIndex(root, index)
     }
 
-    @OptIn(PartiQLFunctionExperimental::class, PartiQLValueExperimental::class)
+    @OptIn(PartiQLFunctionExperimental::class)
     override fun visitRexOpCallStatic(node: Rex.Op.Call.Static, ctx: Unit): Operator {
         val fn = node.fn.signature
         val args = node.args.map { visitRex(it, ctx) }
@@ -151,15 +151,10 @@ internal class Compiler(
     }
 
     override fun visitRexOpCallDynamic(node: Rex.Op.Call.Dynamic, ctx: Unit): Operator {
-        val fn = node.candidates
-        fn.forEach {
-            println(it.fn.signature)
-        }
         error("call dynamic not yet implemented")
     }
 
     // REL
-
     override fun visitRel(node: Rel, ctx: Unit): Operator.Relation {
         return super.visitRelOp(node.op, ctx) as Operator.Relation
     }

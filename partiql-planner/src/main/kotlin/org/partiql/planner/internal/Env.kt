@@ -361,6 +361,9 @@ internal class Env(
                 }
             }
             // TODO: Verify if this is the correct behavior
+            // This is to temporarily unblock the path access on any type.
+            // Consider tbl : <<{'a' : 1, 'b': 2}>>,
+            // We now infer the tbl having PartiQLValueType of Bag, which is then converted to StaticType BAG(ANY).
             if (rootType is AnyType) {
                 val match = ResolvedVar.Local(StaticType.ANY, ordinal, rootType, listOf(pathPrefix) + path.steps)
                 matches.add(match)

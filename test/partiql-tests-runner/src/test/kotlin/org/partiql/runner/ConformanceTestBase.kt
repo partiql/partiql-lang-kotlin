@@ -11,6 +11,10 @@ abstract class ConformanceTestBase<T, V> {
     abstract val runner: TestRunner<T, V>
 
     // Tests the eval tests with the Kotlin implementation
+    // Unit is second.
+    // This is not a performance test. This is for stop long-running tests during development process in eval engine.
+    // This number can be smaller, but to account for the cold start time and fluctuation of GitHub runner,
+    // I decided to make this number a bit larger than needed.
     @Timeout(value = 100, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
     @ParameterizedTest(name = "{arguments}")
     @ArgumentsSource(TestProvider.Eval::class)
