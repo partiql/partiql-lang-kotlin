@@ -1,4 +1,4 @@
-package org.partiql.planner.internal.typer
+package org.partiql.planner.internal
 
 import org.partiql.spi.connector.ConnectorHandle
 

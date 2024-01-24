@@ -33,6 +33,7 @@ import org.partiql.types.BagType
 import org.partiql.types.ListType
 import org.partiql.types.SexpType
 import org.partiql.types.StaticType
+import org.partiql.types.StaticType.Companion.unionOf
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
 import java.util.stream.Stream
@@ -445,6 +446,46 @@ class PlanTyperTestsPorted {
                 name = "ERROR always MISSING",
                 key = key("is-type-08"),
                 catalog = "pql",
+            ),
+        )
+
+        @JvmStatic
+        fun castCases() = listOf(
+            SuccessTestCase(
+                name = "DECIMAL AS INT2",
+                key = key("cast-00"),
+                catalog = "pql",
+                expected = StaticType.INT2,
+            ),
+            SuccessTestCase(
+                name = "DECIMAL AS INT4",
+                key = key("cast-01"),
+                catalog = "pql",
+                expected = StaticType.INT4,
+            ),
+            SuccessTestCase(
+                name = "DECIMAL AS INT8",
+                key = key("cast-02"),
+                catalog = "pql",
+                expected = StaticType.INT8,
+            ),
+            SuccessTestCase(
+                name = "DECIMAL AS INT",
+                key = key("cast-03"),
+                catalog = "pql",
+                expected = StaticType.INT,
+            ),
+            SuccessTestCase(
+                name = "DECIMAL AS BIGINT",
+                key = key("cast-04"),
+                catalog = "pql",
+                expected = StaticType.INT8,
+            ),
+            SuccessTestCase(
+                name = "DECIMAL_ARBITRARY AS DECIMAL",
+                key = key("cast-05"),
+                catalog = "pql",
+                expected = StaticType.DECIMAL,
             ),
         )
 
@@ -3039,6 +3080,11 @@ class PlanTyperTestsPorted {
     @MethodSource("isTypeCases")
     @Execution(ExecutionMode.CONCURRENT)
     fun testIsType(tc: TestCase) = runTest(tc)
+
+    @ParameterizedTest
+    @MethodSource("castCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun testCasts(tc: TestCase) = runTest(tc)
 
     // --------- Finish Parameterized Tests ------
 

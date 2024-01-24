@@ -19,13 +19,13 @@ import org.partiql.value.stringValue
 /**
  * TypeEnv represents a variables type environment.
  */
-internal class TypeEnv(private val schema: List<Rel.Binding>) {
+internal class TypeEnv(public val schema: List<Rel.Binding>) {
 
     /**
-     * We resolve a local with the following rules.
+     * We resolve a local with the following rules. See, PartiQL Specification p.35.
      *
-     *  1) Check if the path root unambiguously matches a local variable name, set as root.
-     *  2) Else, check if path root unambiguously matches a struct field in a local value struct.
+     *  1) Check if the path root unambiguously matches a local binding name, set as root.
+     *  2) Check if the path root unambiguously matches a local binding struct value field.
      *
      * Convert any remaining binding names (tail) to a path expression.
      *
@@ -44,12 +44,19 @@ internal class TypeEnv(private val schema: List<Rel.Binding>) {
         return if (tail.isEmpty()) r else r.toPath(tail)
     }
 
+    /**
+     * Debugging string, ex: < x: int, y: string >
+     *
+     * @return
+     */
     override fun toString(): String = "< " + schema.joinToString { "${it.name}: ${it.type}" } + " >"
 
-    // --------------------------
-    //  HELPERS
-    // --------------------------
-
+    /**
+     * Check if `name` unambiguously matches a local binding name and return its reference; otherwise return null.
+     *
+     * @param name
+     * @return
+     */
     private fun matchRoot(name: BindingName): Rex? {
         var r: Rex? = null
         for (i in schema.indices) {
@@ -66,6 +73,12 @@ internal class TypeEnv(private val schema: List<Rel.Binding>) {
         return r
     }
 
+    /**
+     * Check if `name` unambiguously matches a field within a struct and return its reference; otherwise return null.
+     *
+     * @param name
+     * @return
+     */
     private fun matchStruct(name: BindingName): Rex? {
         var c: Rex? = null
         var known = false
@@ -101,6 +114,15 @@ internal class TypeEnv(private val schema: List<Rel.Binding>) {
         return c
     }
 
+    /**
+     * Converts a list of [BindingName] to a path expression.
+     *
+     *  1) Case SENSITIVE identifiers become string literal key lookups.
+     *  2) Case INSENSITIVE identifiers become symbol lookups.
+     *
+     * @param steps
+     * @return
+     */
     @OptIn(PartiQLValueExperimental::class)
     private fun Rex.toPath(steps: List<BindingName>): Rex = steps.fold(this) { curr, step ->
         val op = when (step.case) {
@@ -111,7 +133,7 @@ internal class TypeEnv(private val schema: List<Rel.Binding>) {
     }
 
     /**
-     * Searches for the [BindingName] withing the given [StructType].
+     * Searches for the [BindingName] within the given [StructType].
      *
      * Returns
      *  - true  iff known to contain key

@@ -64,7 +64,6 @@ import org.partiql.planner.internal.ir.rexOpSelect
 import org.partiql.planner.internal.ir.rexOpStruct
 import org.partiql.planner.internal.ir.rexOpStructField
 import org.partiql.planner.internal.ir.rexOpTupleUnion
-import org.partiql.planner.internal.ir.rexOpVarResolved
 import org.partiql.planner.internal.ir.statementQuery
 import org.partiql.planner.internal.ir.util.PlanRewriter
 import org.partiql.spi.BindingCase
@@ -118,7 +117,9 @@ internal class PlanTyper(
         if (statement !is Statement.Query) {
             throw IllegalArgumentException("PartiQLPlanner only supports Query statements")
         }
-        val root = statement.root.type(emptyList(), ResolutionStrategy.GLOBAL)
+        // root TypeEnv has no bindings
+        val typeEnv = TypeEnv(schema = emptyList())
+        val root = statement.root.type(typeEnv, ResolutionStrategy.GLOBAL)
         return statementQuery(root)
     }
 
@@ -209,8 +210,8 @@ internal class PlanTyper(
             // compute input schema
             val input = visitRel(node.input, ctx)
             // type sub-nodes
-            val locals = input.type.schema
-            val predicate = node.predicate.type(locals)
+            val typeEnv = TypeEnv(input.type.schema)
+            val predicate = node.predicate.type(typeEnv)
             // compute output schema
             val type = input.type
             // rewrite
@@ -222,10 +223,10 @@ internal class PlanTyper(
             // compute input schema
             val input = visitRel(node.input, ctx)
             // type sub-nodes
-            val locals = input.type.schema
+            val typeEnv = TypeEnv(input.type.schema)
             val specs = node.specs.map {
-                val rex = it.rex.type(locals)
-                it.copy(rex)
+                val rex = it.rex.type(typeEnv)
+                it.copy(rex = rex)
             }
             // output schema of a sort is the same as the input
             val type = input.type.copy(props = setOf(Rel.Prop.ORDERED))
@@ -278,7 +279,7 @@ internal class PlanTyper(
             // compute input schema
             val input = visitRel(node.input, ctx)
             // type sub-nodes
-            val locals = input.type.schema
+            val typeEnv = TypeEnv(input.type.schema)
             val projections = node.projections.map {
                 it.type(locals)
             }
@@ -308,7 +309,7 @@ internal class PlanTyper(
             val locals = type.schema
 
             // Type the condition on the output schema
-            val condition = node.rex.type(locals)
+            val condition = node.rex.type(TypeEnv(type.schema))
 
             val op = relOpJoin(lhs, rhs, condition, node.type)
             return rel(type, op)
@@ -352,20 +353,22 @@ internal class PlanTyper(
             val schema = node.items.fold((init)) { bindings, item -> excludeBindings(bindings, item) }
 
             // rewrite
-            val type = ctx!!.copy(schema)
+            val type = ctx!!.copy(schema = schema)
 
             // resolve exclude path roots
             val newItems = node.items.map { item ->
                 val resolvedRoot = when (val root = item.root) {
                     is Rex.Op.Var.Unresolved -> {
                         // resolve `root` to local binding
-                        val bindingPath = root.identifier.toBindingPath()
-                        when (val resolved = env.resolveLocalBind(bindingPath, init)) {
-                            null -> {
-                                handleUnresolvedExcludeRoot(root.identifier)
-                                root
-                            }
-                            else -> rexOpVarResolved(resolved.ordinal)
+                        val locals = TypeEnv(input.type.schema)
+                        val path = root.identifier.toBindingPath()
+                        val resolved = locals.resolve(path)
+                        if (resolved == null) {
+                            handleUnresolvedExcludeRoot(root.identifier)
+                            root
+                        } else {
+                            // root of exclude is always a symbol
+                            resolved.op as Rex.Op.Var
                         }
                     }
                     is Rex.Op.Var.Resolved -> root
@@ -383,7 +386,7 @@ internal class PlanTyper(
             val input = visitRel(node.input, ctx)
 
             // type the calls and groups
-            val typer = RexTyper(input.type.schema, ResolutionStrategy.LOCAL)
+            val typer = RexTyper(TypeEnv(input.type.schema), ResolutionStrategy.LOCAL)
 
             // typing of aggregate calls is slightly more complicated because they are not expressions.
             val calls = node.calls.mapIndexed { i, call ->
@@ -870,9 +873,10 @@ internal class PlanTyper(
 
         override fun visitRexOpPivot(node: Rex.Op.Pivot, ctx: StaticType?): Rex {
             val rel = node.rel.type(locals)
-            val locals = rel.type.schema
-            val key = node.key.type(locals)
-            val value = node.value.type(locals)
+            val typeEnv = TypeEnv(rel.type.schema)
+            val typer = RexTyper(typeEnv, ResolutionStrategy.LOCAL)
+            val key = typer.visitRex(node.key, null)
+            val value = typer.visitRex(node.value, null)
             val type = StructType(
                 contentClosed = false,
                 constraints = setOf(TupleConstraint.Open(true))
@@ -929,8 +933,8 @@ internal class PlanTyper(
 
         override fun visitRexOpSelect(node: Rex.Op.Select, ctx: StaticType?): Rex {
             val rel = node.rel.type(locals)
-            val locals = rel.type.schema
-            var constructor = node.constructor.type(locals)
+            val typeEnv = TypeEnv(rel.type.schema)
+            var constructor = node.constructor.type(typeEnv)
             var constructorType = constructor.type
             // add the ordered property to the constructor
             if (constructorType is StructType) {
