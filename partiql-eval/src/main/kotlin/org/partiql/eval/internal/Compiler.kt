@@ -137,15 +137,11 @@ internal class Compiler(
         val args = node.args.map { visitRex(it, ctx) }
         val matches = session.functions
             .flatMap { it.value }
+            .filterIsInstance<PartiQLFunction.Scalar>()
             .filter { it.signature == fn }
         return when (matches.size) {
             0 -> error("no match")
-            1 -> {
-                when (val call = matches.first()) {
-                    is PartiQLFunction.Aggregation -> error("expect scalar func")
-                    is PartiQLFunction.Scalar -> ExprCall(call, args.toTypedArray())
-                }
-            }
+            1 -> ExprCall(matches.first(), args.toTypedArray())
             else -> error("multiple math")
         }
     }

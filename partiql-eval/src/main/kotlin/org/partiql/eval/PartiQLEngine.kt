@@ -37,7 +37,7 @@ public interface PartiQLEngine {
     }
 
     public class Session @OptIn(PartiQLFunctionExperimental::class) constructor(
-        var bindings: MutableMap<String, ConnectorBindings> = mutableMapOf(),
-        val functions: MutableMap<String, List<PartiQLFunction>> = mutableMapOf()
+        val bindings: Map<String, ConnectorBindings> = mapOf(),
+        val functions: Map<String, List<PartiQLFunction>> = mapOf()
     )
 }
