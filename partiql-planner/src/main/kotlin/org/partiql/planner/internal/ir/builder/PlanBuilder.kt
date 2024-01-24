@@ -16,6 +16,7 @@ import org.partiql.types.StaticType
 import org.partiql.types.function.FunctionSignature
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.PartiQLValueType
 
 internal fun <T : PlanNode> plan(block: PlanBuilder.() -> T) = PlanBuilder().block()
 
@@ -219,12 +220,14 @@ internal class PlanBuilder {
         return builder.build()
     }
 
+    @OptIn(PartiQLValueExperimental::class)
     internal fun rexOpCallDynamicCandidate(
-        fn: Fn.Resolved? = null,
-        coercions: MutableList<Fn.Resolved?> = mutableListOf(),
+        fn: Fn? = null,
+        parameters: MutableList<PartiQLValueType> = mutableListOf(),
+        coercions: MutableList<Fn?> = mutableListOf(),
         block: RexOpCallDynamicCandidateBuilder.() -> Unit = {},
     ): Rex.Op.Call.Dynamic.Candidate {
-        val builder = RexOpCallDynamicCandidateBuilder(fn, coercions)
+        val builder = RexOpCallDynamicCandidateBuilder(fn, parameters, coercions)
         builder.block()
         return builder.build()
     }

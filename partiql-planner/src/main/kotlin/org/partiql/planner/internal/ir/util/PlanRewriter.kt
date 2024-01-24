@@ -262,11 +262,13 @@ internal abstract class PlanRewriter<C> : PlanBaseVisitor<PlanNode, C>() {
         }
     }
 
-    override fun visitRexOpCallDynamicCandidate(node: Rex.Op.Call.Dynamic.Candidate, ctx: C): PlanNode {
-        val fn = visitFnResolved(node.fn, ctx) as Fn.Resolved
-        val coercions = _visitListNull(node.coercions, ctx, ::visitFnResolved)
-        return if (fn !== node.fn || coercions !== node.coercions) {
-            Rex.Op.Call.Dynamic.Candidate(fn, coercions)
+    public override fun visitRexOpCallDynamicCandidate(node: Rex.Op.Call.Dynamic.Candidate, ctx: C):
+        PlanNode {
+        val fn = visitFn(node.fn, ctx) as Fn
+        val parameters = node.parameters
+        val coercions = _visitListNull(node.coercions, ctx, ::visitFn)
+        return if (fn !== node.fn || parameters !== node.parameters || coercions !== node.coercions) {
+            Rex.Op.Call.Dynamic.Candidate(fn, parameters, coercions)
         } else {
             node
         }

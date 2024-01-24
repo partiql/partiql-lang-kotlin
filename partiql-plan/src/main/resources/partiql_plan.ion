@@ -1,6 +1,7 @@
 imports::{
   kotlin: [
     partiql_value::'org.partiql.value.PartiQLValue',
+    partiql_value_type::'org.partiql.value.PartiQLValueType',
     static_type::'org.partiql.types.StaticType',
     scalar_signature::'org.partiql.types.function.FunctionSignature$Scalar',
     aggregation_signature::'org.partiql.types.function.FunctionSignature$Aggregation',
@@ -116,8 +117,16 @@ rex::{
         args: list::[rex],
         candidates: list::[candidate],
         _: [
+          // Represents a potential candidate for dynamic dispatch. AKA `SELECT abs(a) FROM << 1, 2.0 >> AS a` can invoke
+          // ABS(INT32) -> INT32 or ABS(DEC) -> DEC. In this scenario, we maintain the two potential candidates.
+          //
+          // @param fn - represents the function to invoke (ex: ABS(INT32) -> INT32)
+          // @param parameters - represents the input type(s) to match. (ex: INT32)
+          // @param coercions - represents the optional coercion to use on the argument(s). It will be NULL if no coercion
+          //  is necessary.
           candidate::{
             fn: fn,
+            parameters: list::[partiql_value_type],
             coercions: list::[optional::fn]
           }
         ]

@@ -11,6 +11,8 @@ import org.partiql.eval.PartiQLResult
 import org.partiql.parser.PartiQLParser
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.PartiQLPlannerBuilder
+import org.partiql.plugin.PartiQLPlugin
+import org.partiql.spi.function.PartiQLFunctionExperimental
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.bagValue
@@ -213,6 +215,18 @@ class PartiQLEngineDefaultTest {
                 expected = bagValue(boolValue(true), boolValue(false))
             ),
             SuccessTestCase(
+                input = "SELECT DISTINCT VALUE t FROM <<true, false, true, false, false, false>> AS t WHERE t = TRUE;",
+                expected = bagValue(boolValue(true))
+            ),
+            SuccessTestCase(
+                input = "100 + 50;",
+                expected = int32Value(150)
+            ),
+            SuccessTestCase(
+                input = "SELECT DISTINCT VALUE t * 100 FROM <<0, 1, 2, 3>> AS t;",
+                expected = bagValue(int32Value(0), int32Value(100), int32Value(200), int32Value(300))
+            ),
+            SuccessTestCase(
                 input = """
                     PIVOT x.v AT x.k FROM << 
                         { 'k': 'a', 'v': 'x' },
@@ -226,6 +240,29 @@ class PartiQLEngineDefaultTest {
                     "c" to stringValue("z"),
                 )
             ),
+            SuccessTestCase(
+                input = """
+                    CASE (1)
+                        WHEN NULL THEN 'isNull'
+                        WHEN MISSING THEN 'isMissing'
+                        WHEN 2 THEN 'isTwo'
+                    END
+                    ;
+                """.trimIndent(),
+                expected = nullValue()
+            ),
+            SuccessTestCase(
+                input = """
+                    CASE (1)
+                        WHEN NULL THEN 'isNull'
+                        WHEN MISSING THEN 'isMissing'
+                        WHEN 2 THEN 'isTwo'
+                        WHEN 1 THEN 'isOne'
+                    END
+                    ;
+                """.trimIndent(),
+                expected = stringValue("isOne")
+            )
         )
     }
     public class SuccessTestCase @OptIn(PartiQLValueExperimental::class) constructor(
@@ -233,16 +270,20 @@ class PartiQLEngineDefaultTest {
         val expected: PartiQLValue
     ) {
 
-        private val engine = PartiQLEngine.default()
+        @OptIn(PartiQLFunctionExperimental::class)
+        private val engine = PartiQLEngine.builder().build()
         private val planner = PartiQLPlannerBuilder().build()
         private val parser = PartiQLParser.default()
 
-        @OptIn(PartiQLValueExperimental::class)
+        @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
         internal fun assert() {
             val statement = parser.parse(input).root
             val session = PartiQLPlanner.Session("q", "u")
             val plan = planner.plan(statement, session)
-            val prepared = engine.prepare(plan.plan, PartiQLEngine.Session())
+            val functions = mapOf(
+                "partiql" to PartiQLPlugin.functions
+            )
+            val prepared = engine.prepare(plan.plan, PartiQLEngine.Session(functions = functions))
             val result = engine.execute(prepared) as PartiQLResult.Value
             val output = result.value
             assertEquals(expected, output, comparisonString(expected, output))
@@ -266,32 +307,17 @@ class PartiQLEngineDefaultTest {
         }
     }
 
-    @Disabled("This is disabled because FN EQUALS is not yet implemented.")
     @Test
-    fun testCaseLiteral02() = SuccessTestCase(
-        input = """
-            CASE (1)
-                WHEN NULL THEN 'isNull'
-                WHEN MISSING THEN 'isMissing'
-                WHEN 2 THEN 'isTwo'
-                WHEN 1 THEN 'isOne'
-            END
-            ;
-        """.trimIndent(),
-        expected = stringValue("isOne")
+    @Disabled("CASTS have not yet been implemented.")
+    fun testCast1() = SuccessTestCase(
+        input = "1 + 2.0",
+        expected = int32Value(3),
     ).assert()
 
-    @Disabled("This is disabled because FN EQUALS is not yet implemented.")
     @Test
-    fun testCaseLiteral03() = SuccessTestCase(
-        input = """
-            CASE (1)
-                WHEN NULL THEN 'isNull'
-                WHEN MISSING THEN 'isMissing'
-                WHEN 2 THEN 'isTwo'
-            END
-            ;
-        """.trimIndent(),
-        expected = nullValue()
+    @Disabled("CASTS have not yet been implemented.")
+    fun testCasts() = SuccessTestCase(
+        input = "SELECT DISTINCT VALUE t * 100 FROM <<0, 1, 2.0, 3.0>> AS t;",
+        expected = bagValue(int32Value(0), int32Value(100), int32Value(200), int32Value(300))
     ).assert()
 }
