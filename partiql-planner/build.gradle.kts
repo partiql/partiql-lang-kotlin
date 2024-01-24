@@ -78,7 +78,7 @@ publish {
     description = "PartiQL's Experimental Planner."
 }
 
-// Generate IR
+// Generate internal IR
 tasks.register<Exec>("codegen") {
     dependsOn(":lib:sprout:install")
     workingDir(projectDir)
