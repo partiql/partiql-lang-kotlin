@@ -598,10 +598,11 @@ internal class PlanTyper(
                         val resolvedFn = staticCall.fn as? Fn.Resolved ?: error("This should have been resolved")
                         types.add(rex.type)
                         val coercions = candidate.mapping.map { it?.let { fnResolved(it) } }
-                        rexOpCallDynamicCandidate(fn = resolvedFn, coercions = coercions)
+                        val originalInputTypes = candidate.inputParameterTypes
+                        rexOpCallDynamicCandidate(fn = resolvedFn, parameters = originalInputTypes, coercions = coercions)
                     }
                     val op = rexOpCallDynamic(args = args, candidates = candidates)
-                    rex(type = StaticType.unionOf(types).flatten(), op = op)
+                    rex(type = unionOf(types).flatten(), op = op)
                 }
                 is FnMatch.Error -> {
                     handleUnknownFunction(match)

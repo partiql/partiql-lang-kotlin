@@ -7,6 +7,7 @@ import org.partiql.types.StaticType
 import org.partiql.types.function.FunctionSignature
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.PartiQLValueType
 
 internal fun partiQLPlan(
     version: PartiQLVersion,
@@ -69,8 +70,11 @@ internal fun rexOpCallStatic(fn: Fn, args: List<Rex>): Rex.Op.Call.Static = Rex.
 internal fun rexOpCallDynamic(args: List<Rex>, candidates: List<Rex.Op.Call.Dynamic.Candidate>):
     Rex.Op.Call.Dynamic = Rex.Op.Call.Dynamic(args, candidates)
 
-internal fun rexOpCallDynamicCandidate(fn: Fn.Resolved, coercions: List<Fn.Resolved?>):
-    Rex.Op.Call.Dynamic.Candidate = Rex.Op.Call.Dynamic.Candidate(fn, coercions)
+internal fun rexOpCallDynamicCandidate(
+    fn: Fn,
+    parameters: List<PartiQLValueType>,
+    coercions: List<Fn?>,
+): Rex.Op.Call.Dynamic.Candidate = Rex.Op.Call.Dynamic.Candidate(fn, parameters, coercions)
 
 internal fun rexOpCase(branches: List<Rex.Op.Case.Branch>, default: Rex): Rex.Op.Case =
     Rex.Op.Case(branches, default)

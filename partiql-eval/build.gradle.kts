@@ -31,6 +31,7 @@ dependencies {
     testImplementation(project(":partiql-parser"))
     testImplementation(project(":plugins:partiql-local"))
     testImplementation(project(":plugins:partiql-memory"))
+    testImplementation(project(":plugins:partiql-plugin"))
     testImplementation(testFixtures(project(":partiql-planner")))
     testImplementation(testFixtures(project(":partiql-lang")))
     testImplementation(Deps.junit4)

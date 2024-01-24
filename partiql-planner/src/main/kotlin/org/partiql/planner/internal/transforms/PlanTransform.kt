@@ -162,6 +162,7 @@ internal object PlanTransform : PlanBaseVisitor<PlanNode, ProblemCallback>() {
         )
     }
 
+    @OptIn(PartiQLValueExperimental::class)
     override fun visitRexOpCallDynamicCandidate(node: Rex.Op.Call.Dynamic.Candidate, ctx: ProblemCallback): PlanNode {
         val fn = visitFn(node.fn, ctx)
         if (fn is org.partiql.plan.Rex.Op.Err) return fn
@@ -173,7 +174,7 @@ internal object PlanTransform : PlanBaseVisitor<PlanNode, ProblemCallback>() {
                 c as org.partiql.plan.Fn
             }
         }
-        return org.partiql.plan.Rex.Op.Call.Dynamic.Candidate(fn, coercions)
+        return org.partiql.plan.Rex.Op.Call.Dynamic.Candidate(fn, node.parameters, coercions)
     }
 
     override fun visitRexOpCase(node: Rex.Op.Case, ctx: ProblemCallback) = org.partiql.plan.Rex.Op.Case(

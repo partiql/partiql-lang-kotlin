@@ -15,6 +15,7 @@ import org.partiql.types.StaticType
 import org.partiql.types.function.FunctionSignature
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.PartiQLValueType
 
 internal class PartiQlPlanBuilder(
     internal var version: PartiQLVersion? = null,
@@ -328,22 +329,28 @@ internal class RexOpCallDynamicBuilder(
     )
 }
 
+@OptIn(PartiQLValueExperimental::class)
 internal class RexOpCallDynamicCandidateBuilder(
-    internal var fn: Fn.Resolved? = null,
-    internal var coercions: MutableList<Fn.Resolved?> = mutableListOf(),
+    internal var fn: Fn? = null,
+    internal var parameters: MutableList<PartiQLValueType> = mutableListOf(),
+    internal var coercions: MutableList<Fn?> = mutableListOf(),
 ) {
-    internal fun fn(fn: Fn.Resolved?): RexOpCallDynamicCandidateBuilder = this.apply {
+    internal fun fn(fn: Fn?): RexOpCallDynamicCandidateBuilder = this.apply {
         this.fn = fn
     }
 
-    internal fun coercions(coercions: MutableList<Fn.Resolved?>): RexOpCallDynamicCandidateBuilder =
+    internal fun parameters(parameters: MutableList<PartiQLValueType>): RexOpCallDynamicCandidateBuilder =
         this.apply {
-            this.coercions = coercions
+            this.parameters = parameters
         }
+
+    internal fun coercions(coercions: MutableList<Fn?>): RexOpCallDynamicCandidateBuilder = this.apply {
+        this.coercions = coercions
+    }
 
     internal fun build(): Rex.Op.Call.Dynamic.Candidate = Rex.Op.Call.Dynamic.Candidate(
         fn = fn!!,
-        coercions = coercions
+        parameters = parameters, coercions = coercions
     )
 }
 

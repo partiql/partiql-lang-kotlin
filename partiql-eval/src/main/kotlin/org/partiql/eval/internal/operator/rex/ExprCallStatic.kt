@@ -11,7 +11,7 @@ import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.missingValue
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-internal class ExprCall(
+internal class ExprCallStatic(
     private val fn: PartiQLFunction.Scalar,
     private val inputs: Array<Operator.Expr>,
 ) : Operator.Expr {

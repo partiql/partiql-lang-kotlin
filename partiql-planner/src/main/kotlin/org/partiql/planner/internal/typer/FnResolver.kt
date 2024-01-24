@@ -9,6 +9,7 @@ import org.partiql.types.StaticType
 import org.partiql.types.function.FunctionParameter
 import org.partiql.types.function.FunctionSignature
 import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.PartiQLValueType
 import org.partiql.value.PartiQLValueType.ANY
 import org.partiql.value.PartiQLValueType.NULL
 
@@ -42,11 +43,18 @@ internal sealed class FnMatch<T : FunctionSignature> {
      * @property signature
      * @property mapping
      * @property isMissable TRUE when anyone of the arguments _could_ be MISSING. We *always* propagate MISSING.
+     * @property inputParameterTypes represents the expected argument type. For example, for 1 + 2.0, this should result
+     *  in resolving the function PLUS(DEC, DEC) -> DEC. The [mapping] will show which argument to coerce. However, the
+     *  [inputParameterTypes] will show the original expected argument types to perform the coercion(s). Therefore, the
+     *  [inputParameterTypes] in the example would be [ INT32, DECIMAL ]. The [mapping] would show which arguments
+     *  require coercions (in this example, the first would be coerced to a DECIMAL). And the [signature] would show the
+     *  PLUS(DEC, DEC) -> DEC.
      */
-    public data class Ok<T : FunctionSignature>(
+    public data class Ok<T : FunctionSignature> @OptIn(PartiQLValueExperimental::class) constructor(
         public val signature: T,
         public val mapping: Mapping,
         public val isMissable: Boolean,
+        public val inputParameterTypes: List<PartiQLValueType>
     ) : FnMatch<T>()
 
     /**
@@ -101,6 +109,7 @@ internal class FnResolver(private val metadata: Collection<ConnectorFunctions>) 
             }
         }
         val potentialFunctions = parameterPermutations.mapNotNull { parameters ->
+            val types = parameters.map { it.type }
             when (val match = match(candidates, parameters)) {
                 null -> {
                     canReturnMissing = true
@@ -108,7 +117,7 @@ internal class FnResolver(private val metadata: Collection<ConnectorFunctions>) 
                 }
                 else -> {
                     val isMissable = canReturnMissing || registry.isUnsafeCast(match.signature.specific)
-                    FnMatch.Ok(match.signature, match.mapping, isMissable)
+                    FnMatch.Ok(match.signature, match.mapping, isMissable, types)
                 }
             }
         }
@@ -157,12 +166,13 @@ internal class FnResolver(private val metadata: Collection<ConnectorFunctions>) 
             }
             FunctionParameter("arg-$i", arg.type.toRuntimeType())
         }
+        val types = parameters.map { it.type }
         val match = match(candidates, parameters)
         return when (match) {
             null -> FnMatch.Error(agg.identifier, args, candidates)
             else -> {
                 val isMissable = hadMissingArg || registry.isUnsafeCast(match.signature.specific)
-                FnMatch.Ok(match.signature, match.mapping, isMissable)
+                FnMatch.Ok(match.signature, match.mapping, isMissable, types)
             }
         }
     }

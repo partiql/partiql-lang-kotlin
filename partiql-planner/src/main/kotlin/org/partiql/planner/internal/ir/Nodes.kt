@@ -65,6 +65,7 @@ import org.partiql.types.StaticType
 import org.partiql.types.function.FunctionSignature
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.PartiQLValueType
 import kotlin.random.Random
 
 internal abstract class PlanNode {
@@ -550,9 +551,11 @@ internal data class Rex(
 
                 internal data class Candidate(
                     @JvmField
-                    internal val fn: Fn.Resolved,
+                    internal val fn: Fn,
                     @JvmField
-                    internal val coercions: List<Fn.Resolved?>,
+                    internal val parameters: List<PartiQLValueType>,
+                    @JvmField
+                    internal val coercions: List<Fn?>,
                 ) : PlanNode() {
                     internal override val children: List<PlanNode> by lazy {
                         val kids = mutableListOf<PlanNode?>()

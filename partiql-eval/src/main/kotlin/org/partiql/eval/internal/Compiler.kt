@@ -11,7 +11,8 @@ import org.partiql.eval.internal.operator.rel.RelJoinRight
 import org.partiql.eval.internal.operator.rel.RelProject
 import org.partiql.eval.internal.operator.rel.RelScan
 import org.partiql.eval.internal.operator.rel.RelScanIndexed
-import org.partiql.eval.internal.operator.rex.ExprCall
+import org.partiql.eval.internal.operator.rex.ExprCallDynamic
+import org.partiql.eval.internal.operator.rex.ExprCallStatic
 import org.partiql.eval.internal.operator.rex.ExprCase
 import org.partiql.eval.internal.operator.rex.ExprCollection
 import org.partiql.eval.internal.operator.rex.ExprGlobal
@@ -34,10 +35,11 @@ import org.partiql.plan.visitor.PlanBaseVisitor
 import org.partiql.spi.connector.ConnectorObjectPath
 import org.partiql.spi.function.PartiQLFunction
 import org.partiql.spi.function.PartiQLFunctionExperimental
+import org.partiql.types.function.FunctionSignature
 import org.partiql.value.PartiQLValueExperimental
 import java.lang.IllegalStateException
 
-internal class Compiler(
+internal class Compiler @OptIn(PartiQLFunctionExperimental::class) constructor(
     private val plan: PartiQLPlan,
     private val session: PartiQLEngine.Session
 ) : PlanBaseVisitor<Operator, Unit>() {
@@ -133,21 +135,36 @@ internal class Compiler(
 
     @OptIn(PartiQLFunctionExperimental::class)
     override fun visitRexOpCallStatic(node: Rex.Op.Call.Static, ctx: Unit): Operator {
-        val fn = node.fn.signature
-        val args = node.args.map { visitRex(it, ctx) }
+        val function = getFunction(node.fn.signature)
+        val args = node.args.map { visitRex(it, ctx) }.toTypedArray()
+        return ExprCallStatic(function, args)
+    }
+
+    @OptIn(PartiQLFunctionExperimental::class, PartiQLValueExperimental::class)
+    override fun visitRexOpCallDynamic(node: Rex.Op.Call.Dynamic, ctx: Unit): Operator {
+        val args = node.args.map { visitRex(it, ctx) }.toTypedArray()
+        val candidates = node.candidates.map { candidate ->
+            val fn = getFunction(candidate.fn.signature)
+            val coercions = candidate.coercions.map { it?.signature?.let { sig -> getFunction(sig) } }
+            ExprCallDynamic.Candidate(candidate.parameters.toTypedArray(), fn, coercions)
+        }
+        return ExprCallDynamic(candidates, args)
+    }
+
+    @OptIn(PartiQLFunctionExperimental::class)
+    private fun getFunction(signature: FunctionSignature): PartiQLFunction.Scalar {
+        // TODO: .flatMap is a HACK. Once functions in the plan reference functions in a catalog, we will need to
+        //  query that connector. This should be a somewhat simple change.
         val matches = session.functions
             .flatMap { it.value }
             .filterIsInstance<PartiQLFunction.Scalar>()
-            .filter { it.signature == fn }
-        return when (matches.size) {
-            0 -> error("no match")
-            1 -> ExprCall(matches.first(), args.toTypedArray())
-            else -> error("multiple math")
-        }
-    }
+            .filter { it.signature == signature }
 
-    override fun visitRexOpCallDynamic(node: Rex.Op.Call.Dynamic, ctx: Unit): Operator {
-        error("call dynamic not yet implemented")
+        return when (matches.size) {
+            0 -> error("No matches encountered for $signature")
+            1 -> matches.first()
+            else -> error("Multiple matches encountered for $signature")
+        }
     }
 
     // REL
