@@ -25,6 +25,25 @@ Thank you to all who have contributed!
 
 -->
 
+## [0.12.2] - 2024-01-25
+
+### Added
+
+### Changed
+- Upgrade IonJava dependency to v1.11.1
+
+### Deprecated
+
+### Fixed
+
+### Removed
+
+### Security
+
+### Contributors
+Thank you to all who have contributed!
+- @alancai98
+
 ## [0.12.1] - 2023-09-19
 
 ### Fixed
