@@ -1,5 +1,6 @@
 package org.partiql.eval.internal.operator.rex
 
+import org.partiql.errors.TypeCheckException
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.spi.function.PartiQLFunction
@@ -7,7 +8,6 @@ import org.partiql.spi.function.PartiQLFunctionExperimental
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
-import org.partiql.value.missingValue
 
 /**
  * This represents Dynamic Dispatch.
@@ -30,7 +30,7 @@ internal class ExprCallDynamic(
                 candidate.eval(actualArgs)
             }
         }
-        return missingValue()
+        throw TypeCheckException()
     }
 
     /**
