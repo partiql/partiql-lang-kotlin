@@ -70,6 +70,13 @@ class EvalExecutor(
     // 1 of type INT is considered the same as 1 of type INT32
     // we should probably consider adding our own hashcode implementation
     private fun valueComparison(v1: PartiQLValue, v2: PartiQLValue): Boolean {
+        // Additional check to put on annotation
+        // we want to have
+        // annotation::null.int == annotation::null.bool  <- True
+        // annotation::null.int == other::null.int <- False
+        if (v1.annotations != v2.annotations) {
+            return false
+        }
         if (v1.isNull && v2.isNull) {
             return true
         }
