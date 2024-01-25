@@ -262,6 +262,12 @@ class PartiQLEngineDefaultTest {
                     ;
                 """.trimIndent(),
                 expected = stringValue("isOne")
+            ),
+            SuccessTestCase(
+                input = """
+                    `null.bool` IS NULL
+                """.trimIndent(),
+                expected = boolValue(true)
             )
         )
     }

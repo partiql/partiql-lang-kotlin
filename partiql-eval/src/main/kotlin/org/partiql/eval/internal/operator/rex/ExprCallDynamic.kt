@@ -27,7 +27,7 @@ internal class ExprCallDynamic(
         val actualArgs = args.map { it.eval(record) }.toTypedArray()
         candidates.forEach { candidate ->
             if (candidate.matches(actualArgs)) {
-                candidate.eval(actualArgs)
+                return candidate.eval(actualArgs)
             }
         }
         throw TypeCheckException()
