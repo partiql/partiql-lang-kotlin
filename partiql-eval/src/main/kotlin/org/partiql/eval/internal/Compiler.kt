@@ -1,5 +1,6 @@
 package org.partiql.eval.internal
 
+import org.partiql.eval.PartiQLEngine
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.eval.internal.operator.rel.RelDistinct
 import org.partiql.eval.internal.operator.rel.RelFilter
@@ -10,6 +11,7 @@ import org.partiql.eval.internal.operator.rel.RelJoinRight
 import org.partiql.eval.internal.operator.rel.RelProject
 import org.partiql.eval.internal.operator.rel.RelScan
 import org.partiql.eval.internal.operator.rel.RelScanIndexed
+import org.partiql.eval.internal.operator.rex.ExprCall
 import org.partiql.eval.internal.operator.rex.ExprCase
 import org.partiql.eval.internal.operator.rex.ExprCollection
 import org.partiql.eval.internal.operator.rex.ExprGlobal
@@ -27,15 +29,17 @@ import org.partiql.plan.PlanNode
 import org.partiql.plan.Rel
 import org.partiql.plan.Rex
 import org.partiql.plan.Statement
+import org.partiql.plan.debug.PlanPrinter
 import org.partiql.plan.visitor.PlanBaseVisitor
-import org.partiql.spi.connector.ConnectorBindings
 import org.partiql.spi.connector.ConnectorObjectPath
+import org.partiql.spi.function.PartiQLFunction
+import org.partiql.spi.function.PartiQLFunctionExperimental
 import org.partiql.value.PartiQLValueExperimental
 import java.lang.IllegalStateException
 
 internal class Compiler(
     private val plan: PartiQLPlan,
-    private val catalogs: Map<String, ConnectorBindings>,
+    private val session: PartiQLEngine.Session
 ) : PlanBaseVisitor<Operator, Unit>() {
 
     fun compile(): Operator.Expr {
@@ -47,7 +51,11 @@ internal class Compiler(
     }
 
     override fun visitRexOpErr(node: Rex.Op.Err, ctx: Unit): Operator {
-        throw IllegalStateException(node.message)
+        val message = buildString {
+            this.appendLine(node.message)
+            PlanPrinter.append(this, plan)
+        }
+        throw IllegalStateException(message)
     }
 
     override fun visitRelOpErr(node: Rel.Op.Err, ctx: Unit): Operator {
@@ -101,7 +109,7 @@ internal class Compiler(
         val catalog = plan.catalogs[node.ref.catalog]
         val symbol = catalog.symbols[node.ref.symbol]
         val path = ConnectorObjectPath(symbol.path)
-        val bindings = catalogs[catalog.name]!!
+        val bindings = session.bindings[catalog.name]!!
         return ExprGlobal(path, bindings)
     }
 
@@ -123,8 +131,26 @@ internal class Compiler(
         return ExprPathIndex(root, index)
     }
 
-    // REL
+    @OptIn(PartiQLFunctionExperimental::class)
+    override fun visitRexOpCallStatic(node: Rex.Op.Call.Static, ctx: Unit): Operator {
+        val fn = node.fn.signature
+        val args = node.args.map { visitRex(it, ctx) }
+        val matches = session.functions
+            .flatMap { it.value }
+            .filterIsInstance<PartiQLFunction.Scalar>()
+            .filter { it.signature == fn }
+        return when (matches.size) {
+            0 -> error("no match")
+            1 -> ExprCall(matches.first(), args.toTypedArray())
+            else -> error("multiple math")
+        }
+    }
 
+    override fun visitRexOpCallDynamic(node: Rex.Op.Call.Dynamic, ctx: Unit): Operator {
+        error("call dynamic not yet implemented")
+    }
+
+    // REL
     override fun visitRel(node: Rel, ctx: Unit): Operator.Relation {
         return super.visitRelOp(node.op, ctx) as Operator.Relation
     }

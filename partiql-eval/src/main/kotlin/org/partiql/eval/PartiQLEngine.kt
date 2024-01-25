@@ -1,6 +1,9 @@
 package org.partiql.eval
 
 import org.partiql.plan.PartiQLPlan
+import org.partiql.spi.connector.ConnectorBindings
+import org.partiql.spi.function.PartiQLFunction
+import org.partiql.spi.function.PartiQLFunctionExperimental
 
 /**
  * PartiQL's Experimental Engine.
@@ -19,8 +22,9 @@ import org.partiql.plan.PartiQLPlan
  */
 public interface PartiQLEngine {
 
-    public fun prepare(plan: PartiQLPlan): PartiQLStatement<*>
+    public fun prepare(plan: PartiQLPlan, session: Session): PartiQLStatement<*>
 
+    // TODO: Pass session variable during statement execution once we finalize data structure for session.
     public fun execute(statement: PartiQLStatement<*>): PartiQLResult
 
     companion object {
@@ -31,4 +35,9 @@ public interface PartiQLEngine {
         @JvmStatic
         fun default() = PartiQLEngineBuilder().build()
     }
+
+    public class Session @OptIn(PartiQLFunctionExperimental::class) constructor(
+        val bindings: Map<String, ConnectorBindings> = mapOf(),
+        val functions: Map<String, List<PartiQLFunction>> = mapOf()
+    )
 }

@@ -242,7 +242,7 @@ class PartiQLEngineDefaultTest {
             val statement = parser.parse(input).root
             val session = PartiQLPlanner.Session("q", "u")
             val plan = planner.plan(statement, session)
-            val prepared = engine.prepare(plan.plan)
+            val prepared = engine.prepare(plan.plan, PartiQLEngine.Session())
             val result = engine.execute(prepared) as PartiQLResult.Value
             val output = result.value
             assertEquals(expected, output, comparisonString(expected, output))
