@@ -5,11 +5,13 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.internal.ir.Catalog
+import org.partiql.planner.internal.typer.Scope
+import org.partiql.planner.internal.typer.TypeEnv
+
 <<<<<<< HEAD
 import org.partiql.planner.internal.ir.Rex
 =======
 >>>>>>> partiql-spi
-import org.partiql.planner.internal.typer.TypeEnv
 import org.partiql.plugins.local.LocalConnector
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
@@ -36,11 +38,11 @@ class EnvTest {
         )
     }
 
-    private lateinit var env: Env
+    private lateinit var env: TypeEnvDb
 
     @BeforeEach
     fun init() {
-        env = Env(
+        env = TypeEnvDb(
             PartiQLPlanner.Session(
                 queryId = Random().nextInt().toString(),
                 userId = "test-user",
@@ -61,7 +63,7 @@ class EnvTest {
         assertEquals(1, env.symbols.size)
         assert(env.symbols.contains(GLOBAL_OS))
 =======
-        assertNotNull(env.resolve(path, EMPTY_TYPE_ENV, ResolutionStrategy.GLOBAL))
+        assertNotNull(env.resolve(path, EMPTY_TYPE_ENV, Scope.GLOBAL))
         assertEquals(1, env.catalogs.size)
         assert(env.catalogs.contains(GLOBAL_OS))
 >>>>>>> partiql-spi
@@ -75,7 +77,7 @@ class EnvTest {
         assertEquals(1, env.symbols.size)
         assert(env.symbols.contains(GLOBAL_OS))
 =======
-        assertNotNull(env.resolve(path, EMPTY_TYPE_ENV, ResolutionStrategy.GLOBAL))
+        assertNotNull(env.resolve(path, EMPTY_TYPE_ENV, Scope.GLOBAL))
         assertEquals(1, env.catalogs.size)
         assert(env.catalogs.contains(GLOBAL_OS))
 >>>>>>> partiql-spi
@@ -88,7 +90,7 @@ class EnvTest {
         assertNull(env.resolve(path, EMPTY_TYPE_ENV, Rex.Op.Var.Scope.DEFAULT))
         assert(env.symbols.isEmpty())
 =======
-        assertNull(env.resolve(path, EMPTY_TYPE_ENV, ResolutionStrategy.GLOBAL))
+        assertNull(env.resolve(path, EMPTY_TYPE_ENV, Scope.GLOBAL))
         assert(env.catalogs.isEmpty())
 >>>>>>> partiql-spi
     }
@@ -100,7 +102,7 @@ class EnvTest {
         assertNull(env.resolve(path, EMPTY_TYPE_ENV, Rex.Op.Var.Scope.DEFAULT))
         assert(env.symbols.isEmpty())
 =======
-        assertNull(env.resolve(path, EMPTY_TYPE_ENV, ResolutionStrategy.GLOBAL))
+        assertNull(env.resolve(path, EMPTY_TYPE_ENV, Scope.GLOBAL))
         assert(env.catalogs.isEmpty())
 >>>>>>> partiql-spi
     }

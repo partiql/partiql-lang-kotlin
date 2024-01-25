@@ -30,7 +30,7 @@ import org.partiql.ast.builder.ast
 import org.partiql.ast.helpers.toBinder
 import org.partiql.ast.util.AstRewriter
 import org.partiql.ast.visitor.AstBaseVisitor
-import org.partiql.planner.internal.Env
+import org.partiql.planner.internal.TypeEnvDb
 import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.fnUnresolved
@@ -80,7 +80,7 @@ internal object RelConverter {
     /**
      * Here we convert an SFW to composed [Rel]s, then apply the appropriate relation-value projection to get a [Rex].
      */
-    internal fun apply(sfw: Expr.SFW, env: Env): Rex {
+    internal fun apply(sfw: Expr.SFW, env: TypeEnvDb): Rex {
         val rel = sfw.accept(ToRel(env), nil)
         val rex = when (val projection = sfw.select) {
             // PIVOT ... FROM
@@ -120,10 +120,10 @@ internal object RelConverter {
     /**
      * Syntax sugar for converting an [Expr] tree to a [Rex] tree.
      */
-    private fun Expr.toRex(env: Env): Rex = RexConverter.apply(this, env)
+    private fun Expr.toRex(env: TypeEnvDb): Rex = RexConverter.apply(this, env)
 
     @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE", "LocalVariableName")
-    private class ToRel(private val env: Env) : AstBaseVisitor<Rel, Rel>() {
+    private class ToRel(private val env: TypeEnvDb) : AstBaseVisitor<Rel, Rel>() {
 
         override fun defaultReturn(node: AstNode, input: Rel): Rel =
             throw IllegalArgumentException("unsupported rel $node")

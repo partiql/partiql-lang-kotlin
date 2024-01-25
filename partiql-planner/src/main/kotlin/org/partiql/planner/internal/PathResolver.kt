@@ -32,59 +32,93 @@ internal abstract class PathResolver<T>(
 ) {
 
     /**
-     *
+     * The session's current directory represented as [BindingName] steps.
      */
     private val schema = session.currentDirectory.map { it.toBindingName() }
 
     /**
      * A [PathResolver] should override this one method for which [ConnectorMetadata] API to call.
      *
-     * @param path  The absolute path within a catalog.
+     * @param path  The catalog absolute path.
      * @return
      */
     abstract fun get(metadata: ConnectorMetadata, path: BindingPath): ConnectorHandle<T>?
 
     /**
-     * Resolution rules for a given name.
+     * Lookup a `path` following the scoping rules in the class javadoc.
+     *
+     * Returns a pair of the
      *
      * @param path  This represents the exact path
      * @return
      */
-    internal fun resolve(path: BindingPath): PathEntry<T>? {
+    internal fun lookup(path: BindingPath): PathMatch<T>? {
         val n = path.steps.size
         val absPath = BindingPath(schema + path.steps)
         return when (n) {
             0 -> null
-            1 -> get(absPath)
-            2 -> get(absPath) ?: get(path)
-            else -> get(absPath) ?: get(path) ?: lookup(path)
+            1 -> get(absPath, n)
+            2 -> get(absPath, n) ?: get(path, n)
+            else -> get(absPath, n) ?: get(path, n) ?: search(path, n)
         }
     }
 
     /**
      * This gets the path in the current catalog.
      *
-     * @param path
+     * @param absPath   Catalog absolute path.
+     * @param n         Original path step size, used in depth calculation.
      * @return
      */
-    private fun get(path: BindingPath): PathEntry<T>? =
-        get(catalog, path)?.let { PathEntry(session.currentCatalog, it) }
+    private fun get(absPath: BindingPath, n: Int): PathMatch<T>? {
+        val handle = get(catalog, absPath) ?: return null
+        val depth = depth(n, absPath.steps.size, handle.path.size)
+        val item = PathItem(session.currentCatalog, handle)
+        return PathMatch(depth, item)
+    }
 
     /**
-     * This looks for an absolute path in the current system, using the session to lookup catalogs.
+     * This searches with a system absolute path, using the session to lookup catalogs.
      *
-     * @param path
+     * @param path  System absolute path.
+     * @param n     Original path step size, used in depth calculation.
      */
-    private fun lookup(path: BindingPath): PathEntry<T>? {
-        val head = path.steps.first()
-        val tail = BindingPath(path.steps.drop(1))
-        for ((catalog, metadata) in session.catalogs) {
-            if (head.matches(catalog)) {
-                return get(metadata, tail)?.let { PathEntry(catalog, it) }
+    private fun search(path: BindingPath, n: Int): PathMatch<T>? {
+        var match: Map.Entry<String, ConnectorMetadata>? = null
+        val first: BindingName = path.steps.first()
+        for (catalog in session.catalogs) {
+            if (first.matches(catalog.key)) {
+                if (match != null) {
+                    // TODO root was already matched, emit ambiguous error
+                    return null
+                }
+                match = catalog
             }
         }
-        return null
+        if (match == null) {
+            return null
+        }
+        // Lookup in the unambiguously matched catalog, calculating the depth matched.
+        val absPath = BindingPath(path.steps.drop(1))
+        val catalog = match.key
+        val metadata = match.value
+        val handle = get(metadata, absPath) ?: return null
+        val depth = depth(n, absPath.steps.size, handle.path.size)
+        val item = PathItem(catalog, handle)
+        return PathMatch(depth, item)
     }
 
     private fun String.toBindingName() = BindingName(this, BindingCase.SENSITIVE)
+
+    /**
+     * Logic for determining how many BindingNames were “matched” by the ConnectorMetadata
+     *
+     * 1. Matched = RelativePath - Not Found
+     * 2. Not Found = Input CatalogPath - Output CatalogPath
+     * 3. Matched = RelativePath - (Input CatalogPath - Output CatalogPath)
+     * 4. Matched = RelativePath + Output CatalogPath - Input CatalogPath
+     *
+     * Ask johqunn@ as this is too clever for me.
+     */
+    private fun depth(original: Int, input: Int, output: Int): Int = original + output - input
 }

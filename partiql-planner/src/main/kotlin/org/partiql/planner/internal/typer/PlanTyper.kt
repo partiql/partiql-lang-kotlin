@@ -21,7 +21,6 @@ import org.partiql.errors.ProblemCallback
 import org.partiql.errors.UNKNOWN_PROBLEM_LOCATION
 import org.partiql.planner.PlanningProblemDetails
 import org.partiql.planner.internal.Env
-import org.partiql.planner.internal.ResolutionStrategy
 import org.partiql.planner.internal.ir.Fn
 import org.partiql.planner.internal.ir.Identifier
 import org.partiql.planner.internal.ir.PlanNode
@@ -119,7 +118,7 @@ internal class PlanTyper(
         }
         // root TypeEnv has no bindings
         val typeEnv = TypeEnv(schema = emptyList())
-        val root = statement.root.type(typeEnv, ResolutionStrategy.GLOBAL)
+        val root = statement.root.type(typeEnv, Scope.GLOBAL)
         return statementQuery(root)
     }
 
@@ -131,7 +130,7 @@ internal class PlanTyper(
      */
     private inner class RelTyper(
         private val outer: TypeEnv,
-        private val strategy: ResolutionStrategy,
+        private val strategy: Scope,
     ) : PlanRewriter<Rel.Type?>() {
 
         override fun visitRel(node: Rel, ctx: Rel.Type?) = visitRelOp(node.op, node.type) as Rel
@@ -141,7 +140,7 @@ internal class PlanTyper(
          */
         override fun visitRelOpScan(node: Rel.Op.Scan, ctx: Rel.Type?): Rel {
             // descend, with GLOBAL resolution strategy
-            val rex = node.rex.type(outer, ResolutionStrategy.GLOBAL)
+            val rex = node.rex.type(outer, Scope.GLOBAL)
             // compute rel type
             val valueT = getElementTypeForFromSource(rex.type)
             val type = ctx!!.copyWithSchema(listOf(valueT))
@@ -160,7 +159,7 @@ internal class PlanTyper(
          */
         override fun visitRelOpScanIndexed(node: Rel.Op.ScanIndexed, ctx: Rel.Type?): Rel {
             // descend, with GLOBAL resolution strategy
-            val rex = node.rex.type(outer, ResolutionStrategy.GLOBAL)
+            val rex = node.rex.type(outer, Scope.GLOBAL)
             // compute rel type
             val valueT = getElementTypeForFromSource(rex.type)
             val indexT = StaticType.INT8
@@ -175,7 +174,7 @@ internal class PlanTyper(
          */
         override fun visitRelOpUnpivot(node: Rel.Op.Unpivot, ctx: Rel.Type?): Rel {
             // descend, with GLOBAL resolution strategy
-            val rex = node.rex.type(outer, ResolutionStrategy.GLOBAL)
+            val rex = node.rex.type(outer, Scope.GLOBAL)
 
             // only UNPIVOT a struct
             if (rex.type !is StructType) {
@@ -251,7 +250,7 @@ internal class PlanTyper(
             // compute input schema
             val input = visitRel(node.input, ctx)
             // type limit expression using outer scope with global resolution
-            val limit = node.limit.type(outer, ResolutionStrategy.GLOBAL)
+            val limit = node.limit.type(outer, Scope.GLOBAL)
             // check types
             assertAsInt(limit.type)
             // compute output schema
@@ -265,7 +264,7 @@ internal class PlanTyper(
             // compute input schema
             val input = visitRel(node.input, ctx)
             // type offset expression using outer scope with global resolution
-            val offset = node.offset.type(outer, ResolutionStrategy.GLOBAL)
+            val offset = node.offset.type(outer, Scope.GLOBAL)
             // check types
             assertAsInt(offset.type)
             // compute output schema
@@ -386,7 +385,7 @@ internal class PlanTyper(
             val input = visitRel(node.input, ctx)
 
             // type the calls and groups
-            val typer = RexTyper(TypeEnv(input.type.schema), ResolutionStrategy.LOCAL)
+            val typer = RexTyper(TypeEnv(input.type.schema), Scope.LOCAL)
 
             // typing of aggregate calls is slightly more complicated because they are not expressions.
             val calls = node.calls.mapIndexed { i, call ->
@@ -425,7 +424,7 @@ internal class PlanTyper(
     @OptIn(PartiQLValueExperimental::class)
     private inner class RexTyper(
         private val locals: TypeEnv,
-        private val strategy: ResolutionStrategy,
+        private val strategy: Scope,
     ) : PlanRewriter<StaticType?>() {
 
         override fun visitRex(node: Rex, ctx: StaticType?): Rex = visitRexOp(node.op, node.type) as Rex
@@ -436,18 +435,21 @@ internal class PlanTyper(
         }
 
         override fun visitRexOpVarResolved(node: Rex.Op.Var.Resolved, ctx: StaticType?): Rex {
-            assert(node.ref < locals.size) { "Invalid resolved variable (var ${node.ref}) for $locals" }
-            val type = locals[node.ref].type
+            assert(node.ref < locals.schema.size) { "Invalid resolved variable (var ${node.ref}) for $locals" }
+            val type = locals.schema[node.ref].type
             return rex(type, node)
         }
 
         override fun visitRexOpVarUnresolved(node: Rex.Op.Var.Unresolved, ctx: StaticType?): Rex {
             val path = node.identifier.toBindingPath()
-            val strategy = when (node.scope) {
+            val scope = when (node.scope) {
                 Rex.Op.Var.Scope.DEFAULT -> strategy
-                Rex.Op.Var.Scope.LOCAL -> ResolutionStrategy.LOCAL
+                Rex.Op.Var.Scope.LOCAL -> Scope.LOCAL
             }
-            val resolvedVar = env.resolve(path, locals, strategy)
+            val resolvedVar = when (scope) {
+                Scope.LOCAL -> locals.resolve(path) ?: env.resolveObj(path)
+                Scope.GLOBAL -> env.resolveObj(path) ?: locals.resolve(path)
+            }
             if (resolvedVar == null) {
                 handleUndefinedVariable(path.steps.last())
                 return rex(ANY, rexOpErr("Undefined variable ${node.identifier}"))
@@ -874,7 +876,7 @@ internal class PlanTyper(
         override fun visitRexOpPivot(node: Rex.Op.Pivot, ctx: StaticType?): Rex {
             val rel = node.rel.type(locals)
             val typeEnv = TypeEnv(rel.type.schema)
-            val typer = RexTyper(typeEnv, ResolutionStrategy.LOCAL)
+            val typer = RexTyper(typeEnv, Scope.LOCAL)
             val key = typer.visitRex(node.key, null)
             val value = typer.visitRex(node.value, null)
             val type = StructType(
@@ -1217,10 +1219,10 @@ internal class PlanTyper(
 
     // HELPERS
 
-    private fun Rel.type(locals: TypeEnv, strategy: ResolutionStrategy = ResolutionStrategy.LOCAL): Rel =
+    private fun Rel.type(locals: TypeEnv, strategy: Scope = Scope.LOCAL): Rel =
         RelTyper(locals, strategy).visitRel(this, null)
 
-    private fun Rex.type(locals: TypeEnv, strategy: ResolutionStrategy = ResolutionStrategy.LOCAL) =
+    private fun Rex.type(locals: TypeEnv, strategy: Scope = Scope.LOCAL) =
         RexTyper(locals, strategy).visitRex(this, this.type)
 
     private fun rexErr(message: String) = rex(MISSING, rexOpErr(message))

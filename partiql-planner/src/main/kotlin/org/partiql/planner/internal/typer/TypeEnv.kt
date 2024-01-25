@@ -115,24 +115,6 @@ internal class TypeEnv(public val schema: List<Rel.Binding>) {
     }
 
     /**
-     * Converts a list of [BindingName] to a path expression.
-     *
-     *  1) Case SENSITIVE identifiers become string literal key lookups.
-     *  2) Case INSENSITIVE identifiers become symbol lookups.
-     *
-     * @param steps
-     * @return
-     */
-    @OptIn(PartiQLValueExperimental::class)
-    private fun Rex.toPath(steps: List<BindingName>): Rex = steps.fold(this) { curr, step ->
-        val op = when (step.case) {
-            BindingCase.SENSITIVE -> rexOpPathKey(curr, rex(StaticType.STRING, rexOpLit(stringValue(step.name))))
-            BindingCase.INSENSITIVE -> rexOpPathSymbol(curr, step.name)
-        }
-        rex(StaticType.ANY, op)
-    }
-
-    /**
      * Searches for the [BindingName] within the given [StructType].
      *
      * Returns
@@ -151,5 +133,28 @@ internal class TypeEnv(public val schema: List<Rel.Binding>) {
         }
         val closed = constraints.contains(TupleConstraint.Open(false))
         return if (closed) false else null
+    }
+
+    companion object {
+
+        /**
+         * Converts a list of [BindingName] to a path expression.
+         *
+         *  1) Case SENSITIVE identifiers become string literal key lookups.
+         *  2) Case INSENSITIVE identifiers become symbol lookups.
+         *
+         * @param steps
+         * @return
+         */
+        @JvmStatic
+        @OptIn(PartiQLValueExperimental::class)
+        internal fun Rex.toPath(steps: List<BindingName>): Rex = steps.fold(this) { curr, step ->
+            val op = when (step.case) {
+                BindingCase.SENSITIVE -> rexOpPathKey(curr, rex(StaticType.STRING, rexOpLit(stringValue(step.name))))
+                BindingCase.INSENSITIVE -> rexOpPathSymbol(curr, step.name)
+            }
+            rex(StaticType.ANY, op)
+        }
+
     }
 }

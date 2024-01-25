@@ -9,7 +9,7 @@ import org.partiql.spi.connector.ConnectorHandle
  * @property catalog    The resolved entity's catalog name.
  * @property handle     The resolved entity's catalog path and type information.
  */
-internal data class PathEntry<T>(
+internal data class PathItem<T>(
     @JvmField val catalog: String,
     @JvmField val handle: ConnectorHandle<T>,
 )
