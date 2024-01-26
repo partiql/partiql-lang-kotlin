@@ -34,17 +34,6 @@ ref::{
   symbol: int
 }
 
-// Functions
-
-fn::[
-  resolved::{
-    ref: ref,
-  },
-  unresolved::{
-    identifier: identifier,
-  },
-]
-
 // Statements
 
 statement::[
@@ -113,9 +102,15 @@ rex::{
     ],
 
     call::[
+
+      unresolved::{
+        identifier: identifier,
+        args: list::[rex],
+      },
+
       static::{
-        fn: fn,
-        args: list::[rex]
+        fn: ref,
+        args: list::[rex],
       },
 
       // Represents a dynamic function call. If all candidates are exhausted, dynamic calls will return MISSING.
@@ -128,8 +123,8 @@ rex::{
         candidates: list::[candidate],
         _: [
           candidate::{
-            fn: fn,
-            coercions: list::[optional::fn]
+            fn: ref,
+            coercions: list::[optional::ref]
           }
         ]
       }
@@ -291,7 +286,7 @@ rel::{
       groups:   list::[rex],
       _: [
         call::{
-          agg:  fn,
+          agg:  ref,
           args: list::[rex],
         },
       ],

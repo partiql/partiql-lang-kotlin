@@ -21,9 +21,9 @@ import org.partiql.spi.fn.FnSignature
 public interface ConnectorFn {
 
     /**
-     * Returns a function's type.
+     * Returns a function's variants.
      *
      * @return
      */
-    public fun getType(): FnSignature
+    public fun getVariants(): List<FnSignature>
 }

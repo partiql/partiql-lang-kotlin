@@ -45,5 +45,5 @@ public interface ConnectorMetadata {
      * @return
      */
     @FnExperimental
-    public fun getFunctions(path: BindingPath): List<ConnectorHandle.Fn>
+    public fun getFunction(path: BindingPath): ConnectorHandle.Fn?
 }

@@ -30,5 +30,5 @@ public interface ConnectorObject {
      *
      * @return
      */
-    public fun getType(): StaticType?
+    public fun getType(): StaticType
 }

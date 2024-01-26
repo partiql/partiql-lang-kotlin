@@ -5,8 +5,6 @@ package org.partiql.planner.`internal`.ir
 import org.partiql.planner.internal.ir.builder.CatalogBuilder
 import org.partiql.planner.internal.ir.builder.CatalogItemFnBuilder
 import org.partiql.planner.internal.ir.builder.CatalogItemValueBuilder
-import org.partiql.planner.internal.ir.builder.FnResolvedBuilder
-import org.partiql.planner.internal.ir.builder.FnUnresolvedBuilder
 import org.partiql.planner.internal.ir.builder.IdentifierQualifiedBuilder
 import org.partiql.planner.internal.ir.builder.IdentifierSymbolBuilder
 import org.partiql.planner.internal.ir.builder.PartiQlPlanBuilder
@@ -41,6 +39,7 @@ import org.partiql.planner.internal.ir.builder.RexBuilder
 import org.partiql.planner.internal.ir.builder.RexOpCallDynamicBuilder
 import org.partiql.planner.internal.ir.builder.RexOpCallDynamicCandidateBuilder
 import org.partiql.planner.internal.ir.builder.RexOpCallStaticBuilder
+import org.partiql.planner.internal.ir.builder.RexOpCallUnresolvedBuilder
 import org.partiql.planner.internal.ir.builder.RexOpCaseBranchBuilder
 import org.partiql.planner.internal.ir.builder.RexOpCaseBuilder
 import org.partiql.planner.internal.ir.builder.RexOpCollectionBuilder
@@ -159,47 +158,6 @@ internal data class Ref(
     internal companion object {
         @JvmStatic
         internal fun builder(): RefBuilder = RefBuilder()
-    }
-}
-
-internal sealed class Fn : PlanNode() {
-    override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = when (this) {
-        is Resolved -> visitor.visitFnResolved(this, ctx)
-        is Unresolved -> visitor.visitFnUnresolved(this, ctx)
-    }
-
-    internal data class Resolved(
-        @JvmField internal val ref: Ref,
-    ) : Fn() {
-        override val children: List<PlanNode> by lazy {
-            val kids = mutableListOf<PlanNode?>()
-            kids.add(ref)
-            kids.filterNotNull()
-        }
-
-        override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitFnResolved(this, ctx)
-
-        internal companion object {
-            @JvmStatic
-            internal fun builder(): FnResolvedBuilder = FnResolvedBuilder()
-        }
-    }
-
-    internal data class Unresolved(
-        @JvmField internal val identifier: Identifier,
-    ) : Fn() {
-        override val children: List<PlanNode> by lazy {
-            val kids = mutableListOf<PlanNode?>()
-            kids.add(identifier)
-            kids.filterNotNull()
-        }
-
-        override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitFnUnresolved(this, ctx)
-
-        internal companion object {
-            @JvmStatic
-            internal fun builder(): FnUnresolvedBuilder = FnUnresolvedBuilder()
-        }
     }
 }
 
@@ -443,12 +401,33 @@ internal data class Rex(
 
         internal sealed class Call : Op() {
             override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = when (this) {
+                is Unresolved -> visitor.visitRexOpCallUnresolved(this, ctx)
                 is Static -> visitor.visitRexOpCallStatic(this, ctx)
                 is Dynamic -> visitor.visitRexOpCallDynamic(this, ctx)
             }
 
+            internal data class Unresolved(
+                @JvmField internal val identifier: Identifier,
+                @JvmField internal val args: List<Rex>,
+            ) : Call() {
+                override val children: List<PlanNode> by lazy {
+                    val kids = mutableListOf<PlanNode?>()
+                    kids.add(identifier)
+                    kids.addAll(args)
+                    kids.filterNotNull()
+                }
+
+                override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                    visitor.visitRexOpCallUnresolved(this, ctx)
+
+                internal companion object {
+                    @JvmStatic
+                    internal fun builder(): RexOpCallUnresolvedBuilder = RexOpCallUnresolvedBuilder()
+                }
+            }
+
             internal data class Static(
-                @JvmField internal val fn: Fn,
+                @JvmField internal val fn: Ref,
                 @JvmField internal val args: List<Rex>,
             ) : Call() {
                 override val children: List<PlanNode> by lazy {
@@ -482,8 +461,8 @@ internal data class Rex(
                     visitor.visitRexOpCallDynamic(this, ctx)
 
                 internal data class Candidate(
-                    @JvmField internal val fn: Fn,
-                    @JvmField internal val coercions: List<Fn?>,
+                    @JvmField internal val fn: Ref,
+                    @JvmField internal val coercions: List<Ref?>,
                 ) : PlanNode() {
                     override val children: List<PlanNode> by lazy {
                         val kids = mutableListOf<PlanNode?>()
@@ -1047,7 +1026,7 @@ internal data class Rel(
             }
 
             internal data class Call(
-                @JvmField internal val agg: Fn,
+                @JvmField internal val agg: Ref,
                 @JvmField internal val args: List<Rex>,
             ) : PlanNode() {
                 override val children: List<PlanNode> by lazy {
