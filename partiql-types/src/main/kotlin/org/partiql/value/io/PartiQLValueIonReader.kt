@@ -28,6 +28,7 @@ import org.partiql.value.nullValue
 import org.partiql.value.sexpValue
 import org.partiql.value.stringValue
 import org.partiql.value.structValue
+import org.partiql.value.symbolValue
 import org.partiql.value.timeValue
 import org.partiql.value.timestampValue
 import java.io.ByteArrayInputStream
@@ -125,13 +126,11 @@ internal class PartiQLValueIonReader(
                 }
             }
 
-            // TODO: From discussions with the PartiQL Maintainers, it seems like SYMBOL should be used just as a
-            //  pointer to somewhere on the symbol table. If nothing is pointed to, it should be a STRING.
             IonType.SYMBOL -> {
                 if (reader.isNullValue) {
-                    stringValue(null, reader.typeAnnotations.toList())
+                    symbolValue(null, reader.typeAnnotations.toList())
                 } else {
-                    stringValue(reader.stringValue(), reader.typeAnnotations.toList())
+                    symbolValue(reader.stringValue(), reader.typeAnnotations.toList())
                 }
             }
 
@@ -319,9 +318,9 @@ internal class PartiQLValueIonReader(
                     PARTIQL_ANNOTATION.GRAPH_ANNOTATION -> throw IllegalArgumentException("GRAPH_ANNOTATION with Symbol Value")
                     null -> {
                         if (reader.isNullValue) {
-                            stringValue(null, annotations)
+                            symbolValue(null, annotations)
                         } else {
-                            stringValue(reader.stringValue(), annotations)
+                            symbolValue(reader.stringValue(), annotations)
                         }
                     }
                 }
