@@ -30,6 +30,7 @@ import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.Statement
 import org.partiql.planner.internal.ir.aggResolved
+import org.partiql.planner.internal.ir.cast
 import org.partiql.planner.internal.ir.fnResolved
 import org.partiql.planner.internal.ir.identifierSymbol
 import org.partiql.planner.internal.ir.rel
@@ -55,6 +56,7 @@ import org.partiql.planner.internal.ir.rexOpCallDynamic
 import org.partiql.planner.internal.ir.rexOpCallDynamicCandidate
 import org.partiql.planner.internal.ir.rexOpCallStatic
 import org.partiql.planner.internal.ir.rexOpCaseBranch
+import org.partiql.planner.internal.ir.rexOpCastOp
 import org.partiql.planner.internal.ir.rexOpCollection
 import org.partiql.planner.internal.ir.rexOpErr
 import org.partiql.planner.internal.ir.rexOpLit
@@ -97,6 +99,7 @@ import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.TextValue
 import org.partiql.value.boolValue
 import org.partiql.value.missingValue
+import org.partiql.value.nullValue
 import org.partiql.value.stringValue
 
 /**
@@ -597,7 +600,7 @@ internal class PlanTyper(
                         val staticCall = rex.op as? Rex.Op.Call.Static ?: error("ToRexCall should always return a static call.")
                         val resolvedFn = staticCall.fn as? Fn.Resolved ?: error("This should have been resolved")
                         types.add(rex.type)
-                        val coercions = candidate.mapping.map { it?.let { fnResolved(it) } }
+                        val coercions = candidate.mapping.map { it?.toCast() }
                         val originalInputTypes = candidate.inputParameterTypes
                         rexOpCallDynamicCandidate(fn = resolvedFn, parameters = originalInputTypes, coercions = coercions)
                     }
@@ -805,6 +808,26 @@ internal class PlanTyper(
                     }
                     return rexOpCaseBranch(simplifiedCondition, rex)
                 }
+            }
+        }
+
+        override fun visitRexOpCastOp(node: Rex.Op.CastOp, ctx: StaticType?): Rex {
+            val arg = visitRex(node.arg, ctx)
+            val operandType = arg.type.toRuntimeType()
+            val lookUp = TypeCasts.partiql().graph[operandType.ordinal][node.cast.target.ordinal]
+                ?: return rexErr("Cast from $operandType to ${node.cast.target} is not defined")
+            val cast = lookUp.toCast()
+            if (arg.type is NullType) {
+                return Rex(cast.target.toStaticType(), rexOpLit(nullValue().withType(cast.target)))
+            }
+            if (arg.type is MissingType) {
+                return Rex(MISSING, rexOpLit(missingValue()))
+            }
+            val rewritten = rexOpCastOp(arg, cast)
+            return when (lookUp.castType) {
+                CastType.COERCION -> rex(cast.target.toStaticType(), rewritten)
+                CastType.EXPLICIT -> rex(cast.target.toStaticType(), rewritten)
+                CastType.UNSAFE -> rex(cast.target.toStaticType().asOptional(), rewritten)
             }
         }
 
@@ -1272,7 +1295,7 @@ internal class PlanTyper(
     /**
      * Rewrites function arguments, wrapping in the given function if exists.
      */
-    private fun rewriteFnArgs(mapping: List<FunctionSignature.Scalar?>, args: List<Rex>): List<Rex> {
+    private fun rewriteFnArgs(mapping: List<TypeRelationship?>, args: List<Rex>): List<Rex> {
         if (mapping.size != args.size) {
             error("Fatal, malformed function mapping") // should be unreachable given how a mapping is generated.
         }
@@ -1282,9 +1305,9 @@ internal class PlanTyper(
             val m = mapping[i]
             if (m != null) {
                 // rewrite
-                val type = m.returns.toNonNullStaticType()
-                val cast = rexOpCallStatic(fnResolved(m), listOf(a))
-                a = rex(type, cast)
+                val type = m.toCast().target
+                val node = rexOpCastOp(a, m.toCast())
+                a = rex(type.toNonNullStaticType(), node)
             }
             newArgs.add(a)
         }

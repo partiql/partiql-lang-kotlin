@@ -853,7 +853,7 @@ internal class PartiQLParserDefault : PartiQLParser {
                 throw error(ctx, "Expected a path element literal")
             }
             when (val i = v.value) {
-                is NumericValue<*> -> pathStepIndex(i.int!!)
+                is NumericValue<*> -> pathStepIndex(i.toInt32().value!!)
                 is StringValue -> pathStepSymbol(
                     identifierSymbol(
                         i.value!!, Identifier.CaseSensitivity.SENSITIVE

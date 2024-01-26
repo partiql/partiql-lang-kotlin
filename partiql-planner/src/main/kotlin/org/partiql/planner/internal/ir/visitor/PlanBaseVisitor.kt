@@ -3,6 +3,7 @@
 package org.partiql.planner.internal.ir.visitor
 
 import org.partiql.planner.internal.ir.Agg
+import org.partiql.planner.internal.ir.Cast
 import org.partiql.planner.internal.ir.Catalog
 import org.partiql.planner.internal.ir.Fn
 import org.partiql.planner.internal.ir.Identifier
@@ -18,12 +19,14 @@ internal abstract class PlanBaseVisitor<R, C> : PlanVisitor<R, C> {
 
     override fun visitPartiQLPlan(node: PartiQLPlan, ctx: C): R = defaultVisit(node, ctx)
 
-    public override fun visitCatalog(node: Catalog, ctx: C): R = defaultVisit(node, ctx)
+    override fun visitCatalog(node: Catalog, ctx: C): R = defaultVisit(node, ctx)
 
-    public override fun visitCatalogSymbol(node: Catalog.Symbol, ctx: C): R = defaultVisit(node, ctx)
+    override fun visitCatalogSymbol(node: Catalog.Symbol, ctx: C): R = defaultVisit(node, ctx)
 
-    public override fun visitCatalogSymbolRef(node: Catalog.Symbol.Ref, ctx: C): R =
+    override fun visitCatalogSymbolRef(node: Catalog.Symbol.Ref, ctx: C): R =
         defaultVisit(node, ctx)
+
+    override fun visitCast(node: Cast, ctx: C): R = defaultVisit(node, ctx)
 
     override fun visitFn(node: Fn, ctx: C): R = when (node) {
         is Fn.Resolved -> visitFnResolved(node, ctx)
@@ -74,6 +77,7 @@ internal abstract class PlanBaseVisitor<R, C> : PlanVisitor<R, C> {
         is Rex.Op.Path -> visitRexOpPath(node, ctx)
         is Rex.Op.Call -> visitRexOpCall(node, ctx)
         is Rex.Op.Case -> visitRexOpCase(node, ctx)
+        is Rex.Op.CastOp -> visitRexOpCastOp(node, ctx)
         is Rex.Op.Collection -> visitRexOpCollection(node, ctx)
         is Rex.Op.Struct -> visitRexOpStruct(node, ctx)
         is Rex.Op.Pivot -> visitRexOpPivot(node, ctx)
@@ -135,6 +139,11 @@ internal abstract class PlanBaseVisitor<R, C> : PlanVisitor<R, C> {
     override fun visitRexOpCase(node: Rex.Op.Case, ctx: C): R = defaultVisit(node, ctx)
 
     override fun visitRexOpCaseBranch(node: Rex.Op.Case.Branch, ctx: C): R = defaultVisit(
+        node,
+        ctx
+    )
+
+    override fun visitRexOpCastOp(node: Rex.Op.CastOp, ctx: C): R = defaultVisit(
         node,
         ctx
     )

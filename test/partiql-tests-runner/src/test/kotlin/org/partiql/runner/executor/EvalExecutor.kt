@@ -13,6 +13,7 @@ import org.partiql.eval.PartiQLStatement
 import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.TypingMode
 import org.partiql.parser.PartiQLParser
+import org.partiql.plan.Statement
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.plugin.PartiQLPlugin
 import org.partiql.plugins.memory.MemoryBindings
@@ -147,13 +148,33 @@ class EvalExecutor(
          */
         private fun infer(env: StructElement): Connector {
             val map = mutableMapOf<String, StaticType>()
+
             env.fields.forEach {
-                map[it.name] = StaticType.ANY
+                map[it.name] = inferEnv(env)
             }
             val metadata = MemoryConnector.Metadata(map)
             val globals = load(metadata, env)
             val bindings = MemoryBindings(globals)
             return MemoryConnector(metadata, bindings)
+        }
+
+        private fun inferEnv(env: StructElement): StaticType {
+            val connector = MemoryConnector(MemoryConnector.Metadata(emptyMap()), MemoryBindings(emptyMap()))
+            val session = PartiQLPlanner.Session(
+                queryId = "query",
+                userId = "user",
+                currentCatalog = "default",
+                catalogs = mapOf(
+                    "default" to connector.getMetadata(object : ConnectorSession {
+                        override fun getQueryId(): String = "query"
+                        override fun getUserId(): String = "user"
+                    })
+                )
+            )
+
+            val stmt = parser.parse("`$env`").root
+            val plan = planner.plan(stmt, session)
+            return (plan.plan.statement as Statement.Query).root.type
         }
 
         /**

@@ -3,6 +3,7 @@
 package org.partiql.planner.internal.ir.builder
 
 import org.partiql.planner.internal.ir.Agg
+import org.partiql.planner.internal.ir.Cast
 import org.partiql.planner.internal.ir.Catalog
 import org.partiql.planner.internal.ir.Fn
 import org.partiql.planner.internal.ir.Identifier
@@ -87,6 +88,30 @@ internal class CatalogSymbolRefBuilder(
         catalog = catalog!!,
         symbol =
         symbol!!
+    )
+}
+
+internal class CastBuilder(
+    internal var operand: PartiQLValueType? = null,
+    internal var target: PartiQLValueType? = null,
+    internal var castType: Cast.CastType? = null
+) {
+    internal fun operand(operand: PartiQLValueType?): CastBuilder = this.apply {
+        this.operand = operand
+    }
+
+    internal fun target(target: PartiQLValueType?): CastBuilder = this.apply {
+        this.target = target
+    }
+
+    internal fun castType(castType: Cast.CastType?): CastBuilder = this.apply {
+        this.castType = castType
+    }
+
+    internal fun build(): Cast = Cast(
+        operand = operand!!,
+        target = target!!,
+        castType = castType!!
     )
 }
 
@@ -333,7 +358,7 @@ internal class RexOpCallDynamicBuilder(
 internal class RexOpCallDynamicCandidateBuilder(
     internal var fn: Fn? = null,
     internal var parameters: MutableList<PartiQLValueType> = mutableListOf(),
-    internal var coercions: MutableList<Fn?> = mutableListOf(),
+    internal var coercions: MutableList<Cast?> = mutableListOf(),
 ) {
     internal fun fn(fn: Fn?): RexOpCallDynamicCandidateBuilder = this.apply {
         this.fn = fn
@@ -344,7 +369,7 @@ internal class RexOpCallDynamicCandidateBuilder(
             this.parameters = parameters
         }
 
-    internal fun coercions(coercions: MutableList<Fn?>): RexOpCallDynamicCandidateBuilder = this.apply {
+    internal fun coercions(coercions: MutableList<Cast?>): RexOpCallDynamicCandidateBuilder = this.apply {
         this.coercions = coercions
     }
 
@@ -382,6 +407,21 @@ internal class RexOpCaseBranchBuilder(
     }
 
     internal fun build(): Rex.Op.Case.Branch = Rex.Op.Case.Branch(condition = condition!!, rex = rex!!)
+}
+
+internal class RexOpCastOpBuilder(
+    internal var arg: Rex? = null,
+    internal var cast: Cast? = null
+) {
+    internal fun arg(arg: Rex?): RexOpCastOpBuilder = this.apply {
+        this.arg = arg
+    }
+
+    internal fun cast(cast: Cast): RexOpCastOpBuilder = this.apply {
+        this.cast = cast
+    }
+
+    internal fun build(): Rex.Op.CastOp = Rex.Op.CastOp(arg!!, cast!!)
 }
 
 internal class RexOpCollectionBuilder(

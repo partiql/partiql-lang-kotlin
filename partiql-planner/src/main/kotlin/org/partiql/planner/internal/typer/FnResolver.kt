@@ -21,7 +21,7 @@ internal typealias Args = List<FunctionParameter>
 /**
  * Parameter mapping list tells the planner where to insert implicit casts. Null is the identity.
  */
-internal typealias Mapping = List<FunctionSignature.Scalar?>
+internal typealias Mapping = List<TypeRelationship?>
 
 /**
  * Tells us which function matched, and how the arguments are mapped.
@@ -199,7 +199,7 @@ internal class FnResolver(private val metadata: Collection<ConnectorFunctions>) 
         if (signature.parameters.size != args.size) {
             return null
         }
-        val mapping = ArrayList<FunctionSignature.Scalar?>(args.size)
+        val mapping = ArrayList<TypeRelationship?>(args.size)
         for (i in args.indices) {
             val a = args[i]
             val p = signature.parameters[i]

@@ -76,11 +76,18 @@ internal class FnRegistry(private val metadata: Collection<ConnectorFunctions>) 
     /**
      * Returns the CAST function if exists, else null.
      */
-    internal fun lookupCoercion(operand: PartiQLValueType, target: PartiQLValueType): FunctionSignature.Scalar? {
+//    internal fun lookupCoercion(operand: PartiQLValueType, target: PartiQLValueType): FunctionSignature.Scalar? {
+//        val i = operand.ordinal
+//        val j = target.ordinal
+//        val rel = pCasts.graph[i][j] ?: return null
+//        return if (rel.castType == CastType.COERCION) rel.castFn else null
+//    }
+
+    internal fun lookupCoercion(operand: PartiQLValueType, target: PartiQLValueType): TypeRelationship? {
         val i = operand.ordinal
         val j = target.ordinal
         val rel = pCasts.graph[i][j] ?: return null
-        return if (rel.castType == CastType.COERCION) rel.castFn else null
+        return if (rel.castType == CastType.COERCION) rel else null
     }
 
     internal fun isUnsafeCast(specific: String): Boolean = pCasts.unsafeCastSet.contains(specific)

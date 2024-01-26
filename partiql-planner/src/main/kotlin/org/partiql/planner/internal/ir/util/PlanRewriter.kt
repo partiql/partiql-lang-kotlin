@@ -266,7 +266,7 @@ internal abstract class PlanRewriter<C> : PlanBaseVisitor<PlanNode, C>() {
         PlanNode {
         val fn = visitFn(node.fn, ctx) as Fn
         val parameters = node.parameters
-        val coercions = _visitListNull(node.coercions, ctx, ::visitFn)
+        val coercions = _visitListNull(node.coercions, ctx, ::visitCast)
         return if (fn !== node.fn || parameters !== node.parameters || coercions !== node.coercions) {
             Rex.Op.Call.Dynamic.Candidate(fn, parameters, coercions)
         } else {

@@ -37,6 +37,18 @@ catalog::{
   ]
 }
 
+// System level cast table.
+// We currently do not allow custom override to the cast table
+cast::{
+  operand: partiql_value_type, // operand is a value.
+  target: partiql_value_type, // TODO: Consider change this to Static Type
+  cast_type: cast_type::[
+    COERCION,
+    EXPLICIT,
+    UNSAFE
+  ],
+}
+
 // Functions
 
 fn::{
@@ -102,6 +114,11 @@ rex::{
       symbol::{ root: rex, key: string },
     ],
 
+    cast_op::{
+      arg: rex,
+      cast: cast
+    },
+
     call::[
       static::{
         fn: fn,
@@ -127,7 +144,7 @@ rex::{
           candidate::{
             fn: fn,
             parameters: list::[partiql_value_type],
-            coercions: list::[optional::fn]
+            coercions: list::[optional::cast]
           }
         ]
       }

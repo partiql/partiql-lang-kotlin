@@ -3,6 +3,8 @@ package org.partiql.eval.internal.operator.rex
 import org.partiql.errors.TypeCheckException
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
+import org.partiql.plan.Cast
+import org.partiql.plan.rex
 import org.partiql.spi.function.PartiQLFunction
 import org.partiql.spi.function.PartiQLFunctionExperimental
 import org.partiql.value.PartiQLValue
@@ -44,13 +46,16 @@ internal class ExprCallDynamic(
     internal class Candidate @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class) constructor(
         val types: Array<PartiQLValueType>,
         val fn: PartiQLFunction.Scalar,
-        val coercions: List<PartiQLFunction.Scalar?>
+        val coercions: List<Cast?>
     ) {
 
         @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
         fun eval(originalArgs: Array<PartiQLValue>): PartiQLValue {
             val args = coercions.mapIndexed { index, coercion ->
-                coercion?.invoke(arrayOf(originalArgs[index])) ?: originalArgs[index]
+                coercion?.let {
+                    val arg = originalArgs[index]
+                    ExprCastOp(ExprLiteral(arg), it).eval(Record(emptyArray()))
+                } ?: originalArgs[index]
             }.toTypedArray()
             return fn.invoke(args)
         }

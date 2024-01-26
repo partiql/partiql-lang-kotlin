@@ -3,6 +3,7 @@
 package org.partiql.planner.internal.ir.visitor
 
 import org.partiql.planner.internal.ir.Agg
+import org.partiql.planner.internal.ir.Cast
 import org.partiql.planner.internal.ir.Catalog
 import org.partiql.planner.internal.ir.Fn
 import org.partiql.planner.internal.ir.Identifier
@@ -18,11 +19,13 @@ internal interface PlanVisitor<R, C> {
 
     fun visitPartiQLPlan(node: PartiQLPlan, ctx: C): R
 
-    public fun visitCatalog(node: Catalog, ctx: C): R
+    fun visitCatalog(node: Catalog, ctx: C): R
 
-    public fun visitCatalogSymbol(node: Catalog.Symbol, ctx: C): R
+    fun visitCatalogSymbol(node: Catalog.Symbol, ctx: C): R
 
-    public fun visitCatalogSymbolRef(node: Catalog.Symbol.Ref, ctx: C): R
+    fun visitCatalogSymbolRef(node: Catalog.Symbol.Ref, ctx: C): R
+
+    fun visitCast(node: Cast, ctx: C): R
 
     fun visitFn(node: Fn, ctx: C): R
 
@@ -79,6 +82,8 @@ internal interface PlanVisitor<R, C> {
     fun visitRexOpCase(node: Rex.Op.Case, ctx: C): R
 
     fun visitRexOpCaseBranch(node: Rex.Op.Case.Branch, ctx: C): R
+
+    fun visitRexOpCastOp(node: Rex.Op.CastOp, ctx: C): R
 
     fun visitRexOpCollection(node: Rex.Op.Collection, ctx: C): R
 

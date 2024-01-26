@@ -55,7 +55,7 @@ internal object Fn_IS_CHAR__INT32_ANY__BOOL : PartiQLFunction.Scalar {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val length = args[0].check<Int32Value>().int
+        val length = args[0].check<Int32Value>().value
         if (length == null || length < 0) {
             throw TypeCheckException()
         }

@@ -3,6 +3,7 @@
 
 package org.partiql.plugin.internal.fn.scalar
 
+import org.partiql.errors.DataException
 import org.partiql.errors.TypeCheckException
 import org.partiql.plugin.internal.extensions.codepointSubstring
 import org.partiql.spi.function.PartiQLFunction
@@ -108,7 +109,7 @@ internal object Fn_SUBSTRING__STRING_INT64__STRING : PartiQLFunction.Scalar {
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val value = args[0].check<StringValue>().string
-        val start = args[1].check<Int64Value>().int
+        val start = try { args[1].check<Int64Value>().toInt32().value } catch (e: DataException) { throw TypeCheckException() }
         if (value == null || start == null) {
             return stringValue(null)
         }
@@ -134,8 +135,8 @@ internal object Fn_SUBSTRING__STRING_INT64_INT64__STRING : PartiQLFunction.Scala
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val value = args[0].check<SymbolValue>().string
-        val start = args[1].check<Int64Value>().int
-        val end = args[2].check<Int64Value>().int
+        val start = try { args[1].check<Int64Value>().toInt32().value } catch (e: DataException) { throw TypeCheckException() }
+        val end = try { args[2].check<Int64Value>().toInt32().value } catch (e: DataException) { throw TypeCheckException() }
         if (value == null || start == null || end == null) {
             return stringValue(null)
         }
@@ -163,7 +164,7 @@ internal object Fn_SUBSTRING__SYMBOL_INT64__SYMBOL : PartiQLFunction.Scalar {
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val value = args[0].check<SymbolValue>().string
-        val start = args[1].check<Int64Value>().int
+        val start = try { args[1].check<Int64Value>().toInt32().value } catch (e: DataException) { throw TypeCheckException() }
         if (value == null || start == null) {
             return stringValue(null)
         }
@@ -189,7 +190,7 @@ internal object Fn_SUBSTRING__SYMBOL_INT64_INT64__SYMBOL : PartiQLFunction.Scala
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val value = args[0].check<ClobValue>().string
-        val start = args[1].check<Int64Value>().int
+        val start = try { args[1].check<Int64Value>().toInt32().value } catch (e: DataException) { throw TypeCheckException() }
         if (value == null || start == null) {
             return stringValue(null)
         }
@@ -234,8 +235,8 @@ internal object Fn_SUBSTRING__CLOB_INT64_INT64__CLOB : PartiQLFunction.Scalar {
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val value = args[0].check<ClobValue>().string
-        val start = args[1].check<Int64Value>().int
-        val end = args[2].check<Int64Value>().int
+        val start = try { args[1].check<Int64Value>().toInt32().value } catch (e: DataException) { throw TypeCheckException() }
+        val end = try { args[2].check<Int64Value>().toInt32().value } catch (e: DataException) { throw TypeCheckException() }
         if (value == null || start == null || end == null) {
             return stringValue(null)
         }

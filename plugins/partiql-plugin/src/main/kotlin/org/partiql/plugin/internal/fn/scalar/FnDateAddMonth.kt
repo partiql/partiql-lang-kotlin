@@ -3,6 +3,8 @@
 
 package org.partiql.plugin.internal.fn.scalar
 
+import org.partiql.errors.DataException
+import org.partiql.errors.TypeCheckException
 import org.partiql.spi.function.PartiQLFunction
 import org.partiql.spi.function.PartiQLFunctionExperimental
 import org.partiql.types.function.FunctionParameter
@@ -44,7 +46,7 @@ internal object Fn_DATE_ADD_MONTH__INT32_DATE__DATE : PartiQLFunction.Scalar {
             dateValue(null)
         } else {
             val datetimeValue = datetime.value!!
-            val intervalValue = interval.long!!
+            val intervalValue = interval.toInt64().value!!
             dateValue(datetimeValue.plusMonths(intervalValue))
         }
     }
@@ -71,7 +73,7 @@ internal object Fn_DATE_ADD_MONTH__INT64_DATE__DATE : PartiQLFunction.Scalar {
             dateValue(null)
         } else {
             val datetimeValue = datetime.value!!
-            val intervalValue = interval.long!!
+            val intervalValue = interval.value!!
             dateValue(datetimeValue.plusMonths(intervalValue))
         }
     }
@@ -98,7 +100,7 @@ internal object Fn_DATE_ADD_MONTH__INT_DATE__DATE : PartiQLFunction.Scalar {
             dateValue(null)
         } else {
             val datetimeValue = datetime.value!!
-            val intervalValue = interval.long!!
+            val intervalValue = try { interval.toInt64().value!! } catch (e: DataException) { throw TypeCheckException() }
             dateValue(datetimeValue.plusMonths(intervalValue))
         }
     }
@@ -125,7 +127,7 @@ internal object Fn_DATE_ADD_MONTH__INT32_TIMESTAMP__TIMESTAMP : PartiQLFunction.
             timestampValue(null)
         } else {
             val datetimeValue = datetime.value!!
-            val intervalValue = interval.long!!
+            val intervalValue = interval.toInt64().value!!
             timestampValue(datetimeValue.plusMonths(intervalValue))
         }
     }
@@ -152,7 +154,7 @@ internal object Fn_DATE_ADD_MONTH__INT64_TIMESTAMP__TIMESTAMP : PartiQLFunction.
             timestampValue(null)
         } else {
             val datetimeValue = datetime.value!!
-            val intervalValue = interval.long!!
+            val intervalValue = interval.value!!
             timestampValue(datetimeValue.plusMonths(intervalValue))
         }
     }
@@ -179,8 +181,7 @@ internal object Fn_DATE_ADD_MONTH__INT_TIMESTAMP__TIMESTAMP : PartiQLFunction.Sc
             timestampValue(null)
         } else {
             val datetimeValue = datetime.value!!
-            // TODO: We need to consider overflow here
-            val intervalValue = interval.long!!
+            val intervalValue = try { interval.toInt64().value!! } catch (e: DataException) { throw TypeCheckException() }
             timestampValue(datetimeValue.plusMonths(intervalValue))
         }
     }

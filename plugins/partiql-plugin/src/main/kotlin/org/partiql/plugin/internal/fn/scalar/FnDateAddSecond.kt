@@ -3,6 +3,8 @@
 
 package org.partiql.plugin.internal.fn.scalar
 
+import org.partiql.errors.DataException
+import org.partiql.errors.TypeCheckException
 import org.partiql.spi.function.PartiQLFunction
 import org.partiql.spi.function.PartiQLFunctionExperimental
 import org.partiql.types.function.FunctionParameter
@@ -44,7 +46,7 @@ internal object Fn_DATE_ADD_SECOND__INT32_TIME__TIME : PartiQLFunction.Scalar {
             timeValue(null)
         } else {
             val datetimeValue = datetime.value!!
-            val intervalValue = interval.long!!
+            val intervalValue = interval.toInt64().value!!
             timeValue(datetimeValue.plusSeconds(intervalValue))
         }
     }
@@ -71,7 +73,7 @@ internal object Fn_DATE_ADD_SECOND__INT64_TIME__TIME : PartiQLFunction.Scalar {
             timeValue(null)
         } else {
             val datetimeValue = datetime.value!!
-            val intervalValue = interval.long!!
+            val intervalValue = interval.value!!
             timeValue(datetimeValue.plusSeconds(intervalValue))
         }
     }
@@ -98,8 +100,7 @@ internal object Fn_DATE_ADD_SECOND__INT_TIME__TIME : PartiQLFunction.Scalar {
             timeValue(null)
         } else {
             val datetimeValue = datetime.value!!
-            // TODO: We need to consider overflow here
-            val intervalValue = interval.long!!
+            val intervalValue = try { interval.toInt64().value!! } catch (e: DataException) { throw TypeCheckException() }
             timeValue(datetimeValue.plusSeconds(intervalValue))
         }
     }
@@ -126,7 +127,7 @@ internal object Fn_DATE_ADD_SECOND__INT32_TIMESTAMP__TIMESTAMP : PartiQLFunction
             timestampValue(null)
         } else {
             val datetimeValue = datetime.value!!
-            val intervalValue = interval.long!!
+            val intervalValue = interval.toInt64().value!!
             timestampValue(datetimeValue.plusSeconds(intervalValue))
         }
     }
@@ -153,7 +154,7 @@ internal object Fn_DATE_ADD_SECOND__INT64_TIMESTAMP__TIMESTAMP : PartiQLFunction
             timestampValue(null)
         } else {
             val datetimeValue = datetime.value!!
-            val intervalValue = interval.long!!
+            val intervalValue = interval.value!!
             timestampValue(datetimeValue.plusSeconds(intervalValue))
         }
     }
@@ -180,8 +181,7 @@ internal object Fn_DATE_ADD_SECOND__INT_TIMESTAMP__TIMESTAMP : PartiQLFunction.S
             timestampValue(null)
         } else {
             val datetimeValue = datetime.value!!
-            // TODO: We need to consider overflow here
-            val intervalValue = interval.long!!
+            val intervalValue = try { interval.toInt64().value!! } catch (e: DataException) { throw TypeCheckException() }
             timestampValue(datetimeValue.plusSeconds(intervalValue))
         }
     }

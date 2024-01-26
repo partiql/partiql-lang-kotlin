@@ -22,14 +22,17 @@ import org.partiql.ast.Expr
 import org.partiql.ast.Type
 import org.partiql.ast.visitor.AstBaseVisitor
 import org.partiql.planner.internal.Env
+import org.partiql.planner.internal.ir.Cast
 import org.partiql.planner.internal.ir.Identifier
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.builder.plan
+import org.partiql.planner.internal.ir.cast
 import org.partiql.planner.internal.ir.fnUnresolved
 import org.partiql.planner.internal.ir.identifierQualified
 import org.partiql.planner.internal.ir.identifierSymbol
 import org.partiql.planner.internal.ir.rex
 import org.partiql.planner.internal.ir.rexOpCallStatic
+import org.partiql.planner.internal.ir.rexOpCastOp
 import org.partiql.planner.internal.ir.rexOpCollection
 import org.partiql.planner.internal.ir.rexOpLit
 import org.partiql.planner.internal.ir.rexOpPathIndex
@@ -41,9 +44,15 @@ import org.partiql.planner.internal.ir.rexOpSubquery
 import org.partiql.planner.internal.ir.rexOpTupleUnion
 import org.partiql.planner.internal.ir.rexOpVarUnresolved
 import org.partiql.planner.internal.typer.toNonNullStaticType
+import org.partiql.planner.internal.typer.toRuntimeType
 import org.partiql.planner.internal.typer.toStaticType
+import org.partiql.types.DecimalType
+import org.partiql.types.NumberConstraint
 import org.partiql.types.StaticType
+import org.partiql.types.StringType
 import org.partiql.types.TimeType
+import org.partiql.types.TimestampType
+import org.partiql.value.PartiQLTimestampExperimental
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.StringValue
 import org.partiql.value.boolValue
@@ -546,45 +555,10 @@ internal object RexConverter {
 
         // TODO: Ignoring type parameter now
         override fun visitExprCast(node: Expr.Cast, ctx: Env): Rex {
-            val type = node.asType
+            val type = node.asType.toStaticType()
             val arg0 = visitExprCoerce(node.value, ctx)
-            return when (type) {
-                is Type.NullType -> rex(StaticType.NULL, call("cast_null", arg0))
-                is Type.Missing -> rex(StaticType.MISSING, call("cast_missing", arg0))
-                is Type.Bool -> rex(StaticType.BOOL, call("cast_bool", arg0))
-                is Type.Tinyint -> TODO("Static Type does not have TINYINT type")
-                is Type.Smallint, is Type.Int2 -> rex(StaticType.INT2, call("cast_int16", arg0))
-                is Type.Int4 -> rex(StaticType.INT4, call("cast_int32", arg0))
-                is Type.Bigint, is Type.Int8 -> rex(StaticType.INT8, call("cast_int64", arg0))
-                is Type.Int -> rex(StaticType.INT, call("cast_int", arg0))
-                is Type.Real -> TODO("Static Type does not have REAL type")
-                is Type.Float32 -> TODO("Static Type does not have FLOAT32 type")
-                is Type.Float64 -> rex(StaticType.FLOAT, call("cast_float64", arg0))
-                is Type.Decimal -> rex(StaticType.DECIMAL, call("cast_decimal", arg0))
-                is Type.Numeric -> rex(StaticType.DECIMAL, call("cast_numeric", arg0))
-                is Type.Char -> rex(StaticType.CHAR, call("cast_char", arg0))
-                is Type.Varchar -> rex(StaticType.STRING, call("cast_varchar", arg0))
-                is Type.String -> rex(StaticType.STRING, call("cast_string", arg0))
-                is Type.Symbol -> rex(StaticType.SYMBOL, call("cast_symbol", arg0))
-                is Type.Bit -> TODO("Static Type does not have Bit type")
-                is Type.BitVarying -> TODO("Static Type does not have BitVarying type")
-                is Type.ByteString -> TODO("Static Type does not have ByteString type")
-                is Type.Blob -> rex(StaticType.BLOB, call("cast_blob", arg0))
-                is Type.Clob -> rex(StaticType.CLOB, call("cast_clob", arg0))
-                is Type.Date -> rex(StaticType.DATE, call("cast_date", arg0))
-                is Type.Time -> rex(StaticType.TIME, call("cast_time", arg0))
-                is Type.TimeWithTz -> rex(TimeType(null, true), call("cast_timeWithTz", arg0))
-                is Type.Timestamp -> TODO("Need to rebase main")
-                is Type.TimestampWithTz -> rex(StaticType.TIMESTAMP, call("cast_timeWithTz", arg0))
-                is Type.Interval -> TODO("Static Type does not have Interval type")
-                is Type.Bag -> rex(StaticType.BAG, call("cast_bag", arg0))
-                is Type.List -> rex(StaticType.LIST, call("cast_list", arg0))
-                is Type.Sexp -> rex(StaticType.SEXP, call("cast_sexp", arg0))
-                is Type.Tuple -> rex(StaticType.STRUCT, call("cast_tuple", arg0))
-                is Type.Struct -> rex(StaticType.STRUCT, call("cast_struct", arg0))
-                is Type.Any -> rex(StaticType.ANY, call("cast_any", arg0))
-                is Type.Custom -> TODO("Custom type not supported ")
-            }
+            val argType = arg0.type.toRuntimeType()
+            return rex(type, rexOpCastOp(arg0, cast(argType, type.toRuntimeType(), Cast.CastType.EXPLICIT)))
         }
 
         override fun visitExprCanCast(node: Expr.CanCast, ctx: Env): Rex {
@@ -670,5 +644,76 @@ internal object RexConverter {
         }
 
         private fun Int?.toRex() = rex(StaticType.INT4, rexOpLit(int32Value(this)))
+
+        @OptIn(PartiQLTimestampExperimental::class)
+        private fun Type.toStaticType() = when (this) {
+            // MISSING / NULL
+            is Type.Missing -> StaticType.MISSING
+            is Type.NullType -> StaticType.NULL
+
+            // BOOL
+            is Type.Bool -> StaticType.BOOL
+
+            // NUMBER
+            is Type.Tinyint -> TODO("Static Type does not have TINY INT Type")
+            is Type.Smallint, is Type.Int2 -> StaticType.INT2
+            is Type.Int4 -> StaticType.INT4
+            is Type.Int8, is Type.Bigint -> StaticType.INT8
+            is Type.Int -> StaticType.INT
+            is Type.Decimal -> {
+                if (this.precision == null || this.scale == null) StaticType.DECIMAL
+                else DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(this.precision!!, this.scale!!))
+            }
+            is Type.Numeric -> {
+                if (this.precision == null || this.scale == null) StaticType.DECIMAL
+                else DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(this.precision!!, this.scale!!))
+            }
+            is Type.Real -> TODO("Static Type does not have REAL type")
+            is Type.Float32 -> TODO("Static Type does not have FLOAT32 type")
+            is Type.Float64 -> StaticType.FLOAT
+
+            // Text
+            is Type.Char -> this.length?.let { l ->
+                StringType(StringType.StringLengthConstraint.Constrained(NumberConstraint.Equals(l)))
+            } ?: StaticType.CHAR
+            is Type.String -> this.length?.let { l ->
+                StringType(StringType.StringLengthConstraint.Constrained(NumberConstraint.UpTo(l)))
+            } ?: StaticType.STRING
+            is Type.Varchar -> this.length?.let { l ->
+                StringType(StringType.StringLengthConstraint.Constrained(NumberConstraint.UpTo(l)))
+            } ?: StaticType.STRING
+            is Type.Symbol -> StaticType.SYMBOL
+
+            // Date Time
+            is Type.Date -> StaticType.DATE
+            is Type.Time -> TimeType(this.precision, false)
+            is Type.TimeWithTz -> TimeType(this.precision, true)
+            is Type.Timestamp -> TimestampType(this.precision, false)
+            is Type.TimestampWithTz -> TimestampType(this.precision, true)
+            is Type.Interval -> TODO("Static Type does not have INTERVAL type")
+
+            // Bit
+            is Type.Bit -> TODO("Static Type does not have Bit type")
+            is Type.BitVarying -> TODO("Static Type does not have BitVarying type")
+            is Type.ByteString -> TODO("Static Type does not have ByteString type")
+
+            // LOB
+            is Type.Blob -> StaticType.BLOB
+            is Type.Clob -> StaticType.CLOB
+
+            // Collection
+            is Type.List -> StaticType.LIST
+            is Type.Sexp -> StaticType.SEXP
+            is Type.Bag -> StaticType.BAG
+
+            // Struct
+            is Type.Struct, is Type.Tuple -> StaticType.STRUCT
+
+            // ANY
+            is Type.Any -> StaticType.ANY
+
+            // Custom
+            is Type.Custom -> TODO("Custom type not supported ")
+        }
     }
 }

@@ -16,6 +16,7 @@ import org.partiql.eval.internal.operator.rel.RelScanPermissive
 import org.partiql.eval.internal.operator.rex.ExprCallDynamic
 import org.partiql.eval.internal.operator.rex.ExprCallStatic
 import org.partiql.eval.internal.operator.rex.ExprCase
+import org.partiql.eval.internal.operator.rex.ExprCastOp
 import org.partiql.eval.internal.operator.rex.ExprCollection
 import org.partiql.eval.internal.operator.rex.ExprGlobal
 import org.partiql.eval.internal.operator.rex.ExprLiteral
@@ -160,7 +161,7 @@ internal class Compiler @OptIn(PartiQLFunctionExperimental::class) constructor(
         val args = node.args.map { visitRex(it, ctx).modeHandled() }.toTypedArray()
         val candidates = node.candidates.map { candidate ->
             val fn = getFunction(candidate.fn.signature)
-            val coercions = candidate.coercions.map { it?.signature?.let { sig -> getFunction(sig) } }
+            val coercions = candidate.coercions
             ExprCallDynamic.Candidate(candidate.parameters.toTypedArray(), fn, coercions)
         }
         return ExprCallDynamic(candidates, args)
@@ -232,6 +233,10 @@ internal class Compiler @OptIn(PartiQLFunctionExperimental::class) constructor(
         }
         val default = visitRex(node.default, ctx)
         return ExprCase(branches, default)
+    }
+
+    override fun visitRexOpCastOp(node: Rex.Op.CastOp, ctx: Unit): Operator {
+        return ExprCastOp(visitRex(node.arg, ctx), node.cast)
     }
 
     @OptIn(PartiQLValueExperimental::class)

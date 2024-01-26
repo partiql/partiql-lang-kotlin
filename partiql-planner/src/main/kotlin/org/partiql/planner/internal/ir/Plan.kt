@@ -23,6 +23,9 @@ internal fun catalogSymbol(path: List<String>, type: StaticType): Catalog.Symbol
 internal fun catalogSymbolRef(catalog: Int, symbol: Int): Catalog.Symbol.Ref =
     Catalog.Symbol.Ref(catalog, symbol)
 
+internal fun cast(operand: PartiQLValueType, target: PartiQLValueType, castType: Cast.CastType) =
+    Cast(operand, target, castType)
+
 internal fun fnResolved(signature: FunctionSignature.Scalar): Fn.Resolved = Fn.Resolved(signature)
 
 internal fun fnUnresolved(identifier: Identifier, isHidden: Boolean): Fn.Unresolved =
@@ -73,7 +76,7 @@ internal fun rexOpCallDynamic(args: List<Rex>, candidates: List<Rex.Op.Call.Dyna
 internal fun rexOpCallDynamicCandidate(
     fn: Fn,
     parameters: List<PartiQLValueType>,
-    coercions: List<Fn?>,
+    coercions: List<Cast?>,
 ): Rex.Op.Call.Dynamic.Candidate = Rex.Op.Call.Dynamic.Candidate(fn, parameters, coercions)
 
 internal fun rexOpCase(branches: List<Rex.Op.Case.Branch>, default: Rex): Rex.Op.Case =
@@ -81,6 +84,9 @@ internal fun rexOpCase(branches: List<Rex.Op.Case.Branch>, default: Rex): Rex.Op
 
 internal fun rexOpCaseBranch(condition: Rex, rex: Rex): Rex.Op.Case.Branch =
     Rex.Op.Case.Branch(condition, rex)
+
+internal fun rexOpCastOp(arg: Rex, cast: Cast): Rex.Op.CastOp =
+    Rex.Op.CastOp(arg, cast)
 
 internal fun rexOpCollection(values: List<Rex>): Rex.Op.Collection = Rex.Op.Collection(values)
 

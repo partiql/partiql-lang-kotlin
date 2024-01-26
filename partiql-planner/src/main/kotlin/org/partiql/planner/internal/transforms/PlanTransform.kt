@@ -1,6 +1,11 @@
 package org.partiql.planner.internal.transforms
 
+import org.partiql.errors.Problem
 import org.partiql.errors.ProblemCallback
+import org.partiql.errors.ProblemDetails
+import org.partiql.errors.ProblemSeverity
+import org.partiql.errors.UNKNOWN_PROBLEM_LOCATION
+import org.partiql.plan.Cast
 import org.partiql.plan.PlanNode
 import org.partiql.plan.partiQLPlan
 import org.partiql.planner.internal.ir.Agg
@@ -130,6 +135,27 @@ internal object PlanTransform : PlanBaseVisitor<PlanNode, ProblemCallback>() {
         return org.partiql.plan.Rex.Op.Path.Symbol(root, node.key)
     }
 
+    @OptIn(PartiQLValueExperimental::class)
+    override fun visitRexOpCastOp(node: Rex.Op.CastOp, ctx: ProblemCallback): PlanNode {
+        val arg = visitRex(node.arg, ctx)
+        val cast = when (node.cast.castType) {
+            org.partiql.planner.internal.ir.Cast.CastType.COERCION -> org.partiql.plan.cast(node.cast.operand, node.cast.target, Cast.CastType.COERCION)
+            org.partiql.planner.internal.ir.Cast.CastType.EXPLICIT -> org.partiql.plan.cast(node.cast.operand, node.cast.target, Cast.CastType.EXPLICIT)
+            org.partiql.planner.internal.ir.Cast.CastType.UNSAFE -> org.partiql.plan.cast(node.cast.operand, node.cast.target, Cast.CastType.UNSAFE)
+        }
+        return org.partiql.plan.Rex.Op.CastOp(arg, cast)
+    }
+
+    @OptIn(PartiQLValueExperimental::class)
+    override fun visitCast(node: org.partiql.planner.internal.ir.Cast, ctx: ProblemCallback): PlanNode {
+        val castType = when (node.castType) {
+            org.partiql.planner.internal.ir.Cast.CastType.COERCION -> org.partiql.plan.Cast.CastType.COERCION
+            org.partiql.planner.internal.ir.Cast.CastType.EXPLICIT -> org.partiql.plan.Cast.CastType.EXPLICIT
+            org.partiql.planner.internal.ir.Cast.CastType.UNSAFE -> org.partiql.plan.Cast.CastType.EXPLICIT
+        }
+        return org.partiql.plan.cast(node.operand, node.target, castType)
+    }
+
     override fun visitRexOpCall(node: Rex.Op.Call, ctx: ProblemCallback) =
         super.visitRexOpCall(node, ctx) as org.partiql.plan.Rex.Op
 
@@ -169,9 +195,9 @@ internal object PlanTransform : PlanBaseVisitor<PlanNode, ProblemCallback>() {
         fn as org.partiql.plan.Fn
         val coercions = node.coercions.map {
             it?.let {
-                val c = visitFn(it, ctx)
+                val c = visitCast(it, ctx)
                 if (c is org.partiql.plan.Rex.Op.Err) return c
-                c as org.partiql.plan.Fn
+                c as org.partiql.plan.Cast
             }
         }
         return org.partiql.plan.Rex.Op.Call.Dynamic.Candidate(fn, node.parameters, coercions)
@@ -220,7 +246,20 @@ internal object PlanTransform : PlanBaseVisitor<PlanNode, ProblemCallback>() {
         override fun visitRexOpTupleUnion(node: Rex.Op.TupleUnion, ctx: ProblemCallback) =
             org.partiql.plan.Rex.Op.TupleUnion(args = node.args.map { visitRex(it, ctx) })
 
-        override fun visitRexOpErr(node: Rex.Op.Err, ctx: ProblemCallback) = org.partiql.plan.Rex.Op.Err(node.message)
+        override fun visitRexOpErr(node: Rex.Op.Err, ctx: ProblemCallback): org.partiql.plan.Rex.Op.Err {
+            ctx.invoke(
+                Problem(
+                    UNKNOWN_PROBLEM_LOCATION,
+                    object : ProblemDetails {
+                        override val severity: ProblemSeverity
+                            get() = ProblemSeverity.ERROR
+                        override val message: String
+                            get() = node.message
+                    }
+                )
+            )
+            return org.partiql.plan.Rex.Op.Err(node.message)
+        }
 
         // RELATION OPERATORS
 

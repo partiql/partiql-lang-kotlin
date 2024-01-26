@@ -3,6 +3,7 @@
 package org.partiql.planner.internal.ir.builder
 
 import org.partiql.planner.internal.ir.Agg
+import org.partiql.planner.internal.ir.Cast
 import org.partiql.planner.internal.ir.Catalog
 import org.partiql.planner.internal.ir.Fn
 import org.partiql.planner.internal.ir.Identifier
@@ -58,6 +59,17 @@ internal class PlanBuilder {
         block: CatalogSymbolRefBuilder.() -> Unit = {},
     ): Catalog.Symbol.Ref {
         val builder = CatalogSymbolRefBuilder(catalog, symbol)
+        builder.block()
+        return builder.build()
+    }
+
+    internal fun cast(
+        operand: PartiQLValueType? = null,
+        target: PartiQLValueType? = null,
+        castType: Cast.CastType? = null,
+        block: CastBuilder.() -> Unit = {},
+    ): Cast {
+        val builder = CastBuilder(operand, target, castType)
         builder.block()
         return builder.build()
     }
@@ -224,7 +236,7 @@ internal class PlanBuilder {
     internal fun rexOpCallDynamicCandidate(
         fn: Fn? = null,
         parameters: MutableList<PartiQLValueType> = mutableListOf(),
-        coercions: MutableList<Fn?> = mutableListOf(),
+        coercions: MutableList<Cast?> = mutableListOf(),
         block: RexOpCallDynamicCandidateBuilder.() -> Unit = {},
     ): Rex.Op.Call.Dynamic.Candidate {
         val builder = RexOpCallDynamicCandidateBuilder(fn, parameters, coercions)
@@ -248,6 +260,16 @@ internal class PlanBuilder {
         block: RexOpCaseBranchBuilder.() -> Unit = {},
     ): Rex.Op.Case.Branch {
         val builder = RexOpCaseBranchBuilder(condition, rex)
+        builder.block()
+        return builder.build()
+    }
+
+    internal fun rexOpCastOp(
+        arg: Rex? = null,
+        cast: Cast? = null,
+        block: RexOpCastOpBuilder.() -> Unit = {},
+    ): Rex.Op.CastOp {
+        val builder = RexOpCastOpBuilder(arg, cast)
         builder.block()
         return builder.build()
     }
