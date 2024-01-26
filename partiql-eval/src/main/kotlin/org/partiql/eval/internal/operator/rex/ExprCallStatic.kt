@@ -22,15 +22,40 @@ internal class ExprCallStatic(
     @OptIn(PartiQLValueExperimental::class)
     private val nil = fn.signature.returns.toNull()
 
-    override fun eval(record: Record): PartiQLValue = try {
+    override fun eval(record: Record): PartiQLValue {
         // Evaluate arguments
         val args = inputs.map { input ->
             val r = input.eval(record)
             if (r.isNull && fn.signature.isNullCall) return nil()
             r
         }.toTypedArray()
-        fn.invoke(args)
-    } catch (ex: TypeCheckException) {
-        missingValue()
+        return fn.invoke(args)
+    }
+
+    @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
+    internal class Permissive(
+        private val fn: PartiQLFunction.Scalar,
+        private val inputs: Array<Operator.Expr>,
+    ) : Operator.Expr {
+
+        /**
+         * Memoize creation of
+         */
+        @OptIn(PartiQLValueExperimental::class)
+        private val nil = fn.signature.returns.toNull()
+
+        override fun eval(record: Record): PartiQLValue {
+            // Evaluate arguments
+            val args = inputs.map { input ->
+                try {
+                    val r = input.eval(record)
+                    if (r.isNull && fn.signature.isNullCall) return nil()
+                    r
+                } catch (e: TypeCheckException) {
+                    missingValue()
+                }
+            }.toTypedArray()
+            return fn.invoke(args)
+        }
     }
 }
