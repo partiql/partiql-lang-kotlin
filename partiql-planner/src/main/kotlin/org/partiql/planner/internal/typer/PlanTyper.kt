@@ -606,7 +606,7 @@ internal class PlanTyper(
                 }
                 is FnMatch.Error -> {
                     handleUnknownFunction(match)
-                    rexErr("Unknown scalar function $fn")
+                    rexErr("Unknown scalar function $fn for args: $args")
                 }
             }
         }

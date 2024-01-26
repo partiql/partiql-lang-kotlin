@@ -19,6 +19,7 @@ package org.partiql.planner.internal.transforms
 import org.partiql.ast.AstNode
 import org.partiql.ast.DatetimeField
 import org.partiql.ast.Expr
+import org.partiql.ast.Select
 import org.partiql.ast.Type
 import org.partiql.ast.visitor.AstBaseVisitor
 import org.partiql.planner.internal.Env
@@ -106,9 +107,9 @@ internal object RexConverter {
          */
         private fun visitExprCoerce(node: Expr, ctx: Env, coercion: Rex.Op.Subquery.Coercion = Rex.Op.Subquery.Coercion.SCALAR): Rex {
             val rex = super.visitExpr(node, ctx)
-            return when (rex.op is Rex.Op.Select) {
+            return when (isSqlSelect(node)) {
                 true -> rex(StaticType.ANY, rexOpSubquery(rex.op as Rex.Op.Select, coercion))
-                else -> rex
+                false -> rex
             }
         }
 
@@ -137,25 +138,56 @@ internal object RexConverter {
 
         override fun visitExprBinary(node: Expr.Binary, context: Env): Rex {
             val type = (StaticType.ANY)
-            // Args
-            val lhs = visitExprCoerce(node.lhs, context)
-            val rhs = visitExprCoerce(node.rhs, context)
-            val args = listOf(lhs, rhs)
+            val args = when (node.op) {
+                Expr.Binary.Op.LT, Expr.Binary.Op.GT,
+                Expr.Binary.Op.LTE, Expr.Binary.Op.GTE,
+                Expr.Binary.Op.EQ, Expr.Binary.Op.NE -> {
+                    when {
+                        // Example: [1, 2] < (SELECT a, b FROM t)
+                        isLiteralArray(node.lhs) && isSqlSelect(node.rhs) -> {
+                            val lhs = visitExprCoerce(node.lhs, context)
+                            val rhs = visitExprCoerce(node.rhs, context, Rex.Op.Subquery.Coercion.ROW)
+                            listOf(lhs, rhs)
+                        }
+                        // Example: (SELECT a, b FROM t) < [1, 2]
+                        isSqlSelect(node.lhs) && isLiteralArray(node.rhs) -> {
+                            val lhs = visitExprCoerce(node.lhs, context, Rex.Op.Subquery.Coercion.ROW)
+                            val rhs = visitExprCoerce(node.rhs, context)
+                            listOf(lhs, rhs)
+                        }
+                        // Example: 1 < 2
+                        else -> {
+                            val lhs = visitExprCoerce(node.lhs, context)
+                            val rhs = visitExprCoerce(node.rhs, context)
+                            listOf(lhs, rhs)
+                        }
+                    }
+                }
+                // Example: 1 + 2
+                else -> {
+                    val lhs = visitExprCoerce(node.lhs, context)
+                    val rhs = visitExprCoerce(node.rhs, context)
+                    listOf(lhs, rhs)
+                }
+            }
+            // Wrap if a NOT if necessary
             return when (node.op) {
                 Expr.Binary.Op.NE -> {
-                    val op = negate(call("eq", lhs, rhs))
+                    val op = negate(call("eq", *args.toTypedArray()))
                     rex(type, op)
                 }
                 else -> {
-                    // Fn
                     val id = identifierSymbol(node.op.name.lowercase(), Identifier.CaseSensitivity.SENSITIVE)
                     val fn = fnUnresolved(id, true)
-                    // Rex
                     val op = rexOpCallStatic(fn, args)
                     rex(type, op)
                 }
             }
         }
+
+        private fun isLiteralArray(node: Expr): Boolean = node is Expr.Collection && (node.type == Expr.Collection.Type.ARRAY || node.type == Expr.Collection.Type.LIST)
+
+        private fun isSqlSelect(node: Expr): Boolean = node is Expr.SFW && (node.select is Select.Project || node.select is Select.Star)
 
         private fun mergeIdentifiers(root: Identifier, steps: List<Identifier>): Identifier {
             if (steps.isEmpty()) {

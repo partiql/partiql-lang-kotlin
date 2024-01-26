@@ -27,6 +27,7 @@ import org.partiql.eval.internal.operator.rex.ExprPivot
 import org.partiql.eval.internal.operator.rex.ExprPivotPermissive
 import org.partiql.eval.internal.operator.rex.ExprSelect
 import org.partiql.eval.internal.operator.rex.ExprStruct
+import org.partiql.eval.internal.operator.rex.ExprSubquery
 import org.partiql.eval.internal.operator.rex.ExprTupleUnion
 import org.partiql.eval.internal.operator.rex.ExprVar
 import org.partiql.plan.PartiQLPlan
@@ -97,10 +98,18 @@ internal class Compiler @OptIn(PartiQLFunctionExperimental::class) constructor(
         return ExprStruct(fields)
     }
 
-    override fun visitRexOpSelect(node: Rex.Op.Select, ctx: Unit): Operator {
+    override fun visitRexOpSelect(node: Rex.Op.Select, ctx: Unit): Operator.Expr {
         val rel = visitRel(node.rel, ctx)
         val constructor = visitRex(node.constructor, ctx).modeHandled()
         return ExprSelect(rel, constructor)
+    }
+
+    override fun visitRexOpSubquery(node: Rex.Op.Subquery, ctx: Unit): Operator {
+        val select = visitRexOpSelect(node.select, ctx)
+        return when (node.coercion) {
+            Rex.Op.Subquery.Coercion.SCALAR -> ExprSubquery.Scalar(select)
+            Rex.Op.Subquery.Coercion.ROW -> ExprSubquery.Row(select)
+        }
     }
 
     override fun visitRexOpPivot(node: Rex.Op.Pivot, ctx: Unit): Operator {

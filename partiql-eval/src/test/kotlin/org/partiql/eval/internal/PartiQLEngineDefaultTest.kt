@@ -262,6 +262,57 @@ class PartiQLEngineDefaultTest {
                 expected = boolValue(true)
             ),
             SuccessTestCase(
+                input = """
+                    1 + (SELECT t.a FROM << { 'a': 3 } >> AS t)
+                """.trimIndent(),
+                expected = int32Value(4)
+            ),
+            // SELECT * without nested coercion
+            SuccessTestCase(
+                input = """
+                    SELECT *
+                    FROM (
+                        SELECT t.a AS "first", t.b AS "second"
+                        FROM << { 'a': 3, 'b': 5 } >> AS t
+                    );
+                """.trimIndent(),
+                expected = bagValue(
+                    structValue(
+                        "first" to int32Value(3),
+                        "second" to int32Value(5)
+                    )
+                )
+            ),
+            // SELECT list without nested coercion
+            SuccessTestCase(
+                input = """
+                    SELECT "first", "second"
+                    FROM (
+                        SELECT t.a AS "first", t.b AS "second"
+                        FROM << { 'a': 3, 'b': 5 } >> AS t
+                    );
+                """.trimIndent(),
+                expected = bagValue(
+                    structValue(
+                        "first" to int32Value(3),
+                        "second" to int32Value(5)
+                    )
+                )
+            ),
+            // SELECT value without nested coercion
+            SuccessTestCase(
+                input = """
+                    SELECT VALUE "first"
+                    FROM (
+                        SELECT t.a AS "first", t.b AS "second"
+                        FROM << { 'a': 3, 'b': 5 } >> AS t
+                    );
+                """.trimIndent(),
+                expected = bagValue(
+                    int32Value(3),
+                )
+            ),
+            SuccessTestCase(
                 input = "MISSING IS MISSING;",
                 expected = boolValue(true)
             ),
@@ -677,5 +728,26 @@ class PartiQLEngineDefaultTest {
                     "i" to int64Value(2),
                 ),
             )
+        ).assert()
+
+    @Test
+    @Disabled("Support for ORDER BY needs to be added for this to pass.")
+    // PartiQL Specification says that SQL's SELECT is coerced, but SELECT VALUE is not.
+    fun selectValueNoCoercion() =
+        SuccessTestCase(
+            input = """
+                (4, 5) < (SELECT VALUE t.a FROM << { 'a': 3 }, { 'a': 4 } >> AS t ORDER BY t.a)
+            """.trimIndent(),
+            expected = boolValue(false)
+        ).assert()
+
+    @Test
+    @Disabled("This is appropriately coerced, but this test is failing because LT currently doesn't support LISTS.")
+    fun rowCoercion() =
+        SuccessTestCase(
+            input = """
+                (4, 5) < (SELECT t.a, t.a FROM << { 'a': 3 } >> AS t)
+            """.trimIndent(),
+            expected = boolValue(false)
         ).assert()
 }

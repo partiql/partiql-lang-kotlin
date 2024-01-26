@@ -81,8 +81,9 @@ internal object RelConverter {
      * Here we convert an SFW to composed [Rel]s, then apply the appropriate relation-value projection to get a [Rex].
      */
     internal fun apply(sfw: Expr.SFW, env: Env): Rex {
-        val rel = sfw.accept(ToRel(env), nil)
-        val rex = when (val projection = sfw.select) {
+        val normalizedSfw = NormalizeSelect.normalize(sfw)
+        val rel = normalizedSfw.accept(ToRel(env), nil)
+        val rex = when (val projection = normalizedSfw.select) {
             // PIVOT ... FROM
             is Select.Pivot -> {
                 val key = projection.key.toRex(env)
@@ -149,15 +150,11 @@ internal object RelConverter {
             rel = convertExclude(rel, sel.exclude)
             // append SQL projection if present
             rel = when (val projection = sel.select) {
-                is Select.Project -> {
-                    val project = visitSelectProject(projection, rel)
-                    visitSetQuantifier(projection.setq, project)
-                }
                 is Select.Value -> {
                     val project = visitSelectValue(projection, rel)
                     visitSetQuantifier(projection.setq, project)
                 }
-                is Select.Star -> error("AST not normalized, found project star")
+                is Select.Star, is Select.Project -> error("AST not normalized, found ${projection.javaClass.simpleName}")
                 is Select.Pivot -> rel // Skip PIVOT
             }
             return rel
