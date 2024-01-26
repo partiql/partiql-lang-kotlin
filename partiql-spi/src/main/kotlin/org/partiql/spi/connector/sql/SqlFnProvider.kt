@@ -27,17 +27,15 @@ import org.partiql.spi.fn.FnScalar
 @OptIn(FnExperimental::class)
 public class SqlFnProvider(private val index: FnIndex) : ConnectorFnProvider {
 
-    override fun getFnScalar(handle: ConnectorHandle.Fn): FnScalar? {
+    override fun getFnScalar(handle: ConnectorHandle.Fn, specific: String): FnScalar? {
         val path = handle.path
-        val type = handle.entity.getType()
-        val fn = index.get(path, type.specific)
+        val fn = index.get(path, specific)
         return if (fn is FnScalar) fn else null
     }
 
-    override fun getFnAggregation(handle: ConnectorHandle.Fn): FnAggregation? {
+    override fun getFnAggregation(handle: ConnectorHandle.Fn, specific: String): FnAggregation? {
         val path = handle.path
-        val type = handle.entity.getType()
-        val fn = index.get(path, type.specific)
+        val fn = index.get(path, specific)
         return if (fn is FnAggregation) fn else null
     }
 }

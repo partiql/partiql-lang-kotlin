@@ -26,7 +26,7 @@ internal class InfoViewRoutines(private val index: FnIndex) : InfoView {
         )
     )
 
-    @PartiQLValueExperimental
+    @OptIn(PartiQLValueExperimental::class)
     override fun value(): PartiQLValue {
         return bagValue(listOf(nullValue()))
     }

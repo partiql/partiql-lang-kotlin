@@ -21,12 +21,14 @@ import org.partiql.spi.fn.FnSignature
 /**
  * Simple [ConnectorFn] implementation wrapping a signature.
  *
- * @property signature
+ * @property name
+ * @property variants
  */
 @OptIn(FnExperimental::class)
 public class SqlFn(
-    private val signature: FnSignature,
+    private val name: String,
+    private val variants: List<FnSignature>,
 ) : ConnectorFn {
 
-    override fun getType(): FnSignature = signature
+    override fun getVariants(): List<FnSignature> = variants
 }

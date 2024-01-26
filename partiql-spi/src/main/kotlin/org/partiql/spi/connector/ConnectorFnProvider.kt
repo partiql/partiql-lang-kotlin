@@ -24,7 +24,7 @@ import org.partiql.spi.fn.FnScalar
 @FnExperimental
 public interface ConnectorFnProvider {
 
-    public fun getFnScalar(handle: ConnectorHandle.Fn): FnScalar?
+    public fun getFnScalar(handle: ConnectorHandle.Fn, specific: String): FnScalar?
 
-    public fun getFnAggregation(handle: ConnectorHandle.Fn): FnAggregation?
+    public fun getFnAggregation(handle: ConnectorHandle.Fn, specific: String): FnAggregation?
 }

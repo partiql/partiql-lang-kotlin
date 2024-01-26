@@ -12,10 +12,10 @@ public interface FnIndex {
      * @param path
      * @return
      */
-    public fun list(path: List<String>): List<Fn>
+    public fun get(path: List<String>): List<Fn>
 
     /**
-     * Lookup a function by its specific name.
+     * Lookup a function signature by its specific name.
      *
      * @param specific
      * @return

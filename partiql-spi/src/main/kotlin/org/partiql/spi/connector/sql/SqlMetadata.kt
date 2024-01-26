@@ -43,10 +43,13 @@ public class SqlMetadata(
     override fun getObject(path: BindingPath): ConnectorHandle.Obj? = delegate.getObject(path)
 
     @FnExperimental
-    override fun getFunctions(path: BindingPath): List<ConnectorHandle.Fn> {
+    override fun getFunction(path: BindingPath): ConnectorHandle.Fn? {
         val cnf = path.normalized
-        return info.functions.list(cnf).map {
-            ConnectorHandle.Fn(cnf, SqlFn(it.signature))
+        val name = cnf.last()
+        val variants = info.functions.get(cnf).map { it.signature }
+        if (variants.isEmpty()) {
+            return null
         }
+        return ConnectorHandle.Fn(cnf, SqlFn(name, variants))
     }
 }
