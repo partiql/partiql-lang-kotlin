@@ -1,10 +1,8 @@
-@file:OptIn(FnExperimental::class)
-
 package org.partiql.planner.internal.casts
 
+import org.partiql.planner.internal.ir.Ref.Cast
+import org.partiql.planner.internal.ir.refCast
 import org.partiql.spi.fn.FnExperimental
-import org.partiql.spi.fn.FnParameter
-import org.partiql.spi.fn.FnSignature
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
 import org.partiql.value.PartiQLValueType.ANY
@@ -42,7 +40,7 @@ import org.partiql.value.PartiQLValueType.TIMESTAMP
  * @property types
  * @property graph      Going with a matrix here (using enum ordinals) as it's simple and avoids walking.
  */
-@OptIn(PartiQLValueExperimental::class, FnExperimental::class)
+@OptIn(PartiQLValueExperimental::class)
 internal class CastTable private constructor(
     private val types: Array<PartiQLValueType>,
     private val graph: Array<Array<CastInfo?>>,
@@ -75,11 +73,11 @@ internal class CastTable private constructor(
     /**
      * Returns the CAST function if exists, else null.
      */
-    internal fun lookupCoercion(operand: PartiQLValueType, target: PartiQLValueType): FnSignature.Scalar? {
+    internal fun lookupCoercion(operand: PartiQLValueType, target: PartiQLValueType): Cast? {
         val i = operand.ordinal
         val j = target.ordinal
-        val rel = graph[i][j] ?: return null
-        return if (rel.castType == CastType.COERCION) rel.castFn else null
+        val cast = graph[i][j] ?: return null
+        return if (cast.type == CastType.COERCION) cast.ref else null
     }
 
     /**
@@ -318,7 +316,6 @@ internal class CastTable private constructor(
         }
     }
 
-    @OptIn(FnExperimental::class)
     private class RelationshipBuilder(val operand: PartiQLValueType) {
 
         private val relationships = arrayOfNulls<CastInfo?>(N)
@@ -326,26 +323,15 @@ internal class CastTable private constructor(
         fun build() = relationships
 
         fun coercion(target: PartiQLValueType) {
-            relationships[target] = CastInfo(CastType.COERCION, cast(operand, target))
+            relationships[target] = CastInfo(CastType.COERCION, refCast(operand, target))
         }
 
         fun explicit(target: PartiQLValueType) {
-            relationships[target] = CastInfo(CastType.EXPLICIT, cast(operand, target))
+            relationships[target] = CastInfo(CastType.EXPLICIT, refCast(operand, target))
         }
 
         fun unsafe(target: PartiQLValueType) {
-            relationships[target] = CastInfo(CastType.UNSAFE, cast(operand, target))
+            relationships[target] = CastInfo(CastType.UNSAFE, refCast(operand, target))
         }
-
-        private fun cast(operand: PartiQLValueType, target: PartiQLValueType) =
-            FnSignature.Scalar(
-                name = "cast_${target.name.lowercase()}",
-                returns = target,
-                parameters = listOf(
-                    FnParameter("value", operand),
-                ),
-                isNullable = false,
-                isNullCall = true
-            )
     }
 }

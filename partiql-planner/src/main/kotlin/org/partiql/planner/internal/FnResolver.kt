@@ -1,158 +1,171 @@
 package org.partiql.planner.internal
 
 import org.partiql.planner.internal.casts.CastTable
-import org.partiql.spi.connector.ConnectorFn
-import org.partiql.spi.connector.ConnectorHandle
+import org.partiql.planner.internal.ir.Ref
+import org.partiql.planner.internal.ir.Rex
+import org.partiql.planner.internal.typer.toRuntimeTypeOrNull
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnSignature
+import org.partiql.types.StaticType
+import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.PartiQLValueType.*
 
 /**
  *
+ * Resolution of static calls.
  *
- * https://www.postgresql.org/docs/current/typeconv-func.html
+ *  1. Sort all functions by resolution precedence.
+ *  2. Check for a function accepting exactly the input argument types. If one exists, use it.
+ *  3. Look for the best match
+ *      a. Discard candidates whose arguments do not match or cannot be coerced.
+ *      b. Check all candidates and keep those with the most exact matches.
+ *
+ * Resolution of dynamic calls.
+ *
+ *
+ *
+ * Reference https://www.postgresql.org/docs/current/typeconv-func.html
  */
-@OptIn(FnExperimental::class)
+@OptIn(FnExperimental::class, PartiQLValueExperimental::class)
 internal object FnResolver {
 
-    private val casts = CastTable
+    @JvmStatic
+    private val casts = CastTable.partiql()
 
-    fun resolve(fn: ConnectorHandle<ConnectorFn>, args: FnArgs): FnSignature? {
-        TODO()
+    /**
+     * Resolution of either a static or dynamic function.
+     *
+     * @param variants
+     * @param args
+     * @return
+     */
+    fun resolve(variants: List<FnSignature>, args: List<StaticType>): FnMatch? {
+
+        val candidates = variants
+            .filter { it.parameters.size == args.size }
+            .sortedWith(FnComparator)
+            .ifEmpty { return null }
+
+        val parameterPermutations = buildArgumentPermutations(args).mapNotNull { argList ->
+            argList.map { arg ->
+                // Skip over if we cannot convert type to runtime type.
+                arg.toRuntimeTypeOrNull() ?: return@mapNotNull null
+            }
+        }
+
+        val potentialFunctions = parameterPermutations.mapNotNull { parameters ->
+            when (val match = match(candidates, parameters)) {
+                null -> {
+                    canReturnMissing = true
+                    null
+                }
+                else -> {
+                    val isMissable = canReturnMissing || isUnsafeCast(match.signature.specific)
+                    FnMatch.Ok(match.signature, match.mapping, isMissable)
+                }
+            }
+        }
+        // Remove duplicates while maintaining order (precedence).
+        val orderedUniqueFunctions = potentialFunctions.toSet().toList()
+        return when (orderedUniqueFunctions.size) {
+            0 -> null
+            1 -> orderedUniqueFunctions.first()
+            else -> FnMatch.Dynamic(orderedUniqueFunctions, canReturnMissing)
+        }
     }
 
-    // /**
-    //  * Attempt to match arguments to the parameters; return the implicit casts if necessary.
-    //  *
-    //  * TODO we need to constrain the allowable runtime types for an ANY typed parameter.
-    //  */
-    // fun match(signature: FnSignature, args: FnArgs): boo {
-    //     if (signature.parameters.size != args.size) {
-    //         return null
-    //     }
-    //     // val mapping = ArrayList<FunctionSignature.Scalar?>(args.size)
-    //     for (i in args.indices) {
-    //         val a = args[i]
-    //         val p = signature.parameters[i]
-    //         when {
-    //             // 1. Exact match
-    //             a.type == p.type -> continue
-    //             // 2. Match ANY, no coercion needed
-    //             p.type == ANY -> mapping.add(null)
-    //             // 3. Match NULL argument
-    //             a.type == NULL -> mapping.add(null)
-    //             // 4. Check for a coercion
-    //             else -> {
-    //
-    //                 val coercion = lookupCoercion(a.type, p.type)
-    //                 when (coercion) {
-    //                     null -> return null // short-circuit
-    //                     else -> mapping.add(coercion)
-    //                 }
-    //             }
-    //         }
-    //     }
-    //     // if all elements requires casting, then no match
-    //     // because there must be another function definition that requires no casting
-    //     return if (mapping.isEmpty() || mapping.contains(null)) {
-    //         // we made a match
-    //         mapping
-    //     } else {
-    //         null
-    //     }
-    // }
-    //
-    // public fun resolveFn(fn: Fn.Unresolved, args: List<Rex>): FnMatch<FunctionSignature.Scalar> {
-    //     val candidates = lookup(fn)
-    //     var canReturnMissing = false
-    //     val parameterPermutations = buildArgumentPermutations(args.map { it.type }).mapNotNull { argList ->
-    //         argList.mapIndexed { i, arg ->
-    //             if (arg.isMissable()) {
-    //                 canReturnMissing = true
-    //             }
-    //             // Skip over if we cannot convert type to runtime type.
-    //             val argType = arg.toRuntimeTypeOrNull() ?: return@mapNotNull null
-    //             FunctionParameter("arg-$i", argType)
-    //         }
-    //     }
-    //     val potentialFunctions = parameterPermutations.mapNotNull { parameters ->
-    //         when (val match = match(candidates, parameters)) {
-    //             null -> {
-    //                 canReturnMissing = true
-    //                 null
-    //             }
-    //             else -> {
-    //                 val isMissable = canReturnMissing || isUnsafeCast(match.signature.specific)
-    //                 FnMatch.Ok(match.signature, match.mapping, isMissable)
-    //             }
-    //         }
-    //     }
-    //     // Remove duplicates while maintaining order (precedence).
-    //     val orderedUniqueFunctions = potentialFunctions.toSet().toList()
-    //     return when (orderedUniqueFunctions.size) {
-    //         0 -> FnMatch.Error(fn.identifier, args, candidates)
-    //         1 -> orderedUniqueFunctions.first()
-    //         else -> FnMatch.Dynamic(orderedUniqueFunctions, canReturnMissing)
-    //     }
-    // }
-    //
-    // private fun buildArgumentPermutations(args: List<StaticType>): List<List<StaticType>> {
-    //     val flattenedArgs = args.map { it.flatten().allTypes }
-    //     return buildArgumentPermutations(flattenedArgs, accumulator = emptyList())
-    // }
-    //
-    // private fun buildArgumentPermutations(
-    //     args: List<List<StaticType>>,
-    //     accumulator: List<StaticType>,
-    // ): List<List<StaticType>> {
-    //     if (args.isEmpty()) {
-    //         return listOf(accumulator)
-    //     }
-    //     val first = args.first()
-    //     val rest = when (args.size) {
-    //         1 -> emptyList()
-    //         else -> args.subList(1, args.size)
-    //     }
-    //     return buildList {
-    //         first.forEach { argSubType ->
-    //             addAll(buildArgumentPermutations(rest, accumulator + listOf(argSubType)))
-    //         }
-    //     }
-    // }
+    /**
+     * Resolution of a static function.
+     *
+     * @param candidates
+     * @param args
+     * @return
+     */
+    private fun resolve(candidates: List<FnSignature>, args: FnArgs): FnMatch? {
+        // 1. Check for an exact match
+        for (candidate in candidates) {
+            if (candidate.matches(args)) {
+                return FnMatch.Static(candidate, null)
+            }
+        }
+        // 2. Look for best match.
+        var match: FnMatch.Static? = null
+        for (candidate in candidates) {
+            val m = candidate.match(args) ?: continue
+            if (match != null && m.exact < match.exact) {
+                // already had a better match.
+                continue
+            }
+            match = m
+        }
+        // 3. Return best match or null
+        return match
+    }
 
-    // /**
-    //  * Leverages a [FnResolver] to find a matching function defined in the [Header] aggregation function catalog.
-    //  */
-    // public fun resolveAgg(agg: Agg.Unresolved, args: List<Rex>): FnMatch<FunctionSignature.Aggregation> {
-    //     val candidates = lookup(agg)
-    //     var hadMissingArg = false
-    //     val parameters = args.mapIndexed { i, arg ->
-    //         if (!hadMissingArg && arg.type.isMissable()) {
-    //             hadMissingArg = true
-    //         }
-    //         FunctionParameter("arg-$i", arg.type.toRuntimeType())
-    //     }
-    //     val match = match(candidates, parameters)
-    //     return when (match) {
-    //         null -> FnMatch.Error(agg.identifier, args, candidates)
-    //         else -> {
-    //             val isMissable = hadMissingArg || isUnsafeCast(match.signature.specific)
-    //             FnMatch.Ok(match.signature, match.mapping, isMissable)
-    //         }
-    //     }
-    // }
+    /**
+     * Check if this function accepts the exact input argument types. Assume same arity.
+     */
+    private fun FnSignature.matches(args: FnArgs): Boolean {
+        for (i in args.indices) {
+            val a = args[i]
+            val p = parameters[i]
+            if (a != p.type) return true
+        }
+        return false
+    }
 
-    // /**
-    //  * Functions are sorted by precedence (which is not rigorously defined/specified at the moment).
-    //  */
-    // private fun <T : FnSignature> match(signatures: List<T>, args: FnArgs): Match<T>? {
-    //     for (signature in signatures) {
-    //         val mapping = match(signature, args)
-    //         if (mapping != null) {
-    //             return Match(signature, mapping)
-    //         }
-    //     }
-    //     return null
-    // }
-    // companion object {
-    // }
+    /**
+     * Attempt to match arguments to the parameters; return the implicit casts if necessary.
+     *
+     * @param args
+     * @return
+     */
+    private fun FnSignature.match(args: FnArgs): FnMatch.Static? {
+        val mapping = arrayOfNulls<Ref.Cast?>(args.size)
+        for (i in args.indices) {
+            val a = args[i]
+            val p = parameters[i]
+            when {
+                // 1. Exact match
+                a == p.type -> continue
+                // 2. Match ANY, no coercion needed
+                p.type == ANY -> continue
+                // 3. Match NULL argument
+                a == NULL -> continue
+                // 4. Check for a coercion
+                else -> {
+                    val coercion = casts.lookupCoercion(a, p.type)
+                    when (coercion) {
+                        null -> return null // short-circuit
+                        else -> mapping[i] = coercion
+                    }
+                }
+            }
+        }
+        return FnMatch.Static(this, mapping)
+    }
+
+    private fun buildArgumentPermutations(args: List<StaticType>): List<List<StaticType>> {
+        val flattenedArgs = args.map { it.flatten().allTypes }
+        return buildArgumentPermutations(flattenedArgs, accumulator = emptyList())
+    }
+
+    private fun buildArgumentPermutations(
+        args: List<List<StaticType>>,
+        accumulator: List<StaticType>,
+    ): List<List<StaticType>> {
+        if (args.isEmpty()) {
+            return listOf(accumulator)
+        }
+        val first = args.first()
+        val rest = when (args.size) {
+            1 -> emptyList()
+            else -> args.subList(1, args.size)
+        }
+        return buildList {
+            first.forEach { argSubType ->
+                addAll(buildArgumentPermutations(rest, accumulator + listOf(argSubType)))
+            }
+        }
+    }
 }

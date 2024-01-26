@@ -9,6 +9,7 @@ import org.partiql.planner.internal.ir.builder.IdentifierQualifiedBuilder
 import org.partiql.planner.internal.ir.builder.IdentifierSymbolBuilder
 import org.partiql.planner.internal.ir.builder.PartiQlPlanBuilder
 import org.partiql.planner.internal.ir.builder.RefBuilder
+import org.partiql.planner.internal.ir.builder.RefCastBuilder
 import org.partiql.planner.internal.ir.builder.RelBindingBuilder
 import org.partiql.planner.internal.ir.builder.RelBuilder
 import org.partiql.planner.internal.ir.builder.RelOpAggregateBuilder
@@ -42,6 +43,7 @@ import org.partiql.planner.internal.ir.builder.RexOpCallStaticBuilder
 import org.partiql.planner.internal.ir.builder.RexOpCallUnresolvedBuilder
 import org.partiql.planner.internal.ir.builder.RexOpCaseBranchBuilder
 import org.partiql.planner.internal.ir.builder.RexOpCaseBuilder
+import org.partiql.planner.internal.ir.builder.RexOpCastBuilder
 import org.partiql.planner.internal.ir.builder.RexOpCollectionBuilder
 import org.partiql.planner.internal.ir.builder.RexOpErrBuilder
 import org.partiql.planner.internal.ir.builder.RexOpGlobalBuilder
@@ -62,6 +64,7 @@ import org.partiql.planner.internal.ir.visitor.PlanVisitor
 import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.PartiQLValueType
 import kotlin.random.Random
 
 internal abstract class PlanNode {
@@ -116,7 +119,8 @@ internal data class Catalog(
         ) : Item() {
             override val children: List<PlanNode> = emptyList()
 
-            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitCatalogItemValue(this, ctx)
+            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitCatalogItemValue(this, ctx)
 
             internal companion object {
                 @JvmStatic
@@ -130,7 +134,8 @@ internal data class Catalog(
         ) : Item() {
             override val children: List<PlanNode> = emptyList()
 
-            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitCatalogItemFn(this, ctx)
+            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitCatalogItemFn(this, ctx)
 
             internal companion object {
                 @JvmStatic
@@ -155,6 +160,20 @@ internal data class Ref(
         this, ctx
     )
 
+    internal data class Cast(
+        @JvmField internal val input: PartiQLValueType,
+        @JvmField internal val target: PartiQLValueType,
+    ) : PlanNode() {
+        override val children: List<PlanNode> = emptyList()
+
+        override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitRefCast(this, ctx)
+
+        internal companion object {
+            @JvmStatic
+            internal fun builder(): RefCastBuilder = RefCastBuilder()
+        }
+    }
+
     internal companion object {
         @JvmStatic
         internal fun builder(): RefBuilder = RefBuilder()
@@ -175,7 +194,8 @@ internal sealed class Statement : PlanNode() {
             kids.filterNotNull()
         }
 
-        override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitStatementQuery(this, ctx)
+        override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+            visitor.visitStatementQuery(this, ctx)
 
         internal companion object {
             @JvmStatic
@@ -200,7 +220,8 @@ internal sealed class Identifier : PlanNode() {
     ) : Identifier() {
         override val children: List<PlanNode> = emptyList()
 
-        override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitIdentifierSymbol(this, ctx)
+        override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+            visitor.visitIdentifierSymbol(this, ctx)
 
         internal companion object {
             @JvmStatic
@@ -219,7 +240,8 @@ internal sealed class Identifier : PlanNode() {
             kids.filterNotNull()
         }
 
-        override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitIdentifierQualified(this, ctx)
+        override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+            visitor.visitIdentifierQualified(this, ctx)
 
         internal companion object {
             @JvmStatic
@@ -248,6 +270,7 @@ internal data class Rex(
             is Var -> visitor.visitRexOpVar(this, ctx)
             is Global -> visitor.visitRexOpGlobal(this, ctx)
             is Path -> visitor.visitRexOpPath(this, ctx)
+            is Cast -> visitor.visitRexOpCast(this, ctx)
             is Call -> visitor.visitRexOpCall(this, ctx)
             is Case -> visitor.visitRexOpCase(this, ctx)
             is Collection -> visitor.visitRexOpCollection(this, ctx)
@@ -325,7 +348,8 @@ internal data class Rex(
                 kids.filterNotNull()
             }
 
-            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitRexOpGlobal(this, ctx)
+            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitRexOpGlobal(this, ctx)
 
             internal companion object {
                 @JvmStatic
@@ -371,7 +395,8 @@ internal data class Rex(
                     kids.filterNotNull()
                 }
 
-                override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitRexOpPathKey(this, ctx)
+                override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                    visitor.visitRexOpPathKey(this, ctx)
 
                 internal companion object {
                     @JvmStatic
@@ -396,6 +421,25 @@ internal data class Rex(
                     @JvmStatic
                     internal fun builder(): RexOpPathSymbolBuilder = RexOpPathSymbolBuilder()
                 }
+            }
+        }
+
+        internal data class Cast(
+            @JvmField internal val cast: Ref.Cast,
+            @JvmField internal val arg: Rex,
+        ) : Op() {
+            override val children: List<PlanNode> by lazy {
+                val kids = mutableListOf<PlanNode?>()
+                kids.add(cast)
+                kids.add(arg)
+                kids.filterNotNull()
+            }
+
+            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitRexOpCast(this, ctx)
+
+            internal companion object {
+                @JvmStatic
+                internal fun builder(): RexOpCastBuilder = RexOpCastBuilder()
             }
         }
 
@@ -462,7 +506,7 @@ internal data class Rex(
 
                 internal data class Candidate(
                     @JvmField internal val fn: Ref,
-                    @JvmField internal val coercions: List<Ref?>,
+                    @JvmField internal val coercions: List<Ref.Cast?>,
                 ) : PlanNode() {
                     override val children: List<PlanNode> by lazy {
                         val kids = mutableListOf<PlanNode?>()
@@ -535,7 +579,8 @@ internal data class Rex(
                 kids.filterNotNull()
             }
 
-            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitRexOpCollection(this, ctx)
+            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitRexOpCollection(this, ctx)
 
             internal companion object {
                 @JvmStatic
@@ -552,7 +597,8 @@ internal data class Rex(
                 kids.filterNotNull()
             }
 
-            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitRexOpStruct(this, ctx)
+            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitRexOpStruct(this, ctx)
 
             internal data class Field(
                 @JvmField internal val k: Rex,
@@ -593,7 +639,8 @@ internal data class Rex(
                 kids.filterNotNull()
             }
 
-            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitRexOpPivot(this, ctx)
+            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitRexOpPivot(this, ctx)
 
             internal companion object {
                 @JvmStatic
@@ -611,7 +658,8 @@ internal data class Rex(
                 kids.filterNotNull()
             }
 
-            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitRexOpSubquery(this, ctx)
+            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitRexOpSubquery(this, ctx)
 
             internal enum class Coercion {
                 SCALAR, ROW,
@@ -634,7 +682,8 @@ internal data class Rex(
                 kids.filterNotNull()
             }
 
-            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitRexOpSelect(this, ctx)
+            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitRexOpSelect(this, ctx)
 
             internal companion object {
                 @JvmStatic
@@ -651,7 +700,8 @@ internal data class Rex(
                 kids.filterNotNull()
             }
 
-            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitRexOpTupleUnion(this, ctx)
+            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitRexOpTupleUnion(this, ctx)
 
             internal companion object {
                 @JvmStatic
@@ -762,7 +812,8 @@ internal data class Rel(
                 kids.filterNotNull()
             }
 
-            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitRelOpScanIndexed(this, ctx)
+            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitRelOpScanIndexed(this, ctx)
 
             internal companion object {
                 @JvmStatic
@@ -779,7 +830,8 @@ internal data class Rel(
                 kids.filterNotNull()
             }
 
-            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitRelOpUnpivot(this, ctx)
+            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitRelOpUnpivot(this, ctx)
 
             internal companion object {
                 @JvmStatic
@@ -796,7 +848,8 @@ internal data class Rel(
                 kids.filterNotNull()
             }
 
-            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitRelOpDistinct(this, ctx)
+            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitRelOpDistinct(this, ctx)
 
             internal companion object {
                 @JvmStatic
@@ -815,7 +868,8 @@ internal data class Rel(
                 kids.filterNotNull()
             }
 
-            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitRelOpFilter(this, ctx)
+            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitRelOpFilter(this, ctx)
 
             internal companion object {
                 @JvmStatic
@@ -876,7 +930,8 @@ internal data class Rel(
                 kids.filterNotNull()
             }
 
-            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitRelOpUnion(this, ctx)
+            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitRelOpUnion(this, ctx)
 
             internal companion object {
                 @JvmStatic
@@ -895,7 +950,8 @@ internal data class Rel(
                 kids.filterNotNull()
             }
 
-            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitRelOpIntersect(this, ctx)
+            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitRelOpIntersect(this, ctx)
 
             internal companion object {
                 @JvmStatic
@@ -914,7 +970,8 @@ internal data class Rel(
                 kids.filterNotNull()
             }
 
-            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitRelOpExcept(this, ctx)
+            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitRelOpExcept(this, ctx)
 
             internal companion object {
                 @JvmStatic
@@ -933,7 +990,8 @@ internal data class Rel(
                 kids.filterNotNull()
             }
 
-            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitRelOpLimit(this, ctx)
+            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitRelOpLimit(this, ctx)
 
             internal companion object {
                 @JvmStatic
@@ -952,7 +1010,8 @@ internal data class Rel(
                 kids.filterNotNull()
             }
 
-            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitRelOpOffset(this, ctx)
+            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitRelOpOffset(this, ctx)
 
             internal companion object {
                 @JvmStatic
@@ -971,7 +1030,8 @@ internal data class Rel(
                 kids.filterNotNull()
             }
 
-            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitRelOpProject(this, ctx)
+            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitRelOpProject(this, ctx)
 
             internal companion object {
                 @JvmStatic
@@ -1019,7 +1079,8 @@ internal data class Rel(
                 kids.filterNotNull()
             }
 
-            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitRelOpAggregate(this, ctx)
+            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitRelOpAggregate(this, ctx)
 
             internal enum class Strategy {
                 FULL, PARTIAL,
@@ -1062,7 +1123,8 @@ internal data class Rel(
                 kids.filterNotNull()
             }
 
-            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitRelOpExclude(this, ctx)
+            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitRelOpExclude(this, ctx)
 
             internal data class Item(
                 @JvmField internal val root: Rex.Op.Var,

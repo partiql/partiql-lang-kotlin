@@ -1,7 +1,6 @@
 package org.partiql.planner.internal
 
-import org.partiql.planner.internal.ir.Identifier
-import org.partiql.planner.internal.ir.Rex
+import org.partiql.planner.internal.ir.Ref
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnSignature
 
@@ -9,7 +8,7 @@ import org.partiql.spi.fn.FnSignature
  * Result of attempting to match an unresolved function.
  */
 @OptIn(FnExperimental::class)
-internal sealed class FnMatch<T : FnSignature> {
+internal sealed class FnMatch {
 
     /**
      * 7.1 Inputs with wrong types
@@ -19,11 +18,16 @@ internal sealed class FnMatch<T : FnSignature> {
      * @property mapping
      * @property isMissable TRUE when anyone of the arguments _could_ be MISSING. We *always* propagate MISSING.
      */
-    public data class Ok<T : FnSignature>(
-        public val signature: T,
-        public val mapping: Boolean,
-        public val isMissable: Boolean,
-    ) : FnMatch<T>()
+     class Static(
+         val signature: FnSignature,
+         val mapping: Array<Ref.Cast?>?,
+    ) : FnMatch() {
+
+        /**
+         * The number of exact matches. Useful when ranking function matches.
+         */
+        val exact: Int = mapping?.count { it != null } ?: 0
+    }
 
     /**
      * This represents dynamic dispatch.
@@ -35,14 +39,7 @@ internal sealed class FnMatch<T : FnSignature> {
      * all the arguments. On the other hand, take an "exhaustive" scenario: ABS(INT | DEC). In this case, [isMissable]
      * is false because we have functions for each potential argument AKA we have exhausted the arguments.
      */
-    public data class Dynamic<T : FnSignature>(
-        public val candidates: List<Ok<T>>,
-        public val isMissable: Boolean,
-    ) : FnMatch<T>()
-
-    public data class Error<T : FnSignature>(
-        public val identifier: Identifier,
-        public val args: List<Rex>,
-        public val candidates: List<FnSignature>,
-    ) : FnMatch<T>()
+     data class Dynamic(
+         val candidates: List<Static>,
+    ) : FnMatch()
 }

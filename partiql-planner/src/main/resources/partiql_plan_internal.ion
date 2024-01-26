@@ -1,6 +1,7 @@
 imports::{
   kotlin: [
     partiql_value::'org.partiql.value.PartiQLValue',
+    partiql_value_type::'org.partiql.value.PartiQLValueType',
     static_type::'org.partiql.types.StaticType',
   ],
 }
@@ -31,7 +32,13 @@ catalog::{
 
 ref::{
   catalog: int,
-  symbol: int
+  symbol: int,
+  _: [
+    cast::{
+      input: partiql_value_type,
+      target: partiql_value_type,
+    }
+  ]
 }
 
 // Statements
@@ -101,6 +108,11 @@ rex::{
       symbol::{ root: rex, key: string },
     ],
 
+    cast::{
+      cast: '.ref.cast',
+      arg: rex,
+    },
+
     call::[
 
       unresolved::{
@@ -124,10 +136,10 @@ rex::{
         _: [
           candidate::{
             fn: ref,
-            coercions: list::[optional::ref]
+            coercions: list::[optional::'.ref.cast'],
           }
         ]
-      }
+      },
     ],
 
     case::{

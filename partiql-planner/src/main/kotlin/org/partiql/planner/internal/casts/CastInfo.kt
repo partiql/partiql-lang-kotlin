@@ -1,13 +1,8 @@
 package org.partiql.planner.internal.casts
 
-import org.partiql.spi.fn.FnExperimental
-import org.partiql.spi.fn.FnSignature
+import org.partiql.planner.internal.ir.Ref
 
 /**
  * Each edge represents a type relationship
  */
-@OptIn(FnExperimental::class)
-internal data class CastInfo(
-    val castType: CastType,
-    val castFn: FnSignature.Scalar,
-)
+internal data class CastInfo(val type: CastType, val ref: Ref.Cast)

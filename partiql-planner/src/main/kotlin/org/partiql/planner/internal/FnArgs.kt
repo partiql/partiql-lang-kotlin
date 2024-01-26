@@ -1,8 +1,10 @@
 package org.partiql.planner.internal
 
-import org.partiql.planner.internal.ir.Rex
+import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.PartiQLValueType
 
 /**
  * Context parameter for the [PathResolverFn]. A simple typealias suffices for now.
  */
-internal typealias FnArgs = List<Rex>
+@OptIn(PartiQLValueExperimental::class)
+internal typealias FnArgs = List<PartiQLValueType>
