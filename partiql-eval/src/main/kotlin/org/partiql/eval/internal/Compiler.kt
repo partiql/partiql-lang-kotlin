@@ -41,6 +41,7 @@ import org.partiql.spi.function.PartiQLFunction
 import org.partiql.spi.function.PartiQLFunctionExperimental
 import org.partiql.types.function.FunctionSignature
 import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.PartiQLValueType
 import java.lang.IllegalStateException
 
 internal class Compiler @OptIn(PartiQLFunctionExperimental::class) constructor(
@@ -141,19 +142,22 @@ internal class Compiler @OptIn(PartiQLFunctionExperimental::class) constructor(
         return ExprPathIndex(root, index)
     }
 
-    @OptIn(PartiQLFunctionExperimental::class)
+    @OptIn(PartiQLFunctionExperimental::class, PartiQLValueExperimental::class)
     override fun visitRexOpCallStatic(node: Rex.Op.Call.Static, ctx: Unit): Operator {
         val function = getFunction(node.fn.signature)
         val args = node.args.map { visitRex(it, ctx) }.toTypedArray()
-        return when (function.signature.name.equals("is_missing", ignoreCase = true)) {
-            false -> ExprCallStatic(function, args)
+        val fnTakesInMissing = function.signature.parameters.any {
+            it.type == PartiQLValueType.MISSING || it.type == PartiQLValueType.ANY
+        }
+        return when (fnTakesInMissing) {
             true -> ExprCallStatic(function, args.map { it.modeHandled() }.toTypedArray())
+            false -> ExprCallStatic(function, args)
         }
     }
 
     @OptIn(PartiQLFunctionExperimental::class, PartiQLValueExperimental::class)
     override fun visitRexOpCallDynamic(node: Rex.Op.Call.Dynamic, ctx: Unit): Operator {
-        val args = node.args.map { visitRex(it, ctx) }.toTypedArray()
+        val args = node.args.map { visitRex(it, ctx).modeHandled() }.toTypedArray()
         val candidates = node.candidates.map { candidate ->
             val fn = getFunction(candidate.fn.signature)
             val coercions = candidate.coercions.map { it?.signature?.let { sig -> getFunction(sig) } }

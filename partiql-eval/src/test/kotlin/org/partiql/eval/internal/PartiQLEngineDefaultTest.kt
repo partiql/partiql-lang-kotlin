@@ -270,6 +270,10 @@ class PartiQLEngineDefaultTest {
                 expected = boolValue(true), // TODO: Is this right?
                 mode = PartiQLEngine.Mode.STRICT
             ),
+            SuccessTestCase(
+                input = "SELECT VALUE t.a IS MISSING FROM << { 'b': 1 }, { 'a': 2 } >> AS t;",
+                expected = bagValue(boolValue(true), boolValue(false))
+            ),
             // PartiQL Specification Section 7.1.1 -- Equality
             SuccessTestCase(
                 input = "5 = 'a';",
@@ -278,7 +282,7 @@ class PartiQLEngineDefaultTest {
             // PartiQL Specification Section 7.1.1 -- Equality
             SuccessTestCase(
                 input = "5 = 'a';",
-                expected = boolValue(false), // TODO: Is this correct? See: The eqg, unlike the =, returns true when a NULL is compared to a NULL or a MISSING to a MISSING
+                expected = boolValue(false), // TODO: Is this correct?
                 mode = PartiQLEngine.Mode.STRICT
             ),
             // PartiQL Specification Section 8
@@ -462,7 +466,7 @@ class PartiQLEngineDefaultTest {
             val functions = mapOf(
                 "partiql" to PartiQLPlugin.functions
             )
-            val prepared = engine.prepare(plan.plan, PartiQLEngine.Session(functions = functions))
+            val prepared = engine.prepare(plan.plan, PartiQLEngine.Session(functions = functions, mode = mode))
             val result = engine.execute(prepared) as PartiQLResult.Value
             val output = result.value
             assertEquals(expected, output, comparisonString(expected, output))
