@@ -13,6 +13,8 @@ import org.partiql.value.PartiQLValueType.BOOL
 import org.partiql.value.PartiQLValueType.CLOB
 import org.partiql.value.PartiQLValueType.STRING
 import org.partiql.value.PartiQLValueType.SYMBOL
+import org.partiql.value.StringValue
+import org.partiql.value.check
 
 @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
 internal object Fn_LIKE_ESCAPE__STRING_STRING_STRING__BOOL : PartiQLFunction.Scalar {
@@ -30,7 +32,11 @@ internal object Fn_LIKE_ESCAPE__STRING_STRING_STRING__BOOL : PartiQLFunction.Sca
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function like_escape not implemented")
+        val value = args[0].check<StringValue>()
+        val pattern = args[1].check<StringValue>()
+        val escape = args[2].check<StringValue>()
+        val pps = LikeUtils.getRegexPattern(pattern, escape)
+        return LikeUtils.matchRegexPattern(value, pps)
     }
 }
 

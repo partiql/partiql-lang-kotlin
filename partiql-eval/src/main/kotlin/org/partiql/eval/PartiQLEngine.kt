@@ -38,6 +38,12 @@ public interface PartiQLEngine {
 
     public class Session @OptIn(PartiQLFunctionExperimental::class) constructor(
         val bindings: Map<String, ConnectorBindings> = mapOf(),
-        val functions: Map<String, List<PartiQLFunction>> = mapOf()
+        val functions: Map<String, List<PartiQLFunction>> = mapOf(),
+        val mode: Mode = Mode.PERMISSIVE
     )
+
+    public enum class Mode {
+        PERMISSIVE,
+        STRICT // AKA, Type Checking Mode in the PartiQL Specification
+    }
 }

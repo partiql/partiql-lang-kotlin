@@ -31,7 +31,7 @@ internal object Fn_LOWER__STRING__STRING : PartiQLFunction.Scalar {
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val string = args[0].check<StringValue>().string
-        val result = string?.uppercase()
+        val result = string?.lowercase()
         return stringValue(result)
     }
 }
@@ -49,7 +49,7 @@ internal object Fn_LOWER__SYMBOL__SYMBOL : PartiQLFunction.Scalar {
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val string = args[0].check<SymbolValue>().string
-        val result = string?.uppercase()
+        val result = string?.lowercase()
         return stringValue(result)
     }
 }
@@ -67,7 +67,7 @@ internal object Fn_LOWER__CLOB__CLOB : PartiQLFunction.Scalar {
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val string = args[0].check<ClobValue>().string
-        val result = string?.uppercase()
+        val result = string?.lowercase()
         return stringValue(result)
     }
 }

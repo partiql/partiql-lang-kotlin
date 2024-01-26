@@ -1,6 +1,5 @@
 package org.partiql.eval.internal.operator.rel
 
-import org.partiql.errors.TypeCheckException
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.value.BagValue
@@ -8,27 +7,29 @@ import org.partiql.value.CollectionValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.int64Value
+import org.partiql.value.missingValue
 
 @OptIn(PartiQLValueExperimental::class)
-internal class RelScanIndexed(
+internal class RelScanIndexedPermissive(
     private val expr: Operator.Expr
 ) : Operator.Relation {
 
     private lateinit var iterator: Iterator<PartiQLValue>
     private var index: Long = 0
+    private var isIndexable: Boolean = true
 
     override fun open() {
         val r = expr.eval(Record.empty)
         index = 0
         iterator = when (r) {
             is BagValue<*> -> {
-                close()
-                throw TypeCheckException()
+                isIndexable = false
+                r.iterator()
             }
             is CollectionValue<*> -> r.iterator()
             else -> {
-                close()
-                throw TypeCheckException()
+                isIndexable = false
+                iterator { yield(r) }
             }
         }
     }
@@ -37,10 +38,15 @@ internal class RelScanIndexed(
         if (!iterator.hasNext()) {
             return null
         }
-        val i = index
         val v = iterator.next()
-        index += 1
-        return Record.of(v, int64Value(i))
+        return when (isIndexable) {
+            true -> {
+                val i = index
+                index += 1
+                Record.of(v, int64Value(i))
+            }
+            false -> Record.of(v, missingValue())
+        }
     }
 
     override fun close() {}

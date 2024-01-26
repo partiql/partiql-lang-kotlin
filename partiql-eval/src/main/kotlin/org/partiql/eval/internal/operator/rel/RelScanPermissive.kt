@@ -1,13 +1,12 @@
 package org.partiql.eval.internal.operator.rel
 
-import org.partiql.errors.TypeCheckException
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.value.CollectionValue
 import org.partiql.value.PartiQLValueExperimental
 
 @OptIn(PartiQLValueExperimental::class)
-internal class RelScan(
+internal class RelScanPermissive(
     private val expr: Operator.Expr
 ) : Operator.Relation {
 
@@ -17,10 +16,7 @@ internal class RelScan(
         val r = expr.eval(Record.empty)
         records = when (r) {
             is CollectionValue<*> -> r.map { Record.of(it) }.iterator()
-            else -> {
-                close()
-                throw TypeCheckException()
-            }
+            else -> iterator { yield(Record.of(r)) }
         }
     }
 

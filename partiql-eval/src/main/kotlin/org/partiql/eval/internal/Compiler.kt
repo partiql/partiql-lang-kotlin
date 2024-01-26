@@ -11,6 +11,8 @@ import org.partiql.eval.internal.operator.rel.RelJoinRight
 import org.partiql.eval.internal.operator.rel.RelProject
 import org.partiql.eval.internal.operator.rel.RelScan
 import org.partiql.eval.internal.operator.rel.RelScanIndexed
+import org.partiql.eval.internal.operator.rel.RelScanIndexedPermissive
+import org.partiql.eval.internal.operator.rel.RelScanPermissive
 import org.partiql.eval.internal.operator.rex.ExprCallDynamic
 import org.partiql.eval.internal.operator.rex.ExprCallStatic
 import org.partiql.eval.internal.operator.rex.ExprCase
@@ -20,7 +22,9 @@ import org.partiql.eval.internal.operator.rex.ExprLiteral
 import org.partiql.eval.internal.operator.rex.ExprPathIndex
 import org.partiql.eval.internal.operator.rex.ExprPathKey
 import org.partiql.eval.internal.operator.rex.ExprPathSymbol
+import org.partiql.eval.internal.operator.rex.ExprPermissive
 import org.partiql.eval.internal.operator.rex.ExprPivot
+import org.partiql.eval.internal.operator.rex.ExprPivotPermissive
 import org.partiql.eval.internal.operator.rex.ExprSelect
 import org.partiql.eval.internal.operator.rex.ExprStruct
 import org.partiql.eval.internal.operator.rex.ExprTupleUnion
@@ -71,7 +75,7 @@ internal class Compiler @OptIn(PartiQLFunctionExperimental::class) constructor(
 
     // TODO: Re-look at
     override fun visitStatementQuery(node: Statement.Query, ctx: Unit): Operator.Expr {
-        return visitRex(node.root, ctx)
+        return visitRex(node.root, ctx).modeHandled()
     }
 
     // REX
@@ -81,19 +85,20 @@ internal class Compiler @OptIn(PartiQLFunctionExperimental::class) constructor(
     }
 
     override fun visitRexOpCollection(node: Rex.Op.Collection, ctx: Unit): Operator {
-        val values = node.values.map { visitRex(it, ctx) }
+        val values = node.values.map { visitRex(it, ctx).modeHandled() }
         return ExprCollection(values)
     }
     override fun visitRexOpStruct(node: Rex.Op.Struct, ctx: Unit): Operator {
         val fields = node.fields.map {
-            ExprStruct.Field(visitRex(it.k, ctx), visitRex(it.v, ctx))
+            val value = visitRex(it.v, ctx).modeHandled()
+            ExprStruct.Field(visitRex(it.k, ctx), value)
         }
         return ExprStruct(fields)
     }
 
     override fun visitRexOpSelect(node: Rex.Op.Select, ctx: Unit): Operator {
         val rel = visitRel(node.rel, ctx)
-        val constructor = visitRex(node.constructor, ctx)
+        val constructor = visitRex(node.constructor, ctx).modeHandled()
         return ExprSelect(rel, constructor)
     }
 
@@ -101,7 +106,10 @@ internal class Compiler @OptIn(PartiQLFunctionExperimental::class) constructor(
         val rel = visitRel(node.rel, ctx)
         val key = visitRex(node.key, ctx)
         val value = visitRex(node.value, ctx)
-        return ExprPivot(rel, key, value)
+        return when (session.mode) {
+            PartiQLEngine.Mode.PERMISSIVE -> ExprPivotPermissive(rel, key, value)
+            PartiQLEngine.Mode.STRICT -> ExprPivot(rel, key, value)
+        }
     }
     override fun visitRexOpVar(node: Rex.Op.Var, ctx: Unit): Operator {
         return ExprVar(node.ref)
@@ -137,7 +145,10 @@ internal class Compiler @OptIn(PartiQLFunctionExperimental::class) constructor(
     override fun visitRexOpCallStatic(node: Rex.Op.Call.Static, ctx: Unit): Operator {
         val function = getFunction(node.fn.signature)
         val args = node.args.map { visitRex(it, ctx) }.toTypedArray()
-        return ExprCallStatic(function, args)
+        return when (function.signature.name.equals("is_missing", ignoreCase = true)) {
+            false -> ExprCallStatic(function, args)
+            true -> ExprCallStatic(function, args.map { it.modeHandled() }.toTypedArray())
+        }
     }
 
     @OptIn(PartiQLFunctionExperimental::class, PartiQLValueExperimental::class)
@@ -174,18 +185,24 @@ internal class Compiler @OptIn(PartiQLFunctionExperimental::class) constructor(
 
     override fun visitRelOpScan(node: Rel.Op.Scan, ctx: Unit): Operator {
         val rex = visitRex(node.rex, ctx)
-        return RelScan(rex)
+        return when (session.mode) {
+            PartiQLEngine.Mode.PERMISSIVE -> RelScanPermissive(rex)
+            PartiQLEngine.Mode.STRICT -> RelScan(rex)
+        }
     }
 
     override fun visitRelOpProject(node: Rel.Op.Project, ctx: Unit): Operator {
         val input = visitRel(node.input, ctx)
-        val projections = node.projections.map { visitRex(it, ctx) }
+        val projections = node.projections.map { visitRex(it, ctx).modeHandled() }
         return RelProject(input, projections)
     }
 
     override fun visitRelOpScanIndexed(node: Rel.Op.ScanIndexed, ctx: Unit): Operator {
         val rex = visitRex(node.rex, ctx)
-        return RelScanIndexed(rex)
+        return when (session.mode) {
+            PartiQLEngine.Mode.PERMISSIVE -> RelScanIndexedPermissive(rex)
+            PartiQLEngine.Mode.STRICT -> RelScanIndexed(rex)
+        }
     }
 
     override fun visitRexOpTupleUnion(node: Rex.Op.TupleUnion, ctx: Unit): Operator {
@@ -227,5 +244,13 @@ internal class Compiler @OptIn(PartiQLFunctionExperimental::class) constructor(
         val input = visitRel(node.input, ctx)
         val condition = visitRex(node.predicate, ctx)
         return RelFilter(input, condition)
+    }
+
+    // HELPERS
+    private fun Operator.Expr.modeHandled(): Operator.Expr {
+        return when (session.mode) {
+            PartiQLEngine.Mode.PERMISSIVE -> ExprPermissive(this)
+            PartiQLEngine.Mode.STRICT -> this
+        }
     }
 }

@@ -11,6 +11,7 @@ import org.partiql.eval.PartiQLEngine
 import org.partiql.eval.PartiQLResult
 import org.partiql.eval.PartiQLStatement
 import org.partiql.lang.eval.CompileOptions
+import org.partiql.lang.eval.TypingMode
 import org.partiql.parser.PartiQLParser
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.plugin.PartiQLPlugin
@@ -120,6 +121,10 @@ class EvalExecutor(
                     })
                 )
             )
+            val mode = when (options.typingMode) {
+                TypingMode.PERMISSIVE -> PartiQLEngine.Mode.PERMISSIVE
+                TypingMode.LEGACY -> PartiQLEngine.Mode.STRICT
+            }
 
             val evalSession = PartiQLEngine.Session(
                 bindings = mutableMapOf(
@@ -127,7 +132,8 @@ class EvalExecutor(
                 ),
                 functions = mutableMapOf(
                     "partiql" to PartiQLPlugin.functions
-                )
+                ),
+                mode = mode
             )
             return EvalExecutor(session, evalSession)
         }
