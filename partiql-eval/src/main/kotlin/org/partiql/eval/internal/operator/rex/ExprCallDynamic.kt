@@ -58,6 +58,9 @@ internal class ExprCallDynamic(
         @OptIn(PartiQLValueExperimental::class)
         internal fun matches(args: Array<PartiQLValue>): Boolean {
             for (i in args.indices) {
+                if (types[i] == PartiQLValueType.ANY) {
+                    return true
+                }
                 if (args[i].type != types[i]) {
                     return false
                 }
