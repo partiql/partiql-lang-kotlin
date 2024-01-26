@@ -25,11 +25,12 @@ Thank you to all who have contributed!
 
 -->
 
-## [Unreleased]
+## [0.14.2] - 2024-01-25
 
 ### Added
 
 ### Changed
+- Upgrade IonJava dependency to v1.11.1
 
 ### Deprecated
 
@@ -41,7 +42,8 @@ Thank you to all who have contributed!
 
 ### Contributors
 Thank you to all who have contributed!
-- @<your-username>
+- @RCHowell
+- @alancai98
 
 ## [0.14.1] - 2024-01-03
 
@@ -1002,7 +1004,8 @@ breaking changes if migrating from v0.9.2. The breaking changes accidentally int
 ### Added
 Initial alpha release of PartiQL.
 
-[Unreleased]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.1...HEAD
+[Unreleased]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.2...HEAD
+[0.14.2]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.1...v0.14.2
 [0.14.1]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.0-alpha...v0.14.1
 [0.14.0-alpha]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.13.2-alpha...v0.14.0-alpha
 [0.13.2-alpha]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.13.1-alpha...v0.13.2-alpha
