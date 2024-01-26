@@ -108,7 +108,7 @@ public class LocalConnector(
         }
 
         @FnExperimental
-        override fun getFunctions(path: BindingPath): List<ConnectorHandle.Fn> {
+        override fun getFunction(path: BindingPath): ConnectorHandle.Fn? {
             TODO("Not yet implemented")
         }
 

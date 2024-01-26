@@ -38,7 +38,7 @@ internal class MemoryConnector(private val catalog: MemoryCatalog) : SqlConnecto
                 override fun getObject(path: BindingPath): ConnectorHandle.Obj? = catalog.find(path)
 
                 @FnExperimental
-                override fun getFunctions(path: BindingPath): List<ConnectorHandle.Fn> = emptyList()
+                override fun getFunction(path: BindingPath): ConnectorHandle.Fn? = null
             }
         )
 
