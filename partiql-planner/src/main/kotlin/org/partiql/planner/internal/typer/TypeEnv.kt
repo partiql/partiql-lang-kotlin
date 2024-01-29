@@ -155,6 +155,5 @@ internal class TypeEnv(public val schema: List<Rel.Binding>) {
             }
             rex(StaticType.ANY, op)
         }
-
     }
 }

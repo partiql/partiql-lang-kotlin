@@ -33,11 +33,9 @@ import org.partiql.ast.visitor.AstBaseVisitor
 import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
-import org.partiql.planner.internal.ir.ref
 import org.partiql.planner.internal.ir.rel
 import org.partiql.planner.internal.ir.relBinding
 import org.partiql.planner.internal.ir.relOpAggregate
-import org.partiql.planner.internal.ir.relOpAggregateCall
 import org.partiql.planner.internal.ir.relOpDistinct
 import org.partiql.planner.internal.ir.relOpErr
 import org.partiql.planner.internal.ir.relOpExcept
@@ -364,9 +362,9 @@ internal object RelConverter {
                 val id = AstToPlan.convert(expr.function)
 
                 // TODO aggregate UDFs
-                val fn = ref(0, 0)
+                TODO()
 
-                relOpAggregateCall(fn, args)
+                // relOpAggregateCall(fn, args)
             }
             var groups = emptyList<Rex>()
             if (groupBy != null) {

@@ -21,6 +21,7 @@ internal object Fn_NOT__BOOL__BOOL : FnScalar {
         parameters = listOf(FnParameter("value", BOOL),),
         isNullCall = true,
         isNullable = false,
+        isMissingCall = false,
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
@@ -37,6 +38,7 @@ internal object Fn_NOT__MISSING__BOOL : FnScalar {
         parameters = listOf(FnParameter("value", MISSING),),
         isNullCall = true,
         isNullable = false,
+        isMissingCall = false,
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {

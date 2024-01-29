@@ -21,7 +21,6 @@ import org.partiql.errors.ProblemCallback
 import org.partiql.errors.UNKNOWN_PROBLEM_LOCATION
 import org.partiql.planner.PlanningProblemDetails
 import org.partiql.planner.internal.Env
-import org.partiql.planner.internal.FnMatch
 import org.partiql.planner.internal.ir.Identifier
 import org.partiql.planner.internal.ir.PlanNode
 import org.partiql.planner.internal.ir.Rel
@@ -45,8 +44,6 @@ import org.partiql.planner.internal.ir.relOpSort
 import org.partiql.planner.internal.ir.relOpUnpivot
 import org.partiql.planner.internal.ir.relType
 import org.partiql.planner.internal.ir.rex
-import org.partiql.planner.internal.ir.rexOpCallStatic
-import org.partiql.planner.internal.ir.rexOpCaseBranch
 import org.partiql.planner.internal.ir.rexOpCollection
 import org.partiql.planner.internal.ir.rexOpErr
 import org.partiql.planner.internal.ir.rexOpLit
@@ -60,7 +57,6 @@ import org.partiql.planner.internal.ir.rexOpStructField
 import org.partiql.planner.internal.ir.rexOpTupleUnion
 import org.partiql.planner.internal.ir.statementQuery
 import org.partiql.planner.internal.ir.util.PlanRewriter
-import org.partiql.planner.internal.transforms.PlanTransform
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
@@ -78,7 +74,6 @@ import org.partiql.types.NullType
 import org.partiql.types.SexpType
 import org.partiql.types.StaticType
 import org.partiql.types.StaticType.Companion.ANY
-import org.partiql.types.StaticType.Companion.BOOL
 import org.partiql.types.StaticType.Companion.MISSING
 import org.partiql.types.StaticType.Companion.NULL
 import org.partiql.types.StaticType.Companion.STRING
@@ -89,7 +84,6 @@ import org.partiql.types.TupleConstraint
 import org.partiql.value.BoolValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.TextValue
-import org.partiql.value.boolValue
 import org.partiql.value.missingValue
 import org.partiql.value.stringValue
 
@@ -454,6 +448,8 @@ internal class PlanTyper(
             return visitRex(resolvedVar, null)
         }
 
+        override fun visitRexOpGlobal(node: Rex.Op.Global, ctx: StaticType?): Rex = rex(node.ref.type, node)
+
         override fun visitRexOpPathIndex(node: Rex.Op.Path.Index, ctx: StaticType?): Rex {
             val root = visitRex(node.root, node.root.type)
             val key = visitRex(node.key, node.key.type)
@@ -561,17 +557,25 @@ internal class PlanTyper(
             return path
         }
 
-        override fun visitRexOpCallUnresolved(node: Rex.Op.Call.Unresolved, ctx: StaticType?): PlanNode {
+        override fun visitRexOpCallUnresolved(node: Rex.Op.Call.Unresolved, ctx: StaticType?): Rex {
             // Type the arguments
-            // val args = node.args.map {
-            //     val arg = visitRex(it, null)
-            //     if (arg.op is Rex.Op.Err) {
-            //         return arg
-            //     }
-            //     arg
-            // }
-            // return super.visitRexOpCallUnresolved(node, ctx)
-            TODO()
+            val args = node.args.map {
+                val arg = visitRex(it, null)
+                if (arg.op is Rex.Op.Err) {
+                    // don't attempt to resolve a function which has erroneous arguments.
+                    return arg
+                }
+                arg
+            }
+            // Attempt to resolve in the environment
+            val path = node.identifier.toBindingPath()
+            val rex = env.resolveFn(path, args)
+            if (rex == null) {
+                handleUnknownFunction(node)
+                return rexErr("Unable to resolve function $node")
+            }
+            // Pass off to Rex.Op.Call.Static or Rex.Op.Call.Dynamic for typing.
+            return visitRex(rex, null)
         }
 
         /**
@@ -581,108 +585,101 @@ internal class PlanTyper(
          * @param ctx
          * @return
          */
+        @OptIn(FnExperimental::class)
         override fun visitRexOpCallStatic(node: Rex.Op.Call.Static, ctx: StaticType?): Rex {
-            TODO()
-            // val isNotMissable = fn.isNotMissable()
-            // val args = node.args.map { visitRex(it, null) }
-            //
-            // // Try to match the arguments to functions defined in the catalog
-            // return when (val match = env.resolveFn(fn, args)) {
-            //     is FnMatch.Ok -> toRexCall(match, args, isNotMissable)
-            //     is FnMatch.Dynamic -> {
-            //         val types = mutableSetOf<StaticType>()
-            //         if (match.isMissable && !isNotMissable) {
-            //             types.add(MISSING)
-            //         }
-            //         val candidates = match.candidates.map { candidate ->
-            //             val rex = toRexCall(candidate, args, isNotMissable)
-            //             val staticCall =
-            //                 rex.op as? Rex.Op.Call.Static ?: error("ToRexCall should always return a static call.")
-            //             val resolvedFn = staticCall.fn as? Fn.Resolved ?: error("This should have been resolved")
-            //             types.add(rex.type)
-            //             val coercions = candidate.mapping.map { it?.let { fnResolved(it) } }
-            //             rexOpCallDynamicCandidate(fn = resolvedFn, coercions = coercions)
-            //         }
-            //         val op = rexOpCallDynamic(args = args, candidates = candidates)
-            //         rex(type = unionOf(types).flatten(), op = op)
-            //     }
-            //     is FnMatch.Error -> {
-            //         handleUnknownFunction(match)
-            //         rexErr("Unknown scalar function $fn")
-            //     }
+
+            val fn = node.fn.signature as FnSignature.Scalar
+
+            // 7.1 All functions return MISSING when one of their inputs is MISSING (except `=`)
+            node.args.forEach {
+                if (it.type == MissingType && fn.isMissingCall) {
+                    handleAlwaysMissing()
+                    return rex(MISSING, node)
+                }
+            }
+
+            // If a function does not propagate MISSING, then treat MISSING as NULL.
+            var isMissing = false
+            var isMissable = false
+            if (!fn.isMissingCall) {
+                if (node.args.any { it.type is MissingType }) {
+                    isMissing = true
+                } else if (node.args.any { it.type.isMissable() }) {
+                    isMissable = true
+                }
+            }
+
+            // Determine the nullability of the return type
+            var isNull = false // True iff NULL CALL and has a NULL arg
+            var isNullable = false // True iff NULL CALL and has a NULLABLE arg; or is a NULLABLE operator
+            if (fn.isNullCall) {
+                if (isMissing) {
+                    isNull = true
+                } else if (isMissable) {
+                    isNullable = true
+                } else {
+                    for (arg in node.args) {
+                        if (arg.type is NullType) {
+                            isNull = true
+                            break
+                        }
+                        if (arg.type.isNullable()) {
+                            isNullable = true
+                            break
+                        }
+                    }
+                }
+            }
+            isNullable = isNullable || fn.isNullable
+
+            // Return type with calculated nullability
+            var type: StaticType = when {
+                isNull -> NULL
+                isNullable -> fn.returns.toStaticType()
+                else -> fn.returns.toNonNullStaticType()
+            }
+
+            // TODO Some operators can return MISSING during runtime
+            // if (match.isMissable && !isNotMissable) {
+            //     type = unionOf(type, MISSING)
             // }
+
+            // Finally, rewrite this node
+            return rex(type.flatten(), node)
         }
 
+        /**
+         * Typing of a dynamic function call.
+         *
+         * isMissable TRUE when the argument permutations may not definitively invoke one of the candidates. You
+         *      * can think of [isMissable] as being the same as "not exhaustive". For example, if we have ABS(INT | STRING), then
+         *      * this function call [isMissable] because there isn't an `ABS(STRING)` function signature AKA we haven't exhausted
+         *      * all the arguments. On the other hand, take an "exhaustive" scenario: ABS(INT | DEC). In this case, [isMissable]
+         *      * is false because we have functions for each potential argument AKA we have exhausted the arguments.
+         *
+         *
+         * @param node
+         * @param ctx
+         * @return
+         */
         override fun visitRexOpCallDynamic(node: Rex.Op.Call.Dynamic, ctx: StaticType?): Rex {
+            // val types = mutableSetOf<StaticType>()
+            // if (match.isMissable && !isNotMissable) {
+            //     types.add(MISSING)
+            // }
+            // val candidates = match.candidates.map { candidate ->
+            //     val rex = toRexCall(candidate, args, isNotMissable)
+            //     val staticCall =
+            //         rex.op as? Rex.Op.Call.Static ?: error("ToRexCall should always return a static call.")
+            //     val resolvedFn = staticCall.fn as? Fn.Resolved ?: error("This should have been resolved")
+            //     types.add(rex.type)
+            //     val coercions = candidate.mapping.map { it?.let { fnResolved(it) } }
+            //     rexOpCallDynamicCandidate(fn = resolvedFn, coercions = coercions)
+            // }
+            // val op = rexOpCallDynamic(args = args, candidates = candidates)
+            // rex(type = unionOf(types).flatten(), op = op)
             return rex(ANY, rexOpErr("Direct dynamic calls are not supported. This should have been a static call."))
         }
-
-        // @OptIn(FnExperimental::class)
-        // private fun toRexCall(match: FnMatch.Ok<FnSignature.Scalar>, args: List<Rex>, isNotMissable: Boolean): Rex {
-        //     // Found a match!
-        //     val newFn = fnResolved(match.signature)
-        //     val newArgs = rewriteFnArgs(match.mapping, args)
-        //     val returns = newFn.signature.returns
-        //
-        //     // 7.1 All functions return MISSING when one of their inputs is MISSING (except `=`)
-        //     newArgs.forEach {
-        //         if (it.type == MissingType && !isNotMissable) {
-        //             handleAlwaysMissing()
-        //             return rex(MISSING, rexOpCallStatic(newFn, newArgs))
-        //         }
-        //     }
-        //
-        //     // If a function is NOT Missable (i.e., does not propagate MISSING)
-        //     // then treat MISSING as null.
-        //     var isMissing = false
-        //     var isMissable = false
-        //     if (isNotMissable) {
-        //         if (newArgs.any { it.type is MissingType }) {
-        //             isMissing = true
-        //         } else if (newArgs.any { it.type.isMissable() }) {
-        //             isMissable = true
-        //         }
-        //     }
-        //
-        //     // Determine the nullability of the return type
-        //     var isNull = false // True iff NULL CALL and has a NULL arg
-        //     var isNullable = false // True iff NULL CALL and has a NULLABLE arg; or is a NULLABLE operator
-        //     if (newFn.signature.isNullCall) {
-        //         if (isMissing) {
-        //             isNull = true
-        //         } else if (isMissable) {
-        //             isNullable = true
-        //         } else {
-        //             for (arg in newArgs) {
-        //                 if (arg.type is NullType) {
-        //                     isNull = true
-        //                     break
-        //                 }
-        //                 if (arg.type.isNullable()) {
-        //                     isNullable = true
-        //                     break
-        //                 }
-        //             }
-        //         }
-        //     }
-        //     isNullable = isNullable || newFn.signature.isNullable
-        //
-        //     // Return type with calculated nullability
-        //     var type: StaticType = when {
-        //         isNull -> NULL
-        //         isNullable -> returns.toStaticType()
-        //         else -> returns.toNonNullStaticType()
-        //     }
-        //
-        //     // Some operators can return MISSING during runtime
-        //     if (match.isMissable && !isNotMissable) {
-        //         type = unionOf(type, MISSING)
-        //     }
-        //
-        //     // Finally, rewrite this node
-        //     val op = rexOpCallStatic(newFn, newArgs)
-        //     return rex(type.flatten(), op)
-        // }
 
         override fun visitRexOpCase(node: Rex.Op.Case, ctx: StaticType?): Rex {
             // Type branches and prune branches known to never execute
@@ -1308,7 +1305,7 @@ internal class PlanTyper(
     // ERRORS
 
     private fun handleUndefinedVariable(id: Identifier) {
-        val publicId = PlanTransform.visitIdentifier(id, onProblem)
+        val publicId = id.toBindingPath()
         onProblem(
             Problem(
                 sourceLocation = UNKNOWN_PROBLEM_LOCATION,
@@ -1326,13 +1323,13 @@ internal class PlanTyper(
         )
     }
 
-    private fun handleUnknownFunction(match: FnMatch.Error<*>) {
+    private fun handleUnknownFunction(node: Rex.Op.Call.Unresolved) {
         onProblem(
             Problem(
                 sourceLocation = UNKNOWN_PROBLEM_LOCATION,
                 details = PlanningProblemDetails.UnknownFunction(
-                    match.identifier.normalize(),
-                    match.args.map { a -> a.type },
+                    identifier = node.identifier.normalize(),
+                    args = node.args.map { it.type }
                 )
             )
         )
@@ -1370,27 +1367,6 @@ internal class PlanTyper(
             Identifier.CaseSensitivity.INSENSITIVE -> symbol.lowercase()
         }
     }
-
-    /**
-     * Indicates whether the given functions propagate Missing.
-     *
-     * Currently, Logical Functions : AND, OR, NOT, IS NULL, IS MISSING
-     * the equal function, function do not propagate Missing.
-     */
-    // private fun Fn.Unresolved.isNotMissable(): Boolean {
-    //     return when (identifier) {
-    //         is Identifier.Qualified -> false
-    //         is Identifier.Symbol -> when (identifier.symbol) {
-    //             "and" -> true
-    //             "or" -> true
-    //             "not" -> true
-    //             "eq" -> true
-    //             "is_null" -> true
-    //             "is_missing" -> true
-    //             else -> false
-    //         }
-    //     }
-    // }
 
     /**
      * This will make all binding values nullables. If the value is a struct, each field will be nullable.

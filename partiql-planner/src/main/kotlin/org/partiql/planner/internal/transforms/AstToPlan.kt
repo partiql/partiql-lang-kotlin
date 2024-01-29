@@ -19,7 +19,7 @@ package org.partiql.planner.internal.transforms
 import org.partiql.ast.AstNode
 import org.partiql.ast.Expr
 import org.partiql.ast.visitor.AstBaseVisitor
-import org.partiql.planner.internal.TypeEnvDb
+import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.ir.identifierQualified
 import org.partiql.planner.internal.ir.identifierSymbol
 import org.partiql.planner.internal.ir.statementQuery
@@ -35,14 +35,14 @@ internal object AstToPlan {
 
     // statement.toPlan()
     @JvmStatic
-    fun apply(statement: AstStatement, env: TypeEnvDb): PlanStatement = statement.accept(ToPlanStatement, env)
+    fun apply(statement: AstStatement, env: Env): PlanStatement = statement.accept(ToPlanStatement, env)
 
     @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
-    private object ToPlanStatement : AstBaseVisitor<PlanStatement, TypeEnvDb>() {
+    private object ToPlanStatement : AstBaseVisitor<PlanStatement, Env>() {
 
-        override fun defaultReturn(node: AstNode, env: TypeEnvDb) = throw IllegalArgumentException("Unsupported statement")
+        override fun defaultReturn(node: AstNode, env: Env) = throw IllegalArgumentException("Unsupported statement")
 
-        override fun visitStatementQuery(node: AstStatement.Query, env: TypeEnvDb): PlanStatement {
+        override fun visitStatementQuery(node: AstStatement.Query, env: Env): PlanStatement {
             val rex = when (val expr = node.expr) {
                 is Expr.SFW -> RelConverter.apply(expr, env)
                 else -> RexConverter.apply(expr, env)

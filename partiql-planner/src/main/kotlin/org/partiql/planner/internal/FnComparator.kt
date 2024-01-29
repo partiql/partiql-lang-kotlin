@@ -1,6 +1,5 @@
 package org.partiql.planner.internal
 
-import org.partiql.spi.connector.ConnectorHandle
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature

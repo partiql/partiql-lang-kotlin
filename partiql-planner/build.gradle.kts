@@ -94,6 +94,7 @@ tasks.register<Exec>("codegen") {
         "--poems", "builder",
         "--poems", "util",
         "--opt-in", "org.partiql.value.PartiQLValueExperimental",
+        "--opt-in", "org.partiql.spi.fn.FnExperimental",
         "./src/main/resources/partiql_plan_internal.ion"
     )
 }

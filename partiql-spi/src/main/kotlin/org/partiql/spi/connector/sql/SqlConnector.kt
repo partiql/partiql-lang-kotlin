@@ -39,15 +39,10 @@ public abstract class SqlConnector : Connector {
      * @param session
      * @return
      */
-    override fun getMetadata(session: ConnectorSession): ConnectorMetadata {
-        val delegate = getSqlMetadata(session)
-        return SqlMetadata(session, info, delegate)
-    }
+    abstract override fun getMetadata(session: ConnectorSession): SqlMetadata
 
     override fun getBindings(): ConnectorBindings = SqlBindings(info)
 
     @FnExperimental
     override fun getFunctions(): ConnectorFnProvider = SqlFnProvider(info.functions)
-
-    public abstract fun getSqlMetadata(session: ConnectorSession): ConnectorMetadata
 }

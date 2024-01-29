@@ -26,12 +26,10 @@ import org.partiql.spi.fn.FnExperimental
  *
  * @property session
  * @property info
- * @property delegate
  */
-public class SqlMetadata(
+public open class SqlMetadata(
     private val session: ConnectorSession,
     private val info: InfoSchema,
-    private val delegate: ConnectorMetadata,
 ) : ConnectorMetadata {
 
     /**
@@ -40,7 +38,7 @@ public class SqlMetadata(
      * @param path
      * @return
      */
-    override fun getObject(path: BindingPath): ConnectorHandle.Obj? = delegate.getObject(path)
+    override fun getObject(path: BindingPath): ConnectorHandle.Obj? = null
 
     @FnExperimental
     override fun getFunction(path: BindingPath): ConnectorHandle.Fn? {

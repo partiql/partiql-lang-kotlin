@@ -21,6 +21,7 @@ internal object Fn_IS_NULL__ANY__BOOL : FnScalar {
         parameters = listOf(FnParameter("value", ANY),),
         isNullCall = false,
         isNullable = false,
+        isMissingCall = false,
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {

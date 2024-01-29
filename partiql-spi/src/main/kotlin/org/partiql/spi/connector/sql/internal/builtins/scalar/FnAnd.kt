@@ -24,6 +24,7 @@ internal object Fn_AND__BOOL_BOOL__BOOL : FnScalar {
         ),
         isNullCall = false,
         isNullable = true,
+        isMissingCall = false,
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
@@ -43,6 +44,7 @@ internal object Fn_AND__MISSING_BOOL__BOOL : FnScalar {
         ),
         isNullCall = false,
         isNullable = true,
+        isMissingCall = false,
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
@@ -62,6 +64,7 @@ internal object Fn_AND__BOOL_MISSING__BOOL : FnScalar {
         ),
         isNullCall = false,
         isNullable = true,
+        isMissingCall = false,
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
@@ -81,6 +84,7 @@ internal object Fn_AND__MISSING_MISSING__BOOL : FnScalar {
         ),
         isNullCall = false,
         isNullable = true,
+        isMissingCall = false,
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {

@@ -58,6 +58,7 @@ public sealed class FnSignature(
         isNullable: Boolean = true,
         @JvmField public val isDeterministic: Boolean = true,
         @JvmField public val isNullCall: Boolean = false,
+        @JvmField public val isMissingCall: Boolean = true,
     ) : FnSignature(name, returns, parameters, description, isNullable) {
 
         override fun equals(other: Any?): Boolean {

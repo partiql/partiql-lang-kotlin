@@ -1,20 +1,19 @@
 package org.partiql.planner.internal
 
 import org.partiql.planner.PartiQLPlanner
-import org.partiql.planner.internal.ir.Catalog
 import org.partiql.planner.internal.ir.Rex
-import org.partiql.planner.internal.ir.catalogItemFn
-import org.partiql.planner.internal.ir.catalogItemValue
+import org.partiql.planner.internal.ir.refFn
+import org.partiql.planner.internal.ir.refObj
 import org.partiql.planner.internal.ir.rex
+import org.partiql.planner.internal.ir.rexOpCallDynamic
+import org.partiql.planner.internal.ir.rexOpCallDynamicCandidate
 import org.partiql.planner.internal.ir.rexOpCallStatic
 import org.partiql.planner.internal.ir.rexOpGlobal
 import org.partiql.planner.internal.typer.TypeEnv.Companion.toPath
-import org.partiql.planner.internal.typer.toRuntimeType
 import org.partiql.spi.BindingPath
 import org.partiql.spi.connector.ConnectorMetadata
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.types.StaticType
-import org.partiql.value.PartiQLValueExperimental
 
 /**
  * [Env] is similar to the database type environment from the PartiQL Specification. This includes resolution of
@@ -29,12 +28,12 @@ internal class Env(private val session: PartiQLPlanner.Session) {
     /**
      * Maintain a list of all resolved catalog symbols (objects and functions).
      */
-    private val symbols: Symbols = Symbols.empty()
+    // private val symbols: Symbols = Symbols.empty()
 
     /**
      * Convert the symbols structure into a list of [Catalog] for shipping in the plan.
      */
-    internal fun catalogs(): List<Catalog> = symbols.build()
+    // internal fun catalogs(): List<Catalog> = symbols.build()
 
     /**
      * Current catalog [ConnectorMetadata]. Error if missing from the session.
@@ -52,6 +51,8 @@ internal class Env(private val session: PartiQLPlanner.Session) {
      */
     private val functions: PathResolverFn = PathResolverFn(catalog, session)
 
+    // inline fun <reified T : Catalog.Item> get(ref: Ref): T? = symbols.get(ref) as? T
+
     /**
      * This function looks up a global [BindingPath], returning a global reference expression.
      *
@@ -62,15 +63,15 @@ internal class Env(private val session: PartiQLPlanner.Session) {
      */
     fun resolveObj(path: BindingPath): Rex? {
         val item = objects.lookup(path) ?: return null
-        // Insert into symbols, producing a reference
-        val symbol = catalogItemValue(
+        // Create an internal typed reference
+        val ref = refObj(
+            catalog = item.catalog,
             path = item.handle.path,
             type = item.handle.entity.getType(),
         )
-        val ref = symbols.insert(item.catalog, symbol)
         // Rewrite as a path expression.
-        val root = rex(symbol.type, rexOpGlobal(ref))
-        val depth = calculateMatched(path, item.input, symbol.path)
+        val root = rex(ref.type, rexOpGlobal(ref))
+        val depth = calculateMatched(path, item.input, ref.path)
         val tail = path.steps.drop(depth)
         return if (tail.isEmpty()) root else root.toPath(tail)
     }
@@ -87,15 +88,25 @@ internal class Env(private val session: PartiQLPlanner.Session) {
         }
         return when (match) {
             is FnMatch.Dynamic -> {
-                TODO()
+                val candidates = match.candidates.map {
+                    rexOpCallDynamicCandidate(
+                        fn = refFn(
+                            catalog = item.catalog,
+                            path = item.handle.path,
+                            signature = it.signature,
+                        ),
+                        coercions = it.mapping.toList(),
+                    )
+                }
+                rex(StaticType.ANY, rexOpCallDynamic(args, candidates))
             }
             is FnMatch.Static -> {
-                // Insert into symbols, producing a reference
-                val symbol = catalogItemFn(
+                // Create an internal typed reference
+                val ref = refFn(
+                    catalog = item.catalog,
                     path = item.handle.path,
-                    specific = match.signature.specific,
+                    signature = match.signature,
                 )
-                val ref = symbols.insert(item.catalog, symbol)
                 // Rewrite as a static call to by typed by PlanTyper
                 rex(StaticType.ANY, rexOpCallStatic(ref, args))
             }

@@ -1,9 +1,8 @@
 imports::{
   kotlin: [
     partiql_value::'org.partiql.value.PartiQLValue',
+    partiql_value_type::'org.partiql.value.PartiQLValueType',
     static_type::'org.partiql.types.StaticType',
-    scalar_signature::'org.partiql.types.function.FunctionSignature$Scalar',
-    aggregation_signature::'org.partiql.types.function.FunctionSignature$Aggregation',
   ],
 }
 
@@ -33,7 +32,13 @@ catalog::{
 
 ref::{
   catalog: int,
-  symbol: int
+  symbol: int,
+  _: [
+    cast::{
+      input: partiql_value_type,
+      target: partiql_value_type,
+    }
+  ]
 }
 
 // Statements
@@ -91,10 +96,15 @@ rex::{
       symbol::{ root: rex, key: string },
     ],
 
+    cast::{
+      cast: '.ref.cast',
+      arg: rex,
+    },
+
     call::[
       static::{
-        fn:   ref,
-        args: list::[rex]
+        fn: ref,
+        args: list::[rex],
       },
 
       // Represents a dynamic function call. If all candidates are exhausted, dynamic calls will return MISSING.
@@ -108,10 +118,10 @@ rex::{
         _: [
           candidate::{
             fn: ref,
-            coercions: list::[optional::ref]
+            coercions: list::[optional::'.ref.cast'],
           }
         ]
-      }
+      },
     ],
 
     case::{

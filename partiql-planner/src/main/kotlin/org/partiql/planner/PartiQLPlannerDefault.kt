@@ -33,13 +33,10 @@ internal class PartiQLPlannerDefault(
         // 3. Resolve variables
         val typer = PlanTyper(env, onProblem)
         val typed = typer.resolve(root)
-        val internal = org.partiql.planner.internal.ir.PartiQLPlan(
-            catalogs = env.catalogs(),
-            statement = typed,
-        )
+        val internal = org.partiql.planner.internal.ir.PartiQLPlan(typed)
 
         // 4. Assert plan has been resolved — translating to public API
-        var plan = PlanTransform.visitPartiQLPlan(internal, onProblem)
+        var plan = PlanTransform.transform(internal, onProblem)
 
         // 5. Apply all passes
         for (pass in passes) {

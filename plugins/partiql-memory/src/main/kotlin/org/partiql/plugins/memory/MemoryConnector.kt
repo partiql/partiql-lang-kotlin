@@ -16,31 +16,17 @@
 package org.partiql.plugins.memory
 
 import com.amazon.ionelement.api.StructElement
-import org.partiql.spi.BindingPath
 import org.partiql.spi.connector.Connector
-import org.partiql.spi.connector.ConnectorHandle
-import org.partiql.spi.connector.ConnectorMetadata
 import org.partiql.spi.connector.ConnectorSession
 import org.partiql.spi.connector.sql.SqlConnector
 import org.partiql.spi.connector.sql.SqlMetadata
-import org.partiql.spi.fn.FnExperimental
 
 /**
  * This is a plugin used for testing and is not a versioned API per semver.
  */
-internal class MemoryConnector(private val catalog: MemoryCatalog) : SqlConnector() {
+public class MemoryConnector(private val catalog: MemoryCatalog) : SqlConnector() {
 
-    override fun getSqlMetadata(session: ConnectorSession): ConnectorMetadata =
-        SqlMetadata(
-            session, info,
-            object : ConnectorMetadata {
-
-                override fun getObject(path: BindingPath): ConnectorHandle.Obj? = catalog.find(path)
-
-                @FnExperimental
-                override fun getFunction(path: BindingPath): ConnectorHandle.Fn? = null
-            }
-        )
+    override fun getMetadata(session: ConnectorSession): SqlMetadata = MemoryMetadata(catalog, session, info)
 
     internal class Factory(private val catalogs: List<MemoryCatalog>) : Connector.Factory {
 

@@ -25,8 +25,14 @@ import org.partiql.planner.test.PartiQLTest
 import org.partiql.planner.test.PartiQLTestProvider
 import org.partiql.planner.util.ProblemCollector
 import org.partiql.plugins.local.toStaticType
+import org.partiql.plugins.memory.MemoryCatalog
 import org.partiql.plugins.memory.MemoryConnector
+import org.partiql.plugins.memory.MemoryObject
+import org.partiql.spi.BindingCase
+import org.partiql.spi.BindingName
+import org.partiql.spi.BindingPath
 import org.partiql.spi.connector.ConnectorMetadata
+import org.partiql.spi.connector.ConnectorSession
 import org.partiql.types.AnyOfType
 import org.partiql.types.AnyType
 import org.partiql.types.BagType
@@ -96,6 +102,11 @@ class PlanTyperTestsPorted {
             }
         }
 
+        val session = object : ConnectorSession {
+            override fun getQueryId(): String = "query-id"
+            override fun getUserId(): String = "user-id"
+        }
+
         /**
          * MemoryConnector.Factory from reading the resources in /resource_path.txt for Github CI/CD.
          */
@@ -122,8 +133,15 @@ class PlanTyperTestsPorted {
                     }
                 }
             }
-            map.entries.map {
-                it.key to MemoryConnector.Metadata.of(*it.value.toTypedArray())
+            map.entries.map { (catalogName, bindings) ->
+                val catalog = MemoryCatalog(catalogName)
+                val connector = MemoryConnector(catalog)
+                for (binding in bindings) {
+                    val name = name(binding.first)
+                    val obj = MemoryObject(binding.second)
+                    catalog.insert(name, obj)
+                }
+                catalogName to connector.getMetadata(session)
             }
         }
 
@@ -213,6 +231,8 @@ class PlanTyperTestsPorted {
                     TupleConstraint.Ordered
                 )
             )
+
+        private fun name(symbol: String) = BindingPath(listOf(BindingName(symbol, BindingCase.INSENSITIVE)))
 
         //
         // Parameterized Test Source
@@ -796,7 +816,7 @@ class PlanTyperTestsPorted {
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UndefinedVariable("a", false)
+                        PlanningProblemDetails.UndefinedVariable(name("a"))
                     )
                 }
             ),
@@ -2013,7 +2033,7 @@ class PlanTyperTestsPorted {
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UndefinedVariable("unknown_col", false)
+                        PlanningProblemDetails.UndefinedVariable(name("unknown_col"))
                     )
                 }
             ),
@@ -2533,7 +2553,7 @@ class PlanTyperTestsPorted {
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UndefinedVariable("main", true)
+                        PlanningProblemDetails.UndefinedVariable(name("main"))
                     )
                 }
             ),
@@ -2546,7 +2566,7 @@ class PlanTyperTestsPorted {
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UndefinedVariable("pql", true)
+                        PlanningProblemDetails.UndefinedVariable(name("pql"))
                     )
                 }
             ),
@@ -3110,7 +3130,7 @@ class PlanTyperTestsPorted {
         val session = PartiQLPlanner.Session(
             tc.query.hashCode().toString(),
             USER_ID,
-            tc.catalog,
+            tc.catalog!!,
             tc.catalogPath,
             catalogs = mapOf(*catalogs.toTypedArray())
         )
@@ -3151,7 +3171,7 @@ class PlanTyperTestsPorted {
         val session = PartiQLPlanner.Session(
             tc.query.hashCode().toString(),
             USER_ID,
-            tc.catalog,
+            tc.catalog!!,
             tc.catalogPath,
             catalogs = mapOf(*catalogs.toTypedArray())
         )
@@ -3197,7 +3217,7 @@ class PlanTyperTestsPorted {
         val session = PartiQLPlanner.Session(
             tc.query.hashCode().toString(),
             USER_ID,
-            tc.catalog,
+            tc.catalog!!,
             tc.catalogPath,
             catalogs = mapOf(*catalogs.toTypedArray())
         )
@@ -3248,7 +3268,7 @@ class PlanTyperTestsPorted {
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UndefinedVariable("pets", false)
+                        PlanningProblemDetails.UndefinedVariable(name("pets"))
                     )
                 }
             ),
@@ -3281,7 +3301,7 @@ class PlanTyperTestsPorted {
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UndefinedVariable("pets", false)
+                        PlanningProblemDetails.UndefinedVariable(name("pets"))
                     )
                 }
             ),
@@ -3348,7 +3368,7 @@ class PlanTyperTestsPorted {
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UndefinedVariable("pets", false)
+                        PlanningProblemDetails.UndefinedVariable(name("pets"))
                     )
                 }
             ),
@@ -3618,7 +3638,7 @@ class PlanTyperTestsPorted {
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UndefinedVariable("non_existing_column", false)
+                        PlanningProblemDetails.UndefinedVariable(name("non_existing_column"))
                     )
                 }
             ),
@@ -3673,7 +3693,7 @@ class PlanTyperTestsPorted {
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UndefinedVariable("unknown_col", false)
+                        PlanningProblemDetails.UndefinedVariable(name("unknown_col"))
                     )
                 }
             ),

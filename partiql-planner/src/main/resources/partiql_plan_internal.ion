@@ -3,43 +3,42 @@ imports::{
     partiql_value::'org.partiql.value.PartiQLValue',
     partiql_value_type::'org.partiql.value.PartiQLValueType',
     static_type::'org.partiql.types.StaticType',
+    fn_signature::'org.partiql.spi.fn.FnSignature',
   ],
 }
 
 parti_q_l_plan::{
-  catalogs:   list::[catalog],      // (catalogs ...)
   statement:  statement,            // (statement ...)
 }
 
-catalog::{
-  name:   string,
-  items:  list::[item],
-  _: [
-    item::[
-      value::{
-        path: list::[string],
-        type: static_type,
-      },
-      fn::{
-        path:     list::[string],
-        specific: string,
-      },
-    ]
-  ]
-}
-
 // Reference to some item in a catalog.
+// In the internal plan, we inline additional typing information.
+// When transforming to the public plan we produce a symbol table,
+// replacing each internal ref with a pointer ref to the public plan's catalog list.
 
-ref::{
-  catalog: int,
-  symbol: int,
-  _: [
+ref::[
+  obj::{
+    catalog: string,
+    path: list::[string],
+    type: static_type,
+  },
+  fn::{
+    catalog: string,
+    path: list::[string],
+    signature: fn_signature,
+  },
+  _::[
     cast::{
       input: partiql_value_type,
       target: partiql_value_type,
+      safety: [
+        COERCION, // Lossless CAST(V AS T) -> T
+        EXPLICIT, // Lossy    CAST(V AS T) -> T
+        UNSAFE,   //          CAST(V AS T) -> T|MISSING
+      ]
     }
   ]
-}
+]
 
 // Statements
 
@@ -94,7 +93,7 @@ rex::{
     ],
 
     global::{
-      ref: ref,
+      ref: '.ref.obj',
     },
 
     path::[
@@ -121,7 +120,7 @@ rex::{
       },
 
       static::{
-        fn: ref,
+        fn: '.ref.fn',
         args: list::[rex],
       },
 
@@ -135,7 +134,7 @@ rex::{
         candidates: list::[candidate],
         _: [
           candidate::{
-            fn: ref,
+            fn: '.ref.fn',
             coercions: list::[optional::'.ref.cast'],
           }
         ]
@@ -298,7 +297,7 @@ rel::{
       groups:   list::[rex],
       _: [
         call::{
-          agg:  ref,
+          agg:  '.ref.fn',
           args: list::[rex],
         },
       ],

@@ -2,7 +2,6 @@ package org.partiql.planner.internal.casts
 
 import org.partiql.planner.internal.ir.Ref.Cast
 import org.partiql.planner.internal.ir.refCast
-import org.partiql.spi.fn.FnExperimental
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
 import org.partiql.value.PartiQLValueType.ANY
@@ -43,10 +42,10 @@ import org.partiql.value.PartiQLValueType.TIMESTAMP
 @OptIn(PartiQLValueExperimental::class)
 internal class CastTable private constructor(
     private val types: Array<PartiQLValueType>,
-    private val graph: Array<Array<CastInfo?>>,
+    private val graph: Array<Array<Cast?>>,
 ) {
 
-    private fun relationships(): Sequence<CastInfo> = sequence {
+    private fun relationships(): Sequence<Cast> = sequence {
         for (t1 in types) {
             for (t2 in types) {
                 val r = graph[t1][t2]
@@ -58,33 +57,14 @@ internal class CastTable private constructor(
     }
 
     /**
-     * Cache a list of unsafe cast SPECIFIC for easy typing lookup
-     */
-    private val unsafeCastSet: Set<String> by lazy {
-        val set = mutableSetOf<String>()
-        relationships().forEach {
-            if (it.castType == CastType.UNSAFE) {
-                set.add(it.castFn.specific)
-            }
-        }
-        set
-    }
-
-    /**
      * Returns the CAST function if exists, else null.
      */
     internal fun lookupCoercion(operand: PartiQLValueType, target: PartiQLValueType): Cast? {
         val i = operand.ordinal
         val j = target.ordinal
         val cast = graph[i][j] ?: return null
-        return if (cast.type == CastType.COERCION) cast.ref else null
+        return if (cast.safety == Cast.Safety.COERCION) cast else null
     }
-
-    /**
-     * Easy lookup of whether this CAST can return MISSING.
-     */
-    internal fun isUnsafeCast(specific: String): Boolean = unsafeCastSet.contains(specific)
-
 
     private operator fun <T> Array<T>.get(t: PartiQLValueType): T = get(t.ordinal)
 
@@ -94,7 +74,7 @@ internal class CastTable private constructor(
 
         private operator fun <T> Array<T>.set(t: PartiQLValueType, value: T): Unit = this.set(t.ordinal, value)
 
-        private fun PartiQLValueType.relationships(block: RelationshipBuilder.() -> Unit): Array<CastInfo?> {
+        private fun PartiQLValueType.relationships(block: RelationshipBuilder.() -> Unit): Array<Cast?> {
             return with(RelationshipBuilder(this)) {
                 block()
                 build()
@@ -108,7 +88,7 @@ internal class CastTable private constructor(
          */
         public fun partiql(): CastTable {
             val types = PartiQLValueType.values()
-            val graph = arrayOfNulls<Array<CastInfo?>>(N)
+            val graph = arrayOfNulls<Array<Cast?>>(N)
             for (type in types) {
                 // initialize all with empty relationships
                 graph[type] = arrayOfNulls(N)
@@ -318,20 +298,20 @@ internal class CastTable private constructor(
 
     private class RelationshipBuilder(val operand: PartiQLValueType) {
 
-        private val relationships = arrayOfNulls<CastInfo?>(N)
+        private val relationships = arrayOfNulls<Cast?>(N)
 
         fun build() = relationships
 
         fun coercion(target: PartiQLValueType) {
-            relationships[target] = CastInfo(CastType.COERCION, refCast(operand, target))
+            relationships[target] = refCast(operand, target, Cast.Safety.COERCION)
         }
 
         fun explicit(target: PartiQLValueType) {
-            relationships[target] = CastInfo(CastType.EXPLICIT, refCast(operand, target))
+            relationships[target] = refCast(operand, target, Cast.Safety.EXPLICIT)
         }
 
         fun unsafe(target: PartiQLValueType) {
-            relationships[target] = CastInfo(CastType.UNSAFE, refCast(operand, target))
+            relationships[target] = refCast(operand, target, Cast.Safety.UNSAFE)
         }
     }
 }

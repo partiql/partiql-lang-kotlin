@@ -2,11 +2,11 @@ package org.partiql.planner.internal.typer
 
 import org.junit.jupiter.api.Test
 import org.partiql.planner.PartiQLPlanner
-import org.partiql.planner.internal.TypeEnvDb
+import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.ir.Identifier
 import org.partiql.planner.internal.ir.Rex
-import org.partiql.planner.internal.ir.catalogSymbolRef
 import org.partiql.planner.internal.ir.identifierSymbol
+import org.partiql.planner.internal.ir.refObj
 import org.partiql.planner.internal.ir.rex
 import org.partiql.planner.internal.ir.rexOpGlobal
 import org.partiql.planner.internal.ir.rexOpLit
@@ -172,7 +172,7 @@ class PlanTyperTest {
 
         private fun getTyper(): PlanTyperWrapper {
             val collector = ProblemCollector()
-            val env = TypeEnvDb(
+            val env = Env(
                 PartiQLPlanner.Session(
                     queryId = Random().nextInt().toString(),
                     userId = "test-user",
@@ -322,10 +322,10 @@ class PlanTyperTest {
         )
     }
 
-    private fun global(type: StaticType, catalogIndex: Int = 0, symbolIndex: Int = 0): Rex {
+    private fun global(type: StaticType): Rex {
         return rex(
             type,
-            rexOpGlobal(catalogSymbolRef(catalogIndex, symbolIndex))
+            rexOpGlobal(refObj(catalog = "foo", path = emptyList(), type))
         )
     }
 }

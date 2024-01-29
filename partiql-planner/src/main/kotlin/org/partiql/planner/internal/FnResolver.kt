@@ -2,13 +2,14 @@ package org.partiql.planner.internal
 
 import org.partiql.planner.internal.casts.CastTable
 import org.partiql.planner.internal.ir.Ref
-import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.typer.toRuntimeTypeOrNull
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnSignature
 import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType.*
+import org.partiql.value.PartiQLValueType
+import org.partiql.value.PartiQLValueType.ANY
+import org.partiql.value.PartiQLValueType.NULL
 
 /**
  *
@@ -21,7 +22,6 @@ import org.partiql.value.PartiQLValueType.*
  *      b. Check all candidates and keep those with the most exact matches.
  *
  * Resolution of dynamic calls.
- *
  *
  *
  * Reference https://www.postgresql.org/docs/current/typeconv-func.html
@@ -46,31 +46,24 @@ internal object FnResolver {
             .sortedWith(FnComparator)
             .ifEmpty { return null }
 
-        val parameterPermutations = buildArgumentPermutations(args).mapNotNull { argList ->
+        val argPermutations = buildArgumentPermutations(args).mapNotNull { argList ->
             argList.map { arg ->
                 // Skip over if we cannot convert type to runtime type.
                 arg.toRuntimeTypeOrNull() ?: return@mapNotNull null
             }
         }
 
-        val potentialFunctions = parameterPermutations.mapNotNull { parameters ->
-            when (val match = match(candidates, parameters)) {
-                null -> {
-                    canReturnMissing = true
-                    null
-                }
-                else -> {
-                    val isMissable = canReturnMissing || isUnsafeCast(match.signature.specific)
-                    FnMatch.Ok(match.signature, match.mapping, isMissable)
-                }
-            }
-        }
+        // Match candidates on all argument permutations
+        val matches = argPermutations.mapNotNull { match(candidates, it) }
+
         // Remove duplicates while maintaining order (precedence).
-        val orderedUniqueFunctions = potentialFunctions.toSet().toList()
+        val orderedUniqueFunctions = matches.toSet().toList()
+
+        //
         return when (orderedUniqueFunctions.size) {
             0 -> null
             1 -> orderedUniqueFunctions.first()
-            else -> FnMatch.Dynamic(orderedUniqueFunctions, canReturnMissing)
+            else -> FnMatch.Dynamic(orderedUniqueFunctions)
         }
     }
 
@@ -81,11 +74,11 @@ internal object FnResolver {
      * @param args
      * @return
      */
-    private fun resolve(candidates: List<FnSignature>, args: FnArgs): FnMatch? {
+    private fun match(candidates: List<FnSignature>, args: List<PartiQLValueType>): FnMatch.Static? {
         // 1. Check for an exact match
         for (candidate in candidates) {
             if (candidate.matches(args)) {
-                return FnMatch.Static(candidate, null)
+                return FnMatch.Static(candidate, arrayOfNulls(args.size))
             }
         }
         // 2. Look for best match.
@@ -105,7 +98,7 @@ internal object FnResolver {
     /**
      * Check if this function accepts the exact input argument types. Assume same arity.
      */
-    private fun FnSignature.matches(args: FnArgs): Boolean {
+    private fun FnSignature.matches(args: List<PartiQLValueType>): Boolean {
         for (i in args.indices) {
             val a = args[i]
             val p = parameters[i]
@@ -120,25 +113,22 @@ internal object FnResolver {
      * @param args
      * @return
      */
-    private fun FnSignature.match(args: FnArgs): FnMatch.Static? {
+    private fun FnSignature.match(args: List<PartiQLValueType>): FnMatch.Static? {
         val mapping = arrayOfNulls<Ref.Cast?>(args.size)
         for (i in args.indices) {
-            val a = args[i]
+            val arg = args[i]
             val p = parameters[i]
             when {
                 // 1. Exact match
-                a == p.type -> continue
+                arg == p.type -> continue
                 // 2. Match ANY, no coercion needed
                 p.type == ANY -> continue
                 // 3. Match NULL argument
-                a == NULL -> continue
+                arg == NULL -> continue
                 // 4. Check for a coercion
-                else -> {
-                    val coercion = casts.lookupCoercion(a, p.type)
-                    when (coercion) {
-                        null -> return null // short-circuit
-                        else -> mapping[i] = coercion
-                    }
+                else -> when (val coercion = casts.lookupCoercion(arg, p.type)) {
+                    null -> return null // short-circuit
+                    else -> mapping[i] = coercion
                 }
             }
         }
