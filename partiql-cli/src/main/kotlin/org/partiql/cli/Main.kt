@@ -23,7 +23,6 @@ import org.partiql.lang.eval.EvaluationSession
 import org.partiql.parser.PartiQLParser
 import org.partiql.plan.debug.PlanPrinter
 import org.partiql.planner.PartiQLPlanner
-import org.partiql.plugins.local.LocalConnector
 import picocli.CommandLine
 import java.io.PrintStream
 import java.nio.file.Paths

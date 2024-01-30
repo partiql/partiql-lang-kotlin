@@ -14,9 +14,8 @@
 
 package org.partiql.spi.connector
 
-import org.partiql.spi.fn.FnAggregation
+import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnExperimental
-import org.partiql.spi.fn.FnScalar
 
 /**
  * A [ConnectorFnProvider] implementation is responsible for providing a function implementation given a handle.
@@ -24,7 +23,5 @@ import org.partiql.spi.fn.FnScalar
 @FnExperimental
 public interface ConnectorFnProvider {
 
-    public fun getFnScalar(handle: ConnectorHandle.Fn, specific: String): FnScalar?
-
-    public fun getFnAggregation(handle: ConnectorHandle.Fn, specific: String): FnAggregation?
+    public fun getFn(handle: ConnectorHandle.Fn, specific: String): Fn?
 }

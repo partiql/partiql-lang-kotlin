@@ -1,10 +1,25 @@
 package org.partiql.spi.fn
 
+import org.partiql.value.PartiQLValue
+import org.partiql.value.PartiQLValueExperimental
+
 /**
- * Simple common interface shared between [FnScalar] and [FnAggregation].
+ * Represents a scalar function (SQL row-value call expression).
  */
 @FnExperimental
 public interface Fn {
 
+    /**
+     * Scalar function signature.
+     */
     public val signature: FnSignature
+
+    /**
+     * Invoke the routine with the given arguments.
+     *
+     * @param args
+     * @return
+     */
+    @OptIn(PartiQLValueExperimental::class)
+    public fun invoke(args: Array<PartiQLValue>): PartiQLValue
 }

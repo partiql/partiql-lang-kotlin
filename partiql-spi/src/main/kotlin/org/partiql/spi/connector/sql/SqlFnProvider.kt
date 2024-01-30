@@ -16,10 +16,9 @@ package org.partiql.spi.connector.sql
 
 import org.partiql.spi.connector.ConnectorFnProvider
 import org.partiql.spi.connector.ConnectorHandle
-import org.partiql.spi.fn.FnAggregation
+import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnIndex
-import org.partiql.spi.fn.FnScalar
 
 /**
  * A basic [ConnectorFnProvider] over an [FnIndex].
@@ -27,15 +26,9 @@ import org.partiql.spi.fn.FnScalar
 @OptIn(FnExperimental::class)
 public class SqlFnProvider(private val index: FnIndex) : ConnectorFnProvider {
 
-    override fun getFnScalar(handle: ConnectorHandle.Fn, specific: String): FnScalar? {
+    override fun getFn(handle: ConnectorHandle.Fn, specific: String): Fn? {
         val path = handle.path
         val fn = index.get(path, specific)
-        return if (fn is FnScalar) fn else null
-    }
-
-    override fun getFnAggregation(handle: ConnectorHandle.Fn, specific: String): FnAggregation? {
-        val path = handle.path
-        val fn = index.get(path, specific)
-        return if (fn is FnAggregation) fn else null
+        return if (fn is Fn) fn else null
     }
 }

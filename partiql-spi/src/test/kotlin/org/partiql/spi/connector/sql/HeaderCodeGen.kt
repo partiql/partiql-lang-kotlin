@@ -1,17 +1,20 @@
 package org.partiql.spi.connector.sql
 
 import net.pearx.kasechange.toPascalCase
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
+import org.partiql.spi.fn.AggSignature
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnSignature
 import org.partiql.value.PartiQLValueExperimental
 import java.io.File
 
 const val imports = """
+import org.partiql.spi.fn.Agg
+import org.partiql.spi.fn.AggSignature
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnScalar
-import org.partiql.spi.fn.FnAggregation
 import org.partiql.spi.fn.FnSignature
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.*
@@ -31,7 +34,7 @@ const val TEMPLATE_SCALAR = """
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object %s : FnScalar {
 
-    override val signature = FnSignature.Scalar(
+    override val signature = FnSignature(
         name = "%s",
         returns = %s,
         parameters = listOf(%s),
@@ -56,9 +59,9 @@ internal object %s : FnScalar {
  */
 const val TEMPLATE_AGG = """
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
-internal object %s : FnAggregation {
+internal object %s : Agg {
 
-    override val signature = FnSignature.Aggregation(
+    override val signature = AggSignature(
         name = "%s",
         returns = %s,
         parameters = listOf(%s),
@@ -66,30 +69,30 @@ internal object %s : FnAggregation {
         isDecomposable = %b
     )
 
-    override fun accumulator(): FnAggregation.Accumulator {
+    override fun accumulator(): Agg.Accumulator {
         TODO("Aggregation %s not implemented")
     }
 }
 """
 
+@Disabled
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 class HeaderCodeGen {
 
     @Test
     fun scalars() {
-        generate("package org.partiql.spi.connector.sql.internal.builtins.scalar", TEMPLATE_SCALAR, "Fn", SqlHeader.functions)
-        generate("package org.partiql.spi.connector.sql.internal.builtins.scalar", TEMPLATE_SCALAR, "Fn", SqlHeader.operators())
+        generateFns("package org.partiql.spi.connector.sql.internal.builtins", TEMPLATE_SCALAR, "Fn", SqlHeader.fns)
     }
 
     @Test
     fun aggregations() {
-        generate("package org.partiql.spi.connector.sql.internal.builtins.agg", TEMPLATE_AGG, "Agg", SqlHeader.aggregations)
+        generateAggs("package org.partiql.spi.connector.sql.internal.builtins", TEMPLATE_AGG, "Agg", SqlHeader.aggs)
     }
 
     /**
      * Writes function implementation to file, prints list of classes
      */
-    private fun generate(
+    private fun generateFns(
         packageName: String,
         template: String,
         prefix: String,
@@ -97,7 +100,45 @@ class HeaderCodeGen {
     ) {
         val clazzes = mutableListOf<String>()
         val funcs = signatures.groupBy { it.name }
-        val pathToDir = "./src/main/kotlin/org/partiql/spi/connector/sql/internal/builtins/agg"
+        val pathToDir = "./src/main/kotlin/org/partiql/spi/connector/sql/builtins"
+        for ((name, fns) in funcs) {
+            val pre = "${prefix}_$name".toPascalCase()
+            val file = File("$pathToDir/$pre.kt")
+            file.printWriter().use {
+                it.appendLine("// ktlint-disable filename")
+                it.appendLine("@file:Suppress(\"ClassName\")")
+                it.appendLine()
+                it.appendLine(packageName)
+                it.appendLine()
+                it.appendLine(imports)
+                it.appendLine()
+                fns.forEach { sig ->
+                    val clazz = "${prefix}_${sig.specific}"
+                    val params = toParams(clazz, sig)
+                    val code = String.format(template, *params)
+                    it.appendLine(code)
+                    it.appendLine()
+                    clazzes.add(clazz)
+                }
+            }
+        }
+        println("-- GENERATED")
+        println("listOf(${clazzes.joinToString()})")
+        println()
+    }
+
+    /**
+     * Writes function implementation to file, prints list of classes
+     */
+    private fun generateAggs(
+        packageName: String,
+        template: String,
+        prefix: String,
+        signatures: List<AggSignature>,
+    ) {
+        val clazzes = mutableListOf<String>()
+        val funcs = signatures.groupBy { it.name }
+        val pathToDir = "./src/main/kotlin/org/partiql/spi/connector/sql/builtins"
         for ((name, fns) in funcs) {
             val pre = "${prefix}_$name".toPascalCase()
             val file = File("$pathToDir/$pre.kt")
@@ -125,13 +166,7 @@ class HeaderCodeGen {
     }
 
     @OptIn(FnExperimental::class)
-    private fun toParams(clazz: String, fn: FnSignature) = when (fn) {
-        is FnSignature.Aggregation -> toParams(clazz, fn)
-        is FnSignature.Scalar -> toParams(clazz, fn)
-    }
-
-    @OptIn(FnExperimental::class)
-    private fun toParams(clazz: String, fn: FnSignature.Scalar): Array<out Any?> {
+    private fun toParams(clazz: String, fn: FnSignature): Array<out Any?> {
         val snake = fn.name
         val returns = fn.returns.name
         val parameters = fn.parameters.mapIndexed { i, p ->
@@ -141,13 +176,13 @@ class HeaderCodeGen {
     }
 
     @OptIn(FnExperimental::class)
-    private fun toParams(clazz: String, fn: FnSignature.Aggregation): Array<out Any?> {
-        val snake = fn.name
-        val returns = fn.returns.name
+    private fun toParams(clazz: String, agg: AggSignature): Array<out Any?> {
+        val snake = agg.name
+        val returns = agg.returns.name
         var parameters = ""
-        for (p in fn.parameters) {
+        for (p in agg.parameters) {
             parameters += "FnParameter(\"${p.name}\", ${p.type.name}),\n"
         }
-        return arrayOf(clazz, snake, returns, parameters, fn.isNullable, fn.isDecomposable, snake)
+        return arrayOf(clazz, snake, returns, parameters, agg.isNullable, agg.isDecomposable, snake)
     }
 }
