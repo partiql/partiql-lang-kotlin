@@ -34,12 +34,10 @@ import org.partiql.spi.BindingPath
 import org.partiql.spi.connector.ConnectorMetadata
 import org.partiql.spi.connector.ConnectorSession
 import org.partiql.types.AnyOfType
-import org.partiql.types.AnyType
 import org.partiql.types.BagType
 import org.partiql.types.ListType
 import org.partiql.types.SexpType
 import org.partiql.types.StaticType
-import org.partiql.types.StaticType.Companion.unionOf
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
 import java.util.stream.Stream
@@ -55,31 +53,32 @@ class PlanTyperTestsPorted {
             val name: String,
             val key: PartiQLTest.Key? = null,
             val query: String? = null,
-            val catalog: String? = null,
+            val catalog: String = "pql",
             val catalogPath: List<String> = emptyList(),
             val expected: StaticType,
             val warnings: ProblemHandler? = null,
         ) : TestCase() {
-            override fun toString(): String = "$name : $query"
+            override fun toString(): String = "$name : ${query ?: key}"
         }
 
         class ErrorTestCase(
             val name: String,
             val key: PartiQLTest.Key? = null,
             val query: String? = null,
-            val catalog: String? = null,
+            val catalog: String = "pql",
             val catalogPath: List<String> = emptyList(),
             val note: String? = null,
             val expected: StaticType? = null,
             val problemHandler: ProblemHandler? = null,
         ) : TestCase() {
-            override fun toString(): String = "$name : $query"
+
+            override fun toString(): String = "$name : ${query ?: key}"
         }
 
         class ThrowingExceptionTestCase(
             val name: String,
             val query: String,
-            val catalog: String? = null,
+            val catalog: String = "pql",
             val catalogPath: List<String> = emptyList(),
             val note: String? = null,
             val expectedThrowable: KClass<out Throwable>,
@@ -112,24 +111,22 @@ class PlanTyperTestsPorted {
          */
         val catalogs: List<Pair<String, ConnectorMetadata>> by lazy {
             val inputStream = this::class.java.getResourceAsStream("/resource_path.txt")!!
-            val map = mutableMapOf<String, MutableList<Pair<String, StaticType>>>()
+            val map = mutableMapOf<String, MutableList<Pair<BindingPath, StaticType>>>()
             inputStream.reader().readLines().forEach { path ->
                 if (path.startsWith("catalogs/default")) {
                     val schema = this::class.java.getResourceAsStream("/$path")!!
                     val ion = loadSingleElement(schema.reader().readText())
                     val staticType = ion.toStaticType()
-                    val steps = path.split('/').drop(2) // drop the catalogs/default
+                    val steps = path.substring(0, path.length - 4).split('/').drop(2) // drop the catalogs/default
                     val catalogName = steps.first()
-                    val subPath = steps
+                    val bindingSteps = steps
                         .drop(1)
-                        .joinToString(".") { it.lowercase() }
-                        .let {
-                            it.substring(0, it.length - 4)
-                        }
+                        .map { BindingName(it, BindingCase.INSENSITIVE) }
+                    val bindingPath = BindingPath(bindingSteps)
                     if (map.containsKey(catalogName)) {
-                        map[catalogName]!!.add(subPath to staticType)
+                        map[catalogName]!!.add(bindingPath to staticType)
                     } else {
-                        map[catalogName] = mutableListOf(subPath to staticType)
+                        map[catalogName] = mutableListOf(bindingPath to staticType)
                     }
                 }
             }
@@ -137,9 +134,9 @@ class PlanTyperTestsPorted {
                 val catalog = MemoryCatalog(catalogName)
                 val connector = MemoryConnector(catalog)
                 for (binding in bindings) {
-                    val name = name(binding.first)
+                    val path = binding.first
                     val obj = MemoryObject(binding.second)
-                    catalog.insert(name, obj)
+                    catalog.insert(path, obj)
                 }
                 catalogName to connector.getMetadata(session)
             }
@@ -3130,7 +3127,7 @@ class PlanTyperTestsPorted {
         val session = PartiQLPlanner.Session(
             tc.query.hashCode().toString(),
             USER_ID,
-            tc.catalog!!,
+            tc.catalog,
             tc.catalogPath,
             catalogs = mapOf(*catalogs.toTypedArray())
         )
@@ -3171,7 +3168,7 @@ class PlanTyperTestsPorted {
         val session = PartiQLPlanner.Session(
             tc.query.hashCode().toString(),
             USER_ID,
-            tc.catalog!!,
+            tc.catalog,
             tc.catalogPath,
             catalogs = mapOf(*catalogs.toTypedArray())
         )
@@ -3217,7 +3214,7 @@ class PlanTyperTestsPorted {
         val session = PartiQLPlanner.Session(
             tc.query.hashCode().toString(),
             USER_ID,
-            tc.catalog!!,
+            tc.catalog,
             tc.catalogPath,
             catalogs = mapOf(*catalogs.toTypedArray())
         )
@@ -3469,448 +3466,448 @@ class PlanTyperTestsPorted {
                 query = "b.b.b.b.b",
                 expected = TYPE_B_B_B_B_B
             ),
-            SuccessTestCase(
-                name = "EQ",
-                catalog = CATALOG_DB,
-                catalogPath = DB_SCHEMA_MARKETS,
-                query = "order_info.customer_id = 1",
-                expected = TYPE_BOOL
-            ),
-            SuccessTestCase(
-                name = "NEQ",
-                catalog = CATALOG_DB,
-                catalogPath = DB_SCHEMA_MARKETS,
-                query = "order_info.customer_id <> 1",
-                expected = TYPE_BOOL
-            ),
-            SuccessTestCase(
-                name = "GEQ",
-                catalog = CATALOG_DB,
-                catalogPath = DB_SCHEMA_MARKETS,
-                query = "order_info.customer_id >= 1",
-                expected = TYPE_BOOL
-            ),
-            SuccessTestCase(
-                name = "GT",
-                catalog = CATALOG_DB,
-                catalogPath = DB_SCHEMA_MARKETS,
-                query = "order_info.customer_id > 1",
-                expected = TYPE_BOOL
-            ),
-            SuccessTestCase(
-                name = "LEQ",
-                catalog = CATALOG_DB,
-                catalogPath = DB_SCHEMA_MARKETS,
-                query = "order_info.customer_id <= 1",
-                expected = TYPE_BOOL
-            ),
-            SuccessTestCase(
-                name = "LT",
-                catalog = CATALOG_DB,
-                catalogPath = DB_SCHEMA_MARKETS,
-                query = "order_info.customer_id < 1",
-                expected = TYPE_BOOL
-            ),
-            SuccessTestCase(
-                name = "IN",
-                catalog = CATALOG_DB,
-                catalogPath = DB_SCHEMA_MARKETS,
-                query = "order_info.customer_id IN (1, 2, 3)",
-                expected = TYPE_BOOL
-            ),
-            ErrorTestCase(
-                name = "IN Failure",
-                catalog = CATALOG_DB,
-                catalogPath = DB_SCHEMA_MARKETS,
-                query = "order_info.customer_id IN 'hello'",
-                expected = StaticType.MISSING,
-                problemHandler = assertProblemExists {
-                    Problem(
-                        UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UnknownFunction(
-                            "in_collection",
-                            listOf(StaticType.INT4, StaticType.STRING),
-                        )
-                    )
-                }
-            ),
-            SuccessTestCase(
-                name = "BETWEEN",
-                catalog = CATALOG_DB,
-                catalogPath = DB_SCHEMA_MARKETS,
-                query = "order_info.customer_id BETWEEN 1 AND 2",
-                expected = TYPE_BOOL
-            ),
-            ErrorTestCase(
-                name = "BETWEEN Failure",
-                catalog = CATALOG_DB,
-                catalogPath = DB_SCHEMA_MARKETS,
-                query = "order_info.customer_id BETWEEN 1 AND 'a'",
-                expected = StaticType.MISSING,
-                problemHandler = assertProblemExists {
-                    Problem(
-                        UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UnknownFunction(
-                            "between",
-                            listOf(
-                                StaticType.INT4,
-                                StaticType.INT4,
-                                StaticType.STRING
-                            ),
-                        )
-                    )
-                }
-            ),
-            SuccessTestCase(
-                name = "LIKE",
-                catalog = CATALOG_DB,
-                catalogPath = DB_SCHEMA_MARKETS,
-                query = "order_info.ship_option LIKE '%ABC%'",
-                expected = TYPE_BOOL
-            ),
-            ErrorTestCase(
-                name = "LIKE Failure",
-                catalog = CATALOG_DB,
-                catalogPath = DB_SCHEMA_MARKETS,
-                query = "order_info.ship_option LIKE 3",
-                expected = StaticType.MISSING,
-                problemHandler = assertProblemExists {
-                    Problem(
-                        UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UnknownFunction(
-                            "like",
-                            listOf(StaticType.STRING, StaticType.INT4),
-                        )
-                    )
-                }
-            ),
-            SuccessTestCase(
-                name = "Case Insensitive success",
-                catalog = CATALOG_DB,
-                catalogPath = DB_SCHEMA_MARKETS,
-                query = "order_info.CUSTOMER_ID = 1",
-                expected = TYPE_BOOL
-            ),
-            // MISSING = 1
-            ErrorTestCase(
-                name = "Case Sensitive failure",
-                catalog = CATALOG_DB,
-                catalogPath = DB_SCHEMA_MARKETS,
-                query = "order_info.\"CUSTOMER_ID\" = 1",
-                expected = StaticType.NULL
-            ),
-            SuccessTestCase(
-                name = "Case Sensitive success",
-                catalog = CATALOG_DB,
-                catalogPath = DB_SCHEMA_MARKETS,
-                query = "order_info.\"customer_id\" = 1",
-                expected = TYPE_BOOL
-            ),
-            SuccessTestCase(
-                name = "1-Level Junction",
-                catalog = CATALOG_DB,
-                catalogPath = DB_SCHEMA_MARKETS,
-                query = "(order_info.customer_id = 1) AND (order_info.marketplace_id = 2)",
-                expected = StaticType.unionOf(StaticType.BOOL, StaticType.NULL)
-            ),
-            SuccessTestCase(
-                name = "2-Level Junction",
-                catalog = CATALOG_DB,
-                catalogPath = DB_SCHEMA_MARKETS,
-                query = "(order_info.customer_id = 1) AND (order_info.marketplace_id = 2) OR (order_info.customer_id = 3) AND (order_info.marketplace_id = 4)",
-                expected = StaticType.unionOf(StaticType.BOOL, StaticType.NULL)
-            ),
-            SuccessTestCase(
-                name = "INT and STR Comparison",
-                catalog = CATALOG_DB,
-                catalogPath = DB_SCHEMA_MARKETS,
-                query = "order_info.customer_id = 'something'",
-                expected = TYPE_BOOL,
-            ),
-            ErrorTestCase(
-                name = "Nonexisting Comparison",
-                catalog = CATALOG_DB,
-                catalogPath = DB_SCHEMA_MARKETS,
-                query = "non_existing_column = 1",
-                // Function resolves to EQ__ANY_ANY__BOOL
-                // Which can return BOOL Or NULL
-                expected = StaticType.unionOf(StaticType.BOOL, StaticType.NULL),
-                problemHandler = assertProblemExists {
-                    Problem(
-                        UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UndefinedVariable(name("non_existing_column"))
-                    )
-                }
-            ),
-            ErrorTestCase(
-                name = "Bad comparison",
-                catalog = CATALOG_DB,
-                catalogPath = DB_SCHEMA_MARKETS,
-                query = "order_info.customer_id = 1 AND 1",
-                expected = StaticType.MISSING,
-                problemHandler = assertProblemExists {
-                    Problem(
-                        UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UnknownFunction(
-                            "and",
-                            listOf(StaticType.BOOL, StaticType.INT4),
-                        )
-                    )
-                }
-            ),
-            ErrorTestCase(
-                name = "Bad comparison",
-                catalog = CATALOG_DB,
-                catalogPath = DB_SCHEMA_MARKETS,
-                query = "1 AND order_info.customer_id = 1",
-                expected = StaticType.MISSING,
-                problemHandler = assertProblemExists {
-                    Problem(
-                        UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UnknownFunction(
-                            "and",
-                            listOf(StaticType.INT4, StaticType.BOOL),
-                        )
-                    )
-                }
-            ),
-            ErrorTestCase(
-                name = "Unknown column",
-                catalog = CATALOG_DB,
-                catalogPath = DB_SCHEMA_MARKETS,
-                query = "SELECT unknown_col FROM orders WHERE customer_id = 1",
-                expected = BagType(
-                    StructType(
-                        fields = mapOf("unknown_col" to AnyType()),
-                        contentClosed = true,
-                        constraints = setOf(
-                            TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(true),
-                            TupleConstraint.Ordered
-                        )
-                    )
-                ),
-                problemHandler = assertProblemExists {
-                    Problem(
-                        UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UndefinedVariable(name("unknown_col"))
-                    )
-                }
-            ),
-            SuccessTestCase(
-                name = "LIMIT INT",
-                catalog = CATALOG_AWS,
-                catalogPath = listOf("ddb"),
-                query = "SELECT * FROM pets LIMIT 5",
-                expected = TABLE_AWS_DDB_PETS
-            ),
-            ErrorTestCase(
-                name = "LIMIT STR",
-                catalog = CATALOG_AWS,
-                catalogPath = listOf("ddb"),
-                query = "SELECT * FROM pets LIMIT '5'",
-                expected = TABLE_AWS_DDB_PETS,
-                problemHandler = assertProblemExists {
-                    Problem(
-                        UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UnexpectedType(StaticType.STRING, setOf(StaticType.INT))
-                    )
-                }
-            ),
-            SuccessTestCase(
-                name = "OFFSET INT",
-                catalog = CATALOG_AWS,
-                catalogPath = listOf("ddb"),
-                query = "SELECT * FROM pets LIMIT 1 OFFSET 5",
-                expected = TABLE_AWS_DDB_PETS
-            ),
-            ErrorTestCase(
-                name = "OFFSET STR",
-                catalog = CATALOG_AWS,
-                catalogPath = listOf("ddb"),
-                query = "SELECT * FROM pets LIMIT 1 OFFSET '5'",
-                expected = TABLE_AWS_DDB_PETS,
-                problemHandler = assertProblemExists {
-                    Problem(
-                        UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UnexpectedType(StaticType.STRING, setOf(StaticType.INT))
-                    )
-                }
-            ),
-            SuccessTestCase(
-                name = "CAST",
-                catalog = CATALOG_AWS,
-                catalogPath = listOf("ddb"),
-                query = "SELECT CAST(breed AS INT) AS cast_breed FROM pets",
-                expected = BagType(
-                    StructType(
-                        fields = mapOf("cast_breed" to StaticType.unionOf(StaticType.INT, StaticType.MISSING)),
-                        contentClosed = true,
-                        constraints = setOf(
-                            TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(true),
-                            TupleConstraint.Ordered
-                        )
-                    )
-                )
-            ),
-            SuccessTestCase(
-                name = "UPPER",
-                catalog = CATALOG_AWS,
-                catalogPath = listOf("ddb"),
-                query = "SELECT UPPER(breed) AS upper_breed FROM pets",
-                expected = BagType(
-                    StructType(
-                        fields = mapOf("upper_breed" to StaticType.STRING),
-                        contentClosed = true,
-                        constraints = setOf(
-                            TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(true),
-                            TupleConstraint.Ordered
-                        )
-                    )
-                )
-            ),
-            SuccessTestCase(
-                name = "Non-tuples",
-                query = "SELECT a FROM << [ 1, 1.0 ] >> AS a",
-                expected = BagType(
-                    StructType(
-                        fields = mapOf("a" to ListType(StaticType.unionOf(StaticType.INT4, StaticType.DECIMAL))),
-                        contentClosed = true,
-                        constraints = setOf(
-                            TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(true),
-                            TupleConstraint.Ordered
-                        )
-                    )
-                )
-            ),
-            SuccessTestCase(
-                name = "Non-tuples in SELECT VALUE",
-                query = "SELECT VALUE a FROM << [ 1, 1.0 ] >> AS a",
-                expected =
-                BagType(ListType(StaticType.unionOf(StaticType.INT4, StaticType.DECIMAL)))
-            ),
-            SuccessTestCase(
-                name = "SELECT VALUE",
-                query = "SELECT VALUE [1, 1.0] FROM <<>>",
-                expected =
-                BagType(ListType(StaticType.unionOf(StaticType.INT4, StaticType.DECIMAL)))
-            ),
-            SuccessTestCase(
-                name = "Duplicate fields in struct",
-                query = """
-                    SELECT t.a AS a
-                    FROM <<
-                        { 'a': 1, 'a': 'hello' }
-                    >> AS t
-                """,
-                expected = BagType(
-                    StructType(
-                        fields = listOf(
-                            StructType.Field("a", StaticType.unionOf(StaticType.INT4, StaticType.STRING))
-                        ),
-                        contentClosed = true,
-                        constraints = setOf(
-                            TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(true),
-                            TupleConstraint.Ordered
-                        )
-                    )
-                )
-            ),
-            SuccessTestCase(
-                name = "Duplicate fields in ordered STRUCT. NOTE: b.b.d is an ordered struct with two attributes (e). First is INT4.",
-                query = """
-                    SELECT d.e AS e
-                    FROM << b.b.d >> AS d
-                """,
-                expected = BagType(
-                    StructType(
-                        fields = listOf(
-                            StructType.Field("e", StaticType.INT4)
-                        ),
-                        contentClosed = true,
-                        constraints = setOf(
-                            TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(true),
-                            TupleConstraint.Ordered
-                        )
-                    )
-                )
-            ),
-            SuccessTestCase(
-                name = "Duplicate fields in struct",
-                query = """
-                    SELECT a AS a
-                    FROM <<
-                        { 'a': 1, 'a': 'hello' }
-                    >> AS t
-                """,
-                expected = BagType(
-                    StructType(
-                        fields = listOf(
-                            StructType.Field("a", StaticType.unionOf(StaticType.INT4, StaticType.STRING))
-                        ),
-                        contentClosed = true,
-                        constraints = setOf(
-                            TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(true),
-                            TupleConstraint.Ordered
-                        )
-                    )
-                )
-            ),
-            SuccessTestCase(
-                name = "Current User",
-                query = "CURRENT_USER",
-                expected = StaticType.unionOf(StaticType.STRING, StaticType.NULL)
-            ),
-            SuccessTestCase(
-                name = "Trim",
-                query = "trim(' ')",
-                expected = StaticType.STRING
-            ),
-            SuccessTestCase(
-                name = "Current User Concat",
-                query = "CURRENT_USER || 'hello'",
-                expected = StaticType.unionOf(StaticType.STRING, StaticType.NULL)
-            ),
-            SuccessTestCase(
-                name = "Current User Concat in WHERE",
-                query = "SELECT VALUE a FROM [ 0 ] AS a WHERE CURRENT_USER = 'hello'",
-                expected = BagType(StaticType.INT4)
-            ),
-            SuccessTestCase(
-                name = "TRIM_2",
-                query = "trim(' ' FROM ' Hello, World! ')",
-                expected = StaticType.STRING
-            ),
-            SuccessTestCase(
-                name = "TRIM_1",
-                query = "trim(' Hello, World! ')",
-                expected = StaticType.STRING
-            ),
-            SuccessTestCase(
-                name = "TRIM_3",
-                query = "trim(LEADING ' ' FROM ' Hello, World! ')",
-                expected = StaticType.STRING
-            ),
-            ErrorTestCase(
-                name = "TRIM_2_error",
-                query = "trim(2 FROM ' Hello, World! ')",
-                expected = StaticType.MISSING,
-                problemHandler = assertProblemExists {
-                    Problem(
-                        UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UnknownFunction(
-                            "trim_chars",
-                            args = listOf(StaticType.STRING, StaticType.INT4)
-                        )
-                    )
-                }
-            ),
+            // SuccessTestCase(
+            //     name = "EQ",
+            //     catalog = CATALOG_DB,
+            //     catalogPath = DB_SCHEMA_MARKETS,
+            //     query = "order_info.customer_id = 1",
+            //     expected = TYPE_BOOL
+            // ),
+            // SuccessTestCase(
+            //     name = "NEQ",
+            //     catalog = CATALOG_DB,
+            //     catalogPath = DB_SCHEMA_MARKETS,
+            //     query = "order_info.customer_id <> 1",
+            //     expected = TYPE_BOOL
+            // ),
+            // SuccessTestCase(
+            //     name = "GEQ",
+            //     catalog = CATALOG_DB,
+            //     catalogPath = DB_SCHEMA_MARKETS,
+            //     query = "order_info.customer_id >= 1",
+            //     expected = TYPE_BOOL
+            // ),
+            // SuccessTestCase(
+            //     name = "GT",
+            //     catalog = CATALOG_DB,
+            //     catalogPath = DB_SCHEMA_MARKETS,
+            //     query = "order_info.customer_id > 1",
+            //     expected = TYPE_BOOL
+            // ),
+            // SuccessTestCase(
+            //     name = "LEQ",
+            //     catalog = CATALOG_DB,
+            //     catalogPath = DB_SCHEMA_MARKETS,
+            //     query = "order_info.customer_id <= 1",
+            //     expected = TYPE_BOOL
+            // ),
+            // SuccessTestCase(
+            //     name = "LT",
+            //     catalog = CATALOG_DB,
+            //     catalogPath = DB_SCHEMA_MARKETS,
+            //     query = "order_info.customer_id < 1",
+            //     expected = TYPE_BOOL
+            // ),
+            // SuccessTestCase(
+            //     name = "IN",
+            //     catalog = CATALOG_DB,
+            //     catalogPath = DB_SCHEMA_MARKETS,
+            //     query = "order_info.customer_id IN (1, 2, 3)",
+            //     expected = TYPE_BOOL
+            // ),
+            // ErrorTestCase(
+            //     name = "IN Failure",
+            //     catalog = CATALOG_DB,
+            //     catalogPath = DB_SCHEMA_MARKETS,
+            //     query = "order_info.customer_id IN 'hello'",
+            //     expected = StaticType.MISSING,
+            //     problemHandler = assertProblemExists {
+            //         Problem(
+            //             UNKNOWN_PROBLEM_LOCATION,
+            //             PlanningProblemDetails.UnknownFunction(
+            //                 "in_collection",
+            //                 listOf(StaticType.INT4, StaticType.STRING),
+            //             )
+            //         )
+            //     }
+            // ),
+            // SuccessTestCase(
+            //     name = "BETWEEN",
+            //     catalog = CATALOG_DB,
+            //     catalogPath = DB_SCHEMA_MARKETS,
+            //     query = "order_info.customer_id BETWEEN 1 AND 2",
+            //     expected = TYPE_BOOL
+            // ),
+            // ErrorTestCase(
+            //     name = "BETWEEN Failure",
+            //     catalog = CATALOG_DB,
+            //     catalogPath = DB_SCHEMA_MARKETS,
+            //     query = "order_info.customer_id BETWEEN 1 AND 'a'",
+            //     expected = StaticType.MISSING,
+            //     problemHandler = assertProblemExists {
+            //         Problem(
+            //             UNKNOWN_PROBLEM_LOCATION,
+            //             PlanningProblemDetails.UnknownFunction(
+            //                 "between",
+            //                 listOf(
+            //                     StaticType.INT4,
+            //                     StaticType.INT4,
+            //                     StaticType.STRING
+            //                 ),
+            //             )
+            //         )
+            //     }
+            // ),
+            // SuccessTestCase(
+            //     name = "LIKE",
+            //     catalog = CATALOG_DB,
+            //     catalogPath = DB_SCHEMA_MARKETS,
+            //     query = "order_info.ship_option LIKE '%ABC%'",
+            //     expected = TYPE_BOOL
+            // ),
+            // ErrorTestCase(
+            //     name = "LIKE Failure",
+            //     catalog = CATALOG_DB,
+            //     catalogPath = DB_SCHEMA_MARKETS,
+            //     query = "order_info.ship_option LIKE 3",
+            //     expected = StaticType.MISSING,
+            //     problemHandler = assertProblemExists {
+            //         Problem(
+            //             UNKNOWN_PROBLEM_LOCATION,
+            //             PlanningProblemDetails.UnknownFunction(
+            //                 "like",
+            //                 listOf(StaticType.STRING, StaticType.INT4),
+            //             )
+            //         )
+            //     }
+            // ),
+            // SuccessTestCase(
+            //     name = "Case Insensitive success",
+            //     catalog = CATALOG_DB,
+            //     catalogPath = DB_SCHEMA_MARKETS,
+            //     query = "order_info.CUSTOMER_ID = 1",
+            //     expected = TYPE_BOOL
+            // ),
+            // // MISSING = 1
+            // ErrorTestCase(
+            //     name = "Case Sensitive failure",
+            //     catalog = CATALOG_DB,
+            //     catalogPath = DB_SCHEMA_MARKETS,
+            //     query = "order_info.\"CUSTOMER_ID\" = 1",
+            //     expected = StaticType.NULL
+            // ),
+            // SuccessTestCase(
+            //     name = "Case Sensitive success",
+            //     catalog = CATALOG_DB,
+            //     catalogPath = DB_SCHEMA_MARKETS,
+            //     query = "order_info.\"customer_id\" = 1",
+            //     expected = TYPE_BOOL
+            // ),
+            // SuccessTestCase(
+            //     name = "1-Level Junction",
+            //     catalog = CATALOG_DB,
+            //     catalogPath = DB_SCHEMA_MARKETS,
+            //     query = "(order_info.customer_id = 1) AND (order_info.marketplace_id = 2)",
+            //     expected = StaticType.unionOf(StaticType.BOOL, StaticType.NULL)
+            // ),
+            // SuccessTestCase(
+            //     name = "2-Level Junction",
+            //     catalog = CATALOG_DB,
+            //     catalogPath = DB_SCHEMA_MARKETS,
+            //     query = "(order_info.customer_id = 1) AND (order_info.marketplace_id = 2) OR (order_info.customer_id = 3) AND (order_info.marketplace_id = 4)",
+            //     expected = StaticType.unionOf(StaticType.BOOL, StaticType.NULL)
+            // ),
+            // SuccessTestCase(
+            //     name = "INT and STR Comparison",
+            //     catalog = CATALOG_DB,
+            //     catalogPath = DB_SCHEMA_MARKETS,
+            //     query = "order_info.customer_id = 'something'",
+            //     expected = TYPE_BOOL,
+            // ),
+            // ErrorTestCase(
+            //     name = "Nonexisting Comparison",
+            //     catalog = CATALOG_DB,
+            //     catalogPath = DB_SCHEMA_MARKETS,
+            //     query = "non_existing_column = 1",
+            //     // Function resolves to EQ__ANY_ANY__BOOL
+            //     // Which can return BOOL Or NULL
+            //     expected = StaticType.unionOf(StaticType.BOOL, StaticType.NULL),
+            //     problemHandler = assertProblemExists {
+            //         Problem(
+            //             UNKNOWN_PROBLEM_LOCATION,
+            //             PlanningProblemDetails.UndefinedVariable(name("non_existing_column"))
+            //         )
+            //     }
+            // ),
+            // ErrorTestCase(
+            //     name = "Bad comparison",
+            //     catalog = CATALOG_DB,
+            //     catalogPath = DB_SCHEMA_MARKETS,
+            //     query = "order_info.customer_id = 1 AND 1",
+            //     expected = StaticType.MISSING,
+            //     problemHandler = assertProblemExists {
+            //         Problem(
+            //             UNKNOWN_PROBLEM_LOCATION,
+            //             PlanningProblemDetails.UnknownFunction(
+            //                 "and",
+            //                 listOf(StaticType.BOOL, StaticType.INT4),
+            //             )
+            //         )
+            //     }
+            // ),
+            // ErrorTestCase(
+            //     name = "Bad comparison",
+            //     catalog = CATALOG_DB,
+            //     catalogPath = DB_SCHEMA_MARKETS,
+            //     query = "1 AND order_info.customer_id = 1",
+            //     expected = StaticType.MISSING,
+            //     problemHandler = assertProblemExists {
+            //         Problem(
+            //             UNKNOWN_PROBLEM_LOCATION,
+            //             PlanningProblemDetails.UnknownFunction(
+            //                 "and",
+            //                 listOf(StaticType.INT4, StaticType.BOOL),
+            //             )
+            //         )
+            //     }
+            // ),
+            // ErrorTestCase(
+            //     name = "Unknown column",
+            //     catalog = CATALOG_DB,
+            //     catalogPath = DB_SCHEMA_MARKETS,
+            //     query = "SELECT unknown_col FROM orders WHERE customer_id = 1",
+            //     expected = BagType(
+            //         StructType(
+            //             fields = mapOf("unknown_col" to AnyType()),
+            //             contentClosed = true,
+            //             constraints = setOf(
+            //                 TupleConstraint.Open(false),
+            //                 TupleConstraint.UniqueAttrs(true),
+            //                 TupleConstraint.Ordered
+            //             )
+            //         )
+            //     ),
+            //     problemHandler = assertProblemExists {
+            //         Problem(
+            //             UNKNOWN_PROBLEM_LOCATION,
+            //             PlanningProblemDetails.UndefinedVariable(name("unknown_col"))
+            //         )
+            //     }
+            // ),
+            // SuccessTestCase(
+            //     name = "LIMIT INT",
+            //     catalog = CATALOG_AWS,
+            //     catalogPath = listOf("ddb"),
+            //     query = "SELECT * FROM pets LIMIT 5",
+            //     expected = TABLE_AWS_DDB_PETS
+            // ),
+            // ErrorTestCase(
+            //     name = "LIMIT STR",
+            //     catalog = CATALOG_AWS,
+            //     catalogPath = listOf("ddb"),
+            //     query = "SELECT * FROM pets LIMIT '5'",
+            //     expected = TABLE_AWS_DDB_PETS,
+            //     problemHandler = assertProblemExists {
+            //         Problem(
+            //             UNKNOWN_PROBLEM_LOCATION,
+            //             PlanningProblemDetails.UnexpectedType(StaticType.STRING, setOf(StaticType.INT))
+            //         )
+            //     }
+            // ),
+            // SuccessTestCase(
+            //     name = "OFFSET INT",
+            //     catalog = CATALOG_AWS,
+            //     catalogPath = listOf("ddb"),
+            //     query = "SELECT * FROM pets LIMIT 1 OFFSET 5",
+            //     expected = TABLE_AWS_DDB_PETS
+            // ),
+            // ErrorTestCase(
+            //     name = "OFFSET STR",
+            //     catalog = CATALOG_AWS,
+            //     catalogPath = listOf("ddb"),
+            //     query = "SELECT * FROM pets LIMIT 1 OFFSET '5'",
+            //     expected = TABLE_AWS_DDB_PETS,
+            //     problemHandler = assertProblemExists {
+            //         Problem(
+            //             UNKNOWN_PROBLEM_LOCATION,
+            //             PlanningProblemDetails.UnexpectedType(StaticType.STRING, setOf(StaticType.INT))
+            //         )
+            //     }
+            // ),
+            // SuccessTestCase(
+            //     name = "CAST",
+            //     catalog = CATALOG_AWS,
+            //     catalogPath = listOf("ddb"),
+            //     query = "SELECT CAST(breed AS INT) AS cast_breed FROM pets",
+            //     expected = BagType(
+            //         StructType(
+            //             fields = mapOf("cast_breed" to StaticType.unionOf(StaticType.INT, StaticType.MISSING)),
+            //             contentClosed = true,
+            //             constraints = setOf(
+            //                 TupleConstraint.Open(false),
+            //                 TupleConstraint.UniqueAttrs(true),
+            //                 TupleConstraint.Ordered
+            //             )
+            //         )
+            //     )
+            // ),
+            // SuccessTestCase(
+            //     name = "UPPER",
+            //     catalog = CATALOG_AWS,
+            //     catalogPath = listOf("ddb"),
+            //     query = "SELECT UPPER(breed) AS upper_breed FROM pets",
+            //     expected = BagType(
+            //         StructType(
+            //             fields = mapOf("upper_breed" to StaticType.STRING),
+            //             contentClosed = true,
+            //             constraints = setOf(
+            //                 TupleConstraint.Open(false),
+            //                 TupleConstraint.UniqueAttrs(true),
+            //                 TupleConstraint.Ordered
+            //             )
+            //         )
+            //     )
+            // ),
+            // SuccessTestCase(
+            //     name = "Non-tuples",
+            //     query = "SELECT a FROM << [ 1, 1.0 ] >> AS a",
+            //     expected = BagType(
+            //         StructType(
+            //             fields = mapOf("a" to ListType(StaticType.unionOf(StaticType.INT4, StaticType.DECIMAL))),
+            //             contentClosed = true,
+            //             constraints = setOf(
+            //                 TupleConstraint.Open(false),
+            //                 TupleConstraint.UniqueAttrs(true),
+            //                 TupleConstraint.Ordered
+            //             )
+            //         )
+            //     )
+            // ),
+            // SuccessTestCase(
+            //     name = "Non-tuples in SELECT VALUE",
+            //     query = "SELECT VALUE a FROM << [ 1, 1.0 ] >> AS a",
+            //     expected =
+            //     BagType(ListType(StaticType.unionOf(StaticType.INT4, StaticType.DECIMAL)))
+            // ),
+            // SuccessTestCase(
+            //     name = "SELECT VALUE",
+            //     query = "SELECT VALUE [1, 1.0] FROM <<>>",
+            //     expected =
+            //     BagType(ListType(StaticType.unionOf(StaticType.INT4, StaticType.DECIMAL)))
+            // ),
+            // SuccessTestCase(
+            //     name = "Duplicate fields in struct",
+            //     query = """
+            //         SELECT t.a AS a
+            //         FROM <<
+            //             { 'a': 1, 'a': 'hello' }
+            //         >> AS t
+            //     """,
+            //     expected = BagType(
+            //         StructType(
+            //             fields = listOf(
+            //                 StructType.Field("a", StaticType.unionOf(StaticType.INT4, StaticType.STRING))
+            //             ),
+            //             contentClosed = true,
+            //             constraints = setOf(
+            //                 TupleConstraint.Open(false),
+            //                 TupleConstraint.UniqueAttrs(true),
+            //                 TupleConstraint.Ordered
+            //             )
+            //         )
+            //     )
+            // ),
+            // SuccessTestCase(
+            //     name = "Duplicate fields in ordered STRUCT. NOTE: b.b.d is an ordered struct with two attributes (e). First is INT4.",
+            //     query = """
+            //         SELECT d.e AS e
+            //         FROM << b.b.d >> AS d
+            //     """,
+            //     expected = BagType(
+            //         StructType(
+            //             fields = listOf(
+            //                 StructType.Field("e", StaticType.INT4)
+            //             ),
+            //             contentClosed = true,
+            //             constraints = setOf(
+            //                 TupleConstraint.Open(false),
+            //                 TupleConstraint.UniqueAttrs(true),
+            //                 TupleConstraint.Ordered
+            //             )
+            //         )
+            //     )
+            // ),
+            // SuccessTestCase(
+            //     name = "Duplicate fields in struct",
+            //     query = """
+            //         SELECT a AS a
+            //         FROM <<
+            //             { 'a': 1, 'a': 'hello' }
+            //         >> AS t
+            //     """,
+            //     expected = BagType(
+            //         StructType(
+            //             fields = listOf(
+            //                 StructType.Field("a", StaticType.unionOf(StaticType.INT4, StaticType.STRING))
+            //             ),
+            //             contentClosed = true,
+            //             constraints = setOf(
+            //                 TupleConstraint.Open(false),
+            //                 TupleConstraint.UniqueAttrs(true),
+            //                 TupleConstraint.Ordered
+            //             )
+            //         )
+            //     )
+            // ),
+            // SuccessTestCase(
+            //     name = "Current User",
+            //     query = "CURRENT_USER",
+            //     expected = StaticType.unionOf(StaticType.STRING, StaticType.NULL)
+            // ),
+            // SuccessTestCase(
+            //     name = "Trim",
+            //     query = "trim(' ')",
+            //     expected = StaticType.STRING
+            // ),
+            // SuccessTestCase(
+            //     name = "Current User Concat",
+            //     query = "CURRENT_USER || 'hello'",
+            //     expected = StaticType.unionOf(StaticType.STRING, StaticType.NULL)
+            // ),
+            // SuccessTestCase(
+            //     name = "Current User Concat in WHERE",
+            //     query = "SELECT VALUE a FROM [ 0 ] AS a WHERE CURRENT_USER = 'hello'",
+            //     expected = BagType(StaticType.INT4)
+            // ),
+            // SuccessTestCase(
+            //     name = "TRIM_2",
+            //     query = "trim(' ' FROM ' Hello, World! ')",
+            //     expected = StaticType.STRING
+            // ),
+            // SuccessTestCase(
+            //     name = "TRIM_1",
+            //     query = "trim(' Hello, World! ')",
+            //     expected = StaticType.STRING
+            // ),
+            // SuccessTestCase(
+            //     name = "TRIM_3",
+            //     query = "trim(LEADING ' ' FROM ' Hello, World! ')",
+            //     expected = StaticType.STRING
+            // ),
+            // ErrorTestCase(
+            //     name = "TRIM_2_error",
+            //     query = "trim(2 FROM ' Hello, World! ')",
+            //     expected = StaticType.MISSING,
+            //     problemHandler = assertProblemExists {
+            //         Problem(
+            //             UNKNOWN_PROBLEM_LOCATION,
+            //             PlanningProblemDetails.UnknownFunction(
+            //                 "trim_chars",
+            //                 args = listOf(StaticType.STRING, StaticType.INT4)
+            //             )
+            //         )
+            //     }
+            // ),
         )
     }
 }

@@ -38,12 +38,15 @@ public interface FnIndex {
         }
 
         /**
-         * TODO
+         * Creates a map of function name to variants; variants are keyed by their specific.
          *
          * @return
          */
         public fun build(): FnIndex {
-            return FnIndexMap(emptyMap())
+            val fns = builtins
+                .groupBy { it.signature.name }
+                .mapValues { e -> e.value.associateBy { f -> f.signature.specific } }
+            return FnIndexMap(fns)
         }
     }
 

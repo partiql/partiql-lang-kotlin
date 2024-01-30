@@ -107,10 +107,16 @@ rex::{
       symbol::{ root: rex, key: string },
     ],
 
-    cast::{
-      cast: '.ref.cast',
-      arg: rex,
-    },
+    cast::[
+      unresolved::{
+        target: partiql_value_type,
+        arg:    rex,
+      },
+      resolved::{
+        cast: '.ref.cast',
+        arg: rex,
+      }
+    ],
 
     call::[
 

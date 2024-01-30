@@ -12,7 +12,14 @@ import org.partiql.planner.test.PartiQLTest
 import org.partiql.planner.test.PartiQLTestProvider
 import org.partiql.planner.util.PlanNodeEquivalentVisitor
 import org.partiql.planner.util.ProblemCollector
+import org.partiql.plugins.memory.MemoryCatalog
 import org.partiql.plugins.memory.MemoryConnector
+import org.partiql.plugins.memory.MemoryObject
+import org.partiql.spi.BindingCase
+import org.partiql.spi.BindingName
+import org.partiql.spi.BindingPath
+import org.partiql.spi.connector.ConnectorMetadata
+import org.partiql.spi.connector.ConnectorSession
 import org.partiql.types.BagType
 import org.partiql.types.StaticType
 import org.partiql.types.StructType
@@ -36,34 +43,37 @@ class PlanTest {
 
     val input = PartiQLTestProvider().apply { load() }
 
-    val metadata = MemoryConnector.Metadata.of(
-        "default.t" to BagType(
-            StructType(
-                listOf(
-                    StructType.Field("a", StaticType.BOOL),
-                    StructType.Field("b", StaticType.INT4),
-                    StructType.Field("c", StaticType.STRING),
-                    StructType.Field(
-                        "d",
-                        StructType(
-                            listOf(StructType.Field("e", StaticType.STRING)),
-                            contentClosed = true,
-                            emptyList(),
-                            setOf(TupleConstraint.Open(false)),
-                            emptyMap()
-                        )
-                    ),
-                    StructType.Field("x", StaticType.ANY),
-                    StructType.Field("z", StaticType.STRING),
-                    StructType.Field("v", StaticType.STRING),
+    val type = BagType(
+        StructType(
+            listOf(
+                StructType.Field("a", StaticType.BOOL),
+                StructType.Field("b", StaticType.INT4),
+                StructType.Field("c", StaticType.STRING),
+                StructType.Field(
+                    "d",
+                    StructType(
+                        listOf(StructType.Field("e", StaticType.STRING)),
+                        contentClosed = true,
+                        emptyList(),
+                        setOf(TupleConstraint.Open(false)),
+                        emptyMap()
+                    )
                 ),
-                contentClosed = true,
-                emptyList(),
-                setOf(TupleConstraint.Open(false)),
-                emptyMap()
-            )
+                StructType.Field("x", StaticType.ANY),
+                StructType.Field("z", StaticType.STRING),
+                StructType.Field("v", StaticType.STRING),
+            ),
+            contentClosed = true,
+            emptyList(),
+            setOf(TupleConstraint.Open(false)),
+            emptyMap()
         )
     )
+
+    val connectorSession = object : ConnectorSession {
+        override fun getQueryId(): String = "query-id"
+        override fun getUserId(): String = "user-id"
+    }
 
     val session: (PartiQLTest.Key) -> PartiQLPlanner.Session = { key ->
         PartiQLPlanner.Session(
@@ -71,7 +81,7 @@ class PlanTest {
             userId = "user_id",
             currentCatalog = "default",
             currentDirectory = listOf(),
-            catalogs = mapOf("default" to metadata),
+            catalogs = mapOf("default" to buildMetadata("default")),
             instant = Instant.now(),
         )
     }
@@ -82,6 +92,20 @@ class PlanTest {
         val planner = PartiQLPlannerBuilder()
             .build()
         planner.plan(ast, session(test.key), problemCollector)
+    }
+
+    fun buildMetadata(catalogName: String): ConnectorMetadata {
+        val catalog = MemoryCatalog(catalogName)
+        // Insert binding
+        val name = BindingPath(
+            listOf(
+                BindingName("default", BindingCase.INSENSITIVE),
+                BindingName("a", BindingCase.INSENSITIVE),
+            )
+        )
+        val obj = MemoryObject(type)
+        catalog.insert(name, obj)
+        return MemoryConnector(catalog).getMetadata(connectorSession)
     }
 
     @TestFactory

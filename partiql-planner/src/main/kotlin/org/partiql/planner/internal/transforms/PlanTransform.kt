@@ -3,6 +3,7 @@ package org.partiql.planner.internal.transforms
 import org.partiql.errors.ProblemCallback
 import org.partiql.plan.PlanNode
 import org.partiql.plan.partiQLPlan
+import org.partiql.plan.rexOpCast
 import org.partiql.planner.internal.ir.Identifier
 import org.partiql.planner.internal.ir.PartiQLPlan
 import org.partiql.planner.internal.ir.Ref
@@ -143,14 +144,20 @@ internal object PlanTransform {
         override fun visitRexOpPath(node: Rex.Op.Path, ctx: Unit) =
             super.visitRexOpPath(node, ctx) as org.partiql.plan.Rex.Op.Path
 
-        override fun visitRexOpCast(node: Rex.Op.Cast, ctx: Unit): PlanNode {
+        override fun visitRexOpCast(node: Rex.Op.Cast, ctx: Unit) = super.visitRexOpCast(node, ctx) as org.partiql.plan.Rex.Op.Cast
+
+        override fun visitRexOpCastUnresolved(node: Rex.Op.Cast.Unresolved, ctx: Unit): PlanNode {
+            error("Unresolved cast $node")
+        }
+
+        override fun visitRexOpCastResolved(node: Rex.Op.Cast.Resolved, ctx: Unit): PlanNode {
             val cast = visitRefCast(node.cast, ctx)
             val arg = visitRex(node.arg, ctx)
-            return org.partiql.plan.rexOpCast(cast, arg)
+            return rexOpCast(cast, arg)
         }
 
         override fun visitRexOpCallUnresolved(node: Rex.Op.Call.Unresolved, ctx: Unit): PlanNode {
-            return super.visitRexOpCallUnresolved(node, ctx)
+            error("Unresolved function ${node.identifier}")
         }
 
         override fun visitRexOpCallStatic(node: Rex.Op.Call.Static, ctx: Unit): org.partiql.plan.Rex.Op {

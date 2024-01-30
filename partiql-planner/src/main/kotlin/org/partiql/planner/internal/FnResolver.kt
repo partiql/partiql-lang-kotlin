@@ -102,9 +102,9 @@ internal object FnResolver {
         for (i in args.indices) {
             val a = args[i]
             val p = parameters[i]
-            if (a != p.type) return true
+            if (a != p.type) return false
         }
-        return false
+        return true
     }
 
     /**

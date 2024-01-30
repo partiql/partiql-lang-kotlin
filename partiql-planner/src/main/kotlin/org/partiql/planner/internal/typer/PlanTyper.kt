@@ -44,6 +44,7 @@ import org.partiql.planner.internal.ir.relOpSort
 import org.partiql.planner.internal.ir.relOpUnpivot
 import org.partiql.planner.internal.ir.relType
 import org.partiql.planner.internal.ir.rex
+import org.partiql.planner.internal.ir.rexOpCaseBranch
 import org.partiql.planner.internal.ir.rexOpCollection
 import org.partiql.planner.internal.ir.rexOpErr
 import org.partiql.planner.internal.ir.rexOpLit
@@ -74,6 +75,7 @@ import org.partiql.types.NullType
 import org.partiql.types.SexpType
 import org.partiql.types.StaticType
 import org.partiql.types.StaticType.Companion.ANY
+import org.partiql.types.StaticType.Companion.BOOL
 import org.partiql.types.StaticType.Companion.MISSING
 import org.partiql.types.StaticType.Companion.NULL
 import org.partiql.types.StaticType.Companion.STRING
@@ -84,6 +86,7 @@ import org.partiql.types.TupleConstraint
 import org.partiql.value.BoolValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.TextValue
+import org.partiql.value.boolValue
 import org.partiql.value.missingValue
 import org.partiql.value.stringValue
 
@@ -750,11 +753,10 @@ internal class PlanTyper(
         }
 
         /**
-         * This takes in a [Rex.Op.Case.Branch.condition] and [Rex.Op.Case.Branch.rex]. If the [condition] is a type check,
-         * AKA `<var> IS STRUCT`, then this function will return a new [Rex.Op.Case.Branch] whose [Rex.Op.Case.Branch.rex]
-         * assumes that the type will always be a struct. The [Rex.Op.Case.Branch.condition] will be replaced by a
-         * boolean literal if it is KNOWN whether a branch will always/never execute. This can be used to prune the
-         * branch in subsequent passes.
+         * This takes in a branch condition and its result expression.
+         *
+         *  1. If the condition is a type check T (ie `<var> IS T`), then this function will be typed as T.
+         *  2. If a branch condition is known to be false, it will be removed.
          *
          * TODO: Currently, this only folds type checking for STRUCTs. We need to add support for all other types.
          *
@@ -762,51 +764,50 @@ internal class PlanTyper(
          *  `WHEN { 'a': { 'b': 1} }.a IS STRUCT THEN { 'a': { 'b': 1} }.a.b`. We can discuss this later, but I'm
          *  currently limiting the scope of this intentionally.
          */
+        @OptIn(FnExperimental::class)
         private fun foldCaseBranch(condition: Rex, result: Rex): Rex.Op.Case.Branch {
-            TODO()
-            // val call = condition.op as? Rex.Op.Call ?: return rexOpCaseBranch(condition, result)
-            // when (call) {
-            //     is Rex.Op.Call.Dynamic -> {
-            //         val rex = call.candidates.map { candidate ->
-            //             val fn = candidate.fn as? Fn.Resolved ?: return rexOpCaseBranch(condition, result)
-            //             if (fn.signature.name.equals("is_struct", ignoreCase = true).not()) {
-            //                 return rexOpCaseBranch(condition, result)
-            //             }
-            //             val ref = call.args.getOrNull(0) ?: error("IS STRUCT requires an argument.")
-            //             // Replace the result's type
-            //             val type = AnyOfType(ref.type.allTypes.filterIsInstance<StructType>().toSet())
-            //             val replacementVal = ref.copy(type = type)
-            //             when (ref.op is Rex.Op.Var.Resolved) {
-            //                 true -> RexReplacer.replace(result, ref, replacementVal)
-            //                 false -> result
-            //             }
-            //         }
-            //         val type = rex.toUnionType().flatten()
-            //
-            //         return rexOpCaseBranch(condition, result.copy(type))
-            //     }
-            //     is Rex.Op.Call.Static -> {
-            //         val fn = call.fn as? Fn.Resolved ?: return rexOpCaseBranch(condition, result)
-            //         if (fn.signature.name.equals("is_struct", ignoreCase = true).not()) {
-            //             return rexOpCaseBranch(condition, result)
-            //         }
-            //         val ref = call.args.getOrNull(0) ?: error("IS STRUCT requires an argument.")
-            //         val simplifiedCondition = when {
-            //             ref.type.allTypes.all { it is StructType } -> rex(BOOL, rexOpLit(boolValue(true)))
-            //             ref.type.allTypes.none { it is StructType } -> rex(BOOL, rexOpLit(boolValue(false)))
-            //             else -> condition
-            //         }
-            //
-            //         // Replace the result's type
-            //         val type = AnyOfType(ref.type.allTypes.filterIsInstance<StructType>().toSet())
-            //         val replacementVal = ref.copy(type = type)
-            //         val rex = when (ref.op is Rex.Op.Var.Resolved) {
-            //             true -> RexReplacer.replace(result, ref, replacementVal)
-            //             false -> result
-            //         }
-            //         return rexOpCaseBranch(simplifiedCondition, rex)
-            //     }
-            // }
+            return when (val call = condition.op) {
+                is Rex.Op.Call.Dynamic -> {
+                    val rex = call.candidates.map { candidate ->
+                        val fn = candidate.fn
+                        if (fn.signature.name.equals("is_struct", ignoreCase = true).not()) {
+                            return rexOpCaseBranch(condition, result)
+                        }
+                        val ref = call.args.getOrNull(0) ?: error("IS STRUCT requires an argument.")
+                        // Replace the result's type
+                        val type = AnyOfType(ref.type.allTypes.filterIsInstance<StructType>().toSet())
+                        val replacementVal = ref.copy(type = type)
+                        when (ref.op is Rex.Op.Var.Resolved) {
+                            true -> RexReplacer.replace(result, ref, replacementVal)
+                            false -> result
+                        }
+                    }
+                    val type = rex.toUnionType().flatten()
+                    return rexOpCaseBranch(condition, result.copy(type))
+                }
+                is Rex.Op.Call.Static -> {
+                    val fn = call.fn
+                    if (fn.signature.name.equals("is_struct", ignoreCase = true).not()) {
+                        return rexOpCaseBranch(condition, result)
+                    }
+                    val ref = call.args.getOrNull(0) ?: error("IS STRUCT requires an argument.")
+                    val simplifiedCondition = when {
+                        ref.type.allTypes.all { it is StructType } -> rex(BOOL, rexOpLit(boolValue(true)))
+                        ref.type.allTypes.none { it is StructType } -> rex(BOOL, rexOpLit(boolValue(false)))
+                        else -> condition
+                    }
+
+                    // Replace the result's type
+                    val type = AnyOfType(ref.type.allTypes.filterIsInstance<StructType>().toSet())
+                    val replacementVal = ref.copy(type = type)
+                    val rex = when (ref.op is Rex.Op.Var.Resolved) {
+                        true -> RexReplacer.replace(result, ref, replacementVal)
+                        false -> result
+                    }
+                    return rexOpCaseBranch(simplifiedCondition, rex)
+                }
+                else -> rexOpCaseBranch(condition, result)
+            }
         }
 
         override fun visitRexOpCollection(node: Rex.Op.Collection, ctx: StaticType?): Rex {

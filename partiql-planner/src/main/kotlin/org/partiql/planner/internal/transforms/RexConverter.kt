@@ -29,6 +29,7 @@ import org.partiql.planner.internal.ir.identifierQualified
 import org.partiql.planner.internal.ir.identifierSymbol
 import org.partiql.planner.internal.ir.rex
 import org.partiql.planner.internal.ir.rexOpCallUnresolved
+import org.partiql.planner.internal.ir.rexOpCastUnresolved
 import org.partiql.planner.internal.ir.rexOpCollection
 import org.partiql.planner.internal.ir.rexOpLit
 import org.partiql.planner.internal.ir.rexOpPathIndex
@@ -42,8 +43,8 @@ import org.partiql.planner.internal.ir.rexOpVarUnresolved
 import org.partiql.planner.internal.typer.toNonNullStaticType
 import org.partiql.planner.internal.typer.toStaticType
 import org.partiql.types.StaticType
-import org.partiql.types.TimeType
 import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.PartiQLValueType
 import org.partiql.value.StringValue
 import org.partiql.value.int32Value
 import org.partiql.value.int64Value
@@ -548,44 +549,45 @@ internal object RexConverter {
         // TODO: Ignoring type parameter now
         override fun visitExprCast(node: Expr.Cast, ctx: Env): Rex {
             val type = node.asType
-            val arg0 = visitExprCoerce(node.value, ctx)
-            return when (type) {
-                is Type.NullType -> rex(StaticType.NULL, call("cast_null", arg0))
-                is Type.Missing -> rex(StaticType.MISSING, call("cast_missing", arg0))
-                is Type.Bool -> rex(StaticType.BOOL, call("cast_bool", arg0))
-                is Type.Tinyint -> TODO("Static Type does not have TINYINT type")
-                is Type.Smallint, is Type.Int2 -> rex(StaticType.INT2, call("cast_int16", arg0))
-                is Type.Int4 -> rex(StaticType.INT4, call("cast_int32", arg0))
-                is Type.Bigint, is Type.Int8 -> rex(StaticType.INT8, call("cast_int64", arg0))
-                is Type.Int -> rex(StaticType.INT, call("cast_int", arg0))
-                is Type.Real -> TODO("Static Type does not have REAL type")
-                is Type.Float32 -> TODO("Static Type does not have FLOAT32 type")
-                is Type.Float64 -> rex(StaticType.FLOAT, call("cast_float64", arg0))
-                is Type.Decimal -> rex(StaticType.DECIMAL, call("cast_decimal", arg0))
-                is Type.Numeric -> rex(StaticType.DECIMAL, call("cast_numeric", arg0))
-                is Type.Char -> rex(StaticType.CHAR, call("cast_char", arg0))
-                is Type.Varchar -> rex(StaticType.STRING, call("cast_varchar", arg0))
-                is Type.String -> rex(StaticType.STRING, call("cast_string", arg0))
-                is Type.Symbol -> rex(StaticType.SYMBOL, call("cast_symbol", arg0))
-                is Type.Bit -> TODO("Static Type does not have Bit type")
-                is Type.BitVarying -> TODO("Static Type does not have BitVarying type")
-                is Type.ByteString -> TODO("Static Type does not have ByteString type")
-                is Type.Blob -> rex(StaticType.BLOB, call("cast_blob", arg0))
-                is Type.Clob -> rex(StaticType.CLOB, call("cast_clob", arg0))
-                is Type.Date -> rex(StaticType.DATE, call("cast_date", arg0))
-                is Type.Time -> rex(StaticType.TIME, call("cast_time", arg0))
-                is Type.TimeWithTz -> rex(TimeType(null, true), call("cast_timeWithTz", arg0))
-                is Type.Timestamp -> TODO("Need to rebase main")
-                is Type.TimestampWithTz -> rex(StaticType.TIMESTAMP, call("cast_timeWithTz", arg0))
-                is Type.Interval -> TODO("Static Type does not have Interval type")
-                is Type.Bag -> rex(StaticType.BAG, call("cast_bag", arg0))
-                is Type.List -> rex(StaticType.LIST, call("cast_list", arg0))
-                is Type.Sexp -> rex(StaticType.SEXP, call("cast_sexp", arg0))
-                is Type.Tuple -> rex(StaticType.STRUCT, call("cast_tuple", arg0))
-                is Type.Struct -> rex(StaticType.STRUCT, call("cast_struct", arg0))
-                is Type.Any -> rex(StaticType.ANY, call("cast_any", arg0))
+            val arg = visitExprCoerce(node.value, ctx)
+            val target = when (type) {
+                is Type.NullType -> PartiQLValueType.NULL
+                is Type.Missing -> PartiQLValueType.MISSING
+                is Type.Bool -> PartiQLValueType.BOOL
+                is Type.Tinyint -> PartiQLValueType.INT8
+                is Type.Smallint, is Type.Int2 -> PartiQLValueType.INT16
+                is Type.Int4 -> PartiQLValueType.INT32
+                is Type.Bigint, is Type.Int8 -> PartiQLValueType.INT64
+                is Type.Int -> PartiQLValueType.INT
+                is Type.Real -> PartiQLValueType.FLOAT64
+                is Type.Float32 -> PartiQLValueType.FLOAT32
+                is Type.Float64 -> PartiQLValueType.FLOAT64
+                is Type.Decimal -> if (type.scale != null) PartiQLValueType.DECIMAL else PartiQLValueType.DECIMAL_ARBITRARY
+                is Type.Numeric -> if (type.scale != null) PartiQLValueType.DECIMAL else PartiQLValueType.DECIMAL_ARBITRARY
+                is Type.Char -> PartiQLValueType.CHAR
+                is Type.Varchar -> PartiQLValueType.STRING
+                is Type.String -> PartiQLValueType.STRING
+                is Type.Symbol -> PartiQLValueType.SYMBOL
+                is Type.Bit -> PartiQLValueType.BINARY
+                is Type.BitVarying -> PartiQLValueType.BINARY
+                is Type.ByteString -> PartiQLValueType.BINARY
+                is Type.Blob -> PartiQLValueType.BLOB
+                is Type.Clob -> PartiQLValueType.CLOB
+                is Type.Date -> PartiQLValueType.DATE
+                is Type.Time -> PartiQLValueType.TIME
+                is Type.TimeWithTz -> PartiQLValueType.TIME
+                is Type.Timestamp -> PartiQLValueType.TIMESTAMP
+                is Type.TimestampWithTz -> PartiQLValueType.TIMESTAMP
+                is Type.Interval -> PartiQLValueType.INTERVAL
+                is Type.Bag -> PartiQLValueType.BAG
+                is Type.List -> PartiQLValueType.LIST
+                is Type.Sexp -> PartiQLValueType.SEXP
+                is Type.Tuple -> PartiQLValueType.STRUCT
+                is Type.Struct -> PartiQLValueType.STRUCT
+                is Type.Any -> PartiQLValueType.ANY
                 is Type.Custom -> TODO("Custom type not supported ")
             }
+            return rex(StaticType.ANY, rexOpCastUnresolved(target, arg))
         }
 
         override fun visitExprCanCast(node: Expr.CanCast, ctx: Env): Rex {

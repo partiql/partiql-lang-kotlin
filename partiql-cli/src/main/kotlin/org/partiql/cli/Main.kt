@@ -72,9 +72,8 @@ object Debug {
         val sess = PartiQLPlanner.Session(
             queryId = UUID.randomUUID().toString(),
             userId = "debug",
-            catalogs = mapOf(
-                "local" to LocalConnector.Metadata(root)
-            )
+            currentCatalog = "default",
+            catalogs = emptyMap(),
         )
         val result = planner.plan(statement, sess).plan
         out.info("-- Plan ----------")

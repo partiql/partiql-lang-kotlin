@@ -34,7 +34,7 @@ internal abstract class PathResolver<T>(
     /**
      * The session's current directory represented as [BindingName] steps.
      */
-    private val schema = session.currentDirectory.map { it.toBindingName() }
+    open val schema = session.currentDirectory.map { it.toBindingName() }
 
     /**
      * A [PathResolver] should override this one method for which [ConnectorMetadata] API to call.
