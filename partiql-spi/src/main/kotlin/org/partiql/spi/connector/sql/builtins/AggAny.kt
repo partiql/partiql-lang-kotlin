@@ -11,9 +11,9 @@ import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType.BOOL
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
-internal object Agg_ANY__BOOL__BOOL : Agg {
+public object Agg_ANY__BOOL__BOOL : Agg {
 
-    override val signature = AggSignature(
+    override val signature: AggSignature = AggSignature(
         name = "any",
         returns = BOOL,
         parameters = listOf(

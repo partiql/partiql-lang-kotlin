@@ -23,7 +23,7 @@ class FnResolverTest {
     fun sanity() {
         // 1 + 1.0 -> 2.0
         val variants = listOf(
-            FnSignature.Scalar(
+            FnSignature(
                 name = "plus",
                 returns = PartiQLValueType.FLOAT64,
                 parameters = listOf(
@@ -41,7 +41,7 @@ class FnResolverTest {
     @Test
     fun split() {
         val variants = listOf(
-            FnSignature.Scalar(
+            FnSignature(
                 name = "split",
                 returns = PartiQLValueType.LIST,
                 parameters = listOf(

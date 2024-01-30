@@ -10,9 +10,9 @@ import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType.INT32
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
-internal object Agg_COUNT_STAR____INT32 : Agg {
+public object Agg_COUNT_STAR____INT32 : Agg {
 
-    override val signature = AggSignature(
+    override val signature: AggSignature = AggSignature(
         name = "count_star",
         returns = INT32,
         parameters = listOf(),

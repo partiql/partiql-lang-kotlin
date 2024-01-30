@@ -12,9 +12,9 @@ import org.partiql.value.PartiQLValueType.ANY
 import org.partiql.value.PartiQLValueType.INT32
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
-internal object Agg_COUNT__ANY__INT32 : Agg {
+public object Agg_COUNT__ANY__INT32 : Agg {
 
-    override val signature = AggSignature(
+    override val signature: AggSignature = AggSignature(
         name = "count",
         returns = INT32,
         parameters = listOf(

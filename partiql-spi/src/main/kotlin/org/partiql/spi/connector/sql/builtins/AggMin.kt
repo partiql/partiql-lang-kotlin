@@ -18,9 +18,9 @@ import org.partiql.value.PartiQLValueType.INT64
 import org.partiql.value.PartiQLValueType.INT8
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
-internal object Agg_MIN__INT8__INT8 : Agg {
+public object Agg_MIN__INT8__INT8 : Agg {
 
-    override val signature = AggSignature(
+    override val signature: AggSignature = AggSignature(
         name = "min",
         returns = INT8,
         parameters = listOf(
@@ -36,9 +36,9 @@ internal object Agg_MIN__INT8__INT8 : Agg {
 }
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
-internal object Agg_MIN__INT16__INT16 : Agg {
+public object Agg_MIN__INT16__INT16 : Agg {
 
-    override val signature = AggSignature(
+    override val signature: AggSignature = AggSignature(
         name = "min",
         returns = INT16,
         parameters = listOf(
@@ -54,9 +54,9 @@ internal object Agg_MIN__INT16__INT16 : Agg {
 }
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
-internal object Agg_MIN__INT32__INT32 : Agg {
+public object Agg_MIN__INT32__INT32 : Agg {
 
-    override val signature = AggSignature(
+    override val signature: AggSignature = AggSignature(
         name = "min",
         returns = INT32,
         parameters = listOf(
@@ -72,9 +72,9 @@ internal object Agg_MIN__INT32__INT32 : Agg {
 }
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
-internal object Agg_MIN__INT64__INT64 : Agg {
+public object Agg_MIN__INT64__INT64 : Agg {
 
-    override val signature = AggSignature(
+    override val signature: AggSignature = AggSignature(
         name = "min",
         returns = INT64,
         parameters = listOf(
@@ -90,9 +90,9 @@ internal object Agg_MIN__INT64__INT64 : Agg {
 }
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
-internal object Agg_MIN__INT__INT : Agg {
+public object Agg_MIN__INT__INT : Agg {
 
-    override val signature = AggSignature(
+    override val signature: AggSignature = AggSignature(
         name = "min",
         returns = INT,
         parameters = listOf(
@@ -108,9 +108,9 @@ internal object Agg_MIN__INT__INT : Agg {
 }
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
-internal object Agg_MIN__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY : Agg {
+public object Agg_MIN__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY : Agg {
 
-    override val signature = AggSignature(
+    override val signature: AggSignature = AggSignature(
         name = "min",
         returns = DECIMAL_ARBITRARY,
         parameters = listOf(
@@ -126,9 +126,9 @@ internal object Agg_MIN__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY : Agg {
 }
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
-internal object Agg_MIN__FLOAT32__FLOAT32 : Agg {
+public object Agg_MIN__FLOAT32__FLOAT32 : Agg {
 
-    override val signature = AggSignature(
+    override val signature: AggSignature = AggSignature(
         name = "min",
         returns = FLOAT32,
         parameters = listOf(
@@ -144,9 +144,9 @@ internal object Agg_MIN__FLOAT32__FLOAT32 : Agg {
 }
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
-internal object Agg_MIN__FLOAT64__FLOAT64 : Agg {
+public object Agg_MIN__FLOAT64__FLOAT64 : Agg {
 
-    override val signature = AggSignature(
+    override val signature: AggSignature = AggSignature(
         name = "min",
         returns = FLOAT64,
         parameters = listOf(

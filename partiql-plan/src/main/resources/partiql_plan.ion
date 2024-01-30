@@ -280,7 +280,7 @@ rel::{
       groups:   list::[rex],
       _: [
         call::{
-          agg:  ref,
+          agg:  string,
           args: list::[rex],
         },
       ],

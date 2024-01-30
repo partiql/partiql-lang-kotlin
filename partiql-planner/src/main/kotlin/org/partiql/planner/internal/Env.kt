@@ -1,6 +1,7 @@
 package org.partiql.planner.internal
 
 import org.partiql.planner.PartiQLPlanner
+import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.refFn
 import org.partiql.planner.internal.ir.refObj
@@ -8,12 +9,15 @@ import org.partiql.planner.internal.ir.rex
 import org.partiql.planner.internal.ir.rexOpCallDynamic
 import org.partiql.planner.internal.ir.rexOpCallDynamicCandidate
 import org.partiql.planner.internal.ir.rexOpCallStatic
+import org.partiql.planner.internal.ir.rexOpCastResolved
 import org.partiql.planner.internal.ir.rexOpGlobal
 import org.partiql.planner.internal.typer.TypeEnv.Companion.toPath
+import org.partiql.planner.internal.typer.toStaticType
 import org.partiql.spi.BindingPath
 import org.partiql.spi.connector.ConnectorMetadata
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.types.StaticType
+import org.partiql.value.PartiQLValueExperimental
 
 /**
  * [Env] is similar to the database type environment from the PartiQL Specification. This includes resolution of
@@ -24,16 +28,6 @@ import org.partiql.types.StaticType
  * @property session
  */
 internal class Env(private val session: PartiQLPlanner.Session) {
-
-    /**
-     * Maintain a list of all resolved catalog symbols (objects and functions).
-     */
-    // private val symbols: Symbols = Symbols.empty()
-
-    /**
-     * Convert the symbols structure into a list of [Catalog] for shipping in the plan.
-     */
-    // internal fun catalogs(): List<Catalog> = symbols.build()
 
     /**
      * Current catalog [ConnectorMetadata]. Error if missing from the session.
@@ -49,9 +43,12 @@ internal class Env(private val session: PartiQLPlanner.Session) {
     /**
      * A [PathResolver] for looking up functions given both unqualified and qualified names.
      */
-    private val functions: PathResolverFn = PathResolverFn(catalog, session)
+    private val fns: PathResolverFn = PathResolverFn(catalog, session)
 
-    // inline fun <reified T : Catalog.Item> get(ref: Ref): T? = symbols.get(ref) as? T
+    /**
+     * A [PathResolver] for aggregation function lookup.
+     */
+    private val aggs: PathResolverAgg = PathResolverAgg
 
     /**
      * This function looks up a global [BindingPath], returning a global reference expression.
@@ -76,9 +73,9 @@ internal class Env(private val session: PartiQLPlanner.Session) {
         return if (tail.isEmpty()) root else root.toPath(tail)
     }
 
-    @OptIn(FnExperimental::class)
+    @OptIn(FnExperimental::class, PartiQLValueExperimental::class)
     fun resolveFn(path: BindingPath, args: List<Rex>): Rex? {
-        val item = functions.lookup(path) ?: return null
+        val item = fns.lookup(path) ?: return null
         // Invoke FnResolver to determine if we made a match
         val variants = item.handle.entity.getVariants()
         val match = FnResolver.resolve(variants, args.map { it.type })
@@ -89,6 +86,7 @@ internal class Env(private val session: PartiQLPlanner.Session) {
         return when (match) {
             is FnMatch.Dynamic -> {
                 val candidates = match.candidates.map {
+                    // Create an internal typed reference for every candidate
                     rexOpCallDynamicCandidate(
                         fn = refFn(
                             catalog = item.catalog,
@@ -98,6 +96,7 @@ internal class Env(private val session: PartiQLPlanner.Session) {
                         coercions = it.mapping.toList(),
                     )
                 }
+                // Rewrite as a dynamic call to be typed by PlanTyper
                 rex(StaticType.ANY, rexOpCallDynamic(args, candidates))
             }
             is FnMatch.Static -> {
@@ -107,10 +106,24 @@ internal class Env(private val session: PartiQLPlanner.Session) {
                     path = item.handle.path,
                     signature = match.signature,
                 )
-                // Rewrite as a static call to by typed by PlanTyper
-                rex(StaticType.ANY, rexOpCallStatic(ref, args))
+                // Apply the coercions as explicit casts
+                val coercions: List<Rex> = args.mapIndexed { i, arg ->
+                    when (val cast = match.mapping[i]) {
+                        null -> arg
+                        else -> rex(cast.target.toStaticType(), rexOpCastResolved(cast, arg))
+                    }
+                }
+                // Rewrite as a static call to be typed by PlanTyper
+                rex(StaticType.ANY, rexOpCallStatic(ref, coercions))
             }
         }
+    }
+
+    @OptIn(FnExperimental::class)
+    fun resolveAgg(name: String, args: List<Rex>): Rel.Op.Aggregate.Call.Resolved? {
+        val match = aggs.resolve(name, args) ?: return null
+
+        TODO()
     }
 
     // -----------------------

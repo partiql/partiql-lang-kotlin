@@ -4,6 +4,7 @@ imports::{
     partiql_value_type::'org.partiql.value.PartiQLValueType',
     static_type::'org.partiql.types.StaticType',
     fn_signature::'org.partiql.spi.fn.FnSignature',
+    agg_signature::'org.partiql.spi.fn.AggSignature',
   ],
 }
 
@@ -36,7 +37,11 @@ ref::[
         EXPLICIT, // Lossy    CAST(V AS T) -> T
         UNSAFE,   //          CAST(V AS T) -> T|MISSING
       ]
-    }
+    },
+    agg::{
+      name: string,
+      signature: agg_signature,
+    },
   ]
 ]
 
@@ -302,10 +307,16 @@ rel::{
       calls:    list::[call],
       groups:   list::[rex],
       _: [
-        call::{
-          agg:  '.ref.fn',
-          args: list::[rex],
-        },
+        call::[
+          unresolved::{
+            name: string,
+            args: list::[rex],
+          },
+          resolved::{
+            agg:  '.ref.agg',
+            args: list::[rex],
+          },
+        ]
       ],
     },
 

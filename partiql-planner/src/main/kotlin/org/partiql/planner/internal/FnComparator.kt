@@ -39,7 +39,6 @@ import org.partiql.value.PartiQLValueType.TIMESTAMP
  *
  *  1. Fewest args first
  *  2. Parameters are compared left-to-right
- *  3. Scalars before aggregations.
  */
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object FnComparator : Comparator<FnSignature> {

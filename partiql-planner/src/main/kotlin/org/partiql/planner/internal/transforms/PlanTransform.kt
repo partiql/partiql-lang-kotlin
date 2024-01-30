@@ -80,14 +80,13 @@ internal object PlanTransform {
         override fun visitIdentifier(node: Identifier, ctx: Unit) =
             super.visitIdentifier(node, ctx) as org.partiql.plan.Identifier
 
-        override fun visitIdentifierSymbol(node: Identifier.Symbol, ctx: Unit) =
-            org.partiql.plan.Identifier.Symbol(
-                symbol = node.symbol,
-                caseSensitivity = when (node.caseSensitivity) {
-                    Identifier.CaseSensitivity.SENSITIVE -> org.partiql.plan.Identifier.CaseSensitivity.SENSITIVE
-                    Identifier.CaseSensitivity.INSENSITIVE -> org.partiql.plan.Identifier.CaseSensitivity.INSENSITIVE
-                }
-            )
+        override fun visitIdentifierSymbol(node: Identifier.Symbol, ctx: Unit) = org.partiql.plan.Identifier.Symbol(
+            symbol = node.symbol,
+            caseSensitivity = when (node.caseSensitivity) {
+                Identifier.CaseSensitivity.SENSITIVE -> org.partiql.plan.Identifier.CaseSensitivity.SENSITIVE
+                Identifier.CaseSensitivity.INSENSITIVE -> org.partiql.plan.Identifier.CaseSensitivity.INSENSITIVE
+            }
+        )
 
         override fun visitIdentifierQualified(node: Identifier.Qualified, ctx: Unit) =
             org.partiql.plan.Identifier.Qualified(
@@ -111,8 +110,7 @@ internal object PlanTransform {
         override fun visitRexOpVar(node: Rex.Op.Var, ctx: Unit) =
             super.visitRexOpVar(node, ctx) as org.partiql.plan.Rex.Op
 
-        override fun visitRexOpVarResolved(node: Rex.Op.Var.Resolved, ctx: Unit) =
-            org.partiql.plan.Rex.Op.Var(node.ref)
+        override fun visitRexOpVarResolved(node: Rex.Op.Var.Resolved, ctx: Unit) = org.partiql.plan.Rex.Op.Var(node.ref)
 
         override fun visitRexOpVarUnresolved(node: Rex.Op.Var.Unresolved, ctx: Unit) =
             org.partiql.plan.Rex.Op.Err("Unresolved variable $node")
@@ -144,7 +142,8 @@ internal object PlanTransform {
         override fun visitRexOpPath(node: Rex.Op.Path, ctx: Unit) =
             super.visitRexOpPath(node, ctx) as org.partiql.plan.Rex.Op.Path
 
-        override fun visitRexOpCast(node: Rex.Op.Cast, ctx: Unit) = super.visitRexOpCast(node, ctx) as org.partiql.plan.Rex.Op.Cast
+        override fun visitRexOpCast(node: Rex.Op.Cast, ctx: Unit) =
+            super.visitRexOpCast(node, ctx) as org.partiql.plan.Rex.Op.Cast
 
         override fun visitRexOpCastUnresolved(node: Rex.Op.Cast.Unresolved, ctx: Unit): PlanNode {
             error("Unresolved cast $node")
@@ -188,10 +187,9 @@ internal object PlanTransform {
             branches = node.branches.map { visitRexOpCaseBranch(it, ctx) }, default = visitRex(node.default, ctx)
             )
 
-            override fun visitRexOpCaseBranch(node: Rex.Op.Case.Branch, ctx: Unit) =
-                org.partiql.plan.Rex.Op.Case.Branch(
-                    condition = visitRex(node.condition, ctx), rex = visitRex(node.rex, ctx)
-                )
+            override fun visitRexOpCaseBranch(node: Rex.Op.Case.Branch, ctx: Unit) = org.partiql.plan.Rex.Op.Case.Branch(
+                condition = visitRex(node.condition, ctx), rex = visitRex(node.rex, ctx)
+            )
 
             override fun visitRexOpCollection(node: Rex.Op.Collection, ctx: Unit) =
                 org.partiql.plan.Rex.Op.Collection(values = node.values.map { visitRex(it, ctx) })
@@ -199,11 +197,10 @@ internal object PlanTransform {
             override fun visitRexOpStruct(node: Rex.Op.Struct, ctx: Unit) =
                 org.partiql.plan.Rex.Op.Struct(fields = node.fields.map { visitRexOpStructField(it, ctx) })
 
-            override fun visitRexOpStructField(node: Rex.Op.Struct.Field, ctx: Unit) =
-                org.partiql.plan.Rex.Op.Struct.Field(
-                    k = visitRex(node.k, ctx),
-                    v = visitRex(node.v, ctx),
-                )
+            override fun visitRexOpStructField(node: Rex.Op.Struct.Field, ctx: Unit) = org.partiql.plan.Rex.Op.Struct.Field(
+                k = visitRex(node.k, ctx),
+                v = visitRex(node.v, ctx),
+            )
 
             override fun visitRexOpPivot(node: Rex.Op.Pivot, ctx: Unit) = org.partiql.plan.Rex.Op.Pivot(
                 key = visitRex(node.key, ctx),
@@ -253,10 +250,9 @@ internal object PlanTransform {
                 rex = visitRex(node.rex, ctx),
             )
 
-            override fun visitRelOpScanIndexed(node: Rel.Op.ScanIndexed, ctx: Unit) =
-                org.partiql.plan.Rel.Op.ScanIndexed(
-                    rex = visitRex(node.rex, ctx),
-                )
+            override fun visitRelOpScanIndexed(node: Rel.Op.ScanIndexed, ctx: Unit) = org.partiql.plan.Rel.Op.ScanIndexed(
+                rex = visitRex(node.rex, ctx),
+            )
 
             override fun visitRelOpUnpivot(node: Rel.Op.Unpivot, ctx: Unit) = org.partiql.plan.Rel.Op.Unpivot(
                 rex = visitRex(node.rex, ctx),
@@ -340,10 +336,17 @@ internal object PlanTransform {
             )
 
             override fun visitRelOpAggregateCall(node: Rel.Op.Aggregate.Call, ctx: Unit) =
-                org.partiql.plan.Rel.Op.Aggregate.Call(
-                    agg = visitRef(node.agg, ctx),
-                    args = node.args.map { visitRex(it, ctx) },
-                )
+                super.visitRelOpAggregateCall(node, ctx) as org.partiql.plan.Rel.Op.Aggregate.Call
+
+            override fun visitRelOpAggregateCallUnresolved(node: Rel.Op.Aggregate.Call.Unresolved, ctx: Unit): PlanNode {
+                error("Unresolved aggregate call $node")
+            }
+
+            override fun visitRelOpAggregateCallResolved(node: Rel.Op.Aggregate.Call.Resolved, ctx: Unit): PlanNode {
+                val agg = node.agg.name
+                val args = node.args.map { visitRex(it, ctx) }
+                return org.partiql.plan.relOpAggregateCall(node.agg.name, args)
+            }
 
             override fun visitRelOpExclude(node: Rel.Op.Exclude, ctx: Unit) = org.partiql.plan.Rel.Op.Exclude(
                 input = visitRel(node.input, ctx),

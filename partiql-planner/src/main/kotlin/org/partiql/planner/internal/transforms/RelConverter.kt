@@ -31,11 +31,13 @@ import org.partiql.ast.helpers.toBinder
 import org.partiql.ast.util.AstRewriter
 import org.partiql.ast.visitor.AstBaseVisitor
 import org.partiql.planner.internal.Env
+import org.partiql.planner.internal.ir.Identifier
 import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.rel
 import org.partiql.planner.internal.ir.relBinding
 import org.partiql.planner.internal.ir.relOpAggregate
+import org.partiql.planner.internal.ir.relOpAggregateCallUnresolved
 import org.partiql.planner.internal.ir.relOpDistinct
 import org.partiql.planner.internal.ir.relOpErr
 import org.partiql.planner.internal.ir.relOpExcept
@@ -360,11 +362,11 @@ internal object RelConverter {
                 schema.add(binding)
                 val args = expr.args.map { arg -> arg.toRex(env) }
                 val id = AstToPlan.convert(expr.function)
-
-                // TODO aggregate UDFs
-                TODO()
-
-                // relOpAggregateCall(fn, args)
+                val name = when (id) {
+                    is Identifier.Qualified -> error("Qualified aggregation calls are not supported.")
+                    is Identifier.Symbol -> id.symbol.lowercase()
+                }
+                relOpAggregateCallUnresolved(name, args)
             }
             var groups = emptyList<Rex>()
             if (groupBy != null) {
