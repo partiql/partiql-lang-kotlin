@@ -42,12 +42,8 @@ import org.partiql.value.DateValue
 import org.partiql.value.DecimalValue
 import org.partiql.value.Float32Value
 import org.partiql.value.Float64Value
-import org.partiql.value.Int16Value
-import org.partiql.value.Int32Value
-import org.partiql.value.Int64Value
-import org.partiql.value.Int8Value
-import org.partiql.value.IntValue
 import org.partiql.value.ListValue
+import org.partiql.value.NumericValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
@@ -185,23 +181,16 @@ class ServiceLoaderUtil {
                 PartiQLValueType.BOOL -> (partiqlValue as? BoolValue)?.value?.let { newBoolean(it) }
                     ?: ExprValue.nullValue
 
-                PartiQLValueType.INT8 -> (partiqlValue as? Int8Value)?.int?.let { newInt(it) } ?: ExprValue.nullValue
-
-                PartiQLValueType.INT16 -> (partiqlValue as? Int16Value)?.int?.let { newInt(it) } ?: ExprValue.nullValue
-
-                PartiQLValueType.INT32 -> (partiqlValue as? Int32Value)?.int?.let { newInt(it) } ?: ExprValue.nullValue
-
-                PartiQLValueType.INT64 -> (partiqlValue as? Int64Value)?.long?.let { newInt(it) } ?: ExprValue.nullValue
-
-                PartiQLValueType.INT -> (partiqlValue as? IntValue)?.long?.let { newInt(it) } ?: ExprValue.nullValue
+                PartiQLValueType.INT8, PartiQLValueType.INT16, PartiQLValueType.INT32,
+                PartiQLValueType.INT64, PartiQLValueType.INT -> (partiqlValue as? NumericValue<*>)?.toInt64()?.value?.let { newInt(it) } ?: ExprValue.nullValue
 
                 PartiQLValueType.DECIMAL_ARBITRARY -> (partiqlValue as? DecimalValue)?.value?.let { newDecimal(it) }
                     ?: ExprValue.nullValue
 
-                PartiQLValueType.FLOAT32 -> (partiqlValue as? Float32Value)?.double?.let { newFloat(it) }
+                PartiQLValueType.FLOAT32 -> (partiqlValue as? Float32Value)?.toFloat64()?.value?.let { newFloat(it) }
                     ?: ExprValue.nullValue
 
-                PartiQLValueType.FLOAT64 -> (partiqlValue as? Float64Value)?.double?.let { newFloat(it) }
+                PartiQLValueType.FLOAT64 -> (partiqlValue as? Float64Value)?.value?.let { newFloat(it) }
                     ?: ExprValue.nullValue
 
                 PartiQLValueType.CHAR -> (partiqlValue as? CharValue)?.string?.let { newString(it) }
