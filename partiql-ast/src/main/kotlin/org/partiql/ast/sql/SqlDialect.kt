@@ -40,7 +40,7 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
         public val PARTIQL = object : SqlDialect() {}
     }
 
-    override fun defaultReturn(node: AstNode, head: SqlBlock) =
+    override fun defaultReturn(node: AstNode, head: SqlBlock): SqlBlock =
         throw UnsupportedOperationException("Cannot print $node")
 
     // STATEMENTS
