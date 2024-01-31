@@ -44,7 +44,7 @@ public interface FnIndex {
          */
         public fun build(): FnIndex {
             val fns = builtins
-                .groupBy { it.signature.name }
+                .groupBy { it.signature.name.uppercase() }
                 .mapValues { e -> e.value.associateBy { f -> f.signature.specific } }
             return FnIndexMap(fns)
         }

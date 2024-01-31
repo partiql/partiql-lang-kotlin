@@ -42,7 +42,7 @@ public open class SqlMetadata(
 
     @FnExperimental
     override fun getFunction(path: BindingPath): ConnectorHandle.Fn? {
-        val cnf = path.normalized
+        val cnf = path.steps.map { it.name.uppercase() }
         val name = cnf.last()
         val variants = info.functions.get(cnf).map { it.signature }
         if (variants.isEmpty()) {

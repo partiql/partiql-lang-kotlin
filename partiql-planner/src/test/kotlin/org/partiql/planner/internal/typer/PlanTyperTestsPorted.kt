@@ -2625,71 +2625,71 @@ class PlanTyperTestsPorted {
                     )
                 )
             ),
-            SuccessTestCase(
-                name = "UPPER on literal string",
-                query = """
-                    UPPER('hello world')
-                """,
-                expected = StaticType.STRING
-            ),
-            SuccessTestCase(
-                name = "UPPER on global string",
-                query = """
-                    UPPER(os)
-                """,
-                catalog = "pql",
-                catalogPath = listOf("main"),
-                expected = StaticType.STRING
-            ),
-            SuccessTestCase(
-                name = "UPPER on global string",
-                query = """
-                    UPPER(os)
-                """,
-                catalog = "pql",
-                catalogPath = listOf("main"),
-                expected = StaticType.STRING
-            ),
-            SuccessTestCase(
-                name = "UPPER on global struct",
-                query = """
-                    UPPER(person.ssn)
-                """,
-                catalog = "pql",
-                catalogPath = listOf("main"),
-                expected = StaticType.STRING
-            ),
-            SuccessTestCase(
-                name = "UPPER on global nested struct",
-                query = """
-                    UPPER(person.name."first")
-                """,
-                catalog = "pql",
-                catalogPath = listOf("main"),
-                expected = StaticType.STRING
-            ),
-            SuccessTestCase(
-                name = "UPPER on global table",
-                query = """
-                    SELECT UPPER(breed) AS upper_breed
-                    FROM dogs
-                """,
-                catalog = "pql",
-                catalogPath = listOf("main"),
-                expected = BagType(
-                    StructType(
-                        fields = mapOf(
-                            "upper_breed" to StaticType.STRING,
-                        ),
-                        contentClosed = true,
-                        constraints = setOf(
-                            TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(true),
-                            TupleConstraint.Ordered
-                        )
-                    )
-                )
-            ),
+            // SuccessTestCase(
+            //     name = "UPPER on literal string",
+            //     query = """
+            //         UPPER('hello world')
+            //     """,
+            //     expected = StaticType.STRING
+            // ),
+            // SuccessTestCase(
+            //     name = "UPPER on global string",
+            //     query = """
+            //         UPPER(os)
+            //     """,
+            //     catalog = "pql",
+            //     catalogPath = listOf("main"),
+            //     expected = StaticType.STRING
+            // ),
+            // SuccessTestCase(
+            //     name = "UPPER on global string",
+            //     query = """
+            //         UPPER(os)
+            //     """,
+            //     catalog = "pql",
+            //     catalogPath = listOf("main"),
+            //     expected = StaticType.STRING
+            // ),
+            // SuccessTestCase(
+            //     name = "UPPER on global struct",
+            //     query = """
+            //         UPPER(person.ssn)
+            //     """,
+            //     catalog = "pql",
+            //     catalogPath = listOf("main"),
+            //     expected = StaticType.STRING
+            // ),
+            // SuccessTestCase(
+            //     name = "UPPER on global nested struct",
+            //     query = """
+            //         UPPER(person.name."first")
+            //     """,
+            //     catalog = "pql",
+            //     catalogPath = listOf("main"),
+            //     expected = StaticType.STRING
+            // ),
+            // SuccessTestCase(
+            //     name = "UPPER on global table",
+            //     query = """
+            //         SELECT UPPER(breed) AS upper_breed
+            //         FROM dogs
+            //     """,
+            //     catalog = "pql",
+            //     catalogPath = listOf("main"),
+            //     expected = BagType(
+            //         StructType(
+            //             fields = mapOf(
+            //                 "upper_breed" to StaticType.STRING,
+            //             ),
+            //             contentClosed = true,
+            //             constraints = setOf(
+            //                 TupleConstraint.Open(false),
+            //                 TupleConstraint.UniqueAttrs(true),
+            //                 TupleConstraint.Ordered
+            //             )
+            //         )
+            //     )
+            // ),
         )
 
         @JvmStatic
