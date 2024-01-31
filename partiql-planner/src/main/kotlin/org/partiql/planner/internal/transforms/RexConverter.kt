@@ -132,7 +132,7 @@ internal object RexConverter {
             val arg = visitExprCoerce(node.expr, context)
             val args = listOf(arg)
             // Fn
-            val id = identifierSymbol(node.op.name.lowercase(), Identifier.CaseSensitivity.SENSITIVE)
+            val id = identifierSymbol(node.op.name.lowercase(), Identifier.CaseSensitivity.INSENSITIVE)
             val op = rexOpCallUnresolved(id, args)
             return rex(type, op)
         }
@@ -149,7 +149,7 @@ internal object RexConverter {
                     rex(type, op)
                 }
                 else -> {
-                    val id = identifierSymbol(node.op.name.lowercase(), Identifier.CaseSensitivity.SENSITIVE)
+                    val id = identifierSymbol(node.op.name.lowercase(), Identifier.CaseSensitivity.INSENSITIVE)
                     val op = rexOpCallUnresolved(id, args)
                     rex(type, op)
                 }
@@ -651,7 +651,7 @@ internal object RexConverter {
          * The purpose of having such hidden function is to prevent usage of generated function name in query text.
          */
         private fun call(name: String, vararg args: Rex): Rex.Op.Call {
-            val id = identifierSymbol(name, Identifier.CaseSensitivity.SENSITIVE)
+            val id = identifierSymbol(name, Identifier.CaseSensitivity.INSENSITIVE)
             return rexOpCallUnresolved(id, args.toList())
         }
 

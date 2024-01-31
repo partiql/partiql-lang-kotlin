@@ -107,7 +107,7 @@ internal class Env(private val session: PartiQLPlanner.Session) {
                     )
                 }
                 // Rewrite as a dynamic call to be typed by PlanTyper
-                rex(StaticType.ANY, rexOpCallDynamic(args, candidates))
+                rex(StaticType.ANY, rexOpCallDynamic(args, candidates, match.exhaustive))
             }
             is FnMatch.Static -> {
                 // Create an internal typed reference

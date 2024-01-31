@@ -18,10 +18,11 @@ internal object Fn_NOT__BOOL__BOOL : Fn {
     override val signature = FnSignature(
         name = "not",
         returns = BOOL,
-        parameters = listOf(FnParameter("value", BOOL),),
+        parameters = listOf(FnParameter("value", BOOL)),
         isNullCall = true,
         isNullable = false,
         isMissingCall = false,
+        isMissable = false,
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
@@ -35,10 +36,11 @@ internal object Fn_NOT__MISSING__BOOL : Fn {
     override val signature = FnSignature(
         name = "not",
         returns = BOOL,
-        parameters = listOf(FnParameter("value", MISSING),),
+        parameters = listOf(FnParameter("value", MISSING)),
         isNullCall = true,
         isNullable = false,
         isMissingCall = false,
+        isMissable = false,
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {

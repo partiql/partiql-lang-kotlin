@@ -54,16 +54,25 @@ internal object FnResolver {
         }
 
         // Match candidates on all argument permutations
-        val matches = argPermutations.mapNotNull { match(candidates, it) }
+        var exhaustive = true
+        val matches = argPermutations.mapNotNull {
+            val m = match(candidates, it)
+            if (m == null) {
+                // we had a branch whose arguments did not match a static call
+                exhaustive = false
+            }
+            m
+        }
 
         // Remove duplicates while maintaining order (precedence).
         val orderedUniqueFunctions = matches.toSet().toList()
+        val n = orderedUniqueFunctions.size
 
-        //
-        return when (orderedUniqueFunctions.size) {
-            0 -> null
-            1 -> orderedUniqueFunctions.first()
-            else -> FnMatch.Dynamic(orderedUniqueFunctions)
+        // Static call iff only one match for every branch
+        return when {
+            n == 0 -> null
+            n == 1 && exhaustive -> orderedUniqueFunctions.first()
+            else -> FnMatch.Dynamic(orderedUniqueFunctions, exhaustive)
         }
     }
 

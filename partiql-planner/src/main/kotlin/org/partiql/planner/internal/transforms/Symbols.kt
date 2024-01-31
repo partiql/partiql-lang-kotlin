@@ -39,7 +39,13 @@ internal class Symbols private constructor() {
     private fun insert(catalog: String, item: Catalog.Item): CatalogRef {
         val i = upsert(catalog)
         val c = catalogs[i]
-        val j = c.items.size
+        var j = 0
+        while (j < c.items.size) {
+            if (c.items[j] == item) {
+                break
+            }
+            j++
+        }
         c.items.add(item)
         return CatalogRef(i, j)
     }

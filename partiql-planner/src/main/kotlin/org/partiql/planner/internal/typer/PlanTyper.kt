@@ -448,7 +448,7 @@ internal class PlanTyper(
             }
             if (resolvedVar == null) {
                 handleUndefinedVariable(node.identifier)
-                return rex(ANY, rexOpErr("Undefined variable ${node.identifier}"))
+                return rexErr("Undefined variable `${node.identifier.debug()}`")
             }
             return visitRex(resolvedVar, null)
         }
@@ -594,7 +594,7 @@ internal class PlanTyper(
             val rex = env.resolveFn(path, args)
             if (rex == null) {
                 handleUnknownFunction(node, args)
-                val name = node.identifier.normalize()
+                val name = node.identifier.debug()
                 val types = args.joinToString { "<${it.type}>" }
                 return rexErr("Unable to resolve function $name($types)")
             }
@@ -632,11 +632,11 @@ internal class PlanTyper(
         /**
          * Typing of a dynamic function call.
          *
-         * isMissable TRUE when the argument permutations may not definitively invoke one of the candidates. You
-         *      * can think of [isMissable] as being the same as "not exhaustive". For example, if we have ABS(INT | STRING), then
-         *      * this function call [isMissable] because there isn't an `ABS(STRING)` function signature AKA we haven't exhausted
-         *      * all the arguments. On the other hand, take an "exhaustive" scenario: ABS(INT | DEC). In this case, [isMissable]
-         *      * is false because we have functions for each potential argument AKA we have exhausted the arguments.
+         * isMissable TRUE when the argument permutations may not definitively invoke one of the candidates.
+         * You can think of [isMissable] as being the same as "not exhaustive". For example, if we have ABS(INT | STRING), then
+         * this function call [isMissable] because there isn't an `ABS(STRING)` function signature AKA we haven't exhausted
+         * all the arguments. On the other hand, take an "exhaustive" scenario: ABS(INT | DEC). In this case, [isMissable]
+         * is false because we have functions for each potential argument AKA we have exhausted the arguments.
          *
          *
          * @param node
@@ -651,13 +651,11 @@ internal class PlanTyper(
                 inferFnType(candidate.fn.signature, node.args)
             }.toMutableSet()
 
-            // Can return missing?
-            // if (isMissingCall) {
-            //
-            // }
-            // if (match.isMissable && !isNotMissable) {
-            //     types.add(MISSING)
-            // }
+            // We had a branch (arg type permutation) without a candidate.
+            if (!node.exhaustive) {
+                types.add(MISSING)
+            }
+
             return rex(type = unionOf(types).flatten(), op = node)
         }
 
@@ -807,10 +805,14 @@ internal class PlanTyper(
 
         @OptIn(PartiQLValueExperimental::class)
         override fun visitRexOpStruct(node: Rex.Op.Struct, ctx: StaticType?): Rex {
-            val fields = node.fields.map {
+            val fields = node.fields.mapNotNull {
                 val k = visitRex(it.k, it.k.type)
                 val v = visitRex(it.v, it.v.type)
-                rexOpStructField(k, v)
+                if (v.type is MissingType) {
+                    null
+                } else {
+                    rexOpStructField(k, v)
+                }
             }
             var structIsClosed = true
             val structTypeFields = mutableListOf<StructType.Field>()
@@ -1342,7 +1344,7 @@ internal class PlanTyper(
             Problem(
                 sourceLocation = UNKNOWN_PROBLEM_LOCATION,
                 details = PlanningProblemDetails.UnknownFunction(
-                    identifier = node.identifier.normalize(),
+                    identifier = node.identifier.debug(),
                     args = args.map { it.type }
                 )
             )
@@ -1362,23 +1364,18 @@ internal class PlanTyper(
         onProblem(
             Problem(
                 sourceLocation = UNKNOWN_PROBLEM_LOCATION,
-                details = PlanningProblemDetails.UnresolvedExcludeExprRoot(
-                    when (root) {
-                        is Identifier.Symbol -> root.symbol
-                        is Identifier.Qualified -> root.toString()
-                    }
-                )
+                details = PlanningProblemDetails.UnresolvedExcludeExprRoot(root.debug())
             )
         )
     }
 
     // HELPERS
 
-    private fun Identifier.normalize(): String = when (this) {
-        is Identifier.Qualified -> (listOf(root.normalize()) + steps.map { it.normalize() }).joinToString(".")
+    private fun Identifier.debug(): String = when (this) {
+        is Identifier.Qualified -> (listOf(root.debug()) + steps.map { it.debug() }).joinToString(".")
         is Identifier.Symbol -> when (caseSensitivity) {
-            Identifier.CaseSensitivity.SENSITIVE -> symbol
-            Identifier.CaseSensitivity.INSENSITIVE -> symbol.lowercase()
+            Identifier.CaseSensitivity.SENSITIVE -> "\"$symbol\""
+            Identifier.CaseSensitivity.INSENSITIVE -> symbol
         }
     }
 
@@ -1445,7 +1442,12 @@ internal class PlanTyper(
                     op.root
                 }
                 is Rex.Op.Path.Key -> {
-                    steps.add("${op.key}")
+                    val k = op.key.op
+                    if (k is Rex.Op.Lit && k.value is TextValue<*>) {
+                        steps.add("${k.value.string}")
+                    } else {
+                        steps.add("${op.key}")
+                    }
                     op.root
                 }
                 is Rex.Op.Path.Symbol -> {

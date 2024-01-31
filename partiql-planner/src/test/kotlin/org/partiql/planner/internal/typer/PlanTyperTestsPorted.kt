@@ -34,7 +34,6 @@ import org.partiql.spi.BindingPath
 import org.partiql.spi.connector.ConnectorMetadata
 import org.partiql.spi.connector.ConnectorSession
 import org.partiql.types.AnyOfType
-import org.partiql.types.AnyType
 import org.partiql.types.BagType
 import org.partiql.types.ListType
 import org.partiql.types.SexpType
@@ -3242,26 +3241,15 @@ class PlanTyperTestsPorted {
                 name = "Pets should not be accessible #1",
                 query = "SELECT * FROM pets",
                 expected = BagType(
-                    StaticType.unionOf(
-                        StructType(
-                            fields = emptyMap(),
-                            contentClosed = false,
-                            constraints = setOf(
-                                TupleConstraint.Open(true),
-                                TupleConstraint.UniqueAttrs(false),
-                            )
-                        ),
-                        StructType(
-                            fields = mapOf(
-                                "_1" to StaticType.ANY
-                            ),
-                            contentClosed = true,
-                            constraints = setOf(
-                                TupleConstraint.Open(false),
-                                TupleConstraint.UniqueAttrs(true),
-                            )
-                        ),
-                    )
+                    StructType(
+                        fields = emptyMap(),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered,
+                        )
+                    ),
                 ),
                 problemHandler = assertProblemExists {
                     Problem(
@@ -3275,26 +3263,15 @@ class PlanTyperTestsPorted {
                 catalog = CATALOG_AWS,
                 query = "SELECT * FROM pets",
                 expected = BagType(
-                    StaticType.unionOf(
-                        StructType(
-                            fields = emptyMap(),
-                            contentClosed = false,
-                            constraints = setOf(
-                                TupleConstraint.Open(true),
-                                TupleConstraint.UniqueAttrs(false),
-                            )
-                        ),
-                        StructType(
-                            fields = mapOf(
-                                "_1" to StaticType.ANY
-                            ),
-                            contentClosed = true,
-                            constraints = setOf(
-                                TupleConstraint.Open(false),
-                                TupleConstraint.UniqueAttrs(true),
-                            )
-                        ),
-                    )
+                    StructType(
+                        fields = emptyMap(),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered,
+                        )
+                    ),
                 ),
                 problemHandler = assertProblemExists {
                     Problem(
@@ -3342,31 +3319,27 @@ class PlanTyperTestsPorted {
                 name = "Test #7",
                 query = "SELECT * FROM ddb.pets",
                 expected = BagType(
-                    StaticType.unionOf(
-                        StructType(
-                            fields = emptyMap(),
-                            contentClosed = false,
-                            constraints = setOf(
-                                TupleConstraint.Open(true),
-                                TupleConstraint.UniqueAttrs(false),
-                            )
-                        ),
-                        StructType(
-                            fields = mapOf(
-                                "_1" to StaticType.ANY
-                            ),
-                            contentClosed = true,
-                            constraints = setOf(
-                                TupleConstraint.Open(false),
-                                TupleConstraint.UniqueAttrs(true),
-                            )
-                        ),
-                    )
+                    StructType(
+                        fields = emptyList(),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered,
+                        )
+                    ),
                 ),
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UndefinedVariable(name("pets"))
+                        PlanningProblemDetails.UndefinedVariable(
+                            BindingPath(
+                                steps = listOf(
+                                    BindingName("ddb", BindingCase.INSENSITIVE),
+                                    BindingName("pets", BindingCase.INSENSITIVE),
+                                )
+                            )
+                        )
                     )
                 }
             ),
@@ -3595,7 +3568,7 @@ class PlanTyperTestsPorted {
                 catalog = CATALOG_DB,
                 catalogPath = DB_SCHEMA_MARKETS,
                 query = "order_info.\"CUSTOMER_ID\" = 1",
-                expected = StaticType.NULL
+                expected = StaticType.MISSING
             ),
             SuccessTestCase(
                 name = "Case Sensitive success",
@@ -3632,7 +3605,7 @@ class PlanTyperTestsPorted {
                 query = "non_existing_column = 1",
                 // Function resolves to EQ__ANY_ANY__BOOL
                 // Which can return BOOL Or NULL
-                expected = StaticType.unionOf(StaticType.BOOL, StaticType.NULL),
+                expected = StaticType.MISSING,
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
@@ -3679,7 +3652,7 @@ class PlanTyperTestsPorted {
                 query = "SELECT unknown_col FROM orders WHERE customer_id = 1",
                 expected = BagType(
                     StructType(
-                        fields = mapOf("unknown_col" to AnyType()),
+                        fields = emptyList(),
                         contentClosed = true,
                         constraints = setOf(
                             TupleConstraint.Open(false),
