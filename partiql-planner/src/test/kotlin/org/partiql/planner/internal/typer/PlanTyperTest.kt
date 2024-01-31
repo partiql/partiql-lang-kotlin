@@ -189,7 +189,7 @@ class PlanTyperTest {
 
     private class PlanTyperWrapper(
         internal val typer: PlanTyper,
-        internal val collector: ProblemCollector
+        internal val collector: ProblemCollector,
     )
 
     /**
@@ -209,7 +209,9 @@ class PlanTyperTest {
         val wrapper = getTyper()
         val typer = wrapper.typer
         val input = statementQuery(LITERAL_STRUCT_1.pathSymbol("first_key").pathKey("sEcoNd_KEY"))
-        val expected = statementQuery(LITERAL_STRUCT_1_TYPED.pathKey("FiRsT_KeY", LITERAL_STRUCT_1_FIRST_KEY_TYPE).pathKey("sEcoNd_KEY", INT4))
+        val expected = statementQuery(
+            LITERAL_STRUCT_1_TYPED.pathKey("FiRsT_KeY", LITERAL_STRUCT_1_FIRST_KEY_TYPE).pathKey("sEcoNd_KEY", INT4)
+        )
 
         val actual = typer.resolve(input)
         assertEquals(expected, actual)
@@ -222,7 +224,12 @@ class PlanTyperTest {
         val input = statementQuery(
             unresolvedSensitiveVar("closed_ordered_duplicates_struct").pathSymbol("DEFINITION")
         )
-        val expected = statementQuery(global(ORDERED_DUPLICATES_STRUCT).pathKey("definition", STRING))
+        val expected = statementQuery(
+            global(
+                type = ORDERED_DUPLICATES_STRUCT,
+                path = listOf("main", "closed_ordered_duplicates_struct"),
+            ).pathKey("definition", STRING)
+        )
 
         val actual = typer.resolve(input)
         assertEquals(expected, actual)
@@ -233,7 +240,12 @@ class PlanTyperTest {
         val wrapper = getTyper()
         val typer = wrapper.typer
         val input = statementQuery(unresolvedSensitiveVar("closed_ordered_duplicates_struct").pathKey("DEFINITION"))
-        val expected = statementQuery(global(ORDERED_DUPLICATES_STRUCT).pathKey("DEFINITION", DECIMAL))
+        val expected = statementQuery(
+            global(
+                type = ORDERED_DUPLICATES_STRUCT,
+                path = listOf("main", "closed_ordered_duplicates_struct"),
+            ).pathKey("DEFINITION", DECIMAL)
+        )
 
         val actual = typer.resolve(input)
         assertEquals(expected, actual)
@@ -244,7 +256,15 @@ class PlanTyperTest {
         val wrapper = getTyper()
         val typer = wrapper.typer
         val input = statementQuery(unresolvedSensitiveVar("closed_duplicates_struct").pathSymbol("DEFINITION"))
-        val expected = statementQuery(global(DUPLICATES_STRUCT).pathSymbol("DEFINITION", StaticType.unionOf(STRING, FLOAT, DECIMAL)))
+        val expected = statementQuery(
+            global(
+                type = DUPLICATES_STRUCT,
+                path = listOf("main", "closed_duplicates_struct"),
+            ).pathSymbol(
+                "DEFINITION",
+                StaticType.unionOf(STRING, FLOAT, DECIMAL)
+            )
+        )
 
         val actual = typer.resolve(input)
         assertEquals(expected, actual)
@@ -255,7 +275,12 @@ class PlanTyperTest {
         val wrapper = getTyper()
         val typer = wrapper.typer
         val input = statementQuery(unresolvedSensitiveVar("closed_duplicates_struct").pathKey("DEFINITION"))
-        val expected = statementQuery(global(DUPLICATES_STRUCT).pathKey("DEFINITION", DECIMAL))
+        val expected = statementQuery(
+            global(
+                type = DUPLICATES_STRUCT,
+                path = listOf("main", "closed_duplicates_struct"),
+            ).pathKey("DEFINITION", DECIMAL)
+        )
 
         val actual = typer.resolve(input)
         assertEquals(expected, actual)
@@ -266,7 +291,15 @@ class PlanTyperTest {
         val wrapper = getTyper()
         val typer = wrapper.typer
         val input = statementQuery(unresolvedSensitiveVar("closed_duplicates_struct").pathKey("definition"))
-        val expected = statementQuery(global(DUPLICATES_STRUCT).pathKey("definition", StaticType.unionOf(StaticType.STRING, StaticType.FLOAT)))
+        val expected = statementQuery(
+            global(
+                type = DUPLICATES_STRUCT,
+                path = listOf("main", "closed_duplicates_struct"),
+            ).pathKey(
+                "definition",
+                StaticType.unionOf(StaticType.STRING, StaticType.FLOAT)
+            )
+        )
 
         val actual = typer.resolve(input)
         assertEquals(expected, actual)
@@ -277,7 +310,12 @@ class PlanTyperTest {
         val wrapper = getTyper()
         val typer = wrapper.typer
         val input = statementQuery(unresolvedSensitiveVar("open_duplicates_struct").pathKey("definition"))
-        val expected = statementQuery(global(OPEN_DUPLICATES_STRUCT).pathKey("definition"))
+        val expected = statementQuery(
+            global(
+                type = OPEN_DUPLICATES_STRUCT,
+                path = listOf("main", "open_duplicates_struct"),
+            ).pathKey("definition")
+        )
 
         val actual = typer.resolve(input)
         assertEquals(expected, actual)
@@ -288,7 +326,15 @@ class PlanTyperTest {
         val wrapper = getTyper()
         val typer = wrapper.typer
         val input = statementQuery(unresolvedSensitiveVar("closed_union_duplicates_struct").pathSymbol("definition"))
-        val expected = statementQuery(global(CLOSED_UNION_DUPLICATES_STRUCT).pathSymbol("definition", StaticType.unionOf(STRING, FLOAT, DECIMAL, INT2)))
+        val expected = statementQuery(
+            global(
+                type = CLOSED_UNION_DUPLICATES_STRUCT,
+                path = listOf("main", "closed_union_duplicates_struct"),
+            ).pathSymbol(
+                "definition",
+                StaticType.unionOf(STRING, FLOAT, DECIMAL, INT2)
+            )
+        )
 
         val actual = typer.resolve(input)
         assertEquals(expected, actual)
@@ -299,7 +345,15 @@ class PlanTyperTest {
         val wrapper = getTyper()
         val typer = wrapper.typer
         val input = statementQuery(unresolvedSensitiveVar("closed_union_duplicates_struct").pathKey("definition"))
-        val expected = statementQuery(global(CLOSED_UNION_DUPLICATES_STRUCT).pathKey("definition", StaticType.unionOf(STRING, FLOAT, INT2)))
+        val expected = statementQuery(
+            global(
+                type = CLOSED_UNION_DUPLICATES_STRUCT,
+                path = listOf("main", "closed_union_duplicates_struct"),
+            ).pathKey(
+                "definition",
+                StaticType.unionOf(STRING, FLOAT, INT2)
+            )
+        )
 
         val actual = typer.resolve(input)
         assertEquals(expected, actual)
@@ -322,10 +376,10 @@ class PlanTyperTest {
         )
     }
 
-    private fun global(type: StaticType): Rex {
+    private fun global(type: StaticType, path: List<String>): Rex {
         return rex(
             type,
-            rexOpGlobal(refObj(catalog = "foo", path = emptyList(), type))
+            rexOpGlobal(refObj(catalog = "pql", path = path, type))
         )
     }
 }

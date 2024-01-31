@@ -48,8 +48,9 @@ internal object Fn_EQ__ANY_ANY__BOOL : Fn {
             FnParameter("lhs", ANY),
             FnParameter("rhs", ANY),
         ),
-        isNullCall = true,
         isNullable = false,
+        isNullCall = true,
+        isMissable = false,
         isMissingCall = false,
     )
 
@@ -68,8 +69,9 @@ internal object Fn_EQ__BOOL_BOOL__BOOL : Fn {
             FnParameter("lhs", BOOL),
             FnParameter("rhs", BOOL),
         ),
-        isNullCall = true,
         isNullable = false,
+        isNullCall = true,
+        isMissable = false,
         isMissingCall = false,
     )
 
@@ -88,8 +90,9 @@ internal object Fn_EQ__INT8_INT8__BOOL : Fn {
             FnParameter("lhs", INT8),
             FnParameter("rhs", INT8),
         ),
-        isNullCall = true,
         isNullable = false,
+        isNullCall = true,
+        isMissable = false,
         isMissingCall = false,
     )
 
@@ -108,8 +111,9 @@ internal object Fn_EQ__INT16_INT16__BOOL : Fn {
             FnParameter("lhs", INT16),
             FnParameter("rhs", INT16),
         ),
-        isNullCall = true,
         isNullable = false,
+        isNullCall = true,
+        isMissable = false,
         isMissingCall = false,
     )
 
@@ -128,8 +132,9 @@ internal object Fn_EQ__INT32_INT32__BOOL : Fn {
             FnParameter("lhs", INT32),
             FnParameter("rhs", INT32),
         ),
-        isNullCall = true,
         isNullable = false,
+        isNullCall = true,
+        isMissable = false,
         isMissingCall = false,
     )
 
@@ -148,8 +153,9 @@ internal object Fn_EQ__INT64_INT64__BOOL : Fn {
             FnParameter("lhs", INT64),
             FnParameter("rhs", INT64),
         ),
-        isNullCall = true,
         isNullable = false,
+        isNullCall = true,
+        isMissable = false,
         isMissingCall = false,
     )
 
@@ -168,8 +174,9 @@ internal object Fn_EQ__INT_INT__BOOL : Fn {
             FnParameter("lhs", INT),
             FnParameter("rhs", INT),
         ),
-        isNullCall = true,
         isNullable = false,
+        isNullCall = true,
+        isMissable = false,
         isMissingCall = false,
     )
 
@@ -188,8 +195,9 @@ internal object Fn_EQ__DECIMAL_DECIMAL__BOOL : Fn {
             FnParameter("lhs", DECIMAL),
             FnParameter("rhs", DECIMAL),
         ),
-        isNullCall = true,
         isNullable = false,
+        isNullCall = true,
+        isMissable = false,
         isMissingCall = false,
     )
 
@@ -208,8 +216,9 @@ internal object Fn_EQ__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__BOOL : Fn {
             FnParameter("lhs", DECIMAL_ARBITRARY),
             FnParameter("rhs", DECIMAL_ARBITRARY),
         ),
-        isNullCall = true,
         isNullable = false,
+        isNullCall = true,
+        isMissable = false,
         isMissingCall = false,
     )
 
@@ -228,8 +237,9 @@ internal object Fn_EQ__FLOAT32_FLOAT32__BOOL : Fn {
             FnParameter("lhs", FLOAT32),
             FnParameter("rhs", FLOAT32),
         ),
-        isNullCall = true,
         isNullable = false,
+        isNullCall = true,
+        isMissable = false,
         isMissingCall = false,
     )
 
@@ -248,8 +258,9 @@ internal object Fn_EQ__FLOAT64_FLOAT64__BOOL : Fn {
             FnParameter("lhs", FLOAT64),
             FnParameter("rhs", FLOAT64),
         ),
-        isNullCall = true,
         isNullable = false,
+        isNullCall = true,
+        isMissable = false,
         isMissingCall = false,
     )
 
@@ -268,8 +279,9 @@ internal object Fn_EQ__CHAR_CHAR__BOOL : Fn {
             FnParameter("lhs", CHAR),
             FnParameter("rhs", CHAR),
         ),
-        isNullCall = true,
         isNullable = false,
+        isNullCall = true,
+        isMissable = false,
         isMissingCall = false,
     )
 
@@ -288,8 +300,9 @@ internal object Fn_EQ__STRING_STRING__BOOL : Fn {
             FnParameter("lhs", STRING),
             FnParameter("rhs", STRING),
         ),
-        isNullCall = true,
         isNullable = false,
+        isNullCall = true,
+        isMissable = false,
         isMissingCall = false,
     )
 
@@ -308,8 +321,9 @@ internal object Fn_EQ__SYMBOL_SYMBOL__BOOL : Fn {
             FnParameter("lhs", SYMBOL),
             FnParameter("rhs", SYMBOL),
         ),
-        isNullCall = true,
         isNullable = false,
+        isNullCall = true,
+        isMissable = false,
         isMissingCall = false,
     )
 
@@ -328,8 +342,9 @@ internal object Fn_EQ__BINARY_BINARY__BOOL : Fn {
             FnParameter("lhs", BINARY),
             FnParameter("rhs", BINARY),
         ),
-        isNullCall = true,
         isNullable = false,
+        isNullCall = true,
+        isMissable = false,
         isMissingCall = false,
     )
 
@@ -348,8 +363,9 @@ internal object Fn_EQ__BYTE_BYTE__BOOL : Fn {
             FnParameter("lhs", BYTE),
             FnParameter("rhs", BYTE),
         ),
-        isNullCall = true,
         isNullable = false,
+        isNullCall = true,
+        isMissable = false,
         isMissingCall = false,
     )
 
@@ -368,8 +384,9 @@ internal object Fn_EQ__BLOB_BLOB__BOOL : Fn {
             FnParameter("lhs", BLOB),
             FnParameter("rhs", BLOB),
         ),
-        isNullCall = true,
         isNullable = false,
+        isNullCall = true,
+        isMissable = false,
         isMissingCall = false,
     )
 
@@ -388,8 +405,9 @@ internal object Fn_EQ__CLOB_CLOB__BOOL : Fn {
             FnParameter("lhs", CLOB),
             FnParameter("rhs", CLOB),
         ),
-        isNullCall = true,
         isNullable = false,
+        isNullCall = true,
+        isMissable = false,
         isMissingCall = false,
     )
 
@@ -408,8 +426,9 @@ internal object Fn_EQ__DATE_DATE__BOOL : Fn {
             FnParameter("lhs", DATE),
             FnParameter("rhs", DATE),
         ),
-        isNullCall = true,
         isNullable = false,
+        isNullCall = true,
+        isMissable = false,
         isMissingCall = false,
     )
 
@@ -428,8 +447,9 @@ internal object Fn_EQ__TIME_TIME__BOOL : Fn {
             FnParameter("lhs", TIME),
             FnParameter("rhs", TIME),
         ),
-        isNullCall = true,
         isNullable = false,
+        isNullCall = true,
+        isMissable = false,
         isMissingCall = false,
     )
 
@@ -448,8 +468,9 @@ internal object Fn_EQ__TIMESTAMP_TIMESTAMP__BOOL : Fn {
             FnParameter("lhs", TIMESTAMP),
             FnParameter("rhs", TIMESTAMP),
         ),
-        isNullCall = true,
         isNullable = false,
+        isNullCall = true,
+        isMissable = false,
         isMissingCall = false,
     )
 
@@ -468,8 +489,9 @@ internal object Fn_EQ__INTERVAL_INTERVAL__BOOL : Fn {
             FnParameter("lhs", INTERVAL),
             FnParameter("rhs", INTERVAL),
         ),
-        isNullCall = true,
         isNullable = false,
+        isNullCall = true,
+        isMissable = false,
         isMissingCall = false,
     )
 
@@ -488,8 +510,9 @@ internal object Fn_EQ__BAG_BAG__BOOL : Fn {
             FnParameter("lhs", BAG),
             FnParameter("rhs", BAG),
         ),
-        isNullCall = true,
         isNullable = false,
+        isNullCall = true,
+        isMissable = false,
         isMissingCall = false,
     )
 
@@ -508,8 +531,9 @@ internal object Fn_EQ__LIST_LIST__BOOL : Fn {
             FnParameter("lhs", LIST),
             FnParameter("rhs", LIST),
         ),
-        isNullCall = true,
         isNullable = false,
+        isNullCall = true,
+        isMissable = false,
         isMissingCall = false,
     )
 
@@ -528,8 +552,9 @@ internal object Fn_EQ__SEXP_SEXP__BOOL : Fn {
             FnParameter("lhs", SEXP),
             FnParameter("rhs", SEXP),
         ),
-        isNullCall = true,
         isNullable = false,
+        isNullCall = true,
+        isMissable = false,
         isMissingCall = false,
     )
 
@@ -548,8 +573,9 @@ internal object Fn_EQ__STRUCT_STRUCT__BOOL : Fn {
             FnParameter("lhs", STRUCT),
             FnParameter("rhs", STRUCT),
         ),
-        isNullCall = true,
         isNullable = false,
+        isNullCall = true,
+        isMissable = false,
         isMissingCall = false,
     )
 
@@ -568,8 +594,9 @@ internal object Fn_EQ__NULL_NULL__BOOL : Fn {
             FnParameter("lhs", NULL),
             FnParameter("rhs", NULL),
         ),
-        isNullCall = true,
         isNullable = false,
+        isNullCall = true,
+        isMissable = false,
         isMissingCall = false,
     )
 
@@ -588,8 +615,9 @@ internal object Fn_EQ__MISSING_MISSING__BOOL : Fn {
             FnParameter("lhs", MISSING),
             FnParameter("rhs", MISSING),
         ),
-        isNullCall = true,
         isNullable = false,
+        isNullCall = true,
+        isMissable = false,
         isMissingCall = false,
     )
 

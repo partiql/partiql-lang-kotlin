@@ -55,34 +55,43 @@ internal abstract class PathResolver<T>(
      */
     internal fun lookup(path: BindingPath): PathItem<T>? {
         val n = path.steps.size
-        val absPath = BindingPath(schema + path.steps)
-        return when (n) {
-            0 -> null
-            1 -> get(absPath, path)
-            2 -> get(absPath, path) ?: get(path, path)
-            else -> get(absPath, path) ?: get(path, path) ?: search(path, path)
+        val m = schema.size
+        return if (m > 0) {
+            val absPath = BindingPath(schema + path.steps)
+            when (n) {
+                0 -> return null
+                1 -> return get(absPath)
+                2 -> return get(absPath) ?: get(path)
+                else -> return get(absPath) ?: get(path) ?: search(path)
+            }
+        } else {
+            // no need to prepend <schema> path as it's empty
+            when (n) {
+                0 -> null
+                1 -> get(path)
+                2 -> get(path)
+                else -> get(path) ?: search(path)
+            }
         }
     }
 
     /**
      * This gets the path in the current catalog.
      *
-     * @param absPath   Catalog absolute path.
-     * @param input     Input binding path.
+     * @param path   Catalog absolute path.
      * @return
      */
-    private fun get(absPath: BindingPath, input: BindingPath): PathItem<T>? {
-        val handle = get(catalog, absPath) ?: return null
-        return PathItem(session.currentCatalog, input, handle)
+    private fun get(path: BindingPath): PathItem<T>? {
+        val handle = get(catalog, path) ?: return null
+        return PathItem(session.currentCatalog, path, handle)
     }
 
     /**
      * This searches with a system absolute path, using the session to lookup catalogs.
      *
      * @param path  System absolute path.
-     * @param input Input binding path.
      */
-    private fun search(path: BindingPath, input: BindingPath): PathItem<T>? {
+    private fun search(path: BindingPath): PathItem<T>? {
         var match: Map.Entry<String, ConnectorMetadata>? = null
         val first: BindingName = path.steps.first()
         for (catalog in session.catalogs) {
@@ -102,7 +111,7 @@ internal abstract class PathResolver<T>(
         val catalog = match.key
         val metadata = match.value
         val handle = get(metadata, absPath) ?: return null
-        return PathItem(catalog, input, handle)
+        return PathItem(catalog, absPath, handle)
     }
 
     private fun String.toBindingName() = BindingName(this, BindingCase.SENSITIVE)

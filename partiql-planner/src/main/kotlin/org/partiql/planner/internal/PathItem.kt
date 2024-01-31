@@ -8,7 +8,7 @@ import org.partiql.spi.connector.ConnectorHandle
  *
  * @param T
  * @property catalog    The resolved entity's catalog name.
- * @property input      The input binding path that result in this item match.
+ * @property input      The input binding path that resulted in this item match.
  * @property handle     The resolved entity's catalog path and type information.
  */
 internal data class PathItem<T>(

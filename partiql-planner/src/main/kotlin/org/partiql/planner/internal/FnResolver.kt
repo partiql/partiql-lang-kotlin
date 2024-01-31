@@ -9,7 +9,6 @@ import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
 import org.partiql.value.PartiQLValueType.ANY
-import org.partiql.value.PartiQLValueType.MISSING
 import org.partiql.value.PartiQLValueType.NULL
 
 /**
@@ -49,12 +48,8 @@ internal object FnResolver {
 
         val argPermutations = buildArgumentPermutations(args).mapNotNull { argList ->
             argList.map { arg ->
-                val t = arg.toRuntimeTypeOrNull()
-                if (t == null || t == MISSING) {
-                    // Skip over if we cannot convert type to runtime type.
-                    return@mapNotNull null
-                }
-                t
+                // Skip over if we cannot convert type to runtime type.
+                arg.toRuntimeTypeOrNull() ?: return@mapNotNull null
             }
         }
 

@@ -517,14 +517,12 @@ internal class PlanTyper(
             val paths = root.type.allTypes.map { type ->
                 val struct = type as? StructType ?: return@map rex(MISSING, rexOpLit(missingValue()))
                 val (pathType, replacementId) = inferStructLookup(
-                    struct,
-                    identifierSymbol(node.key, Identifier.CaseSensitivity.INSENSITIVE)
+                    struct, identifierSymbol(node.key, Identifier.CaseSensitivity.INSENSITIVE)
                 )
                 when (replacementId.caseSensitivity) {
                     Identifier.CaseSensitivity.INSENSITIVE -> rex(pathType, rexOpPathSymbol(root, replacementId.symbol))
                     Identifier.CaseSensitivity.SENSITIVE -> rex(
-                        pathType,
-                        rexOpPathKey(root, rexString(replacementId.symbol))
+                        pathType, rexOpPathKey(root, rexString(replacementId.symbol))
                     )
                 }
             }
@@ -557,7 +555,7 @@ internal class PlanTyper(
             val path = super.visitRexOpPath(node, ctx) as Rex
             if (path.type == MISSING) {
                 handleAlwaysMissing()
-                return rexErr("Path always returns missing $node")
+                return rexErr("Path always returns missing: ${node.debug()}")
             }
             return path
         }
@@ -595,8 +593,10 @@ internal class PlanTyper(
             val path = node.identifier.toBindingPath()
             val rex = env.resolveFn(path, args)
             if (rex == null) {
-                handleUnknownFunction(node)
-                return rexErr("Unable to resolve function $node")
+                handleUnknownFunction(node, args)
+                val name = node.identifier.normalize()
+                val types = args.joinToString { "<${it.type}>" }
+                return rexErr("Unable to resolve function $name($types)")
             }
             // Pass off to Rex.Op.Call.Static or Rex.Op.Call.Dynamic for typing.
             return visitRex(rex, null)
@@ -613,6 +613,7 @@ internal class PlanTyper(
         override fun visitRexOpCallStatic(node: Rex.Op.Call.Static, ctx: StaticType?): Rex {
             // Apply the coercions as explicit casts
             val args: List<Rex> = node.args.map {
+                // Propagate MISSING argument.
                 if (it.type == MissingType && node.fn.signature.isMissingCall) {
                     handleAlwaysMissing()
                     return rex(MISSING, node)
@@ -623,6 +624,7 @@ internal class PlanTyper(
                     else -> it
                 }
             }
+            // Infer fn return type
             val type = inferFnType(node.fn.signature, args)
             return rex(type, node)
         }
@@ -853,8 +855,7 @@ internal class PlanTyper(
             val key = typer.visitRex(node.key, null)
             val value = typer.visitRex(node.value, null)
             val type = StructType(
-                contentClosed = false,
-                constraints = setOf(TupleConstraint.Open(true))
+                contentClosed = false, constraints = setOf(TupleConstraint.Open(true))
             )
             val op = rexOpPivot(key, value, rel)
             return rex(type, op)
@@ -1133,33 +1134,32 @@ internal class PlanTyper(
         @OptIn(FnExperimental::class)
         private fun inferFnType(fn: FnSignature, args: List<Rex>): StaticType {
 
-            // Determine if a function should propagate missing.
-            var isMissable = false
-            if (fn.isMissingCall) {
-                for (arg in args) {
-                    if (arg.type.isMissable()) {
-                        isMissable = true
-                        break
-                    }
+            // Determine role of NULL and MISSING in the return type
+            var hadNull = false
+            var hadNullable = false
+            var hadMissing = false
+            var hadMissable = false
+            for (arg in args) {
+                val t = arg.type
+                when {
+                    t is MissingType -> hadMissing = true
+                    t is NullType -> hadNull = true
+                    t.isMissable() -> hadMissable = true
+                    t.isNullable() -> hadNullable = true
                 }
             }
 
-            // Determine the nullability of the return type
-            var isNull = false // True iff NULL CALL and has a NULL arg
-            var isNullable = false // True iff NULL CALL and has a NULLABLE arg; or is a NULLABLE operator
-            if (fn.isNullCall) {
-                for (arg in args) {
-                    if (arg.type is NullType) {
-                        isNull = true
-                        break
-                    }
-                    if (arg.type.isNullable()) {
-                        isNullable = true
-                        break
-                    }
-                }
-            }
-            isNullable = isNullable || fn.isNullable
+            // True iff NULL CALL and had a NULL arg; or NOT missable and had MISSING argument
+            val isNull = (fn.isNullCall && hadNull) || (!fn.isMissable && hadMissing)
+
+            // True iff NULL CALL and had a NULLABLE arg; or is a NULLABLE operator
+            val isNullable = (fn.isNullCall && hadNullable) || fn.isNullable || (!fn.isMissable && hadMissable)
+
+            // True iff MISSING CALL and had a MISSING arg.
+            val isMissing = fn.isMissingCall && hadMissing
+
+            // True iff MISSING CALL and had a MISSABLE arg
+            val isMissable = (fn.isMissingCall && hadMissable) && fn.isMissable
 
             // Return type with calculated nullability
             var type: StaticType = when {
@@ -1168,7 +1168,7 @@ internal class PlanTyper(
                 else -> fn.returns.toNonNullStaticType()
             }
 
-            // TODO Some operators can return MISSING during runtime
+            // Propagate MISSING unless this operator explicitly doesn't return missing (fn.isMissable = false).
             if (isMissable) {
                 type = unionOf(type, MISSING)
             }
@@ -1288,29 +1288,6 @@ internal class PlanTyper(
         else -> fromSourceType
     }
 
-    /**
-     * Rewrites function arguments, wrapping in the given function if exists.
-     */
-    // @OptIn(FnExperimental::class)
-    // private fun rewriteFnArgs(mapping: List<FnSignature.Scalar?>, args: List<Rex>): List<Rex> {
-    //     if (mapping.size != args.size) {
-    //         error("Fatal, malformed function mapping") // should be unreachable given how a mapping is generated.
-    //     }
-    //     val newArgs = mutableListOf<Rex>()
-    //     for (i in mapping.indices) {
-    //         var a = args[i]
-    //         val m = mapping[i]
-    //         if (m != null) {
-    //             // rewrite
-    //             val type = m.returns.toNonNullStaticType()
-    //             val cast = rexOpCallStatic(fnResolved(m), listOf(a))
-    //             a = rex(type, cast)
-    //         }
-    //         newArgs.add(a)
-    //     }
-    //     return newArgs
-    // }
-
     private fun assertAsInt(type: StaticType) {
         if (type.flatten().allTypes.any { variant -> variant is IntType }.not()) {
             handleUnexpectedType(type, setOf(StaticType.INT))
@@ -1323,8 +1300,7 @@ internal class PlanTyper(
         val publicId = id.toBindingPath()
         onProblem(
             Problem(
-                sourceLocation = UNKNOWN_PROBLEM_LOCATION,
-                details = PlanningProblemDetails.UndefinedVariable(publicId)
+                sourceLocation = UNKNOWN_PROBLEM_LOCATION, details = PlanningProblemDetails.UndefinedVariable(publicId)
             )
         )
     }
@@ -1343,8 +1319,7 @@ internal class PlanTyper(
             Problem(
                 sourceLocation = UNKNOWN_PROBLEM_LOCATION,
                 details = PlanningProblemDetails.UnknownFunction(
-                    identifier = "CAST(<arg> AS ${node.target})",
-                    args = listOf(node.arg.type)
+                    identifier = "CAST(<arg> AS ${node.target})", args = listOf(node.arg.type)
                 )
             )
         )
@@ -1362,13 +1337,13 @@ internal class PlanTyper(
         )
     }
 
-    private fun handleUnknownFunction(node: Rex.Op.Call.Unresolved) {
+    private fun handleUnknownFunction(node: Rex.Op.Call.Unresolved, args: List<Rex>) {
         onProblem(
             Problem(
                 sourceLocation = UNKNOWN_PROBLEM_LOCATION,
                 details = PlanningProblemDetails.UnknownFunction(
                     identifier = node.identifier.normalize(),
-                    args = node.args.map { it.type }
+                    args = args.map { it.type }
                 )
             )
         )
@@ -1453,5 +1428,34 @@ internal class PlanTyper(
     private fun Identifier.Symbol.isEquivalentTo(other: String): Boolean = when (caseSensitivity) {
         Identifier.CaseSensitivity.SENSITIVE -> symbol.equals(other)
         Identifier.CaseSensitivity.INSENSITIVE -> symbol.equals(other, ignoreCase = true)
+    }
+
+    /**
+     * Pretty-print a path and its root type.
+     *
+     * @return
+     */
+    private fun Rex.Op.Path.debug(): String {
+        val steps = mutableListOf<String>()
+        var curr: Rex = rex(ANY, this)
+        while (true) {
+            curr = when (val op = curr.op) {
+                is Rex.Op.Path.Index -> {
+                    steps.add("${op.key}")
+                    op.root
+                }
+                is Rex.Op.Path.Key -> {
+                    steps.add("${op.key}")
+                    op.root
+                }
+                is Rex.Op.Path.Symbol -> {
+                    steps.add(op.key)
+                    op.root
+                }
+                else -> break
+            }
+        }
+        // curr is root
+        return "`${steps.joinToString(".")}` on type ${curr.type}"
     }
 }

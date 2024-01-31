@@ -16,6 +16,7 @@ import org.partiql.value.PartiQLValueType
  * @property isDeterministic    Flag indicating this function always produces the same output given the same input.
  * @property isNullable         Flag indicating this function's operator may return a NULL value.
  * @property isNullCall         Flag indicating if any of the call arguments is NULL, then return NULL.
+ * @property isMissable         Flag indicating this function's operator may return a MISSING value.
  * @property isMissingCall      Flag indicating if any of the call arguments is MISSING, the return MISSING.
  */
 @FnExperimental
@@ -28,6 +29,7 @@ public class FnSignature(
     @JvmField public val isDeterministic: Boolean = true,
     @JvmField public val isNullable: Boolean = true,
     @JvmField public val isNullCall: Boolean = false,
+    @JvmField public val isMissable: Boolean = true,
     @JvmField public val isMissingCall: Boolean = true,
 ) {
 

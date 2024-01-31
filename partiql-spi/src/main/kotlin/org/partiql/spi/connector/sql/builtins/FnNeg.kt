@@ -25,8 +25,9 @@ internal object Fn_NEG__INT8__INT8 : Fn {
         name = "neg",
         returns = INT8,
         parameters = listOf(FnParameter("value", INT8),),
-        isNullCall = true,
         isNullable = false,
+        isNullCall = true,
+        isMissable = false,
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
@@ -41,8 +42,9 @@ internal object Fn_NEG__INT16__INT16 : Fn {
         name = "neg",
         returns = INT16,
         parameters = listOf(FnParameter("value", INT16),),
-        isNullCall = true,
         isNullable = false,
+        isNullCall = true,
+        isMissable = false,
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
@@ -57,8 +59,9 @@ internal object Fn_NEG__INT32__INT32 : Fn {
         name = "neg",
         returns = INT32,
         parameters = listOf(FnParameter("value", INT32),),
-        isNullCall = true,
         isNullable = false,
+        isNullCall = true,
+        isMissable = false,
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
@@ -73,8 +76,9 @@ internal object Fn_NEG__INT64__INT64 : Fn {
         name = "neg",
         returns = INT64,
         parameters = listOf(FnParameter("value", INT64),),
-        isNullCall = true,
         isNullable = false,
+        isNullCall = true,
+        isMissable = false,
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
@@ -89,8 +93,9 @@ internal object Fn_NEG__INT__INT : Fn {
         name = "neg",
         returns = INT,
         parameters = listOf(FnParameter("value", INT),),
-        isNullCall = true,
         isNullable = false,
+        isNullCall = true,
+        isMissable = false,
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
@@ -105,8 +110,9 @@ internal object Fn_NEG__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY : Fn {
         name = "neg",
         returns = DECIMAL_ARBITRARY,
         parameters = listOf(FnParameter("value", DECIMAL_ARBITRARY),),
-        isNullCall = true,
         isNullable = false,
+        isNullCall = true,
+        isMissable = false,
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
@@ -121,8 +127,9 @@ internal object Fn_NEG__FLOAT32__FLOAT32 : Fn {
         name = "neg",
         returns = FLOAT32,
         parameters = listOf(FnParameter("value", FLOAT32),),
-        isNullCall = true,
         isNullable = false,
+        isNullCall = true,
+        isMissable = false,
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
@@ -137,8 +144,9 @@ internal object Fn_NEG__FLOAT64__FLOAT64 : Fn {
         name = "neg",
         returns = FLOAT64,
         parameters = listOf(FnParameter("value", FLOAT64),),
-        isNullCall = true,
         isNullable = false,
+        isNullCall = true,
+        isMissable = false,
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
