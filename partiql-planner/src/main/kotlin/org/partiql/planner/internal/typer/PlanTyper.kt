@@ -825,9 +825,9 @@ internal class PlanTyper(
             }
             val rewritten = rexOpCastOp(arg, cast)
             return when (lookUp.castType) {
-                CastType.COERCION -> rex(cast.target.toStaticType(), rewritten)
-                CastType.EXPLICIT -> rex(cast.target.toStaticType(), rewritten)
-                CastType.UNSAFE -> rex(cast.target.toStaticType().asOptional(), rewritten)
+                CastType.COERCION -> rex(cast.target.toNonNullStaticType(), rewritten)
+                CastType.EXPLICIT -> rex(cast.target.toNonNullStaticType(), rewritten)
+                CastType.UNSAFE -> rex(cast.target.toNonNullStaticType().asOptional(), rewritten)
             }
         }
 

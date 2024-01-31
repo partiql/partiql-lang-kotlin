@@ -1,5 +1,6 @@
 package org.partiql.planner.internal.typer.casts
 
+import org.partiql.planner.internal.typer.toNonNullStaticType
 import org.partiql.planner.internal.typer.toStaticType
 import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValueExperimental
@@ -14,7 +15,7 @@ object CastTestsUtil {
                 PartiQLValueType.ANY -> StaticType.ANY
                 PartiQLValueType.NULL -> StaticType.unionOf(StaticType.NULL, StaticType.MISSING)
                 PartiQLValueType.MISSING -> StaticType.unionOf(StaticType.NULL, StaticType.MISSING)
-                else -> to.toStaticType().asOptional()
+                else -> to.toNonNullStaticType().asOptional()
             }
             PartiQLValueType.BOOL -> when (to) {
                 PartiQLValueType.ANY -> StaticType.ANY
@@ -31,7 +32,7 @@ object CastTestsUtil {
                 PartiQLValueType.FLOAT32, PartiQLValueType.FLOAT64,
                 // TEXT
                 PartiQLValueType.CHAR, PartiQLValueType.STRING, PartiQLValueType.SYMBOL
-                -> to.toStaticType()
+                -> to.toNonNullStaticType()
                 else -> null
             }
             PartiQLValueType.INT8 -> when (to) {
@@ -47,49 +48,49 @@ object CastTestsUtil {
                 PartiQLValueType.DECIMAL, PartiQLValueType.DECIMAL_ARBITRARY,
                 PartiQLValueType.FLOAT32, PartiQLValueType.FLOAT64,
 
-                PartiQLValueType.CHAR, PartiQLValueType.STRING, PartiQLValueType.SYMBOL -> to.toStaticType()
+                PartiQLValueType.CHAR, PartiQLValueType.STRING, PartiQLValueType.SYMBOL -> to.toNonNullStaticType()
                 else -> null
             }
             PartiQLValueType.INT16 -> when (to) {
                 PartiQLValueType.ANY -> StaticType.ANY
                 PartiQLValueType.NULL -> StaticType.unionOf(StaticType.NULL, StaticType.MISSING)
 
-                PartiQLValueType.INT8 -> to.toStaticType().asOptional()
+                PartiQLValueType.INT8 -> to.toNonNullStaticType().asOptional()
 
                 PartiQLValueType.BOOL,
                 PartiQLValueType.INT16, PartiQLValueType.INT32, PartiQLValueType.INT64,
                 PartiQLValueType.INT,
                 PartiQLValueType.DECIMAL, PartiQLValueType.DECIMAL_ARBITRARY,
                 PartiQLValueType.FLOAT32, PartiQLValueType.FLOAT64,
-                PartiQLValueType.CHAR, PartiQLValueType.STRING, PartiQLValueType.SYMBOL -> to.toStaticType()
+                PartiQLValueType.CHAR, PartiQLValueType.STRING, PartiQLValueType.SYMBOL -> to.toNonNullStaticType()
                 else -> null
             }
             PartiQLValueType.INT32 -> when (to) {
                 PartiQLValueType.ANY -> StaticType.ANY
                 PartiQLValueType.NULL -> StaticType.unionOf(StaticType.NULL, StaticType.MISSING)
 
-                PartiQLValueType.INT8, PartiQLValueType.INT16 -> to.toStaticType().asOptional()
+                PartiQLValueType.INT8, PartiQLValueType.INT16 -> to.toNonNullStaticType().asOptional()
 
                 PartiQLValueType.BOOL,
                 PartiQLValueType.INT32, PartiQLValueType.INT64,
                 PartiQLValueType.INT,
                 PartiQLValueType.DECIMAL, PartiQLValueType.DECIMAL_ARBITRARY,
                 PartiQLValueType.FLOAT32, PartiQLValueType.FLOAT64,
-                PartiQLValueType.CHAR, PartiQLValueType.STRING, PartiQLValueType.SYMBOL -> to.toStaticType()
+                PartiQLValueType.CHAR, PartiQLValueType.STRING, PartiQLValueType.SYMBOL -> to.toNonNullStaticType()
                 else -> null
             }
             PartiQLValueType.INT64 -> when (to) {
                 PartiQLValueType.ANY -> StaticType.ANY
                 PartiQLValueType.NULL -> StaticType.unionOf(StaticType.NULL, StaticType.MISSING)
 
-                PartiQLValueType.INT8, PartiQLValueType.INT16, PartiQLValueType.INT32 -> to.toStaticType().asOptional()
+                PartiQLValueType.INT8, PartiQLValueType.INT16, PartiQLValueType.INT32 -> to.toNonNullStaticType().asOptional()
 
                 PartiQLValueType.BOOL,
                 PartiQLValueType.INT64,
                 PartiQLValueType.INT,
                 PartiQLValueType.DECIMAL, PartiQLValueType.DECIMAL_ARBITRARY,
                 PartiQLValueType.FLOAT32, PartiQLValueType.FLOAT64,
-                PartiQLValueType.CHAR, PartiQLValueType.STRING, PartiQLValueType.SYMBOL -> to.toStaticType()
+                PartiQLValueType.CHAR, PartiQLValueType.STRING, PartiQLValueType.SYMBOL -> to.toNonNullStaticType()
                 else -> null
             }
             PartiQLValueType.INT -> when (to) {
@@ -97,12 +98,12 @@ object CastTestsUtil {
                 PartiQLValueType.NULL -> StaticType.unionOf(StaticType.NULL, StaticType.MISSING)
 
                 PartiQLValueType.INT8, PartiQLValueType.INT16, PartiQLValueType.INT32, PartiQLValueType.INT64
-                -> to.toStaticType().asOptional()
+                -> to.toNonNullStaticType().asOptional()
                 PartiQLValueType.BOOL,
                 PartiQLValueType.INT,
                 PartiQLValueType.DECIMAL, PartiQLValueType.DECIMAL_ARBITRARY,
                 PartiQLValueType.FLOAT32, PartiQLValueType.FLOAT64,
-                PartiQLValueType.CHAR, PartiQLValueType.STRING, PartiQLValueType.SYMBOL -> to.toStaticType()
+                PartiQLValueType.CHAR, PartiQLValueType.STRING, PartiQLValueType.SYMBOL -> to.toNonNullStaticType()
                 else -> null
             }
             PartiQLValueType.DECIMAL -> when (to) {
@@ -110,14 +111,14 @@ object CastTestsUtil {
                 PartiQLValueType.NULL -> StaticType.unionOf(StaticType.NULL, StaticType.MISSING)
 
                 PartiQLValueType.INT8, PartiQLValueType.INT16,
-                PartiQLValueType.INT32, PartiQLValueType.INT64 -> to.toStaticType().asOptional()
+                PartiQLValueType.INT32, PartiQLValueType.INT64 -> to.toNonNullStaticType().asOptional()
 
                 PartiQLValueType.BOOL,
                 PartiQLValueType.INT,
                 PartiQLValueType.DECIMAL, PartiQLValueType.DECIMAL_ARBITRARY,
 
                 PartiQLValueType.FLOAT32, PartiQLValueType.FLOAT64,
-                PartiQLValueType.CHAR, PartiQLValueType.STRING, PartiQLValueType.SYMBOL -> to.toStaticType()
+                PartiQLValueType.CHAR, PartiQLValueType.STRING, PartiQLValueType.SYMBOL -> to.toNonNullStaticType()
                 else -> null
             }
             PartiQLValueType.DECIMAL_ARBITRARY -> when (to) {
@@ -125,12 +126,12 @@ object CastTestsUtil {
                 PartiQLValueType.NULL -> StaticType.unionOf(StaticType.NULL, StaticType.MISSING)
 
                 PartiQLValueType.INT8, PartiQLValueType.INT16, PartiQLValueType.INT32, PartiQLValueType.INT64,
-                PartiQLValueType.DECIMAL, -> to.toStaticType().asOptional()
+                PartiQLValueType.DECIMAL, -> to.toNonNullStaticType().asOptional()
 
                 PartiQLValueType.BOOL,
                 PartiQLValueType.INT, PartiQLValueType.DECIMAL_ARBITRARY,
                 PartiQLValueType.FLOAT32, PartiQLValueType.FLOAT64,
-                PartiQLValueType.CHAR, PartiQLValueType.STRING, PartiQLValueType.SYMBOL -> to.toStaticType()
+                PartiQLValueType.CHAR, PartiQLValueType.STRING, PartiQLValueType.SYMBOL -> to.toNonNullStaticType()
                 else -> null
             }
 
@@ -139,13 +140,13 @@ object CastTestsUtil {
                 PartiQLValueType.NULL -> StaticType.unionOf(StaticType.NULL, StaticType.MISSING)
 
                 PartiQLValueType.INT8, PartiQLValueType.INT16, PartiQLValueType.INT32, PartiQLValueType.INT64,
-                PartiQLValueType.DECIMAL, -> to.toStaticType().asOptional()
+                PartiQLValueType.DECIMAL, -> to.toNonNullStaticType().asOptional()
 
                 PartiQLValueType.BOOL,
                 PartiQLValueType.INT,
                 PartiQLValueType.DECIMAL_ARBITRARY,
                 PartiQLValueType.FLOAT32, PartiQLValueType.FLOAT64,
-                PartiQLValueType.CHAR, PartiQLValueType.STRING, PartiQLValueType.SYMBOL -> to.toStaticType()
+                PartiQLValueType.CHAR, PartiQLValueType.STRING, PartiQLValueType.SYMBOL -> to.toNonNullStaticType()
                 else -> null
             }
 
@@ -155,13 +156,13 @@ object CastTestsUtil {
 
                 PartiQLValueType.INT8, PartiQLValueType.INT16, PartiQLValueType.INT32, PartiQLValueType.INT64,
                 PartiQLValueType.DECIMAL,
-                PartiQLValueType.FLOAT32, -> to.toStaticType().asOptional()
+                PartiQLValueType.FLOAT32, -> to.toNonNullStaticType().asOptional()
 
                 PartiQLValueType.BOOL,
                 PartiQLValueType.INT,
                 PartiQLValueType.DECIMAL_ARBITRARY,
                 PartiQLValueType.FLOAT64,
-                PartiQLValueType.CHAR, PartiQLValueType.STRING, PartiQLValueType.SYMBOL -> to.toStaticType()
+                PartiQLValueType.CHAR, PartiQLValueType.STRING, PartiQLValueType.SYMBOL -> to.toNonNullStaticType()
                 else -> null
             }
 
@@ -173,9 +174,9 @@ object CastTestsUtil {
                 PartiQLValueType.INT8, PartiQLValueType.INT16, PartiQLValueType.INT32, PartiQLValueType.INT64,
                 PartiQLValueType.INT,
                 PartiQLValueType.DECIMAL, PartiQLValueType.DECIMAL_ARBITRARY,
-                PartiQLValueType.FLOAT32, PartiQLValueType.FLOAT64 -> to.toStaticType().asOptional()
+                PartiQLValueType.FLOAT32, PartiQLValueType.FLOAT64 -> to.toNonNullStaticType().asOptional()
 
-                PartiQLValueType.CHAR, PartiQLValueType.STRING, PartiQLValueType.SYMBOL -> to.toStaticType()
+                PartiQLValueType.CHAR, PartiQLValueType.STRING, PartiQLValueType.SYMBOL -> to.toNonNullStaticType()
                 else -> null
             }
 
@@ -188,9 +189,9 @@ object CastTestsUtil {
                 PartiQLValueType.INT32, PartiQLValueType.INT64, PartiQLValueType.DECIMAL,
                 PartiQLValueType.INT,
                 PartiQLValueType.DECIMAL_ARBITRARY, PartiQLValueType.FLOAT32,
-                PartiQLValueType.FLOAT64, -> to.toStaticType().asOptional()
+                PartiQLValueType.FLOAT64, -> to.toNonNullStaticType().asOptional()
 
-                PartiQLValueType.CHAR, PartiQLValueType.STRING, PartiQLValueType.SYMBOL -> to.toStaticType()
+                PartiQLValueType.CHAR, PartiQLValueType.STRING, PartiQLValueType.SYMBOL -> to.toNonNullStaticType()
                 else -> null
             }
 
@@ -202,9 +203,9 @@ object CastTestsUtil {
                 PartiQLValueType.INT8, PartiQLValueType.INT16, PartiQLValueType.INT32, PartiQLValueType.INT64,
                 PartiQLValueType.INT,
                 PartiQLValueType.DECIMAL, PartiQLValueType.DECIMAL_ARBITRARY,
-                PartiQLValueType.FLOAT32, PartiQLValueType.FLOAT64, -> to.toStaticType().asOptional()
+                PartiQLValueType.FLOAT32, PartiQLValueType.FLOAT64, -> to.toNonNullStaticType().asOptional()
 
-                PartiQLValueType.CHAR, PartiQLValueType.STRING, PartiQLValueType.SYMBOL -> to.toStaticType()
+                PartiQLValueType.CHAR, PartiQLValueType.STRING, PartiQLValueType.SYMBOL -> to.toNonNullStaticType()
                 else -> null
             }
 
@@ -216,7 +217,7 @@ object CastTestsUtil {
             }
             PartiQLValueType.CLOB -> when (to) {
                 PartiQLValueType.CLOB -> StaticType.CLOB.asNullable()
-                PartiQLValueType.CHAR, PartiQLValueType.STRING, PartiQLValueType.SYMBOL -> to.toStaticType().asOptional()
+                PartiQLValueType.CHAR, PartiQLValueType.STRING, PartiQLValueType.SYMBOL -> to.toNonNullStaticType().asOptional()
                 else -> null
             }
             PartiQLValueType.DATE -> when (to) {
@@ -225,7 +226,7 @@ object CastTestsUtil {
 
                 PartiQLValueType.CHAR, PartiQLValueType.STRING, PartiQLValueType.SYMBOL,
 
-                PartiQLValueType.DATE, PartiQLValueType.TIMESTAMP -> to.toStaticType()
+                PartiQLValueType.DATE, PartiQLValueType.TIMESTAMP -> to.toNonNullStaticType()
 
                 else -> null
             }
@@ -234,7 +235,7 @@ object CastTestsUtil {
                 PartiQLValueType.NULL -> StaticType.unionOf(StaticType.NULL, StaticType.MISSING)
 
                 PartiQLValueType.CHAR, PartiQLValueType.STRING, PartiQLValueType.SYMBOL,
-                PartiQLValueType.TIME, PartiQLValueType.TIMESTAMP -> to.toStaticType()
+                PartiQLValueType.TIME, PartiQLValueType.TIMESTAMP -> to.toNonNullStaticType()
                 else -> null
             }
 
@@ -243,7 +244,7 @@ object CastTestsUtil {
                 PartiQLValueType.NULL -> StaticType.unionOf(StaticType.NULL, StaticType.MISSING)
 
                 PartiQLValueType.CHAR, PartiQLValueType.STRING, PartiQLValueType.SYMBOL,
-                PartiQLValueType.DATE, PartiQLValueType.TIME, PartiQLValueType.TIMESTAMP -> to.toStaticType()
+                PartiQLValueType.DATE, PartiQLValueType.TIME, PartiQLValueType.TIMESTAMP -> to.toNonNullStaticType()
 
                 else -> null
             }
@@ -252,7 +253,7 @@ object CastTestsUtil {
                 PartiQLValueType.ANY -> StaticType.ANY
                 PartiQLValueType.NULL -> StaticType.unionOf(StaticType.NULL, StaticType.MISSING)
 
-                PartiQLValueType.LIST, PartiQLValueType.SEXP, PartiQLValueType.BAG, -> to.toStaticType()
+                PartiQLValueType.LIST, PartiQLValueType.SEXP, PartiQLValueType.BAG, -> to.toNonNullStaticType()
                 else -> null
             }
 
@@ -260,21 +261,21 @@ object CastTestsUtil {
                 PartiQLValueType.ANY -> StaticType.ANY
                 PartiQLValueType.NULL -> StaticType.unionOf(StaticType.NULL, StaticType.MISSING)
 
-                PartiQLValueType.LIST, PartiQLValueType.SEXP, PartiQLValueType.BAG, -> to.toStaticType()
+                PartiQLValueType.LIST, PartiQLValueType.SEXP, PartiQLValueType.BAG, -> to.toNonNullStaticType()
                 else -> null
             }
             PartiQLValueType.SEXP -> when (to) {
                 PartiQLValueType.ANY -> StaticType.ANY
                 PartiQLValueType.NULL -> StaticType.unionOf(StaticType.NULL, StaticType.MISSING)
 
-                PartiQLValueType.LIST, PartiQLValueType.SEXP, PartiQLValueType.BAG, -> to.toStaticType()
+                PartiQLValueType.LIST, PartiQLValueType.SEXP, PartiQLValueType.BAG, -> to.toNonNullStaticType()
                 else -> null
             }
             PartiQLValueType.STRUCT -> when (to) {
                 PartiQLValueType.ANY -> StaticType.ANY
                 PartiQLValueType.NULL -> StaticType.unionOf(StaticType.NULL, StaticType.MISSING)
 
-                PartiQLValueType.STRUCT -> to.toStaticType()
+                PartiQLValueType.STRUCT -> to.toNonNullStaticType()
 
                 else -> null
             }
