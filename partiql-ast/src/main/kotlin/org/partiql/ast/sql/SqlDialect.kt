@@ -55,7 +55,7 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
      * @param node
      * @param head
      */
-    public open fun visitExprWrapped(node: Expr, head: SqlBlock) = when (node) {
+    public open fun visitExprWrapped(node: Expr, head: SqlBlock): SqlBlock = when (node) {
         is Expr.SFW -> {
             var h = head
             h = h concat "("
@@ -116,11 +116,11 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
     }
 
     // cannot write path step outside the context of a path as we don't want it to reflow
-    override fun visitPathStep(node: Path.Step, head: SqlBlock) = error("path step cannot be written directly")
+    override fun visitPathStep(node: Path.Step, head: SqlBlock): SqlBlock = error("path step cannot be written directly")
 
-    override fun visitPathStepSymbol(node: Path.Step.Symbol, head: SqlBlock) = visitPathStep(node, head)
+    override fun visitPathStepSymbol(node: Path.Step.Symbol, head: SqlBlock): SqlBlock = visitPathStep(node, head)
 
-    override fun visitPathStepIndex(node: Path.Step.Index, head: SqlBlock) = visitPathStep(node, head)
+    override fun visitPathStepIndex(node: Path.Step.Index, head: SqlBlock): SqlBlock = visitPathStep(node, head)
 
     // TYPES
 
