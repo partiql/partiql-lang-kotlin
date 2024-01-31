@@ -1456,6 +1456,6 @@ internal class PlanTyper(
             }
         }
         // curr is root
-        return "`${steps.joinToString(".")}` on type ${curr.type}"
+        return "`${steps.joinToString(".")}` on root $curr"
     }
 }

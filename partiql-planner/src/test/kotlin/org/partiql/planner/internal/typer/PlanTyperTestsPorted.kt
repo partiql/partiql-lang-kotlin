@@ -3381,13 +3381,13 @@ class PlanTyperTestsPorted {
                 catalog = CATALOG_B,
                 catalogPath = listOf("b"),
                 query = "b.b",
-                expected = TYPE_B_B_B
+                expected = TYPE_B_B_B_B
             ),
             TestCase.SuccessTestCase(
                 name = "Test #12",
                 catalog = CATALOG_AWS,
                 catalogPath = listOf("ddb"),
-                query = "SELECT * FROM b.b",
+                query = "SELECT * FROM b",
                 expected = TABLE_AWS_DDB_B
             ),
             TestCase.SuccessTestCase(
@@ -3412,7 +3412,7 @@ class PlanTyperTestsPorted {
                 name = "Test #16",
                 catalog = CATALOG_B,
                 query = "b.b.b",
-                expected = TYPE_B_B_B
+                expected = TYPE_B_B_B_B
             ),
             TestCase.SuccessTestCase(
                 name = "Test #17",
@@ -3425,7 +3425,7 @@ class PlanTyperTestsPorted {
                 catalog = CATALOG_B,
                 catalogPath = listOf("b"),
                 query = "b.b.b",
-                expected = TYPE_B_B_B
+                expected = TYPE_B_B_B_B_B
             ),
             TestCase.SuccessTestCase(
                 name = "Test #19",
@@ -3441,20 +3441,20 @@ class PlanTyperTestsPorted {
                 name = "Test #21",
                 catalog = CATALOG_B,
                 query = "b.b.b.b",
-                expected = TYPE_B_B_B_B
+                expected = TYPE_B_B_B_B_B
             ),
             SuccessTestCase(
                 name = "Test #22",
                 catalog = CATALOG_B,
-                query = "b.b.b.c",
-                expected = TYPE_B_B_C
+                query = "b.b.c",
+                expected = TYPE_B_B_B_C
             ),
             SuccessTestCase(
                 name = "Test #23",
                 catalog = CATALOG_B,
                 catalogPath = listOf("b"),
-                query = "b.b.b.b",
-                expected = TYPE_B_B_B_B
+                query = "b.b.b",
+                expected = TYPE_B_B_B_B_B
             ),
             SuccessTestCase(
                 name = "Test #24",
@@ -3462,9 +3462,9 @@ class PlanTyperTestsPorted {
                 expected = TYPE_B_B_B_B_B
             ),
             SuccessTestCase(
-                name = "Test #24",
+                name = "Test #25",
                 catalog = CATALOG_B,
-                query = "b.b.b.b.b",
+                query = "b.b.b.b",
                 expected = TYPE_B_B_B_B_B
             ),
             SuccessTestCase(
