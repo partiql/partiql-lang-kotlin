@@ -65,7 +65,7 @@ import org.partiql.value.PartiQLValueType.NULL
 internal object PathResolverAgg {
 
     @JvmStatic
-    private val casts = CastTable.partiql()
+    private val casts = CastTable.partiql
 
     private val map = listOf(
         Agg_ANY__BOOL__BOOL,

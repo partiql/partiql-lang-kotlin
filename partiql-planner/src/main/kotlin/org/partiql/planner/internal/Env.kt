@@ -1,10 +1,13 @@
 package org.partiql.planner.internal
 
 import org.partiql.planner.PartiQLPlanner
+import org.partiql.planner.internal.casts.CastTable
 import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
+import org.partiql.planner.internal.ir.refAgg
 import org.partiql.planner.internal.ir.refFn
 import org.partiql.planner.internal.ir.refObj
+import org.partiql.planner.internal.ir.relOpAggregateCallResolved
 import org.partiql.planner.internal.ir.rex
 import org.partiql.planner.internal.ir.rexOpCallDynamic
 import org.partiql.planner.internal.ir.rexOpCallDynamicCandidate
@@ -12,12 +15,14 @@ import org.partiql.planner.internal.ir.rexOpCallStatic
 import org.partiql.planner.internal.ir.rexOpCastResolved
 import org.partiql.planner.internal.ir.rexOpGlobal
 import org.partiql.planner.internal.typer.TypeEnv.Companion.toPath
+import org.partiql.planner.internal.typer.toRuntimeType
 import org.partiql.planner.internal.typer.toStaticType
 import org.partiql.spi.BindingPath
 import org.partiql.spi.connector.ConnectorMetadata
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.PartiQLValueType
 
 /**
  * [Env] is similar to the database type environment from the PartiQL Specification. This includes resolution of
@@ -28,6 +33,11 @@ import org.partiql.value.PartiQLValueExperimental
  * @property session
  */
 internal class Env(private val session: PartiQLPlanner.Session) {
+
+    /**
+     * Cast table used for coercion and explicit cast resolution.
+     */
+    private val casts = CastTable.partiql
 
     /**
      * Current catalog [ConnectorMetadata]. Error if missing from the session.
@@ -110,7 +120,7 @@ internal class Env(private val session: PartiQLPlanner.Session) {
                 val coercions: List<Rex> = args.mapIndexed { i, arg ->
                     when (val cast = match.mapping[i]) {
                         null -> arg
-                        else -> rex(cast.target.toStaticType(), rexOpCastResolved(cast, arg))
+                        else -> rex(StaticType.ANY, rexOpCastResolved(cast, arg))
                     }
                 }
                 // Rewrite as a static call to be typed by PlanTyper
@@ -119,11 +129,28 @@ internal class Env(private val session: PartiQLPlanner.Session) {
         }
     }
 
-    @OptIn(FnExperimental::class)
+    @OptIn(FnExperimental::class, PartiQLValueExperimental::class)
     fun resolveAgg(name: String, args: List<Rex>): Rel.Op.Aggregate.Call.Resolved? {
         val match = aggs.resolve(name, args) ?: return null
+        val agg = match.first
+        val mapping = match.second
+        // Create an internal typed reference
+        val ref = refAgg(name, agg)
+        // Apply the coercions as explicit casts
+        val coercions: List<Rex> = args.mapIndexed { i, arg ->
+            when (val cast = mapping[i]) {
+                null -> arg
+                else -> rex(cast.target.toStaticType(), rexOpCastResolved(cast, arg))
+            }
+        }
+        return relOpAggregateCallResolved(ref, coercions)
+    }
 
-        TODO()
+    @OptIn(PartiQLValueExperimental::class)
+    fun resolveCast(input: Rex, target: PartiQLValueType): Rex.Op.Cast.Resolved? {
+        val operand = input.type.toRuntimeType()
+        val cast = casts.get(operand, target) ?: return null
+        return rexOpCastResolved(cast, input)
     }
 
     // -----------------------

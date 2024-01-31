@@ -9,6 +9,7 @@ import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
 import org.partiql.value.PartiQLValueType.ANY
+import org.partiql.value.PartiQLValueType.MISSING
 import org.partiql.value.PartiQLValueType.NULL
 
 /**
@@ -30,7 +31,7 @@ import org.partiql.value.PartiQLValueType.NULL
 internal object FnResolver {
 
     @JvmStatic
-    private val casts = CastTable.partiql()
+    private val casts = CastTable.partiql
 
     /**
      * Resolution of either a static or dynamic function.
@@ -48,8 +49,12 @@ internal object FnResolver {
 
         val argPermutations = buildArgumentPermutations(args).mapNotNull { argList ->
             argList.map { arg ->
-                // Skip over if we cannot convert type to runtime type.
-                arg.toRuntimeTypeOrNull() ?: return@mapNotNull null
+                val t = arg.toRuntimeTypeOrNull()
+                if (t == null || t == MISSING) {
+                    // Skip over if we cannot convert type to runtime type.
+                    return@mapNotNull null
+                }
+                t
             }
         }
 
@@ -81,18 +86,20 @@ internal object FnResolver {
                 return FnMatch.Static(candidate, arrayOfNulls(args.size))
             }
         }
-        // 2. Look for best match.
-        var match: FnMatch.Static? = null
+        // 2. Look for best match (for now, first match).
         for (candidate in candidates) {
-            val m = candidate.match(args) ?: continue
-            if (match != null && m.exact < match.exact) {
-                // already had a better match.
-                continue
+            val m = candidate.match(args)
+            if (m != null) {
+                return m
             }
-            match = m
+            // if (match != null && m.exact < match.exact) {
+            //     // already had a better match.
+            //     continue
+            // }
+            // match = m
         }
-        // 3. Return best match or null
-        return match
+        // 3. No match, return null
+        return null
     }
 
     /**

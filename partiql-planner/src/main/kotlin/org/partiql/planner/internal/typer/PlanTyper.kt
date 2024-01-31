@@ -23,6 +23,7 @@ import org.partiql.planner.PlanningProblemDetails
 import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.ir.Identifier
 import org.partiql.planner.internal.ir.PlanNode
+import org.partiql.planner.internal.ir.Ref.Cast.Safety.UNSAFE
 import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.Statement
@@ -561,6 +562,25 @@ internal class PlanTyper(
             return path
         }
 
+        override fun visitRexOpCastUnresolved(node: Rex.Op.Cast.Unresolved, ctx: StaticType?): Rex {
+            val arg = visitRex(node.arg, null)
+            val cast = env.resolveCast(arg, node.target)
+            if (cast == null) {
+                handleUnknownCast(node)
+                return rexErr("Invalid CAST operator")
+            }
+            return visitRexOpCastResolved(cast, null)
+        }
+
+        override fun visitRexOpCastResolved(node: Rex.Op.Cast.Resolved, ctx: StaticType?): Rex {
+            val missable = node.arg.type.isMissable() || node.cast.safety == UNSAFE
+            var type = node.cast.target.toNonNullStaticType()
+            if (missable) {
+                type = unionOf(type, MISSING)
+            }
+            return rex(type, node)
+        }
+
         override fun visitRexOpCallUnresolved(node: Rex.Op.Call.Unresolved, ctx: StaticType?): Rex {
             // Type the arguments
             val args = node.args.map {
@@ -591,13 +611,19 @@ internal class PlanTyper(
          */
         @OptIn(FnExperimental::class)
         override fun visitRexOpCallStatic(node: Rex.Op.Call.Static, ctx: StaticType?): Rex {
-            node.args.forEach {
+            // Apply the coercions as explicit casts
+            val args: List<Rex> = node.args.map {
                 if (it.type == MissingType && node.fn.signature.isMissingCall) {
                     handleAlwaysMissing()
                     return rex(MISSING, node)
                 }
+                // Type the coercions
+                when (val op = it.op) {
+                    is Rex.Op.Cast.Resolved -> visitRexOpCastResolved(op, null)
+                    else -> it
+                }
             }
-            val type = inferFnType(node.fn.signature, node.args)
+            val type = inferFnType(node.fn.signature, args)
             return rex(type, node)
         }
 
@@ -1106,15 +1132,14 @@ internal class PlanTyper(
 
         @OptIn(FnExperimental::class)
         private fun inferFnType(fn: FnSignature, args: List<Rex>): StaticType {
-            // If a function does not propagate MISSING, then treat MISSING as NULL.
-            var isMissing = false
+
+            // Determine if a function should propagate missing.
             var isMissable = false
-            if (!fn.isMissingCall) {
+            if (fn.isMissingCall) {
                 for (arg in args) {
-                    if (arg.type is MissingType) {
-                        isMissing = true
-                    } else if (arg.type.isMissable()) {
+                    if (arg.type.isMissable()) {
                         isMissable = true
+                        break
                     }
                 }
             }
@@ -1123,20 +1148,14 @@ internal class PlanTyper(
             var isNull = false // True iff NULL CALL and has a NULL arg
             var isNullable = false // True iff NULL CALL and has a NULLABLE arg; or is a NULLABLE operator
             if (fn.isNullCall) {
-                if (isMissing) {
-                    isNull = true
-                } else if (isMissable) {
-                    isNullable = true
-                } else {
-                    for (arg in args) {
-                        if (arg.type is NullType) {
-                            isNull = true
-                            break
-                        }
-                        if (arg.type.isNullable()) {
-                            isNullable = true
-                            break
-                        }
+                for (arg in args) {
+                    if (arg.type is NullType) {
+                        isNull = true
+                        break
+                    }
+                    if (arg.type.isNullable()) {
+                        isNullable = true
+                        break
                     }
                 }
             }
@@ -1315,6 +1334,18 @@ internal class PlanTyper(
             Problem(
                 sourceLocation = UNKNOWN_PROBLEM_LOCATION,
                 details = PlanningProblemDetails.UnexpectedType(actual, expected),
+            )
+        )
+    }
+
+    private fun handleUnknownCast(node: Rex.Op.Cast.Unresolved) {
+        onProblem(
+            Problem(
+                sourceLocation = UNKNOWN_PROBLEM_LOCATION,
+                details = PlanningProblemDetails.UnknownFunction(
+                    identifier = "CAST(<arg> AS ${node.target})",
+                    args = listOf(node.arg.type)
+                )
             )
         )
     }

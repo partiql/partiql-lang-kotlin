@@ -56,10 +56,16 @@ internal class CastTable private constructor(
         }
     }
 
+    fun get(operand: PartiQLValueType, target: PartiQLValueType): Cast? {
+        val i = operand.ordinal
+        val j = target.ordinal
+        return graph[i][j]
+    }
+
     /**
      * Returns the CAST function if exists, else null.
      */
-    internal fun lookupCoercion(operand: PartiQLValueType, target: PartiQLValueType): Cast? {
+    fun lookupCoercion(operand: PartiQLValueType, target: PartiQLValueType): Cast? {
         val i = operand.ordinal
         val j = target.ordinal
         val cast = graph[i][j] ?: return null
@@ -86,7 +92,8 @@ internal class CastTable private constructor(
          *
          * TODO this is incomplete.
          */
-        public fun partiql(): CastTable {
+        @JvmStatic
+        val partiql: CastTable = run {
             val types = PartiQLValueType.values()
             val graph = arrayOfNulls<Array<Cast?>>(N)
             for (type in types) {
@@ -292,7 +299,7 @@ internal class CastTable private constructor(
             graph[STRUCT] = STRUCT.relationships {
                 coercion(STRUCT)
             }
-            return CastTable(types, graph.requireNoNulls())
+            CastTable(types, graph.requireNoNulls())
         }
     }
 
