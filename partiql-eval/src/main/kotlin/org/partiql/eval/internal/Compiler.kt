@@ -42,6 +42,7 @@ import org.partiql.spi.function.PartiQLFunctionExperimental
 import org.partiql.types.function.FunctionSignature
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
+import org.partiql.value.missingValue
 import java.lang.IllegalStateException
 
 internal class Compiler @OptIn(PartiQLFunctionExperimental::class) constructor(
@@ -57,13 +58,19 @@ internal class Compiler @OptIn(PartiQLFunctionExperimental::class) constructor(
         TODO("Not yet implemented")
     }
 
-    override fun visitRexOpErr(node: Rex.Op.Err, ctx: Unit): Operator {
-        val message = buildString {
-            this.appendLine(node.message)
-            PlanPrinter.append(this, plan)
+    @OptIn(PartiQLValueExperimental::class)
+    // TODO: re-look at error reporting pattern in Planner
+    override fun visitRexOpErr(node: Rex.Op.Err, ctx: Unit): Operator =
+        when (session.mode) {
+            PartiQLEngine.Mode.PERMISSIVE -> ExprLiteral(missingValue())
+            PartiQLEngine.Mode.STRICT -> {
+                val message = buildString {
+                    this.appendLine(node.message)
+                    PlanPrinter.append(this, plan)
+                }
+                throw IllegalStateException(message)
+            }
         }
-        throw IllegalStateException(message)
-    }
 
     override fun visitRelOpErr(node: Rel.Op.Err, ctx: Unit): Operator {
         throw IllegalStateException(node.message)
