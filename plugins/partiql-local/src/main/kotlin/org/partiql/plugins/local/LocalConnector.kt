@@ -18,12 +18,11 @@ import com.amazon.ionelement.api.StructElement
 import org.partiql.spi.BindingPath
 import org.partiql.spi.connector.Connector
 import org.partiql.spi.connector.ConnectorBindings
-import org.partiql.spi.connector.ConnectorFunctions
+import org.partiql.spi.connector.ConnectorFnProvider
+import org.partiql.spi.connector.ConnectorHandle
 import org.partiql.spi.connector.ConnectorMetadata
-import org.partiql.spi.connector.ConnectorObjectHandle
-import org.partiql.spi.connector.ConnectorObjectPath
 import org.partiql.spi.connector.ConnectorSession
-import org.partiql.types.StaticType
+import org.partiql.spi.fn.FnExperimental
 import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.io.path.notExists
@@ -44,15 +43,15 @@ import kotlin.io.path.notExists
  * @property catalogName    Catalog name
  * @property config         Catalog configuration
  */
-class LocalConnector(
+public class LocalConnector(
     private val catalogRoot: Path,
     private val catalogName: String,
     private val config: StructElement,
 ) : Connector {
 
-    companion object {
-        const val CONNECTOR_NAME = "local"
-        const val ROOT_KEY = "root"
+    public companion object {
+        public const val CONNECTOR_NAME: String = "local"
+        public const val ROOT_KEY: String = "root"
     }
 
     private val metadata = Metadata(catalogRoot)
@@ -66,7 +65,12 @@ class LocalConnector(
         TODO("Not yet implemented")
     }
 
-    class Factory : Connector.Factory {
+    @FnExperimental
+    override fun getFunctions(): ConnectorFnProvider {
+        TODO("Not yet implemented")
+    }
+
+    internal class Factory : Connector.Factory {
 
         private val default: Path = Paths.get(System.getProperty("user.home")).resolve(".partiql/local")
 
@@ -83,9 +87,7 @@ class LocalConnector(
         }
     }
 
-    class Metadata(private val root: Path) : ConnectorMetadata {
-
-        override val functions: ConnectorFunctions? = null
+    public class Metadata(root: Path) : ConnectorMetadata {
 
         /**
          * TODO watch root for changes and rebuild catalog if needed.
@@ -97,17 +99,17 @@ class LocalConnector(
          */
         private var catalog = LocalCatalog.load(root)
 
-        override fun getObjectType(session: ConnectorSession, handle: ConnectorObjectHandle): StaticType {
-            val obj = handle.value as LocalObject
-            return obj.getDescriptor()
+        override fun getObject(path: BindingPath): ConnectorHandle.Obj? {
+            val value = catalog.lookup(path) ?: return null
+            return ConnectorHandle.Obj(
+                path = value.path,
+                entity = value,
+            )
         }
 
-        override fun getObjectHandle(session: ConnectorSession, path: BindingPath): ConnectorObjectHandle? {
-            val value = catalog.lookup(path) ?: return null
-            return ConnectorObjectHandle(
-                absolutePath = ConnectorObjectPath(value.path),
-                value = value,
-            )
+        @FnExperimental
+        override fun getFunction(path: BindingPath): ConnectorHandle.Fn? {
+            TODO("Not yet implemented")
         }
 
         internal fun listObjects(): List<BindingPath> = catalog.listObjects()

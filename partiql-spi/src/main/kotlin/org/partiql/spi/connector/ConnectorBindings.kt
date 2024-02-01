@@ -17,8 +17,17 @@ package org.partiql.spi.connector
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 
+/**
+ * [ConnectorBindings] is responsible for managing value bindings in a catalog.
+ */
 @OptIn(PartiQLValueExperimental::class)
 public interface ConnectorBindings {
 
-    public fun getValue(path: ConnectorObjectPath): PartiQLValue
+    /**
+     * Retrieves a value for the given handle.
+     *
+     * @param handle
+     * @return
+     */
+    public fun getValue(handle: ConnectorHandle.Obj): PartiQLValue
 }

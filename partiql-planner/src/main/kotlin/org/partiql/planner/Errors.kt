@@ -2,6 +2,9 @@ package org.partiql.planner
 
 import org.partiql.errors.ProblemDetails
 import org.partiql.errors.ProblemSeverity
+import org.partiql.plan.Identifier
+import org.partiql.spi.BindingCase
+import org.partiql.spi.BindingPath
 import org.partiql.types.StaticType
 
 /**
@@ -24,11 +27,12 @@ public sealed class PlanningProblemDetails(
     public data class CompileError(val errorMessage: String) :
         PlanningProblemDetails(ProblemSeverity.ERROR, { errorMessage })
 
-    public data class UndefinedVariable(val variableName: String, val caseSensitive: Boolean) :
+    public data class UndefinedVariable(val id: BindingPath) :
         PlanningProblemDetails(
             ProblemSeverity.ERROR,
             {
-                "Undefined variable '$variableName'." +
+                val caseSensitive = id.steps.any { it.case == BindingCase.SENSITIVE }
+                "Undefined variable '${id.key}'." +
                     quotationHint(caseSensitive)
             }
         )
@@ -134,3 +138,15 @@ private fun quotationHint(caseSensitive: Boolean) =
     } else {
         ""
     }
+
+private fun Identifier.sql(): String = when (this) {
+    is Identifier.Qualified -> this.sql()
+    is Identifier.Symbol -> this.sql()
+}
+
+private fun Identifier.Qualified.sql(): String = root.sql() + "." + steps.joinToString(".") { it.sql() }
+
+private fun Identifier.Symbol.sql(): String = when (caseSensitivity) {
+    Identifier.CaseSensitivity.SENSITIVE -> "\"$symbol\""
+    Identifier.CaseSensitivity.INSENSITIVE -> symbol
+}

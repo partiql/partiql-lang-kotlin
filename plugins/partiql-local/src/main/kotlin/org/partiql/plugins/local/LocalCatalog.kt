@@ -1,3 +1,17 @@
+/*
+ * Copyright Amazon.com, Inc. or its affiliates.  All rights reserved.
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License").
+ *  You may not use this file except in compliance with the License.
+ *  A copy of the License is located at:
+ *
+ *       http://aws.amazon.com/apache2.0/
+ *
+ *  or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
+ *  language governing permissions and limitations under the License.
+ */
+
 package org.partiql.plugins.local
 
 import com.amazon.ionelement.api.loadSingleElement
@@ -20,7 +34,7 @@ private sealed class FsTree(val name: String) {
 /**
  * Build a memoized catalog tree from local schema definitions.
  */
-public class LocalCatalog private constructor(private val root: FsTree.D) {
+internal class LocalCatalog private constructor(private val root: FsTree.D) {
 
     /**
      * Search the tree for the type.
@@ -33,7 +47,7 @@ public class LocalCatalog private constructor(private val root: FsTree.D) {
             when (curr) {
                 is FsTree.T -> break
                 is FsTree.D -> {
-                    curr = curr.children.firstOrNull { step.isEquivalentTo(it.name) }
+                    curr = curr.children.firstOrNull { step.matches(it.name) }
                     if (curr != null) match.add(curr.name)
                 }
             }

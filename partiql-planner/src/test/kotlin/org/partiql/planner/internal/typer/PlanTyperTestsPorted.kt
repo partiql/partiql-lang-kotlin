@@ -25,10 +25,15 @@ import org.partiql.planner.test.PartiQLTest
 import org.partiql.planner.test.PartiQLTestProvider
 import org.partiql.planner.util.ProblemCollector
 import org.partiql.plugins.local.toStaticType
+import org.partiql.plugins.memory.MemoryCatalog
 import org.partiql.plugins.memory.MemoryConnector
+import org.partiql.plugins.memory.MemoryObject
+import org.partiql.spi.BindingCase
+import org.partiql.spi.BindingName
+import org.partiql.spi.BindingPath
 import org.partiql.spi.connector.ConnectorMetadata
+import org.partiql.spi.connector.ConnectorSession
 import org.partiql.types.AnyOfType
-import org.partiql.types.AnyType
 import org.partiql.types.BagType
 import org.partiql.types.ListType
 import org.partiql.types.SexpType
@@ -48,31 +53,32 @@ class PlanTyperTestsPorted {
             val name: String,
             val key: PartiQLTest.Key? = null,
             val query: String? = null,
-            val catalog: String? = null,
+            val catalog: String = "pql",
             val catalogPath: List<String> = emptyList(),
             val expected: StaticType,
             val warnings: ProblemHandler? = null,
         ) : TestCase() {
-            override fun toString(): String = "$name : $query"
+            override fun toString(): String = "$name : ${query ?: key}"
         }
 
         class ErrorTestCase(
             val name: String,
             val key: PartiQLTest.Key? = null,
             val query: String? = null,
-            val catalog: String? = null,
+            val catalog: String = "pql",
             val catalogPath: List<String> = emptyList(),
             val note: String? = null,
             val expected: StaticType? = null,
             val problemHandler: ProblemHandler? = null,
         ) : TestCase() {
-            override fun toString(): String = "$name : $query"
+
+            override fun toString(): String = "$name : ${query ?: key}"
         }
 
         class ThrowingExceptionTestCase(
             val name: String,
             val query: String,
-            val catalog: String? = null,
+            val catalog: String = "pql",
             val catalogPath: List<String> = emptyList(),
             val note: String? = null,
             val expectedThrowable: KClass<out Throwable>,
@@ -95,34 +101,44 @@ class PlanTyperTestsPorted {
             }
         }
 
+        val session = object : ConnectorSession {
+            override fun getQueryId(): String = "query-id"
+            override fun getUserId(): String = "user-id"
+        }
+
         /**
          * MemoryConnector.Factory from reading the resources in /resource_path.txt for Github CI/CD.
          */
         val catalogs: List<Pair<String, ConnectorMetadata>> by lazy {
             val inputStream = this::class.java.getResourceAsStream("/resource_path.txt")!!
-            val map = mutableMapOf<String, MutableList<Pair<String, StaticType>>>()
+            val map = mutableMapOf<String, MutableList<Pair<BindingPath, StaticType>>>()
             inputStream.reader().readLines().forEach { path ->
                 if (path.startsWith("catalogs/default")) {
                     val schema = this::class.java.getResourceAsStream("/$path")!!
                     val ion = loadSingleElement(schema.reader().readText())
                     val staticType = ion.toStaticType()
-                    val steps = path.split('/').drop(2) // drop the catalogs/default
+                    val steps = path.substring(0, path.length - 4).split('/').drop(2) // drop the catalogs/default
                     val catalogName = steps.first()
-                    val subPath = steps
+                    val bindingSteps = steps
                         .drop(1)
-                        .joinToString(".") { it.lowercase() }
-                        .let {
-                            it.substring(0, it.length - 4)
-                        }
+                        .map { BindingName(it, BindingCase.INSENSITIVE) }
+                    val bindingPath = BindingPath(bindingSteps)
                     if (map.containsKey(catalogName)) {
-                        map[catalogName]!!.add(subPath to staticType)
+                        map[catalogName]!!.add(bindingPath to staticType)
                     } else {
-                        map[catalogName] = mutableListOf(subPath to staticType)
+                        map[catalogName] = mutableListOf(bindingPath to staticType)
                     }
                 }
             }
-            map.entries.map {
-                it.key to MemoryConnector.Metadata.of(*it.value.toTypedArray())
+            map.entries.map { (catalogName, bindings) ->
+                val catalog = MemoryCatalog(catalogName)
+                val connector = MemoryConnector(catalog)
+                for (binding in bindings) {
+                    val path = binding.first
+                    val obj = MemoryObject(binding.second)
+                    catalog.insert(path, obj)
+                }
+                catalogName to connector.getMetadata(session)
             }
         }
 
@@ -212,6 +228,8 @@ class PlanTyperTestsPorted {
                     TupleConstraint.Ordered
                 )
             )
+
+        private fun name(symbol: String) = BindingPath(listOf(BindingName(symbol, BindingCase.INSENSITIVE)))
 
         //
         // Parameterized Test Source
@@ -481,6 +499,106 @@ class PlanTyperTestsPorted {
         )
 
         @JvmStatic
+        fun isTypeCases() = listOf(
+            SuccessTestCase(
+                name = "IS BOOL",
+                key = key("is-type-00"),
+                catalog = "pql",
+                catalogPath = listOf("main"),
+                expected = StaticType.BOOL
+            ),
+            SuccessTestCase(
+                name = "IS INT",
+                key = key("is-type-01"),
+                catalog = "pql",
+                catalogPath = listOf("main"),
+                expected = StaticType.BOOL
+            ),
+            SuccessTestCase(
+                name = "IS STRING",
+                key = key("is-type-02"),
+                catalog = "pql",
+                catalogPath = listOf("main"),
+                expected = StaticType.BOOL
+            ),
+            SuccessTestCase(
+                name = "IS NULL",
+                key = key("is-type-03"),
+                catalog = "pql",
+                expected = StaticType.BOOL,
+            ),
+            SuccessTestCase(
+                name = "MISSING IS NULL",
+                key = key("is-type-04"),
+                catalog = "pql",
+                expected = StaticType.BOOL,
+            ),
+            SuccessTestCase(
+                name = "NULL IS NULL",
+                key = key("is-type-05"),
+                catalog = "pql",
+                expected = StaticType.BOOL,
+            ),
+            SuccessTestCase(
+                name = "MISSING IS MISSING",
+                key = key("is-type-06"),
+                catalog = "pql",
+                expected = StaticType.BOOL,
+            ),
+            SuccessTestCase(
+                name = "NULL IS MISSING",
+                key = key("is-type-07"),
+                catalog = "pql",
+                expected = StaticType.BOOL,
+            ),
+            ErrorTestCase(
+                name = "ERROR always MISSING",
+                key = key("is-type-08"),
+                catalog = "pql",
+            ),
+        )
+
+        @JvmStatic
+        fun castCases() = listOf(
+            SuccessTestCase(
+                name = "DECIMAL AS INT2",
+                key = key("cast-00"),
+                catalog = "pql",
+                expected = StaticType.unionOf(StaticType.INT2, StaticType.MISSING),
+            ),
+            SuccessTestCase(
+                name = "DECIMAL AS INT4",
+                key = key("cast-01"),
+                catalog = "pql",
+                expected = StaticType.unionOf(StaticType.INT4, StaticType.MISSING),
+            ),
+            SuccessTestCase(
+                name = "DECIMAL AS INT8",
+                key = key("cast-02"),
+                catalog = "pql",
+                expected = StaticType.unionOf(StaticType.INT8, StaticType.MISSING),
+            ),
+            SuccessTestCase(
+                name = "DECIMAL AS INT",
+                key = key("cast-03"),
+                catalog = "pql",
+                expected = StaticType.unionOf(StaticType.INT, StaticType.MISSING),
+            ),
+            SuccessTestCase(
+                name = "DECIMAL AS BIGINT",
+                key = key("cast-04"),
+                catalog = "pql",
+                expected = StaticType.unionOf(StaticType.INT8, StaticType.MISSING),
+            ),
+            SuccessTestCase(
+                name = "DECIMAL_ARBITRARY AS DECIMAL",
+                key = key("cast-05"),
+                catalog = "pql",
+                expected = StaticType.DECIMAL,
+            ),
+        )
+
+        @JvmStatic
         fun sessionVariables() = listOf(
             SuccessTestCase(
                 name = "Current User",
@@ -628,7 +746,10 @@ class PlanTyperTestsPorted {
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UnknownFunction("bitwise_and", listOf(StaticType.INT4, StaticType.STRING))
+                        PlanningProblemDetails.UnknownFunction(
+                            "bitwise_and",
+                            listOf(StaticType.INT4, StaticType.STRING)
+                        )
                     )
                 }
             ),
@@ -784,7 +905,7 @@ class PlanTyperTestsPorted {
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UndefinedVariable("a", false)
+                        PlanningProblemDetails.UndefinedVariable(name("a"))
                     )
                 }
             ),
@@ -2001,7 +2122,7 @@ class PlanTyperTestsPorted {
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UndefinedVariable("unknown_col", false)
+                        PlanningProblemDetails.UndefinedVariable(name("unknown_col"))
                     )
                 }
             ),
@@ -2521,7 +2642,7 @@ class PlanTyperTestsPorted {
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UndefinedVariable("main", true)
+                        PlanningProblemDetails.UndefinedVariable(name("main"))
                     )
                 }
             ),
@@ -2534,7 +2655,7 @@ class PlanTyperTestsPorted {
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UndefinedVariable("pql", true)
+                        PlanningProblemDetails.UndefinedVariable(name("pql"))
                     )
                 }
             ),
@@ -3069,6 +3190,16 @@ class PlanTyperTestsPorted {
     @Execution(ExecutionMode.CONCURRENT)
     fun testPivot(tc: TestCase) = runTest(tc)
 
+    @ParameterizedTest
+    @MethodSource("isTypeCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun testIsType(tc: TestCase) = runTest(tc)
+
+    @ParameterizedTest
+    @MethodSource("castCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun testCasts(tc: TestCase) = runTest(tc)
+
     // --------- Finish Parameterized Tests ------
 
     //
@@ -3077,7 +3208,7 @@ class PlanTyperTestsPorted {
     private fun infer(
         query: String,
         session: PartiQLPlanner.Session,
-        problemCollector: ProblemCollector
+        problemCollector: ProblemCollector,
     ): PartiQLPlan {
         val ast = parser.parse(query).root
         return planner.plan(ast, session, problemCollector).plan
@@ -3113,7 +3244,7 @@ class PlanTyperTestsPorted {
                     buildString {
                         appendLine(collector.problems.toString())
                         appendLine()
-                        PlanPrinter.append(this, statement)
+                        PlanPrinter.append(this, plan)
                     }
                 }
                 val actual = statement.root.type
@@ -3123,7 +3254,7 @@ class PlanTyperTestsPorted {
                         appendLine("Expect: ${tc.expected}")
                         appendLine("Actual: $actual")
                         appendLine()
-                        PlanPrinter.append(this, statement)
+                        PlanPrinter.append(this, plan)
                     }
                 }
             }
@@ -3207,31 +3338,20 @@ class PlanTyperTestsPorted {
                 name = "Pets should not be accessible #1",
                 query = "SELECT * FROM pets",
                 expected = BagType(
-                    StaticType.unionOf(
-                        StructType(
-                            fields = emptyMap(),
-                            contentClosed = false,
-                            constraints = setOf(
-                                TupleConstraint.Open(true),
-                                TupleConstraint.UniqueAttrs(false),
-                            )
-                        ),
-                        StructType(
-                            fields = mapOf(
-                                "_1" to StaticType.ANY
-                            ),
-                            contentClosed = true,
-                            constraints = setOf(
-                                TupleConstraint.Open(false),
-                                TupleConstraint.UniqueAttrs(true),
-                            )
-                        ),
-                    )
+                    StructType(
+                        fields = emptyMap(),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered,
+                        )
+                    ),
                 ),
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UndefinedVariable("pets", false)
+                        PlanningProblemDetails.UndefinedVariable(name("pets"))
                     )
                 }
             ),
@@ -3240,31 +3360,20 @@ class PlanTyperTestsPorted {
                 catalog = CATALOG_AWS,
                 query = "SELECT * FROM pets",
                 expected = BagType(
-                    StaticType.unionOf(
-                        StructType(
-                            fields = emptyMap(),
-                            contentClosed = false,
-                            constraints = setOf(
-                                TupleConstraint.Open(true),
-                                TupleConstraint.UniqueAttrs(false),
-                            )
-                        ),
-                        StructType(
-                            fields = mapOf(
-                                "_1" to StaticType.ANY
-                            ),
-                            contentClosed = true,
-                            constraints = setOf(
-                                TupleConstraint.Open(false),
-                                TupleConstraint.UniqueAttrs(true),
-                            )
-                        ),
-                    )
+                    StructType(
+                        fields = emptyMap(),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered,
+                        )
+                    ),
                 ),
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UndefinedVariable("pets", false)
+                        PlanningProblemDetails.UndefinedVariable(name("pets"))
                     )
                 }
             ),
@@ -3307,31 +3416,27 @@ class PlanTyperTestsPorted {
                 name = "Test #7",
                 query = "SELECT * FROM ddb.pets",
                 expected = BagType(
-                    StaticType.unionOf(
-                        StructType(
-                            fields = emptyMap(),
-                            contentClosed = false,
-                            constraints = setOf(
-                                TupleConstraint.Open(true),
-                                TupleConstraint.UniqueAttrs(false),
-                            )
-                        ),
-                        StructType(
-                            fields = mapOf(
-                                "_1" to StaticType.ANY
-                            ),
-                            contentClosed = true,
-                            constraints = setOf(
-                                TupleConstraint.Open(false),
-                                TupleConstraint.UniqueAttrs(true),
-                            )
-                        ),
-                    )
+                    StructType(
+                        fields = emptyList(),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered,
+                        )
+                    ),
                 ),
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UndefinedVariable("pets", false)
+                        PlanningProblemDetails.UndefinedVariable(
+                            BindingPath(
+                                steps = listOf(
+                                    BindingName("ddb", BindingCase.INSENSITIVE),
+                                    BindingName("pets", BindingCase.INSENSITIVE),
+                                )
+                            )
+                        )
                     )
                 }
             ),
@@ -3346,14 +3451,14 @@ class PlanTyperTestsPorted {
                 catalog = CATALOG_B,
                 catalogPath = listOf("b"),
                 query = "b.b",
-                expected = TYPE_B_B_B
+                expected = TYPE_B_B_B_B
             ),
             TestCase.SuccessTestCase(
                 name = "Test #12",
                 catalog = CATALOG_AWS,
                 catalogPath = listOf("ddb"),
-                query = "SELECT * FROM b.b",
-                expected = TABLE_AWS_B_B
+                query = "SELECT * FROM b",
+                expected = TABLE_AWS_DDB_B
             ),
             TestCase.SuccessTestCase(
                 name = "Test #13",
@@ -3377,7 +3482,7 @@ class PlanTyperTestsPorted {
                 name = "Test #16",
                 catalog = CATALOG_B,
                 query = "b.b.b",
-                expected = TYPE_B_B_B
+                expected = TYPE_B_B_B_B
             ),
             TestCase.SuccessTestCase(
                 name = "Test #17",
@@ -3390,7 +3495,7 @@ class PlanTyperTestsPorted {
                 catalog = CATALOG_B,
                 catalogPath = listOf("b"),
                 query = "b.b.b",
-                expected = TYPE_B_B_B
+                expected = TYPE_B_B_B_B_B
             ),
             TestCase.SuccessTestCase(
                 name = "Test #19",
@@ -3406,20 +3511,20 @@ class PlanTyperTestsPorted {
                 name = "Test #21",
                 catalog = CATALOG_B,
                 query = "b.b.b.b",
-                expected = TYPE_B_B_B_B
+                expected = TYPE_B_B_B_B_B
             ),
             SuccessTestCase(
                 name = "Test #22",
                 catalog = CATALOG_B,
-                query = "b.b.b.c",
-                expected = TYPE_B_B_C
+                query = "b.b.c",
+                expected = TYPE_B_B_B_C
             ),
             SuccessTestCase(
                 name = "Test #23",
                 catalog = CATALOG_B,
                 catalogPath = listOf("b"),
-                query = "b.b.b.b",
-                expected = TYPE_B_B_B_B
+                query = "b.b.b",
+                expected = TYPE_B_B_B_B_B
             ),
             SuccessTestCase(
                 name = "Test #24",
@@ -3427,9 +3532,9 @@ class PlanTyperTestsPorted {
                 expected = TYPE_B_B_B_B_B
             ),
             SuccessTestCase(
-                name = "Test #24",
+                name = "Test #25",
                 catalog = CATALOG_B,
-                query = "b.b.b.b.b",
+                query = "b.b.b.b",
                 expected = TYPE_B_B_B_B_B
             ),
             SuccessTestCase(
@@ -3560,7 +3665,7 @@ class PlanTyperTestsPorted {
                 catalog = CATALOG_DB,
                 catalogPath = DB_SCHEMA_MARKETS,
                 query = "order_info.\"CUSTOMER_ID\" = 1",
-                expected = StaticType.NULL
+                expected = StaticType.MISSING
             ),
             SuccessTestCase(
                 name = "Case Sensitive success",
@@ -3597,11 +3702,11 @@ class PlanTyperTestsPorted {
                 query = "non_existing_column = 1",
                 // Function resolves to EQ__ANY_ANY__BOOL
                 // Which can return BOOL Or NULL
-                expected = StaticType.unionOf(StaticType.BOOL, StaticType.NULL),
+                expected = StaticType.MISSING,
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UndefinedVariable("non_existing_column", false)
+                        PlanningProblemDetails.UndefinedVariable(name("non_existing_column"))
                     )
                 }
             ),
@@ -3644,7 +3749,7 @@ class PlanTyperTestsPorted {
                 query = "SELECT unknown_col FROM orders WHERE customer_id = 1",
                 expected = BagType(
                     StructType(
-                        fields = mapOf("unknown_col" to AnyType()),
+                        fields = emptyList(),
                         contentClosed = true,
                         constraints = setOf(
                             TupleConstraint.Open(false),
@@ -3656,7 +3761,7 @@ class PlanTyperTestsPorted {
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UndefinedVariable("unknown_col", false)
+                        PlanningProblemDetails.UndefinedVariable(name("unknown_col"))
                     )
                 }
             ),
