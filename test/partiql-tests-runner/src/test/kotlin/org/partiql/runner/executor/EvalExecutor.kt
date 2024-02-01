@@ -2,6 +2,7 @@ package org.partiql.runner.executor
 
 import com.amazon.ion.IonStruct
 import com.amazon.ion.IonValue
+import com.amazon.ionelement.api.AnyElement
 import com.amazon.ionelement.api.ElementType
 import com.amazon.ionelement.api.IonElement
 import com.amazon.ionelement.api.StructElement
@@ -150,7 +151,7 @@ class EvalExecutor(
             val map = mutableMapOf<String, StaticType>()
 
             env.fields.forEach {
-                map[it.name] = inferEnv(env)
+                map[it.name] = inferEnv(it.value)
             }
             val metadata = MemoryConnector.Metadata(map)
             val globals = load(metadata, env)
@@ -158,7 +159,7 @@ class EvalExecutor(
             return MemoryConnector(metadata, bindings)
         }
 
-        private fun inferEnv(env: StructElement): StaticType {
+        private fun inferEnv(env: AnyElement): StaticType {
             val connector = MemoryConnector(MemoryConnector.Metadata(emptyMap()), MemoryBindings(emptyMap()))
             val session = PartiQLPlanner.Session(
                 queryId = "query",
