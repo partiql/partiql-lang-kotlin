@@ -18,7 +18,7 @@ internal object Fn_IS_ANY__ANY__BOOL : Fn {
     override val signature = FnSignature(
         name = "is_any",
         returns = BOOL,
-        parameters = listOf(FnParameter("value", ANY),),
+        parameters = listOf(FnParameter("value", ANY)),
         isNullCall = false,
         isNullable = false,
     )

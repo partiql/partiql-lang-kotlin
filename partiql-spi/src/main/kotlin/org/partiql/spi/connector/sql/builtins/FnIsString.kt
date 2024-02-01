@@ -3,15 +3,20 @@
 
 package org.partiql.spi.connector.sql.builtins
 
+import org.partiql.errors.TypeCheckException
 import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
+import org.partiql.value.Int32Value
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType.ANY
 import org.partiql.value.PartiQLValueType.BOOL
 import org.partiql.value.PartiQLValueType.INT32
+import org.partiql.value.StringValue
+import org.partiql.value.boolValue
+import org.partiql.value.check
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_IS_STRING__ANY__BOOL : Fn {
@@ -19,13 +24,13 @@ internal object Fn_IS_STRING__ANY__BOOL : Fn {
     override val signature = FnSignature(
         name = "is_string",
         returns = BOOL,
-        parameters = listOf(FnParameter("value", ANY),),
+        parameters = listOf(FnParameter("value", ANY)),
         isNullCall = false,
         isNullable = false,
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function is_string not implemented")
+        return boolValue(args[0] is StringValue)
     }
 }
 
@@ -44,6 +49,14 @@ internal object Fn_IS_STRING__INT32_ANY__BOOL : Fn {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function is_string not implemented")
+        val v = args[1]
+        if (v !is StringValue) {
+            return boolValue(false)
+        }
+        val length = args[0].check<Int32Value>().int
+        if (length == null || length < 0) {
+            throw TypeCheckException()
+        }
+        return boolValue(v.value!!.length <= length)
     }
 }

@@ -12,6 +12,8 @@ import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType.ANY
 import org.partiql.value.PartiQLValueType.BOOL
 import org.partiql.value.PartiQLValueType.INT32
+import org.partiql.value.TimestampValue
+import org.partiql.value.boolValue
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_IS_TIMESTAMP__ANY__BOOL : Fn {
@@ -19,13 +21,13 @@ internal object Fn_IS_TIMESTAMP__ANY__BOOL : Fn {
     override val signature = FnSignature(
         name = "is_timestamp",
         returns = BOOL,
-        parameters = listOf(FnParameter("value", ANY),),
+        parameters = listOf(FnParameter("value", ANY)),
         isNullCall = false,
         isNullable = false,
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function is_timestamp not implemented")
+        return boolValue(args[0] is TimestampValue)
     }
 }
 

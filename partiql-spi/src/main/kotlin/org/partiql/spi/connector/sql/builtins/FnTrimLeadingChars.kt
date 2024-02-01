@@ -7,11 +7,18 @@ import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
+import org.partiql.value.ClobValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType.CLOB
 import org.partiql.value.PartiQLValueType.STRING
 import org.partiql.value.PartiQLValueType.SYMBOL
+import org.partiql.value.StringValue
+import org.partiql.value.SymbolValue
+import org.partiql.value.check
+import org.partiql.value.clobValue
+import org.partiql.value.stringValue
+import org.partiql.value.symbolValue
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_TRIM_LEADING_CHARS__STRING_STRING__STRING : Fn {
@@ -28,7 +35,10 @@ internal object Fn_TRIM_LEADING_CHARS__STRING_STRING__STRING : Fn {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function trim_leading_chars not implemented")
+        val value = args[0].check<StringValue>().string!!
+        val chars = args[1].check<StringValue>().string!!
+        val result = value.codepointTrimLeading(chars)
+        return stringValue(result)
     }
 }
 
@@ -47,7 +57,10 @@ internal object Fn_TRIM_LEADING_CHARS__SYMBOL_SYMBOL__SYMBOL : Fn {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function trim_leading_chars not implemented")
+        val value = args[0].check<SymbolValue>().string!!
+        val chars = args[1].check<SymbolValue>().string!!
+        val result = value.codepointTrimLeading(chars)
+        return symbolValue(result)
     }
 }
 
@@ -66,6 +79,9 @@ internal object Fn_TRIM_LEADING_CHARS__CLOB_CLOB__CLOB : Fn {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function trim_leading_chars not implemented")
+        val value = args[0].check<ClobValue>().string!!
+        val chars = args[1].check<ClobValue>().string!!
+        val result = value.codepointTrimLeading(chars)
+        return clobValue(result.toByteArray())
     }
 }

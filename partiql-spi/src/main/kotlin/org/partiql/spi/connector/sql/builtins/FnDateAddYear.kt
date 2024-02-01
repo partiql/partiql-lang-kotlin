@@ -7,14 +7,21 @@ import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
+import org.partiql.value.DateValue
+import org.partiql.value.Int32Value
+import org.partiql.value.Int64Value
+import org.partiql.value.IntValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType.DATE
 import org.partiql.value.PartiQLValueType.INT
 import org.partiql.value.PartiQLValueType.INT32
 import org.partiql.value.PartiQLValueType.INT64
-import org.partiql.value.PartiQLValueType.TIME
 import org.partiql.value.PartiQLValueType.TIMESTAMP
+import org.partiql.value.TimestampValue
+import org.partiql.value.check
+import org.partiql.value.dateValue
+import org.partiql.value.timestampValue
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_DATE_ADD_YEAR__INT32_DATE__DATE : Fn {
@@ -31,7 +38,11 @@ internal object Fn_DATE_ADD_YEAR__INT32_DATE__DATE : Fn {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function date_add_year not implemented")
+        val interval = args[0].check<Int32Value>()
+        val datetime = args[1].check<DateValue>()
+        val datetimeValue = datetime.value!!
+        val intervalValue = interval.long!!
+        return dateValue(datetimeValue.plusYears(intervalValue))
     }
 }
 
@@ -50,7 +61,11 @@ internal object Fn_DATE_ADD_YEAR__INT64_DATE__DATE : Fn {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function date_add_year not implemented")
+        val interval = args[0].check<Int64Value>()
+        val datetime = args[1].check<DateValue>()
+        val datetimeValue = datetime.value!!
+        val intervalValue = interval.long!!
+        return dateValue(datetimeValue.plusYears(intervalValue))
     }
 }
 
@@ -69,64 +84,12 @@ internal object Fn_DATE_ADD_YEAR__INT_DATE__DATE : Fn {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function date_add_year not implemented")
-    }
-}
-
-@OptIn(PartiQLValueExperimental::class, FnExperimental::class)
-internal object Fn_DATE_ADD_YEAR__INT32_TIME__TIME : Fn {
-
-    override val signature = FnSignature(
-        name = "date_add_year",
-        returns = TIME,
-        parameters = listOf(
-            FnParameter("interval", INT32),
-            FnParameter("datetime", TIME),
-        ),
-        isNullCall = true,
-        isNullable = false,
-    )
-
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function date_add_year not implemented")
-    }
-}
-
-@OptIn(PartiQLValueExperimental::class, FnExperimental::class)
-internal object Fn_DATE_ADD_YEAR__INT64_TIME__TIME : Fn {
-
-    override val signature = FnSignature(
-        name = "date_add_year",
-        returns = TIME,
-        parameters = listOf(
-            FnParameter("interval", INT64),
-            FnParameter("datetime", TIME),
-        ),
-        isNullCall = true,
-        isNullable = false,
-    )
-
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function date_add_year not implemented")
-    }
-}
-
-@OptIn(PartiQLValueExperimental::class, FnExperimental::class)
-internal object Fn_DATE_ADD_YEAR__INT_TIME__TIME : Fn {
-
-    override val signature = FnSignature(
-        name = "date_add_year",
-        returns = TIME,
-        parameters = listOf(
-            FnParameter("interval", INT),
-            FnParameter("datetime", TIME),
-        ),
-        isNullCall = true,
-        isNullable = false,
-    )
-
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function date_add_year not implemented")
+        val interval = args[0].check<IntValue>()
+        val datetime = args[1].check<DateValue>()
+        val datetimeValue = datetime.value!!
+        // TODO: We need to consider overflow here
+        val intervalValue = interval.long!!
+        return dateValue(datetimeValue.plusYears(intervalValue))
     }
 }
 
@@ -145,7 +108,11 @@ internal object Fn_DATE_ADD_YEAR__INT32_TIMESTAMP__TIMESTAMP : Fn {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function date_add_year not implemented")
+        val interval = args[0].check<Int32Value>()
+        val datetime = args[1].check<TimestampValue>()
+        val datetimeValue = datetime.value!!
+        val intervalValue = interval.long!!
+        return timestampValue(datetimeValue.plusYears(intervalValue))
     }
 }
 
@@ -164,7 +131,11 @@ internal object Fn_DATE_ADD_YEAR__INT64_TIMESTAMP__TIMESTAMP : Fn {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function date_add_year not implemented")
+        val interval = args[0].check<Int64Value>()
+        val datetime = args[1].check<TimestampValue>()
+        val datetimeValue = datetime.value!!
+        val intervalValue = interval.long!!
+        return timestampValue(datetimeValue.plusYears(intervalValue))
     }
 }
 
@@ -183,6 +154,11 @@ internal object Fn_DATE_ADD_YEAR__INT_TIMESTAMP__TIMESTAMP : Fn {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        TODO("Function date_add_year not implemented")
+        val interval = args[0].check<IntValue>()
+        val datetime = args[1].check<TimestampValue>()
+        val datetimeValue = datetime.value!!
+        // TODO: We need to consider overflow here
+        val intervalValue = interval.long!!
+        return timestampValue(datetimeValue.plusYears(intervalValue))
     }
 }
