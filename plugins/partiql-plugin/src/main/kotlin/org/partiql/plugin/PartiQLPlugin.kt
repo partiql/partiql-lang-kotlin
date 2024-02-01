@@ -25,6 +25,14 @@ object PartiQLPlugin : Plugin {
 
     @PartiQLFunctionExperimental
     internal val scalars = listOf(
+        Fn_ABS__INT8__INT8,
+        Fn_ABS__INT16__INT16,
+        Fn_ABS__INT32__INT32,
+        Fn_ABS__INT64__INT64,
+        Fn_ABS__INT__INT,
+        Fn_ABS__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY,
+        Fn_ABS__FLOAT32__FLOAT32,
+        Fn_ABS__FLOAT64__FLOAT64,
         Fn_UPPER__STRING__STRING,
         Fn_UPPER__SYMBOL__SYMBOL,
         Fn_UPPER__CLOB__CLOB,
