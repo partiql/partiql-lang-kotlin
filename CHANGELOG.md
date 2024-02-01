@@ -34,6 +34,7 @@ Thank you to all who have contributed!
 ### Deprecated
 
 ### Fixed
+- Return type of `partiql-ast`'s `SqlDialect` for `defaultReturn` to be a `SqlBlock` rather than `Nothing`
 
 ### Removed
 
@@ -41,7 +42,7 @@ Thank you to all who have contributed!
 
 ### Contributors
 Thank you to all who have contributed!
-- @<your-username>
+- @alancai98
 
 ## [0.14.2] - 2024-01-25
 
