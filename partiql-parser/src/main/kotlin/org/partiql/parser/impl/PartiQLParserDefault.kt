@@ -1730,9 +1730,14 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitFunctionCallReserved(ctx: GeneratedParser.FunctionCallReservedContext) = translate(ctx) {
-            val function = ctx.name.text.toIdentifier()
+            val name = ctx.name
             val args = visitOrEmpty<Expr>(ctx.expr())
-            exprCall(function, args)
+//            exprCall(name, args)
+            when (name.type) {
+                GeneratedParser.CHAR_LENGTH, GeneratedParser.CHARACTER_LENGTH -> exprCall("char_length".toIdentifier(), args)
+                GeneratedParser.MOD -> exprBinary(Expr.Binary.Op.MODULO, args[0], args[1])
+                else -> exprCall(name.text.toIdentifier(), args)
+            }
         }
 
         /**

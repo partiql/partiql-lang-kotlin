@@ -711,7 +711,8 @@ dateFunction
 
 functionCall
     : name=( CHAR_LENGTH | CHARACTER_LENGTH | OCTET_LENGTH |
-        BIT_LENGTH | UPPER | LOWER | SIZE | EXISTS | COUNT )
+        BIT_LENGTH | UPPER | LOWER | SIZE | EXISTS | COUNT |
+        MOD )
         PAREN_LEFT ( expr ( COMMA expr )* )? PAREN_RIGHT                         # FunctionCallReserved
     | name=symbolPrimitive PAREN_LEFT ( expr ( COMMA expr )* )? PAREN_RIGHT      # FunctionCallIdent
     ;

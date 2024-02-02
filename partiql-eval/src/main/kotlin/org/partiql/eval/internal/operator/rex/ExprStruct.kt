@@ -5,7 +5,7 @@ import org.partiql.eval.internal.operator.Operator
 import org.partiql.value.MissingValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.StringValue
+import org.partiql.value.TextValue
 import org.partiql.value.check
 import org.partiql.value.structValue
 
@@ -13,7 +13,7 @@ internal class ExprStruct(val fields: List<Field>) : Operator.Expr {
     @OptIn(PartiQLValueExperimental::class)
     override fun eval(record: Record): PartiQLValue {
         val fields = fields.mapNotNull {
-            val key = it.key.eval(record).check<StringValue>()
+            val key = it.key.eval(record).check<TextValue<String>>()
             when (val value = it.value.eval(record)) {
                 is MissingValue -> null
                 else -> key.value!! to value
