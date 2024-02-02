@@ -17,6 +17,7 @@ package org.partiql.plugins.memory
 
 import com.amazon.ionelement.api.StructElement
 import org.partiql.spi.connector.Connector
+import org.partiql.spi.connector.ConnectorBindings
 import org.partiql.spi.connector.ConnectorSession
 import org.partiql.spi.connector.sql.SqlConnector
 import org.partiql.spi.connector.sql.SqlMetadata
@@ -25,6 +26,10 @@ import org.partiql.spi.connector.sql.SqlMetadata
  * This is a plugin used for testing and is not a versioned API per semver.
  */
 public class MemoryConnector(private val catalog: MemoryCatalog) : SqlConnector() {
+
+    private val bindings = MemoryBindings(catalog)
+
+    override fun getBindings(): ConnectorBindings = bindings
 
     override fun getMetadata(session: ConnectorSession): SqlMetadata = MemoryMetadata(catalog, session, info)
 

@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
+import org.partiql.spi.connector.ConnectorPath
 import org.partiql.types.BagType
 import org.partiql.types.StaticType
 import org.partiql.types.StructType
@@ -67,7 +68,7 @@ class MemoryCatalogTest {
         )
         val handle = catalog.find(requested)
         val descriptor = handle!!.entity.getType()
-        val expectConnectorPath = listOf("struct")
+        val expectConnectorPath = ConnectorPath.of("struct")
         val expectedObjectType = StructType(fields = listOf(StructType.Field("a", StaticType.INT2)))
 
         assert(expectConnectorPath == handle.path)
@@ -102,7 +103,7 @@ class MemoryCatalogTest {
         val handle = catalog.find(requested)
         val descriptor = handle!!.entity.getType()
         val expectedObjectType = BagType(StructType(fields = listOf(StructType.Field("a", StaticType.INT2))))
-        val expectConnectorPath = listOf("schema", "tbl")
+        val expectConnectorPath = ConnectorPath.of("schema", "tbl")
 
         assert(expectConnectorPath == handle.path)
         assert(expectedObjectType == descriptor)

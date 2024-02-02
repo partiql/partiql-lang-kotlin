@@ -3,8 +3,9 @@ package org.partiql.eval.internal.operator.rex
 import org.partiql.errors.TypeCheckException
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
-import org.partiql.spi.function.PartiQLFunction
-import org.partiql.spi.function.PartiQLFunctionExperimental
+import org.partiql.plan.Ref
+import org.partiql.spi.fn.Fn
+import org.partiql.spi.fn.FnExperimental
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
@@ -17,12 +18,12 @@ import org.partiql.value.PartiQLValueType
  * [ExprCallStatic]'s. By doing this, this implementation can evaluate ([eval]) the input [Record], execute and gather the
  * arguments, and pass the [PartiQLValue]s directly to the [Candidate.eval].
  */
+@OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal class ExprCallDynamic(
     private val candidates: List<Candidate>,
     private val args: Array<Operator.Expr>
 ) : Operator.Expr {
 
-    @OptIn(PartiQLValueExperimental::class)
     override fun eval(record: Record): PartiQLValue {
         val actualArgs = args.map { it.eval(record) }.toTypedArray()
         candidates.forEach { candidate ->
@@ -41,21 +42,22 @@ internal class ExprCallDynamic(
      *
      * @see ExprCallDynamic
      */
-    internal class Candidate @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class) constructor(
+    internal class Candidate(
+        val fn: Fn,
         val types: Array<PartiQLValueType>,
-        val fn: PartiQLFunction.Scalar,
-        val coercions: List<PartiQLFunction.Scalar?>
+        val coercions: Array<Ref.Cast?>
     ) {
 
-        @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
         fun eval(originalArgs: Array<PartiQLValue>): PartiQLValue {
             val args = coercions.mapIndexed { index, coercion ->
-                coercion?.invoke(arrayOf(originalArgs[index])) ?: originalArgs[index]
+                coercion?.let {
+                    val arg = originalArgs[index]
+                    ExprCast(ExprLiteral(arg), it).eval(Record(emptyArray()))
+                } ?: originalArgs[index]
             }.toTypedArray()
             return fn.invoke(args)
         }
 
-        @OptIn(PartiQLValueExperimental::class)
         internal fun matches(args: Array<PartiQLValue>): Boolean {
             for (i in args.indices) {
                 if (types[i] == PartiQLValueType.ANY) {

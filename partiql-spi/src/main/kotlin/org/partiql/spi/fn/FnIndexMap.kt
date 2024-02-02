@@ -1,5 +1,7 @@
 package org.partiql.spi.fn
 
+import org.partiql.spi.connector.ConnectorPath
+
 /**
  * An implementation of [FnIndex] which uses the normalized paths as map keys.
  *
@@ -14,8 +16,8 @@ internal class FnIndexMap(private val map: Map<String, Map<String, Fn>>) : FnInd
         return variants.values.toList()
     }
 
-    override fun get(path: List<String>, specific: String): Fn? {
-        val key = path.joinToString(".")
+    override fun get(path: ConnectorPath, specific: String): Fn? {
+        val key = path.steps.joinToString(".")
         val variants = map[key] ?: emptyMap()
         return variants[specific]
     }

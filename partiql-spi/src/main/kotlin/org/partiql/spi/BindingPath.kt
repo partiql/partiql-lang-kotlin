@@ -14,6 +14,8 @@
 
 package org.partiql.spi
 
+import org.partiql.spi.connector.ConnectorPath
+
 /**
  * A [BindingPath] represents an SQL-qualified identifier which is composed of case-sensitive and case-insensitive steps.
  *
@@ -47,12 +49,12 @@ public class BindingPath(public val steps: List<BindingName>) {
 
     override fun toString(): String = key
 
-    public fun matches(path: List<String>): Boolean {
-        if (path.size != steps.size) {
+    public fun matches(path: ConnectorPath): Boolean {
+        if (path.steps.size != steps.size) {
             return false
         }
-        for (i in path.indices) {
-            val t = path[i]
+        for (i in path.steps.indices) {
+            val t = path.steps[i]
             val s = steps[i]
             if (!s.matches(t)) {
                 return false

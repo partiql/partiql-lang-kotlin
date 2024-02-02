@@ -1,5 +1,7 @@
 package org.partiql.spi.fn
 
+import org.partiql.spi.connector.ConnectorPath
+
 /**
  * Utility class for an optimized function lookup data structure. Right now this is read only.
  */
@@ -20,7 +22,7 @@ public interface FnIndex {
      * @param specific
      * @return
      */
-    public fun get(path: List<String>, specific: String): Fn?
+    public fun get(path: ConnectorPath, specific: String): Fn?
 
     public class Builder {
 

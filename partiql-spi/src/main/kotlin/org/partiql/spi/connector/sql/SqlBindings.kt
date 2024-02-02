@@ -15,7 +15,7 @@
 package org.partiql.spi.connector.sql
 
 import org.partiql.spi.connector.ConnectorBindings
-import org.partiql.spi.connector.ConnectorHandle
+import org.partiql.spi.connector.ConnectorPath
 import org.partiql.spi.connector.sql.info.InfoSchema
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
@@ -26,7 +26,7 @@ import org.partiql.value.PartiQLValueExperimental
 public class SqlBindings(private val info: InfoSchema) : ConnectorBindings {
 
     @OptIn(PartiQLValueExperimental::class)
-    public override fun getValue(handle: ConnectorHandle.Obj): PartiQLValue {
+    public override fun getValue(path: ConnectorPath): PartiQLValue {
         TODO("Not yet implemented")
     }
 }

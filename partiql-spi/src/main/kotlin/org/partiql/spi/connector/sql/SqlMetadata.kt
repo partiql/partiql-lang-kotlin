@@ -17,6 +17,7 @@ package org.partiql.spi.connector.sql
 import org.partiql.spi.BindingPath
 import org.partiql.spi.connector.ConnectorHandle
 import org.partiql.spi.connector.ConnectorMetadata
+import org.partiql.spi.connector.ConnectorPath
 import org.partiql.spi.connector.ConnectorSession
 import org.partiql.spi.connector.sql.info.InfoSchema
 import org.partiql.spi.fn.FnExperimental
@@ -48,6 +49,6 @@ public open class SqlMetadata(
         if (variants.isEmpty()) {
             return null
         }
-        return ConnectorHandle.Fn(cnf, SqlFn(name, variants))
+        return ConnectorHandle.Fn(ConnectorPath(cnf), SqlFn(name, variants))
     }
 }

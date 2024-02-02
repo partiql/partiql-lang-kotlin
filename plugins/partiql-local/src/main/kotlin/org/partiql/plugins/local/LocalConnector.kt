@@ -21,6 +21,7 @@ import org.partiql.spi.connector.ConnectorBindings
 import org.partiql.spi.connector.ConnectorFnProvider
 import org.partiql.spi.connector.ConnectorHandle
 import org.partiql.spi.connector.ConnectorMetadata
+import org.partiql.spi.connector.ConnectorPath
 import org.partiql.spi.connector.ConnectorSession
 import org.partiql.spi.fn.FnExperimental
 import java.nio.file.Path
@@ -102,7 +103,7 @@ public class LocalConnector(
         override fun getObject(path: BindingPath): ConnectorHandle.Obj? {
             val value = catalog.lookup(path) ?: return null
             return ConnectorHandle.Obj(
-                path = value.path,
+                path = ConnectorPath(value.path),
                 entity = value,
             )
         }

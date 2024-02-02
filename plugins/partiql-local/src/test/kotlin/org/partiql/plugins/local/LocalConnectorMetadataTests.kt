@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
+import org.partiql.spi.connector.ConnectorPath
 import org.partiql.types.BagType
 import org.partiql.types.IntType
 import org.partiql.types.StaticType
@@ -63,7 +64,7 @@ class LocalConnectorMetadataTests {
                 BindingName("nested", BindingCase.INSENSITIVE),
             )
         )
-        val expectedPath = listOf("data", "struct")
+        val expectedPath = ConnectorPath.of("data", "struct")
         val expected =
             StructType(
                 contentClosed = true,

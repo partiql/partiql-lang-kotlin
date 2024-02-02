@@ -18,6 +18,7 @@ package org.partiql.plugins.memory
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
 import org.partiql.spi.connector.ConnectorHandle
+import org.partiql.spi.connector.ConnectorPath
 
 /**
  * A basic catalog implementation used in testing.
@@ -48,7 +49,7 @@ public class MemoryCatalog(public val name: String) {
         curr.insert(
             binding.name,
             ConnectorHandle.Obj(
-                path = path.steps.map { it.name },
+                path = ConnectorPath(path.steps.map { it.name }),
                 entity = obj,
             )
         )
@@ -85,6 +86,29 @@ public class MemoryCatalog(public val name: String) {
             1 -> currItems.first().obj
             else -> error("Ambiguous binding $path, found multiple matching bindings")
         }
+    }
+
+    /**
+     * Gets a [MemoryObject] in the catalog, returning `null` if it does not exist.
+     *
+     * @param path
+     * @return
+     */
+    public fun get(path: ConnectorPath): MemoryObject? {
+        var curr: Tree.Dir = root
+        for (i in path.steps.indices) {
+            val next = curr.get(path.steps[i]) ?: break
+            when (next) {
+                is Tree.Dir -> curr = next
+                is Tree.Item -> {
+                    if (i == path.steps.size - 1) {
+                        return next.obj.entity as? MemoryObject
+                    }
+                    break
+                }
+            }
+        }
+        return null
     }
 
     public companion object {
@@ -163,6 +187,14 @@ public class MemoryCatalog(public val name: String) {
              * @return
              */
             fun find(name: BindingName): List<Tree> = ls().filter { name.matches(it.name) }
+
+            /**
+             * Get all directory entries by name.
+             *
+             * @param name
+             * @return
+             */
+            fun get(name: String): Tree? = children[name]
         }
 
         /**

@@ -23,5 +23,5 @@ import org.partiql.spi.fn.FnExperimental
 @FnExperimental
 public interface ConnectorFnProvider {
 
-    public fun getFn(handle: ConnectorHandle.Fn, specific: String): Fn?
+    public fun getFn(path: ConnectorPath, specific: String): Fn?
 }

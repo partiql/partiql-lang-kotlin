@@ -73,7 +73,7 @@ internal class Env(private val session: PartiQLPlanner.Session) {
         // Create an internal typed reference
         val ref = refObj(
             catalog = item.catalog,
-            path = item.handle.path,
+            path = item.handle.path.steps,
             type = item.handle.entity.getType(),
         )
         // Rewrite as a path expression.
@@ -100,7 +100,7 @@ internal class Env(private val session: PartiQLPlanner.Session) {
                     rexOpCallDynamicCandidate(
                         fn = refFn(
                             catalog = item.catalog,
-                            path = item.handle.path,
+                            path = item.handle.path.steps,
                             signature = it.signature,
                         ),
                         coercions = it.mapping.toList(),
@@ -113,7 +113,7 @@ internal class Env(private val session: PartiQLPlanner.Session) {
                 // Create an internal typed reference
                 val ref = refFn(
                     catalog = item.catalog,
-                    path = item.handle.path,
+                    path = item.handle.path.steps,
                     signature = match.signature,
                 )
                 // Apply the coercions as explicit casts

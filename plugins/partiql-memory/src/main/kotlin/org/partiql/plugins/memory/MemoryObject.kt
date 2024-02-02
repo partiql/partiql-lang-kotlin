@@ -17,15 +17,16 @@ package org.partiql.plugins.memory
 
 import org.partiql.spi.connector.ConnectorObject
 import org.partiql.types.StaticType
+import org.partiql.value.PartiQLValue
+import org.partiql.value.PartiQLValueExperimental
 
-// import org.partiql.value.PartiQLValue
-// import org.partiql.value.PartiQLValueExperimental
-
-// @OptIn(PartiQLValueExperimental::class)
+@OptIn(PartiQLValueExperimental::class)
 public class MemoryObject(
     private val type: StaticType,
-    // private val value: PartiQLValue,
+    private val value: PartiQLValue? = null,
 ) : ConnectorObject {
+
+    public fun getValue(): PartiQLValue? = value
 
     override fun getType(): StaticType = type
 }

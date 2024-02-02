@@ -1,9 +1,7 @@
 package org.partiql.eval
 
 import org.partiql.plan.PartiQLPlan
-import org.partiql.spi.connector.ConnectorBindings
-import org.partiql.spi.function.PartiQLFunction
-import org.partiql.spi.function.PartiQLFunctionExperimental
+import org.partiql.spi.connector.Connector
 
 /**
  * PartiQL's Experimental Engine.
@@ -36,9 +34,8 @@ public interface PartiQLEngine {
         fun default() = PartiQLEngineBuilder().build()
     }
 
-    public class Session @OptIn(PartiQLFunctionExperimental::class) constructor(
-        val bindings: Map<String, ConnectorBindings> = mapOf(),
-        val functions: Map<String, List<PartiQLFunction>> = mapOf(),
+    public class Session(
+        val catalogs: Map<String, Connector> = mapOf(),
         val mode: Mode = Mode.PERMISSIVE
     )
 

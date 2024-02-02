@@ -15,7 +15,7 @@
 package org.partiql.spi.connector.sql
 
 import org.partiql.spi.connector.ConnectorFnProvider
-import org.partiql.spi.connector.ConnectorHandle
+import org.partiql.spi.connector.ConnectorPath
 import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnIndex
@@ -26,8 +26,7 @@ import org.partiql.spi.fn.FnIndex
 @OptIn(FnExperimental::class)
 public class SqlFnProvider(private val index: FnIndex) : ConnectorFnProvider {
 
-    override fun getFn(handle: ConnectorHandle.Fn, specific: String): Fn? {
-        val path = handle.path
+    override fun getFn(path: ConnectorPath, specific: String): Fn? {
         val fn = index.get(path, specific)
         return if (fn is Fn) fn else null
     }

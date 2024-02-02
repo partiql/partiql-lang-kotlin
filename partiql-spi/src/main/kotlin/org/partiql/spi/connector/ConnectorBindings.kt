@@ -24,10 +24,10 @@ import org.partiql.value.PartiQLValueExperimental
 public interface ConnectorBindings {
 
     /**
-     * Retrieves a value for the given handle.
+     * Retrieves a value for the given path.
      *
-     * @param handle
+     * @param path
      * @return
      */
-    public fun getValue(handle: ConnectorHandle.Obj): PartiQLValue
+    public fun getValue(path: ConnectorPath): PartiQLValue
 }
