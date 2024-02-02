@@ -49,11 +49,11 @@ internal class ExprCallDynamic(
     ) {
 
         fun eval(originalArgs: Array<PartiQLValue>): PartiQLValue {
-            val args = coercions.mapIndexed { index, coercion ->
-                coercion?.let {
-                    val arg = originalArgs[index]
-                    ExprCast(ExprLiteral(arg), it).eval(Record(emptyArray()))
-                } ?: originalArgs[index]
+            val args = originalArgs.mapIndexed { i, arg ->
+                when (val c = coercions[i]) {
+                    null -> arg
+                    else -> ExprCast(ExprLiteral(arg), c).eval(Record.empty)
+                }
             }.toTypedArray()
             return fn.invoke(args)
         }

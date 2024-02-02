@@ -3,7 +3,6 @@ package org.partiql.runner.executor
 import com.amazon.ion.IonStruct
 import com.amazon.ion.IonValue
 import com.amazon.ionelement.api.ElementType
-import com.amazon.ionelement.api.IonElement
 import com.amazon.ionelement.api.StructElement
 import com.amazon.ionelement.api.toIonElement
 import com.amazon.ionelement.api.toIonValue
