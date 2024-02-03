@@ -1166,7 +1166,12 @@ internal class PlanTyper(
             // Return type with calculated nullability
             var type: StaticType = when {
                 isMissing -> MISSING
-                isNull -> NULL
+                // Edge cases for EQ and boolean connective
+                // If function can not return missing or null, can not propagate missing or null
+                // AKA, the Function IS MISSING
+                // return signature return type
+                !fn.isMissable && !fn.isMissingCall && !fn.isNullable && !fn.isNullCall -> fn.returns.toNonNullStaticType()
+                isNull || (!fn.isMissable && hadMissing) -> NULL
                 isNullable -> fn.returns.toStaticType()
                 else -> fn.returns.toNonNullStaticType()
             }

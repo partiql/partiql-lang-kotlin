@@ -518,14 +518,14 @@ class PlanTyperTestsPorted {
                 key = key("is-type-01"),
                 catalog = "pql",
                 catalogPath = listOf("main"),
-                expected = StaticType.BOOL
+                expected = StaticType.unionOf(StaticType.BOOL, StaticType.NULL)
             ),
             SuccessTestCase(
                 name = "IS STRING",
                 key = key("is-type-02"),
                 catalog = "pql",
                 catalogPath = listOf("main"),
-                expected = StaticType.BOOL
+                expected = StaticType.unionOf(StaticType.BOOL, StaticType.NULL)
             ),
             SuccessTestCase(
                 name = "IS NULL",
