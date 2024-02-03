@@ -21,7 +21,7 @@ internal object Fn_IS_DECIMAL_ARBITRARY__ANY__BOOL : Fn {
         name = "is_decimal_arbitrary",
         returns = BOOL,
         parameters = listOf(FnParameter("value", ANY)),
-        isNullCall = false,
+        isNullCall = true,
         isNullable = false,
     )
 

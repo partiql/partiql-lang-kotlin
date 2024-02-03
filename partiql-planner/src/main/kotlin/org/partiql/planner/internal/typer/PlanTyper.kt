@@ -1151,11 +1151,11 @@ internal class PlanTyper(
                 }
             }
 
-            // True iff NULL CALL and had a NULL arg; or NOT missable and had MISSING argument
-            val isNull = (fn.isNullCall && hadNull) || (!fn.isMissable && hadMissing)
+            // True iff NULL CALL and had a NULL arg;
+            val isNull = (fn.isNullCall && hadNull)
 
             // True iff NULL CALL and had a NULLABLE arg; or is a NULLABLE operator
-            val isNullable = (fn.isNullCall && hadNullable) || fn.isNullable || (!fn.isMissable && hadMissable)
+            val isNullable = (fn.isNullCall && hadNullable) || fn.isNullable
 
             // True iff MISSING CALL and had a MISSING arg.
             val isMissing = fn.isMissingCall && hadMissing
@@ -1165,6 +1165,7 @@ internal class PlanTyper(
 
             // Return type with calculated nullability
             var type: StaticType = when {
+                isMissing -> MISSING
                 isNull -> NULL
                 isNullable -> fn.returns.toStaticType()
                 else -> fn.returns.toNonNullStaticType()

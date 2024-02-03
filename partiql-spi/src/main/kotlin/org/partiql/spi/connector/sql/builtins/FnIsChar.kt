@@ -26,7 +26,7 @@ internal object Fn_IS_CHAR__ANY__BOOL : Fn {
         name = "is_char",
         returns = BOOL,
         parameters = listOf(FnParameter("value", ANY)),
-        isNullCall = false,
+        isNullCall = true,
         isNullable = false,
     )
 
@@ -45,7 +45,7 @@ internal object Fn_IS_CHAR__INT32_ANY__BOOL : Fn {
             FnParameter("type_parameter_1", INT32),
             FnParameter("value", ANY),
         ),
-        isNullCall = false,
+        isNullCall = true,
         isNullable = false,
     )
 

@@ -21,7 +21,7 @@ internal object Fn_IS_SEXP__ANY__BOOL : Fn {
         name = "is_sexp",
         returns = BOOL,
         parameters = listOf(FnParameter("value", ANY)),
-        isNullCall = false,
+        isNullCall = true,
         isNullable = false,
     )
 

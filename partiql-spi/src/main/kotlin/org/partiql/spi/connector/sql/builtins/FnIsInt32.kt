@@ -25,7 +25,7 @@ internal object Fn_IS_INT32__ANY__BOOL : Fn {
         name = "is_int32",
         returns = BOOL,
         parameters = listOf(FnParameter("value", ANY)),
-        isNullCall = false,
+        isNullCall = true,
         isNullable = false,
     )
 

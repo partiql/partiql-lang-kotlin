@@ -21,7 +21,7 @@ internal object Fn_IS_INTERVAL__ANY__BOOL : Fn {
         name = "is_interval",
         returns = BOOL,
         parameters = listOf(FnParameter("value", ANY)),
-        isNullCall = false,
+        isNullCall = true,
         isNullable = false,
     )
 
