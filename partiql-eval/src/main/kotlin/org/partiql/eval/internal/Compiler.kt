@@ -236,7 +236,7 @@ internal class Compiler(
         return RelFilter(input, condition)
     }
 
-    override fun visitRelOpExclude(node: Rel.Op.Exclude, ctx: Unit): Operator {
+    override fun visitRelOpExclude(node: Rel.Op.Exclude, ctx: Symbols): Operator {
         val input = visitRel(node.input, ctx)
         return RelExclude(input, node.paths)
     }

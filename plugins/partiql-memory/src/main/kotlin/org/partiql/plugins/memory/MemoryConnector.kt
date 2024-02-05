@@ -43,4 +43,10 @@ public class MemoryConnector(private val catalog: MemoryCatalog) : SqlConnector(
             return MemoryConnector(catalog)
         }
     }
+
+    public companion object {
+
+        @JvmStatic
+        public fun empty(name: String = "default"): MemoryConnector = MemoryConnector(MemoryCatalog(name))
+    }
 }

@@ -32,7 +32,6 @@ import org.partiql.ast.helpers.toBinder
 import org.partiql.ast.util.AstRewriter
 import org.partiql.ast.visitor.AstBaseVisitor
 import org.partiql.planner.internal.Env
-import org.partiql.planner.internal.ir.Identifier
 import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.rel
@@ -71,6 +70,7 @@ import org.partiql.planner.internal.ir.rexOpVarResolved
 import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.boolValue
+import org.partiql.planner.internal.ir.Identifier as InternalId
 
 /**
  * Lexically scoped state for use in translating an individual SELECT statement.
@@ -366,8 +366,8 @@ internal object RelConverter {
                 val args = expr.args.map { arg -> arg.toRex(env) }
                 val id = AstToPlan.convert(expr.function)
                 val name = when (id) {
-                    is Identifier.Qualified -> error("Qualified aggregation calls are not supported.")
-                    is Identifier.Symbol -> id.symbol.lowercase()
+                    is InternalId.Qualified -> error("Qualified aggregation calls are not supported.")
+                    is InternalId.Symbol -> id.symbol.lowercase()
                 }
                 relOpAggregateCallUnresolved(name, args)
             }
