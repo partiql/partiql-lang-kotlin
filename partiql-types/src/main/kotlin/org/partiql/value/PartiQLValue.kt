@@ -514,7 +514,6 @@ public abstract class StructValue<T : PartiQLValue> : PartiQLValue {
     }
 
     override fun hashCode(): Int {
-        // TODO
         return entries.hashCode()
     }
 
@@ -545,7 +544,7 @@ public abstract class MissingValue : PartiQLValue {
 
     override val type: PartiQLValueType = PartiQLValueType.MISSING
 
-    override val isNull: Boolean = true
+    override val isNull: Boolean = false
 
     abstract override fun copy(annotations: Annotations): MissingValue
 

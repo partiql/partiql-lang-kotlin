@@ -1,5 +1,6 @@
 package org.partiql.eval.internal.operator.rex
 
+import org.partiql.errors.TypeCheckException
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.value.CollectionValue
@@ -11,7 +12,6 @@ import org.partiql.value.IntValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.check
-import org.partiql.value.missingValue
 
 internal class ExprPathIndex(
     @JvmField val root: Operator.Expr,
@@ -21,7 +21,6 @@ internal class ExprPathIndex(
     @OptIn(PartiQLValueExperimental::class)
     override fun eval(record: Record): PartiQLValue {
         val collection = root.eval(record).check<CollectionValue<PartiQLValue>>()
-        val value = missingValue()
 
         // Calculate index
         val index = when (val k = key.eval(record)) {
@@ -30,8 +29,8 @@ internal class ExprPathIndex(
             is Int64Value -> k.int
             is Int8Value -> k.int
             is IntValue -> k.int
-            else -> return value
-        } ?: return value
+            else -> throw TypeCheckException()
+        } ?: throw TypeCheckException()
 
         // Get element
         val iterator = collection.iterator()
@@ -43,6 +42,6 @@ internal class ExprPathIndex(
             }
             i++
         }
-        return value
+        throw TypeCheckException()
     }
 }

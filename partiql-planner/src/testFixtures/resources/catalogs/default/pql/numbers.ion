@@ -1,5 +1,6 @@
 {
   type: "struct",
+  constraints: [closed],
   fields: [
     {
       name: "nullable_int16s",
@@ -68,6 +69,10 @@
         type: "list",
         items: "int",
       },
+    },
+    {
+      name: "d",
+      type: "decimal",
     },
     {
       name: "decimals",

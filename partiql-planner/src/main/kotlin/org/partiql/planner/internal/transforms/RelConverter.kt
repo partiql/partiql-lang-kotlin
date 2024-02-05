@@ -34,11 +34,10 @@ import org.partiql.ast.visitor.AstBaseVisitor
 import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
-import org.partiql.planner.internal.ir.aggUnresolved
 import org.partiql.planner.internal.ir.rel
 import org.partiql.planner.internal.ir.relBinding
 import org.partiql.planner.internal.ir.relOpAggregate
-import org.partiql.planner.internal.ir.relOpAggregateCall
+import org.partiql.planner.internal.ir.relOpAggregateCallUnresolved
 import org.partiql.planner.internal.ir.relOpDistinct
 import org.partiql.planner.internal.ir.relOpErr
 import org.partiql.planner.internal.ir.relOpExcept
@@ -71,6 +70,7 @@ import org.partiql.planner.internal.ir.rexOpVarResolved
 import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.boolValue
+import org.partiql.planner.internal.ir.Identifier as InternalId
 
 /**
  * Lexically scoped state for use in translating an individual SELECT statement.
@@ -365,8 +365,11 @@ internal object RelConverter {
                 schema.add(binding)
                 val args = expr.args.map { arg -> arg.toRex(env) }
                 val id = AstToPlan.convert(expr.function)
-                val fn = aggUnresolved(id)
-                relOpAggregateCall(fn, args)
+                val name = when (id) {
+                    is InternalId.Qualified -> error("Qualified aggregation calls are not supported.")
+                    is InternalId.Symbol -> id.symbol.lowercase()
+                }
+                relOpAggregateCallUnresolved(name, args)
             }
             var groups = emptyList<Rex>()
             if (groupBy != null) {
