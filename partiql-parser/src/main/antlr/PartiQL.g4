@@ -709,11 +709,15 @@ trimFunction
 dateFunction
     : func=(DATE_ADD|DATE_DIFF) PAREN_LEFT dt=IDENTIFIER COMMA expr COMMA expr PAREN_RIGHT;
 
+// SQL-99 10.4 — <routine invocation> ::= <routine name> <SQL argument list>
 functionCall
-    : name=( CHAR_LENGTH | CHARACTER_LENGTH | OCTET_LENGTH |
-        BIT_LENGTH | UPPER | LOWER | SIZE | EXISTS | COUNT )
-        PAREN_LEFT ( expr ( COMMA expr )* )? PAREN_RIGHT                         # FunctionCallReserved
-    | name=symbolPrimitive PAREN_LEFT ( expr ( COMMA expr )* )? PAREN_RIGHT      # FunctionCallIdent
+    : functionName PAREN_LEFT ( expr ( COMMA expr )* )? PAREN_RIGHT
+    ;
+
+// SQL-99 10.4 — <routine name> ::= [ <schema name> <period> ] <qualified identifier>
+functionName
+    : (qualifier+=symbolPrimitive PERIOD)* name=( CHAR_LENGTH | CHARACTER_LENGTH | OCTET_LENGTH | BIT_LENGTH | UPPER | LOWER | SIZE | EXISTS | COUNT )  # FunctionNameReserved
+    | (qualifier+=symbolPrimitive PERIOD)* name=symbolPrimitive                                                                                         # FunctionNameSymbol
     ;
 
 pathStep

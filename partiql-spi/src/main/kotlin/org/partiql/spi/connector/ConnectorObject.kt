@@ -14,10 +14,21 @@
 
 package org.partiql.spi.connector
 
+import org.partiql.types.StaticType
+
 /**
  * An object's representation within a Catalog. This is used by plugin implementers to store logic in relation to the
  * [ConnectorMetadata]. An example implementation of [ConnectorObject] could represent an object of a Catalog that holds
- * the serialized [org.partiql.types.StaticType], so that the [ConnectorMetadata] may be able
- * to grab the descriptor using [ConnectorMetadata.getObjectType].
+ * the serialized [org.partiql.types.StaticType].
  */
-public interface ConnectorObject
+public interface ConnectorObject {
+
+    /**
+     * Returns the type descriptor of an object in a catalog.
+     *
+     * If the handle is unable to produce a [StaticType], implementers should return null.
+     *
+     * @return
+     */
+    public fun getType(): StaticType
+}

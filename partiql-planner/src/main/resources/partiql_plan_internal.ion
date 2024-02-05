@@ -1,0 +1,359 @@
+imports::{
+  kotlin: [
+    partiql_value::'org.partiql.value.PartiQLValue',
+    partiql_value_type::'org.partiql.value.PartiQLValueType',
+    static_type::'org.partiql.types.StaticType',
+    fn_signature::'org.partiql.spi.fn.FnSignature',
+    agg_signature::'org.partiql.spi.fn.AggSignature',
+  ],
+}
+
+parti_q_l_plan::{
+  statement:  statement,            // (statement ...)
+}
+
+// Reference to some item in a catalog.
+// In the internal plan, we inline additional typing information.
+// When transforming to the public plan we produce a symbol table,
+// replacing each internal ref with a pointer ref to the public plan's catalog list.
+
+ref::[
+  obj::{
+    catalog: string,
+    path: list::[string],
+    type: static_type,
+  },
+  fn::{
+    catalog: string,
+    path: list::[string],
+    signature: fn_signature,
+  },
+  _::[
+    cast::{
+      input: partiql_value_type,
+      target: partiql_value_type,
+      safety: [
+        COERCION, // Lossless CAST(V AS T) -> T
+        EXPLICIT, // Lossy    CAST(V AS T) -> T
+        UNSAFE,   //          CAST(V AS T) -> T|MISSING
+      ]
+    },
+    agg::{
+      name: string,
+      signature: agg_signature,
+    },
+  ]
+]
+
+// Statements
+
+statement::[
+  query::{
+    root: rex,
+  },
+]
+
+// Identifiers
+
+identifier::[
+  symbol::{
+    symbol:           string,
+    case_sensitivity: case_sensitivity,
+  },
+  qualified::{
+    root:   symbol,
+    steps:  list::[symbol],
+  },
+  _::[
+    case_sensitivity::[
+      SENSITIVE,
+      INSENSITIVE,
+    ],
+  ],
+]
+
+// Rex
+rex::{
+  type: static_type,
+  op:[
+
+    lit::{
+      value: partiql_value,
+    },
+
+    var::[
+      resolved::{
+        ref: int,
+      },
+      unresolved::{
+        identifier: identifier,
+        scope: scope,
+      },
+      _::[
+        scope::[
+          DEFAULT,  //  x.y.z
+          LOCAL,    // @x.y.z
+        ],
+      ],
+    ],
+
+    global::{
+      ref: '.ref.obj',
+    },
+
+    path::[
+      // The key MUST be an integer expression. Ex: a[0], a[1 + 1]
+      index::{ root: rex, key: rex },
+
+      // Case-sensitive lookup. The key MUST be a string expression. Ex: a["b"], a."b", a[CAST(b AS STRING)]
+      key::{ root: rex, key: rex },
+
+      // Case-insensitive lookup. The key MUST be a literal string. Ex: a.b
+      symbol::{ root: rex, key: string },
+    ],
+
+    cast::[
+      unresolved::{
+        target: partiql_value_type,
+        arg:    rex,
+      },
+      resolved::{
+        cast: '.ref.cast',
+        arg: rex,
+      }
+    ],
+
+    call::[
+
+      unresolved::{
+        identifier: identifier,
+        args: list::[rex],
+      },
+
+      static::{
+        fn: '.ref.fn',
+        args: list::[rex],
+      },
+
+      // Represents a dynamic function call. If all candidates are exhausted, dynamic calls will return MISSING.
+      //
+      // args: represent the original typed arguments. These will eventually be wrapped by coercions from [candidates].
+      // candidates: represent the potentially applicable resolved functions with coercions. Each of these candidates
+      //  should be overloaded functions of the same name and number of arguments.
+      dynamic::{
+        args: list::[rex],
+        candidates: list::[candidate],
+        exhaustive: bool,
+        _: [
+          candidate::{
+            fn: '.ref.fn',
+            coercions: list::[optional::'.ref.cast'],
+          }
+        ]
+      },
+    ],
+
+    case::{
+      branches: list::[branch],
+      default: rex,
+      _: [
+        branch::{
+          condition:  rex,
+          rex:        rex,
+        },
+      ],
+    },
+
+    collection::{
+      values: list::[rex],
+    },
+
+    struct::{
+      fields: list::[field],
+      _: [
+        field::{
+          k: rex,
+          v: rex,
+        },
+      ],
+    },
+
+    pivot::{
+      key:    rex,
+      value:  rex,
+      rel:    rel,
+    },
+
+    subquery::{
+      select:   select,
+      coercion: [ SCALAR, ROW ],
+    },
+
+    select::{
+      constructor:  rex,
+      rel:          rel,
+    },
+
+    // SELECT v1.*, e2 AS a, v3.*
+    //
+    // SELECT VALUE TUPLEUNION(
+    //   CASE WHEN v1 IS TUPLE THEN v1 ELSE {'_1': v1} END,
+    //   {'a':e2 },
+    //   CASE WHEN v3 IS TUPLE THEN v3 ELSE {'_2': v3} END
+    // )
+    //
+    // Tuple Union Function Signature: (Array<Struct>) -> Struct
+    tuple_union::{
+      args: list::[rex],
+    },
+
+    err::{
+      message: string,
+    },
+  ],
+}
+
+// Rel
+
+rel::{
+  type: {
+    schema: list::[binding],
+    props:  set::[prop],
+  },
+  op: [
+
+    scan::{
+      rex: rex,
+    },
+
+    scan_indexed::{
+      rex: rex,
+    },
+
+    unpivot::{
+      rex:  rex,
+    },
+
+    distinct::{
+      input: rel,
+    },
+
+    filter::{
+      input:      rel,
+      predicate:  rex,
+    },
+
+    sort::{
+      input: rel,
+      specs: list::[spec],
+      _: [
+        spec::{
+          rex: rex,
+          order: order,
+        },
+        order::[
+          ASC_NULLS_LAST,
+          ASC_NULLS_FIRST,
+          DESC_NULLS_LAST,
+          DESC_NULLS_FIRST,
+        ],
+      ],
+    },
+
+    union::{
+      lhs: rel,
+      rhs: rel,
+    },
+
+    intersect::{
+      lhs: rel,
+      rhs: rel,
+    },
+
+    except::{
+      lhs: rel,
+      rhs: rel,
+    },
+
+    limit::{
+      input:  rel,
+      limit:  rex,
+    },
+
+    offset::{
+      input:  rel,
+      offset: rex,
+    },
+
+    project::{
+      input:        rel,
+      projections:  list::[rex],
+    },
+
+    join::{
+      lhs: rel,
+      rhs: rel,
+      rex: rex, // The Join Expression (required) (can be set to TRUE)
+      type: [
+        INNER, // Inner Join
+        LEFT,  // Left Outer Join
+        RIGHT, // Right Outer Join
+        FULL   // Full Outer Join
+      ],
+    },
+
+    aggregate::{
+      input:    rel,
+      strategy: [ FULL, PARTIAL ],
+      calls:    list::[call],
+      groups:   list::[rex],
+      _: [
+        call::[
+          unresolved::{
+            name: string,
+            args: list::[rex],
+          },
+          resolved::{
+            agg:  '.ref.agg',
+            args: list::[rex],
+          },
+        ]
+      ],
+    },
+
+    exclude::{
+      input: rel,
+      paths: list::[path],
+      _: [
+        path::{
+          root: '.rex.op.var',
+          steps: list::[step],
+        },
+        step::{
+          type: type,
+          substeps: list::[step],
+        },
+        type::[
+          struct_symbol::{ symbol: string },
+          struct_key::{ key: string },
+          coll_index::{ index: int },
+          struct_wildcard::{},
+          coll_wildcard::{},
+        ]
+      ],
+    },
+
+    err::{
+      message: string,
+    },
+  ],
+  _: [
+    prop::[
+      ORDERED,
+    ],
+    binding::{
+      name: string,
+      type: static_type,
+    },
+  ]
+}
