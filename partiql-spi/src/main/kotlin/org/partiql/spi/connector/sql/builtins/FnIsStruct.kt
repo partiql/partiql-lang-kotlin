@@ -21,7 +21,7 @@ internal object Fn_IS_STRUCT__ANY__BOOL : Fn {
         name = "is_struct",
         returns = BOOL,
         parameters = listOf(FnParameter("value", ANY)),
-        isNullCall = false,
+        isNullCall = true,
         isNullable = false,
     )
 

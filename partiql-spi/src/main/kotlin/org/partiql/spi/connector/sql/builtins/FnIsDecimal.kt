@@ -26,7 +26,7 @@ internal object Fn_IS_DECIMAL__ANY__BOOL : Fn {
         name = "is_decimal",
         returns = BOOL,
         parameters = listOf(FnParameter("value", ANY)),
-        isNullCall = false,
+        isNullCall = true,
         isNullable = false,
     )
 
@@ -46,7 +46,7 @@ internal object Fn_IS_DECIMAL__INT32_INT32_ANY__BOOL : Fn {
             FnParameter("type_parameter_2", INT32),
             FnParameter("value", ANY),
         ),
-        isNullCall = false,
+        isNullCall = true,
         isNullable = false,
     )
 

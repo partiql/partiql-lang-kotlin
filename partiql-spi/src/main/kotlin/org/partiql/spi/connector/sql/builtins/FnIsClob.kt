@@ -21,7 +21,7 @@ internal object Fn_IS_CLOB__ANY__BOOL : Fn {
         name = "is_clob",
         returns = BOOL,
         parameters = listOf(FnParameter("value", ANY)),
-        isNullCall = false,
+        isNullCall = true,
         isNullable = false,
     )
 

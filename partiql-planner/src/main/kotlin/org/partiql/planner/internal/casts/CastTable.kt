@@ -102,6 +102,9 @@ internal class CastTable private constructor(
             }
             graph[ANY] = ANY.relationships {
                 coercion(ANY)
+                PartiQLValueType.values().filterNot { it == ANY }.forEach {
+                    unsafe(it)
+                }
             }
             graph[NULL] = NULL.relationships {
                 coercion(NULL)

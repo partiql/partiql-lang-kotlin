@@ -21,7 +21,7 @@ internal object Fn_IS_LIST__ANY__BOOL : Fn {
         name = "is_list",
         returns = BOOL,
         parameters = listOf(FnParameter("value", ANY)),
-        isNullCall = false,
+        isNullCall = true,
         isNullable = false,
     )
 

@@ -21,7 +21,7 @@ internal object Fn_IS_BINARY__ANY__BOOL : Fn {
         name = "is_binary",
         returns = BOOL,
         parameters = listOf(FnParameter("value", ANY)),
-        isNullCall = false,
+        isNullCall = true,
         isNullable = false,
     )
 
