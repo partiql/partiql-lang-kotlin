@@ -514,7 +514,6 @@ public abstract class StructValue<T : PartiQLValue> : PartiQLValue {
     }
 
     override fun hashCode(): Int {
-        // TODO
         return entries.hashCode()
     }
 

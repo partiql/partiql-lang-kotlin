@@ -11,8 +11,9 @@ import org.partiql.eval.PartiQLResult
 import org.partiql.parser.PartiQLParser
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.PartiQLPlannerBuilder
-import org.partiql.plugin.PartiQLPlugin
-import org.partiql.spi.function.PartiQLFunctionExperimental
+import org.partiql.plugins.memory.MemoryCatalog
+import org.partiql.plugins.memory.MemoryConnector
+import org.partiql.spi.connector.ConnectorSession
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.bagValue
@@ -453,20 +454,26 @@ class PartiQLEngineDefaultTest {
         val mode: PartiQLEngine.Mode = PartiQLEngine.Mode.PERMISSIVE
     ) {
 
-        @OptIn(PartiQLFunctionExperimental::class)
         private val engine = PartiQLEngine.builder().build()
         private val planner = PartiQLPlannerBuilder().build()
         private val parser = PartiQLParser.default()
 
-        @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
         internal fun assert() {
             val statement = parser.parse(input).root
-            val session = PartiQLPlanner.Session("q", "u")
-            val plan = planner.plan(statement, session)
-            val functions = mapOf(
-                "partiql" to PartiQLPlugin.functions
+            val catalog = MemoryCatalog.builder().name("memory").build()
+            val connector = MemoryConnector(catalog)
+            val connectorSession = object : ConnectorSession {
+                override fun getQueryId(): String = "q"
+                override fun getUserId(): String = "u"
+            }
+            val session = PartiQLPlanner.Session(
+                "q",
+                "u",
+                "memory",
+                catalogs = mapOf("memory" to connector.getMetadata(connectorSession))
             )
-            val prepared = engine.prepare(plan.plan, PartiQLEngine.Session(functions = functions, mode = mode))
+            val plan = planner.plan(statement, session)
+            val prepared = engine.prepare(plan.plan, PartiQLEngine.Session(mapOf("memory" to connector), mode = mode))
             val result = engine.execute(prepared) as PartiQLResult.Value
             val output = result.value
             assertEquals(expected, output, comparisonString(expected, output))
@@ -496,12 +503,10 @@ class PartiQLEngineDefaultTest {
         val expectedPermissive: PartiQLValue
     ) {
 
-        @OptIn(PartiQLFunctionExperimental::class)
         private val engine = PartiQLEngine.builder().build()
         private val planner = PartiQLPlannerBuilder().build()
         private val parser = PartiQLParser.default()
 
-        @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
         internal fun assert() {
             val permissiveResult = run(mode = PartiQLEngine.Mode.PERMISSIVE)
             assertEquals(expectedPermissive, permissiveResult, comparisonString(expectedPermissive, permissiveResult))
@@ -514,15 +519,22 @@ class PartiQLEngineDefaultTest {
             assertNotNull(error)
         }
 
-        @OptIn(PartiQLFunctionExperimental::class)
         private fun run(mode: PartiQLEngine.Mode): PartiQLValue {
             val statement = parser.parse(input).root
-            val session = PartiQLPlanner.Session("q", "u")
-            val plan = planner.plan(statement, session)
-            val functions = mapOf(
-                "partiql" to PartiQLPlugin.functions
+            val catalog = MemoryCatalog.builder().name("memory").build()
+            val connector = MemoryConnector(catalog)
+            val connectorSession = object : ConnectorSession {
+                override fun getQueryId(): String = "q"
+                override fun getUserId(): String = "u"
+            }
+            val session = PartiQLPlanner.Session(
+                "q",
+                "u",
+                "memory",
+                catalogs = mapOf("memory" to connector.getMetadata(connectorSession))
             )
-            val prepared = engine.prepare(plan.plan, PartiQLEngine.Session(functions = functions, mode = mode))
+            val plan = planner.plan(statement, session)
+            val prepared = engine.prepare(plan.plan, PartiQLEngine.Session(mapOf("memory" to connector), mode = mode))
             when (val result = engine.execute(prepared)) {
                 is PartiQLResult.Value -> return result.value
                 is PartiQLResult.Error -> throw result.cause

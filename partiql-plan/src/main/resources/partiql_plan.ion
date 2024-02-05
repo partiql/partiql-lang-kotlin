@@ -3,8 +3,6 @@ imports::{
     partiql_value::'org.partiql.value.PartiQLValue',
     partiql_value_type::'org.partiql.value.PartiQLValueType',
     static_type::'org.partiql.types.StaticType',
-    scalar_signature::'org.partiql.types.function.FunctionSignature$Scalar',
-    aggregation_signature::'org.partiql.types.function.FunctionSignature$Aggregation',
   ],
 }
 
@@ -13,38 +11,34 @@ parti_q_l_plan::{
   statement:  statement,            // (statement ...)
 }
 
-// Represent an instance of a database.
-// - Currently, `symbols` represents all values from this catalog to be used in this plan.
-// - Eventually, TODO functions may be resolved to a specific namespace within a catalog.
 catalog::{
-  name: string,
-  symbols: list::[symbol],
+  name:   string,
+  items:  list::[item],
   _: [
-    // A reference to a value contained within a catalog.
-    symbol::{
-      // The path to a value WITHIN a catalog. Note: This should not start with the catalog's name. Also, this
-      //  should not be empty
-      path: list::[string],
-      type: static_type,
-      _: [
-        // A reference to a symbol
-        ref::{
-          catalog: int,
-          symbol: int
-        }
-      ]
-    }
+    item::[
+      value::{
+        path: list::[string],
+        type: static_type,
+      },
+      fn::{
+        path:     list::[string],
+        specific: string,
+      },
+    ]
   ]
 }
 
-// Functions
+// Reference to some item in a catalog.
 
-fn::{
-  signature: scalar_signature,
-}
-
-agg::{
-  signature: aggregation_signature,
+ref::{
+  catalog: int,
+  symbol: int,
+  _: [
+    cast::{
+      input: partiql_value_type,
+      target: partiql_value_type,
+    }
+  ]
 }
 
 // Statements
@@ -88,7 +82,7 @@ rex::{
     },
 
     global::{
-      ref: '.catalog.symbol.ref'
+      ref: ref,
     },
 
     path::[
@@ -102,10 +96,15 @@ rex::{
       symbol::{ root: rex, key: string },
     ],
 
+    cast::{
+      cast: '.ref.cast',
+      arg: rex,
+    },
+
     call::[
       static::{
-        fn: fn,
-        args: list::[rex]
+        fn: ref,
+        args: list::[rex],
       },
 
       // Represents a dynamic function call. If all candidates are exhausted, dynamic calls will return MISSING.
@@ -125,12 +124,11 @@ rex::{
           // @param coercions - represents the optional coercion to use on the argument(s). It will be NULL if no coercion
           //  is necessary.
           candidate::{
-            fn: fn,
-            parameters: list::[partiql_value_type],
-            coercions: list::[optional::fn]
+            fn: ref,
+            coercions: list::[optional::'.ref.cast'],
           }
         ]
-      }
+      },
     ],
 
     case::{
@@ -289,7 +287,7 @@ rel::{
       groups:   list::[rex],
       _: [
         call::{
-          agg:  agg,
+          agg:  string,
           args: list::[rex],
         },
       ],

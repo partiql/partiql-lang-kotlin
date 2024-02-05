@@ -23,9 +23,9 @@ import org.partiql.types.StaticType
  * @property path
  * @property type
  */
-class LocalObject(
+internal class LocalObject(
     val path: List<String>,
-    val type: StaticType,
+    private val type: StaticType,
 ) : ConnectorObject {
-    fun getDescriptor(): StaticType = type
+    override fun getType(): StaticType = type
 }

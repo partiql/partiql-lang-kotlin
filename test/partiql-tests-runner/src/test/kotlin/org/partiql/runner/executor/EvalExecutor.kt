@@ -3,7 +3,6 @@ package org.partiql.runner.executor
 import com.amazon.ion.IonStruct
 import com.amazon.ion.IonValue
 import com.amazon.ionelement.api.ElementType
-import com.amazon.ionelement.api.IonElement
 import com.amazon.ionelement.api.StructElement
 import com.amazon.ionelement.api.toIonElement
 import com.amazon.ionelement.api.toIonValue
@@ -14,14 +13,16 @@ import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.TypingMode
 import org.partiql.parser.PartiQLParser
 import org.partiql.planner.PartiQLPlanner
-import org.partiql.plugin.PartiQLPlugin
-import org.partiql.plugins.memory.MemoryBindings
+import org.partiql.plugins.memory.MemoryCatalog
 import org.partiql.plugins.memory.MemoryConnector
+import org.partiql.plugins.memory.MemoryObject
 import org.partiql.runner.ION
 import org.partiql.runner.test.TestExecutor
+import org.partiql.spi.BindingCase
+import org.partiql.spi.BindingName
+import org.partiql.spi.BindingPath
 import org.partiql.spi.connector.Connector
 import org.partiql.spi.connector.ConnectorSession
-import org.partiql.spi.function.PartiQLFunctionExperimental
 import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
@@ -102,8 +103,8 @@ class EvalExecutor(
 
     object Factory : TestExecutor.Factory<PartiQLStatement<*>, PartiQLResult> {
 
-        @OptIn(PartiQLFunctionExperimental::class)
         override fun create(env: IonStruct, options: CompileOptions): TestExecutor<PartiQLStatement<*>, PartiQLResult> {
+
             val catalog = "default"
             val data = env.toIonElement() as StructElement
 
@@ -127,11 +128,8 @@ class EvalExecutor(
             }
 
             val evalSession = PartiQLEngine.Session(
-                bindings = mutableMapOf(
-                    "default" to connector.getBindings()
-                ),
-                functions = mutableMapOf(
-                    "partiql" to PartiQLPlugin.functions
+                catalogs = mutableMapOf(
+                    "default" to connector
                 ),
                 mode = mode
             )
@@ -140,7 +138,6 @@ class EvalExecutor(
 
         /**
          * Produces an inferred catalog from the environment.
-         * Until this point, PartiQL Kotlin has only done top-level bindings.
          *
          * @param env
          * @return
@@ -150,30 +147,28 @@ class EvalExecutor(
             env.fields.forEach {
                 map[it.name] = StaticType.ANY
             }
-            val metadata = MemoryConnector.Metadata(map)
-            val globals = load(metadata, env)
-            val bindings = MemoryBindings(globals)
-            return MemoryConnector(metadata, bindings)
+            val catalog = MemoryCatalog("default")
+            catalog.load(env)
+            return MemoryConnector(catalog)
         }
 
         /**
          * Loads each declared global of the catalog from the data element.
+         *
+         * TODO until this point, PartiQL Kotlin has only done top-level bindings.
          */
-        private fun load(metadata: MemoryConnector.Metadata, data: StructElement): Map<String, PartiQLValue> {
-            val bindings = mutableMapOf<String, PartiQLValue>()
-            for ((key, _) in metadata.entries) {
-                var ion: IonElement = data
-                val steps = key.split(".")
-                steps.forEach { s ->
-                    if (ion is StructElement) {
-                        ion = (ion as StructElement).getOptional(s) ?: error("No value for binding $key")
-                    } else {
-                        error("No value for binding $key")
-                    }
-                }
-                bindings[key] = PartiQLValueIonReaderBuilder.standard().build(ion).read()
+        private fun MemoryCatalog.load(env: StructElement) {
+            for (f in env.fields) {
+                val k = f.name
+                val v = f.value
+                // convert to binding
+                val path = BindingPath(steps = listOf(BindingName(k, BindingCase.SENSITIVE)))
+                val item = MemoryObject(
+                    type = StaticType.ANY,
+                    value = PartiQLValueIonReaderBuilder.standard().build(v).read(),
+                )
+                this.insert(path, item)
             }
-            return bindings
         }
     }
 }
