@@ -3,26 +3,26 @@ package org.partiql.eval.internal.operator.rel
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.plan.Rel
-import org.partiql.value.NullOrder
-import org.partiql.value.PartiQLValueComparator
+import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
+import java.util.Collections
 
 @OptIn(PartiQLValueExperimental::class)
 internal class RelSort(
-    val input: Operator.Relation,
-    val specs: List<Pair<Operator.Expr, Rel.Op.Sort.Order>>
+    private val input: Operator.Relation,
+    private val specs: List<Pair<Operator.Expr, Rel.Op.Sort.Order>>
 
 ) : Operator.Relation {
-    private var records: MutableList<Record> = mutableListOf()
+    private var records: Iterator<Record> = Collections.emptyIterator()
     private var init: Boolean = false
 
-    private val nullsFirstComparator = PartiQLValueComparator.comparator(NullOrder.FIRST)
-    private val nullsLastComparator = PartiQLValueComparator.comparator(NullOrder.LAST)
+    private val nullsFirstComparator = PartiQLValue.comparator(nullsFirst = true)
+    private val nullsLastComparator = PartiQLValue.comparator(nullsFirst = false)
 
     override fun open() {
         input.open()
         init = false
-        records = mutableListOf()
+        records = Collections.emptyIterator()
     }
 
     private val comparator = object : Comparator<Record> {
@@ -49,15 +49,18 @@ internal class RelSort(
 
     override fun next(): Record? {
         if (!init) {
+            val sortedRecords = mutableListOf<Record>()
             while (true) {
                 val row = input.next() ?: break
-                records.add(row)
+                sortedRecords.add(row)
             }
-            records.sortWith(comparator)
+            sortedRecords.sortWith(comparator)
+            records = sortedRecords.iterator()
+            init = true
         }
-        return when (records.isEmpty()) {
-            true -> null
-            else -> records.removeAt(0)
+        return when (records.hasNext()) {
+            true -> records.next()
+            false -> null
         }
     }
 

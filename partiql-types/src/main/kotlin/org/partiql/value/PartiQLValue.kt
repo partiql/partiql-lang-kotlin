@@ -48,6 +48,44 @@ public sealed interface PartiQLValue {
     public fun withoutAnnotations(): PartiQLValue
 
     public fun <R, C> accept(visitor: PartiQLValueVisitor<R, C>, ctx: C): R
+
+    public companion object {
+        /**
+         * Provides a total, natural ordering over [PartiQLValue] as defined by section 12.2 of the PartiQL specification
+         * (https://partiql.org/assets/PartiQL-Specification.pdf#subsection.12.2). PartiQL treats Ion typed nulls as `NULL`
+         * for the purposes of comparisons and Ion annotations are not considered for comparison purposes.
+         *
+         * The ordering rules are as follows:
+         *
+         *  * [NullValue] and [MissingValue] are always first or last and compare equally.  In other words,
+         *    comparison cannot distinguish between `NULL` or `MISSING`.
+         *  * The [BoolValue] values follow with `false` coming before `true`.
+         *  * The [NumericValue] types come next ordered by their numerical value irrespective
+         *    of precision or specific type.
+         *      For `FLOAT` special values, `nan` comes before `-inf`, which comes before all normal
+         *      numeric values, which is followed by `+inf`.
+         *  * [DateValue] values follow and are compared by the date from earliest to latest.
+         *  * [TimeValue] values follow and are compared by the time of the day (point of time in a day of 24 hours)
+         *      from earliest to latest. Note that time without time zone is not directly comparable with time with time zone.
+         *  * [TimestampValue] values follow and are compared by the point of time irrespective of precision and
+         *    local UTC offset.
+         *  * The [TextValue] types come next ordered by their lexicographical ordering by
+         *    Unicode scalar irrespective of their specific type.
+         *  * The [BlobValue] and [ClobValue] types follow and are ordered by their lexicographical ordering
+         *    by octet.
+         *  * [ListValue] comes next, and their values compare lexicographically based on their
+         *    child elements recursively based on this definition.
+         *  * [SexpValue] follows and compares within its type similar to `LIST`.
+         *  * [StructValue] values follow and compare lexicographically based on the *sorted*
+         *    (as defined by this definition) members, as pairs of field name and the member value.
+         *  * [BagValue] values come finally (except with [nullsFirst] == true), and their values
+         *    compare lexicographically based on the *sorted* child elements.
+         *
+         * @param nullsFirst whether [NullValue], [MissingValue], and typed Ion null values come first
+         */
+        @JvmStatic
+        public fun comparator(nullsFirst: Boolean): Comparator<PartiQLValue> = PartiQLValueComparatorInternal(nullsFirst)
+    }
 }
 
 @PartiQLValueExperimental

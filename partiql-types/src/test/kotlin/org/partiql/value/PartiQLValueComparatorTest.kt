@@ -14,8 +14,8 @@ import java.util.Random
 class PartiQLValueComparatorTest {
     class EquivValues(vararg val values: PartiQLValue)
 
-    private val nullsFirstComparator = PartiQLValueComparator.comparator(nullOrder = NullOrder.FIRST)
-    private val nullsLastComparator = PartiQLValueComparator.comparator(nullOrder = NullOrder.LAST)
+    private val nullsFirstComparator = PartiQLValue.comparator(nullsFirst = true)
+    private val nullsLastComparator = PartiQLValue.comparator(nullsFirst = false)
 
     // TODO consider replacing linear congruential generator with something else (e.g. xorshift)
     // RNG for fuzz testing the sort orders, the seed is arbitrary but static for determinism

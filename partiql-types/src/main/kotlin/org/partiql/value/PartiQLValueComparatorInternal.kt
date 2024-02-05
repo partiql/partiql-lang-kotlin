@@ -6,55 +6,8 @@ import org.partiql.value.util.isNegInf
 import org.partiql.value.util.isPosInf
 import org.partiql.value.util.isZero
 
-/**
- * Provides a total, natural ordering over [PartiQLValue] as defined by section 12.2 of the PartiQL specification
- * (https://partiql.org/assets/PartiQL-Specification.pdf#subsection.12.2). PartiQL treats Ion typed nulls as `NULL`
- * for the purposes of comparisons and Ion annotations are not considered for comparison purposes.
- *
- * The ordering rules are as follows:
- *
- *  * [NullValue] and [MissingValue] are always first or last and compare equally.  In other words,
- *    comparison cannot distinguish between `NULL` or `MISSING`.
- *  * The [BoolValue] values follow with `false` coming before `true`.
- *  * The [NumericValue] types come next ordered by their numerical value irrespective
- *    of precision or specific type.
- *      For `FLOAT` special values, `nan` comes before `-inf`, which comes before all normal
- *      numeric values, which is followed by `+inf`.
- *  * [DateValue] values follow and are compared by the date from earliest to latest.
- *  * [TimeValue] values follow and are compared by the time of the day (point of time in a day of 24 hours)
- *      from earliest to latest. Note that time without time zone is not directly comparable with time with time zone.
- *  * [TimestampValue] values follow and are compared by the point of time irrespective of precision and
- *    local UTC offset.
- *  * The [TextValue] types come next ordered by their lexicographical ordering by
- *    Unicode scalar irrespective of their specific type.
- *  * The [BlobValue] and [ClobValue] types follow and are ordered by their lexicographical ordering
- *    by octet.
- *  * [ListValue] comes next, and their values compare lexicographically based on their
- *    child elements recursively based on this definition.
- *  * [SexpValue] follows and compares within its type similar to `LIST`.
- *  * [StructValue] values follow and compare lexicographically based on the *sorted*
- *    (as defined by this definition) members, as pairs of field name and the member value.
- *  * [BagValue] values come finally (except with [NullOrder.LAST]), and their values
- *    compare lexicographically based on the *sorted* child elements.
- */
 @OptIn(PartiQLValueExperimental::class)
-public class PartiQLValueComparator {
-    public companion object {
-        /**
-         * @param nullOrder that places [NullValue], [MissingValue], and typed Ion null values first or last
-         */
-        public fun comparator(nullOrder: NullOrder): Comparator<PartiQLValue> = PartiQLValueComparatorInternal(nullOrder)
-    }
-}
-
-/** Whether null values come first or last. */
-public enum class NullOrder {
-    FIRST,
-    LAST
-}
-
-@OptIn(PartiQLValueExperimental::class)
-internal class PartiQLValueComparatorInternal(private val nullOrder: NullOrder) : Comparator<PartiQLValue> {
+internal class PartiQLValueComparatorInternal(private val nullsFirst: Boolean) : Comparator<PartiQLValue> {
     private val EQUAL = 0
     private val LESS = -1
     private val GREATER = 1
@@ -72,7 +25,7 @@ internal class PartiQLValueComparatorInternal(private val nullOrder: NullOrder) 
         }
     }
 
-    private fun compareInternal(l: PartiQLValue, r: PartiQLValue, nullsFirst: NullOrder): Int {
+    private fun compareInternal(l: PartiQLValue, r: PartiQLValue, nullsFirst: Boolean): Int {
         if (l.withoutAnnotations() == r.withoutAnnotations()) {
             return EQUAL
         }
@@ -80,12 +33,12 @@ internal class PartiQLValueComparatorInternal(private val nullOrder: NullOrder) 
         when {
             l.isNullOrMissing() && r.isNullOrMissing() -> return EQUAL
             l.isNullOrMissing() -> return when (nullsFirst) {
-                NullOrder.FIRST -> LESS
-                NullOrder.LAST -> GREATER
+                true -> LESS
+                false -> GREATER
             }
             r.isNullOrMissing() -> return when (nullsFirst) {
-                NullOrder.FIRST -> GREATER
-                NullOrder.LAST -> LESS
+                true -> GREATER
+                false -> LESS
             }
         }
 
@@ -263,6 +216,6 @@ internal class PartiQLValueComparatorInternal(private val nullOrder: NullOrder) 
     }
 
     override fun compare(l: PartiQLValue, r: PartiQLValue): Int {
-        return compareInternal(l, r, nullOrder)
+        return compareInternal(l, r, nullsFirst)
     }
 }
