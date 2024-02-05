@@ -94,17 +94,21 @@ public abstract class BoolValue : ScalarValue<Boolean?> {
 @PartiQLValueExperimental
 public sealed class NumericValue<T : Number> : ScalarValue<T> {
 
-    public val int: Int?
-        get() = value?.toInt()
+    public abstract fun toInt8(): Int8Value
 
-    public val long: Long?
-        get() = value?.toLong()
+    public abstract fun toInt16(): Int16Value
 
-    public val float: Float?
-        get() = value?.toFloat()
+    public abstract fun toInt32(): Int32Value
 
-    public val double: Double?
-        get() = value?.toDouble()
+    public abstract fun toInt64(): Int64Value
+
+    public abstract fun toInt(): IntValue
+
+    public abstract fun toDecimal(): DecimalValue
+
+    public abstract fun toFloat32(): Float32Value
+
+    public abstract fun toFloat64(): Float64Value
 
     abstract override fun copy(annotations: Annotations): NumericValue<T>
 
@@ -514,6 +518,7 @@ public abstract class StructValue<T : PartiQLValue> : PartiQLValue {
     }
 
     override fun hashCode(): Int {
+        // TODO
         return entries.hashCode()
     }
 
@@ -531,6 +536,8 @@ public abstract class NullValue : PartiQLValue {
     override val type: PartiQLValueType = PartiQLValueType.NULL
 
     override val isNull: Boolean = true
+
+    public abstract fun withType(type: PartiQLValueType): PartiQLValue
 
     abstract override fun copy(annotations: Annotations): NullValue
 

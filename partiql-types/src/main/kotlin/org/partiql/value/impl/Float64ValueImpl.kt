@@ -16,10 +16,26 @@ package org.partiql.value.impl
 
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.toPersistentList
+import org.partiql.errors.DataException
 import org.partiql.value.Annotations
+import org.partiql.value.DecimalValue
+import org.partiql.value.Float32Value
 import org.partiql.value.Float64Value
+import org.partiql.value.Int16Value
+import org.partiql.value.Int32Value
+import org.partiql.value.Int64Value
+import org.partiql.value.Int8Value
+import org.partiql.value.IntValue
 import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.decimalValue
+import org.partiql.value.float32Value
+import org.partiql.value.int16Value
+import org.partiql.value.int32Value
+import org.partiql.value.int64Value
+import org.partiql.value.int8Value
+import org.partiql.value.intValue
 import org.partiql.value.util.PartiQLValueVisitor
+import java.math.BigDecimal
 
 @OptIn(PartiQLValueExperimental::class)
 internal data class Float64ValueImpl(
@@ -31,6 +47,63 @@ internal data class Float64ValueImpl(
     override fun withAnnotations(annotations: Annotations): Float64Value = _withAnnotations(annotations)
 
     override fun withoutAnnotations(): Float64Value = _withoutAnnotations()
+    override fun toInt8(): Int8Value {
+        if (this.value == null) {
+            return int8Value(null, annotations)
+        }
+        if (this.value > Byte.MAX_VALUE || this.value < Byte.MIN_VALUE) {
+            throw DataException("Overflow when casting ${this.value} to INT8")
+        }
+        return int8Value(this.value.toInt().toByte(), annotations)
+    }
+
+    override fun toInt16(): Int16Value {
+        if (this.value == null) {
+            return int16Value(null, annotations)
+        }
+        if (this.value > Short.MAX_VALUE || this.value < Short.MIN_VALUE) {
+            throw DataException("Overflow when casting ${this.value} to INT16")
+        }
+        return int16Value(this.value.toInt().toShort(), annotations)
+    }
+
+    override fun toInt32(): Int32Value {
+        if (this.value == null) {
+            return int32Value(null, annotations)
+        }
+        if (this.value > Int.MAX_VALUE || this.value < Int.MIN_VALUE) {
+            throw DataException("Overflow when casting ${this.value} to INT32")
+        }
+        return int32Value(this.value.toInt(), annotations)
+    }
+
+    override fun toInt64(): Int64Value {
+        if (this.value == null) {
+            return int64Value(null, annotations)
+        }
+        if (this.value > Long.MAX_VALUE || this.value < Long.MIN_VALUE) {
+            throw DataException("Overflow when casting ${this.value} to INT64")
+        }
+        return int64Value(this.value.toLong(), annotations)
+    }
+
+    override fun toInt(): IntValue =
+        intValue(this.value?.let { BigDecimal(it) }?.toBigInteger(), annotations)
+
+    override fun toDecimal(): DecimalValue =
+        decimalValue(this.value?.let { BigDecimal(it) }, annotations)
+
+    override fun toFloat32(): Float32Value {
+        if (this.value == null) {
+            return float32Value(null, annotations)
+        }
+        if (this.value > Float.MAX_VALUE || this.value < Float.MIN_VALUE) {
+            throw DataException("Overflow when casting ${this.value} to Float32")
+        }
+        return float32Value(this.value.toFloat(), annotations)
+    }
+
+    override fun toFloat64(): Float64Value = this
 
     override fun <R, C> accept(visitor: PartiQLValueVisitor<R, C>, ctx: C): R = visitor.visitFloat64(this, ctx)
 }

@@ -13,6 +13,17 @@ internal object SqlBuiltins {
 
     @JvmStatic
     val builtins: List<Fn> = listOf(
+        Fn_ABS__INT8__INT8,
+        Fn_ABS__INT16__INT16,
+        Fn_ABS__INT32__INT32,
+        Fn_ABS__INT64__INT64,
+        Fn_ABS__INT__INT,
+        Fn_ABS__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY,
+        Fn_ABS__FLOAT32__FLOAT32,
+        Fn_ABS__FLOAT64__FLOAT64,
+        Fn_CHAR_LENGTH__STRING__INT,
+        Fn_CHAR_LENGTH__SYMBOL__INT,
+        Fn_CHAR_LENGTH__CLOB__INT,
         Fn_POS__INT8__INT8,
         Fn_POS__INT16__INT16,
         Fn_POS__INT32__INT32,

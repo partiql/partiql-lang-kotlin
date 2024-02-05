@@ -3,6 +3,8 @@
 
 package org.partiql.spi.connector.sql.builtins
 
+import org.partiql.errors.DataException
+import org.partiql.errors.TypeCheckException
 import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnParameter
@@ -41,7 +43,7 @@ internal object Fn_DATE_ADD_HOUR__INT32_TIME__TIME : Fn {
         val interval = args[0].check<Int32Value>()
         val datetime = args[1].check<TimeValue>()
         val datetimeValue = datetime.value!!
-        val intervalValue = interval.long!!
+        val intervalValue = interval.toInt64().value!!
         return timeValue(datetimeValue.plusHours(intervalValue))
     }
 }
@@ -64,7 +66,7 @@ internal object Fn_DATE_ADD_HOUR__INT64_TIME__TIME : Fn {
         val interval = args[0].check<Int64Value>()
         val datetime = args[1].check<TimeValue>()
         val datetimeValue = datetime.value!!
-        val intervalValue = interval.long!!
+        val intervalValue = interval.value!!
         return timeValue(datetimeValue.plusHours(intervalValue))
     }
 }
@@ -87,8 +89,7 @@ internal object Fn_DATE_ADD_HOUR__INT_TIME__TIME : Fn {
         val interval = args[0].check<IntValue>()
         val datetime = args[1].check<TimeValue>()
         val datetimeValue = datetime.value!!
-        // TODO: We need to consider overflow here
-        val intervalValue = interval.long!!
+        val intervalValue = try { interval.toInt64().value!! } catch (e: DataException) { throw TypeCheckException() }
         return timeValue(datetimeValue.plusHours(intervalValue))
     }
 }
@@ -111,7 +112,7 @@ internal object Fn_DATE_ADD_HOUR__INT32_TIMESTAMP__TIMESTAMP : Fn {
         val interval = args[0].check<Int32Value>()
         val datetime = args[1].check<TimestampValue>()
         val datetimeValue = datetime.value!!
-        val intervalValue = interval.long!!
+        val intervalValue = interval.toInt64().value!!
         return timestampValue(datetimeValue.plusHours(intervalValue))
     }
 }
@@ -134,7 +135,7 @@ internal object Fn_DATE_ADD_HOUR__INT64_TIMESTAMP__TIMESTAMP : Fn {
         val interval = args[0].check<Int64Value>()
         val datetime = args[1].check<TimestampValue>()
         val datetimeValue = datetime.value!!
-        val intervalValue = interval.long!!
+        val intervalValue = interval.value!!
         return timestampValue(datetimeValue.plusHours(intervalValue))
     }
 }
@@ -157,8 +158,7 @@ internal object Fn_DATE_ADD_HOUR__INT_TIMESTAMP__TIMESTAMP : Fn {
         val interval = args[0].check<IntValue>()
         val datetime = args[1].check<TimestampValue>()
         val datetimeValue = datetime.value!!
-        // TODO: We need to consider overflow here
-        val intervalValue = interval.long!!
+        val intervalValue = try { interval.toInt64().value!! } catch (e: DataException) { throw TypeCheckException() }
         return timestampValue(datetimeValue.plusHours(intervalValue))
     }
 }

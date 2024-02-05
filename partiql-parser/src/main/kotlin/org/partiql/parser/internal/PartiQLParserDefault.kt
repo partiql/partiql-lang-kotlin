@@ -854,7 +854,7 @@ internal class PartiQLParserDefault : PartiQLParser {
                 throw error(ctx, "Expected a path element literal")
             }
             when (val i = v.value) {
-                is NumericValue<*> -> pathStepIndex(i.int!!)
+                is NumericValue<*> -> pathStepIndex(i.toInt32().value!!)
                 is StringValue -> pathStepSymbol(
                     identifierSymbol(
                         i.value!!, Identifier.CaseSensitivity.SENSITIVE
@@ -1725,14 +1725,30 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitFunctionCall(ctx: GeneratedParser.FunctionCallContext) = translate(ctx) {
-            val function = visit(ctx.functionName()) as Identifier
             val args = visitOrEmpty<Expr>(ctx.expr())
-            exprCall(function, args)
+            when (val funcName = ctx.functionName()) {
+                is GeneratedParser.FunctionNameReservedContext -> {
+                    when (funcName.name.type) {
+                        GeneratedParser.MOD -> exprBinary(Expr.Binary.Op.MODULO, args[0], args[1])
+                        else -> visitNonReservedFunctionCall(ctx, args)
+                    }
+                }
+                else -> visitNonReservedFunctionCall(ctx, args)
+            }
+        }
+        private fun visitNonReservedFunctionCall(ctx: GeneratedParser.FunctionCallContext, args: List<Expr>): Expr.Call {
+            val function = visit(ctx.functionName()) as Identifier
+            return exprCall(function, args)
         }
 
         override fun visitFunctionNameReserved(ctx: GeneratedParser.FunctionNameReservedContext): Identifier {
             val path = ctx.qualifier.map { visitSymbolPrimitive(it) }
-            val name = identifierSymbol(ctx.name.text, Identifier.CaseSensitivity.INSENSITIVE)
+            val name = when (ctx.name.type) {
+                GeneratedParser.CHARACTER_LENGTH, GeneratedParser.CHAR_LENGTH ->
+                    identifierSymbol("char_length", Identifier.CaseSensitivity.INSENSITIVE)
+                else ->
+                    identifierSymbol(ctx.name.text, Identifier.CaseSensitivity.INSENSITIVE)
+            }
             return if (path.isEmpty()) {
                 name
             } else {
