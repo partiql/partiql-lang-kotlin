@@ -23,7 +23,6 @@ import org.partiql.lang.eval.EvaluationSession
 import org.partiql.parser.PartiQLParser
 import org.partiql.plan.debug.PlanPrinter
 import org.partiql.planner.PartiQLPlanner
-import org.partiql.plugins.local.LocalConnector
 import picocli.CommandLine
 import java.io.PrintStream
 import java.nio.file.Paths
@@ -72,9 +71,8 @@ object Debug {
         val sess = PartiQLPlanner.Session(
             queryId = UUID.randomUUID().toString(),
             userId = "debug",
-            catalogs = mapOf(
-                "local" to LocalConnector.Metadata(root)
-            )
+            currentCatalog = "default",
+            catalogs = emptyMap(),
         )
         val result = planner.plan(statement, sess).plan
         out.info("-- Plan ----------")

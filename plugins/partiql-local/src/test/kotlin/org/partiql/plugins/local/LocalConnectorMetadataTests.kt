@@ -4,8 +4,7 @@ import org.junit.jupiter.api.Test
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
-import org.partiql.spi.connector.ConnectorObjectPath
-import org.partiql.spi.connector.ConnectorSession
+import org.partiql.spi.connector.ConnectorPath
 import org.partiql.types.BagType
 import org.partiql.types.IntType
 import org.partiql.types.StaticType
@@ -18,10 +17,6 @@ class LocalConnectorMetadataTests {
 
     private val catalogUrl =
         LocalConnectorMetadataTests::class.java.classLoader.getResource("catalogs/local") ?: error("Couldn't be found")
-    private val session = object : ConnectorSession {
-        override fun getQueryId(): String = "mock_query_id"
-        override fun getUserId(): String = "mock_user"
-    }
 
     private val metadata = LocalConnector.Metadata(Paths.get(catalogUrl.path))
 
@@ -46,11 +41,11 @@ class LocalConnectorMetadataTests {
         )
 
         // Act
-        val handle = metadata.getObjectHandle(session, requested)!!
-        val descriptor = metadata.getObjectType(session, handle)
+        val handle = metadata.getObject(requested)!!
+        val descriptor = handle.entity.getType()
 
         // Assert
-        assert(requested.isEquivalentTo(handle.absolutePath))
+        assert(requested.matches(handle.path))
         assert(expected == descriptor) {
             buildString {
                 appendLine("Expected: $expected")
@@ -69,7 +64,7 @@ class LocalConnectorMetadataTests {
                 BindingName("nested", BindingCase.INSENSITIVE),
             )
         )
-        val expectedPath = ConnectorObjectPath(listOf("data", "struct"))
+        val expectedPath = ConnectorPath.of("data", "struct")
         val expected =
             StructType(
                 contentClosed = true,
@@ -80,18 +75,26 @@ class LocalConnectorMetadataTests {
                         fields = mapOf(
                             "nested_id" to IntType()
                         ),
-                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
                     )
                 ),
-                constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
+                constraints = setOf(
+                    TupleConstraint.Open(false),
+                    TupleConstraint.UniqueAttrs(true),
+                    TupleConstraint.Ordered
+                )
             )
 
         // Act
-        val handle = metadata.getObjectHandle(session, requested)!!
-        val descriptor = metadata.getObjectType(session, handle)
+        val handle = metadata.getObject(requested)!!
+        val descriptor = handle.entity.getType()
 
         // Assert
-        assertEquals(expectedPath, handle.absolutePath)
+        assertEquals(expectedPath, handle.path)
         assert(expected == descriptor) {
             buildString {
                 appendLine("Expected: $expected")
@@ -111,7 +114,7 @@ class LocalConnectorMetadataTests {
         )
 
         // Act
-        val handle = metadata.getObjectHandle(session, requested)
+        val handle = metadata.getObject(requested)
         assertEquals(null, handle)
     }
 
@@ -126,7 +129,7 @@ class LocalConnectorMetadataTests {
         )
 
         // Act
-        val handle = metadata.getObjectHandle(session, requested)
+        val handle = metadata.getObject(requested)
         assertEquals(null, handle)
     }
 
@@ -141,19 +144,7 @@ class LocalConnectorMetadataTests {
         )
 
         // Act
-        val handle = metadata.getObjectHandle(session, requested)
+        val handle = metadata.getObject(requested)
         assertEquals(null, handle)
-    }
-
-    private fun BindingPath.isEquivalentTo(other: ConnectorObjectPath): Boolean {
-        if (this.steps.size != other.steps.size) {
-            return false
-        }
-        this.steps.forEachIndexed { index, step ->
-            if (step.isEquivalentTo(other.steps[index]).not()) {
-                return false
-            }
-        }
-        return true
     }
 }

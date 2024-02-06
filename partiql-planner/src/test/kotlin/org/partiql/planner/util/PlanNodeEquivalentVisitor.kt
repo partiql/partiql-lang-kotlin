@@ -1,8 +1,6 @@
 package org.partiql.planner.util
 
-import org.partiql.plan.Agg
 import org.partiql.plan.Catalog
-import org.partiql.plan.Fn
 import org.partiql.plan.Identifier
 import org.partiql.plan.PlanNode
 import org.partiql.plan.Rel
@@ -20,36 +18,6 @@ class PlanNodeEquivalentVisitor : PlanBaseVisitor<Boolean, PlanNode>() {
         if (!super.visitCatalog(node, ctx)) return false
         ctx as Catalog
         if (node.name != ctx.name) return false
-        return true
-    }
-
-    override fun visitCatalogSymbol(node: Catalog.Symbol, ctx: PlanNode): Boolean {
-        if (!super.visitCatalogSymbol(node, ctx)) return false
-        ctx as Catalog.Symbol
-        if (node.path != ctx.path) return false
-        if (node.type != ctx.type) return false
-        return true
-    }
-
-    override fun visitCatalogSymbolRef(node: Catalog.Symbol.Ref, ctx: PlanNode): Boolean {
-        if (!super.visitCatalogSymbolRef(node, ctx)) return false
-        ctx as Catalog.Symbol.Ref
-        if (node.catalog != ctx.catalog) return false
-        if (node.symbol != ctx.symbol) return false
-        return true
-    }
-
-    override fun visitFn(node: Fn, ctx: PlanNode): Boolean {
-        if (!super.visitFn(node, ctx)) return false
-        ctx as Fn
-        if (node.signature != ctx.signature) return false
-        return true
-    }
-
-    override fun visitAgg(node: Agg, ctx: PlanNode): Boolean {
-        if (!super.visitAgg(node, ctx)) return false
-        ctx as Agg
-        if (node.signature != ctx.signature) return false
         return true
     }
 

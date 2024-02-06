@@ -84,7 +84,8 @@ public sealed interface PartiQLValue {
          * @param nullsFirst whether [NullValue], [MissingValue], and typed Ion null values come first
          */
         @JvmStatic
-        public fun comparator(nullsFirst: Boolean): Comparator<PartiQLValue> = PartiQLValueComparatorInternal(nullsFirst)
+        @JvmOverloads
+        public fun comparator(nullsFirst: Boolean = true): Comparator<PartiQLValue> = PartiQLValueComparatorInternal(nullsFirst)
     }
 }
 
@@ -549,7 +550,6 @@ public abstract class StructValue<T : PartiQLValue> : PartiQLValue {
     }
 
     override fun hashCode(): Int {
-        // TODO
         return entries.hashCode()
     }
 
@@ -580,7 +580,7 @@ public abstract class MissingValue : PartiQLValue {
 
     override val type: PartiQLValueType = PartiQLValueType.MISSING
 
-    override val isNull: Boolean = true
+    override val isNull: Boolean = false
 
     abstract override fun copy(annotations: Annotations): MissingValue
 

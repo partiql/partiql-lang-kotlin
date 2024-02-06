@@ -20,12 +20,23 @@ import org.partiql.plan.relOpExcludeTypeStructSymbol
 import org.partiql.plan.relOpExcludeTypeStructWildcard
 import org.partiql.plan.rexOpVar
 import org.partiql.planner.PartiQLPlanner
+import org.partiql.plugins.memory.MemoryConnector
+import org.partiql.spi.connector.ConnectorSession
 import java.util.stream.Stream
 import kotlin.test.assertEquals
 
 class SubsumptionTest {
-    private val planner = org.partiql.planner.PartiQLPlannerBuilder().build()
-    private val parser = PartiQLParser.default()
+
+    companion object {
+
+        private val planner = PartiQLPlanner.default()
+        private val parser = PartiQLParser.default()
+        private val session = object : ConnectorSession {
+            override fun getQueryId(): String = "query-id"
+            override fun getUserId(): String = "user-id"
+        }
+        private val connector = MemoryConnector.empty()
+    }
 
     private fun getExcludeClause(statement: Statement): Rel.Op.Exclude {
         val queryExpr = (statement as Statement.Query).root
@@ -36,7 +47,12 @@ class SubsumptionTest {
     private fun testExcludeExprSubsumption(tc: SubsumptionTC) {
         val text = "SELECT * EXCLUDE ${tc.excludeExprStr} FROM <<>> AS s, <<>> AS t;"
         val statement = parser.parse(text).root
-        val session = PartiQLPlanner.Session("q", "u")
+        val session = PartiQLPlanner.Session(
+            queryId = "query-id", userId = "user-id", currentCatalog = "default",
+            catalogs = mapOf(
+                "default" to connector.getMetadata(session),
+            )
+        )
         val plan = planner.plan(statement, session).plan
         val excludeClause = getExcludeClause(plan.statement).paths
         assertEquals(tc.expectedExcludeExprs, excludeClause)
@@ -111,12 +127,10 @@ class SubsumptionTest {
                         root = rexOpVar(0),
                         steps = listOf(
                             relOpExcludeStep(
-                                type = relOpExcludeTypeStructSymbol(symbol = "a"),
-                                substeps = emptyList()
+                                type = relOpExcludeTypeStructSymbol(symbol = "a"), substeps = emptyList()
                             ),
                             relOpExcludeStep(
-                                type = relOpExcludeTypeStructSymbol(symbol = "b"),
-                                substeps = emptyList()
+                                type = relOpExcludeTypeStructSymbol(symbol = "b"), substeps = emptyList()
                             )
                         )
                     ),
@@ -124,12 +138,10 @@ class SubsumptionTest {
                         root = rexOpVar(1),
                         steps = listOf(
                             relOpExcludeStep(
-                                type = relOpExcludeTypeStructSymbol(symbol = "a"),
-                                substeps = emptyList()
+                                type = relOpExcludeTypeStructSymbol(symbol = "a"), substeps = emptyList()
                             ),
                             relOpExcludeStep(
-                                type = relOpExcludeTypeStructSymbol(symbol = "b"),
-                                substeps = emptyList()
+                                type = relOpExcludeTypeStructSymbol(symbol = "b"), substeps = emptyList()
                             )
                         )
                     )
@@ -150,19 +162,16 @@ class SubsumptionTest {
                         root = rexOpVar(1),
                         steps = listOf(
                             relOpExcludeStep(
-                                type = relOpExcludeTypeStructSymbol(symbol = "a"),
-                                substeps = emptyList()
+                                type = relOpExcludeTypeStructSymbol(symbol = "a"), substeps = emptyList()
                             ),
                             relOpExcludeStep(
-                                type = relOpExcludeTypeStructSymbol(symbol = "b"),
-                                substeps = emptyList()
+                                type = relOpExcludeTypeStructSymbol(symbol = "b"), substeps = emptyList()
                             ),
                             relOpExcludeStep(
                                 type = relOpExcludeTypeStructSymbol(symbol = "c"),
                                 substeps = listOf(
                                     relOpExcludeStep(
-                                        type = relOpExcludeTypeStructWildcard(),
-                                        substeps = emptyList()
+                                        type = relOpExcludeTypeStructWildcard(), substeps = emptyList()
                                     )
                                 )
                             ),
@@ -189,8 +198,7 @@ class SubsumptionTest {
                                 type = relOpExcludeTypeStructSymbol(symbol = "g"),
                                 substeps = listOf(
                                     relOpExcludeStep(
-                                        type = relOpExcludeTypeCollWildcard(),
-                                        substeps = emptyList()
+                                        type = relOpExcludeTypeCollWildcard(), substeps = emptyList()
                                     )
                                 )
                             ),
@@ -198,8 +206,7 @@ class SubsumptionTest {
                                 type = relOpExcludeTypeStructSymbol(symbol = "h"),
                                 substeps = listOf(
                                     relOpExcludeStep(
-                                        type = relOpExcludeTypeCollIndex(index = 1),
-                                        substeps = emptyList()
+                                        type = relOpExcludeTypeCollIndex(index = 1), substeps = emptyList()
                                     )
                                 )
                             ),
@@ -207,8 +214,7 @@ class SubsumptionTest {
                                 type = relOpExcludeTypeStructSymbol(symbol = "i"),
                                 substeps = listOf(
                                     relOpExcludeStep(
-                                        type = relOpExcludeTypeStructKey(key = "j"),
-                                        substeps = emptyList()
+                                        type = relOpExcludeTypeStructKey(key = "j"), substeps = emptyList()
                                     )
                                 )
                             ),
@@ -234,12 +240,10 @@ class SubsumptionTest {
                         root = rexOpVar(1),
                         steps = listOf(
                             relOpExcludeStep(
-                                type = relOpExcludeTypeStructSymbol(symbol = "a"),
-                                substeps = emptyList()
+                                type = relOpExcludeTypeStructSymbol(symbol = "a"), substeps = emptyList()
                             ),
                             relOpExcludeStep(
-                                type = relOpExcludeTypeStructSymbol(symbol = "b"),
-                                substeps = emptyList()
+                                type = relOpExcludeTypeStructSymbol(symbol = "b"), substeps = emptyList()
                             ),
                             relOpExcludeStep(
                                 type = relOpExcludeTypeStructSymbol(symbol = "c"),
@@ -273,8 +277,7 @@ class SubsumptionTest {
                                 type = relOpExcludeTypeStructSymbol(symbol = "e"),
                                 substeps = listOf(
                                     relOpExcludeStep(
-                                        type = relOpExcludeTypeCollIndex(index = 1),
-                                        substeps = emptyList()
+                                        type = relOpExcludeTypeCollIndex(index = 1), substeps = emptyList()
                                     )
                                 )
                             ),
@@ -282,8 +285,7 @@ class SubsumptionTest {
                                 type = relOpExcludeTypeStructSymbol(symbol = "f"),
                                 substeps = listOf(
                                     relOpExcludeStep(
-                                        type = relOpExcludeTypeCollIndex(index = 1),
-                                        substeps = emptyList()
+                                        type = relOpExcludeTypeCollIndex(index = 1), substeps = emptyList()
                                     )
                                 )
                             ),
@@ -291,8 +293,7 @@ class SubsumptionTest {
                                 type = relOpExcludeTypeStructSymbol(symbol = "g"),
                                 substeps = listOf(
                                     relOpExcludeStep(
-                                        type = relOpExcludeTypeCollWildcard(),
-                                        substeps = emptyList()
+                                        type = relOpExcludeTypeCollWildcard(), substeps = emptyList()
                                     )
                                 )
                             ),
@@ -300,18 +301,15 @@ class SubsumptionTest {
                                 type = relOpExcludeTypeStructSymbol(symbol = "h"),
                                 substeps = listOf(
                                     relOpExcludeStep(
-                                        type = relOpExcludeTypeCollWildcard(),
-                                        substeps = emptyList()
+                                        type = relOpExcludeTypeCollWildcard(), substeps = emptyList()
                                     )
                                 )
                             ),
                             relOpExcludeStep(
-                                type = relOpExcludeTypeStructKey(key = "i"),
-                                substeps = emptyList()
+                                type = relOpExcludeTypeStructKey(key = "i"), substeps = emptyList()
                             ),
                             relOpExcludeStep(
-                                type = relOpExcludeTypeStructKey(key = "j"),
-                                substeps = emptyList()
+                                type = relOpExcludeTypeStructKey(key = "j"), substeps = emptyList()
                             ),
                         )
                     ),
@@ -330,8 +328,7 @@ class SubsumptionTest {
                                 type = relOpExcludeTypeStructSymbol(symbol = "a"),
                                 substeps = listOf(
                                     relOpExcludeStep(
-                                        type = relOpExcludeTypeStructWildcard(),
-                                        substeps = emptyList()
+                                        type = relOpExcludeTypeStructWildcard(), substeps = emptyList()
                                     )
                                 )
                             ),
@@ -339,8 +336,7 @@ class SubsumptionTest {
                                 type = relOpExcludeTypeStructKey(key = "b"),
                                 substeps = listOf(
                                     relOpExcludeStep(
-                                        type = relOpExcludeTypeStructWildcard(),
-                                        substeps = emptyList()
+                                        type = relOpExcludeTypeStructWildcard(), substeps = emptyList()
                                     )
                                 )
                             ),
@@ -361,8 +357,7 @@ class SubsumptionTest {
                                 type = relOpExcludeTypeStructSymbol(symbol = "a"),
                                 substeps = listOf(
                                     relOpExcludeStep(
-                                        type = relOpExcludeTypeCollWildcard(),
-                                        substeps = emptyList()
+                                        type = relOpExcludeTypeCollWildcard(), substeps = emptyList()
                                     )
                                 )
                             ),
@@ -373,8 +368,7 @@ class SubsumptionTest {
                                         type = relOpExcludeTypeStructKey(key = "b1"),
                                         substeps = listOf(
                                             relOpExcludeStep(
-                                                type = relOpExcludeTypeCollWildcard(),
-                                                substeps = emptyList()
+                                                type = relOpExcludeTypeCollWildcard(), substeps = emptyList()
                                             )
                                         )
                                     )
@@ -394,15 +388,13 @@ class SubsumptionTest {
                         root = rexOpVar(1),
                         steps = listOf(
                             relOpExcludeStep(
-                                type = relOpExcludeTypeStructSymbol(symbol = "foo"),
-                                substeps = emptyList()
+                                type = relOpExcludeTypeStructSymbol(symbol = "foo"), substeps = emptyList()
                             ),
                             relOpExcludeStep(
                                 type = relOpExcludeTypeStructKey(key = "bAr"),
                                 substeps = listOf(
                                     relOpExcludeStep(
-                                        type = relOpExcludeTypeStructSymbol(symbol = "baz"),
-                                        substeps = emptyList()
+                                        type = relOpExcludeTypeStructSymbol(symbol = "baz"), substeps = emptyList()
                                     )
                                 )
                             ),
@@ -587,28 +579,22 @@ class SubsumptionTest {
                         root = rexOpVar(1),
                         steps = listOf(
                             relOpExcludeStep(
-                                type = relOpExcludeTypeStructSymbol(symbol = "a"),
-                                substeps = emptyList()
+                                type = relOpExcludeTypeStructSymbol(symbol = "a"), substeps = emptyList()
                             ),
                             relOpExcludeStep(
-                                type = relOpExcludeTypeStructSymbol(symbol = "b"),
-                                substeps = emptyList()
+                                type = relOpExcludeTypeStructSymbol(symbol = "b"), substeps = emptyList()
                             ),
                             relOpExcludeStep(
-                                type = relOpExcludeTypeStructSymbol(symbol = "c"),
-                                substeps = emptyList()
+                                type = relOpExcludeTypeStructSymbol(symbol = "c"), substeps = emptyList()
                             ),
                             relOpExcludeStep(
-                                type = relOpExcludeTypeStructSymbol(symbol = "d"),
-                                substeps = emptyList()
+                                type = relOpExcludeTypeStructSymbol(symbol = "d"), substeps = emptyList()
                             ),
                             relOpExcludeStep(
-                                type = relOpExcludeTypeStructSymbol(symbol = "e"),
-                                substeps = emptyList()
+                                type = relOpExcludeTypeStructSymbol(symbol = "e"), substeps = emptyList()
                             ),
                             relOpExcludeStep(
-                                type = relOpExcludeTypeStructKey(key = "f"),
-                                substeps = emptyList()
+                                type = relOpExcludeTypeStructKey(key = "f"), substeps = emptyList()
                             ),
                         )
                     ),

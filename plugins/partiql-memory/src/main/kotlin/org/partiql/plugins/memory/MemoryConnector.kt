@@ -1,119 +1,52 @@
+/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
 package org.partiql.plugins.memory
 
 import com.amazon.ionelement.api.StructElement
-import org.partiql.spi.BindingCase
-import org.partiql.spi.BindingPath
 import org.partiql.spi.connector.Connector
 import org.partiql.spi.connector.ConnectorBindings
-import org.partiql.spi.connector.ConnectorMetadata
-import org.partiql.spi.connector.ConnectorObjectHandle
-import org.partiql.spi.connector.ConnectorObjectPath
 import org.partiql.spi.connector.ConnectorSession
-import org.partiql.types.StaticType
+import org.partiql.spi.connector.sql.SqlConnector
+import org.partiql.spi.connector.sql.SqlMetadata
 
 /**
  * This is a plugin used for testing and is not a versioned API per semver.
  */
-public class MemoryConnector(
-    private val metadata: ConnectorMetadata,
-    private val bindings: ConnectorBindings,
-) : Connector {
+public class MemoryConnector(private val catalog: MemoryCatalog) : SqlConnector() {
 
-    companion object {
-        const val CONNECTOR_NAME = "memory"
-    }
-
-    override fun getMetadata(session: ConnectorSession): ConnectorMetadata = metadata
+    private val bindings = MemoryBindings(catalog)
 
     override fun getBindings(): ConnectorBindings = bindings
 
-    class Factory(private val catalogs: Map<String, MemoryConnector>) : Connector.Factory {
+    override fun getMetadata(session: ConnectorSession): SqlMetadata = MemoryMetadata(catalog, session, info)
 
-        override val name: String = CONNECTOR_NAME
+    internal class Factory(private val catalogs: List<MemoryCatalog>) : Connector.Factory {
 
-        override fun create(catalogName: String, config: StructElement?): Connector {
-            return catalogs[catalogName] ?: error("Catalog $catalogName is not registered in the MemoryPlugin")
+        override val name: String = "memory"
+
+        override fun create(catalogName: String, config: StructElement?): MemoryConnector {
+            val catalog = catalogs.firstOrNull { it.name == catalogName }
+                ?: error("Catalog $catalogName is not registered in the MemoryPlugin")
+            return MemoryConnector(catalog)
         }
     }
 
-    /**
-     * Connector metadata uses dot-delimited identifiers and StaticType for catalog metadata.
-     *
-     * @property map
-     */
-    class Metadata(private val map: Map<String, StaticType>) : ConnectorMetadata {
+    public companion object {
 
-        public val entries: List<Pair<String, StaticType>>
-            get() = map.entries.map { it.key to it.value }
-
-        companion object {
-            @JvmStatic
-            fun of(vararg entities: Pair<String, StaticType>) = Metadata(mapOf(*entities))
-        }
-
-        override fun getObjectType(session: ConnectorSession, handle: ConnectorObjectHandle): StaticType {
-            val obj = handle.value as MemoryObject
-            return obj.type
-        }
-
-        override fun getObjectHandle(session: ConnectorSession, path: BindingPath): ConnectorObjectHandle? {
-            val value = lookup(path) ?: return null
-            return ConnectorObjectHandle(
-                absolutePath = ConnectorObjectPath(value.path),
-                value = value,
-            )
-        }
-
-        operator fun get(key: String): StaticType? = map[key]
-
-        public fun lookup(path: BindingPath): MemoryObject? {
-            val kPath = ConnectorObjectPath(
-                path.steps.map {
-                    when (it.bindingCase) {
-                        BindingCase.SENSITIVE -> it.name
-                        BindingCase.INSENSITIVE -> it.loweredName
-                    }
-                }
-            )
-            val k = kPath.steps.joinToString(".")
-            if (this[k] != null) {
-                return this[k]?.let { MemoryObject(kPath.steps, it) }
-            } else {
-                val candidatePath = this.map.keys.map { it.split(".") }
-                val kPathIter = kPath.steps.listIterator()
-                while (kPathIter.hasNext()) {
-                    val currKPath = kPathIter.next()
-                    candidatePath.forEach {
-                        val match = mutableListOf<String>()
-                        val candidateIterator = it.iterator()
-                        while (candidateIterator.hasNext()) {
-                            if (candidateIterator.next() == currKPath) {
-                                match.add(currKPath)
-                                val pathIteratorCopy = kPath.steps.listIterator(kPathIter.nextIndex())
-                                candidateIterator.forEachRemaining {
-                                    val nextPath = pathIteratorCopy.next()
-                                    if (it != nextPath) {
-                                        match.clear()
-                                        return@forEachRemaining
-                                    }
-                                    match.add(it)
-                                }
-                            } else {
-                                return@forEach
-                            }
-                        }
-                        if (match.isNotEmpty()) {
-                            return this[match.joinToString(".")]?.let { it1 ->
-                                MemoryObject(
-                                    match,
-                                    it1
-                                )
-                            }
-                        }
-                    }
-                }
-                return null
-            }
-        }
+        @JvmStatic
+        public fun empty(name: String = "default"): MemoryConnector = MemoryConnector(MemoryCatalog(name))
     }
 }

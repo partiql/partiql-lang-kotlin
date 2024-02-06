@@ -25,11 +25,11 @@ import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.ir.Identifier
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.builder.plan
-import org.partiql.planner.internal.ir.fnUnresolved
 import org.partiql.planner.internal.ir.identifierQualified
 import org.partiql.planner.internal.ir.identifierSymbol
 import org.partiql.planner.internal.ir.rex
-import org.partiql.planner.internal.ir.rexOpCallStatic
+import org.partiql.planner.internal.ir.rexOpCallUnresolved
+import org.partiql.planner.internal.ir.rexOpCastUnresolved
 import org.partiql.planner.internal.ir.rexOpCollection
 import org.partiql.planner.internal.ir.rexOpLit
 import org.partiql.planner.internal.ir.rexOpPathIndex
@@ -43,10 +43,9 @@ import org.partiql.planner.internal.ir.rexOpVarUnresolved
 import org.partiql.planner.internal.typer.toNonNullStaticType
 import org.partiql.planner.internal.typer.toStaticType
 import org.partiql.types.StaticType
-import org.partiql.types.TimeType
 import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.PartiQLValueType
 import org.partiql.value.StringValue
-import org.partiql.value.boolValue
 import org.partiql.value.int32Value
 import org.partiql.value.int64Value
 import org.partiql.value.io.PartiQLValueIonReaderBuilder
@@ -104,10 +103,14 @@ internal object RexConverter {
          * @param ctx
          * @return
          */
-        private fun visitExprCoerce(node: Expr, ctx: Env, coercion: Rex.Op.Subquery.Coercion = Rex.Op.Subquery.Coercion.SCALAR): Rex {
+        private fun visitExprCoerce(
+            node: Expr,
+            ctx: Env,
+            coercion: Rex.Op.Subquery.Coercion = Rex.Op.Subquery.Coercion.SCALAR,
+        ): Rex {
             val rex = super.visitExpr(node, ctx)
             return when (rex.op is Rex.Op.Select) {
-                true -> rex(StaticType.ANY, rexOpSubquery(rex.op as Rex.Op.Select, coercion))
+                true -> rex(StaticType.ANY, rexOpSubquery(rex.op, coercion))
                 else -> rex
             }
         }
@@ -129,9 +132,8 @@ internal object RexConverter {
             val arg = visitExprCoerce(node.expr, context)
             val args = listOf(arg)
             // Fn
-            val id = identifierSymbol(node.op.name.lowercase(), Identifier.CaseSensitivity.SENSITIVE)
-            val fn = fnUnresolved(id, true)
-            val op = rexOpCallStatic(fn, args)
+            val id = identifierSymbol(node.op.name.lowercase(), Identifier.CaseSensitivity.INSENSITIVE)
+            val op = rexOpCallUnresolved(id, args)
             return rex(type, op)
         }
 
@@ -147,11 +149,8 @@ internal object RexConverter {
                     rex(type, op)
                 }
                 else -> {
-                    // Fn
-                    val id = identifierSymbol(node.op.name.lowercase(), Identifier.CaseSensitivity.SENSITIVE)
-                    val fn = fnUnresolved(id, true)
-                    // Rex
-                    val op = rexOpCallStatic(fn, args)
+                    val id = identifierSymbol(node.op.name.lowercase(), Identifier.CaseSensitivity.INSENSITIVE)
+                    val op = rexOpCallUnresolved(id, args)
                     rex(type, op)
                 }
             }
@@ -193,7 +192,10 @@ internal object RexConverter {
                     when (identifierSteps.size) {
                         0 -> root to node.steps
                         else -> {
-                            val newRoot = rex(StaticType.ANY, rexOpVarUnresolved(mergeIdentifiers(op.identifier, identifierSteps), op.scope))
+                            val newRoot = rex(
+                                StaticType.ANY,
+                                rexOpVarUnresolved(mergeIdentifiers(op.identifier, identifierSteps), op.scope)
+                            )
                             val newSteps = node.steps.subList(identifierSteps.size, node.steps.size)
                             newRoot to newSteps
                         }
@@ -224,7 +226,10 @@ internal object RexConverter {
                         is Expr.Path.Step.Symbol -> {
                             val identifier = AstToPlan.convert(step.symbol)
                             when (identifier.caseSensitivity) {
-                                Identifier.CaseSensitivity.SENSITIVE -> rexOpPathKey(current, rexString(identifier.symbol))
+                                Identifier.CaseSensitivity.SENSITIVE -> rexOpPathKey(
+                                    current,
+                                    rexString(identifier.symbol)
+                                )
                                 Identifier.CaseSensitivity.INSENSITIVE -> rexOpPathSymbol(current, identifier.symbol)
                             }
                         }
@@ -245,11 +250,10 @@ internal object RexConverter {
             if (id is Identifier.Symbol && id.symbol.equals("TUPLEUNION", ignoreCase = true)) {
                 return visitExprCallTupleUnion(node, context)
             }
-            val fn = fnUnresolved(id, false)
             // Args
             val args = node.args.map { visitExprCoerce(it, context) }
             // Rex
-            val op = rexOpCallStatic(fn, args)
+            val op = rexOpCallUnresolved(id, args)
             return rex(type, op)
         }
 
@@ -269,11 +273,10 @@ internal object RexConverter {
 
             // Converts AST CASE (x) WHEN y THEN z --> Plan CASE WHEN x = y THEN z
             val id = identifierSymbol(Expr.Binary.Op.EQ.name.lowercase(), Identifier.CaseSensitivity.SENSITIVE)
-            val fn = fnUnresolved(id, true)
             val createBranch: (Rex, Rex) -> Rex.Op.Case.Branch = { condition: Rex, result: Rex ->
                 val updatedCondition = when (rex) {
                     null -> condition
-                    else -> rex(type, rexOpCallStatic(fn.copy(), listOf(rex, condition)))
+                    else -> rex(type, rexOpCallUnresolved(id, listOf(rex, condition)))
                 }
                 rexOpCaseBranch(updatedCondition, result)
             }
@@ -470,8 +473,7 @@ internal object RexConverter {
             val expr1 = visitExpr(node.value, ctx)
             val expr2 = visitExpr(node.nullifier, ctx)
             val id = identifierSymbol(Expr.Binary.Op.EQ.name.lowercase(), Identifier.CaseSensitivity.SENSITIVE)
-            val fn = fnUnresolved(id, true)
-            val call = rexOpCallStatic(fn, listOf(expr1, expr2))
+            val call = rexOpCallUnresolved(id, listOf(expr1, expr2))
             val branches = listOf(
                 rexOpCaseBranch(rex(type, call), rex(type = StaticType.NULL, op = rexOpLit(value = nullValue()))),
             )
@@ -529,7 +531,7 @@ internal object RexConverter {
                 }
                 // TODO: We may want to add a trim_both for trim(BOTH FROM arg)
                 else -> when (arg1) {
-                    null -> callNonHidden("trim", arg0)
+                    null -> call("trim", arg0)
                     else -> call("trim_chars", arg0, arg1)
                 }
             }
@@ -547,44 +549,45 @@ internal object RexConverter {
         // TODO: Ignoring type parameter now
         override fun visitExprCast(node: Expr.Cast, ctx: Env): Rex {
             val type = node.asType
-            val arg0 = visitExprCoerce(node.value, ctx)
-            return when (type) {
-                is Type.NullType -> rex(StaticType.NULL, call("cast_null", arg0))
-                is Type.Missing -> rex(StaticType.MISSING, call("cast_missing", arg0))
-                is Type.Bool -> rex(StaticType.BOOL, call("cast_bool", arg0))
-                is Type.Tinyint -> TODO("Static Type does not have TINYINT type")
-                is Type.Smallint, is Type.Int2 -> rex(StaticType.INT2, call("cast_int16", arg0))
-                is Type.Int4 -> rex(StaticType.INT4, call("cast_int32", arg0))
-                is Type.Bigint, is Type.Int8 -> rex(StaticType.INT8, call("cast_int64", arg0))
-                is Type.Int -> rex(StaticType.INT, call("cast_int", arg0))
-                is Type.Real -> TODO("Static Type does not have REAL type")
-                is Type.Float32 -> TODO("Static Type does not have FLOAT32 type")
-                is Type.Float64 -> rex(StaticType.FLOAT, call("cast_float64", arg0))
-                is Type.Decimal -> rex(StaticType.DECIMAL, call("cast_decimal", arg0))
-                is Type.Numeric -> rex(StaticType.DECIMAL, call("cast_numeric", arg0))
-                is Type.Char -> rex(StaticType.CHAR, call("cast_char", arg0))
-                is Type.Varchar -> rex(StaticType.STRING, call("cast_varchar", arg0))
-                is Type.String -> rex(StaticType.STRING, call("cast_string", arg0))
-                is Type.Symbol -> rex(StaticType.SYMBOL, call("cast_symbol", arg0))
-                is Type.Bit -> TODO("Static Type does not have Bit type")
-                is Type.BitVarying -> TODO("Static Type does not have BitVarying type")
-                is Type.ByteString -> TODO("Static Type does not have ByteString type")
-                is Type.Blob -> rex(StaticType.BLOB, call("cast_blob", arg0))
-                is Type.Clob -> rex(StaticType.CLOB, call("cast_clob", arg0))
-                is Type.Date -> rex(StaticType.DATE, call("cast_date", arg0))
-                is Type.Time -> rex(StaticType.TIME, call("cast_time", arg0))
-                is Type.TimeWithTz -> rex(TimeType(null, true), call("cast_timeWithTz", arg0))
-                is Type.Timestamp -> TODO("Need to rebase main")
-                is Type.TimestampWithTz -> rex(StaticType.TIMESTAMP, call("cast_timeWithTz", arg0))
-                is Type.Interval -> TODO("Static Type does not have Interval type")
-                is Type.Bag -> rex(StaticType.BAG, call("cast_bag", arg0))
-                is Type.List -> rex(StaticType.LIST, call("cast_list", arg0))
-                is Type.Sexp -> rex(StaticType.SEXP, call("cast_sexp", arg0))
-                is Type.Tuple -> rex(StaticType.STRUCT, call("cast_tuple", arg0))
-                is Type.Struct -> rex(StaticType.STRUCT, call("cast_struct", arg0))
-                is Type.Any -> rex(StaticType.ANY, call("cast_any", arg0))
+            val arg = visitExprCoerce(node.value, ctx)
+            val target = when (type) {
+                is Type.NullType -> PartiQLValueType.NULL
+                is Type.Missing -> PartiQLValueType.MISSING
+                is Type.Bool -> PartiQLValueType.BOOL
+                is Type.Tinyint -> PartiQLValueType.INT8
+                is Type.Smallint, is Type.Int2 -> PartiQLValueType.INT16
+                is Type.Int4 -> PartiQLValueType.INT32
+                is Type.Bigint, is Type.Int8 -> PartiQLValueType.INT64
+                is Type.Int -> PartiQLValueType.INT
+                is Type.Real -> PartiQLValueType.FLOAT64
+                is Type.Float32 -> PartiQLValueType.FLOAT32
+                is Type.Float64 -> PartiQLValueType.FLOAT64
+                is Type.Decimal -> if (type.scale != null) PartiQLValueType.DECIMAL else PartiQLValueType.DECIMAL_ARBITRARY
+                is Type.Numeric -> if (type.scale != null) PartiQLValueType.DECIMAL else PartiQLValueType.DECIMAL_ARBITRARY
+                is Type.Char -> PartiQLValueType.CHAR
+                is Type.Varchar -> PartiQLValueType.STRING
+                is Type.String -> PartiQLValueType.STRING
+                is Type.Symbol -> PartiQLValueType.SYMBOL
+                is Type.Bit -> PartiQLValueType.BINARY
+                is Type.BitVarying -> PartiQLValueType.BINARY
+                is Type.ByteString -> PartiQLValueType.BINARY
+                is Type.Blob -> PartiQLValueType.BLOB
+                is Type.Clob -> PartiQLValueType.CLOB
+                is Type.Date -> PartiQLValueType.DATE
+                is Type.Time -> PartiQLValueType.TIME
+                is Type.TimeWithTz -> PartiQLValueType.TIME
+                is Type.Timestamp -> PartiQLValueType.TIMESTAMP
+                is Type.TimestampWithTz -> PartiQLValueType.TIMESTAMP
+                is Type.Interval -> PartiQLValueType.INTERVAL
+                is Type.Bag -> PartiQLValueType.BAG
+                is Type.List -> PartiQLValueType.LIST
+                is Type.Sexp -> PartiQLValueType.SEXP
+                is Type.Tuple -> PartiQLValueType.STRUCT
+                is Type.Struct -> PartiQLValueType.STRUCT
+                is Type.Any -> PartiQLValueType.ANY
                 is Type.Custom -> TODO("Custom type not supported ")
             }
+            return rex(StaticType.ANY, rexOpCastUnresolved(target, arg))
         }
 
         override fun visitExprCanCast(node: Expr.CanCast, ctx: Env): Rex {
@@ -634,39 +637,22 @@ internal object RexConverter {
 
         // Helpers
 
-        private fun bool(v: Boolean): Rex {
-            val type = StaticType.BOOL
-            val op = rexOpLit(boolValue(v))
-            return rex(type, op)
-        }
-
-        private fun negate(call: Rex.Op.Call): Rex.Op.Call.Static {
+        private fun negate(call: Rex.Op.Call): Rex.Op.Call {
             val name = Expr.Unary.Op.NOT.name
             val id = identifierSymbol(name.lowercase(), Identifier.CaseSensitivity.SENSITIVE)
-            val fn = fnUnresolved(id, true)
             // wrap
             val arg = rex(StaticType.BOOL, call)
             // rewrite call
-            return rexOpCallStatic(fn, listOf(arg))
+            return rexOpCallUnresolved(id, listOf(arg))
         }
 
         /**
          * Create a [Rex.Op.Call.Static] node which has a hidden unresolved Function.
          * The purpose of having such hidden function is to prevent usage of generated function name in query text.
          */
-        private fun call(name: String, vararg args: Rex): Rex.Op.Call.Static {
-            val id = identifierSymbol(name, Identifier.CaseSensitivity.SENSITIVE)
-            val fn = fnUnresolved(id, true)
-            return rexOpCallStatic(fn, args.toList())
-        }
-
-        /**
-         * Create a [Rex.Op.Call.Static] node which has a non-hidden unresolved Function.
-         */
-        private fun callNonHidden(name: String, vararg args: Rex): Rex.Op.Call.Static {
-            val id = identifierSymbol(name, Identifier.CaseSensitivity.SENSITIVE)
-            val fn = fnUnresolved(id, false)
-            return rexOpCallStatic(fn, args.toList())
+        private fun call(name: String, vararg args: Rex): Rex.Op.Call {
+            val id = identifierSymbol(name, Identifier.CaseSensitivity.INSENSITIVE)
+            return rexOpCallUnresolved(id, args.toList())
         }
 
         private fun Int?.toRex() = rex(StaticType.INT4, rexOpLit(int32Value(this)))

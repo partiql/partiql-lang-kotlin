@@ -1,7 +1,9 @@
 package org.partiql.eval.internal.operator.rel
 
+import org.partiql.errors.TypeCheckException
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
+import org.partiql.value.BagValue
 import org.partiql.value.CollectionValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
@@ -19,8 +21,15 @@ internal class RelScanIndexed(
         val r = expr.eval(Record.empty)
         index = 0
         iterator = when (r) {
+            is BagValue<*> -> {
+                close()
+                throw TypeCheckException()
+            }
             is CollectionValue<*> -> r.iterator()
-            else -> iterator { yield(r) }
+            else -> {
+                close()
+                throw TypeCheckException()
+            }
         }
     }
 

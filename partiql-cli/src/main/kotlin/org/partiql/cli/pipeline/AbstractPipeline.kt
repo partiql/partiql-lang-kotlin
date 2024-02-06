@@ -27,7 +27,6 @@ import org.partiql.cli.functions.ReadFile_1
 import org.partiql.cli.functions.ReadFile_2
 import org.partiql.cli.functions.WriteFile_1
 import org.partiql.cli.functions.WriteFile_2
-import org.partiql.cli.utils.ServiceLoaderUtil
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.compiler.PartiQLCompilerBuilder
 import org.partiql.lang.compiler.PartiQLCompilerPipeline
@@ -84,7 +83,7 @@ internal sealed class AbstractPipeline(open val options: PipelineOptions) {
                 WriteFile_1(ion),
                 WriteFile_2(ion),
                 QueryDDB(ion)
-            ) + ServiceLoaderUtil.loadFunctions(pluginPath)
+            )
             val parser = PartiQLParserBuilder().build()
             return PipelineOptions(
                 pipeline,

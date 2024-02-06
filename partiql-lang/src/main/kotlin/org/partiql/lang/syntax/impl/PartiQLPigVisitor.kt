@@ -36,7 +36,6 @@ import com.amazon.ionelement.api.loadSingleElement
 import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.Token
 import org.antlr.v4.runtime.tree.TerminalNode
-import org.partiql.ast.Identifier
 import org.partiql.errors.ErrorCode
 import org.partiql.errors.Property
 import org.partiql.errors.PropertyValueMap
@@ -118,7 +117,7 @@ import java.time.format.DateTimeParseException
  */
 internal class PartiQLPigVisitor(
     val customTypes: List<CustomType> = listOf(),
-    private val parameterIndexes: Map<Int, Int> = mapOf()
+    private val parameterIndexes: Map<Int, Int> = mapOf(),
 ) :
     PartiQLBaseVisitor<PartiqlAst.PartiqlAstNode>() {
 
@@ -648,19 +647,22 @@ internal class PartiQLPigVisitor(
         excludeTupleAttr(identifier(attr, caseSensitivity))
     }
 
-    override fun visitExcludeExprCollectionIndex(ctx: PartiQLParser.ExcludeExprCollectionIndexContext) = PartiqlAst.build {
-        val index = ctx.index.text.toInteger().toLong()
-        excludeCollectionIndex(index)
-    }
+    override fun visitExcludeExprCollectionIndex(ctx: PartiQLParser.ExcludeExprCollectionIndexContext) =
+        PartiqlAst.build {
+            val index = ctx.index.text.toInteger().toLong()
+            excludeCollectionIndex(index)
+        }
 
-    override fun visitExcludeExprCollectionAttr(ctx: PartiQLParser.ExcludeExprCollectionAttrContext) = PartiqlAst.build {
-        val attr = ctx.attr.getStringValue()
-        excludeTupleAttr(identifier(attr, caseSensitive()))
-    }
+    override fun visitExcludeExprCollectionAttr(ctx: PartiQLParser.ExcludeExprCollectionAttrContext) =
+        PartiqlAst.build {
+            val attr = ctx.attr.getStringValue()
+            excludeTupleAttr(identifier(attr, caseSensitive()))
+        }
 
-    override fun visitExcludeExprCollectionWildcard(ctx: PartiQLParser.ExcludeExprCollectionWildcardContext) = PartiqlAst.build {
-        excludeCollectionWildcard()
-    }
+    override fun visitExcludeExprCollectionWildcard(ctx: PartiQLParser.ExcludeExprCollectionWildcardContext) =
+        PartiqlAst.build {
+            excludeCollectionWildcard()
+        }
 
     override fun visitExcludeExprTupleWildcard(ctx: PartiQLParser.ExcludeExprTupleWildcardContext) = PartiqlAst.build {
         excludeTupleWildcard()
@@ -1292,17 +1294,20 @@ internal class PartiQLPigVisitor(
         canLosslessCast(expr, type, metas)
     }
 
-    override fun visitFunctionCallIdent(ctx: PartiQLParser.FunctionCallIdentContext) = PartiqlAst.build {
-        val name = ctx.name.getString().lowercase()
+    override fun visitFunctionCall(ctx: PartiQLParser.FunctionCallContext) = PartiqlAst.build {
+        val name = when (val nameCtx = ctx.functionName()) {
+            is PartiQLParser.FunctionNameReservedContext -> {
+                if (nameCtx.qualifier.isNotEmpty()) error("Legacy AST does not support qualified function names")
+                nameCtx.name.text.lowercase()
+            }
+            is PartiQLParser.FunctionNameSymbolContext -> {
+                if (nameCtx.qualifier.isNotEmpty()) error("Legacy AST does not support qualified function names")
+                nameCtx.name.getString().lowercase()
+            }
+            else -> error("Expected context FunctionNameReserved or FunctionNameSymbol")
+        }
         val args = ctx.expr().map { visitExpr(it) }
-        val metas = ctx.name.getSourceMetaContainer()
-        call(name, args = args, metas = metas)
-    }
-
-    override fun visitFunctionCallReserved(ctx: PartiQLParser.FunctionCallReservedContext) = PartiqlAst.build {
-        val name = ctx.name.text.lowercase()
-        val args = ctx.expr().map { visitExpr(it) }
-        val metas = ctx.name.getSourceMetaContainer()
+        val metas = ctx.start.getSourceMetaContainer()
         call(name, args = args, metas = metas)
     }
 
@@ -1693,7 +1698,7 @@ internal class PartiQLPigVisitor(
         lhs: ParserRuleContext?,
         rhs: ParserRuleContext?,
         op: Token?,
-        parent: ParserRuleContext? = null
+        parent: ParserRuleContext? = null,
     ) = PartiqlAst.build {
         if (parent != null) return@build visit(parent) as PartiqlAst.Expr
         val args = listOf(lhs!!, rhs!!).map { visit(it) as PartiqlAst.Expr }
@@ -1847,7 +1852,7 @@ internal class PartiQLPigVisitor(
         withTimeZone: Boolean,
         precision: Long,
         stringNode: TerminalNode,
-        timeNode: TerminalNode
+        timeNode: TerminalNode,
     ) = PartiqlAst.build {
         val time: LocalTime
         val formatter = when (withTimeZone) {
@@ -1871,7 +1876,7 @@ internal class PartiQLPigVisitor(
 
     private fun getTimestampStringAndPrecision(
         stringNode: TerminalNode,
-        integerNode: TerminalNode?
+        integerNode: TerminalNode?,
     ): Pair<String, Long?> {
         val timestampString = stringNode.getStringValue()
         val precision = when (integerNode) {
@@ -1890,7 +1895,7 @@ internal class PartiQLPigVisitor(
     private fun getTimestampDynamic(
         timestampString: String,
         precision: Long?,
-        node: TerminalNode
+        node: TerminalNode,
     ) = PartiqlAst.build {
         val timestamp =
             try {
@@ -1901,9 +1906,14 @@ internal class PartiQLPigVisitor(
         val timeZone = timestamp.timeZone?.let { getTimeZone(it) }
         timestamp(
             timestampValue(
-                timestamp.year.toLong(), timestamp.month.toLong(), timestamp.day.toLong(),
-                timestamp.hour.toLong(), timestamp.minute.toLong(), ionDecimal(Decimal.valueOf(timestamp.decimalSecond)),
-                timeZone, precision
+                timestamp.year.toLong(),
+                timestamp.month.toLong(),
+                timestamp.day.toLong(),
+                timestamp.hour.toLong(),
+                timestamp.minute.toLong(),
+                ionDecimal(Decimal.valueOf(timestamp.decimalSecond)),
+                timeZone,
+                precision
             )
         )
     }
@@ -1911,7 +1921,7 @@ internal class PartiQLPigVisitor(
     private fun getTimestampWithTimezone(
         timestampString: String,
         precision: Long?,
-        node: TerminalNode
+        node: TerminalNode,
     ) = PartiqlAst.build {
         val timestamp = try {
             DateTimeUtils.parseTimestamp(timestampString)
@@ -1926,9 +1936,14 @@ internal class PartiQLPigVisitor(
         val timeZone = timestamp.timeZone?.let { getTimeZone(it) }
         timestamp(
             timestampValue(
-                timestamp.year.toLong(), timestamp.month.toLong(), timestamp.day.toLong(),
-                timestamp.hour.toLong(), timestamp.minute.toLong(), ionDecimal(Decimal.valueOf(timestamp.decimalSecond)),
-                timeZone, precision
+                timestamp.year.toLong(),
+                timestamp.month.toLong(),
+                timestamp.day.toLong(),
+                timestamp.hour.toLong(),
+                timestamp.minute.toLong(),
+                ionDecimal(Decimal.valueOf(timestamp.decimalSecond)),
+                timeZone,
+                precision
             )
         )
     }
@@ -2124,13 +2139,13 @@ internal class PartiQLPigVisitor(
         msg: String,
         code: ErrorCode,
         ctx: PropertyValueMap = PropertyValueMap(),
-        cause: Throwable? = null
+        cause: Throwable? = null,
     ) = this.error(msg, code, ctx, cause)
 
     private fun Token?.err(
         msg: String,
         code: ErrorCode,
         ctx: PropertyValueMap = PropertyValueMap(),
-        cause: Throwable? = null
+        cause: Throwable? = null,
     ) = this.error(msg, code, ctx, cause)
 }

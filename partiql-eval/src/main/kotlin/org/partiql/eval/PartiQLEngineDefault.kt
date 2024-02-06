@@ -2,19 +2,20 @@ package org.partiql.eval
 
 import org.partiql.eval.internal.Compiler
 import org.partiql.eval.internal.Record
+import org.partiql.eval.internal.Symbols
 import org.partiql.plan.PartiQLPlan
-import org.partiql.spi.connector.ConnectorBindings
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 
-internal class PartiQLEngineDefault(
-    private val catalogs: Map<String, ConnectorBindings>,
-) : PartiQLEngine {
+internal class PartiQLEngineDefault : PartiQLEngine {
 
     @OptIn(PartiQLValueExperimental::class)
-    override fun prepare(plan: PartiQLPlan): PartiQLStatement<*> {
+    override fun prepare(plan: PartiQLPlan, session: PartiQLEngine.Session): PartiQLStatement<*> {
         try {
-            val compiler = Compiler(plan, catalogs)
+            // 1. Validate all references
+            val symbols = Symbols.build(plan, session)
+            // 2. Compile with built symbols
+            val compiler = Compiler(plan, session, symbols)
             val expression = compiler.compile()
             return object : PartiQLStatement.Query {
                 override fun execute(): PartiQLValue {
