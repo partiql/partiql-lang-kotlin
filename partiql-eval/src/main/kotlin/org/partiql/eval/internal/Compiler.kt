@@ -14,6 +14,7 @@ import org.partiql.eval.internal.operator.rel.RelScan
 import org.partiql.eval.internal.operator.rel.RelScanIndexed
 import org.partiql.eval.internal.operator.rel.RelScanIndexedPermissive
 import org.partiql.eval.internal.operator.rel.RelScanPermissive
+import org.partiql.eval.internal.operator.rel.RelSort
 import org.partiql.eval.internal.operator.rex.ExprCallDynamic
 import org.partiql.eval.internal.operator.rex.ExprCallStatic
 import org.partiql.eval.internal.operator.rex.ExprCase
@@ -40,27 +41,26 @@ import org.partiql.plan.Statement
 import org.partiql.plan.debug.PlanPrinter
 import org.partiql.plan.visitor.PlanBaseVisitor
 import org.partiql.spi.fn.FnExperimental
+import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
 import java.lang.IllegalStateException
 
 internal class Compiler(
     private val plan: PartiQLPlan,
-    private val session: PartiQLEngine.Session
-) : PlanBaseVisitor<Operator, Symbols>() {
+    private val session: PartiQLEngine.Session,
+    private val symbols: Symbols
+) : PlanBaseVisitor<Operator, StaticType?>() {
 
     fun compile(): Operator.Expr {
-        // 1. Validate all references
-        val symbols = Symbols.build(plan, session)
-        // 2. Compile with built symbols
-        return visitPartiQLPlan(plan, symbols)
+        return visitPartiQLPlan(plan, null)
     }
 
-    override fun defaultReturn(node: PlanNode, ctx: Symbols): Operator {
+    override fun defaultReturn(node: PlanNode, ctx: StaticType?): Operator {
         TODO("Not yet implemented")
     }
 
-    override fun visitRexOpErr(node: Rex.Op.Err, ctx: Symbols): Operator {
+    override fun visitRexOpErr(node: Rex.Op.Err, ctx: StaticType?): Operator {
         val message = buildString {
             this.appendLine(node.message)
             PlanPrinter.append(this, plan)
@@ -68,31 +68,32 @@ internal class Compiler(
         throw IllegalStateException(message)
     }
 
-    override fun visitRelOpErr(node: Rel.Op.Err, ctx: Symbols): Operator {
+    override fun visitRelOpErr(node: Rel.Op.Err, ctx: StaticType?): Operator {
         throw IllegalStateException(node.message)
     }
 
     // TODO: Re-look at
-    override fun visitPartiQLPlan(node: PartiQLPlan, ctx: Symbols): Operator.Expr {
+    override fun visitPartiQLPlan(node: PartiQLPlan, ctx: StaticType?): Operator.Expr {
         return visitStatement(node.statement, ctx) as Operator.Expr
     }
 
     // TODO: Re-look at
-    override fun visitStatementQuery(node: Statement.Query, ctx: Symbols): Operator.Expr {
+    override fun visitStatementQuery(node: Statement.Query, ctx: StaticType?): Operator.Expr {
         return visitRex(node.root, ctx).modeHandled()
     }
 
     // REX
 
-    override fun visitRex(node: Rex, ctx: Symbols): Operator.Expr {
-        return super.visitRexOp(node.op, ctx) as Operator.Expr
+    override fun visitRex(node: Rex, ctx: StaticType?): Operator.Expr {
+        return super.visitRexOp(node.op, node.type) as Operator.Expr
     }
 
-    override fun visitRexOpCollection(node: Rex.Op.Collection, ctx: Symbols): Operator {
+    override fun visitRexOpCollection(node: Rex.Op.Collection, ctx: StaticType?): Operator {
         val values = node.values.map { visitRex(it, ctx).modeHandled() }
-        return ExprCollection(values)
+        val type = ctx ?: error("No type provided in ctx")
+        return ExprCollection(values, type)
     }
-    override fun visitRexOpStruct(node: Rex.Op.Struct, ctx: Symbols): Operator {
+    override fun visitRexOpStruct(node: Rex.Op.Struct, ctx: StaticType?): Operator {
         val fields = node.fields.map {
             val value = visitRex(it.v, ctx).modeHandled()
             ExprStruct.Field(visitRex(it.k, ctx), value)
@@ -100,13 +101,14 @@ internal class Compiler(
         return ExprStruct(fields)
     }
 
-    override fun visitRexOpSelect(node: Rex.Op.Select, ctx: Symbols): Operator {
+    override fun visitRexOpSelect(node: Rex.Op.Select, ctx: StaticType?): Operator {
         val rel = visitRel(node.rel, ctx)
+        val ordered = node.rel.type.props.contains(Rel.Prop.ORDERED)
         val constructor = visitRex(node.constructor, ctx).modeHandled()
-        return ExprSelect(rel, constructor)
+        return ExprSelect(rel, constructor, ordered)
     }
 
-    override fun visitRexOpPivot(node: Rex.Op.Pivot, ctx: Symbols): Operator {
+    override fun visitRexOpPivot(node: Rex.Op.Pivot, ctx: StaticType?): Operator {
         val rel = visitRel(node.rel, ctx)
         val key = visitRex(node.key, ctx)
         val value = visitRex(node.value, ctx)
@@ -115,33 +117,33 @@ internal class Compiler(
             PartiQLEngine.Mode.STRICT -> ExprPivot(rel, key, value)
         }
     }
-    override fun visitRexOpVar(node: Rex.Op.Var, ctx: Symbols): Operator {
+    override fun visitRexOpVar(node: Rex.Op.Var, ctx: StaticType?): Operator {
         return ExprVar(node.ref)
     }
 
-    override fun visitRexOpGlobal(node: Rex.Op.Global, ctx: Symbols): Operator = ctx.getGlobal(node.ref)
+    override fun visitRexOpGlobal(node: Rex.Op.Global, ctx: StaticType?): Operator = symbols.getGlobal(node.ref)
 
-    override fun visitRexOpPathKey(node: Rex.Op.Path.Key, ctx: Symbols): Operator {
+    override fun visitRexOpPathKey(node: Rex.Op.Path.Key, ctx: StaticType?): Operator {
         val root = visitRex(node.root, ctx)
         val key = visitRex(node.key, ctx)
         return ExprPathKey(root, key)
     }
 
-    override fun visitRexOpPathSymbol(node: Rex.Op.Path.Symbol, ctx: Symbols): Operator {
+    override fun visitRexOpPathSymbol(node: Rex.Op.Path.Symbol, ctx: StaticType?): Operator {
         val root = visitRex(node.root, ctx)
         val symbol = node.key
         return ExprPathSymbol(root, symbol)
     }
 
-    override fun visitRexOpPathIndex(node: Rex.Op.Path.Index, ctx: Symbols): Operator {
+    override fun visitRexOpPathIndex(node: Rex.Op.Path.Index, ctx: StaticType?): Operator {
         val root = visitRex(node.root, ctx)
         val index = visitRex(node.key, ctx)
         return ExprPathIndex(root, index)
     }
 
     @OptIn(FnExperimental::class, PartiQLValueExperimental::class)
-    override fun visitRexOpCallStatic(node: Rex.Op.Call.Static, ctx: Symbols): Operator {
-        val fn = ctx.getFn(node.fn)
+    override fun visitRexOpCallStatic(node: Rex.Op.Call.Static, ctx: StaticType?): Operator {
+        val fn = symbols.getFn(node.fn)
         val args = node.args.map { visitRex(it, ctx) }.toTypedArray()
         val fnTakesInMissing = fn.signature.parameters.any {
             it.type == PartiQLValueType.MISSING || it.type == PartiQLValueType.ANY
@@ -153,10 +155,10 @@ internal class Compiler(
     }
 
     @OptIn(FnExperimental::class, PartiQLValueExperimental::class)
-    override fun visitRexOpCallDynamic(node: Rex.Op.Call.Dynamic, ctx: Symbols): Operator {
+    override fun visitRexOpCallDynamic(node: Rex.Op.Call.Dynamic, ctx: StaticType?): Operator {
         val args = node.args.map { visitRex(it, ctx).modeHandled() }.toTypedArray()
         val candidates = node.candidates.map { candidate ->
-            val fn = ctx.getFn(candidate.fn)
+            val fn = symbols.getFn(candidate.fn)
             val types = fn.signature.parameters.map { it.type }.toTypedArray()
             val coercions = candidate.coercions.toTypedArray()
             ExprCallDynamic.Candidate(fn, types, coercions)
@@ -164,16 +166,16 @@ internal class Compiler(
         return ExprCallDynamic(candidates, args)
     }
 
-    override fun visitRexOpCast(node: Rex.Op.Cast, ctx: Symbols): Operator {
+    override fun visitRexOpCast(node: Rex.Op.Cast, ctx: StaticType?): Operator {
         return ExprCast(visitRex(node.arg, ctx), node.cast)
     }
 
     // REL
-    override fun visitRel(node: Rel, ctx: Symbols): Operator.Relation {
+    override fun visitRel(node: Rel, ctx: StaticType?): Operator.Relation {
         return super.visitRelOp(node.op, ctx) as Operator.Relation
     }
 
-    override fun visitRelOpScan(node: Rel.Op.Scan, ctx: Symbols): Operator {
+    override fun visitRelOpScan(node: Rel.Op.Scan, ctx: StaticType?): Operator {
         val rex = visitRex(node.rex, ctx)
         return when (session.mode) {
             PartiQLEngine.Mode.PERMISSIVE -> RelScanPermissive(rex)
@@ -181,13 +183,13 @@ internal class Compiler(
         }
     }
 
-    override fun visitRelOpProject(node: Rel.Op.Project, ctx: Symbols): Operator {
+    override fun visitRelOpProject(node: Rel.Op.Project, ctx: StaticType?): Operator {
         val input = visitRel(node.input, ctx)
         val projections = node.projections.map { visitRex(it, ctx).modeHandled() }
         return RelProject(input, projections)
     }
 
-    override fun visitRelOpScanIndexed(node: Rel.Op.ScanIndexed, ctx: Symbols): Operator {
+    override fun visitRelOpScanIndexed(node: Rel.Op.ScanIndexed, ctx: StaticType?): Operator {
         val rex = visitRex(node.rex, ctx)
         return when (session.mode) {
             PartiQLEngine.Mode.PERMISSIVE -> RelScanIndexedPermissive(rex)
@@ -195,12 +197,12 @@ internal class Compiler(
         }
     }
 
-    override fun visitRexOpTupleUnion(node: Rex.Op.TupleUnion, ctx: Symbols): Operator {
+    override fun visitRexOpTupleUnion(node: Rex.Op.TupleUnion, ctx: StaticType?): Operator {
         val args = node.args.map { visitRex(it, ctx) }.toTypedArray()
         return ExprTupleUnion(args)
     }
 
-    override fun visitRelOpJoin(node: Rel.Op.Join, ctx: Symbols): Operator {
+    override fun visitRelOpJoin(node: Rel.Op.Join, ctx: StaticType?): Operator {
         val lhs = visitRel(node.lhs, ctx)
         val rhs = visitRel(node.rhs, ctx)
         val condition = visitRex(node.rex, ctx)
@@ -212,7 +214,7 @@ internal class Compiler(
         }
     }
 
-    override fun visitRexOpCase(node: Rex.Op.Case, ctx: Symbols): Operator {
+    override fun visitRexOpCase(node: Rex.Op.Case, ctx: StaticType?): Operator {
         val branches = node.branches.map { branch ->
             visitRex(branch.condition, ctx) to visitRex(branch.rex, ctx)
         }
@@ -221,24 +223,34 @@ internal class Compiler(
     }
 
     @OptIn(PartiQLValueExperimental::class)
-    override fun visitRexOpLit(node: Rex.Op.Lit, ctx: Symbols): Operator {
+    override fun visitRexOpLit(node: Rex.Op.Lit, ctx: StaticType?): Operator {
         return ExprLiteral(node.value)
     }
 
-    override fun visitRelOpDistinct(node: Rel.Op.Distinct, ctx: Symbols): Operator {
+    override fun visitRelOpDistinct(node: Rel.Op.Distinct, ctx: StaticType?): Operator {
         val input = visitRel(node.input, ctx)
         return RelDistinct(input)
     }
 
-    override fun visitRelOpFilter(node: Rel.Op.Filter, ctx: Symbols): Operator {
+    override fun visitRelOpFilter(node: Rel.Op.Filter, ctx: StaticType?): Operator {
         val input = visitRel(node.input, ctx)
         val condition = visitRex(node.predicate, ctx)
         return RelFilter(input, condition)
     }
 
-    override fun visitRelOpExclude(node: Rel.Op.Exclude, ctx: Symbols): Operator {
+    override fun visitRelOpExclude(node: Rel.Op.Exclude, ctx: StaticType?): Operator {
         val input = visitRel(node.input, ctx)
         return RelExclude(input, node.paths)
+    }
+
+    override fun visitRelOpSort(node: Rel.Op.Sort, ctx: StaticType?): Operator {
+        val input = visitRel(node.input, ctx)
+        val compiledSpecs = node.specs.map { spec ->
+            val expr = visitRex(spec.rex, ctx)
+            val order = spec.order
+            expr to order
+        }
+        return RelSort(input, compiledSpecs)
     }
 
     // HELPERS

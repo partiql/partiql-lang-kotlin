@@ -23,6 +23,7 @@ internal class RelOffset(
                 input.next() ?: return null
                 seen += 1
             }
+            init = true
         }
         return input.next()
     }

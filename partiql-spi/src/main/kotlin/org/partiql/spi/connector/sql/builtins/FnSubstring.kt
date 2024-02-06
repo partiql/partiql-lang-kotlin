@@ -201,7 +201,7 @@ internal object Fn_SUBSTRING__CLOB_INT64__CLOB : Fn {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val value = args[0].check<ClobValue>().string!!
+        val value = args[0].check<ClobValue>().value!!.toString(Charsets.UTF_8)
         val start = args[1].check<Int64Value>().int!!
         val result = value.codepointSubstring(start)
         return clobValue(result.toByteArray())
@@ -224,11 +224,11 @@ internal object Fn_SUBSTRING__CLOB_INT64_INT64__CLOB : Fn {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val value = args[0].check<ClobValue>().string!!
+        val string = args[0].check<ClobValue>().value!!.toString(Charsets.UTF_8)
         val start = args[1].check<Int64Value>().int!!
         val end = args[2].check<Int64Value>().int!!
         if (end < 0) throw TypeCheckException()
-        val result = value.codepointSubstring(start, end)
+        val result = string.codepointSubstring(start, end)
         return clobValue(result.toByteArray())
     }
 }

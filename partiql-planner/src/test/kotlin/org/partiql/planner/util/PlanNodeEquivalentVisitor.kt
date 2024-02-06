@@ -93,13 +93,6 @@ class PlanNodeEquivalentVisitor : PlanBaseVisitor<Boolean, PlanNode>() {
         return true
     }
 
-    override fun visitRelOpExcludeTypeCollIndex(node: Rel.Op.Exclude.Type.CollIndex, ctx: PlanNode): Boolean {
-        if (!super.visitRelOpExcludeTypeCollIndex(node, ctx)) return false
-        ctx as Rel.Op.Exclude.Type.CollIndex
-        if (node.index != ctx.index) return false
-        return true
-    }
-
     override fun visitRelOpErr(node: Rel.Op.Err, ctx: PlanNode): Boolean {
         if (!super.visitRelOpErr(node, ctx)) return false
         ctx as Rel.Op.Err
