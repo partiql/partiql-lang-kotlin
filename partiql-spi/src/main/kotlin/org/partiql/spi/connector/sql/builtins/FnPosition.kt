@@ -78,8 +78,8 @@ internal object Fn_POSITION__CLOB_CLOB__INT64 : Fn {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val s1 = args[0].check<ClobValue>().string!!
-        val s2 = args[1].check<ClobValue>().string!!
+        val s1 = args[0].check<ClobValue>().value!!.toString(Charsets.UTF_8)
+        val s2 = args[1].check<ClobValue>().value!!.toString(Charsets.UTF_8)
         val result = s2.codepointPosition(s1)
         return int64Value(result.toLong())
     }

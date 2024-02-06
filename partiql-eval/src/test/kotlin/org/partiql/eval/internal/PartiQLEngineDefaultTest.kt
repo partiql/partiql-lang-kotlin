@@ -204,6 +204,20 @@ class PartiQLEngineDefaultTest {
                 )
             ),
             SuccessTestCase(
+                input = "SELECT v, i FROM << 'a', 'b', 'c' >> AS v AT i",
+                expected = bagValue(
+                    structValue(
+                        "v" to stringValue("a"),
+                    ),
+                    structValue(
+                        "v" to stringValue("b"),
+                    ),
+                    structValue(
+                        "v" to stringValue("c"),
+                    ),
+                )
+            ),
+            SuccessTestCase(
                 input = "SELECT DISTINCT VALUE t FROM <<true, false, true, false, false, false>> AS t;",
                 expected = bagValue(boolValue(true), boolValue(false))
             ),
@@ -231,6 +245,72 @@ class PartiQLEngineDefaultTest {
                     "a" to stringValue("x"),
                     "b" to stringValue("y"),
                     "c" to stringValue("z"),
+                )
+            ),
+            SuccessTestCase(
+                input = """
+                    SELECT t
+                    EXCLUDE t.a.b
+                    FROM <<
+                        {'a': {'b': 2}, 'foo': 'bar', 'foo2': 'bar2'}
+                    >> AS t
+                """.trimIndent(),
+                expected = bagValue(
+                    structValue(
+                        "t" to structValue(
+                            "a" to structValue<PartiQLValue>(
+                                // field `b` excluded
+                            ),
+                            "foo" to stringValue("bar"),
+                            "foo2" to stringValue("bar2")
+                        )
+                    ),
+                )
+            ),
+            SuccessTestCase(
+                input = """
+                    SELECT *
+                    EXCLUDE
+                        t.a.b.c[*].field_x
+                    FROM [{
+                        'a': {
+                            'b': {
+                                'c': [
+                                    {                    -- c[0]; field_x to be removed
+                                        'field_x': 0, 
+                                        'field_y': 0
+                                    },
+                                    {                    -- c[1]; field_x to be removed
+                                        'field_x': 1,
+                                        'field_y': 1
+                                    },
+                                    {                    -- c[2]; field_x to be removed
+                                        'field_x': 2,
+                                        'field_y': 2
+                                    }
+                                ]
+                            }
+                        }
+                    }] AS t
+                """.trimIndent(),
+                expected = bagValue(
+                    structValue(
+                        "a" to structValue(
+                            "b" to structValue(
+                                "c" to listValue(
+                                    structValue(
+                                        "field_y" to int32Value(0)
+                                    ),
+                                    structValue(
+                                        "field_y" to int32Value(1)
+                                    ),
+                                    structValue(
+                                        "field_y" to int32Value(2)
+                                    )
+                                )
+                            )
+                        )
+                    )
                 )
             ),
             SuccessTestCase(
@@ -307,6 +387,60 @@ class PartiQLEngineDefaultTest {
                 input = "NULL IS MISSING;",
                 expected = boolValue(false),
                 mode = PartiQLEngine.Mode.STRICT
+            ),
+            SuccessTestCase(
+                input = "SELECT * FROM <<{'a': 10, 'b': 1}, {'a': 1, 'b': 2}>> AS t ORDER BY t.a;",
+                expected = listValue(
+                    structValue("a" to int32Value(1), "b" to int32Value(2)),
+                    structValue("a" to int32Value(10), "b" to int32Value(1))
+                )
+            ),
+            SuccessTestCase(
+                input = "SELECT * FROM <<{'a': 10, 'b': 1}, {'a': 1, 'b': 2}>> AS t ORDER BY t.a DESC;",
+                expected = listValue(
+                    structValue("a" to int32Value(10), "b" to int32Value(1)),
+                    structValue("a" to int32Value(1), "b" to int32Value(2))
+                )
+            ),
+            SuccessTestCase(
+                input = "SELECT * FROM <<{'a': NULL, 'b': 1}, {'a': 1, 'b': 2}, {'a': 3, 'b': 4}>> AS t ORDER BY t.a NULLS LAST;",
+                expected = listValue(
+                    structValue("a" to int32Value(1), "b" to int32Value(2)),
+                    structValue("a" to int32Value(3), "b" to int32Value(4)),
+                    structValue("a" to nullValue(), "b" to int32Value(1))
+                )
+            ),
+            SuccessTestCase(
+                input = "SELECT * FROM <<{'a': NULL, 'b': 1}, {'a': 1, 'b': 2}, {'a': 3, 'b': 4}>> AS t ORDER BY t.a NULLS FIRST;",
+                expected = listValue(
+                    structValue("a" to nullValue(), "b" to int32Value(1)),
+                    structValue("a" to int32Value(1), "b" to int32Value(2)),
+                    structValue("a" to int32Value(3), "b" to int32Value(4))
+                )
+            ),
+            SuccessTestCase(
+                input = "SELECT * FROM <<{'a': NULL, 'b': 1}, {'a': 1, 'b': 2}, {'a': 3, 'b': 4}>> AS t ORDER BY t.a DESC NULLS LAST;",
+                expected = listValue(
+                    structValue("a" to int32Value(3), "b" to int32Value(4)),
+                    structValue("a" to int32Value(1), "b" to int32Value(2)),
+                    structValue("a" to nullValue(), "b" to int32Value(1))
+                )
+            ),
+            SuccessTestCase(
+                input = "SELECT * FROM <<{'a': NULL, 'b': 1}, {'a': 1, 'b': 2}, {'a': 3, 'b': 4}>> AS t ORDER BY t.a DESC NULLS FIRST;",
+                expected = listValue(
+                    structValue("a" to nullValue(), "b" to int32Value(1)),
+                    structValue("a" to int32Value(3), "b" to int32Value(4)),
+                    structValue("a" to int32Value(1), "b" to int32Value(2))
+                )
+            ),
+            SuccessTestCase( // use multiple sort specs
+                input = "SELECT * FROM <<{'a': NULL, 'b': 1}, {'a': 1, 'b': 2}, {'a': 1, 'b': 4}>> AS t ORDER BY t.a DESC NULLS FIRST, t.b DESC;",
+                expected = listValue(
+                    structValue("a" to nullValue(), "b" to int32Value(1)),
+                    structValue("a" to int32Value(1), "b" to int32Value(4)),
+                    structValue("a" to int32Value(1), "b" to int32Value(2))
+                )
             ),
         )
 

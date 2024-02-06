@@ -5,6 +5,7 @@ import org.partiql.eval.internal.operator.Operator
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.bagValue
+import org.partiql.value.listValue
 
 /**
  * Invoke the constructor over all inputs.
@@ -15,6 +16,7 @@ import org.partiql.value.bagValue
 internal class ExprSelect(
     val input: Operator.Relation,
     val constructor: Operator.Expr,
+    val ordered: Boolean
 ) : Operator.Expr {
 
     /**
@@ -31,6 +33,9 @@ internal class ExprSelect(
             elements.add(e)
         }
         input.close()
-        return bagValue(elements)
+        return when (ordered) {
+            true -> listValue(elements)
+            false -> bagValue(elements)
+        }
     }
 }

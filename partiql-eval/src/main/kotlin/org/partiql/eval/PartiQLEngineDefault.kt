@@ -2,6 +2,7 @@ package org.partiql.eval
 
 import org.partiql.eval.internal.Compiler
 import org.partiql.eval.internal.Record
+import org.partiql.eval.internal.Symbols
 import org.partiql.plan.PartiQLPlan
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
@@ -11,7 +12,10 @@ internal class PartiQLEngineDefault : PartiQLEngine {
     @OptIn(PartiQLValueExperimental::class)
     override fun prepare(plan: PartiQLPlan, session: PartiQLEngine.Session): PartiQLStatement<*> {
         try {
-            val compiler = Compiler(plan, session)
+            // 1. Validate all references
+            val symbols = Symbols.build(plan, session)
+            // 2. Compile with built symbols
+            val compiler = Compiler(plan, session, symbols)
             val expression = compiler.compile()
             return object : PartiQLStatement.Query {
                 override fun execute(): PartiQLValue {

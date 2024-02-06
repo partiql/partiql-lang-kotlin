@@ -79,9 +79,9 @@ internal object Fn_TRIM_TRAILING_CHARS__CLOB_CLOB__CLOB : Fn {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val value = args[0].check<ClobValue>().string!!
-        val chars = args[1].check<ClobValue>().string!!
-        val result = value.codepointTrimTrailing(chars)
+        val string = args[0].check<ClobValue>().value!!.toString(Charsets.UTF_8)
+        val chars = args[1].check<ClobValue>().value!!.toString(Charsets.UTF_8)
+        val result = string.codepointTrimTrailing(chars)
         return clobValue(result.toByteArray())
     }
 }
