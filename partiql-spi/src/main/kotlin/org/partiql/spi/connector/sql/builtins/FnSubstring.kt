@@ -228,8 +228,6 @@ internal object Fn_SUBSTRING__CLOB_INT64_INT64__CLOB : Fn {
         val string = args[0].check<ClobValue>().value!!.toString(Charsets.UTF_8)
         val start = try { args[1].check<Int64Value>().toInt32().value!! } catch (e: DataException) { throw TypeCheckException() }
         val end = try { args[2].check<Int64Value>().toInt32().value!! } catch (e: DataException) { throw TypeCheckException() }
-        val start = args[1].check<Int64Value>().int!!
-        val end = args[2].check<Int64Value>().int!!
         if (end < 0) throw TypeCheckException()
         val result = string.codepointSubstring(start, end)
         return clobValue(result.toByteArray())
