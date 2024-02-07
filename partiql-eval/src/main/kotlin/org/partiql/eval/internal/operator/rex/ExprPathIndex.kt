@@ -1,5 +1,6 @@
 package org.partiql.eval.internal.operator.rex
 
+import org.partiql.errors.DataException
 import org.partiql.errors.TypeCheckException
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
@@ -9,6 +10,7 @@ import org.partiql.value.Int32Value
 import org.partiql.value.Int64Value
 import org.partiql.value.Int8Value
 import org.partiql.value.IntValue
+import org.partiql.value.NumericValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.check
@@ -24,11 +26,15 @@ internal class ExprPathIndex(
 
         // Calculate index
         val index = when (val k = key.eval(record)) {
-            is Int16Value -> k.int
-            is Int32Value -> k.int
-            is Int64Value -> k.int
-            is Int8Value -> k.int
-            is IntValue -> k.int
+            is Int16Value,
+            is Int32Value,
+            is Int64Value,
+            is Int8Value,
+            is IntValue -> try {
+                (k as NumericValue<*>).toInt32().value
+            } catch (e: DataException) {
+                throw TypeCheckException()
+            }
             else -> throw TypeCheckException()
         } ?: throw TypeCheckException()
 

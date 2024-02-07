@@ -3,6 +3,8 @@
 
 package org.partiql.spi.connector.sql.builtins
 
+import org.partiql.errors.DataException
+import org.partiql.errors.TypeCheckException
 import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnParameter
@@ -41,7 +43,7 @@ internal object Fn_DATE_ADD_DAY__INT32_DATE__DATE : Fn {
         val interval = args[0].check<Int32Value>()
         val datetime = args[1].check<DateValue>()
         val datetimeValue = datetime.value!!
-        val intervalValue = interval.long!!
+        val intervalValue = interval.toInt64().value!!
         return dateValue(datetimeValue.plusDays(intervalValue))
     }
 }
@@ -64,7 +66,7 @@ internal object Fn_DATE_ADD_DAY__INT64_DATE__DATE : Fn {
         val interval = args[0].check<Int64Value>()
         val datetime = args[1].check<DateValue>()
         val datetimeValue = datetime.value!!
-        val intervalValue = interval.long!!
+        val intervalValue = interval.toInt64().value!!
         return dateValue(datetimeValue.plusDays(intervalValue))
     }
 }
@@ -87,8 +89,9 @@ internal object Fn_DATE_ADD_DAY__INT_DATE__DATE : Fn {
         val interval = args[0].check<IntValue>()
         val datetime = args[1].check<DateValue>()
         val datetimeValue = datetime.value!!
-        // TODO: We need to consider overflow here
-        val intervalValue = interval.long!!
+        val intervalValue = try { interval.toInt64().value!! } catch (e: DataException) {
+            throw TypeCheckException()
+        }
         return dateValue(datetimeValue.plusDays(intervalValue))
     }
 }
@@ -111,7 +114,7 @@ internal object Fn_DATE_ADD_DAY__INT32_TIMESTAMP__TIMESTAMP : Fn {
         val interval = args[0].check<Int32Value>()
         val datetime = args[1].check<TimestampValue>()
         val datetimeValue = datetime.value!!
-        val intervalValue = interval.long!!
+        val intervalValue = interval.toInt64().value!!
         return timestampValue(datetimeValue.plusDays(intervalValue))
     }
 }
@@ -134,7 +137,7 @@ internal object Fn_DATE_ADD_DAY__INT64_TIMESTAMP__TIMESTAMP : Fn {
         val interval = args[0].check<Int64Value>()
         val datetime = args[1].check<TimestampValue>()
         val datetimeValue = datetime.value!!
-        val intervalValue = interval.long!!
+        val intervalValue = interval.toInt64().value!!
         return timestampValue(datetimeValue.plusDays(intervalValue))
     }
 }
@@ -157,8 +160,9 @@ internal object Fn_DATE_ADD_DAY__INT_TIMESTAMP__TIMESTAMP : Fn {
         val interval = args[0].check<IntValue>()
         val datetime = args[1].check<TimestampValue>()
         val datetimeValue = datetime.value!!
-        // TODO: We need to consider overflow here
-        val intervalValue = interval.long!!
+        val intervalValue = try { interval.toInt64().value!! } catch (e: DataException) {
+            throw TypeCheckException()
+        }
         return timestampValue(datetimeValue.plusDays(intervalValue))
     }
 }

@@ -16,10 +16,27 @@ package org.partiql.value.impl
 
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.toPersistentList
+import org.partiql.errors.DataException
 import org.partiql.value.Annotations
+import org.partiql.value.DecimalValue
+import org.partiql.value.Float32Value
+import org.partiql.value.Float64Value
+import org.partiql.value.Int16Value
 import org.partiql.value.Int32Value
+import org.partiql.value.Int64Value
+import org.partiql.value.Int8Value
+import org.partiql.value.IntValue
 import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.datetime.DateTimeUtil.toBigDecimal
+import org.partiql.value.decimalValue
+import org.partiql.value.float32Value
+import org.partiql.value.float64Value
+import org.partiql.value.int16Value
+import org.partiql.value.int64Value
+import org.partiql.value.int8Value
+import org.partiql.value.intValue
 import org.partiql.value.util.PartiQLValueVisitor
+import java.math.BigInteger
 
 @OptIn(PartiQLValueExperimental::class)
 internal data class Int32ValueImpl(
@@ -32,6 +49,33 @@ internal data class Int32ValueImpl(
     override fun withAnnotations(annotations: Annotations): Int32Value = _withAnnotations(annotations)
 
     override fun withoutAnnotations(): Int32Value = _withoutAnnotations()
+    override fun toInt8(): Int8Value {
+        val byte = this.value?.toByte() ?: return int8Value(null, annotations)
+        if (byte.toInt() != this.value) {
+            throw DataException("Overflow when casting ${this.value} to INT8")
+        }
+        return int8Value(byte, annotations)
+    }
+
+    override fun toInt16(): Int16Value {
+        val short = this.value?.toShort() ?: return int16Value(null, annotations)
+        if (short.toInt() != this.value) {
+            throw DataException("Overflow when casting ${this.value} to INT16")
+        }
+        return int16Value(short, annotations)
+    }
+
+    override fun toInt32(): Int32Value = this
+
+    override fun toInt64(): Int64Value = int64Value(this.value?.toLong(), annotations)
+
+    override fun toInt(): IntValue = intValue(this.value?.toLong()?.let { BigInteger.valueOf(it) }, annotations)
+
+    override fun toDecimal(): DecimalValue = decimalValue(this.value?.toBigDecimal(), annotations)
+
+    override fun toFloat32(): Float32Value = float32Value(this.value?.toFloat(), annotations)
+
+    override fun toFloat64(): Float64Value = float64Value(this.value?.toDouble(), annotations)
 
     override fun <R, C> accept(visitor: PartiQLValueVisitor<R, C>, ctx: C): R = visitor.visitInt32(this, ctx)
 }

@@ -54,7 +54,7 @@ internal object Fn_IS_CHAR__INT32_ANY__BOOL : Fn {
         if (value !is StringValue) {
             return boolValue(false)
         }
-        val length = args[0].check<Int32Value>().int
+        val length = args[0].check<Int32Value>().value
         if (length == null || length < 0) {
             throw TypeCheckException()
         }

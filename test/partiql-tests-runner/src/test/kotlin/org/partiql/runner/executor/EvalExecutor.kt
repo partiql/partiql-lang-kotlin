@@ -2,6 +2,7 @@ package org.partiql.runner.executor
 
 import com.amazon.ion.IonStruct
 import com.amazon.ion.IonValue
+import com.amazon.ionelement.api.AnyElement
 import com.amazon.ionelement.api.ElementType
 import com.amazon.ionelement.api.StructElement
 import com.amazon.ionelement.api.toIonElement
@@ -12,6 +13,7 @@ import org.partiql.eval.PartiQLStatement
 import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.TypingMode
 import org.partiql.parser.PartiQLParser
+import org.partiql.plan.Statement
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.plugins.memory.MemoryCatalog
 import org.partiql.plugins.memory.MemoryConnector
@@ -145,11 +147,30 @@ class EvalExecutor(
         private fun infer(env: StructElement): Connector {
             val map = mutableMapOf<String, StaticType>()
             env.fields.forEach {
-                map[it.name] = StaticType.ANY
+                map[it.name] = inferEnv(it.value)
             }
             val catalog = MemoryCatalog("default")
             catalog.load(env)
             return MemoryConnector(catalog)
+        }
+
+        private fun inferEnv(env: AnyElement): StaticType {
+            val catalog = MemoryCatalog.builder().name("conformance_test").build()
+            val connector = MemoryConnector(catalog)
+            val session = PartiQLPlanner.Session(
+                queryId = "query",
+                userId = "user",
+                currentCatalog = "default",
+                catalogs = mapOf(
+                    "default" to connector.getMetadata(object : ConnectorSession {
+                        override fun getQueryId(): String = "query"
+                        override fun getUserId(): String = "user"
+                    })
+                )
+            )
+            val stmt = parser.parse("`$env`").root
+            val plan = planner.plan(stmt, session)
+            return (plan.plan.statement as Statement.Query).root.type
         }
 
         /**

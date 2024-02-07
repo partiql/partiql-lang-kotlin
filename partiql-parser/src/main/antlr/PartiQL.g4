@@ -716,7 +716,8 @@ functionCall
 
 // SQL-99 10.4 — <routine name> ::= [ <schema name> <period> ] <qualified identifier>
 functionName
-    : (qualifier+=symbolPrimitive PERIOD)* name=( CHAR_LENGTH | CHARACTER_LENGTH | OCTET_LENGTH | BIT_LENGTH | UPPER | LOWER | SIZE | EXISTS | COUNT )  # FunctionNameReserved
+    : (qualifier+=symbolPrimitive PERIOD)* name=( CHAR_LENGTH | CHARACTER_LENGTH | OCTET_LENGTH | BIT_LENGTH |
+     UPPER | LOWER | SIZE | EXISTS | COUNT | MOD)  # FunctionNameReserved
     | (qualifier+=symbolPrimitive PERIOD)* name=symbolPrimitive                                                                                         # FunctionNameSymbol
     ;
 
