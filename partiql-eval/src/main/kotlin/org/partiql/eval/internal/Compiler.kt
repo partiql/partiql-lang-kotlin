@@ -9,12 +9,14 @@ import org.partiql.eval.internal.operator.rel.RelJoinInner
 import org.partiql.eval.internal.operator.rel.RelJoinLeft
 import org.partiql.eval.internal.operator.rel.RelJoinOuterFull
 import org.partiql.eval.internal.operator.rel.RelJoinRight
+import org.partiql.eval.internal.operator.rel.RelLimit
 import org.partiql.eval.internal.operator.rel.RelProject
 import org.partiql.eval.internal.operator.rel.RelScan
 import org.partiql.eval.internal.operator.rel.RelScanIndexed
 import org.partiql.eval.internal.operator.rel.RelScanIndexedPermissive
 import org.partiql.eval.internal.operator.rel.RelScanPermissive
 import org.partiql.eval.internal.operator.rel.RelSort
+import org.partiql.eval.internal.operator.rel.RelUnpivot
 import org.partiql.eval.internal.operator.rex.ExprCallDynamic
 import org.partiql.eval.internal.operator.rex.ExprCallStatic
 import org.partiql.eval.internal.operator.rex.ExprCase
@@ -195,6 +197,26 @@ internal class Compiler(
             PartiQLEngine.Mode.PERMISSIVE -> RelScanIndexedPermissive(rex)
             PartiQLEngine.Mode.STRICT -> RelScanIndexed(rex)
         }
+    }
+
+    override fun visitRelOpUnpivot(node: Rel.Op.Unpivot, ctx: StaticType?): Operator {
+        val expr = visitRex(node.rex, ctx)
+        return when (session.mode) {
+            PartiQLEngine.Mode.PERMISSIVE -> RelUnpivot.Permissive(expr)
+            PartiQLEngine.Mode.STRICT -> RelUnpivot.Strict(expr)
+        }
+    }
+
+    override fun visitRelOpLimit(node: Rel.Op.Limit, ctx: StaticType?): Operator {
+        val input = visitRel(node.input, ctx)
+        val limit = visitRex(node.limit, ctx)
+        return RelLimit(input, limit)
+    }
+
+    override fun visitRelOpOffset(node: Rel.Op.Offset, ctx: StaticType?): Operator {
+        val input = visitRel(node.input, ctx)
+        val offset = visitRex(node.offset, ctx)
+        return RelLimit(input, offset)
     }
 
     override fun visitRexOpTupleUnion(node: Rex.Op.TupleUnion, ctx: StaticType?): Operator {
