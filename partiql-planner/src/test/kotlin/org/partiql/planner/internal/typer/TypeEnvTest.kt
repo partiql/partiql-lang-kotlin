@@ -39,7 +39,8 @@ internal class TypeEnvTest {
                 relBinding("x", struct("Y" to BoolType(), open = true)),
                 relBinding("y", struct(open = true)),
                 relBinding("T", struct("x" to BoolType(), "x" to BoolType())),
-            )
+            ),
+            stack = emptyList()
         )
 
         private fun struct(vararg fields: Pair<String, StaticType>, open: Boolean = false): StructType {
@@ -89,7 +90,7 @@ internal class TypeEnvTest {
         }
         // For now, just traverse to the root
         var root = rex.op
-        while (root !is Rex.Op.Var.Resolved) {
+        while (root !is Rex.Op.Var.Local) {
             root = when (root) {
                 is Rex.Op.Path.Symbol -> root.root.op
                 is Rex.Op.Path.Key -> root.root.op

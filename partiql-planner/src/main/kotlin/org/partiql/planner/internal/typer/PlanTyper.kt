@@ -58,6 +58,7 @@ import org.partiql.planner.internal.ir.rexOpPivot
 import org.partiql.planner.internal.ir.rexOpSelect
 import org.partiql.planner.internal.ir.rexOpStruct
 import org.partiql.planner.internal.ir.rexOpStructField
+import org.partiql.planner.internal.ir.rexOpSubquery
 import org.partiql.planner.internal.ir.rexOpTupleUnion
 import org.partiql.planner.internal.ir.statementQuery
 import org.partiql.planner.internal.ir.util.PlanRewriter
@@ -113,8 +114,7 @@ internal class PlanTyper(
             throw IllegalArgumentException("PartiQLPlanner only supports Query statements")
         }
         // root TypeEnv has no bindings
-        val typeEnv = TypeEnv(schema = emptyList())
-        val root = statement.root.type(typeEnv, Scope.GLOBAL)
+        val root = statement.root.type(emptyList(), emptyList(), Scope.GLOBAL)
         return statementQuery(root)
     }
 
@@ -125,7 +125,7 @@ internal class PlanTyper(
      * @property strategy
      */
     private inner class RelTyper(
-        private val outer: TypeEnv,
+        private val outer: List<TypeEnv>,
         private val strategy: Scope,
     ) : PlanRewriter<Rel.Type?>() {
 
@@ -136,7 +136,7 @@ internal class PlanTyper(
          */
         override fun visitRelOpScan(node: Rel.Op.Scan, ctx: Rel.Type?): Rel {
             // descend, with GLOBAL resolution strategy
-            val rex = node.rex.type(outer, Scope.GLOBAL)
+            val rex = node.rex.type(emptyList(), outer, Scope.GLOBAL)
             // compute rel type
             val valueT = getElementTypeForFromSource(rex.type)
             val type = ctx!!.copyWithSchema(listOf(valueT))
@@ -155,7 +155,7 @@ internal class PlanTyper(
          */
         override fun visitRelOpScanIndexed(node: Rel.Op.ScanIndexed, ctx: Rel.Type?): Rel {
             // descend, with GLOBAL resolution strategy
-            val rex = node.rex.type(outer, Scope.GLOBAL)
+            val rex = node.rex.type(emptyList(), outer, Scope.GLOBAL)
             // compute rel type
             val valueT = getElementTypeForFromSource(rex.type)
             val indexT = StaticType.INT8
@@ -170,7 +170,7 @@ internal class PlanTyper(
          */
         override fun visitRelOpUnpivot(node: Rel.Op.Unpivot, ctx: Rel.Type?): Rel {
             // descend, with GLOBAL resolution strategy
-            val rex = node.rex.type(outer, Scope.GLOBAL)
+            val rex = node.rex.type(emptyList(), outer, Scope.GLOBAL)
 
             // key type, always a string.
             val kType = STRING
@@ -202,8 +202,7 @@ internal class PlanTyper(
             // compute input schema
             val input = visitRel(node.input, ctx)
             // type sub-nodes
-            val typeEnv = TypeEnv(input.type.schema)
-            val predicate = node.predicate.type(typeEnv)
+            val predicate = node.predicate.type(input.type.schema, outer)
             // compute output schema
             val type = input.type
             // rewrite
@@ -215,9 +214,8 @@ internal class PlanTyper(
             // compute input schema
             val input = visitRel(node.input, ctx)
             // type sub-nodes
-            val typeEnv = TypeEnv(input.type.schema)
             val specs = node.specs.map {
-                val rex = it.rex.type(typeEnv)
+                val rex = it.rex.type(input.type.schema, outer)
                 it.copy(rex = rex)
             }
             // output schema of a sort is the same as the input
@@ -243,7 +241,8 @@ internal class PlanTyper(
             // compute input schema
             val input = visitRel(node.input, ctx)
             // type limit expression using outer scope with global resolution
-            val limit = node.limit.type(outer, Scope.GLOBAL)
+            // TODO: Assert expression doesn't contain locals or upvalues.
+            val limit = node.limit.type(input.type.schema, outer, Scope.GLOBAL)
             // check types
             assertAsInt(limit.type)
             // compute output schema
@@ -257,7 +256,8 @@ internal class PlanTyper(
             // compute input schema
             val input = visitRel(node.input, ctx)
             // type offset expression using outer scope with global resolution
-            val offset = node.offset.type(outer, Scope.GLOBAL)
+            // TODO: Assert expression doesn't contain locals or upvalues.
+            val offset = node.offset.type(input.type.schema, outer, Scope.GLOBAL)
             // check types
             assertAsInt(offset.type)
             // compute output schema
@@ -271,9 +271,8 @@ internal class PlanTyper(
             // compute input schema
             val input = visitRel(node.input, ctx)
             // type sub-nodes
-            val locals = TypeEnv(input.type.schema)
             val projections = node.projections.map {
-                it.type(locals)
+                it.type(input.type.schema, outer)
             }
             // compute output schema
             val schema = projections.map { it.type }
@@ -286,7 +285,8 @@ internal class PlanTyper(
         override fun visitRelOpJoin(node: Rel.Op.Join, ctx: Rel.Type?): Rel {
             // Rewrite LHS and RHS
             val lhs = visitRel(node.lhs, ctx)
-            val rhs = visitRel(node.rhs, ctx)
+            val stack = outer + listOf(TypeEnv(lhs.type.schema, outer))
+            val rhs = RelTyper(stack, Scope.GLOBAL).visitRel(node.rhs, ctx)
 
             // Calculate output schema given JOIN type
             val l = lhs.type.schema
@@ -301,7 +301,7 @@ internal class PlanTyper(
             val locals = type.schema
 
             // Type the condition on the output schema
-            val condition = node.rex.type(TypeEnv(type.schema))
+            val condition = node.rex.type(TypeEnv(type.schema, outer))
 
             val op = relOpJoin(lhs, rhs, condition, node.type)
             return rel(type, op)
@@ -352,7 +352,7 @@ internal class PlanTyper(
                 val resolvedRoot = when (val root = path.root) {
                     is Rex.Op.Var.Unresolved -> {
                         // resolve `root` to local binding
-                        val locals = TypeEnv(input.type.schema)
+                        val locals = TypeEnv(input.type.schema, outer)
                         val path = root.identifier.toBindingPath()
                         val resolved = locals.resolve(path)
                         if (resolved == null) {
@@ -363,7 +363,7 @@ internal class PlanTyper(
                             resolved.op as Rex.Op.Var
                         }
                     }
-                    is Rex.Op.Var.Resolved -> root
+                    is Rex.Op.Var.Upvalue, is Rex.Op.Var.Local, is Rex.Op.Var.Global -> root
                 }
                 relOpExcludePath(resolvedRoot, path.steps)
             }
@@ -382,7 +382,7 @@ internal class PlanTyper(
             val input = visitRel(node.input, ctx)
 
             // type the calls and groups
-            val typer = RexTyper(TypeEnv(input.type.schema), Scope.LOCAL)
+            val typer = RexTyper(TypeEnv(input.type.schema, outer), Scope.LOCAL)
 
             // typing of aggregate calls is slightly more complicated because they are not expressions.
             val calls = node.calls.mapIndexed { i, call ->
@@ -431,9 +431,17 @@ internal class PlanTyper(
             return rex(ctx!!, node)
         }
 
-        override fun visitRexOpVarResolved(node: Rex.Op.Var.Resolved, ctx: StaticType?): Rex {
-            assert(node.ref < locals.schema.size) { "Invalid resolved variable (var ${node.ref}) for $locals" }
-            val type = locals.schema[node.ref].type
+        override fun visitRexOpVarUpvalue(node: Rex.Op.Var.Upvalue, ctx: StaticType?): Rex {
+            val typeEnv = locals.stack[node.frameRef]
+            assert(node.valueRef < typeEnv.schema.size) {
+                "Invalid resolved variable (var ${node.valueRef}, stack frame ${node.frameRef}) in env: $locals"
+            }
+            val type = typeEnv.schema[node.valueRef].type
+            return rex(type, node)
+        }
+
+        override fun visitRexOpVarLocal(node: Rex.Op.Var.Local, ctx: StaticType?): Rex {
+            val type = locals.schema.getOrNull(node.ref)?.type ?: error("Can't find locals value.")
             return rex(type, node)
         }
 
@@ -454,7 +462,7 @@ internal class PlanTyper(
             return visitRex(resolvedVar, null)
         }
 
-        override fun visitRexOpGlobal(node: Rex.Op.Global, ctx: StaticType?): Rex = rex(node.ref.type, node)
+        override fun visitRexOpVarGlobal(node: Rex.Op.Var.Global, ctx: StaticType?): Rex = rex(node.ref.type, node)
 
         override fun visitRexOpPathIndex(node: Rex.Op.Path.Index, ctx: StaticType?): Rex {
             val root = visitRex(node.root, node.root.type)
@@ -736,7 +744,7 @@ internal class PlanTyper(
          *
          * TODO: Currently, this only folds type checking for STRUCTs. We need to add support for all other types.
          *
-         * TODO: I added a check for [Rex.Op.Var.Resolved] as it seemed odd to replace a general expression like:
+         * TODO: I added a check for [Rex.Op.Var.Upvalue] as it seemed odd to replace a general expression like:
          *  `WHEN { 'a': { 'b': 1} }.a IS STRUCT THEN { 'a': { 'b': 1} }.a.b`. We can discuss this later, but I'm
          *  currently limiting the scope of this intentionally.
          */
@@ -753,7 +761,7 @@ internal class PlanTyper(
                         // Replace the result's type
                         val type = AnyOfType(ref.type.allTypes.filterIsInstance<StructType>().toSet())
                         val replacementVal = ref.copy(type = type)
-                        when (ref.op is Rex.Op.Var.Resolved) {
+                        when (ref.op is Rex.Op.Var.Upvalue || ref.op is Rex.Op.Var.Local) {
                             true -> RexReplacer.replace(result, ref, replacementVal)
                             false -> result
                         }
@@ -776,7 +784,7 @@ internal class PlanTyper(
                     // Replace the result's type
                     val type = AnyOfType(ref.type.allTypes.filterIsInstance<StructType>().toSet())
                     val replacementVal = ref.copy(type = type)
-                    val rex = when (ref.op is Rex.Op.Var.Resolved) {
+                    val rex = when (ref.op is Rex.Op.Var.Upvalue || ref.op is Rex.Op.Var.Local) {
                         true -> RexReplacer.replace(result, ref, replacementVal)
                         false -> result
                     }
@@ -852,8 +860,9 @@ internal class PlanTyper(
         }
 
         override fun visitRexOpPivot(node: Rex.Op.Pivot, ctx: StaticType?): Rex {
-            val rel = node.rel.type(locals)
-            val typeEnv = TypeEnv(rel.type.schema)
+            val stack = locals.stack + listOf(locals)
+            val rel = node.rel.type(stack)
+            val typeEnv = TypeEnv(rel.type.schema, stack)
             val typer = RexTyper(typeEnv, Scope.LOCAL)
             val key = typer.visitRex(node.key, null)
             val value = typer.visitRex(node.value, null)
@@ -865,11 +874,13 @@ internal class PlanTyper(
         }
 
         override fun visitRexOpSubquery(node: Rex.Op.Subquery, ctx: StaticType?): Rex {
-            val select = visitRexOpSelect(node.select, ctx).op as Rex.Op.Select
-            val subquery = node.copy(select = select)
+            val rel = node.rel.type(locals.stack + listOf(locals))
+            val newTypeEnv = TypeEnv(schema = rel.type.schema, stack = locals.stack + listOf(locals))
+            val constructor = node.constructor.type(newTypeEnv)
+            val subquery = rexOpSubquery(constructor, rel, node.coercion)
             return when (node.coercion) {
-                Rex.Op.Subquery.Coercion.SCALAR -> visitRexOpSubqueryScalar(subquery, select.constructor.type)
-                Rex.Op.Subquery.Coercion.ROW -> visitRexOpSubqueryRow(subquery, select.constructor.type)
+                Rex.Op.Subquery.Coercion.SCALAR -> visitRexOpSubqueryScalar(subquery, constructor.type)
+                Rex.Op.Subquery.Coercion.ROW -> visitRexOpSubqueryRow(subquery, constructor.type)
             }
         }
 
@@ -911,9 +922,9 @@ internal class PlanTyper(
         }
 
         override fun visitRexOpSelect(node: Rex.Op.Select, ctx: StaticType?): Rex {
-            val rel = node.rel.type(locals)
-            val typeEnv = TypeEnv(rel.type.schema)
-            var constructor = node.constructor.type(typeEnv)
+            val rel = node.rel.type(locals.stack + listOf(locals))
+            val newTypeEnv = TypeEnv(schema = rel.type.schema, stack = locals.stack + listOf(locals))
+            var constructor = node.constructor.type(newTypeEnv)
             var constructorType = constructor.type
             // add the ordered property to the constructor
             if (constructorType is StructType) {
@@ -1240,11 +1251,21 @@ internal class PlanTyper(
 
     // HELPERS
 
-    private fun Rel.type(locals: TypeEnv, strategy: Scope = Scope.LOCAL): Rel =
-        RelTyper(locals, strategy).visitRel(this, null)
+    private fun Rel.type(stack: List<TypeEnv>, strategy: Scope = Scope.LOCAL): Rel =
+        RelTyper(stack, strategy).visitRel(this, null)
 
-    private fun Rex.type(locals: TypeEnv, strategy: Scope = Scope.LOCAL) =
-        RexTyper(locals, strategy).visitRex(this, this.type)
+    /**
+     * This types the [Rex] given the input record ([input]) and [stack] of [TypeEnv] (representing the outer scopes).
+     */
+    private fun Rex.type(input: List<Rel.Binding>, stack: List<TypeEnv>, strategy: Scope = Scope.LOCAL) =
+        RexTyper(TypeEnv(input, stack), strategy).visitRex(this, this.type)
+
+    /**
+     * This types the [Rex] given a [TypeEnv]. We use the [TypeEnv.schema] as the input schema and the [TypeEnv.stack]
+     * as the outer scopes/
+     */
+    private fun Rex.type(typeEnv: TypeEnv, strategy: Scope = Scope.LOCAL) =
+        RexTyper(typeEnv, strategy).visitRex(this, this.type)
 
     private fun rexErr(message: String) = rex(MISSING, rexOpErr(message))
 
@@ -1422,7 +1443,7 @@ internal class PlanTyper(
                         is Identifier.Qualified -> it
                     }
                 }
-                is Rex.Op.Var.Resolved -> it
+                is Rex.Op.Var.Upvalue, is Rex.Op.Var.Local, is Rex.Op.Var.Global -> it
             }
         }
         if (!matchedRoot && item.root is Rex.Op.Var.Unresolved) handleUnresolvedExcludeRoot(item.root.identifier)

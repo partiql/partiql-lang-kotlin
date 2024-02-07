@@ -1,4 +1,4 @@
-package org.partiql.ast.normalize
+package org.partiql.planner.internal.transforms
 
 import org.junit.jupiter.api.Test
 import org.partiql.ast.Expr
@@ -38,7 +38,7 @@ class NormalizeSelectTest {
             "b" to variable("b"),
             "c" to variable("c"),
         )
-        val actual = NormalizeSelect.apply(input)
+        val actual = NormalizeSelect.normalize(input)
         assertEquals(expected, actual)
     }
 
@@ -63,7 +63,7 @@ class NormalizeSelectTest {
             "_2" to lit(2),
             "_3" to lit(3),
         )
-        val actual = NormalizeSelect.apply(input)
+        val actual = NormalizeSelect.normalize(input)
         assertEquals(expected, actual)
     }
 
@@ -88,7 +88,7 @@ class NormalizeSelectTest {
             "_1" to lit(2),
             "_2" to lit(3),
         )
-        val actual = NormalizeSelect.apply(input)
+        val actual = NormalizeSelect.normalize(input)
         assertEquals(expected, actual)
     }
 
@@ -113,7 +113,7 @@ class NormalizeSelectTest {
             "b" to lit(2),
             "c" to lit(3),
         )
-        val actual = NormalizeSelect.apply(input)
+        val actual = NormalizeSelect.normalize(input)
         assertEquals(expected, actual)
     }
 
@@ -128,43 +128,39 @@ class NormalizeSelectTest {
     )
 
     private fun select(vararg items: Select.Project.Item) = ast {
-        statementQuery {
-            expr = exprSFW {
-                select = selectProject {
-                    this.items += items
-                }
-                from = fromValue {
-                    expr = variable("T")
-                    type = From.Value.Type.SCAN
-                }
+        exprSFW {
+            select = selectProject {
+                this.items += items
+            }
+            from = fromValue {
+                expr = variable("T")
+                type = From.Value.Type.SCAN
             }
         }
     }
 
     @OptIn(PartiQLValueExperimental::class)
     private fun selectValue(vararg items: Pair<String, Expr>) = ast {
-        statementQuery {
-            expr = exprSFW {
-                select = selectValue {
-                    constructor = exprStruct {
-                        for ((k, v) in items) {
-                            fields += exprStructField {
-                                name = exprLit(stringValue(k))
-                                value = v
-                            }
+        exprSFW {
+            select = selectValue {
+                constructor = exprStruct {
+                    for ((k, v) in items) {
+                        fields += exprStructField {
+                            name = exprLit(stringValue(k))
+                            value = v
                         }
                     }
                 }
-                from = fromValue {
-                    expr = exprVar {
-                        identifier = identifierSymbol {
-                            symbol = "T"
-                            caseSensitivity = Identifier.CaseSensitivity.INSENSITIVE
-                        }
-                        scope = Expr.Var.Scope.DEFAULT
+            }
+            from = fromValue {
+                expr = exprVar {
+                    identifier = identifierSymbol {
+                        symbol = "T"
+                        caseSensitivity = Identifier.CaseSensitivity.INSENSITIVE
                     }
-                    type = From.Value.Type.SCAN
+                    scope = Expr.Var.Scope.DEFAULT
                 }
+                type = From.Value.Type.SCAN
             }
         }
     }

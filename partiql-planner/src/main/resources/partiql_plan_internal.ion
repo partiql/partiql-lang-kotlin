@@ -82,8 +82,18 @@ rex::{
     },
 
     var::[
-      resolved::{
+      // Refers to a value defined in outer scopes. See https://craftinginterpreters.com/closures.html#upvalues .
+      upvalue::{
+        frameRef: int,
+        valueRef: int
+      },
+      // Refers to a value coming from the input record.
+      local::{
         ref: int,
+      },
+      // Refers to a value in the database environment.
+      global::{
+        ref: '.ref.obj',
       },
       unresolved::{
         identifier: identifier,
@@ -96,10 +106,6 @@ rex::{
         ],
       ],
     ],
-
-    global::{
-      ref: '.ref.obj',
-    },
 
     path::[
       // The key MUST be an integer expression. Ex: a[0], a[1 + 1]
@@ -185,8 +191,9 @@ rex::{
     },
 
     subquery::{
-      select:   select,
-      coercion: [ SCALAR, ROW ],
+      constructor:  rex,
+      rel:          rel,
+      coercion:     [ SCALAR, ROW ],
     },
 
     select::{

@@ -6,7 +6,8 @@ import org.partiql.planner.internal.ir.rex
 import org.partiql.planner.internal.ir.rexOpLit
 import org.partiql.planner.internal.ir.rexOpPathKey
 import org.partiql.planner.internal.ir.rexOpPathSymbol
-import org.partiql.planner.internal.ir.rexOpVarResolved
+import org.partiql.planner.internal.ir.rexOpVarLocal
+import org.partiql.planner.internal.ir.rexOpVarUpvalue
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
@@ -19,7 +20,10 @@ import org.partiql.value.stringValue
 /**
  * TypeEnv represents a variables type environment.
  */
-internal class TypeEnv(public val schema: List<Rel.Binding>) {
+internal data class TypeEnv(
+    public val schema: List<Rel.Binding>,
+    public val stack: List<TypeEnv>
+) {
 
     /**
      * We resolve a local with the following rules. See, PartiQL Specification p.35.
@@ -35,14 +39,20 @@ internal class TypeEnv(public val schema: List<Rel.Binding>) {
     fun resolve(path: BindingPath): Rex? {
         val head: BindingName = path.steps[0]
         var tail: List<BindingName> = path.steps.drop(1)
-        var r = matchRoot(head)
+        var r = matchRoot(head, height)
         if (r == null) {
-            r = matchStruct(head) ?: return null
+            r = matchStruct(head, height) ?: return null
             tail = path.steps
+        }
+        val op = r.op as Rex.Op.Var.Upvalue
+        if (op.frameRef == height) {
+            r = rex(r.type, rexOpVarLocal(op.valueRef))
         }
         // Convert any remaining binding names (tail) to an untyped path expression.
         return if (tail.isEmpty()) r else r.toPath(tail)
     }
+
+    val height: Int = this.stack.size
 
     /**
      * Debugging string, ex: < x: int, y: string >
@@ -57,7 +67,7 @@ internal class TypeEnv(public val schema: List<Rel.Binding>) {
      * @param name
      * @return
      */
-    private fun matchRoot(name: BindingName): Rex? {
+    private fun matchRoot(name: BindingName, level: Int): Rex? {
         var r: Rex? = null
         for (i in schema.indices) {
             val local = schema[i]
@@ -67,8 +77,11 @@ internal class TypeEnv(public val schema: List<Rel.Binding>) {
                     // TODO root was already matched, emit ambiguous error.
                     return null
                 }
-                r = rex(type, rexOpVarResolved(i))
+                r = rex(type, rexOpVarUpvalue(level, i))
             }
+        }
+        if (r == null && stack.isNotEmpty()) {
+            return stack.last().matchRoot(name, level - 1)
         }
         return r
     }
@@ -79,7 +92,7 @@ internal class TypeEnv(public val schema: List<Rel.Binding>) {
      * @param name
      * @return
      */
-    private fun matchStruct(name: BindingName): Rex? {
+    private fun matchStruct(name: BindingName, level: Int): Rex? {
         var c: Rex? = null
         var known = false
         for (i in schema.indices) {
@@ -92,7 +105,7 @@ internal class TypeEnv(public val schema: List<Rel.Binding>) {
                             // TODO root was already definitively matched, emit ambiguous error.
                             return null
                         }
-                        c = rex(type, rexOpVarResolved(i))
+                        c = rex(type, rexOpVarUpvalue(level, i))
                         known = true
                     }
                     null -> {
@@ -104,12 +117,15 @@ internal class TypeEnv(public val schema: List<Rel.Binding>) {
                                 return null
                             }
                         }
-                        c = rex(type, rexOpVarResolved(i))
+                        c = rex(type, rexOpVarUpvalue(level, i))
                         known = false
                     }
                     false -> continue
                 }
             }
+        }
+        if (c == null && stack.isNotEmpty()) {
+            return stack.last().matchStruct(name, level - 1)
         }
         return c
     }

@@ -4,7 +4,7 @@ import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 
 @OptIn(PartiQLValueExperimental::class)
-internal class Record(val values: Array<PartiQLValue>) {
+internal data class Record(val values: Array<PartiQLValue>) {
 
     companion object {
         val empty = Record(emptyArray())
@@ -28,5 +28,9 @@ internal class Record(val values: Array<PartiQLValue>) {
 
     public fun copy(): Record {
         return Record(this.values.copyOf())
+    }
+
+    public operator fun get(index: Int): PartiQLValue {
+        return this.values[index]
     }
 }

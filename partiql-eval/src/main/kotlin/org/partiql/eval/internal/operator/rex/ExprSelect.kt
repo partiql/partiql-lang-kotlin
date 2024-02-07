@@ -6,6 +6,7 @@ import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.bagValue
 import org.partiql.value.listValue
+import java.util.Stack
 
 /**
  * Invoke the constructor over all inputs.
@@ -14,9 +15,10 @@ import org.partiql.value.listValue
  * @property constructor
  */
 internal class ExprSelect(
-    val input: Operator.Relation,
-    val constructor: Operator.Expr,
-    val ordered: Boolean
+    private val input: Operator.Relation,
+    private val constructor: Operator.Expr,
+    private val ordered: Boolean,
+    private val scopes: Stack<Record>,
 ) : Operator.Expr {
 
     /**
@@ -26,12 +28,14 @@ internal class ExprSelect(
     @PartiQLValueExperimental
     override fun eval(record: Record): PartiQLValue {
         val elements = mutableListOf<PartiQLValue>()
+        scopes.push(record)
         input.open()
         while (true) {
             val r = input.next() ?: break
             val e = constructor.eval(r)
             elements.add(e)
         }
+        scopes.pop()
         input.close()
         return when (ordered) {
             true -> listValue(elements)

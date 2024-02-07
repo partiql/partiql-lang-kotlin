@@ -44,9 +44,17 @@ class PlanNodeEquivalentVisitor : PlanBaseVisitor<Boolean, PlanNode>() {
         return true
     }
 
-    override fun visitRexOpVar(node: Rex.Op.Var, ctx: PlanNode): Boolean {
+    override fun visitRexOpVarUpvalue(node: Rex.Op.Var.Upvalue, ctx: PlanNode): Boolean {
         if (!super.visitRexOpVar(node, ctx)) return false
-        ctx as Rex.Op.Var
+        ctx as Rex.Op.Var.Upvalue
+        if (node.frameRef != ctx.frameRef) return false
+        if (node.valueRef != ctx.valueRef) return false
+        return true
+    }
+
+    override fun visitRexOpVarLocal(node: Rex.Op.Var.Local, ctx: PlanNode): Boolean {
+        if (!super.visitRexOpVarLocal(node, ctx)) return false
+        ctx as Rex.Op.Var.Local
         if (node.ref != ctx.ref) return false
         return true
     }

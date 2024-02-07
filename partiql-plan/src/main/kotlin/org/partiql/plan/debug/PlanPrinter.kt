@@ -2,7 +2,10 @@ package org.partiql.plan.debug
 
 import org.partiql.plan.PlanNode
 import org.partiql.plan.Rel
+import org.partiql.plan.Rex
+import org.partiql.plan.debug.PlanPrinter.Visitor.primitives
 import org.partiql.plan.visitor.PlanBaseVisitor
+import org.partiql.types.StaticType
 import kotlin.reflect.KVisibility
 import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.memberProperties
@@ -23,17 +26,24 @@ object PlanPrinter {
     }
 
     // args for a visitor invocation
-    private class Args(
+    private data class Args(
         val out: Appendable,
         val levels: Array<Boolean> = emptyArray(),
         val last: Boolean = true,
+        val type: TypeInfo = TypeInfo.Nil
     ) {
+        sealed interface TypeInfo {
+            class Rel(val type: org.partiql.plan.Rel.Type) : TypeInfo
+            class Rex(val type: StaticType) : TypeInfo
+            object Nil : TypeInfo
+        }
+
         // leading characters of a tree print
         val lead: String = when (levels.size) {
             0 -> "⚬ "
             else -> {
                 val prefix = levels.joinToString("") { if (it) "│  " else "   " }
-                val suffix = if (last) "└──" else "├──"
+                val suffix = if (last) "└── " else "├── "
                 prefix + suffix
             }
         }
@@ -53,12 +63,33 @@ object PlanPrinter {
 
         override fun defaultReturn(node: PlanNode, ctx: Args) = Unit
 
+        override fun visitRel(node: Rel, ctx: Args) = with(ctx) {
+            visitRelOp(node.op, ctx = ctx.copy(type = Args.TypeInfo.Rel(node.type)))
+        }
+
+        override fun visitRex(node: Rex, ctx: Args) {
+            visitRexOp(node.op, ctx = ctx.copy(type = Args.TypeInfo.Rex(node.type)))
+        }
+
+        private fun Args.TypeInfo.args(): List<Pair<String, Any>> {
+            return when (this) {
+                is Args.TypeInfo.Rel -> return listOf(
+                    "schema" to this.type.schema,
+                    "props" to this.type.props
+                )
+                is Args.TypeInfo.Rex -> return listOf(
+                    "static_type" to this.type
+                )
+                is Args.TypeInfo.Nil -> emptyList()
+            }
+        }
+
         override fun defaultVisit(node: PlanNode, ctx: Args): Unit = with(ctx) {
             out.append(lead)
             // print node name
             out.append(node::class.simpleName)
             // print primitive items
-            val primitives = node.primitives().filter { it.second != null }
+            val primitives = node.primitives().filter { it.second != null } + type.args()
             if (primitives.isNotEmpty()) {
                 out.append("[")
                 out.append(primitives.joinToString { "${it.first}=${it.second}" })
