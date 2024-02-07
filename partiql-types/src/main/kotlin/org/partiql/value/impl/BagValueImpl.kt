@@ -40,4 +40,8 @@ internal class BagValueImpl<T : PartiQLValue>(
     override fun withoutAnnotations(): BagValue<T> = _withoutAnnotations()
 
     override fun <R, C> accept(visitor: PartiQLValueVisitor<R, C>, ctx: C): R = visitor.visitBag(this, ctx)
+
+    override fun toString(): String {
+        return delegate?.joinToString(separator = ", ", prefix = "<< ", postfix = " >>") ?: "null.bag"
+    }
 }

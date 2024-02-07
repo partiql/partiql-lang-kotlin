@@ -12,14 +12,12 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.ast.normalize
+package org.partiql.planner.internal.transforms
 
-import org.partiql.ast.AstNode
 import org.partiql.ast.Expr
 import org.partiql.ast.From
 import org.partiql.ast.Identifier
 import org.partiql.ast.Select
-import org.partiql.ast.Statement
 import org.partiql.ast.exprCall
 import org.partiql.ast.exprCase
 import org.partiql.ast.exprCaseBranch
@@ -81,13 +79,26 @@ import org.partiql.value.stringValue
  * } FROM A AS x
  * ```
  *
- * TODO: LET
+ * NOTE: This does NOT transform subqueries. It operates directly on an [Expr.SFW] -- and that is it. Therefore:
+ * ```
+ * SELECT
+ *   (SELECT 1 FROM T AS "T")
+ * FROM R AS "R"
+ * ```
+ * will be transformed to:
+ * ```
+ * SELECT VALUE {
+ *   '_1': (SELECT 1 FROM T AS "T") -- notice that SELECT 1 didn't get transformed.
+ * } FROM R AS "R"
+ * ```
  *
  * Requires [NormalizeFromSource].
  */
-internal object NormalizeSelect : AstPass {
+internal object NormalizeSelect {
 
-    override fun apply(statement: Statement): Statement = Visitor.visitStatement(statement, newCtx()) as Statement
+    internal fun normalize(node: Expr.SFW): Expr.SFW {
+        return Visitor.visitSFW(node, newCtx())
+    }
 
     /**
      * Closure for incrementing a derived binding counter
@@ -124,7 +135,7 @@ internal object NormalizeSelect : AstPass {
          */
         private val col = { index: Int -> "_${index + 1}" }
 
-        override fun visitExprSFW(node: Expr.SFW, ctx: () -> Int): Expr.SFW {
+        internal fun visitSFW(node: Expr.SFW, ctx: () -> Int): Expr.SFW {
             val sfw = super.visitExprSFW(node, ctx) as Expr.SFW
             return when (val select = sfw.select) {
                 is Select.Star -> sfw.copy(select = visitSelectAll(select, sfw.from))
@@ -132,7 +143,11 @@ internal object NormalizeSelect : AstPass {
             }
         }
 
-        override fun visitSelectProject(node: Select.Project, ctx: () -> Int): AstNode {
+        override fun visitExprSFW(node: Expr.SFW, ctx: () -> Int): Expr.SFW {
+            return node
+        }
+
+        override fun visitSelectProject(node: Select.Project, ctx: () -> Int): Select.Value {
 
             // Visit items, adding a binder if necessary
             var diff = false
@@ -200,7 +215,7 @@ internal object NormalizeSelect : AstPass {
             )
         }
 
-        private fun visitSelectProjectWithProjectAll(node: Select.Project): AstNode {
+        private fun visitSelectProjectWithProjectAll(node: Select.Project): Select.Value {
             val tupleUnionArgs = node.items.mapIndexed { index, item ->
                 when (item) {
                     is Select.Project.Item.All -> buildCaseWhenStruct(item.expr, index)
@@ -221,7 +236,7 @@ internal object NormalizeSelect : AstPass {
         }
 
         @OptIn(PartiQLValueExperimental::class)
-        private fun visitSelectProjectWithoutProjectAll(node: Select.Project): AstNode {
+        private fun visitSelectProjectWithoutProjectAll(node: Select.Project): Select.Value {
             val structFields = node.items.map { item ->
                 val itemExpr = item as? Select.Project.Item.Expression ?: error("Expected the projection to be an expression.")
                 exprStructField(

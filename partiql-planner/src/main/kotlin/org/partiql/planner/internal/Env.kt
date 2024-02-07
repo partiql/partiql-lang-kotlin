@@ -13,7 +13,7 @@ import org.partiql.planner.internal.ir.rexOpCallDynamic
 import org.partiql.planner.internal.ir.rexOpCallDynamicCandidate
 import org.partiql.planner.internal.ir.rexOpCallStatic
 import org.partiql.planner.internal.ir.rexOpCastResolved
-import org.partiql.planner.internal.ir.rexOpGlobal
+import org.partiql.planner.internal.ir.rexOpVarGlobal
 import org.partiql.planner.internal.typer.TypeEnv.Companion.toPath
 import org.partiql.planner.internal.typer.toRuntimeType
 import org.partiql.planner.internal.typer.toStaticType
@@ -77,7 +77,7 @@ internal class Env(private val session: PartiQLPlanner.Session) {
             type = item.handle.entity.getType(),
         )
         // Rewrite as a path expression.
-        val root = rex(ref.type, rexOpGlobal(ref))
+        val root = rex(ref.type, rexOpVarGlobal(ref))
         val depth = calculateMatched(path, item.input, ref.path)
         val tail = path.steps.drop(depth)
         return if (tail.isEmpty()) root else root.toPath(tail)

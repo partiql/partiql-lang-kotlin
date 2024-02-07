@@ -52,7 +52,6 @@ import org.partiql.planner.internal.ir.builder.RexOpCastResolvedBuilder
 import org.partiql.planner.internal.ir.builder.RexOpCastUnresolvedBuilder
 import org.partiql.planner.internal.ir.builder.RexOpCollectionBuilder
 import org.partiql.planner.internal.ir.builder.RexOpErrBuilder
-import org.partiql.planner.internal.ir.builder.RexOpGlobalBuilder
 import org.partiql.planner.internal.ir.builder.RexOpLitBuilder
 import org.partiql.planner.internal.ir.builder.RexOpPathIndexBuilder
 import org.partiql.planner.internal.ir.builder.RexOpPathKeyBuilder
@@ -63,8 +62,10 @@ import org.partiql.planner.internal.ir.builder.RexOpStructBuilder
 import org.partiql.planner.internal.ir.builder.RexOpStructFieldBuilder
 import org.partiql.planner.internal.ir.builder.RexOpSubqueryBuilder
 import org.partiql.planner.internal.ir.builder.RexOpTupleUnionBuilder
-import org.partiql.planner.internal.ir.builder.RexOpVarResolvedBuilder
+import org.partiql.planner.internal.ir.builder.RexOpVarGlobalBuilder
+import org.partiql.planner.internal.ir.builder.RexOpVarLocalBuilder
 import org.partiql.planner.internal.ir.builder.RexOpVarUnresolvedBuilder
+import org.partiql.planner.internal.ir.builder.RexOpVarUpvalueBuilder
 import org.partiql.planner.internal.ir.builder.StatementQueryBuilder
 import org.partiql.planner.internal.ir.visitor.PlanVisitor
 import org.partiql.spi.fn.AggSignature
@@ -260,7 +261,6 @@ internal data class Rex(
         public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = when (this) {
             is Lit -> visitor.visitRexOpLit(this, ctx)
             is Var -> visitor.visitRexOpVar(this, ctx)
-            is Global -> visitor.visitRexOpGlobal(this, ctx)
             is Path -> visitor.visitRexOpPath(this, ctx)
             is Cast -> visitor.visitRexOpCast(this, ctx)
             is Call -> visitor.visitRexOpCall(this, ctx)
@@ -289,7 +289,9 @@ internal data class Rex(
 
         internal sealed class Var : Op() {
             public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = when (this) {
-                is Resolved -> visitor.visitRexOpVarResolved(this, ctx)
+                is Local -> visitor.visitRexOpVarLocal(this, ctx)
+                is Global -> visitor.visitRexOpVarGlobal(this, ctx)
+                is Upvalue -> visitor.visitRexOpVarUpvalue(this, ctx)
                 is Unresolved -> visitor.visitRexOpVarUnresolved(this, ctx)
             }
 
@@ -297,17 +299,50 @@ internal data class Rex(
                 DEFAULT, LOCAL,
             }
 
-            internal data class Resolved(
+            internal data class Upvalue(
+                @JvmField internal val frameRef: Int,
+                @JvmField internal val valueRef: Int
+            ) : Var() {
+                public override val children: List<PlanNode> = emptyList()
+
+                public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                    visitor.visitRexOpVarUpvalue(this, ctx)
+
+                internal companion object {
+                    @JvmStatic
+                    internal fun builder(): RexOpVarUpvalueBuilder = RexOpVarUpvalueBuilder()
+                }
+            }
+
+            internal data class Local(
                 @JvmField internal val ref: Int,
             ) : Var() {
                 public override val children: List<PlanNode> = emptyList()
 
                 public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
-                    visitor.visitRexOpVarResolved(this, ctx)
+                    visitor.visitRexOpVarLocal(this, ctx)
 
                 internal companion object {
                     @JvmStatic
-                    internal fun builder(): RexOpVarResolvedBuilder = RexOpVarResolvedBuilder()
+                    internal fun builder(): RexOpVarLocalBuilder = RexOpVarLocalBuilder()
+                }
+            }
+
+            internal data class Global(
+                @JvmField internal val ref: Ref.Obj,
+            ) : Var() {
+                public override val children: List<PlanNode> by lazy {
+                    val kids = mutableListOf<PlanNode?>()
+                    kids.add(ref)
+                    kids.filterNotNull()
+                }
+
+                public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                    visitor.visitRexOpVarGlobal(this, ctx)
+
+                internal companion object {
+                    @JvmStatic
+                    internal fun builder(): RexOpVarGlobalBuilder = RexOpVarGlobalBuilder()
                 }
             }
 
@@ -328,24 +363,6 @@ internal data class Rex(
                     @JvmStatic
                     internal fun builder(): RexOpVarUnresolvedBuilder = RexOpVarUnresolvedBuilder()
                 }
-            }
-        }
-
-        internal data class Global(
-            @JvmField internal val ref: Ref.Obj,
-        ) : Op() {
-            public override val children: List<PlanNode> by lazy {
-                val kids = mutableListOf<PlanNode?>()
-                kids.add(ref)
-                kids.filterNotNull()
-            }
-
-            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
-                visitor.visitRexOpGlobal(this, ctx)
-
-            internal companion object {
-                @JvmStatic
-                internal fun builder(): RexOpGlobalBuilder = RexOpGlobalBuilder()
             }
         }
 
@@ -669,12 +686,14 @@ internal data class Rex(
         }
 
         internal data class Subquery(
-            @JvmField internal val select: Select,
+            @JvmField internal val constructor: Rex,
+            @JvmField internal val rel: Rel,
             @JvmField internal val coercion: Coercion,
         ) : Op() {
             public override val children: List<PlanNode> by lazy {
                 val kids = mutableListOf<PlanNode?>()
-                kids.add(select)
+                kids.add(constructor)
+                kids.add(rel)
                 kids.filterNotNull()
             }
 

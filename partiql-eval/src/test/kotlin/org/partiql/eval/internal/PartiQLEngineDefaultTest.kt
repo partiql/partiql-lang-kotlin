@@ -9,6 +9,8 @@ import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.eval.PartiQLEngine
 import org.partiql.eval.PartiQLResult
 import org.partiql.parser.PartiQLParser
+import org.partiql.plan.PlanNode
+import org.partiql.plan.debug.PlanPrinter
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.PartiQLPlannerBuilder
 import org.partiql.plugins.memory.MemoryCatalog
@@ -48,7 +50,269 @@ class PartiQLEngineDefaultTest {
     @Execution(ExecutionMode.CONCURRENT)
     fun typingModeTests(tc: TypingTestCase) = tc.assert()
 
+    @ParameterizedTest
+    @MethodSource("subqueryTestCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun subqueryTests(tc: SuccessTestCase) = tc.assert()
+
     companion object {
+
+        @JvmStatic
+        fun subqueryTestCases() = listOf(
+            SuccessTestCase(
+                input = """
+                    SELECT VALUE (
+                        SELECT VALUE t1 + t2
+                        FROM <<5, 6>> AS t2
+                    ) FROM <<0, 10>> AS t1;
+                """.trimIndent(),
+                expected = bagValue(
+                    bagValue(int32Value(5), int32Value(6)),
+                    bagValue(int32Value(15), int32Value(16))
+                )
+            ),
+            SuccessTestCase(
+                input = """
+                    SELECT VALUE (
+                        SELECT t1 + t2
+                        FROM <<5>> AS t2
+                    ) FROM <<0, 10>> AS t1;
+                """.trimIndent(),
+                expected = bagValue(int32Value(5), int32Value(15))
+            ),
+            SuccessTestCase(
+                input = """
+                    SELECT (
+                        SELECT VALUE t1 + t2
+                        FROM <<5>> AS t2
+                    ) AS t1_plus_t2
+                    FROM <<0, 10>> AS t1;
+                """.trimIndent(),
+                expected = bagValue(
+                    structValue("t1_plus_t2" to bagValue(int32Value(5))),
+                    structValue("t1_plus_t2" to bagValue(int32Value(15)))
+                )
+            ),
+            SuccessTestCase(
+                input = """
+                    SELECT
+                        (
+                            SELECT (t1 + t2) * (
+                                SELECT t1 + t3 + t2
+                                FROM <<7>> AS t3
+                            )
+                            FROM <<5>> AS t2
+                        ) AS t1_plus_t2
+                    FROM <<0, 10>> AS t1;
+                """.trimIndent(),
+                expected = bagValue(
+                    structValue("t1_plus_t2" to int32Value(60)),
+                    structValue("t1_plus_t2" to int32Value(330))
+                )
+            ),
+            SuccessTestCase(
+                input = """
+                    1 + (SELECT t.a FROM << { 'a': 3 } >> AS t)
+                """.trimIndent(),
+                expected = int32Value(4)
+            ),
+            SuccessTestCase(
+                input = """
+                    SELECT VALUE element
+                    FROM << { 'a': [0, 1, 2] }, { 'a': [3, 4, 5] } >> AS t, t.a AS element
+                """.trimIndent(),
+                expected = bagValue(
+                    int32Value(0),
+                    int32Value(1),
+                    int32Value(2),
+                    int32Value(3),
+                    int32Value(4),
+                    int32Value(5),
+                )
+            ),
+            SuccessTestCase(
+                input = """
+                    SELECT VALUE element
+                    FROM << { 'a': { 'c': [0, 1, 2] } }, { 'a': { 'c': [3, 4, 5] } } >> AS t, t.a AS b, b.c AS element
+                """.trimIndent(),
+                expected = bagValue(
+                    int32Value(0),
+                    int32Value(1),
+                    int32Value(2),
+                    int32Value(3),
+                    int32Value(4),
+                    int32Value(5),
+                )
+            ),
+            SuccessTestCase(
+                input = """
+                    SELECT VALUE t_a_b + t_a_c
+                    FROM << { 'a': { 'b': [100, 200], 'c': [0, 1, 2] } }, { 'a': { 'b': [300, 400], 'c': [3, 4, 5] } } >>
+                        AS t, t.a AS t_a, t_a.b AS t_a_b, t_a.c AS t_a_c
+                """.trimIndent(),
+                expected = bagValue(
+                    int32Value(100),
+                    int32Value(101),
+                    int32Value(102),
+                    int32Value(200),
+                    int32Value(201),
+                    int32Value(202),
+                    int32Value(303),
+                    int32Value(304),
+                    int32Value(305),
+                    int32Value(403),
+                    int32Value(404),
+                    int32Value(405),
+                )
+            ),
+            SuccessTestCase(
+                input = """
+                    SELECT VALUE t_a_b + t_a_c + t_a_c_original
+                    FROM << { 'a': { 'b': [100, 200], 'c': [1, 2] } }, { 'a': { 'b': [300, 400], 'c': [3, 4] } } >>
+                        AS t, t.a AS t_a, t_a.b AS t_a_b, t_a.c AS t_a_c, t.a.c AS t_a_c_original
+                """.trimIndent(),
+                expected = bagValue(
+                    int32Value(102),
+                    int32Value(103),
+                    int32Value(103),
+                    int32Value(104),
+                    int32Value(202),
+                    int32Value(203),
+                    int32Value(203),
+                    int32Value(204),
+                    int32Value(306),
+                    int32Value(307),
+                    int32Value(307),
+                    int32Value(308),
+                    int32Value(406),
+                    int32Value(407),
+                    int32Value(407),
+                    int32Value(408),
+                )
+            ),
+            SuccessTestCase(
+                input = """
+                    SELECT VALUE t_a_b + t_a_c + t_a_c_original
+                    FROM << { 'a': { 'b': [100, 200], 'c': [1, 2] } }, { 'a': { 'b': [300, 400], 'c': [3, 4] } } >>
+                        AS t, t.a AS t_a, t_a.b AS t_a_b, t_a.c AS t_a_c, (SELECT VALUE d FROM t.a.c AS d) AS t_a_c_original
+                """.trimIndent(),
+                expected = bagValue(
+                    int32Value(102),
+                    int32Value(103),
+                    int32Value(103),
+                    int32Value(104),
+                    int32Value(202),
+                    int32Value(203),
+                    int32Value(203),
+                    int32Value(204),
+                    int32Value(306),
+                    int32Value(307),
+                    int32Value(307),
+                    int32Value(308),
+                    int32Value(406),
+                    int32Value(407),
+                    int32Value(407),
+                    int32Value(408),
+                )
+            ),
+            SuccessTestCase(
+                input = """
+                    SELECT VALUE t_a_b + t_a_c + t_a_c_original
+                    FROM << { 'a': { 'b': [100, 200], 'c': [1, 2] } }, { 'a': { 'b': [300, 400], 'c': [3, 4] } } >>
+                        AS t,
+                        t.a AS t_a,
+                        t_a.b AS t_a_b,
+                        t_a.c AS t_a_c,
+                        (SELECT VALUE d + (SELECT b_og FROM t.a.b AS b_og WHERE b_og = 200 OR b_og = 400) FROM t.a.c AS d) AS t_a_c_original
+                """.trimIndent(),
+                expected = bagValue(
+                    int32Value(302),
+                    int32Value(303),
+                    int32Value(303),
+                    int32Value(304),
+                    int32Value(402),
+                    int32Value(403),
+                    int32Value(403),
+                    int32Value(404),
+                    int32Value(706),
+                    int32Value(707),
+                    int32Value(707),
+                    int32Value(708),
+                    int32Value(806),
+                    int32Value(807),
+                    int32Value(807),
+                    int32Value(808),
+                )
+            ),
+            SuccessTestCase(
+                input = """
+                    SELECT VALUE
+                        t_a_b + t_a_c + t_a_c_original + (
+                            SELECT t_a_c_inner
+                            FROM t.a.c AS t_a_c_inner
+                            WHERE t_a_c_inner = 2 OR t_a_c_inner = 4
+                        )
+                    FROM << { 'a': { 'b': [100, 200], 'c': [1, 2] } }, { 'a': { 'b': [300, 400], 'c': [3, 4] } } >>
+                        AS t,
+                        t.a AS t_a,
+                        t_a.b AS t_a_b,
+                        t_a.c AS t_a_c,
+                        (SELECT VALUE d + (SELECT b_og FROM t.a.b AS b_og WHERE b_og = 200 OR b_og = 400) FROM t.a.c AS d) AS t_a_c_original
+                """.trimIndent(),
+                expected = bagValue(
+                    int32Value(304),
+                    int32Value(305),
+                    int32Value(305),
+                    int32Value(306),
+                    int32Value(404),
+                    int32Value(405),
+                    int32Value(405),
+                    int32Value(406),
+                    int32Value(710),
+                    int32Value(711),
+                    int32Value(711),
+                    int32Value(712),
+                    int32Value(810),
+                    int32Value(811),
+                    int32Value(811),
+                    int32Value(812),
+                )
+            ),
+            SuccessTestCase(
+                input = """
+                    SELECT VALUE
+                        t_a_b + t_a_c + t_a_c_original + (
+                            SELECT t_a_c_inner + t_a_c
+                            FROM t.a.c AS t_a_c_inner
+                            WHERE t_a_c_inner = 2 OR t_a_c_inner = 4
+                        )
+                    FROM << { 'a': { 'b': [100, 200], 'c': [1, 2] } }, { 'a': { 'b': [300, 400], 'c': [3, 4] } } >>
+                        AS t,
+                        t.a AS t_a,
+                        t_a.b AS t_a_b,
+                        t_a.c AS t_a_c,
+                        (SELECT VALUE d + (SELECT b_og + t_a_c FROM t.a.b AS b_og WHERE b_og = 200 OR b_og = 400) FROM t.a.c AS d) AS t_a_c_original
+                """.trimIndent(),
+                expected = bagValue(
+                    int32Value(306),
+                    int32Value(307),
+                    int32Value(309),
+                    int32Value(310),
+                    int32Value(406),
+                    int32Value(407),
+                    int32Value(409),
+                    int32Value(410),
+                    int32Value(716),
+                    int32Value(717),
+                    int32Value(719),
+                    int32Value(720),
+                    int32Value(816),
+                    int32Value(817),
+                    int32Value(819),
+                    int32Value(820),
+                )
+            )
+        )
 
         @JvmStatic
         fun sanityTestsCases() = listOf(
@@ -342,6 +606,51 @@ class PartiQLEngineDefaultTest {
                 """.trimIndent(),
                 expected = boolValue(true)
             ),
+            // SELECT * without nested coercion
+            SuccessTestCase(
+                input = """
+                    SELECT *
+                    FROM (
+                        SELECT t.a AS "first", t.b AS "second"
+                        FROM << { 'a': 3, 'b': 5 } >> AS t
+                    );
+                """.trimIndent(),
+                expected = bagValue(
+                    structValue(
+                        "first" to int32Value(3),
+                        "second" to int32Value(5)
+                    )
+                )
+            ),
+            // SELECT list without nested coercion
+            SuccessTestCase(
+                input = """
+                    SELECT "first", "second"
+                    FROM (
+                        SELECT t.a AS "first", t.b AS "second"
+                        FROM << { 'a': 3, 'b': 5 } >> AS t
+                    );
+                """.trimIndent(),
+                expected = bagValue(
+                    structValue(
+                        "first" to int32Value(3),
+                        "second" to int32Value(5)
+                    )
+                )
+            ),
+            // SELECT value without nested coercion
+            SuccessTestCase(
+                input = """
+                    SELECT VALUE "first"
+                    FROM (
+                        SELECT t.a AS "first", t.b AS "second"
+                        FROM << { 'a': 3, 'b': 5 } >> AS t
+                    );
+                """.trimIndent(),
+                expected = bagValue(
+                    int32Value(3),
+                )
+            ),
             SuccessTestCase(
                 input = "MISSING IS MISSING;",
                 expected = boolValue(true)
@@ -573,12 +882,25 @@ class PartiQLEngineDefaultTest {
                 input = "SELECT VALUE NOT v FROM << false, {'a':1} >> AS v;",
                 expectedPermissive = bagValue(boolValue(true), missingValue())
             ),
-
             TypingTestCase(
                 name = "PartiQL Specification Section 7.1 -- Inputs with wrong types Example 28 (2)",
                 input = "SELECT VALUE 5 > v FROM <<1, 'a'>> AS v;",
                 expectedPermissive = bagValue(boolValue(true), missingValue())
             ),
+            TypingTestCase(
+                name = "PartiQL Specification Section 9.1",
+                input = """
+                    SELECT
+                        o.name AS orderName,
+                        (SELECT c.name FROM << { 'name': 'John', 'id': 1 }, { 'name': 'Alan', 'id': 1 } >> c WHERE c.id=o.custId) AS customerName
+                        FROM << { 'name': 'apples', 'custId': 1 } >> o
+                """.trimIndent(),
+                expectedPermissive = bagValue(
+                    structValue(
+                        "orderName" to stringValue("apples")
+                    )
+                )
+            )
         )
     }
 
@@ -608,17 +930,24 @@ class PartiQLEngineDefaultTest {
             )
             val plan = planner.plan(statement, session)
             val prepared = engine.prepare(plan.plan, PartiQLEngine.Session(mapOf("memory" to connector), mode = mode))
-            val result = engine.execute(prepared) as PartiQLResult.Value
+            val result = when (val returned = engine.execute(prepared)) {
+                is PartiQLResult.Value -> returned
+                is PartiQLResult.Error -> {
+                    PlanPrinter.append(System.err, plan.plan)
+                    throw returned.cause
+                }
+            }
             val output = result.value
-            assertEquals(expected, output, comparisonString(expected, output))
+            assertEquals(expected, output, comparisonString(plan.plan, expected, output))
         }
 
         @OptIn(PartiQLValueExperimental::class)
-        private fun comparisonString(expected: PartiQLValue, actual: PartiQLValue): String {
+        private fun comparisonString(plan: PlanNode, expected: PartiQLValue, actual: PartiQLValue): String {
             val expectedBuffer = ByteArrayOutputStream()
             val expectedWriter = PartiQLValueIonWriterBuilder.standardIonTextBuilder().build(expectedBuffer)
             expectedWriter.append(expected)
             return buildString {
+                PlanPrinter.append(this, plan)
                 appendLine("Expected : $expectedBuffer")
                 expectedBuffer.reset()
                 expectedWriter.append(actual)
@@ -720,22 +1049,6 @@ class PartiQLEngineDefaultTest {
     ).assert()
 
     @Test
-    @Disabled("Subqueries aren't supported yet.")
-    fun test() = TypingTestCase(
-        name = "PartiQL Specification Section 9.1",
-        input = """
-            SELECT o.name AS orderName,
-                (SELECT c.name FROM << { 'name': 'John', 'id': 1 }, { 'name': 'Alan', 'id': 1 } >> c WHERE c.id=o.custId) AS customerName
-            FROM << { 'name': 'apples', 'custId': 1 } >> o
-        """.trimIndent(),
-        expectedPermissive = bagValue(
-            structValue(
-                "orderName" to stringValue("apples")
-            )
-        )
-    ).assert()
-
-    @Test
     @Disabled("This is just a placeholder. We should add support for this. Grouping is not yet supported.")
     fun test3() =
         TypingTestCase(
@@ -823,5 +1136,26 @@ class PartiQLEngineDefaultTest {
                     "i" to int64Value(2),
                 ),
             )
+        ).assert()
+
+    @Test
+    @Disabled("Support for ORDER BY needs to be added for this to pass.")
+    // PartiQL Specification says that SQL's SELECT is coerced, but SELECT VALUE is not.
+    fun selectValueNoCoercion() =
+        SuccessTestCase(
+            input = """
+                (4, 5) < (SELECT VALUE t.a FROM << { 'a': 3 }, { 'a': 4 } >> AS t ORDER BY t.a)
+            """.trimIndent(),
+            expected = boolValue(false)
+        ).assert()
+
+    @Test
+    @Disabled("This is appropriately coerced, but this test is failing because LT currently doesn't support LISTS.")
+    fun rowCoercion() =
+        SuccessTestCase(
+            input = """
+                (4, 5) < (SELECT t.a, t.a FROM << { 'a': 3 } >> AS t)
+            """.trimIndent(),
+            expected = boolValue(false)
         ).assert()
 }

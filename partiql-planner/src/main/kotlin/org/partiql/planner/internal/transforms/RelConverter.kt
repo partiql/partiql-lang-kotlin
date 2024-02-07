@@ -66,7 +66,7 @@ import org.partiql.planner.internal.ir.rex
 import org.partiql.planner.internal.ir.rexOpLit
 import org.partiql.planner.internal.ir.rexOpPivot
 import org.partiql.planner.internal.ir.rexOpSelect
-import org.partiql.planner.internal.ir.rexOpVarResolved
+import org.partiql.planner.internal.ir.rexOpVarLocal
 import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.boolValue
@@ -84,8 +84,9 @@ internal object RelConverter {
      * Here we convert an SFW to composed [Rel]s, then apply the appropriate relation-value projection to get a [Rex].
      */
     internal fun apply(sfw: Expr.SFW, env: Env): Rex {
-        val rel = sfw.accept(ToRel(env), nil)
-        val rex = when (val projection = sfw.select) {
+        val normalizedSfw = NormalizeSelect.normalize(sfw)
+        val rel = normalizedSfw.accept(ToRel(env), nil)
+        val rex = when (val projection = normalizedSfw.select) {
             // PIVOT ... FROM
             is Select.Pivot -> {
                 val key = projection.key.toRex(env)
@@ -100,7 +101,7 @@ internal object RelConverter {
                     "Expected SELECT VALUE's input to have a single binding. " +
                         "However, it contained: ${rel.type.schema.map { it.name }}."
                 }
-                val constructor = rex(StaticType.ANY, rexOpVarResolved(0))
+                val constructor = rex(StaticType.ANY, rexOpVarLocal(0))
                 val op = rexOpSelect(constructor, rel)
                 val type = when (rel.type.props.contains(Rel.Prop.ORDERED)) {
                     true -> (StaticType.LIST)
@@ -152,15 +153,11 @@ internal object RelConverter {
             rel = convertExclude(rel, sel.exclude)
             // append SQL projection if present
             rel = when (val projection = sel.select) {
-                is Select.Project -> {
-                    val project = visitSelectProject(projection, rel)
-                    visitSetQuantifier(projection.setq, project)
-                }
                 is Select.Value -> {
                     val project = visitSelectValue(projection, rel)
                     visitSetQuantifier(projection.setq, project)
                 }
-                is Select.Star -> error("AST not normalized, found project star")
+                is Select.Star, is Select.Project -> error("AST not normalized, found ${projection.javaClass.simpleName}")
                 is Select.Pivot -> rel // Skip PIVOT
             }
             return rel
@@ -203,7 +200,7 @@ internal object RelConverter {
         }
 
         override fun visitFromValue(node: From.Value, nil: Rel): Rel {
-            val rex = RexConverter.apply(node.expr, env)
+            val rex = RexConverter.applyRel(node.expr, env)
             val binding = when (val a = node.asAlias) {
                 null -> error("AST not normalized, missing AS alias on $node")
                 else -> relBinding(

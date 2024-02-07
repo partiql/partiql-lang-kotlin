@@ -3,6 +3,7 @@ package org.partiql.eval.internal.operator.rel
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.plan.Rel
+import org.partiql.plan.Rex
 import org.partiql.plan.relOpExcludeTypeCollIndex
 import org.partiql.plan.relOpExcludeTypeCollWildcard
 import org.partiql.plan.relOpExcludeTypeStructKey
@@ -34,9 +35,14 @@ internal class RelExclude(
     override fun next(): Record? {
         val record = input.next() ?: return null
         exclusions.forEach { path ->
-            val root = path.root.ref
-            val value = record.values[root]
-            record.values[root] = exclude(value, path.steps)
+            when (val root = path.root) {
+                is Rex.Op.Var.Local -> {
+                    val value = record.values[root.ref]
+                    record.values[root.ref] = exclude(value, path.steps)
+                }
+                is Rex.Op.Var.Upvalue -> { TODO("Remove values from stack.") }
+                is Rex.Op.Var.Global -> { TODO("Add and remove value from stack.") }
+            }
         }
         return record
     }

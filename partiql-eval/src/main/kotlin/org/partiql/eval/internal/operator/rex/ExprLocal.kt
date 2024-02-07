@@ -7,13 +7,13 @@ import org.partiql.value.PartiQLValueExperimental
 
 /**
  * Returns the value in the given record index.
- *
- * @property index
  */
-internal class ExprVar(private val index: Int) : Operator.Expr {
+internal class ExprLocal(
+    private val ref: Int,
+) : Operator.Expr {
 
     @PartiQLValueExperimental
     override fun eval(record: Record): PartiQLValue {
-        return record.values[index]
+        return record.values[ref]
     }
 }

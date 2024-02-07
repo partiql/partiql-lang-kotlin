@@ -23,6 +23,7 @@ import org.partiql.eval.internal.operator.rex.ExprCase
 import org.partiql.eval.internal.operator.rex.ExprCast
 import org.partiql.eval.internal.operator.rex.ExprCollection
 import org.partiql.eval.internal.operator.rex.ExprLiteral
+import org.partiql.eval.internal.operator.rex.ExprLocal
 import org.partiql.eval.internal.operator.rex.ExprPathIndex
 import org.partiql.eval.internal.operator.rex.ExprPathKey
 import org.partiql.eval.internal.operator.rex.ExprPathSymbol
@@ -31,8 +32,9 @@ import org.partiql.eval.internal.operator.rex.ExprPivot
 import org.partiql.eval.internal.operator.rex.ExprPivotPermissive
 import org.partiql.eval.internal.operator.rex.ExprSelect
 import org.partiql.eval.internal.operator.rex.ExprStruct
+import org.partiql.eval.internal.operator.rex.ExprSubquery
 import org.partiql.eval.internal.operator.rex.ExprTupleUnion
-import org.partiql.eval.internal.operator.rex.ExprVar
+import org.partiql.eval.internal.operator.rex.ExprUpvalue
 import org.partiql.plan.Catalog
 import org.partiql.plan.PartiQLPlan
 import org.partiql.plan.PlanNode
@@ -47,12 +49,19 @@ import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
 import java.lang.IllegalStateException
+import java.util.Stack
 
 internal class Compiler(
     private val plan: PartiQLPlan,
     private val session: PartiQLEngine.Session,
     private val symbols: Symbols
 ) : PlanBaseVisitor<Operator, StaticType?>() {
+
+    /**
+     * This represents variable scopes in a PartiQL Query. This is in relation to [Rex.Op.Var.Upvalue]. For now,
+     * the three scope-creating expressions are: [Rex.Op.Select], [Rex.Op.Subquery], [Rel.Op.Join].
+     */
+    private val scopes: Stack<Record> = Stack<Record>()
 
     fun compile(): Operator.Expr {
         return visitPartiQLPlan(plan, null)
@@ -103,11 +112,20 @@ internal class Compiler(
         return ExprStruct(fields)
     }
 
-    override fun visitRexOpSelect(node: Rex.Op.Select, ctx: StaticType?): Operator {
+    override fun visitRexOpSelect(node: Rex.Op.Select, ctx: StaticType?): Operator.Expr {
         val rel = visitRel(node.rel, ctx)
         val ordered = node.rel.type.props.contains(Rel.Prop.ORDERED)
         val constructor = visitRex(node.constructor, ctx).modeHandled()
-        return ExprSelect(rel, constructor, ordered)
+        return ExprSelect(rel, constructor, ordered, scopes)
+    }
+
+    override fun visitRexOpSubquery(node: Rex.Op.Subquery, ctx: StaticType?): Operator {
+        val constructor = visitRex(node.constructor, ctx)
+        val input = visitRel(node.rel, ctx)
+        return when (node.coercion) {
+            Rex.Op.Subquery.Coercion.SCALAR -> ExprSubquery.Scalar(constructor, input, scopes)
+            Rex.Op.Subquery.Coercion.ROW -> ExprSubquery.Row(constructor, input, scopes)
+        }
     }
 
     override fun visitRexOpPivot(node: Rex.Op.Pivot, ctx: StaticType?): Operator {
@@ -119,11 +137,16 @@ internal class Compiler(
             PartiQLEngine.Mode.STRICT -> ExprPivot(rel, key, value)
         }
     }
-    override fun visitRexOpVar(node: Rex.Op.Var, ctx: StaticType?): Operator {
-        return ExprVar(node.ref)
+
+    override fun visitRexOpVarUpvalue(node: Rex.Op.Var.Upvalue, ctx: StaticType?): Operator {
+        return ExprUpvalue(node.frameRef, node.valueRef, scopes)
     }
 
-    override fun visitRexOpGlobal(node: Rex.Op.Global, ctx: StaticType?): Operator = symbols.getGlobal(node.ref)
+    override fun visitRexOpVarLocal(node: Rex.Op.Var.Local, ctx: StaticType?): Operator {
+        return ExprLocal(node.ref)
+    }
+
+    override fun visitRexOpVarGlobal(node: Rex.Op.Var.Global, ctx: StaticType?): Operator = symbols.getGlobal(node.ref)
 
     override fun visitRexOpPathKey(node: Rex.Op.Path.Key, ctx: StaticType?): Operator {
         val root = visitRex(node.root, ctx)
@@ -229,10 +252,10 @@ internal class Compiler(
         val rhs = visitRel(node.rhs, ctx)
         val condition = visitRex(node.rex, ctx)
         return when (node.type) {
-            Rel.Op.Join.Type.INNER -> RelJoinInner(lhs, rhs, condition)
-            Rel.Op.Join.Type.LEFT -> RelJoinLeft(lhs, rhs, condition)
-            Rel.Op.Join.Type.RIGHT -> RelJoinRight(lhs, rhs, condition)
-            Rel.Op.Join.Type.FULL -> RelJoinOuterFull(lhs, rhs, condition)
+            Rel.Op.Join.Type.INNER -> RelJoinInner(lhs, rhs, condition, scopes)
+            Rel.Op.Join.Type.LEFT -> RelJoinLeft(lhs, rhs, condition, scopes)
+            Rel.Op.Join.Type.RIGHT -> RelJoinRight(lhs, rhs, condition, scopes)
+            Rel.Op.Join.Type.FULL -> RelJoinOuterFull(lhs, rhs, condition, scopes)
         }
     }
 

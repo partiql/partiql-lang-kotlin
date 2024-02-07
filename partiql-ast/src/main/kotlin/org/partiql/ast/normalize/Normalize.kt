@@ -23,7 +23,6 @@ public fun Statement.normalize(): Statement {
     // could be a fold, but this is nice for setting breakpoints
     var ast = this
     ast = NormalizeFromSource.apply(ast)
-    ast = NormalizeSelect.apply(ast)
     ast = NormalizeGroupBy.apply(ast)
     return ast
 }

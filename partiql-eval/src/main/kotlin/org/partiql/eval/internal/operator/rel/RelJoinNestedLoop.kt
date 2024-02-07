@@ -8,40 +8,46 @@ import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.StructValue
 import org.partiql.value.nullValue
 import org.partiql.value.structValue
+import java.util.Stack
 
 internal abstract class RelJoinNestedLoop : Operator.Relation {
 
     abstract val lhs: Operator.Relation
     abstract val rhs: Operator.Relation
     abstract val condition: Operator.Expr
+    abstract val scopes: Stack<Record>
 
-    private var rhsRecord: Record? = null
+    private var lhsRecord: Record? = null
 
     override fun open() {
         lhs.open()
+        lhsRecord = lhs.next()
+        scopes.push(lhsRecord)
         rhs.open()
-        rhsRecord = rhs.next()
+        scopes.pop()
     }
 
     abstract fun join(condition: Boolean, lhs: Record, rhs: Record): Record?
 
     @OptIn(PartiQLValueExperimental::class)
     override fun next(): Record? {
-        var lhsRecord = lhs.next()
+        var rhsRecord = rhs.next()
         var toReturn: Record? = null
         do {
             // Acquire LHS and RHS Records
-            if (lhsRecord == null) {
-                lhs.close()
-                rhsRecord = rhs.next() ?: return null
-                lhs.open()
-                lhsRecord = lhs.next()
+            if (rhsRecord == null) {
+                rhs.close()
+                lhsRecord = lhs.next() ?: return null
+                scopes.push(lhsRecord)
+                rhs.open()
+                rhsRecord = rhs.next()
+                scopes.pop()
             }
             // Return Joined Record
-            if (lhsRecord != null && rhsRecord != null) {
-                val input = lhsRecord + rhsRecord!!
+            if (rhsRecord != null && lhsRecord != null) {
+                val input = lhsRecord!! + rhsRecord
                 val result = condition.eval(input)
-                toReturn = join(result.isTrue(), lhsRecord, rhsRecord!!)
+                toReturn = join(result.isTrue(), lhsRecord!!, rhsRecord)
             }
         }
         while (toReturn == null)

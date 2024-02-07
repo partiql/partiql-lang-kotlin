@@ -110,14 +110,20 @@ internal object PlanTransform {
         override fun visitRexOpVar(node: Rex.Op.Var, ctx: Unit) =
             super.visitRexOpVar(node, ctx) as org.partiql.plan.Rex.Op
 
-        override fun visitRexOpVarResolved(node: Rex.Op.Var.Resolved, ctx: Unit) = org.partiql.plan.Rex.Op.Var(node.ref)
-
         override fun visitRexOpVarUnresolved(node: Rex.Op.Var.Unresolved, ctx: Unit) =
             org.partiql.plan.Rex.Op.Err("Unresolved variable $node")
 
-        override fun visitRexOpGlobal(node: Rex.Op.Global, ctx: Unit) = org.partiql.plan.Rex.Op.Global(
+        override fun visitRexOpVarGlobal(node: Rex.Op.Var.Global, ctx: Unit) = org.partiql.plan.Rex.Op.Var.Global(
             ref = visitRef(node.ref, ctx)
         )
+
+        override fun visitRexOpVarUpvalue(node: Rex.Op.Var.Upvalue, ctx: Unit): org.partiql.plan.Rex.Op {
+            return org.partiql.plan.Rex.Op.Var.Upvalue(node.frameRef, node.valueRef)
+        }
+
+        override fun visitRexOpVarLocal(node: Rex.Op.Var.Local, ctx: Unit): org.partiql.plan.Rex.Op {
+            return org.partiql.plan.Rex.Op.Var.Local(node.ref)
+        }
 
         override fun visitRexOpPathIndex(node: Rex.Op.Path.Index, ctx: Unit): PlanNode {
             val root = visitRex(node.root, ctx)
@@ -209,7 +215,8 @@ internal object PlanTransform {
             )
 
             override fun visitRexOpSubquery(node: Rex.Op.Subquery, ctx: Unit) = org.partiql.plan.Rex.Op.Subquery(
-                select = visitRexOpSelect(node.select, ctx),
+                constructor = visitRex(node.constructor, ctx),
+                rel = visitRel(node.rel, ctx),
                 coercion = when (node.coercion) {
                     Rex.Op.Subquery.Coercion.SCALAR -> org.partiql.plan.Rex.Op.Subquery.Coercion.SCALAR
                     Rex.Op.Subquery.Coercion.ROW -> org.partiql.plan.Rex.Op.Subquery.Coercion.ROW
@@ -354,8 +361,10 @@ internal object PlanTransform {
 
             override fun visitRelOpExcludePath(node: Rel.Op.Exclude.Path, ctx: Unit): org.partiql.plan.Rel.Op.Exclude.Path {
                 val root = when (node.root) {
-                    is Rex.Op.Var.Resolved -> visitRexOpVar(node.root, ctx) as org.partiql.plan.Rex.Op.Var
-                    is Rex.Op.Var.Unresolved -> org.partiql.plan.Rex.Op.Var(-1) // unresolved in `PlanTyper` results in error
+                    is Rex.Op.Var.Upvalue -> visitRexOpVar(node.root, ctx) as org.partiql.plan.Rex.Op.Var
+                    is Rex.Op.Var.Unresolved -> org.partiql.plan.Rex.Op.Var.Upvalue(-1, -1) // unresolved in `PlanTyper` results in error
+                    is Rex.Op.Var.Local -> visitRexOpVarLocal(node.root, ctx) as org.partiql.plan.Rex.Op.Var.Local
+                    is Rex.Op.Var.Global -> visitRexOpVarGlobal(node.root, ctx)
                 }
                 return org.partiql.plan.Rel.Op.Exclude.Path(
                     root = root,

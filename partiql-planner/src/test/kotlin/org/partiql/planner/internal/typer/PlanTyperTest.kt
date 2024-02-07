@@ -8,12 +8,12 @@ import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.identifierSymbol
 import org.partiql.planner.internal.ir.refObj
 import org.partiql.planner.internal.ir.rex
-import org.partiql.planner.internal.ir.rexOpGlobal
 import org.partiql.planner.internal.ir.rexOpLit
 import org.partiql.planner.internal.ir.rexOpPathKey
 import org.partiql.planner.internal.ir.rexOpPathSymbol
 import org.partiql.planner.internal.ir.rexOpStruct
 import org.partiql.planner.internal.ir.rexOpStructField
+import org.partiql.planner.internal.ir.rexOpVarGlobal
 import org.partiql.planner.internal.ir.rexOpVarUnresolved
 import org.partiql.planner.internal.ir.statementQuery
 import org.partiql.planner.util.ProblemCollector
@@ -379,7 +379,7 @@ class PlanTyperTest {
     private fun global(type: StaticType, path: List<String>): Rex {
         return rex(
             type,
-            rexOpGlobal(refObj(catalog = "pql", path = path, type))
+            rexOpVarGlobal(refObj(catalog = "pql", path = path, type))
         )
     }
 }
