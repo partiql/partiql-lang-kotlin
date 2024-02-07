@@ -34,7 +34,6 @@ import org.partiql.planner.internal.ir.relBinding
 import org.partiql.planner.internal.ir.relOpAggregate
 import org.partiql.planner.internal.ir.relOpAggregateCallUnresolved
 import org.partiql.planner.internal.ir.relOpDistinct
-import org.partiql.planner.internal.ir.relOpErr
 import org.partiql.planner.internal.ir.relOpExclude
 import org.partiql.planner.internal.ir.relOpExcludePath
 import org.partiql.planner.internal.ir.relOpFilter
@@ -173,26 +172,23 @@ internal class PlanTyper(
             // descend, with GLOBAL resolution strategy
             val rex = node.rex.type(outer, Scope.GLOBAL)
 
-            // only UNPIVOT a struct
-            if (rex.type !is StructType) {
-                handleUnexpectedType(rex.type, expected = setOf(StaticType.STRUCT))
-                return rel(ctx!!, relOpErr("UNPIVOT on non-STRUCT type ${rex.type}"))
-            }
-
-            // compute element type
-            val t = rex.type
-            val e = if (t.contentClosed) {
-                unionOf(t.fields.map { it.value }.toSet()).flatten()
-            } else {
-                ANY
-            }
-
-            // compute rel type
+            // key type, always a string.
             val kType = STRING
-            val vType = e
-            val type = ctx!!.copyWithSchema(listOf(kType, vType))
+
+            // value type, possibly coerced.
+            val vType = when (val t = rex.type) {
+                is StructType -> {
+                    if (t.contentClosed || t.constraints.contains(TupleConstraint.Open(false))) {
+                        unionOf(t.fields.map { it.value }.toSet()).flatten()
+                    } else {
+                        ANY
+                    }
+                }
+                else -> t
+            }
 
             // rewrite
+            val type = ctx!!.copyWithSchema(listOf(kType, vType))
             val op = relOpUnpivot(rex)
             return rel(type, op)
         }
