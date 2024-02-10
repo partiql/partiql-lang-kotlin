@@ -35,6 +35,7 @@ Thank you to all who have contributed!
 
 ### Fixed
 - Return type of `partiql-ast`'s `SqlDialect` for `defaultReturn` to be a `SqlBlock` rather than `Nothing`
+- Flatten `CASE WHEN` branch type in `PlanTyper`
 
 ### Removed
 
