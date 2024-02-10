@@ -796,7 +796,7 @@ internal class PlanTyper(
                     }
 
                     // Replace the result's type
-                    val type = AnyOfType(ref.type.allTypes.filterIsInstance<StructType>().toSet())
+                    val type = AnyOfType(ref.type.allTypes.filterIsInstance<StructType>().toSet()).flatten()
                     val replacementVal = ref.copy(type = type)
                     val rex = when (ref.op is Rex.Op.Var.Resolved) {
                         true -> RexReplacer.replace(result, ref, replacementVal)
