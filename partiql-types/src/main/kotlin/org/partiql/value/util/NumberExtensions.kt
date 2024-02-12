@@ -84,7 +84,7 @@ private val CONVERTERS = mapOf<Class<*>, (Number) -> Number>(
     Float::class.javaObjectType to Number::toFloat,
     Double::class.javaObjectType to Number::toDouble,
     BigInteger::class.javaObjectType to { num ->
-        when(num) {
+        when (num) {
             is Int -> num.toBigInteger()
             is Long -> num.toBigInteger()
             is BigInteger -> num
