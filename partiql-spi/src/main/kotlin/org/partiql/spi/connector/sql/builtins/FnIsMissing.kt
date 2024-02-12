@@ -17,7 +17,7 @@ import org.partiql.value.boolValue
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_IS_MISSING__ANY__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "is_missing",
         returns = BOOL,
         parameters = listOf(FnParameter("value", ANY)),
@@ -25,8 +25,7 @@ internal object Fn_IS_MISSING__ANY__BOOL : Fn {
         isNullCall = false,
         isMissable = false,
         isMissingCall = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         return boolValue(args[0] is MissingValue)
     }

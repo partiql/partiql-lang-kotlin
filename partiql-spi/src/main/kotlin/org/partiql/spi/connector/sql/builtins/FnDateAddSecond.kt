@@ -28,7 +28,7 @@ import org.partiql.value.timestampValue
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_DATE_ADD_SECOND__INT32_TIME__TIME : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "date_add_second",
         returns = TIME,
         parameters = listOf(
@@ -37,8 +37,7 @@ internal object Fn_DATE_ADD_SECOND__INT32_TIME__TIME : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val interval = args[0].check<Int32Value>()
         val datetime = args[1].check<TimeValue>()
@@ -51,7 +50,7 @@ internal object Fn_DATE_ADD_SECOND__INT32_TIME__TIME : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_DATE_ADD_SECOND__INT64_TIME__TIME : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "date_add_second",
         returns = TIME,
         parameters = listOf(
@@ -60,8 +59,7 @@ internal object Fn_DATE_ADD_SECOND__INT64_TIME__TIME : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val interval = args[0].check<Int64Value>()
         val datetime = args[1].check<TimeValue>()
@@ -74,7 +72,7 @@ internal object Fn_DATE_ADD_SECOND__INT64_TIME__TIME : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_DATE_ADD_SECOND__INT_TIME__TIME : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "date_add_second",
         returns = TIME,
         parameters = listOf(
@@ -83,8 +81,7 @@ internal object Fn_DATE_ADD_SECOND__INT_TIME__TIME : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val interval = args[0].check<IntValue>()
         val datetime = args[1].check<TimeValue>()
@@ -97,7 +94,7 @@ internal object Fn_DATE_ADD_SECOND__INT_TIME__TIME : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_DATE_ADD_SECOND__INT32_TIMESTAMP__TIMESTAMP : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "date_add_second",
         returns = TIMESTAMP,
         parameters = listOf(
@@ -106,8 +103,7 @@ internal object Fn_DATE_ADD_SECOND__INT32_TIMESTAMP__TIMESTAMP : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val interval = args[0].check<Int32Value>()
         val datetime = args[1].check<TimestampValue>()
@@ -120,7 +116,7 @@ internal object Fn_DATE_ADD_SECOND__INT32_TIMESTAMP__TIMESTAMP : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_DATE_ADD_SECOND__INT64_TIMESTAMP__TIMESTAMP : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "date_add_second",
         returns = TIMESTAMP,
         parameters = listOf(
@@ -129,8 +125,7 @@ internal object Fn_DATE_ADD_SECOND__INT64_TIMESTAMP__TIMESTAMP : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val interval = args[0].check<Int64Value>()
         val datetime = args[1].check<TimestampValue>()
@@ -143,7 +138,7 @@ internal object Fn_DATE_ADD_SECOND__INT64_TIMESTAMP__TIMESTAMP : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_DATE_ADD_SECOND__INT_TIMESTAMP__TIMESTAMP : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "date_add_second",
         returns = TIMESTAMP,
         parameters = listOf(
@@ -152,8 +147,7 @@ internal object Fn_DATE_ADD_SECOND__INT_TIMESTAMP__TIMESTAMP : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val interval = args[0].check<IntValue>()
         val datetime = args[1].check<TimestampValue>()

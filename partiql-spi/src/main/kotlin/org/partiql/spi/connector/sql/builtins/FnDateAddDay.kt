@@ -28,7 +28,7 @@ import org.partiql.value.timestampValue
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_DATE_ADD_DAY__INT32_DATE__DATE : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "date_add_day",
         returns = DATE,
         parameters = listOf(
@@ -37,8 +37,7 @@ internal object Fn_DATE_ADD_DAY__INT32_DATE__DATE : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val interval = args[0].check<Int32Value>()
         val datetime = args[1].check<DateValue>()
@@ -51,7 +50,7 @@ internal object Fn_DATE_ADD_DAY__INT32_DATE__DATE : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_DATE_ADD_DAY__INT64_DATE__DATE : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "date_add_day",
         returns = DATE,
         parameters = listOf(
@@ -60,8 +59,7 @@ internal object Fn_DATE_ADD_DAY__INT64_DATE__DATE : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val interval = args[0].check<Int64Value>()
         val datetime = args[1].check<DateValue>()
@@ -74,7 +72,7 @@ internal object Fn_DATE_ADD_DAY__INT64_DATE__DATE : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_DATE_ADD_DAY__INT_DATE__DATE : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "date_add_day",
         returns = DATE,
         parameters = listOf(
@@ -83,8 +81,7 @@ internal object Fn_DATE_ADD_DAY__INT_DATE__DATE : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val interval = args[0].check<IntValue>()
         val datetime = args[1].check<DateValue>()
@@ -99,7 +96,7 @@ internal object Fn_DATE_ADD_DAY__INT_DATE__DATE : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_DATE_ADD_DAY__INT32_TIMESTAMP__TIMESTAMP : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "date_add_day",
         returns = TIMESTAMP,
         parameters = listOf(
@@ -108,8 +105,7 @@ internal object Fn_DATE_ADD_DAY__INT32_TIMESTAMP__TIMESTAMP : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val interval = args[0].check<Int32Value>()
         val datetime = args[1].check<TimestampValue>()
@@ -122,7 +118,7 @@ internal object Fn_DATE_ADD_DAY__INT32_TIMESTAMP__TIMESTAMP : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_DATE_ADD_DAY__INT64_TIMESTAMP__TIMESTAMP : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "date_add_day",
         returns = TIMESTAMP,
         parameters = listOf(
@@ -131,8 +127,7 @@ internal object Fn_DATE_ADD_DAY__INT64_TIMESTAMP__TIMESTAMP : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val interval = args[0].check<Int64Value>()
         val datetime = args[1].check<TimestampValue>()
@@ -145,7 +140,7 @@ internal object Fn_DATE_ADD_DAY__INT64_TIMESTAMP__TIMESTAMP : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_DATE_ADD_DAY__INT_TIMESTAMP__TIMESTAMP : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "date_add_day",
         returns = TIMESTAMP,
         parameters = listOf(
@@ -154,8 +149,7 @@ internal object Fn_DATE_ADD_DAY__INT_TIMESTAMP__TIMESTAMP : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val interval = args[0].check<IntValue>()
         val datetime = args[1].check<TimestampValue>()

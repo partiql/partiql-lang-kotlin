@@ -15,14 +15,13 @@ import org.partiql.value.timestampValue
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_UTCNOW____TIMESTAMP : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "utcnow",
         returns = TIMESTAMP,
         parameters = listOf(),
         isNullCall = false,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val now = TimestampWithTimeZone.nowZ()
         return timestampValue(now)

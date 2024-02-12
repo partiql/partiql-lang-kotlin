@@ -1164,6 +1164,8 @@ internal class PlanTyper(
             // True iff MISSING CALL and had a MISSABLE arg
             val isMissable = (fn.isMissingCall && hadMissable) && fn.isMissable
 
+            val actualParameterType = args.map { it.type }
+
             // Return type with calculated nullability
             var type: StaticType = when {
                 isMissing -> MISSING
@@ -1171,10 +1173,10 @@ internal class PlanTyper(
                 // If function can not return missing or null, can not propagate missing or null
                 // AKA, the Function IS MISSING
                 // return signature return type
-                !fn.isMissable && !fn.isMissingCall && !fn.isNullable && !fn.isNullCall -> fn.returns.toNonNullStaticType()
+                !fn.isMissable && !fn.isMissingCall && !fn.isNullable && !fn.isNullCall -> fn.computeReturnType(*actualParameterType.toTypedArray())
                 isNull || (!fn.isMissable && hadMissing) -> NULL
-                isNullable -> fn.returns.toStaticType()
-                else -> fn.returns.toNonNullStaticType()
+                isNullable -> fn.computeReturnType(*actualParameterType.toTypedArray()).asNullable()
+                else -> fn.computeReturnType(*actualParameterType.toTypedArray())
             }
 
             // Propagate MISSING unless this operator explicitly doesn't return missing (fn.isMissable = false).

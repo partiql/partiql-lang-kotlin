@@ -23,7 +23,7 @@ import org.partiql.value.symbolValue
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_TRIM_TRAILING_CHARS__STRING_STRING__STRING : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "trim_trailing_chars",
         returns = STRING,
         parameters = listOf(
@@ -32,8 +32,7 @@ internal object Fn_TRIM_TRAILING_CHARS__STRING_STRING__STRING : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val value = args[0].check<StringValue>().string!!
         val chars = args[1].check<StringValue>().string!!
@@ -45,7 +44,7 @@ internal object Fn_TRIM_TRAILING_CHARS__STRING_STRING__STRING : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_TRIM_TRAILING_CHARS__SYMBOL_SYMBOL__SYMBOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "trim_trailing_chars",
         returns = SYMBOL,
         parameters = listOf(
@@ -54,8 +53,7 @@ internal object Fn_TRIM_TRAILING_CHARS__SYMBOL_SYMBOL__SYMBOL : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val value = args[0].check<SymbolValue>().string!!
         val chars = args[1].check<SymbolValue>().string!!
@@ -67,7 +65,7 @@ internal object Fn_TRIM_TRAILING_CHARS__SYMBOL_SYMBOL__SYMBOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_TRIM_TRAILING_CHARS__CLOB_CLOB__CLOB : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "trim_trailing_chars",
         returns = CLOB,
         parameters = listOf(
@@ -76,8 +74,7 @@ internal object Fn_TRIM_TRAILING_CHARS__CLOB_CLOB__CLOB : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val string = args[0].check<ClobValue>().value!!.toString(Charsets.UTF_8)
         val chars = args[1].check<ClobValue>().value!!.toString(Charsets.UTF_8)

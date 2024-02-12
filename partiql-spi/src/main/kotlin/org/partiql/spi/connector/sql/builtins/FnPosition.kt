@@ -22,7 +22,7 @@ import org.partiql.value.int64Value
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_POSITION__STRING_STRING__INT64 : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "position",
         returns = INT64,
         parameters = listOf(
@@ -31,8 +31,7 @@ internal object Fn_POSITION__STRING_STRING__INT64 : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val s1 = args[0].check<StringValue>().string!!
         val s2 = args[1].check<StringValue>().string!!
@@ -44,7 +43,7 @@ internal object Fn_POSITION__STRING_STRING__INT64 : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_POSITION__SYMBOL_SYMBOL__INT64 : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "position",
         returns = INT64,
         parameters = listOf(
@@ -53,8 +52,7 @@ internal object Fn_POSITION__SYMBOL_SYMBOL__INT64 : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val s1 = args[0].check<SymbolValue>().string!!
         val s2 = args[1].check<SymbolValue>().string!!
@@ -66,7 +64,7 @@ internal object Fn_POSITION__SYMBOL_SYMBOL__INT64 : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_POSITION__CLOB_CLOB__INT64 : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "position",
         returns = INT64,
         parameters = listOf(
@@ -75,8 +73,7 @@ internal object Fn_POSITION__CLOB_CLOB__INT64 : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val s1 = args[0].check<ClobValue>().value!!.toString(Charsets.UTF_8)
         val s2 = args[1].check<ClobValue>().value!!.toString(Charsets.UTF_8)

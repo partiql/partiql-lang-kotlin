@@ -7,6 +7,8 @@ import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
+import org.partiql.types.DecimalType
+import org.partiql.types.StaticType
 import org.partiql.value.DecimalValue
 import org.partiql.value.Float32Value
 import org.partiql.value.Float64Value
@@ -17,7 +19,7 @@ import org.partiql.value.Int8Value
 import org.partiql.value.IntValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType.DECIMAL_ARBITRARY
+import org.partiql.value.PartiQLValueType
 import org.partiql.value.PartiQLValueType.FLOAT32
 import org.partiql.value.PartiQLValueType.FLOAT64
 import org.partiql.value.PartiQLValueType.INT
@@ -34,12 +36,13 @@ import org.partiql.value.int32Value
 import org.partiql.value.int64Value
 import org.partiql.value.int8Value
 import org.partiql.value.intValue
+import kotlin.math.max
 
 // TODO: Handle Overflow
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_PLUS__INT8_INT8__INT8 : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "plus",
         returns = INT8,
         parameters = listOf(
@@ -48,8 +51,7 @@ internal object Fn_PLUS__INT8_INT8__INT8 : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val arg0 = args[0].check<Int8Value>().value!!
         val arg1 = args[1].check<Int8Value>().value!!
@@ -60,7 +62,7 @@ internal object Fn_PLUS__INT8_INT8__INT8 : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_PLUS__INT16_INT16__INT16 : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "plus",
         returns = INT16,
         parameters = listOf(
@@ -69,8 +71,7 @@ internal object Fn_PLUS__INT16_INT16__INT16 : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val arg0 = args[0].check<Int16Value>().value!!
         val arg1 = args[1].check<Int16Value>().value!!
@@ -81,7 +82,7 @@ internal object Fn_PLUS__INT16_INT16__INT16 : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_PLUS__INT32_INT32__INT32 : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "plus",
         returns = INT32,
         parameters = listOf(
@@ -90,8 +91,7 @@ internal object Fn_PLUS__INT32_INT32__INT32 : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val arg0 = args[0].check<Int32Value>().value!!
         val arg1 = args[1].check<Int32Value>().value!!
@@ -102,7 +102,7 @@ internal object Fn_PLUS__INT32_INT32__INT32 : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_PLUS__INT64_INT64__INT64 : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "plus",
         returns = INT64,
         parameters = listOf(
@@ -111,8 +111,7 @@ internal object Fn_PLUS__INT64_INT64__INT64 : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val arg0 = args[0].check<Int64Value>().value!!
         val arg1 = args[1].check<Int64Value>().value!!
@@ -123,7 +122,7 @@ internal object Fn_PLUS__INT64_INT64__INT64 : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_PLUS__INT_INT__INT : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "plus",
         returns = INT,
         parameters = listOf(
@@ -132,8 +131,7 @@ internal object Fn_PLUS__INT_INT__INT : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val arg0 = args[0].check<IntValue>().value!!
         val arg1 = args[1].check<IntValue>().value!!
@@ -142,19 +140,58 @@ internal object Fn_PLUS__INT_INT__INT : Fn {
 }
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
-internal object Fn_PLUS__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__DECIMAL_ARBITRARY : Fn {
+internal object Fn_PLUS__DECIMAL_DECIMAL__DECIMAL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "plus",
-        returns = DECIMAL_ARBITRARY,
+        returns = PartiQLValueType.DECIMAL,
         parameters = listOf(
-            FnParameter("lhs", DECIMAL_ARBITRARY),
-            FnParameter("rhs", DECIMAL_ARBITRARY),
+            FnParameter("lhs", PartiQLValueType.DECIMAL),
+            FnParameter("rhs", PartiQLValueType.DECIMAL),
         ),
         isNullCall = true,
         isNullable = false,
-    )
+    ) {
+        override fun computeReturnType(vararg parameterType: StaticType): StaticType {
+            val lhs = parameterType[0] as DecimalType
+            val rhs = parameterType[1] as DecimalType
+            return when (val lc = lhs.precisionScaleConstraint) {
+                is DecimalType.PrecisionScaleConstraint.Constrained -> when (val rc = rhs.precisionScaleConstraint) {
+                    is DecimalType.PrecisionScaleConstraint.Constrained -> {
+                        val scale = max(lc.scale, rc.scale)
+                        val precison = scale + max(lc.precision - lc.scale, rc.precision - rc.scale) + 1
+                        DecimalType(
+                            DecimalType.PrecisionScaleConstraint.Constrained(precison, scale)
+                        )
+                    }
 
+                    DecimalType.PrecisionScaleConstraint.Unconstrained -> StaticType.DECIMAL
+                }
+
+                DecimalType.PrecisionScaleConstraint.Unconstrained -> StaticType.DECIMAL
+            }
+        }
+    }
+    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
+        val arg0 = args[0].check<DecimalValue>().value!!
+        val arg1 = args[1].check<DecimalValue>().value!!
+        return decimalValue(arg0 + arg1)
+    }
+}
+
+@OptIn(PartiQLValueExperimental::class, FnExperimental::class)
+internal object Fn_PLUS__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__DECIMAL_ARBITRARY : Fn {
+
+    override val signature = object : FnSignature(
+        name = "plus",
+        returns = PartiQLValueType.DECIMAL_ARBITRARY,
+        parameters = listOf(
+            FnParameter("lhs", PartiQLValueType.DECIMAL_ARBITRARY),
+            FnParameter("rhs", PartiQLValueType.DECIMAL_ARBITRARY),
+        ),
+        isNullCall = true,
+        isNullable = false,
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val arg0 = args[0].check<DecimalValue>().value!!
         val arg1 = args[1].check<DecimalValue>().value!!
@@ -165,7 +202,7 @@ internal object Fn_PLUS__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__DECIMAL_ARBITRARY 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_PLUS__FLOAT32_FLOAT32__FLOAT32 : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "plus",
         returns = FLOAT32,
         parameters = listOf(
@@ -174,8 +211,7 @@ internal object Fn_PLUS__FLOAT32_FLOAT32__FLOAT32 : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val arg0 = args[0].check<Float32Value>().value!!
         val arg1 = args[1].check<Float32Value>().value!!
@@ -186,7 +222,7 @@ internal object Fn_PLUS__FLOAT32_FLOAT32__FLOAT32 : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_PLUS__FLOAT64_FLOAT64__FLOAT64 : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "plus",
         returns = FLOAT64,
         parameters = listOf(
@@ -195,8 +231,7 @@ internal object Fn_PLUS__FLOAT64_FLOAT64__FLOAT64 : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val arg0 = args[0].check<Float64Value>().value!!
         val arg1 = args[1].check<Float64Value>().value!!

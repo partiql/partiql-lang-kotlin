@@ -13,14 +13,13 @@ import org.partiql.value.PartiQLValueType.STRING
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_CURRENT_USER____STRING : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "current_user",
         returns = STRING,
         parameters = listOf(),
         isNullCall = false,
         isNullable = true,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         TODO("Function current_user not implemented")
     }

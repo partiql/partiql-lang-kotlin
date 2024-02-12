@@ -353,7 +353,10 @@ public data class DecimalType(
     override val allTypes: List<StaticType>
         get() = listOf(this)
 
-    override fun toString(): String = "decimal"
+    override fun toString(): String = when (precisionScaleConstraint) {
+        is PrecisionScaleConstraint.Constrained -> "decimal(${precisionScaleConstraint.precision}, ${precisionScaleConstraint.scale})"
+        PrecisionScaleConstraint.Unconstrained -> "decimal"
+    }
 }
 
 public data class DateType(override val metas: Map<String, Any> = mapOf()) : SingleType() {

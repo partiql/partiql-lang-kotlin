@@ -23,7 +23,7 @@ import org.partiql.value.symbolValue
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_CONCAT__STRING_STRING__STRING : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "concat",
         returns = STRING,
         parameters = listOf(
@@ -32,8 +32,7 @@ internal object Fn_CONCAT__STRING_STRING__STRING : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val arg0 = args[0].check<StringValue>().value!!
         val arg1 = args[1].check<StringValue>().value!!
@@ -44,7 +43,7 @@ internal object Fn_CONCAT__STRING_STRING__STRING : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_CONCAT__SYMBOL_SYMBOL__SYMBOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "concat",
         returns = SYMBOL,
         parameters = listOf(
@@ -53,8 +52,7 @@ internal object Fn_CONCAT__SYMBOL_SYMBOL__SYMBOL : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val arg0 = args[0].check<SymbolValue>().value!!
         val arg1 = args[1].check<SymbolValue>().value!!
@@ -65,7 +63,7 @@ internal object Fn_CONCAT__SYMBOL_SYMBOL__SYMBOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_CONCAT__CLOB_CLOB__CLOB : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "concat",
         returns = CLOB,
         parameters = listOf(
@@ -74,8 +72,7 @@ internal object Fn_CONCAT__CLOB_CLOB__CLOB : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val arg0 = args[0].check<ClobValue>().value!!
         val arg1 = args[1].check<ClobValue>().value!!

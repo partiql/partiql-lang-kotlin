@@ -17,7 +17,7 @@ import org.partiql.value.PartiQLValueType.SYMBOL
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_LIKE__STRING_STRING__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "like",
         returns = BOOL,
         parameters = listOf(
@@ -26,8 +26,7 @@ internal object Fn_LIKE__STRING_STRING__BOOL : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         TODO("Function like not implemented")
     }
@@ -36,7 +35,7 @@ internal object Fn_LIKE__STRING_STRING__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_LIKE__SYMBOL_SYMBOL__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "like",
         returns = BOOL,
         parameters = listOf(
@@ -45,8 +44,7 @@ internal object Fn_LIKE__SYMBOL_SYMBOL__BOOL : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         TODO("Function like not implemented")
     }
@@ -55,7 +53,7 @@ internal object Fn_LIKE__SYMBOL_SYMBOL__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_LIKE__CLOB_CLOB__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "like",
         returns = BOOL,
         parameters = listOf(
@@ -64,8 +62,7 @@ internal object Fn_LIKE__CLOB_CLOB__BOOL : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         TODO("Function like not implemented")
     }

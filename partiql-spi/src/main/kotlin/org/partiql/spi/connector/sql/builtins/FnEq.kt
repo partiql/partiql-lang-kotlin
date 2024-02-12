@@ -67,7 +67,7 @@ import org.partiql.value.check
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_EQ__ANY_ANY__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "eq",
         returns = BOOL,
         parameters = listOf(
@@ -78,8 +78,7 @@ internal object Fn_EQ__ANY_ANY__BOOL : Fn {
         isNullCall = true,
         isMissable = false,
         isMissingCall = false,
-    )
-
+    ) {}
     // TODO ANY, ANY equals not clearly defined at the moment.
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val lhs = args[0]
@@ -91,7 +90,7 @@ internal object Fn_EQ__ANY_ANY__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_EQ__BOOL_BOOL__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "eq",
         returns = BOOL,
         parameters = listOf(
@@ -102,8 +101,7 @@ internal object Fn_EQ__BOOL_BOOL__BOOL : Fn {
         isNullCall = true,
         isMissable = false,
         isMissingCall = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val lhs = args[0].check<BoolValue>()
         val rhs = args[1].check<BoolValue>()
@@ -114,7 +112,7 @@ internal object Fn_EQ__BOOL_BOOL__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_EQ__INT8_INT8__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "eq",
         returns = BOOL,
         parameters = listOf(
@@ -125,8 +123,7 @@ internal object Fn_EQ__INT8_INT8__BOOL : Fn {
         isNullCall = true,
         isMissable = false,
         isMissingCall = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val lhs = args[0].check<Int8Value>()
         val rhs = args[1].check<Int8Value>()
@@ -137,7 +134,7 @@ internal object Fn_EQ__INT8_INT8__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_EQ__INT16_INT16__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "eq",
         returns = BOOL,
         parameters = listOf(
@@ -148,8 +145,7 @@ internal object Fn_EQ__INT16_INT16__BOOL : Fn {
         isNullCall = true,
         isMissable = false,
         isMissingCall = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val lhs = args[0].check<Int16Value>()
         val rhs = args[1].check<Int16Value>()
@@ -160,7 +156,7 @@ internal object Fn_EQ__INT16_INT16__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_EQ__INT32_INT32__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "eq",
         returns = BOOL,
         parameters = listOf(
@@ -171,8 +167,7 @@ internal object Fn_EQ__INT32_INT32__BOOL : Fn {
         isNullCall = true,
         isMissable = false,
         isMissingCall = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val lhs = args[0].check<Int32Value>()
         val rhs = args[1].check<Int32Value>()
@@ -183,7 +178,7 @@ internal object Fn_EQ__INT32_INT32__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_EQ__INT64_INT64__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "eq",
         returns = BOOL,
         parameters = listOf(
@@ -194,8 +189,7 @@ internal object Fn_EQ__INT64_INT64__BOOL : Fn {
         isNullCall = true,
         isMissable = false,
         isMissingCall = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val lhs = args[0].check<Int64Value>()
         val rhs = args[1].check<Int64Value>()
@@ -206,7 +200,7 @@ internal object Fn_EQ__INT64_INT64__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_EQ__INT_INT__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "eq",
         returns = BOOL,
         parameters = listOf(
@@ -217,8 +211,7 @@ internal object Fn_EQ__INT_INT__BOOL : Fn {
         isNullCall = true,
         isMissable = false,
         isMissingCall = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val lhs = args[0].check<IntValue>()
         val rhs = args[1].check<IntValue>()
@@ -229,7 +222,7 @@ internal object Fn_EQ__INT_INT__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_EQ__DECIMAL_DECIMAL__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "eq",
         returns = BOOL,
         parameters = listOf(
@@ -240,8 +233,7 @@ internal object Fn_EQ__DECIMAL_DECIMAL__BOOL : Fn {
         isNullCall = true,
         isMissable = false,
         isMissingCall = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val lhs = args[0].check<DecimalValue>()
         val rhs = args[1].check<DecimalValue>()
@@ -252,7 +244,7 @@ internal object Fn_EQ__DECIMAL_DECIMAL__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_EQ__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "eq",
         returns = BOOL,
         parameters = listOf(
@@ -263,8 +255,7 @@ internal object Fn_EQ__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__BOOL : Fn {
         isNullCall = true,
         isMissable = false,
         isMissingCall = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val lhs = args[0].check<DecimalValue>()
         val rhs = args[1].check<DecimalValue>()
@@ -275,7 +266,7 @@ internal object Fn_EQ__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_EQ__FLOAT32_FLOAT32__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "eq",
         returns = BOOL,
         parameters = listOf(
@@ -286,8 +277,7 @@ internal object Fn_EQ__FLOAT32_FLOAT32__BOOL : Fn {
         isNullCall = true,
         isMissable = false,
         isMissingCall = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val lhs = args[0].check<Float32Value>()
         val rhs = args[1].check<Float32Value>()
@@ -298,7 +288,7 @@ internal object Fn_EQ__FLOAT32_FLOAT32__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_EQ__FLOAT64_FLOAT64__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "eq",
         returns = BOOL,
         parameters = listOf(
@@ -309,8 +299,7 @@ internal object Fn_EQ__FLOAT64_FLOAT64__BOOL : Fn {
         isNullCall = true,
         isMissable = false,
         isMissingCall = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val lhs = args[0].check<Float64Value>()
         val rhs = args[1].check<Float64Value>()
@@ -321,7 +310,7 @@ internal object Fn_EQ__FLOAT64_FLOAT64__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_EQ__CHAR_CHAR__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "eq",
         returns = BOOL,
         parameters = listOf(
@@ -332,8 +321,7 @@ internal object Fn_EQ__CHAR_CHAR__BOOL : Fn {
         isNullCall = true,
         isMissable = false,
         isMissingCall = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val lhs = args[0].check<CharValue>()
         val rhs = args[1].check<CharValue>()
@@ -344,7 +332,7 @@ internal object Fn_EQ__CHAR_CHAR__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_EQ__STRING_STRING__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "eq",
         returns = BOOL,
         parameters = listOf(
@@ -355,8 +343,7 @@ internal object Fn_EQ__STRING_STRING__BOOL : Fn {
         isNullCall = true,
         isMissable = false,
         isMissingCall = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val lhs = args[0].check<StringValue>()
         val rhs = args[1].check<StringValue>()
@@ -367,7 +354,7 @@ internal object Fn_EQ__STRING_STRING__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_EQ__SYMBOL_SYMBOL__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "eq",
         returns = BOOL,
         parameters = listOf(
@@ -378,8 +365,7 @@ internal object Fn_EQ__SYMBOL_SYMBOL__BOOL : Fn {
         isNullCall = true,
         isMissable = false,
         isMissingCall = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val lhs = args[0].check<SymbolValue>()
         val rhs = args[1].check<SymbolValue>()
@@ -390,7 +376,7 @@ internal object Fn_EQ__SYMBOL_SYMBOL__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_EQ__BINARY_BINARY__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "eq",
         returns = BOOL,
         parameters = listOf(
@@ -401,8 +387,7 @@ internal object Fn_EQ__BINARY_BINARY__BOOL : Fn {
         isNullCall = true,
         isMissable = false,
         isMissingCall = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val lhs = args[0].check<BinaryValue>()
         val rhs = args[1].check<BinaryValue>()
@@ -413,7 +398,7 @@ internal object Fn_EQ__BINARY_BINARY__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_EQ__BYTE_BYTE__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "eq",
         returns = BOOL,
         parameters = listOf(
@@ -424,8 +409,7 @@ internal object Fn_EQ__BYTE_BYTE__BOOL : Fn {
         isNullCall = true,
         isMissable = false,
         isMissingCall = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val lhs = args[0].check<ByteValue>()
         val rhs = args[1].check<ByteValue>()
@@ -436,7 +420,7 @@ internal object Fn_EQ__BYTE_BYTE__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_EQ__BLOB_BLOB__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "eq",
         returns = BOOL,
         parameters = listOf(
@@ -447,8 +431,7 @@ internal object Fn_EQ__BLOB_BLOB__BOOL : Fn {
         isNullCall = true,
         isMissable = false,
         isMissingCall = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val lhs = args[0].check<BlobValue>()
         val rhs = args[1].check<BlobValue>()
@@ -459,7 +442,7 @@ internal object Fn_EQ__BLOB_BLOB__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_EQ__CLOB_CLOB__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "eq",
         returns = BOOL,
         parameters = listOf(
@@ -470,8 +453,7 @@ internal object Fn_EQ__CLOB_CLOB__BOOL : Fn {
         isNullCall = true,
         isMissable = false,
         isMissingCall = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val lhs = args[0].check<ClobValue>()
         val rhs = args[1].check<ClobValue>()
@@ -482,7 +464,7 @@ internal object Fn_EQ__CLOB_CLOB__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_EQ__DATE_DATE__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "eq",
         returns = BOOL,
         parameters = listOf(
@@ -493,8 +475,7 @@ internal object Fn_EQ__DATE_DATE__BOOL : Fn {
         isNullCall = true,
         isMissable = false,
         isMissingCall = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val lhs = args[0].check<DateValue>()
         val rhs = args[1].check<DateValue>()
@@ -505,7 +486,7 @@ internal object Fn_EQ__DATE_DATE__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_EQ__TIME_TIME__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "eq",
         returns = BOOL,
         parameters = listOf(
@@ -516,8 +497,7 @@ internal object Fn_EQ__TIME_TIME__BOOL : Fn {
         isNullCall = true,
         isMissable = false,
         isMissingCall = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val lhs = args[0].check<TimeValue>()
         val rhs = args[1].check<TimeValue>()
@@ -528,7 +508,7 @@ internal object Fn_EQ__TIME_TIME__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_EQ__TIMESTAMP_TIMESTAMP__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "eq",
         returns = BOOL,
         parameters = listOf(
@@ -539,8 +519,7 @@ internal object Fn_EQ__TIMESTAMP_TIMESTAMP__BOOL : Fn {
         isNullCall = true,
         isMissable = false,
         isMissingCall = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val lhs = args[0].check<TimestampValue>()
         val rhs = args[1].check<TimestampValue>()
@@ -551,7 +530,7 @@ internal object Fn_EQ__TIMESTAMP_TIMESTAMP__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_EQ__INTERVAL_INTERVAL__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "eq",
         returns = BOOL,
         parameters = listOf(
@@ -562,8 +541,7 @@ internal object Fn_EQ__INTERVAL_INTERVAL__BOOL : Fn {
         isNullCall = true,
         isMissable = false,
         isMissingCall = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val lhs = args[0].check<IntervalValue>()
         val rhs = args[1].check<IntervalValue>()
@@ -574,7 +552,7 @@ internal object Fn_EQ__INTERVAL_INTERVAL__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_EQ__BAG_BAG__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "eq",
         returns = BOOL,
         parameters = listOf(
@@ -585,8 +563,7 @@ internal object Fn_EQ__BAG_BAG__BOOL : Fn {
         isNullCall = true,
         isMissable = false,
         isMissingCall = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val lhs = args[0].check<BagValue<*>>()
         val rhs = args[1].check<BagValue<*>>()
@@ -597,7 +574,7 @@ internal object Fn_EQ__BAG_BAG__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_EQ__LIST_LIST__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "eq",
         returns = BOOL,
         parameters = listOf(
@@ -608,8 +585,7 @@ internal object Fn_EQ__LIST_LIST__BOOL : Fn {
         isNullCall = true,
         isMissable = false,
         isMissingCall = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val lhs = args[0].check<ListValue<*>>()
         val rhs = args[1].check<ListValue<*>>()
@@ -620,7 +596,7 @@ internal object Fn_EQ__LIST_LIST__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_EQ__SEXP_SEXP__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "eq",
         returns = BOOL,
         parameters = listOf(
@@ -631,8 +607,7 @@ internal object Fn_EQ__SEXP_SEXP__BOOL : Fn {
         isNullCall = true,
         isMissable = false,
         isMissingCall = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val lhs = args[0].check<SexpValue<*>>()
         val rhs = args[1].check<SexpValue<*>>()
@@ -643,7 +618,7 @@ internal object Fn_EQ__SEXP_SEXP__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_EQ__STRUCT_STRUCT__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "eq",
         returns = BOOL,
         parameters = listOf(
@@ -654,8 +629,7 @@ internal object Fn_EQ__STRUCT_STRUCT__BOOL : Fn {
         isNullCall = true,
         isMissable = false,
         isMissingCall = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val lhs = args[0].check<StructValue<*>>()
         val rhs = args[1].check<StructValue<*>>()
@@ -666,7 +640,7 @@ internal object Fn_EQ__STRUCT_STRUCT__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_EQ__NULL_NULL__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "eq",
         returns = BOOL,
         parameters = listOf(
@@ -677,8 +651,7 @@ internal object Fn_EQ__NULL_NULL__BOOL : Fn {
         isNullCall = true,
         isMissable = false,
         isMissingCall = false,
-    )
-
+    ) {}
     // TODO how does null comparison work? ie null.null == null.null or int8.null == null.null ??
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val lhs = args[0]
@@ -690,7 +663,7 @@ internal object Fn_EQ__NULL_NULL__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_EQ__MISSING_MISSING__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "eq",
         returns = BOOL,
         parameters = listOf(
@@ -701,8 +674,7 @@ internal object Fn_EQ__MISSING_MISSING__BOOL : Fn {
         isNullCall = true,
         isMissable = false,
         isMissingCall = false,
-    )
-
+    ) {}
     // TODO how does `=` work with MISSING? As of now, always false.
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         return boolValue(false)

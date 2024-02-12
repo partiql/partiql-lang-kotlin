@@ -23,7 +23,7 @@ import org.partiql.value.int32Value
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_CHAR_LENGTH__STRING__INT : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "char_length",
         returns = INT32,
         parameters = listOf(
@@ -31,8 +31,7 @@ internal object Fn_CHAR_LENGTH__STRING__INT : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): Int32Value {
         val value = args[0].check<StringValue>().value!!
         return int32Value(value.codePointCount(0, value.length))
@@ -42,7 +41,7 @@ internal object Fn_CHAR_LENGTH__STRING__INT : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_CHAR_LENGTH__SYMBOL__INT : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "char_length",
         returns = INT32,
         parameters = listOf(
@@ -50,8 +49,7 @@ internal object Fn_CHAR_LENGTH__SYMBOL__INT : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): Int32Value {
         val value = args[0].check<SymbolValue>().value!!
         return int32Value(value.codePointCount(0, value.length))
@@ -61,7 +59,7 @@ internal object Fn_CHAR_LENGTH__SYMBOL__INT : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_CHAR_LENGTH__CLOB__INT : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "char_length",
         returns = INT32,
         parameters = listOf(
@@ -69,8 +67,7 @@ internal object Fn_CHAR_LENGTH__CLOB__INT : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): Int32Value {
         val value = args[0].check<ClobValue>().value!!
         return int32Value(value.size)

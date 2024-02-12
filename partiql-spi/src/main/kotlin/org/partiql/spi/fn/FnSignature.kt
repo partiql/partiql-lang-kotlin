@@ -1,5 +1,7 @@
 package org.partiql.spi.fn
 
+import org.partiql.spi.fn.TypeUtils.toNonNullStaticType
+import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
 
@@ -21,7 +23,7 @@ import org.partiql.value.PartiQLValueType
  */
 @FnExperimental
 @OptIn(PartiQLValueExperimental::class)
-public class FnSignature(
+public abstract class FnSignature(
     @JvmField public val name: String,
     @JvmField public val returns: PartiQLValueType,
     @JvmField public val parameters: List<FnParameter>,
@@ -32,6 +34,7 @@ public class FnSignature(
     @JvmField public val isMissable: Boolean = true,
     @JvmField public val isMissingCall: Boolean = true,
 ) {
+    public open fun computeReturnType(vararg parameterType: StaticType): StaticType = returns.toNonNullStaticType()
 
     /**
      * Symbolic name of this operator of the form NAME__INPUTS__RETURNS

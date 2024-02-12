@@ -19,7 +19,7 @@ import org.partiql.value.check
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_NOT__BOOL__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "not",
         returns = BOOL,
         parameters = listOf(FnParameter("value", BOOL)),
@@ -27,8 +27,7 @@ internal object Fn_NOT__BOOL__BOOL : Fn {
         isNullCall = true,
         isMissable = false,
         isMissingCall = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val value = args[0].check<BoolValue>().value!!
         return boolValue(value.not())
@@ -38,7 +37,7 @@ internal object Fn_NOT__BOOL__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_NOT__MISSING__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "not",
         returns = BOOL,
         parameters = listOf(FnParameter("value", MISSING)),
@@ -46,8 +45,7 @@ internal object Fn_NOT__MISSING__BOOL : Fn {
         isNullCall = true,
         isMissable = false,
         isMissingCall = false,
-    )
-
+    ) {}
     // TODO: determine what this behavior should be
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         throw TypeCheckException()

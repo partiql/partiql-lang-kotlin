@@ -15,14 +15,13 @@ import org.partiql.value.PartiQLValueType.BOOL
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_IS_ANY__ANY__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "is_any",
         returns = BOOL,
         parameters = listOf(FnParameter("value", ANY)),
         isNullCall = false,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         TODO("Function is_any not implemented")
     }

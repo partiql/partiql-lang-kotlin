@@ -40,7 +40,7 @@ import org.partiql.value.intValue
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_MODULO__INT8_INT8__INT8 : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "modulo",
         returns = INT8,
         parameters = listOf(
@@ -49,8 +49,7 @@ internal object Fn_MODULO__INT8_INT8__INT8 : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val arg0 = args[0].check<Int8Value>().value!!
         val arg1 = args[1].check<Int8Value>().value!!
@@ -61,7 +60,7 @@ internal object Fn_MODULO__INT8_INT8__INT8 : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_MODULO__INT16_INT16__INT16 : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "modulo",
         returns = INT16,
         parameters = listOf(
@@ -70,8 +69,7 @@ internal object Fn_MODULO__INT16_INT16__INT16 : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val arg0 = args[0].check<Int16Value>().value!!
         val arg1 = args[1].check<Int16Value>().value!!
@@ -82,7 +80,7 @@ internal object Fn_MODULO__INT16_INT16__INT16 : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_MODULO__INT32_INT32__INT32 : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "modulo",
         returns = INT32,
         parameters = listOf(
@@ -91,8 +89,7 @@ internal object Fn_MODULO__INT32_INT32__INT32 : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val arg0 = args[0].check<Int32Value>().value!!
         val arg1 = args[1].check<Int32Value>().value!!
@@ -103,7 +100,7 @@ internal object Fn_MODULO__INT32_INT32__INT32 : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_MODULO__INT64_INT64__INT64 : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "modulo",
         returns = INT64,
         parameters = listOf(
@@ -112,8 +109,7 @@ internal object Fn_MODULO__INT64_INT64__INT64 : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val arg0 = args[0].check<Int64Value>().value!!
         val arg1 = args[1].check<Int64Value>().value!!
@@ -124,7 +120,7 @@ internal object Fn_MODULO__INT64_INT64__INT64 : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_MODULO__INT_INT__INT : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "modulo",
         returns = INT,
         parameters = listOf(
@@ -133,8 +129,7 @@ internal object Fn_MODULO__INT_INT__INT : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val arg0 = args[0].check<IntValue>().value!!
         val arg1 = args[1].check<IntValue>().value!!
@@ -145,7 +140,7 @@ internal object Fn_MODULO__INT_INT__INT : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_MODULO__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__DECIMAL_ARBITRARY : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "modulo",
         returns = DECIMAL_ARBITRARY,
         parameters = listOf(
@@ -154,8 +149,7 @@ internal object Fn_MODULO__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__DECIMAL_ARBITRAR
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val arg0 = args[0].check<DecimalValue>().value!!
         val arg1 = args[1].check<DecimalValue>().value!!
@@ -166,7 +160,7 @@ internal object Fn_MODULO__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__DECIMAL_ARBITRAR
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_MODULO__FLOAT32_FLOAT32__FLOAT32 : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "modulo",
         returns = FLOAT32,
         parameters = listOf(
@@ -175,8 +169,7 @@ internal object Fn_MODULO__FLOAT32_FLOAT32__FLOAT32 : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val arg0 = args[0].check<Float32Value>().value!!
         val arg1 = args[1].check<Float32Value>().value!!
@@ -187,7 +180,7 @@ internal object Fn_MODULO__FLOAT32_FLOAT32__FLOAT32 : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_MODULO__FLOAT64_FLOAT64__FLOAT64 : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "modulo",
         returns = FLOAT64,
         parameters = listOf(
@@ -196,8 +189,7 @@ internal object Fn_MODULO__FLOAT64_FLOAT64__FLOAT64 : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val arg0 = args[0].check<Float64Value>().value!!
         val arg1 = args[1].check<Float64Value>().value!!

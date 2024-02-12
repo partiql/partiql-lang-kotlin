@@ -24,11 +24,10 @@ import org.partiql.value.TimestampValue
 import org.partiql.value.check
 import org.partiql.value.timeValue
 import org.partiql.value.timestampValue
-
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_DATE_ADD_HOUR__INT32_TIME__TIME : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "date_add_hour",
         returns = TIME,
         parameters = listOf(
@@ -37,8 +36,7 @@ internal object Fn_DATE_ADD_HOUR__INT32_TIME__TIME : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val interval = args[0].check<Int32Value>()
         val datetime = args[1].check<TimeValue>()
@@ -51,7 +49,7 @@ internal object Fn_DATE_ADD_HOUR__INT32_TIME__TIME : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_DATE_ADD_HOUR__INT64_TIME__TIME : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "date_add_hour",
         returns = TIME,
         parameters = listOf(
@@ -60,8 +58,7 @@ internal object Fn_DATE_ADD_HOUR__INT64_TIME__TIME : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val interval = args[0].check<Int64Value>()
         val datetime = args[1].check<TimeValue>()
@@ -74,7 +71,7 @@ internal object Fn_DATE_ADD_HOUR__INT64_TIME__TIME : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_DATE_ADD_HOUR__INT_TIME__TIME : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "date_add_hour",
         returns = TIME,
         parameters = listOf(
@@ -83,8 +80,7 @@ internal object Fn_DATE_ADD_HOUR__INT_TIME__TIME : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val interval = args[0].check<IntValue>()
         val datetime = args[1].check<TimeValue>()
@@ -97,7 +93,7 @@ internal object Fn_DATE_ADD_HOUR__INT_TIME__TIME : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_DATE_ADD_HOUR__INT32_TIMESTAMP__TIMESTAMP : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "date_add_hour",
         returns = TIMESTAMP,
         parameters = listOf(
@@ -106,8 +102,7 @@ internal object Fn_DATE_ADD_HOUR__INT32_TIMESTAMP__TIMESTAMP : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val interval = args[0].check<Int32Value>()
         val datetime = args[1].check<TimestampValue>()
@@ -120,7 +115,7 @@ internal object Fn_DATE_ADD_HOUR__INT32_TIMESTAMP__TIMESTAMP : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_DATE_ADD_HOUR__INT64_TIMESTAMP__TIMESTAMP : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "date_add_hour",
         returns = TIMESTAMP,
         parameters = listOf(
@@ -129,8 +124,7 @@ internal object Fn_DATE_ADD_HOUR__INT64_TIMESTAMP__TIMESTAMP : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val interval = args[0].check<Int64Value>()
         val datetime = args[1].check<TimestampValue>()
@@ -143,7 +137,7 @@ internal object Fn_DATE_ADD_HOUR__INT64_TIMESTAMP__TIMESTAMP : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_DATE_ADD_HOUR__INT_TIMESTAMP__TIMESTAMP : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "date_add_hour",
         returns = TIMESTAMP,
         parameters = listOf(
@@ -152,8 +146,7 @@ internal object Fn_DATE_ADD_HOUR__INT_TIMESTAMP__TIMESTAMP : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val interval = args[0].check<IntValue>()
         val datetime = args[1].check<TimestampValue>()

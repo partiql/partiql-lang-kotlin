@@ -26,11 +26,10 @@ import org.partiql.value.int64Value
 import org.partiql.value.int8Value
 import org.partiql.value.intValue
 import kotlin.experimental.and
-
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_BITWISE_AND__INT8_INT8__INT8 : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "bitwise_and",
         returns = INT8,
         parameters = listOf(
@@ -39,8 +38,7 @@ internal object Fn_BITWISE_AND__INT8_INT8__INT8 : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val arg0 = args[0].check<Int8Value>().value!!
         val arg1 = args[1].check<Int8Value>().value!!
@@ -51,7 +49,7 @@ internal object Fn_BITWISE_AND__INT8_INT8__INT8 : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_BITWISE_AND__INT16_INT16__INT16 : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "bitwise_and",
         returns = INT16,
         parameters = listOf(
@@ -60,8 +58,7 @@ internal object Fn_BITWISE_AND__INT16_INT16__INT16 : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val arg0 = args[0].check<Int16Value>().value!!
         val arg1 = args[1].check<Int16Value>().value!!
@@ -72,7 +69,7 @@ internal object Fn_BITWISE_AND__INT16_INT16__INT16 : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_BITWISE_AND__INT32_INT32__INT32 : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "bitwise_and",
         returns = INT32,
         parameters = listOf(
@@ -81,8 +78,7 @@ internal object Fn_BITWISE_AND__INT32_INT32__INT32 : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val arg0 = args[0].check<Int32Value>().value!!
         val arg1 = args[1].check<Int32Value>().value!!
@@ -93,7 +89,7 @@ internal object Fn_BITWISE_AND__INT32_INT32__INT32 : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_BITWISE_AND__INT64_INT64__INT64 : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "bitwise_and",
         returns = INT64,
         parameters = listOf(
@@ -102,8 +98,7 @@ internal object Fn_BITWISE_AND__INT64_INT64__INT64 : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val arg0 = args[0].check<Int64Value>().value!!
         val arg1 = args[1].check<Int64Value>().value!!
@@ -114,7 +109,7 @@ internal object Fn_BITWISE_AND__INT64_INT64__INT64 : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_BITWISE_AND__INT_INT__INT : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "bitwise_and",
         returns = INT,
         parameters = listOf(
@@ -123,8 +118,7 @@ internal object Fn_BITWISE_AND__INT_INT__INT : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val arg0 = args[0].check<IntValue>().value!!
         val arg1 = args[1].check<IntValue>().value!!

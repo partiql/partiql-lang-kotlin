@@ -18,7 +18,7 @@ import org.partiql.value.check
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_AND__BOOL_BOOL__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "and",
         returns = BOOL,
         parameters = listOf(
@@ -29,8 +29,7 @@ internal object Fn_AND__BOOL_BOOL__BOOL : Fn {
         isNullCall = false,
         isMissable = false,
         isMissingCall = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val lhs = args[0].check<BoolValue>().value!!
         val rhs = args[1].check<BoolValue>().value!!
@@ -45,7 +44,7 @@ internal object Fn_AND__BOOL_BOOL__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_AND__MISSING_BOOL__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "and",
         returns = BOOL,
         parameters = listOf(
@@ -56,8 +55,7 @@ internal object Fn_AND__MISSING_BOOL__BOOL : Fn {
         isNullCall = false,
         isMissable = false,
         isMissingCall = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         return when (args[1].check<BoolValue>().value!!) {
             false -> boolValue(false)
@@ -69,7 +67,7 @@ internal object Fn_AND__MISSING_BOOL__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_AND__BOOL_MISSING__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "and",
         returns = BOOL,
         parameters = listOf(
@@ -80,8 +78,7 @@ internal object Fn_AND__BOOL_MISSING__BOOL : Fn {
         isNullCall = false,
         isMissable = false,
         isMissingCall = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         return when (args[0].check<BoolValue>().value!!) {
             false -> boolValue(false)
@@ -93,7 +90,7 @@ internal object Fn_AND__BOOL_MISSING__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_AND__MISSING_MISSING__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "and",
         returns = BOOL,
         parameters = listOf(
@@ -104,8 +101,7 @@ internal object Fn_AND__MISSING_MISSING__BOOL : Fn {
         isNullCall = false,
         isMissable = false,
         isMissingCall = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         return boolValue(null)
     }

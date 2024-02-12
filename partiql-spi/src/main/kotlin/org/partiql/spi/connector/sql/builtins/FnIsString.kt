@@ -21,14 +21,13 @@ import org.partiql.value.check
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_IS_STRING__ANY__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "is_string",
         returns = BOOL,
         parameters = listOf(FnParameter("value", ANY)),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         return boolValue(args[0] is StringValue)
     }
@@ -37,7 +36,7 @@ internal object Fn_IS_STRING__ANY__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_IS_STRING__INT32_ANY__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "is_string",
         returns = BOOL,
         parameters = listOf(
@@ -46,8 +45,7 @@ internal object Fn_IS_STRING__INT32_ANY__BOOL : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val v = args[1]
         if (v !is StringValue) {

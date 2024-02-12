@@ -39,14 +39,13 @@ import org.partiql.value.intValue
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_NEG__INT8__INT8 : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "neg",
         returns = INT8,
         parameters = listOf(FnParameter("value", INT8)),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val value = args[0].check<Int8Value>().value!!
         return int8Value(value.times(-1).toByte())
@@ -56,14 +55,13 @@ internal object Fn_NEG__INT8__INT8 : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_NEG__INT16__INT16 : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "neg",
         returns = INT16,
         parameters = listOf(FnParameter("value", INT16)),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val value = args[0].check<Int16Value>().value!!
         return int16Value(value.times(-1).toShort())
@@ -73,14 +71,13 @@ internal object Fn_NEG__INT16__INT16 : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_NEG__INT32__INT32 : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "neg",
         returns = INT32,
         parameters = listOf(FnParameter("value", INT32)),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val value = args[0].check<Int32Value>().value!!
         return int32Value(value.times(-1))
@@ -90,14 +87,13 @@ internal object Fn_NEG__INT32__INT32 : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_NEG__INT64__INT64 : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "neg",
         returns = INT64,
         parameters = listOf(FnParameter("value", INT64)),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val value = args[0].check<Int64Value>().value!!
         return int64Value(value.times(-1L))
@@ -107,14 +103,13 @@ internal object Fn_NEG__INT64__INT64 : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_NEG__INT__INT : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "neg",
         returns = INT,
         parameters = listOf(FnParameter("value", INT)),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val value = args[0].check<IntValue>().value!!
         return intValue(value.negate())
@@ -124,14 +119,13 @@ internal object Fn_NEG__INT__INT : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_NEG__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "neg",
         returns = DECIMAL_ARBITRARY,
         parameters = listOf(FnParameter("value", DECIMAL_ARBITRARY)),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val value = args[0].check<DecimalValue>().value!!
         return decimalValue(value.negate())
@@ -141,14 +135,13 @@ internal object Fn_NEG__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_NEG__FLOAT32__FLOAT32 : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "neg",
         returns = FLOAT32,
         parameters = listOf(FnParameter("value", FLOAT32)),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val value = args[0].check<Float32Value>().value!!
         return float32Value(value.times(-1))
@@ -158,14 +151,13 @@ internal object Fn_NEG__FLOAT32__FLOAT32 : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_NEG__FLOAT64__FLOAT64 : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "neg",
         returns = FLOAT64,
         parameters = listOf(FnParameter("value", FLOAT64)),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val value = args[0].check<Float64Value>().value!!
         return float64Value(value.times(-1))

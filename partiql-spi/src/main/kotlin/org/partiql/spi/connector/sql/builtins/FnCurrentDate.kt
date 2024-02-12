@@ -13,14 +13,13 @@ import org.partiql.value.PartiQLValueType.DATE
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_CURRENT_DATE____DATE : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "current_date",
         returns = DATE,
         parameters = listOf(),
         isNullCall = false,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         TODO("Function current_date not implemented")
     }
