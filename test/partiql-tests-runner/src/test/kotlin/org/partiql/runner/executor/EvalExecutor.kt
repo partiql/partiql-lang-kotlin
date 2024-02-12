@@ -84,7 +84,7 @@ class EvalExecutor(
         if (v1.isNull && v2.isNull) {
             return true
         }
-        if (v1 == v2) {
+        if (comparator.compare(v1, v2) == 0) {
             return true
         }
         if (v1.toIon().hashCode() == v2.toIon().hashCode()) {
@@ -101,6 +101,7 @@ class EvalExecutor(
         val parser = PartiQLParser.default()
         val planner = PartiQLPlanner.default()
         val engine = PartiQLEngine.default()
+        val comparator = PartiQLValue.comparator()
     }
 
     object Factory : TestExecutor.Factory<PartiQLStatement<*>, PartiQLResult> {

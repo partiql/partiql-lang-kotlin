@@ -5,6 +5,8 @@ import org.partiql.planner.internal.ir.Ref
 import org.partiql.planner.internal.typer.toRuntimeTypeOrNull
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnSignature
+import org.partiql.types.AnyOfType
+import org.partiql.types.NullType
 import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
@@ -147,7 +149,13 @@ internal object FnResolver {
     }
 
     private fun buildArgumentPermutations(args: List<StaticType>): List<List<StaticType>> {
-        val flattenedArgs = args.map { it.flatten().allTypes }
+        val flattenedArgs = args.map {
+            if (it is AnyOfType) {
+                it.flatten().allTypes.filter { it !is NullType }
+            } else {
+                it.flatten().allTypes
+            }
+        }
         return buildArgumentPermutations(flattenedArgs, accumulator = emptyList())
     }
 

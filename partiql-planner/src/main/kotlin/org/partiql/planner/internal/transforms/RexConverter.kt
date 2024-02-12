@@ -538,7 +538,7 @@ internal object RexConverter {
             // Call Variants
             val call = when (arg2) {
                 null -> call("substring", arg0, arg1)
-                else -> call("substring_length", arg0, arg1, arg2)
+                else -> call("substring", arg0, arg1, arg2)
             }
             return rex(type, call)
         }
