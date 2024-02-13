@@ -71,6 +71,7 @@ internal class ExprCallDynamic(
                     val c = coercions[i]
                     when {
                         c == null -> return false
+                        c.input != args[i].type -> return false
                         c.target != types[i] -> return false
                     }
                 }
