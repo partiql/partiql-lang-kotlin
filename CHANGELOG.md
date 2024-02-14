@@ -25,25 +25,16 @@ Thank you to all who have contributed!
 
 -->
 
-## [Unreleased]
-
-### Added
-
-### Changed
-
-### Deprecated
+## [0.14.3] - 2024-02-14
 
 ### Fixed
 - Return type of `partiql-ast`'s `SqlDialect` for `defaultReturn` to be a `SqlBlock` rather than `Nothing`
 - Flatten `CASE WHEN` branch type in `PlanTyper`
 
-### Removed
-
-### Security
-
 ### Contributors
 Thank you to all who have contributed!
 - @alancai98
+- @yliuuuu
 
 ## [0.14.2] - 2024-01-25
 
