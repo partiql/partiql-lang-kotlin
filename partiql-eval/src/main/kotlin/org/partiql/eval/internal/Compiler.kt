@@ -57,11 +57,7 @@ internal class Compiler(
     private val symbols: Symbols
 ) : PlanBaseVisitor<Operator, StaticType?>() {
 
-    /**
-     * This represents variable scopes in a PartiQL Query. This is in relation to [Rex.Op.Var.Upvalue]. For now,
-     * the three scope-creating expressions are: [Rex.Op.Select], [Rex.Op.Subquery], [Rel.Op.Join].
-     */
-    private val scopes: Stack<Record> = Stack<Record>()
+    private val env: Environment = Environment()
 
     fun compile(): Operator.Expr {
         return visitPartiQLPlan(plan, null)
@@ -116,15 +112,15 @@ internal class Compiler(
         val rel = visitRel(node.rel, ctx)
         val ordered = node.rel.type.props.contains(Rel.Prop.ORDERED)
         val constructor = visitRex(node.constructor, ctx).modeHandled()
-        return ExprSelect(rel, constructor, ordered, scopes)
+        return ExprSelect(rel, constructor, ordered, env)
     }
 
     override fun visitRexOpSubquery(node: Rex.Op.Subquery, ctx: StaticType?): Operator {
         val constructor = visitRex(node.constructor, ctx)
         val input = visitRel(node.rel, ctx)
         return when (node.coercion) {
-            Rex.Op.Subquery.Coercion.SCALAR -> ExprSubquery.Scalar(constructor, input, scopes)
-            Rex.Op.Subquery.Coercion.ROW -> ExprSubquery.Row(constructor, input, scopes)
+            Rex.Op.Subquery.Coercion.SCALAR -> ExprSubquery.Scalar(constructor, input, env)
+            Rex.Op.Subquery.Coercion.ROW -> ExprSubquery.Row(constructor, input, env)
         }
     }
 
@@ -139,7 +135,7 @@ internal class Compiler(
     }
 
     override fun visitRexOpVarUpvalue(node: Rex.Op.Var.Upvalue, ctx: StaticType?): Operator {
-        return ExprUpvalue(node.frameRef, node.valueRef, scopes)
+        return ExprUpvalue(node.frameRef, node.valueRef, env)
     }
 
     override fun visitRexOpVarLocal(node: Rex.Op.Var.Local, ctx: StaticType?): Operator {
@@ -252,10 +248,10 @@ internal class Compiler(
         val rhs = visitRel(node.rhs, ctx)
         val condition = visitRex(node.rex, ctx)
         return when (node.type) {
-            Rel.Op.Join.Type.INNER -> RelJoinInner(lhs, rhs, condition, scopes)
-            Rel.Op.Join.Type.LEFT -> RelJoinLeft(lhs, rhs, condition, scopes)
-            Rel.Op.Join.Type.RIGHT -> RelJoinRight(lhs, rhs, condition, scopes)
-            Rel.Op.Join.Type.FULL -> RelJoinOuterFull(lhs, rhs, condition, scopes)
+            Rel.Op.Join.Type.INNER -> RelJoinInner(lhs, rhs, condition, env)
+            Rel.Op.Join.Type.LEFT -> RelJoinLeft(lhs, rhs, condition, env)
+            Rel.Op.Join.Type.RIGHT -> RelJoinRight(lhs, rhs, condition, env)
+            Rel.Op.Join.Type.FULL -> RelJoinOuterFull(lhs, rhs, condition, env)
         }
     }
 

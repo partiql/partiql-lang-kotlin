@@ -1,5 +1,6 @@
 package org.partiql.eval.internal.operator.rex
 
+import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.value.PartiQLValue
@@ -18,7 +19,7 @@ internal class ExprSelect(
     private val input: Operator.Relation,
     private val constructor: Operator.Expr,
     private val ordered: Boolean,
-    private val scopes: Stack<Record>,
+    private val env: Environment,
 ) : Operator.Expr {
 
     /**
@@ -28,14 +29,14 @@ internal class ExprSelect(
     @PartiQLValueExperimental
     override fun eval(record: Record): PartiQLValue {
         val elements = mutableListOf<PartiQLValue>()
-        scopes.push(record)
-        input.open()
-        while (true) {
-            val r = input.next() ?: break
-            val e = constructor.eval(r)
-            elements.add(e)
+        env.scope(record) {
+            input.open()
+            while (true) {
+                val r = input.next() ?: break
+                val e = constructor.eval(r)
+                elements.add(e)
+            }
         }
-        scopes.pop()
         input.close()
         return when (ordered) {
             true -> listValue(elements)
