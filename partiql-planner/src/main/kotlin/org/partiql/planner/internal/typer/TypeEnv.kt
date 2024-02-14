@@ -7,7 +7,7 @@ import org.partiql.planner.internal.ir.rexOpLit
 import org.partiql.planner.internal.ir.rexOpPathKey
 import org.partiql.planner.internal.ir.rexOpPathSymbol
 import org.partiql.planner.internal.ir.rexOpVarLocal
-import org.partiql.planner.internal.ir.rexOpVarUpvalue
+import org.partiql.planner.internal.ir.rexOpVarOuter
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
@@ -19,10 +19,12 @@ import org.partiql.value.stringValue
 
 /**
  * TypeEnv represents a variables type environment.
+ *
+ * @property outer refers to the outer variable scopes that we have access to.
  */
 internal data class TypeEnv(
     public val schema: List<Rel.Binding>,
-    public val stack: List<TypeEnv>
+    public val outer: List<TypeEnv>
 ) {
 
     /**
@@ -39,20 +41,20 @@ internal data class TypeEnv(
     fun resolve(path: BindingPath): Rex? {
         val head: BindingName = path.steps[0]
         var tail: List<BindingName> = path.steps.drop(1)
-        var r = matchRoot(head, height)
+        var r = matchRoot(head, scopeIndex)
         if (r == null) {
-            r = matchStruct(head, height) ?: return null
+            r = matchStruct(head, scopeIndex) ?: return null
             tail = path.steps
         }
-        val op = r.op as Rex.Op.Var.Upvalue
-        if (op.frameRef == height) {
-            r = rex(r.type, rexOpVarLocal(op.valueRef))
+        val op = r.op as Rex.Op.Var.Outer
+        if (op.scope == scopeIndex) {
+            r = rex(r.type, rexOpVarLocal(op.ref))
         }
         // Convert any remaining binding names (tail) to an untyped path expression.
         return if (tail.isEmpty()) r else r.toPath(tail)
     }
 
-    val height: Int = this.stack.size
+    private val scopeIndex: Int = this.outer.size
 
     /**
      * Debugging string, ex: < x: int, y: string >
@@ -67,7 +69,7 @@ internal data class TypeEnv(
      * @param name
      * @return
      */
-    private fun matchRoot(name: BindingName, level: Int): Rex? {
+    private fun matchRoot(name: BindingName, scopeIndex: Int): Rex? {
         var r: Rex? = null
         for (i in schema.indices) {
             val local = schema[i]
@@ -77,11 +79,11 @@ internal data class TypeEnv(
                     // TODO root was already matched, emit ambiguous error.
                     return null
                 }
-                r = rex(type, rexOpVarUpvalue(level, i))
+                r = rex(type, rexOpVarOuter(scopeIndex, i))
             }
         }
-        if (r == null && stack.isNotEmpty()) {
-            return stack.last().matchRoot(name, level - 1)
+        if (r == null && outer.isNotEmpty()) {
+            return outer.last().matchRoot(name, scopeIndex - 1)
         }
         return r
     }
@@ -92,7 +94,7 @@ internal data class TypeEnv(
      * @param name
      * @return
      */
-    private fun matchStruct(name: BindingName, level: Int): Rex? {
+    private fun matchStruct(name: BindingName, scopeIndex: Int): Rex? {
         var c: Rex? = null
         var known = false
         for (i in schema.indices) {
@@ -105,7 +107,7 @@ internal data class TypeEnv(
                             // TODO root was already definitively matched, emit ambiguous error.
                             return null
                         }
-                        c = rex(type, rexOpVarUpvalue(level, i))
+                        c = rex(type, rexOpVarOuter(scopeIndex, i))
                         known = true
                     }
                     null -> {
@@ -117,15 +119,15 @@ internal data class TypeEnv(
                                 return null
                             }
                         }
-                        c = rex(type, rexOpVarUpvalue(level, i))
+                        c = rex(type, rexOpVarOuter(scopeIndex, i))
                         known = false
                     }
                     false -> continue
                 }
             }
         }
-        if (c == null && stack.isNotEmpty()) {
-            return stack.last().matchStruct(name, level - 1)
+        if (c == null && outer.isNotEmpty()) {
+            return outer.last().matchStruct(name, scopeIndex - 1)
         }
         return c
     }

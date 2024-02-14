@@ -1,8 +1,8 @@
 package org.partiql.eval.internal.operator.rel
 
+import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
-import java.util.Stack
 
 /**
  * Here's a simple implementation of FULL OUTER JOIN. The idea is fairly straightforward:
@@ -24,7 +24,7 @@ internal class RelJoinOuterFull(
     override val lhs: Operator.Relation,
     override val rhs: Operator.Relation,
     override val condition: Operator.Expr,
-    override val scopes: Stack<Record>
+    override val env: Environment
 ) : RelJoinNestedLoop() {
 
     private var previousLhs: Record? = null

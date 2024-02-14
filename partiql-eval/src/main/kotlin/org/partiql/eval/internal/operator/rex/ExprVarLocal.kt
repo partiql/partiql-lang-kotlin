@@ -4,19 +4,16 @@ import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
-import java.util.Stack
 
 /**
- * Returns the appropriate value from the stack.
+ * Returns the value in the given record index.
  */
-internal class ExprUpvalue(
-    private val frameIndex: Int,
-    private val varIndex: Int,
-    private val scopes: Stack<Record>
+internal class ExprVarLocal(
+    private val ref: Int,
 ) : Operator.Expr {
 
     @PartiQLValueExperimental
     override fun eval(record: Record): PartiQLValue {
-        return scopes[frameIndex][varIndex]
+        return record.values[ref]
     }
 }

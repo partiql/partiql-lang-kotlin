@@ -82,10 +82,10 @@ rex::{
     },
 
     var::[
-      // Refers to a value defined in outer scopes. See https://craftinginterpreters.com/closures.html#upvalues .
-      upvalue::{
-        frameRef: int,
-        valueRef: int
+      // Refers to a value defined in outer scopes.
+      outer::{
+        scope: int, // Scope reference. If the stack looks like [ < a, b >, < c, d > ], then scope 0 refers to < a, b >.
+        ref: int,    // Value reference within the scope
       },
       // Refers to a value coming from the input record.
       local::{

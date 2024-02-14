@@ -1,5 +1,6 @@
 package org.partiql.eval.internal.operator.rex
 
+import org.partiql.errors.CardinalityViolation
 import org.partiql.errors.TypeCheckException
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
@@ -16,6 +17,8 @@ internal class ExprPermissive(
         return try {
             target.eval(record)
         } catch (e: TypeCheckException) {
+            missingValue()
+        } catch (e: CardinalityViolation) {
             missingValue()
         }
     }

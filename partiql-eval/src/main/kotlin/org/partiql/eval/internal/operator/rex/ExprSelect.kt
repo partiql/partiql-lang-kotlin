@@ -7,7 +7,6 @@ import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.bagValue
 import org.partiql.value.listValue
-import java.util.Stack
 
 /**
  * Invoke the constructor over all inputs.
