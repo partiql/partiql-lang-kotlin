@@ -1,6 +1,7 @@
 package org.partiql.eval.internal.operator.rex
 
 import org.partiql.errors.TypeCheckException
+import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.value.PartiQLValue
@@ -22,12 +23,12 @@ internal abstract class ExprSubquery : Operator.Expr {
 
     abstract val constructor: Operator.Expr
     abstract val input: Operator.Relation
-    abstract val scopes: Stack<Record>
+    abstract val env: Environment
 
     internal class Row(
         override val constructor: Operator.Expr,
         override val input: Operator.Relation,
-        override val scopes: Stack<Record>
+        override val env: Environment
     ) : ExprSubquery() {
         @PartiQLValueExperimental
         override fun eval(record: Record): PartiQLValue {
@@ -39,7 +40,7 @@ internal abstract class ExprSubquery : Operator.Expr {
     internal class Scalar(
         override val constructor: Operator.Expr,
         override val input: Operator.Relation,
-        override val scopes: Stack<Record>
+        override val env: Environment
     ) : ExprSubquery() {
         @PartiQLValueExperimental
         override fun eval(record: Record): PartiQLValue {
@@ -65,16 +66,16 @@ internal abstract class ExprSubquery : Operator.Expr {
      */
     @OptIn(PartiQLValueExperimental::class)
     fun getValues(record: Record): Iterator<PartiQLValue>? {
-        scopes.push(record)
+        env.push(record)
         input.open()
         val firstRecord = input.next()
         if (firstRecord == null) {
-            scopes.pop()
+            env.pop()
             return null
         }
         val tuple = constructor.eval(firstRecord).check<StructValue<*>>()
         val secondRecord = input.next()
-        scopes.pop()
+        env.pop()
         if (secondRecord != null) {
             throw TypeCheckException()
         }
