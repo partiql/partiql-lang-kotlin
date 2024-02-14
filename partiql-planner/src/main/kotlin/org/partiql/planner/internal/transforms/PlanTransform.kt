@@ -117,8 +117,8 @@ internal object PlanTransform {
             ref = visitRef(node.ref, ctx)
         )
 
-        override fun visitRexOpVarUpvalue(node: Rex.Op.Var.Upvalue, ctx: Unit): org.partiql.plan.Rex.Op {
-            return org.partiql.plan.Rex.Op.Var.Upvalue(node.frameRef, node.valueRef)
+        override fun visitRexOpVarOuter(node: Rex.Op.Var.Outer, ctx: Unit): org.partiql.plan.Rex.Op {
+            return org.partiql.plan.Rex.Op.Var.Outer(node.scope, node.ref)
         }
 
         override fun visitRexOpVarLocal(node: Rex.Op.Var.Local, ctx: Unit): org.partiql.plan.Rex.Op {
@@ -361,8 +361,8 @@ internal object PlanTransform {
 
             override fun visitRelOpExcludePath(node: Rel.Op.Exclude.Path, ctx: Unit): org.partiql.plan.Rel.Op.Exclude.Path {
                 val root = when (node.root) {
-                    is Rex.Op.Var.Upvalue -> visitRexOpVar(node.root, ctx) as org.partiql.plan.Rex.Op.Var
-                    is Rex.Op.Var.Unresolved -> org.partiql.plan.Rex.Op.Var.Upvalue(-1, -1) // unresolved in `PlanTyper` results in error
+                    is Rex.Op.Var.Outer -> visitRexOpVar(node.root, ctx) as org.partiql.plan.Rex.Op.Var
+                    is Rex.Op.Var.Unresolved -> org.partiql.plan.Rex.Op.Var.Outer(-1, -1) // unresolved in `PlanTyper` results in error
                     is Rex.Op.Var.Local -> visitRexOpVarLocal(node.root, ctx) as org.partiql.plan.Rex.Op.Var.Local
                     is Rex.Op.Var.Global -> visitRexOpVarGlobal(node.root, ctx)
                 }

@@ -1,14 +1,14 @@
 package org.partiql.eval.internal.operator.rel
 
+import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
-import java.util.Stack
 
 internal class RelJoinRight(
     lhs: Operator.Relation,
     rhs: Operator.Relation,
     override val condition: Operator.Expr,
-    override val scopes: Stack<Record>
+    override val env: Environment
 ) : RelJoinNestedLoop() {
 
     override val lhs: Operator.Relation = rhs

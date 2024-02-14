@@ -23,7 +23,6 @@ import org.partiql.eval.internal.operator.rex.ExprCase
 import org.partiql.eval.internal.operator.rex.ExprCast
 import org.partiql.eval.internal.operator.rex.ExprCollection
 import org.partiql.eval.internal.operator.rex.ExprLiteral
-import org.partiql.eval.internal.operator.rex.ExprLocal
 import org.partiql.eval.internal.operator.rex.ExprPathIndex
 import org.partiql.eval.internal.operator.rex.ExprPathKey
 import org.partiql.eval.internal.operator.rex.ExprPathSymbol
@@ -34,7 +33,8 @@ import org.partiql.eval.internal.operator.rex.ExprSelect
 import org.partiql.eval.internal.operator.rex.ExprStruct
 import org.partiql.eval.internal.operator.rex.ExprSubquery
 import org.partiql.eval.internal.operator.rex.ExprTupleUnion
-import org.partiql.eval.internal.operator.rex.ExprUpvalue
+import org.partiql.eval.internal.operator.rex.ExprVarLocal
+import org.partiql.eval.internal.operator.rex.ExprVarOuter
 import org.partiql.plan.Catalog
 import org.partiql.plan.PartiQLPlan
 import org.partiql.plan.PlanNode
@@ -49,7 +49,6 @@ import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
 import java.lang.IllegalStateException
-import java.util.Stack
 
 internal class Compiler(
     private val plan: PartiQLPlan,
@@ -134,12 +133,12 @@ internal class Compiler(
         }
     }
 
-    override fun visitRexOpVarUpvalue(node: Rex.Op.Var.Upvalue, ctx: StaticType?): Operator {
-        return ExprUpvalue(node.frameRef, node.valueRef, env)
+    override fun visitRexOpVarOuter(node: Rex.Op.Var.Outer, ctx: StaticType?): Operator {
+        return ExprVarOuter(node.scope, node.ref, env)
     }
 
     override fun visitRexOpVarLocal(node: Rex.Op.Var.Local, ctx: StaticType?): Operator {
-        return ExprLocal(node.ref)
+        return ExprVarLocal(node.ref)
     }
 
     override fun visitRexOpVarGlobal(node: Rex.Op.Var.Global, ctx: StaticType?): Operator = symbols.getGlobal(node.ref)

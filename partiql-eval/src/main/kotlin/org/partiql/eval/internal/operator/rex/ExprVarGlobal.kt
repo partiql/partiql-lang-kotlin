@@ -8,7 +8,7 @@ import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 
 @OptIn(PartiQLValueExperimental::class)
-internal class ExprGlobal(
+internal class ExprVarGlobal(
     private val path: ConnectorPath,
     private val bindings: ConnectorBindings,
 ) : Operator.Expr {

@@ -6,9 +6,19 @@ internal class Environment {
 
     private val scopes: Stack<Record> = Stack<Record>()
 
-    internal inline fun scope(record: Record, block: () -> Unit) {
+    internal inline fun <T> scope(record: Record, block: () -> T): T {
         scopes.push(record)
-        block.invoke()
+        val result = try {
+            block.invoke()
+        } catch (t: Throwable) {
+            scopes.pop()
+            throw t
+        }
         scopes.pop()
+        return result
+    }
+
+    operator fun get(index: Int): Record {
+        return scopes[index]
     }
 }

@@ -64,8 +64,8 @@ import org.partiql.planner.internal.ir.builder.RexOpSubqueryBuilder
 import org.partiql.planner.internal.ir.builder.RexOpTupleUnionBuilder
 import org.partiql.planner.internal.ir.builder.RexOpVarGlobalBuilder
 import org.partiql.planner.internal.ir.builder.RexOpVarLocalBuilder
+import org.partiql.planner.internal.ir.builder.RexOpVarOuterBuilder
 import org.partiql.planner.internal.ir.builder.RexOpVarUnresolvedBuilder
-import org.partiql.planner.internal.ir.builder.RexOpVarUpvalueBuilder
 import org.partiql.planner.internal.ir.builder.StatementQueryBuilder
 import org.partiql.planner.internal.ir.visitor.PlanVisitor
 import org.partiql.spi.fn.AggSignature
@@ -291,7 +291,7 @@ internal data class Rex(
             public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = when (this) {
                 is Local -> visitor.visitRexOpVarLocal(this, ctx)
                 is Global -> visitor.visitRexOpVarGlobal(this, ctx)
-                is Upvalue -> visitor.visitRexOpVarUpvalue(this, ctx)
+                is Outer -> visitor.visitRexOpVarOuter(this, ctx)
                 is Unresolved -> visitor.visitRexOpVarUnresolved(this, ctx)
             }
 
@@ -299,18 +299,18 @@ internal data class Rex(
                 DEFAULT, LOCAL,
             }
 
-            internal data class Upvalue(
-                @JvmField internal val frameRef: Int,
-                @JvmField internal val valueRef: Int
+            internal data class Outer(
+                @JvmField internal val scope: Int,
+                @JvmField internal val ref: Int
             ) : Var() {
                 public override val children: List<PlanNode> = emptyList()
 
                 public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
-                    visitor.visitRexOpVarUpvalue(this, ctx)
+                    visitor.visitRexOpVarOuter(this, ctx)
 
                 internal companion object {
                     @JvmStatic
-                    internal fun builder(): RexOpVarUpvalueBuilder = RexOpVarUpvalueBuilder()
+                    internal fun builder(): RexOpVarOuterBuilder = RexOpVarOuterBuilder()
                 }
             }
 

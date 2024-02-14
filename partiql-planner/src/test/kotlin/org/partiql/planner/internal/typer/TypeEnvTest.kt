@@ -40,7 +40,7 @@ internal class TypeEnvTest {
                 relBinding("y", struct(open = true)),
                 relBinding("T", struct("x" to BoolType(), "x" to BoolType())),
             ),
-            stack = emptyList()
+            outer = emptyList()
         )
 
         private fun struct(vararg fields: Pair<String, StaticType>, open: Boolean = false): StructType {

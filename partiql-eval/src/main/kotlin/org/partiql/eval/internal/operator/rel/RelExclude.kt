@@ -40,7 +40,7 @@ internal class RelExclude(
                     val value = record.values[root.ref]
                     record.values[root.ref] = exclude(value, path.steps)
                 }
-                is Rex.Op.Var.Upvalue -> { TODO("Remove values from stack.") }
+                is Rex.Op.Var.Outer -> { TODO("Remove values from stack.") }
                 is Rex.Op.Var.Global -> { TODO("Add and remove value from stack.") }
             }
         }

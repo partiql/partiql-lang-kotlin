@@ -3,7 +3,7 @@
 package org.partiql.eval.internal
 
 import org.partiql.eval.PartiQLEngine
-import org.partiql.eval.internal.operator.rex.ExprGlobal
+import org.partiql.eval.internal.operator.rex.ExprVarGlobal
 import org.partiql.plan.Catalog
 import org.partiql.plan.PartiQLPlan
 import org.partiql.plan.Ref
@@ -31,14 +31,14 @@ internal class Symbols private constructor(private val catalogs: Array<C>) {
         override fun toString(): String = name
     }
 
-    fun getGlobal(ref: Ref): ExprGlobal {
+    fun getGlobal(ref: Ref): ExprVarGlobal {
         val catalog = catalogs[ref.catalog]
         val item = catalog.items.getOrNull(ref.symbol)
         if (item == null || item !is Catalog.Item.Value) {
             error("Invalid reference $ref; missing value entry for catalog `$catalog`.")
         }
         val path = ConnectorPath(item.path)
-        return ExprGlobal(path, catalog.bindings)
+        return ExprVarGlobal(path, catalog.bindings)
     }
 
     fun getFn(ref: Ref): Fn {
