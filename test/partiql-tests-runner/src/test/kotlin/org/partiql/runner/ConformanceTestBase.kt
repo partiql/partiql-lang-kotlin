@@ -15,7 +15,7 @@ abstract class ConformanceTestBase<T, V> {
     // This is not a performance test. This is for stop long-running tests during development process in eval engine.
     // This number can be smaller, but to account for the cold start time and fluctuation of GitHub runner,
     // I decided to make this number a bit larger than needed.
-    @Timeout(value = 500, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
+    @Timeout(value = 5, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
     @ParameterizedTest(name = "{arguments}")
     @ArgumentsSource(TestProvider.Eval::class)
     fun validatePartiQLEvalTestData(tc: TestCase) {
