@@ -2,10 +2,21 @@ package org.partiql.eval.internal
 
 import java.util.Stack
 
+/**
+ * This class represents the Variables Environment defined in the PartiQL Specification. It differs slightly as it does
+ * not hold the "current" [Record]. The reason for this is that the PartiQL Maintainers have opted to use the Volcano
+ * Model for query execution (see [org.partiql.eval.internal.operator.Operator.Relation.next] and
+ * [org.partiql.eval.internal.operator.Operator.Expr.eval]), however, the use of the [Environment] is to provide the
+ * functionality defined in the PartiQL Specification. It accomplishes this by wrapping the "outer" variables
+ * environments (or [scopes]).
+ */
 internal class Environment {
 
     private val scopes: Stack<Record> = Stack<Record>()
 
+    /**
+     * Creates a new scope using the [record] to execute the [block]. Pops the [record] once the [block] is done executing.
+     */
     internal inline fun <T> scope(record: Record, block: () -> T): T {
         scopes.push(record)
         val result = try {
@@ -18,6 +29,9 @@ internal class Environment {
         return result
     }
 
+    /**
+     * Gets the scope/record/variables-environment at the requested [index].
+     */
     operator fun get(index: Int): Record {
         return scopes[index]
     }
