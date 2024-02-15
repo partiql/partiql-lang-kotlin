@@ -42,9 +42,7 @@ import org.partiql.planner.internal.ir.relOpLimit
 import org.partiql.planner.internal.ir.relOpOffset
 import org.partiql.planner.internal.ir.relOpProject
 import org.partiql.planner.internal.ir.relOpScan
-import org.partiql.planner.internal.ir.relOpScanIndexed
 import org.partiql.planner.internal.ir.relOpSort
-import org.partiql.planner.internal.ir.relOpUnpivot
 import org.partiql.planner.internal.ir.relType
 import org.partiql.planner.internal.ir.rex
 import org.partiql.planner.internal.ir.rexOpCaseBranch
@@ -60,6 +58,8 @@ import org.partiql.planner.internal.ir.rexOpStruct
 import org.partiql.planner.internal.ir.rexOpStructField
 import org.partiql.planner.internal.ir.rexOpSubquery
 import org.partiql.planner.internal.ir.rexOpTupleUnion
+import org.partiql.planner.internal.ir.rexOpVarLocal
+import org.partiql.planner.internal.ir.rexOpVarOuter
 import org.partiql.planner.internal.ir.statementQuery
 import org.partiql.planner.internal.ir.util.PlanRewriter
 import org.partiql.spi.BindingCase
@@ -93,6 +93,7 @@ import org.partiql.value.TextValue
 import org.partiql.value.boolValue
 import org.partiql.value.missingValue
 import org.partiql.value.stringValue
+import kotlin.math.absoluteValue
 
 /**
  * Rewrites an untyped algebraic translation of the query to be both typed and have resolved variables.
@@ -155,7 +156,7 @@ internal class PlanTyper(
          */
         override fun visitRelOpScanIndexed(node: Rel.Op.ScanIndexed, ctx: Rel.Type?): Rel {
             // descend, with GLOBAL resolution strategy
-            val rex = node.rex.type(emptyList(), outer, Scope.GLOBAL)
+            val rex = node.rex.type(outer, Scope.GLOBAL)
             // compute rel type
             val valueT = getElementTypeForFromSource(rex.type)
             val indexT = StaticType.INT8
@@ -170,7 +171,7 @@ internal class PlanTyper(
          */
         override fun visitRelOpUnpivot(node: Rel.Op.Unpivot, ctx: Rel.Type?): Rel {
             // descend, with GLOBAL resolution strategy
-            val rex = node.rex.type(emptyList(), outer, Scope.GLOBAL)
+            val rex = node.rex.type(outer, Scope.GLOBAL)
 
             // key type, always a string.
             val kType = STRING
@@ -431,13 +432,22 @@ internal class PlanTyper(
             return rex(ctx!!, node)
         }
 
-        override fun visitRexOpVarLocal(node: Rex.Op.Var.Local, ctx: StaticType?): Rex {
-            val scope = locals.getScope(node.depth)
-            assert(node.ref < scope.schema.size) {
-                "Invalid resolved variable (var ${node.ref}, stack frame ${node.depth}) in env: $locals"
+        override fun visitRexOpVarOuter(node: Rex.Op.Var.Outer, ctx: StaticType?): Rex {
+            val scopeIndex = if (node.scope < 0) locals.outer.size - node.scope.absoluteValue else node.scope
+            val typeEnv = locals.outer[scopeIndex]
+            assert(node.ref < typeEnv.schema.size) {
+                "Invalid resolved variable (var ${node.ref}, stack frame ${node.scope}) in env: $locals"
             }
-            val type = scope.schema.getOrNull(node.ref)?.type ?: error("Can't find locals value.")
-            return rex(type, node)
+            val nodeRef = if (node.ref < 0) typeEnv.schema.size - node.ref.absoluteValue else node.ref
+
+            val type = typeEnv.schema[nodeRef].type
+            return rex(type, rexOpVarOuter(scopeIndex, nodeRef))
+        }
+
+        override fun visitRexOpVarLocal(node: Rex.Op.Var.Local, ctx: StaticType?): Rex {
+            val nodeRef = if (node.ref < 0) locals.schema.size - node.ref.absoluteValue else node.ref
+            val type = locals.schema.getOrNull(nodeRef)?.type ?: error("Can't find locals value.")
+            return rex(type, rexOpVarLocal(nodeRef))
         }
 
         override fun visitRexOpVarUnresolved(node: Rex.Op.Var.Unresolved, ctx: StaticType?): Rex {

@@ -227,17 +227,9 @@ rel::{
     props:  set::[prop],
   },
   op: [
-
     scan::{
       rex: rex,
-    },
-
-    scan_indexed::{
-      rex: rex,
-    },
-
-    unpivot::{
-      rex:  rex,
+      type: [DEFAULT, INDEXED, UNPIVOT]
     },
 
     distinct::{

@@ -1289,4 +1289,56 @@ class PartiQLEngineDefaultTest {
             """.trimIndent(),
             expected = boolValue(false)
         ).assert()
+
+    @Test
+    fun wildCard() =
+        SuccessTestCase(
+            input = """
+ [
+    {
+      'id':'5',
+      'books':[
+        {
+          'title':'A',
+          'price':5.0
+        },
+        {
+          'title':'B',
+          'price':2.0
+        }
+      ]
+    },
+    {
+      'id':'6',
+      'books':[
+        {
+          'title':'A',
+          'price':5.0
+        },
+        {
+          'title':'E',
+          'price':2.0
+        }
+      ]
+    },
+    {
+      'id':7,
+      'books':[]
+    }
+  ][*].books[*].title
+            """.trimIndent(),
+            expected = bagValue(listOf(stringValue("A"), stringValue("B"), stringValue("A"), stringValue("E")))
+        ).assert()
+
+    @Test
+    fun wildCard2() {
+        val query = """
+            {'a':1, 'b':2}.*
+        """.trimIndent()
+        val expected = bagValue(listOf(int32Value(1), int32Value(2)))
+        SuccessTestCase(
+            query,
+            expected
+        ).assert()
+    }
 }

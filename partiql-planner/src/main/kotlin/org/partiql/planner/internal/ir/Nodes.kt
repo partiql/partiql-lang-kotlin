@@ -35,11 +35,9 @@ import org.partiql.planner.internal.ir.builder.RelOpLimitBuilder
 import org.partiql.planner.internal.ir.builder.RelOpOffsetBuilder
 import org.partiql.planner.internal.ir.builder.RelOpProjectBuilder
 import org.partiql.planner.internal.ir.builder.RelOpScanBuilder
-import org.partiql.planner.internal.ir.builder.RelOpScanIndexedBuilder
 import org.partiql.planner.internal.ir.builder.RelOpSortBuilder
 import org.partiql.planner.internal.ir.builder.RelOpSortSpecBuilder
 import org.partiql.planner.internal.ir.builder.RelOpUnionBuilder
-import org.partiql.planner.internal.ir.builder.RelOpUnpivotBuilder
 import org.partiql.planner.internal.ir.builder.RelTypeBuilder
 import org.partiql.planner.internal.ir.builder.RexBuilder
 import org.partiql.planner.internal.ir.builder.RexOpCallDynamicBuilder
@@ -795,8 +793,6 @@ internal data class Rel(
     internal sealed class Op : PlanNode() {
         public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = when (this) {
             is Scan -> visitor.visitRelOpScan(this, ctx)
-            is ScanIndexed -> visitor.visitRelOpScanIndexed(this, ctx)
-            is Unpivot -> visitor.visitRelOpUnpivot(this, ctx)
             is Distinct -> visitor.visitRelOpDistinct(this, ctx)
             is Filter -> visitor.visitRelOpFilter(this, ctx)
             is Sort -> visitor.visitRelOpSort(this, ctx)
@@ -814,6 +810,7 @@ internal data class Rel(
 
         internal data class Scan(
             @JvmField internal val rex: Rex,
+            @JvmField internal val type: Type
         ) : Op() {
             public override val children: List<PlanNode> by lazy {
                 val kids = mutableListOf<PlanNode?>()
@@ -823,45 +820,13 @@ internal data class Rel(
 
             public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitRelOpScan(this, ctx)
 
+            internal enum class Type {
+                DEFAULT, INDEXED, UNPIVOT
+            }
+
             internal companion object {
                 @JvmStatic
                 internal fun builder(): RelOpScanBuilder = RelOpScanBuilder()
-            }
-        }
-
-        internal data class ScanIndexed(
-            @JvmField internal val rex: Rex,
-        ) : Op() {
-            public override val children: List<PlanNode> by lazy {
-                val kids = mutableListOf<PlanNode?>()
-                kids.add(rex)
-                kids.filterNotNull()
-            }
-
-            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
-                visitor.visitRelOpScanIndexed(this, ctx)
-
-            internal companion object {
-                @JvmStatic
-                internal fun builder(): RelOpScanIndexedBuilder = RelOpScanIndexedBuilder()
-            }
-        }
-
-        internal data class Unpivot(
-            @JvmField internal val rex: Rex,
-        ) : Op() {
-            public override val children: List<PlanNode> by lazy {
-                val kids = mutableListOf<PlanNode?>()
-                kids.add(rex)
-                kids.filterNotNull()
-            }
-
-            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
-                visitor.visitRelOpUnpivot(this, ctx)
-
-            internal companion object {
-                @JvmStatic
-                internal fun builder(): RelOpUnpivotBuilder = RelOpUnpivotBuilder()
             }
         }
 
