@@ -56,7 +56,19 @@ internal class Compiler(
     private val symbols: Symbols
 ) : PlanBaseVisitor<Operator, StaticType?>() {
 
+    /**
+     * The variables environment
+     */
     private val env: Environment = Environment()
+
+    /**
+     * Aids in determining the index by which we will query [Environment.get] for [Rex.Op.Var.depth].
+     *
+     * @see scope
+     * @see Environment
+     * @see Rex.Op.Var
+     */
+    private var scopeSize = 0
 
     fun compile(): Operator.Expr {
         return visitPartiQLPlan(plan, null)
@@ -108,28 +120,34 @@ internal class Compiler(
     }
 
     override fun visitRexOpSelect(node: Rex.Op.Select, ctx: StaticType?): Operator.Expr {
-        val rel = visitRel(node.rel, ctx)
-        val ordered = node.rel.type.props.contains(Rel.Prop.ORDERED)
-        val constructor = visitRex(node.constructor, ctx).modeHandled()
-        return ExprSelect(rel, constructor, ordered, env)
+        return scope {
+            val rel = visitRel(node.rel, ctx)
+            val ordered = node.rel.type.props.contains(Rel.Prop.ORDERED)
+            val constructor = visitRex(node.constructor, ctx).modeHandled()
+            ExprSelect(rel, constructor, ordered, env)
+        }
     }
 
     override fun visitRexOpSubquery(node: Rex.Op.Subquery, ctx: StaticType?): Operator {
-        val constructor = visitRex(node.constructor, ctx)
-        val input = visitRel(node.rel, ctx)
-        return when (node.coercion) {
-            Rex.Op.Subquery.Coercion.SCALAR -> ExprSubquery.Scalar(constructor, input, env)
-            Rex.Op.Subquery.Coercion.ROW -> ExprSubquery.Row(constructor, input, env)
+        return scope {
+            val constructor = visitRex(node.constructor, ctx)
+            val input = visitRel(node.rel, ctx)
+            when (node.coercion) {
+                Rex.Op.Subquery.Coercion.SCALAR -> ExprSubquery.Scalar(constructor, input, env)
+                Rex.Op.Subquery.Coercion.ROW -> ExprSubquery.Row(constructor, input, env)
+            }
         }
     }
 
     override fun visitRexOpPivot(node: Rex.Op.Pivot, ctx: StaticType?): Operator {
-        val rel = visitRel(node.rel, ctx)
-        val key = visitRex(node.key, ctx)
-        val value = visitRex(node.value, ctx)
-        return when (session.mode) {
-            PartiQLEngine.Mode.PERMISSIVE -> ExprPivotPermissive(rel, key, value)
-            PartiQLEngine.Mode.STRICT -> ExprPivot(rel, key, value)
+        return scope {
+            val rel = visitRel(node.rel, ctx)
+            val key = visitRex(node.key, ctx)
+            val value = visitRex(node.value, ctx)
+            when (session.mode) {
+                PartiQLEngine.Mode.PERMISSIVE -> ExprPivotPermissive(rel, key, value)
+                PartiQLEngine.Mode.STRICT -> ExprPivot(rel, key, value)
+            }
         }
     }
 
@@ -142,7 +160,10 @@ internal class Compiler(
     override fun visitRexOpVar(node: Rex.Op.Var, ctx: StaticType?): Operator {
         return when (node.depth) {
             0 -> ExprVarLocal(node.ref)
-            else -> ExprVarOuter(node.depth - 1, node.ref, env)
+            else -> {
+                val index = scopeSize - node.depth
+                ExprVarOuter(index, node.ref, env)
+            }
         }
     }
 
@@ -249,7 +270,7 @@ internal class Compiler(
 
     override fun visitRelOpJoin(node: Rel.Op.Join, ctx: StaticType?): Operator {
         val lhs = visitRel(node.lhs, ctx)
-        val rhs = visitRel(node.rhs, ctx)
+        val rhs = scope { visitRel(node.rhs, ctx) }
         val condition = visitRex(node.rex, ctx)
         return when (node.type) {
             Rel.Op.Join.Type.INNER -> RelJoinInner(lhs, rhs, condition, env)
@@ -319,5 +340,21 @@ internal class Compiler(
             error("Invalid catalog reference, $this for type ${T::class}")
         }
         return item
+    }
+
+    /**
+     * Figuratively creates a new scope by incrementing/decrementing the [scopeSize] before/after the [block] invocation.
+     *
+     * @see scopeSize
+     * @see Environment
+     * @see Rex.Op.Var
+     */
+    private inline fun <T> scope(block: () -> T): T {
+        scopeSize++
+        try {
+            return block.invoke()
+        } finally {
+            scopeSize--
+        }
     }
 }
