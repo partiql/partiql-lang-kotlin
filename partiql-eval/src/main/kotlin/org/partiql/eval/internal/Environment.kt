@@ -19,14 +19,13 @@ internal class Environment {
      */
     internal inline fun <T> scope(record: Record, block: () -> T): T {
         scopes.push(record)
-        val result = try {
-            block.invoke()
+        try {
+            return block.invoke()
         } catch (t: Throwable) {
-            scopes.pop()
             throw t
+        } finally {
+            scopes.pop()
         }
-        scopes.pop()
-        return result
     }
 
     /**
