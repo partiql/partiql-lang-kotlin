@@ -3,6 +3,7 @@
 
 package org.partiql.spi.connector.sql.builtins
 
+import org.partiql.spi.connector.sql.utils.StringUtils.codepointPosition
 import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnParameter

@@ -5,6 +5,7 @@ package org.partiql.spi.connector.sql.builtins
 
 import org.partiql.errors.DataException
 import org.partiql.errors.TypeCheckException
+import org.partiql.spi.connector.sql.utils.StringUtils.codepointSubstring
 import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnParameter
