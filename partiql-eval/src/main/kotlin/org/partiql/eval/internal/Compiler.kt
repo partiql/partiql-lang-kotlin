@@ -133,15 +133,20 @@ internal class Compiler(
         }
     }
 
-    override fun visitRexOpVarOuter(node: Rex.Op.Var.Outer, ctx: StaticType?): Operator {
-        return ExprVarOuter(node.scope, node.ref, env)
+    /**
+     * All variables from the local scope have a depth of 0.
+     *
+     * All variables coming from the stack have a depth > 0. To slightly minimize computation at execution, we subtract
+     * the depth by 1 to account for the fact that the local scope is not kept on the stack.
+     */
+    override fun visitRexOpVar(node: Rex.Op.Var, ctx: StaticType?): Operator {
+        return when (node.depth) {
+            0 -> ExprVarLocal(node.ref)
+            else -> ExprVarOuter(node.depth - 1, node.ref, env)
+        }
     }
 
-    override fun visitRexOpVarLocal(node: Rex.Op.Var.Local, ctx: StaticType?): Operator {
-        return ExprVarLocal(node.ref)
-    }
-
-    override fun visitRexOpVarGlobal(node: Rex.Op.Var.Global, ctx: StaticType?): Operator = symbols.getGlobal(node.ref)
+    override fun visitRexOpGlobal(node: Rex.Op.Global, ctx: StaticType?): Operator = symbols.getGlobal(node.ref)
 
     override fun visitRexOpPathKey(node: Rex.Op.Path.Key, ctx: StaticType?): Operator {
         val root = visitRex(node.root, ctx)

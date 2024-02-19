@@ -7,7 +7,6 @@ import org.partiql.planner.internal.ir.rexOpLit
 import org.partiql.planner.internal.ir.rexOpPathKey
 import org.partiql.planner.internal.ir.rexOpPathSymbol
 import org.partiql.planner.internal.ir.rexOpVarLocal
-import org.partiql.planner.internal.ir.rexOpVarOuter
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
@@ -27,6 +26,13 @@ internal data class TypeEnv(
     public val outer: List<TypeEnv>
 ) {
 
+    internal fun getScope(depth: Int): TypeEnv {
+        return when (depth) {
+            0 -> this
+            else -> outer.reversed()[depth - 1]
+        }
+    }
+
     /**
      * We resolve a local with the following rules. See, PartiQL Specification p.35.
      *
@@ -41,20 +47,14 @@ internal data class TypeEnv(
     fun resolve(path: BindingPath): Rex? {
         val head: BindingName = path.steps[0]
         var tail: List<BindingName> = path.steps.drop(1)
-        var r = matchRoot(head, scopeIndex)
+        var r = matchRoot(head)
         if (r == null) {
-            r = matchStruct(head, scopeIndex) ?: return null
+            r = matchStruct(head) ?: return null
             tail = path.steps
-        }
-        val op = r.op as Rex.Op.Var.Outer
-        if (op.scope == scopeIndex) {
-            r = rex(r.type, rexOpVarLocal(op.ref))
         }
         // Convert any remaining binding names (tail) to an untyped path expression.
         return if (tail.isEmpty()) r else r.toPath(tail)
     }
-
-    private val scopeIndex: Int = this.outer.size
 
     /**
      * Debugging string, ex: < x: int, y: string >
@@ -69,7 +69,7 @@ internal data class TypeEnv(
      * @param name
      * @return
      */
-    private fun matchRoot(name: BindingName, scopeIndex: Int): Rex? {
+    private fun matchRoot(name: BindingName, depth: Int = 0): Rex? {
         var r: Rex? = null
         for (i in schema.indices) {
             val local = schema[i]
@@ -79,11 +79,11 @@ internal data class TypeEnv(
                     // TODO root was already matched, emit ambiguous error.
                     return null
                 }
-                r = rex(type, rexOpVarOuter(scopeIndex, i))
+                r = rex(type, rexOpVarLocal(depth, i))
             }
         }
         if (r == null && outer.isNotEmpty()) {
-            return outer.last().matchRoot(name, scopeIndex - 1)
+            return outer.last().matchRoot(name, depth + 1)
         }
         return r
     }
@@ -94,7 +94,7 @@ internal data class TypeEnv(
      * @param name
      * @return
      */
-    private fun matchStruct(name: BindingName, scopeIndex: Int): Rex? {
+    private fun matchStruct(name: BindingName, depth: Int = 0): Rex? {
         var c: Rex? = null
         var known = false
         for (i in schema.indices) {
@@ -107,7 +107,7 @@ internal data class TypeEnv(
                             // TODO root was already definitively matched, emit ambiguous error.
                             return null
                         }
-                        c = rex(type, rexOpVarOuter(scopeIndex, i))
+                        c = rex(type, rexOpVarLocal(depth, i))
                         known = true
                     }
                     null -> {
@@ -119,7 +119,7 @@ internal data class TypeEnv(
                                 return null
                             }
                         }
-                        c = rex(type, rexOpVarOuter(scopeIndex, i))
+                        c = rex(type, rexOpVarLocal(depth, i))
                         known = false
                     }
                     false -> continue
@@ -127,7 +127,7 @@ internal data class TypeEnv(
             }
         }
         if (c == null && outer.isNotEmpty()) {
-            return outer.last().matchStruct(name, scopeIndex - 1)
+            return outer.last().matchStruct(name, depth + 1)
         }
         return c
     }

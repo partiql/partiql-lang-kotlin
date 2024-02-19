@@ -363,7 +363,7 @@ internal class PlanTyper(
                             resolved.op as Rex.Op.Var
                         }
                     }
-                    is Rex.Op.Var.Outer, is Rex.Op.Var.Local, is Rex.Op.Var.Global -> root
+                    is Rex.Op.Var.Local, is Rex.Op.Var.Global -> root
                 }
                 relOpExcludePath(resolvedRoot, path.steps)
             }
@@ -431,17 +431,12 @@ internal class PlanTyper(
             return rex(ctx!!, node)
         }
 
-        override fun visitRexOpVarOuter(node: Rex.Op.Var.Outer, ctx: StaticType?): Rex {
-            val typeEnv = locals.outer[node.scope]
-            assert(node.ref < typeEnv.schema.size) {
-                "Invalid resolved variable (var ${node.ref}, stack frame ${node.scope}) in env: $locals"
-            }
-            val type = typeEnv.schema[node.ref].type
-            return rex(type, node)
-        }
-
         override fun visitRexOpVarLocal(node: Rex.Op.Var.Local, ctx: StaticType?): Rex {
-            val type = locals.schema.getOrNull(node.ref)?.type ?: error("Can't find locals value.")
+            val scope = locals.getScope(node.depth)
+            assert(node.ref < scope.schema.size) {
+                "Invalid resolved variable (var ${node.ref}, stack frame ${node.depth}) in env: $locals"
+            }
+            val type = scope.schema.getOrNull(node.ref)?.type ?: error("Can't find locals value.")
             return rex(type, node)
         }
 
@@ -761,7 +756,7 @@ internal class PlanTyper(
                         // Replace the result's type
                         val type = AnyOfType(ref.type.allTypes.filterIsInstance<StructType>().toSet())
                         val replacementVal = ref.copy(type = type)
-                        when (ref.op is Rex.Op.Var.Outer || ref.op is Rex.Op.Var.Local) {
+                        when (ref.op is Rex.Op.Var.Local) {
                             true -> RexReplacer.replace(result, ref, replacementVal)
                             false -> result
                         }
@@ -784,7 +779,7 @@ internal class PlanTyper(
                     // Replace the result's type
                     val type = AnyOfType(ref.type.allTypes.filterIsInstance<StructType>().toSet())
                     val replacementVal = ref.copy(type = type)
-                    val rex = when (ref.op is Rex.Op.Var.Outer || ref.op is Rex.Op.Var.Local) {
+                    val rex = when (ref.op is Rex.Op.Var.Local) {
                         true -> RexReplacer.replace(result, ref, replacementVal)
                         false -> result
                     }
@@ -1443,7 +1438,7 @@ internal class PlanTyper(
                         is Identifier.Qualified -> it
                     }
                 }
-                is Rex.Op.Var.Outer, is Rex.Op.Var.Local, is Rex.Op.Var.Global -> it
+                is Rex.Op.Var.Local, is Rex.Op.Var.Global -> it
             }
         }
         if (!matchedRoot && item.root is Rex.Op.Var.Unresolved) handleUnresolvedExcludeRoot(item.root.identifier)

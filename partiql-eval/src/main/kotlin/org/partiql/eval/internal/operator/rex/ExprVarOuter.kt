@@ -10,13 +10,13 @@ import org.partiql.value.PartiQLValueExperimental
  * Returns the appropriate value from the stack.
  */
 internal class ExprVarOuter(
-    private val scope: Int,
+    private val depth: Int,
     private val reference: Int,
     private val env: Environment
 ) : Operator.Expr {
 
     @PartiQLValueExperimental
     override fun eval(record: Record): PartiQLValue {
-        return env[scope][reference]
+        return env[depth][reference]
     }
 }

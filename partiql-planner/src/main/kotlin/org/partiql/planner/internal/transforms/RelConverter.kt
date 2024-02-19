@@ -101,7 +101,7 @@ internal object RelConverter {
                     "Expected SELECT VALUE's input to have a single binding. " +
                         "However, it contained: ${rel.type.schema.map { it.name }}."
                 }
-                val constructor = rex(StaticType.ANY, rexOpVarLocal(0))
+                val constructor = rex(StaticType.ANY, rexOpVarLocal(0, 0))
                 val op = rexOpSelect(constructor, rel)
                 val type = when (rel.type.props.contains(Rel.Prop.ORDERED)) {
                     true -> (StaticType.LIST)

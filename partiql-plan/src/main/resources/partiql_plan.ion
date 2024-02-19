@@ -77,21 +77,16 @@ rex::{
       value: partiql_value,
     },
 
-    var::[
-      // Refers to a value coming from the input record.
-      local::{
-        ref: int
-      },
-      // Refers to a value defined in outer scopes.
-      outer::{
-        scope: int, // Scope reference. If the stack looks like [ < a, b >, < c, d > ], then scope 0 refers to < a, b >.
-        ref: int,    // Value reference within the scope
-      },
-      // Refers to a value in the database environment.
-      global::{
-        ref: ref,
-      },
-    ],
+    // Refers to a value in the variables environment.
+    var::{
+      depth: int, // A depth of 0 would indicate that the variable is coming from the current variable scope
+      ref: int,   // Value reference within the scope
+    },
+
+    // Refers to a value in the database environment.
+    global::{
+      ref: ref,
+    },
 
     path::[
       // The key MUST be an integer expression. Ex: a[0], a[1 + 1]
