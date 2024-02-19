@@ -82,14 +82,10 @@ rex::{
     },
 
     var::[
-      // Refers to a value defined in outer scopes.
-      outer::{
-        scope: int, // Scope reference. If the stack looks like [ < a, b >, < c, d > ], then scope 0 refers to < a, b >.
-        ref: int,    // Value reference within the scope
-      },
-      // Refers to a value coming from the input record.
+      // Refers to a value in the variables environment.
       local::{
-        ref: int,
+        depth: int, // A depth of 0 would indicate that the variable is coming from the current variable scope
+        ref: int,   // Value reference within the scope
       },
       // Refers to a value in the database environment.
       global::{

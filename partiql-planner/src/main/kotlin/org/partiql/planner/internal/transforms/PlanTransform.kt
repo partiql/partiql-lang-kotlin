@@ -113,16 +113,12 @@ internal object PlanTransform {
         override fun visitRexOpVarUnresolved(node: Rex.Op.Var.Unresolved, ctx: Unit) =
             org.partiql.plan.Rex.Op.Err("Unresolved variable $node")
 
-        override fun visitRexOpVarGlobal(node: Rex.Op.Var.Global, ctx: Unit) = org.partiql.plan.Rex.Op.Var.Global(
+        override fun visitRexOpVarGlobal(node: Rex.Op.Var.Global, ctx: Unit) = org.partiql.plan.Rex.Op.Global(
             ref = visitRef(node.ref, ctx)
         )
 
-        override fun visitRexOpVarOuter(node: Rex.Op.Var.Outer, ctx: Unit): org.partiql.plan.Rex.Op {
-            return org.partiql.plan.Rex.Op.Var.Outer(node.scope, node.ref)
-        }
-
-        override fun visitRexOpVarLocal(node: Rex.Op.Var.Local, ctx: Unit): org.partiql.plan.Rex.Op {
-            return org.partiql.plan.Rex.Op.Var.Local(node.ref)
+        override fun visitRexOpVarLocal(node: Rex.Op.Var.Local, ctx: Unit): org.partiql.plan.Rex.Op.Var {
+            return org.partiql.plan.Rex.Op.Var(node.depth, node.ref)
         }
 
         override fun visitRexOpPathIndex(node: Rex.Op.Path.Index, ctx: Unit): PlanNode {
@@ -361,10 +357,9 @@ internal object PlanTransform {
 
             override fun visitRelOpExcludePath(node: Rel.Op.Exclude.Path, ctx: Unit): org.partiql.plan.Rel.Op.Exclude.Path {
                 val root = when (node.root) {
-                    is Rex.Op.Var.Outer -> visitRexOpVar(node.root, ctx) as org.partiql.plan.Rex.Op.Var
-                    is Rex.Op.Var.Unresolved -> org.partiql.plan.Rex.Op.Var.Outer(-1, -1) // unresolved in `PlanTyper` results in error
-                    is Rex.Op.Var.Local -> visitRexOpVarLocal(node.root, ctx) as org.partiql.plan.Rex.Op.Var.Local
-                    is Rex.Op.Var.Global -> visitRexOpVarGlobal(node.root, ctx)
+                    is Rex.Op.Var.Unresolved -> org.partiql.plan.Rex.Op.Var(-1, -1) // unresolved in `PlanTyper` results in error
+                    is Rex.Op.Var.Local -> visitRexOpVarLocal(node.root, ctx)
+                    is Rex.Op.Var.Global -> error("EXCLUDE only disallows values coming from the input record.")
                 }
                 return org.partiql.plan.Rel.Op.Exclude.Path(
                     root = root,

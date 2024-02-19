@@ -30,9 +30,10 @@ internal class Environment {
     }
 
     /**
-     * Gets the scope/record/variables-environment at the requested [index].
+     * Gets the scope/record/variables-environment at the requested [depth].
      */
-    operator fun get(index: Int): Record {
+    operator fun get(depth: Int): Record {
+        val index = scopes.lastIndex - depth
         return scopes[index]
     }
 }
