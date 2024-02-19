@@ -5,6 +5,7 @@ import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.value.NumericValue
 import org.partiql.value.PartiQLValueExperimental
+import java.math.BigInteger
 
 @OptIn(PartiQLValueExperimental::class)
 internal class RelLimit(
@@ -12,17 +13,17 @@ internal class RelLimit(
     private val limit: Operator.Expr,
 ) : Operator.Relation {
 
-    private var _seen: Long = 0
-    private var _limit: Long = 0
+    private var _seen: BigInteger = BigInteger.ZERO
+    private var _limit: BigInteger = BigInteger.ZERO
 
     override fun open() {
         input.open()
-        _seen = 0
+        _seen = BigInteger.ZERO
 
         // TODO pass outer scope to limit expression
         val l = limit.eval(Record.empty)
         if (l is NumericValue<*>) {
-            _limit = l.toInt64().value ?: 0L
+            _limit = l.toInt().value!!
         } else {
             throw TypeCheckException()
         }
@@ -31,7 +32,7 @@ internal class RelLimit(
     override fun next(): Record? {
         if (_seen < _limit) {
             val row = input.next() ?: return null
-            _seen += 1
+            _seen = _seen.add(BigInteger.ONE)
             return row
         }
         return null
