@@ -42,7 +42,9 @@ import org.partiql.planner.internal.ir.relOpLimit
 import org.partiql.planner.internal.ir.relOpOffset
 import org.partiql.planner.internal.ir.relOpProject
 import org.partiql.planner.internal.ir.relOpScan
+import org.partiql.planner.internal.ir.relOpScanIndexed
 import org.partiql.planner.internal.ir.relOpSort
+import org.partiql.planner.internal.ir.relOpUnpivot
 import org.partiql.planner.internal.ir.relType
 import org.partiql.planner.internal.ir.rex
 import org.partiql.planner.internal.ir.rexOpCaseBranch
@@ -135,6 +137,9 @@ internal class PlanTyper(
         /**
          * The output schema of a `rel.op.scan` is the single value binding.
          */
+        /**
+         * The output schema of a `rel.op.scan` is the single value binding.
+         */
         override fun visitRelOpScan(node: Rel.Op.Scan, ctx: Rel.Type?): Rel {
             // descend, with GLOBAL resolution strategy
             val rex = node.rex.type(emptyList(), outer, Scope.GLOBAL)
@@ -146,17 +151,12 @@ internal class PlanTyper(
             return rel(type, op)
         }
 
-        override fun visitRelOpErr(node: Rel.Op.Err, ctx: Rel.Type?): Rel {
-            val type = ctx ?: relType(emptyList(), emptySet())
-            return rel(type, node)
-        }
-
         /**
          * The output schema of a `rel.op.scan_index` is the value binding and index binding.
          */
         override fun visitRelOpScanIndexed(node: Rel.Op.ScanIndexed, ctx: Rel.Type?): Rel {
             // descend, with GLOBAL resolution strategy
-            val rex = node.rex.type(outer, Scope.GLOBAL)
+            val rex = node.rex.type(emptyList(), outer, Scope.GLOBAL)
             // compute rel type
             val valueT = getElementTypeForFromSource(rex.type)
             val indexT = StaticType.INT8
@@ -171,7 +171,7 @@ internal class PlanTyper(
          */
         override fun visitRelOpUnpivot(node: Rel.Op.Unpivot, ctx: Rel.Type?): Rel {
             // descend, with GLOBAL resolution strategy
-            val rex = node.rex.type(outer, Scope.GLOBAL)
+            val rex = node.rex.type(emptyList(), outer, Scope.GLOBAL)
 
             // key type, always a string.
             val kType = STRING
@@ -192,6 +192,11 @@ internal class PlanTyper(
             val type = ctx!!.copyWithSchema(listOf(kType, vType))
             val op = relOpUnpivot(rex)
             return rel(type, op)
+        }
+
+        override fun visitRelOpErr(node: Rel.Op.Err, ctx: Rel.Type?): Rel {
+            val type = ctx ?: relType(emptyList(), emptySet())
+            return rel(type, node)
         }
 
         override fun visitRelOpDistinct(node: Rel.Op.Distinct, ctx: Rel.Type?): Rel {

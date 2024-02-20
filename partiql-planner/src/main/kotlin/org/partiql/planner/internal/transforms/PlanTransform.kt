@@ -255,21 +255,17 @@ internal object PlanTransform {
 
             override fun visitRelOp(node: Rel.Op, ctx: Unit) = super.visitRelOp(node, ctx) as org.partiql.plan.Rel.Op
 
-            override fun visitRelOpScan(node: Rel.Op.Scan, ctx: Unit) = when (node.type) {
-                Rel.Op.Scan.Type.DEFAULT -> {
-                    org.partiql.plan.Rel.Op.Scan(
-                        rex = visitRex(node.rex, ctx),
-                    )
-                }
-                Rel.Op.Scan.Type.INDEXED -> org.partiql.plan.Rel.Op.ScanIndexed(
-                    rex = visitRex(node.rex, ctx),
-                )
-                Rel.Op.Scan.Type.UNPIVOT -> {
-                    org.partiql.plan.Rel.Op.Unpivot(
-                        rex = visitRex(node.rex, ctx),
-                    )
-                }
-            }
+            override fun visitRelOpScan(node: Rel.Op.Scan, ctx: Unit) = org.partiql.plan.Rel.Op.Scan(
+                rex = visitRex(node.rex, ctx),
+            )
+
+            override fun visitRelOpScanIndexed(node: Rel.Op.ScanIndexed, ctx: Unit) = org.partiql.plan.Rel.Op.ScanIndexed(
+                rex = visitRex(node.rex, ctx),
+            )
+
+            override fun visitRelOpUnpivot(node: Rel.Op.Unpivot, ctx: Unit) = org.partiql.plan.Rel.Op.Unpivot(
+                rex = visitRex(node.rex, ctx),
+            )
 
             override fun visitRelOpDistinct(node: Rel.Op.Distinct, ctx: Unit) = org.partiql.plan.Rel.Op.Distinct(
                 input = visitRel(node.input, ctx),

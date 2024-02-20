@@ -33,6 +33,7 @@ import org.partiql.planner.internal.ir.rel
 import org.partiql.planner.internal.ir.relBinding
 import org.partiql.planner.internal.ir.relOpJoin
 import org.partiql.planner.internal.ir.relOpScan
+import org.partiql.planner.internal.ir.relOpUnpivot
 import org.partiql.planner.internal.ir.relType
 import org.partiql.planner.internal.ir.rex
 import org.partiql.planner.internal.ir.rexOpCallUnresolved
@@ -263,19 +264,19 @@ internal object RexConverter {
                 return newRoot
             }
 
-            val relFromDefault: (Rel.Op.Scan, Int) -> Rel = { scan, index ->
+            val relFromDefault: (Rex, Int) -> Rel = { path, index ->
                 val schema = listOf(
                     relBinding(
                         name = "_v$index", // fresh variable
-                        type = scan.rex.type
+                        type = path.type
                     )
                 )
                 val props = emptySet<Rel.Prop>()
                 val relType = relType(schema, props)
-                rel(relType, scan)
+                rel(relType, relOpScan(path))
             }
 
-            val relFromUnpivot: (Rel.Op.Scan, Int) -> Rel = { scan, index ->
+            val relFromUnpivot: (Rex, Int) -> Rel = { path, index ->
                 val schema = listOf(
                     relBinding(
                         name = "_k$index", // fresh variable
@@ -283,15 +284,14 @@ internal object RexConverter {
                     ),
                     relBinding(
                         name = "_v$index", // fresh variable
-                        type = scan.rex.type
+                        type = path.type
                     )
                 )
                 val props = emptySet<Rel.Prop>()
                 val relType = relType(schema, props)
-                rel(relType, scan)
+                rel(relType, relOpUnpivot(path))
             }
 
-            val fromHead = relFromDefault(relOpScan(newRoot, Rel.Op.Scan.Type.DEFAULT), 0)
             val fromList = mutableListOf<Rel>()
 
             val pathNavi = newSteps.fold(newRoot) { current, step ->
@@ -330,13 +330,13 @@ internal object RexConverter {
                     is Expr.Path.Step.Unpivot -> {
                         val op = rexOpVarOuter(-1, -1)
                         val index = fromList.size
-                        fromList.add(relFromUnpivot(relOpScan(current, Rel.Op.Scan.Type.UNPIVOT), index))
+                        fromList.add(relFromUnpivot(current, index))
                         op
                     }
                     is Expr.Path.Step.Wildcard -> {
                         val op = rexOpVarOuter(-1, -1)
                         val index = fromList.size
-                        fromList.add(relFromDefault(relOpScan(current, Rel.Op.Scan.Type.DEFAULT), index))
+                        fromList.add(relFromDefault(current, index))
                         op
                     }
                 }

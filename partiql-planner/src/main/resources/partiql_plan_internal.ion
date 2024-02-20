@@ -229,7 +229,14 @@ rel::{
   op: [
     scan::{
       rex: rex,
-      type: [DEFAULT, INDEXED, UNPIVOT]
+    },
+
+    scan_indexed::{
+      rex: rex,
+    },
+
+    unpivot::{
+      rex:  rex,
     },
 
     distinct::{

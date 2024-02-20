@@ -58,9 +58,11 @@ import org.partiql.planner.internal.ir.relOpLimit
 import org.partiql.planner.internal.ir.relOpOffset
 import org.partiql.planner.internal.ir.relOpProject
 import org.partiql.planner.internal.ir.relOpScan
+import org.partiql.planner.internal.ir.relOpScanIndexed
 import org.partiql.planner.internal.ir.relOpSort
 import org.partiql.planner.internal.ir.relOpSortSpec
 import org.partiql.planner.internal.ir.relOpUnion
+import org.partiql.planner.internal.ir.relOpUnpivot
 import org.partiql.planner.internal.ir.relType
 import org.partiql.planner.internal.ir.rex
 import org.partiql.planner.internal.ir.rexOpLit
@@ -273,7 +275,7 @@ internal object RelConverter {
             val schema = listOf(binding)
             val props = emptySet<Rel.Prop>()
             val type = relType(schema, props)
-            val op = relOpScan(rex, Rel.Op.Scan.Type.DEFAULT)
+            val op = relOpScan(rex)
             return rel(type, op)
         }
 
@@ -281,7 +283,7 @@ internal object RelConverter {
             val schema = listOf(binding, index)
             val props = emptySet<Rel.Prop>()
             val type = relType(schema, props)
-            val op = relOpScan(rex, Rel.Op.Scan.Type.INDEXED)
+            val op = relOpScanIndexed(rex)
             return rel(type, op)
         }
 
@@ -296,7 +298,7 @@ internal object RelConverter {
             val schema = listOf(k, v)
             val props = emptySet<Rel.Prop>()
             val type = relType(schema, props)
-            val op = relOpScan(rex, Rel.Op.Scan.Type.UNPIVOT)
+            val op = relOpUnpivot(rex)
             return rel(type, op)
         }
 
