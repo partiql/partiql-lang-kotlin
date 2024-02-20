@@ -84,6 +84,11 @@ class EvalExecutor(
         if (v1.isNull && v2.isNull) {
             return true
         }
+        // TODO: this comparator is designed for order by
+        //  One of the false result it might produce is that
+        //  it treats MISSING and NULL equally.
+        //  we should move to hash or equals in value class once
+        //  we finished implementing those.
         if (comparator.compare(v1, v2) == 0) {
             return true
         }

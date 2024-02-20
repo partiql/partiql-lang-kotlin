@@ -232,9 +232,8 @@ internal class Compiler(
         val args = node.args.map { visitRex(it, ctx).modeHandled() }.toTypedArray()
         val candidates = node.candidates.map { candidate ->
             val fn = symbols.getFn(candidate.fn)
-            val types = candidate.parameters.toTypedArray()
             val coercions = candidate.coercions.toTypedArray()
-            ExprCallDynamic.Candidate(fn, types, coercions)
+            ExprCallDynamic.Candidate(fn, coercions)
         }
         return ExprCallDynamic(candidates, args)
     }

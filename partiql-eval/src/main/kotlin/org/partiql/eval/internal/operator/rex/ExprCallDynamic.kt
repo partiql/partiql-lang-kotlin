@@ -48,9 +48,10 @@ internal class ExprCallDynamic(
      */
     internal class Candidate(
         val fn: Fn,
-        val types: Array<PartiQLValueType>,
         val coercions: Array<Ref.Cast?>
     ) {
+
+        private val signatureParameters = fn.signature.parameters.map { it.type }.toTypedArray()
 
         fun eval(originalArgs: Array<PartiQLValue>): PartiQLValue {
             val args = originalArgs.mapIndexed { i, arg ->
@@ -62,17 +63,27 @@ internal class ExprCallDynamic(
             return fn.invoke(args)
         }
 
-        internal fun matches(args: Array<PartiQLValue>): Boolean {
-            for (i in args.indices) {
-                if (types[i] == PartiQLValueType.ANY) {
-                    return true
-                }
-                if (args[i].type != types[i]) {
-                    val c = coercions[i]
-                    when {
-                        c == null -> return false
-                        c.input != args[i].type -> return false
-                        c.target != types[i] -> return false
+        internal fun matches(inputs: Array<PartiQLValue>): Boolean {
+            for (i in inputs.indices) {
+                val inputType = inputs[i].type
+                val parameterType = signatureParameters[i]
+                val c = coercions[i]
+                when (c) {
+                    // coercion might be null if one of the following is true
+                    // Function parameter is ANY,
+                    // Input type is null
+                    // input type is the same as function parameter
+                    null -> {
+                        if (!(inputType == parameterType || inputType == PartiQLValueType.NULL || parameterType == PartiQLValueType.ANY)) {
+                            return false
+                        }
+                    }
+                    else -> {
+                        // checking the input type is expected by the coercion
+                        if (inputType != c.input) return false
+                        // checking the result is expected by the function signature
+                        // this should branch should never be reached, but leave it here for clarity
+                        if (c.target != parameterType) return false
                     }
                 }
             }
