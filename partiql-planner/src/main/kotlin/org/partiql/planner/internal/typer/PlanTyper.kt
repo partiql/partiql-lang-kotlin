@@ -136,9 +136,6 @@ internal class PlanTyper(
         /**
          * The output schema of a `rel.op.scan` is the single value binding.
          */
-        /**
-         * The output schema of a `rel.op.scan` is the single value binding.
-         */
         override fun visitRelOpScan(node: Rel.Op.Scan, ctx: Rel.Type?): Rel {
             // descend, with GLOBAL resolution strategy
             val rex = node.rex.type(emptyList(), outer, Scope.GLOBAL)
