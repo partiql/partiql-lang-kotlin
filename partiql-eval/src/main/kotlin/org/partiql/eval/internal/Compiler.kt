@@ -10,6 +10,7 @@ import org.partiql.eval.internal.operator.rel.RelJoinLeft
 import org.partiql.eval.internal.operator.rel.RelJoinOuterFull
 import org.partiql.eval.internal.operator.rel.RelJoinRight
 import org.partiql.eval.internal.operator.rel.RelLimit
+import org.partiql.eval.internal.operator.rel.RelOffset
 import org.partiql.eval.internal.operator.rel.RelProject
 import org.partiql.eval.internal.operator.rel.RelScan
 import org.partiql.eval.internal.operator.rel.RelScanIndexed
@@ -260,7 +261,7 @@ internal class Compiler(
     override fun visitRelOpOffset(node: Rel.Op.Offset, ctx: StaticType?): Operator {
         val input = visitRel(node.input, ctx)
         val offset = visitRex(node.offset, ctx)
-        return RelLimit(input, offset)
+        return RelOffset(input, offset)
     }
 
     override fun visitRexOpTupleUnion(node: Rex.Op.TupleUnion, ctx: StaticType?): Operator {

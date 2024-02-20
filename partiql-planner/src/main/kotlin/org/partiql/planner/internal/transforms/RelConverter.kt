@@ -148,8 +148,9 @@ internal object RelConverter {
             rel = convertHaving(rel, sel.having)
             rel = convertSetOp(rel, sel.setOp)
             rel = convertOrderBy(rel, sel.orderBy)
-            rel = convertLimit(rel, sel.limit)
+            // offset should precede limit
             rel = convertOffset(rel, sel.offset)
+            rel = convertLimit(rel, sel.limit)
             rel = convertExclude(rel, sel.exclude)
             // append SQL projection if present
             rel = when (val projection = sel.select) {
