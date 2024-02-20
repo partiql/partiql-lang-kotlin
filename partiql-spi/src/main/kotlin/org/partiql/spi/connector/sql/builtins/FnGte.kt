@@ -43,7 +43,7 @@ import org.partiql.value.check
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_GTE__INT8_INT8__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "gte",
         returns = BOOL,
         parameters = listOf(
@@ -52,8 +52,7 @@ internal object Fn_GTE__INT8_INT8__BOOL : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val lhs = args[0].check<Int8Value>()
         val rhs = args[1].check<Int8Value>()
@@ -64,7 +63,7 @@ internal object Fn_GTE__INT8_INT8__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_GTE__INT16_INT16__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "gte",
         returns = BOOL,
         parameters = listOf(
@@ -73,8 +72,7 @@ internal object Fn_GTE__INT16_INT16__BOOL : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val lhs = args[0].check<Int16Value>()
         val rhs = args[1].check<Int16Value>()
@@ -85,7 +83,7 @@ internal object Fn_GTE__INT16_INT16__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_GTE__INT32_INT32__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "gte",
         returns = BOOL,
         parameters = listOf(
@@ -94,8 +92,7 @@ internal object Fn_GTE__INT32_INT32__BOOL : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val lhs = args[0].check<Int32Value>()
         val rhs = args[1].check<Int32Value>()
@@ -106,7 +103,7 @@ internal object Fn_GTE__INT32_INT32__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_GTE__INT64_INT64__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "gte",
         returns = BOOL,
         parameters = listOf(
@@ -115,8 +112,7 @@ internal object Fn_GTE__INT64_INT64__BOOL : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val lhs = args[0].check<Int64Value>()
         val rhs = args[1].check<Int64Value>()
@@ -127,7 +123,7 @@ internal object Fn_GTE__INT64_INT64__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_GTE__INT_INT__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "gte",
         returns = BOOL,
         parameters = listOf(
@@ -136,8 +132,7 @@ internal object Fn_GTE__INT_INT__BOOL : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val lhs = args[0].check<IntValue>()
         val rhs = args[1].check<IntValue>()
@@ -148,7 +143,7 @@ internal object Fn_GTE__INT_INT__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_GTE__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "gte",
         returns = BOOL,
         parameters = listOf(
@@ -157,8 +152,7 @@ internal object Fn_GTE__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__BOOL : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val lhs = args[0].check<DecimalValue>()
         val rhs = args[1].check<DecimalValue>()
@@ -169,7 +163,7 @@ internal object Fn_GTE__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_GTE__FLOAT32_FLOAT32__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "gte",
         returns = BOOL,
         parameters = listOf(
@@ -178,8 +172,7 @@ internal object Fn_GTE__FLOAT32_FLOAT32__BOOL : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val lhs = args[0].check<Float32Value>()
         val rhs = args[1].check<Float32Value>()
@@ -190,7 +183,7 @@ internal object Fn_GTE__FLOAT32_FLOAT32__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_GTE__FLOAT64_FLOAT64__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "gte",
         returns = BOOL,
         parameters = listOf(
@@ -199,8 +192,7 @@ internal object Fn_GTE__FLOAT64_FLOAT64__BOOL : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val lhs = args[0].check<Float64Value>()
         val rhs = args[1].check<Float64Value>()
@@ -211,7 +203,7 @@ internal object Fn_GTE__FLOAT64_FLOAT64__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_GTE__STRING_STRING__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "gte",
         returns = BOOL,
         parameters = listOf(
@@ -220,8 +212,7 @@ internal object Fn_GTE__STRING_STRING__BOOL : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val lhs = args[0].check<StringValue>()
         val rhs = args[1].check<StringValue>()
@@ -232,7 +223,7 @@ internal object Fn_GTE__STRING_STRING__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_GTE__SYMBOL_SYMBOL__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "gte",
         returns = BOOL,
         parameters = listOf(
@@ -241,8 +232,7 @@ internal object Fn_GTE__SYMBOL_SYMBOL__BOOL : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val lhs = args[0].check<SymbolValue>()
         val rhs = args[1].check<SymbolValue>()
@@ -253,7 +243,7 @@ internal object Fn_GTE__SYMBOL_SYMBOL__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_GTE__DATE_DATE__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "gte",
         returns = BOOL,
         parameters = listOf(
@@ -262,8 +252,7 @@ internal object Fn_GTE__DATE_DATE__BOOL : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val lhs = args[0].check<DateValue>()
         val rhs = args[1].check<DateValue>()
@@ -274,7 +263,7 @@ internal object Fn_GTE__DATE_DATE__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_GTE__TIME_TIME__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "gte",
         returns = BOOL,
         parameters = listOf(
@@ -283,8 +272,7 @@ internal object Fn_GTE__TIME_TIME__BOOL : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val lhs = args[0].check<TimeValue>()
         val rhs = args[1].check<TimeValue>()
@@ -295,7 +283,7 @@ internal object Fn_GTE__TIME_TIME__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_GTE__TIMESTAMP_TIMESTAMP__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "gte",
         returns = BOOL,
         parameters = listOf(
@@ -304,8 +292,7 @@ internal object Fn_GTE__TIMESTAMP_TIMESTAMP__BOOL : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val lhs = args[0].check<TimestampValue>()
         val rhs = args[1].check<TimestampValue>()
@@ -316,7 +303,7 @@ internal object Fn_GTE__TIMESTAMP_TIMESTAMP__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_GTE__BOOL_BOOL__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "gte",
         returns = BOOL,
         parameters = listOf(
@@ -325,8 +312,7 @@ internal object Fn_GTE__BOOL_BOOL__BOOL : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val lhs = args[0].check<BoolValue>()
         val rhs = args[1].check<BoolValue>()

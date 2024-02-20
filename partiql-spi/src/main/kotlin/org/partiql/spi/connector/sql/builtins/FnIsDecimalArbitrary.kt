@@ -17,14 +17,13 @@ import org.partiql.value.boolValue
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_IS_DECIMAL_ARBITRARY__ANY__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "is_decimal_arbitrary",
         returns = BOOL,
         parameters = listOf(FnParameter("value", ANY)),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         return boolValue(args[0] is DecimalValue)
     }

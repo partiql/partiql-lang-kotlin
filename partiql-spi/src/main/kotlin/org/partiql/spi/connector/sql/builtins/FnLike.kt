@@ -24,7 +24,7 @@ import java.util.regex.Pattern
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_LIKE__STRING_STRING__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "like",
         returns = BOOL,
         parameters = listOf(
@@ -33,8 +33,7 @@ internal object Fn_LIKE__STRING_STRING__BOOL : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val value = args[0].check<TextValue<String>>().value!!
         val pattern = args[1].check<TextValue<String>>().value!!
@@ -52,7 +51,7 @@ internal object Fn_LIKE__STRING_STRING__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_LIKE__SYMBOL_SYMBOL__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "like",
         returns = BOOL,
         parameters = listOf(
@@ -61,8 +60,7 @@ internal object Fn_LIKE__SYMBOL_SYMBOL__BOOL : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val value = args[0].check<TextValue<String>>().value!!
         val pattern = args[1].check<TextValue<String>>().value!!
@@ -80,7 +78,7 @@ internal object Fn_LIKE__SYMBOL_SYMBOL__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_LIKE__CLOB_CLOB__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "like",
         returns = BOOL,
         parameters = listOf(
@@ -89,8 +87,7 @@ internal object Fn_LIKE__CLOB_CLOB__BOOL : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val value = args[0].check<ClobValue>().value!!.toString(Charsets.UTF_8)
         val pattern = args[1].check<ClobValue>().value!!.toString(Charsets.UTF_8)

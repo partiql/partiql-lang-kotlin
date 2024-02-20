@@ -21,14 +21,13 @@ import org.partiql.value.PartiQLValueType.INT8
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_POS__INT8__INT8 : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "pos",
         returns = INT8,
         parameters = listOf(FnParameter("value", INT8)),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         return args[0]
     }
@@ -37,14 +36,13 @@ internal object Fn_POS__INT8__INT8 : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_POS__INT16__INT16 : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "pos",
         returns = INT16,
         parameters = listOf(FnParameter("value", INT16)),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         return args[0]
     }
@@ -53,14 +51,13 @@ internal object Fn_POS__INT16__INT16 : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_POS__INT32__INT32 : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "pos",
         returns = INT32,
         parameters = listOf(FnParameter("value", INT32)),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         return args[0]
     }
@@ -69,14 +66,13 @@ internal object Fn_POS__INT32__INT32 : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_POS__INT64__INT64 : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "pos",
         returns = INT64,
         parameters = listOf(FnParameter("value", INT64)),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         return args[0]
     }
@@ -85,14 +81,13 @@ internal object Fn_POS__INT64__INT64 : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_POS__INT__INT : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "pos",
         returns = INT,
         parameters = listOf(FnParameter("value", INT)),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         return args[0]
     }
@@ -101,14 +96,13 @@ internal object Fn_POS__INT__INT : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_POS__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "pos",
         returns = DECIMAL_ARBITRARY,
         parameters = listOf(FnParameter("value", DECIMAL_ARBITRARY)),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         return args[0]
     }
@@ -117,14 +111,13 @@ internal object Fn_POS__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_POS__FLOAT32__FLOAT32 : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "pos",
         returns = FLOAT32,
         parameters = listOf(FnParameter("value", FLOAT32)),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         return args[0]
     }
@@ -133,14 +126,13 @@ internal object Fn_POS__FLOAT32__FLOAT32 : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_POS__FLOAT64__FLOAT64 : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "pos",
         returns = FLOAT64,
         parameters = listOf(FnParameter("value", FLOAT64)),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         return args[0]
     }

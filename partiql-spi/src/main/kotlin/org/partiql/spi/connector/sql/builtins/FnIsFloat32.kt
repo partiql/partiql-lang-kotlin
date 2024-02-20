@@ -18,14 +18,13 @@ import org.partiql.value.boolValue
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_IS_FLOAT32__ANY__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "is_float32",
         returns = BOOL,
         parameters = listOf(FnParameter("value", ANY)),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         return when (val arg = args[0]) {
             is Float32Value -> boolValue(true)

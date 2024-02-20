@@ -206,20 +206,20 @@ internal object SqlHeader {
     // OPERATORS
 
     private fun not(): List<FnSignature> = listOf(
-        FnSignature(
+        object : FnSignature(
             name = "not",
             returns = BOOL,
             isNullCall = true,
             isNullable = false,
             parameters = listOf(FnParameter("value", BOOL)),
-        ),
-        FnSignature(
+        ) {},
+        object : FnSignature(
             name = "not",
             returns = BOOL,
             isNullCall = true,
             isNullable = false,
             parameters = listOf(FnParameter("value", MISSING)),
-        ),
+        ) {},
     )
 
     private fun pos(): List<FnSignature> = numeric.map { t ->
@@ -231,75 +231,75 @@ internal object SqlHeader {
     }
 
     private fun eq(): List<FnSignature> = all.map { t ->
-        FnSignature(
+        object : FnSignature(
             name = "eq",
             returns = BOOL,
             parameters = listOf(FnParameter("lhs", t), FnParameter("rhs", t)),
             isNullable = false,
             isNullCall = true,
-        )
+        ) {}
     }
 
     private fun and(): List<FnSignature> = listOf(
-        FnSignature(
+        object : FnSignature(
             name = "and",
             returns = BOOL,
             isNullCall = false,
             isNullable = true,
             parameters = listOf(FnParameter("lhs", BOOL), FnParameter("rhs", BOOL)),
-        ),
-        FnSignature(
+        ) {},
+        object : FnSignature(
             name = "and",
             returns = BOOL,
             isNullCall = false,
             isNullable = true,
             parameters = listOf(FnParameter("lhs", MISSING), FnParameter("rhs", BOOL)),
-        ),
-        FnSignature(
+        ) {},
+        object : FnSignature(
             name = "and",
             returns = BOOL,
             isNullCall = false,
             isNullable = true,
             parameters = listOf(FnParameter("lhs", BOOL), FnParameter("rhs", MISSING)),
-        ),
-        FnSignature(
+        ) {},
+        object : FnSignature(
             name = "and",
             returns = BOOL,
             isNullCall = false,
             isNullable = true,
             parameters = listOf(FnParameter("lhs", MISSING), FnParameter("rhs", MISSING)),
-        ),
+        ) {},
     )
 
     private fun or(): List<FnSignature> = listOf(
-        FnSignature(
+        object : FnSignature(
             name = "or",
             returns = BOOL,
             isNullCall = false,
             isNullable = true,
             parameters = listOf(FnParameter("lhs", BOOL), FnParameter("rhs", BOOL)),
-        ),
-        FnSignature(
+        ) {},
+        object : FnSignature(
             name = "or",
             returns = BOOL,
             isNullCall = false,
             isNullable = true,
             parameters = listOf(FnParameter("lhs", MISSING), FnParameter("rhs", BOOL)),
-        ),
-        FnSignature(
+        ) {},
+        object : FnSignature(
             name = "or",
             returns = BOOL,
             isNullCall = false,
             isNullable = true,
             parameters = listOf(FnParameter("lhs", BOOL), FnParameter("rhs", MISSING)),
-        ),
-        FnSignature(
+        ) {},
+        object : FnSignature(
             name = "or",
             returns = BOOL,
             isNullCall = false,
             isNullable = true,
             parameters = listOf(FnParameter("lhs", MISSING), FnParameter("rhs", MISSING)),
-        ),
+        ) {},
     )
 
     private fun lt(): List<FnSignature> = (numeric + text + datetime + BOOL).map { t ->
@@ -348,30 +348,30 @@ internal object SqlHeader {
 
     // BUILT INS
     private fun upper(): List<FnSignature> = text.map { t ->
-        FnSignature(
+        object : FnSignature(
             name = "upper",
             returns = t,
             parameters = listOf(FnParameter("value", t)),
             isNullable = false,
             isNullCall = true,
-        )
+        ) {}
     }
 
     private fun lower(): List<FnSignature> = text.map { t ->
-        FnSignature(
+        object : FnSignature(
             name = "lower",
             returns = t,
             parameters = listOf(FnParameter("value", t)),
             isNullable = false,
             isNullCall = true,
-        )
+        ) {}
     }
 
     // SPECIAL FORMS
 
     private fun like(): List<FnSignature> = text.flatMap { t ->
         listOf(
-            FnSignature(
+            object : FnSignature(
                 name = "like",
                 returns = BOOL,
                 parameters = listOf(
@@ -380,8 +380,8 @@ internal object SqlHeader {
                 ),
                 isNullCall = true,
                 isNullable = false,
-            ),
-            FnSignature(
+            ) {},
+            object : FnSignature(
                 name = "like_escape",
                 returns = BOOL,
                 parameters = listOf(
@@ -391,12 +391,12 @@ internal object SqlHeader {
                 ),
                 isNullCall = true,
                 isNullable = false,
-            ),
+            ) {}
         )
     }
 
     private fun between(): List<FnSignature> = (numeric + text + datetime).map { t ->
-        FnSignature(
+        object : FnSignature(
             name = "between",
             returns = BOOL,
             parameters = listOf(
@@ -406,12 +406,12 @@ internal object SqlHeader {
             ),
             isNullable = false,
             isNullCall = true,
-        )
+        ) {}
     }
 
     private fun inCollection(): List<FnSignature> = all.map { element ->
         collections.map { collection ->
-            FnSignature(
+            object : FnSignature(
                 name = "in_collection",
                 returns = BOOL,
                 parameters = listOf(
@@ -420,35 +420,35 @@ internal object SqlHeader {
                 ),
                 isNullable = false,
                 isNullCall = true,
-            )
+            ) {}
         }
     }.flatten()
 
     private fun isNull(): List<FnSignature> = listOf(
-        FnSignature(
+        object : FnSignature(
             name = "is_null", returns = BOOL,
             parameters = listOf(
                 FnParameter("value", ANY) // TODO: Decide if we need to further segment this
             ),
             isNullCall = false, isNullable = false
-        )
+        ) {}
     )
 
     private fun isMissing(): List<FnSignature> = listOf(
-        FnSignature(
+        object : FnSignature(
             name = "is_missing", returns = BOOL,
             parameters = listOf(
                 FnParameter("value", ANY) // TODO: Decide if we need to further segment this
             ),
             isNullCall = false, isNullable = false
-        )
+        ) {}
     )
 
     // To model type assertion, generating a list of assertion function based on the type,
     // and the parameter will be the value entered.
     //  i.e., 1 is INT2  => is_int16(1)
     private fun isType(): List<FnSignature> = all.filterNot { it == NULL || it == MISSING }.map { element ->
-        FnSignature(
+        object : FnSignature(
             name = "is_${element.name.lowercase()}",
             returns = BOOL,
             parameters = listOf(
@@ -456,24 +456,24 @@ internal object SqlHeader {
             ),
             isNullable = false,
             isNullCall = false,
-        )
+        ) {}
     }
 
     // In type assertion, it is possible for types to have args
     // i.e., 'a' is CHAR(2)
     // we put type parameter before value.
     private fun isTypeSingleArg(): List<FnSignature> = listOf(CHAR, STRING).map { element ->
-        FnSignature(
+        object : FnSignature(
             name = "is_${element.name.lowercase()}", returns = BOOL,
             parameters = listOf(
                 FnParameter("type_parameter_1", INT32), FnParameter("value", ANY)
             ),
             isNullable = false, isNullCall = false
-        )
+        ) {}
     }
 
     private fun isTypeDoubleArgsInt(): List<FnSignature> = listOf(DECIMAL).map { element ->
-        FnSignature(
+        object : FnSignature(
             name = "is_${element.name.lowercase()}", returns = BOOL,
             parameters = listOf(
                 FnParameter("type_parameter_1", INT32),
@@ -481,11 +481,11 @@ internal object SqlHeader {
                 FnParameter("value", ANY)
             ),
             isNullable = false, isNullCall = false
-        )
+        ) {}
     }
 
     private fun isTypeTime(): List<FnSignature> = listOf(TIME, TIMESTAMP).map { element ->
-        FnSignature(
+        object : FnSignature(
             name = "is_${element.name.lowercase()}", returns = BOOL,
             parameters = listOf(
                 FnParameter("type_parameter_1", BOOL),
@@ -493,14 +493,14 @@ internal object SqlHeader {
                 FnParameter("value", ANY) // TODO: Decide if we need to further segment this
             ),
             isNullable = false, isNullCall = false
-        )
+        ) {}
     }
 
     // SUBSTRING (expression, start[, length]?)
     // SUBSTRINGG(expression from start [FOR length]? )
     private fun substring(): List<FnSignature> = text.map { t ->
         listOf(
-            FnSignature(
+            object : FnSignature(
                 name = "substring",
                 returns = t,
                 parameters = listOf(
@@ -509,8 +509,8 @@ internal object SqlHeader {
                 ),
                 isNullable = false,
                 isNullCall = true,
-            ),
-            FnSignature(
+            ) {},
+            object : FnSignature(
                 name = "substring",
                 returns = t,
                 parameters = listOf(
@@ -520,14 +520,14 @@ internal object SqlHeader {
                 ),
                 isNullable = false,
                 isNullCall = true,
-            )
+            ) {}
         )
     }.flatten()
 
     // position (str1, str2)
     // position (str1 in str2)
     private fun position(): List<FnSignature> = text.map { t ->
-        FnSignature(
+        object : FnSignature(
             name = "position",
             returns = INT64,
             parameters = listOf(
@@ -536,12 +536,12 @@ internal object SqlHeader {
             ),
             isNullable = false,
             isNullCall = true,
-        )
+        ) {}
     }
 
     // trim(str)
     private fun trim(): List<FnSignature> = text.map { t ->
-        FnSignature(
+        object : FnSignature(
             name = "trim",
             returns = t,
             parameters = listOf(
@@ -549,7 +549,7 @@ internal object SqlHeader {
             ),
             isNullable = false,
             isNullCall = true,
-        )
+        ) {}
     }
 
     // TODO: We need to add a special form function for TRIM(BOTH FROM value)
@@ -557,7 +557,7 @@ internal object SqlHeader {
         listOf(
             // TRIM(chars FROM value)
             // TRIM(both chars from value)
-            FnSignature(
+            object : FnSignature(
                 name = "trim_chars",
                 returns = t,
                 parameters = listOf(
@@ -566,9 +566,9 @@ internal object SqlHeader {
                 ),
                 isNullable = false,
                 isNullCall = true,
-            ),
+            ) {},
             // TRIM(LEADING FROM value)
-            FnSignature(
+            object : FnSignature(
                 name = "trim_leading",
                 returns = t,
                 parameters = listOf(
@@ -576,9 +576,9 @@ internal object SqlHeader {
                 ),
                 isNullable = false,
                 isNullCall = true,
-            ),
+            ) {},
             // TRIM(LEADING chars FROM value)
-            FnSignature(
+            object : FnSignature(
                 name = "trim_leading_chars",
                 returns = t,
                 parameters = listOf(
@@ -587,9 +587,9 @@ internal object SqlHeader {
                 ),
                 isNullable = false,
                 isNullCall = true,
-            ),
+            ) {},
             // TRIM(TRAILING FROM value)
-            FnSignature(
+            object : FnSignature(
                 name = "trim_trailing",
                 returns = t,
                 parameters = listOf(
@@ -597,9 +597,9 @@ internal object SqlHeader {
                 ),
                 isNullable = false,
                 isNullCall = true,
-            ),
+            ) {},
             // TRIM(TRAILING chars FROM value)
-            FnSignature(
+            object : FnSignature(
                 name = "trim_trailing_chars",
                 returns = t,
                 parameters = listOf(
@@ -608,7 +608,7 @@ internal object SqlHeader {
                 ),
                 isNullable = false,
                 isNullCall = true,
-            ),
+            ) {},
         )
     }.flatten()
 
@@ -627,7 +627,7 @@ internal object SqlHeader {
                     continue
                 }
                 for (interval in intervals) {
-                    val signature = FnSignature(
+                    val signature = object : FnSignature(
                         name = "date_add_${field.name.lowercase()}",
                         returns = type,
                         parameters = listOf(
@@ -636,7 +636,7 @@ internal object SqlHeader {
                         ),
                         isNullable = false,
                         isNullCall = true,
-                    )
+                    ) {}
                     operators.add(signature)
                 }
             }
@@ -651,7 +651,7 @@ internal object SqlHeader {
                 if (field == DatetimeField.TIMEZONE_HOUR || field == DatetimeField.TIMEZONE_MINUTE) {
                     continue
                 }
-                val signature = FnSignature(
+                val signature = object : FnSignature(
                     name = "date_diff_${field.name.lowercase()}",
                     returns = INT64,
                     parameters = listOf(
@@ -660,7 +660,7 @@ internal object SqlHeader {
                     ),
                     isNullable = false,
                     isNullCall = true,
-                )
+                ) {}
                 operators.add(signature)
             }
         }
@@ -668,27 +668,27 @@ internal object SqlHeader {
     }
 
     private fun utcNow(): List<FnSignature> = listOf(
-        FnSignature(
+        object : FnSignature(
             name = "utcnow",
             returns = TIMESTAMP,
             parameters = emptyList(),
             isNullable = false,
-        )
+        ) {}
     )
 
-    private fun currentUser() = FnSignature(
+    private fun currentUser() = object : FnSignature(
         name = "current_user",
         returns = STRING,
         parameters = emptyList(),
         isNullable = true,
-    )
+    ) {}
 
-    private fun currentDate() = FnSignature(
+    private fun currentDate() = object : FnSignature(
         name = "current_date",
         returns = DATE,
         parameters = emptyList(),
         isNullable = false,
-    )
+    ) {}
 
     // ====================================
     //  AGGREGATIONS
@@ -791,23 +791,23 @@ internal object SqlHeader {
     // ====================================
 
     @JvmStatic
-    internal fun unary(name: String, returns: PartiQLValueType, value: PartiQLValueType) = FnSignature(
+    internal fun unary(name: String, returns: PartiQLValueType, value: PartiQLValueType) = object : FnSignature(
         name = name,
         returns = returns,
         parameters = listOf(FnParameter("value", value)),
         isNullable = false,
         isNullCall = true
-    )
+    ) {}
 
     @JvmStatic
     internal fun binary(name: String, returns: PartiQLValueType, lhs: PartiQLValueType, rhs: PartiQLValueType) =
-        FnSignature(
+        object : FnSignature(
             name = name,
             returns = returns,
             parameters = listOf(FnParameter("lhs", lhs), FnParameter("rhs", rhs)),
             isNullable = false,
             isNullCall = true
-        )
+        ) {}
 
     /**
      * Dump the Header as SQL commands

@@ -43,7 +43,7 @@ import org.partiql.value.check
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_BETWEEN__INT8_INT8_INT8__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "between",
         returns = BOOL,
         parameters = listOf(
@@ -53,8 +53,7 @@ internal object Fn_BETWEEN__INT8_INT8_INT8__BOOL : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val value = args[0].check<Int8Value>().value!!
         val lower = args[1].check<Int8Value>().value!!
@@ -66,7 +65,7 @@ internal object Fn_BETWEEN__INT8_INT8_INT8__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_BETWEEN__INT16_INT16_INT16__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "between",
         returns = BOOL,
         parameters = listOf(
@@ -76,8 +75,7 @@ internal object Fn_BETWEEN__INT16_INT16_INT16__BOOL : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val value = args[0].check<Int16Value>().value!!
         val lower = args[1].check<Int16Value>().value!!
@@ -89,7 +87,7 @@ internal object Fn_BETWEEN__INT16_INT16_INT16__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_BETWEEN__INT32_INT32_INT32__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "between",
         returns = BOOL,
         parameters = listOf(
@@ -99,8 +97,7 @@ internal object Fn_BETWEEN__INT32_INT32_INT32__BOOL : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val value = args[0].check<Int32Value>().value!!
         val lower = args[1].check<Int32Value>().value!!
@@ -112,7 +109,7 @@ internal object Fn_BETWEEN__INT32_INT32_INT32__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_BETWEEN__INT64_INT64_INT64__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "between",
         returns = BOOL,
         parameters = listOf(
@@ -122,8 +119,7 @@ internal object Fn_BETWEEN__INT64_INT64_INT64__BOOL : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val value = args[0].check<Int64Value>().value!!
         val lower = args[1].check<Int64Value>().value!!
@@ -135,7 +131,7 @@ internal object Fn_BETWEEN__INT64_INT64_INT64__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_BETWEEN__INT_INT_INT__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "between",
         returns = BOOL,
         parameters = listOf(
@@ -145,8 +141,7 @@ internal object Fn_BETWEEN__INT_INT_INT__BOOL : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val value = args[0].check<IntValue>().value!!
         val lower = args[1].check<IntValue>().value!!
@@ -158,7 +153,7 @@ internal object Fn_BETWEEN__INT_INT_INT__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_BETWEEN__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "between",
         returns = BOOL,
         parameters = listOf(
@@ -168,8 +163,7 @@ internal object Fn_BETWEEN__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY_DECIMAL_ARBITRAR
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val value = args[0].check<DecimalValue>().value!!
         val lower = args[1].check<DecimalValue>().value!!
@@ -181,7 +175,7 @@ internal object Fn_BETWEEN__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY_DECIMAL_ARBITRAR
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_BETWEEN__FLOAT32_FLOAT32_FLOAT32__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "between",
         returns = BOOL,
         parameters = listOf(
@@ -191,8 +185,7 @@ internal object Fn_BETWEEN__FLOAT32_FLOAT32_FLOAT32__BOOL : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val value = args[0].check<Float32Value>().value!!
         val lower = args[1].check<Float32Value>().value!!
@@ -204,7 +197,7 @@ internal object Fn_BETWEEN__FLOAT32_FLOAT32_FLOAT32__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_BETWEEN__FLOAT64_FLOAT64_FLOAT64__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "between",
         returns = BOOL,
         parameters = listOf(
@@ -214,8 +207,7 @@ internal object Fn_BETWEEN__FLOAT64_FLOAT64_FLOAT64__BOOL : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val value = args[0].check<Float64Value>().value!!
         val lower = args[1].check<Float64Value>().value!!
@@ -227,7 +219,7 @@ internal object Fn_BETWEEN__FLOAT64_FLOAT64_FLOAT64__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_BETWEEN__STRING_STRING_STRING__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "between",
         returns = BOOL,
         parameters = listOf(
@@ -237,8 +229,7 @@ internal object Fn_BETWEEN__STRING_STRING_STRING__BOOL : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val value = args[0].check<TextValue<String>>().value!!
         val lower = args[1].check<TextValue<String>>().value!!
@@ -250,7 +241,7 @@ internal object Fn_BETWEEN__STRING_STRING_STRING__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_BETWEEN__SYMBOL_SYMBOL_SYMBOL__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "between",
         returns = BOOL,
         parameters = listOf(
@@ -260,8 +251,7 @@ internal object Fn_BETWEEN__SYMBOL_SYMBOL_SYMBOL__BOOL : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val value = args[0].check<TextValue<String>>().value!!
         val lower = args[1].check<TextValue<String>>().value!!
@@ -273,7 +263,7 @@ internal object Fn_BETWEEN__SYMBOL_SYMBOL_SYMBOL__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_BETWEEN__CLOB_CLOB_CLOB__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "between",
         returns = BOOL,
         parameters = listOf(
@@ -283,8 +273,7 @@ internal object Fn_BETWEEN__CLOB_CLOB_CLOB__BOOL : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val value = args[0].check<ClobValue>().value!!.toString(Charsets.UTF_8)
         val lower = args[1].check<ClobValue>().value!!.toString(Charsets.UTF_8)
@@ -296,7 +285,7 @@ internal object Fn_BETWEEN__CLOB_CLOB_CLOB__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_BETWEEN__DATE_DATE_DATE__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "between",
         returns = BOOL,
         parameters = listOf(
@@ -306,8 +295,7 @@ internal object Fn_BETWEEN__DATE_DATE_DATE__BOOL : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val value = args[0].check<DateValue>().value!!
         val lower = args[1].check<DateValue>().value!!
@@ -319,7 +307,7 @@ internal object Fn_BETWEEN__DATE_DATE_DATE__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_BETWEEN__TIME_TIME_TIME__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "between",
         returns = BOOL,
         parameters = listOf(
@@ -329,8 +317,7 @@ internal object Fn_BETWEEN__TIME_TIME_TIME__BOOL : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val value = args[0].check<TimeValue>().value!!
         val lower = args[1].check<TimeValue>().value!!
@@ -342,7 +329,7 @@ internal object Fn_BETWEEN__TIME_TIME_TIME__BOOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_BETWEEN__TIMESTAMP_TIMESTAMP_TIMESTAMP__BOOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "between",
         returns = BOOL,
         parameters = listOf(
@@ -352,8 +339,7 @@ internal object Fn_BETWEEN__TIMESTAMP_TIMESTAMP_TIMESTAMP__BOOL : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val value = args[0].check<TimestampValue>().value!!
         val lower = args[1].check<TimestampValue>().value!!

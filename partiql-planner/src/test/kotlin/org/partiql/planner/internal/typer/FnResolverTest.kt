@@ -23,14 +23,14 @@ class FnResolverTest {
     fun sanity() {
         // 1 + 1.0 -> 2.0
         val variants = listOf(
-            FnSignature(
+            object : FnSignature(
                 name = "plus",
                 returns = PartiQLValueType.FLOAT64,
                 parameters = listOf(
                     FnParameter("arg-0", PartiQLValueType.FLOAT64),
                     FnParameter("arg-1", PartiQLValueType.FLOAT64),
                 ),
-            )
+            ) {}
         )
         val args = listOf(StaticType.INT4, StaticType.FLOAT)
         val expectedImplicitCasts = listOf(true, false)
@@ -41,7 +41,7 @@ class FnResolverTest {
     @Test
     fun split() {
         val variants = listOf(
-            FnSignature(
+            object : FnSignature(
                 name = "split",
                 returns = PartiQLValueType.LIST,
                 parameters = listOf(
@@ -49,7 +49,7 @@ class FnResolverTest {
                     FnParameter("delimiter", PartiQLValueType.STRING),
                 ),
                 isNullable = false,
-            )
+            ) {}
         )
         val args = listOf(StaticType.STRING, StaticType.STRING)
         val expectedImplicitCasts = listOf(false, false)

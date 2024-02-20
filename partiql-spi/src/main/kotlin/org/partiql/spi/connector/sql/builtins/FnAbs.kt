@@ -40,13 +40,13 @@ import kotlin.math.absoluteValue
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_ABS__INT8__INT8 : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "abs",
         returns = INT8,
         parameters = listOf(FnParameter("value", INT8)),
         isNullCall = true,
         isNullable = false,
-    )
+    ) {}
 
     override fun invoke(args: Array<PartiQLValue>): Int8Value {
         val value = args[0].check<Int8Value>().value!!
@@ -57,13 +57,13 @@ internal object Fn_ABS__INT8__INT8 : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_ABS__INT16__INT16 : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "abs",
         returns = INT16,
         parameters = listOf(FnParameter("value", INT16)),
         isNullCall = true,
         isNullable = false,
-    )
+    ) {}
 
     override fun invoke(args: Array<PartiQLValue>): Int16Value {
         val value = args[0].check<Int16Value>().value!!
@@ -74,13 +74,13 @@ internal object Fn_ABS__INT16__INT16 : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_ABS__INT32__INT32 : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "abs",
         returns = INT32,
         parameters = listOf(FnParameter("value", INT32)),
         isNullCall = true,
         isNullable = false,
-    )
+    ) {}
 
     override fun invoke(args: Array<PartiQLValue>): Int32Value {
         val value = args[0].check<Int32Value>().value!!
@@ -91,13 +91,13 @@ internal object Fn_ABS__INT32__INT32 : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_ABS__INT64__INT64 : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "abs",
         returns = INT64,
         parameters = listOf(FnParameter("value", INT64)),
         isNullCall = true,
         isNullable = false,
-    )
+    ) {}
 
     override fun invoke(args: Array<PartiQLValue>): Int64Value {
         val value = args[0].check<Int64Value>().value!!
@@ -108,13 +108,13 @@ internal object Fn_ABS__INT64__INT64 : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_ABS__INT__INT : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "abs",
         returns = INT,
         parameters = listOf(FnParameter("value", INT)),
         isNullCall = true,
         isNullable = false,
-    )
+    ) {}
 
     override fun invoke(args: Array<PartiQLValue>): IntValue {
         val value = args[0].check<IntValue>().value!!
@@ -125,13 +125,13 @@ internal object Fn_ABS__INT__INT : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_ABS__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "abs",
         returns = DECIMAL_ARBITRARY,
         parameters = listOf(FnParameter("value", DECIMAL_ARBITRARY)),
         isNullCall = true,
         isNullable = false,
-    )
+    ) {}
 
     override fun invoke(args: Array<PartiQLValue>): DecimalValue {
         val value = args[0].check<DecimalValue>().value!!
@@ -142,13 +142,13 @@ internal object Fn_ABS__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_ABS__FLOAT32__FLOAT32 : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "abs",
         returns = FLOAT32,
         parameters = listOf(FnParameter("value", FLOAT32)),
         isNullCall = true,
         isNullable = false,
-    )
+    ) {}
 
     override fun invoke(args: Array<PartiQLValue>): Float32Value {
         val value = args[0].check<Float32Value>().value!!
@@ -159,13 +159,13 @@ internal object Fn_ABS__FLOAT32__FLOAT32 : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_ABS__FLOAT64__FLOAT64 : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "abs",
         returns = FLOAT64,
         parameters = listOf(FnParameter("value", FLOAT64)),
         isNullCall = true,
         isNullable = false,
-    )
+    ) {}
 
     override fun invoke(args: Array<PartiQLValue>): Float64Value {
         val value = args[0].check<Float64Value>().value!!

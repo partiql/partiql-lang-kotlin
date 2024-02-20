@@ -97,7 +97,7 @@ import org.partiql.value.symbolValue
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_SUBSTRING__STRING_INT64__STRING : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "substring",
         returns = STRING,
         parameters = listOf(
@@ -106,8 +106,7 @@ internal object Fn_SUBSTRING__STRING_INT64__STRING : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val value = args[0].check<StringValue>().string!!
         val start = try { args[1].check<Int64Value>().toInt32().value!! } catch (e: DataException) { throw TypeCheckException() }
@@ -119,7 +118,7 @@ internal object Fn_SUBSTRING__STRING_INT64__STRING : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_SUBSTRING__STRING_INT64_INT64__STRING : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "substring",
         returns = STRING,
         parameters = listOf(
@@ -129,8 +128,7 @@ internal object Fn_SUBSTRING__STRING_INT64_INT64__STRING : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val value = args[0].check<StringValue>().string!!
         val start = try { args[1].check<Int64Value>().toInt32().value!! } catch (e: DataException) { throw TypeCheckException() }
@@ -144,7 +142,7 @@ internal object Fn_SUBSTRING__STRING_INT64_INT64__STRING : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_SUBSTRING__SYMBOL_INT64__SYMBOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "substring",
         returns = SYMBOL,
         parameters = listOf(
@@ -153,8 +151,7 @@ internal object Fn_SUBSTRING__SYMBOL_INT64__SYMBOL : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val value = args[0].check<SymbolValue>().string!!
         val start = try { args[1].check<Int64Value>().toInt32().value!! } catch (e: DataException) { throw TypeCheckException() }
@@ -166,7 +163,7 @@ internal object Fn_SUBSTRING__SYMBOL_INT64__SYMBOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_SUBSTRING__SYMBOL_INT64_INT64__SYMBOL : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "substring",
         returns = SYMBOL,
         parameters = listOf(
@@ -176,8 +173,7 @@ internal object Fn_SUBSTRING__SYMBOL_INT64_INT64__SYMBOL : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val value = args[0].check<SymbolValue>().string!!
         val start = try { args[1].check<Int64Value>().toInt32().value!! } catch (e: DataException) { throw TypeCheckException() }
@@ -191,7 +187,7 @@ internal object Fn_SUBSTRING__SYMBOL_INT64_INT64__SYMBOL : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_SUBSTRING__CLOB_INT64__CLOB : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "substring",
         returns = CLOB,
         parameters = listOf(
@@ -200,8 +196,7 @@ internal object Fn_SUBSTRING__CLOB_INT64__CLOB : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val value = args[0].check<ClobValue>().value!!.toString(Charsets.UTF_8)
         val start = try { args[1].check<Int64Value>().toInt32().value!! } catch (e: DataException) { throw TypeCheckException() }
@@ -213,7 +208,7 @@ internal object Fn_SUBSTRING__CLOB_INT64__CLOB : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_SUBSTRING__CLOB_INT64_INT64__CLOB : Fn {
 
-    override val signature = FnSignature(
+    override val signature = object : FnSignature(
         name = "substring",
         returns = CLOB,
         parameters = listOf(
@@ -223,8 +218,7 @@ internal object Fn_SUBSTRING__CLOB_INT64_INT64__CLOB : Fn {
         ),
         isNullCall = true,
         isNullable = false,
-    )
-
+    ) {}
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val string = args[0].check<ClobValue>().value!!.toString(Charsets.UTF_8)
         val start = try { args[1].check<Int64Value>().toInt32().value!! } catch (e: DataException) { throw TypeCheckException() }
