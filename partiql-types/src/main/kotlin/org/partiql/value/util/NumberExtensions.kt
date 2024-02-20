@@ -89,7 +89,7 @@ private val CONVERTERS = mapOf<Class<*>, (Number) -> Number>(
             is Long -> num.toBigInteger()
             is BigInteger -> num
             else -> throw IllegalArgumentException(
-                "Unsupported number for decimal conversion: $num"
+                "Unsupported number for BigInteger conversion: $num"
             )
         }
     },
