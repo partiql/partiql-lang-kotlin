@@ -49,7 +49,6 @@ import org.partiql.planner.internal.ir.rexOpStructField
 import org.partiql.planner.internal.ir.rexOpSubquery
 import org.partiql.planner.internal.ir.rexOpTupleUnion
 import org.partiql.planner.internal.ir.rexOpVarLocal
-import org.partiql.planner.internal.ir.rexOpVarOuter
 import org.partiql.planner.internal.ir.rexOpVarUnresolved
 import org.partiql.planner.internal.typer.toNonNullStaticType
 import org.partiql.planner.internal.typer.toStaticType
@@ -328,13 +327,13 @@ internal object RexConverter {
                     }
 
                     is Expr.Path.Step.Unpivot -> {
-                        val op = rexOpVarOuter(-1, -1)
+                        val op = rexOpVarLocal(1, -1)
                         val index = fromList.size
                         fromList.add(relFromUnpivot(current, index))
                         op
                     }
                     is Expr.Path.Step.Wildcard -> {
-                        val op = rexOpVarOuter(-1, -1)
+                        val op = rexOpVarLocal(1, -1)
                         val index = fromList.size
                         fromList.add(relFromDefault(current, index))
                         op
@@ -352,10 +351,10 @@ internal object RexConverter {
             }
 
             val constructor = when (val op = pathNavi.op) {
-                is Rex.Op.Path.Index -> rex(pathNavi.type, rexOpPathIndex(rex(op.root.type, rexOpVarLocal(-1)), op.key))
-                is Rex.Op.Path.Key -> rex(pathNavi.type, rexOpPathKey(rex(op.root.type, rexOpVarLocal(-1)), op.key))
-                is Rex.Op.Path.Symbol -> rex(pathNavi.type, rexOpPathSymbol(rex(op.root.type, rexOpVarLocal(-1)), op.key))
-                is Rex.Op.Var.Outer -> rex(pathNavi.type, rexOpVarLocal(-1))
+                is Rex.Op.Path.Index -> rex(pathNavi.type, rexOpPathIndex(rex(op.root.type, rexOpVarLocal(0, -1)), op.key))
+                is Rex.Op.Path.Key -> rex(pathNavi.type, rexOpPathKey(rex(op.root.type, rexOpVarLocal(0, -1)), op.key))
+                is Rex.Op.Path.Symbol -> rex(pathNavi.type, rexOpPathSymbol(rex(op.root.type, rexOpVarLocal(0, -1)), op.key))
+                is Rex.Op.Var.Local -> rex(pathNavi.type, rexOpVarLocal(0, -1))
                 else -> throw IllegalStateException()
             }
             val op = rexOpSelect(constructor, fromNode)

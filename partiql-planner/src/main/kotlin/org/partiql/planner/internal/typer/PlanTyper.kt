@@ -61,7 +61,6 @@ import org.partiql.planner.internal.ir.rexOpStructField
 import org.partiql.planner.internal.ir.rexOpSubquery
 import org.partiql.planner.internal.ir.rexOpTupleUnion
 import org.partiql.planner.internal.ir.rexOpVarLocal
-import org.partiql.planner.internal.ir.rexOpVarOuter
 import org.partiql.planner.internal.ir.statementQuery
 import org.partiql.planner.internal.ir.util.PlanRewriter
 import org.partiql.spi.BindingCase
@@ -437,22 +436,14 @@ internal class PlanTyper(
             return rex(ctx!!, node)
         }
 
-        override fun visitRexOpVarOuter(node: Rex.Op.Var.Outer, ctx: StaticType?): Rex {
-            val scopeIndex = if (node.scope < 0) locals.outer.size - node.scope.absoluteValue else node.scope
-            val typeEnv = locals.outer[scopeIndex]
-            assert(node.ref < typeEnv.schema.size) {
-                "Invalid resolved variable (var ${node.ref}, stack frame ${node.scope}) in env: $locals"
-            }
-            val nodeRef = if (node.ref < 0) typeEnv.schema.size - node.ref.absoluteValue else node.ref
-
-            val type = typeEnv.schema[nodeRef].type
-            return rex(type, rexOpVarOuter(scopeIndex, nodeRef))
-        }
-
         override fun visitRexOpVarLocal(node: Rex.Op.Var.Local, ctx: StaticType?): Rex {
-            val nodeRef = if (node.ref < 0) locals.schema.size - node.ref.absoluteValue else node.ref
-            val type = locals.schema.getOrNull(nodeRef)?.type ?: error("Can't find locals value.")
-            return rex(type, rexOpVarLocal(nodeRef))
+            val scope = locals.getScope(node.depth)
+            assert(node.ref < scope.schema.size) {
+                "Invalid resolved variable (var ${node.ref}, stack frame ${node.depth}) in env: $locals"
+            }
+            val nodeRef = if (node.ref < 0) scope.schema.size - node.ref.absoluteValue else node.ref
+            val type = scope.schema.getOrNull(nodeRef)?.type ?: error("Can't find locals value.")
+            return rex(type, rexOpVarLocal(node.depth, nodeRef))
         }
 
         override fun visitRexOpVarUnresolved(node: Rex.Op.Var.Unresolved, ctx: StaticType?): Rex {
