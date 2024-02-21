@@ -9,7 +9,7 @@ import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.eval.PartiQLEngine
 import org.partiql.eval.PartiQLResult
 import org.partiql.parser.PartiQLParser
-import org.partiql.plan.PlanNode
+import org.partiql.plan.PartiQLPlan
 import org.partiql.plan.debug.PlanPrinter
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.PartiQLPlannerBuilder
@@ -54,6 +54,11 @@ class PartiQLEngineDefaultTest {
     @MethodSource("subqueryTestCases")
     @Execution(ExecutionMode.CONCURRENT)
     fun subqueryTests(tc: SuccessTestCase) = tc.assert()
+
+    @ParameterizedTest
+    @MethodSource("aggregationTestCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun aggregationTests(tc: SuccessTestCase) = tc.assert()
 
     companion object {
 
@@ -312,6 +317,110 @@ class PartiQLEngineDefaultTest {
                     int32Value(820),
                 )
             )
+        )
+
+        @JvmStatic
+        fun aggregationTestCases() = kotlin.collections.listOf(
+            SuccessTestCase(
+                input = """
+                    SELECT
+                        gk_0, SUM(t.c) AS t_c_sum
+                    FROM <<
+                        { 'b': NULL, 'c': 1 },
+                        { 'b': MISSING, 'c': 2 },
+                        { 'b': 1, 'c': 1 },
+                        { 'b': 1, 'c': 2 },
+                        { 'b': 2, 'c': NULL },
+                        { 'b': 2, 'c': 2 },
+                        { 'b': 3, 'c': MISSING },
+                        { 'b': 3, 'c': 2 },
+                        { 'b': 4, 'c': MISSING },
+                        { 'b': 4, 'c': NULL }
+                    >> AS t GROUP BY t.b AS gk_0;
+                """.trimIndent(),
+                expected = org.partiql.value.bagValue(
+                    org.partiql.value.structValue(
+                        "gk_0" to org.partiql.value.int32Value(1),
+                        "t_c_sum" to org.partiql.value.int64Value(3)
+                    ),
+                    org.partiql.value.structValue(
+                        "gk_0" to org.partiql.value.int32Value(2),
+                        "t_c_sum" to org.partiql.value.int64Value(2)
+                    ),
+                    org.partiql.value.structValue(
+                        "gk_0" to org.partiql.value.int32Value(3),
+                        "t_c_sum" to org.partiql.value.int64Value(2)
+                    ),
+                    org.partiql.value.structValue(
+                        "gk_0" to org.partiql.value.int32Value(4),
+                        "t_c_sum" to org.partiql.value.nullValue()
+                    ),
+                    org.partiql.value.structValue(
+                        "gk_0" to org.partiql.value.nullValue(),
+                        "t_c_sum" to org.partiql.value.int64Value(3)
+                    ),
+                ),
+                mode = org.partiql.eval.PartiQLEngine.Mode.PERMISSIVE
+            ),
+            SuccessTestCase(
+                input = """
+                    SELECT VALUE { 'sensor': sensor,
+                          'readings': (SELECT VALUE v.l.co FROM g AS v)
+                    }
+                    FROM [{'sensor':1, 'co':0.4}, {'sensor':1, 'co':0.2}, {'sensor':2, 'co':0.3}] AS l
+                    GROUP BY l.sensor AS sensor GROUP AS g
+                """.trimIndent(),
+                expected = org.partiql.value.bagValue(
+                    org.partiql.value.structValue(
+                        "sensor" to org.partiql.value.int32Value(1),
+                        "readings" to org.partiql.value.bagValue(
+                            org.partiql.value.decimalValue(0.4.toBigDecimal()),
+                            org.partiql.value.decimalValue(0.2.toBigDecimal())
+                        )
+                    ),
+                    org.partiql.value.structValue(
+                        "sensor" to org.partiql.value.int32Value(2),
+                        "readings" to org.partiql.value.bagValue(
+                            org.partiql.value.decimalValue(0.3.toBigDecimal())
+                        )
+                    ),
+                )
+            ),
+            SuccessTestCase(
+                input = """
+                    SELECT col1, g
+                    FROM [{ 'col1':1 }, { 'col1':1 }] simple_1_col_1_group
+                    GROUP BY col1 GROUP AS g
+                """.trimIndent(),
+                expected = bagValue(
+                    structValue(
+                        "col1" to int32Value(1),
+                        "g" to bagValue(
+                            structValue(
+                                "simple_1_col_1_group" to structValue("col1" to int32Value(1))
+                            ),
+                            structValue(
+                                "simple_1_col_1_group" to structValue("col1" to int32Value(1))
+                            ),
+                        )
+                    ),
+                )
+            ),
+            SuccessTestCase(
+                input = """
+                    SELECT p.supplierId_mixed
+                    FROM [
+                        { 'productId': 5,  'categoryId': 21, 'regionId': 100, 'supplierId_nulls': null, 'price_nulls': null },
+                        { 'productId': 4,  'categoryId': 20, 'regionId': 100, 'supplierId_nulls': null, 'supplierId_mixed': null, 'price_nulls': null, 'price_mixed': null }
+                    ] AS p
+                    GROUP BY p.supplierId_mixed
+                """.trimIndent(),
+                expected = bagValue(
+                    structValue(
+                        "supplierId_mixed" to nullValue(),
+                    ),
+                )
+            ),
         )
 
         @JvmStatic
@@ -938,11 +1047,11 @@ class PartiQLEngineDefaultTest {
                 }
             }
             val output = result.value
-            assertEquals(expected, output, comparisonString(plan.plan, expected, output))
+            assertEquals(expected, output, comparisonString(expected, output, plan.plan))
         }
 
         @OptIn(PartiQLValueExperimental::class)
-        private fun comparisonString(plan: PlanNode, expected: PartiQLValue, actual: PartiQLValue): String {
+        private fun comparisonString(expected: PartiQLValue, actual: PartiQLValue, plan: PartiQLPlan): String {
             val expectedBuffer = ByteArrayOutputStream()
             val expectedWriter = PartiQLValueIonWriterBuilder.standardIonTextBuilder().build(expectedBuffer)
             expectedWriter.append(expected)

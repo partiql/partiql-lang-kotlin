@@ -67,6 +67,8 @@ import org.partiql.value.check
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_EQ__ANY_ANY__BOOL : Fn {
 
+    private val comparator = PartiQLValue.comparator()
+
     override val signature = FnSignature(
         name = "eq",
         returns = BOOL,
@@ -84,7 +86,10 @@ internal object Fn_EQ__ANY_ANY__BOOL : Fn {
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val lhs = args[0]
         val rhs = args[1]
-        return boolValue(lhs == rhs)
+        return when {
+            lhs.type == MISSING || rhs.type == MISSING -> boolValue(lhs == rhs)
+            else -> boolValue(comparator.compare(lhs, rhs) == 0)
+        }
     }
 }
 

@@ -28,6 +28,11 @@ ref::[
     path: list::[string],
     signature: fn_signature,
   },
+  agg::{
+    catalog: string,
+    path: list::[string],
+    signature: agg_signature,
+  },
   _::[
     cast::{
       input: partiql_value_type,
@@ -37,11 +42,7 @@ ref::[
         EXPLICIT, // Lossy    CAST(V AS T) -> T
         UNSAFE,   //          CAST(V AS T) -> T|MISSING
       ]
-    },
-    agg::{
-      name: string,
-      signature: agg_signature,
-    },
+    }
   ]
 ]
 
@@ -140,6 +141,7 @@ rex::{
       // Represents a dynamic function call. If all candidates are exhausted, dynamic calls will return MISSING.
       //
       // args: represent the original typed arguments. These will eventually be wrapped by coercions from [candidates].
+      // parameters: represents the input type(s) to match. (ex: INT32)
       // candidates: represent the potentially applicable resolved functions with coercions. Each of these candidates
       //  should be overloaded functions of the same name and number of arguments.
       dynamic::{
@@ -149,6 +151,7 @@ rex::{
         _: [
           candidate::{
             fn: '.ref.fn',
+            parameters: list::[partiql_value_type],
             coercions: list::[optional::'.ref.cast'],
           }
         ]
@@ -314,13 +317,16 @@ rel::{
         call::[
           unresolved::{
             name: string,
+            set_quantifier: set_quantifier,
             args: list::[rex],
           },
           resolved::{
             agg:  '.ref.agg',
+            set_quantifier: set_quantifier,
             args: list::[rex],
           },
-        ]
+        ],
+        set_quantifier::[ ALL, DISTINCT ]
       ],
     },
 

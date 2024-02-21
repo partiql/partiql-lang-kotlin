@@ -10,6 +10,8 @@ import org.partiql.planner.internal.ir.rexOpVarLocal
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
+import org.partiql.types.AnyOfType
+import org.partiql.types.AnyType
 import org.partiql.types.StaticType
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
@@ -100,30 +102,28 @@ internal data class TypeEnv(
         for (i in schema.indices) {
             val local = schema[i]
             val type = local.type
-            if (type is StructType) {
-                when (type.containsKey(name)) {
-                    true -> {
-                        if (c != null && known) {
-                            // TODO root was already definitively matched, emit ambiguous error.
+            when (type.containsKey(name)) {
+                true -> {
+                    if (c != null && known) {
+                        // TODO root was already definitively matched, emit ambiguous error.
+                        return null
+                    }
+                    c = rex(type, rexOpVarLocal(depth, i))
+                    known = true
+                }
+                null -> {
+                    if (c != null) {
+                        if (known) {
+                            continue
+                        } else {
+                            // TODO we have more than one possible match, emit ambiguous error.
                             return null
                         }
-                        c = rex(type, rexOpVarLocal(depth, i))
-                        known = true
                     }
-                    null -> {
-                        if (c != null) {
-                            if (known) {
-                                continue
-                            } else {
-                                // TODO we have more than one possible match, emit ambiguous error.
-                                return null
-                            }
-                        }
-                        c = rex(type, rexOpVarLocal(depth, i))
-                        known = false
-                    }
-                    false -> continue
+                    c = rex(type, rexOpVarLocal(depth, i))
+                    known = false
                 }
+                false -> continue
             }
         }
         if (c == null && outer.isNotEmpty()) {
@@ -151,6 +151,35 @@ internal data class TypeEnv(
         }
         val closed = constraints.contains(TupleConstraint.Open(false))
         return if (closed) false else null
+    }
+
+    /**
+     * Searches for the [BindingName] within the given [StaticType].
+     *
+     * Returns
+     *  - true  iff known to contain key
+     *  - false iff known to NOT contain key
+     *  - null  iff NOT known to contain key
+     *
+     * @param name
+     * @return
+     */
+    private fun StaticType.containsKey(name: BindingName): Boolean? {
+        return when (val type = this.flatten()) {
+            is StructType -> type.containsKey(name)
+            is AnyOfType -> {
+                val anyKnownToContainKey = type.allTypes.any { it.containsKey(name) == true }
+                val anyKnownToNotContainKey = type.allTypes.any { it.containsKey(name) == false }
+                val anyNotKnownToContainKey = type.allTypes.any { it.containsKey(name) == null }
+                when {
+                    anyKnownToNotContainKey.not() && anyNotKnownToContainKey.not() -> true
+                    anyKnownToContainKey.not() && anyNotKnownToContainKey -> false
+                    else -> null
+                }
+            }
+            is AnyType -> null
+            else -> false
+        }
     }
 
     companion object {

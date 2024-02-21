@@ -24,6 +24,10 @@ catalog::{
         path:     list::[string],
         specific: string,
       },
+      agg::{
+        path:     list::[string],
+        specific: string,
+      },
     ]
   ]
 }
@@ -128,6 +132,7 @@ rex::{
           //  is necessary.
           candidate::{
             fn: ref,
+            parameters: list::[partiql_value_type],
             coercions: list::[optional::'.ref.cast'],
           }
         ]
@@ -291,7 +296,8 @@ rel::{
       groups:   list::[rex],
       _: [
         call::{
-          agg:  string,
+          agg:  ref,
+          set_quantifier: [ ALL, DISTINCT ],
           args: list::[rex],
         },
       ],

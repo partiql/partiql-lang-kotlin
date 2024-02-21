@@ -31,7 +31,11 @@ internal class ExprCallDynamic(
                 return candidate.eval(actualArgs)
             }
         }
-        throw TypeCheckException()
+        val errorString = buildString {
+            val argString = actualArgs.joinToString(", ")
+            append("Could not dynamically find function for arguments $argString in $candidates.")
+        }
+        throw TypeCheckException(errorString)
     }
 
     /**

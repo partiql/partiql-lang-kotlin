@@ -92,7 +92,8 @@ internal fun StaticType.toRuntimeType(): PartiQLValueType {
         // handle anyOf(null, T) cases
         val t = types.filter { it !is NullType && it !is MissingType }
         return if (t.size != 1) {
-            error("Cannot have a UNION runtime type: $this")
+            PartiQLValueType.ANY
+            // TODO: Do we need this? error("Cannot have a UNION runtime type: $this")
         } else {
             t.first().asRuntimeType()
         }

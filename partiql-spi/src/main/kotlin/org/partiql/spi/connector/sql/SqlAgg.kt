@@ -14,19 +14,22 @@
 
 package org.partiql.spi.connector.sql
 
-import org.partiql.spi.connector.ConnectorFnProvider
-import org.partiql.spi.connector.ConnectorPath
-import org.partiql.spi.fn.Fn
+import org.partiql.spi.connector.ConnectorAgg
+import org.partiql.spi.connector.ConnectorFn
+import org.partiql.spi.fn.AggSignature
 import org.partiql.spi.fn.FnExperimental
-import org.partiql.spi.fn.Index
 
 /**
- * A basic [ConnectorFnProvider] over an [Index].
+ * Simple [ConnectorFn] implementation wrapping a signature.
+ *
+ * @property name
+ * @property variants
  */
 @OptIn(FnExperimental::class)
-public class SqlFnProvider(private val index: Index<Fn>) : ConnectorFnProvider {
+public class SqlAgg(
+    private val name: String,
+    private val variants: List<AggSignature>,
+) : ConnectorAgg {
 
-    override fun getFn(path: ConnectorPath, specific: String): Fn? {
-        return index.get(path, specific)
-    }
+    override fun getVariants(): List<AggSignature> = variants
 }

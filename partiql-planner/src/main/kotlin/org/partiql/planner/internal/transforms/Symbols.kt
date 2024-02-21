@@ -2,6 +2,7 @@ package org.partiql.planner.internal.transforms
 
 import org.partiql.plan.Catalog
 import org.partiql.plan.builder.CatalogBuilder
+import org.partiql.plan.catalogItemAgg
 import org.partiql.plan.catalogItemFn
 import org.partiql.plan.catalogItemValue
 import org.partiql.planner.internal.ir.Ref
@@ -34,6 +35,12 @@ internal class Symbols private constructor() {
     fun insert(ref: Ref.Fn): CatalogRef = insert(
         catalog = ref.catalog,
         item = catalogItemFn(ref.path, ref.signature.specific),
+    )
+
+    @OptIn(FnExperimental::class)
+    fun insert(ref: Ref.Agg): CatalogRef = insert(
+        catalog = ref.catalog,
+        item = catalogItemAgg(ref.path, ref.signature.specific),
     )
 
     private fun insert(catalog: String, item: Catalog.Item): CatalogRef {

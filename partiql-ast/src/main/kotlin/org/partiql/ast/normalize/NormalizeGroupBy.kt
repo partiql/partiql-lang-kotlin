@@ -14,6 +14,7 @@
 
 package org.partiql.ast.normalize
 
+import org.partiql.ast.AstNode
 import org.partiql.ast.Expr
 import org.partiql.ast.GroupBy
 import org.partiql.ast.Statement
@@ -29,6 +30,13 @@ object NormalizeGroupBy : AstPass {
     override fun apply(statement: Statement) = Visitor.visitStatement(statement, 0) as Statement
 
     private object Visitor : AstRewriter<Int>() {
+
+        override fun visitGroupBy(node: GroupBy, ctx: Int): AstNode {
+            val keys = node.keys.mapIndexed { index, key ->
+                visitGroupByKey(key, index + 1)
+            }
+            return node.copy(keys = keys)
+        }
 
         override fun visitGroupByKey(node: GroupBy.Key, ctx: Int): GroupBy.Key {
             val expr = visitExpr(node.expr, 0) as Expr

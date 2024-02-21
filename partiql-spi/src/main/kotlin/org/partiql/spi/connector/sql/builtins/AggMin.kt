@@ -3,11 +3,13 @@
 
 package org.partiql.spi.connector.sql.builtins
 
+import org.partiql.spi.connector.sql.builtins.internal.AccumulatorMin
 import org.partiql.spi.fn.Agg
 import org.partiql.spi.fn.AggSignature
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnParameter
 import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.PartiQLValueType.ANY
 import org.partiql.value.PartiQLValueType.DECIMAL_ARBITRARY
 import org.partiql.value.PartiQLValueType.FLOAT32
 import org.partiql.value.PartiQLValueType.FLOAT64
@@ -30,9 +32,7 @@ public object Agg_MIN__INT8__INT8 : Agg {
         isDecomposable = true
     )
 
-    override fun accumulator(): Agg.Accumulator {
-        TODO("Aggregation min not implemented")
-    }
+    override fun accumulator(): Agg.Accumulator = AccumulatorMin()
 }
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
@@ -48,9 +48,7 @@ public object Agg_MIN__INT16__INT16 : Agg {
         isDecomposable = true
     )
 
-    override fun accumulator(): Agg.Accumulator {
-        TODO("Aggregation min not implemented")
-    }
+    override fun accumulator(): Agg.Accumulator = AccumulatorMin()
 }
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
@@ -66,9 +64,7 @@ public object Agg_MIN__INT32__INT32 : Agg {
         isDecomposable = true
     )
 
-    override fun accumulator(): Agg.Accumulator {
-        TODO("Aggregation min not implemented")
-    }
+    override fun accumulator(): Agg.Accumulator = AccumulatorMin()
 }
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
@@ -84,9 +80,7 @@ public object Agg_MIN__INT64__INT64 : Agg {
         isDecomposable = true
     )
 
-    override fun accumulator(): Agg.Accumulator {
-        TODO("Aggregation min not implemented")
-    }
+    override fun accumulator(): Agg.Accumulator = AccumulatorMin()
 }
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
@@ -102,9 +96,7 @@ public object Agg_MIN__INT__INT : Agg {
         isDecomposable = true
     )
 
-    override fun accumulator(): Agg.Accumulator {
-        TODO("Aggregation min not implemented")
-    }
+    override fun accumulator(): Agg.Accumulator = AccumulatorMin()
 }
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
@@ -120,9 +112,7 @@ public object Agg_MIN__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY : Agg {
         isDecomposable = true
     )
 
-    override fun accumulator(): Agg.Accumulator {
-        TODO("Aggregation min not implemented")
-    }
+    override fun accumulator(): Agg.Accumulator = AccumulatorMin()
 }
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
@@ -138,9 +128,7 @@ public object Agg_MIN__FLOAT32__FLOAT32 : Agg {
         isDecomposable = true
     )
 
-    override fun accumulator(): Agg.Accumulator {
-        TODO("Aggregation min not implemented")
-    }
+    override fun accumulator(): Agg.Accumulator = AccumulatorMin()
 }
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
@@ -156,7 +144,21 @@ public object Agg_MIN__FLOAT64__FLOAT64 : Agg {
         isDecomposable = true
     )
 
-    override fun accumulator(): Agg.Accumulator {
-        TODO("Aggregation min not implemented")
-    }
+    override fun accumulator(): Agg.Accumulator = AccumulatorMin()
+}
+
+@OptIn(PartiQLValueExperimental::class, FnExperimental::class)
+public object Agg_MIN__ANY__ANY : Agg {
+
+    override val signature: AggSignature = AggSignature(
+        name = "min",
+        returns = ANY,
+        parameters = listOf(
+            FnParameter("value", ANY),
+        ),
+        isNullable = true,
+        isDecomposable = true
+    )
+
+    override fun accumulator(): Agg.Accumulator = AccumulatorMin()
 }

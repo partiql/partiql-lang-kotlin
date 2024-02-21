@@ -51,4 +51,15 @@ public open class SqlMetadata(
         }
         return ConnectorHandle.Fn(ConnectorPath(cnf), SqlFn(name, variants))
     }
+
+    @FnExperimental
+    override fun getAggregation(path: BindingPath): ConnectorHandle.Agg? {
+        val cnf = path.steps.map { it.name.uppercase() }
+        val name = cnf.last()
+        val variants = info.aggregations.get(cnf).map { it.signature }
+        if (variants.isEmpty()) {
+            return null
+        }
+        return ConnectorHandle.Agg(ConnectorPath(cnf), SqlAgg(name, variants))
+    }
 }
