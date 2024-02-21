@@ -3,7 +3,6 @@ package org.partiql.spi.connector.sql.builtins.internal
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
-import org.partiql.value.nullValue
 
 @OptIn(PartiQLValueExperimental::class)
 internal class AccumulatorAvg(
@@ -20,7 +19,7 @@ internal class AccumulatorAvg(
     }
 
     override fun value(): PartiQLValue = when (count) {
-        0L -> nullValue()
+        0L -> nullToTargetType(targetType)
         else -> (sum / bigDecimalOf(count)).toTargetType(targetType)
     }
 }

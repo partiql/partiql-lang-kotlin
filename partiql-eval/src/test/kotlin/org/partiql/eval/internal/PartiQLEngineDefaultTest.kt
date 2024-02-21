@@ -341,23 +341,23 @@ class PartiQLEngineDefaultTest {
                 expected = org.partiql.value.bagValue(
                     org.partiql.value.structValue(
                         "gk_0" to org.partiql.value.int32Value(1),
-                        "t_c_sum" to org.partiql.value.int64Value(3)
+                        "t_c_sum" to org.partiql.value.int32Value(3)
                     ),
                     org.partiql.value.structValue(
                         "gk_0" to org.partiql.value.int32Value(2),
-                        "t_c_sum" to org.partiql.value.int64Value(2)
+                        "t_c_sum" to org.partiql.value.int32Value(2)
                     ),
                     org.partiql.value.structValue(
                         "gk_0" to org.partiql.value.int32Value(3),
-                        "t_c_sum" to org.partiql.value.int64Value(2)
+                        "t_c_sum" to org.partiql.value.int32Value(2)
                     ),
                     org.partiql.value.structValue(
                         "gk_0" to org.partiql.value.int32Value(4),
-                        "t_c_sum" to org.partiql.value.nullValue()
+                        "t_c_sum" to org.partiql.value.int32Value(null)
                     ),
                     org.partiql.value.structValue(
                         "gk_0" to org.partiql.value.nullValue(),
-                        "t_c_sum" to org.partiql.value.int64Value(3)
+                        "t_c_sum" to org.partiql.value.int32Value(3)
                     ),
                 ),
                 mode = org.partiql.eval.PartiQLEngine.Mode.PERMISSIVE

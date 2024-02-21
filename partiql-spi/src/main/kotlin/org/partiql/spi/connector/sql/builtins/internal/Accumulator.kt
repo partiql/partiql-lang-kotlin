@@ -40,6 +40,7 @@ import org.partiql.value.int32Value
 import org.partiql.value.int64Value
 import org.partiql.value.int8Value
 import org.partiql.value.intValue
+import org.partiql.value.nullValue
 import org.partiql.value.util.coerceNumbers
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -162,6 +163,23 @@ internal fun PartiQLValueType.isNumber(): Boolean = when (this) {
     PartiQLValueType.FLOAT32,
     PartiQLValueType.FLOAT64 -> true
     else -> false
+}
+
+/**
+ * This is specifically for SUM/AVG
+ */
+@OptIn(PartiQLValueExperimental::class)
+internal fun nullToTargetType(type: PartiQLValueType): PartiQLValue = when (type) {
+    PartiQLValueType.ANY -> nullValue()
+    PartiQLValueType.FLOAT32 -> float32Value(null)
+    PartiQLValueType.FLOAT64 -> float64Value(null)
+    PartiQLValueType.INT8 -> int8Value(null)
+    PartiQLValueType.INT16 -> int16Value(null)
+    PartiQLValueType.INT32 -> int32Value(null)
+    PartiQLValueType.INT64 -> int64Value(null)
+    PartiQLValueType.INT -> intValue(null)
+    PartiQLValueType.DECIMAL_ARBITRARY, PartiQLValueType.DECIMAL -> decimalValue(null)
+    else -> TODO("Unsupported target type $type")
 }
 
 /**
