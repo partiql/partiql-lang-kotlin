@@ -46,10 +46,6 @@ fun bigDecimalOf(num: Number, mc: MathContext = MATH_CONTEXT): BigDecimal = when
 fun bigDecimalOf(text: String, mc: MathContext = MATH_CONTEXT): BigDecimal = BigDecimal(text.trim(), mc)
 
 private val CONVERSION_MAP = mapOf<Set<Class<*>>, Class<out Number>>(
-    setOf(Int::class.javaObjectType, Long::class.javaObjectType) to Long::class.javaObjectType,
-    setOf(Int::class.javaObjectType, BigInteger::class.javaObjectType) to BigInteger::class.javaObjectType,
-    setOf(Long::class.javaObjectType, BigInteger::class.javaObjectType) to BigInteger::class.javaObjectType,
-    setOf(BigInteger::class.javaObjectType, BigInteger::class.javaObjectType) to BigInteger::class.javaObjectType,
     setOf(Long::class.javaObjectType, Long::class.javaObjectType) to Long::class.javaObjectType,
     setOf(Long::class.javaObjectType, Double::class.javaObjectType) to Double::class.javaObjectType,
     setOf(Long::class.javaObjectType, BigDecimal::class.javaObjectType) to BigDecimal::class.javaObjectType,
@@ -63,12 +59,6 @@ private val CONVERSION_MAP = mapOf<Set<Class<*>>, Class<out Number>>(
 private val CONVERTERS = mapOf<Class<*>, (Number) -> Number>(
     Long::class.javaObjectType to Number::toLong,
     Double::class.javaObjectType to Number::toDouble,
-    BigInteger::class.javaObjectType to { num ->
-        when (num) {
-            is BigInteger -> num
-            else -> BigInteger.valueOf(num.toLong())
-        }
-    },
     BigDecimal::class.java to { num ->
         when (num) {
             is Long -> bigDecimalOf(num)
@@ -83,10 +73,10 @@ private val CONVERTERS = mapOf<Class<*>, (Number) -> Number>(
 
 internal fun Number.isZero() = when (this) {
     // using compareTo instead of equals for BigDecimal because equality also checks same scale
+
     is Long -> this == 0L
     is Double -> this == 0.0 || this == -0.0
     is BigDecimal -> BigDecimal.ZERO.compareTo(this) == 0
-    is BigInteger -> BigInteger.ZERO.compareTo(this) == 0
     else -> throw IllegalStateException()
 }
 
@@ -220,7 +210,6 @@ operator fun Number.plus(other: Number): Number {
         is Long -> first.checkOverflowPlus(second as Long)
         is Double -> first + second as Double
         is BigDecimal -> first.add(second as BigDecimal, MATH_CONTEXT)
-        is BigInteger -> first.add(second as BigInteger)
         else -> throw IllegalStateException()
     }
 }
@@ -270,7 +259,6 @@ operator fun Number.compareTo(other: Number): Int {
     return when (first) {
         is Long -> first.compareTo(second as Long)
         is Double -> first.compareTo(second as Double)
-        is BigInteger -> first.compareTo(second as BigInteger)
         is BigDecimal -> first.compareTo(second as BigDecimal)
         else -> throw IllegalStateException()
     }

@@ -4,11 +4,9 @@ import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.spi.fn.Agg
 import org.partiql.spi.fn.FnExperimental
-import org.partiql.value.ListValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
-import org.partiql.value.listValue
 import org.partiql.value.nullValue
 import java.util.TreeMap
 import java.util.TreeSet
@@ -16,13 +14,13 @@ import java.util.TreeSet
 internal class RelAggregate(
     val input: Operator.Relation,
     val keys: List<Operator.Expr>,
-    val functions: List<Operator.Accumulator>
+    val functions: List<Operator.Aggregation>
 ) : Operator.Relation {
 
     lateinit var records: Iterator<Record>
 
     @OptIn(PartiQLValueExperimental::class)
-    val aggregationMap = TreeMap<PartiQLValue, List<AccumulatorWrapper>>(PartiQLValue.comparator(nullsFirst = false))
+    val aggregationMap = TreeMap<List<PartiQLValue>, List<AccumulatorWrapper>>(PartiQLValueListComparator)
 
     @OptIn(PartiQLValueExperimental::class)
     object PartiQLValueListComparator : Comparator<List<PartiQLValue>> {
@@ -47,7 +45,7 @@ internal class RelAggregate(
     }
 
     /**
-     * Wraps an [Operator.Accumulator.Instance] to help with filtering distinct values.
+     * Wraps an [Agg.Accumulator] to help with filtering distinct values.
      *
      * @property seen maintains which values have already been seen. If null, we accumulate all values coming through.
      */
@@ -63,23 +61,21 @@ internal class RelAggregate(
         var inputRecord = input.next()
         while (inputRecord != null) {
             // Initialize the AggregationMap
-            val evaluatedGroupByKeys = listValue(
-                keys.map {
-                    val key = it.eval(inputRecord!!)
-                    when (key.type == PartiQLValueType.MISSING) {
-                        true -> nullValue()
-                        false -> key
-                    }
+            val evaluatedGroupByKeys = keys.map {
+                val key = it.eval(inputRecord!!)
+                when (key.type == PartiQLValueType.MISSING) {
+                    true -> nullValue()
+                    false -> key
                 }
-            )
+            }
             val accumulators = aggregationMap.getOrPut(evaluatedGroupByKeys) {
                 functions.map {
                     AccumulatorWrapper(
                         delegate = it.delegate.accumulator(),
                         args = it.args,
                         seen = when (it.setQuantifier) {
-                            Operator.Accumulator.SetQuantifier.DISTINCT -> TreeSet(PartiQLValueListComparator)
-                            Operator.Accumulator.SetQuantifier.ALL -> null
+                            Operator.Aggregation.SetQuantifier.DISTINCT -> TreeSet(PartiQLValueListComparator)
+                            Operator.Aggregation.SetQuantifier.ALL -> null
                         }
                     )
                 }
@@ -101,7 +97,7 @@ internal class RelAggregate(
             inputRecord = input.next()
         }
 
-        // No Aggregations Created // TODO: How would this be possible?
+        // No Aggregations Created
         if (keys.isEmpty() && aggregationMap.isEmpty()) {
             val record = mutableListOf<PartiQLValue>()
             functions.forEach { function ->
@@ -113,8 +109,7 @@ internal class RelAggregate(
         }
 
         records = iterator {
-            aggregationMap.forEach { (pValue, accumulators) ->
-                val keysEvaluated = pValue as ListValue<*>
+            aggregationMap.forEach { (keysEvaluated, accumulators) ->
                 val recordValues = accumulators.map { acc -> acc.delegate.value() } + keysEvaluated.map { value -> value }
                 yield(Record.of(*recordValues.toTypedArray()))
             }

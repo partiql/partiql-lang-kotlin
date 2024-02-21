@@ -60,7 +60,7 @@ internal class Symbols private constructor(private val catalogs: Array<C>) {
         val catalog = catalogs[ref.catalog]
         val item = catalog.items.getOrNull(ref.symbol)
         if (item == null || item !is Catalog.Item.Agg) {
-            error("Invalid reference $ref; missing function entry for catalog `$catalog`.")
+            error("Invalid reference $ref; missing aggregation entry for catalog `$catalog`.")
         }
         // Lookup in connector
         val path = ConnectorPath(item.path)

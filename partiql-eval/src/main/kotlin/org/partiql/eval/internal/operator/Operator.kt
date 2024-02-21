@@ -29,7 +29,7 @@ internal sealed interface Operator {
         override fun close()
     }
 
-    interface Accumulator : Operator {
+    interface Aggregation : Operator {
 
         @OptIn(FnExperimental::class)
         val delegate: Agg

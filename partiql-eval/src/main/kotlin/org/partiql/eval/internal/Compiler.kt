@@ -182,17 +182,17 @@ internal class Compiler(
     }
 
     @OptIn(FnExperimental::class)
-    override fun visitRelOpAggregateCall(node: Rel.Op.Aggregate.Call, ctx: StaticType?): Operator.Accumulator {
-        val args = node.args.map { visitRex(it, it.type).modeHandled() } // TODO: Should we support multiple arguments?
-        val setQuantifier: Operator.Accumulator.SetQuantifier = when (node.setQuantifier) {
-            Rel.Op.Aggregate.Call.SetQuantifier.ALL -> Operator.Accumulator.SetQuantifier.ALL
-            Rel.Op.Aggregate.Call.SetQuantifier.DISTINCT -> Operator.Accumulator.SetQuantifier.DISTINCT
+    override fun visitRelOpAggregateCall(node: Rel.Op.Aggregate.Call, ctx: StaticType?): Operator.Aggregation {
+        val args = node.args.map { visitRex(it, it.type).modeHandled() }
+        val setQuantifier: Operator.Aggregation.SetQuantifier = when (node.setQuantifier) {
+            Rel.Op.Aggregate.Call.SetQuantifier.ALL -> Operator.Aggregation.SetQuantifier.ALL
+            Rel.Op.Aggregate.Call.SetQuantifier.DISTINCT -> Operator.Aggregation.SetQuantifier.DISTINCT
         }
         val agg = symbols.getAgg(node.agg)
-        return object : Operator.Accumulator {
+        return object : Operator.Aggregation {
             override val delegate: Agg = agg
             override val args: List<Operator.Expr> = args
-            override val setQuantifier: Operator.Accumulator.SetQuantifier = setQuantifier
+            override val setQuantifier: Operator.Aggregation.SetQuantifier = setQuantifier
         }
     }
 
