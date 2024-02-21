@@ -57,7 +57,6 @@ internal abstract class Accumulator : Agg.Accumulator {
     abstract fun nextValue(value: PartiQLValue)
 }
 
-// TODO: Make this better
 @OptIn(PartiQLValueExperimental::class)
 internal fun comparisonAccumulator(comparator: Comparator<PartiQLValue>): (PartiQLValue?, PartiQLValue) -> PartiQLValue =
     { left, right ->
@@ -67,7 +66,6 @@ internal fun comparisonAccumulator(comparator: Comparator<PartiQLValue>): (Parti
         }
     }
 
-// TODO: Make this better
 @OptIn(PartiQLValueExperimental::class)
 internal fun checkIsNumberType(funcName: String, value: PartiQLValue) {
     if (!value.type.isNumber()) {
@@ -120,7 +118,6 @@ private fun Long.checkOverflowPlus(other: Long): Number {
     }
 }
 
-// TODO: Make this better
 @OptIn(PartiQLValueExperimental::class)
 internal fun checkIsBooleanType(funcName: String, value: PartiQLValue) {
     if (value.type != PartiQLValueType.BOOL) {
@@ -128,11 +125,9 @@ internal fun checkIsBooleanType(funcName: String, value: PartiQLValue) {
     }
 }
 
-// TODO: Make this better
 @OptIn(PartiQLValueExperimental::class)
 internal fun PartiQLValue.isUnknown(): Boolean = this.type == PartiQLValueType.MISSING || this.isNull
 
-// TODO: Make this better
 @OptIn(PartiQLValueExperimental::class)
 internal fun PartiQLValue.numberValue(): Number = when (this) {
     is IntValue -> this.value!!
@@ -146,14 +141,12 @@ internal fun PartiQLValue.numberValue(): Number = when (this) {
     else -> error("Cannot convert PartiQLValue ($this) to number.")
 }
 
-// TODO: Make this better
 @OptIn(PartiQLValueExperimental::class)
 internal fun PartiQLValue.booleanValue(): Boolean = when (this) {
     is BoolValue -> this.value!!
     else -> error("Cannot convert PartiQLValue ($this) to boolean.")
 }
 
-// TODO: Make this better
 @OptIn(PartiQLValueExperimental::class)
 internal fun PartiQLValueType.isNumber(): Boolean = when (this) {
     PartiQLValueType.INT,
@@ -168,7 +161,6 @@ internal fun PartiQLValueType.isNumber(): Boolean = when (this) {
     else -> false
 }
 
-// TODO: Make this better
 @OptIn(PartiQLValueExperimental::class)
 internal fun Number.partiqlValue(): PartiQLValue = when (this) {
     is Int -> int32Value(this)
@@ -176,13 +168,11 @@ internal fun Number.partiqlValue(): PartiQLValue = when (this) {
     is Double -> float64Value(this)
     is BigDecimal -> decimalValue(this)
     is BigInteger -> intValue(this)
-    else -> TODO("Error context")
+    else -> TODO("Could not convert $this to PartiQL Value")
 }
 
-// TODO: Make this better
 private val MATH_CONTEXT = MathContext(38, RoundingMode.HALF_EVEN)
 
-// TODO: Make this better
 /**
  * Factory function to create a [BigDecimal] using correct precision, use it in favor of native BigDecimal constructors
  * and factory methods

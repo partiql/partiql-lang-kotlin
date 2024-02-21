@@ -8,7 +8,6 @@ import org.partiql.spi.connector.sql.builtins.internal.AccumulatorAnySome
 import org.partiql.spi.connector.sql.builtins.internal.AccumulatorAvg
 import org.partiql.spi.connector.sql.builtins.internal.AccumulatorCount
 import org.partiql.spi.connector.sql.builtins.internal.AccumulatorEvery
-import org.partiql.spi.connector.sql.builtins.internal.AccumulatorGroupAs
 import org.partiql.spi.connector.sql.builtins.internal.AccumulatorMax
 import org.partiql.spi.connector.sql.builtins.internal.AccumulatorMin
 import org.partiql.spi.connector.sql.builtins.internal.AccumulatorSum
@@ -76,12 +75,6 @@ internal abstract class Fn_COLL_AGG__BAG__ANY : Fn {
     object EVERY : Fn_COLL_AGG__BAG__ANY() {
         override val signature = createSignature("coll_every")
         override fun getAccumulator(): Accumulator = AccumulatorEvery()
-    }
-
-    // TODO: Should we allow this?
-    object GROUP_AS : Fn_COLL_AGG__BAG__ANY() {
-        override val signature = createSignature("coll_group_as")
-        override fun getAccumulator(): Accumulator = AccumulatorGroupAs()
     }
 
     object ANY : Fn_COLL_AGG__BAG__ANY() {

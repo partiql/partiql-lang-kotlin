@@ -50,8 +50,6 @@ public interface ConnectorMetadata {
     /**
      * Returns all aggregation function signatures matching the given name.
      *
-     * NOTE: We currently do not support aggregations from a [BindingPath], however, it may be added in the future.
-     *
      * @param path
      * @return
      */

@@ -32,7 +32,7 @@ public object Agg_MAX__INT8__INT8 : Agg {
         isDecomposable = true
     )
 
-    override fun accumulator(): Agg.Accumulator = AccumulatorMax()
+    override fun accumulator(): Agg.Accumulator = TODO("This is not yet supported.")
 }
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
@@ -48,7 +48,7 @@ public object Agg_MAX__INT16__INT16 : Agg {
         isDecomposable = true
     )
 
-    override fun accumulator(): Agg.Accumulator = AccumulatorMax()
+    override fun accumulator(): Agg.Accumulator = TODO("This is not yet supported.")
 }
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
@@ -64,7 +64,7 @@ public object Agg_MAX__INT32__INT32 : Agg {
         isDecomposable = true
     )
 
-    override fun accumulator(): Agg.Accumulator = AccumulatorMax()
+    override fun accumulator(): Agg.Accumulator = TODO("This is not yet supported.")
 }
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
@@ -80,7 +80,7 @@ public object Agg_MAX__INT64__INT64 : Agg {
         isDecomposable = true
     )
 
-    override fun accumulator(): Agg.Accumulator = AccumulatorMax()
+    override fun accumulator(): Agg.Accumulator = TODO("This is not yet supported.")
 }
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
@@ -96,7 +96,7 @@ public object Agg_MAX__INT__INT : Agg {
         isDecomposable = true
     )
 
-    override fun accumulator(): Agg.Accumulator = AccumulatorMax()
+    override fun accumulator(): Agg.Accumulator = TODO("This is not yet supported.")
 }
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
@@ -112,7 +112,7 @@ public object Agg_MAX__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY : Agg {
         isDecomposable = true
     )
 
-    override fun accumulator(): Agg.Accumulator = AccumulatorMax()
+    override fun accumulator(): Agg.Accumulator = TODO("This is not yet supported.")
 }
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
@@ -128,7 +128,7 @@ public object Agg_MAX__FLOAT32__FLOAT32 : Agg {
         isDecomposable = true
     )
 
-    override fun accumulator(): Agg.Accumulator = AccumulatorMax()
+    override fun accumulator(): Agg.Accumulator = TODO("This is not yet supported.")
 }
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
@@ -144,7 +144,7 @@ public object Agg_MAX__FLOAT64__FLOAT64 : Agg {
         isDecomposable = true
     )
 
-    override fun accumulator(): Agg.Accumulator = AccumulatorMax()
+    override fun accumulator(): Agg.Accumulator = TODO("This is not yet supported.")
 }
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
