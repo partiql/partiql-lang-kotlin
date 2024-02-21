@@ -35,7 +35,7 @@ class SubsumptionTest {
             override fun getQueryId(): String = "query-id"
             override fun getUserId(): String = "user-id"
         }
-        private val connector = MemoryConnector.empty()
+        private val connector = MemoryConnector.partiQL()
     }
 
     private fun getExcludeClause(statement: Statement): Rel.Op.Exclude {

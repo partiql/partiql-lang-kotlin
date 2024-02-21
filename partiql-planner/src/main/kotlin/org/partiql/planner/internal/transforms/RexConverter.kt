@@ -583,12 +583,37 @@ internal object RexConverter {
             return rex(type, call)
         }
 
+        // SUBSTRING ( CV FROM 1 FOR SP -1)
+        // || RS
+        // || SUBSTRING ( CV FROM SP + SL )
         override fun visitExprOverlay(node: Expr.Overlay, ctx: Env): Rex {
-            TODO("SQL Special Form OVERLAY")
+            val cv = visitExprCoerce(node.value, ctx)
+            val sp = visitExprCoerce(node.start, ctx)
+            val rs = visitExprCoerce(node.overlay, ctx)
+            val sl = node.length?.let { visitExprCoerce(it, ctx) } ?: rex(StaticType.ANY, call("char_length", rs))
+            val p1 = rex(
+                StaticType.ANY,
+                call(
+                    "substring",
+                    cv,
+                    rex(StaticType.INT4, rexOpLit(int32Value(1))),
+                    rex(StaticType.ANY, call("minus", sp, rex(StaticType.INT4, rexOpLit(int32Value(1)))))
+                )
+            )
+            val p2 = rex(StaticType.ANY, call("concat", p1, rs))
+            return rex(
+                StaticType.ANY,
+                call(
+                    "concat",
+                    p2,
+                    rex(StaticType.ANY, call("substring", cv, rex(StaticType.ANY, call("plus", sp, sl))))
+                )
+            )
         }
 
         override fun visitExprExtract(node: Expr.Extract, ctx: Env): Rex {
-            TODO("SQL Special Form EXTRACT")
+            val call = call("extract_${node.field.name.lowercase()}", visitExprCoerce(node.source, ctx))
+            return rex(StaticType.ANY, call)
         }
 
         // TODO: Ignoring type parameter now

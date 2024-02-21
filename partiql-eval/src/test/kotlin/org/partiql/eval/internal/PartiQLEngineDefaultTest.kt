@@ -916,7 +916,7 @@ class PartiQLEngineDefaultTest {
 
         internal fun assert() {
             val statement = parser.parse(input).root
-            val catalog = MemoryCatalog.builder().name("memory").build()
+            val catalog = MemoryCatalog.PartiQL().name("memory").build()
             val connector = MemoryConnector(catalog)
             val connectorSession = object : ConnectorSession {
                 override fun getQueryId(): String = "q"
@@ -984,7 +984,7 @@ class PartiQLEngineDefaultTest {
 
         private fun run(mode: PartiQLEngine.Mode): PartiQLValue {
             val statement = parser.parse(input).root
-            val catalog = MemoryCatalog.builder().name("memory").build()
+            val catalog = MemoryCatalog.PartiQL().name("memory").build()
             val connector = MemoryConnector(catalog)
             val connectorSession = object : ConnectorSession {
                 override fun getQueryId(): String = "q"

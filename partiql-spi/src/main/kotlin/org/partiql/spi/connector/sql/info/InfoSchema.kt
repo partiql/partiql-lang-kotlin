@@ -1,5 +1,6 @@
 package org.partiql.spi.connector.sql.info
 
+import org.partiql.spi.connector.sql.PartiQLExts
 import org.partiql.spi.connector.sql.SqlBuiltins
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnIndex
@@ -28,6 +29,14 @@ public class InfoSchema(
         public fun default(): InfoSchema {
             val functions = FnIndex.builder()
                 .addAll(SqlBuiltins.builtins)
+                .build()
+            return InfoSchema(functions)
+        }
+
+        @OptIn(FnExperimental::class)
+        public fun ext(): InfoSchema {
+            val functions = FnIndex.builder()
+                .addAll(SqlBuiltins.builtins + PartiQLExts.builtins)
                 .build()
             return InfoSchema(functions)
         }
