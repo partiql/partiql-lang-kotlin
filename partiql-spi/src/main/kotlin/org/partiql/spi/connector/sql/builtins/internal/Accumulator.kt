@@ -33,9 +33,12 @@ import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
 import org.partiql.value.decimalValue
+import org.partiql.value.float32Value
 import org.partiql.value.float64Value
+import org.partiql.value.int16Value
 import org.partiql.value.int32Value
 import org.partiql.value.int64Value
+import org.partiql.value.int8Value
 import org.partiql.value.intValue
 import org.partiql.value.util.coerceNumbers
 import java.math.BigDecimal
@@ -159,6 +162,33 @@ internal fun PartiQLValueType.isNumber(): Boolean = when (this) {
     PartiQLValueType.FLOAT32,
     PartiQLValueType.FLOAT64 -> true
     else -> false
+}
+
+/**
+ * This is specifically for SUM/AVG
+ */
+@OptIn(PartiQLValueExperimental::class)
+internal fun Number.toTargetType(type: PartiQLValueType): PartiQLValue = when (type) {
+    PartiQLValueType.ANY -> this.partiqlValue()
+    PartiQLValueType.FLOAT32 -> float32Value(this.toFloat())
+    PartiQLValueType.FLOAT64 -> float64Value(this.toDouble())
+    PartiQLValueType.DECIMAL, PartiQLValueType.DECIMAL_ARBITRARY -> {
+        when (this) {
+            is BigDecimal -> decimalValue(this)
+            is BigInteger -> decimalValue(this.toBigDecimal())
+            else -> decimalValue(BigDecimal.valueOf(this.toDouble()))
+        }
+    }
+    PartiQLValueType.INT8 -> int8Value(this.toByte())
+    PartiQLValueType.INT16 -> int16Value(this.toShort())
+    PartiQLValueType.INT32 -> int32Value(this.toInt())
+    PartiQLValueType.INT64 -> int64Value(this.toLong())
+    PartiQLValueType.INT -> when (this) {
+        is BigInteger -> intValue(this)
+        is BigDecimal -> intValue(this.toBigInteger())
+        else -> intValue(BigInteger.valueOf(this.toLong()))
+    }
+    else -> TODO("Unsupported target type $type")
 }
 
 @OptIn(PartiQLValueExperimental::class)

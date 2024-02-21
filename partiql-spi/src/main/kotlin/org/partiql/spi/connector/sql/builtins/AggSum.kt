@@ -32,7 +32,7 @@ public object Agg_SUM__INT8__INT8 : Agg {
         isDecomposable = true
     )
 
-    override fun accumulator(): Agg.Accumulator = TODO("Not yet implemented.")
+    override fun accumulator(): Agg.Accumulator = AccumulatorSum(INT8)
 }
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
@@ -48,7 +48,7 @@ public object Agg_SUM__INT16__INT16 : Agg {
         isDecomposable = true
     )
 
-    override fun accumulator(): Agg.Accumulator = TODO("Not yet implemented.")
+    override fun accumulator(): Agg.Accumulator = AccumulatorSum(INT16)
 }
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
@@ -64,7 +64,7 @@ public object Agg_SUM__INT32__INT32 : Agg {
         isDecomposable = true
     )
 
-    override fun accumulator(): Agg.Accumulator = TODO("Not yet implemented.")
+    override fun accumulator(): Agg.Accumulator = AccumulatorSum(INT32)
 }
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
@@ -80,7 +80,7 @@ public object Agg_SUM__INT64__INT64 : Agg {
         isDecomposable = true
     )
 
-    override fun accumulator(): Agg.Accumulator = TODO("Not yet implemented.")
+    override fun accumulator(): Agg.Accumulator = AccumulatorSum(INT64)
 }
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
@@ -96,7 +96,7 @@ public object Agg_SUM__INT__INT : Agg {
         isDecomposable = true
     )
 
-    override fun accumulator(): Agg.Accumulator = TODO("Not yet implemented.")
+    override fun accumulator(): Agg.Accumulator = AccumulatorSum(INT)
 }
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
@@ -112,7 +112,7 @@ public object Agg_SUM__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY : Agg {
         isDecomposable = true
     )
 
-    override fun accumulator(): Agg.Accumulator = TODO("Not yet implemented.")
+    override fun accumulator(): Agg.Accumulator = AccumulatorSum(DECIMAL_ARBITRARY)
 }
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
@@ -128,7 +128,7 @@ public object Agg_SUM__FLOAT32__FLOAT32 : Agg {
         isDecomposable = true
     )
 
-    override fun accumulator(): Agg.Accumulator = TODO("Not yet implemented.")
+    override fun accumulator(): Agg.Accumulator = AccumulatorSum(FLOAT32)
 }
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
@@ -144,7 +144,7 @@ public object Agg_SUM__FLOAT64__FLOAT64 : Agg {
         isDecomposable = true
     )
 
-    override fun accumulator(): Agg.Accumulator = TODO("Not yet implemented.")
+    override fun accumulator(): Agg.Accumulator = AccumulatorSum(FLOAT64)
 }
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)

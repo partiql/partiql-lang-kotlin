@@ -25,7 +25,7 @@ public object Agg_SOME__BOOL__BOOL : Agg {
         isDecomposable = true
     )
 
-    override fun accumulator(): Agg.Accumulator = TODO("Not yet implemented.")
+    override fun accumulator(): Agg.Accumulator = AccumulatorAnySome()
 }
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)

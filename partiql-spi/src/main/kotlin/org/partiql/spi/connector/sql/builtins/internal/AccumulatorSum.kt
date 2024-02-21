@@ -2,10 +2,13 @@ package org.partiql.spi.connector.sql.builtins.internal
 
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.PartiQLValueType
 import org.partiql.value.nullValue
 
 @OptIn(PartiQLValueExperimental::class)
-internal class AccumulatorSum : Accumulator() {
+internal class AccumulatorSum(
+    private val targetType: PartiQLValueType = PartiQLValueType.ANY
+) : Accumulator() {
 
     var sum: Number? = null
 
@@ -18,6 +21,6 @@ internal class AccumulatorSum : Accumulator() {
 
     @OptIn(PartiQLValueExperimental::class)
     override fun value(): PartiQLValue {
-        return sum?.partiqlValue() ?: nullValue()
+        return sum?.toTargetType(targetType) ?: nullValue()
     }
 }
