@@ -5,13 +5,13 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.errors.ErrorCode
 import org.partiql.errors.Property
-import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestCase
-import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
-import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
+import org.partiql.eval.framework.EvaluatorTestTarget
+import org.partiql.eval.framework.ExpectedResultFormat
+import org.partiql.eval.framework.testcase.impl.EvaluatorTestCase
+import org.partiql.eval.util.ArgumentsProviderBase
+import org.partiql.eval.util.crossMap
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.UnknownArguments
-import org.partiql.lang.util.ArgumentsProviderBase
-import org.partiql.lang.util.crossMap
 import org.partiql.lang.util.propertyValueMapOf
 import org.partiql.types.StaticType
 

@@ -20,12 +20,12 @@ import com.amazon.ionelement.api.metaContainerOf
 import org.junit.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
+import org.partiql.eval.util.ArgumentsProviderBase
 import org.partiql.lang.ast.AggregateCallSiteListMeta
 import org.partiql.lang.ast.AggregateRegisterIdMeta
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.syntax.PartiQLParserBuilder
-import org.partiql.lang.util.ArgumentsProviderBase
 
 class AggregateSupportVisitorTransformTests : VisitorTransformTestBase() {
 

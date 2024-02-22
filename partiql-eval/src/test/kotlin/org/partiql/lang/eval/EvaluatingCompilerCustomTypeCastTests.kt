@@ -3,11 +3,11 @@ package org.partiql.lang.eval
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.errors.ErrorCode
-import org.partiql.lang.CUSTOM_TEST_TYPES
-import org.partiql.lang.util.ArgumentsProviderBase
-import org.partiql.lang.util.honorTypedOpParameters
-import org.partiql.lang.util.legacyTypingMode
-import org.partiql.lang.util.permissiveTypingMode
+import org.partiql.eval.CUSTOM_TEST_TYPES
+import org.partiql.eval.util.ArgumentsProviderBase
+import org.partiql.eval.util.honorTypedOpParameters
+import org.partiql.eval.util.legacyTypingMode
+import org.partiql.eval.util.permissiveTypingMode
 
 class EvaluatingCompilerCustomTypeCastTests : CastTestBase() {
     companion object {

@@ -2,13 +2,13 @@ package org.partiql.lang.eval
 
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
-import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestCase
+import org.partiql.eval.framework.testcase.impl.EvaluatorTestCase
+import org.partiql.eval.util.ArgumentsProviderBase
 import org.partiql.lang.graph.Graph
 import org.partiql.lang.graph.SimpleGraph
 import org.partiql.lang.graph.SimpleGraph.EdgeDirected
 import org.partiql.lang.graph.SimpleGraph.EdgeUndir
 import org.partiql.lang.graph.SimpleGraph.Node
-import org.partiql.lang.util.ArgumentsProviderBase
 
 /** A few sample graphs constructed directly with a graph API. */
 object ApiSampleGraphs {

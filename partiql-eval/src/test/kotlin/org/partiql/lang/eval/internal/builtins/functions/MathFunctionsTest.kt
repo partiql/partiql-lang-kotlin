@@ -4,10 +4,10 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.errors.ErrorCode
+import org.partiql.eval.framework.testcase.impl.EvaluatorErrorTestCase
+import org.partiql.eval.util.ArgumentsProviderBase
 import org.partiql.lang.eval.EvaluatorTestBase
-import org.partiql.lang.eval.evaluatortestframework.EvaluatorErrorTestCase
 import org.partiql.lang.eval.internal.builtins.Argument
-import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.types.StaticType
 
 // constant that can be handy in testing

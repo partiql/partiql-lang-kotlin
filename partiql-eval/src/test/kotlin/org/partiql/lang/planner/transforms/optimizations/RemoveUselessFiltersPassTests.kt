@@ -2,11 +2,11 @@ package org.partiql.lang.planner.transforms.optimizations
 
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
+import org.partiql.eval.util.ArgumentsProviderBase
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.planner.litInt
 import org.partiql.lang.planner.litTrue
 import org.partiql.lang.planner.transforms.DEFAULT_IMPL
-import org.partiql.lang.util.ArgumentsProviderBase
 
 class RemoveUselessFiltersPassTests {
     @ParameterizedTest

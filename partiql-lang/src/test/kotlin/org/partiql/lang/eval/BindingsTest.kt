@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.fail
 import org.partiql.errors.ErrorCode
-import org.partiql.lang.ION
+import org.partiql.eval.ION
 import org.partiql.lang.SqlException
 import org.partiql.lang.util.newFromIonText
 

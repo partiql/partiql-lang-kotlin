@@ -1,6 +1,6 @@
 package org.partiql.lang.compiler.memorydb
 
-import org.partiql.lang.ION
+import org.partiql.eval.ION
 import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.DEFAULT_COMPARATOR

@@ -43,6 +43,7 @@ dependencies {
 
     testImplementation(testFixtures(project(":partiql-planner")))
     testImplementation(project(":plugins:partiql-memory"))
+    testImplementation(testFixtures(project(":partiql-eval")))
     testImplementation(Deps.assertj)
     testImplementation(Deps.junit4)
     testImplementation(Deps.junit4Params)

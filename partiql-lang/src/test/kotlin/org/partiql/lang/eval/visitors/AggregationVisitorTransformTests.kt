@@ -17,9 +17,9 @@ package org.partiql.lang.eval.visitors
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.errors.ErrorCode
+import org.partiql.eval.util.ArgumentsProviderBase
 import org.partiql.lang.eval.visitors.AggregationVisitorTransform.Companion.GROUP_DELIMITER
 import org.partiql.lang.eval.visitors.AggregationVisitorTransform.Companion.GROUP_PREFIX
-import org.partiql.lang.util.ArgumentsProviderBase
 
 internal class AggregationVisitorTransformTests : VisitorTransformTestBase() {
 

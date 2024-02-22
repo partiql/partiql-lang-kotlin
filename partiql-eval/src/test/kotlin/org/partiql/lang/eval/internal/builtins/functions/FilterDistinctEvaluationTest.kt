@@ -5,11 +5,11 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.errors.ErrorCode
 import org.partiql.errors.Property
+import org.partiql.eval.util.ArgumentsProviderBase
 import org.partiql.lang.eval.BAG_ANNOTATION
 import org.partiql.lang.eval.EvaluatorTestBase
 import org.partiql.lang.eval.internal.builtins.ExprFunctionTestCase
 import org.partiql.lang.eval.internal.builtins.checkInvalidArity
-import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.lang.util.propertyValueMapOf
 import org.partiql.lang.util.to
 

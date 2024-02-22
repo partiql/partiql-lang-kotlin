@@ -17,7 +17,7 @@ package org.partiql.lang.util
 // import com.amazon.ion.Decimal
 import com.amazon.ion.Decimal
 import org.junit.Test
-import org.partiql.lang.TestBase
+import org.partiql.eval.TestBase
 import java.math.BigDecimal
 
 class NumbersTest : TestBase() {

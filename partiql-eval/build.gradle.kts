@@ -18,6 +18,7 @@ plugins {
     id(Plugins.conventions)
     id(Plugins.library)
     id(Plugins.publish)
+    id(Plugins.testFixtures)
 }
 
 dependencies {
@@ -32,10 +33,22 @@ dependencies {
     testImplementation(project(":plugins:partiql-local"))
     testImplementation(project(":plugins:partiql-memory"))
     testImplementation(testFixtures(project(":partiql-planner")))
-    testImplementation(testFixtures(project(":partiql-lang")))
+//    testImplementation(testFixtures(project(":partiql-lang")))
     testImplementation(Deps.junit4)
     testImplementation(Deps.junit4Params)
     testImplementation(Deps.junitVintage) // Enables JUnit4
+
+    testFixturesImplementation(project(":partiql-lang"))
+    testFixturesImplementation(project(":lib:isl"))
+    testFixturesImplementation(Deps.kotlinTest)
+    testFixturesImplementation(Deps.kotlinTestJunit)
+    testFixturesImplementation(Deps.assertj)
+    testFixturesImplementation(Deps.junit4)
+    testFixturesImplementation(Deps.junit4Params)
+    testFixturesImplementation(Deps.junitApi)
+    testFixturesImplementation(Deps.junitParams)
+    testFixturesImplementation(Deps.junitVintage) // Enables JUnit4
+    testFixturesImplementation(Deps.mockk)
 }
 
 // Disabled for partiql-eval project at initialization.

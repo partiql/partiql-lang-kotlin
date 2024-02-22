@@ -21,13 +21,13 @@ import com.amazon.ionelement.api.toIonElement
 import com.amazon.ionelement.api.toIonValue
 import org.partiql.errors.ErrorCode
 import org.partiql.errors.Property
-import org.partiql.lang.CUSTOM_TEST_TYPES
-import org.partiql.lang.TestBase
+import org.partiql.eval.CUSTOM_TEST_TYPES
+import org.partiql.eval.TestBase
+import org.partiql.eval.util.SexpAstPrettyPrinter
+import org.partiql.eval.util.checkErrorAndErrorContext
+import org.partiql.eval.util.softAssert
 import org.partiql.lang.domains.PartiqlAst
-import org.partiql.lang.util.SexpAstPrettyPrinter
 import org.partiql.lang.util.asIonSexp
-import org.partiql.lang.util.checkErrorAndErrorContext
-import org.partiql.lang.util.softAssert
 import org.partiql.pig.runtime.toIonElement
 
 abstract class PartiQLParserTestBase : TestBase() {

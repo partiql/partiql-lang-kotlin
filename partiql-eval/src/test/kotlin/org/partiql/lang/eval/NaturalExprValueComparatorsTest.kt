@@ -17,7 +17,7 @@ package org.partiql.lang.eval
 import junitparams.Parameters
 import org.junit.Test
 import org.junit.jupiter.api.assertDoesNotThrow
-import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
+import org.partiql.eval.framework.ExpectedResultFormat
 import java.util.Collections
 import java.util.Random
 

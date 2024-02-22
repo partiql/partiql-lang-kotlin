@@ -4,6 +4,7 @@ import junitparams.JUnitParamsRunner
 import junitparams.Parameters
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.partiql.eval.util.softAssert
 import org.partiql.lang.eval.internal.timestamp.AmPmPatternSymbol
 import org.partiql.lang.eval.internal.timestamp.DayOfMonthPatternSymbol
 import org.partiql.lang.eval.internal.timestamp.FormatItem
@@ -23,7 +24,6 @@ import org.partiql.lang.eval.internal.timestamp.TimestampField
 import org.partiql.lang.eval.internal.timestamp.TimestampFieldFormat
 import org.partiql.lang.eval.internal.timestamp.YearFormat
 import org.partiql.lang.eval.internal.timestamp.YearPatternSymbol
-import org.partiql.lang.util.softAssert
 import kotlin.test.assertEquals
 
 @RunWith(JUnitParamsRunner::class)

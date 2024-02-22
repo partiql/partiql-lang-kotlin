@@ -7,6 +7,7 @@ import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.annotations.ExperimentalPartiQLCompilerPipeline
 import org.partiql.errors.Problem
 import org.partiql.errors.ProblemHandler
+import org.partiql.eval.util.ArgumentsProviderBase
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.planner.GlobalResolutionResult
 import org.partiql.lang.planner.GlobalVariableResolver
@@ -18,7 +19,6 @@ import org.partiql.lang.planner.litTrue
 import org.partiql.lang.planner.transforms.DEFAULT_IMPL
 import org.partiql.lang.planner.transforms.PLAN_VERSION_NUMBER
 import org.partiql.lang.syntax.PartiQLParserBuilder
-import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.types.BagType
 import org.partiql.types.StaticType
 import org.partiql.types.StructType

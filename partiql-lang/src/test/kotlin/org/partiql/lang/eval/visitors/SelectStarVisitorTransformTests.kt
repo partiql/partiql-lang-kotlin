@@ -2,7 +2,7 @@ package org.partiql.lang.eval.visitors
 
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
-import org.partiql.lang.util.ArgumentsProviderBase
+import org.partiql.eval.util.ArgumentsProviderBase
 
 class SelectStarVisitorTransformTests : VisitorTransformTestBase() {
     // SelectStar visitor transform depends on UniqueNameMetas injected by GroupByItemAliasVisitorTransform.

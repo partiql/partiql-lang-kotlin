@@ -16,7 +16,7 @@ package org.partiql.lang.eval
 
 import com.amazon.ion.Timestamp
 import org.junit.Test
-import org.partiql.lang.util.softAssert
+import org.partiql.eval.util.softAssert
 import kotlin.test.assertEquals
 
 class EvaluationSessionTest {

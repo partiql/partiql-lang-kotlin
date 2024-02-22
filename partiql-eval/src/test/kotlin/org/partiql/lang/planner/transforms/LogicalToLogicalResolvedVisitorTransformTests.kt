@@ -7,6 +7,7 @@ import org.junit.jupiter.api.fail
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.errors.Problem
+import org.partiql.eval.util.ArgumentsProviderBase
 import org.partiql.lang.domains.PartiqlLogical
 import org.partiql.lang.domains.PartiqlLogicalResolved
 import org.partiql.lang.eval.BindingCase
@@ -17,7 +18,6 @@ import org.partiql.lang.planner.PlanningProblemDetails
 import org.partiql.lang.planner.createFakeGlobalsResolver
 import org.partiql.lang.planner.problem
 import org.partiql.lang.syntax.PartiQLParserBuilder
-import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.lang.util.toIntExact
 
 private fun localVariable(name: String, index: Int) =

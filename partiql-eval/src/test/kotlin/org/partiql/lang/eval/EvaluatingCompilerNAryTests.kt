@@ -6,8 +6,8 @@ import junitparams.JUnitParamsRunner
 import junitparams.Parameters
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.partiql.eval.ION
 import org.partiql.lang.CompilerPipeline
-import org.partiql.lang.ION
 import org.partiql.lang.domains.PartiqlAst
 
 /**

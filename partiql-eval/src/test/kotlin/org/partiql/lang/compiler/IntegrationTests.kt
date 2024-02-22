@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import org.partiql.lang.ION
+import org.partiql.eval.ION
 import org.partiql.lang.compiler.memorydb.MemoryDatabase
 import org.partiql.lang.compiler.memorydb.QueryEngine
 import org.partiql.lang.eval.BAG_ANNOTATION
