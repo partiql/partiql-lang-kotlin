@@ -121,10 +121,11 @@ private fun StaticType.asRuntimeType(): PartiQLValueType = when (this) {
     is ListType -> PartiQLValueType.LIST
     is SexpType -> PartiQLValueType.SEXP
     is DateType -> PartiQLValueType.DATE
-    is DecimalType -> when (this.precisionScaleConstraint) {
-        is DecimalType.PrecisionScaleConstraint.Constrained -> PartiQLValueType.DECIMAL
-        DecimalType.PrecisionScaleConstraint.Unconstrained -> PartiQLValueType.DECIMAL_ARBITRARY
-    }
+    // TODO: Run time decimal type does not model precision scale constraint yet
+    //  even though we can match to Decimal vs Decimal_ARBITRARY (PVT) here
+    //  but when mapping it back to Static Type, (i.e, mapping function return type to Value Type)
+    //  we can only map to Unconstrained decimal (Static Type)
+    is DecimalType -> PartiQLValueType.DECIMAL_ARBITRARY
     is FloatType -> PartiQLValueType.FLOAT64
     is GraphType -> error("Graph type missing from runtime types")
     is IntType -> when (this.rangeConstraint) {
