@@ -106,6 +106,7 @@ internal sealed class Ref : PlanNode() {
     public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = when (this) {
         is Obj -> visitor.visitRefObj(this, ctx)
         is Fn -> visitor.visitRefFn(this, ctx)
+        is Agg -> visitor.visitRefAgg(this, ctx)
     }
 
     internal data class Obj(
@@ -138,6 +139,21 @@ internal sealed class Ref : PlanNode() {
         }
     }
 
+    internal data class Agg(
+        @JvmField internal val catalog: String,
+        @JvmField internal val path: List<String>,
+        @JvmField internal val signature: AggSignature,
+    ) : Ref() {
+        public override val children: List<PlanNode> = emptyList()
+
+        public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitRefAgg(this, ctx)
+
+        internal companion object {
+            @JvmStatic
+            internal fun builder(): RefAggBuilder = RefAggBuilder()
+        }
+    }
+
     internal data class Cast(
         @JvmField internal val input: PartiQLValueType,
         @JvmField internal val target: PartiQLValueType,
@@ -154,20 +170,6 @@ internal sealed class Ref : PlanNode() {
         internal companion object {
             @JvmStatic
             internal fun builder(): RefCastBuilder = RefCastBuilder()
-        }
-    }
-
-    internal data class Agg(
-        @JvmField internal val name: String,
-        @JvmField internal val signature: AggSignature,
-    ) : PlanNode() {
-        public override val children: List<PlanNode> = emptyList()
-
-        public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitRefAgg(this, ctx)
-
-        internal companion object {
-            @JvmStatic
-            internal fun builder(): RefAggBuilder = RefAggBuilder()
         }
     }
 }
@@ -527,6 +529,7 @@ internal data class Rex(
 
                 internal data class Candidate(
                     @JvmField internal val fn: Ref.Fn,
+                    @JvmField internal val parameters: List<PartiQLValueType>,
                     @JvmField internal val coercions: List<Ref.Cast?>,
                 ) : PlanNode() {
                     public override val children: List<PlanNode> by lazy {
@@ -1117,6 +1120,7 @@ internal data class Rel(
 
                 internal data class Unresolved(
                     @JvmField internal val name: String,
+                    @JvmField internal val setQuantifier: SetQuantifier,
                     @JvmField internal val args: List<Rex>,
                 ) : Call() {
                     public override val children: List<PlanNode> by lazy {
@@ -1137,6 +1141,7 @@ internal data class Rel(
 
                 internal data class Resolved(
                     @JvmField internal val agg: Ref.Agg,
+                    @JvmField internal val setQuantifier: SetQuantifier,
                     @JvmField internal val args: List<Rex>,
                 ) : Call() {
                     public override val children: List<PlanNode> by lazy {
@@ -1154,6 +1159,10 @@ internal data class Rel(
                         internal fun builder(): RelOpAggregateCallResolvedBuilder = RelOpAggregateCallResolvedBuilder()
                     }
                 }
+            }
+
+            internal enum class SetQuantifier {
+                ALL, DISTINCT,
             }
 
             internal companion object {

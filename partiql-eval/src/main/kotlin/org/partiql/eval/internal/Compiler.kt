@@ -2,6 +2,7 @@ package org.partiql.eval.internal
 
 import org.partiql.eval.PartiQLEngine
 import org.partiql.eval.internal.operator.Operator
+import org.partiql.eval.internal.operator.rel.RelAggregate
 import org.partiql.eval.internal.operator.rel.RelDistinct
 import org.partiql.eval.internal.operator.rel.RelExclude
 import org.partiql.eval.internal.operator.rel.RelFilter
@@ -45,6 +46,7 @@ import org.partiql.plan.Rex
 import org.partiql.plan.Statement
 import org.partiql.plan.debug.PlanPrinter
 import org.partiql.plan.visitor.PlanBaseVisitor
+import org.partiql.spi.fn.Agg
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValueExperimental
@@ -170,6 +172,30 @@ internal class Compiler(
 
     override fun visitRexOpGlobal(node: Rex.Op.Global, ctx: StaticType?): Operator = symbols.getGlobal(node.ref)
 
+    override fun visitRelOpAggregate(node: Rel.Op.Aggregate, ctx: StaticType?): Operator.Relation {
+        val input = visitRel(node.input, ctx)
+        val calls = node.calls.map {
+            visitRelOpAggregateCall(it, ctx)
+        }
+        val groups = node.groups.map { visitRex(it, ctx).modeHandled() }
+        return RelAggregate(input, groups, calls)
+    }
+
+    @OptIn(FnExperimental::class)
+    override fun visitRelOpAggregateCall(node: Rel.Op.Aggregate.Call, ctx: StaticType?): Operator.Aggregation {
+        val args = node.args.map { visitRex(it, it.type).modeHandled() }
+        val setQuantifier: Operator.Aggregation.SetQuantifier = when (node.setQuantifier) {
+            Rel.Op.Aggregate.Call.SetQuantifier.ALL -> Operator.Aggregation.SetQuantifier.ALL
+            Rel.Op.Aggregate.Call.SetQuantifier.DISTINCT -> Operator.Aggregation.SetQuantifier.DISTINCT
+        }
+        val agg = symbols.getAgg(node.agg)
+        return object : Operator.Aggregation {
+            override val delegate: Agg = agg
+            override val args: List<Operator.Expr> = args
+            override val setQuantifier: Operator.Aggregation.SetQuantifier = setQuantifier
+        }
+    }
+
     override fun visitRexOpPathKey(node: Rex.Op.Path.Key, ctx: StaticType?): Operator {
         val root = visitRex(node.root, ctx)
         val key = visitRex(node.key, ctx)
@@ -206,7 +232,7 @@ internal class Compiler(
         val args = node.args.map { visitRex(it, ctx).modeHandled() }.toTypedArray()
         val candidates = node.candidates.map { candidate ->
             val fn = symbols.getFn(candidate.fn)
-            val types = fn.signature.parameters.map { it.type }.toTypedArray()
+            val types = candidate.parameters.toTypedArray()
             val coercions = candidate.coercions.toTypedArray()
             ExprCallDynamic.Candidate(fn, types, coercions)
         }

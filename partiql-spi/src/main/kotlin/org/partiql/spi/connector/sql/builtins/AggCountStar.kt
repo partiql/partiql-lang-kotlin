@@ -3,6 +3,7 @@
 
 package org.partiql.spi.connector.sql.builtins
 
+import org.partiql.spi.connector.sql.builtins.internal.AccumulatorCountStar
 import org.partiql.spi.fn.Agg
 import org.partiql.spi.fn.AggSignature
 import org.partiql.spi.fn.FnExperimental
@@ -20,7 +21,5 @@ public object Agg_COUNT_STAR____INT32 : Agg {
         isDecomposable = true
     )
 
-    override fun accumulator(): Agg.Accumulator {
-        TODO("Aggregation count_star not implemented")
-    }
+    override fun accumulator(): Agg.Accumulator = AccumulatorCountStar()
 }

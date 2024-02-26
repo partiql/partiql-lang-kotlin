@@ -66,6 +66,11 @@ internal object PlanTransform {
          */
         override fun visitRefFn(node: Ref.Fn, ctx: Unit) = symbols.insert(node)
 
+        /**
+         * Insert into symbol table, returning the public reference.
+         */
+        override fun visitRefAgg(node: Ref.Agg, ctx: Unit) = symbols.insert(node)
+
         @OptIn(PartiQLValueExperimental::class)
         override fun visitRefCast(node: Ref.Cast, ctx: Unit) = org.partiql.plan.refCast(node.input, node.target)
 
@@ -179,10 +184,11 @@ internal object PlanTransform {
             )
         }
 
+        @OptIn(PartiQLValueExperimental::class)
         override fun visitRexOpCallDynamicCandidate(node: Rex.Op.Call.Dynamic.Candidate, ctx: Unit): PlanNode {
             val fn = visitRef(node.fn, ctx)
             val coercions = node.coercions.map { it?.let { visitRefCast(it, ctx) } }
-            return org.partiql.plan.Rex.Op.Call.Dynamic.Candidate(fn, coercions)
+            return org.partiql.plan.Rex.Op.Call.Dynamic.Candidate(fn, node.parameters, coercions)
         }
 
         override fun visitRexOpCase(node: Rex.Op.Case, ctx: Unit) = org.partiql.plan.Rex.Op.Case(
@@ -345,9 +351,13 @@ internal object PlanTransform {
             }
 
             override fun visitRelOpAggregateCallResolved(node: Rel.Op.Aggregate.Call.Resolved, ctx: Unit): PlanNode {
-                val agg = node.agg.name
+                val agg = visitRef(node.agg, ctx)
                 val args = node.args.map { visitRex(it, ctx) }
-                return org.partiql.plan.relOpAggregateCall(node.agg.name, args)
+                val setQuantifier = when (node.setQuantifier) {
+                    Rel.Op.Aggregate.SetQuantifier.ALL -> org.partiql.plan.Rel.Op.Aggregate.Call.SetQuantifier.ALL
+                    Rel.Op.Aggregate.SetQuantifier.DISTINCT -> org.partiql.plan.Rel.Op.Aggregate.Call.SetQuantifier.DISTINCT
+                }
+                return org.partiql.plan.relOpAggregateCall(agg, setQuantifier, args)
             }
 
             override fun visitRelOpExclude(node: Rel.Op.Exclude, ctx: Unit) = org.partiql.plan.Rel.Op.Exclude(

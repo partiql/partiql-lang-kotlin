@@ -15,6 +15,7 @@
 package org.partiql.spi.connector.sql
 
 import org.partiql.spi.connector.Connector
+import org.partiql.spi.connector.ConnectorAggProvider
 import org.partiql.spi.connector.ConnectorBindings
 import org.partiql.spi.connector.ConnectorFnProvider
 import org.partiql.spi.connector.ConnectorMetadata
@@ -45,4 +46,7 @@ public abstract class SqlConnector : Connector {
 
     @FnExperimental
     override fun getFunctions(): ConnectorFnProvider = SqlFnProvider(info.functions)
+
+    @FnExperimental
+    override fun getAggregations(): ConnectorAggProvider = SqlAggProvider(info.aggregations)
 }

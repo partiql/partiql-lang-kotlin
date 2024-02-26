@@ -12,21 +12,15 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.spi.connector.sql
+package org.partiql.spi.connector
 
-import org.partiql.spi.connector.ConnectorFnProvider
-import org.partiql.spi.connector.ConnectorPath
-import org.partiql.spi.fn.Fn
+import org.partiql.spi.fn.Agg
 import org.partiql.spi.fn.FnExperimental
-import org.partiql.spi.fn.Index
 
 /**
- * A basic [ConnectorFnProvider] over an [Index].
+ * A [ConnectorAggProvider] implementation is responsible for providing an aggregation function implementation given a handle.
  */
-@OptIn(FnExperimental::class)
-public class SqlFnProvider(private val index: Index<Fn>) : ConnectorFnProvider {
-
-    override fun getFn(path: ConnectorPath, specific: String): Fn? {
-        return index.get(path, specific)
-    }
+@FnExperimental
+public interface ConnectorAggProvider {
+    public fun getAgg(path: ConnectorPath, specific: String): Agg?
 }

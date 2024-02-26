@@ -3,6 +3,8 @@ package org.partiql.planner.internal
 import org.partiql.planner.internal.ir.Ref
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnSignature
+import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.PartiQLValueType
 
 /**
  * Result of matching an unresolved function.
@@ -41,7 +43,19 @@ internal sealed class FnMatch {
      * @property exhaustive     True if all argument permutations (branches) are matched.
      */
     data class Dynamic(
-        val candidates: List<Static>,
+        val candidates: List<Candidate>,
         val exhaustive: Boolean,
-    ) : FnMatch()
+    ) : FnMatch() {
+
+        /**
+         * Represents a candidate of dynamic dispatch.
+         *
+         * @property fn             Function to invoke.
+         * @property parameters     Represents the input type(s) to match. (ex: INT32)
+         */
+        data class Candidate @OptIn(PartiQLValueExperimental::class) constructor(
+            val fn: Static,
+            val parameters: List<PartiQLValueType>
+        )
+    }
 }

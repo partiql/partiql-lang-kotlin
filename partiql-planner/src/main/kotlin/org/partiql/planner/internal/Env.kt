@@ -2,6 +2,7 @@ package org.partiql.planner.internal
 
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.internal.casts.CastTable
+import org.partiql.planner.internal.ir.Ref
 import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.refAgg
@@ -17,8 +18,11 @@ import org.partiql.planner.internal.ir.rexOpVarGlobal
 import org.partiql.planner.internal.typer.TypeEnv.Companion.toPath
 import org.partiql.planner.internal.typer.toRuntimeType
 import org.partiql.planner.internal.typer.toStaticType
+import org.partiql.spi.BindingCase
+import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
 import org.partiql.spi.connector.ConnectorMetadata
+import org.partiql.spi.fn.AggSignature
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValueExperimental
@@ -58,7 +62,7 @@ internal class Env(private val session: PartiQLPlanner.Session) {
     /**
      * A [PathResolver] for aggregation function lookup.
      */
-    private val aggs: PathResolverAgg = PathResolverAgg
+    private val aggs: PathResolverAgg = PathResolverAgg(catalog, session)
 
     /**
      * This function looks up a global [BindingPath], returning a global reference expression.
@@ -101,9 +105,10 @@ internal class Env(private val session: PartiQLPlanner.Session) {
                         fn = refFn(
                             catalog = item.catalog,
                             path = item.handle.path.steps,
-                            signature = it.signature,
+                            signature = it.fn.signature,
                         ),
-                        coercions = it.mapping.toList(),
+                        parameters = it.parameters,
+                        coercions = it.fn.mapping.toList(),
                     )
                 }
                 // Rewrite as a dynamic call to be typed by PlanTyper
@@ -130,12 +135,23 @@ internal class Env(private val session: PartiQLPlanner.Session) {
     }
 
     @OptIn(FnExperimental::class, PartiQLValueExperimental::class)
-    fun resolveAgg(name: String, args: List<Rex>): Rel.Op.Aggregate.Call.Resolved? {
-        val match = aggs.resolve(name, args) ?: return null
+    fun resolveAgg(name: String, setQuantifier: Rel.Op.Aggregate.SetQuantifier, args: List<Rex>): Rel.Op.Aggregate.Call.Resolved? {
+        // TODO: Eventually, do we want to support sensitive lookup? With a path?
+        val path = BindingPath(listOf(BindingName(name, BindingCase.INSENSITIVE)))
+        val item = aggs.lookup(path) ?: return null
+        val candidates = item.handle.entity.getVariants()
+        var hadMissingArg = false
+        val parameters = args.mapIndexed { i, arg ->
+            if (!hadMissingArg && arg.type.isMissable()) {
+                hadMissingArg = true
+            }
+            arg.type.toRuntimeType()
+        }
+        val match = match(candidates, parameters) ?: return null
         val agg = match.first
         val mapping = match.second
         // Create an internal typed reference
-        val ref = refAgg(name, agg)
+        val ref = refAgg(item.catalog, item.handle.path.steps, agg)
         // Apply the coercions as explicit casts
         val coercions: List<Rex> = args.mapIndexed { i, arg ->
             when (val cast = mapping[i]) {
@@ -143,7 +159,7 @@ internal class Env(private val session: PartiQLPlanner.Session) {
                 else -> rex(cast.target.toStaticType(), rexOpCastResolved(cast, arg))
             }
         }
-        return relOpAggregateCallResolved(ref, coercions)
+        return relOpAggregateCallResolved(ref, setQuantifier, coercions)
     }
 
     @OptIn(PartiQLValueExperimental::class)
@@ -159,16 +175,107 @@ internal class Env(private val session: PartiQLPlanner.Session) {
 
     /**
      * Logic for determining how many BindingNames were “matched” by the ConnectorMetadata
-     * 1. Matched = RelativePath - Not Found
-     * 2. Not Found = Input CatalogPath - Output CatalogPath
-     * 3. Matched = RelativePath - (Input CatalogPath - Output CatalogPath)
-     * 4. Matched = RelativePath + Output CatalogPath - Input CatalogPath
+     *
+     * Assume:
+     * - steps_matched = user_input_path_size - path_steps_not_found_size
+     * - path_steps_not_found_size = catalog_path_sent_to_spi_size - actual_catalog_absolute_path_size
+     *
+     * Therefore, we present the equation to [calculateMatched]:
+     * - steps_matched = user_input_path_size - (catalog_path_sent_to_spi_size - actual_catalog_absolute_path_size)
+     *                 = user_input_path_size + actual_catalog_absolute_path_size - catalog_path_sent_to_spi_size
+     *
+     * For example:
+     *
+     * Assume we are in some catalog, C, in some schema, S. There is a tuple, T, with attribute, A1. Assume A1 is of type
+     * tuple with an attribute A2.
+     * If our query references `T.A1.A2`, we will eventually ask SPI (connector C) for `S.T.A1.A2`. In this scenario:
+     * - The original user input was `T.A1.A2` (length 3)
+     * - The absolute path returned from SPI will be `S.T` (length 2)
+     * - The path we eventually sent to SPI to resolve was `S.T.A1.A2` (length 4)
+     *
+     * So, we can now use [calculateMatched] to determine how many were actually matched from the user input. Using the
+     * equation from above:
+     *
+     * - steps_matched = len(user input) + len(absolute catalog path) - len(path sent to SPI)
+     * = len([userInputPath]) + len([actualAbsolutePath]) - len([pathSentToConnector])
+     * = 3 + 2 - 4
+     * = 5 - 4
+     * = 1
+     *
+     *
+     * Therefore, in this example we have determined that from the original input (`T.A1.A2`) `T` is the value matched in the
+     * database environment.
      */
     private fun calculateMatched(
-        originalPath: BindingPath,
-        inputCatalogPath: BindingPath,
-        outputCatalogPath: List<String>,
+        userInputPath: BindingPath,
+        pathSentToConnector: BindingPath,
+        actualAbsolutePath: List<String>,
     ): Int {
-        return originalPath.steps.size + outputCatalogPath.size - inputCatalogPath.steps.size
+        return userInputPath.steps.size + actualAbsolutePath.size - pathSentToConnector.steps.size
+    }
+
+    @OptIn(FnExperimental::class, PartiQLValueExperimental::class)
+    private fun match(candidates: List<AggSignature>, args: List<PartiQLValueType>): Pair<AggSignature, Array<Ref.Cast?>>? {
+        // 1. Check for an exact match
+        for (candidate in candidates) {
+            if (candidate.matches(args)) {
+                return candidate to arrayOfNulls(args.size)
+            }
+        }
+        // 2. Look for best match.
+        var match: Pair<AggSignature, Array<Ref.Cast?>>? = null
+        for (candidate in candidates) {
+            val m = candidate.match(args) ?: continue
+            // TODO AggMatch comparison
+            // if (match != null && m.exact < match.exact) {
+            //     // already had a better match.
+            //     continue
+            // }
+            match = m
+        }
+        // 3. Return best match or null
+        return match
+    }
+
+    /**
+     * Check if this function accepts the exact input argument types. Assume same arity.
+     */
+    @OptIn(FnExperimental::class, PartiQLValueExperimental::class)
+    private fun AggSignature.matches(args: List<PartiQLValueType>): Boolean {
+        for (i in args.indices) {
+            val a = args[i]
+            val p = parameters[i]
+            if (p.type != PartiQLValueType.ANY && a != p.type) return false
+        }
+        return true
+    }
+
+    /**
+     * Attempt to match arguments to the parameters; return the implicit casts if necessary.
+     *
+     * @param args
+     * @return
+     */
+    @OptIn(FnExperimental::class, PartiQLValueExperimental::class)
+    private fun AggSignature.match(args: List<PartiQLValueType>): Pair<AggSignature, Array<Ref.Cast?>>? {
+        val mapping = arrayOfNulls<Ref.Cast?>(args.size)
+        for (i in args.indices) {
+            val arg = args[i]
+            val p = parameters[i]
+            when {
+                // 1. Exact match
+                arg == p.type -> continue
+                // 2. Match ANY, no coercion needed
+                p.type == PartiQLValueType.ANY -> continue
+                // 3. Match NULL argument
+                arg == PartiQLValueType.NULL -> continue
+                // 4. Check for a coercion
+                else -> when (val coercion = PathResolverAgg.casts.lookupCoercion(arg, p.type)) {
+                    null -> return null // short-circuit
+                    else -> mapping[i] = coercion
+                }
+            }
+        }
+        return this to mapping
     }
 }

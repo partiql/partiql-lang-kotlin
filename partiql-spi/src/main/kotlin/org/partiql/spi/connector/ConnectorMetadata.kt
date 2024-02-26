@@ -46,4 +46,13 @@ public interface ConnectorMetadata {
      */
     @FnExperimental
     public fun getFunction(path: BindingPath): ConnectorHandle.Fn?
+
+    /**
+     * Returns all aggregation function signatures matching the given name.
+     *
+     * @param path
+     * @return
+     */
+    @FnExperimental
+    public fun getAggregation(path: BindingPath): ConnectorHandle.Agg?
 }

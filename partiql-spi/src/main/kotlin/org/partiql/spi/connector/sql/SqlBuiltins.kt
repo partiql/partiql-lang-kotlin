@@ -2,6 +2,7 @@ package org.partiql.spi.connector.sql
 
 /* ktlint-disable no-wildcard-imports */
 import org.partiql.spi.connector.sql.builtins.*
+import org.partiql.spi.fn.Agg
 import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnExperimental
 
@@ -24,6 +25,14 @@ internal object SqlBuiltins {
         Fn_CHAR_LENGTH__STRING__INT,
         Fn_CHAR_LENGTH__SYMBOL__INT,
         Fn_CHAR_LENGTH__CLOB__INT,
+        Fn_COLL_AGG__BAG__ANY.ANY,
+        Fn_COLL_AGG__BAG__ANY.AVG,
+        Fn_COLL_AGG__BAG__ANY.COUNT,
+        Fn_COLL_AGG__BAG__ANY.EVERY,
+        Fn_COLL_AGG__BAG__ANY.MAX,
+        Fn_COLL_AGG__BAG__ANY.MIN,
+        Fn_COLL_AGG__BAG__ANY.SOME,
+        Fn_COLL_AGG__BAG__ANY.SUM,
         Fn_POS__INT8__INT8,
         Fn_POS__INT16__INT16,
         Fn_POS__INT32__INT32,
@@ -477,5 +486,53 @@ internal object SqlBuiltins {
         Fn_DATE_DIFF_SECOND__TIMESTAMP_TIMESTAMP__INT64,
         Fn_CURRENT_USER____STRING,
         Fn_CURRENT_DATE____DATE
+    )
+
+    @JvmStatic
+    val aggregations: List<Agg> = listOf(
+        Agg_ANY__BOOL__BOOL,
+        Agg_AVG__INT8__INT8,
+        Agg_AVG__INT16__INT16,
+        Agg_AVG__INT32__INT32,
+        Agg_AVG__INT64__INT64,
+        Agg_AVG__INT__INT,
+        Agg_AVG__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY,
+        Agg_AVG__FLOAT32__FLOAT32,
+        Agg_AVG__FLOAT64__FLOAT64,
+        Agg_AVG__ANY__ANY,
+        Agg_COUNT__ANY__INT32,
+        Agg_COUNT_STAR____INT32,
+        Agg_EVERY__BOOL__BOOL,
+        Agg_EVERY__ANY__BOOL,
+        Agg_MAX__INT8__INT8,
+        Agg_MAX__INT16__INT16,
+        Agg_MAX__INT32__INT32,
+        Agg_MAX__INT64__INT64,
+        Agg_MAX__INT__INT,
+        Agg_MAX__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY,
+        Agg_MAX__FLOAT32__FLOAT32,
+        Agg_MAX__FLOAT64__FLOAT64,
+        Agg_MAX__ANY__ANY,
+        Agg_MIN__INT8__INT8,
+        Agg_MIN__INT16__INT16,
+        Agg_MIN__INT32__INT32,
+        Agg_MIN__INT64__INT64,
+        Agg_MIN__INT__INT,
+        Agg_MIN__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY,
+        Agg_MIN__FLOAT32__FLOAT32,
+        Agg_MIN__FLOAT64__FLOAT64,
+        Agg_MIN__ANY__ANY,
+        Agg_SOME__BOOL__BOOL,
+        Agg_SOME__ANY__BOOL,
+        Agg_SUM__INT8__INT8,
+        Agg_SUM__INT16__INT16,
+        Agg_SUM__INT32__INT32,
+        Agg_SUM__INT64__INT64,
+        Agg_SUM__INT__INT,
+        Agg_SUM__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY,
+        Agg_SUM__FLOAT32__FLOAT32,
+        Agg_SUM__FLOAT64__FLOAT64,
+        Agg_SUM__ANY__ANY,
+        Agg_GROUP_AS__ANY__ANY
     )
 }

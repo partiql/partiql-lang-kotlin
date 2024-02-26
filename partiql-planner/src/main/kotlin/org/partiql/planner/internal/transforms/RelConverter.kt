@@ -28,7 +28,9 @@ import org.partiql.ast.SetOp
 import org.partiql.ast.SetQuantifier
 import org.partiql.ast.Sort
 import org.partiql.ast.builder.ast
+import org.partiql.ast.exprVar
 import org.partiql.ast.helpers.toBinder
+import org.partiql.ast.identifierSymbol
 import org.partiql.ast.util.AstRewriter
 import org.partiql.ast.visitor.AstBaseVisitor
 import org.partiql.planner.internal.Env
@@ -66,10 +68,13 @@ import org.partiql.planner.internal.ir.rex
 import org.partiql.planner.internal.ir.rexOpLit
 import org.partiql.planner.internal.ir.rexOpPivot
 import org.partiql.planner.internal.ir.rexOpSelect
+import org.partiql.planner.internal.ir.rexOpStruct
+import org.partiql.planner.internal.ir.rexOpStructField
 import org.partiql.planner.internal.ir.rexOpVarLocal
 import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.boolValue
+import org.partiql.value.stringValue
 import org.partiql.planner.internal.ir.Identifier as InternalId
 
 /**
@@ -158,7 +163,9 @@ internal object RelConverter {
                     val project = visitSelectValue(projection, rel)
                     visitSetQuantifier(projection.setq, project)
                 }
-                is Select.Star, is Select.Project -> error("AST not normalized, found ${projection.javaClass.simpleName}")
+                is Select.Star, is Select.Project -> {
+                    error("AST not normalized, found ${projection.javaClass.simpleName}")
+                }
                 is Select.Pivot -> rel // Skip PIVOT
             }
             return rel
@@ -244,7 +251,7 @@ internal object RelConverter {
         override fun visitFromJoin(node: From.Join, nil: Rel): Rel {
             val lhs = visitFrom(node.lhs, nil)
             val rhs = visitFrom(node.rhs, nil)
-            val schema = listOf<Rel.Binding>()
+            val schema = lhs.type.schema + rhs.type.schema // Note: This gets more specific in PlanTyper. It is only used to find binding names here.
             val props = emptySet<Rel.Prop>()
             val condition = node.condition?.let { RexConverter.apply(it, env) } ?: rex(StaticType.BOOL, rexOpLit(boolValue(true)))
             val joinType = when (node.type) {
@@ -336,16 +343,13 @@ internal object RelConverter {
          *         1. Ast.Expr.SFW has every Ast.Expr.CallAgg replaced by a synthetic Ast.Expr.Var
          *         2. Rel which has the appropriate Rex.Agg calls and groups
          */
+        @OptIn(PartiQLValueExperimental::class)
         private fun convertAgg(input: Rel, select: Expr.SFW, groupBy: GroupBy?): Pair<Expr.SFW, Rel> {
             // Rewrite and extract all aggregations in the SELECT clause
             val (sel, aggregations) = AggregationTransform.apply(select)
 
             // No aggregation planning required for GROUP BY
-            if (aggregations.isEmpty()) {
-                if (groupBy != null) {
-                    // GROUP BY with no aggregations is considered an error.
-                    error("GROUP BY with no aggregations in SELECT clause")
-                }
+            if (aggregations.isEmpty() && groupBy == null) {
                 return Pair(select, input)
             }
 
@@ -367,7 +371,28 @@ internal object RelConverter {
                     is InternalId.Qualified -> error("Qualified aggregation calls are not supported.")
                     is InternalId.Symbol -> id.symbol.lowercase()
                 }
-                relOpAggregateCallUnresolved(name, args)
+                val setq = when (expr.setq) {
+                    null -> Rel.Op.Aggregate.SetQuantifier.ALL
+                    SetQuantifier.ALL -> Rel.Op.Aggregate.SetQuantifier.ALL
+                    SetQuantifier.DISTINCT -> Rel.Op.Aggregate.SetQuantifier.DISTINCT
+                }
+                relOpAggregateCallUnresolved(name, setq, args)
+            }.toMutableList()
+
+            // Add GROUP_AS aggregation
+            groupBy?.let { gb ->
+                gb.asAlias?.let { groupAs ->
+                    val binding = relBinding(groupAs.symbol, StaticType.ANY)
+                    schema.add(binding)
+                    val fields = input.type.schema.mapIndexed { bindingIndex, currBinding ->
+                        rexOpStructField(
+                            k = rex(StaticType.STRING, rexOpLit(stringValue(currBinding.name))),
+                            v = rex(StaticType.ANY, rexOpVarLocal(0, bindingIndex))
+                        )
+                    }
+                    val arg = listOf(rex(StaticType.ANY, rexOpStruct(fields)))
+                    calls.add(relOpAggregateCallUnresolved("group_as", Rel.Op.Aggregate.SetQuantifier.ALL, arg))
+                }
             }
             var groups = emptyList<Rex>()
             if (groupBy != null) {
@@ -559,23 +584,38 @@ internal object RelConverter {
     /**
      * Rewrites a SELECT node replacing (and extracting) each aggregation `i` with a synthetic field name `$agg_i`.
      */
-    private object AggregationTransform : AstRewriter<MutableList<Expr.Agg>>() {
+    private object AggregationTransform : AstRewriter<AggregationTransform.Context>() {
+
+        private data class Context(
+            val aggregations: MutableList<Expr.Agg>,
+            val keys: List<GroupBy.Key>
+        )
 
         fun apply(node: Expr.SFW): Pair<Expr.SFW, List<Expr.Agg>> {
             val aggs = mutableListOf<Expr.Agg>()
-            val select = super.visitExprSFW(node, aggs) as Expr.SFW
+            val keys = node.groupBy?.keys ?: emptyList()
+            val context = Context(aggs, keys)
+            val select = super.visitExprSFW(node, context) as Expr.SFW
             return Pair(select, aggs)
         }
 
-        // only rewrite top-level SFW
-        override fun visitExprSFW(node: Expr.SFW, ctx: MutableList<Expr.Agg>): AstNode = node
+        override fun visitSelectValue(node: Select.Value, ctx: Context): AstNode {
+            val visited = super.visitSelectValue(node, ctx)
+            val substitutions = ctx.keys.associate {
+                it.expr to exprVar(identifierSymbol(it.asAlias!!.symbol, Identifier.CaseSensitivity.SENSITIVE), Expr.Var.Scope.DEFAULT)
+            }
+            return SubstitutionVisitor.visit(visited, substitutions)
+        }
 
-        override fun visitExprAgg(node: Expr.Agg, ctx: MutableList<Expr.Agg>) = ast {
+        // only rewrite top-level SFW
+        override fun visitExprSFW(node: Expr.SFW, ctx: Context): AstNode = node
+
+        override fun visitExprAgg(node: Expr.Agg, ctx: Context) = ast {
             val id = identifierSymbol {
-                symbol = syntheticAgg(ctx.size)
+                symbol = syntheticAgg(ctx.aggregations.size)
                 caseSensitivity = org.partiql.ast.Identifier.CaseSensitivity.INSENSITIVE
             }
-            ctx += node
+            ctx.aggregations += node
             exprVar(id, Expr.Var.Scope.DEFAULT)
         }
     }
