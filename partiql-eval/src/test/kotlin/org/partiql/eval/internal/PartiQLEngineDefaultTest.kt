@@ -421,6 +421,28 @@ class PartiQLEngineDefaultTest {
                     ),
                 )
             ),
+            SuccessTestCase(
+                input = """
+                    SELECT *
+                    FROM << { 'a': 1, 'b': 2 } >> AS t
+                    GROUP BY a, b, a + b GROUP AS g
+                """.trimIndent(),
+                expected = bagValue(
+                    structValue(
+                        "a" to int32Value(1),
+                        "b" to int32Value(2),
+                        "_3" to int32Value(3),
+                        "g" to bagValue(
+                            structValue(
+                                "t" to structValue(
+                                    "a" to int32Value(1),
+                                    "b" to int32Value(2),
+                                )
+                            )
+                        ),
+                    ),
+                )
+            ),
         )
 
         @JvmStatic
