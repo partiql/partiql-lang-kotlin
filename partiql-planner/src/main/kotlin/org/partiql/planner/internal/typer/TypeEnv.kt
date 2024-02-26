@@ -31,8 +31,7 @@ internal data class TypeEnv(
     internal fun getScope(depth: Int): TypeEnv {
         return when (depth) {
             0 -> this
-            // TODO: Consider resolve the variable to the correct index
-            else -> outer.reversed()[depth - 1]
+            else -> outer[outer.size - depth]
         }
     }
 

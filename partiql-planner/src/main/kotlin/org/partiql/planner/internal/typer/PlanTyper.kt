@@ -60,7 +60,6 @@ import org.partiql.planner.internal.ir.rexOpStruct
 import org.partiql.planner.internal.ir.rexOpStructField
 import org.partiql.planner.internal.ir.rexOpSubquery
 import org.partiql.planner.internal.ir.rexOpTupleUnion
-import org.partiql.planner.internal.ir.rexOpVarLocal
 import org.partiql.planner.internal.ir.statementQuery
 import org.partiql.planner.internal.ir.util.PlanRewriter
 import org.partiql.spi.BindingCase
@@ -94,7 +93,6 @@ import org.partiql.value.TextValue
 import org.partiql.value.boolValue
 import org.partiql.value.missingValue
 import org.partiql.value.stringValue
-import kotlin.math.absoluteValue
 
 /**
  * Rewrites an untyped algebraic translation of the query to be both typed and have resolved variables.
@@ -438,9 +436,8 @@ internal class PlanTyper(
             assert(node.ref < scope.schema.size) {
                 "Invalid resolved variable (var ${node.ref}, stack frame ${node.depth}) in env: $locals"
             }
-            val nodeRef = if (node.ref < 0) scope.schema.size - node.ref.absoluteValue else node.ref
-            val type = scope.schema.getOrNull(nodeRef)?.type ?: error("Can't find locals value.")
-            return rex(type, rexOpVarLocal(node.depth, nodeRef))
+            val type = scope.schema.getOrNull(node.ref)?.type ?: error("Can't find locals value.")
+            return rex(type, node)
         }
 
         override fun visitRexOpVarUnresolved(node: Rex.Op.Var.Unresolved, ctx: StaticType?): Rex {

@@ -263,34 +263,6 @@ internal object RexConverter {
                 return newRoot
             }
 
-            val relFromDefault: (Rex, Int) -> Rel = { path, index ->
-                val schema = listOf(
-                    relBinding(
-                        name = "_v$index", // fresh variable
-                        type = path.type
-                    )
-                )
-                val props = emptySet<Rel.Prop>()
-                val relType = relType(schema, props)
-                rel(relType, relOpScan(path))
-            }
-
-            val relFromUnpivot: (Rex, Int) -> Rel = { path, index ->
-                val schema = listOf(
-                    relBinding(
-                        name = "_k$index", // fresh variable
-                        type = StaticType.STRING
-                    ),
-                    relBinding(
-                        name = "_v$index", // fresh variable
-                        type = path.type
-                    )
-                )
-                val props = emptySet<Rel.Prop>()
-                val relType = relType(schema, props)
-                rel(relType, relOpUnpivot(path))
-            }
-
             val fromList = mutableListOf<Rel>()
 
             val pathNavi = newSteps.fold(newRoot) { current, step ->
@@ -327,13 +299,16 @@ internal object RexConverter {
                     }
 
                     is Expr.Path.Step.Unpivot -> {
-                        val op = rexOpVarLocal(1, -1)
+                        // Unpivot produces two binding, in this context we want the value,
+                        // which always going to be the second binding
+                        val op = rexOpVarLocal(1, 1)
                         val index = fromList.size
                         fromList.add(relFromUnpivot(current, index))
                         op
                     }
                     is Expr.Path.Step.Wildcard -> {
-                        val op = rexOpVarLocal(1, -1)
+                        // Scan produce only one binding
+                        val op = rexOpVarLocal(1, 0)
                         val index = fromList.size
                         fromList.add(relFromDefault(current, index))
                         op
@@ -350,15 +325,57 @@ internal object RexConverter {
                 rel(type, relOpJoin(acc, scan, rex(StaticType.BOOL, rexOpLit(boolValue(true))), Rel.Op.Join.Type.INNER))
             }
 
+            // compute the ref used by select construct
+            // always going to be the last binding
+            val selectRef = fromNode.type.schema.size - 1
+
             val constructor = when (val op = pathNavi.op) {
-                is Rex.Op.Path.Index -> rex(pathNavi.type, rexOpPathIndex(rex(op.root.type, rexOpVarLocal(0, -1)), op.key))
-                is Rex.Op.Path.Key -> rex(pathNavi.type, rexOpPathKey(rex(op.root.type, rexOpVarLocal(0, -1)), op.key))
-                is Rex.Op.Path.Symbol -> rex(pathNavi.type, rexOpPathSymbol(rex(op.root.type, rexOpVarLocal(0, -1)), op.key))
-                is Rex.Op.Var.Local -> rex(pathNavi.type, rexOpVarLocal(0, -1))
+                is Rex.Op.Path.Index -> rex(pathNavi.type, rexOpPathIndex(rex(op.root.type, rexOpVarLocal(0, selectRef)), op.key))
+                is Rex.Op.Path.Key -> rex(pathNavi.type, rexOpPathKey(rex(op.root.type, rexOpVarLocal(0, selectRef)), op.key))
+                is Rex.Op.Path.Symbol -> rex(pathNavi.type, rexOpPathSymbol(rex(op.root.type, rexOpVarLocal(0, selectRef)), op.key))
+                is Rex.Op.Var.Local -> rex(pathNavi.type, rexOpVarLocal(0, selectRef))
                 else -> throw IllegalStateException()
             }
             val op = rexOpSelect(constructor, fromNode)
             return rex(StaticType.ANY, op)
+        }
+
+        /**
+         * Construct Rel(Scan([path])).
+         *
+         * The constructed rel would produce one binding: _v$[index]
+         */
+        private fun relFromDefault(path: Rex, index: Int): Rel {
+            val schema = listOf(
+                relBinding(
+                    name = "_v$index", // fresh variable
+                    type = path.type
+                )
+            )
+            val props = emptySet<Rel.Prop>()
+            val relType = relType(schema, props)
+            return rel(relType, relOpScan(path))
+        }
+
+        /**
+         * Construct Rel(Unpivot([path])).
+         *
+         * The constructed rel would produce two bindings: _k$[index] and _v$[index]
+         */
+        private fun relFromUnpivot(path: Rex, index: Int): Rel {
+            val schema = listOf(
+                relBinding(
+                    name = "_k$index", // fresh variable
+                    type = StaticType.STRING
+                ),
+                relBinding(
+                    name = "_v$index", // fresh variable
+                    type = path.type
+                )
+            )
+            val props = emptySet<Rel.Prop>()
+            val relType = relType(schema, props)
+            return rel(relType, relOpUnpivot(path))
         }
 
         private fun rexString(str: String) = rex(StaticType.STRING, rexOpLit(stringValue(str)))
