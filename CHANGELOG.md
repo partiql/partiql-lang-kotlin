@@ -28,8 +28,10 @@ Thank you to all who have contributed!
 ## [Unreleased]
 
 ### Added
+- Added constrained decimal as valid parameter type to functions that take in numeric parameters. 
 
 ### Changed
+- Function resolution logic: Now the function resolver would match all possible candidate(based on if the argument can be coerced to the Signature parameter type). If there are multiple match it will first attempt to pick the one requires the least cast, then pick the function with the highest precedence. 
 
 ### Deprecated
 

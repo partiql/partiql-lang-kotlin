@@ -86,6 +86,7 @@ internal class TypeLattice private constructor(
         INT32,
         INT64,
         INT,
+        DECIMAL,
         DECIMAL_ARBITRARY,
         FLOAT32,
         FLOAT64,
