@@ -100,7 +100,10 @@ internal class Compiler(
 
     // TODO: Re-look at
     override fun visitStatementQuery(node: Statement.Query, ctx: StaticType?): Operator.Expr {
-        return visitRex(node.root, ctx).modeHandled()
+        return when (val op = node.root.op) {
+            is Rex.Op.Select -> visitRexSelect(op, node.root.type, true).modeHandled()
+            else -> visitRex(node.root, ctx).modeHandled()
+        }
     }
 
     // REX
@@ -122,12 +125,16 @@ internal class Compiler(
         return ExprStruct(fields)
     }
 
-    override fun visitRexOpSelect(node: Rex.Op.Select, ctx: StaticType?): Operator.Expr {
+    override fun visitRexOpSelect(node: Rex.Op.Select, ctx: StaticType?): Operator {
+        return visitRexSelect(node, ctx, isTopLevel = false)
+    }
+
+    private fun visitRexSelect(node: Rex.Op.Select, ctx: StaticType?, isTopLevel: Boolean): Operator.Expr {
         return scope {
             val rel = visitRel(node.rel, ctx)
             val ordered = node.rel.type.props.contains(Rel.Prop.ORDERED)
             val constructor = visitRex(node.constructor, ctx).modeHandled()
-            ExprSelect(rel, constructor, ordered, env)
+            ExprSelect(rel, constructor, ordered, env, isTopLevel)
         }
     }
 

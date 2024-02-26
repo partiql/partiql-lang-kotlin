@@ -14,12 +14,14 @@ internal class RelProject(
         input.open()
     }
 
-    override fun next(): Record? {
-        while (true) {
-            val r = input.next() ?: return null
-            val p = projections.map { it.eval(r) }.toTypedArray()
-            return Record(p)
-        }
+    override fun hasNext(): Boolean {
+        return input.hasNext()
+    }
+
+    override fun next(): Record {
+        val r = input.next()
+        val p = projections.map { it.eval(r) }.toTypedArray()
+        return Record(p)
     }
 
     override fun close() {

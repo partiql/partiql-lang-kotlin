@@ -1,6 +1,7 @@
 package org.partiql.eval.internal.operator.rel
 
 import org.partiql.eval.internal.Record
+import org.partiql.eval.internal.helpers.RecordValueIterator
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.value.CollectionValue
 import org.partiql.value.PartiQLValueExperimental
@@ -15,17 +16,17 @@ internal class RelScanPermissive(
     override fun open() {
         val r = expr.eval(Record.empty)
         records = when (r) {
-            is CollectionValue<*> -> r.map { Record.of(it) }.iterator()
+            is CollectionValue<*> -> RecordValueIterator(r)
             else -> iterator { yield(Record.of(r)) }
         }
     }
 
-    override fun next(): Record? {
-        return if (records.hasNext()) {
-            records.next()
-        } else {
-            null
-        }
+    override fun hasNext(): Boolean {
+        return records.hasNext()
+    }
+
+    override fun next(): Record {
+        return records.next()
     }
 
     override fun close() {}

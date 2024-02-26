@@ -8,19 +8,18 @@ import org.partiql.value.PartiQLValueExperimental
 internal class RelFilter(
     val input: Operator.Relation,
     val expr: Operator.Expr
-) : Operator.Relation {
+) : RelMaterialized() {
 
     override fun open() {
         input.open()
     }
 
-    override fun next(): Record? {
-        var inputRecord: Record? = input.next()
-        while (inputRecord != null) {
+    override fun materializeNext(): Record? {
+        while (input.hasNext()) {
+            val inputRecord: Record = input.next()
             if (conditionIsTrue(inputRecord, expr)) {
                 return inputRecord
             }
-            inputRecord = input.next()
         }
         return null
     }

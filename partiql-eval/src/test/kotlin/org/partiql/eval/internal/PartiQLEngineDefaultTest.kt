@@ -1,5 +1,6 @@
 package org.partiql.eval.internal
 
+import com.amazon.ionelement.api.createIonElementLoader
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.parallel.Execution
@@ -16,6 +17,7 @@ import org.partiql.planner.PartiQLPlannerBuilder
 import org.partiql.plugins.memory.MemoryCatalog
 import org.partiql.plugins.memory.MemoryConnector
 import org.partiql.spi.connector.ConnectorSession
+import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.bagValue
@@ -23,6 +25,7 @@ import org.partiql.value.boolValue
 import org.partiql.value.decimalValue
 import org.partiql.value.int32Value
 import org.partiql.value.int64Value
+import org.partiql.value.intValue
 import org.partiql.value.io.PartiQLValueIonWriterBuilder
 import org.partiql.value.listValue
 import org.partiql.value.missingValue
@@ -31,6 +34,7 @@ import org.partiql.value.stringValue
 import org.partiql.value.structValue
 import java.io.ByteArrayOutputStream
 import java.math.BigDecimal
+import java.math.BigInteger
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
@@ -60,7 +64,91 @@ class PartiQLEngineDefaultTest {
     @Execution(ExecutionMode.CONCURRENT)
     fun aggregationTests(tc: SuccessTestCase) = tc.assert()
 
+    @ParameterizedTest
+    @MethodSource("globalsTestCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun globalsTests(tc: SuccessTestCase) = tc.assert()
+
+    @Test
+    fun singleTest() {
+        val tc = SuccessTestCase(
+            input = """
+                    SELECT VALUE element
+                    FROM << { 'a': [0, 1, 2] }, { 'a': [3, 4, 5] } >> AS t, t.a AS element
+            """.trimIndent(),
+            expected = bagValue(
+                int32Value(0),
+                int32Value(1),
+                int32Value(2),
+                int32Value(3),
+                int32Value(4),
+                int32Value(5),
+            )
+        )
+        val tc1 = SuccessTestCase(
+            input = """
+                    SELECT VALUE (
+                        SELECT VALUE t1 + t2
+                        FROM <<5, 6>> AS t2
+                    ) FROM <<0, 10>> AS t1;
+            """.trimIndent(),
+            expected = bagValue(
+                bagValue(int32Value(5), int32Value(6)),
+                bagValue(int32Value(15), int32Value(16))
+            )
+        )
+        tc1.assert()
+    }
+
     companion object {
+
+        @JvmStatic
+        fun globalsTestCases() = listOf(
+            SuccessTestCase(
+                input = """
+                    SELECT VALUE t.a
+                    FROM t;
+                """.trimIndent(),
+                expected = bagValue(
+                    intValue(BigInteger.valueOf(1)),
+                    intValue(BigInteger.valueOf(2)),
+                ),
+                globals = listOf(
+                    SuccessTestCase.Global(
+                        name = "t",
+                        value = """
+                            [
+                                { "a": 1 },
+                                { "a": 2 }
+                            ]
+                        """
+                    )
+                )
+            ),
+            SuccessTestCase(
+                input = """
+                    SELECT VALUE t1.a
+                    FROM t AS t1, t AS t2;
+                """.trimIndent(),
+                expected = bagValue(
+                    intValue(BigInteger.valueOf(1)),
+                    intValue(BigInteger.valueOf(1)),
+                    intValue(BigInteger.valueOf(2)),
+                    intValue(BigInteger.valueOf(2)),
+                ),
+                globals = listOf(
+                    SuccessTestCase.Global(
+                        name = "t",
+                        value = """
+                            [
+                                { "a": 1 },
+                                { "a": 2 }
+                            ]
+                        """
+                    )
+                )
+            ),
+        )
 
         @JvmStatic
         fun subqueryTestCases() = listOf(
@@ -471,12 +559,12 @@ class PartiQLEngineDefaultTest {
                 input = "SELECT t.a, s.b FROM << { 'a': 1 } >> t FULL OUTER JOIN << { 'b': 2 } >> s ON false;",
                 expected = bagValue(
                     structValue(
-                        "a" to nullValue(),
-                        "b" to int32Value(2)
-                    ),
-                    structValue(
                         "a" to int32Value(1),
                         "b" to nullValue()
+                    ),
+                    structValue(
+                        "a" to nullValue(),
+                        "b" to int32Value(2)
                     ),
                 )
             ),
@@ -1038,16 +1126,31 @@ class PartiQLEngineDefaultTest {
     public class SuccessTestCase @OptIn(PartiQLValueExperimental::class) constructor(
         val input: String,
         val expected: PartiQLValue,
-        val mode: PartiQLEngine.Mode = PartiQLEngine.Mode.PERMISSIVE
+        val mode: PartiQLEngine.Mode = PartiQLEngine.Mode.PERMISSIVE,
+        val globals: List<Global> = emptyList()
     ) {
 
         private val engine = PartiQLEngine.builder().build()
         private val planner = PartiQLPlannerBuilder().build()
         private val parser = PartiQLParser.default()
+        private val loader = createIonElementLoader()
+
+        /**
+         * @property value is a serialized Ion value.
+         */
+        class Global(
+            val name: String,
+            val value: String,
+            val type: StaticType = StaticType.ANY,
+        )
 
         internal fun assert() {
             val statement = parser.parse(input).root
-            val catalog = MemoryCatalog.builder().name("memory").build()
+            val catalogBuilder = MemoryCatalog.builder().name("memory")
+            globals.forEach { global ->
+                catalogBuilder.define(global.name, global.type, loader.loadSingleElement(global.value))
+            }
+            val catalog = catalogBuilder.build()
             val connector = MemoryConnector(catalog)
             val connectorSession = object : ConnectorSession {
                 override fun getQueryId(): String = "q"
@@ -1069,7 +1172,9 @@ class PartiQLEngineDefaultTest {
                 }
             }
             val output = result.value
-            assertEquals(expected, output, comparisonString(expected, output, plan.plan))
+            assert(expected == output) {
+                comparisonString(expected, output, plan.plan)
+            }
         }
 
         @OptIn(PartiQLValueExperimental::class)

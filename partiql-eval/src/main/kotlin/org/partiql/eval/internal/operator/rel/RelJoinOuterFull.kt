@@ -30,7 +30,7 @@ internal class RelJoinOuterFull(
     private var previousLhs: Record? = null
     private var previousRhs: Record? = null
 
-    override fun next(): Record? {
+    override fun next(): Record {
         if (previousLhs != null && previousRhs != null) {
             previousRhs!!.padNull()
             val newRecord = previousLhs!! + previousRhs!!

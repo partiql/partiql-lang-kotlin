@@ -17,8 +17,8 @@ internal class ExprPivotPermissive(
     override fun eval(record: Record): PartiQLValue {
         input.open()
         val fields = mutableListOf<Pair<String, PartiQLValue>>()
-        while (true) {
-            val row = input.next() ?: break
+        while (input.hasNext()) {
+            val row = input.next()
             val k = key.eval(row) as? StringValue ?: continue
             val v = value.eval(row)
             fields.add(k.value!! to v)

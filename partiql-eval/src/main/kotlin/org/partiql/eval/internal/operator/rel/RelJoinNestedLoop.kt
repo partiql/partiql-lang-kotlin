@@ -10,7 +10,7 @@ import org.partiql.value.StructValue
 import org.partiql.value.nullValue
 import org.partiql.value.structValue
 
-internal abstract class RelJoinNestedLoop : Operator.Relation {
+internal abstract class RelJoinNestedLoop : RelMaterialized() {
 
     abstract val lhs: Operator.Relation
     abstract val rhs: Operator.Relation
@@ -21,7 +21,10 @@ internal abstract class RelJoinNestedLoop : Operator.Relation {
 
     override fun open() {
         lhs.open()
-        lhsRecord = lhs.next() ?: return
+        if (lhs.hasNext().not()) {
+            return
+        }
+        lhsRecord = lhs.next()
         env.scope(lhsRecord!!) {
             rhs.open()
         }
@@ -30,19 +33,25 @@ internal abstract class RelJoinNestedLoop : Operator.Relation {
     abstract fun join(condition: Boolean, lhs: Record, rhs: Record): Record?
 
     @OptIn(PartiQLValueExperimental::class)
-    override fun next(): Record? {
+    override fun materializeNext(): Record? {
         if (lhsRecord == null) {
             return null
         }
         var rhsRecord = env.scope(lhsRecord!!) {
-            rhs.next()
+            when (rhs.hasNext()) {
+                true -> rhs.next()
+                false -> null
+            }
         }
         var toReturn: Record? = null
         do {
             // Acquire LHS and RHS Records
             if (rhsRecord == null) {
                 rhs.close()
-                lhsRecord = lhs.next() ?: return null
+                if (lhs.hasNext().not()) {
+                    return null
+                }
+                lhsRecord = lhs.next()
                 env.scope(lhsRecord!!) {
                     rhs.open()
                     rhsRecord = rhs.next()

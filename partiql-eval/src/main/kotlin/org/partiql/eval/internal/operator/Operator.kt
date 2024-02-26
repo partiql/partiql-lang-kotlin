@@ -20,11 +20,9 @@ internal sealed interface Operator {
     /**
      * Relation operator represents an evaluable collection of binding tuples.
      */
-    interface Relation : Operator, AutoCloseable {
+    interface Relation : Operator, AutoCloseable, Iterator<Record> {
 
         fun open()
-
-        fun next(): Record?
 
         override fun close()
     }

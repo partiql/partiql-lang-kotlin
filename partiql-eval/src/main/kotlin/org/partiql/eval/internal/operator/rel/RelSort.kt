@@ -14,15 +14,19 @@ internal class RelSort(
 
 ) : Operator.Relation {
     private var records: Iterator<Record> = Collections.emptyIterator()
-    private var init: Boolean = false
 
     private val nullsFirstComparator = PartiQLValue.comparator(nullsFirst = true)
     private val nullsLastComparator = PartiQLValue.comparator(nullsFirst = false)
 
     override fun open() {
         input.open()
-        init = false
-        records = Collections.emptyIterator()
+        val sortedRecords = mutableListOf<Record>()
+        while (input.hasNext()) {
+            val row = input.next()
+            sortedRecords.add(row)
+        }
+        sortedRecords.sortWith(comparator)
+        records = sortedRecords.iterator()
     }
 
     private val comparator = object : Comparator<Record> {
@@ -47,21 +51,12 @@ internal class RelSort(
         }
     }
 
-    override fun next(): Record? {
-        if (!init) {
-            val sortedRecords = mutableListOf<Record>()
-            while (true) {
-                val row = input.next() ?: break
-                sortedRecords.add(row)
-            }
-            sortedRecords.sortWith(comparator)
-            records = sortedRecords.iterator()
-            init = true
-        }
-        return when (records.hasNext()) {
-            true -> records.next()
-            false -> null
-        }
+    override fun hasNext(): Boolean {
+        return records.hasNext()
+    }
+
+    override fun next(): Record {
+        return records.next()
     }
 
     override fun close() {

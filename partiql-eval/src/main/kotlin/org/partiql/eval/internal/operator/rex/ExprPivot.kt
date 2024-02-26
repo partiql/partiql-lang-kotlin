@@ -18,8 +18,8 @@ internal class ExprPivot(
     override fun eval(record: Record): PartiQLValue {
         input.open()
         val fields = mutableListOf<Pair<String, PartiQLValue>>()
-        while (true) {
-            val row = input.next() ?: break
+        while (input.hasNext()) {
+            val row = input.next()
             val k = key.eval(row).check<StringValue>()
             val v = value.eval(row)
             fields.add(k.value!! to v)

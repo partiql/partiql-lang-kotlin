@@ -13,12 +13,15 @@ internal class RelUnion(
         rhs.open()
     }
 
-    override fun next(): Record? {
-        val l = lhs.next()
-        if (l != null) {
-            return l
+    override fun hasNext(): Boolean {
+        return lhs.hasNext() || rhs.hasNext()
+    }
+
+    override fun next(): Record {
+        return when (lhs.hasNext()) {
+            true -> lhs.next()
+            false -> rhs.next()
         }
-        return rhs.next()
     }
 
     override fun close() {

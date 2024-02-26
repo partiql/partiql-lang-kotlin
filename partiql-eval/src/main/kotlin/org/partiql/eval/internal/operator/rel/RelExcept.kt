@@ -12,7 +12,7 @@ import org.partiql.eval.internal.operator.Operator
 internal class RelExcept(
     private val lhs: Operator.Relation,
     private val rhs: Operator.Relation,
-) : Operator.Relation {
+) : RelMaterialized() {
 
     private var seen: MutableSet<Record> = mutableSetOf()
     private var init: Boolean = false
@@ -24,16 +24,17 @@ internal class RelExcept(
         seen = mutableSetOf()
     }
 
-    override fun next(): Record? {
+    override fun materializeNext(): Record? {
         if (!init) {
             seed()
         }
-        while (true) {
-            val row = lhs.next() ?: return null
+        while (lhs.hasNext()) {
+            val row = lhs.next()
             if (!seen.contains(row)) {
                 return row
             }
         }
+        return null
     }
 
     override fun close() {
@@ -48,7 +49,10 @@ internal class RelExcept(
     private fun seed() {
         init = true
         while (true) {
-            val row = rhs.next() ?: break
+            if (rhs.hasNext().not()) {
+                break
+            }
+            val row = rhs.next()
             seen.add(row)
         }
     }

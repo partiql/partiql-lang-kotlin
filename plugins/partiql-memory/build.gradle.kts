@@ -22,6 +22,7 @@ plugins {
 }
 
 dependencies {
+    implementation(Deps.ionElement)
     implementation(project(":partiql-spi"))
     implementation(project(":partiql-types"))
 }

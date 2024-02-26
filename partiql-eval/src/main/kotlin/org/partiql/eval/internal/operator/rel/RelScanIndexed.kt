@@ -33,10 +33,11 @@ internal class RelScanIndexed(
         }
     }
 
-    override fun next(): Record? {
-        if (!iterator.hasNext()) {
-            return null
-        }
+    override fun hasNext(): Boolean {
+        return iterator.hasNext()
+    }
+
+    override fun next(): Record {
         val i = index
         val v = iterator.next()
         index += 1

@@ -72,12 +72,17 @@ internal abstract class ExprSubquery : Operator.Expr {
     fun getFirst(record: Record): StructValue<*>? {
         return env.scope(record) {
             input.open()
-            val firstRecord = input.next() ?: return@scope null
+            if (input.hasNext().not()) {
+                input.close()
+                return@scope null
+            }
+            val firstRecord = input.next()
             val tuple = constructor.eval(firstRecord).check<StructValue<*>>()
-            val secondRecord = input.next()
-            if (secondRecord != null) {
+            if (input.hasNext()) {
+                input.close()
                 throw CardinalityViolation()
             }
+            input.close()
             tuple
         }
     }

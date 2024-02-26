@@ -31,14 +31,18 @@ internal class RelOffset(
         }
     }
 
-    override fun next(): Record? {
+    override fun hasNext(): Boolean {
         if (!init) {
-            while (_seen < _offset) {
-                input.next() ?: return null
+            while (_seen < _offset && input.hasNext()) {
+                input.next()
                 _seen = _seen.add(BigInteger.ONE)
             }
             init = true
         }
+        return input.hasNext()
+    }
+
+    override fun next(): Record {
         return input.next()
     }
 

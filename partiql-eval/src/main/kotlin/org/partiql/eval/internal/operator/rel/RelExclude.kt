@@ -30,9 +30,13 @@ internal class RelExclude(
         input.open()
     }
 
+    override fun hasNext(): Boolean {
+        return input.hasNext()
+    }
+
     @OptIn(PartiQLValueExperimental::class)
-    override fun next(): Record? {
-        val record = input.next() ?: return null
+    override fun next(): Record {
+        val record = input.next()
         exclusions.forEach { path ->
             val root = path.root.ref
             val value = record.values[root]

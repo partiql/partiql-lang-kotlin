@@ -29,13 +29,14 @@ internal class RelLimit(
         }
     }
 
-    override fun next(): Record? {
-        if (_seen < _limit) {
-            val row = input.next() ?: return null
-            _seen = _seen.add(BigInteger.ONE)
-            return row
-        }
-        return null
+    override fun hasNext(): Boolean {
+        return _seen < _limit && input.hasNext()
+    }
+
+    override fun next(): Record {
+        val row = input.next()
+        _seen = _seen.add(BigInteger.ONE)
+        return row
     }
 
     override fun close() {

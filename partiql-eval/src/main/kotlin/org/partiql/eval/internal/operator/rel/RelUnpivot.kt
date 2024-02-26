@@ -36,10 +36,11 @@ internal sealed class RelUnpivot : Operator.Relation {
         _iterator = struct().entries.iterator()
     }
 
-    override fun next(): Record? {
-        if (!_iterator.hasNext()) {
-            return null
-        }
+    override fun hasNext(): Boolean {
+        return _iterator.hasNext()
+    }
+
+    override fun next(): Record {
         val f = _iterator.next()
         val k = stringValue(f.first)
         val v = f.second
