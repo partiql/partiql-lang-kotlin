@@ -5,6 +5,7 @@ import org.partiql.planner.internal.ir.Agg
 import org.partiql.planner.internal.ir.Fn
 import org.partiql.planner.internal.ir.Identifier
 import org.partiql.planner.internal.ir.Rex
+import org.partiql.planner.internal.typer.FnResolver.Companion.compareTo
 import org.partiql.types.AnyOfType
 import org.partiql.types.NullType
 import org.partiql.types.StaticType
@@ -247,15 +248,28 @@ internal class FnResolver(private val header: Header) {
 
     /**
      * Functions are sorted by precedence (which is not rigorously defined/specified at the moment).
+     *
+     * This function first attempts to find all possible match for given args
+     * If there are multiple matches, then
+     *   - return the matches that requires the lowest number of coercion
+     *          - This is to match edges like concat(symbol, symbol) which should return symbol
+     *             but because string has higher precedence,
+     *             we also would have concat(cast(symbol as string), cast(symbol as string))
+     *             added to the map first.
+     *   - return the matches which has the highest argument precedence.
      */
     private fun <T : FunctionSignature> match(signatures: List<T>, args: Args): Match<T>? {
+        val candidates = mutableListOf<Match<T>>()
         for (signature in signatures) {
             val mapping = match(signature, args)
             if (mapping != null) {
-                return Match(signature, mapping)
+                candidates.add(Match(signature, mapping))
             }
         }
-        return null
+
+        // Sorted By is stable, we don't have to resort based on parameter type precedence
+        candidates.sortBy { it.mapping.filterNotNull().size }
+        return candidates.firstOrNull()
     }
 
     /**
@@ -288,14 +302,7 @@ internal class FnResolver(private val header: Header) {
                 }
             }
         }
-        // if all elements requires casting, then no match
-        // because there must be another function definition that requires no casting
-        return if (mapping.isEmpty() || mapping.contains(null)) {
-            // we made a match
-            mapping
-        } else {
-            null
-        }
+        return mapping
     }
 
     /**
