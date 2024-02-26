@@ -15,7 +15,7 @@
 package org.partiql.lang.util
 
 import org.junit.Test
-import org.partiql.lang.TestBase
+import org.partiql.eval.TestBase
 
 /*
  * Copyright 2017 Amazon.com, Inc. or its affiliates.  All rights reserved.

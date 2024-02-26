@@ -33,12 +33,11 @@ dependencies {
     testImplementation(project(":plugins:partiql-local"))
     testImplementation(project(":plugins:partiql-memory"))
     testImplementation(testFixtures(project(":partiql-planner")))
-//    testImplementation(testFixtures(project(":partiql-lang")))
     testImplementation(Deps.junit4)
     testImplementation(Deps.junit4Params)
     testImplementation(Deps.junitVintage) // Enables JUnit4
 
-    testFixturesImplementation(project(":partiql-lang"))
+    testFixturesImplementation(project(":partiql-lang")) // To be decoupled
     testFixturesImplementation(project(":lib:isl"))
     testFixturesImplementation(Deps.kotlinTest)
     testFixturesImplementation(Deps.kotlinTestJunit)

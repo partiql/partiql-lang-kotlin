@@ -4,6 +4,7 @@ import com.amazon.ion.system.IonSystemBuilder
 import org.partiql.errors.Problem
 import org.partiql.errors.ProblemLocation
 import org.partiql.errors.ProblemSeverity
+import org.partiql.eval.util.countMatchingSubstrings
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.passes.SemanticProblemDetails
 import org.partiql.lang.ast.passes.inference.StaticTypeInferencer
@@ -22,7 +23,6 @@ import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.TypedOpParameter
 import org.partiql.lang.util.cartesianProduct
 import org.partiql.lang.util.compareTo
-import org.partiql.lang.util.countMatchingSubstrings
 import org.partiql.types.BagType
 import org.partiql.types.BoolType
 import org.partiql.types.CollectionType

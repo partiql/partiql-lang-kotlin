@@ -15,8 +15,8 @@
 package org.partiql.lang.eval
 
 import org.junit.Test
-import org.partiql.lang.TestBase
-import org.partiql.lang.util.newFromIonText
+import org.partiql.eval.TestBase
+import org.partiql.eval.util.newFromIonText
 
 class ExprValueAdaptersTest : TestBase() {
     @Test

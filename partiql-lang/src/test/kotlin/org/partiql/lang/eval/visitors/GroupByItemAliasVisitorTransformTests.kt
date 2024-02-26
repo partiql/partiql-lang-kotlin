@@ -2,6 +2,7 @@ package org.partiql.lang.eval.visitors
 
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
+import org.partiql.eval.util.ArgumentsProviderBase
 
 class GroupByItemAliasVisitorTransformTests : VisitorTransformTestBase() {
 
