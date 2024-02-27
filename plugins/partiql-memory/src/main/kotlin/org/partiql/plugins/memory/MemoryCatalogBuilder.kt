@@ -20,9 +20,10 @@ import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
 import org.partiql.spi.connector.ConnectorPath
 import org.partiql.spi.connector.sql.info.InfoSchema
+import org.partiql.spi.fn.Agg
 import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnExperimental
-import org.partiql.spi.fn.FnIndex
+import org.partiql.spi.fn.Index
 import org.partiql.types.StaticType
 
 /**
@@ -55,10 +56,16 @@ public class MemoryCatalogBuilder {
     @OptIn(FnExperimental::class)
     public fun build(): MemoryCatalog {
         val name = _name ?: error("MemoryCatalog must have a name")
-        val info = _info ?: InfoSchema(object : FnIndex {
-            override fun get(path: List<String>): List<Fn> = emptyList()
-            override fun get(path: ConnectorPath, specific: String): Fn? = null
-        })
+        val info = _info ?: InfoSchema(
+            object : Index<Fn> {
+                override fun get(path: List<String>): List<Fn> = emptyList()
+                override fun get(path: ConnectorPath, specific: String): Fn? = null
+            },
+            object : Index<Agg> {
+                override fun get(path: List<String>): List<Agg> = emptyList()
+                override fun get(path: ConnectorPath, specific: String): Agg? = null
+            }
+        )
         val catalog = MemoryCatalog(name, info)
         for (item in _items) { catalog.insert(item.first, item.second) }
         return catalog

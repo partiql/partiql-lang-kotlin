@@ -42,10 +42,13 @@ public class InfoSchema @OptIn(FnExperimental::class) constructor(
 
         @OptIn(FnExperimental::class)
         public fun ext(): InfoSchema {
-            val functions = FnIndex.builder()
+            val functions = Index.fnBuilder()
                 .addAll(SqlBuiltins.builtins + PartiQLExts.builtins)
                 .build()
-            return InfoSchema(functions)
+            val aggregations = Index.aggBuilder()
+                .addAll(SqlBuiltins.aggregations)
+                .build()
+            return InfoSchema(functions, aggregations)
         }
     }
 }
