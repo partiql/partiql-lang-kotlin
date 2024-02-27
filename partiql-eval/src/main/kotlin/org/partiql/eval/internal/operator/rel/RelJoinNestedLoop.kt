@@ -54,6 +54,8 @@ internal abstract class RelJoinNestedLoop : Operator.Relation {
                 val result = condition.eval(input)
                 toReturn = join(result.isTrue(), lhsRecord!!, rhsRecord!!)
             }
+            // Move the pointer to the next row for the RHS
+            if (toReturn == null) rhsRecord = rhs.next()
         }
         while (toReturn == null)
         return toReturn
