@@ -49,7 +49,8 @@ internal class Symbols private constructor() {
         var j = 0
         while (j < c.items.size) {
             if (c.items[j] == item) {
-                break
+                // Found existing item in catalog, return the ref
+                return CatalogRef(i, j)
             }
             j++
         }
