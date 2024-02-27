@@ -18,6 +18,7 @@ import org.partiql.plugins.memory.MemoryCatalog
 import org.partiql.plugins.memory.MemoryConnector
 import org.partiql.spi.connector.ConnectorSession
 import org.partiql.types.StaticType
+import org.partiql.value.CollectionValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.bagValue
@@ -1211,7 +1212,10 @@ class PartiQLEngineDefaultTest {
             assertEquals(expectedPermissive, permissiveResult, comparisonString(expectedPermissive, permissiveResult))
             var error: Throwable? = null
             try {
-                run(mode = PartiQLEngine.Mode.STRICT)
+                when (val result = run(mode = PartiQLEngine.Mode.STRICT)) {
+                    is CollectionValue<*> -> result.toList()
+                    else -> result
+                }
             } catch (e: Throwable) {
                 error = e
             }
