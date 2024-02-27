@@ -23,8 +23,7 @@ internal class RelOffset(
         init = false
         _seen = BigInteger.ZERO
 
-        // TODO pass outer scope to offset expression
-        val o = offset.eval(env)
+        val o = offset.eval(env.nest(Record.empty))
         if (o is NumericValue<*>) {
             _offset = o.toInt().value!!
         } else {

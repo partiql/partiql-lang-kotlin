@@ -60,7 +60,7 @@ internal sealed class RelUnpivot : Operator.Relation {
     class Strict(private val expr: Operator.Expr) : RelUnpivot() {
 
         override fun struct(): StructValue<*> {
-            val v = expr.eval(env)
+            val v = expr.eval(env.nest(Record.empty))
             if (v !is StructValue<*>) {
                 throw TypeCheckException()
             }
@@ -79,7 +79,7 @@ internal sealed class RelUnpivot : Operator.Relation {
      */
     class Permissive(private val expr: Operator.Expr) : RelUnpivot() {
 
-        override fun struct(): StructValue<*> = when (val v = expr.eval(env)) {
+        override fun struct(): StructValue<*> = when (val v = expr.eval(env.nest(Record.empty))) {
             is StructValue<*> -> v
             is MissingValue -> structValue<PartiQLValue>()
             else -> structValue("_1" to v)

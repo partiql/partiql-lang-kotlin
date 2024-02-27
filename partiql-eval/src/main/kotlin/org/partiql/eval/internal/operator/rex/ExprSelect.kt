@@ -17,7 +17,6 @@ internal class ExprSelect(
     private val input: Operator.Relation,
     private val constructor: Operator.Expr,
     private val ordered: Boolean,
-    private val isTopLevel: Boolean = false
 ) : Operator.Expr {
 
     @OptIn(PartiQLValueExperimental::class)
