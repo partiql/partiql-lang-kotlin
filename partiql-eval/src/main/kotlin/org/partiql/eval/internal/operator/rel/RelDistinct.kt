@@ -26,6 +26,7 @@ internal class RelDistinct(
     }
 
     override fun close() {
+        seen.clear()
         input.close()
     }
 }

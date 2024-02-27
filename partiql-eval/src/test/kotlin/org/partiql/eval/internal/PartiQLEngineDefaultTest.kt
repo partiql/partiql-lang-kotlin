@@ -70,37 +70,6 @@ class PartiQLEngineDefaultTest {
     @Execution(ExecutionMode.CONCURRENT)
     fun globalsTests(tc: SuccessTestCase) = tc.assert()
 
-    @Test
-    fun singleTest() {
-        val tc = SuccessTestCase(
-            input = """
-                    SELECT VALUE element
-                    FROM << { 'a': [0, 1, 2] }, { 'a': [3, 4, 5] } >> AS t, t.a AS element
-            """.trimIndent(),
-            expected = bagValue(
-                int32Value(0),
-                int32Value(1),
-                int32Value(2),
-                int32Value(3),
-                int32Value(4),
-                int32Value(5),
-            )
-        )
-        val tc1 = SuccessTestCase(
-            input = """
-                    SELECT VALUE (
-                        SELECT VALUE t1 + t2
-                        FROM <<5, 6>> AS t2
-                    ) FROM <<0, 10>> AS t1;
-            """.trimIndent(),
-            expected = bagValue(
-                bagValue(int32Value(5), int32Value(6)),
-                bagValue(int32Value(15), int32Value(16))
-            )
-        )
-        tc1.assert()
-    }
-
     companion object {
 
         @JvmStatic

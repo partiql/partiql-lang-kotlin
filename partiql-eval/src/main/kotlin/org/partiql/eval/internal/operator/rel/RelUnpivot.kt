@@ -36,6 +36,7 @@ internal sealed class RelUnpivot : Operator.Relation {
      * Initialize the _iterator from the concrete implementation's struct()
      */
     override fun open(env: Environment) {
+        this.env = env
         _iterator = struct().entries.iterator()
     }
 
