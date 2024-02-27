@@ -109,20 +109,13 @@ private val CONVERTERS = mapOf<Class<*>, (Number) -> Number>(
 )
 
 internal fun Number.isZero() = when (this) {
-    // using compareTo instead of equals for BigDecimal because equality also checks same scale
     is Int -> this == 0
     is Long -> this == 0L
     is Float -> this == 0.0f || this == -0.0f
     is Double -> this == 0.0 || this == -0.0
-<<<<<<< HEAD
-    is BigDecimal -> BigDecimal.ZERO.compareTo(this) == 0
-    is BigInteger -> BigInteger.ZERO.compareTo(this) == 0
-    else -> throw IllegalStateException("$this (${this.javaClass.simpleName})")
-=======
     is BigDecimal -> this.signum() == 0
     is BigInteger -> this.signum() == 0
     else -> throw IllegalStateException("$this")
->>>>>>> d0cb6b1b (fix comparator and substring func resolution)
 }
 
 @Suppress("UNCHECKED_CAST")
