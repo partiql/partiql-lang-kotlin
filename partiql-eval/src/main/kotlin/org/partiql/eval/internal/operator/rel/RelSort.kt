@@ -1,5 +1,6 @@
 package org.partiql.eval.internal.operator.rel
 
+import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.plan.Rel
@@ -18,8 +19,11 @@ internal class RelSort(
     private val nullsFirstComparator = PartiQLValue.comparator(nullsFirst = true)
     private val nullsLastComparator = PartiQLValue.comparator(nullsFirst = false)
 
-    override fun open() {
-        input.open()
+    private lateinit var env: Environment
+
+    override fun open(env: Environment) {
+        this.env = env
+        input.open(env)
         val sortedRecords = mutableListOf<Record>()
         while (input.hasNext()) {
             val row = input.next()
@@ -32,8 +36,8 @@ internal class RelSort(
     private val comparator = object : Comparator<Record> {
         override fun compare(l: Record, r: Record): Int {
             specs.forEach { spec ->
-                val lVal = spec.first.eval(l)
-                val rVal = spec.first.eval(r)
+                val lVal = spec.first.eval(env.nest(l))
+                val rVal = spec.first.eval(env.nest(r))
 
                 // DESC_NULLS_FIRST(l, r) == ASC_NULLS_LAST(r, l)
                 // DESC_NULLS_LAST(l, r) == ASC_NULLS_FIRST(r, l)

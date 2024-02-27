@@ -1,6 +1,7 @@
 package org.partiql.eval.internal.operator.rel
 
 import org.partiql.errors.TypeCheckException
+import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.value.NumericValue
@@ -16,12 +17,12 @@ internal class RelLimit(
     private var _seen: BigInteger = BigInteger.ZERO
     private var _limit: BigInteger = BigInteger.ZERO
 
-    override fun open() {
-        input.open()
+    override fun open(env: Environment) {
+        input.open(env)
         _seen = BigInteger.ZERO
 
         // TODO pass outer scope to limit expression
-        val l = limit.eval(Record.empty)
+        val l = limit.eval(env)
         if (l is NumericValue<*>) {
             _limit = l.toInt().value!!
         } else {

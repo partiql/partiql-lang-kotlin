@@ -1,5 +1,6 @@
 package org.partiql.eval.internal.operator.rel
 
+import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.spi.fn.Agg
@@ -56,13 +57,13 @@ internal class RelAggregate(
     )
 
     @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
-    override fun open() {
-        input.open()
+    override fun open(env: Environment) {
+        input.open(env)
         while (input.hasNext()) {
             val inputRecord = input.next()
             // Initialize the AggregationMap
             val evaluatedGroupByKeys = keys.map {
-                val key = it.eval(inputRecord)
+                val key = it.eval(env.nest(inputRecord))
                 when (key.type == PartiQLValueType.MISSING) {
                     true -> nullValue()
                     false -> key
@@ -83,7 +84,7 @@ internal class RelAggregate(
 
             // Aggregate Values in Aggregation State
             accumulators.forEachIndexed { index, function ->
-                val valueToAggregate = function.args.map { it.eval(inputRecord) }
+                val valueToAggregate = function.args.map { it.eval(env.nest(inputRecord)) }
                 // Skip over aggregation if NULL/MISSING
                 if (valueToAggregate.any { it.type == PartiQLValueType.MISSING || it.isNull }) {
                     return@forEachIndexed

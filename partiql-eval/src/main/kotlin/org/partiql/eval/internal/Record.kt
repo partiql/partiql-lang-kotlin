@@ -33,4 +33,8 @@ internal data class Record(val values: Array<PartiQLValue>) {
     public operator fun get(index: Int): PartiQLValue {
         return this.values[index]
     }
+
+    override fun toString(): String {
+        return this.values.joinToString(", ", "[", "]")
+    }
 }

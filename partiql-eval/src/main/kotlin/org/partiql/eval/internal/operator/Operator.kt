@@ -1,5 +1,6 @@
 package org.partiql.eval.internal.operator
 
+import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
 import org.partiql.spi.fn.Agg
 import org.partiql.spi.fn.FnExperimental
@@ -14,7 +15,7 @@ internal sealed interface Operator {
     interface Expr : Operator {
 
         @OptIn(PartiQLValueExperimental::class)
-        fun eval(record: Record): PartiQLValue
+        fun eval(env: Environment): PartiQLValue
     }
 
     /**
@@ -22,7 +23,7 @@ internal sealed interface Operator {
      */
     interface Relation : Operator, AutoCloseable, Iterator<Record> {
 
-        fun open()
+        fun open(env: Environment)
 
         override fun close()
     }

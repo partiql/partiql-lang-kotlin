@@ -6,7 +6,7 @@ import com.amazon.ionelement.api.IonElementException
 import com.amazon.ionelement.api.createIonElementLoader
 import org.partiql.errors.DataException
 import org.partiql.errors.TypeCheckException
-import org.partiql.eval.internal.Record
+import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.plan.Ref
 import org.partiql.value.BagValue
@@ -49,8 +49,8 @@ import java.math.BigInteger
 // TODO: This is incomplete
 internal class ExprCast(val arg: Operator.Expr, val cast: Ref.Cast) : Operator.Expr {
     @OptIn(PartiQLValueExperimental::class)
-    override fun eval(record: Record): PartiQLValue {
-        val arg = arg.eval(record)
+    override fun eval(env: Environment): PartiQLValue {
+        val arg = arg.eval(env)
         try {
             return when (arg.type) {
                 PartiQLValueType.ANY -> TODO("Not Possible")

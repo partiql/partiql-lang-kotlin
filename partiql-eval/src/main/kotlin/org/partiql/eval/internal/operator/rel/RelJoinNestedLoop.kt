@@ -15,19 +15,18 @@ internal abstract class RelJoinNestedLoop : RelMaterialized() {
     abstract val lhs: Operator.Relation
     abstract val rhs: Operator.Relation
     abstract val condition: Operator.Expr
-    abstract val env: Environment
 
     private var lhsRecord: Record? = null
+    private lateinit var env: Environment
 
-    override fun open() {
-        lhs.open()
+    override fun open(env: Environment) {
+        this.env = env
+        lhs.open(env)
         if (lhs.hasNext().not()) {
             return
         }
         lhsRecord = lhs.next()
-        env.scope(lhsRecord!!) {
-            rhs.open()
-        }
+        rhs.open(env.nest(lhsRecord!!))
     }
 
     abstract fun join(condition: Boolean, lhs: Record, rhs: Record): Record?
@@ -37,11 +36,9 @@ internal abstract class RelJoinNestedLoop : RelMaterialized() {
         if (lhsRecord == null) {
             return null
         }
-        var rhsRecord = env.scope(lhsRecord!!) {
-            when (rhs.hasNext()) {
-                true -> rhs.next()
-                false -> null
-            }
+        var rhsRecord = when (rhs.hasNext()) {
+            true -> rhs.next()
+            false -> null
         }
         var toReturn: Record? = null
         do {
@@ -52,16 +49,17 @@ internal abstract class RelJoinNestedLoop : RelMaterialized() {
                     return null
                 }
                 lhsRecord = lhs.next()
-                env.scope(lhsRecord!!) {
-                    rhs.open()
-                    rhsRecord = rhs.next()
+                rhs.open(env.nest(lhsRecord!!))
+                rhsRecord = when (rhs.hasNext()) {
+                    true -> rhs.next()
+                    false -> null
                 }
             }
             // Return Joined Record
             if (rhsRecord != null && lhsRecord != null) {
-                val input = lhsRecord!! + rhsRecord!!
-                val result = condition.eval(input)
-                toReturn = join(result.isTrue(), lhsRecord!!, rhsRecord!!)
+                val input = lhsRecord!! + rhsRecord
+                val result = condition.eval(env.nest(input))
+                toReturn = join(result.isTrue(), lhsRecord!!, rhsRecord)
             }
         }
         while (toReturn == null)

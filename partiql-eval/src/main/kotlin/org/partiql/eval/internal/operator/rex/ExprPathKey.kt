@@ -1,7 +1,7 @@
 package org.partiql.eval.internal.operator.rex
 
 import org.partiql.errors.TypeCheckException
-import org.partiql.eval.internal.Record
+import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
@@ -15,9 +15,9 @@ internal class ExprPathKey(
 ) : Operator.Expr {
 
     @OptIn(PartiQLValueExperimental::class)
-    override fun eval(record: Record): PartiQLValue {
-        val rootEvaluated = root.eval(record).check<StructValue<PartiQLValue>>()
-        val keyEvaluated = key.eval(record).check<StringValue>()
+    override fun eval(env: Environment): PartiQLValue {
+        val rootEvaluated = root.eval(env).check<StructValue<PartiQLValue>>()
+        val keyEvaluated = key.eval(env).check<StringValue>()
         val keyString = keyEvaluated.value ?: error("String value was null")
         return rootEvaluated[keyString] ?: throw TypeCheckException()
     }

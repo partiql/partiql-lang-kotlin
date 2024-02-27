@@ -1,6 +1,7 @@
 package org.partiql.eval.internal.operator.rel
 
 import org.partiql.errors.TypeCheckException
+import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.value.BagValue
@@ -17,8 +18,8 @@ internal class RelScanIndexed(
     private lateinit var iterator: Iterator<PartiQLValue>
     private var index: Long = 0
 
-    override fun open() {
-        val r = expr.eval(Record.empty)
+    override fun open(env: Environment) {
+        val r = expr.eval(env.nest(Record.empty))
         index = 0
         iterator = when (r) {
             is BagValue<*> -> {

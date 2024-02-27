@@ -1,5 +1,6 @@
 package org.partiql.eval.internal.operator.rel
 
+import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
 
@@ -9,8 +10,8 @@ internal class RelDistinct(
 
     private val seen = mutableSetOf<Record>()
 
-    override fun open() {
-        input.open()
+    override fun open(env: Environment) {
+        input.open(env)
     }
 
     override fun materializeNext(): Record? {

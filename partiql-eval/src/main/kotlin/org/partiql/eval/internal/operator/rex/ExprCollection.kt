@@ -1,6 +1,6 @@
 package org.partiql.eval.internal.operator.rex
 
-import org.partiql.eval.internal.Record
+import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.types.BagType
 import org.partiql.types.ListType
@@ -18,11 +18,11 @@ internal class ExprCollection(
 ) : Operator.Expr {
 
     @PartiQLValueExperimental
-    override fun eval(record: Record): PartiQLValue {
+    override fun eval(env: Environment): PartiQLValue {
         return when (type) {
-            is BagType -> bagValue(values.map { it.eval(record) })
-            is SexpType -> sexpValue(values.map { it.eval(record) })
-            is ListType -> listValue(values.map { it.eval(record) })
+            is BagType -> bagValue(values.map { it.eval(env) })
+            is SexpType -> sexpValue(values.map { it.eval(env) })
+            is ListType -> listValue(values.map { it.eval(env) })
             else -> error("Unsupported type for collection $type")
         }
     }

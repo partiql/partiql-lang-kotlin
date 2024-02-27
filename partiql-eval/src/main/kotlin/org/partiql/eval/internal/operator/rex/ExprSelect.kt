@@ -1,7 +1,6 @@
 package org.partiql.eval.internal.operator.rex
 
 import org.partiql.eval.internal.Environment
-import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
@@ -18,7 +17,6 @@ internal class ExprSelect(
     private val input: Operator.Relation,
     private val constructor: Operator.Expr,
     private val ordered: Boolean,
-    private val env: Environment,
     private val isTopLevel: Boolean = false
 ) : Operator.Expr {
 
@@ -26,7 +24,6 @@ internal class ExprSelect(
     class Elements(
         private val input: Operator.Relation,
         private val constructor: Operator.Expr,
-        private val outer: Record,
         private val env: Environment,
     ) : Iterable<PartiQLValue> {
 
@@ -34,51 +31,25 @@ internal class ExprSelect(
             return object : Iterator<PartiQLValue> {
                 private var _init = false
 
-                override fun hasNext(): Boolean = env.scope(outer) {
+                override fun hasNext(): Boolean {
                     if (!_init) {
-                        input.open()
+                        input.open(env)
                         _init = true
                     }
                     val hasNext = input.hasNext()
                     if (!hasNext) {
                         input.close()
                     }
-                    hasNext
+                    return hasNext
                 }
 
                 override fun next(): PartiQLValue {
-                    return env.scope(outer) {
-                        val r = input.next()
-                        val result = constructor.eval(r)
-                        result
-                    }
-                }
-            }
-        }
-    }
-
-    @OptIn(PartiQLValueExperimental::class)
-    class GreedyElements(
-        private val input: Operator.Relation,
-        private val constructor: Operator.Expr,
-        private val outer: Record,
-        private val env: Environment,
-    ) : Iterable<PartiQLValue> {
-
-        val elements = mutableListOf<PartiQLValue>()
-        init {
-            env.scope(outer) {
-                input.open()
-                while (input.hasNext()) {
                     val r = input.next()
-                    val e = constructor.eval(r)
-                    elements.add(e)
+                    val result = constructor.eval(env.nest(r))
+                    return result
                 }
-                input.close()
             }
         }
-
-        override fun iterator(): Iterator<PartiQLValue> = elements.iterator()
     }
 
     /**
@@ -86,11 +57,8 @@ internal class ExprSelect(
      * @return
      */
     @PartiQLValueExperimental
-    override fun eval(record: Record): PartiQLValue {
-        val elements = when (isTopLevel) {
-            true -> Elements(input, constructor, record, env)
-            false -> GreedyElements(input, constructor, record, env)
-        }
+    override fun eval(env: Environment): PartiQLValue {
+        val elements = Elements(input, constructor, env)
         return when (ordered) {
             true -> listValue(elements)
             false -> bagValue(elements)

@@ -1,6 +1,7 @@
 package org.partiql.eval.internal.operator.rel
 
 import org.partiql.errors.TypeCheckException
+import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.helpers.RecordValueIterator
 import org.partiql.eval.internal.operator.Operator
@@ -14,8 +15,8 @@ internal class RelScan(
 
     private lateinit var records: Iterator<Record>
 
-    override fun open() {
-        val r = expr.eval(Record.empty)
+    override fun open(env: Environment) {
+        val r = expr.eval(env.nest(Record.empty))
         records = when (r) {
             is CollectionValue<*> -> RecordValueIterator(r)
             else -> {

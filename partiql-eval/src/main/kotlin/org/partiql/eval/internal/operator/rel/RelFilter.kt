@@ -1,5 +1,6 @@
 package org.partiql.eval.internal.operator.rel
 
+import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.value.BoolValue
@@ -10,8 +11,11 @@ internal class RelFilter(
     val expr: Operator.Expr
 ) : RelMaterialized() {
 
-    override fun open() {
-        input.open()
+    private lateinit var env: Environment
+
+    override fun open(env: Environment) {
+        this.env = env
+        input.open(env)
     }
 
     override fun materializeNext(): Record? {
@@ -30,7 +34,7 @@ internal class RelFilter(
 
     @OptIn(PartiQLValueExperimental::class)
     private fun conditionIsTrue(record: Record, expr: Operator.Expr): Boolean {
-        val condition = expr.eval(record)
+        val condition = expr.eval(env.nest(record))
         return condition is BoolValue && condition.value == true
     }
 }

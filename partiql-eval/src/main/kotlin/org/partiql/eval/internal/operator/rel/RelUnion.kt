@@ -1,5 +1,6 @@
 package org.partiql.eval.internal.operator.rel
 
+import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
 
@@ -8,9 +9,9 @@ internal class RelUnion(
     private val rhs: Operator.Relation,
 ) : Operator.Relation {
 
-    override fun open() {
-        lhs.open()
-        rhs.open()
+    override fun open(env: Environment) {
+        lhs.open(env)
+        rhs.open(env)
     }
 
     override fun hasNext(): Boolean {
