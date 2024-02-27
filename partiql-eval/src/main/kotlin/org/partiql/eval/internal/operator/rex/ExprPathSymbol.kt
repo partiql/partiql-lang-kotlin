@@ -25,6 +25,6 @@ internal class ExprPathSymbol(
                 return v
             }
         }
-        throw TypeCheckException()
+        throw TypeCheckException("Couldn't find symbol '$symbol' in $struct.")
     }
 }

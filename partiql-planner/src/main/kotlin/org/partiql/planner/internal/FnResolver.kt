@@ -71,7 +71,7 @@ internal object FnResolver {
         // Static call iff only one match for every branch
         return when {
             n == 0 -> null
-            n == 1 && exhaustive -> orderedUniqueFunctions.first()
+            n == 1 && exhaustive -> orderedUniqueFunctions.first().fn
             else -> FnMatch.Dynamic(orderedUniqueFunctions, exhaustive)
         }
     }
@@ -83,11 +83,11 @@ internal object FnResolver {
      * @param args
      * @return
      */
-    private fun match(candidates: List<FnSignature>, args: List<PartiQLValueType>): FnMatch.Static? {
+    private fun match(candidates: List<FnSignature>, args: List<PartiQLValueType>): FnMatch.Dynamic.Candidate? {
         // 1. Check for an exact match
         for (candidate in candidates) {
             if (candidate.matches(args)) {
-                return FnMatch.Static(candidate, arrayOfNulls(args.size))
+                return FnMatch.Dynamic.Candidate(fn = FnMatch.Static(candidate, arrayOfNulls(args.size)), args)
             }
         }
         // 2. Look for best match (for now, first match).
@@ -124,7 +124,7 @@ internal object FnResolver {
      * @param args
      * @return
      */
-    private fun FnSignature.match(args: List<PartiQLValueType>): FnMatch.Static? {
+    private fun FnSignature.match(args: List<PartiQLValueType>): FnMatch.Dynamic.Candidate? {
         val mapping = arrayOfNulls<Ref.Cast?>(args.size)
         for (i in args.indices) {
             val arg = args[i]
@@ -143,7 +143,7 @@ internal object FnResolver {
                 }
             }
         }
-        return FnMatch.Static(this, mapping)
+        return FnMatch.Dynamic.Candidate(fn = FnMatch.Static(this, mapping), args)
     }
 
     private fun buildArgumentPermutations(args: List<StaticType>): List<List<StaticType>> {

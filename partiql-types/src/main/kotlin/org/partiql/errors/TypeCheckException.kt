@@ -3,7 +3,7 @@ package org.partiql.errors
 /**
  * A [TypeCheckException] represents an invalid operation due to argument types.
  */
-public class TypeCheckException : RuntimeException()
+public class TypeCheckException(message: String? = null) : RuntimeException(message)
 
 /**
  * A [DataException] represents an unrecoverable query runtime exception.

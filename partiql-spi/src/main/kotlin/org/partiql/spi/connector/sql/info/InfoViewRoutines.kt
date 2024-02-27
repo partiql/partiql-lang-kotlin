@@ -1,6 +1,8 @@
 package org.partiql.spi.connector.sql.info
 
-import org.partiql.spi.fn.FnIndex
+import org.partiql.spi.fn.Fn
+import org.partiql.spi.fn.FnExperimental
+import org.partiql.spi.fn.Index
 import org.partiql.types.BagType
 import org.partiql.types.StaticType
 import org.partiql.types.StructType
@@ -13,7 +15,7 @@ import org.partiql.value.nullValue
 /**
  * This provides the INFORMATION_SCHEMA.ROUTINES view for an [SqlConnector].
  */
-internal class InfoViewRoutines(private val index: FnIndex) : InfoView {
+internal class InfoViewRoutines @OptIn(FnExperimental::class) constructor(private val index: Index<Fn>) : InfoView {
 
     override val schema: StaticType = BagType(
         elementType = StructType(

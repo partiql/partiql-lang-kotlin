@@ -33,7 +33,7 @@ public interface Agg {
          * @return
          */
         @OptIn(PartiQLValueExperimental::class)
-        public fun next(args: Array<PartiQLValue>): PartiQLValue
+        public fun next(args: Array<PartiQLValue>)
 
         /**
          * Return the accumulator value.

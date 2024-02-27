@@ -16,6 +16,7 @@ package org.partiql.value.util
 
 import com.amazon.ion.Decimal
 import java.math.BigDecimal
+import java.math.BigInteger
 import java.math.MathContext
 import java.math.RoundingMode
 
@@ -38,6 +39,7 @@ internal fun bigDecimalOf(num: Number, mc: MathContext = MATH_CONTEXT): BigDecim
     is Long -> BigDecimal(num, mc)
     is Float -> BigDecimal(num.toDouble(), mc)
     is Double -> BigDecimal(num, mc)
+    is BigInteger -> BigDecimal(num, mc)
     is BigDecimal -> num
     else -> throw IllegalArgumentException("Unsupported number type: $num, ${num.javaClass}")
 }
@@ -45,6 +47,9 @@ internal fun bigDecimalOf(num: Number, mc: MathContext = MATH_CONTEXT): BigDecim
 private val CONVERSION_MAP = mapOf<Set<Class<*>>, Class<out Number>>(
     setOf(Int::class.javaObjectType, Int::class.javaObjectType) to Int::class.javaObjectType,
     setOf(Int::class.javaObjectType, Long::class.javaObjectType) to Long::class.javaObjectType,
+    setOf(Int::class.javaObjectType, BigInteger::class.javaObjectType) to BigInteger::class.javaObjectType,
+    setOf(Long::class.javaObjectType, BigInteger::class.javaObjectType) to BigInteger::class.javaObjectType,
+    setOf(BigInteger::class.javaObjectType, BigInteger::class.javaObjectType) to BigInteger::class.javaObjectType,
     // Int w/ Float -> Double
     setOf(Int::class.javaObjectType, Float::class.javaObjectType) to Double::class.javaObjectType,
     setOf(Int::class.javaObjectType, Double::class.javaObjectType) to Double::class.javaObjectType,
@@ -60,6 +65,9 @@ private val CONVERSION_MAP = mapOf<Set<Class<*>>, Class<out Number>>(
     setOf(Long::class.javaObjectType, Double::class.javaObjectType) to Double::class.javaObjectType,
     setOf(Long::class.javaObjectType, BigDecimal::class.javaObjectType) to BigDecimal::class.javaObjectType,
 
+    setOf(BigInteger::class.javaObjectType, Double::class.javaObjectType) to Double::class.javaObjectType,
+    setOf(BigInteger::class.javaObjectType, BigDecimal::class.javaObjectType) to BigDecimal::class.javaObjectType,
+
     setOf(Double::class.javaObjectType, Double::class.javaObjectType) to Double::class.javaObjectType,
     setOf(Double::class.javaObjectType, BigDecimal::class.javaObjectType) to BigDecimal::class.javaObjectType,
 
@@ -71,6 +79,12 @@ private val CONVERTERS = mapOf<Class<*>, (Number) -> Number>(
     Long::class.javaObjectType to Number::toLong,
     Float::class.javaObjectType to Number::toFloat,
     Double::class.javaObjectType to Number::toDouble,
+    BigInteger::class.javaObjectType to { num ->
+        when (num) {
+            is BigInteger -> num
+            else -> BigInteger.valueOf(num.toLong())
+        }
+    },
     BigDecimal::class.java to { num ->
         when (num) {
             is Int -> bigDecimalOf(num)
@@ -78,8 +92,9 @@ private val CONVERTERS = mapOf<Class<*>, (Number) -> Number>(
             is Float -> bigDecimalOf(num)
             is Double -> bigDecimalOf(num)
             is BigDecimal -> bigDecimalOf(num)
+            is BigInteger -> bigDecimalOf(num)
             else -> throw IllegalArgumentException(
-                "Unsupported number for decimal conversion: $num"
+                "Unsupported number for decimal conversion: $num (${num.javaClass.simpleName})"
             )
         }
     }
@@ -92,7 +107,8 @@ internal fun Number.isZero() = when (this) {
     is Float -> this == 0.0f || this == -0.0f
     is Double -> this == 0.0 || this == -0.0
     is BigDecimal -> BigDecimal.ZERO.compareTo(this) == 0
-    else -> throw IllegalStateException("$this")
+    is BigInteger -> BigInteger.ZERO.compareTo(this) == 0
+    else -> throw IllegalStateException("$this (${this.javaClass.simpleName})")
 }
 
 @Suppress("UNCHECKED_CAST")
@@ -107,8 +123,9 @@ internal fun <T> Number.coerce(type: Class<T>): T where T : Number {
  * compatible type.
  *
  * This is only supported on limited types needed by the expression system.
+ * TODO: Make no longer public.
  */
-internal fun coerceNumbers(first: Number, second: Number): Pair<Number, Number> {
+public fun coerceNumbers(first: Number, second: Number): Pair<Number, Number> {
     fun typeFor(n: Number): Class<*> = if (n is Decimal) {
         BigDecimal::class.javaObjectType
     } else {
@@ -129,6 +146,7 @@ internal operator fun Number.compareTo(other: Number): Int {
         is Float -> first.compareTo(second as Float)
         is Double -> first.compareTo(second as Double)
         is BigDecimal -> first.compareTo(second as BigDecimal)
+        is BigInteger -> first.compareTo(second as BigInteger)
         else -> throw IllegalStateException()
     }
 }

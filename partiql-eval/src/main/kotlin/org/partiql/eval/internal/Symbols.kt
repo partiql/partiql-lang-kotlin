@@ -7,9 +7,11 @@ import org.partiql.eval.internal.operator.rex.ExprVarGlobal
 import org.partiql.plan.Catalog
 import org.partiql.plan.PartiQLPlan
 import org.partiql.plan.Ref
+import org.partiql.spi.connector.ConnectorAggProvider
 import org.partiql.spi.connector.ConnectorBindings
 import org.partiql.spi.connector.ConnectorFnProvider
 import org.partiql.spi.connector.ConnectorPath
+import org.partiql.spi.fn.Agg
 import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnExperimental
 
@@ -25,6 +27,7 @@ internal class Symbols private constructor(private val catalogs: Array<C>) {
         val name: String,
         val bindings: ConnectorBindings,
         val functions: ConnectorFnProvider,
+        val aggregations: ConnectorAggProvider,
         val items: Array<Catalog.Item>,
     ) {
 
@@ -53,6 +56,18 @@ internal class Symbols private constructor(private val catalogs: Array<C>) {
             ?: error("Catalog `$catalog` has no entry for function $item")
     }
 
+    fun getAgg(ref: Ref): Agg {
+        val catalog = catalogs[ref.catalog]
+        val item = catalog.items.getOrNull(ref.symbol)
+        if (item == null || item !is Catalog.Item.Agg) {
+            error("Invalid reference $ref; missing aggregation entry for catalog `$catalog`.")
+        }
+        // Lookup in connector
+        val path = ConnectorPath(item.path)
+        return catalog.aggregations.getAgg(path, item.specific)
+            ?: error("Catalog `$catalog` has no entry for aggregation function $item")
+    }
+
     companion object {
 
         /**
@@ -71,6 +86,7 @@ internal class Symbols private constructor(private val catalogs: Array<C>) {
                     name = it.name,
                     bindings = connector.getBindings(),
                     functions = connector.getFunctions(),
+                    aggregations = connector.getAggregations(),
                     items = it.items.toTypedArray()
                 )
             }.toTypedArray()

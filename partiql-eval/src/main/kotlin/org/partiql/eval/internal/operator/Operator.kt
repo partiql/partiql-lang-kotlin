@@ -1,6 +1,8 @@
 package org.partiql.eval.internal.operator
 
 import org.partiql.eval.internal.Record
+import org.partiql.spi.fn.Agg
+import org.partiql.spi.fn.FnExperimental
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 
@@ -25,5 +27,20 @@ internal sealed interface Operator {
         fun next(): Record?
 
         override fun close()
+    }
+
+    interface Aggregation : Operator {
+
+        @OptIn(FnExperimental::class)
+        val delegate: Agg
+
+        val args: List<Expr>
+
+        val setQuantifier: SetQuantifier
+
+        enum class SetQuantifier {
+            ALL,
+            DISTINCT
+        }
     }
 }

@@ -602,5 +602,5 @@ public fun PartiQLValue.toIon(): IonElement = accept(ToIon, Unit)
 @PartiQLValueExperimental
 @Throws(TypeCheckException::class)
 public inline fun <reified T : PartiQLValue> PartiQLValue.check(): T {
-    if (this is T) return this else throw TypeCheckException()
+    if (this is T) return this else throw TypeCheckException("Expected ${T::class.java} but received $this.")
 }

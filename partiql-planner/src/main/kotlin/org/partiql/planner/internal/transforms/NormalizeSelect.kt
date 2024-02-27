@@ -16,6 +16,7 @@ package org.partiql.planner.internal.transforms
 
 import org.partiql.ast.Expr
 import org.partiql.ast.From
+import org.partiql.ast.GroupBy
 import org.partiql.ast.Identifier
 import org.partiql.ast.Select
 import org.partiql.ast.exprCall
@@ -138,7 +139,13 @@ internal object NormalizeSelect {
         internal fun visitSFW(node: Expr.SFW, ctx: () -> Int): Expr.SFW {
             val sfw = super.visitExprSFW(node, ctx) as Expr.SFW
             return when (val select = sfw.select) {
-                is Select.Star -> sfw.copy(select = visitSelectAll(select, sfw.from))
+                is Select.Star -> {
+                    val selectValue = when (val group = sfw.groupBy) {
+                        null -> visitSelectAll(select, sfw.from)
+                        else -> visitSelectAll(select, group)
+                    }
+                    sfw.copy(select = selectValue)
+                }
                 else -> sfw
             }
         }
@@ -215,6 +222,25 @@ internal object NormalizeSelect {
             )
         }
 
+        /**
+         * We need to call this from [visitExprSFW] and not override [visitSelectStar] because we need access to the
+         * [GroupBy] aliases.
+         *
+         * Note: We assume that [select] and [group] have already been visited.
+         */
+        private fun visitSelectAll(select: Select.Star, group: GroupBy): Select.Value {
+            val groupAs = group.asAlias?.let { structField(it.symbol, varLocal(it.symbol)) }
+            val fields = group.keys.map { key ->
+                val alias = key.asAlias ?: error("Expected a GROUP BY alias.")
+                structField(alias.symbol, varLocal(alias.symbol))
+            } + listOfNotNull(groupAs)
+            val constructor = exprStruct(fields)
+            return selectValue(
+                constructor = constructor,
+                setq = select.setq
+            )
+        }
+
         private fun visitSelectProjectWithProjectAll(node: Select.Project): Select.Value {
             val tupleUnionArgs = node.items.mapIndexed { index, item ->
                 when (item) {
@@ -272,6 +298,17 @@ internal object NormalizeSelect {
                     value = expr
                 )
             )
+        )
+
+        @OptIn(PartiQLValueExperimental::class)
+        private fun structField(name: String, expr: Expr): Expr.Struct.Field = Expr.Struct.Field(
+            name = Expr.Lit(stringValue(name)),
+            value = expr
+        )
+
+        private fun varLocal(name: String): Expr.Var = Expr.Var(
+            identifier = Identifier.Symbol(name, Identifier.CaseSensitivity.SENSITIVE),
+            scope = Expr.Var.Scope.LOCAL
         )
 
         private fun From.aliases(): List<Triple<String, String?, String?>> = when (this) {

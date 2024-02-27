@@ -1218,7 +1218,7 @@ internal class PlanTyper(
                     return node to ANY
                 } else if (arg.type is MissingType) {
                     handleAlwaysMissing()
-                    return relOpAggregateCallUnresolved(node.name, listOf(rexErr("MISSING"))) to MissingType
+                    return relOpAggregateCallUnresolved(node.name, node.setQuantifier, listOf(rexErr("MISSING"))) to MissingType
                 } else if (arg.type.isMissable()) {
                     isMissable = true
                 }
@@ -1226,7 +1226,7 @@ internal class PlanTyper(
             }
 
             // Resolve the function
-            val call = env.resolveAgg(node.name, args)
+            val call = env.resolveAgg(node.name, node.setQuantifier, args)
             if (call == null) {
                 handleUnknownAggregation(node)
                 return node to ANY

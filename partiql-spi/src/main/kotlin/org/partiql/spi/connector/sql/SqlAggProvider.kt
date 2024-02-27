@@ -14,9 +14,10 @@
 
 package org.partiql.spi.connector.sql
 
+import org.partiql.spi.connector.ConnectorAggProvider
 import org.partiql.spi.connector.ConnectorFnProvider
 import org.partiql.spi.connector.ConnectorPath
-import org.partiql.spi.fn.Fn
+import org.partiql.spi.fn.Agg
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.Index
 
@@ -24,9 +25,9 @@ import org.partiql.spi.fn.Index
  * A basic [ConnectorFnProvider] over an [Index].
  */
 @OptIn(FnExperimental::class)
-public class SqlFnProvider(private val index: Index<Fn>) : ConnectorFnProvider {
+public class SqlAggProvider(private val index: Index<Agg>) : ConnectorAggProvider {
 
-    override fun getFn(path: ConnectorPath, specific: String): Fn? {
+    override fun getAgg(path: ConnectorPath, specific: String): Agg? {
         return index.get(path, specific)
     }
 }
