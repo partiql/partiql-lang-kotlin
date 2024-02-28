@@ -83,7 +83,7 @@ internal class ExprCallDynamic(
                         if (inputType != c.input) return false
                         // checking the result is expected by the function signature
                         // this should branch should never be reached, but leave it here for clarity
-                        if (c.target != parameterType) return false
+                        if (c.target != parameterType) error("Internal Error: Cast Target does not match Function Parameter")
                     }
                 }
             }
