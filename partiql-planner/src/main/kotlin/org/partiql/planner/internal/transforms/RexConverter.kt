@@ -265,6 +265,8 @@ internal object RexConverter {
 
             val fromList = mutableListOf<Rel>()
 
+            var varRefIndex = 0 // tracking var ref index
+
             val pathNavi = newSteps.fold(newRoot) { current, step ->
                 val path = when (step) {
                     is Expr.Path.Step.Index -> {
@@ -298,17 +300,44 @@ internal object RexConverter {
                         op
                     }
 
+                    // Unpivot and Wildcard steps trigger the rewrite
+                    // According to spec Section 4.3
+                    // ew1p1...wnpn
+                    // rewrite to:
+                    //  SELECT VALUE v_n.p_n
+                    //  FROM
+                    //       u_1 e as v_1
+                    //       u_2 @v_1.p_1 as v_2
+                    //       ...
+                    //       u_n @v_(n-1).p_(n-1) as v_n
+                    //  The From clause needs to be rewritten to
+                    //                     Join <------------------- schema: [(k_1), v_1, (k_2), v_2, ..., (k_(n-1)) v_(n-1)]
+                    //                  /       \
+                    //               ...     un @v_(n-1).p_(n-1) <-- stack: [global, typeEnv: [outer: [global], schema: [(k_1), v_1, (k_2), v_2, ..., (k_(n-1)) v_(n-1)]]]
+                    //                Join  <----------------------- schema: [(k_1), v_1, (k_2), v_2, (k_3), v_3]
+                    //              /    \
+                    //                   u_2 @v_1.p_1 as v2 <------- stack: [global, typeEnv: [outer: [global], schema: [(k_1), v_1, (k_2), v_2]]]
+                    //          JOIN   <---------------------------- schema: [(k_1), v_1, (k_2), v_2]
+                    //          /          \
+                    //   u_1 e as v_1 < ----\----------------------- stack: [global]
+                    //                    u_2 @v_1.p_1 as v2 <------ stack: [global, typeEnv: [outer: [global], schema: [(k_1), v_1]]]
+                    //   while doing the traversal, instead of passing the stack,
+                    //   each join will produce its own schema and pass the schema as a type Env.
+                    // The (k_i) indicate the possible key binding produced by unpivot.
+                    // We calculate the var ref on the fly.
                     is Expr.Path.Step.Unpivot -> {
                         // Unpivot produces two binding, in this context we want the value,
                         // which always going to be the second binding
-                        val op = rexOpVarLocal(1, 1)
+                        val op = rexOpVarLocal(1, varRefIndex + 1)
+                        varRefIndex += 2
                         val index = fromList.size
                         fromList.add(relFromUnpivot(current, index))
                         op
                     }
                     is Expr.Path.Step.Wildcard -> {
                         // Scan produce only one binding
-                        val op = rexOpVarLocal(1, 0)
+                        val op = rexOpVarLocal(1, varRefIndex)
+                        varRefIndex += 1
                         val index = fromList.size
                         fromList.add(relFromDefault(current, index))
                         op
