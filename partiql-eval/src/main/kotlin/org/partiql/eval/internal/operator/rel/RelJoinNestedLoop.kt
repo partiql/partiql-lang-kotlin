@@ -10,7 +10,7 @@ import org.partiql.value.StructValue
 import org.partiql.value.nullValue
 import org.partiql.value.structValue
 
-internal abstract class RelJoinNestedLoop : RelMaterialized() {
+internal abstract class RelJoinNestedLoop : RelPeeking() {
 
     abstract val lhs: Operator.Relation
     abstract val rhs: Operator.Relation
@@ -26,14 +26,14 @@ internal abstract class RelJoinNestedLoop : RelMaterialized() {
             return
         }
         lhsRecord = lhs.next()
-        rhs.open(env.nest(lhsRecord!!))
+        rhs.open(env.push(lhsRecord!!))
         super.open(env)
     }
 
     abstract fun join(condition: Boolean, lhs: Record, rhs: Record): Record?
 
     @OptIn(PartiQLValueExperimental::class)
-    override fun materializeNext(): Record? {
+    override fun peek(): Record? {
         if (lhsRecord == null) {
             return null
         }
@@ -50,7 +50,7 @@ internal abstract class RelJoinNestedLoop : RelMaterialized() {
                     return null
                 }
                 lhsRecord = lhs.next()
-                rhs.open(env.nest(lhsRecord!!))
+                rhs.open(env.push(lhsRecord!!))
                 rhsRecord = when (rhs.hasNext()) {
                     true -> rhs.next()
                     false -> null
@@ -59,7 +59,7 @@ internal abstract class RelJoinNestedLoop : RelMaterialized() {
             // Return Joined Record
             if (rhsRecord != null && lhsRecord != null) {
                 val input = lhsRecord!! + rhsRecord
-                val result = condition.eval(env.nest(input))
+                val result = condition.eval(env.push(input))
                 toReturn = join(result.isTrue(), lhsRecord!!, rhsRecord)
             }
         }

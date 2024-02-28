@@ -72,7 +72,7 @@ internal abstract class ExprSubquery : Operator.Expr {
             return null
         }
         val firstRecord = input.next()
-        val tuple = constructor.eval(env.nest(firstRecord)).check<StructValue<*>>()
+        val tuple = constructor.eval(env.push(firstRecord)).check<StructValue<*>>()
         if (input.hasNext()) {
             input.close()
             throw CardinalityViolation()

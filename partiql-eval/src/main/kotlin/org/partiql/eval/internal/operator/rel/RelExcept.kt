@@ -13,7 +13,7 @@ import org.partiql.eval.internal.operator.Operator
 internal class RelExcept(
     private val lhs: Operator.Relation,
     private val rhs: Operator.Relation,
-) : RelMaterialized() {
+) : RelPeeking() {
 
     private var seen: MutableSet<Record> = mutableSetOf()
     private var init: Boolean = false
@@ -26,12 +26,11 @@ internal class RelExcept(
         super.open(env)
     }
 
-    override fun materializeNext(): Record? {
+    override fun peek(): Record? {
         if (!init) {
             seed()
         }
-        while (lhs.hasNext()) {
-            val row = lhs.next()
+        for (row in lhs) {
             if (!seen.contains(row)) {
                 return row
             }

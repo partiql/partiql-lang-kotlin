@@ -44,7 +44,7 @@ internal class ExprSelect(
 
                 override fun next(): PartiQLValue {
                     val r = input.next()
-                    val result = constructor.eval(env.nest(r))
+                    val result = constructor.eval(env.push(r))
                     return result
                 }
             }

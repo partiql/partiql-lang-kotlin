@@ -35,6 +35,15 @@ internal data class Record(val values: Array<PartiQLValue>) {
     }
 
     override fun toString(): String {
-        return this.values.joinToString(", ", "[", "]")
+        return buildString {
+            append("< ")
+            values.forEachIndexed { index, value ->
+                append("$index: $value")
+                if (index != values.lastIndex) {
+                    append(", ")
+                }
+            }
+            append(" >")
+        }
     }
 }

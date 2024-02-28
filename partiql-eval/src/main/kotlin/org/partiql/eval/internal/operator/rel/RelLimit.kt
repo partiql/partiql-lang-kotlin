@@ -21,7 +21,7 @@ internal class RelLimit(
         input.open(env)
         _seen = BigInteger.ZERO
 
-        val l = limit.eval(env.nest(Record.empty))
+        val l = limit.eval(env.push(Record.empty))
         if (l is NumericValue<*>) {
             _limit = l.toInt().value!!
         } else {

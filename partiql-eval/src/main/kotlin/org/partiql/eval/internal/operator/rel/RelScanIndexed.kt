@@ -19,7 +19,7 @@ internal class RelScanIndexed(
     private var index: Long = 0
 
     override fun open(env: Environment) {
-        val r = expr.eval(env.nest(Record.empty))
+        val r = expr.eval(env.push(Record.empty))
         index = 0
         iterator = when (r) {
             is BagValue<*> -> {

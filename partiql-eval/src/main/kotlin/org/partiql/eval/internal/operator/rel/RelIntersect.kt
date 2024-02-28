@@ -7,7 +7,7 @@ import org.partiql.eval.internal.operator.Operator
 internal class RelIntersect(
     private val lhs: Operator.Relation,
     private val rhs: Operator.Relation,
-) : RelMaterialized() {
+) : RelPeeking() {
 
     private var seen: MutableSet<Record> = mutableSetOf()
     private var init: Boolean = false
@@ -20,12 +20,11 @@ internal class RelIntersect(
         super.open(env)
     }
 
-    override fun materializeNext(): Record? {
+    override fun peek(): Record? {
         if (!init) {
             seed()
         }
-        while (rhs.hasNext()) {
-            val row = rhs.next()
+        for (row in rhs) {
             if (seen.contains(row)) {
                 return row
             }

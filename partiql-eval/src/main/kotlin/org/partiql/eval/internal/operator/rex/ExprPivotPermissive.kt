@@ -19,7 +19,7 @@ internal class ExprPivotPermissive(
         val fields = mutableListOf<Pair<String, PartiQLValue>>()
         while (input.hasNext()) {
             val row = input.next()
-            val newEnv = env.nest(row)
+            val newEnv = env.push(row)
             val k = key.eval(newEnv) as? StringValue ?: continue
             val v = value.eval(newEnv)
             fields.add(k.value!! to v)

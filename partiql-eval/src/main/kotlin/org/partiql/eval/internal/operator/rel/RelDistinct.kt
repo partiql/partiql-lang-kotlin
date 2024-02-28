@@ -6,7 +6,7 @@ import org.partiql.eval.internal.operator.Operator
 
 internal class RelDistinct(
     val input: Operator.Relation
-) : RelMaterialized() {
+) : RelPeeking() {
 
     private val seen = mutableSetOf<Record>()
 
@@ -15,9 +15,8 @@ internal class RelDistinct(
         super.open(env)
     }
 
-    override fun materializeNext(): Record? {
-        while (input.hasNext()) {
-            val next = input.next()
+    override fun peek(): Record? {
+        for (next in input) {
             if (seen.contains(next).not()) {
                 seen.add(next)
                 return next

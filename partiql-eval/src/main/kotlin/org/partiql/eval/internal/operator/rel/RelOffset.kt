@@ -23,7 +23,7 @@ internal class RelOffset(
         init = false
         _seen = BigInteger.ZERO
 
-        val o = offset.eval(env.nest(Record.empty))
+        val o = offset.eval(env.push(Record.empty))
         if (o is NumericValue<*>) {
             _offset = o.toInt().value!!
         } else {
@@ -33,8 +33,10 @@ internal class RelOffset(
 
     override fun hasNext(): Boolean {
         if (!init) {
-            while (_seen < _offset && input.hasNext()) {
-                input.next()
+            for (record in input) {
+                if (_seen >= _offset) {
+                    break
+                }
                 _seen = _seen.add(BigInteger.ONE)
             }
             init = true

@@ -15,7 +15,7 @@ internal class RelScanPermissive(
     private lateinit var records: Iterator<Record>
 
     override fun open(env: Environment) {
-        val r = expr.eval(env.nest(Record.empty))
+        val r = expr.eval(env.push(Record.empty))
         records = when (r) {
             is CollectionValue<*> -> RecordValueIterator(r)
             else -> iterator { yield(Record.of(r)) }

@@ -59,11 +59,10 @@ internal class RelAggregate(
     @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
     override fun open(env: Environment) {
         input.open(env)
-        while (input.hasNext()) {
-            val inputRecord = input.next()
+        for (inputRecord in input) {
             // Initialize the AggregationMap
             val evaluatedGroupByKeys = keys.map {
-                val key = it.eval(env.nest(inputRecord))
+                val key = it.eval(env.push(inputRecord))
                 when (key.type == PartiQLValueType.MISSING) {
                     true -> nullValue()
                     false -> key
@@ -84,7 +83,7 @@ internal class RelAggregate(
 
             // Aggregate Values in Aggregation State
             accumulators.forEachIndexed { index, function ->
-                val valueToAggregate = function.args.map { it.eval(env.nest(inputRecord)) }
+                val valueToAggregate = function.args.map { it.eval(env.push(inputRecord)) }
                 // Skip over aggregation if NULL/MISSING
                 if (valueToAggregate.any { it.type == PartiQLValueType.MISSING || it.isNull }) {
                     return@forEachIndexed

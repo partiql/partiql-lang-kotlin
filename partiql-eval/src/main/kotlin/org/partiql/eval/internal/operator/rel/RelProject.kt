@@ -24,7 +24,7 @@ internal class RelProject(
 
     override fun next(): Record {
         val r = input.next()
-        val p = projections.map { it.eval(env.nest(r)) }.toTypedArray()
+        val p = projections.map { it.eval(env.push(r)) }.toTypedArray()
         return Record(p)
     }
 

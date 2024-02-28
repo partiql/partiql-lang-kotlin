@@ -15,6 +15,7 @@ internal class RelSort(
 
 ) : Operator.Relation {
     private var records: Iterator<Record> = Collections.emptyIterator()
+    private var init: Boolean = false
 
     private val nullsFirstComparator = PartiQLValue.comparator(nullsFirst = true)
     private val nullsLastComparator = PartiQLValue.comparator(nullsFirst = false)
@@ -24,20 +25,15 @@ internal class RelSort(
     override fun open(env: Environment) {
         this.env = env
         input.open(env)
-        val sortedRecords = mutableListOf<Record>()
-        while (input.hasNext()) {
-            val row = input.next()
-            sortedRecords.add(row)
-        }
-        sortedRecords.sortWith(comparator)
-        records = sortedRecords.iterator()
+        init = false
+        records = Collections.emptyIterator()
     }
 
     private val comparator = object : Comparator<Record> {
         override fun compare(l: Record, r: Record): Int {
             specs.forEach { spec ->
-                val lVal = spec.first.eval(env.nest(l))
-                val rVal = spec.first.eval(env.nest(r))
+                val lVal = spec.first.eval(env.push(l))
+                val rVal = spec.first.eval(env.push(r))
 
                 // DESC_NULLS_FIRST(l, r) == ASC_NULLS_LAST(r, l)
                 // DESC_NULLS_LAST(l, r) == ASC_NULLS_FIRST(r, l)
@@ -56,6 +52,15 @@ internal class RelSort(
     }
 
     override fun hasNext(): Boolean {
+        if (!init) {
+            val sortedRecords = mutableListOf<Record>()
+            for (row in input) {
+                sortedRecords.add(row)
+            }
+            sortedRecords.sortWith(comparator)
+            records = sortedRecords.iterator()
+            init = true
+        }
         return records.hasNext()
     }
 
@@ -64,6 +69,7 @@ internal class RelSort(
     }
 
     override fun close() {
+        init = false
         input.close()
     }
 }

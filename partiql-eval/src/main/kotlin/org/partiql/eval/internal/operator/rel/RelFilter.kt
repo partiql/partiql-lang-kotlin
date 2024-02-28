@@ -9,7 +9,7 @@ import org.partiql.value.PartiQLValueExperimental
 internal class RelFilter(
     val input: Operator.Relation,
     val expr: Operator.Expr
-) : RelMaterialized() {
+) : RelPeeking() {
 
     private lateinit var env: Environment
 
@@ -19,9 +19,8 @@ internal class RelFilter(
         super.open(env)
     }
 
-    override fun materializeNext(): Record? {
-        while (input.hasNext()) {
-            val inputRecord: Record = input.next()
+    override fun peek(): Record? {
+        for (inputRecord in input) {
             if (conditionIsTrue(inputRecord, expr)) {
                 return inputRecord
             }
@@ -36,7 +35,7 @@ internal class RelFilter(
 
     @OptIn(PartiQLValueExperimental::class)
     private fun conditionIsTrue(record: Record, expr: Operator.Expr): Boolean {
-        val condition = expr.eval(env.nest(record))
+        val condition = expr.eval(env.push(record))
         return condition is BoolValue && condition.value == true
     }
 }
