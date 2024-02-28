@@ -12,6 +12,7 @@ internal class RelDistinct(
 
     override fun open(env: Environment) {
         input.open(env)
+        super.open(env)
     }
 
     override fun materializeNext(): Record? {
@@ -28,5 +29,6 @@ internal class RelDistinct(
     override fun close() {
         seen.clear()
         input.close()
+        super.close()
     }
 }

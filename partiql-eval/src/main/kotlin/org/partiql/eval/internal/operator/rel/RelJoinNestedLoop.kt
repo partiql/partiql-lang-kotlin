@@ -27,6 +27,7 @@ internal abstract class RelJoinNestedLoop : RelMaterialized() {
         }
         lhsRecord = lhs.next()
         rhs.open(env.nest(lhsRecord!!))
+        super.open(env)
     }
 
     abstract fun join(condition: Boolean, lhs: Record, rhs: Record): Record?
@@ -69,6 +70,7 @@ internal abstract class RelJoinNestedLoop : RelMaterialized() {
     override fun close() {
         lhs.close()
         rhs.close()
+        super.close()
     }
 
     @OptIn(PartiQLValueExperimental::class)

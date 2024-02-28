@@ -1,5 +1,6 @@
 package org.partiql.eval.internal.operator.rel
 
+import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
 
@@ -19,6 +20,10 @@ internal abstract class RelMaterialized : Operator.Relation {
      */
     abstract fun materializeNext(): Record?
 
+    override fun open(env: Environment) {
+        _nextIsReady = false
+    }
+
     override fun hasNext(): Boolean {
         if (_nextIsReady) {
             return true
@@ -35,5 +40,9 @@ internal abstract class RelMaterialized : Operator.Relation {
         }
         _nextIsReady = false
         return _next
+    }
+
+    override fun close() {
+        _nextIsReady = false
     }
 }

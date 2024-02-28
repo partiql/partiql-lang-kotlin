@@ -16,6 +16,7 @@ internal class RelFilter(
     override fun open(env: Environment) {
         this.env = env
         input.open(env)
+        super.open(env)
     }
 
     override fun materializeNext(): Record? {
@@ -30,6 +31,7 @@ internal class RelFilter(
 
     override fun close() {
         input.close()
+        super.close()
     }
 
     @OptIn(PartiQLValueExperimental::class)

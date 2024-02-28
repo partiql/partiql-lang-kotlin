@@ -23,6 +23,7 @@ internal class RelExcept(
         rhs.open(env)
         init = false
         seen = mutableSetOf()
+        super.open(env)
     }
 
     override fun materializeNext(): Record? {
@@ -42,6 +43,7 @@ internal class RelExcept(
         lhs.close()
         rhs.close()
         seen.clear()
+        super.close()
     }
 
     /**

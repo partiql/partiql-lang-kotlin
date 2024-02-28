@@ -17,6 +17,7 @@ internal class RelIntersect(
         rhs.open(env)
         init = false
         seen = mutableSetOf()
+        super.open(env)
     }
 
     override fun materializeNext(): Record? {
@@ -36,6 +37,7 @@ internal class RelIntersect(
         lhs.close()
         rhs.close()
         seen.clear()
+        super.close()
     }
 
     /**
