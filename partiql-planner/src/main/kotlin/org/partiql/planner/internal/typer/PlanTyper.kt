@@ -183,7 +183,7 @@ internal class PlanTyper(
                     else -> type
                 }
             }.let {
-                unionOf(it.toSet())
+                unionOf(it.toSet()).flatten()
             }
 
             // rewrite
