@@ -1291,54 +1291,107 @@ class PartiQLEngineDefaultTest {
         ).assert()
 
     @Test
+    // TODO: Add to conformance tests
     fun wildCard() =
         SuccessTestCase(
             input = """
- [
-    {
-      'id':'5',
-      'books':[
-        {
-          'title':'A',
-          'price':5.0
-        },
-        {
-          'title':'B',
-          'price':2.0
-        }
-      ]
-    },
-    {
-      'id':'6',
-      'books':[
-        {
-          'title':'A',
-          'price':5.0
-        },
-        {
-          'title':'E',
-          'price':2.0
-        }
-      ]
-    },
-    {
-      'id':7,
-      'books':[]
-    }
-  ][*].books[*].title
+             [
+               { 'id':'5',
+                 'books':[
+                   { 'title':'A',
+                     'price':5.0,
+                     'authors': [{'name': 'John'}, {'name': 'Doe'}]
+                   },
+                   { 'title':'B',
+                     'price':2.0,
+                     'authors': [{'name': 'Zoe'}, {'name': 'Bill'}]
+                   }
+                 ]
+               },
+               { 'id':'6',
+                 'books':[
+                   { 'title':'A',
+                     'price':5.0,
+                     'authors': [{'name': 'John'}, {'name': 'Doe'}]
+                   },
+                   { 'title':'E',
+                     'price':2.0,
+                     'authors': [{'name': 'Zoe'}, {'name': 'Bill'}]
+                   }
+                 ]
+               },
+               { 'id':7,
+                 'books':[]
+               }
+             ][*].books[*].authors[*].name
             """.trimIndent(),
-            expected = bagValue(listOf(stringValue("A"), stringValue("B"), stringValue("A"), stringValue("E")))
+            expected = bagValue(
+                listOf(
+                    stringValue("John"), stringValue("Doe"), stringValue("Zoe"), stringValue("Bill"),
+                    stringValue("John"), stringValue("Doe"), stringValue("Zoe"), stringValue("Bill")
+                )
+            )
         ).assert()
 
     @Test
-    fun wildCard2() {
-        val query = """
-            {'a':1, 'b':2}.*
-        """.trimIndent()
-        val expected = bagValue(listOf(int32Value(1), int32Value(2)))
+    // TODO: add to conformance tests
+    // Note that the existing pipeline produced identical result when supplying with
+    // SELECT VALUE v2.name FROM e as v0, v0.books as v1, unpivot v1.authors as v2;
+    // But it produces different result when supplying with e[*].books[*].authors.*
+    // <<
+    //  <<{ 'name': 'John'},{'name': 'Doe'} >>,
+    //  ...
+    // >>
+    fun unpivot() =
         SuccessTestCase(
-            query,
-            expected
+            input = """
+             [
+               { 'id':'5',
+                 'books':[
+                   { 'title':'A',
+                     'price':5.0,
+                     'authors': {
+                      'first': {'name': 'John'},
+                      'second': {'name': 'Doe'}
+                     }
+                   },
+                   { 'title':'B',
+                     'price':2.0,
+                     'authors': {
+                      'first': {'name': 'Zoe'}, 
+                      'second': {'name': 'Bill'}
+                     }
+                   }
+                 ]
+               },
+               { 'id':'6',
+                 'books':[
+                   { 'title':'A',
+                     'price':5.0,
+                     'authors': {
+                      'first': {'name': 'John'},
+                      'second': {'name': 'Doe'}
+                     }
+                   },
+                   { 'title':'E',
+                     'price':2.0,
+                     'authors': {
+                      'first': {'name': 'Zoe'}, 
+                      'second': {'name': 'Bill'}
+                     }
+                   }
+                 ]
+               },
+               { 'id':7,
+                 'books':[]
+               }
+             ][*].books[*].authors.*.name
+            """.trimIndent(),
+            expected = bagValue(
+                listOf(
+                    stringValue("John"), stringValue("Doe"), stringValue("Zoe"), stringValue("Bill"),
+                    stringValue("John"), stringValue("Doe"), stringValue("Zoe"), stringValue("Bill")
+                )
+            )
         ).assert()
-    }
 }

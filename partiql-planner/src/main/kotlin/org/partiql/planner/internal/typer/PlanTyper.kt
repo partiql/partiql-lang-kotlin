@@ -171,15 +171,19 @@ internal class PlanTyper(
             val kType = STRING
 
             // value type, possibly coerced.
-            val vType = when (val t = rex.type) {
-                is StructType -> {
-                    if (t.contentClosed || t.constraints.contains(TupleConstraint.Open(false))) {
-                        unionOf(t.fields.map { it.value }.toSet()).flatten()
-                    } else {
-                        ANY
+            val vType = rex.type.allTypes.map { type ->
+                when (type) {
+                    is StructType -> {
+                        if (type.contentClosed || type.constraints.contains(TupleConstraint.Open(false))) {
+                            unionOf(type.fields.map { it.value }.toSet()).flatten()
+                        } else {
+                            ANY
+                        }
                     }
+                    else -> type
                 }
-                else -> t
+            }.let {
+                unionOf(it.toSet())
             }
 
             // rewrite
