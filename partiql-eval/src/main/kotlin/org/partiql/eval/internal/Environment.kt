@@ -1,37 +1,61 @@
 package org.partiql.eval.internal
 
-import java.util.Stack
+import org.partiql.value.PartiQLValue
+import org.partiql.value.PartiQLValueExperimental
 
 /**
- * This class represents the Variables Environment defined in the PartiQL Specification. It differs slightly as it does
- * not hold the "current" [Record]. The reason for this is that the PartiQL Maintainers have opted to use the Volcano
- * Model for query execution (see [org.partiql.eval.internal.operator.Operator.Relation.next] and
- * [org.partiql.eval.internal.operator.Operator.Expr.eval]), however, the use of the [Environment] is to provide the
- * functionality defined in the PartiQL Specification. It accomplishes this by wrapping the "outer" variables
- * environments (or [scopes]).
+ * This class represents the Variables Environment defined in the PartiQL Specification.
  */
-internal class Environment {
+internal class Environment(
+    private val bindings: Record,
+    private val parent: Environment? = null
+) {
 
-    private val scopes: Stack<Record> = Stack<Record>()
+    companion object {
+        @JvmStatic
+        val empty: Environment = Environment(Record.empty, null)
+    }
 
-    /**
-     * Creates a new scope using the [record] to execute the [block]. Pops the [record] once the [block] is done executing.
-     */
-    internal inline fun <T> scope(record: Record, block: () -> T): T {
-        scopes.push(record)
-        try {
-            return block.invoke()
-        } catch (t: Throwable) {
-            throw t
-        } finally {
-            scopes.pop()
-        }
+    @OptIn(PartiQLValueExperimental::class)
+    operator fun get(index: Int): PartiQLValue {
+        return this.bindings[index]
+    }
+
+    @OptIn(PartiQLValueExperimental::class)
+    fun getOrNull(index: Int): PartiQLValue? {
+        return this.bindings.values.getOrNull(index)
+    }
+
+    internal fun next(): Environment? {
+        return this.parent
     }
 
     /**
-     * Gets the scope/record/variables-environment at the requested [index].
+     * Returns a new [Environment] that contains the [record] and encloses the current [Environment]. This is used to:
+     * 1. Pass on a [Record] from a Rel to a Rex. Consider `SELECT a + 1 FROM t`. The PROJECT would likely grab the input
+     * record from the SCAN, [push] it into the current environment, and pass it to the Expr representing `a + 1`.
+     * 2. Create a nested scope. Consider `SELECT 1 + (SELECT t1.a + t2.b FROM t2 LIMIT 1) FROM t1`. Since the inner
+     * SELECT (ExprSubquery) is creating a "nested scope", it would invoke [push].
+     *
+     * Here are the general rules to follow:
+     * 1. When evaluating Expressions from within a Relation, one should always use [push] to "push" onto the stack.
+     * 2. When evaluating Relations from within an Expression, one should always use [push] to "push" onto the stack.
+     * 3. When evaluating Expressions from within a Relation, there is no need to use [push].
+     * 4. When evaluating Relations from within a Relation, one **might** want to use [push]. Consider the LATERAL JOIN, for instance.
+     *
+     * @see [org.partiql.eval.internal.operator.Operator.Expr]
+     * @see [org.partiql.eval.internal.operator.Operator.Relation]
+     * @see [org.partiql.eval.internal.operator.rex.ExprSubquery]
      */
-    operator fun get(index: Int): Record {
-        return scopes[index]
+    internal fun push(record: Record): Environment = Environment(
+        record,
+        this
+    )
+
+    override fun toString(): String {
+        return when (parent) {
+            null -> bindings.toString()
+            else -> "$bindings --> $parent"
+        }
     }
 }

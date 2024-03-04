@@ -1,7 +1,7 @@
 package org.partiql.eval
 
 import org.partiql.eval.internal.Compiler
-import org.partiql.eval.internal.Record
+import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Symbols
 import org.partiql.plan.PartiQLPlan
 import org.partiql.value.PartiQLValue
@@ -19,7 +19,7 @@ internal class PartiQLEngineDefault : PartiQLEngine {
             val expression = compiler.compile()
             return object : PartiQLStatement.Query {
                 override fun execute(): PartiQLValue {
-                    return expression.eval(Record.empty)
+                    return expression.eval(Environment.empty)
                 }
             }
         } catch (ex: Exception) {

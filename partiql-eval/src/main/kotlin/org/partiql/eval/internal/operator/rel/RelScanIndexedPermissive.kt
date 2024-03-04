@@ -1,5 +1,6 @@
 package org.partiql.eval.internal.operator.rel
 
+import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.value.BagValue
@@ -18,8 +19,8 @@ internal class RelScanIndexedPermissive(
     private var index: Long = 0
     private var isIndexable: Boolean = true
 
-    override fun open() {
-        val r = expr.eval(Record.empty)
+    override fun open(env: Environment) {
+        val r = expr.eval(env.push(Record.empty))
         index = 0
         iterator = when (r) {
             is BagValue<*> -> {
@@ -34,10 +35,11 @@ internal class RelScanIndexedPermissive(
         }
     }
 
-    override fun next(): Record? {
-        if (!iterator.hasNext()) {
-            return null
-        }
+    override fun hasNext(): Boolean {
+        return iterator.hasNext()
+    }
+
+    override fun next(): Record {
         val v = iterator.next()
         return when (isIndexable) {
             true -> {

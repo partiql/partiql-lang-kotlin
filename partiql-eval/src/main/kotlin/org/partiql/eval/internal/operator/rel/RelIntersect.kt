@@ -1,39 +1,42 @@
 package org.partiql.eval.internal.operator.rel
 
+import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
 
 internal class RelIntersect(
     private val lhs: Operator.Relation,
     private val rhs: Operator.Relation,
-) : Operator.Relation {
+) : RelPeeking() {
 
     private var seen: MutableSet<Record> = mutableSetOf()
     private var init: Boolean = false
 
-    override fun open() {
-        lhs.open()
-        rhs.open()
+    override fun open(env: Environment) {
+        lhs.open(env)
+        rhs.open(env)
         init = false
         seen = mutableSetOf()
+        super.open(env)
     }
 
-    override fun next(): Record? {
+    override fun peek(): Record? {
         if (!init) {
             seed()
         }
-        while (true) {
-            val row = rhs.next() ?: return null
+        for (row in rhs) {
             if (seen.contains(row)) {
                 return row
             }
         }
+        return null
     }
 
     override fun close() {
         lhs.close()
         rhs.close()
         seen.clear()
+        super.close()
     }
 
     /**

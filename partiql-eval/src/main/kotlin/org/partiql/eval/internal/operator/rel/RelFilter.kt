@@ -1,5 +1,6 @@
 package org.partiql.eval.internal.operator.rel
 
+import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.value.BoolValue
@@ -8,30 +9,33 @@ import org.partiql.value.PartiQLValueExperimental
 internal class RelFilter(
     val input: Operator.Relation,
     val expr: Operator.Expr
-) : Operator.Relation {
+) : RelPeeking() {
 
-    override fun open() {
-        input.open()
+    private lateinit var env: Environment
+
+    override fun open(env: Environment) {
+        this.env = env
+        input.open(env)
+        super.open(env)
     }
 
-    override fun next(): Record? {
-        var inputRecord: Record? = input.next()
-        while (inputRecord != null) {
+    override fun peek(): Record? {
+        for (inputRecord in input) {
             if (conditionIsTrue(inputRecord, expr)) {
                 return inputRecord
             }
-            inputRecord = input.next()
         }
         return null
     }
 
     override fun close() {
         input.close()
+        super.close()
     }
 
     @OptIn(PartiQLValueExperimental::class)
     private fun conditionIsTrue(record: Record, expr: Operator.Expr): Boolean {
-        val condition = expr.eval(record)
+        val condition = expr.eval(env.push(record))
         return condition is BoolValue && condition.value == true
     }
 }

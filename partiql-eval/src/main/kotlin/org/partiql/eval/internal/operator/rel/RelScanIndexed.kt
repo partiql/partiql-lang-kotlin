@@ -1,6 +1,7 @@
 package org.partiql.eval.internal.operator.rel
 
 import org.partiql.errors.TypeCheckException
+import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.value.BagValue
@@ -17,8 +18,8 @@ internal class RelScanIndexed(
     private lateinit var iterator: Iterator<PartiQLValue>
     private var index: Long = 0
 
-    override fun open() {
-        val r = expr.eval(Record.empty)
+    override fun open(env: Environment) {
+        val r = expr.eval(env.push(Record.empty))
         index = 0
         iterator = when (r) {
             is BagValue<*> -> {
@@ -33,10 +34,11 @@ internal class RelScanIndexed(
         }
     }
 
-    override fun next(): Record? {
-        if (!iterator.hasNext()) {
-            return null
-        }
+    override fun hasNext(): Boolean {
+        return iterator.hasNext()
+    }
+
+    override fun next(): Record {
         val i = index
         val v = iterator.next()
         index += 1
