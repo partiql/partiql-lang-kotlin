@@ -43,21 +43,6 @@ Thank you to all who have contributed!
 Thank you to all who have contributed!
 - @<your-username>
 
-## [1.0.0-perf.1] - 2024-03-04
-
-This is a pre-release containing:
-- A new, experimental evaluator under `org.partiql.eval`.
-- Several breaking changes under `org.partiql.plan` and `org.partiql.types` and `org.partiql.spi`.
-
-Please note that these changes are subject to future breaking changes without warning.
-
-### Contributors
-Thank you to all who have contributed!
-- @alancai98
-- @johnedquinn
-- @RCHowell
-- @yliuuuu
-
 ## [0.14.1] - 2024-01-03
 
 ### Added
