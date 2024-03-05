@@ -27,7 +27,7 @@ import org.partiql.lang.planner.GlobalResolutionResult
 import org.partiql.lang.syntax.PartiQLParserBuilder
 import java.util.concurrent.TimeUnit
 
-@BenchmarkMode(Mode.All)
+@BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
 open class PartiQLCompilerPipelineAsyncBenchmark {
     companion object {
