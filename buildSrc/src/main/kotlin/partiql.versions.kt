@@ -44,6 +44,8 @@ object Versions {
     const val kasechange = "1.3.0"
     const val ktlint = "11.6.0"
     const val pig = "0.6.2"
+    const val kotlinxCoroutines = "1.6.0"
+    const val kotlinxCoroutinesJdk8 = "1.6.0"
 
     // Testing
     const val assertj = "3.11.0"
@@ -54,6 +56,7 @@ object Versions {
     const val junit4Params = "1.1.1"
     const val mockito = "4.5.0"
     const val mockk = "1.11.0"
+    const val kotlinxCoroutinesTest = "1.6.0"
 }
 
 object Deps {
@@ -84,6 +87,8 @@ object Deps {
     const val picoCli = "info.picocli:picocli:${Versions.picoCli}"
     const val pig = "org.partiql:partiql-ir-generator:${Versions.pig}"
     const val pigRuntime = "org.partiql:partiql-ir-generator-runtime:${Versions.pig}"
+    const val kotlinxCoroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-core:${Versions.kotlinxCoroutines}"
+    const val kotlinxCoroutinesJdk8 = "org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:${Versions.kotlinxCoroutinesJdk8}"
 
     // Testing
     const val assertj = "org.assertj:assertj-core:${Versions.assertj}"
@@ -97,6 +102,7 @@ object Deps {
     const val kotlinTestJunit = "org.jetbrains.kotlin:kotlin-test-junit5:${Versions.kotlin}"
     const val mockito = "org.mockito:mockito-junit-jupiter:${Versions.mockito}"
     const val mockk = "io.mockk:mockk:${Versions.mockk}"
+    const val kotlinxCoroutinesTest = "org.jetbrains.kotlinx:kotlinx-coroutines-test:${Versions.kotlinxCoroutinesTest}"
 }
 
 object Plugins {

@@ -23,4 +23,9 @@ enum class EvaluatorTestTarget {
      * supported by [org.partiql.lang.CompilerPipeline], or when testing features unique to the former.
      */
     PARTIQL_PIPELINE,
+
+    /**
+     * TODO ALAN
+     */
+    PARTIQL_PIPELINE_ASYNC
 }

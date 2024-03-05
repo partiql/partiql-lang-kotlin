@@ -39,6 +39,8 @@ dependencies {
     implementation(Deps.antlrRuntime)
     implementation(Deps.csv)
     implementation(Deps.kotlinReflect)
+    implementation(Deps.kotlinxCoroutines)
+    implementation(Deps.kotlinxCoroutinesJdk8)
 
     testImplementation(testFixtures(project(":partiql-planner")))
     testImplementation(project(":plugins:partiql-memory"))
@@ -48,6 +50,14 @@ dependencies {
     testImplementation(Deps.junit4Params)
     testImplementation(Deps.junitVintage) // Enables JUnit4
     testImplementation(Deps.mockk)
+    testImplementation(Deps.kotlinxCoroutinesTest)
+
+    // jmh use newer version
+    dependencies {
+        jmh("org.openjdk.jmh:jmh-core:1.37")
+        jmh("org.openjdk.jmh:jmh-generator-annprocess:1.37")
+        jmh("org.openjdk.jmh:jmh-generator-bytecode:1.37")
+    }
 }
 
 publish {

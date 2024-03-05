@@ -15,12 +15,12 @@ import org.partiql.lang.planner.transforms.DEFAULT_IMPL_NAME
  *
  * @param name
  */
-abstract class JoinRelationalOperatorFactory(name: String) : RelationalOperatorFactory {
+abstract class JoinRelationalOperatorFactoryAsync(name: String) : RelationalOperatorFactory {
 
     final override val key = RelationalOperatorFactoryKey(RelationalOperatorKind.JOIN, name)
 
     /**
-     * Creates a [RelationExpression] instance for [PartiqlPhysical.Bexpr.Join].
+     * Creates a [RelationExpressionAsync] instance for [PartiqlPhysical.Bexpr.Join].
      *
      * @param impl static arguments
      * @param joinType inner, left, right, outer
@@ -34,33 +34,33 @@ abstract class JoinRelationalOperatorFactory(name: String) : RelationalOperatorF
     abstract fun create(
         impl: PartiqlPhysical.Impl,
         joinType: PartiqlPhysical.JoinType,
-        leftBexpr: RelationExpression,
-        rightBexpr: RelationExpression,
-        predicateExpr: ValueExpression?,
+        leftBexpr: RelationExpressionAsync,
+        rightBexpr: RelationExpressionAsync,
+        predicateExpr: ValueExpressionAsync?,
         setLeftSideVariablesToNull: (EvaluatorState) -> Unit,
         setRightSideVariablesToNull: (EvaluatorState) -> Unit
-    ): RelationExpression
+    ): RelationExpressionAsync
 }
 
-internal object JoinRelationalOperatorFactoryDefault : JoinRelationalOperatorFactory(DEFAULT_IMPL_NAME) {
+internal object JoinRelationalOperatorFactoryDefaultAsync : JoinRelationalOperatorFactoryAsync(DEFAULT_IMPL_NAME) {
     override fun create(
         impl: PartiqlPhysical.Impl,
         joinType: PartiqlPhysical.JoinType,
-        leftBexpr: RelationExpression,
-        rightBexpr: RelationExpression,
-        predicateExpr: ValueExpression?,
+        leftBexpr: RelationExpressionAsync,
+        rightBexpr: RelationExpressionAsync,
+        predicateExpr: ValueExpressionAsync?,
         setLeftSideVariablesToNull: (EvaluatorState) -> Unit,
         setRightSideVariablesToNull: (EvaluatorState) -> Unit
-    ): RelationExpression = when (joinType) {
+    ): RelationExpressionAsync = when (joinType) {
         is PartiqlPhysical.JoinType.Inner -> {
-            InnerJoinOperator(
+            InnerJoinOperatorAsync(
                 lhs = leftBexpr,
                 rhs = rightBexpr,
                 condition = predicateExpr?.closure() ?: { true }
             )
         }
         is PartiqlPhysical.JoinType.Left -> {
-            LeftJoinOperator(
+            LeftJoinOperatorAsync(
                 lhs = leftBexpr,
                 rhs = rightBexpr,
                 condition = predicateExpr?.closure() ?: { true },
@@ -68,7 +68,7 @@ internal object JoinRelationalOperatorFactoryDefault : JoinRelationalOperatorFac
             )
         }
         is PartiqlPhysical.JoinType.Right -> {
-            RightJoinOperator(
+            RightJoinOperatorAsync(
                 lhs = leftBexpr,
                 rhs = rightBexpr,
                 condition = predicateExpr?.closure() ?: { true },
@@ -78,7 +78,7 @@ internal object JoinRelationalOperatorFactoryDefault : JoinRelationalOperatorFac
         is PartiqlPhysical.JoinType.Full -> TODO("Full join")
     }
 
-    private fun ValueExpression.closure() = { state: EvaluatorState ->
+    private fun ValueExpressionAsync.closure(): suspend (EvaluatorState) -> Boolean = { state: EvaluatorState ->
         val v = invoke(state)
         v.isNotUnknown() && v.booleanValue()
     }
@@ -87,16 +87,16 @@ internal object JoinRelationalOperatorFactoryDefault : JoinRelationalOperatorFac
 /**
  * See specification 5.6
  */
-private class InnerJoinOperator(
-    private val lhs: RelationExpression,
-    private val rhs: RelationExpression,
-    private val condition: (EvaluatorState) -> Boolean
-) : RelationExpression {
+private class InnerJoinOperatorAsync(
+    private val lhs: RelationExpressionAsync,
+    private val rhs: RelationExpressionAsync,
+    private val condition: suspend (EvaluatorState) -> Boolean
+) : RelationExpressionAsync {
 
-    override fun evaluate(state: EvaluatorState) = relation(RelationType.BAG) {
-        val leftItr = lhs.evaluate(state)
+    override suspend fun evaluateAsync(state: EvaluatorState) = relation(RelationType.BAG) {
+        val leftItr = lhs.evaluateAsync(state)
         while (leftItr.nextRow()) {
-            val rightItr = rhs.evaluate(state)
+            val rightItr = rhs.evaluateAsync(state)
             while (rightItr.nextRow()) {
                 if (condition(state)) {
                     yield()
@@ -109,17 +109,17 @@ private class InnerJoinOperator(
 /**
  * See specification 5.6
  */
-private class LeftJoinOperator(
-    private val lhs: RelationExpression,
-    private val rhs: RelationExpression,
-    private val condition: (EvaluatorState) -> Boolean,
+private class LeftJoinOperatorAsync(
+    private val lhs: RelationExpressionAsync,
+    private val rhs: RelationExpressionAsync,
+    private val condition: suspend (EvaluatorState) -> Boolean,
     private val setRightSideVariablesToNull: (EvaluatorState) -> Unit
-) : RelationExpression {
+) : RelationExpressionAsync {
 
-    override fun evaluate(state: EvaluatorState) = relation(RelationType.BAG) {
-        val leftItr = lhs.evaluate(state)
+    override suspend fun evaluateAsync(state: EvaluatorState) = relation(RelationType.BAG) {
+        val leftItr = lhs.evaluateAsync(state)
         while (leftItr.nextRow()) {
-            val rightItr = rhs.evaluate(state)
+            val rightItr = rhs.evaluateAsync(state)
             var yieldedSomething = false
             while (rightItr.nextRow()) {
                 if (condition(state)) {
@@ -138,17 +138,17 @@ private class LeftJoinOperator(
 /**
  * See specification 5.6
  */
-private class RightJoinOperator(
-    private val lhs: RelationExpression,
-    private val rhs: RelationExpression,
-    private val condition: (EvaluatorState) -> Boolean,
+private class RightJoinOperatorAsync(
+    private val lhs: RelationExpressionAsync,
+    private val rhs: RelationExpressionAsync,
+    private val condition: suspend (EvaluatorState) -> Boolean,
     private val setLeftSideVariablesToNull: (EvaluatorState) -> Unit
-) : RelationExpression {
+) : RelationExpressionAsync {
 
-    override fun evaluate(state: EvaluatorState) = relation(RelationType.BAG) {
-        val rightItr = rhs.evaluate(state)
+    override suspend fun evaluateAsync(state: EvaluatorState) = relation(RelationType.BAG) {
+        val rightItr = rhs.evaluateAsync(state)
         while (rightItr.nextRow()) {
-            val leftItr = lhs.evaluate(state)
+            val leftItr = lhs.evaluateAsync(state)
             var yieldedSomething = false
             while (leftItr.nextRow()) {
                 if (condition(state)) {
