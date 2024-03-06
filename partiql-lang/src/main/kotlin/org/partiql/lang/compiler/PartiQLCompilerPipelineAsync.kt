@@ -25,12 +25,12 @@ import org.partiql.lang.syntax.Parser
 import org.partiql.lang.syntax.PartiQLParserBuilder
 
 /**
- * TODO ALAN update usage
  * [PartiQLCompilerPipelineAsync] is the top-level class for embedded usage of PartiQL.
  *
  * Example usage:
  * ```
- * val pipeline = PartiQLCompilerPipeline.standard()
+ * // Within a coroutine scope or `suspend fun`
+ * val pipeline = PartiQLCompilerPipelineAsync.standard()
  * val session = // session bindings
  * val statement = pipeline.compile("-- some PartiQL query!")
  * val result = statement.eval(session)
@@ -66,7 +66,7 @@ class PartiQLCompilerPipelineAsync(
          *
          * Example usage:
          * ```
-         * val pipeline = PartiQLCompilerPipeline.build {
+         * val pipeline = PartiQLCompilerPipelineAsync.build {
          *    planner.options(plannerOptions)
          *           .globalVariableResolver(globalVariableResolver)
          *    compiler.ionSystem(ION)

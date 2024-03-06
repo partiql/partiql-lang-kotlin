@@ -19,7 +19,7 @@ package org.partiql.lang.eval
  */
 internal interface ExpressionAsync {
     /**
-     * TODO ALAN
+     * Evaluates the [ExpressionAsync] with the given Session
      */
     suspend fun eval(session: EvaluationSession): PartiQLResult
 }

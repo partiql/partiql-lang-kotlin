@@ -54,6 +54,7 @@ import org.partiql.lang.types.CustomType
  */
 
 @ExperimentalPartiQLCompilerPipeline
+@Deprecated("To be removed in the next major version.", replaceWith = ReplaceWith("PartiQLCompilerAsyncBuilder"))
 class PartiQLCompilerBuilder private constructor() {
 
     private var options: EvaluatorOptions = EvaluatorOptions.standard()
@@ -90,9 +91,11 @@ class PartiQLCompilerBuilder private constructor() {
         )
 
         @JvmStatic
+        @Deprecated("To be removed in the next major version.", replaceWith = ReplaceWith("PartiQLCompilerAsyncBuilder.standard"))
         fun standard() = PartiQLCompilerBuilder()
     }
 
+    @Deprecated("To be removed in the next major version.", replaceWith = ReplaceWith("PartiQLCompilerAsyncBuilder.build"))
     fun build(): PartiQLCompiler {
         if (options.thunkOptions.thunkReturnTypeAssertions == ThunkReturnTypeAssertions.ENABLED) {
             TODO("ThunkReturnTypeAssertions.ENABLED requires a static type pass")
@@ -112,22 +115,27 @@ class PartiQLCompilerBuilder private constructor() {
         )
     }
 
+    @Deprecated("To be removed in the next major version.", replaceWith = ReplaceWith("PartiQLCompilerAsyncBuilder.options"))
     fun options(options: EvaluatorOptions) = this.apply {
         this.options = options
     }
 
+    @Deprecated("To be removed in the next major version.", replaceWith = ReplaceWith("PartiQLCompilerAsyncBuilder.customFunctions"))
     fun customFunctions(customFunctions: List<ExprFunction>) = this.apply {
         this.customFunctions = customFunctions
     }
 
+    @Deprecated("To be removed in the next major version.", replaceWith = ReplaceWith("PartiQLCompilerAsyncBuilder.customTypes"))
     fun customTypes(customTypes: List<CustomType>) = this.apply {
         this.customTypes = customTypes
     }
 
+    @Deprecated("To be removed in the next major version.", replaceWith = ReplaceWith("PartiQLCompilerAsyncBuilder.customProcedures"))
     fun customProcedures(customProcedures: List<StoredProcedure>) = this.apply {
         this.customProcedures = customProcedures
     }
 
+    @Deprecated("To be removed in the next major version.", replaceWith = ReplaceWith("PartiQLCompilerAsyncBuilder.customOperatorFactories"))
     fun customOperatorFactories(customOperatorFactories: List<RelationalOperatorFactory>) = this.apply {
         this.customOperatorFactories = customOperatorFactories
     }

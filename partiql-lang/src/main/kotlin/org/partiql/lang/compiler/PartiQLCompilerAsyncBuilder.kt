@@ -38,16 +38,16 @@ import org.partiql.lang.planner.EvaluatorOptions
 import org.partiql.lang.types.CustomType
 
 /**
- * Builder class to instantiate a [PartiQLCompiler].
+ * Builder class to instantiate a [PartiQLCompilerAsync].
  *
  * Example usages:
  *
  * ```
  * // Default
- * val compiler = PartiQLCompilerBuilder.standard().build()
+ * val compiler = PartiQLCompilerAsyncBuilder.standard().build()
  *
  * // Fluent builder
- * val compiler = PartiQLCompilerBuilder.standard()
+ * val compiler = PartiQLCompilerAsyncBuilder.standard()
  *                                      .customFunctions(myCustomFunctionList)
  *                                      .build()
  * ```

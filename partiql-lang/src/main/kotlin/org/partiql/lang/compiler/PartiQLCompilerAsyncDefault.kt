@@ -21,7 +21,6 @@ import org.partiql.lang.domains.PartiqlLogicalResolved
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.errors.PartiQLException
 import org.partiql.lang.eval.ExprFunction
-import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.PartiQLResult
 import org.partiql.lang.eval.PartiQLStatementAsync
 import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
@@ -157,6 +156,4 @@ internal class PartiQLCompilerAsyncDefault(
             }
         }
     }
-
-    private fun ExprValue.toValue(): PartiQLResult = PartiQLResult.Value(this)
 }

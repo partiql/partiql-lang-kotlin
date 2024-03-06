@@ -29,6 +29,7 @@ import java.util.concurrent.TimeUnit
 
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
+@Deprecated("To be removed in the next major version once the synchronous physical plan compiler is removed.")
 open class PartiQLCompilerPipelineBenchmark {
     companion object {
         private const val FORK_VALUE: Int = FORK_VALUE_RECOMMENDED
