@@ -49,7 +49,19 @@ public interface PartiQLPlanner {
         public val currentDirectory: List<String> = emptyList(),
         public val catalogs: Map<String, ConnectorMetadata> = emptyMap(),
         public val instant: Instant = Instant.now(),
-    )
+        public val missingOpBehavior: MissingOpBehavior = MissingOpBehavior.QUIET
+    ) {
+        public enum class MissingOpBehavior {
+            /**
+             * Suppress Missing Op
+             */
+            QUIET,
+            /**
+             * Throw
+             */
+            SIGNAL
+        }
+    }
 
     public companion object {
 
@@ -58,5 +70,8 @@ public interface PartiQLPlanner {
 
         @JvmStatic
         public fun default(): PartiQLPlanner = PartiQLPlannerBuilder().build()
+
+        @JvmStatic
+        public fun debug(): PartiQLPlanner = PartiQLPlannerDebug()
     }
 }

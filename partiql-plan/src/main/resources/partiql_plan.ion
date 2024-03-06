@@ -197,6 +197,26 @@ rex::{
     err::{
       message: string,
     },
+
+    // Information that worth to have to help end customer debugging the plan.
+    debug::[
+      call::[
+        unresolved::{
+          identifier: identifier,
+          args: list::[rex],
+        },
+      ],
+      problem::[
+        missing::{
+          trace: '.rex.op',
+          problem: string
+        },
+        error::{
+          trace: '.rex.op',
+          problem: string
+        },
+      ]
+    ]
   ],
 }
 

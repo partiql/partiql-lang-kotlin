@@ -3,7 +3,9 @@ package org.partiql.planner.internal.transforms
 import org.partiql.errors.ProblemCallback
 import org.partiql.plan.PlanNode
 import org.partiql.plan.partiQLPlan
+import org.partiql.plan.rexOpCallStatic
 import org.partiql.plan.rexOpCast
+import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.internal.ir.Identifier
 import org.partiql.planner.internal.ir.PartiQLPlan
 import org.partiql.planner.internal.ir.Ref
@@ -12,6 +14,7 @@ import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.Statement
 import org.partiql.planner.internal.ir.visitor.PlanBaseVisitor
 import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.missingValue
 
 /**
  * This is an internal utility to translate from the internal unresolved plan used for typing to the public plan IR.
@@ -23,9 +26,9 @@ import org.partiql.value.PartiQLValueExperimental
  */
 internal object PlanTransform {
 
-    fun transform(node: PartiQLPlan, onProblem: ProblemCallback): org.partiql.plan.PartiQLPlan {
+    fun transform(node: PartiQLPlan, missingOpBehavior: PartiQLPlanner.Session.MissingOpBehavior, onProblem: ProblemCallback, debugMode: Boolean): org.partiql.plan.PartiQLPlan {
         val symbols = Symbols.empty()
-        val visitor = Visitor(symbols, onProblem)
+        val visitor = Visitor(symbols, missingOpBehavior, onProblem, debugMode)
         val statement = visitor.visitStatement(node.statement, Unit)
         return partiQLPlan(
             catalogs = symbols.build(),
@@ -35,7 +38,9 @@ internal object PlanTransform {
 
     private class Visitor(
         private val symbols: Symbols,
+        private val missingOpBehavior: PartiQLPlanner.Session.MissingOpBehavior,
         private val onProblem: ProblemCallback,
+        private val debugMode: Boolean,
     ) : PlanBaseVisitor<PlanNode, Unit>() {
 
         /**
@@ -163,6 +168,9 @@ internal object PlanTransform {
         }
 
         override fun visitRexOpCallUnresolved(node: Rex.Op.Call.Unresolved, ctx: Unit): PlanNode {
+            if (debugMode) {
+                return org.partiql.plan.rexOpDebugCallUnresolved(visitIdentifier(node.identifier, ctx), node.args.map { visitRex(it, ctx) })
+            }
             error("Unresolved function ${node.identifier}")
         }
 
@@ -233,7 +241,43 @@ internal object PlanTransform {
             override fun visitRexOpTupleUnion(node: Rex.Op.TupleUnion, ctx: Unit) =
                 org.partiql.plan.Rex.Op.TupleUnion(args = node.args.map { visitRex(it, ctx) })
 
-            override fun visitRexOpErr(node: Rex.Op.Err, ctx: Unit) = org.partiql.plan.Rex.Op.Err(node.message)
+            override fun visitRexOpErr(node: Rex.Op.Err, ctx: Unit): org.partiql.plan.Rex.Op.Err {
+                visitRexOp(node.input, ctx)
+                return org.partiql.plan.Rex.Op.Err(node.problem.toString()).also {
+                    onProblem(node.problem)
+                }
+            }
+
+            @OptIn(PartiQLValueExperimental::class)
+            override fun visitRexOpMissing(node: Rex.Op.Missing, ctx: Unit): PlanNode {
+                // gather problem from subtree.
+                val trace = visitRexOp(node.input, ctx)
+
+                return when (debugMode) {
+                    true -> {
+                        when (missingOpBehavior) {
+                            PartiQLPlanner.Session.MissingOpBehavior.QUIET -> {
+                                org.partiql.plan.rexOpDebugProblemMissing(trace, node.problem.toString())
+                            }
+                            PartiQLPlanner.Session.MissingOpBehavior.SIGNAL -> {
+                                onProblem(node.problem)
+                                org.partiql.plan.rexOpDebugProblemError(trace, node.problem.toString())
+                            }
+                        }
+                    }
+                    false -> {
+                        when (missingOpBehavior) {
+                            PartiQLPlanner.Session.MissingOpBehavior.QUIET -> {
+                                org.partiql.plan.Rex.Op.Lit(missingValue())
+                            }
+                            PartiQLPlanner.Session.MissingOpBehavior.SIGNAL -> {
+                                onProblem(node.problem)
+                                org.partiql.plan.Rex.Op.Err(node.problem.toString())
+                            }
+                        }
+                    }
+                }
+            }
 
             // RELATION OPERATORS
 
@@ -362,20 +406,27 @@ internal object PlanTransform {
 
             override fun visitRelOpExclude(node: Rel.Op.Exclude, ctx: Unit) = org.partiql.plan.Rel.Op.Exclude(
                 input = visitRel(node.input, ctx),
-                paths = node.paths.map { visitRelOpExcludePath(it, ctx) },
-            )
-
-            override fun visitRelOpExcludePath(node: Rel.Op.Exclude.Path, ctx: Unit): org.partiql.plan.Rel.Op.Exclude.Path {
-                val root = when (node.root) {
-                    is Rex.Op.Var.Unresolved -> org.partiql.plan.Rex.Op.Var(-1, -1) // unresolved in `PlanTyper` results in error
-                    is Rex.Op.Var.Local -> visitRexOpVarLocal(node.root, ctx)
-                    is Rex.Op.Var.Global -> error("EXCLUDE only disallows values coming from the input record.")
+                paths = node.paths.mapNotNull {
+                    val root = when (val root = it.root) {
+                        is Rex.Op.Var.Unresolved -> org.partiql.plan.Rex.Op.Var(-1, -1) // unresolved in `PlanTyper` results in error
+                        is Rex.Op.Var.Local -> visitRexOpVarLocal(root, ctx)
+                        is Rex.Op.Var.Global -> error("EXCLUDE only disallows values coming from the input record.")
+                        is Rex.Op.Err -> {
+                            onProblem(root.problem)
+                            return@mapNotNull null
+                        }
+                        is Rex.Op.Missing -> {
+                            if (missingOpBehavior == PartiQLPlanner.Session.MissingOpBehavior.SIGNAL) onProblem(root.problem)
+                            return@mapNotNull null
+                        }
+                        else -> error("Should be converted to a error node")
+                    }
+                    org.partiql.plan.Rel.Op.Exclude.Path(
+                        root = root,
+                        steps = it.steps.map { visitRelOpExcludeStep(it, ctx) },
+                    )
                 }
-                return org.partiql.plan.Rel.Op.Exclude.Path(
-                    root = root,
-                    steps = node.steps.map { visitRelOpExcludeStep(it, ctx) },
-                )
-            }
+            )
 
             override fun visitRelOpExcludeStep(node: Rel.Op.Exclude.Step, ctx: Unit): org.partiql.plan.Rel.Op.Exclude.Step {
                 return org.partiql.plan.Rel.Op.Exclude.Step(

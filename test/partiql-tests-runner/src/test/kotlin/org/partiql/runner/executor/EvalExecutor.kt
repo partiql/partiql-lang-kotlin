@@ -14,6 +14,7 @@ import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.TypingMode
 import org.partiql.parser.PartiQLParser
 import org.partiql.plan.Statement
+import org.partiql.plan.debug.PlanPrinter
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.plugins.memory.MemoryCatalog
 import org.partiql.plugins.memory.MemoryConnector
@@ -40,6 +41,11 @@ class EvalExecutor(
     override fun prepare(statement: String): PartiQLStatement<*> {
         val stmt = parser.parse(statement).root
         val plan = planner.plan(stmt, plannerSession)
+        println(
+            buildString {
+                PlanPrinter.append(this, plan.plan)
+            }
+        )
         return engine.prepare(plan.plan, evalSession)
     }
 

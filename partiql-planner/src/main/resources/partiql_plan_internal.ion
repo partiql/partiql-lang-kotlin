@@ -5,6 +5,7 @@ imports::{
     static_type::'org.partiql.types.StaticType',
     fn_signature::'org.partiql.spi.fn.FnSignature',
     agg_signature::'org.partiql.spi.fn.AggSignature',
+    problem::'org.partiql.errors.Problem'
   ],
 }
 
@@ -214,7 +215,13 @@ rex::{
     },
 
     err::{
-      message: string,
+      input: '.rex.op',
+      problem: problem,
+    },
+
+    missing::{
+      input: '.rex.op',
+      problem: problem,
     },
   ],
 }
@@ -335,7 +342,7 @@ rel::{
       paths: list::[path],
       _: [
         path::{
-          root: '.rex.op.var',
+          root: '.rex.op',
           steps: list::[step],
         },
         step::{

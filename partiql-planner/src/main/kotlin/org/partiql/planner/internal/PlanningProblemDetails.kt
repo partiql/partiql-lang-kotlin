@@ -1,4 +1,4 @@
-package org.partiql.planner
+package org.partiql.planner.internal
 
 import org.partiql.errors.ProblemDetails
 import org.partiql.errors.ProblemSeverity
@@ -13,21 +13,45 @@ import org.partiql.types.StaticType
  * This information can be used to generate end-user readable error messages and is also easy to assert
  * equivalence in unit tests.
  */
-public sealed class PlanningProblemDetails(
+internal sealed class PlanningProblemDetails(
     override val severity: ProblemSeverity,
-    public val messageFormatter: () -> String,
+    val messageFormatter: () -> String,
 ) : ProblemDetails {
+
+    companion object {
+        private fun quotationHint(caseSensitive: Boolean) =
+            if (caseSensitive) {
+                // Individuals that are new to SQL often try to use double quotes for string literals.
+                // Let's help them out a bit.
+                " Hint: did you intend to use single-quotes (') here?  Remember that double-quotes (\") denote " +
+                    "quoted identifiers and single-quotes denote strings."
+            } else {
+                ""
+            }
+
+        private fun Identifier.sql(): String = when (this) {
+            is Identifier.Qualified -> this.sql()
+            is Identifier.Symbol -> this.sql()
+        }
+
+        private fun Identifier.Qualified.sql(): String = root.sql() + "." + steps.joinToString(".") { it.sql() }
+
+        private fun Identifier.Symbol.sql(): String = when (caseSensitivity) {
+            Identifier.CaseSensitivity.SENSITIVE -> "\"$symbol\""
+            Identifier.CaseSensitivity.INSENSITIVE -> symbol
+        }
+    }
 
     override fun toString(): String = message
     override val message: String get() = messageFormatter()
 
-    public data class ParseError(val parseErrorMessage: String) :
+    data class ParseError(val parseErrorMessage: String) :
         PlanningProblemDetails(ProblemSeverity.ERROR, { parseErrorMessage })
 
-    public data class CompileError(val errorMessage: String) :
+    data class CompileError(val errorMessage: String) :
         PlanningProblemDetails(ProblemSeverity.ERROR, { errorMessage })
 
-    public data class UndefinedVariable(val id: BindingPath) :
+    data class UndefinedVariable(val id: BindingPath) :
         PlanningProblemDetails(
             ProblemSeverity.ERROR,
             {
@@ -37,7 +61,7 @@ public sealed class PlanningProblemDetails(
             }
         )
 
-    public data class UndefinedDmlTarget(val variableName: String, val caseSensitive: Boolean) :
+    data class UndefinedDmlTarget(val variableName: String, val caseSensitive: Boolean) :
         PlanningProblemDetails(
             ProblemSeverity.ERROR,
             {
@@ -47,25 +71,25 @@ public sealed class PlanningProblemDetails(
             }
         )
 
-    public data class VariablePreviouslyDefined(val variableName: String) :
+    data class VariablePreviouslyDefined(val variableName: String) :
         PlanningProblemDetails(
             ProblemSeverity.ERROR,
             { "The variable '$variableName' was previously defined." }
         )
 
-    public data class UnimplementedFeature(val featureName: String) :
+    data class UnimplementedFeature(val featureName: String) :
         PlanningProblemDetails(
             ProblemSeverity.ERROR,
             { "The syntax at this location is valid but utilizes unimplemented PartiQL feature '$featureName'" }
         )
 
-    public object InvalidDmlTarget :
+    object InvalidDmlTarget :
         PlanningProblemDetails(
             ProblemSeverity.ERROR,
             { "Expression is not a valid DML target.  Hint: only table names are allowed here." }
         )
 
-    public object InsertValueDisallowed :
+    object InsertValueDisallowed :
         PlanningProblemDetails(
             ProblemSeverity.ERROR,
             {
@@ -74,7 +98,7 @@ public sealed class PlanningProblemDetails(
             }
         )
 
-    public object InsertValuesDisallowed :
+    object InsertValuesDisallowed :
         PlanningProblemDetails(
             ProblemSeverity.ERROR,
             {
@@ -83,14 +107,14 @@ public sealed class PlanningProblemDetails(
             }
         )
 
-    public data class UnexpectedType(
+    data class UnexpectedType(
         val actualType: StaticType,
         val expectedTypes: Set<StaticType>,
     ) : PlanningProblemDetails(ProblemSeverity.ERROR, {
         "Unexpected type $actualType, expected one of ${expectedTypes.joinToString()}"
     })
 
-    public data class UnknownFunction(
+    data class UnknownFunction(
         val identifier: String,
         val args: List<StaticType>,
     ) : PlanningProblemDetails(ProblemSeverity.ERROR, {
@@ -98,12 +122,17 @@ public sealed class PlanningProblemDetails(
         "Unknown function `$identifier($types)"
     })
 
-    public object ExpressionAlwaysReturnsNullOrMissing : PlanningProblemDetails(
+    data class ExpressionAlwaysReturnsMissing(val reason: String? = null) : PlanningProblemDetails(
+        severity = ProblemSeverity.ERROR,
+        messageFormatter = { "Expression always returns null or missing: caused by $reason" }
+    )
+
+    object ExpressionAlwaysReturnsNullOrMissing : PlanningProblemDetails(
         severity = ProblemSeverity.ERROR,
         messageFormatter = { "Expression always returns null or missing." }
     )
 
-    public data class InvalidArgumentTypeForFunction(
+    data class InvalidArgumentTypeForFunction(
         val functionName: String,
         val expectedType: StaticType,
         val actualType: StaticType,
@@ -113,7 +142,7 @@ public sealed class PlanningProblemDetails(
             messageFormatter = { "Invalid argument type for $functionName. Expected $expectedType but got $actualType" }
         )
 
-    public data class IncompatibleTypesForOp(
+    data class IncompatibleTypesForOp(
         val actualTypes: List<StaticType>,
         val operator: String,
     ) :
@@ -122,31 +151,9 @@ public sealed class PlanningProblemDetails(
             messageFormatter = { "${actualTypes.joinToString()} is/are incompatible data types for the '$operator' operator." }
         )
 
-    public data class UnresolvedExcludeExprRoot(val root: String) :
+    data class UnresolvedExcludeExprRoot(val root: String) :
         PlanningProblemDetails(
             ProblemSeverity.ERROR,
             { "Exclude expression given an unresolvable root '$root'" }
         )
-}
-
-private fun quotationHint(caseSensitive: Boolean) =
-    if (caseSensitive) {
-        // Individuals that are new to SQL often try to use double quotes for string literals.
-        // Let's help them out a bit.
-        " Hint: did you intend to use single-quotes (') here?  Remember that double-quotes (\") denote " +
-            "quoted identifiers and single-quotes denote strings."
-    } else {
-        ""
-    }
-
-private fun Identifier.sql(): String = when (this) {
-    is Identifier.Qualified -> this.sql()
-    is Identifier.Symbol -> this.sql()
-}
-
-private fun Identifier.Qualified.sql(): String = root.sql() + "." + steps.joinToString(".") { it.sql() }
-
-private fun Identifier.Symbol.sql(): String = when (caseSensitivity) {
-    Identifier.CaseSensitivity.SENSITIVE -> "\"$symbol\""
-    Identifier.CaseSensitivity.INSENSITIVE -> symbol
 }
