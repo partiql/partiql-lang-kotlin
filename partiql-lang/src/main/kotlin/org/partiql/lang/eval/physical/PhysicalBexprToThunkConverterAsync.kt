@@ -34,7 +34,7 @@ import org.partiql.lang.eval.physical.window.createBuiltinWindowFunctionAsync
 import org.partiql.lang.util.toIntExact
 
 /** Converts instances of [PartiqlPhysical.Bexpr] to any [T]. */
-interface Converter<T> {
+internal interface Converter<T> {
     suspend fun convert(node: PartiqlPhysical.Bexpr): T = when (node) {
         is PartiqlPhysical.Bexpr.Project -> convertProject(node)
         is PartiqlPhysical.Bexpr.Scan -> convertScan(node)
