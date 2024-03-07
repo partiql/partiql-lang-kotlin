@@ -1,6 +1,6 @@
 package org.partiql.eval.internal.operator.rex
 
-import org.partiql.eval.internal.Record
+import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.helpers.toNull
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.spi.fn.Fn
@@ -19,10 +19,10 @@ internal class ExprCallStatic(
      */
     private val nil = fn.signature.returns.toNull()
 
-    override fun eval(record: Record): PartiQLValue {
+    override fun eval(env: Environment): PartiQLValue {
         // Evaluate arguments
         val args = inputs.map { input ->
-            val r = input.eval(record)
+            val r = input.eval(env)
             if (r.isNull && fn.signature.isNullCall) return nil()
             r
         }.toTypedArray()

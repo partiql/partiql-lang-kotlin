@@ -1,7 +1,7 @@
 package org.partiql.eval.internal.operator.rex
 
 import org.partiql.errors.TypeCheckException
-import org.partiql.eval.internal.Record
+import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
@@ -15,8 +15,8 @@ internal class ExprPathSymbol(
 ) : Operator.Expr {
 
     @OptIn(PartiQLValueExperimental::class)
-    override fun eval(record: Record): PartiQLValue {
-        val struct = root.eval(record).check<StructValue<PartiQLValue>>()
+    override fun eval(env: Environment): PartiQLValue {
+        val struct = root.eval(env).check<StructValue<PartiQLValue>>()
         if (struct.isNull) {
             return nullValue()
         }

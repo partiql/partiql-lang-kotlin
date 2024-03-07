@@ -1,5 +1,6 @@
 package org.partiql.eval.internal.operator.rel
 
+import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.value.PartiQLValueExperimental
@@ -10,16 +11,21 @@ internal class RelProject(
     private val projections: List<Operator.Expr>
 ) : Operator.Relation {
 
-    override fun open() {
-        input.open()
+    private lateinit var env: Environment
+
+    override fun open(env: Environment) {
+        this.env = env
+        input.open(env)
     }
 
-    override fun next(): Record? {
-        while (true) {
-            val r = input.next() ?: return null
-            val p = projections.map { it.eval(r) }.toTypedArray()
-            return Record(p)
-        }
+    override fun hasNext(): Boolean {
+        return input.hasNext()
+    }
+
+    override fun next(): Record {
+        val r = input.next()
+        val p = projections.map { it.eval(env.push(r)) }.toTypedArray()
+        return Record(p)
     }
 
     override fun close() {

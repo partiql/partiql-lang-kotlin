@@ -2,7 +2,7 @@ package org.partiql.eval.internal.operator.rex
 
 import org.partiql.errors.DataException
 import org.partiql.errors.TypeCheckException
-import org.partiql.eval.internal.Record
+import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.value.CollectionValue
 import org.partiql.value.Int16Value
@@ -21,11 +21,11 @@ internal class ExprPathIndex(
 ) : Operator.Expr {
 
     @OptIn(PartiQLValueExperimental::class)
-    override fun eval(record: Record): PartiQLValue {
-        val collection = root.eval(record).check<CollectionValue<PartiQLValue>>()
+    override fun eval(env: Environment): PartiQLValue {
+        val collection = root.eval(env).check<CollectionValue<PartiQLValue>>()
 
         // Calculate index
-        val index = when (val k = key.eval(record)) {
+        val index = when (val k = key.eval(env)) {
             is Int16Value,
             is Int32Value,
             is Int64Value,

@@ -1,5 +1,6 @@
 package org.partiql.eval.internal.operator.rel
 
+import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.plan.Rel
@@ -26,13 +27,17 @@ internal class RelExclude(
     private val exclusions: List<Rel.Op.Exclude.Path>
 ) : Operator.Relation {
 
-    override fun open() {
-        input.open()
+    override fun open(env: Environment) {
+        input.open(env)
+    }
+
+    override fun hasNext(): Boolean {
+        return input.hasNext()
     }
 
     @OptIn(PartiQLValueExperimental::class)
-    override fun next(): Record? {
-        val record = input.next() ?: return null
+    override fun next(): Record {
+        val record = input.next()
         exclusions.forEach { path ->
             val root = path.root.ref
             val value = record.values[root]

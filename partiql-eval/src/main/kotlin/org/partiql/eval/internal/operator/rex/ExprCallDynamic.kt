@@ -1,6 +1,7 @@
 package org.partiql.eval.internal.operator.rex
 
 import org.partiql.errors.TypeCheckException
+import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.plan.Ref
@@ -24,11 +25,11 @@ internal class ExprCallDynamic(
     private val args: Array<Operator.Expr>
 ) : Operator.Expr {
 
-    override fun eval(record: Record): PartiQLValue {
-        val actualArgs = args.map { it.eval(record) }.toTypedArray()
+    override fun eval(env: Environment): PartiQLValue {
+        val actualArgs = args.map { it.eval(env) }.toTypedArray()
         candidates.forEach { candidate ->
             if (candidate.matches(actualArgs)) {
-                return candidate.eval(actualArgs)
+                return candidate.eval(actualArgs, env)
             }
         }
         val errorString = buildString {
@@ -53,11 +54,11 @@ internal class ExprCallDynamic(
 
         private val signatureParameters = fn.signature.parameters.map { it.type }.toTypedArray()
 
-        fun eval(originalArgs: Array<PartiQLValue>): PartiQLValue {
+        fun eval(originalArgs: Array<PartiQLValue>, env: Environment): PartiQLValue {
             val args = originalArgs.mapIndexed { i, arg ->
                 when (val c = coercions[i]) {
                     null -> arg
-                    else -> ExprCast(ExprLiteral(arg), c).eval(Record.empty)
+                    else -> ExprCast(ExprLiteral(arg), c).eval(env)
                 }
             }.toTypedArray()
             return fn.invoke(args)

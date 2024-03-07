@@ -1,6 +1,5 @@
 package org.partiql.eval.internal.operator.rel
 
-import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
 
@@ -8,7 +7,6 @@ internal class RelJoinRight(
     lhs: Operator.Relation,
     rhs: Operator.Relation,
     override val condition: Operator.Expr,
-    override val env: Environment
 ) : RelJoinNestedLoop() {
 
     override val lhs: Operator.Relation = rhs

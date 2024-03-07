@@ -1,5 +1,6 @@
 package org.partiql.eval.internal.operator.rel
 
+import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.plan.Rel
@@ -19,8 +20,11 @@ internal class RelSort(
     private val nullsFirstComparator = PartiQLValue.comparator(nullsFirst = true)
     private val nullsLastComparator = PartiQLValue.comparator(nullsFirst = false)
 
-    override fun open() {
-        input.open()
+    private lateinit var env: Environment
+
+    override fun open(env: Environment) {
+        this.env = env
+        input.open(env)
         init = false
         records = Collections.emptyIterator()
     }
@@ -28,8 +32,8 @@ internal class RelSort(
     private val comparator = object : Comparator<Record> {
         override fun compare(l: Record, r: Record): Int {
             specs.forEach { spec ->
-                val lVal = spec.first.eval(l)
-                val rVal = spec.first.eval(r)
+                val lVal = spec.first.eval(env.push(l))
+                val rVal = spec.first.eval(env.push(r))
 
                 // DESC_NULLS_FIRST(l, r) == ASC_NULLS_LAST(r, l)
                 // DESC_NULLS_LAST(l, r) == ASC_NULLS_FIRST(r, l)
@@ -47,24 +51,25 @@ internal class RelSort(
         }
     }
 
-    override fun next(): Record? {
+    override fun hasNext(): Boolean {
         if (!init) {
             val sortedRecords = mutableListOf<Record>()
-            while (true) {
-                val row = input.next() ?: break
+            for (row in input) {
                 sortedRecords.add(row)
             }
             sortedRecords.sortWith(comparator)
             records = sortedRecords.iterator()
             init = true
         }
-        return when (records.hasNext()) {
-            true -> records.next()
-            false -> null
-        }
+        return records.hasNext()
+    }
+
+    override fun next(): Record {
+        return records.next()
     }
 
     override fun close() {
+        init = false
         input.close()
     }
 }
