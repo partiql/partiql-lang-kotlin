@@ -20,6 +20,7 @@ import com.amazon.ionelement.api.ionInt
 import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.ionStructOf
 import com.amazon.ionelement.api.toIonValue
+import kotlinx.coroutines.runBlocking
 import org.partiql.annotations.ExperimentalPartiQLCompilerPipeline
 import org.partiql.cli.Debug
 import org.partiql.cli.functions.QueryDDB
@@ -48,7 +49,6 @@ import org.partiql.lang.syntax.Parser
 import org.partiql.lang.syntax.PartiQLParserBuilder
 import java.nio.file.Path
 import java.time.ZoneOffset
-import kotlinx.coroutines.runBlocking
 
 /**
  * A means by which we can run both the EvaluatingCompiler and [PartiQLCompilerPipelineAsync].

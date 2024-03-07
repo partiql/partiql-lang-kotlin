@@ -1,6 +1,7 @@
 package org.partiql.examples
 
 import com.amazon.ion.system.IonSystemBuilder
+import kotlinx.coroutines.runBlocking
 import org.partiql.annotations.ExperimentalPartiQLCompilerPipeline
 import org.partiql.examples.util.Example
 import org.partiql.lang.compiler.PartiQLCompilerPipelineAsync
@@ -13,7 +14,6 @@ import org.partiql.lang.planner.EvaluatorOptions
 import org.partiql.lang.planner.GlobalResolutionResult
 import org.partiql.lang.planner.GlobalVariableResolver
 import java.io.PrintStream
-import kotlinx.coroutines.runBlocking
 
 /**
  * This example demonstrate how to use PartiQLCompilerPipeline. This feature is currently in experimental stage.

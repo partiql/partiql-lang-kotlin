@@ -16,8 +16,6 @@ package org.partiql.lang.eval
 
 import com.amazon.ionelement.api.MetaContainer
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.forEach
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 import org.partiql.errors.ErrorBehaviorInPermissiveMode
 import org.partiql.errors.ErrorCode
@@ -61,55 +59,13 @@ internal typealias ThunkExceptionHandlerForPermissiveModeAsync = (Throwable, Sou
 /**
  * Options for thunk construction.
  *
- *  - [handleExceptionForLegacyMode] will be called when in [TypingMode.LEGACY] mode
- *  - [handleExceptionForPermissiveMode] will be called when in [TypingMode.PERMISSIVE] mode
- *  - [thunkReturnTypeAssertions] is intended for testing only, and ensures that the return value of every expression
+ *  - [ThunkOptions.handleExceptionForLegacyMode] will be called when in [TypingMode.LEGACY] mode
+ *  - [ThunkOptions.handleExceptionForPermissiveMode] will be called when in [TypingMode.PERMISSIVE] mode
+ *  - [ThunkOptions.thunkReturnTypeAssertions] is intended for testing only, and ensures that the return value of every expression
  *  conforms to its `StaticType` meta.  This has negative performance implications so should be avoided in production
  *  environments.  This only be used for testing and diagnostic purposes only.
  * The default exception handler wraps any [Throwable] exception and throws [EvaluationException]
  */
-// private class ThunkOptionsAsync private constructor(
-//    val handleExceptionForLegacyMode: ThunkExceptionHandlerForLegacyModeAsync = DEFAULT_EXCEPTION_HANDLER_FOR_LEGACY_MODE,
-//    val handleExceptionForPermissiveMode: ThunkExceptionHandlerForPermissiveModeAsync = DEFAULT_EXCEPTION_HANDLER_FOR_PERMISSIVE_MODE,
-//    val thunkReturnTypeAssertions: ThunkReturnTypeAssertions = ThunkReturnTypeAssertions.DISABLED,
-// ) {
-//
-//    companion object {
-//
-//        /**
-//         * Creates a java style builder that will choose the default values for any unspecified options.
-//         */
-//        @JvmStatic
-//        fun builder() = Builder()
-//
-//        /**
-//         * Kotlin style builder that will choose the default values for any unspecified options.
-//         */
-//        fun build(block: Builder.() -> Unit) = Builder().apply(block).build()
-//
-//        /**
-//         * Creates a [ThunkOptionsAsync] instance with the standard values.
-//         */
-//        @JvmStatic
-//        fun standard() = Builder().build()
-//    }
-//
-//    /**
-//     * Builds a [ThunkOptionsAsync] instance.
-//     */
-//    class Builder {
-//        private var options = ThunkOptionsAsync()
-//        fun handleExceptionForLegacyMode(value: ThunkExceptionHandlerForLegacyModeAsync) = set { copy(handleExceptionForLegacyMode = value) }
-//        fun handleExceptionForPermissiveMode(value: ThunkExceptionHandlerForPermissiveModeAsync) = set { copy(handleExceptionForPermissiveMode = value) }
-//        fun evaluationTimeTypeChecks(value: ThunkReturnTypeAssertions) = set { copy(thunkReturnTypeAssertions = value) }
-//        private inline fun set(block: ThunkOptionsAsync.() -> ThunkOptionsAsync): Builder {
-//            options = block(options)
-//            return this
-//        }
-//
-//        fun build() = options
-//    }
-// }
 
 internal val DEFAULT_EXCEPTION_HANDLER_FOR_LEGACY_MODE: ThunkExceptionHandlerForLegacyModeAsync = { e, sourceLocation ->
     val message = e.message ?: "<NO MESSAGE>"
@@ -171,8 +127,8 @@ internal abstract class ThunkFactoryAsync<TEnv>(
      * contained within [metas].
      *
      * If [metas] contains does not contain [StaticTypeMeta], an [IllegalStateException] is thrown. This is to prevent
-     * confusion in the case [StaticTypeInferenceVisitorTransform] has a bug which prevents it from assigning a
-     * [StaticTypeMeta] or in case it is not run at all.
+     * confusion in the case [org.partiql.lang.eval.visitors.StaticTypeInferenceVisitorTransform] has a bug which
+     * prevents it from assigning a [StaticTypeMeta] or in case it is not run at all.
      */
     protected suspend fun ThunkAsync<TEnv>.typeCheck(metas: MetaContainer): ThunkAsync<TEnv> =
         when (thunkOptions.thunkReturnTypeAssertions) {
@@ -192,19 +148,6 @@ internal abstract class ThunkFactoryAsync<TEnv>(
             ThunkReturnTypeAssertions.DISABLED -> this
             ThunkReturnTypeAssertions.ENABLED -> {
                 val wrapper: ThunkValueAsync<TEnv, ExprValue> = { env: TEnv, value: ExprValue ->
-                    val thunkResult: ExprValue = this(env, value)
-                    checkEvaluationTimeType(thunkResult, metas)
-                }
-                wrapper
-            }
-        }
-
-    /** Same as [typeCheck] but works on a [ThunkEnvValue<List<ExprValue>>] instead of a [Thunk<TEnv>]. */
-    protected suspend fun ThunkValueAsync<TEnv, List<ExprValue>>.typeCheckEnvValueList(metas: MetaContainer): ThunkValueAsync<TEnv, List<ExprValue>> =
-        when (thunkOptions.thunkReturnTypeAssertions) {
-            ThunkReturnTypeAssertions.DISABLED -> this
-            ThunkReturnTypeAssertions.ENABLED -> {
-                val wrapper: ThunkValueAsync<TEnv, List<ExprValue>> = { env: TEnv, value: List<ExprValue> ->
                     val thunkResult: ExprValue = this(env, value)
                     checkEvaluationTimeType(thunkResult, metas)
                 }
@@ -267,7 +210,7 @@ internal abstract class ThunkFactoryAsync<TEnv>(
      * unknowns according to the current [TypingMode].  When possible, use this function or one of its overloads
      * instead of [thunkEnvAsync] when the operation requires propagation of unknown values.
      *
-     * [t1], [t2] and [t3] are each evaluated in with short circuiting depending on the current [TypingMode]:
+     * [t1], [t2] and [t3] are each evaluated in with short-circuiting depending on the current [TypingMode]:
      *
      * - In [TypingMode.PERMISSIVE] mode, the first `MISSING` returned from one of the thunks causes a short-circuit,
      * and `MISSING` is returned immediately without evaluating the remaining thunks.  If none of the thunks return
@@ -352,32 +295,17 @@ internal abstract class ThunkFactoryAsync<TEnv>(
         return tVal.typeCheckEnvValue(metas)
     }
 
-    /** Similar to [thunkEnvAsync], but creates a [ThunkEnvValue<List<ExprValue>>] instead. */
-    internal suspend inline fun thunkEnvValueList(
-        metas: MetaContainer,
-        crossinline t: ThunkValueAsync<TEnv, List<ExprValue>>
-    ): ThunkValueAsync<TEnv, List<ExprValue>> {
-        val sourceLocationMeta = metas[SourceLocationMeta.TAG] as? SourceLocationMeta
-
-        val tVal: ThunkValueAsync<TEnv, List<ExprValue>> = { env: TEnv, arg1: List<ExprValue> ->
-            this.handleExceptionAsync(sourceLocationMeta) {
-                t(env, arg1)
-            }
-        }
-        return tVal.typeCheckEnvValueList(metas)
-    }
-
     /**
      * Similar to [thunkEnvAsync] but evaluates all [argThunks] and performs a fold using [op] as the operation.
      *
-     * Also handles null propagation appropriately for [NAryOp] arithmetic operations.  Each thunk in [argThunks]
+     * Also handles null propagation appropriately for NAryOp arithmetic operations.  Each thunk in [argThunks]
      * is evaluated in turn and:
      *
      * - for [TypingMode.LEGACY], the first unknown operand short-circuits, returning `NULL`.
      * - for [TypingMode.PERMISSIVE], the first missing operand short-circuits, returning `MISSING`.  Then, if one
      * of the operands returned `NULL`, `NULL` is returned.
      *
-     * For both modes, if all of the operands are known, performs a fold over them with [op].
+     * For both modes, if all the operands are known, performs a fold over them with [op].
      */
     internal abstract suspend fun thunkFold(
         metas: MetaContainer,
@@ -396,7 +324,7 @@ internal abstract class ThunkFactoryAsync<TEnv>(
      * - for [TypingMode.PERMISSIVE], the first missing operand short-circuits, returning `MISSING`.  Then, if one
      * of the operands returned `NULL`, `NULL` is returned.
      *
-     * If [op] is true for all invocations then the result of the thunk becomes `true`, otherwise the reuslt is `false`.
+     * If [op] is true for all invocations then the result of the thunk becomes `true`, otherwise the result is `false`.
      *
      * The name of this function was inspired by Racket's `andmap` procedure.
      */

@@ -12,8 +12,8 @@ import org.partiql.examples.EvaluationWithLazyBindings
 import org.partiql.examples.ParserErrorExample
 import org.partiql.examples.ParserExample
 import org.partiql.examples.ParserJavaExample
-import org.partiql.examples.PartiQLCompilerPipelineExample
 import org.partiql.examples.PartiQLCompilerPipelineAsyncJavaExample
+import org.partiql.examples.PartiQLCompilerPipelineExample
 import org.partiql.examples.PartialEvaluationVisitorTransformExample
 import org.partiql.examples.PreventJoinVisitorExample
 import org.partiql.examples.S3JavaExample
