@@ -15,6 +15,7 @@ import org.partiql.lang.planner.transforms.DEFAULT_IMPL_NAME
  *
  * @param name
  */
+@Deprecated("To be removed in the next major version.", replaceWith = ReplaceWith("JoinRelationalOperatorFactoryAsync"))
 abstract class JoinRelationalOperatorFactory(name: String) : RelationalOperatorFactory {
 
     final override val key = RelationalOperatorFactoryKey(RelationalOperatorKind.JOIN, name)
@@ -31,6 +32,7 @@ abstract class JoinRelationalOperatorFactory(name: String) : RelationalOperatorF
      * @param setRightSideVariablesToNull
      * @return
      */
+    @Deprecated("To be removed in the next major version.", replaceWith = ReplaceWith("JoinRelationalOperatorFactoryAsync.create"))
     abstract fun create(
         impl: PartiqlPhysical.Impl,
         joinType: PartiqlPhysical.JoinType,

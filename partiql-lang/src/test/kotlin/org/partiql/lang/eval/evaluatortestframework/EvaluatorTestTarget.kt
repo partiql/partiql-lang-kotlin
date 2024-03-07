@@ -21,11 +21,17 @@ enum class EvaluatorTestTarget {
     /**
      * Run the test on [org.partiql.lang.compiler.PartiQLCompilerPipeline]. Set this when the test case covers features not
      * supported by [org.partiql.lang.CompilerPipeline], or when testing features unique to the former.
+     *
+     * Since [org.partiql.lang.compiler.PartiQLCompilerPipeline] is deprecated and will be removed in favor of
+     * [org.partiql.lang.compiler.PartiQLCompilerPipelineAsync], opt to use [PARTIQL_PIPELINE_ASYNC] or [ALL_PIPELINES].
      */
     PARTIQL_PIPELINE,
 
     /**
-     * TODO ALAN
+     * Run the test on [org.partiql.lang.compiler.PartiQLCompilerPipelineAsync]. Set this when the test case covers
+     * features not supported by [org.partiql.lang.CompilerPipeline], or when testing features unique to the former.
+     *
+     * This is the async version of [PARTIQL_PIPELINE].
      */
     PARTIQL_PIPELINE_ASYNC
 }

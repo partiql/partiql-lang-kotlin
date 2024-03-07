@@ -4,8 +4,9 @@ import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.TypingMode
 
 /**
- * Represents an abstract pipeline (either [org.partiql.lang.CompilerPipeline] or
- * [org.partiql.lang.compiler.PartiQLCompilerPipeline]) so that [PipelineEvaluatorTestAdapter] can work with either.
+ * Represents an abstract pipeline (one of [org.partiql.lang.CompilerPipeline],
+ * [org.partiql.lang.compiler.PartiQLCompilerPipeline], or [org.partiql.lang.compiler.PartiQLCompilerPipelineAsync])
+ * so that [PipelineEvaluatorTestAdapter] can work on any of them.
  *
  * Includes only those properties and methods that are required for testing purposes.
  */

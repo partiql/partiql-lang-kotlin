@@ -15,6 +15,8 @@
 package org.partiql.lang.compiler
 
 import com.amazon.ionelement.api.ionInt
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
@@ -32,6 +34,7 @@ import org.partiql.lang.util.ArgumentsProviderBase
 class PartiQLCompilerPipelineExplainTests {
 
     val compiler = PartiQLCompilerPipeline.standard()
+    val compilerAsync = PartiQLCompilerPipelineAsync.standard()
 
     data class ExplainTestCase(
         val description: String? = null,
@@ -44,8 +47,19 @@ class PartiQLCompilerPipelineExplainTests {
     @ParameterizedTest
     fun successTests(tc: ExplainTestCase) = runSuccessTest(tc)
 
+    @ArgumentsSource(SuccessTestProvider::class)
+    @ParameterizedTest
+    fun successTestsAsync(tc: ExplainTestCase) = runSuccessTestAsync(tc)
+
     private fun runSuccessTest(tc: ExplainTestCase) {
         val statement = compiler.compile(tc.query)
+        val result = statement.eval(tc.session)
+        assertEquals(tc.expected, result)
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private fun runSuccessTestAsync(tc: ExplainTestCase) = runTest {
+        val statement = compilerAsync.compile(tc.query)
         val result = statement.eval(tc.session)
         assertEquals(tc.expected, result)
     }

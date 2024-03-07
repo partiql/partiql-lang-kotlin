@@ -104,8 +104,9 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
         )
 
         /**
-         * The [EvaluatorTestTarget.PARTIQL_PIPELINE] does NOT support [UndefinedVariableBehavior.MISSING], so if the
-         * [compOptions] includes the [UndefinedVariableBehavior], we should use the [EvaluatorTestTarget.COMPILER_PIPELINE]
+         * The [EvaluatorTestTarget.PARTIQL_PIPELINE] and [EvaluatorTestTarget.PARTIQL_PIPELINE_ASYNC] do NOT support
+         * [UndefinedVariableBehavior.MISSING], so if the [compOptions] includes the [UndefinedVariableBehavior], we
+         * should use the [EvaluatorTestTarget.COMPILER_PIPELINE].
          */
         private fun getTestTarget(compOptions: CompOptions, default: EvaluatorTestTarget): EvaluatorTestTarget = when (compOptions) {
             CompOptions.UNDEF_VAR_MISSING -> EvaluatorTestTarget.COMPILER_PIPELINE
@@ -1058,6 +1059,45 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
             """,
             targetPipeline = EvaluatorTestTarget.PARTIQL_PIPELINE
         ),
+        EvaluatorTestCase(
+            groupName = "SELECT with nested aggregates (complex)",
+            query = """
+                SELECT
+                    i2 AS outerKey,
+                    g2 AS outerGroupAs,
+                    COUNT(*) AS outerCount,
+                    SUM(innerQuery.innerSum) AS outerSum,
+                    MIN(innerQuery.innerSum) AS outerMin
+                FROM (
+                    SELECT
+                        i,
+                        g,
+                        SUM(col1) AS innerSum
+                    FROM simple_1_col_1_group_2 AS innerFromSource
+                    GROUP BY col1 AS i GROUP AS g
+                ) AS innerQuery
+                GROUP BY innerQuery.i AS i2, innerQuery.g AS g2
+            """,
+            expectedResult = """
+                <<
+                    {
+                        'outerKey': 1,
+                        'outerGroupAs': << { 'innerFromSource': { 'col1': 1 } } >>,
+                        'outerCount': 1,
+                        'outerSum': 1,
+                        'outerMin': 1
+                    },
+                    {
+                        'outerKey': 5,
+                        'outerGroupAs': << { 'innerFromSource': { 'col1': 5 } } >>,
+                        'outerCount': 1,
+                        'outerSum': 5,
+                        'outerMin': 5
+                    }
+                >>
+            """,
+            targetPipeline = EvaluatorTestTarget.PARTIQL_PIPELINE_ASYNC
+        ),
     )
 
     @Test
@@ -1102,6 +1142,45 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
                 >>
             """,
             targetPipeline = EvaluatorTestTarget.PARTIQL_PIPELINE
+        ),
+        EvaluatorTestCase(
+            groupName = "SELECT with nested aggregates (complex)",
+            query = """
+                SELECT
+                    i2 AS outerKey,
+                    g2 AS outerGroupAs,
+                    MIN(innerQuery.innerSum) AS outerMin,
+                    (
+                        SELECT VALUE SUM(i2)
+                        FROM << 0, 1 >>
+                    ) AS projListSubQuery
+                FROM (
+                    SELECT
+                        i,
+                        g,
+                        SUM(col1) AS innerSum
+                    FROM simple_1_col_1_group_2 AS innerFromSource
+                    GROUP BY col1 AS i GROUP AS g
+                ) AS innerQuery
+                GROUP BY innerQuery.i AS i2, innerQuery.g AS g2
+            """,
+            expectedResult = """
+                <<
+                    {
+                        'outerKey': 1,
+                        'outerGroupAs': << { 'innerFromSource': { 'col1': 1 } } >>,
+                        'outerMin': 1,
+                        'projListSubQuery': << 2 >>
+                    },
+                    {
+                        'outerKey': 5,
+                        'outerGroupAs': << { 'innerFromSource': { 'col1': 5 } } >>,
+                        'outerMin': 5,
+                        'projListSubQuery': << 10 >>
+                    }
+                >>
+            """,
+            targetPipeline = EvaluatorTestTarget.PARTIQL_PIPELINE_ASYNC
         ),
     )
 
@@ -1355,6 +1434,12 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
             propertyValueMapOf(1, 8, Property.BINDING_NAME to "foo"),
             target = EvaluatorTestTarget.PARTIQL_PIPELINE
         )
+        runEvaluatorErrorTestCase(
+            "SELECT foo AS someSelectListAlias FROM <<{ 'a': 1 }>> GROUP BY someSelectListAlias",
+            ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
+            propertyValueMapOf(1, 8, Property.BINDING_NAME to "foo"),
+            target = EvaluatorTestTarget.PARTIQL_PIPELINE_ASYNC
+        )
     }
 
     @Test
@@ -1420,6 +1505,16 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
             ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
             propertyValueMapOf(2, 28, Property.BINDING_NAME to "O"),
             target = EvaluatorTestTarget.PARTIQL_PIPELINE,
+            session = session
+        )
+        runEvaluatorErrorTestCase(
+            """
+                    SELECT "O".customerId, MAX(o.cost)
+                    FROM orders as o
+                """,
+            ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
+            propertyValueMapOf(2, 28, Property.BINDING_NAME to "O"),
+            target = EvaluatorTestTarget.PARTIQL_PIPELINE_ASYNC,
             session = session
         )
     }

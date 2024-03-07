@@ -36,7 +36,10 @@ object Versions {
     const val jansi = "2.4.0"
     const val jgenhtml = "1.6"
     const val jline = "3.21.0"
-    const val jmh = "0.5.3"
+    const val jmhGradlePlugin = "0.5.3"
+    const val jmhCore = "1.37"
+    const val jmhGeneratorAnnprocess = "1.37"
+    const val jmhGeneratorBytecode = "1.37"
     const val joda = "2.12.1"
     const val kotlinPoet = "1.11.0"
     const val kotlinxCollections = "0.3.5"
@@ -103,6 +106,11 @@ object Deps {
     const val mockito = "org.mockito:mockito-junit-jupiter:${Versions.mockito}"
     const val mockk = "io.mockk:mockk:${Versions.mockk}"
     const val kotlinxCoroutinesTest = "org.jetbrains.kotlinx:kotlinx-coroutines-test:${Versions.kotlinxCoroutinesTest}"
+
+    // JMH Benchmarking
+    const val jmhCore = "org.openjdk.jmh:jmh-core:${Versions.jmhCore}"
+    const val jmhGeneratorAnnprocess = "org.openjdk.jmh:jmh-core:${Versions.jmhGeneratorAnnprocess}"
+    const val jmhGeneratorBytecode = "org.openjdk.jmh:jmh-core:${Versions.jmhGeneratorBytecode}"
 }
 
 object Plugins {

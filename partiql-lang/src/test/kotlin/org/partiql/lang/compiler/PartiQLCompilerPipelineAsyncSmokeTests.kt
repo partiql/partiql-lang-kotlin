@@ -1,20 +1,24 @@
 package org.partiql.lang.compiler
 
 import com.amazon.ionelement.api.ionInt
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
 import org.partiql.annotations.ExperimentalPartiQLCompilerPipeline
 import org.partiql.errors.Problem
+import org.partiql.errors.ProblemDetails
 import org.partiql.errors.ProblemLocation
+import org.partiql.errors.ProblemSeverity
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.errors.PartiQLException
 import org.partiql.lang.eval.physical.SetVariableFunc
-import org.partiql.lang.eval.physical.operators.RelationExpression
-import org.partiql.lang.eval.physical.operators.ScanRelationalOperatorFactory
-import org.partiql.lang.eval.physical.operators.ValueExpression
+import org.partiql.lang.eval.physical.operators.RelationExpressionAsync
+import org.partiql.lang.eval.physical.operators.ScanRelationalOperatorFactoryAsync
+import org.partiql.lang.eval.physical.operators.ValueExpressionAsync
 import org.partiql.lang.eval.physical.sourceLocationMetaOrUnknown
 import org.partiql.lang.planner.PartiQLPhysicalPass
 import org.partiql.lang.planner.PartiQLPlanner
@@ -24,16 +28,25 @@ import org.partiql.lang.planner.createFakeGlobalsResolver
 import org.partiql.lang.planner.transforms.DEFAULT_IMPL_NAME
 import org.partiql.lang.planner.transforms.PLAN_VERSION_NUMBER
 
-@OptIn(ExperimentalPartiQLCompilerPipeline::class)
-// Equivalent to `PartiQLCompilerPipelineAsyncSmokeTests.kt` but using synchronous physical plan evaluator APIs.
-// To be removed next major version
-class PartiQLCompilerPipelineSmokeTests {
+internal fun createFakeErrorProblem(sourceLocationMeta: SourceLocationMeta): Problem {
+    data class FakeProblemDetails(
+        override val severity: ProblemSeverity = ProblemSeverity.ERROR,
+        override val message: String = "Ack, the query author presented us with a logical conundrum!"
+    ) : ProblemDetails
 
-    private fun createPlannerPipelineForTest(
+    return Problem(
+        sourceLocationMeta.toProblemLocation(),
+        FakeProblemDetails()
+    )
+}
+
+@OptIn(ExperimentalCoroutinesApi::class, ExperimentalPartiQLCompilerPipeline::class)
+class PartiQLCompilerPipelineAsyncSmokeTests {
+    private fun createPlannerPipelineAsyncForTest(
         allowUndefinedVariables: Boolean,
         plannerEventCallback: PlannerEventCallback?,
-        block: PartiQLCompilerPipeline.Builder.() -> Unit = { }
-    ) = PartiQLCompilerPipeline.build {
+        block: PartiQLCompilerPipelineAsync.Builder.() -> Unit = { }
+    ) = PartiQLCompilerPipelineAsync.build {
         planner.options(
             PartiQLPlanner.Options(
                 allowedUndefinedVariables = allowUndefinedVariables,
@@ -45,13 +58,13 @@ class PartiQLCompilerPipelineSmokeTests {
     }
 
     @Test
-    fun `happy path`() {
+    fun `happy path`() = runTest {
         var pecCallbacks = 0
         val plannerEventCallback: PlannerEventCallback = { _ ->
             pecCallbacks++
         }
 
-        val pipeline = createPlannerPipelineForTest(allowUndefinedVariables = true, plannerEventCallback = plannerEventCallback)
+        val pipeline = createPlannerPipelineAsyncForTest(allowUndefinedVariables = true, plannerEventCallback = plannerEventCallback)
 
         // the constructed ASTs are tested separately, here we check the compile function does not throw any exception.
         assertDoesNotThrow {
@@ -67,8 +80,8 @@ class PartiQLCompilerPipelineSmokeTests {
     }
 
     @Test
-    fun `undefined variable`() {
-        val qp = createPlannerPipelineForTest(allowUndefinedVariables = false, plannerEventCallback = null)
+    fun `undefined variable`() = runTest {
+        val qp = createPlannerPipelineAsyncForTest(allowUndefinedVariables = false, plannerEventCallback = null)
 
         val error = assertThrows<PartiQLException> {
             qp.compile("SELECT undefined.* FROM Customer AS c")
@@ -82,8 +95,8 @@ class PartiQLCompilerPipelineSmokeTests {
     }
 
     @Test
-    fun `physical plan pass - happy path`() {
-        val qp = createPlannerPipelineForTest(allowUndefinedVariables = false, plannerEventCallback = null) {
+    fun `physical plan pass - happy path`() = runTest {
+        val qp = createPlannerPipelineAsyncForTest(allowUndefinedVariables = false, plannerEventCallback = null) {
             planner.physicalPlannerPasses(
                 listOf(
                     PartiQLPhysicalPass { plan, _ ->
@@ -116,8 +129,8 @@ class PartiQLCompilerPipelineSmokeTests {
         }
 
     @Test
-    fun `physical plan pass - first user pass sends semantic error`() {
-        val qp = createPlannerPipelineForTest(allowUndefinedVariables = false, plannerEventCallback = null) {
+    fun `physical plan pass - first user pass sends semantic error`() = runTest {
+        val qp = createPlannerPipelineAsyncForTest(allowUndefinedVariables = false, plannerEventCallback = null) {
             planner.physicalPlannerPasses(
                 listOf(
                     PartiQLPhysicalPass { plan, problemHandler ->
@@ -154,22 +167,21 @@ class PartiQLCompilerPipelineSmokeTests {
 
     @Test
     fun `duplicate physical operator factories are blocked`() {
-        // This will duplicate the default scan operator factory.
-        val fakeOperator = object : ScanRelationalOperatorFactory(DEFAULT_IMPL_NAME) {
+        // This will duplicate the default async scan operator factory.
+        val fakeOperator = object : ScanRelationalOperatorFactoryAsync(DEFAULT_IMPL_NAME) {
             override fun create(
                 impl: PartiqlPhysical.Impl,
-                expr: ValueExpression,
+                expr: ValueExpressionAsync,
                 setAsVar: SetVariableFunc,
                 setAtVar: SetVariableFunc?,
                 setByVar: SetVariableFunc?
-            ): RelationExpression {
+            ): RelationExpressionAsync {
                 TODO("doesn't matter won't be invoked")
             }
         }
 
         assertThrows<IllegalStateException> {
-            @Suppress("DEPRECATION") // don't warn about use of experimental APIs.
-            PartiQLCompilerPipeline.build {
+            PartiQLCompilerPipelineAsync.build {
                 compiler.customOperatorFactories(
                     listOf(fakeOperator)
                 )
