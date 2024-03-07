@@ -30,8 +30,8 @@ internal object SortOperatorFactoryDefaultAsync : SortOperatorFactoryAsync(DEFAU
 }
 
 internal class SortOperatorDefaultAsync(private val sortKeys: List<CompiledSortKeyAsync>, private val sourceRelation: RelationExpressionAsync) : RelationExpressionAsync {
-    override suspend fun evaluateAsync(state: EvaluatorState): RelationIterator {
-        val source = sourceRelation.evaluateAsync(state)
+    override suspend fun evaluate(state: EvaluatorState): RelationIterator {
+        val source = sourceRelation.evaluate(state)
         return relation(RelationType.LIST) {
             val rows = mutableListOf<Array<ExprValue>>()
 
@@ -63,7 +63,7 @@ internal class SortOperatorDefaultAsync(private val sortKeys: List<CompiledSortK
 
 /**
  * Returns a [Comparator] that compares arrays of registers by using un-evaluated sort keys. It does this by modifying
- * the [state] to allow evaluation of the [sortKeys]
+ * the [EvaluatorState] to allow evaluation of the [sortKeys].
  */
 internal fun getSortingComparator(sortKeys: List<NaturalExprValueComparators>): Comparator<Pair<Array<ExprValue>, List<ExprValue>>> {
     return object : Comparator<Pair<Array<ExprValue>, List<ExprValue>>> {

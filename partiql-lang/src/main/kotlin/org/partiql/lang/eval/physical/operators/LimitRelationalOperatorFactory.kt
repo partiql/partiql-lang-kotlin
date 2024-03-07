@@ -32,6 +32,7 @@ abstract class LimitRelationalOperatorFactory(name: String) : RelationalOperator
      * @param sourceBexpr
      * @return
      */
+    @Deprecated("To be removed in the next major version.", replaceWith = ReplaceWith("LimitRelationalOperatorFactoryAsync.create"))
     abstract fun create(
         impl: PartiqlPhysical.Impl,
         rowCountExpr: ValueExpression,

@@ -22,7 +22,7 @@ import kotlin.test.assertNull
  * TODO delete this once evaluator tests are replaced by `partiql-tests`
  */
 @OptIn(ExperimentalPartiQLCompilerPipeline::class)
-internal class PartiQLCompilerPipelineFactoryAsync() : PipelineFactory {
+internal class PartiQLCompilerPipelineFactoryAsync : PipelineFactory {
 
     override val pipelineName: String = "PartiQLCompilerPipelineAsync"
 

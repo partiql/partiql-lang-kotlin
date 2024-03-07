@@ -2,7 +2,6 @@ package org.partiql.lang.eval.physical.operators
 
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.eval.physical.EvaluatorState
-import org.partiql.lang.eval.physical.VariableBinding
 import org.partiql.lang.eval.physical.VariableBindingAsync
 import org.partiql.lang.eval.relation.RelationIterator
 import org.partiql.lang.eval.relation.relation
@@ -24,7 +23,7 @@ abstract class LetRelationalOperatorFactoryAsync(name: String) : RelationalOpera
      *
      * @param impl
      * @param sourceBexpr
-     * @param bindings list of [VariableBinding]s in the `LET` clause
+     * @param bindings list of [VariableBindingAsync]s in the `LET` clause
      * @return
      */
     abstract fun create(
@@ -51,8 +50,8 @@ internal class LetOperatorAsync(
     private val bindings: List<VariableBindingAsync>
 ) : RelationExpressionAsync {
 
-    override suspend fun evaluateAsync(state: EvaluatorState): RelationIterator {
-        val rows = input.evaluateAsync(state)
+    override suspend fun evaluate(state: EvaluatorState): RelationIterator {
+        val rows = input.evaluate(state)
         return relation(rows.relType) {
             while (rows.nextRow()) {
                 bindings.forEach {

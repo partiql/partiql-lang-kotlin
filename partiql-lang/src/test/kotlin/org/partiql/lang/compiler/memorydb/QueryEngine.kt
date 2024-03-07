@@ -39,7 +39,7 @@ internal const val DB_CONTEXT_VAR = "in-memory-database"
  */
 @OptIn(ExperimentalPartiQLCompilerPipeline::class)
 class QueryEngine(val db: MemoryDatabase) {
-    var enableDebugOutput = false
+    private var enableDebugOutput = false
 
     /** Given a [BindingName], inform the planner the unique identifier of the global variable (usually a table). */
     private val globalVariableResolver = GlobalVariableResolver { bindingName ->
@@ -63,7 +63,7 @@ class QueryEngine(val db: MemoryDatabase) {
                 // TODO: nothing in the planner uses the contentClosed property yet, but "technically" do have open
                 // content since nothing is constraining the fields in the table.
                 contentClosed = false,
-                // The FilterScanTokeyLookup pass does use this.
+                // The FilterScanToKeyLookup pass does use this.
                 primaryKeyFields = tableMetadata.primaryKeyFields
             )
         )

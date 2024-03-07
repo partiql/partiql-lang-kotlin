@@ -43,7 +43,7 @@ internal class UnpivotOperatorDefaultAsync(
     private val setAtVar: SetVariableFunc?,
     private val setByVar: SetVariableFunc?
 ) : RelationExpressionAsync {
-    override suspend fun evaluateAsync(state: EvaluatorState): RelationIterator {
+    override suspend fun evaluate(state: EvaluatorState): RelationIterator {
         val originalValue = expr(state)
         val unpivot = originalValue.unpivot()
 

@@ -1,5 +1,6 @@
 package org.partiql.jmh.benchmarks
 
+import com.amazon.ion.IonSystem
 import com.amazon.ion.system.IonSystemBuilder
 import kotlinx.coroutines.runBlocking
 import org.openjdk.jmh.annotations.Benchmark
@@ -41,10 +42,10 @@ open class PartiQLCompilerPipelineAsyncBenchmark {
     @State(Scope.Thread)
     @OptIn(ExperimentalPartiQLCompilerPipeline::class)
     open class MyState {
-        val parser = PartiQLParserBuilder.standard().build()
-        val myIonSystem = IonSystemBuilder.standard().build()
+        private val parser = PartiQLParserBuilder.standard().build()
+        private val myIonSystem: IonSystem = IonSystemBuilder.standard().build()
 
-        fun tableWithRows(numRows: Int): ExprValue {
+        private fun tableWithRows(numRows: Int): ExprValue {
             val allRows = (1..numRows).joinToString { index ->
                 """
                     {
@@ -62,7 +63,7 @@ open class PartiQLCompilerPipelineAsyncBenchmark {
             )
         }
 
-        val bindings = Bindings.ofMap(
+        private val bindings = Bindings.ofMap(
             mapOf(
                 "t1" to tableWithRows(1),
                 "t10" to tableWithRows(10),
@@ -73,7 +74,7 @@ open class PartiQLCompilerPipelineAsyncBenchmark {
             )
         )
 
-        val parameters = listOf(
+        private val parameters = listOf(
             ExprValue.newInt(5), // WHERE `id` > 5
             ExprValue.newInt(1000000), // LIMIT 1000000
             ExprValue.newInt(3), // OFFSET 3 * 2

@@ -35,12 +35,12 @@ internal class LeadAsync : NavigationWindowFunctionAsync() {
         val defaultValue = default?.invoke(state) ?: ExprValue.nullValue
         val targetIndex = currentPos + offsetValue
 
-        if (targetIndex <= currentPartition.lastIndex) {
+        return if (targetIndex <= currentPartition.lastIndex) {
             val targetRow = currentPartition[targetIndex.toInt()]
             state.load(targetRow)
-            return target!!.invoke(state)
+            target!!.invoke(state)
         } else {
-            return defaultValue
+            defaultValue
         }
     }
 }

@@ -5,6 +5,7 @@ import com.amazon.ionelement.api.ionString
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import org.partiql.annotations.ExperimentalPartiQLCompilerPipeline
@@ -12,6 +13,7 @@ import org.partiql.lang.compiler.PartiQLCompilerPipelineAsync
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.PartiQLResult
+import org.partiql.lang.eval.PartiQLStatementAsync
 import org.partiql.lang.eval.booleanValue
 import org.partiql.lang.eval.isNotUnknown
 import org.partiql.lang.eval.physical.operators.FilterRelationalOperatorFactoryAsync
@@ -26,6 +28,16 @@ import org.partiql.lang.planner.transforms.PLAN_VERSION_NUMBER
 private const val FAKE_IMPL_NAME = "test_async_fake"
 private val FAKE_IMPL_NODE = PartiqlPhysical.build { impl(FAKE_IMPL_NAME) }
 
+/**
+ * Test is included to demonstrate the previous behavior for a relational operator expression that calls an async
+ * functions. Previously, in the synchronous evaluator, making an async function call would require wrapping the call
+ * in [runBlocking], which blocks the current thread of execution. This results in the 10 evaluation calls to be
+ * executed one after the other, waiting for the previous call to finish.
+ *
+ * Since the [PartiQLStatementAsync] evaluation is now async, the [runBlocking] around the async function is no longer
+ * required. Thus, the result is the 10 evaluation calls can be executed without waiting for the previous call to
+ * finish.
+ */
 @OptIn(ExperimentalPartiQLCompilerPipeline::class)
 class AsyncOperatorTests {
     private val fakeOperatorFactories = listOf(
@@ -35,12 +47,13 @@ class AsyncOperatorTests {
                 predicate: ValueExpressionAsync,
                 sourceBexpr: RelationExpressionAsync
             ): RelationExpressionAsync = RelationExpressionAsync { state ->
-                // If `RelationExpression`'s `evaluate` was NOT a `suspend fun`, then `runBlocking` would be required
+                // If `RelationExpressionAsync`'s `evaluate` was NOT a `suspend fun`, then `runBlocking` would be
+                // required
 //                runBlocking {
                 println("Calling")
                 someAsyncOp()
 //                }
-                val input = sourceBexpr.evaluateAsync(state)
+                val input = sourceBexpr.evaluate(state)
 
                 relation(RelationType.BAG) {
                     while (true) {
@@ -94,6 +107,7 @@ class AsyncOperatorTests {
             )
         }
         val statement = pipeline.compile(plan)
+        // asynchronously evaluate 10 statements and print out the results
         repeat(10) { index ->
             launch {
                 print("\nCompiling $index. ")

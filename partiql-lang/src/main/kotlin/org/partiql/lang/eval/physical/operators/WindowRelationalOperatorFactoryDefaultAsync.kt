@@ -34,9 +34,9 @@ internal class WindowOperatorDefaultAsync(
     private val windowSortSpecList: List<CompiledSortKeyAsync>,
     private val compiledWindowFunctions: List<CompiledWindowFunctionAsync>
 ) : RelationExpressionAsync {
-    override suspend fun evaluateAsync(state: EvaluatorState): RelationIterator {
+    override suspend fun evaluate(state: EvaluatorState): RelationIterator {
         // the following corresponding to materialization process
-        val sourceIter = source.evaluateAsync(state)
+        val sourceIter = source.evaluate(state)
         val registers = sequence {
             while (sourceIter.nextRow()) {
                 yield(state.registers.clone())
@@ -59,7 +59,7 @@ internal class WindowOperatorDefaultAsync(
         val sortedRegisters = newRegisters.sortedWith(getSortingComparator(sortKeys.map { it.comparator })).map { it.first }
 
         // create the partition here
-        var partition = mutableListOf<List<Array<ExprValue>>>()
+        val partition = mutableListOf<List<Array<ExprValue>>>()
 
         // entire partition
         if (windowPartitionList.isEmpty()) {
@@ -68,7 +68,7 @@ internal class WindowOperatorDefaultAsync(
         // need to be partitioned
         else {
             val iter = sortedRegisters.iterator()
-            var rowInPartition = mutableListOf<Array<ExprValue>>()
+            val rowInPartition = mutableListOf<Array<ExprValue>>()
             var previousPartition: ExprValue? = null
             while (iter.hasNext()) {
                 val currentRow = iter.next()

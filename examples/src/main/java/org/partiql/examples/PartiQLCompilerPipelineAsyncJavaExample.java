@@ -35,7 +35,7 @@ import java.io.PrintStream;
 /**
  * This is an example of using PartiQLCompilerPipelineAsync in Java.
  * It is an experimental feature and is marked as such, with @OptIn, in this example.
- * Unfortunately, it seems like the Java does not recognize the Optin annotation specified in Kotlin.
+ * Unfortunately, it seems like the Java does not recognize the OptIn annotation specified in Kotlin.
  * Java users will be able to access the experimental APIs freely, and not be warned at all.
  */
 public class PartiQLCompilerPipelineAsyncJavaExample extends Example {
@@ -57,10 +57,7 @@ public class PartiQLCompilerPipelineAsyncJavaExample extends Example {
                 "{name: \"mary\", age: 19}" +
                 "]";
 
-        final Bindings<ExprValue> globalVariables = Bindings.<ExprValue>lazyBindingsBuilder().addBinding("myTable", () -> {
-            ExprValue exprValue = ExprValue.of(ion.singleValue(myTable));
-            return exprValue;
-        }).build();
+        final Bindings<ExprValue> globalVariables = Bindings.<ExprValue>lazyBindingsBuilder().addBinding("myTable", () -> ExprValue.of(ion.singleValue(myTable))).build();
 
         final EvaluationSession session = EvaluationSession.builder()
                 .globals(globalVariables)
@@ -97,6 +94,11 @@ public class PartiQLCompilerPipelineAsyncJavaExample extends Example {
         String query = "SELECT t.name FROM myTable AS t WHERE t.age > 20";
 
         print("PartiQL query:", query);
+
+        // Calling Kotlin coroutines from Java requires some additional libraries from `kotlinx.coroutines.future`
+        // to return a `java.util.concurrent.CompletableFuture`. If a use case arises to call the
+        // `PartiQLCompilerPipelineAsync` APIs directly from Java, we can add Kotlin functions that directly return
+        // Java's async libraries (e.g. in https://stackoverflow.com/a/52887677).
         CompletableFuture<PartiQLStatementAsync> statementFuture = FutureKt.future(
                 CoroutineScopeKt.CoroutineScope(EmptyCoroutineContext.INSTANCE),
                 EmptyCoroutineContext.INSTANCE,

@@ -107,6 +107,25 @@ data class ThunkOptions private constructor(
     }
 }
 
+internal val DEFAULT_EXCEPTION_HANDLER_FOR_LEGACY_MODE: ThunkExceptionHandlerForLegacyMode = { e, sourceLocation ->
+    val message = e.message ?: "<NO MESSAGE>"
+    throw EvaluationException(
+        "Internal error, $message",
+        errorCode = (e as? EvaluationException)?.errorCode ?: ErrorCode.EVALUATOR_GENERIC_EXCEPTION,
+        errorContext = errorContextFrom(sourceLocation),
+        cause = e,
+        internal = true
+    )
+}
+
+internal val DEFAULT_EXCEPTION_HANDLER_FOR_PERMISSIVE_MODE: ThunkExceptionHandlerForPermissiveMode = { e, _ ->
+    when (e) {
+        is InterruptedException -> { throw e }
+        is StackOverflowError -> { throw e }
+        else -> {}
+    }
+}
+
 /**
  * An extension method for creating [ThunkFactory] based on the type of [TypingMode]
  *  - when [TypingMode] is [TypingMode.LEGACY], creates [LegacyThunkFactory]

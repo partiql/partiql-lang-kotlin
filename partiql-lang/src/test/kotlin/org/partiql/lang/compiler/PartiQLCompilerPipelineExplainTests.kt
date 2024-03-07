@@ -34,7 +34,7 @@ import org.partiql.lang.util.ArgumentsProviderBase
 class PartiQLCompilerPipelineExplainTests {
 
     val compiler = PartiQLCompilerPipeline.standard()
-    val compilerAsync = PartiQLCompilerPipelineAsync.standard()
+    private val compilerAsync = PartiQLCompilerPipelineAsync.standard()
 
     data class ExplainTestCase(
         val description: String? = null,

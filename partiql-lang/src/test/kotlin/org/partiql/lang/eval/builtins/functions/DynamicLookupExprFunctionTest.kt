@@ -111,7 +111,7 @@ class DynamicLookupExprFunctionTest : EvaluatorTestBase() {
 
     class MismatchCaseSensitiveCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
-            // Can't find these variables due to case mismatch when perform case sensitive lookup
+            // Can't find these variables due to case mismatch when perform case-sensitive lookup
             EvaluatorErrorTestCase(
                 query = "\"$DYNAMIC_LOOKUP_FUNCTION_NAME\"(`fOo`, `case_sensitive`, `locals_then_globals`, [f, b])",
                 expectedErrorCode = ErrorCode.EVALUATOR_QUOTED_BINDING_DOES_NOT_EXIST,

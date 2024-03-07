@@ -54,7 +54,7 @@ class GetByKeyProjectRelationalOperatorFactoryAsync : ProjectRelationalOperatorF
         // Extract the key value constructor
         val keyValueExpressionAsync = args.single()
 
-        // Parse the tableId so we don't have to at evaluation-time
+        // Parse the tableId, so we don't have to at evaluation-time
         val tableId = UUID.fromString(impl.staticArgs.single().textValue)
 
         var exhausted = false

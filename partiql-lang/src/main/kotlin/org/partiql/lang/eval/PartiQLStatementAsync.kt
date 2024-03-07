@@ -15,7 +15,7 @@
 package org.partiql.lang.eval
 
 /**
- * A compiled PartiQL statement
+ * A compiled PartiQL statement intended to be evaluated from a Kotlin coroutine.
  */
 fun interface PartiQLStatementAsync {
 

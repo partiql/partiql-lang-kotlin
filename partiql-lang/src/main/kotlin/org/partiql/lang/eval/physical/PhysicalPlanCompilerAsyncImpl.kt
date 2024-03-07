@@ -855,7 +855,7 @@ internal class PhysicalPlanCompilerAsyncImpl(
             try {
                 val func = functionManager.get(name = name, arity = arity, args = argTypes)
                 val computeThunk = when (func.signature.unknownArguments) {
-                    UnknownArguments.PROPAGATE -> thunkFactory.thunkEnvOperands(metas, funcArgThunks) { env, values ->
+                    UnknownArguments.PROPAGATE -> thunkFactory.thunkEnvOperands(metas, funcArgThunks) { env, _ ->
                         func.call(env.session, args)
                     }
                     UnknownArguments.PASS_THRU -> thunkFactory.thunkEnvAsync(metas) { env ->
@@ -1679,7 +1679,7 @@ internal class PhysicalPlanCompilerAsyncImpl(
         escape?.let {
             val escapeCharString = checkEscapeChar(escape, escapeLocationMeta)
             val escapeCharCodePoint = escapeCharString.codePointAt(0) // escape is a string of length 1
-            val validEscapedChars = setOf('_'.toInt(), '%'.toInt(), escapeCharCodePoint)
+            val validEscapedChars = setOf('_'.code, '%'.code, escapeCharCodePoint)
             val iter = pattern.codePointSequence().iterator()
 
             while (iter.hasNext()) {

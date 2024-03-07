@@ -93,10 +93,10 @@ private class InnerJoinOperatorAsync(
     private val condition: suspend (EvaluatorState) -> Boolean
 ) : RelationExpressionAsync {
 
-    override suspend fun evaluateAsync(state: EvaluatorState) = relation(RelationType.BAG) {
-        val leftItr = lhs.evaluateAsync(state)
+    override suspend fun evaluate(state: EvaluatorState) = relation(RelationType.BAG) {
+        val leftItr = lhs.evaluate(state)
         while (leftItr.nextRow()) {
-            val rightItr = rhs.evaluateAsync(state)
+            val rightItr = rhs.evaluate(state)
             while (rightItr.nextRow()) {
                 if (condition(state)) {
                     yield()
@@ -116,10 +116,10 @@ private class LeftJoinOperatorAsync(
     private val setRightSideVariablesToNull: (EvaluatorState) -> Unit
 ) : RelationExpressionAsync {
 
-    override suspend fun evaluateAsync(state: EvaluatorState) = relation(RelationType.BAG) {
-        val leftItr = lhs.evaluateAsync(state)
+    override suspend fun evaluate(state: EvaluatorState) = relation(RelationType.BAG) {
+        val leftItr = lhs.evaluate(state)
         while (leftItr.nextRow()) {
-            val rightItr = rhs.evaluateAsync(state)
+            val rightItr = rhs.evaluate(state)
             var yieldedSomething = false
             while (rightItr.nextRow()) {
                 if (condition(state)) {
@@ -145,10 +145,10 @@ private class RightJoinOperatorAsync(
     private val setLeftSideVariablesToNull: (EvaluatorState) -> Unit
 ) : RelationExpressionAsync {
 
-    override suspend fun evaluateAsync(state: EvaluatorState) = relation(RelationType.BAG) {
-        val rightItr = rhs.evaluateAsync(state)
+    override suspend fun evaluate(state: EvaluatorState) = relation(RelationType.BAG) {
+        val rightItr = rhs.evaluate(state)
         while (rightItr.nextRow()) {
-            val leftItr = lhs.evaluateAsync(state)
+            val leftItr = lhs.evaluate(state)
             var yieldedSomething = false
             while (leftItr.nextRow()) {
                 if (condition(state)) {

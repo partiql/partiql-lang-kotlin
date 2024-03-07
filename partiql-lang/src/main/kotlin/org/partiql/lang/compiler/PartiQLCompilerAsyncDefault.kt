@@ -36,11 +36,11 @@ import org.partiql.lang.types.TypedOpParameter
 
 @ExperimentalPartiQLCompilerPipeline
 internal class PartiQLCompilerAsyncDefault(
-    private val evaluatorOptions: EvaluatorOptions,
-    private val customTypedOpParameters: Map<String, TypedOpParameter>,
-    private val functions: List<ExprFunction>,
-    private val procedures: Map<String, StoredProcedure>,
-    private val operatorFactories: Map<RelationalOperatorFactoryKey, RelationalOperatorFactory>
+    evaluatorOptions: EvaluatorOptions,
+    customTypedOpParameters: Map<String, TypedOpParameter>,
+    functions: List<ExprFunction>,
+    procedures: Map<String, StoredProcedure>,
+    operatorFactories: Map<RelationalOperatorFactoryKey, RelationalOperatorFactory>
 ) : PartiQLCompilerAsync {
 
     private lateinit var exprConverter: PhysicalPlanCompilerAsyncImpl
@@ -113,7 +113,7 @@ internal class PartiQLCompilerAsyncDefault(
 
     private fun compileExplainDomain(statement: PartiqlPhysical.ExplainTarget.Domain, details: PartiQLPlanner.PlanningDetails): PartiQLResult.Explain.Domain {
         val format = statement.format?.text
-        val type = statement.type?.text?.toUpperCase() ?: ExplainDomains.AST.name
+        val type = statement.type?.text?.uppercase() ?: ExplainDomains.AST.name
         val domain = try {
             ExplainDomains.valueOf(type)
         } catch (ex: IllegalArgumentException) {

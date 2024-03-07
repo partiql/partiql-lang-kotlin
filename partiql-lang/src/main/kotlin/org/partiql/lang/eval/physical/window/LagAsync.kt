@@ -34,12 +34,12 @@ internal class LagAsync : NavigationWindowFunctionAsync() {
         val defaultValue = default?.invoke(state) ?: ExprValue.nullValue
         val targetIndex = currentPos - offsetValue
 
-        if (targetIndex >= 0 && targetIndex <= currentPartition.lastIndex) {
+        return if (targetIndex >= 0 && targetIndex <= currentPartition.lastIndex) {
             val targetRow = currentPartition[targetIndex.toInt()]
             state.load(targetRow)
-            return target!!.invoke(state)
+            target!!.invoke(state)
         } else {
-            return defaultValue
+            defaultValue
         }
     }
 }

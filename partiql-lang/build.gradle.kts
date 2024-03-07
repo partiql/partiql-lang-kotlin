@@ -40,7 +40,6 @@ dependencies {
     implementation(Deps.csv)
     implementation(Deps.kotlinReflect)
     implementation(Deps.kotlinxCoroutines)
-    implementation(Deps.kotlinxCoroutinesJdk8)
 
     testImplementation(testFixtures(project(":partiql-planner")))
     testImplementation(project(":plugins:partiql-memory"))

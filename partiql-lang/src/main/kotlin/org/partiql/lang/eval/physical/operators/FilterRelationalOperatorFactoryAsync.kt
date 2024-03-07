@@ -51,8 +51,8 @@ internal class SelectOperatorDefaultAsync(
     val predicate: ValueExpressionAsync,
 ) : RelationExpressionAsync {
 
-    override suspend fun evaluateAsync(state: EvaluatorState): RelationIterator {
-        val input = input.evaluateAsync(state)
+    override suspend fun evaluate(state: EvaluatorState): RelationIterator {
+        val input = input.evaluate(state)
         return relation(RelationType.BAG) {
             while (true) {
                 if (!input.nextRow()) {

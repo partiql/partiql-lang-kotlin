@@ -55,9 +55,9 @@ internal class OffsetOperatorAsync(
     private val offset: ValueExpressionAsync,
 ) : RelationExpressionAsync {
 
-    override suspend fun evaluateAsync(state: EvaluatorState): RelationIterator {
+    override suspend fun evaluate(state: EvaluatorState): RelationIterator {
         val skipCount: Long = evalOffsetRowCount(offset, state)
-        val rows = input.evaluateAsync(state)
+        val rows = input.evaluate(state)
         return relation(rows.relType) {
             var rowCount = 0L
             while (rowCount++ < skipCount) {

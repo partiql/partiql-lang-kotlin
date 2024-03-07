@@ -70,10 +70,10 @@ internal class AggregateOperatorDefaultAsync(
     val keys: List<CompiledGroupKeyAsync>,
     val functions: List<CompiledAggregateFunctionAsync>
 ) : RelationExpressionAsync {
-    override suspend fun evaluateAsync(state: EvaluatorState): RelationIterator = relation(RelationType.BAG) {
+    override suspend fun evaluate(state: EvaluatorState): RelationIterator = relation(RelationType.BAG) {
         val aggregationMap = TreeMap<ExprValue, List<Accumulator>>(DEFAULT_COMPARATOR)
 
-        val sourceIter = source.evaluateAsync(state)
+        val sourceIter = source.evaluate(state)
         while (sourceIter.nextRow()) {
 
             // Initialize the AggregationMap

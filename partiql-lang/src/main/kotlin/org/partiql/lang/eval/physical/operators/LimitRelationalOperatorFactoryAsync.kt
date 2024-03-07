@@ -55,9 +55,9 @@ internal class LimitOperatorAsync(
     private val limit: ValueExpressionAsync,
 ) : RelationExpressionAsync {
 
-    override suspend fun evaluateAsync(state: EvaluatorState): RelationIterator {
+    override suspend fun evaluate(state: EvaluatorState): RelationIterator {
         val limit = evalLimitRowCount(limit, state)
-        val rows = input.evaluateAsync(state)
+        val rows = input.evaluate(state)
         return relation(rows.relType) {
             var rowCount = 0L
             while (rowCount++ < limit && rows.nextRow()) {

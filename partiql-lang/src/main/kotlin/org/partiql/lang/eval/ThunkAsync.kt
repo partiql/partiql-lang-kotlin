@@ -47,46 +47,6 @@ internal typealias ThunkAsync<TEnv> = suspend (TEnv) -> ExprValue
 internal typealias ThunkValueAsync<TEnv, TArg> = suspend (TEnv, TArg) -> ExprValue
 
 /**
- * A type alias for an exception handler which always throws(primarily used for [TypingMode.LEGACY]).
- */
-internal typealias ThunkExceptionHandlerForLegacyModeAsync = (Throwable, SourceLocationMeta?) -> Nothing
-
-/**
- * A type alias for an exception handler which does not always throw(primarily used for [TypingMode.PERMISSIVE]).
- */
-internal typealias ThunkExceptionHandlerForPermissiveModeAsync = (Throwable, SourceLocationMeta?) -> Unit
-
-/**
- * Options for thunk construction.
- *
- *  - [ThunkOptions.handleExceptionForLegacyMode] will be called when in [TypingMode.LEGACY] mode
- *  - [ThunkOptions.handleExceptionForPermissiveMode] will be called when in [TypingMode.PERMISSIVE] mode
- *  - [ThunkOptions.thunkReturnTypeAssertions] is intended for testing only, and ensures that the return value of every expression
- *  conforms to its `StaticType` meta.  This has negative performance implications so should be avoided in production
- *  environments.  This only be used for testing and diagnostic purposes only.
- * The default exception handler wraps any [Throwable] exception and throws [EvaluationException]
- */
-
-internal val DEFAULT_EXCEPTION_HANDLER_FOR_LEGACY_MODE: ThunkExceptionHandlerForLegacyModeAsync = { e, sourceLocation ->
-    val message = e.message ?: "<NO MESSAGE>"
-    throw EvaluationException(
-        "Internal error, $message",
-        errorCode = (e as? EvaluationException)?.errorCode ?: ErrorCode.EVALUATOR_GENERIC_EXCEPTION,
-        errorContext = errorContextFrom(sourceLocation),
-        cause = e,
-        internal = true
-    )
-}
-
-internal val DEFAULT_EXCEPTION_HANDLER_FOR_PERMISSIVE_MODE: ThunkExceptionHandlerForPermissiveModeAsync = { e, _ ->
-    when (e) {
-        is InterruptedException -> { throw e }
-        is StackOverflowError -> { throw e }
-        else -> {}
-    }
-}
-
-/**
  * An extension method for creating [ThunkFactoryAsync] based on the type of [TypingMode]
  *  - when [TypingMode] is [TypingMode.LEGACY], creates [LegacyThunkFactoryAsync]
  *  - when [TypingMode] is [TypingMode.PERMISSIVE], creates [PermissiveThunkFactoryAsync]
@@ -348,7 +308,7 @@ internal abstract class ThunkFactoryAsync<TEnv>(
     }
 
     /**
-     * Handles exceptions appropriately for a run-time [Thunk<TEnv>].
+     * Handles exceptions appropriately for a run-time [ThunkAsync<TEnv>].
      *
      * - The [SourceLocationMeta] will be extracted from [MetaContainer] and included in any [EvaluationException] that
      * is thrown, if present.
@@ -479,7 +439,7 @@ internal class LegacyThunkFactoryAsync<TEnv>(
     }
 
     /**
-     * Handles exceptions appropriately for a run-time [Thunk<TEnv>] respecting [TypingMode.LEGACY] behaviour.
+     * Handles exceptions appropriately for a run-time [ThunkAsync<TEnv>] respecting [TypingMode.LEGACY] behaviour.
      *
      * - The [SourceLocationMeta] will be extracted from [MetaContainer] and included in any [EvaluationException] that
      * is thrown, if present.
@@ -630,7 +590,7 @@ internal class PermissiveThunkFactoryAsync<TEnv>(
     /**
      * Handles exceptions appropriately for a run-time [Thunk<TEnv>] respecting [TypingMode.PERMISSIVE] behaviour.
      *
-     * - Exceptions thrown by [block] that are [EvaluationException] are caught and [MissingExprValue] is returned.
+     * - Exceptions thrown by [block] that are [EvaluationException] are caught and [ExprValue.missingValue] is returned.
      * - Exceptions thrown by [block] that are not an [EvaluationException] cause an [EvaluationException] to be thrown
      * with the original exception as the cause.
      */

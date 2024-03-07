@@ -1,6 +1,7 @@
 package org.partiql.lang.compiler.operators
 
 import com.amazon.ionelement.api.ionBool
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.assertThrows
@@ -186,6 +187,7 @@ class CustomOperatorFactoryTests {
         assertEquals(tc.expectedThrownFromOperator, ex.thrownFromOperator)
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     @ParameterizedTest
     @ArgumentsSource(CustomOperatorCases::class)
     fun `make sure custom async operator implementations are called`(tc: CustomOperatorCases.TestCase) = runTest {
@@ -207,7 +209,7 @@ class CustomOperatorFactoryTests {
         class TestCase(val expectedThrownFromOperator: RelationalOperatorKind, val plan: PartiqlPhysical.Plan)
         override fun getParameters() = listOf(
             // The key parts of the cases below are the setting of FAKE_IMPL_NODE which causes the custom operator
-            // factories to be called.  The rest is the minimum gibberish needed to make complete PartiqlPhsyical.Bexpr
+            // factories to be called.  The rest is the minimum gibberish needed to make complete PartiqlPhysical.Bexpr
             // nodes.  There must only be one FAKE_IMPL_NODE per plan otherwise the CreateFunctionWasCalledException
             // might be called for an operator other than the one intended.
             createTestCase(RelationalOperatorKind.PROJECT) { project(FAKE_IMPL_NODE, varDecl(0)) },

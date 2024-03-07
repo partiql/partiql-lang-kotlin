@@ -12,7 +12,6 @@ import org.partiql.lang.eval.ThunkValueAsync
 import org.partiql.lang.eval.physical.operators.AggregateOperatorFactoryAsync
 import org.partiql.lang.eval.physical.operators.CompiledAggregateFunctionAsync
 import org.partiql.lang.eval.physical.operators.CompiledGroupKeyAsync
-import org.partiql.lang.eval.physical.operators.CompiledSortKey
 import org.partiql.lang.eval.physical.operators.CompiledSortKeyAsync
 import org.partiql.lang.eval.physical.operators.CompiledWindowFunctionAsync
 import org.partiql.lang.eval.physical.operators.FilterRelationalOperatorFactoryAsync
@@ -33,7 +32,9 @@ import org.partiql.lang.eval.physical.operators.valueExpressionAsync
 import org.partiql.lang.eval.physical.window.createBuiltinWindowFunctionAsync
 import org.partiql.lang.util.toIntExact
 
-/** Converts instances of [PartiqlPhysical.Bexpr] to any [T]. */
+/** Converts instances of [PartiqlPhysical.Bexpr] to any [T]. A `suspend` version of the physical plan converter
+ * interface is added since PIG currently does not output async functions.
+ */
 internal interface Converter<T> {
     suspend fun convert(node: PartiqlPhysical.Bexpr): T = when (node) {
         is PartiqlPhysical.Bexpr.Project -> convertProject(node)
@@ -62,10 +63,10 @@ internal interface Converter<T> {
     suspend fun convertWindow(node: PartiqlPhysical.Bexpr.Window): T
 }
 
-/** A specialization of [Thunk] that we use for evaluation of physical plans. */
+/** A specialization of [ThunkAsync] that we use for evaluation of physical plans. */
 internal typealias PhysicalPlanThunkAsync = ThunkAsync<EvaluatorState>
 
-/** A specialization of [ThunkValue] that we use for evaluation of physical plans. */
+/** A specialization of [ThunkValueAsync] that we use for evaluation of physical plans. */
 internal typealias PhysicalPlanThunkValueAsync<T> = ThunkValueAsync<EvaluatorState, T>
 
 internal class PhysicalBexprToThunkConverterAsync(
@@ -77,7 +78,7 @@ internal class PhysicalBexprToThunkConverterAsync(
         valueExpressionAsync(sourceLocationMeta) { state -> this(state) }
 
     private suspend fun RelationExpressionAsync.toRelationThunk(metas: MetaContainer) =
-        relationThunkAsync(metas) { state -> this.evaluateAsync(state) }
+        relationThunkAsync(metas) { state -> this.evaluate(state) }
 
     private inline fun <reified T : RelationalOperatorFactory> findOperatorFactory(
         operator: RelationalOperatorKind,
@@ -187,7 +188,7 @@ internal class PhysicalBexprToThunkConverterAsync(
     override suspend fun convertJoin(node: PartiqlPhysical.Bexpr.Join): RelationThunkEnvAsync {
         // recurse into children
         val leftBindingsExpr = this.convert(node.left)
-        val rightBindingdExpr = this.convert(node.right)
+        val rightBindingsExpr = this.convert(node.right)
         val predicateValueExpr = node.predicate?.let { predicate ->
             exprConverter.convert(predicate)
                 .takeIf { !predicate.isLitTrue() }
@@ -214,7 +215,7 @@ internal class PhysicalBexprToThunkConverterAsync(
             impl = node.i,
             joinType = node.joinType,
             leftBexpr = { state -> leftBindingsExpr(state) },
-            rightBexpr = { state -> rightBindingdExpr(state) },
+            rightBexpr = { state -> rightBindingsExpr(state) },
             predicateExpr = predicateValueExpr,
             setLeftSideVariablesToNull = setLeftSideVariablesToNull,
             setRightSideVariablesToNull = setRightSideVariablesToNull
@@ -278,7 +279,7 @@ internal class PhysicalBexprToThunkConverterAsync(
 
         // Get Implementation
         val factory = findOperatorFactory<SortOperatorFactoryAsync>(RelationalOperatorKind.SORT, node.i.name.text)
-        val bindingsExpr = factory.create(sortKeys, { state -> source(state) })
+        val bindingsExpr = factory.create(sortKeys) { state -> source(state) }
         return bindingsExpr.toRelationThunk(node.metas)
     }
 
@@ -302,7 +303,7 @@ internal class PhysicalBexprToThunkConverterAsync(
     }
 
     /**
-     * Returns a list of [CompiledSortKey] with the aim of pre-computing the [NaturalExprValueComparators] prior to
+     * Returns a list of [CompiledSortKeyAsync] with the aim of pre-computing the [NaturalExprValueComparators] prior to
      * evaluation and leaving the [PartiqlPhysical.SortSpec]'s [PartiqlPhysical.Expr] to be evaluated later.
      */
     private suspend fun compileSortSpecsAsync(specs: List<PartiqlPhysical.SortSpec>): List<CompiledSortKeyAsync> = specs.map { spec ->
