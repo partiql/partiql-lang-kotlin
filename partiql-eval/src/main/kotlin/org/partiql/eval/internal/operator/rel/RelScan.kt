@@ -1,7 +1,9 @@
 package org.partiql.eval.internal.operator.rel
 
 import org.partiql.errors.TypeCheckException
+import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
+import org.partiql.eval.internal.helpers.RecordValueIterator
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.value.CollectionValue
 import org.partiql.value.PartiQLValueExperimental
@@ -13,10 +15,10 @@ internal class RelScan(
 
     private lateinit var records: Iterator<Record>
 
-    override fun open() {
-        val r = expr.eval(Record.empty)
+    override fun open(env: Environment) {
+        val r = expr.eval(env.push(Record.empty))
         records = when (r) {
-            is CollectionValue<*> -> r.map { Record.of(it) }.iterator()
+            is CollectionValue<*> -> RecordValueIterator(r)
             else -> {
                 close()
                 throw TypeCheckException()
@@ -24,12 +26,10 @@ internal class RelScan(
         }
     }
 
-    override fun next(): Record? {
-        return if (records.hasNext()) {
-            records.next()
-        } else {
-            null
-        }
+    override fun hasNext(): Boolean = records.hasNext()
+
+    override fun next(): Record {
+        return records.next()
     }
 
     override fun close() {}

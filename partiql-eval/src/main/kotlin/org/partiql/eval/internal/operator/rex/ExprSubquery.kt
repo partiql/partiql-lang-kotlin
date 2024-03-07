@@ -3,7 +3,6 @@ package org.partiql.eval.internal.operator.rex
 import org.partiql.errors.CardinalityViolation
 import org.partiql.errors.TypeCheckException
 import org.partiql.eval.internal.Environment
-import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
@@ -23,17 +22,15 @@ internal abstract class ExprSubquery : Operator.Expr {
 
     abstract val constructor: Operator.Expr
     abstract val input: Operator.Relation
-    abstract val env: Environment
 
     internal class Row(
         override val constructor: Operator.Expr,
         override val input: Operator.Relation,
-        override val env: Environment
     ) : ExprSubquery() {
 
         @PartiQLValueExperimental
-        override fun eval(record: Record): PartiQLValue {
-            val tuple = getFirst(record) ?: return nullValue()
+        override fun eval(env: Environment): PartiQLValue {
+            val tuple = getFirst(env) ?: return nullValue()
             val values = tuple.values.iterator()
             return listValue(values.asSequence().toList())
         }
@@ -42,12 +39,11 @@ internal abstract class ExprSubquery : Operator.Expr {
     internal class Scalar(
         override val constructor: Operator.Expr,
         override val input: Operator.Relation,
-        override val env: Environment
     ) : ExprSubquery() {
 
         @PartiQLValueExperimental
-        override fun eval(record: Record): PartiQLValue {
-            val tuple = getFirst(record) ?: return nullValue()
+        override fun eval(env: Environment): PartiQLValue {
+            val tuple = getFirst(env) ?: return nullValue()
             val values = tuple.values.iterator()
             if (values.hasNext().not()) {
                 throw TypeCheckException()
@@ -69,16 +65,19 @@ internal abstract class ExprSubquery : Operator.Expr {
      * @throws TypeCheckException when the constructor is not a [StructValue].
      */
     @OptIn(PartiQLValueExperimental::class)
-    fun getFirst(record: Record): StructValue<*>? {
-        return env.scope(record) {
-            input.open()
-            val firstRecord = input.next() ?: return@scope null
-            val tuple = constructor.eval(firstRecord).check<StructValue<*>>()
-            val secondRecord = input.next()
-            if (secondRecord != null) {
-                throw CardinalityViolation()
-            }
-            tuple
+    fun getFirst(env: Environment): StructValue<*>? {
+        input.open(env)
+        if (input.hasNext().not()) {
+            input.close()
+            return null
         }
+        val firstRecord = input.next()
+        val tuple = constructor.eval(env.push(firstRecord)).check<StructValue<*>>()
+        if (input.hasNext()) {
+            input.close()
+            throw CardinalityViolation()
+        }
+        input.close()
+        return tuple
     }
 }

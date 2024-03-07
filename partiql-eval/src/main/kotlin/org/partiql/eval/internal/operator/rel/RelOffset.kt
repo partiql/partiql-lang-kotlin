@@ -1,6 +1,7 @@
 package org.partiql.eval.internal.operator.rel
 
 import org.partiql.errors.TypeCheckException
+import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.value.NumericValue
@@ -17,13 +18,12 @@ internal class RelOffset(
     private var _seen: BigInteger = BigInteger.ZERO
     private var _offset: BigInteger = BigInteger.ZERO
 
-    override fun open() {
-        input.open()
+    override fun open(env: Environment) {
+        input.open(env)
         init = false
         _seen = BigInteger.ZERO
 
-        // TODO pass outer scope to offset expression
-        val o = offset.eval(Record.empty)
+        val o = offset.eval(env.push(Record.empty))
         if (o is NumericValue<*>) {
             _offset = o.toInt().value!!
         } else {
@@ -31,14 +31,20 @@ internal class RelOffset(
         }
     }
 
-    override fun next(): Record? {
+    override fun hasNext(): Boolean {
         if (!init) {
-            while (_seen < _offset) {
-                input.next() ?: return null
+            for (record in input) {
+                if (_seen >= _offset) {
+                    break
+                }
                 _seen = _seen.add(BigInteger.ONE)
             }
             init = true
         }
+        return input.hasNext()
+    }
+
+    override fun next(): Record {
         return input.next()
     }
 

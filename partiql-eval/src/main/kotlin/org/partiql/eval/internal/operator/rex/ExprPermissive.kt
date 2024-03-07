@@ -2,7 +2,7 @@ package org.partiql.eval.internal.operator.rex
 
 import org.partiql.errors.CardinalityViolation
 import org.partiql.errors.TypeCheckException
-import org.partiql.eval.internal.Record
+import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
@@ -13,9 +13,9 @@ internal class ExprPermissive(
 ) : Operator.Expr {
 
     @OptIn(PartiQLValueExperimental::class)
-    override fun eval(record: Record): PartiQLValue {
+    override fun eval(env: Environment): PartiQLValue {
         return try {
-            target.eval(record)
+            target.eval(env)
         } catch (e: TypeCheckException) {
             missingValue()
         } catch (e: CardinalityViolation) {

@@ -15,6 +15,7 @@
 
 package org.partiql.plugins.memory
 
+import com.amazon.ionelement.api.IonElement
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
@@ -25,6 +26,8 @@ import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.Index
 import org.partiql.types.StaticType
+import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.io.PartiQLValueIonReaderBuilder
 
 /**
  * Utility class for creating a MemoryCatalog.
@@ -47,9 +50,14 @@ public class MemoryCatalogBuilder {
      * @param name
      * @param type
      */
-    public fun define(name: String, type: StaticType): MemoryCatalogBuilder = this.apply {
+    @OptIn(PartiQLValueExperimental::class)
+    @JvmOverloads
+    public fun define(name: String, type: StaticType = StaticType.ANY, value: IonElement? = null): MemoryCatalogBuilder = this.apply {
         val path = BindingPath(name.split(".").map { BindingName(it, BindingCase.SENSITIVE) })
-        val obj = MemoryObject(type)
+        val pValue = value?.let { elt ->
+            PartiQLValueIonReaderBuilder.standard().build(elt).read()
+        }
+        val obj = MemoryObject(type, value = pValue)
         _items.add(path to obj)
     }
 

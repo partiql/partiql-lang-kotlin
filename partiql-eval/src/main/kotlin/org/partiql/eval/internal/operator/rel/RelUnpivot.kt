@@ -1,6 +1,7 @@
 package org.partiql.eval.internal.operator.rel
 
 import org.partiql.errors.TypeCheckException
+import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.value.MissingValue
@@ -24,6 +25,8 @@ internal sealed class RelUnpivot : Operator.Relation {
      */
     private lateinit var _iterator: Iterator<Pair<String, PartiQLValue>>
 
+    internal lateinit var env: Environment
+
     /**
      * Each mode overrides.
      */
@@ -32,14 +35,16 @@ internal sealed class RelUnpivot : Operator.Relation {
     /**
      * Initialize the _iterator from the concrete implementation's struct()
      */
-    override fun open() {
+    override fun open(env: Environment) {
+        this.env = env
         _iterator = struct().entries.iterator()
     }
 
-    override fun next(): Record? {
-        if (!_iterator.hasNext()) {
-            return null
-        }
+    override fun hasNext(): Boolean {
+        return _iterator.hasNext()
+    }
+
+    override fun next(): Record {
         val f = _iterator.next()
         val k = stringValue(f.first)
         val v = f.second
@@ -56,7 +61,7 @@ internal sealed class RelUnpivot : Operator.Relation {
     class Strict(private val expr: Operator.Expr) : RelUnpivot() {
 
         override fun struct(): StructValue<*> {
-            val v = expr.eval(Record.empty)
+            val v = expr.eval(env.push(Record.empty))
             if (v !is StructValue<*>) {
                 throw TypeCheckException()
             }
@@ -75,7 +80,7 @@ internal sealed class RelUnpivot : Operator.Relation {
      */
     class Permissive(private val expr: Operator.Expr) : RelUnpivot() {
 
-        override fun struct(): StructValue<*> = when (val v = expr.eval(Record.empty)) {
+        override fun struct(): StructValue<*> = when (val v = expr.eval(env.push(Record.empty))) {
             is StructValue<*> -> v
             is MissingValue -> structValue<PartiQLValue>()
             else -> structValue("_1" to v)

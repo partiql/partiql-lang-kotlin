@@ -10,50 +10,60 @@ import org.partiql.value.StructValue
 import org.partiql.value.nullValue
 import org.partiql.value.structValue
 
-internal abstract class RelJoinNestedLoop : Operator.Relation {
+internal abstract class RelJoinNestedLoop : RelPeeking() {
 
     abstract val lhs: Operator.Relation
     abstract val rhs: Operator.Relation
     abstract val condition: Operator.Expr
-    abstract val env: Environment
 
     private var lhsRecord: Record? = null
+    private lateinit var env: Environment
 
-    override fun open() {
-        lhs.open()
-        lhsRecord = lhs.next() ?: return
-        env.scope(lhsRecord!!) {
-            rhs.open()
+    override fun open(env: Environment) {
+        this.env = env
+        lhs.open(env)
+        if (lhs.hasNext().not()) {
+            return
         }
+        lhsRecord = lhs.next()
+        rhs.open(env.push(lhsRecord!!))
+        super.open(env)
     }
 
     abstract fun join(condition: Boolean, lhs: Record, rhs: Record): Record?
 
     @OptIn(PartiQLValueExperimental::class)
-    override fun next(): Record? {
+    override fun peek(): Record? {
         if (lhsRecord == null) {
             return null
         }
-        var rhsRecord = env.scope(lhsRecord!!) {
-            rhs.next()
+        var rhsRecord = when (rhs.hasNext()) {
+            true -> rhs.next()
+            false -> null
         }
         var toReturn: Record? = null
         do {
             // Acquire LHS and RHS Records
             if (rhsRecord == null) {
                 rhs.close()
-                lhsRecord = lhs.next() ?: return null
-                env.scope(lhsRecord!!) {
-                    rhs.open()
-                    rhsRecord = rhs.next()
+                if (lhs.hasNext().not()) {
+                    return null
+                }
+                lhsRecord = lhs.next()
+                rhs.open(env.push(lhsRecord!!))
+                rhsRecord = when (rhs.hasNext()) {
+                    true -> rhs.next()
+                    false -> null
                 }
             }
             // Return Joined Record
             if (rhsRecord != null && lhsRecord != null) {
-                val input = lhsRecord!! + rhsRecord!!
-                val result = condition.eval(input)
-                toReturn = join(result.isTrue(), lhsRecord!!, rhsRecord!!)
+                val input = lhsRecord!! + rhsRecord
+                val result = condition.eval(env.push(input))
+                toReturn = join(result.isTrue(), lhsRecord!!, rhsRecord)
             }
+            // Move the pointer to the next row for the RHS
+            if (toReturn == null) rhsRecord = rhs.next()
         }
         while (toReturn == null)
         return toReturn
@@ -62,6 +72,7 @@ internal abstract class RelJoinNestedLoop : Operator.Relation {
     override fun close() {
         lhs.close()
         rhs.close()
+        super.close()
     }
 
     @OptIn(PartiQLValueExperimental::class)

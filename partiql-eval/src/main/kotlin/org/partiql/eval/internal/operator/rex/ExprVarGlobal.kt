@@ -1,6 +1,6 @@
 package org.partiql.eval.internal.operator.rex
 
-import org.partiql.eval.internal.Record
+import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.spi.connector.ConnectorBindings
 import org.partiql.spi.connector.ConnectorPath
@@ -13,5 +13,5 @@ internal class ExprVarGlobal(
     private val bindings: ConnectorBindings,
 ) : Operator.Expr {
 
-    override fun eval(record: Record): PartiQLValue = bindings.getValue(path)
+    override fun eval(env: Environment): PartiQLValue = bindings.getValue(path)
 }

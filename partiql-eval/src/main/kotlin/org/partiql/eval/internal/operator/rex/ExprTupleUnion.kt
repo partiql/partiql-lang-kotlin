@@ -1,6 +1,6 @@
 package org.partiql.eval.internal.operator.rex
 
-import org.partiql.eval.internal.Record
+import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.value.NullValue
 import org.partiql.value.PartiQLValue
@@ -14,10 +14,10 @@ internal class ExprTupleUnion(
 ) : Operator.Expr {
 
     @OptIn(PartiQLValueExperimental::class)
-    override fun eval(record: Record): PartiQLValue {
+    override fun eval(env: Environment): PartiQLValue {
         // Return MISSING on Mistyping Case
         val tuples = args.map {
-            when (val arg = it.eval(record)) {
+            when (val arg = it.eval(env)) {
                 is StructValue<*> -> arg
                 is NullValue -> structValue(null)
                 else -> when (arg.isNull) {

@@ -1,6 +1,6 @@
 package org.partiql.eval.internal.operator.rex
 
-import org.partiql.eval.internal.Record
+import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
@@ -15,13 +15,14 @@ internal class ExprPivot(
     private val value: Operator.Expr,
 ) : Operator.Expr {
 
-    override fun eval(record: Record): PartiQLValue {
-        input.open()
+    override fun eval(env: Environment): PartiQLValue {
+        input.open(env)
         val fields = mutableListOf<Pair<String, PartiQLValue>>()
-        while (true) {
-            val row = input.next() ?: break
-            val k = key.eval(row).check<StringValue>()
-            val v = value.eval(row)
+        while (input.hasNext()) {
+            val row = input.next()
+            val newEnv = env.push(row)
+            val k = key.eval(newEnv).check<StringValue>()
+            val v = value.eval(newEnv)
             fields.add(k.value!! to v)
         }
         input.close()

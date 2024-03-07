@@ -1,6 +1,6 @@
 package org.partiql.eval.internal.operator.rex
 
-import org.partiql.eval.internal.Record
+import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.value.BoolValue
 import org.partiql.value.PartiQLValue
@@ -12,14 +12,14 @@ internal class ExprCase(
 ) : Operator.Expr {
 
     @OptIn(PartiQLValueExperimental::class)
-    override fun eval(record: Record): PartiQLValue {
+    override fun eval(env: Environment): PartiQLValue {
         branches.forEach { branch ->
-            val condition = branch.first.eval(record)
+            val condition = branch.first.eval(env)
             if (condition.isTrue()) {
-                return branch.second.eval(record)
+                return branch.second.eval(env)
             }
         }
-        return default.eval(record)
+        return default.eval(env)
     }
 
     @OptIn(PartiQLValueExperimental::class)
