@@ -131,7 +131,7 @@ class PlanTyperTestsPorted {
                 }
             }
             map.entries.map { (catalogName, bindings) ->
-                val catalog = MemoryCatalog(catalogName)
+                val catalog = MemoryCatalog.PartiQL().name(catalogName).build()
                 val connector = MemoryConnector(catalog)
                 for (binding in bindings) {
                     val path = binding.first

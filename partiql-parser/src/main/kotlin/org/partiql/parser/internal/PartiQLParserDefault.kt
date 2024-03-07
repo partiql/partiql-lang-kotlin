@@ -1830,11 +1830,18 @@ internal class PartiQLParserDefault : PartiQLParser {
          * TODO Add labels to each alternative, https://github.com/partiql/partiql-lang-kotlin/issues/1113
          */
         override fun visitOverlay(ctx: GeneratedParser.OverlayContext) = translate(ctx) {
+            // TODO: figure out why do we have a normalized form for overlay?
             if (ctx.PLACING() == null) {
                 // normal form
                 val function = "OVERLAY".toIdentifier()
-                val args = visitOrEmpty<Expr>(ctx.expr())
-                exprCall(function, args)
+                val args = arrayOfNulls<Expr>(4).also {
+                    visitOrEmpty<Expr>(ctx.expr()).forEachIndexed { index, expr ->
+                        it[index] = expr
+                    }
+                }
+                val e = error(ctx, "overlay function requires at least three args")
+
+                exprOverlay(args[0] ?: throw e, args[1] ?: throw e, args[2] ?: throw e, args[3])
             } else {
                 // special form
                 val value = visitExpr(ctx.expr(0))

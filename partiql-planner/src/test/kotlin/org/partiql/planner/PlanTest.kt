@@ -94,7 +94,7 @@ class PlanTest {
     }
 
     fun buildMetadata(catalogName: String): ConnectorMetadata {
-        val catalog = MemoryCatalog(catalogName)
+        val catalog = MemoryCatalog.PartiQL().name(catalogName).build()
         // Insert binding
         val name = BindingPath(
             listOf(

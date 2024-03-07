@@ -19,6 +19,12 @@ import com.amazon.ionelement.api.IonElement
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
+import org.partiql.spi.connector.ConnectorPath
+import org.partiql.spi.connector.sql.info.InfoSchema
+import org.partiql.spi.fn.Agg
+import org.partiql.spi.fn.Fn
+import org.partiql.spi.fn.FnExperimental
+import org.partiql.spi.fn.Index
 import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.io.PartiQLValueIonReaderBuilder
@@ -28,10 +34,13 @@ import org.partiql.value.io.PartiQLValueIonReaderBuilder
  */
 public class MemoryCatalogBuilder {
 
-    private var name: String? = null
-    private var items: MutableList<Pair<BindingPath, MemoryObject>> = mutableListOf()
+    private var _name: String? = null
+    private var _info: InfoSchema? = null
+    private var _items: MutableList<Pair<BindingPath, MemoryObject>> = mutableListOf()
 
-    public fun name(name: String): MemoryCatalogBuilder = this.apply { this.name = name }
+    public fun name(name: String): MemoryCatalogBuilder = this.apply { this._name = name }
+
+    public fun info(info: InfoSchema): MemoryCatalogBuilder = this.apply { this._info = info }
 
     /**
      * This is a simple `dot` delimited utility for adding type definitions.
@@ -49,12 +58,24 @@ public class MemoryCatalogBuilder {
             PartiQLValueIonReaderBuilder.standard().build(elt).read()
         }
         val obj = MemoryObject(type, value = pValue)
-        items.add(path to obj)
+        _items.add(path to obj)
     }
 
+    @OptIn(FnExperimental::class)
     public fun build(): MemoryCatalog {
-        val catalog = MemoryCatalog(name ?: error("MemoryCatalog must have a name"))
-        for (item in items) { catalog.insert(item.first, item.second) }
+        val name = _name ?: error("MemoryCatalog must have a name")
+        val info = _info ?: InfoSchema(
+            object : Index<Fn> {
+                override fun get(path: List<String>): List<Fn> = emptyList()
+                override fun get(path: ConnectorPath, specific: String): Fn? = null
+            },
+            object : Index<Agg> {
+                override fun get(path: List<String>): List<Agg> = emptyList()
+                override fun get(path: ConnectorPath, specific: String): Agg? = null
+            }
+        )
+        val catalog = MemoryCatalog(name, info)
+        for (item in _items) { catalog.insert(item.first, item.second) }
         return catalog
     }
 }

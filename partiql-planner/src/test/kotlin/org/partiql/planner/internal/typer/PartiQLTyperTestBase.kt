@@ -66,7 +66,7 @@ abstract class PartiQLTyperTestBase {
      * Build a ConnectorMetadata instance from the list of types.
      */
     private fun buildMetadata(catalog: String, types: List<StaticType>): ConnectorMetadata {
-        val cat = MemoryCatalog(catalog)
+        val cat = MemoryCatalog.PartiQL().name(catalog).build()
         val connector = MemoryConnector(cat)
 
         // define all bindings

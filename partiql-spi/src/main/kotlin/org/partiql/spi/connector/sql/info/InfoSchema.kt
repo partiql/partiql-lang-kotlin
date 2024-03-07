@@ -1,5 +1,6 @@
 package org.partiql.spi.connector.sql.info
 
+import org.partiql.spi.connector.sql.PartiQLExts
 import org.partiql.spi.connector.sql.SqlBuiltins
 import org.partiql.spi.fn.Agg
 import org.partiql.spi.fn.Fn
@@ -32,6 +33,17 @@ public class InfoSchema @OptIn(FnExperimental::class) constructor(
         public fun default(): InfoSchema {
             val functions = Index.fnBuilder()
                 .addAll(SqlBuiltins.builtins)
+                .build()
+            val aggregations = Index.aggBuilder()
+                .addAll(SqlBuiltins.aggregations)
+                .build()
+            return InfoSchema(functions, aggregations)
+        }
+
+        @OptIn(FnExperimental::class)
+        public fun ext(): InfoSchema {
+            val functions = Index.fnBuilder()
+                .addAll(SqlBuiltins.builtins + PartiQLExts.builtins)
                 .build()
             val aggregations = Index.aggBuilder()
                 .addAll(SqlBuiltins.aggregations)
