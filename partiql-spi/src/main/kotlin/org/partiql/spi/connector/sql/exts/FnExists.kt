@@ -29,11 +29,8 @@ internal object Fn_EXISTS__BAG__BOOL : Fn {
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val container = args[0].check<BagValue<*>>()
-        val iter = container.iterator()
-        if (iter.hasNext()) {
-            return boolValue(true)
-        }
-        return boolValue(false)
+        val exists = container.iterator().hasNext()
+        return boolValue(exists)
     }
 }
 
@@ -52,11 +49,8 @@ internal object Fn_EXISTS__LIST__BOOL : Fn {
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val container = args[0].check<ListValue<*>>()
-        val iter = container.iterator()
-        if (iter.hasNext()) {
-            return boolValue(true)
-        }
-        return boolValue(false)
+        val exists = container.iterator().hasNext()
+        return boolValue(exists)
     }
 }
 
@@ -75,11 +69,8 @@ internal object Fn_EXISTS__SEXP__BOOL : Fn {
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val container = args[0].check<SexpValue<*>>()
-        val iter = container.iterator()
-        if (iter.hasNext()) {
-            return boolValue(true)
-        }
-        return boolValue(false)
+        val exists = container.iterator().hasNext()
+        return boolValue(exists)
     }
 }
 
@@ -98,10 +89,7 @@ internal object Fn_EXISTS__STRUCT__BOOL : Fn {
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val container = args[0].check<StructValue<*>>()
-        val iter = container.fields.iterator()
-        if (iter.hasNext()) {
-            return boolValue(true)
-        }
-        return boolValue(false)
+        val exists = container.fields.iterator().hasNext()
+        return boolValue(exists)
     }
 }

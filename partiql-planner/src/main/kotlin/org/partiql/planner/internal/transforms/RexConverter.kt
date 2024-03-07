@@ -583,9 +583,24 @@ internal object RexConverter {
             return rex(type, call)
         }
 
-        // SUBSTRING ( CV FROM 1 FOR SP -1)
-        // || RS
-        // || SUBSTRING ( CV FROM SP + SL )
+        /**
+         * SQL Spec 1999: Section 6.18 <string value function>
+         *
+         * <character overlay function> ::=
+         *    OVERLAY <left paren> <character value expression>
+         *    PLACING <character value expression>
+         *    FROM <start position>
+         *    [ FOR <string length> ] <right paren>
+         *
+         * The <character overlay function> is equivalent to:
+         *
+         *   SUBSTRING ( CV FROM 1 FOR SP - 1 ) || RS || SUBSTRING ( CV FROM SP + SL )
+         *
+         * Where CV is the first <character value expression>,
+         * SP is the <start position>
+         * RS is the second <character value expression>,
+         * SL is the <string length> if specified, otherwise it is char_length(RS).
+         */
         override fun visitExprOverlay(node: Expr.Overlay, ctx: Env): Rex {
             val cv = visitExprCoerce(node.value, ctx)
             val sp = visitExprCoerce(node.start, ctx)

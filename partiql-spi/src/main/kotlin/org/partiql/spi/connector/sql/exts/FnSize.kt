@@ -29,13 +29,7 @@ internal object Fn_SIZE__BAG__INT32 : Fn {
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val container = args[0].check<BagValue<*>>()
-        val iter = container.iterator()
-        var count = 0
-        while (iter.hasNext()) {
-            count ++
-            iter.next()
-        }
-        return int32Value(count)
+        return int32Value(container.count())
     }
 }
 
@@ -54,13 +48,7 @@ internal object Fn_SIZE__LIST__INT32 : Fn {
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val container = args[0].check<ListValue<*>>()
-        val iter = container.iterator()
-        var count = 0
-        while (iter.hasNext()) {
-            count ++
-            iter.next()
-        }
-        return int32Value(count)
+        return int32Value(container.count())
     }
 }
 
@@ -79,13 +67,7 @@ internal object Fn_SIZE__SEXP__INT32 : Fn {
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val container = args[0].check<SexpValue<*>>()
-        val iter = container.iterator()
-        var count = 0
-        while (iter.hasNext()) {
-            count ++
-            iter.next()
-        }
-        return int32Value(count)
+        return int32Value(container.count())
     }
 }
 
@@ -104,12 +86,6 @@ internal object Fn_SIZE__STRUCT__INT32 : Fn {
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val container = args[0].check<StructValue<*>>()
-        val iter = container.fields.iterator()
-        var count = 0
-        while (iter.hasNext()) {
-            count ++
-            iter.next()
-        }
-        return int32Value(count)
+        return int32Value(container.fields.count())
     }
 }

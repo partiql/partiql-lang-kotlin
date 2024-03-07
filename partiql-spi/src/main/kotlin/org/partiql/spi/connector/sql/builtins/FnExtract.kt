@@ -288,7 +288,7 @@ internal object Fn_EXTRACT_TIMEZONE_HOUR__TIME__INT32 : Fn {
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val v = args[0].check<TimeValue>().value!!
         return when (val tz = v.timeZone) {
-            TimeZone.UnknownTimeZone -> int32Value(0)
+            TimeZone.UnknownTimeZone -> int32Value(0) // TODO: Should this be NULL?
             is TimeZone.UtcOffset -> int32Value(tz.tzHour)
             null -> int32Value(null)
         }
@@ -311,7 +311,7 @@ internal object Fn_EXTRACT_TIMEZONE_HOUR__TIMESTAMP__INT32 : Fn {
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val v = args[0].check<TimestampValue>().value!!
         return when (val tz = v.timeZone) {
-            TimeZone.UnknownTimeZone -> int32Value(0)
+            TimeZone.UnknownTimeZone -> int32Value(0) // TODO: Should this be NULL?
             is TimeZone.UtcOffset -> int32Value(tz.tzHour)
             null -> int32Value(null)
         }
@@ -337,7 +337,7 @@ internal object Fn_EXTRACT_TIMEZONE_MINUTE__TIME__INT32 : Fn {
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val v = args[0].check<TimeValue>().value!!
         return when (val tz = v.timeZone) {
-            TimeZone.UnknownTimeZone -> int32Value(0)
+            TimeZone.UnknownTimeZone -> int32Value(0) // TODO: Should this be NULL?
             is TimeZone.UtcOffset -> int32Value(tz.tzMinute)
             null -> int32Value(null)
         }
@@ -360,7 +360,7 @@ internal object Fn_EXTRACT_TIMEZONE_MINUTE__TIMESTAMP__INT32 : Fn {
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val v = args[0].check<TimestampValue>().value!!
         return when (val tz = v.timeZone) {
-            TimeZone.UnknownTimeZone -> int32Value(0)
+            TimeZone.UnknownTimeZone -> int32Value(0) // TODO: Should this be NULL?
             is TimeZone.UtcOffset -> int32Value(tz.tzMinute)
             null -> int32Value(null)
         }
