@@ -38,6 +38,7 @@ Thank you to all who have contributed!
 
 ### Changed
 - Function resolution logic: Now the function resolver would match all possible candidate(based on if the argument can be coerced to the Signature parameter type). If there are multiple match it will first attempt to pick the one requires the least cast, then pick the function with the highest precedence. 
+- partiql-cli -- experimental version of CLI now uses the async physical plan evaluator
 
 ### Deprecated
 - As part of the additions to make an async physical plan evaluator, the synchronous physical plan evaluator `PartiQLCompiler` has been deprecated. The following related APIs have been deprecated
