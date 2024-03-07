@@ -36,6 +36,7 @@ dependencies {
     implementation(Deps.joda)
     implementation(Deps.picoCli)
     implementation(Deps.kotlinReflect)
+    implementation(Deps.kotlinxCoroutines)
     testImplementation(Deps.mockito)
 }
 
