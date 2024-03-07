@@ -269,7 +269,6 @@ internal object RelConverter {
         }
 
         // Helpers
-
         private fun convertScan(rex: Rex, binding: Rel.Binding): Rel {
             val schema = listOf(binding)
             val props = emptySet<Rel.Prop>()

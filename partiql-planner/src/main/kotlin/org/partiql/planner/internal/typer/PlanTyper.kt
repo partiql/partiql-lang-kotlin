@@ -145,11 +145,6 @@ internal class PlanTyper(
             return rel(type, op)
         }
 
-        override fun visitRelOpErr(node: Rel.Op.Err, ctx: Rel.Type?): Rel {
-            val type = ctx ?: relType(emptyList(), emptySet())
-            return rel(type, node)
-        }
-
         /**
          * The output schema of a `rel.op.scan_index` is the value binding and index binding.
          */
@@ -176,21 +171,30 @@ internal class PlanTyper(
             val kType = STRING
 
             // value type, possibly coerced.
-            val vType = when (val t = rex.type) {
-                is StructType -> {
-                    if (t.contentClosed || t.constraints.contains(TupleConstraint.Open(false))) {
-                        unionOf(t.fields.map { it.value }.toSet()).flatten()
-                    } else {
-                        ANY
+            val vType = rex.type.allTypes.map { type ->
+                when (type) {
+                    is StructType -> {
+                        if (type.contentClosed || type.constraints.contains(TupleConstraint.Open(false))) {
+                            unionOf(type.fields.map { it.value }.toSet()).flatten()
+                        } else {
+                            ANY
+                        }
                     }
+                    else -> type
                 }
-                else -> t
+            }.let {
+                unionOf(it.toSet()).flatten()
             }
 
             // rewrite
             val type = ctx!!.copyWithSchema(listOf(kType, vType))
             val op = relOpUnpivot(rex)
             return rel(type, op)
+        }
+
+        override fun visitRelOpErr(node: Rel.Op.Err, ctx: Rel.Type?): Rel {
+            val type = ctx ?: relType(emptyList(), emptySet())
+            return rel(type, node)
         }
 
         override fun visitRelOpDistinct(node: Rel.Op.Distinct, ctx: Rel.Type?): Rel {

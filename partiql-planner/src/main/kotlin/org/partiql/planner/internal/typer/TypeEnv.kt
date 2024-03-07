@@ -31,7 +31,7 @@ internal data class TypeEnv(
     internal fun getScope(depth: Int): TypeEnv {
         return when (depth) {
             0 -> this
-            else -> outer.reversed()[depth - 1]
+            else -> outer[outer.size - depth]
         }
     }
 

@@ -24,10 +24,17 @@ import org.partiql.ast.Type
 import org.partiql.ast.visitor.AstBaseVisitor
 import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.ir.Identifier
+import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.builder.plan
 import org.partiql.planner.internal.ir.identifierQualified
 import org.partiql.planner.internal.ir.identifierSymbol
+import org.partiql.planner.internal.ir.rel
+import org.partiql.planner.internal.ir.relBinding
+import org.partiql.planner.internal.ir.relOpJoin
+import org.partiql.planner.internal.ir.relOpScan
+import org.partiql.planner.internal.ir.relOpUnpivot
+import org.partiql.planner.internal.ir.relType
 import org.partiql.planner.internal.ir.rex
 import org.partiql.planner.internal.ir.rexOpCallUnresolved
 import org.partiql.planner.internal.ir.rexOpCastUnresolved
@@ -36,10 +43,12 @@ import org.partiql.planner.internal.ir.rexOpLit
 import org.partiql.planner.internal.ir.rexOpPathIndex
 import org.partiql.planner.internal.ir.rexOpPathKey
 import org.partiql.planner.internal.ir.rexOpPathSymbol
+import org.partiql.planner.internal.ir.rexOpSelect
 import org.partiql.planner.internal.ir.rexOpStruct
 import org.partiql.planner.internal.ir.rexOpStructField
 import org.partiql.planner.internal.ir.rexOpSubquery
 import org.partiql.planner.internal.ir.rexOpTupleUnion
+import org.partiql.planner.internal.ir.rexOpVarLocal
 import org.partiql.planner.internal.ir.rexOpVarUnresolved
 import org.partiql.planner.internal.typer.toNonNullStaticType
 import org.partiql.planner.internal.typer.toStaticType
@@ -47,6 +56,7 @@ import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
 import org.partiql.value.StringValue
+import org.partiql.value.boolValue
 import org.partiql.value.int32Value
 import org.partiql.value.int64Value
 import org.partiql.value.io.PartiQLValueIonReaderBuilder
@@ -249,41 +259,152 @@ internal object RexConverter {
                 else -> root to node.steps
             }
 
-            // Return wrapped path
-            return when (newSteps.isEmpty()) {
-                true -> newRoot
-                false -> newSteps.fold(newRoot) { current, step ->
-                    val path = when (step) {
-                        is Expr.Path.Step.Index -> {
-                            val key = visitExprCoerce(step.key, context)
-                            when (val astKey = step.key) {
-                                is Expr.Lit -> when (astKey.value) {
-                                    is StringValue -> rexOpPathKey(current, key)
-                                    else -> rexOpPathIndex(current, key)
-                                }
-                                is Expr.Cast -> when (astKey.asType is Type.String) {
-                                    true -> rexOpPathKey(current, key)
-                                    false -> rexOpPathIndex(current, key)
-                                }
+            if (newSteps.isEmpty()) {
+                return newRoot
+            }
+
+            val fromList = mutableListOf<Rel>()
+
+            var varRefIndex = 0 // tracking var ref index
+
+            val pathNavi = newSteps.fold(newRoot) { current, step ->
+                val path = when (step) {
+                    is Expr.Path.Step.Index -> {
+                        val key = visitExprCoerce(step.key, context)
+                        val op = when (val astKey = step.key) {
+                            is Expr.Lit -> when (astKey.value) {
+                                is StringValue -> rexOpPathKey(current, key)
                                 else -> rexOpPathIndex(current, key)
                             }
-                        }
-                        is Expr.Path.Step.Symbol -> {
-                            val identifier = AstToPlan.convert(step.symbol)
-                            when (identifier.caseSensitivity) {
-                                Identifier.CaseSensitivity.SENSITIVE -> rexOpPathKey(
-                                    current,
-                                    rexString(identifier.symbol)
-                                )
-                                Identifier.CaseSensitivity.INSENSITIVE -> rexOpPathSymbol(current, identifier.symbol)
+
+                            is Expr.Cast -> when (astKey.asType is Type.String) {
+                                true -> rexOpPathKey(current, key)
+                                false -> rexOpPathIndex(current, key)
                             }
+
+                            else -> rexOpPathIndex(current, key)
                         }
-                        is Expr.Path.Step.Unpivot -> error("Unpivot path not supported yet")
-                        is Expr.Path.Step.Wildcard -> error("Wildcard path not supported yet")
+                        op
                     }
-                    rex(StaticType.ANY, path)
+
+                    is Expr.Path.Step.Symbol -> {
+                        val identifier = AstToPlan.convert(step.symbol)
+                        val op = when (identifier.caseSensitivity) {
+                            Identifier.CaseSensitivity.SENSITIVE -> rexOpPathKey(
+                                current,
+                                rexString(identifier.symbol)
+                            )
+
+                            Identifier.CaseSensitivity.INSENSITIVE -> rexOpPathSymbol(current, identifier.symbol)
+                        }
+                        op
+                    }
+
+                    // Unpivot and Wildcard steps trigger the rewrite
+                    // According to spec Section 4.3
+                    // ew1p1...wnpn
+                    // rewrite to:
+                    //  SELECT VALUE v_n.p_n
+                    //  FROM
+                    //       u_1 e as v_1
+                    //       u_2 @v_1.p_1 as v_2
+                    //       ...
+                    //       u_n @v_(n-1).p_(n-1) as v_n
+                    //  The From clause needs to be rewritten to
+                    //                     Join <------------------- schema: [(k_1), v_1, (k_2), v_2, ..., (k_(n-1)) v_(n-1)]
+                    //                  /       \
+                    //               ...     un @v_(n-1).p_(n-1) <-- stack: [global, typeEnv: [outer: [global], schema: [(k_1), v_1, (k_2), v_2, ..., (k_(n-1)) v_(n-1)]]]
+                    //                Join  <----------------------- schema: [(k_1), v_1, (k_2), v_2, (k_3), v_3]
+                    //              /    \
+                    //                   u_2 @v_1.p_1 as v2 <------- stack: [global, typeEnv: [outer: [global], schema: [(k_1), v_1, (k_2), v_2]]]
+                    //          JOIN   <---------------------------- schema: [(k_1), v_1, (k_2), v_2]
+                    //          /          \
+                    //   u_1 e as v_1 < ----\----------------------- stack: [global]
+                    //                    u_2 @v_1.p_1 as v2 <------ stack: [global, typeEnv: [outer: [global], schema: [(k_1), v_1]]]
+                    //   while doing the traversal, instead of passing the stack,
+                    //   each join will produce its own schema and pass the schema as a type Env.
+                    // The (k_i) indicate the possible key binding produced by unpivot.
+                    // We calculate the var ref on the fly.
+                    is Expr.Path.Step.Unpivot -> {
+                        // Unpivot produces two binding, in this context we want the value,
+                        // which always going to be the second binding
+                        val op = rexOpVarLocal(1, varRefIndex + 1)
+                        varRefIndex += 2
+                        val index = fromList.size
+                        fromList.add(relFromUnpivot(current, index))
+                        op
+                    }
+                    is Expr.Path.Step.Wildcard -> {
+                        // Scan produce only one binding
+                        val op = rexOpVarLocal(1, varRefIndex)
+                        varRefIndex += 1
+                        val index = fromList.size
+                        fromList.add(relFromDefault(current, index))
+                        op
+                    }
                 }
+                rex(StaticType.ANY, path)
             }
+
+            if (fromList.size == 0) return pathNavi
+            val fromNode = fromList.reduce { acc, scan ->
+                val schema = acc.type.schema + scan.type.schema
+                val props = emptySet<Rel.Prop>()
+                val type = relType(schema, props)
+                rel(type, relOpJoin(acc, scan, rex(StaticType.BOOL, rexOpLit(boolValue(true))), Rel.Op.Join.Type.INNER))
+            }
+
+            // compute the ref used by select construct
+            // always going to be the last binding
+            val selectRef = fromNode.type.schema.size - 1
+
+            val constructor = when (val op = pathNavi.op) {
+                is Rex.Op.Path.Index -> rex(pathNavi.type, rexOpPathIndex(rex(op.root.type, rexOpVarLocal(0, selectRef)), op.key))
+                is Rex.Op.Path.Key -> rex(pathNavi.type, rexOpPathKey(rex(op.root.type, rexOpVarLocal(0, selectRef)), op.key))
+                is Rex.Op.Path.Symbol -> rex(pathNavi.type, rexOpPathSymbol(rex(op.root.type, rexOpVarLocal(0, selectRef)), op.key))
+                is Rex.Op.Var.Local -> rex(pathNavi.type, rexOpVarLocal(0, selectRef))
+                else -> throw IllegalStateException()
+            }
+            val op = rexOpSelect(constructor, fromNode)
+            return rex(StaticType.ANY, op)
+        }
+
+        /**
+         * Construct Rel(Scan([path])).
+         *
+         * The constructed rel would produce one binding: _v$[index]
+         */
+        private fun relFromDefault(path: Rex, index: Int): Rel {
+            val schema = listOf(
+                relBinding(
+                    name = "_v$index", // fresh variable
+                    type = path.type
+                )
+            )
+            val props = emptySet<Rel.Prop>()
+            val relType = relType(schema, props)
+            return rel(relType, relOpScan(path))
+        }
+
+        /**
+         * Construct Rel(Unpivot([path])).
+         *
+         * The constructed rel would produce two bindings: _k$[index] and _v$[index]
+         */
+        private fun relFromUnpivot(path: Rex, index: Int): Rel {
+            val schema = listOf(
+                relBinding(
+                    name = "_k$index", // fresh variable
+                    type = StaticType.STRING
+                ),
+                relBinding(
+                    name = "_v$index", // fresh variable
+                    type = path.type
+                )
+            )
+            val props = emptySet<Rel.Prop>()
+            val relType = relType(schema, props)
+            return rel(relType, relOpUnpivot(path))
         }
 
         private fun rexString(str: String) = rex(StaticType.STRING, rexOpLit(stringValue(str)))
