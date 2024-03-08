@@ -50,9 +50,13 @@ public enum class PartiQLValueType {
 }
 
 public sealed interface PartiQLType {
+    public val name: String
+
     public sealed interface Runtime : PartiQLType {
 
-        public object MissingType : Runtime
+        public object MissingType : Runtime {
+            override val name: String = "MISSING"
+        }
 
         public sealed interface Core : Runtime
 
@@ -68,17 +72,59 @@ public sealed interface PartiQLType {
          */
         public object Any
     }
+
+    public companion object {
+
+        @OptIn(PartiQLValueExperimental::class)
+        @Deprecated("Should not be used")
+        public fun fromLegacy(type: PartiQLValueType): PartiQLType = when (type) {
+            PartiQLValueType.ANY -> AnyType
+            PartiQLValueType.BOOL -> BoolType
+            PartiQLValueType.INT8 -> Int8Type
+            PartiQLValueType.INT16 -> Int16Type
+            PartiQLValueType.INT32 -> Int32Type
+            PartiQLValueType.INT64 -> Int64Type
+            PartiQLValueType.INT -> NumericType(null, 0)
+            PartiQLValueType.NUMERIC -> NumericType(null, null) // TODO: What are the bounds to this?
+            PartiQLValueType.NUMERIC_ARBITRARY -> NumericType(null, null)
+            PartiQLValueType.FLOAT32 -> Float32Type
+            PartiQLValueType.FLOAT64 -> Float64Type
+            PartiQLValueType.CHAR -> CharType(1) // TODO: What to do here?
+            PartiQLValueType.STRING -> CharVarUnboundedType
+            PartiQLValueType.SYMBOL -> CharVarUnboundedType
+            PartiQLValueType.BINARY -> BlobType(10) // TODO: What to do here?
+            PartiQLValueType.BYTE -> ByteType
+            PartiQLValueType.BLOB -> BlobType(10) // TODO: What to do here?
+            PartiQLValueType.CLOB -> ClobType(10) // TODO what to do here?
+            PartiQLValueType.DATE -> DateType
+            PartiQLValueType.TIME -> TimeType(10) // TODO: Precision?
+            PartiQLValueType.TIMESTAMP -> TimestampType(10) // TODO: Precision?
+            PartiQLValueType.INTERVAL -> IntervalType(10) // TODO: Precision?
+            PartiQLValueType.BAG -> BagType(AnyType)
+            PartiQLValueType.LIST -> ArrayType(AnyType)
+            PartiQLValueType.SEXP -> ArrayType(AnyType)
+            PartiQLValueType.STRUCT -> TupleType(AnyType)
+            PartiQLValueType.NULL -> NullType
+            PartiQLValueType.MISSING -> PartiQLType.Runtime.MissingType
+        }
+    }
 }
 
-public object AnyType : PartiQLType.Abstract
+public object AnyType : PartiQLType.Abstract {
+    override val name: String = "ANY"
+}
 
 public data class BitType(
     val length: Int
-) : PartiQLType.Runtime.Core
+) : PartiQLType.Runtime.Core {
+    override val name: String = "BIT"
+}
 
 public data class BitVaryingType(
     val length: Int
-) : PartiQLType.Runtime.Core
+) : PartiQLType.Runtime.Core {
+    override val name: String = "BIT_VARYING"
+}
 
 /**
  * This is SQL:1999's BINARY LARGE OBJECT and Ion's BLOB type
@@ -88,25 +134,33 @@ public data class BitVaryingType(
 public data class BlobType(
     val length: Int
 ) : PartiQLType.Runtime.Core {
+
+    override val name: String = "BLOB"
     public companion object {
         @JvmStatic
         public val MAXIMUM_LENGTH: Int = 2_147_483_647 // TODO: Define MAXIMUM. Here is Oracle's
     }
 }
 
-public object BoolType : PartiQLType.Runtime.Core
+public object BoolType : PartiQLType.Runtime.Core {
+    override val name: String = "BOOL"
+}
 
 /**
  * TODO: Should this be allowed? It's not in SQL:1999
  */
-public object ByteType : PartiQLType.Runtime.Core
+public object ByteType : PartiQLType.Runtime.Core {
+    override val name: String = "BYTE"
+}
 
 /**
  * SQL:1999's CHARACTER type
  */
 public data class CharType(
     val length: Int
-) : PartiQLType.Runtime.Core
+) : PartiQLType.Runtime.Core {
+    override val name: String = "CHAR"
+}
 
 /**
  * SQL:1999's CHARACTER VARYING(n) type
@@ -114,13 +168,17 @@ public data class CharType(
  */
 public data class CharVarType(
     val length: Int
-) : PartiQLType.Runtime.Core
+) : PartiQLType.Runtime.Core {
+    override val name: String = "VARCHAR" // TODO: For now
+}
 
 /**
  * SQL:1999's CHARACTER VARYING type
  * Aliases are VARCHAR, STRING, and SYMBOL (both are unbounded in length)
  */
-public object CharVarUnboundedType : PartiQLType.Runtime.Core
+public object CharVarUnboundedType : PartiQLType.Runtime.Core {
+    override val name: String = "STRING" // TODO: For now
+}
 
 /**
  * SQL:1999's CHARACTER LARGE OBJECT(n) type and Ion's CLOB type
@@ -128,7 +186,9 @@ public object CharVarUnboundedType : PartiQLType.Runtime.Core
  */
 public data class ClobType(
     val length: Int
-) : PartiQLType.Runtime.Core
+) : PartiQLType.Runtime.Core {
+    override val name: String = "CLOB"
+}
 
 /**
  * SQL:1999's CHARACTER LARGE OBJECT type and Ion's CLOB type
@@ -136,28 +196,44 @@ public data class ClobType(
  */
 public data class ClobUnboundedType(
     val length: Int
-) : PartiQLType.Runtime.Core
+) : PartiQLType.Runtime.Core {
+    override val name: String = "CLOB"
+}
 
 /**
  * SQL:1999's DATE type
  * TODO: Does this differ from Ion?
  */
-public object DateType : PartiQLType.Runtime.Core
+public object DateType : PartiQLType.Runtime.Core {
+    override val name: String = "DATE"
+}
 
-public object Int8Type : PartiQLType.Runtime.Core
+public object Int8Type : PartiQLType.Runtime.Core {
+    override val name: String = "INT8"
+}
 
-public object Int16Type : PartiQLType.Runtime.Core
+public object Int16Type : PartiQLType.Runtime.Core {
+    override val name: String = "INT16"
+}
 
-public object Int32Type : PartiQLType.Runtime.Core
+public object Int32Type : PartiQLType.Runtime.Core {
+    override val name: String = "INT32"
 
-public object Int64Type : PartiQLType.Runtime.Core
+}
+
+public object Int64Type : PartiQLType.Runtime.Core {
+    override val name: String = "INT64"
+
+}
 
 /**
  * Approximate Numeric Type
  *
  * Aliases include: REAL
  */
-public object Float32Type : PartiQLType.Runtime.Core
+public object Float32Type : PartiQLType.Runtime.Core {
+    override val name: String = "FLOAT32"
+}
 
 /**
  * Approximate Numeric Type
@@ -165,7 +241,9 @@ public object Float32Type : PartiQLType.Runtime.Core
  * Aliases include: DOUBLE PRECISION
  * TODO: What is SQL:1999's `FLOAT`?
  */
-public object Float64Type : PartiQLType.Runtime.Core
+public object Float64Type : PartiQLType.Runtime.Core {
+    override val name: String = "FLOAT64"
+}
 
 /**
  * Aliases include DECIMAL(p, s)
@@ -173,7 +251,9 @@ public object Float64Type : PartiQLType.Runtime.Core
 public data class NumericType(
     val precision: Int?,
     val scale: Int?
-) : PartiQLType.Runtime.Core
+) : PartiQLType.Runtime.Core {
+    override val name: String = "NUMERIC"
+}
 
 /**
  * SQL:1999's TIME WITHOUT TIME ZONE type
@@ -181,7 +261,9 @@ public data class NumericType(
  */
 public data class TimeType(
     val precision: Int
-) : PartiQLType.Runtime.Core
+) : PartiQLType.Runtime.Core {
+    override val name: String = "TIME"
+}
 
 /**
  * SQL:1999's TIME WITH TIME ZONE type
@@ -189,7 +271,9 @@ public data class TimeType(
  */
 public data class TimeWithTimeZoneType(
     val precision: Int
-) : PartiQLType.Runtime.Core
+) : PartiQLType.Runtime.Core {
+    override val name: String = "TIME_WITH_TIME_ZONE"
+}
 
 /**
  * SQL:1999's TIMESTAMP WITHOUT TIME ZONE type
@@ -197,7 +281,9 @@ public data class TimeWithTimeZoneType(
  */
 public data class TimestampType(
     val precision: Int
-) : PartiQLType.Runtime.Core
+) : PartiQLType.Runtime.Core {
+    override val name: String = "TIMESTAMP"
+}
 
 /**
  * SQL:1999's TIMESTAMP WITH TIME ZONE type
@@ -205,7 +291,9 @@ public data class TimestampType(
  */
 public data class TimestampWithTimeZoneType(
     val precision: Int
-) : PartiQLType.Runtime.Core
+) : PartiQLType.Runtime.Core {
+    override val name: String = "TIMESTAMP_WITH_TIME_ZONE"
+}
 
 /**
  * SQL:1999's INTERVAL type
@@ -213,14 +301,18 @@ public data class TimestampWithTimeZoneType(
 public data class IntervalType(
     // TODO: Does this need a `fields` property?
     val precision: Int
-) : PartiQLType.Runtime.Core
+) : PartiQLType.Runtime.Core {
+    override val name: String = "INTERVAL"
+}
 
 /**
  * PartiQL's BAG type
  */
 public data class BagType(
     val element: PartiQLType
-) : PartiQLType.Runtime.Core
+) : PartiQLType.Runtime.Core {
+    override val name: String = "BAG"
+}
 
 /**
  * PartiQL's Array type
@@ -229,7 +321,9 @@ public data class BagType(
  */
 public data class ArrayType(
     val element: PartiQLType
-) : PartiQLType.Runtime.Core
+) : PartiQLType.Runtime.Core {
+    override val name: String = "ARRAY"
+}
 
 /**
  * PartiQL's Tuple type
@@ -238,9 +332,13 @@ public data class ArrayType(
  */
 public data class TupleType(
     val fields: PartiQLType
-) : PartiQLType.Runtime.Core
+) : PartiQLType.Runtime.Core {
+    override val name: String = "TUPLE"
+}
 
 /**
  * Ion's NULL.NULL type
  */
-public object NullType : PartiQLType.Runtime.Core
+public object NullType : PartiQLType.Runtime.Core {
+    override val name: String = "NULL"
+}

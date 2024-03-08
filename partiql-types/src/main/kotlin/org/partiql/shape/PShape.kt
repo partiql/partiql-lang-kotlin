@@ -23,8 +23,10 @@ public sealed interface PShape {
     /**
      * TODO: Do we support this?
      */
-    @Deprecated("This is an example of how we can gather other descriptors such as PRIMARY KEY, etc. " +
-        "It is distinct from Constraints.")
+    @Deprecated(
+        "This is an example of how we can gather other descriptors such as PRIMARY KEY, etc. " +
+            "It is distinct from Constraints."
+    )
     public sealed interface Meta
 
     public sealed interface ValidationResult {

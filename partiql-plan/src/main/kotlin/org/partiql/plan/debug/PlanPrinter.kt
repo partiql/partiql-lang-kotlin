@@ -6,7 +6,6 @@ import org.partiql.plan.Rex
 import org.partiql.plan.debug.PlanPrinter.Visitor.primitives
 import org.partiql.plan.visitor.PlanBaseVisitor
 import org.partiql.shape.PShape
-import org.partiql.types.StaticType
 import kotlin.reflect.KVisibility
 import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.memberProperties

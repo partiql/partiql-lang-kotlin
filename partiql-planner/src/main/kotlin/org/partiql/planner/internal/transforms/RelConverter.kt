@@ -71,8 +71,18 @@ import org.partiql.planner.internal.ir.rexOpSelect
 import org.partiql.planner.internal.ir.rexOpStruct
 import org.partiql.planner.internal.ir.rexOpStructField
 import org.partiql.planner.internal.ir.rexOpVarLocal
+import org.partiql.shape.PShape
+import org.partiql.types.ListType
 import org.partiql.types.StaticType
+import org.partiql.value.AnyType
+import org.partiql.value.ArrayType
+import org.partiql.value.BagType
+import org.partiql.value.BoolType
+import org.partiql.value.CharVarUnboundedType
+import org.partiql.value.NumericType
+import org.partiql.value.PartiQLType
 import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.TupleType
 import org.partiql.value.boolValue
 import org.partiql.value.stringValue
 import org.partiql.planner.internal.ir.Identifier as InternalId
@@ -96,7 +106,7 @@ internal object RelConverter {
             is Select.Pivot -> {
                 val key = projection.key.toRex(env)
                 val value = projection.value.toRex(env)
-                val type = (StaticType.STRUCT)
+                val type = TupleType(AnyType)
                 val op = rexOpPivot(key, value, rel)
                 rex(type, op)
             }
@@ -106,11 +116,11 @@ internal object RelConverter {
                     "Expected SELECT VALUE's input to have a single binding. " +
                         "However, it contained: ${rel.type.schema.map { it.name }}."
                 }
-                val constructor = rex(StaticType.ANY, rexOpVarLocal(0, 0))
+                val constructor = rex(AnyType, rexOpVarLocal(0, 0))
                 val op = rexOpSelect(constructor, rel)
                 val type = when (rel.type.props.contains(Rel.Prop.ORDERED)) {
-                    true -> (StaticType.LIST)
-                    else -> (StaticType.BAG)
+                    true -> ArrayType(AnyType)
+                    else -> BagType(AnyType)
                 }
                 rex(type, op)
             }
@@ -223,7 +233,7 @@ internal object RelConverter {
                         else -> {
                             val index = relBinding(
                                 name = i.symbol,
-                                type = (StaticType.INT)
+                                type = PShape.of(NumericType(null, 0))
                             )
                             convertScanIndexed(rex, binding, index)
                         }
@@ -234,7 +244,7 @@ internal object RelConverter {
                         null -> error("AST not normalized, missing AT alias on UNPIVOT $node")
                         else -> relBinding(
                             name = at.symbol,
-                            type = (StaticType.STRING)
+                            type = PShape.of(CharVarUnboundedType)
                         )
                     }
                     convertUnpivot(rex, k = atAlias, v = binding)
@@ -253,7 +263,7 @@ internal object RelConverter {
             val rhs = visitFrom(node.rhs, nil)
             val schema = lhs.type.schema + rhs.type.schema // Note: This gets more specific in PlanTyper. It is only used to find binding names here.
             val props = emptySet<Rel.Prop>()
-            val condition = node.condition?.let { RexConverter.apply(it, env) } ?: rex(StaticType.BOOL, rexOpLit(boolValue(true)))
+            val condition = node.condition?.let { RexConverter.apply(it, env) } ?: rex(BoolType, rexOpLit(boolValue(true)))
             val joinType = when (node.type) {
                 From.Join.Type.LEFT_OUTER, From.Join.Type.LEFT -> Rel.Op.Join.Type.LEFT
                 From.Join.Type.RIGHT_OUTER, From.Join.Type.RIGHT -> Rel.Op.Join.Type.RIGHT
@@ -362,7 +372,7 @@ internal object RelConverter {
             val calls = aggregations.mapIndexed { i, expr ->
                 val binding = relBinding(
                     name = syntheticAgg(i),
-                    type = (StaticType.ANY),
+                    type = AnyType,
                 )
                 schema.add(binding)
                 val args = expr.args.map { arg -> arg.toRex(env) }
@@ -382,15 +392,15 @@ internal object RelConverter {
             // Add GROUP_AS aggregation
             groupBy?.let { gb ->
                 gb.asAlias?.let { groupAs ->
-                    val binding = relBinding(groupAs.symbol, StaticType.ANY)
+                    val binding = relBinding(groupAs.symbol, AnyType)
                     schema.add(binding)
                     val fields = input.type.schema.mapIndexed { bindingIndex, currBinding ->
                         rexOpStructField(
-                            k = rex(StaticType.STRING, rexOpLit(stringValue(currBinding.name))),
-                            v = rex(StaticType.ANY, rexOpVarLocal(0, bindingIndex))
+                            k = rex(CharVarUnboundedType, rexOpLit(stringValue(currBinding.name))),
+                            v = rex(AnyType, rexOpVarLocal(0, bindingIndex))
                         )
                     }
-                    val arg = listOf(rex(StaticType.ANY, rexOpStruct(fields)))
+                    val arg = listOf(rex(AnyType, rexOpStruct(fields)))
                     calls.add(relOpAggregateCallUnresolved("group_as", Rel.Op.Aggregate.SetQuantifier.ALL, arg))
                 }
             }
@@ -402,7 +412,7 @@ internal object RelConverter {
                     }
                     val binding = relBinding(
                         name = it.asAlias!!.symbol,
-                        type = (StaticType.ANY)
+                        type = (AnyType)
                     )
                     schema.add(binding)
                     it.expr.toRex(env)
@@ -621,4 +631,11 @@ internal object RelConverter {
     }
 
     private fun syntheticAgg(i: Int) = "\$agg_$i"
+
+    private fun rex(type: PartiQLType, op: Rex.Op): Rex = Rex(
+        type = PShape.of(type),
+        op = op
+    )
+
+    internal fun relBinding(name: String, type: PartiQLType): Rel.Binding = Rel.Binding(name, PShape.of(type))
 }

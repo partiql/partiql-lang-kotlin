@@ -3,8 +3,8 @@ package org.partiql.planner.internal
 import org.partiql.planner.internal.ir.Ref
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnSignature
+import org.partiql.value.PartiQLType
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType
 
 /**
  * Result of matching an unresolved function.
@@ -55,7 +55,7 @@ internal sealed class FnMatch {
          */
         data class Candidate @OptIn(PartiQLValueExperimental::class) constructor(
             val fn: Static,
-            val parameters: List<PartiQLValueType>
+            val parameters: List<PartiQLType>
         )
     }
 }

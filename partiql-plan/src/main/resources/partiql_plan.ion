@@ -1,7 +1,7 @@
 imports::{
   kotlin: [
     partiql_value::'org.partiql.value.PartiQLValue',
-    partiql_value_type::'org.partiql.value.PartiQLValueType',
+    partiql_value_type::'org.partiql.value.PartiQLType',
     partiql_shape::'org.partiql.shape.PShape',
   ],
 }
