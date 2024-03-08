@@ -3,6 +3,7 @@ package org.partiql.planner.internal
 import org.partiql.planner.internal.casts.CastTable
 import org.partiql.planner.internal.ir.Ref
 import org.partiql.shape.PShape
+import org.partiql.shape.PShape.Companion.allTypes
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnSignature
 import org.partiql.value.AnyType
@@ -141,7 +142,7 @@ internal object FnResolver {
     }
 
     private fun buildArgumentPermutations(args: List<PShape>): List<List<PartiQLType>> {
-        val flattenedArgs = args.map { PShape.getTypes(it).toList() }
+        val flattenedArgs = args.map { it.allTypes().toList() }
         return buildArgumentPermutations(flattenedArgs, accumulator = emptyList())
     }
 

@@ -6,7 +6,7 @@ import org.partiql.value.AnyType
 import org.partiql.value.PartiQLType
 import org.partiql.value.TupleType
 
-public class Fields(
+public data class Fields(
     public val fields: List<Field>,
     public val isClosed: Boolean = false,
     @Deprecated("This should probably be a Meta, not a Constraint.")
@@ -20,7 +20,7 @@ public class Fields(
         return PShape.ValidationResult.Success
     }
 
-    public class Field(
+    public data class Field(
         public val key: String,
         public val value: VariablyOccurringPShape
     ) {

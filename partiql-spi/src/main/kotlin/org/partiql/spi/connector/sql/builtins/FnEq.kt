@@ -24,7 +24,7 @@ import org.partiql.value.Int8Value
 import org.partiql.value.IntValue
 import org.partiql.value.IntervalValue
 import org.partiql.value.ListValue
-import org.partiql.value.PartiQLType
+import org.partiql.value.MissingType
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType.ANY
@@ -84,7 +84,7 @@ internal object Fn_EQ__ANY_ANY__BOOL : Fn {
         val lhs = args[0]
         val rhs = args[1]
         return when {
-            lhs.type is PartiQLType.Runtime.MissingType || rhs.type == PartiQLType.Runtime.MissingType -> boolValue(lhs == rhs)
+            lhs.type is MissingType || rhs.type == MissingType -> boolValue(lhs == rhs)
             else -> boolValue(comparator.compare(lhs, rhs) == 0)
         }
     }

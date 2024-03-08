@@ -18,7 +18,7 @@ import org.partiql.value.Int8Type
 import org.partiql.value.NullType
 import org.partiql.value.NumericType
 import org.partiql.value.PartiQLType
-import org.partiql.value.PartiQLType.Runtime.MissingType
+import org.partiql.value.MissingType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
 import org.partiql.value.PartiQLValueType.ANY
@@ -65,7 +65,7 @@ internal class CastTable private constructor(
 
     private val allTypes: List<PartiQLType> = listOf(
         AnyType,
-        PartiQLType.Runtime.MissingType
+        MissingType
     )
 
     private fun relationships(): Sequence<Cast> = sequence {
@@ -134,7 +134,7 @@ internal class CastTable private constructor(
                 coercion(NullType)
             }
             graph[MISSING] = MissingType.relationships(soleTypes) {
-                coercion(PartiQLType.Runtime.MissingType)
+                coercion(MissingType)
             }
             graph[BOOL] = BoolType.relationships(soleTypes) {
                 coercion(BoolType)

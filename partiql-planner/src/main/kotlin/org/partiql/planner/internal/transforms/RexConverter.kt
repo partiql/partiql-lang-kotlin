@@ -42,7 +42,6 @@ import org.partiql.planner.internal.ir.rexOpSubquery
 import org.partiql.planner.internal.ir.rexOpTupleUnion
 import org.partiql.planner.internal.ir.rexOpVarUnresolved
 import org.partiql.shape.PShape
-import org.partiql.shape.constraints.Union
 import org.partiql.value.AnyType
 import org.partiql.value.ArrayType
 import org.partiql.value.BoolType
@@ -571,7 +570,7 @@ internal object RexConverter {
          * TRIM([LEADING|TRAILING|BOTH]? (<arg1> FROM)? <arg0>)
          */
         override fun visitExprTrim(node: Expr.Trim, ctx: Env): Rex {
-            val type = anyOf(
+            val type = PShape.anyOf(
                 setOf(
                     CharType(10), // TODO: Length
                     CharVarType(10), // TODO: Length
@@ -725,16 +724,5 @@ internal object RexConverter {
     private fun rex(type: PartiQLType, op: Rex.Op): Rex = Rex(
         type = PShape.of(type),
         op = op
-    )
-
-    private fun anyOf(types: Set<PartiQLType>): PShape = PShape.of(
-        type = AnyType,
-        constraint = Union(
-            types.map { type ->
-                PShape.of(
-                    type
-                )
-            }.toSet()
-        )
     )
 }

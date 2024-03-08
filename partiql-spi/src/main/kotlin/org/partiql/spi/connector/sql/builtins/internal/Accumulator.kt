@@ -36,6 +36,7 @@ import org.partiql.value.Int64Value
 import org.partiql.value.Int8Type
 import org.partiql.value.Int8Value
 import org.partiql.value.IntValue
+import org.partiql.value.MissingType
 import org.partiql.value.NumericType
 import org.partiql.value.PartiQLType
 import org.partiql.value.PartiQLValue
@@ -139,7 +140,7 @@ internal fun checkIsBooleanType(funcName: String, value: PartiQLValue) {
 }
 
 @OptIn(PartiQLValueExperimental::class)
-internal fun PartiQLValue.isUnknown(): Boolean = this.type is PartiQLType.Runtime.MissingType || this.isNull
+internal fun PartiQLValue.isUnknown(): Boolean = this.type is MissingType || this.isNull
 
 @OptIn(PartiQLValueExperimental::class)
 internal fun PartiQLValue.numberValue(): Number = when (this) {

@@ -516,7 +516,7 @@ public abstract class NullValue : PartiQLValue {
 @PartiQLValueExperimental
 public abstract class MissingValue : PartiQLValue {
 
-    override val type: PartiQLType = PartiQLType.Runtime.MissingType
+    override val type: PartiQLType = MissingType
 
     override val isNull: Boolean = false
 

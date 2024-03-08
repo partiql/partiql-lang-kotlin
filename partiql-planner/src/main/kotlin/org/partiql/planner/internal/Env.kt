@@ -16,22 +16,18 @@ import org.partiql.planner.internal.ir.rexOpCallStatic
 import org.partiql.planner.internal.ir.rexOpCastResolved
 import org.partiql.planner.internal.ir.rexOpVarGlobal
 import org.partiql.planner.internal.typer.TypeEnv.Companion.toPath
-import org.partiql.planner.internal.typer.toRuntimeType
-import org.partiql.planner.internal.typer.toStaticType
 import org.partiql.shape.PShape
-import org.partiql.shape.constraints.Union
+import org.partiql.shape.PShape.Companion.isMissable
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
 import org.partiql.spi.connector.ConnectorMetadata
 import org.partiql.spi.fn.AggSignature
 import org.partiql.spi.fn.FnExperimental
-import org.partiql.types.StaticType
 import org.partiql.value.AnyType
 import org.partiql.value.NullType
 import org.partiql.value.PartiQLType
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType
 
 /**
  * [Env] is similar to the database type environment from the PartiQL Specification. This includes resolution of
@@ -284,15 +280,7 @@ internal class Env(private val session: PartiQLPlanner.Session) {
     }
 
     private fun rex(type: PartiQLType, op: Rex.Op): Rex = Rex(
-        org.partiql.shape.PShape.of(type),
+        PShape.of(type),
         op
     )
-
-    @Deprecated("Double-check this")
-    private fun PShape.isMissable(): Boolean {
-        if (this.type is PartiQLType.Runtime.MissingType)
-            return true
-        val union = this.constraint as? Union ?: return false
-        return union.subShapes.any { it.isMissable() }
-    }
 }

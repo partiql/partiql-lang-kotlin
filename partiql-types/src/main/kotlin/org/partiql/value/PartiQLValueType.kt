@@ -54,10 +54,6 @@ public sealed interface PartiQLType {
 
     public sealed interface Runtime : PartiQLType {
 
-        public object MissingType : Runtime {
-            override val name: String = "MISSING"
-        }
-
         public sealed interface Core : Runtime
 
         /**
@@ -105,9 +101,10 @@ public sealed interface PartiQLType {
             PartiQLValueType.SEXP -> ArrayType(AnyType)
             PartiQLValueType.STRUCT -> TupleType(AnyType)
             PartiQLValueType.NULL -> NullType
-            PartiQLValueType.MISSING -> PartiQLType.Runtime.MissingType
+            PartiQLValueType.MISSING -> MissingType
         }
     }
+
 }
 
 public object AnyType : PartiQLType.Abstract {
@@ -309,7 +306,7 @@ public data class IntervalType(
  * PartiQL's BAG type
  */
 public data class BagType(
-    val element: PartiQLType
+    val element: PartiQLType = AnyType
 ) : PartiQLType.Runtime.Core {
     override val name: String = "BAG"
 }
@@ -320,7 +317,7 @@ public data class BagType(
  * Aliases include LIST
  */
 public data class ArrayType(
-    val element: PartiQLType
+    val element: PartiQLType = AnyType
 ) : PartiQLType.Runtime.Core {
     override val name: String = "ARRAY"
 }
@@ -331,7 +328,7 @@ public data class ArrayType(
  * Aliases include STRUCT TODO: Are we sure?
  */
 public data class TupleType(
-    val fields: PartiQLType
+    val fields: PartiQLType = AnyType
 ) : PartiQLType.Runtime.Core {
     override val name: String = "TUPLE"
 }
