@@ -7,6 +7,12 @@ import org.partiql.planner.internal.ir.rexOpLit
 import org.partiql.planner.internal.ir.rexOpPathKey
 import org.partiql.planner.internal.ir.rexOpPathSymbol
 import org.partiql.planner.internal.ir.rexOpVarLocal
+import org.partiql.shape.PShape
+import org.partiql.shape.PShape.Companion.allShapes
+import org.partiql.shape.PShape.Companion.getFirstAndOnlyFields
+import org.partiql.shape.PShape.Companion.isType
+import org.partiql.shape.Union
+import org.partiql.shape.constraints.Fields
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
@@ -15,7 +21,9 @@ import org.partiql.types.AnyType
 import org.partiql.types.StaticType
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
+import org.partiql.value.CharVarUnboundedType
 import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.TupleType
 import org.partiql.value.stringValue
 
 /**
@@ -143,14 +151,13 @@ internal data class TypeEnv(
      * @param name
      * @return
      */
-    private fun StructType.containsKey(name: BindingName): Boolean? {
+    private fun Fields.containsKey(name: BindingName): Boolean? {
         for (f in fields) {
             if (name.matches(f.key)) {
                 return true
             }
         }
-        val closed = constraints.contains(TupleConstraint.Open(false))
-        return if (closed) false else null
+        return if (this.isClosed) false else null
     }
 
     /**
@@ -164,20 +171,23 @@ internal data class TypeEnv(
      * @param name
      * @return
      */
-    private fun StaticType.containsKey(name: BindingName): Boolean? {
-        return when (val type = this.flatten()) {
-            is StructType -> type.containsKey(name)
-            is AnyOfType -> {
-                val anyKnownToContainKey = type.allTypes.any { it.containsKey(name) == true }
-                val anyKnownToNotContainKey = type.allTypes.any { it.containsKey(name) == false }
-                val anyNotKnownToContainKey = type.allTypes.any { it.containsKey(name) == null }
+    private fun PShape.containsKey(name: BindingName): Boolean? {
+        return when {
+            this.isType<TupleType>() -> {
+                val fields = this.getFirstAndOnlyFields() ?: return null
+                fields.containsKey(name)
+            }
+            this is Union -> {
+                val anyKnownToContainKey = this.allShapes().any { it.containsKey(name) == true }
+                val anyKnownToNotContainKey = this.allShapes().any { it.containsKey(name) == false }
+                val anyNotKnownToContainKey = this.allShapes().any { it.containsKey(name) == null }
                 when {
                     anyKnownToNotContainKey.not() && anyNotKnownToContainKey.not() -> true
                     anyKnownToContainKey.not() && anyNotKnownToContainKey -> false
                     else -> null
                 }
             }
-            is AnyType -> null
+            this.isType<AnyType>() -> null
             else -> false
         }
     }
@@ -197,10 +207,10 @@ internal data class TypeEnv(
         @OptIn(PartiQLValueExperimental::class)
         internal fun Rex.toPath(steps: List<BindingName>): Rex = steps.fold(this) { curr, step ->
             val op = when (step.case) {
-                BindingCase.SENSITIVE -> rexOpPathKey(curr, rex(StaticType.STRING, rexOpLit(stringValue(step.name))))
+                BindingCase.SENSITIVE -> rexOpPathKey(curr, rex(PShape.of(CharVarUnboundedType), rexOpLit(stringValue(step.name))))
                 BindingCase.INSENSITIVE -> rexOpPathSymbol(curr, step.name)
             }
-            rex(StaticType.ANY, op)
+            rex(PShape.of(org.partiql.value.AnyType), op)
         }
     }
 }

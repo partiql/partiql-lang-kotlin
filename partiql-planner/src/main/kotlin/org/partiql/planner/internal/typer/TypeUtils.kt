@@ -1,6 +1,19 @@
 package org.partiql.planner.internal.typer
 
 import org.partiql.planner.internal.ir.Rel
+import org.partiql.shape.PShape
+import org.partiql.shape.PShape.Companion.allShapes
+import org.partiql.shape.PShape.Companion.asOptional
+import org.partiql.shape.PShape.Companion.copy
+import org.partiql.shape.PShape.Companion.getFirstAndOnlyFields
+import org.partiql.shape.PShape.Companion.getSingleElement
+import org.partiql.shape.PShape.Companion.isCollection
+import org.partiql.shape.PShape.Companion.isType
+import org.partiql.shape.PShape.Companion.of
+import org.partiql.shape.PShape.Companion.setElement
+import org.partiql.shape.constraints.Element
+import org.partiql.shape.constraints.Fields
+import org.partiql.shape.constraints.Multiple
 import org.partiql.types.AnyOfType
 import org.partiql.types.AnyType
 import org.partiql.types.BagType
@@ -23,8 +36,10 @@ import org.partiql.types.StructType
 import org.partiql.types.SymbolType
 import org.partiql.types.TimeType
 import org.partiql.types.TimestampType
+import org.partiql.value.ArrayType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
+import org.partiql.value.TupleType
 
 internal fun StaticType.isNullOrMissing(): Boolean = (this is NullType || this is MissingType)
 
@@ -165,6 +180,88 @@ internal fun StaticType.exclude(steps: List<Rel.Op.Exclude.Step>, lastStepOption
 }
 
 /**
+ * Applies the given exclusion path to produce the reduced [StaticType]. [lastStepOptional] indicates if a previous
+ * step in the exclude path includes a collection index exclude step. Currently, for paths with the last step as
+ * a struct symbol/key, the type inference will define that struct value as optional if [lastStepOptional] is true.
+ * Note, this specific behavior could change depending on `EXCLUDE`'s static typing behavior in a future RFC.
+ *
+ * e.g. EXCLUDE t.a[1].field_x will define the struct value `field_x` as optional
+ *
+ * @param steps
+ * @param lastStepOptional
+ * @return
+ */
+internal fun PShape.exclude(steps: List<Rel.Op.Exclude.Step>, lastStepOptional: Boolean = false): PShape {
+    val type = this
+    return steps.fold(type) { acc, step ->
+        when {
+            acc.isType<TupleType>() -> acc.excludeTuple(step, lastStepOptional)
+            acc.isCollection() -> acc.excludeCollection(step, lastStepOptional)
+            acc.isType<AnyType>() -> PShape.anyOf(
+                acc.allShapes().map { it.exclude(steps, lastStepOptional) }.toSet()
+            )
+            else -> acc
+        }
+    }
+}
+
+/**
+ * Applies exclusions to struct fields.
+ *
+ * @param step
+ * @param lastStepOptional
+ * @return
+ */
+internal fun PShape.excludeTuple(step: Rel.Op.Exclude.Step, lastStepOptional: Boolean = false): PShape {
+    val type = step.type
+    val substeps = step.substeps
+    val fields = this.getFirstAndOnlyFields() ?: Fields(emptyList(), isClosed = false, isOrdered = false)
+    val output = fields.fields.mapNotNull { field ->
+        val newField = if (substeps.isEmpty()) {
+            if (lastStepOptional) {
+                field.copy(value = field.value.copy(shape = field.value.shape.asOptional()))
+            } else {
+                null
+            }
+        } else {
+            val k = field.key
+            val v = field.value.shape.exclude(substeps, lastStepOptional)
+            Fields.Field(k, v)
+        }
+        when (type) {
+            is Rel.Op.Exclude.Type.StructSymbol -> {
+                if (type.symbol.equals(field.key, ignoreCase = true)) {
+                    newField
+                } else {
+                    field
+                }
+            }
+
+            is Rel.Op.Exclude.Type.StructKey -> {
+                if (type.key == field.key) {
+                    newField
+                } else {
+                    field
+                }
+            }
+            is Rel.Op.Exclude.Type.StructWildcard -> newField
+            else -> field
+        }
+    }
+    val newFields = Fields(
+        fields = output,
+        isClosed = fields.isClosed,
+        isOrdered = fields.isOrdered
+    )
+    val constraints = when (val c = this.constraint) {
+        is Fields -> emptyList()
+        is Multiple -> c.constraints.filterNot { it is Fields }
+        else -> listOf(c)
+    } + listOf(newFields)
+    return this.copy(constraint = Multiple.of(constraints.toSet()))
+}
+
+/**
  * Applies exclusions to struct fields.
  *
  * @param step
@@ -242,4 +339,37 @@ internal fun CollectionType.exclude(step: Rel.Op.Exclude.Step, lastStepOptional:
         is ListType -> this.copy(e)
         is SexpType -> this.copy(e)
     }
+}
+
+/**
+ * Applies exclusions to collection element type.
+ *
+ * We assume that the [PShape] is an [ArrayTy]
+ *
+ * @param step
+ * @param lastStepOptional
+ * @return
+ */
+internal fun PShape.excludeCollection(step: Rel.Op.Exclude.Step, lastStepOptional: Boolean = false): PShape {
+    var e = this.getSingleElement()?.shape ?: of(org.partiql.value.AnyType)
+    val substeps = step.substeps
+    when (step.type) {
+        is Rel.Op.Exclude.Type.CollIndex -> {
+            if (substeps.isNotEmpty()) {
+                e = e.exclude(substeps, lastStepOptional = true)
+            }
+        }
+        is Rel.Op.Exclude.Type.CollWildcard -> {
+            if (substeps.isNotEmpty()) {
+                e = e.exclude(substeps, lastStepOptional)
+            }
+            // currently no change to elementType if collection wildcard is last element; this behavior could
+            // change based on RFC definition
+        }
+        else -> {
+            // currently no change to elementType and no error thrown; could consider an error/warning in
+            // the future
+        }
+    }
+    return this.setElement(e)
 }

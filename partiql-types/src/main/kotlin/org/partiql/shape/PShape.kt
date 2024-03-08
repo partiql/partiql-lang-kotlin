@@ -1,12 +1,14 @@
 package org.partiql.shape
 
-import org.partiql.shape.PShape.Companion.copy
 import org.partiql.shape.constraints.Constraint
+import org.partiql.shape.constraints.Element
 import org.partiql.shape.constraints.Fields
 import org.partiql.shape.constraints.None
 import org.partiql.shape.constraints.Multiple
 import org.partiql.shape.constraints.NotNull
 import org.partiql.value.AnyType
+import org.partiql.value.ArrayType
+import org.partiql.value.BagType
 import org.partiql.value.CharType
 import org.partiql.value.CharVarType
 import org.partiql.value.CharVarUnboundedType
@@ -64,6 +66,7 @@ public sealed interface PShape {
 
         @JvmStatic
         @Deprecated("Should we allow this?")
+        @JvmName("anyOfTypes")
         public fun anyOf(types: Set<PartiQLType>): PShape {
             val shapes = types.map { type -> of(type) }.toSet()
             return anyOf(shapes)
@@ -71,6 +74,7 @@ public sealed interface PShape {
 
         @JvmStatic
         @Deprecated("Should we allow this?")
+        @JvmName("anyOfShapes")
         public fun anyOf(shapes: Set<PShape>): PShape {
             return when (shapes.size) {
                 0 -> Single(AnyType)
@@ -146,6 +150,40 @@ public sealed interface PShape {
             }
         }
 
+        @JvmStatic
+        @Deprecated("Should we allow this?")
+        public fun PShape.getSingleElement(): Element? {
+            return when (val constraint = this.constraint) {
+                is Multiple -> constraint.getSingleElement()
+                is Element -> constraint
+                else -> null
+            }
+        }
+
+        @JvmStatic
+        @Deprecated("Should we allow this?")
+        public fun PShape.setElement(shape: PShape): PShape {
+            val constraint = when (val c = this.constraint) {
+                is Multiple -> {
+                    val constraints = c.constraints.filterNot { it is Element }.toSet() + setOf(Element(shape))
+                    Multiple.of(constraints)
+                }
+                is Element -> Element(shape)
+                else -> Multiple.of(setOf(c, Element(shape)))
+            }
+            return this.copy(constraint = constraint)
+        }
+
+        @Deprecated("Should we allow this?")
+        private fun Multiple.getSingleElement(): Element? {
+            return this.constraints.filterIsInstance<Element>().let { elements ->
+                when (elements.size) {
+                    1 -> elements.first()
+                    else -> null
+                }
+            }
+        }
+
         @Deprecated("Should we allow this?")
         private fun Multiple.getFirstAndOnlyFields(): Fields? {
             return this.constraints.filterIsInstance<Fields>().let { fields ->
@@ -195,10 +233,30 @@ public sealed interface PShape {
             )
         }
 
+        @Deprecated("Double-check this")
+        public fun PShape.asOptional(): PShape {
+            return when (this.type) {
+                is MissingType -> this
+                else -> Union.of(
+                    shapes = setOf(
+                        this,
+                        Single(MissingType)
+                    ),
+                    type = AnyType
+                )
+            }
+        }
+
         @JvmStatic
         @Deprecated("Double-check this")
         public fun PShape.isMissable(): Boolean {
             return this.mayBeType<MissingType>()
+        }
+
+        @JvmStatic
+        @Deprecated("Double-check this")
+        public fun PShape.isCollection(): Boolean {
+            return this.isType<BagType>() || this.isType<ArrayType>()
         }
 
         @Deprecated("Double-check this")

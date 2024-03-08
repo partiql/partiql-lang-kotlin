@@ -69,6 +69,7 @@ import org.partiql.shape.PShape.Companion.anyOf
 import org.partiql.shape.PShape.Companion.asNullable
 import org.partiql.shape.PShape.Companion.copy
 import org.partiql.shape.PShape.Companion.getFirstAndOnlyFields
+import org.partiql.shape.PShape.Companion.isCollection
 import org.partiql.shape.PShape.Companion.isMissable
 import org.partiql.shape.PShape.Companion.isNullable
 import org.partiql.shape.PShape.Companion.isText
@@ -481,14 +482,14 @@ internal class PlanTyper(
                 handleAlwaysMissing()
                 return rex(MissingType, rexOpErr("Collections must be indexed with integers, found ${key.type}"))
             }
-            val elementTypes = root.type.allTypes().map { type ->
-                val rootType = type as? CollectionType ?: return@map MissingType
-                if (rootType !is ArrayType && rootType !is ArrayType) {
+            val elementTypes = root.type.allShapes().map { type ->
+                if (!type.isType<ArrayType>()) {
                     return@map MissingType
                 }
-                rootType.elementType
+                val rootType = type.type as ArrayType // TODO: Handle union types
+                rootType.element
             }.toSet()
-            val finalType = PShape.anyOf(elementTypes)
+            val finalType = anyOf(elementTypes)
             return rex(finalType, rexOpPathIndex(root, key))
         }
 
@@ -501,30 +502,29 @@ internal class PlanTyper(
                 when (keyType) {
                     is CharVarType -> null
                     is CharVarUnboundedType -> null
-                    is NullType -> NullType
-                    else -> MissingType
+                    is NullType -> PShape.of(NullType)
+                    else -> PShape.of(MissingType)
                 }
             }
-            if (toAddTypes.size == key.type.allTypes().size && toAddTypes.all { it is MissingType }) {
+            if (toAddTypes.size == key.type.allTypes().size && toAddTypes.all { it.type is MissingType }) {
                 handleAlwaysMissing()
                 return rex(MissingType, rexOpErr("Expected string but found: ${key.type}"))
             }
 
-            val pathTypes = root.type.allTypes().map { type ->
-                val struct = type as? TupleType ?: return@map MissingType
-
+            val pathTypes = root.type.allShapes().map { type ->
+                val fields = type.getFirstAndOnlyFields() ?: return@map PShape.of(MissingType)
                 if (key.op is Rex.Op.Lit) {
                     val lit = key.op.value
                     if (lit is TextValue<*> && !lit.isNull) {
                         val id = identifierSymbol(lit.string!!, Identifier.CaseSensitivity.SENSITIVE)
-                        inferStructLookup(struct, id).first
+                        inferStructLookup(fields, id).first
                     } else {
                         error("Expected text literal, but got $lit")
                     }
                 } else {
                     // cannot infer type of non-literal path step because we don't know its value
                     // we might improve upon this with some constant folding prior to typing
-                    AnyType
+                    PShape.of(AnyType)
                 }
             }.toSet()
             val finalType = PShape.anyOf(pathTypes + toAddTypes)
@@ -538,7 +538,7 @@ internal class PlanTyper(
                 if (!type.isType<TupleType>()) {
                     return@map rex(MissingType, rexOpLit(missingValue()))
                 }
-                val struct = type.firstFields() // TODO: Quitting due to CPU
+                val struct = type.getFirstAndOnlyFields() ?: return@map rex(MissingType, rexOpLit(missingValue()))
                 val (pathType, replacementId) = inferStructLookup(
                     struct, identifierSymbol(node.key, Identifier.CaseSensitivity.INSENSITIVE)
                 )
@@ -762,7 +762,7 @@ internal class PlanTyper(
                         }
                         val ref = call.args.getOrNull(0) ?: error("IS STRUCT requires an argument.")
                         // Replace the result's type
-                        val type = AnyOfType(ref.type.allTypes().filterIsInstance<StructType>().toSet())
+                        val type = anyOf(ref.type.allShapes().filter { it.isType<TupleType>() }.toSet())
                         val replacementVal = ref.copy(type = type)
                         when (ref.op is Rex.Op.Var.Local) {
                             true -> RexReplacer.replace(result, ref, replacementVal)
@@ -785,7 +785,7 @@ internal class PlanTyper(
                     }
 
                     // Replace the result's type
-                    val type = PShape.anyOf(ref.type.allTypes().filterIsInstance<StructType>().toSet())
+                    val type = PShape.anyOf(ref.type.allShapes().filter { it.isType<TupleType>() }.toSet())
                     val replacementVal = ref.copy(type = type)
                     val rex = when (ref.op is Rex.Op.Var.Local) {
                         true -> RexReplacer.replace(result, ref, replacementVal)
@@ -1326,8 +1326,8 @@ internal class PlanTyper(
     private fun getElementTypeForFromSource(fromSourceType: PShape): PShape = when (val type = fromSourceType.type) {
         is BagType -> PShape.of(type.element)
         is ArrayType -> PShape.of(type.element)
-        is AnyType -> when (val constraint = fromSourceType.constraint) {
-            is Multiple -> PShape.anyOf(constraint.subShapes.map { getElementTypeForFromSource(it) }.toSet())
+        is AnyType -> when (fromSourceType) {
+            is Union -> anyOf(fromSourceType.shapes.map { getElementTypeForFromSource(it) }.toSet())
             else -> fromSourceType
         }
         // All the other types coerce into a bag of themselves (including null/missing/sexp).

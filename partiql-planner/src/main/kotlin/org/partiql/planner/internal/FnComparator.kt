@@ -69,6 +69,7 @@ internal object FnComparator : Comparator<FnSignature> {
         return p1 - p2
     }
 
+    // TODO: Make precedence using PartiQLType (parameterized)
     // This simply describes some precedence for ordering functions.
     // This is not explicitly defined in the PartiQL Specification!!
     // This does not imply the ability to CAST; this defines function resolution behavior.
