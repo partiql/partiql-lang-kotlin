@@ -17,7 +17,7 @@ import org.partiql.value.Int8Value
 import org.partiql.value.IntValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType.DECIMAL_ARBITRARY
+import org.partiql.value.PartiQLValueType.NUMERIC_ARBITRARY
 import org.partiql.value.PartiQLValueType.FLOAT32
 import org.partiql.value.PartiQLValueType.FLOAT64
 import org.partiql.value.PartiQLValueType.INT
@@ -146,10 +146,10 @@ internal object Fn_PLUS__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__DECIMAL_ARBITRARY 
 
     override val signature = FnSignature(
         name = "plus",
-        returns = DECIMAL_ARBITRARY,
+        returns = NUMERIC_ARBITRARY,
         parameters = listOf(
-            FnParameter("lhs", DECIMAL_ARBITRARY),
-            FnParameter("rhs", DECIMAL_ARBITRARY),
+            FnParameter("lhs", NUMERIC_ARBITRARY),
+            FnParameter("rhs", NUMERIC_ARBITRARY),
         ),
         isNullCall = true,
         isNullable = false,

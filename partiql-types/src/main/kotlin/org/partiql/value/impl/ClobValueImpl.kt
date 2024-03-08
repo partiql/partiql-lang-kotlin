@@ -17,7 +17,9 @@ package org.partiql.value.impl
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.toPersistentList
 import org.partiql.value.Annotations
+import org.partiql.value.ClobType
 import org.partiql.value.ClobValue
+import org.partiql.value.PartiQLType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.util.PartiQLValueVisitor
 
@@ -26,6 +28,8 @@ internal data class ClobValueImpl(
     override val value: ByteArray?,
     override val annotations: PersistentList<String>,
 ) : ClobValue() {
+
+    override val type: PartiQLType = ClobType(value?.size ?: 0)
     override fun copy(annotations: Annotations) = ClobValueImpl(value, annotations.toPersistentList())
 
     override fun withAnnotations(annotations: Annotations): ClobValue = _withAnnotations(annotations)

@@ -17,15 +17,19 @@ package org.partiql.value.impl
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.toPersistentList
 import org.partiql.value.Annotations
+import org.partiql.value.CharType
 import org.partiql.value.CharValue
+import org.partiql.value.PartiQLType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.util.PartiQLValueVisitor
 
 @OptIn(PartiQLValueExperimental::class)
 internal data class CharValueImpl(
-    override val value: Char?,
+    override val value: CharSequence?,
     override val annotations: PersistentList<String>,
 ) : CharValue() {
+
+    override val type: PartiQLType = CharType(value?.length ?: 0)
 
     override fun copy(annotations: Annotations) = CharValueImpl(value, annotations.toPersistentList())
 

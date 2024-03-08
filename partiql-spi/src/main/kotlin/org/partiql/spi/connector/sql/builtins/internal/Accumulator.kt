@@ -20,15 +20,24 @@ import com.amazon.ion.Decimal
 import org.partiql.errors.TypeCheckException
 import org.partiql.spi.fn.Agg
 import org.partiql.spi.fn.FnExperimental
+import org.partiql.value.BoolType
 import org.partiql.value.BoolValue
 import org.partiql.value.DecimalValue
+import org.partiql.value.Float32Type
 import org.partiql.value.Float32Value
+import org.partiql.value.Float64Type
 import org.partiql.value.Float64Value
+import org.partiql.value.Int16Type
 import org.partiql.value.Int16Value
+import org.partiql.value.Int32Type
 import org.partiql.value.Int32Value
+import org.partiql.value.Int64Type
 import org.partiql.value.Int64Value
+import org.partiql.value.Int8Type
 import org.partiql.value.Int8Value
 import org.partiql.value.IntValue
+import org.partiql.value.NumericType
+import org.partiql.value.PartiQLType
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
@@ -124,13 +133,13 @@ private fun Long.checkOverflowPlus(other: Long): Number {
 
 @OptIn(PartiQLValueExperimental::class)
 internal fun checkIsBooleanType(funcName: String, value: PartiQLValue) {
-    if (value.type != PartiQLValueType.BOOL) {
+    if (value.type !is BoolType) {
         throw TypeCheckException("Expected ${PartiQLValueType.BOOL} but received ${value.type}.")
     }
 }
 
 @OptIn(PartiQLValueExperimental::class)
-internal fun PartiQLValue.isUnknown(): Boolean = this.type == PartiQLValueType.MISSING || this.isNull
+internal fun PartiQLValue.isUnknown(): Boolean = this.type is PartiQLType.Runtime.MissingType || this.isNull
 
 @OptIn(PartiQLValueExperimental::class)
 internal fun PartiQLValue.numberValue(): Number = when (this) {
@@ -158,10 +167,21 @@ internal fun PartiQLValueType.isNumber(): Boolean = when (this) {
     PartiQLValueType.INT16,
     PartiQLValueType.INT32,
     PartiQLValueType.INT64,
-    PartiQLValueType.DECIMAL,
-    PartiQLValueType.DECIMAL_ARBITRARY,
+    PartiQLValueType.NUMERIC,
+    PartiQLValueType.NUMERIC_ARBITRARY,
     PartiQLValueType.FLOAT32,
     PartiQLValueType.FLOAT64 -> true
+    else -> false
+}
+
+internal fun PartiQLType.isNumber(): Boolean = when (this) {
+    is Int8Type,
+    is Int16Type,
+    is Int32Type,
+    is Int64Type,
+    is NumericType,
+    is Float32Type,
+    is Float64Type -> true
     else -> false
 }
 
@@ -178,7 +198,7 @@ internal fun nullToTargetType(type: PartiQLValueType): PartiQLValue = when (type
     PartiQLValueType.INT32 -> int32Value(null)
     PartiQLValueType.INT64 -> int64Value(null)
     PartiQLValueType.INT -> intValue(null)
-    PartiQLValueType.DECIMAL_ARBITRARY, PartiQLValueType.DECIMAL -> decimalValue(null)
+    PartiQLValueType.NUMERIC_ARBITRARY, PartiQLValueType.NUMERIC -> decimalValue(null)
     else -> TODO("Unsupported target type $type")
 }
 
@@ -190,7 +210,7 @@ internal fun Number.toTargetType(type: PartiQLValueType): PartiQLValue = when (t
     PartiQLValueType.ANY -> this.partiqlValue()
     PartiQLValueType.FLOAT32 -> float32Value(this.toFloat())
     PartiQLValueType.FLOAT64 -> float64Value(this.toDouble())
-    PartiQLValueType.DECIMAL, PartiQLValueType.DECIMAL_ARBITRARY -> {
+    PartiQLValueType.NUMERIC, PartiQLValueType.NUMERIC_ARBITRARY -> {
         when (this) {
             is BigDecimal -> decimalValue(this)
             is BigInteger -> decimalValue(this.toBigDecimal())

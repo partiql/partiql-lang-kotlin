@@ -116,7 +116,7 @@ internal fun PartiQLValueType.toNull(): () -> PartiQLValue = when (this) {
     PartiQLValueType.MISSING -> {
         { missingValue() }
     }
-    PartiQLValueType.DECIMAL_ARBITRARY -> {
+    PartiQLValueType.NUMERIC_ARBITRARY -> {
         { decimalValue(null) }
     }
 }

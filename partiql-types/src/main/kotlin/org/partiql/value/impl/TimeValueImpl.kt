@@ -17,7 +17,9 @@ package org.partiql.value.impl
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.toPersistentList
 import org.partiql.value.Annotations
+import org.partiql.value.PartiQLType
 import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.TimeType
 import org.partiql.value.TimeValue
 import org.partiql.value.datetime.Time
 import org.partiql.value.util.PartiQLValueVisitor
@@ -27,6 +29,8 @@ internal data class TimeValueImpl(
     override val value: Time?,
     override val annotations: PersistentList<String>,
 ) : TimeValue() {
+
+    override val type: PartiQLType = TimeType(38)
 
     override fun copy(annotations: Annotations) = TimeValueImpl(value, annotations.toPersistentList())
 

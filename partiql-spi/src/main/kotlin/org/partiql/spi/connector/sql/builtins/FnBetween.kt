@@ -22,7 +22,7 @@ import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType.BOOL
 import org.partiql.value.PartiQLValueType.CLOB
 import org.partiql.value.PartiQLValueType.DATE
-import org.partiql.value.PartiQLValueType.DECIMAL_ARBITRARY
+import org.partiql.value.PartiQLValueType.NUMERIC_ARBITRARY
 import org.partiql.value.PartiQLValueType.FLOAT32
 import org.partiql.value.PartiQLValueType.FLOAT64
 import org.partiql.value.PartiQLValueType.INT
@@ -162,9 +162,9 @@ internal object Fn_BETWEEN__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY_DECIMAL_ARBITRAR
         name = "between",
         returns = BOOL,
         parameters = listOf(
-            FnParameter("value", DECIMAL_ARBITRARY),
-            FnParameter("lower", DECIMAL_ARBITRARY),
-            FnParameter("upper", DECIMAL_ARBITRARY),
+            FnParameter("value", NUMERIC_ARBITRARY),
+            FnParameter("lower", NUMERIC_ARBITRARY),
+            FnParameter("upper", NUMERIC_ARBITRARY),
         ),
         isNullCall = true,
         isNullable = false,

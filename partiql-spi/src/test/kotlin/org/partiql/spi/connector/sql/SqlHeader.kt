@@ -12,8 +12,8 @@ import org.partiql.value.PartiQLValueType.BOOL
 import org.partiql.value.PartiQLValueType.CHAR
 import org.partiql.value.PartiQLValueType.CLOB
 import org.partiql.value.PartiQLValueType.DATE
-import org.partiql.value.PartiQLValueType.DECIMAL
-import org.partiql.value.PartiQLValueType.DECIMAL_ARBITRARY
+import org.partiql.value.PartiQLValueType.NUMERIC
+import org.partiql.value.PartiQLValueType.NUMERIC_ARBITRARY
 import org.partiql.value.PartiQLValueType.FLOAT32
 import org.partiql.value.PartiQLValueType.FLOAT64
 import org.partiql.value.PartiQLValueType.INT
@@ -57,7 +57,7 @@ internal object SqlHeader {
         INT32,
         INT64,
         INT,
-        DECIMAL_ARBITRARY,
+        NUMERIC_ARBITRARY,
         FLOAT32,
         FLOAT64,
     )
@@ -472,7 +472,7 @@ internal object SqlHeader {
         )
     }
 
-    private fun isTypeDoubleArgsInt(): List<FnSignature> = listOf(DECIMAL).map { element ->
+    private fun isTypeDoubleArgsInt(): List<FnSignature> = listOf(NUMERIC).map { element ->
         FnSignature(
             name = "is_${element.name.lowercase()}", returns = BOOL,
             parameters = listOf(

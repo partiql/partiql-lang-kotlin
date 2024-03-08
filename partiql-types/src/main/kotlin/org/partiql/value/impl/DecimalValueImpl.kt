@@ -26,6 +26,8 @@ import org.partiql.value.Int32Value
 import org.partiql.value.Int64Value
 import org.partiql.value.Int8Value
 import org.partiql.value.IntValue
+import org.partiql.value.NumericType
+import org.partiql.value.PartiQLType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.float32Value
 import org.partiql.value.float64Value
@@ -43,6 +45,9 @@ internal data class DecimalValueImpl(
     override val value: BigDecimal?,
     override val annotations: PersistentList<String>,
 ) : DecimalValue() {
+
+    // TODO: Is this right?
+    override val type: PartiQLType = NumericType(value?.precision() ?: 0, value?.scale() ?: 0)
 
     override fun copy(annotations: Annotations) = DecimalValueImpl(value, annotations.toPersistentList())
 

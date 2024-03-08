@@ -14,8 +14,8 @@ import org.partiql.value.PartiQLValueType.BYTE
 import org.partiql.value.PartiQLValueType.CHAR
 import org.partiql.value.PartiQLValueType.CLOB
 import org.partiql.value.PartiQLValueType.DATE
-import org.partiql.value.PartiQLValueType.DECIMAL
-import org.partiql.value.PartiQLValueType.DECIMAL_ARBITRARY
+import org.partiql.value.PartiQLValueType.NUMERIC
+import org.partiql.value.PartiQLValueType.NUMERIC_ARBITRARY
 import org.partiql.value.PartiQLValueType.FLOAT32
 import org.partiql.value.PartiQLValueType.FLOAT64
 import org.partiql.value.PartiQLValueType.INT
@@ -81,10 +81,10 @@ internal object FnComparator : Comparator<FnSignature> {
         INT32,
         INT64,
         INT,
-        DECIMAL,
+        NUMERIC,
         FLOAT32,
         FLOAT64,
-        DECIMAL_ARBITRARY, // Arbitrary precision decimal has a higher precedence than FLOAT
+        NUMERIC_ARBITRARY, // Arbitrary precision decimal has a higher precedence than FLOAT
         CHAR,
         STRING,
         CLOB,

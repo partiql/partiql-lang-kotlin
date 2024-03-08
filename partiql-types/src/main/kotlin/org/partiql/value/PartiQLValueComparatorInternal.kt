@@ -13,7 +13,7 @@ internal class PartiQLValueComparatorInternal(private val nullsFirst: Boolean) :
     private val GREATER = 1
 
     private fun PartiQLValue.isNullOrMissing(): Boolean = this is NullValue || this is MissingValue || this.isNull
-    private fun PartiQLValue.isLob(): Boolean = this is BlobValue || this is ClobValue
+    private fun PartiQLValue.isLob(): Boolean = this is BinaryValue || this is ClobValue
 
     private val structFieldComparator = object : Comparator<Pair<String, PartiQLValue>> {
         override fun compare(left: Pair<String, PartiQLValue>, right: Pair<String, PartiQLValue>): Int {
@@ -150,15 +150,6 @@ internal class PartiQLValueComparatorInternal(private val nullsFirst: Boolean) :
             }
             l is ListValue<*> -> return LESS
             r is ListValue<*> -> return GREATER
-        }
-
-        // SEXP
-        when {
-            l is SexpValue<*> && r is SexpValue<*> -> {
-                return compareOrdered(l, r, this)
-            }
-            l is SexpValue<*> -> return LESS
-            r is SexpValue<*> -> return GREATER
         }
 
         // STRUCT

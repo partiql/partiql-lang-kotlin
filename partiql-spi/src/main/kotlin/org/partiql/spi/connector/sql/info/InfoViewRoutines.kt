@@ -1,12 +1,13 @@
 package org.partiql.spi.connector.sql.info
 
+import org.partiql.shape.PShape
+import org.partiql.shape.constraints.Fields
 import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.Index
-import org.partiql.types.BagType
-import org.partiql.types.StaticType
-import org.partiql.types.StructType
-import org.partiql.types.TupleConstraint
+import org.partiql.value.AnyType
+import org.partiql.value.BagType
+import org.partiql.value.CharVarUnboundedType
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.bagValue
@@ -17,14 +18,14 @@ import org.partiql.value.nullValue
  */
 internal class InfoViewRoutines @OptIn(FnExperimental::class) constructor(private val index: Index<Fn>) : InfoView {
 
-    override val schema: StaticType = BagType(
-        elementType = StructType(
+    override val schema = PShape.of(
+        type = BagType(AnyType),
+        constraint = Fields(
             fields = listOf(
-                StructType.Field("ROUTINE_NAME", StaticType.STRING),
-                StructType.Field("ROUTINE_TYPE", StaticType.STRING),
+                Fields.Field("ROUTINE_NAME", CharVarUnboundedType),
+                Fields.Field("ROUTINE_TYPE", CharVarUnboundedType)
             ),
-            contentClosed = true,
-            constraints = setOf(TupleConstraint.Open(false))
+            isClosed = true
         )
     )
 

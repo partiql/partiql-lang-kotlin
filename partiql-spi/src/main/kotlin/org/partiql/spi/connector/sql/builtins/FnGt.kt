@@ -21,7 +21,7 @@ import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType.BOOL
 import org.partiql.value.PartiQLValueType.DATE
-import org.partiql.value.PartiQLValueType.DECIMAL_ARBITRARY
+import org.partiql.value.PartiQLValueType.NUMERIC_ARBITRARY
 import org.partiql.value.PartiQLValueType.FLOAT32
 import org.partiql.value.PartiQLValueType.FLOAT64
 import org.partiql.value.PartiQLValueType.INT
@@ -152,8 +152,8 @@ internal object Fn_GT__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__BOOL : Fn {
         name = "gt",
         returns = BOOL,
         parameters = listOf(
-            FnParameter("lhs", DECIMAL_ARBITRARY),
-            FnParameter("rhs", DECIMAL_ARBITRARY),
+            FnParameter("lhs", NUMERIC_ARBITRARY),
+            FnParameter("rhs", NUMERIC_ARBITRARY),
         ),
         isNullCall = true,
         isNullable = false,

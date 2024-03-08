@@ -1,6 +1,6 @@
 package org.partiql.spi.connector.sql.info
 
-import org.partiql.types.StaticType
+import org.partiql.shape.PShape
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 
@@ -9,7 +9,7 @@ import org.partiql.value.PartiQLValueExperimental
  */
 public interface InfoView {
 
-    public val schema: StaticType
+    public val schema: PShape
 
     @OptIn(PartiQLValueExperimental::class)
     public fun value(): PartiQLValue

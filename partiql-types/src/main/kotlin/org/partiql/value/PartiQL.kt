@@ -23,7 +23,6 @@ import org.partiql.value.datetime.Time
 import org.partiql.value.datetime.Timestamp
 import org.partiql.value.impl.BagValueImpl
 import org.partiql.value.impl.BinaryValueImpl
-import org.partiql.value.impl.BlobValueImpl
 import org.partiql.value.impl.BoolValueImpl
 import org.partiql.value.impl.ByteValueImpl
 import org.partiql.value.impl.CharValueImpl
@@ -44,9 +43,7 @@ import org.partiql.value.impl.MapStructValueImpl
 import org.partiql.value.impl.MissingValueImpl
 import org.partiql.value.impl.MultiMapStructValueImpl
 import org.partiql.value.impl.NullValueImpl
-import org.partiql.value.impl.SexpValueImpl
 import org.partiql.value.impl.StringValueImpl
-import org.partiql.value.impl.SymbolValueImpl
 import org.partiql.value.impl.TimeValueImpl
 import org.partiql.value.impl.TimestampValueImpl
 import java.math.BigDecimal
@@ -189,7 +186,7 @@ public fun float64Value(
 @JvmOverloads
 @PartiQLValueExperimental
 public fun charValue(
-    value: Char?,
+    value: CharSequence?,
     annotations: Annotations = emptyList(),
 ): CharValue = CharValueImpl(value, annotations.toPersistentList())
 
@@ -219,7 +216,7 @@ public fun stringValue(
 public fun symbolValue(
     value: String?,
     annotations: Annotations = emptyList(),
-): SymbolValue = SymbolValueImpl(value, annotations.toPersistentList())
+): StringValue = StringValueImpl(value, annotations.toPersistentList())
 
 /**
  * CLOB type value.
@@ -275,7 +272,7 @@ public fun byteValue(
 public fun blobValue(
     value: ByteArray?,
     annotations: Annotations = emptyList(),
-): BlobValue = BlobValueImpl(value, annotations.toPersistentList())
+): BinaryValue = BinaryValueImpl(BitSet.valueOf(value), annotations.toPersistentList())
 
 /**
  * DATE type value.
@@ -406,7 +403,7 @@ public fun <T : PartiQLValue> listValue(
 public fun <T : PartiQLValue> sexpValue(
     elements: Iterable<T>?,
     annotations: Annotations = emptyList(),
-): SexpValue<T> = SexpValueImpl(elements, annotations.toPersistentList())
+): ListValue<T> = ListValueImpl(elements, annotations.toPersistentList())
 
 /**
  * SEXP type value.
@@ -421,7 +418,7 @@ public fun <T : PartiQLValue> sexpValue(
 public fun <T : PartiQLValue> sexpValue(
     vararg elements: T,
     annotations: Annotations = emptyList(),
-): SexpValue<T> = SexpValueImpl(elements.asIterable(), annotations.toPersistentList())
+): ListValue<T> = ListValueImpl(elements.asIterable(), annotations.toPersistentList())
 
 /**
  * Create a PartiQL struct value backed by an iterable of key-value field pairs.

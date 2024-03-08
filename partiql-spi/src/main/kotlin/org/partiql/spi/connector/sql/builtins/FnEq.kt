@@ -9,7 +9,6 @@ import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
 import org.partiql.value.BagValue
 import org.partiql.value.BinaryValue
-import org.partiql.value.BlobValue
 import org.partiql.value.BoolValue
 import org.partiql.value.ByteValue
 import org.partiql.value.CharValue
@@ -25,6 +24,7 @@ import org.partiql.value.Int8Value
 import org.partiql.value.IntValue
 import org.partiql.value.IntervalValue
 import org.partiql.value.ListValue
+import org.partiql.value.PartiQLType
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType.ANY
@@ -36,8 +36,8 @@ import org.partiql.value.PartiQLValueType.BYTE
 import org.partiql.value.PartiQLValueType.CHAR
 import org.partiql.value.PartiQLValueType.CLOB
 import org.partiql.value.PartiQLValueType.DATE
-import org.partiql.value.PartiQLValueType.DECIMAL
-import org.partiql.value.PartiQLValueType.DECIMAL_ARBITRARY
+import org.partiql.value.PartiQLValueType.NUMERIC
+import org.partiql.value.PartiQLValueType.NUMERIC_ARBITRARY
 import org.partiql.value.PartiQLValueType.FLOAT32
 import org.partiql.value.PartiQLValueType.FLOAT64
 import org.partiql.value.PartiQLValueType.INT
@@ -55,7 +55,6 @@ import org.partiql.value.PartiQLValueType.STRUCT
 import org.partiql.value.PartiQLValueType.SYMBOL
 import org.partiql.value.PartiQLValueType.TIME
 import org.partiql.value.PartiQLValueType.TIMESTAMP
-import org.partiql.value.SexpValue
 import org.partiql.value.StringValue
 import org.partiql.value.StructValue
 import org.partiql.value.SymbolValue
@@ -87,7 +86,7 @@ internal object Fn_EQ__ANY_ANY__BOOL : Fn {
         val lhs = args[0]
         val rhs = args[1]
         return when {
-            lhs.type == MISSING || rhs.type == MISSING -> boolValue(lhs == rhs)
+            lhs.type is PartiQLType.Runtime.MissingType || rhs.type == PartiQLType.Runtime.MissingType -> boolValue(lhs == rhs)
             else -> boolValue(comparator.compare(lhs, rhs) == 0)
         }
     }
@@ -238,8 +237,8 @@ internal object Fn_EQ__DECIMAL_DECIMAL__BOOL : Fn {
         name = "eq",
         returns = BOOL,
         parameters = listOf(
-            FnParameter("lhs", DECIMAL),
-            FnParameter("rhs", DECIMAL),
+            FnParameter("lhs", NUMERIC),
+            FnParameter("rhs", NUMERIC),
         ),
         isNullable = false,
         isNullCall = true,
@@ -261,8 +260,8 @@ internal object Fn_EQ__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__BOOL : Fn {
         name = "eq",
         returns = BOOL,
         parameters = listOf(
-            FnParameter("lhs", DECIMAL_ARBITRARY),
-            FnParameter("rhs", DECIMAL_ARBITRARY),
+            FnParameter("lhs", NUMERIC_ARBITRARY),
+            FnParameter("rhs", NUMERIC_ARBITRARY),
         ),
         isNullable = false,
         isNullCall = true,
@@ -439,29 +438,6 @@ internal object Fn_EQ__BYTE_BYTE__BOOL : Fn {
 }
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
-internal object Fn_EQ__BLOB_BLOB__BOOL : Fn {
-
-    override val signature = FnSignature(
-        name = "eq",
-        returns = BOOL,
-        parameters = listOf(
-            FnParameter("lhs", BLOB),
-            FnParameter("rhs", BLOB),
-        ),
-        isNullable = false,
-        isNullCall = true,
-        isMissable = false,
-        isMissingCall = false,
-    )
-
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val lhs = args[0].check<BlobValue>()
-        val rhs = args[1].check<BlobValue>()
-        return boolValue(lhs == rhs)
-    }
-}
-
-@OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_EQ__CLOB_CLOB__BOOL : Fn {
 
     override val signature = FnSignature(
@@ -618,29 +594,6 @@ internal object Fn_EQ__LIST_LIST__BOOL : Fn {
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val lhs = args[0].check<ListValue<*>>()
         val rhs = args[1].check<ListValue<*>>()
-        return boolValue(lhs == rhs)
-    }
-}
-
-@OptIn(PartiQLValueExperimental::class, FnExperimental::class)
-internal object Fn_EQ__SEXP_SEXP__BOOL : Fn {
-
-    override val signature = FnSignature(
-        name = "eq",
-        returns = BOOL,
-        parameters = listOf(
-            FnParameter("lhs", SEXP),
-            FnParameter("rhs", SEXP),
-        ),
-        isNullable = false,
-        isNullCall = true,
-        isMissable = false,
-        isMissingCall = false,
-    )
-
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val lhs = args[0].check<SexpValue<*>>()
-        val rhs = args[1].check<SexpValue<*>>()
         return boolValue(lhs == rhs)
     }
 }

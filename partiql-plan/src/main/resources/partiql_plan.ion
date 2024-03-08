@@ -2,7 +2,7 @@ imports::{
   kotlin: [
     partiql_value::'org.partiql.value.PartiQLValue',
     partiql_value_type::'org.partiql.value.PartiQLValueType',
-    static_type::'org.partiql.types.StaticType',
+    partiql_shape::'org.partiql.shape.PShape',
   ],
 }
 
@@ -18,7 +18,7 @@ catalog::{
     item::[
       value::{
         path: list::[string],
-        type: static_type,
+        type: partiql_shape,
       },
       fn::{
         path:     list::[string],
@@ -74,7 +74,7 @@ identifier::[
 
 // Rex
 rex::{
-  type: static_type,
+  type: partiql_shape,
   op:[
 
     lit::{
@@ -335,7 +335,7 @@ rel::{
     ],
     binding::{
       name: string,
-      type: static_type,
+      type: partiql_shape,
     },
   ]
 }
