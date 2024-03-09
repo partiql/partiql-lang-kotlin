@@ -36,6 +36,7 @@ Thank you to all who have contributed!
 ### Deprecated
 
 ### Fixed
+- partiql-ast: `SqlDialect` will wrap unary ops (`NOT`, `+`, `-`) in parens
 
 ### Removed
 
