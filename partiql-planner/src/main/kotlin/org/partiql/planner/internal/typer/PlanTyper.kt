@@ -590,7 +590,7 @@ internal class PlanTyper(
 
         override fun visitRexOpCastUnresolved(node: Rex.Op.Cast.Unresolved, ctx: StaticType?): Rex {
             val arg = visitRex(node.arg, null)
-            val cast = env.resolveCast(arg, node.target) ?: return ProblemGenerator.errorOp(
+            val cast = env.resolveCast(arg, node.target) ?: return ProblemGenerator.errorRex(
                 node.copy(node.target, arg),
                 ProblemGenerator.undefinedFunction("CAST(<arg> AS ${node.target})", listOf(arg.type))
             )
@@ -614,7 +614,7 @@ internal class PlanTyper(
             val path = node.identifier.toBindingPath()
             val argsResolved = rexOpCallUnresolved(node.identifier, args)
             val rex = env.resolveFn(path, args, argsResolved)
-                ?: return ProblemGenerator.errorOp(
+                ?: return ProblemGenerator.errorRex(
                     argsResolved,
                     ProblemGenerator.undefinedFunction(node.identifier, args.map { it.type })
                 )
@@ -912,7 +912,7 @@ internal class PlanTyper(
          */
         private fun visitRexOpSubqueryRow(subquery: Rex.Op.Subquery, cons: StaticType): Rex {
             if (cons !is StructType) {
-                return ProblemGenerator.errorOp(
+                return ProblemGenerator.errorRex(
                     subquery,
                     ProblemGenerator.compilerError("Subquery with non-SQL SELECT cannot be coerced to a row-value expression. Found constructor type: $cons")
                 )
@@ -935,14 +935,14 @@ internal class PlanTyper(
          */
         private fun visitRexOpSubqueryScalar(subquery: Rex.Op.Subquery, cons: StaticType): Rex {
             if (cons !is StructType) {
-                return ProblemGenerator.errorOp(
+                return ProblemGenerator.errorRex(
                     subquery,
                     ProblemGenerator.compilerError("Subquery with non-SQL SELECT cannot be coerced to a scalar. Found constructor type: $cons")
                 )
             }
             val n = cons.fields.size
             if (n != 1) {
-                return ProblemGenerator.errorOp(
+                return ProblemGenerator.errorRex(
                     subquery,
                     ProblemGenerator.compilerError("SELECT constructor with $n attributes cannot be coerced to a scalar. Found constructor type: $cons")
                 )

@@ -3,8 +3,8 @@ package org.partiql.planner.internal
 import org.partiql.errors.Problem
 import org.partiql.errors.ProblemDetails
 import org.partiql.errors.ProblemLocation
+import org.partiql.errors.ProblemSeverity
 import org.partiql.errors.UNKNOWN_PROBLEM_LOCATION
-import org.partiql.planner.internal.ProblemGenerator.debug
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.rex
 import org.partiql.planner.internal.ir.rexOpErr
@@ -22,10 +22,27 @@ internal object ProblemGenerator {
         problemDetails
     )
 
+    fun asWarning(problem: Problem): Problem {
+        val details = problem.details as PlanningProblemDetails
+        return if (details.severity == ProblemSeverity.WARNING) problem
+        else Problem(
+            problem.sourceLocation,
+            PlanningProblemDetails(ProblemSeverity.WARNING, details.messageFormatter)
+        )
+    }
+    fun asError(problem: Problem): Problem {
+        val details = problem.details as PlanningProblemDetails
+        return if (details.severity == ProblemSeverity.WARNING) problem
+        else Problem(
+            problem.sourceLocation,
+            PlanningProblemDetails(ProblemSeverity.WARNING, details.messageFormatter)
+        )
+    }
+
     fun missingRex(input: Rex.Op, problem: Problem): Rex =
         rex(StaticType.MISSING, rexOpMissing(input, problem))
 
-    fun errorOp(input: Rex.Op, problem: Problem): Rex =
+    fun errorRex(input: Rex.Op, problem: Problem): Rex =
         rex(StaticType.ANY, rexOpErr(input, problem))
 
     private fun InternalIdentifier.debug(): String = when (this) {

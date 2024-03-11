@@ -13,7 +13,7 @@ import org.partiql.types.StaticType
  * This information can be used to generate end-user readable error messages and is also easy to assert
  * equivalence in unit tests.
  */
-internal sealed class PlanningProblemDetails(
+internal open class PlanningProblemDetails(
     override val severity: ProblemSeverity,
     val messageFormatter: () -> String,
 ) : ProblemDetails {

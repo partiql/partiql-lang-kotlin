@@ -6,6 +6,7 @@ import org.partiql.plan.partiQLPlan
 import org.partiql.plan.rexOpCallStatic
 import org.partiql.plan.rexOpCast
 import org.partiql.planner.PartiQLPlanner
+import org.partiql.planner.internal.ProblemGenerator
 import org.partiql.planner.internal.ir.Identifier
 import org.partiql.planner.internal.ir.PartiQLPlan
 import org.partiql.planner.internal.ir.Ref
@@ -253,27 +254,19 @@ internal object PlanTransform {
                 // gather problem from subtree.
                 val trace = visitRexOp(node.input, ctx)
 
-                return when (debugMode) {
-                    true -> {
-                        when (missingOpBehavior) {
-                            PartiQLPlanner.Session.MissingOpBehavior.QUIET -> {
-                                org.partiql.plan.rexOpDebugProblemMissing(trace, node.problem.toString())
-                            }
-                            PartiQLPlanner.Session.MissingOpBehavior.SIGNAL -> {
-                                onProblem(node.problem)
-                                org.partiql.plan.rexOpDebugProblemError(trace, node.problem.toString())
-                            }
+                return when (missingOpBehavior) {
+                    PartiQLPlanner.Session.MissingOpBehavior.QUIET -> {
+                        onProblem.invoke(ProblemGenerator.asWarning(node.problem))
+                        when (debugMode) {
+                            true -> org.partiql.plan.rexOpDebugProblemMissing(trace, node.problem.toString())
+                            false -> org.partiql.plan.Rex.Op.Lit(missingValue())
                         }
                     }
-                    false -> {
-                        when (missingOpBehavior) {
-                            PartiQLPlanner.Session.MissingOpBehavior.QUIET -> {
-                                org.partiql.plan.Rex.Op.Lit(missingValue())
-                            }
-                            PartiQLPlanner.Session.MissingOpBehavior.SIGNAL -> {
-                                onProblem(node.problem)
-                                org.partiql.plan.Rex.Op.Err(node.problem.toString())
-                            }
+                    PartiQLPlanner.Session.MissingOpBehavior.SIGNAL -> {
+                        onProblem.invoke(ProblemGenerator.asError(node.problem))
+                        when (debugMode) {
+                            true -> org.partiql.plan.rexOpDebugProblemError(trace, node.problem.toString())
+                            false -> org.partiql.plan.Rex.Op.Err(node.problem.toString())
                         }
                     }
                 }
