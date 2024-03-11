@@ -3,6 +3,7 @@ package org.partiql.planner.internal
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
+import org.partiql.value.PartiQLType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
 import org.partiql.value.PartiQLValueType.ANY
@@ -62,10 +63,10 @@ internal object FnComparator : Comparator<FnSignature> {
     private fun FnParameter.compareTo(other: FnParameter): Int =
         comparePrecedence(this.type, other.type)
 
-    private fun comparePrecedence(t1: PartiQLValueType, t2: PartiQLValueType): Int {
+    private fun comparePrecedence(t1: PartiQLType, t2: PartiQLType): Int {
         if (t1 == t2) return 0
-        val p1 = precedence[t1]!!
-        val p2 = precedence[t2]!!
+        val p1 = PartiQLType.PRECEDENCE_MAP[t1]!!
+        val p2 = PartiQLType.PRECEDENCE_MAP[t2]!!
         return p1 - p2
     }
 
