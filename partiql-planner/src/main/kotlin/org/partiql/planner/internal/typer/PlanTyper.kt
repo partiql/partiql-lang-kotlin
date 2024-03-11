@@ -68,13 +68,12 @@ import org.partiql.shape.PShape.Companion.allTypes
 import org.partiql.shape.PShape.Companion.anyOf
 import org.partiql.shape.PShape.Companion.asNullable
 import org.partiql.shape.PShape.Companion.copy
+import org.partiql.shape.PShape.Companion.getElement
 import org.partiql.shape.PShape.Companion.getFirstAndOnlyFields
-import org.partiql.shape.PShape.Companion.isCollection
 import org.partiql.shape.PShape.Companion.isMissable
 import org.partiql.shape.PShape.Companion.isNullable
 import org.partiql.shape.PShape.Companion.isText
 import org.partiql.shape.PShape.Companion.isType
-import org.partiql.shape.PShape.Companion.mayBeType
 import org.partiql.shape.Single
 import org.partiql.shape.Union
 import org.partiql.shape.constraints.Constraint
@@ -85,18 +84,17 @@ import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnSignature
+import org.partiql.types.StaticType
 import org.partiql.value.AnyType
+import org.partiql.value.ArrayType
 import org.partiql.value.BagType
 import org.partiql.value.BoolType
-import org.partiql.types.StaticType
-import org.partiql.value.ArrayType
-import org.partiql.value.MissingType
-import org.partiql.value.NullType
-import org.partiql.types.StructType
 import org.partiql.value.BoolValue
 import org.partiql.value.CharVarType
 import org.partiql.value.CharVarUnboundedType
 import org.partiql.value.Int8Type
+import org.partiql.value.MissingType
+import org.partiql.value.NullType
 import org.partiql.value.NumericType
 import org.partiql.value.PartiQLType
 import org.partiql.value.PartiQLValueExperimental
@@ -625,7 +623,7 @@ internal class PlanTyper(
             // Apply the coercions as explicit casts
             val args: List<Rex> = node.args.map {
                 // Propagate MissingType argument.
-                if (it.type.type !is MissingType && node.fn.signature.isMissingCall) {
+                if (it.type.type is MissingType && node.fn.signature.isMissingCall) {
                     handleAlwaysMissing()
                     return rex(MissingType, node)
                 }
@@ -1323,13 +1321,11 @@ internal class PlanTyper(
      */
     private fun List<Rex>.toUnionType(): PShape = PShape.anyOf(map { it.type }.toSet())
 
-    private fun getElementTypeForFromSource(fromSourceType: PShape): PShape = when (val type = fromSourceType.type) {
-        is BagType -> PShape.of(type.element)
-        is ArrayType -> PShape.of(type.element)
-        is AnyType -> when (fromSourceType) {
-            is Union -> anyOf(fromSourceType.shapes.map { getElementTypeForFromSource(it) }.toSet())
-            else -> fromSourceType
-        }
+    // TODO: How to properly handle union types here?
+    private fun getElementTypeForFromSource(fromSourceType: PShape): PShape = when {
+        fromSourceType.isType<BagType>() -> fromSourceType.getElement().shape
+        fromSourceType.isType<ArrayType>() -> fromSourceType.getElement().shape
+        fromSourceType is Union -> anyOf(fromSourceType.shapes.map { getElementTypeForFromSource(it) }.toSet())
         // All the other types coerce into a bag of themselves (including null/missing/sexp).
         else -> fromSourceType
     }
@@ -1361,6 +1357,7 @@ internal class PlanTyper(
     }
 
     private fun handleUnknownCast(node: Rex.Op.Cast.Unresolved) {
+        error("UNKNOWN CAST: ${node.target} with arg: ${node.arg}") // TODO: Remove
         onProblem(
             Problem(
                 sourceLocation = UNKNOWN_PROBLEM_LOCATION,
@@ -1396,6 +1393,7 @@ internal class PlanTyper(
     }
 
     private fun handleAlwaysMissing() {
+        error("ALWAYS MISSING!") // TODO: Remove this
         onProblem(
             Problem(
                 sourceLocation = UNKNOWN_PROBLEM_LOCATION,

@@ -11,7 +11,6 @@ import org.partiql.shape.PShape.Companion.isCollection
 import org.partiql.shape.PShape.Companion.isType
 import org.partiql.shape.PShape.Companion.of
 import org.partiql.shape.PShape.Companion.setElement
-import org.partiql.shape.constraints.Element
 import org.partiql.shape.constraints.Fields
 import org.partiql.shape.constraints.Multiple
 import org.partiql.types.AnyOfType
@@ -36,7 +35,6 @@ import org.partiql.types.StructType
 import org.partiql.types.SymbolType
 import org.partiql.types.TimeType
 import org.partiql.types.TimestampType
-import org.partiql.value.ArrayType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
 import org.partiql.value.TupleType

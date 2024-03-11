@@ -16,11 +16,9 @@ import org.partiql.shape.constraints.Fields
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
-import org.partiql.types.AnyOfType
 import org.partiql.types.AnyType
 import org.partiql.types.StaticType
 import org.partiql.types.StructType
-import org.partiql.types.TupleConstraint
 import org.partiql.value.CharVarUnboundedType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.TupleType

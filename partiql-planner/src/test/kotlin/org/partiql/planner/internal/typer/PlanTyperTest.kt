@@ -7,7 +7,6 @@ import org.partiql.planner.internal.ir.Identifier
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.identifierSymbol
 import org.partiql.planner.internal.ir.refObj
-import org.partiql.planner.internal.ir.rex
 import org.partiql.planner.internal.ir.rexOpLit
 import org.partiql.planner.internal.ir.rexOpPathKey
 import org.partiql.planner.internal.ir.rexOpPathSymbol
@@ -18,6 +17,7 @@ import org.partiql.planner.internal.ir.rexOpVarUnresolved
 import org.partiql.planner.internal.ir.statementQuery
 import org.partiql.planner.util.ProblemCollector
 import org.partiql.plugins.local.LocalConnector
+import org.partiql.shape.PShape
 import org.partiql.types.StaticType
 import org.partiql.types.StaticType.Companion.ANY
 import org.partiql.types.StaticType.Companion.DECIMAL
@@ -39,6 +39,13 @@ class PlanTyperTest {
     companion object {
 
         private val root = this::class.java.getResource("/catalogs/default/pql")!!.toURI().toPath()
+
+        private fun rex(type: StaticType, op: Rex.Op): Rex {
+            return Rex(
+                PShape.fromStaticType(type),
+                op
+            )
+        }
 
         @OptIn(PartiQLValueExperimental::class)
         private val LITERAL_STRUCT_1 = rex(
@@ -362,9 +369,9 @@ class PlanTyperTest {
     @OptIn(PartiQLValueExperimental::class)
     private fun rexString(str: String) = rex(STRING, rexOpLit(stringValue(str)))
 
-    private fun Rex.pathKey(key: String, type: StaticType = ANY): Rex = Rex(type, rexOpPathKey(this, rexString(key)))
+    private fun Rex.pathKey(key: String, type: StaticType = ANY): Rex = rex(type, rexOpPathKey(this, rexString(key)))
 
-    private fun Rex.pathSymbol(key: String, type: StaticType = ANY): Rex = Rex(type, rexOpPathSymbol(this, key))
+    private fun Rex.pathSymbol(key: String, type: StaticType = ANY): Rex = rex(type, rexOpPathSymbol(this, key))
 
     private fun unresolvedSensitiveVar(name: String, type: StaticType = ANY): Rex {
         return rex(
@@ -379,7 +386,9 @@ class PlanTyperTest {
     private fun global(type: StaticType, path: List<String>): Rex {
         return rex(
             type,
-            rexOpVarGlobal(refObj(catalog = "pql", path = path, type))
+            rexOpVarGlobal(
+                refObj(catalog = "pql", path = path, PShape.fromStaticType(type))
+            )
         )
     }
 }

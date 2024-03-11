@@ -15,10 +15,10 @@ import org.partiql.value.Int16Type
 import org.partiql.value.Int32Type
 import org.partiql.value.Int64Type
 import org.partiql.value.Int8Type
+import org.partiql.value.MissingType
 import org.partiql.value.NullType
 import org.partiql.value.NumericType
 import org.partiql.value.PartiQLType
-import org.partiql.value.MissingType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
 import org.partiql.value.PartiQLValueType.ANY
@@ -346,17 +346,17 @@ internal class CastTable private constructor(
         fun build() = relationships
 
         fun coercion(target: PartiQLType) {
-            val i = types.indexOf(target)
+            val i = types.indexOfFirst { it.javaClass == it.javaClass } // TODO: val i = types.indexOf(target)
             relationships[i] = refCast(operand, target, Cast.Safety.COERCION)
         }
 
         fun explicit(target: PartiQLType) {
-            val i = types.indexOf(target)
+            val i = types.indexOfFirst { it.javaClass == it.javaClass } // TODO: val i = types.indexOf(target)
             relationships[i] = refCast(operand, target, Cast.Safety.EXPLICIT)
         }
 
         fun unsafe(target: PartiQLType) {
-            val i = types.indexOf(target)
+            val i = types.indexOfFirst { it.javaClass == it.javaClass } // TODO: val i = types.indexOf(target)
             relationships[i] = refCast(operand, target, Cast.Safety.UNSAFE)
         }
     }

@@ -35,33 +35,59 @@ public sealed interface StaticType {
         // TODO consider making these into an enumeration...
 
         // Convenient enums to create a bare bones instance of StaticType
+        @JvmStatic
         public val MISSING: MissingType = MissingType
+        @JvmStatic
         public val NULL: NullType = NullType()
+        @JvmStatic
         public val ANY: AnyType = AnyType()
+        @JvmStatic
         public val NULL_OR_MISSING: StaticType = unionOf(NULL, MISSING)
+        @JvmStatic
         public val BOOL: BoolType = BoolType()
+        @JvmStatic
         public val INT2: IntType = IntType(IntType.IntRangeConstraint.SHORT)
+        @JvmStatic
         public val INT4: IntType = IntType(IntType.IntRangeConstraint.INT4)
+        @JvmStatic
         public val INT8: IntType = IntType(IntType.IntRangeConstraint.LONG)
+        @JvmStatic
         public val INT: IntType = IntType(IntType.IntRangeConstraint.UNCONSTRAINED)
+        @JvmStatic
         public val FLOAT: FloatType = FloatType()
+        @JvmStatic
         public val DECIMAL: DecimalType = DecimalType()
+        @JvmStatic
         public val NUMERIC: StaticType = unionOf(INT2, INT4, INT8, INT, FLOAT, DECIMAL)
+        @JvmStatic
         public val DATE: DateType = DateType()
+        @JvmStatic
         public val TIME: TimeType = TimeType()
         // This used to refer to timestamp with arbitrary precision, with time zone (ion timestamp always has timezone)
         @OptIn(PartiQLTimestampExperimental::class)
+        @JvmStatic
         public val TIMESTAMP: TimestampType = TimestampType(null, true)
+        @JvmStatic
         public val SYMBOL: SymbolType = SymbolType()
+        @JvmStatic
         public val STRING: StringType = StringType()
+        @JvmStatic
         public val TEXT: StaticType = unionOf(SYMBOL, STRING)
+        @JvmStatic
         public val CHAR: StaticType = StringType(StringType.StringLengthConstraint.Constrained(NumberConstraint.Equals(1)))
+        @JvmStatic
         public val CLOB: ClobType = ClobType()
+        @JvmStatic
         public val BLOB: BlobType = BlobType()
+        @JvmStatic
         public val LIST: ListType = ListType()
+        @JvmStatic
         public val SEXP: SexpType = SexpType()
+        @JvmStatic
         public val STRUCT: StructType = StructType()
+        @JvmStatic
         public val BAG: BagType = BagType()
+        @JvmStatic
         public val GRAPH: GraphType = GraphType()
 
         /** All the StaticTypes, except for `ANY`. */
@@ -486,7 +512,7 @@ public data class ClobType(override val metas: Map<String, Any> = mapOf()) : Sin
  * @param [elementType] type of element within the list.
  */
 public data class ListType(
-    override val elementType: StaticType = StaticType.ANY,
+    override val elementType: StaticType = AnyType(),
     override val metas: Map<String, Any> = mapOf(),
     override val constraints: Set<CollectionConstraint> = setOf()
 ) : CollectionType() {
@@ -506,7 +532,7 @@ public data class ListType(
  * @param [elementType] type of element within the s-exp.
  */
 public data class SexpType(
-    override val elementType: StaticType = StaticType.ANY,
+    override val elementType: StaticType = AnyType(),
     override val metas: Map<String, Any> = mapOf(),
     override val constraints: Set<CollectionConstraint> = setOf(),
 ) : CollectionType() {
@@ -525,7 +551,7 @@ public data class SexpType(
  * @param [elementType] type of element within the bag.
  */
 public data class BagType(
-    override val elementType: StaticType = StaticType.ANY,
+    override val elementType: StaticType = AnyType(),
     override val metas: Map<String, Any> = mapOf(),
     override val constraints: Set<CollectionConstraint> = setOf(),
 ) : CollectionType() {

@@ -15,6 +15,7 @@
 
 package org.partiql.plugins.memory
 
+import org.partiql.shape.PShape
 import org.partiql.spi.connector.ConnectorObject
 import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValue
@@ -22,11 +23,13 @@ import org.partiql.value.PartiQLValueExperimental
 
 @OptIn(PartiQLValueExperimental::class)
 public class MemoryObject(
-    private val type: StaticType,
+    private val shape: PShape,
     private val value: PartiQLValue? = null,
 ) : ConnectorObject {
 
+    public constructor(type: StaticType, value: PartiQLValue? = null) : this(PShape.fromStaticType(type), value)
+
     public fun getValue(): PartiQLValue? = value
 
-    override fun getType(): StaticType = type
+    override fun getType(): PShape = shape
 }

@@ -13,6 +13,17 @@
  */
 package org.partiql.value
 
+import org.partiql.types.DecimalType
+import org.partiql.types.FloatType
+import org.partiql.types.GraphType
+import org.partiql.types.IntType
+import org.partiql.types.ListType
+import org.partiql.types.SexpType
+import org.partiql.types.SingleType
+import org.partiql.types.StringType
+import org.partiql.types.StructType
+import org.partiql.types.SymbolType
+
 /**
  * PartiQL Type Names
  */
@@ -81,27 +92,59 @@ public sealed interface PartiQLType {
             PartiQLValueType.INT32 -> Int32Type
             PartiQLValueType.INT64 -> Int64Type
             PartiQLValueType.INT -> NumericType(null, 0)
-            PartiQLValueType.NUMERIC -> NumericType(null, null) // TODO: What are the bounds to this?
+            PartiQLValueType.NUMERIC -> NumericType(NumericType.MAX_PRECISION, NumericType.MAX_SCALE)
             PartiQLValueType.NUMERIC_ARBITRARY -> NumericType(null, null)
             PartiQLValueType.FLOAT32 -> Float32Type
             PartiQLValueType.FLOAT64 -> Float64Type
-            PartiQLValueType.CHAR -> CharType(1) // TODO: What to do here?
+            PartiQLValueType.CHAR -> CharType(CharType.MAX_LENGTH)
             PartiQLValueType.STRING -> CharVarUnboundedType
             PartiQLValueType.SYMBOL -> CharVarUnboundedType
-            PartiQLValueType.BINARY -> BlobType(10) // TODO: What to do here?
+            PartiQLValueType.BINARY -> BlobType(BlobType.MAXIMUM_LENGTH)
             PartiQLValueType.BYTE -> ByteType
-            PartiQLValueType.BLOB -> BlobType(10) // TODO: What to do here?
-            PartiQLValueType.CLOB -> ClobType(10) // TODO what to do here?
+            PartiQLValueType.BLOB -> BlobType(BlobType.MAXIMUM_LENGTH)
+            PartiQLValueType.CLOB -> ClobType(ClobType.MAX_LENGTH)
             PartiQLValueType.DATE -> DateType
-            PartiQLValueType.TIME -> TimeType(10) // TODO: Precision?
-            PartiQLValueType.TIMESTAMP -> TimestampType(10) // TODO: Precision?
-            PartiQLValueType.INTERVAL -> IntervalType(10) // TODO: Precision?
+            PartiQLValueType.TIME -> TimeType(TimeType.MAX_PRECISION)
+            PartiQLValueType.TIMESTAMP -> TimestampType(TimestampType.MAX_PRECISION)
+            PartiQLValueType.INTERVAL -> IntervalType(IntervalType.MAX_PRECISION)
             PartiQLValueType.BAG -> BagType(AnyType)
             PartiQLValueType.LIST -> ArrayType(AnyType)
             PartiQLValueType.SEXP -> ArrayType(AnyType)
             PartiQLValueType.STRUCT -> TupleType(AnyType)
             PartiQLValueType.NULL -> NullType
             PartiQLValueType.MISSING -> MissingType
+        }
+
+        @Deprecated("Should not be used")
+        public fun fromSingleType(type: SingleType): PartiQLType = when (type) {
+            is org.partiql.types.NullType -> NullType
+            is org.partiql.types.BlobType -> BlobType(BlobType.MAXIMUM_LENGTH) // TODO
+            is org.partiql.types.BoolType -> BoolType
+            is org.partiql.types.ClobType -> ClobType(ClobType.MAX_LENGTH)
+            is org.partiql.types.BagType -> BagType()
+            is ListType -> ArrayType()
+            is SexpType -> ArrayType()
+            is org.partiql.types.DateType -> DateType
+            is DecimalType -> {
+                when (val constraint = type.precisionScaleConstraint) {
+                    is DecimalType.PrecisionScaleConstraint.Unconstrained -> NumericType(null, null)
+                    is DecimalType.PrecisionScaleConstraint.Constrained -> NumericType(constraint.precision, constraint.scale)
+                }
+            }
+            is FloatType -> Float64Type // TODO: What about Float 32?
+            is GraphType -> TODO()
+            is IntType -> when (type.rangeConstraint) {
+                IntType.IntRangeConstraint.SHORT -> Int16Type
+                IntType.IntRangeConstraint.INT4 -> Int32Type
+                IntType.IntRangeConstraint.LONG -> Int64Type
+                IntType.IntRangeConstraint.UNCONSTRAINED -> NumericType(null, 0)
+            }
+            org.partiql.types.MissingType -> MissingType
+            is StringType -> CharVarUnboundedType
+            is StructType -> TupleType()
+            is SymbolType -> CharVarUnboundedType
+            is org.partiql.types.TimeType -> TimeType(TimeType.MAX_PRECISION)
+            is org.partiql.types.TimestampType -> TimestampType(TimestampType.MAX_PRECISION)
         }
 
         // TODO: I'm pretty sure this is wrong, but I'll just publish this for now
@@ -244,6 +287,7 @@ public sealed interface PartiQLType {
             NUMERIC_BOUND_TYPES +
             APPROXIMATE_NUMERIC_TYPES +
             listOf(NumericType.UNCONSTRAINED) +
+            listOf(NumericType(null, 0)) + // Unbound INT
             TEXT_TYPES +
             BLOB_TYPES +
             DATETIME_TYPES +
@@ -285,7 +329,7 @@ public data class BlobType(
     override val name: String = "BLOB"
     public companion object {
         @JvmStatic
-        public val MAXIMUM_LENGTH: Int = 2_147_483_647 // TODO: Define MAXIMUM. Here is Oracle's
+        public val MAXIMUM_LENGTH: Int = 10 // TODO: Define MAXIMUM. Here is Oracle's: 2_147_483_647
     }
 }
 
@@ -374,12 +418,10 @@ public object Int16Type : PartiQLType.Runtime.Core {
 
 public object Int32Type : PartiQLType.Runtime.Core {
     override val name: String = "INT32"
-
 }
 
 public object Int64Type : PartiQLType.Runtime.Core {
     override val name: String = "INT64"
-
 }
 
 /**

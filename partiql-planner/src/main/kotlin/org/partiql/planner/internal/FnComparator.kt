@@ -65,8 +65,8 @@ internal object FnComparator : Comparator<FnSignature> {
 
     private fun comparePrecedence(t1: PartiQLType, t2: PartiQLType): Int {
         if (t1 == t2) return 0
-        val p1 = PartiQLType.PRECEDENCE_MAP[t1]!!
-        val p2 = PartiQLType.PRECEDENCE_MAP[t2]!!
+        val p1 = PartiQLType.PRECEDENCE_MAP[t1] ?: error("Could not find $t1 in precedence map.")
+        val p2 = PartiQLType.PRECEDENCE_MAP[t2] ?: error("Could not find $t2 in precedence map.")
         return p1 - p2
     }
 

@@ -3,9 +3,14 @@ package org.partiql.shape
 import org.partiql.shape.constraints.Constraint
 import org.partiql.shape.constraints.Element
 import org.partiql.shape.constraints.Fields
-import org.partiql.shape.constraints.None
 import org.partiql.shape.constraints.Multiple
+import org.partiql.shape.constraints.None
 import org.partiql.shape.constraints.NotNull
+import org.partiql.types.AnyOfType
+import org.partiql.types.SingleType
+import org.partiql.types.StaticType
+import org.partiql.types.StructType
+import org.partiql.types.TupleConstraint
 import org.partiql.value.AnyType
 import org.partiql.value.ArrayType
 import org.partiql.value.BagType
@@ -162,6 +167,17 @@ public sealed interface PShape {
 
         @JvmStatic
         @Deprecated("Should we allow this?")
+        public fun PShape.getElement(): Element {
+            val default = Element(of(AnyType))
+            return when (val constraint = this.constraint) {
+                is Multiple -> constraint.getSingleElement() ?: default
+                is Element -> constraint
+                else -> default
+            }
+        }
+
+        @JvmStatic
+        @Deprecated("Should we allow this?")
         public fun PShape.setElement(shape: PShape): PShape {
             val constraint = when (val c = this.constraint) {
                 is Multiple -> {
@@ -208,9 +224,9 @@ public sealed interface PShape {
         }
 
         @Deprecated("Double-check this")
-        public fun PShape.isText(): Boolean = this.isType<CharType>()
-            || this.isType<CharVarType>()
-            || this.isType<CharVarUnboundedType>()
+        public fun PShape.isText(): Boolean = this.isType<CharType>() ||
+            this.isType<CharVarType>() ||
+            this.isType<CharVarUnboundedType>()
 
         @Deprecated("Double-check this")
         public fun PartiQLType.isText(): Boolean = this is CharType || this is CharVarType || this is CharVarUnboundedType
@@ -276,6 +292,38 @@ public sealed interface PShape {
                 val t = type ?: this.type
                 val m = metas ?: this.metas
                 this.copy(constraint = c, type = t, metas = m)
+            }
+            else -> error("This should not have occurred, but to compile, this check is required.")
+        }
+
+        /**
+         * Converts [StaticType] to [PShape]
+         */
+        @Deprecated("Should not be used")
+        public fun fromStaticType(type: StaticType): PShape {
+            return when (type) {
+                is SingleType -> when (type) {
+                    is StructType -> {
+                        val pType = PartiQLType.fromSingleType(type)
+                        val fields = type.fields.map { Fields.Field(it.key, fromStaticType(it.value)) }
+                        Single(
+                            type = pType,
+                            constraint = Fields(
+                                fields = fields,
+                                isClosed = type.contentClosed,
+                                isOrdered = type.constraints.contains(TupleConstraint.Ordered)
+                            )
+                        )
+                    }
+                    else -> of(PartiQLType.fromSingleType(type))
+                }
+                is org.partiql.types.AnyType -> of(AnyType)
+                is AnyOfType -> {
+                    val types = type.flatten().allTypes.map { child ->
+                        fromStaticType(child)
+                    }.toSet()
+                    Union.of(types)
+                }
             }
         }
     }

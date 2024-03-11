@@ -72,8 +72,6 @@ import org.partiql.planner.internal.ir.rexOpStruct
 import org.partiql.planner.internal.ir.rexOpStructField
 import org.partiql.planner.internal.ir.rexOpVarLocal
 import org.partiql.shape.PShape
-import org.partiql.types.ListType
-import org.partiql.types.StaticType
 import org.partiql.value.AnyType
 import org.partiql.value.ArrayType
 import org.partiql.value.BagType

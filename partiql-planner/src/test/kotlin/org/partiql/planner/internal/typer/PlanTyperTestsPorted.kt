@@ -28,6 +28,7 @@ import org.partiql.plugins.local.toStaticType
 import org.partiql.plugins.memory.MemoryCatalog
 import org.partiql.plugins.memory.MemoryConnector
 import org.partiql.plugins.memory.MemoryObject
+import org.partiql.shape.PShape
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
@@ -3272,7 +3273,8 @@ class PlanTyperTestsPorted {
                     }
                 }
                 val actual = statement.root.type
-                assert(tc.expected == actual) {
+                // TODO: Make all tests actually use PShape
+                assert(PShape.fromStaticType(tc.expected) == actual) {
                     buildString {
                         appendLine()
                         appendLine("Expect: ${tc.expected}")
@@ -3313,7 +3315,8 @@ class PlanTyperTestsPorted {
                     }
                 }
                 if (tc.expected != null) {
-                    assert(tc.expected == statement.root.type) {
+                    // TODO: Have users pass in PShapes
+                    assert(PShape.fromStaticType(tc.expected) == statement.root.type) {
                         buildString {
                             appendLine()
                             appendLine("Expect: ${tc.expected}")
