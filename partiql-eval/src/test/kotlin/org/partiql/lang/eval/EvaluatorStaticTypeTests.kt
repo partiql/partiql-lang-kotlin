@@ -2,8 +2,9 @@ package org.partiql.lang.eval
 
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
-import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
-import org.partiql.lang.util.testdsl.IonResultTestCase
+import org.partiql.eval.EVALUATOR_TEST_SUITE
+import org.partiql.eval.framework.EvaluatorTestTarget
+import org.partiql.eval.util.testdsl.IonResultTestCase
 
 /**
  * This test class is effectively the same as [EvaluatorTests] however it:

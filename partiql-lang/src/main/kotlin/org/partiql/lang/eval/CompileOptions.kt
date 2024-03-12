@@ -145,8 +145,8 @@ enum class ThunkReturnTypeAssertions {
 @Suppress("DataClassPrivateConstructor")
 data class CompileOptions private constructor (
     val undefinedVariable: UndefinedVariableBehavior,
-    val projectionIteration: ProjectionIterationBehavior = ProjectionIterationBehavior.FILTER_MISSING,
-    val visitorTransformMode: VisitorTransformMode = VisitorTransformMode.DEFAULT,
+    val projectionIteration: ProjectionIterationBehavior = FILTER_MISSING,
+    val visitorTransformMode: VisitorTransformMode = DEFAULT,
     val thunkOptions: ThunkOptions = ThunkOptions.standard(),
     val typingMode: TypingMode = TypingMode.LEGACY,
     val typedOpBehavior: TypedOpBehavior = TypedOpBehavior.HONOR_PARAMETERS,

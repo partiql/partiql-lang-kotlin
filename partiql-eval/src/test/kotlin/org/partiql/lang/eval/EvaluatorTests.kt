@@ -3,14 +3,17 @@ package org.partiql.lang.eval
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
+import org.partiql.eval.EVALUATOR_TEST_SUITE
+import org.partiql.eval.framework.EvaluatorTestTarget
+import org.partiql.eval.framework.ExpectedResultFormat
+import org.partiql.eval.framework.adapter.impl.PipelineEvaluatorTestAdapter
+import org.partiql.eval.framework.pipeline.factory.impl.CompilerPipelineFactory
+import org.partiql.eval.framework.pipeline.factory.impl.EvalEnginePipelineFactory
+import org.partiql.eval.framework.pipeline.factory.impl.PartiQLCompilerPipelineFactory
+import org.partiql.eval.framework.testcase.impl.EvaluatorTestCase
+import org.partiql.eval.mockdb.MockDb
+import org.partiql.eval.util.testdsl.IonResultTestCase
 import org.partiql.lang.CompilerPipeline
-import org.partiql.lang.eval.evaluatortestframework.CompilerPipelineFactory
-import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestCase
-import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
-import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
-import org.partiql.lang.eval.evaluatortestframework.PipelineEvaluatorTestAdapter
-import org.partiql.lang.mockdb.MockDb
-import org.partiql.lang.util.testdsl.IonResultTestCase
 
 class EvaluatorTests {
     private val mockDb = EVALUATOR_TEST_SUITE.mockDb()
@@ -121,6 +124,7 @@ fun IonResultTestCase.runTestCase(
             // We don't support ALL_PIPELINES here because each pipeline needs a separate skip list, which
             // is decided by the caller of this function.
             EvaluatorTestTarget.ALL_PIPELINES -> error("May only test one pipeline at a time with IonResultTestCase")
+            EvaluatorTestTarget.EVAL_ENGINE_PIPELINE -> EvalEnginePipelineFactory()
         }
     )
 

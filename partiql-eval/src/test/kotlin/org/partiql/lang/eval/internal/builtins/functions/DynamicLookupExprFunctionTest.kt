@@ -5,12 +5,12 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.errors.ErrorCode
 import org.partiql.errors.Property
+import org.partiql.eval.framework.EvaluatorTestTarget
+import org.partiql.eval.framework.ExpectedResultFormat
+import org.partiql.eval.framework.testcase.impl.EvaluatorErrorTestCase
+import org.partiql.eval.util.ArgumentsProviderBase
 import org.partiql.lang.eval.EvaluatorTestBase
 import org.partiql.lang.eval.builtins.DYNAMIC_LOOKUP_FUNCTION_NAME
-import org.partiql.lang.eval.evaluatortestframework.EvaluatorErrorTestCase
-import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
-import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
-import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.lang.util.propertyValueMapOf
 import org.partiql.lang.util.to
 

@@ -14,6 +14,7 @@ import org.partiql.errors.Problem
 import org.partiql.errors.ProblemHandler
 import org.partiql.errors.ProblemLocation
 import org.partiql.errors.ProblemSeverity
+import org.partiql.eval.util.ArgumentsProviderBase
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.PartiqlLogical
 import org.partiql.lang.domains.id
@@ -23,7 +24,6 @@ import org.partiql.lang.eval.internal.builtins.ExprFunctionCurrentUser
 import org.partiql.lang.planner.PlanningProblemDetails
 import org.partiql.lang.planner.unimplementedProblem
 import org.partiql.lang.syntax.PartiQLParserBuilder
-import org.partiql.lang.util.ArgumentsProviderBase
 
 /**
  * Test cases in this class might seem a little light--that's because [AstToLogicalVisitorTransform] is getting

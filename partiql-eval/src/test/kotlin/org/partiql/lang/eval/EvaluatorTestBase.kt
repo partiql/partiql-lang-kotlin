@@ -16,21 +16,23 @@ package org.partiql.lang.eval
 
 import org.partiql.errors.ErrorCode
 import org.partiql.errors.PropertyValueMap
-import org.partiql.lang.CUSTOM_TEST_TYPES
+import org.partiql.eval.CUSTOM_TEST_TYPES
+import org.partiql.eval.TestBase
+import org.partiql.eval.framework.EvaluatorTestTarget
+import org.partiql.eval.framework.ExpectedResultFormat
+import org.partiql.eval.framework.adapter.EvaluatorTestAdapter
+import org.partiql.eval.framework.adapter.impl.MultipleTestAdapter
+import org.partiql.eval.framework.adapter.impl.PipelineEvaluatorTestAdapter
+import org.partiql.eval.framework.adapter.impl.VisitorTransformBaseTestAdapter
+import org.partiql.eval.framework.pipeline.factory.impl.CompilerPipelineFactory
+import org.partiql.eval.framework.pipeline.factory.impl.EvalEnginePipelineFactory
+import org.partiql.eval.framework.pipeline.factory.impl.PartiQLCompilerPipelineFactory
+import org.partiql.eval.framework.testcase.impl.EvaluatorErrorTestCase
+import org.partiql.eval.framework.testcase.impl.EvaluatorTestCase
+import org.partiql.eval.util.newFromIonText
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.SqlException
-import org.partiql.lang.TestBase
-import org.partiql.lang.eval.evaluatortestframework.CompilerPipelineFactory
-import org.partiql.lang.eval.evaluatortestframework.EvaluatorErrorTestCase
-import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestAdapter
-import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestCase
-import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
-import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
-import org.partiql.lang.eval.evaluatortestframework.MultipleTestAdapter
-import org.partiql.lang.eval.evaluatortestframework.PipelineEvaluatorTestAdapter
-import org.partiql.lang.eval.evaluatortestframework.VisitorTransformBaseTestAdapter
 import org.partiql.lang.graph.ExternalGraphReader
-import org.partiql.lang.util.newFromIonText
 import java.io.File
 
 /**
@@ -42,6 +44,7 @@ abstract class EvaluatorTestBase : TestBase() {
         listOf(
             PipelineEvaluatorTestAdapter(CompilerPipelineFactory()),
             PipelineEvaluatorTestAdapter(PartiQLCompilerPipelineFactory()),
+            PipelineEvaluatorTestAdapter(EvalEnginePipelineFactory()),
             VisitorTransformBaseTestAdapter()
         )
     )

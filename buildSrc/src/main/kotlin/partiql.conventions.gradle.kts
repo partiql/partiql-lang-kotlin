@@ -50,6 +50,8 @@ java {
 tasks.test {
     useJUnitPlatform() // Enable JUnit5
     jvmArgs.addAll(listOf("-Duser.language=en", "-Duser.country=US"))
+    // disable timeout during debugging session for all junit5 tests
+    jvmArgs.add("-Djunit.jupiter.execution.timeout.mode=disabled_on_debug")
     maxHeapSize = "4g"
     testLogging {
         events.add(TestLogEvent.FAILED)

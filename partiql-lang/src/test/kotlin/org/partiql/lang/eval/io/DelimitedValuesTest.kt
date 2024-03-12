@@ -18,7 +18,8 @@ import com.amazon.ion.IonType
 import com.amazon.ion.IonValue
 import org.apache.commons.csv.CSVFormat
 import org.junit.Test
-import org.partiql.lang.TestBase
+import org.partiql.eval.TestBase
+import org.partiql.eval.util.newFromIonText
 import org.partiql.lang.eval.BAG_ANNOTATION
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
@@ -28,7 +29,6 @@ import org.partiql.lang.eval.io.DelimitedValues.ConversionMode.NONE
 import org.partiql.lang.eval.orderedNamesValue
 import org.partiql.lang.eval.toIonValue
 import org.partiql.lang.util.asSequence
-import org.partiql.lang.util.newFromIonText
 import java.io.StringReader
 import java.io.StringWriter
 

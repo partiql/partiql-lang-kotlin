@@ -17,9 +17,9 @@ package org.partiql.lang.eval.visitors
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.fail
 import org.partiql.errors.ErrorCode
+import org.partiql.eval.EvaluatorTestFailureReason
+import org.partiql.eval.assertThrowsSqlException
 import org.partiql.lang.domains.PartiqlAst
-import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestFailureReason
-import org.partiql.lang.eval.evaluatortestframework.assertThrowsSqlException
 import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.lang.syntax.PartiQLParserTestBase
 
@@ -112,7 +112,7 @@ abstract class VisitorTransformTestBase : PartiQLParserTestBase() {
             transform.transformStatement(ast)
         }
 
-        org.partiql.lang.eval.evaluatortestframework.assertEquals(
+        org.partiql.eval.assertEquals(
             tc.expectedErrorCode,
             ex.errorCode,
             EvaluatorTestFailureReason.UNEXPECTED_ERROR_CODE

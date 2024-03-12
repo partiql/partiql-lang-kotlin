@@ -2,8 +2,8 @@ package org.partiql.lang.eval.internal.builtins
 
 import org.partiql.errors.ErrorCode
 import org.partiql.errors.Property
+import org.partiql.eval.framework.EvaluatorTestTarget
 import org.partiql.lang.eval.EvaluatorTestBase
-import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
 import org.partiql.lang.util.propertyValueMapOf
 
 /**

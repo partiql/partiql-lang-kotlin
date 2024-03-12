@@ -2,11 +2,11 @@ package org.partiql.lang.eval
 
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
-import org.partiql.lang.eval.evaluatortestframework.CompilerPipelineFactory
-import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestAdapter
-import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestCase
-import org.partiql.lang.eval.evaluatortestframework.PipelineEvaluatorTestAdapter
-import org.partiql.lang.util.ArgumentsProviderBase
+import org.partiql.eval.framework.adapter.EvaluatorTestAdapter
+import org.partiql.eval.framework.adapter.impl.PipelineEvaluatorTestAdapter
+import org.partiql.eval.framework.pipeline.factory.impl.CompilerPipelineFactory
+import org.partiql.eval.framework.testcase.impl.EvaluatorTestCase
+import org.partiql.eval.util.ArgumentsProviderBase
 
 class EvaluatingCompilerExcludeTests : EvaluatorTestBase() {
 

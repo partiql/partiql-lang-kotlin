@@ -23,7 +23,7 @@ import org.junit.Ignore
 import org.junit.Test
 import org.partiql.errors.ErrorCode
 import org.partiql.errors.Property
-import org.partiql.lang.ION
+import org.partiql.eval.ION
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.sourceLocation
 import org.partiql.lang.domains.PartiqlAst

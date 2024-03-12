@@ -16,7 +16,7 @@ package org.partiql.lang.util
 
 import junitparams.Parameters
 import org.junit.Test
-import org.partiql.lang.TestBase
+import org.partiql.eval.TestBase
 import java.math.MathContext
 import java.math.RoundingMode
 

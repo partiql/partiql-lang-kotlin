@@ -10,9 +10,9 @@ import org.junit.Assert
 import org.partiql.errors.Problem
 import org.partiql.errors.ProblemDetails
 import org.partiql.errors.ProblemLocation
-import org.partiql.lang.ION
+import org.partiql.eval.ION
+import org.partiql.eval.util.SexpAstPrettyPrinter
 import org.partiql.lang.domains.PartiqlPhysical
-import org.partiql.lang.util.SexpAstPrettyPrinter
 
 /**
  * Creates a fake implementation of [GlobalVariableResolver] with the specified [globalVariableNames].

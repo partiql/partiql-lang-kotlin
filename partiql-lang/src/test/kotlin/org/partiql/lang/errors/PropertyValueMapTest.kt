@@ -18,7 +18,7 @@ import org.junit.Before
 import org.junit.Test
 import org.partiql.errors.Property
 import org.partiql.errors.PropertyValueMap
-import org.partiql.lang.TestBase
+import org.partiql.eval.TestBase
 
 class PropertyValueMapTest : TestBase() {
 

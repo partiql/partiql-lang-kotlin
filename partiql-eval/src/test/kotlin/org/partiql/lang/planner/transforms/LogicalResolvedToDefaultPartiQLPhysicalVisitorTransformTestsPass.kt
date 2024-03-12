@@ -8,10 +8,10 @@ import com.amazon.ionelement.api.ionSymbol
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
+import org.partiql.eval.util.ArgumentsProviderBase
 import org.partiql.lang.domains.PartiqlLogicalResolved
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.eval.internal.ProblemCollector
-import org.partiql.lang.util.ArgumentsProviderBase
 import kotlin.test.fail
 
 class LogicalResolvedToDefaultPartiQLPhysicalVisitorTransformTestsPass {

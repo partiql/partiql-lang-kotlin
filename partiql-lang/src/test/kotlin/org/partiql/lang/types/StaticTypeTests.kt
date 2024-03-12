@@ -3,6 +3,7 @@ package org.partiql.lang.types
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
+import org.partiql.eval.util.ArgumentsProviderBase
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
@@ -10,7 +11,6 @@ import org.partiql.lang.eval.StructExprValue
 import org.partiql.lang.eval.StructOrdering
 import org.partiql.lang.eval.namedValue
 import org.partiql.lang.types.StaticTypeUtils.isInstance
-import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.types.AnyOfType
 import org.partiql.types.ListType
 import org.partiql.types.MissingType

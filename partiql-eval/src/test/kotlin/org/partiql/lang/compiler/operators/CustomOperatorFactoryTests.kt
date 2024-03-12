@@ -6,6 +6,7 @@ import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.annotations.ExperimentalPartiQLCompilerPipeline
+import org.partiql.eval.util.ArgumentsProviderBase
 import org.partiql.lang.compiler.PartiQLCompilerPipeline
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.eval.physical.EvaluatorState
@@ -23,7 +24,6 @@ import org.partiql.lang.eval.physical.operators.ScanRelationalOperatorFactory
 import org.partiql.lang.eval.physical.operators.ValueExpression
 import org.partiql.lang.planner.transforms.DEFAULT_IMPL
 import org.partiql.lang.planner.transforms.PLAN_VERSION_NUMBER
-import org.partiql.lang.util.ArgumentsProviderBase
 
 private const val FAKE_IMPL_NAME = "fake_impl"
 private val FAKE_IMPL_NODE = PartiqlPhysical.build { impl(FAKE_IMPL_NAME) }

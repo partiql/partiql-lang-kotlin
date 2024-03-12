@@ -2,8 +2,8 @@ package org.partiql.lang.eval.internal.builtins.aggfunctions
 
 import org.junit.Test
 import org.partiql.errors.ErrorCode
+import org.partiql.eval.framework.EvaluatorTestTarget
 import org.partiql.lang.eval.EvaluatorTestBase
-import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
 
 class SumTests : EvaluatorTestBase() {
     @Test

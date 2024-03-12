@@ -2,8 +2,8 @@ package org.partiql.lang.eval
 
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
-import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestCase
-import org.partiql.lang.util.ArgumentsProviderBase
+import org.partiql.eval.framework.testcase.impl.EvaluatorTestCase
+import org.partiql.eval.util.ArgumentsProviderBase
 
 /**
  * Constructs 8 test cases for the specified cast expression, replacing "{TYPE}" in [sql] with

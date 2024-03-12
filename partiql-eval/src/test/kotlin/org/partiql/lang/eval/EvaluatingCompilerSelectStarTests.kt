@@ -2,7 +2,7 @@ package org.partiql.lang.eval
 
 import junitparams.Parameters
 import org.junit.Test
-import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestCase
+import org.partiql.eval.framework.testcase.impl.EvaluatorTestCase
 import org.partiql.lang.util.downcast
 
 class EvaluatingCompilerSelectStarTests : EvaluatorTestBase() {

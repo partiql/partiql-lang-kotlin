@@ -7,7 +7,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.errors.ErrorCode
 import org.partiql.errors.Property
-import org.partiql.lang.ION
+import org.partiql.eval.ION
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.id
 import org.partiql.lang.util.getAntlrDisplayString

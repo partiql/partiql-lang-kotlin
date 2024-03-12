@@ -2,10 +2,10 @@ package org.partiql.lang.eval.internal.builtins.windowFunctions
 
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
+import org.partiql.eval.framework.EvaluatorTestTarget
+import org.partiql.eval.framework.testcase.impl.EvaluatorTestCase
+import org.partiql.eval.util.ArgumentsProviderBase
 import org.partiql.lang.eval.EvaluatorTestBase
-import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestCase
-import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
-import org.partiql.lang.util.ArgumentsProviderBase
 
 class WindowFunctionTests : EvaluatorTestBase() {
     private val session = mapOf(

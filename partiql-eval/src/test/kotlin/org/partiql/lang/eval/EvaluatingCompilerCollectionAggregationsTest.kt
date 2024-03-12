@@ -17,11 +17,11 @@ package org.partiql.lang.eval
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.errors.ErrorCode
-import org.partiql.lang.eval.evaluatortestframework.EvaluatorErrorTestCase
-import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestCase
-import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
+import org.partiql.eval.framework.EvaluatorTestTarget
+import org.partiql.eval.framework.testcase.impl.EvaluatorErrorTestCase
+import org.partiql.eval.framework.testcase.impl.EvaluatorTestCase
+import org.partiql.eval.util.ArgumentsProviderBase
 import org.partiql.lang.eval.internal.builtins.toSession
-import org.partiql.lang.util.ArgumentsProviderBase
 
 internal class EvaluatingCompilerCollectionAggregationsTest : EvaluatorTestBase() {
 
