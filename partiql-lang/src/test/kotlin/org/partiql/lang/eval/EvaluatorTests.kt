@@ -114,4 +114,8 @@ class EvaluatorTests {
     @ParameterizedTest
     @MethodSource("planEvaluatorTests")
     fun planEvaluatorTests(tc: IonResultTestCase) = tc.runTestCase(mockDb, EvaluatorTestTarget.PARTIQL_PIPELINE)
+
+    @ParameterizedTest
+    @MethodSource("planEvaluatorTests")
+    fun planEvaluatorTestsAsync(tc: IonResultTestCase) = tc.runTestCase(mockDb, EvaluatorTestTarget.PARTIQL_PIPELINE_ASYNC)
 }

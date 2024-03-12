@@ -1,6 +1,8 @@
 package org.partiql.lang.eval.evaluatortestframework
 
 import org.partiql.lang.CompilerPipeline
+import org.partiql.lang.compiler.PartiQLCompilerPipeline
+import org.partiql.lang.compiler.PartiQLCompilerPipelineAsync
 import org.partiql.lang.eval.CompileOptions
 
 /**
@@ -32,8 +34,8 @@ interface EvaluatorTestDefinition {
     val implicitPermissiveModeTest: Boolean
 
     /**
-     * Determines which pipeline this test should run against; the [CompilerPipeline],
-     * [org.partiql.lang.compiler.PartiQLCompilerPipeline] or both.
+     * Determines which pipeline this test should run against; the [CompilerPipeline], [PartiQLCompilerPipeline],
+     * [PartiQLCompilerPipelineAsync], or all of them.
      */
     val targetPipeline: EvaluatorTestTarget
 

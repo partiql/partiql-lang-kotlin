@@ -16,6 +16,7 @@ import org.partiql.lang.planner.transforms.DEFAULT_IMPL_NAME
  *
  * @param name
  */
+@Deprecated("To be removed in the next major version.", replaceWith = ReplaceWith("FilterRelationalOperatorFactoryAsync"))
 abstract class FilterRelationalOperatorFactory(name: String) : RelationalOperatorFactory {
 
     final override val key = RelationalOperatorFactoryKey(RelationalOperatorKind.FILTER, name)
@@ -28,6 +29,7 @@ abstract class FilterRelationalOperatorFactory(name: String) : RelationalOperato
      * @param sourceBexpr
      * @return
      */
+    @Deprecated("To be removed in the next major version.", replaceWith = ReplaceWith("FilterRelationalOperatorFactoryAsync.create"))
     abstract fun create(
         impl: PartiqlPhysical.Impl,
         predicate: ValueExpression,

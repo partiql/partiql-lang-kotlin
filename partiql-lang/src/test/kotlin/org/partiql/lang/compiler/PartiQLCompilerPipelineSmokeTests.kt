@@ -7,9 +7,7 @@ import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
 import org.partiql.annotations.ExperimentalPartiQLCompilerPipeline
 import org.partiql.errors.Problem
-import org.partiql.errors.ProblemDetails
 import org.partiql.errors.ProblemLocation
-import org.partiql.errors.ProblemSeverity
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.errors.PartiQLException
@@ -27,6 +25,8 @@ import org.partiql.lang.planner.transforms.DEFAULT_IMPL_NAME
 import org.partiql.lang.planner.transforms.PLAN_VERSION_NUMBER
 
 @OptIn(ExperimentalPartiQLCompilerPipeline::class)
+// Equivalent to `PartiQLCompilerPipelineAsyncSmokeTests.kt` but using synchronous physical plan evaluator APIs.
+// To be removed next major version
 class PartiQLCompilerPipelineSmokeTests {
 
     private fun createPlannerPipelineForTest(
@@ -150,18 +150,6 @@ class PartiQLCompilerPipelineSmokeTests {
 
         // TODO: We use string comparison until we finalized the error reporting mechanism for PartiQLCompilerPipeline
         assertEquals(listOf(expectedError).toString(), error.message)
-    }
-
-    private fun createFakeErrorProblem(sourceLocationMeta: SourceLocationMeta): Problem {
-        data class FakeProblemDetails(
-            override val severity: ProblemSeverity = ProblemSeverity.ERROR,
-            override val message: String = "Ack, the query author presented us with a logical conundrum!"
-        ) : ProblemDetails
-
-        return Problem(
-            sourceLocationMeta.toProblemLocation(),
-            FakeProblemDetails()
-        )
     }
 
     @Test

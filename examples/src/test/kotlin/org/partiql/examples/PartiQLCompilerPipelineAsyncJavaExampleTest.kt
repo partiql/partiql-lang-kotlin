@@ -3,8 +3,9 @@ package org.partiql.examples
 import org.partiql.examples.util.Example
 import java.io.PrintStream
 
-class PartiQLCompilerPipelineJavaExampleTest : BaseExampleTest() {
-    override fun example(out: PrintStream): Example = PartiQLCompilerPipelineJavaExample(out)
+class PartiQLCompilerPipelineAsyncJavaExampleTest : BaseExampleTest() {
+    override fun example(out: PrintStream): Example =
+        PartiQLCompilerPipelineAsyncJavaExample(out)
 
     override val expected = """
         |PartiQL query:

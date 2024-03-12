@@ -14,6 +14,7 @@ import org.partiql.lang.planner.transforms.DEFAULT_IMPL_NAME
  *
  * @param name
  */
+@Deprecated("To be removed in the next major version.", replaceWith = ReplaceWith("LetRelationalOperatorFactoryAsync"))
 abstract class LetRelationalOperatorFactory(name: String) : RelationalOperatorFactory {
 
     final override val key = RelationalOperatorFactoryKey(RelationalOperatorKind.LET, name)
@@ -26,6 +27,7 @@ abstract class LetRelationalOperatorFactory(name: String) : RelationalOperatorFa
      * @param bindings list of [VariableBinding]s in the `LET` clause
      * @return
      */
+    @Deprecated("To be removed in the next major version.", replaceWith = ReplaceWith("LetRelationalOperatorFactoryAsync.create"))
     abstract fun create(
         impl: PartiqlPhysical.Impl,
         sourceBexpr: RelationExpression,

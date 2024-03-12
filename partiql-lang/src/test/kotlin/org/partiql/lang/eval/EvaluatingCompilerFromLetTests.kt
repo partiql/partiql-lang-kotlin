@@ -73,6 +73,11 @@ class EvaluatingCompilerFromLetTests : EvaluatorTestBase() {
                 """<< { 'id': 1 }>>""",
                 target = EvaluatorTestTarget.PARTIQL_PIPELINE
             ),
+            EvaluatorTestCase(
+                "SELECT * FROM A LET 100 AS A",
+                """<< { 'id': 1 }>>""",
+                target = EvaluatorTestTarget.PARTIQL_PIPELINE_ASYNC
+            ),
 
             // LET using other variables
             EvaluatorTestCase(
