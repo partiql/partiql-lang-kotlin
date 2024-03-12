@@ -46,7 +46,7 @@ class TestRunner<T, V>(private val factory: TestExecutor.Factory<T, V>) {
             }
         } catch (e: Exception) {
             when (case.assertion) {
-                is Assertion.EvaluationSuccess -> error("Expected success but exception thrown: $e. ${e.stackTrace.forEach { println(it.toString()) }}")
+                is Assertion.EvaluationSuccess -> error("Expected success but exception thrown: $e.")
                 is Assertion.EvaluationFailure -> {} // skip
             }
         }
