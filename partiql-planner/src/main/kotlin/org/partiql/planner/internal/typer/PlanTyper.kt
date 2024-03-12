@@ -37,6 +37,7 @@ import org.partiql.planner.internal.ir.relOpExcludePath
 import org.partiql.planner.internal.ir.relOpFilter
 import org.partiql.planner.internal.ir.relOpJoin
 import org.partiql.planner.internal.ir.relOpLimit
+import org.partiql.planner.internal.ir.relOpOffset
 import org.partiql.planner.internal.ir.relOpProject
 import org.partiql.planner.internal.ir.relOpScan
 import org.partiql.planner.internal.ir.relOpScanIndexed
@@ -271,12 +272,12 @@ internal class PlanTyper(
             return if (!assertAsInt(offset.type))
                 rel(
                     type,
-                    relOpLimit(
+                    relOpOffset(
                         input,
                         ProblemGenerator.missingRex(offset.op, ProblemGenerator.unexpectedType(offset.type, setOf(StaticType.INT)))
                     )
                 )
-            else rel(type, relOpLimit(input, offset))
+            else rel(type, relOpOffset(input, offset))
         }
 
         override fun visitRelOpProject(node: Rel.Op.Project, ctx: Rel.Type?): Rel {
