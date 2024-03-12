@@ -21,7 +21,7 @@ import java.io.PrintStream
  * One way to do so is to add the `Optin(Experimental<X>::class) before the class. where <X> is the feature name.
  * Also see: https://kotlinlang.org/docs/opt-in-requirements.html#module-wide-opt-in
  */
-class PartiQLCompilerPipelineExample(out: PrintStream) : Example(out) {
+class PartiQLCompilerPipelineAsyncExample(out: PrintStream) : Example(out) {
 
     private val myIonSystem = IonSystemBuilder.standard().build()
 

@@ -12,8 +12,8 @@ import org.partiql.examples.EvaluationWithLazyBindings
 import org.partiql.examples.ParserErrorExample
 import org.partiql.examples.ParserExample
 import org.partiql.examples.ParserJavaExample
+import org.partiql.examples.PartiQLCompilerPipelineAsyncExample
 import org.partiql.examples.PartiQLCompilerPipelineAsyncJavaExample
-import org.partiql.examples.PartiQLCompilerPipelineExample
 import org.partiql.examples.PartialEvaluationVisitorTransformExample
 import org.partiql.examples.PreventJoinVisitorExample
 import org.partiql.examples.S3JavaExample
@@ -41,7 +41,7 @@ private val examples = mapOf(
     PartialEvaluationVisitorTransformExample::class.java.simpleName to PartialEvaluationVisitorTransformExample(System.out),
     PreventJoinVisitorExample::class.java.simpleName to PreventJoinVisitorExample(System.out),
     SimpleExpressionEvaluation::class.java.simpleName to SimpleExpressionEvaluation(System.out),
-    PartiQLCompilerPipelineExample::class.java.simpleName to PartiQLCompilerPipelineExample(System.out)
+    PartiQLCompilerPipelineAsyncExample::class.java.simpleName to PartiQLCompilerPipelineAsyncExample(System.out)
 )
 
 fun main(args: Array<String>) {
