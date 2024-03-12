@@ -51,13 +51,20 @@ public interface PartiQLPlanner {
         public val instant: Instant = Instant.now(),
         public val missingOpBehavior: MissingOpBehavior = MissingOpBehavior.QUIET
     ) {
+        /**
+         * Determine the planner behavior upon encounter an operation that always returns MISSING. 
+         * In both mode, The problometic operation will be tracked in problem callback. 
+         * Subsequence opearation will take in MISSING as input. 
+         */
         public enum class MissingOpBehavior {
             /**
-             * Suppress Missing Op
+             *  The problometic operation will be tracked in problem callback as a error. 
+             *  The result plan will turn the problemetic operation into an error node. 
              */
             QUIET,
             /**
-             * Throw
+             * The problometic operation will be tracked in problem callback as a error.
+             * The result plan will turn the problemetic operation into an missing node. 
              */
             SIGNAL
         }
@@ -71,6 +78,9 @@ public interface PartiQLPlanner {
         @JvmStatic
         public fun default(): PartiQLPlanner = PartiQLPlannerBuilder().build()
 
+        /**
+         * A planner that preserves the trace of problemetic operation for the purpose of debugging. 
+         */ 
         @JvmStatic
         public fun debug(): PartiQLPlanner = PartiQLPlannerDebug()
     }
