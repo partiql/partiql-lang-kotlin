@@ -348,6 +348,8 @@ internal class PlanTyper(
          * some other semantic pass
          *      - currently does not give an error
          */
+
+        // TODO: better error reporting with exclude.
         override fun visitRelOpExclude(node: Rel.Op.Exclude, ctx: Rel.Type?): Rel {
             // compute input schema
             val input = visitRel(node.input, ctx)

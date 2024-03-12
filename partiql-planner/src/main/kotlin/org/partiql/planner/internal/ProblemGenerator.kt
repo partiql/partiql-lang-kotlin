@@ -32,10 +32,10 @@ internal object ProblemGenerator {
     }
     fun asError(problem: Problem): Problem {
         val details = problem.details as PlanningProblemDetails
-        return if (details.severity == ProblemSeverity.WARNING) problem
+        return if (details.severity == ProblemSeverity.ERROR) problem
         else Problem(
             problem.sourceLocation,
-            PlanningProblemDetails(ProblemSeverity.WARNING, details.messageFormatter)
+            PlanningProblemDetails(ProblemSeverity.ERROR, details.messageFormatter)
         )
     }
 

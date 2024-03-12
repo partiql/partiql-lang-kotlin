@@ -5,6 +5,7 @@ import org.partiql.plan.PlanNode
 import org.partiql.plan.partiQLPlan
 import org.partiql.plan.rexOpCallStatic
 import org.partiql.plan.rexOpCast
+import org.partiql.plan.rexOpErr
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.internal.ProblemGenerator
 import org.partiql.planner.internal.ir.Identifier
@@ -169,10 +170,14 @@ internal object PlanTransform {
         }
 
         override fun visitRexOpCallUnresolved(node: Rex.Op.Call.Unresolved, ctx: Unit): PlanNode {
+            val identifier = visitIdentifier(node.identifier, ctx)
+            val args = node.args.map { visitRex(it, ctx) }
             if (debugMode) {
-                return org.partiql.plan.rexOpDebugCallUnresolved(visitIdentifier(node.identifier, ctx), node.args.map { visitRex(it, ctx) })
+                // additional debug information
+                return org.partiql.plan.rexOpDebugCallUnresolved(identifier, args)
             }
-            error("Unresolved function ${node.identifier}")
+            // For continuation
+            return rexOpErr("unresolved function $identifier")
         }
 
         override fun visitRexOpCallStatic(node: Rex.Op.Call.Static, ctx: Unit): org.partiql.plan.Rex.Op {
@@ -243,17 +248,16 @@ internal object PlanTransform {
                 org.partiql.plan.Rex.Op.TupleUnion(args = node.args.map { visitRex(it, ctx) })
 
             override fun visitRexOpErr(node: Rex.Op.Err, ctx: Unit): org.partiql.plan.Rex.Op.Err {
+                // track the error in call back
                 visitRexOp(node.input, ctx)
-                return org.partiql.plan.Rex.Op.Err(node.problem.toString()).also {
-                    onProblem(node.problem)
-                }
+                onProblem(ProblemGenerator.asError(node.problem))
+                return org.partiql.plan.Rex.Op.Err(node.problem.toString())
             }
 
             @OptIn(PartiQLValueExperimental::class)
             override fun visitRexOpMissing(node: Rex.Op.Missing, ctx: Unit): PlanNode {
                 // gather problem from subtree.
                 val trace = visitRexOp(node.input, ctx)
-
                 return when (missingOpBehavior) {
                     PartiQLPlanner.Session.MissingOpBehavior.QUIET -> {
                         onProblem.invoke(ProblemGenerator.asWarning(node.problem))
@@ -405,11 +409,15 @@ internal object PlanTransform {
                         is Rex.Op.Var.Local -> visitRexOpVarLocal(root, ctx)
                         is Rex.Op.Var.Global -> error("EXCLUDE only disallows values coming from the input record.")
                         is Rex.Op.Err -> {
-                            onProblem(root.problem)
+                            // trace error
+                            visitRexOpErr(root, ctx)
+                            // this is: an erroneous exclude path is removed for continuation
                             return@mapNotNull null
                         }
                         is Rex.Op.Missing -> {
-                            if (missingOpBehavior == PartiQLPlanner.Session.MissingOpBehavior.SIGNAL) onProblem(root.problem)
+                            // trace missing
+                            visitRexOpMissing(root, ctx)
+                            // this is: an exclude path that always returns missing is removed for continuation
                             return@mapNotNull null
                         }
                         else -> error("Should be converted to a error node")
