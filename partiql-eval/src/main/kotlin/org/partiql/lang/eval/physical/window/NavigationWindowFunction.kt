@@ -12,6 +12,7 @@ import org.partiql.lang.eval.physical.toSetVariableFunc
  * TODO: When we support FIRST_VALUE, etc, we probably need to modify the process row function, since those function requires frame
  */
 @ExperimentalWindowFunctions
+@Deprecated("To be removed in the next major version.", replaceWith = ReplaceWith("NavigationWindowFunctionAsync"))
 abstract class NavigationWindowFunction() : WindowFunction {
 
     lateinit var currentPartition: List<Array<ExprValue>>
@@ -38,5 +39,6 @@ abstract class NavigationWindowFunction() : WindowFunction {
         currentPos += 1
     }
 
+    @Deprecated("To be removed in the next major version.", replaceWith = ReplaceWith("NavigationWindowFunctionAsync.processRow"))
     abstract fun processRow(state: EvaluatorState, arguments: List<ValueExpression>, currentPos: Int): ExprValue
 }

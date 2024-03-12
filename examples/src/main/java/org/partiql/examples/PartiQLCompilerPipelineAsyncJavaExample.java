@@ -2,17 +2,25 @@ package org.partiql.examples;
 
 import com.amazon.ion.IonSystem;
 import com.amazon.ion.system.IonSystemBuilder;
+
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import kotlin.OptIn;
+import kotlin.coroutines.EmptyCoroutineContext;
+import kotlinx.coroutines.CoroutineScopeKt;
+import kotlinx.coroutines.CoroutineStart;
+import kotlinx.coroutines.future.FutureKt;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.annotations.ExperimentalPartiQLCompilerPipeline;
 import org.partiql.examples.util.Example;
-import org.partiql.lang.compiler.PartiQLCompiler;
-import org.partiql.lang.compiler.PartiQLCompilerBuilder;
-import org.partiql.lang.compiler.PartiQLCompilerPipeline;
+import org.partiql.lang.compiler.PartiQLCompilerAsync;
+import org.partiql.lang.compiler.PartiQLCompilerAsyncBuilder;
+import org.partiql.lang.compiler.PartiQLCompilerPipelineAsync;
 import org.partiql.lang.eval.Bindings;
 import org.partiql.lang.eval.EvaluationSession;
 import org.partiql.lang.eval.ExprValue;
 import org.partiql.lang.eval.PartiQLResult;
+import org.partiql.lang.eval.PartiQLStatementAsync;
 import org.partiql.lang.eval.ProjectionIterationBehavior;
 import org.partiql.lang.planner.EvaluatorOptions;
 import org.partiql.lang.planner.GlobalResolutionResult;
@@ -25,14 +33,14 @@ import org.partiql.lang.syntax.PartiQLParserBuilder;
 import java.io.PrintStream;
 
 /**
- * This is an example of using PartiQLCompilerPipeline in Java.
+ * This is an example of using PartiQLCompilerPipelineAsync in Java.
  * It is an experimental feature and is marked as such, with @OptIn, in this example.
- * Unfortunately, it seems like the Java does not recognize the Optin annotation specified in Kotlin.
+ * Unfortunately, it seems like the Java does not recognize the OptIn annotation specified in Kotlin.
  * Java users will be able to access the experimental APIs freely, and not be warned at all.
  */
-public class PartiQLCompilerPipelineJavaExample extends Example {
+public class PartiQLCompilerPipelineAsyncJavaExample extends Example {
 
-    public PartiQLCompilerPipelineJavaExample(@NotNull PrintStream out) {
+    public PartiQLCompilerPipelineAsyncJavaExample(@NotNull PrintStream out) {
         super(out);
     }
 
@@ -49,10 +57,7 @@ public class PartiQLCompilerPipelineJavaExample extends Example {
                 "{name: \"mary\", age: 19}" +
                 "]";
 
-        final Bindings<ExprValue> globalVariables = Bindings.<ExprValue>lazyBindingsBuilder().addBinding("myTable", () -> {
-            ExprValue exprValue = ExprValue.of(ion.singleValue(myTable));
-            return exprValue;
-        }).build();
+        final Bindings<ExprValue> globalVariables = Bindings.<ExprValue>lazyBindingsBuilder().addBinding("myTable", () -> ExprValue.of(ion.singleValue(myTable))).build();
 
         final EvaluationSession session = EvaluationSession.builder()
                 .globals(globalVariables)
@@ -79,17 +84,41 @@ public class PartiQLCompilerPipelineJavaExample extends Example {
         final PartiQLPlanner planner = PartiQLPlannerBuilder.standard().globalVariableResolver(globalVariableResolver).build();
 
         @OptIn(markerClass = ExperimentalPartiQLCompilerPipeline.class)
-        final PartiQLCompiler compiler = PartiQLCompilerBuilder.standard().options(evaluatorOptions).build();
+        final PartiQLCompilerAsync compiler = PartiQLCompilerAsyncBuilder.standard().options(evaluatorOptions).build();
 
         @OptIn(markerClass = ExperimentalPartiQLCompilerPipeline.class)
-        final PartiQLCompilerPipeline pipeline = new PartiQLCompilerPipeline(
+        final PartiQLCompilerPipelineAsync pipeline = new PartiQLCompilerPipelineAsync(
                 parser, planner, compiler
         );
 
         String query = "SELECT t.name FROM myTable AS t WHERE t.age > 20";
 
         print("PartiQL query:", query);
-        PartiQLResult result = pipeline.compile(query).eval(session);
+
+        // Calling Kotlin coroutines from Java requires some additional libraries from `kotlinx.coroutines.future`
+        // to return a `java.util.concurrent.CompletableFuture`. If a use case arises to call the
+        // `PartiQLCompilerPipelineAsync` APIs directly from Java, we can add Kotlin functions that directly return
+        // Java's async libraries (e.g. in https://stackoverflow.com/a/52887677).
+        CompletableFuture<PartiQLStatementAsync> statementFuture = FutureKt.future(
+                CoroutineScopeKt.CoroutineScope(EmptyCoroutineContext.INSTANCE),
+                EmptyCoroutineContext.INSTANCE,
+                CoroutineStart.DEFAULT,
+                (scope, continuation) -> pipeline.compile(query, continuation)
+        );
+
+        PartiQLResult result;
+        try {
+            PartiQLStatementAsync statement = statementFuture.get();
+            CompletableFuture<PartiQLResult> resultFuture = FutureKt.future(
+                    CoroutineScopeKt.CoroutineScope(EmptyCoroutineContext.INSTANCE),
+                    EmptyCoroutineContext.INSTANCE,
+                    CoroutineStart.DEFAULT,
+                    (scope, continuation) -> statement.eval(session, continuation)
+            );
+            result = resultFuture.get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e);
+        }
         ExprValue exprValue = null;
         if (result instanceof PartiQLResult.Value) {
             exprValue = ((PartiQLResult.Value) result).getValue();

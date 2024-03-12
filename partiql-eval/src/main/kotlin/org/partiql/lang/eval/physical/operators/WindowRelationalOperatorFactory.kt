@@ -6,11 +6,13 @@ import org.partiql.lang.eval.physical.SetVariableFunc
 import org.partiql.lang.eval.physical.window.WindowFunction
 
 @ExperimentalWindowFunctions
+@Deprecated("To be removed in the next major version.", replaceWith = ReplaceWith("WindowRelationalOperatorFactoryAsync"))
 abstract class WindowRelationalOperatorFactory(name: String) : RelationalOperatorFactory {
 
     final override val key: RelationalOperatorFactoryKey = RelationalOperatorFactoryKey(RelationalOperatorKind.WINDOW, name)
 
     /** Creates a [RelationExpression] instance for [PartiqlPhysical.Bexpr.Window]. */
+    @Deprecated("To be removed in the next major version.", replaceWith = ReplaceWith("WindowRelationalOperatorFactoryAsync.create"))
     abstract fun create(
         source: RelationExpression,
         windowPartitionList: List<ValueExpression>,
@@ -21,6 +23,7 @@ abstract class WindowRelationalOperatorFactory(name: String) : RelationalOperato
 }
 
 @ExperimentalWindowFunctions
+@Deprecated("To be removed in the next major version.", replaceWith = ReplaceWith("CompiledWindowFunctionAsync"))
 class CompiledWindowFunction(
     val func: WindowFunction,
     val parameters: List<ValueExpression>,

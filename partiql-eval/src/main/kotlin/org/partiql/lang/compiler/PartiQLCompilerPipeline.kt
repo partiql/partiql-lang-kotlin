@@ -42,6 +42,7 @@ import org.partiql.lang.syntax.PartiQLParserBuilder
  * ```
  */
 @ExperimentalPartiQLCompilerPipeline
+@Deprecated("To be removed in the next major version.", replaceWith = ReplaceWith("PartiQLCompilerPipelineAsync"))
 class PartiQLCompilerPipeline(
     private val parser: Parser,
     private val planner: PartiQLPlanner,
@@ -54,6 +55,7 @@ class PartiQLCompilerPipeline(
          * Returns a [PartiQLCompilerPipeline] with default parser, planner, and compiler configurations.
          */
         @JvmStatic
+        @Deprecated("To be removed in the next major version.", replaceWith = ReplaceWith("PartiQLCompilerPipelineAsync.standard"))
         fun standard() = PartiQLCompilerPipeline(
             parser = PartiQLParserBuilder.standard().build(),
             planner = PartiQLPlannerBuilder.standard().build(),
@@ -75,6 +77,7 @@ class PartiQLCompilerPipeline(
          * }
          * ```
          */
+        @Deprecated("To be removed in the next major version.", replaceWith = ReplaceWith("PartiQLCompilerPipelineAsync.build"))
         fun build(block: Builder.() -> Unit): PartiQLCompilerPipeline {
             val builder = Builder()
             block.invoke(builder)
@@ -89,6 +92,7 @@ class PartiQLCompilerPipeline(
     /**
      * Compiles a PartiQL query into an executable [PartiQLStatement].
      */
+    @Deprecated("To be removed in the next major version.", replaceWith = ReplaceWith("PartiQLCompilerPipelineAsync.compile"))
     fun compile(statement: String): PartiQLStatement {
         val ast = parser.parseAstStatement(statement)
         return compile(ast)
@@ -97,6 +101,7 @@ class PartiQLCompilerPipeline(
     /**
      * Compiles a [PartiqlAst.Statement] representation of a query into an executable [PartiQLStatement].
      */
+    @Deprecated("To be removed in the next major version.", replaceWith = ReplaceWith("PartiQLCompilerPipelineAsync.compile"))
     fun compile(statement: PartiqlAst.Statement): PartiQLStatement {
         val result = planner.plan(statement)
         if (result is PartiQLPlanner.Result.Error) {
@@ -110,10 +115,12 @@ class PartiQLCompilerPipeline(
      * Compiles a [PartiqlPhysical.Plan] representation of a query into an executable [PartiQLStatement].
      */
     @JvmOverloads
+    @Deprecated("To be removed in the next major version.", replaceWith = ReplaceWith("PartiQLCompilerPipelineAsync.compile"))
     fun compile(statement: PartiqlPhysical.Plan, details: PartiQLPlanner.PlanningDetails = PartiQLPlanner.PlanningDetails()): PartiQLStatement {
         return compiler.compile(statement, details)
     }
 
+    @Deprecated("To be removed in the next major version.", replaceWith = ReplaceWith("PartiQLCompilerPipelineAsync.Builder"))
     class Builder internal constructor() {
         var parser = PartiQLParserBuilder.standard()
         var planner = PartiQLPlannerBuilder.standard()

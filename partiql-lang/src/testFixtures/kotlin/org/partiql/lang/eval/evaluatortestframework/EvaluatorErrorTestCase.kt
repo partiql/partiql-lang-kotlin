@@ -55,8 +55,8 @@ data class EvaluatorErrorTestCase(
     val additionalExceptionAssertBlock: (SqlException) -> Unit = { },
 
     /**
-     * Determines which pipeline this test should run against; the [CompilerPipeline],
-     * [PartiQLCompilerPipeline] or both.
+     * Determines which pipeline this test should run against; the [CompilerPipeline], [PartiQLCompilerPipeline],
+     * [PartiQLCompilerPipelineAsync], or all of them.
      */
     override val targetPipeline: EvaluatorTestTarget = EvaluatorTestTarget.ALL_PIPELINES,
 

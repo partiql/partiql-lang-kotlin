@@ -25,6 +25,14 @@ class WindowFunctionTests : EvaluatorTestBase() {
         tc = tc.copy(targetPipeline = EvaluatorTestTarget.PARTIQL_PIPELINE),
         session = session
     )
+
+    @ParameterizedTest
+    @ArgumentsSource(LagFunctionTestsProvider::class)
+    fun lagFunctionTestsAsync(tc: EvaluatorTestCase) = runEvaluatorTestCase(
+        tc = tc.copy(targetPipeline = EvaluatorTestTarget.PARTIQL_PIPELINE_ASYNC),
+        session = session
+    )
+
     class LagFunctionTestsProvider : ArgumentsProviderBase() {
         override fun getParameters() = listOf(
             // Lag Function with PARTITION BY AND ORDER BY
@@ -205,6 +213,13 @@ class WindowFunctionTests : EvaluatorTestBase() {
         session = session
     )
 
+    @ParameterizedTest
+    @ArgumentsSource(LeadFunctionTestsProvider::class)
+    fun leadFunctionTestsAsync(tc: EvaluatorTestCase) = runEvaluatorTestCase(
+        tc = tc.copy(targetPipeline = EvaluatorTestTarget.PARTIQL_PIPELINE_ASYNC),
+        session = session
+    )
+
     class LeadFunctionTestsProvider : ArgumentsProviderBase() {
         override fun getParameters() = listOf(
             EvaluatorTestCase(
@@ -378,6 +393,14 @@ class WindowFunctionTests : EvaluatorTestBase() {
         tc = tc.copy(targetPipeline = EvaluatorTestTarget.PARTIQL_PIPELINE),
         session = session,
     )
+
+    @ParameterizedTest
+    @ArgumentsSource(MultipleFunctionTestsProvider::class)
+    fun multipleFunctionTestsAsync(tc: EvaluatorTestCase) = runEvaluatorTestCase(
+        tc = tc.copy(targetPipeline = EvaluatorTestTarget.PARTIQL_PIPELINE_ASYNC),
+        session = session,
+    )
+
     class MultipleFunctionTestsProvider : ArgumentsProviderBase() {
         override fun getParameters() = listOf(
             EvaluatorTestCase(

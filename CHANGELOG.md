@@ -29,11 +29,28 @@ Thank you to all who have contributed!
 
 ### Added
 - Added constrained decimal as valid parameter type to functions that take in numeric parameters. 
+- Added async version of physical plan evaluator `PartiQLCompilerAsync`. 
+  - The following related async APIs have been added:
+    - `org.partiql.lang.compiler` -- `PartiQLCompilerAsync`, `PartiQLCompilerAsyncBuilder`, `PartiQLCompilerAsyncDefault`, `PartiQLCompilerPipelineAsync`
+    - `org.partiql.lang.eval` -- `PartiQLStatementAsync`
+    - `org.partiql.lang.eval.physical` -- `VariableBindingAsync`
+    - `org.partiql.lang.eval.physical.operators` -- `AggregateOperatorFactoryAsync`, `CompiledGroupKeyAsync`, `CompiledAggregateFunctionAsync`, `FilterRelationalOperatorFactoryAsync`, `JoinRelationalOperatorFactoryAsync`, `LetRelationalOperatorFactoryAsync`, `LimitRelationalOperatorFactoryAsync`, `OffsetRelationalOperatorFactoryAsync`, `ProjectRelationalOperatorFactoryAsync`, `RelationExpressionAsync`, `ScanRelationalOperatorFactoryAsync`, `SortOperatorFactoryAsync`, `CompiledSortKeyAsync`, `UnpivotOperatorFactoryAsync`, `ValueExpressionAsync`, `WindowRelationalOperatorFactoryAsync`, `CompiledWindowFunctionAsync`
+    - `org.partiql.lang.eval.physical.window` -- `NavigationWindowFunctionAsync`, `WindowFunctionAsync`
+  - Overall, we see about a 10-20% performance decline in running a single query on the synchronous vs async evaluator
+    - JMH benchmarks added to partiql-lang: `PartiQLCompilerPipelineBenchmark` and `PartiQLCompilerPipelineAsyncBenchmark`
 
 ### Changed
 - Function resolution logic: Now the function resolver would match all possible candidate(based on if the argument can be coerced to the Signature parameter type). If there are multiple match it will first attempt to pick the one requires the least cast, then pick the function with the highest precedence. 
+- partiql-cli -- experimental version of CLI now uses the async physical plan evaluator
 
 ### Deprecated
+- As part of the additions to make an async physical plan evaluator, the synchronous physical plan evaluator `PartiQLCompiler` has been deprecated.
+  - The following related APIs have been deprecated
+    - `org.partiql.lang.compiler` -- `PartiQLCompiler`, `PartiQLCompilerBuilder`, `PartiQLCompilerDefault`, `PartiQLCompilerPipeline`
+    - `org.partiql.lang.eval` -- `PartiQLStatement`
+    - `org.partiql.lang.eval.physical` -- `VariableBinding`
+    - `org.partiql.lang.eval.physical.operators` -- `AggregateOperatorFactory`, `CompiledGroupKey`, `CompiledAggregateFunction`, `FilterRelationalOperatorFactory`, `JoinRelationalOperatorFactory`, `LetRelationalOperatorFactory`, `LimitRelationalOperatorFactory`, `OffsetRelationalOperatorFactory`, `ProjectRelationalOperatorFactory`, `RelationExpression`, `ScanRelationalOperatorFactory`, `SortOperatorFactory`, `CompiledSortKey`, `UnpivotOperatorFactory`, `ValueExpression`, `WindowRelationalOperatorFactory`, `CompiledWindowFunction`
+    - `org.partiql.lang.eval.physical.window` -- `NavigationWindowFunction`, `WindowFunction`
 
 ### Fixed
 - partiql-ast: `SqlDialect` will wrap unary ops (`NOT`, `+`, `-`) in parens
@@ -44,7 +61,7 @@ Thank you to all who have contributed!
 
 ### Contributors
 Thank you to all who have contributed!
-- @<your-username>
+- @alancai98
 
 ## [0.14.3] - 2024-02-14
 

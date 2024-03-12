@@ -17,7 +17,8 @@ package org.partiql.lang.eval
 /**
  * A compiled PartiQL statement
  */
+@Deprecated("To be removed in the next major version.", replaceWith = ReplaceWith("PartiQLStatementAsync"))
 fun interface PartiQLStatement {
-
+    @Deprecated("To be removed in next major version.", replaceWith = ReplaceWith("PartiQLStatementAsync.eval"))
     fun eval(session: EvaluationSession): PartiQLResult
 }

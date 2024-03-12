@@ -36,6 +36,7 @@ import org.partiql.lang.planner.PartiQLPlanner
 import org.partiql.lang.types.TypedOpParameter
 
 @ExperimentalPartiQLCompilerPipeline
+@Deprecated("To be removed in the next major version.", replaceWith = ReplaceWith("PartiQLCompilerAsyncDefault"))
 internal class PartiQLCompilerDefault(
     private val evaluatorOptions: EvaluatorOptions,
     private val customTypedOpParameters: Map<String, TypedOpParameter>,

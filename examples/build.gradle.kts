@@ -26,6 +26,8 @@ dependencies {
     implementation(project(":partiql-lang"))
     implementation(project(":partiql-eval"))
     implementation(project(":partiql-types"))
+    implementation(Deps.kotlinxCoroutines)
+    implementation(Deps.kotlinxCoroutinesJdk8)
     implementation(Deps.awsSdkS3)
 }
 

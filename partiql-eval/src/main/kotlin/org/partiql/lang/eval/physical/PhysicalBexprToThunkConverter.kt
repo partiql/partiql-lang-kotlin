@@ -1,6 +1,5 @@
 package org.partiql.lang.eval.physical
 
-import com.amazon.ionelement.api.BoolElement
 import com.amazon.ionelement.api.MetaContainer
 import org.partiql.annotations.ExperimentalWindowFunctions
 import org.partiql.lang.ast.SourceLocationMeta
@@ -325,6 +324,3 @@ internal class PhysicalBexprToThunkConverter(
         return bindingsExpr.toRelationThunk(node.metas)
     }
 }
-
-private fun PartiqlPhysical.Expr.isLitTrue() =
-    this is PartiqlPhysical.Expr.Lit && this.value is BoolElement && this.value.booleanValue
