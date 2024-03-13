@@ -28,6 +28,24 @@ Thank you to all who have contributed!
 ## [Unreleased]
 
 ### Added
+
+### Changed
+
+### Deprecated
+
+### Fixed
+
+### Removed
+
+### Security
+
+### Contributors
+Thank you to all who have contributed!
+- @<your-username>
+
+## [0.14.4]
+
+### Added
 - Added constrained decimal as valid parameter type to functions that take in numeric parameters. 
 - Added async version of physical plan evaluator `PartiQLCompilerAsync`. 
   - The following related async APIs have been added:
@@ -61,6 +79,7 @@ Thank you to all who have contributed!
 
 ### Contributors
 Thank you to all who have contributed!
+- @yliuuuu
 - @alancai98
 
 ## [0.14.3] - 2024-02-14
@@ -1053,7 +1072,8 @@ breaking changes if migrating from v0.9.2. The breaking changes accidentally int
 ### Added
 Initial alpha release of PartiQL.
 
-[Unreleased]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.3...HEAD
+[Unreleased]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.4...HEAD
+[0.14.4]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.3...v0.14.4
 [0.14.3]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.2...v0.14.3
 [0.14.2]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.1...v0.14.2
 [0.14.1]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.0-alpha...v0.14.1

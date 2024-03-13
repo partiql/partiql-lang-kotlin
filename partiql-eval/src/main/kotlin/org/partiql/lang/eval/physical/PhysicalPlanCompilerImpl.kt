@@ -26,6 +26,7 @@ import org.partiql.errors.Property
 import org.partiql.errors.PropertyValueMap
 import org.partiql.lang.ast.IsOrderedMeta
 import org.partiql.lang.ast.SourceLocationMeta
+import org.partiql.lang.ast.UNKNOWN_SOURCE_LOCATION
 import org.partiql.lang.ast.sourceLocation
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.domains.staticType
@@ -1900,6 +1901,14 @@ internal class PhysicalPlanCompilerImpl(
             },
             ordering
         )
+}
+
+internal val MetaContainer.sourceLocationMeta get() = this[SourceLocationMeta.TAG] as? SourceLocationMeta
+internal val MetaContainer.sourceLocationMetaOrUnknown get() = this.sourceLocationMeta ?: UNKNOWN_SOURCE_LOCATION
+
+internal fun StaticType.getTypes() = when (val flattened = this.flatten()) {
+    is AnyOfType -> flattened.types
+    else -> listOf(this)
 }
 
 /**
