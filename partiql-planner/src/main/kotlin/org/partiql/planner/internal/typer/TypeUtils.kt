@@ -120,7 +120,10 @@ private fun StaticType.asRuntimeType(): PartiQLValueType = when (this) {
     is ListType -> PartiQLValueType.LIST
     is SexpType -> PartiQLValueType.SEXP
     is DateType -> PartiQLValueType.DATE
-    is DecimalType -> PartiQLValueType.DECIMAL_ARBITRARY
+    is DecimalType -> when (this.precisionScaleConstraint) {
+        is DecimalType.PrecisionScaleConstraint.Constrained -> PartiQLValueType.DECIMAL
+        DecimalType.PrecisionScaleConstraint.Unconstrained -> PartiQLValueType.DECIMAL_ARBITRARY
+    }
     is FloatType -> PartiQLValueType.FLOAT64
     is GraphType -> error("Graph type missing from runtime types")
     is IntType -> when (this.rangeConstraint) {

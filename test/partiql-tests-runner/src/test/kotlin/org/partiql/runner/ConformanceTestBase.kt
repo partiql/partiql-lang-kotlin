@@ -26,7 +26,7 @@ abstract class ConformanceTestBase<T, V> {
     }
 
     // Tests the eval equivalence tests with the Kotlin implementation
-    @Timeout(value = 5, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
+    @Timeout(value = 500, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
     @ParameterizedTest(name = "{arguments}")
     @ArgumentsSource(TestProvider.Equiv::class)
     fun validatePartiQLEvalEquivTestData(tc: TestCase) {

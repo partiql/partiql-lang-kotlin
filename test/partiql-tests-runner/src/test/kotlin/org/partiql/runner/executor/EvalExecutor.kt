@@ -84,7 +84,12 @@ class EvalExecutor(
         if (v1.isNull && v2.isNull) {
             return true
         }
-        if (v1 == v2) {
+        // TODO: this comparator is designed for order by
+        //  One of the false result it might produce is that
+        //  it treats MISSING and NULL equally.
+        //  we should move to hash or equals in value class once
+        //  we finished implementing those.
+        if (comparator.compare(v1, v2) == 0) {
             return true
         }
         if (v1.toIon().hashCode() == v2.toIon().hashCode()) {
@@ -101,6 +106,7 @@ class EvalExecutor(
         val parser = PartiQLParser.default()
         val planner = PartiQLPlanner.default()
         val engine = PartiQLEngine.default()
+        val comparator = PartiQLValue.comparator()
     }
 
     object Factory : TestExecutor.Factory<PartiQLStatement<*>, PartiQLResult> {

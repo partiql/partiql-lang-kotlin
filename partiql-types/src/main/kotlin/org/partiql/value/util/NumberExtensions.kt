@@ -41,6 +41,7 @@ internal fun bigDecimalOf(num: Number, mc: MathContext = MATH_CONTEXT): BigDecim
     is Double -> BigDecimal(num, mc)
     is BigInteger -> BigDecimal(num, mc)
     is BigDecimal -> num
+    is BigInteger -> num.toBigDecimal()
     else -> throw IllegalArgumentException("Unsupported number type: $num, ${num.javaClass}")
 }
 
@@ -58,20 +59,23 @@ private val CONVERSION_MAP = mapOf<Set<Class<*>>, Class<out Number>>(
     setOf(Float::class.javaObjectType, Float::class.javaObjectType) to Float::class.javaObjectType,
     // Float w/ Long -> Double
     setOf(Float::class.javaObjectType, Long::class.javaObjectType) to Double::class.javaObjectType,
+    setOf(Float::class.javaObjectType, BigInteger::class.javaObjectType) to Double::class.javaObjectType,
     setOf(Float::class.javaObjectType, Double::class.javaObjectType) to Double::class.javaObjectType,
     setOf(Float::class.javaObjectType, BigDecimal::class.javaObjectType) to BigDecimal::class.javaObjectType,
 
     setOf(Long::class.javaObjectType, Long::class.javaObjectType) to Long::class.javaObjectType,
+    setOf(Long::class.javaObjectType, BigInteger::class.javaObjectType) to BigInteger::class.javaObjectType,
     setOf(Long::class.javaObjectType, Double::class.javaObjectType) to Double::class.javaObjectType,
     setOf(Long::class.javaObjectType, BigDecimal::class.javaObjectType) to BigDecimal::class.javaObjectType,
 
+    setOf(BigInteger::class.javaObjectType, BigInteger::class.javaObjectType) to BigInteger::class.javaObjectType,
     setOf(BigInteger::class.javaObjectType, Double::class.javaObjectType) to Double::class.javaObjectType,
     setOf(BigInteger::class.javaObjectType, BigDecimal::class.javaObjectType) to BigDecimal::class.javaObjectType,
 
     setOf(Double::class.javaObjectType, Double::class.javaObjectType) to Double::class.javaObjectType,
     setOf(Double::class.javaObjectType, BigDecimal::class.javaObjectType) to BigDecimal::class.javaObjectType,
 
-    setOf(BigDecimal::class.javaObjectType, BigDecimal::class.javaObjectType) to BigDecimal::class.javaObjectType
+    setOf(BigDecimal::class.javaObjectType, BigDecimal::class.javaObjectType) to BigDecimal::class.javaObjectType,
 )
 
 private val CONVERTERS = mapOf<Class<*>, (Number) -> Number>(
@@ -81,8 +85,12 @@ private val CONVERTERS = mapOf<Class<*>, (Number) -> Number>(
     Double::class.javaObjectType to Number::toDouble,
     BigInteger::class.javaObjectType to { num ->
         when (num) {
+            is Int -> num.toBigInteger()
+            is Long -> num.toBigInteger()
             is BigInteger -> num
-            else -> BigInteger.valueOf(num.toLong())
+            else -> throw IllegalArgumentException(
+                "Unsupported number for BigInteger conversion: $num"
+            )
         }
     },
     BigDecimal::class.java to { num ->
@@ -101,14 +109,13 @@ private val CONVERTERS = mapOf<Class<*>, (Number) -> Number>(
 )
 
 internal fun Number.isZero() = when (this) {
-    // using compareTo instead of equals for BigDecimal because equality also checks same scale
     is Int -> this == 0
     is Long -> this == 0L
     is Float -> this == 0.0f || this == -0.0f
     is Double -> this == 0.0 || this == -0.0
-    is BigDecimal -> BigDecimal.ZERO.compareTo(this) == 0
-    is BigInteger -> BigInteger.ZERO.compareTo(this) == 0
-    else -> throw IllegalStateException("$this (${this.javaClass.simpleName})")
+    is BigDecimal -> this.signum() == 0
+    is BigInteger -> this.signum() == 0
+    else -> throw IllegalStateException("$this")
 }
 
 @Suppress("UNCHECKED_CAST")

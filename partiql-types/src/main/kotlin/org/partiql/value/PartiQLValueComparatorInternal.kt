@@ -31,6 +31,7 @@ internal class PartiQLValueComparatorInternal(private val nullsFirst: Boolean) :
         }
 
         when {
+            // TODO: This is EQG-specific behavior. Do we want to leave it as-is in the Value comparator?
             l.isNullOrMissing() && r.isNullOrMissing() -> return EQUAL
             l.isNullOrMissing() -> return when (nullsFirst) {
                 true -> LESS
