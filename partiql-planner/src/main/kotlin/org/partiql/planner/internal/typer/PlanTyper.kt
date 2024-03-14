@@ -81,6 +81,7 @@ import org.partiql.types.ListType
 import org.partiql.types.MissingType
 import org.partiql.types.NullType
 import org.partiql.types.SexpType
+import org.partiql.types.SingleType
 import org.partiql.types.StaticType
 import org.partiql.types.StaticType.Companion.ANY
 import org.partiql.types.StaticType.Companion.BOOL
@@ -94,6 +95,7 @@ import org.partiql.types.TupleConstraint
 import org.partiql.types.function.FunctionSignature
 import org.partiql.value.BoolValue
 import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.PartiQLValueType
 import org.partiql.value.TextValue
 import org.partiql.value.boolValue
 import org.partiql.value.missingValue
@@ -594,7 +596,8 @@ internal class PlanTyper(
                     }
                     val candidates = match.candidates.map { candidate ->
                         val rex = toRexCall(candidate, args, isNotMissable)
-                        val staticCall = rex.op as? Rex.Op.Call.Static ?: error("ToRexCall should always return a static call.")
+                        val staticCall =
+                            rex.op as? Rex.Op.Call.Static ?: error("ToRexCall should always return a static call.")
                         val resolvedFn = staticCall.fn as? Fn.Resolved ?: error("This should have been resolved")
                         types.add(rex.type)
                         val coercions = candidate.mapping.map { it?.let { fnResolved(it) } }
@@ -614,7 +617,11 @@ internal class PlanTyper(
             return rex(ANY, rexOpErr("Direct dynamic calls are not supported. This should have been a static call."))
         }
 
-        private fun toRexCall(match: FnMatch.Ok<FunctionSignature.Scalar>, args: List<Rex>, isNotMissable: Boolean): Rex {
+        private fun toRexCall(
+            match: FnMatch.Ok<FunctionSignature.Scalar>,
+            args: List<Rex>,
+            isNotMissable: Boolean,
+        ): Rex {
             // Found a match!
             val newFn = fnResolved(match.signature)
             val newArgs = rewriteFnArgs(match.mapping, args)
@@ -681,34 +688,51 @@ internal class PlanTyper(
         }
 
         override fun visitRexOpCase(node: Rex.Op.Case, ctx: StaticType?): Rex {
-            // Type branches and prune branches known to never execute
-            val newBranches = node.branches.map { visitRexOpCaseBranch(it, it.rex.type) }
-                .filterNot { isLiteralBool(it.condition, false) }
+            // Rewrite CASE-WHEN branches
+            val oldBranches = node.branches.toTypedArray()
+            val newBranches = mutableListOf<Rex.Op.Case.Branch>()
+            val typer = DynamicTyper()
+            for (i in oldBranches.indices) {
 
-            newBranches.forEach { branch ->
-                if (canBeBoolean(branch.condition.type).not()) {
+                // Type the branch
+                var branch = oldBranches[i]
+                branch = visitRexOpCaseBranch(branch, branch.rex.type)
+
+                // Check if branch condition is a literal
+                val condition = branch.condition
+                when (boolOrNull(condition.op)) {
+                    true -> return branch.rex // fold
+                    false -> continue // prune
+                    null -> {}
+                }
+
+                // Emit typing error if a branch condition is never a boolean (prune)
+                if (!canBeBoolean(condition.type)) {
                     onProblem.invoke(
                         Problem(
                             UNKNOWN_PROBLEM_LOCATION,
                             PlanningProblemDetails.IncompatibleTypesForOp(branch.condition.type.allTypes, "CASE_WHEN")
                         )
                     )
+                    // prune, always false
+                    continue
                 }
-            }
-            val default = visitRex(node.default, node.default.type)
 
-            // Calculate final expression (short-circuit to first branch if the condition is always TRUE).
-            val resultTypes = newBranches.map { it.rex }.map { it.type } + listOf(default.type)
-            return when (newBranches.size) {
-                0 -> default
-                else -> when (isLiteralBool(newBranches[0].condition, true)) {
-                    true -> newBranches[0].rex
-                    false -> rex(
-                        type = StaticType.unionOf(resultTypes.toSet()).flatten(),
-                        node.copy(branches = newBranches, default = default)
-                    )
-                }
+                // Accumulate typing information
+                typer.accumulate(branch.rex.type)
+                newBranches.add(branch)
             }
+
+            // Rewrite ELSE branch
+            val newDefault = visitRex(node.default, node.default.type)
+            if (newBranches.isEmpty()) {
+                return newDefault
+            }
+            typer.accumulate(newDefault.type)
+
+            val type = typer.type()
+            val op = Rex.Op.Case(newBranches, newDefault)
+            return rex(type, op)
         }
 
         /**
@@ -723,11 +747,12 @@ internal class PlanTyper(
             }
         }
 
+        /**
+         * Returns the boolean value of the expression. For now, only handle literals.
+         */
         @OptIn(PartiQLValueExperimental::class)
-        private fun isLiteralBool(rex: Rex, bool: Boolean): Boolean {
-            val op = rex.op as? Rex.Op.Lit ?: return false
-            val value = op.value as? BoolValue ?: return false
-            return value.value == bool
+        private fun boolOrNull(op: Rex.Op): Boolean? {
+            return if (op is Rex.Op.Lit && op.value is BoolValue) op.value.value else null
         }
 
         /**
@@ -1242,7 +1267,8 @@ internal class PlanTyper(
         is Identifier.Symbol -> BindingPath(listOf(this.toBindingName()))
     }
 
-    private fun Identifier.Qualified.toBindingPath() = BindingPath(steps = listOf(this.root.toBindingName()) + steps.map { it.toBindingName() })
+    private fun Identifier.Qualified.toBindingPath() =
+        BindingPath(steps = listOf(this.root.toBindingName()) + steps.map { it.toBindingName() })
 
     private fun Identifier.Symbol.toBindingName() = BindingName(
         name = symbol,
