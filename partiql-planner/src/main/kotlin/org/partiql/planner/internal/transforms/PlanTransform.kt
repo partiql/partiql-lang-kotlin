@@ -72,7 +72,7 @@ internal object PlanTransform {
         override fun visitRefAgg(node: Ref.Agg, ctx: Unit) = symbols.insert(node)
 
         @OptIn(PartiQLValueExperimental::class)
-        override fun visitRefCast(node: Ref.Cast, ctx: Unit) = org.partiql.plan.refCast(node.input, node.target)
+        override fun visitRefCast(node: Ref.Cast, ctx: Unit) = org.partiql.plan.refCast(node.input, node.target, node.isNullable)
 
         override fun visitStatement(node: Statement, ctx: Unit) =
             super.visitStatement(node, ctx) as org.partiql.plan.Statement
@@ -184,11 +184,10 @@ internal object PlanTransform {
             )
         }
 
-        @OptIn(PartiQLValueExperimental::class)
         override fun visitRexOpCallDynamicCandidate(node: Rex.Op.Call.Dynamic.Candidate, ctx: Unit): PlanNode {
             val fn = visitRef(node.fn, ctx)
             val coercions = node.coercions.map { it?.let { visitRefCast(it, ctx) } }
-            return org.partiql.plan.Rex.Op.Call.Dynamic.Candidate(fn, node.parameters, coercions)
+            return org.partiql.plan.Rex.Op.Call.Dynamic.Candidate(fn, coercions)
         }
 
         override fun visitRexOpCase(node: Rex.Op.Case, ctx: Unit) = org.partiql.plan.Rex.Op.Case(

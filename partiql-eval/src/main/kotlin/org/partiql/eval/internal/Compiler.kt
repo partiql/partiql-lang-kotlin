@@ -204,7 +204,7 @@ internal class Compiler(
         }
     }
 
-    @OptIn(FnExperimental::class, PartiQLValueExperimental::class)
+    @OptIn(FnExperimental::class)
     override fun visitRexOpCallDynamic(node: Rex.Op.Call.Dynamic, ctx: StaticType?): Operator {
         val args = node.args.map { visitRex(it, ctx).modeHandled() }.toTypedArray()
         val candidates = node.candidates.map { candidate ->

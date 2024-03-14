@@ -729,7 +729,7 @@ class PlanTyperTestsPorted {
             SuccessTestCase(
                 name = "BITWISE_AND_NULL_OPERAND",
                 query = "1 & NULL",
-                expected = StaticType.NULL,
+                expected = StaticType.unionOf(StaticType.INT4, StaticType.NULL),
             ),
             ErrorTestCase(
                 name = "BITWISE_AND_MISSING_OPERAND",

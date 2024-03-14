@@ -3,6 +3,7 @@ package org.partiql.planner.internal.typer.predicate
 import org.junit.jupiter.api.DynamicContainer
 import org.junit.jupiter.api.TestFactory
 import org.partiql.planner.internal.typer.PartiQLTyperTestBase
+import org.partiql.planner.internal.typer.accumulateSuccessNullCall
 import org.partiql.planner.util.allNumberType
 import org.partiql.planner.util.allSupportedType
 import org.partiql.planner.util.cartesianProduct
@@ -51,19 +52,7 @@ class OpBetweenTest : PartiQLTyperTestBase() {
             }.toSet()
 
             successArgs.forEach { args: List<StaticType> ->
-                val arg0 = args.first()
-                val arg1 = args[1]
-                val arg2 = args[2]
-                if (args.contains(StaticType.NULL)) {
-                    (this[TestResult.Success(StaticType.NULL)] ?: setOf(args)).let {
-                        put(TestResult.Success(StaticType.NULL), it + setOf(args))
-                    }
-                } else {
-                    (this[TestResult.Success(StaticType.BOOL)] ?: setOf(args)).let {
-                        put(TestResult.Success(StaticType.BOOL), it + setOf(args))
-                    }
-                }
-                Unit
+                accumulateSuccessNullCall(StaticType.BOOL, args)
             }
             put(TestResult.Failure, failureArgs)
         }

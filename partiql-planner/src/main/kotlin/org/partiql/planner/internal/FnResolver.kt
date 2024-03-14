@@ -11,7 +11,6 @@ import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
 import org.partiql.value.PartiQLValueType.ANY
-import org.partiql.value.PartiQLValueType.NULL
 
 /**
  *
@@ -66,15 +65,18 @@ internal object FnResolver {
             m
         }
 
-        // Remove duplicates while maintaining order (precedence).
-        val orderedUniqueFunctions = matches.toSet().toList()
-        val n = orderedUniqueFunctions.size
+        // Order based on original candidate function ordering
+        val orderedUniqueMatches = matches.toSet().toList()
+        val orderedCandidates = candidates.flatMap { candidate ->
+            orderedUniqueMatches.filter { it.fn.signature == candidate }
+        }
 
         // Static call iff only one match for every branch
+        val n = orderedCandidates.size
         return when {
             n == 0 -> null
-            n == 1 && exhaustive -> orderedUniqueFunctions.first().fn
-            else -> FnMatch.Dynamic(orderedUniqueFunctions, exhaustive)
+            n == 1 && exhaustive -> orderedCandidates.first().fn
+            else -> FnMatch.Dynamic(orderedCandidates, exhaustive)
         }
     }
 
@@ -89,7 +91,7 @@ internal object FnResolver {
         // 1. Check for an exact match
         for (candidate in candidates) {
             if (candidate.matches(args)) {
-                return FnMatch.Dynamic.Candidate(fn = FnMatch.Static(candidate, arrayOfNulls(args.size)), args)
+                return FnMatch.Dynamic.Candidate(fn = FnMatch.Static(candidate, arrayOfNulls(args.size)))
             }
         }
         // 2. Look for best match (for now, first match).
@@ -136,16 +138,14 @@ internal object FnResolver {
                 arg == p.type -> continue
                 // 2. Match ANY, no coercion needed
                 p.type == ANY -> continue
-                // 3. Match NULL argument
-                arg == NULL -> continue
-                // 4. Check for a coercion
+                // 3. Check for a coercion
                 else -> when (val coercion = casts.lookupCoercion(arg, p.type)) {
                     null -> return null // short-circuit
                     else -> mapping[i] = coercion
                 }
             }
         }
-        return FnMatch.Dynamic.Candidate(fn = FnMatch.Static(this, mapping), args)
+        return FnMatch.Dynamic.Candidate(fn = FnMatch.Static(this, mapping))
     }
 
     private fun buildArgumentPermutations(args: List<StaticType>): List<List<StaticType>> {

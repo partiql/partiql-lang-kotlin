@@ -158,6 +158,7 @@ internal sealed class Ref : PlanNode() {
         @JvmField internal val input: PartiQLValueType,
         @JvmField internal val target: PartiQLValueType,
         @JvmField internal val safety: Safety,
+        @JvmField internal val isNullable: Boolean,
     ) : PlanNode() {
         public override val children: List<PlanNode> = emptyList()
 
@@ -529,7 +530,6 @@ internal data class Rex(
 
                 internal data class Candidate(
                     @JvmField internal val fn: Ref.Fn,
-                    @JvmField internal val parameters: List<PartiQLValueType>,
                     @JvmField internal val coercions: List<Ref.Cast?>,
                 ) : PlanNode() {
                     public override val children: List<PlanNode> by lazy {

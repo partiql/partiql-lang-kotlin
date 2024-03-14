@@ -7,6 +7,7 @@ import org.partiql.parser.PartiQLParser
 import org.partiql.plan.Statement
 import org.partiql.plan.debug.PlanPrinter
 import org.partiql.planner.PartiQLPlanner
+import org.partiql.planner.PlanningProblemDetails
 import org.partiql.planner.test.PartiQLTest
 import org.partiql.planner.test.PartiQLTestProvider
 import org.partiql.planner.util.ProblemCollector
@@ -106,7 +107,11 @@ abstract class PartiQLTyperTestBase {
                                     PlanPrinter.append(this, result.plan)
                                 }
                             }
-                            assert(pc.problems.isEmpty()) {
+                            // We need to allow for the testing of null/missing
+                            val problemsWithoutNullMissing = pc.problems.filterNot {
+                                it.details is PlanningProblemDetails.ExpressionAlwaysReturnsNullOrMissing
+                            }
+                            assert(problemsWithoutNullMissing.isEmpty()) {
                                 buildString {
                                     this.appendLine("expected success Test case to have no problem")
                                     this.appendLine("actual problems are: ")

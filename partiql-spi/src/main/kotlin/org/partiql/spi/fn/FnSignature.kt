@@ -21,7 +21,7 @@ import org.partiql.value.PartiQLValueType
  */
 @FnExperimental
 @OptIn(PartiQLValueExperimental::class)
-public class FnSignature(
+public data class FnSignature(
     @JvmField public val name: String,
     @JvmField public val returns: PartiQLValueType,
     @JvmField public val parameters: List<FnParameter>,
@@ -50,38 +50,6 @@ public class FnSignature(
      * @return
      */
     override fun toString(): String = specific
-
-    override fun equals(other: Any?): Boolean {
-        if (other !is FnSignature) return false
-        if (
-            other.name != name ||
-            other.returns != returns ||
-            other.parameters.size != parameters.size ||
-            other.isDeterministic != isDeterministic ||
-            other.isNullCall != isNullCall ||
-            other.isNullable != isNullable
-        ) {
-            return false
-        }
-        // all other parts equal, compare parameters (ignore names)
-        for (i in parameters.indices) {
-            val p1 = parameters[i]
-            val p2 = other.parameters[i]
-            if (p1.type != p2.type) return false
-        }
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = name.hashCode()
-        result = 31 * result + returns.hashCode()
-        result = 31 * result + parameters.hashCode()
-        result = 31 * result + isDeterministic.hashCode()
-        result = 31 * result + isNullCall.hashCode()
-        result = 31 * result + isNullable.hashCode()
-        result = 31 * result + (description?.hashCode() ?: 0)
-        return result
-    }
 
     // Logic for writing a [FunctionSignature] using SQL `CREATE FUNCTION` syntax.
 
