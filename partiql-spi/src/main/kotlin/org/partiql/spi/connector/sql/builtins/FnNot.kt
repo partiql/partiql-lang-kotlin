@@ -26,7 +26,7 @@ internal object Fn_NOT__BOOL__BOOL : Fn {
         isNullable = false,
         isNullCall = true,
         isMissable = false,
-        isMissingCall = false,
+        isMissingCall = true,
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
@@ -40,12 +40,12 @@ internal object Fn_NOT__MISSING__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "not",
-        returns = BOOL,
+        returns = MISSING,
         parameters = listOf(FnParameter("value", MISSING)),
         isNullable = false,
         isNullCall = true,
-        isMissable = false,
-        isMissingCall = false,
+        isMissable = true,
+        isMissingCall = true,
     )
 
     // TODO: determine what this behavior should be

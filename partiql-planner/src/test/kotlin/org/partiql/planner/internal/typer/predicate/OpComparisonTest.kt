@@ -3,8 +3,10 @@ package org.partiql.planner.internal.typer.predicate
 import org.junit.jupiter.api.DynamicContainer
 import org.junit.jupiter.api.TestFactory
 import org.partiql.planner.internal.typer.PartiQLTyperTestBase
+import org.partiql.planner.internal.typer.accumulateSuccess
 import org.partiql.planner.util.allSupportedType
 import org.partiql.planner.util.cartesianProduct
+import org.partiql.types.MissingType
 import org.partiql.types.StaticType
 import java.util.stream.Stream
 
@@ -20,22 +22,11 @@ class OpComparisonTest : PartiQLTyperTestBase() {
         ).map { inputs.get("basics", it)!! }
         val argsMap = buildMap {
             val successArgs = cartesianProduct(allSupportedType, allSupportedType)
-
             successArgs.forEach { args: List<StaticType> ->
-                if (args.contains(StaticType.MISSING)) {
-                    (this[TestResult.Success(StaticType.NULL)] ?: setOf(args)).let {
-                        put(TestResult.Success(StaticType.NULL), it + setOf(args))
-                    }
-                } else if (args.contains(StaticType.NULL)) {
-                    (this[TestResult.Success(StaticType.NULL)] ?: setOf(args)).let {
-                        put(TestResult.Success(StaticType.NULL), it + setOf(args))
-                    }
-                } else {
-                    (this[TestResult.Success(StaticType.BOOL)] ?: setOf(args)).let {
-                        put(TestResult.Success(StaticType.BOOL), it + setOf(args))
-                    }
+                when (args.any { it is MissingType }) {
+                    true -> accumulateSuccess(StaticType.MISSING, args)
+                    false -> accumulateSuccess(StaticType.BOOL, args)
                 }
-                put(TestResult.Failure, emptySet<List<StaticType>>())
             }
         }
 
@@ -85,16 +76,7 @@ class OpComparisonTest : PartiQLTyperTestBase() {
             }.toSet()
 
             successArgs.forEach { args: List<StaticType> ->
-                if (args.contains(StaticType.NULL)) {
-                    (this[TestResult.Success(StaticType.NULL)] ?: setOf(args)).let {
-                        put(TestResult.Success(StaticType.NULL), it + setOf(args))
-                    }
-                } else {
-                    (this[TestResult.Success(StaticType.BOOL)] ?: setOf(args)).let {
-                        put(TestResult.Success(StaticType.BOOL), it + setOf(args))
-                    }
-                }
-                Unit
+                accumulateSuccess(StaticType.BOOL, args)
             }
             put(TestResult.Failure, failureArgs)
         }

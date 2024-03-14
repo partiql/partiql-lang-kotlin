@@ -69,6 +69,7 @@ internal object Fn_EQ__ANY_ANY__BOOL : Fn {
 
     private val comparator = PartiQLValue.comparator()
 
+    // Since the ANY_ANY function is the catch-all, we must be able to take in nulls. Therefore, isNullCall must be false.
     override val signature = FnSignature(
         name = "eq",
         returns = BOOL,
@@ -77,19 +78,16 @@ internal object Fn_EQ__ANY_ANY__BOOL : Fn {
             FnParameter("rhs", ANY),
         ),
         isNullable = false,
-        isNullCall = true,
+        isNullCall = false,
         isMissable = false,
-        isMissingCall = false,
+        isMissingCall = true,
     )
 
     // TODO ANY, ANY equals not clearly defined at the moment.
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val lhs = args[0]
         val rhs = args[1]
-        return when {
-            lhs.type == MISSING || rhs.type == MISSING -> boolValue(lhs == rhs)
-            else -> boolValue(comparator.compare(lhs, rhs) == 0)
-        }
+        return boolValue(comparator.compare(lhs, rhs) == 0)
     }
 }
 
@@ -686,9 +684,8 @@ internal object Fn_EQ__NULL_NULL__BOOL : Fn {
 
     // TODO how does null comparison work? ie null.null == null.null or int8.null == null.null ??
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val lhs = args[0]
-        val rhs = args[1]
-        return boolValue(lhs.isNull == rhs.isNull)
+        // According to the conformance tests, NULL = NULL -> NULL
+        return boolValue(null)
     }
 }
 
@@ -705,7 +702,7 @@ internal object Fn_EQ__MISSING_MISSING__BOOL : Fn {
         isNullable = false,
         isNullCall = true,
         isMissable = false,
-        isMissingCall = false,
+        isMissingCall = true,
     )
 
     // TODO how does `=` work with MISSING? As of now, always false.

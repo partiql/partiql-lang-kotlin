@@ -41,7 +41,8 @@ ref::[
         COERCION, // Lossless CAST(V AS T) -> T
         EXPLICIT, // Lossy    CAST(V AS T) -> T
         UNSAFE,   //          CAST(V AS T) -> T|MISSING
-      ]
+      ],
+      isNullable: bool
     }
   ]
 ]
@@ -141,7 +142,6 @@ rex::{
       // Represents a dynamic function call. If all candidates are exhausted, dynamic calls will return MISSING.
       //
       // args: represent the original typed arguments. These will eventually be wrapped by coercions from [candidates].
-      // parameters: represents the input type(s) to match. (ex: INT32)
       // candidates: represent the potentially applicable resolved functions with coercions. Each of these candidates
       //  should be overloaded functions of the same name and number of arguments.
       dynamic::{
@@ -151,7 +151,6 @@ rex::{
         _: [
           candidate::{
             fn: '.ref.fn',
-            parameters: list::[partiql_value_type],
             coercions: list::[optional::'.ref.cast'],
           }
         ]
