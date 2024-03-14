@@ -32,10 +32,14 @@ internal object Fn_AND__BOOL_BOOL__BOOL : Fn {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val lhs = args[0].check<BoolValue>().value!!
-        val rhs = args[1].check<BoolValue>().value!!
+        val lhs = args[0].check<BoolValue>()
+        val rhs = args[1].check<BoolValue>()
+        // SQL:1999 Section 6.30 Table 13
         val toReturn = when {
-            !lhs || !rhs -> false
+            lhs.isNull && rhs.isNull -> null
+            lhs.value == true && rhs.isNull -> null
+            rhs.value == true && lhs.isNull -> null
+            lhs.value == false || rhs.value == false -> false
             else -> true
         }
         return boolValue(toReturn)

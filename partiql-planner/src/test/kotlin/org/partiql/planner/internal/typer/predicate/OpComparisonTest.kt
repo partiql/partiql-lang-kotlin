@@ -4,9 +4,11 @@ import org.junit.jupiter.api.DynamicContainer
 import org.junit.jupiter.api.TestFactory
 import org.partiql.planner.internal.typer.PartiQLTyperTestBase
 import org.partiql.planner.internal.typer.accumulateSuccess
+import org.partiql.planner.internal.typer.accumulateSuccessNullCall
 import org.partiql.planner.util.allSupportedType
 import org.partiql.planner.util.cartesianProduct
 import org.partiql.types.MissingType
+import org.partiql.types.NullType
 import org.partiql.types.StaticType
 import java.util.stream.Stream
 
@@ -20,12 +22,12 @@ class OpComparisonTest : PartiQLTyperTestBase() {
             "expr-08", // Not Equal !=
             "expr-09", // Not Equal <>
         ).map { inputs.get("basics", it)!! }
-        val argsMap = buildMap {
+        val argsMap: Map<TestResult, Set<List<StaticType>>> = buildMap {
             val successArgs = cartesianProduct(allSupportedType, allSupportedType)
             successArgs.forEach { args: List<StaticType> ->
-                when (args.any { it is MissingType }) {
-                    true -> accumulateSuccess(StaticType.MISSING, args)
-                    false -> accumulateSuccess(StaticType.BOOL, args)
+                when {
+                    args.any { it is MissingType } && args.any { it is NullType } -> accumulateSuccess(StaticType.BOOL, args)
+                    args.any { it is MissingType } && args.any { it is NullType } -> accumulateSuccess(StaticType.BOOL, args)
                 }
             }
         }
@@ -76,7 +78,7 @@ class OpComparisonTest : PartiQLTyperTestBase() {
             }.toSet()
 
             successArgs.forEach { args: List<StaticType> ->
-                accumulateSuccess(StaticType.BOOL, args)
+                accumulateSuccessNullCall(StaticType.BOOL, args)
             }
             put(TestResult.Failure, failureArgs)
         }

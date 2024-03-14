@@ -3,7 +3,7 @@ package org.partiql.planner.internal.typer.predicate
 import org.junit.jupiter.api.DynamicContainer
 import org.junit.jupiter.api.TestFactory
 import org.partiql.planner.internal.typer.PartiQLTyperTestBase
-import org.partiql.planner.internal.typer.accumulateSuccess
+import org.partiql.planner.internal.typer.accumulateSuccessNullCall
 import org.partiql.planner.internal.typer.accumulateSuccesses
 import org.partiql.planner.util.allSupportedType
 import org.partiql.types.MissingType
@@ -28,7 +28,7 @@ class OpTypeAssertionTest : PartiQLTyperTestBase() {
             }.toSet()
             val failureArgs = setOf(listOf(MissingType))
             accumulateSuccesses(StaticType.BOOL, successArgs)
-            accumulateSuccess(StaticType.BOOL, listOf(StaticType.NULL))
+            accumulateSuccessNullCall(StaticType.BOOL, listOf(StaticType.NULL))
             put(TestResult.Failure, failureArgs)
         }
 

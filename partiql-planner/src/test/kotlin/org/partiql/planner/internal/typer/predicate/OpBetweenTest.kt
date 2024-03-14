@@ -3,7 +3,7 @@ package org.partiql.planner.internal.typer.predicate
 import org.junit.jupiter.api.DynamicContainer
 import org.junit.jupiter.api.TestFactory
 import org.partiql.planner.internal.typer.PartiQLTyperTestBase
-import org.partiql.planner.internal.typer.accumulateSuccess
+import org.partiql.planner.internal.typer.accumulateSuccessNullCall
 import org.partiql.planner.util.allNumberType
 import org.partiql.planner.util.allSupportedType
 import org.partiql.planner.util.cartesianProduct
@@ -52,7 +52,7 @@ class OpBetweenTest : PartiQLTyperTestBase() {
             }.toSet()
 
             successArgs.forEach { args: List<StaticType> ->
-                accumulateSuccess(StaticType.BOOL, args)
+                accumulateSuccessNullCall(StaticType.BOOL, args)
             }
             put(TestResult.Failure, failureArgs)
         }

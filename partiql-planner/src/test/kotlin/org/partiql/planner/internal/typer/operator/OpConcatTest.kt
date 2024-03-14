@@ -3,7 +3,7 @@ package org.partiql.planner.internal.typer.operator
 import org.junit.jupiter.api.DynamicContainer
 import org.junit.jupiter.api.TestFactory
 import org.partiql.planner.internal.typer.PartiQLTyperTestBase
-import org.partiql.planner.internal.typer.accumulateSuccess
+import org.partiql.planner.internal.typer.accumulateSuccessNullCall
 import org.partiql.planner.util.CastType
 import org.partiql.planner.util.allSupportedType
 import org.partiql.planner.util.allTextType
@@ -48,7 +48,7 @@ class OpConcatTest : PartiQLTyperTestBase() {
                     castTable(arg0, arg1) == CastType.COERCION -> arg1
                     else -> error("Arguments do not conform to parameters. Args: $args")
                 }
-                accumulateSuccess(output, args)
+                accumulateSuccessNullCall(output, args)
             }
             put(TestResult.Failure, failureArgs)
         }
