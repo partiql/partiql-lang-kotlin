@@ -41,11 +41,6 @@ class EvalExecutor(
     override fun prepare(statement: String): PartiQLStatement<*> {
         val stmt = parser.parse(statement).root
         val plan = planner.plan(stmt, plannerSession)
-        println(
-            buildString {
-                PlanPrinter.append(this, plan.plan)
-            }
-        )
         return engine.prepare(plan.plan, evalSession)
     }
 
