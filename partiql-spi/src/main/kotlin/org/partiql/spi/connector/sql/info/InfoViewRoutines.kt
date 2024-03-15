@@ -5,7 +5,6 @@ import org.partiql.shape.PShape
 import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.Index
-import org.partiql.value.AnyType
 import org.partiql.value.BagType
 import org.partiql.value.CharVarUnboundedType
 import org.partiql.value.PartiQLValue
@@ -19,7 +18,7 @@ import org.partiql.value.nullValue
 internal class InfoViewRoutines @OptIn(FnExperimental::class) constructor(private val index: Index<Fn>) : InfoView {
 
     override val schema = PShape.of(
-        type = BagType(AnyType),
+        type = BagType,
         constraint = Fields(
             fields = listOf(
                 Fields.Field("ROUTINE_NAME", CharVarUnboundedType),

@@ -64,7 +64,6 @@ import org.partiql.planner.internal.ir.relOpSortSpec
 import org.partiql.planner.internal.ir.relOpUnion
 import org.partiql.planner.internal.ir.relOpUnpivot
 import org.partiql.planner.internal.ir.relType
-import org.partiql.planner.internal.ir.rex
 import org.partiql.planner.internal.ir.rexOpLit
 import org.partiql.planner.internal.ir.rexOpPivot
 import org.partiql.planner.internal.ir.rexOpSelect
@@ -104,7 +103,7 @@ internal object RelConverter {
             is Select.Pivot -> {
                 val key = projection.key.toRex(env)
                 val value = projection.value.toRex(env)
-                val type = TupleType(AnyType)
+                val type = TupleType
                 val op = rexOpPivot(key, value, rel)
                 rex(type, op)
             }
@@ -117,8 +116,8 @@ internal object RelConverter {
                 val constructor = rex(AnyType, rexOpVarLocal(0, 0))
                 val op = rexOpSelect(constructor, rel)
                 val type = when (rel.type.props.contains(Rel.Prop.ORDERED)) {
-                    true -> ArrayType(AnyType)
-                    else -> BagType(AnyType)
+                    true -> ArrayType
+                    else -> BagType
                 }
                 rex(type, op)
             }

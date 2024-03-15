@@ -332,9 +332,9 @@ public sealed interface PShape : ShapeNode {
                             else -> AnyType
                         }
                         val type = when (type) {
-                            is org.partiql.types.BagType -> BagType(pElement)
-                            is ListType -> ArrayType(pElement)
-                            is SexpType -> ArrayType(pElement)
+                            is org.partiql.types.BagType -> BagType
+                            is ListType -> ArrayType
+                            is SexpType -> ArrayType
                         }
                         PShape.of(
                             type = type

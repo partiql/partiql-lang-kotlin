@@ -32,7 +32,7 @@ internal class ListValueImpl<T : PartiQLValue>(
     private val elementType: PartiQLType = AnyType
 ) : ListValue<T>() {
 
-    override val type: PartiQLType = ArrayType(elementType)
+    override val type: PartiQLType = ArrayType
 
     override val isNull: Boolean = delegate == null
 

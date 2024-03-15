@@ -107,10 +107,10 @@ public sealed interface PartiQLType {
             PartiQLValueType.TIME -> TimeType(TimeType.MAX_PRECISION)
             PartiQLValueType.TIMESTAMP -> TimestampType(TimestampType.MAX_PRECISION)
             PartiQLValueType.INTERVAL -> IntervalType(IntervalType.MAX_PRECISION)
-            PartiQLValueType.BAG -> BagType(AnyType)
-            PartiQLValueType.LIST -> ArrayType(AnyType)
-            PartiQLValueType.SEXP -> ArrayType(AnyType)
-            PartiQLValueType.STRUCT -> TupleType(AnyType)
+            PartiQLValueType.BAG -> BagType
+            PartiQLValueType.LIST -> ArrayType
+            PartiQLValueType.SEXP -> ArrayType
+            PartiQLValueType.STRUCT -> TupleType
             PartiQLValueType.NULL -> NullType
             PartiQLValueType.MISSING -> MissingType
         }
@@ -121,9 +121,9 @@ public sealed interface PartiQLType {
             is org.partiql.types.BlobType -> BlobType(BlobType.MAXIMUM_LENGTH) // TODO
             is org.partiql.types.BoolType -> BoolType
             is org.partiql.types.ClobType -> ClobType(ClobType.MAX_LENGTH)
-            is org.partiql.types.BagType -> BagType()
-            is ListType -> ArrayType()
-            is SexpType -> ArrayType()
+            is org.partiql.types.BagType -> BagType
+            is ListType -> ArrayType
+            is SexpType -> ArrayType
             is org.partiql.types.DateType -> DateType
             is DecimalType -> {
                 when (val constraint = type.precisionScaleConstraint) {
@@ -141,7 +141,7 @@ public sealed interface PartiQLType {
             }
             org.partiql.types.MissingType -> MissingType
             is StringType -> CharVarUnboundedType
-            is StructType -> TupleType()
+            is StructType -> TupleType
             is SymbolType -> CharVarUnboundedType
             is org.partiql.types.TimeType -> TimeType(TimeType.MAX_PRECISION)
             is org.partiql.types.TimestampType -> TimestampType(TimestampType.MAX_PRECISION)
@@ -251,14 +251,14 @@ public sealed interface PartiQLType {
         @JvmStatic
         @Deprecated("Will likely be removed")
         public val COLLECTION_TYPES: List<PartiQLType> = buildList {
-            add(ArrayType())
-            add(BagType())
+            add(ArrayType)
+            add(BagType)
         }
 
         @JvmStatic
         @Deprecated("Will likely be removed")
         public val COMPLEX_TYPES: List<PartiQLType> = buildList {
-            add(TupleType())
+            add(TupleType)
         }
 
         @JvmStatic
@@ -559,11 +559,9 @@ public data class IntervalType(
 /**
  * PartiQL's BAG type
  */
-public data class BagType(
-    val element: PartiQLType = AnyType
-) : PartiQLCoreTypeBase() {
+public object BagType : PartiQLCoreTypeBase() {
     override val name: String = "BAG"
-    override fun toString(): String = "${this.name}(${this.element})"
+    override fun toString(): String = this.name
 }
 
 /**
@@ -571,11 +569,9 @@ public data class BagType(
  *
  * Aliases include LIST
  */
-public data class ArrayType(
-    val element: PartiQLType = AnyType
-) : PartiQLCoreTypeBase() {
+public object ArrayType : PartiQLCoreTypeBase() {
     override val name: String = "ARRAY"
-    override fun toString(): String = "${this.name}(${this.element})"
+    override fun toString(): String = this.name
 }
 
 /**
@@ -583,11 +579,9 @@ public data class ArrayType(
  *
  * Aliases include STRUCT TODO: Are we sure?
  */
-public data class TupleType(
-    val fields: PartiQLType = AnyType
-) : PartiQLCoreTypeBase() {
+public object TupleType : PartiQLCoreTypeBase() {
     override val name: String = "TUPLE"
-    override fun toString(): String = "${this.name}(${this.fields})"
+    override fun toString(): String = this.name
 }
 
 /**

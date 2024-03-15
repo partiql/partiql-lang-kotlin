@@ -313,7 +313,7 @@ internal object RexConverter {
         }
 
         private fun visitExprCallTupleUnion(node: Expr.Call, context: Env): Rex {
-            val type = TupleType(AnyType)
+            val type = TupleType
             val args = node.args.map { visitExprCoerce(it, context) }.toMutableList()
             val op = rexOpTupleUnion(args)
             return rex(type, op)
@@ -352,11 +352,11 @@ internal object RexConverter {
 
         override fun visitExprCollection(node: Expr.Collection, context: Env): Rex {
             val type = when (node.type) {
-                Expr.Collection.Type.BAG -> org.partiql.value.BagType(AnyType)
-                Expr.Collection.Type.ARRAY -> ArrayType(AnyType)
-                Expr.Collection.Type.VALUES -> ArrayType(AnyType)
-                Expr.Collection.Type.LIST -> ArrayType(AnyType)
-                Expr.Collection.Type.SEXP -> ArrayType(AnyType)
+                Expr.Collection.Type.BAG -> org.partiql.value.BagType
+                Expr.Collection.Type.ARRAY -> ArrayType
+                Expr.Collection.Type.VALUES -> ArrayType
+                Expr.Collection.Type.LIST -> ArrayType
+                Expr.Collection.Type.SEXP -> ArrayType
             }
             val values = node.values.map { visitExprCoerce(it, context) }
             val op = rexOpCollection(values)
@@ -364,7 +364,7 @@ internal object RexConverter {
         }
 
         override fun visitExprStruct(node: Expr.Struct, context: Env): Rex {
-            val type = TupleType(AnyType)
+            val type = TupleType
             val fields = node.fields.map {
                 val k = visitExprCoerce(it.name, context)
                 val v = visitExprCoerce(it.value, context)

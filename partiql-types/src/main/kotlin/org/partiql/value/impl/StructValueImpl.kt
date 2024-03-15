@@ -39,7 +39,7 @@ internal class IterableStructValueImpl<T : PartiQLValue>(
     private val fieldsType: PartiQLType = AnyType
 ) : StructValue<T>() {
 
-    override val type: PartiQLType = TupleType(fieldsType)
+    override val type: PartiQLType = TupleType
 
     override val isNull: Boolean = delegate == null
 
@@ -95,7 +95,7 @@ internal class MultiMapStructValueImpl<T : PartiQLValue>(
     private val fieldsType: PartiQLType = AnyType
 ) : StructValue<T>() {
 
-    override val type: PartiQLType = TupleType(fieldsType)
+    override val type: PartiQLType = TupleType
 
     override val isNull: Boolean = delegate == null
 
@@ -138,7 +138,7 @@ internal class MapStructValueImpl<T : PartiQLValue>(
     private val fieldsType: PartiQLType = AnyType
 ) : StructValue<T>() {
 
-    override val type: PartiQLType = TupleType(fieldsType)
+    override val type: PartiQLType = TupleType
 
     override val isNull: Boolean = delegate == null
 

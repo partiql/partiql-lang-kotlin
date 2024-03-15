@@ -13,7 +13,7 @@ public data class Element(
         return when (type is BagType || type is ArrayType) {
             true -> PShape.ValidationResult.Success
             false -> PShape.ValidationResult.Failure(
-                TypeMismatchError(setOf(BagType(), ArrayType()), type)
+                TypeMismatchError(setOf(BagType, ArrayType), type)
             )
         }
     }

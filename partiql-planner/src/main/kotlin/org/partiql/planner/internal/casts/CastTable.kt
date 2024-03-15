@@ -319,21 +319,21 @@ internal class CastTable private constructor(
             graph[TIME] = arrayOfNulls(N)
             graph[TIMESTAMP] = arrayOfNulls(N)
             graph[INTERVAL] = arrayOfNulls(N)
-            graph[BAG] = BagType(AnyType).relationships(soleTypes) {
-                coercion(BagType(AnyType))
+            graph[BAG] = BagType.relationships(soleTypes) {
+                coercion(BagType)
             }
-            graph[LIST] = ArrayType(AnyType).relationships(soleTypes) {
-                coercion(BagType(AnyType))
-                coercion(ArrayType(AnyType))
-                coercion(ArrayType(AnyType))
+            graph[LIST] = ArrayType.relationships(soleTypes) {
+                coercion(BagType)
+                coercion(ArrayType)
+                coercion(ArrayType)
             }
-            graph[SEXP] = ArrayType(AnyType).relationships(soleTypes) {
-                coercion(BagType(AnyType))
-                coercion(ArrayType(AnyType))
-                coercion(ArrayType(AnyType))
+            graph[SEXP] = ArrayType.relationships(soleTypes) {
+                coercion(BagType)
+                coercion(ArrayType)
+                coercion(ArrayType)
             }
-            graph[STRUCT] = TupleType(AnyType).relationships(soleTypes) {
-                coercion(TupleType(AnyType))
+            graph[STRUCT] = TupleType.relationships(soleTypes) {
+                coercion(TupleType)
             }
             CastTable(soleTypes, graph.requireNoNulls())
         }

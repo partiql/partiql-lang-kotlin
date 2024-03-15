@@ -34,7 +34,7 @@ internal class BagValueImpl<T : PartiQLValue>(
 
     override val isNull: Boolean = delegate == null
 
-    override val type: PartiQLType = BagType(elementType)
+    override val type: PartiQLType = BagType
 
     override fun iterator(): Iterator<T> = delegate!!.iterator()
 

@@ -483,10 +483,9 @@ internal class PlanTyper(
             }
             val elementTypes = root.type.allShapes().map { type ->
                 if (!type.isType<ArrayType>()) {
-                    return@map MissingType
+                    return@map PShape.of(MissingType)
                 }
-                val rootType = type.type as ArrayType // TODO: Handle union types
-                rootType.element
+                type.getElement().shape
             }.toSet()
             val finalType = anyOf(elementTypes)
             return rex(finalType, rexOpPathIndex(root, key))
@@ -808,8 +807,8 @@ internal class PlanTyper(
             }
             // TODO: How can we model PShape's collection types' element types?
             val type = when (ctx.type) {
-                is BagType -> BagType(t.type)
-                is ArrayType -> ArrayType(t.type)
+                is BagType -> BagType
+                is ArrayType -> ArrayType
                 else -> error("This shouldn't have happened.")
             }
             val shape = PShape.of(
@@ -856,10 +855,13 @@ internal class PlanTyper(
                 }
             }
             val struct = PShape.of(
-                type = TupleType(),
-                constraint = Fields(
-                    isClosed = structIsClosed,
-                    fields = structTypeFields
+                type = TupleType,
+                constraints = setOf(
+                    Fields(
+                        isClosed = structIsClosed,
+                        fields = structTypeFields
+                    ),
+                    NotNull
                 )
             )
             return rex(struct, rexOpStruct(fields))
@@ -873,7 +875,7 @@ internal class PlanTyper(
             val key = typer.visitRex(node.key, null)
             val value = typer.visitRex(node.value, null)
             val type = PShape.of(
-                type = TupleType(AnyType),
+                type = TupleType,
                 constraint = Fields(
                     fields = emptyList(),
                     isClosed = false
@@ -909,7 +911,7 @@ internal class PlanTyper(
             //     return rexErr("Cannot coercion subquery with $m attributes to a row-value-expression with $n attributes")
             // }
             // If we made it this far, then we can coerce this subquery to the desired complex value
-            val type = PShape.of(ArrayType(AnyType)) // TODO: Narrow down the element type
+            val type = PShape.of(ArrayType) // TODO: Narrow down the element type
             val op = subquery
             return rex(type, op)
         }
@@ -945,8 +947,8 @@ internal class PlanTyper(
                 constructor = rex(constructorType, constructor.op)
             }
             val type = when (rel.isOrdered()) {
-                true -> ArrayType(constructor.type.type)
-                else -> BagType(constructor.type.type)
+                true -> ArrayType
+                else -> BagType
             }
             val shape = PShape.of(
                 type = type,
@@ -963,7 +965,7 @@ internal class PlanTyper(
             val type = when (args.size) {
                 0 -> {
                     PShape.of(
-                        type = TupleType(AnyType),
+                        type = TupleType,
                         constraint = Fields(
                             fields = emptyList(),
                             isClosed = true,
@@ -1055,7 +1057,7 @@ internal class PlanTyper(
             }
             uniqueAttrs = uniqueAttrs && (structFields.size == structFields.distinctBy { it.key }.size)
             return PShape.of(
-                type = TupleType(),
+                type = TupleType,
                 constraint = Fields(
                     isClosed = structIsClosed,
                     isOrdered = structIsOrdered,
