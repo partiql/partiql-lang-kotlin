@@ -15,7 +15,6 @@
 
 package org.partiql.cli
 
-import AstPrinter
 import com.amazon.ion.system.IonSystemBuilder
 import com.amazon.ion.system.IonTextWriterBuilder
 import org.partiql.cli.pico.PartiQLCommand

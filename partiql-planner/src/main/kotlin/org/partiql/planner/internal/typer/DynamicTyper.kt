@@ -56,6 +56,7 @@ internal typealias SuperGraph = Array<Array<PartiQLValueType?>>
 internal class DynamicTyper {
 
     private var supertype = NULL
+
     private var nullable = false
     private var missable = false
     private val allTypes = mutableSetOf<StaticType>()
@@ -85,16 +86,20 @@ internal class DynamicTyper {
         val modifiers = mutableSetOf<StaticType>()
         if (nullable) modifiers.add(StaticType.NULL)
         if (missable) modifiers.add(StaticType.MISSING)
+        // If at top supertype, then return union of all accumulated types
         if (supertype == ANY) {
             return StaticType.unionOf(allTypes + modifiers)
         }
+        // If a collection, then return union of all accumulated types as these coercion rules are not defined by SQL.
+        if (supertype == STRUCT || supertype == BAG || supertype == LIST || supertype == SEXP) {
+            return StaticType.unionOf(allTypes + modifiers)
+        }
+        // Otherwise, return the supertype
         val st = supertype.toNonNullStaticType()
         return if (modifiers.isEmpty()) {
-            // simple
             st
         } else {
-            // add in the modifiers
-            StaticType.unionOf(setOf(st) + modifiers)
+            StaticType.unionOf(setOf(st) + modifiers).flatten()
         }
     }
 
@@ -105,9 +110,9 @@ internal class DynamicTyper {
         // Lookup and set the new minimum common supertype
         val t = type.toRuntimeType()
         supertype = when {
-            supertype == NULL -> t                                  // initialize
-            t == NULL || t == MISSING || supertype == t -> return   // skip
-            else -> graph[supertype][t] ?: ANY                      // lookup, if missing then go to top.
+            supertype == NULL -> t // initialize
+            t == NULL || t == MISSING || supertype == t -> return // skip
+            else -> graph[supertype][t] ?: ANY // lookup, if missing then go to top.
         }
     }
 
