@@ -88,7 +88,7 @@ internal class Env(private val session: PartiQLPlanner.Session) {
     }
 
     @OptIn(FnExperimental::class, PartiQLValueExperimental::class)
-    fun resolveFn(path: BindingPath, args: List<Rex>, unresolvedFunc: Rex.Op.Call.Unresolved): Rex? {
+    fun resolveFn(path: BindingPath, args: List<Rex>): Rex? {
         val item = fns.lookup(path) ?: return null
         // Invoke FnResolver to determine if we made a match
         val variants = item.handle.entity.getVariants()

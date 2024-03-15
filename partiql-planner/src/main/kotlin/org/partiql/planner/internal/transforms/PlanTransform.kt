@@ -247,11 +247,14 @@ internal object PlanTransform {
             override fun visitRexOpTupleUnion(node: Rex.Op.TupleUnion, ctx: Unit) =
                 org.partiql.plan.Rex.Op.TupleUnion(args = node.args.map { visitRex(it, ctx) })
 
-            override fun visitRexOpErr(node: Rex.Op.Err, ctx: Unit): org.partiql.plan.Rex.Op.Err {
+            override fun visitRexOpErr(node: Rex.Op.Err, ctx: Unit): PlanNode {
                 // track the error in call back
-                visitRexOp(node.input, ctx)
+                val trace = visitRexOp(node.input, ctx)
                 onProblem(ProblemGenerator.asError(node.problem))
-                return org.partiql.plan.Rex.Op.Err(node.problem.toString())
+                return when (debugMode) {
+                    true -> org.partiql.plan.rexOpDebugProblemError(trace, node.problem.toString())
+                    false -> org.partiql.plan.Rex.Op.Err(node.problem.toString())
+                }
             }
 
             @OptIn(PartiQLValueExperimental::class)
@@ -405,7 +408,7 @@ internal object PlanTransform {
                 input = visitRel(node.input, ctx),
                 paths = node.paths.mapNotNull {
                     val root = when (val root = it.root) {
-                        is Rex.Op.Var.Unresolved -> org.partiql.plan.Rex.Op.Var(-1, -1) // unresolved in `PlanTyper` results in error
+                        is Rex.Op.Var.Unresolved -> error("EXCLUDE expression has an unresolvable root") // unresolved in `PlanTyper` results in error
                         is Rex.Op.Var.Local -> visitRexOpVarLocal(root, ctx)
                         is Rex.Op.Var.Global -> error("EXCLUDE only disallows values coming from the input record.")
                         is Rex.Op.Err -> {

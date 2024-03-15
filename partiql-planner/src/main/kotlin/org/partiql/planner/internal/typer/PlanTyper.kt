@@ -616,7 +616,7 @@ internal class PlanTyper(
             // Attempt to resolve in the environment
             val path = node.identifier.toBindingPath()
             val argsResolved = rexOpCallUnresolved(node.identifier, args)
-            val rex = env.resolveFn(path, args, argsResolved)
+            val rex = env.resolveFn(path, args)
                 ?: return ProblemGenerator.errorRex(
                     argsResolved,
                     ProblemGenerator.undefinedFunction(node.identifier, args.map { it.type })
