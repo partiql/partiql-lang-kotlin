@@ -301,20 +301,28 @@ public sealed interface PartiQLType {
     }
 }
 
+@Deprecated("How can I make this internal?")
+public abstract class PartiQLCoreTypeBase : PartiQLType.Runtime.Core {
+    override fun toString(): String = this.name
+}
+
 public object AnyType : PartiQLType.Abstract {
     override val name: String = "ANY"
+    override fun toString(): String = this.name
 }
 
 public data class BitType(
     val length: Int
-) : PartiQLType.Runtime.Core {
+) : PartiQLCoreTypeBase() {
     override val name: String = "BIT"
+    override fun toString(): String = "${this.name}(${this.length})"
 }
 
 public data class BitVaryingType(
     val length: Int
-) : PartiQLType.Runtime.Core {
+) : PartiQLCoreTypeBase() {
     override val name: String = "BIT_VARYING"
+    override fun toString(): String = "${this.name}(${this.length})"
 }
 
 /**
@@ -324,23 +332,25 @@ public data class BitVaryingType(
  */
 public data class BlobType(
     val length: Int
-) : PartiQLType.Runtime.Core {
+) : PartiQLCoreTypeBase() {
 
     override val name: String = "BLOB"
     public companion object {
         @JvmStatic
         public val MAXIMUM_LENGTH: Int = 10 // TODO: Define MAXIMUM. Here is Oracle's: 2_147_483_647
     }
+
+    override fun toString(): String = "${this.name}(${this.length})"
 }
 
-public object BoolType : PartiQLType.Runtime.Core {
-    override val name: String = "BOOL"
+public object BoolType : PartiQLCoreTypeBase() {
+    public override val name: String = "BOOL"
 }
 
 /**
  * TODO: Should this be allowed? It's not in SQL:1999
  */
-public object ByteType : PartiQLType.Runtime.Core {
+public object ByteType : PartiQLCoreTypeBase() {
     override val name: String = "BYTE"
 }
 
@@ -349,8 +359,9 @@ public object ByteType : PartiQLType.Runtime.Core {
  */
 public data class CharType(
     val length: Int
-) : PartiQLType.Runtime.Core {
+) : PartiQLCoreTypeBase() {
     override val name: String = "CHAR"
+    override fun toString(): String = "${this.name}(${this.length})"
     public companion object {
         public const val MAX_LENGTH: Int = 250 // TODO
     }
@@ -362,8 +373,9 @@ public data class CharType(
  */
 public data class CharVarType(
     val length: Int
-) : PartiQLType.Runtime.Core {
+) : PartiQLCoreTypeBase() {
     override val name: String = "VARCHAR" // TODO: For now
+    override fun toString(): String = "${this.name}(${this.length})"
 
     public companion object {
         public const val MAX_LENGTH: Int = 250 // TODO
@@ -374,7 +386,7 @@ public data class CharVarType(
  * SQL:1999's CHARACTER VARYING type
  * Aliases are VARCHAR, STRING, and SYMBOL (both are unbounded in length)
  */
-public object CharVarUnboundedType : PartiQLType.Runtime.Core {
+public object CharVarUnboundedType : PartiQLCoreTypeBase() {
     override val name: String = "STRING" // TODO: For now
 }
 
@@ -384,8 +396,9 @@ public object CharVarUnboundedType : PartiQLType.Runtime.Core {
  */
 public data class ClobType(
     val length: Int
-) : PartiQLType.Runtime.Core {
+) : PartiQLCoreTypeBase() {
     override val name: String = "CLOB"
+    override fun toString(): String = "${this.name}(${this.length})"
 
     public companion object {
         public const val MAX_LENGTH: Int = 250 // TODO
@@ -396,7 +409,7 @@ public data class ClobType(
  * SQL:1999's CHARACTER LARGE OBJECT type and Ion's CLOB type
  * Aliases are CLOB
  */
-public object ClobUnboundedType : PartiQLType.Runtime.Core {
+public object ClobUnboundedType : PartiQLCoreTypeBase() {
     override val name: String = "CLOB"
 }
 
@@ -404,23 +417,23 @@ public object ClobUnboundedType : PartiQLType.Runtime.Core {
  * SQL:1999's DATE type
  * TODO: Does this differ from Ion?
  */
-public object DateType : PartiQLType.Runtime.Core {
+public object DateType : PartiQLCoreTypeBase() {
     override val name: String = "DATE"
 }
 
-public object Int8Type : PartiQLType.Runtime.Core {
+public object Int8Type : PartiQLCoreTypeBase() {
     override val name: String = "INT8"
 }
 
-public object Int16Type : PartiQLType.Runtime.Core {
+public object Int16Type : PartiQLCoreTypeBase() {
     override val name: String = "INT16"
 }
 
-public object Int32Type : PartiQLType.Runtime.Core {
+public object Int32Type : PartiQLCoreTypeBase() {
     override val name: String = "INT32"
 }
 
-public object Int64Type : PartiQLType.Runtime.Core {
+public object Int64Type : PartiQLCoreTypeBase() {
     override val name: String = "INT64"
 }
 
@@ -429,7 +442,7 @@ public object Int64Type : PartiQLType.Runtime.Core {
  *
  * Aliases include: REAL
  */
-public object Float32Type : PartiQLType.Runtime.Core {
+public object Float32Type : PartiQLCoreTypeBase() {
     override val name: String = "FLOAT32"
 }
 
@@ -439,7 +452,7 @@ public object Float32Type : PartiQLType.Runtime.Core {
  * Aliases include: DOUBLE PRECISION
  * TODO: What is SQL:1999's `FLOAT`?
  */
-public object Float64Type : PartiQLType.Runtime.Core {
+public object Float64Type : PartiQLCoreTypeBase() {
     override val name: String = "FLOAT64"
 }
 
@@ -449,8 +462,9 @@ public object Float64Type : PartiQLType.Runtime.Core {
 public data class NumericType(
     val precision: Int?,
     val scale: Int?
-) : PartiQLType.Runtime.Core {
+) : PartiQLCoreTypeBase() {
     override val name: String = "NUMERIC"
+    override fun toString(): String = "${this.name}(${this.precision}, ${this.scale})"
 
     public companion object {
         public const val MAX_PRECISION: Int = 38 // TODO
@@ -468,8 +482,9 @@ public data class NumericType(
  */
 public data class TimeType(
     val precision: Int
-) : PartiQLType.Runtime.Core {
+) : PartiQLCoreTypeBase() {
     override val name: String = "TIME"
+    override fun toString(): String = "${this.name}(${this.precision})"
 
     public companion object {
         @JvmStatic
@@ -483,8 +498,9 @@ public data class TimeType(
  */
 public data class TimeWithTimeZoneType(
     val precision: Int
-) : PartiQLType.Runtime.Core {
+) : PartiQLCoreTypeBase() {
     override val name: String = "TIME_WITH_TIME_ZONE"
+    override fun toString(): String = "${this.name}(${this.precision})"
 
     public companion object {
         @JvmStatic
@@ -498,8 +514,9 @@ public data class TimeWithTimeZoneType(
  */
 public data class TimestampType(
     val precision: Int
-) : PartiQLType.Runtime.Core {
+) : PartiQLCoreTypeBase() {
     override val name: String = "TIMESTAMP"
+    override fun toString(): String = "${this.name}(${this.precision})"
 
     public companion object {
         @JvmStatic
@@ -513,8 +530,9 @@ public data class TimestampType(
  */
 public data class TimestampWithTimeZoneType(
     val precision: Int
-) : PartiQLType.Runtime.Core {
+) : PartiQLCoreTypeBase() {
     override val name: String = "TIMESTAMP_WITH_TIME_ZONE"
+    override fun toString(): String = "${this.name}(${this.precision})"
 
     public companion object {
         @JvmStatic
@@ -528,8 +546,9 @@ public data class TimestampWithTimeZoneType(
 public data class IntervalType(
     // TODO: Does this need a `fields` property?
     val precision: Int
-) : PartiQLType.Runtime.Core {
+) : PartiQLCoreTypeBase() {
     override val name: String = "INTERVAL"
+    override fun toString(): String = "${this.name}(${this.precision})"
 
     public companion object {
         @JvmStatic
@@ -542,8 +561,9 @@ public data class IntervalType(
  */
 public data class BagType(
     val element: PartiQLType = AnyType
-) : PartiQLType.Runtime.Core {
+) : PartiQLCoreTypeBase() {
     override val name: String = "BAG"
+    override fun toString(): String = "${this.name}(${this.element})"
 }
 
 /**
@@ -553,8 +573,9 @@ public data class BagType(
  */
 public data class ArrayType(
     val element: PartiQLType = AnyType
-) : PartiQLType.Runtime.Core {
+) : PartiQLCoreTypeBase() {
     override val name: String = "ARRAY"
+    override fun toString(): String = "${this.name}(${this.element})"
 }
 
 /**
@@ -564,13 +585,14 @@ public data class ArrayType(
  */
 public data class TupleType(
     val fields: PartiQLType = AnyType
-) : PartiQLType.Runtime.Core {
+) : PartiQLCoreTypeBase() {
     override val name: String = "TUPLE"
+    override fun toString(): String = "${this.name}(${this.fields})"
 }
 
 /**
  * Ion's NULL.NULL type
  */
-public object NullType : PartiQLType.Runtime.Core {
+public object NullType : PartiQLCoreTypeBase() {
     override val name: String = "NULL"
 }

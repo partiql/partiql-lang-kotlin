@@ -1,12 +1,11 @@
 package org.partiql.shape
 
-import org.partiql.shape.constraints.Constraint
-import org.partiql.shape.constraints.Element
-import org.partiql.shape.constraints.Fields
-import org.partiql.shape.constraints.Multiple
-import org.partiql.shape.constraints.None
-import org.partiql.shape.constraints.NotNull
+import org.partiql.shape.visitor.ShapePrinter
+import org.partiql.shape.visitor.ShapeVisitor
 import org.partiql.types.AnyOfType
+import org.partiql.types.CollectionType
+import org.partiql.types.ListType
+import org.partiql.types.SexpType
 import org.partiql.types.SingleType
 import org.partiql.types.StaticType
 import org.partiql.types.StructType
@@ -24,11 +23,11 @@ import org.partiql.value.PartiQLType
 /**
  * TODO: Do we support validation of values eventually?
  */
-public sealed interface PShape {
+public sealed interface PShape : ShapeNode {
 
     public val type: PartiQLType
 
-    public val constraint: Constraint
+    public val constraints: Set<Constraint>
 
     @Deprecated("This is an example of how we can gather metadata.")
     public val metas: Set<Meta>
@@ -63,10 +62,21 @@ public sealed interface PShape {
         @Deprecated("Should we allow this?")
         public fun of(
             type: PartiQLType,
-            constraint: Constraint = None,
+            constraint: Constraint,
             metas: Set<Meta> = emptySet()
         ): PShape {
-            return Single(type, constraint, metas)
+            return Base(type, constraint, metas)
+        }
+
+        @JvmStatic
+        @JvmOverloads
+        @Deprecated("Should we allow this?")
+        public fun of(
+            type: PartiQLType,
+            constraints: Set<Constraint> = emptySet(),
+            metas: Set<Meta> = emptySet()
+        ): PShape {
+            return Base(type, constraints, metas)
         }
 
         @JvmStatic
@@ -82,11 +92,18 @@ public sealed interface PShape {
         @JvmName("anyOfShapes")
         public fun anyOf(shapes: Set<PShape>): PShape {
             return when (shapes.size) {
-                0 -> Single(AnyType)
+                0 -> Base(AnyType)
                 1 -> shapes.first()
-                else -> Union.of(
-                    shapes = shapes
-                )
+                else -> {
+                    val flattened = shapes.flatMap { it.allShapes() }.toSet()
+                    val type = flattened.first().type.let { first ->
+                        when (flattened.all { it.type == first }) {
+                            true -> first
+                            false -> AnyType
+                        }
+                    }
+                    Base(type, constraints = setOf(AnyOf(flattened)))
+                }
             }
         }
 
@@ -105,8 +122,8 @@ public sealed interface PShape {
         @JvmStatic
         @Deprecated("Should we allow this?")
         public fun PShape.allShapes(): Set<PShape> {
-            return when (this) {
-                is Union -> this.shapes
+            return when {
+                this.isUnion() -> this.allShapes()
                 else -> setOf(this)
             }
         }
@@ -127,8 +144,17 @@ public sealed interface PShape {
         @JvmStatic
         @Deprecated("Should we allow this?")
         public inline fun <reified T> PShape.isType(): Boolean {
-            return when (this) {
-                is Union -> this.shapes.all { it.isSpecificType<T>() }
+            return when {
+                this.isUnion() -> this.allShapes().all { it.isSpecificType<T>() }
+                else -> this.isSpecificType<T>()
+            }
+        }
+
+        @JvmStatic
+        @Deprecated("Should we allow this?")
+        public inline fun <reified T> PShape.canBeType(): Boolean {
+            return when {
+                this.isUnion() -> this.allShapes().any { it.isSpecificType<T>() }
                 else -> this.isSpecificType<T>()
             }
         }
@@ -139,8 +165,8 @@ public sealed interface PShape {
             if (this.isType<T>()) {
                 return true
             }
-            return when (this) {
-                is Union -> this.shapes.any { it.isType<T>() }
+            return when {
+                this.isUnion() -> this.allShapes().any { it.isType<T>() }
                 else -> false
             }
         }
@@ -148,20 +174,20 @@ public sealed interface PShape {
         @JvmStatic
         @Deprecated("Should we allow this?")
         public fun PShape.getFirstAndOnlyFields(): Fields? {
-            return when (val constraint = this.constraint) {
-                is Multiple -> constraint.getFirstAndOnlyFields()
-                is Fields -> constraint
-                else -> null
+            val fields = this.constraints.filterIsInstance<Fields>()
+            return when (fields.size) {
+                1 -> fields.first()
+                else -> null // TODO: Error or null?
             }
         }
 
         @JvmStatic
         @Deprecated("Should we allow this?")
         public fun PShape.getSingleElement(): Element? {
-            return when (val constraint = this.constraint) {
-                is Multiple -> constraint.getSingleElement()
-                is Element -> constraint
-                else -> null
+            val elements = this.constraints.filterIsInstance<Element>()
+            return when (elements.size) {
+                1 -> elements.first()
+                else -> null // TODO: Error or null?
             }
         }
 
@@ -169,25 +195,14 @@ public sealed interface PShape {
         @Deprecated("Should we allow this?")
         public fun PShape.getElement(): Element {
             val default = Element(of(AnyType))
-            return when (val constraint = this.constraint) {
-                is Multiple -> constraint.getSingleElement() ?: default
-                is Element -> constraint
-                else -> default
-            }
+            return this.getSingleElement() ?: default
         }
 
         @JvmStatic
         @Deprecated("Should we allow this?")
         public fun PShape.setElement(shape: PShape): PShape {
-            val constraint = when (val c = this.constraint) {
-                is Multiple -> {
-                    val constraints = c.constraints.filterNot { it is Element }.toSet() + setOf(Element(shape))
-                    Multiple.of(constraints)
-                }
-                is Element -> Element(shape)
-                else -> Multiple.of(setOf(c, Element(shape)))
-            }
-            return this.copy(constraint = constraint)
+            val constraints = this.constraints.filterNot { it is Element } + setOf(Element(shape))
+            return this.copy(constraints = constraints.toSet())
         }
 
         @Deprecated("Should we allow this?")
@@ -213,12 +228,17 @@ public sealed interface PShape {
         @Deprecated("Double-check this")
         // TODO: Allow types to be nullable?
         public fun PShape.isNullable(): Boolean {
-            if (this.type is NullType) {
+            if (this.canBeType<NullType>()) {
                 return true
             }
-            return when (val c = this.constraint) {
-                is Multiple -> c.constraints.none { it is NotNull }
+            return this.constraints.any { it.canBeNull() }
+        }
+
+        @Deprecated("Double-check this")
+        public fun Constraint.canBeNull(): Boolean {
+            return when (this) {
                 is NotNull -> false
+                is AnyOf -> this.shapes.any { it.isNullable() }
                 else -> true
             }
         }
@@ -233,18 +253,18 @@ public sealed interface PShape {
 
         @Deprecated("Double-check this")
         public fun PShape.asNullable(): PShape {
-            val constraint = when (val c = this.constraint) {
-                is NotNull -> None
-                is Multiple -> Multiple.of(
-                    c.constraints.filterNot {
-                        it is NotNull
-                    }.toSet()
-                )
-                else -> c
-            }
+            val constraints = this.constraints.filterNot { it is NotNull }.map { c ->
+                when (c) {
+                    is AnyOf -> {
+                        val shapes = c.shapes.map { it.asNullable() }.toSet()
+                        AnyOf(shapes)
+                    }
+                    else -> c
+                }
+            }.toSet()
             return of(
                 type = this.type,
-                constraint = constraint,
+                constraints = constraints,
                 metas = this.metas
             )
         }
@@ -253,12 +273,11 @@ public sealed interface PShape {
         public fun PShape.asOptional(): PShape {
             return when (this.type) {
                 is MissingType -> this
-                else -> Union.of(
-                    shapes = setOf(
+                else -> PShape.anyOf(
+                    setOf(
                         this,
-                        Single(MissingType)
+                        PShape.of(MissingType)
                     ),
-                    type = AnyType
                 )
             }
         }
@@ -278,22 +297,13 @@ public sealed interface PShape {
         @Deprecated("Double-check this")
         public fun PShape.copy(
             type: PartiQLType? = null,
-            constraint: Constraint? = null,
+            constraints: Set<Constraint>? = null,
             metas: Set<Meta>? = null
-        ): PShape = when (this) {
-            is Union -> {
-                val c = constraint ?: this.constraint
-                val t = type ?: this.type
-                val m = metas ?: this.metas
-                this.copy(constraint = c, type = t, metas = m)
-            }
-            is Single -> {
-                val c = constraint ?: this.constraint
-                val t = type ?: this.type
-                val m = metas ?: this.metas
-                this.copy(constraint = c, type = t, metas = m)
-            }
-            else -> error("This should not have occurred, but to compile, this check is required.")
+        ): PShape {
+            val c = constraints ?: this.constraints
+            val t = type ?: this.type
+            val m = metas ?: this.metas
+            return Base(t, c, m)
         }
 
         /**
@@ -306,13 +316,28 @@ public sealed interface PShape {
                     is StructType -> {
                         val pType = PartiQLType.fromSingleType(type)
                         val fields = type.fields.map { Fields.Field(it.key, fromStaticType(it.value)) }
-                        Single(
+                        PShape.of(
                             type = pType,
                             constraint = Fields(
                                 fields = fields,
                                 isClosed = type.contentClosed,
                                 isOrdered = type.constraints.contains(TupleConstraint.Ordered)
                             )
+                        )
+                    }
+                    is CollectionType -> {
+                        val element = type.elementType
+                        val pElement = when (element) {
+                            is SingleType -> PartiQLType.fromSingleType(element)
+                            else -> AnyType
+                        }
+                        val type = when (type) {
+                            is org.partiql.types.BagType -> BagType(pElement)
+                            is ListType -> ArrayType(pElement)
+                            is SexpType -> ArrayType(pElement)
+                        }
+                        PShape.of(
+                            type = type
                         )
                     }
                     else -> of(PartiQLType.fromSingleType(type))
@@ -322,9 +347,44 @@ public sealed interface PShape {
                     val types = type.flatten().allTypes.map { child ->
                         fromStaticType(child)
                     }.toSet()
-                    Union.of(types)
+                    PShape.anyOf(types)
                 }
             }
+        }
+
+        public fun PShape.isUnion(): Boolean = this.constraints.any { it.isUnion() }
+
+        public fun Constraint.isUnion(): Boolean = when (this) {
+            is AnyOf -> true
+            else -> false
+        }
+    }
+
+    private class Base(
+        override val type: PartiQLType,
+        override val constraints: Set<Constraint> = emptySet(),
+        override val metas: Set<Meta> = emptySet()
+    ) : PShape {
+
+        // TODO: On init, add each constructor at a time to make sure everything is clean.
+
+        public constructor(type: PartiQLType, constraint: Constraint, metas: Set<Meta> = emptySet()) : this(type, setOf(constraint), metas)
+        override fun validate(): ValidationResult {
+            constraints.forEach { constraint ->
+                val result = constraint.validate(type)
+                if (result is ValidationResult.Failure) {
+                    return result
+                }
+            }
+            return ValidationResult.Success
+        }
+
+        override fun toString(): String {
+            return ShapePrinter.stringify(this)
+        }
+
+        override fun <R, C> accept(visitor: ShapeVisitor<R, C>, ctx: C): R {
+            return visitor.visitShape(this, ctx)
         }
     }
 }

@@ -1,6 +1,8 @@
 package org.partiql.planner.internal.typer
 
 import org.partiql.planner.internal.ir.Rel
+import org.partiql.shape.Fields
+import org.partiql.shape.Multiple
 import org.partiql.shape.PShape
 import org.partiql.shape.PShape.Companion.allShapes
 import org.partiql.shape.PShape.Companion.asOptional
@@ -11,8 +13,6 @@ import org.partiql.shape.PShape.Companion.isCollection
 import org.partiql.shape.PShape.Companion.isType
 import org.partiql.shape.PShape.Companion.of
 import org.partiql.shape.PShape.Companion.setElement
-import org.partiql.shape.constraints.Fields
-import org.partiql.shape.constraints.Multiple
 import org.partiql.types.AnyOfType
 import org.partiql.types.AnyType
 import org.partiql.types.BagType
@@ -217,13 +217,13 @@ internal fun PShape.excludeTuple(step: Rel.Op.Exclude.Step, lastStepOptional: Bo
     val output = fields.fields.mapNotNull { field ->
         val newField = if (substeps.isEmpty()) {
             if (lastStepOptional) {
-                field.copy(value = field.value.copy(shape = field.value.shape.asOptional()))
+                field.copy(value = field.value.asOptional())
             } else {
                 null
             }
         } else {
             val k = field.key
-            val v = field.value.shape.exclude(substeps, lastStepOptional)
+            val v = field.value.exclude(substeps, lastStepOptional)
             Fields.Field(k, v)
         }
         when (type) {
@@ -251,12 +251,15 @@ internal fun PShape.excludeTuple(step: Rel.Op.Exclude.Step, lastStepOptional: Bo
         isClosed = fields.isClosed,
         isOrdered = fields.isOrdered
     )
-    val constraints = when (val c = this.constraint) {
-        is Fields -> emptyList()
-        is Multiple -> c.constraints.filterNot { it is Fields }
-        else -> listOf(c)
-    } + listOf(newFields)
-    return this.copy(constraint = Multiple.of(constraints.toSet()))
+    val constraints = this.constraints.flatMap { c ->
+        when (c) {
+            is Fields -> emptyList()
+            is Multiple -> c.constraints.filterNot { it is Fields }
+            else -> listOf(c)
+        } + listOf(newFields)
+    }.toSet()
+
+    return this.copy(constraints = constraints)
 }
 
 /**

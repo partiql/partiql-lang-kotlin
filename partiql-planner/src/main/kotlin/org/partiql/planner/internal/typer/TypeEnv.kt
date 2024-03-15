@@ -7,12 +7,12 @@ import org.partiql.planner.internal.ir.rexOpLit
 import org.partiql.planner.internal.ir.rexOpPathKey
 import org.partiql.planner.internal.ir.rexOpPathSymbol
 import org.partiql.planner.internal.ir.rexOpVarLocal
+import org.partiql.shape.Fields
 import org.partiql.shape.PShape
 import org.partiql.shape.PShape.Companion.allShapes
 import org.partiql.shape.PShape.Companion.getFirstAndOnlyFields
 import org.partiql.shape.PShape.Companion.isType
-import org.partiql.shape.Union
-import org.partiql.shape.constraints.Fields
+import org.partiql.shape.PShape.Companion.isUnion
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
@@ -175,7 +175,7 @@ internal data class TypeEnv(
                 val fields = this.getFirstAndOnlyFields() ?: return null
                 fields.containsKey(name)
             }
-            this is Union -> {
+            this.isUnion() -> {
                 val anyKnownToContainKey = this.allShapes().any { it.containsKey(name) == true }
                 val anyKnownToNotContainKey = this.allShapes().any { it.containsKey(name) == false }
                 val anyNotKnownToContainKey = this.allShapes().any { it.containsKey(name) == null }

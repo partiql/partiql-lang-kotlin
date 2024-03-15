@@ -62,6 +62,11 @@ import org.partiql.planner.internal.ir.rexOpSubquery
 import org.partiql.planner.internal.ir.rexOpTupleUnion
 import org.partiql.planner.internal.ir.statementQuery
 import org.partiql.planner.internal.ir.util.PlanRewriter
+import org.partiql.shape.Constraint
+import org.partiql.shape.Element
+import org.partiql.shape.Fields
+import org.partiql.shape.Multiple
+import org.partiql.shape.NotNull
 import org.partiql.shape.PShape
 import org.partiql.shape.PShape.Companion.allShapes
 import org.partiql.shape.PShape.Companion.allTypes
@@ -74,11 +79,7 @@ import org.partiql.shape.PShape.Companion.isMissable
 import org.partiql.shape.PShape.Companion.isNullable
 import org.partiql.shape.PShape.Companion.isText
 import org.partiql.shape.PShape.Companion.isType
-import org.partiql.shape.Single
-import org.partiql.shape.Union
-import org.partiql.shape.constraints.Constraint
-import org.partiql.shape.constraints.Fields
-import org.partiql.shape.constraints.Multiple
+import org.partiql.shape.PShape.Companion.isUnion
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
@@ -194,7 +195,7 @@ internal class PlanTyper(
                         null -> PShape.of(AnyType)
                         else -> when (fields.isClosed) {
                             false -> PShape.of(AnyType)
-                            true -> PShape.anyOf(fields.fields.map { it.value.shape }.toSet()) // TODO: Handle variable occurring arguments
+                            true -> PShape.anyOf(fields.fields.map { it.value }.toSet())
                         }
                     }
                 }
@@ -777,8 +778,8 @@ internal class PlanTyper(
                     }
                     val ref = call.args.getOrNull(0) ?: error("IS STRUCT requires an argument.")
                     val simplifiedCondition = when {
-                        ref.type.allTypes().all { it is TupleType } -> rex(BoolType, rexOpLit(boolValue(true)))
-                        ref.type.allTypes().none { it is TupleType } -> rex(BoolType, rexOpLit(boolValue(false)))
+                        ref.type.allShapes().all { it.isType<TupleType>() } -> rex(BoolType, rexOpLit(boolValue(true)))
+                        ref.type.allShapes().none { it.isType<TupleType>() } -> rex(BoolType, rexOpLit(boolValue(false)))
                         else -> condition
                     }
 
@@ -802,16 +803,20 @@ internal class PlanTyper(
             }
             val values = node.values.map { visitRex(it, it.type) }
             val t = when (values.size) {
-                0 -> AnyType
-                else -> values.toUnionType().type
+                0 -> PShape.of(AnyType)
+                else -> values.toUnionType()
             }
             // TODO: How can we model PShape's collection types' element types?
             val type = when (ctx.type) {
-                is BagType -> BagType(t)
-                is ArrayType -> ArrayType(t)
+                is BagType -> BagType(t.type)
+                is ArrayType -> ArrayType(t.type)
                 else -> error("This shouldn't have happened.")
             }
-            return rex(type, rexOpCollection(values))
+            val shape = PShape.of(
+                type = type,
+                constraint = Element(t)
+            )
+            return rex(shape, rexOpCollection(values))
         }
 
         @OptIn(PartiQLValueExperimental::class)
@@ -924,7 +929,7 @@ internal class PlanTyper(
                 return rexErr("SELECT constructor with $n attributes cannot be coerced to a scalar. Found constructor type: $cons")
             }
             // If we made it this far, then we can coerce this subquery to a scalar
-            val type = fields.fields.first().value.shape
+            val type = fields.fields.first().value
             val op = subquery
             return rex(type, op)
         }
@@ -943,7 +948,14 @@ internal class PlanTyper(
                 true -> ArrayType(constructor.type.type)
                 else -> BagType(constructor.type.type)
             }
-            return rex(type, rexOpSelect(constructor, rel))
+            val shape = PShape.of(
+                type = type,
+                constraints = setOf(
+                    Element(constructor.type),
+                    NotNull
+                )
+            )
+            return rex(shape, rexOpSelect(constructor, rel))
         }
 
         override fun visitRexOpTupleUnion(node: Rex.Op.TupleUnion, ctx: PShape?): Rex {
@@ -1020,20 +1032,20 @@ internal class PlanTyper(
                         structIsOrdered = structIsOrdered && fields.isOrdered
                         uniqueAttrs = uniqueAttrs // TODO: Do we need this?
                     }
-                    arg is Union -> {
+                    arg.isUnion() -> {
                         onProblem.invoke(
                             Problem(
                                 UNKNOWN_PROBLEM_LOCATION,
                                 PlanningProblemDetails.CompileError("TupleUnion wasn't normalized to exclude union types.")
                             )
                         )
-                        possibleOutputTypes.add(Single(MissingType))
+                        possibleOutputTypes.add(PShape.of(MissingType))
                     }
                     arg.isType<NullType>() -> {
-                        return Single(NullType)
+                        return PShape.of(NullType)
                     }
                     else -> {
-                        return Single(MissingType)
+                        return PShape.of(MissingType)
                     }
                 }
             }
@@ -1042,7 +1054,7 @@ internal class PlanTyper(
                 else -> uniqueAttrs
             }
             uniqueAttrs = uniqueAttrs && (structFields.size == structFields.distinctBy { it.key }.size)
-            return Single(
+            return PShape.of(
                 type = TupleType(),
                 constraint = Fields(
                     isClosed = structIsClosed,
@@ -1130,7 +1142,7 @@ internal class PlanTyper(
                 // 1. Struct is closed and ordered
                 isClosed && isOrdered -> {
                     struct.fields.firstOrNull { entry -> binding.matches(entry.key) }?.let {
-                        (sensitive(it.key) to it.value.shape)
+                        (sensitive(it.key) to it.value)
                     } ?: (key to PShape.of(MissingType))
                 }
                 // 2. Struct is closed
@@ -1138,14 +1150,14 @@ internal class PlanTyper(
                     val matches = struct.fields.filter { entry -> binding.matches(entry.key) }
                     when (matches.size) {
                         0 -> (key to PShape.of(MissingType))
-                        1 -> matches.first().let { (sensitive(it.key) to it.value.shape) }
+                        1 -> matches.first().let { (sensitive(it.key) to it.value) }
                         else -> {
                             val firstKey = matches.first().key
                             val sharedKey = when (matches.all { it.key == firstKey }) {
                                 true -> sensitive(firstKey)
                                 false -> key
                             }
-                            sharedKey to PShape.anyOf(matches.map { it.value.shape }.toSet()) // TODO: Handle variably occurring
+                            sharedKey to PShape.anyOf(matches.map { it.value }.toSet())
                         }
                     }
                 }
@@ -1325,7 +1337,7 @@ internal class PlanTyper(
     private fun getElementTypeForFromSource(fromSourceType: PShape): PShape = when {
         fromSourceType.isType<BagType>() -> fromSourceType.getElement().shape
         fromSourceType.isType<ArrayType>() -> fromSourceType.getElement().shape
-        fromSourceType is Union -> anyOf(fromSourceType.shapes.map { getElementTypeForFromSource(it) }.toSet())
+        fromSourceType.isUnion() -> anyOf(fromSourceType.allShapes().map { getElementTypeForFromSource(it) }.toSet())
         // All the other types coerce into a bag of themselves (including null/missing/sexp).
         else -> fromSourceType
     }
@@ -1436,16 +1448,19 @@ internal class PlanTyper(
     }
 
     private fun PShape.withNullableFields(): PShape {
-        val newConstraint = when (val constraint = this.constraint) {
-            is Fields -> constraint.withNullableFields()
-            is Multiple -> Multiple.of(
-                constraint.constraints.map { c ->
-                    c.withNullableFields()
-                }.toSet()
-            )
-            else -> constraint
-        }
-        return this.copy(constraint = newConstraint)
+        val constraints = this.constraints.map { constraint ->
+            when (constraint) {
+                is Fields -> constraint.withNullableFields()
+                is Multiple -> Multiple.of(
+                    constraint.constraints.map { c ->
+                        c.withNullableFields()
+                    }.toSet()
+                )
+
+                else -> constraint
+            }
+        }.toSet()
+        return this.copy(constraints = constraints)
     }
 
     private fun Constraint.withNullableFields(): Constraint {
@@ -1457,7 +1472,7 @@ internal class PlanTyper(
 
     private fun Fields.withNullableFields(): Fields {
         val fields = this.fields.map { field ->
-            field.copy(value = field.value.copy(shape = field.value.shape.asNullable()))
+            field.copy(value = field.value.asNullable())
         }
         return this.copy(fields)
     }

@@ -1,6 +1,7 @@
 package org.partiql.planner.internal.typer
 
 import com.amazon.ionelement.api.loadSingleElement
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.junit.jupiter.api.parallel.Execution
@@ -3121,6 +3122,27 @@ class PlanTyperTestsPorted {
     //
     // Parameterized Tests
     //
+
+    @Test
+    fun testSingle() {
+        val tc = SuccessTestCase(
+            name = "Single test case",
+            query = "{ 'a': 1, 'b': 2 }.a",
+            expected = StaticType.INT4,
+        )
+        runTest(tc)
+    }
+
+    @Test
+    fun testSimpleSFW() {
+        val tc = SuccessTestCase(
+            name = "Single test case",
+            query = "SELECT t.a FROM { 'a': 1, 'b': 2 } AS t",
+            expected = BagType(StaticType.INT4),
+        )
+        runTest(tc)
+    }
+
     @ParameterizedTest
     @ArgumentsSource(TestProvider::class)
     fun test(tc: TestCase) = runTest(tc)

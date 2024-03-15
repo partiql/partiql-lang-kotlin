@@ -1,7 +1,7 @@
-package org.partiql.shape.constraints
+package org.partiql.shape
 
-import org.partiql.shape.PShape
 import org.partiql.shape.errors.InternalError
+import org.partiql.shape.visitor.ShapeVisitor
 import org.partiql.value.AnyType
 import org.partiql.value.PartiQLType
 
@@ -40,5 +40,9 @@ public data class Multiple private constructor(
                 InternalError("UNION was not an ANY type. It contained a $type")
             )
         }
+    }
+
+    override fun <R, C> accept(visitor: ShapeVisitor<R, C>, ctx: C): R {
+        TODO("Not yet implemented")
     }
 }

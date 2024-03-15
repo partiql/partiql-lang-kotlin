@@ -1,7 +1,7 @@
-package org.partiql.shape.constraints
+package org.partiql.shape
 
-import org.partiql.shape.PShape
 import org.partiql.shape.errors.TypeMismatchError
+import org.partiql.shape.visitor.ShapeVisitor
 import org.partiql.value.ArrayType
 import org.partiql.value.BagType
 import org.partiql.value.PartiQLType
@@ -16,5 +16,9 @@ public data class Element(
                 TypeMismatchError(setOf(BagType(), ArrayType()), type)
             )
         }
+    }
+
+    override fun <R, C> accept(visitor: ShapeVisitor<R, C>, ctx: C): R {
+        return visitor.visitConstraintElement(this, ctx)
     }
 }
