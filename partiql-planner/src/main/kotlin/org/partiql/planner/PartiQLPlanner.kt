@@ -53,18 +53,18 @@ public interface PartiQLPlanner {
     ) {
         /**
          * Determine the planner behavior upon encounter an operation that always returns MISSING.
-         * In both mode, The problometic operation will be tracked in problem callback.
-         * Subsequence opearation will take in MISSING as input.
+         * In both mode, The problematic operation will be tracked in problem callback.
+         * Subsequence operation will take in MISSING as input.
          */
         public enum class MissingOpBehavior {
             /**
              *  The problometic operation will be tracked in problem callback as a error.
-             *  The result plan will turn the problemetic operation into an error node.
+             *  The result plan will turn the problematic operation into an error node.
              */
             QUIET,
             /**
-             * The problometic operation will be tracked in problem callback as a error.
-             * The result plan will turn the problemetic operation into an missing node.
+             * The problematic operation will be tracked in problem callback as a error.
+             * The result plan will turn the problematic operation into an missing node.
              */
             SIGNAL
         }
@@ -79,7 +79,7 @@ public interface PartiQLPlanner {
         public fun default(): PartiQLPlanner = PartiQLPlannerBuilder().build()
 
         /**
-         * A planner that preserves the trace of problemetic operation for the purpose of debugging.
+         * A planner that preserves the trace of problematic operation for the purpose of debugging.
          */
         @JvmStatic
         public fun debug(): PartiQLPlanner = PartiQLPlannerDebug()
