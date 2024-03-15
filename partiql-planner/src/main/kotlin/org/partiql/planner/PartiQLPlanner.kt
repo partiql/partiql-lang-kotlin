@@ -49,7 +49,26 @@ public interface PartiQLPlanner {
         public val currentDirectory: List<String> = emptyList(),
         public val catalogs: Map<String, ConnectorMetadata> = emptyMap(),
         public val instant: Instant = Instant.now(),
-    )
+        public val missingOpBehavior: MissingOpBehavior = MissingOpBehavior.QUIET
+    ) {
+        /**
+         * Determine the planner behavior upon encounter an operation that always returns MISSING.
+         * In both mode, The problematic operation will be tracked in problem callback.
+         * Subsequence operation will take in MISSING as input.
+         */
+        public enum class MissingOpBehavior {
+            /**
+             *  The problometic operation will be tracked in problem callback as a error.
+             *  The result plan will turn the problematic operation into an error node.
+             */
+            QUIET,
+            /**
+             * The problematic operation will be tracked in problem callback as a error.
+             * The result plan will turn the problematic operation into an missing node.
+             */
+            SIGNAL
+        }
+    }
 
     public companion object {
 
@@ -58,5 +77,11 @@ public interface PartiQLPlanner {
 
         @JvmStatic
         public fun default(): PartiQLPlanner = PartiQLPlannerBuilder().build()
+
+        /**
+         * A planner that preserves the trace of problematic operation for the purpose of debugging.
+         */
+        @JvmStatic
+        public fun debug(): PartiQLPlanner = PartiQLPlannerDebug()
     }
 }

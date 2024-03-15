@@ -45,7 +45,8 @@ abstract class PartiQLTyperTestBase {
                 currentCatalog = catalog,
                 catalogs = mapOf(
                     catalog to metadata
-                )
+                ),
+                missingOpBehavior = PartiQLPlanner.Session.MissingOpBehavior.SIGNAL
             )
         }
 

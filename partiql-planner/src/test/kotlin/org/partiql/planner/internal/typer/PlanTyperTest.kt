@@ -171,7 +171,7 @@ class PlanTyperTest {
         )
 
         private fun getTyper(): PlanTyperWrapper {
-            val collector = ProblemCollector()
+            ProblemCollector()
             val env = Env(
                 PartiQLPlanner.Session(
                     queryId = Random().nextInt().toString(),
@@ -183,13 +183,12 @@ class PlanTyperTest {
                     ),
                 )
             )
-            return PlanTyperWrapper(PlanTyper(env, collector), collector)
+            return PlanTyperWrapper(PlanTyper(env))
         }
     }
 
     private class PlanTyperWrapper(
         internal val typer: PlanTyper,
-        internal val collector: ProblemCollector,
     )
 
     /**

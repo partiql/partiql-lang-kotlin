@@ -6,6 +6,7 @@ import org.junit.jupiter.api.DynamicNode
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
 import org.partiql.parser.PartiQLParser
+import org.partiql.plan.PartiQLPlan
 import org.partiql.plan.PlanNode
 import org.partiql.plan.debug.PlanPrinter
 import org.partiql.planner.test.PartiQLTest
@@ -75,22 +76,20 @@ class PlanTest {
         override fun getUserId(): String = "user-id"
     }
 
-    val session: (PartiQLTest.Key) -> PartiQLPlanner.Session = { key ->
-        PartiQLPlanner.Session(
-            queryId = key.toString(),
+    val pipeline: (PartiQLTest, PartiQLPlanner.Session.MissingOpBehavior) -> PartiQLPlanner.Result = { test, missingOpBehaivor ->
+        val session = PartiQLPlanner.Session(
+            queryId = test.key.toString(),
             userId = "user_id",
             currentCatalog = "default",
             currentDirectory = listOf(),
             catalogs = mapOf("default" to buildMetadata("default")),
             instant = Instant.now(),
+            missingOpBehavior = missingOpBehaivor
         )
-    }
-
-    val pipeline: (PartiQLTest) -> PartiQLPlanner.Result = { test ->
         val problemCollector = ProblemCollector()
         val ast = PartiQLParser.default().parse(test.statement).root
         val planner = PartiQLPlanner.default()
-        planner.plan(ast, session(test.key), problemCollector)
+        planner.plan(ast, session, problemCollector)
     }
 
     fun buildMetadata(catalogName: String): ConnectorMetadata {
@@ -98,8 +97,7 @@ class PlanTest {
         // Insert binding
         val name = BindingPath(
             listOf(
-                BindingName("default", BindingCase.INSENSITIVE),
-                BindingName("a", BindingCase.INSENSITIVE),
+                BindingName("T", BindingCase.INSENSITIVE),
             )
         )
         val obj = MemoryObject(type)
@@ -132,26 +130,32 @@ class PlanTest {
         val group = parent.name
         val tests = parse(group, file)
 
-        val children = tests.map {
+        val children = tests.map { test ->
             // Prepare
-            val displayName = it.key.toString()
+            val displayName = test.key.toString()
 
             // Assert
             DynamicTest.dynamicTest(displayName) {
-                val input = input[it.key] ?: error("no test cases")
+                val input = input[test.key] ?: error("no test cases")
 
-                val inputPlan = pipeline.invoke(input).plan
-                val outputPlan = pipeline.invoke(it).plan
-                assert(inputPlan.isEquaivalentTo(outputPlan)) {
-                    buildString {
-                        this.appendLine("expect plan equivalence")
-                        PlanPrinter.append(this, inputPlan)
-                        PlanPrinter.append(this, outputPlan)
-                    }
+                PartiQLPlanner.Session.MissingOpBehavior.values().forEach { missingOpBehavior ->
+                    val inputPlan = pipeline.invoke(input, missingOpBehavior).plan
+                    val outputPlan = pipeline.invoke(test, missingOpBehavior).plan
+                    assertPlanEqual(inputPlan, outputPlan)
                 }
             }
         }
         return dynamicContainer(file.nameWithoutExtension, children)
+    }
+
+    private fun assertPlanEqual(inputPlan: PartiQLPlan, outputPlan: PartiQLPlan) {
+        assert(inputPlan.isEquaivalentTo(outputPlan)) {
+            buildString {
+                this.appendLine("expect plan equivalence")
+                PlanPrinter.append(this, inputPlan)
+                PlanPrinter.append(this, outputPlan)
+            }
+        }
     }
 
     private fun parse(group: String, file: File): List<PartiQLTest> {
