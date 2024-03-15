@@ -66,25 +66,19 @@ internal class PlannerErrorReportingTests {
         problems: List<Problem>,
         vararg block: () -> Boolean
     ) {
-        println(
-            buildString {
-                this.appendLine("--------Plan---------")
-                PlanPrinter.append(this, plan)
-            }
-        )
-
-        println(
-            buildString {
-                this.appendLine("----------problems---------")
-                problems.forEach {
-                    this.appendLine(it.toString())
-                }
-            }
-        )
-
         block.forEachIndexed { index, function ->
             assert(function.invoke()) {
-                "assertion #${index + 1} failed"
+                buildString {
+                    this.appendLine("assertion #${index + 1} failed")
+
+                    this.appendLine("--------Plan---------")
+                    PlanPrinter.append(this, plan)
+
+                    this.appendLine("----------problems---------")
+                    problems.forEach {
+                        this.appendLine(it.toString())
+                    }
+                }
             }
         }
     }
