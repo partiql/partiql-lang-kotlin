@@ -3300,6 +3300,7 @@ class PlanTyperTestsPorted {
                     buildString {
                         appendLine()
                         appendLine("Expect: ${tc.expected}")
+                        appendLine("Expect: ${PShape.fromStaticType(tc.expected)}")
                         appendLine("Actual: $actual")
                         appendLine()
                         PlanPrinter.append(this, plan)

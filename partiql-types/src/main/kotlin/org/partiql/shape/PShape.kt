@@ -123,7 +123,7 @@ public sealed interface PShape : ShapeNode {
         @Deprecated("Should we allow this?")
         public fun PShape.allShapes(): Set<PShape> {
             return when {
-                this.isUnion() -> this.allShapes()
+                this.isUnion() -> this.
                 else -> setOf(this)
             }
         }
@@ -327,17 +327,16 @@ public sealed interface PShape : ShapeNode {
                     }
                     is CollectionType -> {
                         val element = type.elementType
-                        val pElement = when (element) {
-                            is SingleType -> PartiQLType.fromSingleType(element)
-                            else -> AnyType
-                        }
-                        val type = when (type) {
+                        val pType = when (type) {
                             is org.partiql.types.BagType -> BagType
                             is ListType -> ArrayType
                             is SexpType -> ArrayType
                         }
                         PShape.of(
-                            type = type
+                            type = pType,
+                            constraints = setOf(
+                                Element(fromStaticType(element))
+                            )
                         )
                     }
                     else -> of(PartiQLType.fromSingleType(type))
@@ -360,7 +359,7 @@ public sealed interface PShape : ShapeNode {
         }
     }
 
-    private class Base(
+    private data class Base(
         override val type: PartiQLType,
         override val constraints: Set<Constraint> = emptySet(),
         override val metas: Set<Meta> = emptySet()

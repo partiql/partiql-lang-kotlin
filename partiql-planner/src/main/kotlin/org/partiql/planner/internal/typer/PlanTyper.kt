@@ -573,7 +573,7 @@ internal class PlanTyper(
             val arg = visitRex(node.arg, null)
             val cast = env.resolveCast(arg, node.target)
             if (cast == null) {
-                handleUnknownCast(node)
+                handleUnknownCast(node.copy(arg = arg))
                 return rexErr("Invalid CAST operator")
             }
             return visitRexOpCastResolved(cast, null)

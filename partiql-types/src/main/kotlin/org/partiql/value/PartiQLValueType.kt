@@ -92,7 +92,7 @@ public sealed interface PartiQLType {
             PartiQLValueType.INT32 -> Int32Type
             PartiQLValueType.INT64 -> Int64Type
             PartiQLValueType.INT -> NumericType(null, 0)
-            PartiQLValueType.NUMERIC -> NumericType(NumericType.MAX_PRECISION, NumericType.MAX_SCALE)
+            PartiQLValueType.NUMERIC -> NumericType(null, null) // TODO: Set Max?
             PartiQLValueType.NUMERIC_ARBITRARY -> NumericType(null, null)
             PartiQLValueType.FLOAT32 -> Float32Type
             PartiQLValueType.FLOAT64 -> Float64Type

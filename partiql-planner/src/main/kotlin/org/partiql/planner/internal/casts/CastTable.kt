@@ -346,17 +346,17 @@ internal class CastTable private constructor(
         fun build() = relationships
 
         fun coercion(target: PartiQLType) {
-            val i = types.indexOfFirst { it.javaClass == it.javaClass } // TODO: val i = types.indexOf(target)
+            val i = types.indexOfFirst { it.javaClass == target.javaClass } // TODO: val i = types.indexOf(target)
             relationships[i] = refCast(operand, target, Cast.Safety.COERCION)
         }
 
         fun explicit(target: PartiQLType) {
-            val i = types.indexOfFirst { it.javaClass == it.javaClass } // TODO: val i = types.indexOf(target)
+            val i = types.indexOfFirst { it.javaClass == target.javaClass } // TODO: val i = types.indexOf(target)
             relationships[i] = refCast(operand, target, Cast.Safety.EXPLICIT)
         }
 
         fun unsafe(target: PartiQLType) {
-            val i = types.indexOfFirst { it.javaClass == it.javaClass } // TODO: val i = types.indexOf(target)
+            val i = types.indexOfFirst { it.javaClass == target.javaClass } // TODO: val i = types.indexOf(target)
             relationships[i] = refCast(operand, target, Cast.Safety.UNSAFE)
         }
     }
