@@ -56,20 +56,20 @@ internal typealias SuperGraph = Array<Array<PartiQLValueType?>>
 internal class DynamicTyper {
 
     private var supertype = NULL
+    private var args = mutableListOf<PartiQLValueType>()
 
     private var nullable = false
     private var missable = false
-    private val allTypes = mutableSetOf<StaticType>()
+    private val types = mutableSetOf<StaticType>()
 
-    /**
-     * Adds this
-     */
-    public fun accumulate(type: StaticType) {
+    fun accumulate(type: StaticType) {
+        val arg = type.toRuntimeType()
+        args.add(arg)
         if (type is SingleType) {
             when (type) {
                 is MissingType -> missable = true
                 is NullType -> nullable = true
-                else -> calculate(type)
+                else -> calculate(type, arg)
             }
         } else {
             for (t in type.flatten().allTypes) {
@@ -82,36 +82,42 @@ internal class DynamicTyper {
         }
     }
 
-    public fun type(): StaticType {
+    /**
+     * Returns a pair of the return StaticType and the coercion
+     *
+     * @return
+     */
+    fun mapping(): Pair<StaticType, List<Pair<PartiQLValueType, PartiQLValueType>>?> {
         val modifiers = mutableSetOf<StaticType>()
         if (nullable) modifiers.add(StaticType.NULL)
         if (missable) modifiers.add(StaticType.MISSING)
         // If at top supertype, then return union of all accumulated types
         if (supertype == ANY) {
-            return StaticType.unionOf(allTypes + modifiers)
+            return StaticType.unionOf(types + modifiers) to null
         }
         // If a collection, then return union of all accumulated types as these coercion rules are not defined by SQL.
         if (supertype == STRUCT || supertype == BAG || supertype == LIST || supertype == SEXP) {
-            return StaticType.unionOf(allTypes + modifiers)
+            return StaticType.unionOf(types + modifiers) to null
         }
-        // Otherwise, return the supertype
-        val st = supertype.toNonNullStaticType()
+        // Otherwise, return the supertype along with the coercion mapping
+        val type = supertype.toNonNullStaticType()
+        val mapping = args.map { it to supertype }
         return if (modifiers.isEmpty()) {
-            st
+            type to mapping
         } else {
-            StaticType.unionOf(setOf(st) + modifiers).flatten()
+            StaticType.unionOf(setOf(type) + modifiers).flatten() to mapping
         }
     }
 
-    private fun calculate(type: StaticType) {
-        allTypes.add(type)
+    private fun calculate(type: StaticType, arg: PartiQLValueType? = null) {
+        types.add(type)
         // Don't bother calculating the new supertype, we've already hit the top.
         if (supertype == ANY) return
         // Lookup and set the new minimum common supertype
-        val t = type.toRuntimeType()
+        val t = arg ?: type.toRuntimeType()
         supertype = when {
             supertype == NULL -> t // initialize
-            t == NULL || t == MISSING || supertype == t -> return // skip
+            arg == NULL || arg == MISSING || supertype == arg -> return // skip
             else -> graph[supertype][t] ?: ANY // lookup, if missing then go to top.
         }
     }

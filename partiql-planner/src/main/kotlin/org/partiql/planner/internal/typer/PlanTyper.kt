@@ -688,7 +688,7 @@ internal class PlanTyper(
         override fun visitRexOpCase(node: Rex.Op.Case, ctx: StaticType?): Rex {
             // Rewrite CASE-WHEN branches
             val oldBranches = node.branches.toTypedArray()
-            val newBranches = mutableListOf<Rex.Op.Case.Branch>()
+            var newBranches = mutableListOf<Rex.Op.Case.Branch>()
             val typer = DynamicTyper()
             for (i in oldBranches.indices) {
 
@@ -722,13 +722,37 @@ internal class PlanTyper(
             }
 
             // Rewrite ELSE branch
-            val newDefault = visitRex(node.default, node.default.type)
+            var newDefault = visitRex(node.default, node.default.type)
             if (newBranches.isEmpty()) {
                 return newDefault
             }
             typer.accumulate(newDefault.type)
 
-            val type = typer.type()
+            // Compute the CASE-WHEN type from the accumulator
+            val (type, mapping) = typer.mapping()
+
+            // Rewrite branches if we have coercions.
+            if (mapping != null) {
+                val msize = mapping.size
+                val bsize = newBranches.size + 1
+                assert(msize == bsize) { "Coercion mappings `len $msize` did not match the number of CASE-WHEN branches `len $bsize`" }
+                // Rewrite branches
+                for (i in newBranches.indices) {
+                    val (operand, target) = mapping[i]
+                    if (operand == target) continue // skip
+                    val cast = env.fnResolver.cast(operand, target)
+                    val branch = newBranches[i]
+                    val rex = rex(type, rexOpCallStatic(fnResolved(cast), listOf(branch.rex)))
+                    newBranches[i] = branch.copy(rex = rex)
+                }
+                // Rewrite default
+                val (operand, target) = mapping.last()
+                if (operand != target) {
+                    val cast = env.fnResolver.cast(operand, target)
+                    newDefault = rex(type, rexOpCallStatic(fnResolved(cast), listOf(newDefault)))
+                }
+            }
+
             val op = Rex.Op.Case(newBranches, newDefault)
             return rex(type, op)
         }
