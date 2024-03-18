@@ -9,7 +9,6 @@ import org.partiql.types.SexpType
 import org.partiql.types.SingleType
 import org.partiql.types.StaticType
 import org.partiql.types.StructType
-import org.partiql.types.TupleConstraint
 import org.partiql.value.AnyType
 import org.partiql.value.ArrayType
 import org.partiql.value.BagType
@@ -243,21 +242,32 @@ public sealed interface PShape : ShapeNode {
         @Deprecated("Double-check this")
         // TODO: Allow types to be nullable?
         public fun PShape.isNullable(): Boolean {
+            return !this.isNotNullable()
+        }
+
+        @Deprecated("Double-check this")
+        private fun PShape.isNotNullable(): Boolean {
             if (this.canBeType<NullType>()) {
-                return true
+                return false
             }
             return when (this.constraints.size) {
-                0 -> true
-                else -> this.constraints.any { it.canBeNull() }
+                0 -> false
+                else -> this.constraints.any { constraint ->
+                    when (constraint) {
+                        is NotNull -> true
+                        is AnyOf -> constraint.shapes.all { it.isNotNullable() }
+                        else -> false
+                    }
+                }
             }
         }
 
         @Deprecated("Double-check this")
-        public fun Constraint.canBeNull(): Boolean {
+        private fun Constraint.isNotNullable(): Boolean {
             return when (this) {
-                is NotNull -> false
-                is AnyOf -> this.shapes.any { it.isNullable() }
-                else -> true
+                is NotNull -> true
+                is AnyOf -> this.shapes.all { it.isNotNullable() }
+                else -> false
             }
         }
 

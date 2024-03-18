@@ -3156,9 +3156,11 @@ class PlanTyperTestsPorted {
     @Test
     fun testSimpleSFW() {
         val tc = SuccessTestCase(
-            name = "Current User Concat",
-            query = "CURRENT_USER || 'hello'",
-            expected = StaticType.unionOf(StaticType.STRING, StaticType.NULL)
+            name = "IN",
+            catalog = CATALOG_DB,
+            catalogPath = DB_SCHEMA_MARKETS,
+            query = "order_info.customer_id IN (1, 2, 3)",
+            expected = TYPE_BOOL
         )
         runTest(tc)
     }
