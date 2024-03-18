@@ -70,13 +70,14 @@ import org.partiql.planner.internal.ir.rexOpSelect
 import org.partiql.planner.internal.ir.rexOpStruct
 import org.partiql.planner.internal.ir.rexOpStructField
 import org.partiql.planner.internal.ir.rexOpVarLocal
+import org.partiql.shape.NotNull
 import org.partiql.shape.PShape
 import org.partiql.value.AnyType
 import org.partiql.value.ArrayType
 import org.partiql.value.BagType
 import org.partiql.value.BoolType
 import org.partiql.value.CharVarUnboundedType
-import org.partiql.value.NumericType
+import org.partiql.value.Int64Type
 import org.partiql.value.PartiQLType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.TupleType
@@ -230,7 +231,7 @@ internal object RelConverter {
                         else -> {
                             val index = relBinding(
                                 name = i.symbol,
-                                type = PShape.of(NumericType(null, 0))
+                                type = PShape.of(Int64Type, constraint = NotNull)
                             )
                             convertScanIndexed(rex, binding, index)
                         }

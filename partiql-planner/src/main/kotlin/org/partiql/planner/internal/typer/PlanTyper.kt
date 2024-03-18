@@ -171,7 +171,7 @@ internal class PlanTyper(
             val rex = node.rex.type(emptyList(), outer, Scope.GLOBAL)
             // compute rel type
             val valueT = getElementTypeForFromSource(rex.type)
-            val indexT = PShape.of(Int8Type)
+            val indexT = PShape.of(Int64Type, constraint = NotNull) // TODO: Handle MISSING (unordered)
             val type = ctx!!.copyWithSchema(listOf(valueT, indexT))
             // rewrite
             val op = relOpScanIndexed(rex)
