@@ -41,6 +41,7 @@ import org.partiql.planner.internal.ir.rexOpStructField
 import org.partiql.planner.internal.ir.rexOpSubquery
 import org.partiql.planner.internal.ir.rexOpTupleUnion
 import org.partiql.planner.internal.ir.rexOpVarUnresolved
+import org.partiql.shape.NotNull
 import org.partiql.shape.PShape
 import org.partiql.value.AnyType
 import org.partiql.value.ArrayType
@@ -81,8 +82,8 @@ internal object RexConverter {
 
         override fun visitExprLit(node: Expr.Lit, context: Env): Rex {
             val type = when (node.value.isNull) {
-                true -> node.value.type
-                else -> node.value.type
+                true -> PShape.of(node.value.type)
+                false -> PShape.of(node.value.type, constraint = NotNull)
             }
             val op = rexOpLit(node.value)
             return rex(type, op)

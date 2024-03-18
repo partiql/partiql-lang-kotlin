@@ -85,7 +85,6 @@ import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnSignature
-import org.partiql.types.StaticType
 import org.partiql.value.AnyType
 import org.partiql.value.ArrayType
 import org.partiql.value.BagType
@@ -581,7 +580,7 @@ internal class PlanTyper(
 
         override fun visitRexOpCastResolved(node: Rex.Op.Cast.Resolved, ctx: PShape?): Rex {
             val missable = node.arg.type.isMissable() || node.cast.safety == UNSAFE
-            var type = PShape.of(node.cast.target) // TODO: toNonNullStaticType() ?
+            var type = PShape.of(node.cast.target, constraints = setOf(NotNull))
             if (missable) {
                 type = PShape.anyOf(type, PShape.of(MissingType))
             }
@@ -797,7 +796,7 @@ internal class PlanTyper(
 
         override fun visitRexOpCollection(node: Rex.Op.Collection, ctx: PShape?): Rex {
             if ((ctx!!.type !is ArrayType) && (ctx.type !is BagType)) {
-                handleUnexpectedType(ctx, emptySet()) // TODO: setOf(StaticType.LIST, StaticType.BAG, StaticType.SEXP))
+                handleUnexpectedType(ctx.type, setOf(BagType, ArrayType))
                 return rex(MissingType, rexOpErr("Expected collection type"))
             }
             val values = node.values.map { visitRex(it, it.type) }
@@ -805,7 +804,6 @@ internal class PlanTyper(
                 0 -> PShape.of(AnyType)
                 else -> values.toUnionType()
             }
-            // TODO: How can we model PShape's collection types' element types?
             val type = when (ctx.type) {
                 is BagType -> BagType
                 is ArrayType -> ArrayType
@@ -813,7 +811,7 @@ internal class PlanTyper(
             }
             val shape = PShape.of(
                 type = type,
-                constraint = Element(t)
+                constraints = setOf(Element(t), NotNull)
             )
             return rex(shape, rexOpCollection(values))
         }
@@ -966,10 +964,13 @@ internal class PlanTyper(
                 0 -> {
                     PShape.of(
                         type = TupleType,
-                        constraint = Fields(
-                            fields = emptyList(),
-                            isClosed = true,
-                            isOrdered = true // TODO: This doesn't even matter. What about uniqueness?
+                        constraints = setOf(
+                            Fields(
+                                fields = emptyList(),
+                                isClosed = true,
+                                // TODO: isOrdered = true // TODO: This doesn't even matter. What about uniqueness?
+                            ),
+                            NotNull
                         )
                     )
                 }
@@ -1058,10 +1059,13 @@ internal class PlanTyper(
             uniqueAttrs = uniqueAttrs && (structFields.size == structFields.distinctBy { it.key }.size)
             return PShape.of(
                 type = TupleType,
-                constraint = Fields(
-                    isClosed = structIsClosed,
-                    isOrdered = structIsOrdered,
-                    fields = structFields
+                constraints = setOf(
+                    Fields(
+                        isClosed = structIsClosed,
+                        // TODO: isOrdered = structIsOrdered,
+                        fields = structFields
+                    ),
+                    NotNull
                 )
             )
         }
@@ -1201,25 +1205,26 @@ internal class PlanTyper(
             // True iff MISSING CALL and had a MISSABLE arg
             val isMissable = (fn.isMissingCall && hadMissable) && fn.isMissable
 
+            val returnType = PartiQLType.fromLegacy(fn.returns)
             // Return type with calculated nullability
-            var type = when {
-                isMissing -> MissingType
+            val type = when {
+                isMissing -> PShape.of(MissingType, constraints = setOf(NotNull))
                 // Edge cases for EQ and boolean connective
                 // If function can not return missing or null, can not propagate missing or null
                 // AKA, the Function IS MissingType
                 // return signature return type
-                !fn.isMissable && !fn.isMissingCall && !fn.isNullable && !fn.isNullCall -> PartiQLType.fromLegacy(fn.returns) // TODO: .toNonNullStaticType()
-                isNull || (!fn.isMissable && hadMissing) -> NullType
-                isNullable -> PartiQLType.fromLegacy(fn.returns) // TODO: Null
-                else -> PartiQLType.fromLegacy(fn.returns) // TODO: Non-null
+                !fn.isMissable && !fn.isMissingCall && !fn.isNullable && !fn.isNullCall -> PShape.of(returnType, constraints = setOf(NotNull))
+                isNull || (!fn.isMissable && hadMissing) -> PShape.of(returnType)
+                isNullable -> PShape.of(returnType)
+                else -> PShape.of(returnType, constraints = setOf(NotNull))
             }
 
             // Propagate MissingType unless this operator explicitly doesn't return missing (fn.isMissable = false).
             if (isMissable) {
-                return PShape.anyOf(type, MissingType)
+                return anyOf(type, PShape.of(MissingType))
             }
 
-            return PShape.of(type)
+            return type
         }
 
         /**
@@ -1346,7 +1351,7 @@ internal class PlanTyper(
 
     private fun assertAsInt(type: PShape) {
         if (type.allTypes().any { variant -> variant is NumericType }.not()) { // TODO: This was originally for INT. Double-check.
-            handleUnexpectedType(type, emptySet())
+            handleUnexpectedType(type.type, setOf(NumericType(null, 0)))
         }
     }
 
@@ -1362,21 +1367,24 @@ internal class PlanTyper(
     }
 
     private fun handleUnexpectedType(actual: PShape, expected: Set<PShape>) {
+        handleUnexpectedType(actual.type, expected.map { it.type }.toSet())
+    }
+
+    private fun handleUnexpectedType(actual: PartiQLType, expected: Set<PartiQLType>) {
         onProblem(
             Problem(
                 sourceLocation = UNKNOWN_PROBLEM_LOCATION,
-                details = PlanningProblemDetails.UnexpectedType(StaticType.ANY, emptySet()) // TODO: PlanningProblemDetails.UnexpectedType(actual, expected),
+                details = PlanningProblemDetails.UnexpectedType(expected, actual)
             )
         )
     }
 
     private fun handleUnknownCast(node: Rex.Op.Cast.Unresolved) {
-        error("UNKNOWN CAST: ${node.target} with arg: ${node.arg}") // TODO: Remove
         onProblem(
             Problem(
                 sourceLocation = UNKNOWN_PROBLEM_LOCATION,
                 details = PlanningProblemDetails.UnknownFunction(
-                    identifier = "CAST(<arg> AS ${node.target})", args = emptyList() // TODO: listOf(node.arg.type)
+                    args = listOf(node.arg.type.type), identifier = "CAST(<arg> AS ${node.target})"
                 )
             )
         )
@@ -1387,8 +1395,8 @@ internal class PlanTyper(
             Problem(
                 sourceLocation = UNKNOWN_PROBLEM_LOCATION,
                 details = PlanningProblemDetails.UnknownFunction(
-                    identifier = node.name,
-                    args = emptyList() // TODO: node.args.map { it.type }
+                    args = node.args.map { it.type.type },
+                    identifier = node.name
                 )
             )
         )
@@ -1399,15 +1407,14 @@ internal class PlanTyper(
             Problem(
                 sourceLocation = UNKNOWN_PROBLEM_LOCATION,
                 details = PlanningProblemDetails.UnknownFunction(
-                    identifier = node.identifier.debug(),
-                    args = emptyList() // TODO: args.map { it.type }
+                    args = args.map { it.type.type },
+                    identifier = node.identifier.debug()
                 )
             )
         )
     }
 
     private fun handleAlwaysMissing() {
-        error("ALWAYS MISSING!") // TODO: Remove this
         onProblem(
             Problem(
                 sourceLocation = UNKNOWN_PROBLEM_LOCATION,

@@ -76,7 +76,11 @@ public sealed interface PShape : ShapeNode {
             constraints: Set<Constraint> = emptySet(),
             metas: Set<Meta> = emptySet()
         ): PShape {
-            return Base(type, constraints, metas)
+            val newConstraints = when (type) {
+                is MissingType -> constraints + setOf(NotNull)
+                else -> constraints
+            }
+            return Base(type, newConstraints, metas)
         }
 
         @JvmStatic
@@ -123,8 +127,19 @@ public sealed interface PShape : ShapeNode {
         @Deprecated("Should we allow this?")
         public fun PShape.allShapes(): Set<PShape> {
             return when {
-                this.isUnion() -> this.
+                this.isUnion() -> this.getAnyOf().shapes
                 else -> setOf(this)
+            }
+        }
+
+        @JvmStatic
+        @Deprecated("Should we allow this?")
+        public fun PShape.getAnyOf(): AnyOf {
+            val anyOf = this.constraints.filterIsInstance<AnyOf>()
+            return when (anyOf.size) {
+                0 -> error("None found!")
+                1 -> anyOf.first()
+                else -> error("Expected one AnyOf, but ${anyOf.size} found.")
             }
         }
 
@@ -316,12 +331,15 @@ public sealed interface PShape : ShapeNode {
                     is StructType -> {
                         val pType = PartiQLType.fromSingleType(type)
                         val fields = type.fields.map { Fields.Field(it.key, fromStaticType(it.value)) }
-                        PShape.of(
+                        of(
                             type = pType,
-                            constraint = Fields(
-                                fields = fields,
-                                isClosed = type.contentClosed,
-                                isOrdered = type.constraints.contains(TupleConstraint.Ordered)
+                            constraints = setOf(
+                                Fields(
+                                    fields = fields,
+                                    isClosed = type.contentClosed,
+                                    // TODO: isOrdered = type.constraints.contains(TupleConstraint.Ordered)
+                                ),
+                                NotNull
                             )
                         )
                     }
@@ -335,18 +353,29 @@ public sealed interface PShape : ShapeNode {
                         PShape.of(
                             type = pType,
                             constraints = setOf(
-                                Element(fromStaticType(element))
+                                Element(fromStaticType(element)),
+                                NotNull
                             )
                         )
                     }
-                    else -> of(PartiQLType.fromSingleType(type))
+                    is org.partiql.types.NullType -> of(PartiQLType.fromSingleType(type))
+                    else -> of(
+                        PartiQLType.fromSingleType(type),
+                        constraints = setOf(NotNull)
+                    )
                 }
                 is org.partiql.types.AnyType -> of(AnyType)
                 is AnyOfType -> {
-                    val types = type.flatten().allTypes.map { child ->
-                        fromStaticType(child)
+                    val flattened = type.flatten().allTypes
+                    val types = when (flattened.any { it is org.partiql.types.NullType }) {
+                        true -> flattened.filterNot { it is org.partiql.types.NullType }.map { child ->
+                            fromStaticType(child).asNullable()
+                        }
+                        false -> flattened.map { child ->
+                            fromStaticType(child)
+                        }
                     }.toSet()
-                    PShape.anyOf(types)
+                    anyOf(types)
                 }
             }
         }

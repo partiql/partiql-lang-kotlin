@@ -151,8 +151,8 @@ public sealed interface PartiQLType {
         @JvmStatic
         @Deprecated("Will likely be removed")
         public val NUMERIC_BOUND_TYPES: List<NumericType> = buildList {
-            repeat(NumericType.MAX_PRECISION) { precision ->
-                repeat(NumericType.MAX_SCALE) { scale ->
+            repeat(NumericType.MAX_PRECISION + 1) { precision ->
+                repeat(NumericType.MAX_SCALE + 1) { scale ->
                     add(NumericType(precision, scale))
                 }
             }
@@ -170,7 +170,7 @@ public sealed interface PartiQLType {
         @JvmStatic
         @Deprecated("Will likely be removed")
         public val CHAR_TYPES: List<PartiQLType> = buildList {
-            repeat(CharType.MAX_LENGTH) { length ->
+            repeat(CharType.MAX_LENGTH + 1) { length ->
                 add(CharType(length))
             }
         }
@@ -178,7 +178,7 @@ public sealed interface PartiQLType {
         @JvmStatic
         @Deprecated("Will likely be removed")
         public val VARCHAR_TYPES: List<PartiQLType> = buildList {
-            repeat(CharVarType.MAX_LENGTH) { length ->
+            repeat(CharVarType.MAX_LENGTH + 1) { length ->
                 add(CharVarType(length))
             }
         }
@@ -186,7 +186,7 @@ public sealed interface PartiQLType {
         @JvmStatic
         @Deprecated("Will likely be removed")
         public val CLOB_TYPES: List<PartiQLType> = buildList {
-            repeat(ClobType.MAX_LENGTH) { length ->
+            repeat(ClobType.MAX_LENGTH + 1) { length ->
                 add(ClobType(length))
             }
             add(ClobUnboundedType)
@@ -195,7 +195,7 @@ public sealed interface PartiQLType {
         @JvmStatic
         @Deprecated("Will likely be removed")
         public val BLOB_TYPES: List<PartiQLType> = buildList {
-            repeat(BlobType.MAXIMUM_LENGTH) { length ->
+            repeat(BlobType.MAXIMUM_LENGTH + 1) { length ->
                 add(BlobType(length))
             }
         }
@@ -211,10 +211,10 @@ public sealed interface PartiQLType {
         @JvmStatic
         @Deprecated("Will likely be removed")
         public val TIME_TYPES: List<PartiQLType> = buildList {
-            repeat(TimeType.MAX_PRECISION) { precision ->
+            repeat(TimeType.MAX_PRECISION + 1) { precision ->
                 add(TimeType(precision))
             }
-            repeat(TimeWithTimeZoneType.MAX_PRECISION) { precision ->
+            repeat(TimeWithTimeZoneType.MAX_PRECISION + 1) { precision ->
                 add(TimeWithTimeZoneType(precision))
             }
         }
@@ -222,10 +222,10 @@ public sealed interface PartiQLType {
         @JvmStatic
         @Deprecated("Will likely be removed")
         public val TIMESTAMP_TYPES: List<PartiQLType> = buildList {
-            repeat(TimestampType.MAX_PRECISION) { precision ->
+            repeat(TimestampType.MAX_PRECISION + 1) { precision ->
                 add(TimestampType(precision))
             }
-            repeat(TimestampWithTimeZoneType.MAX_PRECISION) { precision ->
+            repeat(TimestampWithTimeZoneType.MAX_PRECISION + 1) { precision ->
                 add(TimestampWithTimeZoneType(precision))
             }
         }
@@ -233,7 +233,7 @@ public sealed interface PartiQLType {
         @JvmStatic
         @Deprecated("Will likely be removed")
         public val INTERVAL_TYPES: List<PartiQLType> = buildList {
-            repeat(IntervalType.MAX_PRECISION) { precision ->
+            repeat(IntervalType.MAX_PRECISION + 1) { precision ->
                 add(IntervalType(precision))
             }
         }
@@ -289,7 +289,7 @@ public sealed interface PartiQLType {
             listOf(NumericType.UNCONSTRAINED) +
             listOf(NumericType(null, 0)) + // Unbound INT
             TEXT_TYPES +
-            BLOB_TYPES +
+            BINARY_TYPES +
             DATETIME_TYPES +
             COLLECTION_TYPES +
             COMPLEX_TYPES +

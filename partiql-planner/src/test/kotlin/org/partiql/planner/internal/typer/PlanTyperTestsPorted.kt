@@ -37,6 +37,7 @@ import org.partiql.spi.connector.ConnectorMetadata
 import org.partiql.spi.connector.ConnectorSession
 import org.partiql.types.AnyOfType
 import org.partiql.types.BagType
+import org.partiql.types.DecimalType
 import org.partiql.types.ListType
 import org.partiql.types.SexpType
 import org.partiql.types.StaticType
@@ -781,7 +782,25 @@ class PlanTyperTestsPorted {
                     StructType(
                         fields = mapOf(
                             "a" to StaticType.INT4,
-                            "b" to StaticType.DECIMAL,
+                            "b" to DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(2, 1)),
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "CROSS JOIN with 4 digits of precision",
+                query = "SELECT * FROM <<{ 'a': 1 }>> AS t1, <<{ 'b': 30.01 }>> AS t2",
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "a" to StaticType.INT4,
+                            "b" to DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(4, 2)),
                         ),
                         contentClosed = true,
                         constraints = setOf(
@@ -799,7 +818,7 @@ class PlanTyperTestsPorted {
                     StructType(
                         fields = mapOf(
                             "a" to StaticType.INT4,
-                            "b" to StaticType.unionOf(StaticType.NULL, StaticType.DECIMAL),
+                            "b" to StaticType.unionOf(StaticType.NULL, DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(2, 1))),
                         ),
                         contentClosed = true,
                         constraints = setOf(
@@ -816,7 +835,7 @@ class PlanTyperTestsPorted {
                 expected = BagType(
                     StructType(
                         fields = listOf(
-                            StructType.Field("b", StaticType.unionOf(StaticType.NULL, StaticType.DECIMAL)),
+                            StructType.Field("b", StaticType.unionOf(StaticType.NULL, DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(2, 1)))),
                             StructType.Field("a", StaticType.INT4),
                         ),
                         contentClosed = true,
@@ -835,7 +854,7 @@ class PlanTyperTestsPorted {
                     StructType(
                         fields = listOf(
                             StructType.Field("a", StaticType.INT4),
-                            StructType.Field("a", StaticType.unionOf(StaticType.NULL, StaticType.DECIMAL)),
+                            StructType.Field("a", StaticType.unionOf(StaticType.NULL, DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(2, 1)))),
                         ),
                         contentClosed = true,
                         constraints = setOf(
@@ -853,7 +872,7 @@ class PlanTyperTestsPorted {
                     StructType(
                         fields = listOf(
                             StructType.Field("a", StaticType.INT4),
-                            StructType.Field("a", StaticType.unionOf(StaticType.NULL, StaticType.DECIMAL)),
+                            StructType.Field("a", StaticType.unionOf(StaticType.NULL, DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(2, 1)))),
                         ),
                         contentClosed = true,
                         constraints = setOf(
@@ -881,7 +900,7 @@ class PlanTyperTestsPorted {
                     StructType(
                         fields = listOf(
                             StructType.Field("a", StaticType.INT4),
-                            StructType.Field("a", StaticType.unionOf(StaticType.DECIMAL, StaticType.NULL)),
+                            StructType.Field("a", StaticType.unionOf(DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(2, 1)), StaticType.NULL)),
                             StructType.Field("a", StaticType.unionOf(StaticType.STRING, StaticType.NULL)),
                         ),
                         contentClosed = true,
@@ -900,7 +919,7 @@ class PlanTyperTestsPorted {
                     StructType(
                         fields = listOf(
                             StructType.Field("a", StaticType.INT4),
-                            StructType.Field("a", StaticType.unionOf(StaticType.DECIMAL, StaticType.NULL)),
+                            StructType.Field("a", StaticType.unionOf(DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(2, 1)), StaticType.NULL)),
                         ),
                         contentClosed = true,
                         constraints = setOf(

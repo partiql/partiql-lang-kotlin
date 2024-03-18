@@ -213,7 +213,7 @@ internal fun PShape.exclude(steps: List<Rel.Op.Exclude.Step>, lastStepOptional: 
 internal fun PShape.excludeTuple(step: Rel.Op.Exclude.Step, lastStepOptional: Boolean = false): PShape {
     val type = step.type
     val substeps = step.substeps
-    val fields = this.getFirstAndOnlyFields() ?: Fields(emptyList(), isClosed = false, isOrdered = false)
+    val fields = this.getFirstAndOnlyFields() ?: Fields(emptyList(), isClosed = false) // TODO: isOrdered = false)
     val output = fields.fields.mapNotNull { field ->
         val newField = if (substeps.isEmpty()) {
             if (lastStepOptional) {
@@ -249,7 +249,7 @@ internal fun PShape.excludeTuple(step: Rel.Op.Exclude.Step, lastStepOptional: Bo
     val newFields = Fields(
         fields = output,
         isClosed = fields.isClosed,
-        isOrdered = fields.isOrdered
+        // TODO: isOrdered = fields.isOrdered
     )
     val constraints = this.constraints.flatMap { c ->
         when (c) {
