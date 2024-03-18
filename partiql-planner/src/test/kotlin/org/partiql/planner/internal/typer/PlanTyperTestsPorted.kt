@@ -50,11 +50,13 @@ import org.partiql.types.StaticType
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
 import org.partiql.value.AnyType
+import org.partiql.value.ArrayType
 import org.partiql.value.BoolType
 import org.partiql.value.CharVarUnboundedType
 import org.partiql.value.Int32Type
 import org.partiql.value.MissingType
 import org.partiql.value.NullType
+import org.partiql.value.NumericType
 import org.partiql.value.PartiQLType
 import org.partiql.value.TupleType
 import java.util.stream.Stream
@@ -2075,55 +2077,86 @@ class PlanTyperTestsPorted {
             SuccessTestCase(
                 name = "exclude with unions and last step collection index",
                 key = key("exclude-35"),
-                expected = BagType(
-                    elementType = StructType(
-                        fields = mapOf(
-                            "a" to ListType(
-                                elementType = StaticType.unionOf(
-                                    StructType(
-                                        fields = mapOf(
-                                            "b" to StaticType.INT4,
-                                            "c" to StaticType.INT4.asOptional()
-                                        ),
-                                        contentClosed = true,
-                                        constraints = setOf(
-                                            TupleConstraint.Open(false),
-                                            TupleConstraint.UniqueAttrs(true)
-                                        )
-                                    ),
-                                    StructType(
-                                        fields = mapOf(
-                                            "b" to StaticType.INT4,
-                                            "c" to StaticType.NULL.asOptional()
-                                        ),
-                                        contentClosed = true,
-                                        constraints = setOf(
-                                            TupleConstraint.Open(false),
-                                            TupleConstraint.UniqueAttrs(true)
-                                        )
-                                    ),
-                                    StructType(
-                                        fields = mapOf(
-                                            "b" to StaticType.INT4,
-                                            "c" to StaticType.DECIMAL.asOptional()
-                                        ),
-                                        contentClosed = true,
-                                        constraints = setOf(
-                                            TupleConstraint.Open(false),
-                                            TupleConstraint.UniqueAttrs(true)
+                expected = org.partiql.value.BagType.withConstraints(
+                    NotNull,
+                    Element(
+                        TupleType.withConstraints(
+                            NotNull,
+                            Fields(
+                                isClosed = true,
+                                fields = listOf(
+                                    Fields.Field(
+                                        "a",
+                                        ArrayType.withConstraints(
+                                            NotNull,
+                                            Element(
+                                                TupleType.withConstraints(
+                                                    AnyOf(
+                                                        TupleType.withConstraints(
+                                                            NotNull,
+                                                            Fields(
+                                                                fields = listOf(
+                                                                    Fields.Field("b", Int32Type.withConstraints(NotNull)),
+                                                                    Fields.Field(
+                                                                        "c",
+                                                                        AnyType.withConstraints(
+                                                                            AnyOf(
+                                                                                Int32Type.withConstraints(NotNull),
+                                                                                MissingType.withConstraints(NotNull),
+                                                                            )
+                                                                        )
+                                                                    ),
+                                                                ),
+                                                                isClosed = true
+                                                            )
+                                                        ),
+                                                        TupleType.withConstraints(
+                                                            NotNull,
+                                                            Fields(
+                                                                fields = listOf(
+                                                                    Fields.Field("b", Int32Type.withConstraints(NotNull)),
+                                                                    Fields.Field(
+                                                                        "c",
+                                                                        AnyType.withConstraints(
+                                                                            AnyOf(
+                                                                                NullType.withConstraints(),
+                                                                                MissingType.withConstraints(NotNull),
+                                                                            )
+                                                                        )
+                                                                    ),
+                                                                ),
+                                                                isClosed = true
+                                                            )
+                                                        ),
+                                                        TupleType.withConstraints(
+                                                            NotNull,
+                                                            Fields(
+                                                                fields = listOf(
+                                                                    Fields.Field("b", Int32Type.withConstraints(NotNull)),
+                                                                    Fields.Field(
+                                                                        "c",
+                                                                        AnyType.withConstraints(
+                                                                            AnyOf(
+                                                                                // TODO: This should be NumericType(2, 1)
+                                                                                NumericType(1, 1).withConstraints(NotNull),
+                                                                                MissingType.withConstraints(NotNull),
+                                                                            )
+                                                                        )
+                                                                    ),
+                                                                ),
+                                                                isClosed = true
+                                                            )
+                                                        ),
+                                                    )
+                                                )
+                                            )
                                         )
                                     )
                                 )
                             )
-                        ),
-                        contentClosed = true,
-                        constraints = setOf(
-                            TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(true),
-                            TupleConstraint.Ordered
                         )
                     )
-                )
+                ),
             ),
             // TODO: Actual is bag(struct(b: int4, [Open(value=false), UniqueAttrs(value=true), Ordered]))
 //            SuccessTestCase(

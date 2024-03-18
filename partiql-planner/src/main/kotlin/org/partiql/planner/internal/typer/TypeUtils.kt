@@ -11,6 +11,7 @@ import org.partiql.shape.PShape.Companion.getFirstAndOnlyFields
 import org.partiql.shape.PShape.Companion.getSingleElement
 import org.partiql.shape.PShape.Companion.isCollection
 import org.partiql.shape.PShape.Companion.isType
+import org.partiql.shape.PShape.Companion.isUnion
 import org.partiql.shape.PShape.Companion.of
 import org.partiql.shape.PShape.Companion.setElement
 import org.partiql.types.AnyOfType
@@ -193,11 +194,11 @@ internal fun PShape.exclude(steps: List<Rel.Op.Exclude.Step>, lastStepOptional: 
     val type = this
     return steps.fold(type) { acc, step ->
         when {
-            acc.isType<TupleType>() -> acc.excludeTuple(step, lastStepOptional)
-            acc.isCollection() -> acc.excludeCollection(step, lastStepOptional)
-            acc.isType<AnyType>() -> PShape.anyOf(
+            acc.isUnion() -> PShape.anyOf(
                 acc.allShapes().map { it.exclude(steps, lastStepOptional) }.toSet()
             )
+            acc.isType<TupleType>() -> acc.excludeTuple(step, lastStepOptional)
+            acc.isCollection() -> acc.excludeCollection(step, lastStepOptional)
             else -> acc
         }
     }
