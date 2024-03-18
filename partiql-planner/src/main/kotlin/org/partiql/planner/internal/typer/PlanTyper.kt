@@ -883,9 +883,12 @@ internal class PlanTyper(
             val value = typer.visitRex(node.value, null)
             val type = PShape.of(
                 type = TupleType,
-                constraint = Fields(
-                    fields = emptyList(),
-                    isClosed = false
+                constraints = setOf(
+                    Fields(
+                        fields = emptyList(),
+                        isClosed = false
+                    ),
+                    NotNull
                 )
             )
             val op = rexOpPivot(key, value, rel)
@@ -1359,9 +1362,15 @@ internal class PlanTyper(
     }
 
     private fun assertAsInt(type: PShape) {
-        if (type.allTypes().any { variant -> variant is NumericType }.not()) { // TODO: This was originally for INT. Double-check.
+        if (type.allTypes().any { variant -> variant.isIntegerType() }.not()) {
             handleUnexpectedType(type.type, setOf(NumericType(null, 0)))
         }
+    }
+
+    private fun PartiQLType.isIntegerType(): Boolean = when (this) {
+        is Int8Type, is Int16Type, is Int32Type, is Int64Type -> true
+        is NumericType -> this.scale == 0
+        else -> false
     }
 
     // ERRORS

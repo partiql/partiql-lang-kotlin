@@ -30,6 +30,7 @@ import org.partiql.plugins.memory.MemoryCatalog
 import org.partiql.plugins.memory.MemoryConnector
 import org.partiql.plugins.memory.MemoryObject
 import org.partiql.shape.PShape
+import org.partiql.shape.visitor.ShapePrinter
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
@@ -3155,9 +3156,9 @@ class PlanTyperTestsPorted {
     @Test
     fun testSimpleSFW() {
         val tc = SuccessTestCase(
-            name = "Single test case",
-            query = "SELECT t.a FROM { 'a': 1, 'b': 2 } AS t",
-            expected = BagType(StaticType.INT4),
+            name = "Current User Concat",
+            query = "CURRENT_USER || 'hello'",
+            expected = StaticType.unionOf(StaticType.STRING, StaticType.NULL)
         )
         runTest(tc)
     }
@@ -3315,12 +3316,16 @@ class PlanTyperTestsPorted {
                 }
                 val actual = statement.root.type
                 // TODO: Make all tests actually use PShape
-                assert(PShape.fromStaticType(tc.expected) == actual) {
+                val expectedShape = PShape.fromStaticType(tc.expected)
+                assert(expectedShape == actual) {
                     buildString {
                         appendLine()
                         appendLine("Expect: ${tc.expected}")
-                        appendLine("Expect: ${PShape.fromStaticType(tc.expected)}")
-                        appendLine("Actual: $actual")
+                        append("Expect: ")
+                        ShapePrinter.append(this, expectedShape, pretty = true)
+                        appendLine()
+                        append("Actual: ")
+                        ShapePrinter.append(this, actual, pretty = true)
                         appendLine()
                         PlanPrinter.append(this, plan)
                     }

@@ -11,22 +11,23 @@ import java.lang.StringBuilder
 
 public object ShapePrinter {
 
-    public fun stringify(shape: ShapeNode): String {
+    public fun stringify(shape: ShapeNode, pretty: Boolean = false): String {
         val builder = StringBuilder()
-        val ctx = Context(builder)
+        val ctx = Context(builder, pretty = pretty)
         Visitor.visit(shape, ctx)
         return builder.toString()
     }
 
-    public fun append(out: Appendable, shape: ShapeNode) {
-        val ctx = Context(out)
+    public fun append(out: Appendable, shape: ShapeNode, pretty: Boolean = false) {
+        val ctx = Context(out, pretty = pretty)
         Visitor.visit(shape, ctx)
     }
 
     private data class Context(
         val out: Appendable,
         val indent: Int = 0,
-        var ignoreFirstPrefix: Boolean = false
+        var ignoreFirstPrefix: Boolean = false,
+        val pretty: Boolean = false
     ) {
         fun prefix(): String {
             var str = ""
@@ -38,16 +39,22 @@ public object ShapePrinter {
     private object Visitor : ShapeBaseVisitor<Unit, Context>() {
 
         private fun Context.start(str: String) {
-            when (ignoreFirstPrefix) {
-                true -> this.out.append(str).also { this.ignoreFirstPrefix = false }
-                false -> this.out.append("${prefix()}$str")
+            when (this.pretty) {
+                true -> when (ignoreFirstPrefix) {
+                    true -> this.out.append(str).also { this.ignoreFirstPrefix = false }
+                    false -> this.out.append("${prefix()}$str")
+                }
+                false -> this.append(str)
             }
         }
 
         private fun Context.startLine(str: String) {
-            when (ignoreFirstPrefix) {
-                true -> this.out.appendLine(str).also { this.ignoreFirstPrefix = false }
-                false -> this.out.appendLine("${prefix()}$str")
+            when (this.pretty) {
+                true -> when (ignoreFirstPrefix) {
+                    true -> this.out.appendLine(str).also { this.ignoreFirstPrefix = false }
+                    false -> this.out.appendLine("${prefix()}$str")
+                }
+                false -> this.appendLine(str)
             }
         }
 
@@ -56,18 +63,25 @@ public object ShapePrinter {
         }
 
         private fun Context.appendLine(str: String) {
-            this.out.appendLine(str)
+            when (this.pretty) {
+                true -> this.out.appendLine(str)
+                false -> {
+                    this.out.append(" ")
+                    this.out.append(str)
+                }
+            }
         }
 
         private fun Context.indent(): Context {
             return this.copy(indent = this.indent + 1)
         }
 
-        fun stringify(shape: ShapeNode, indent: Int): String {
+        fun stringify(shape: ShapeNode, indent: Int, pretty: Boolean = false): String {
             val builder = StringBuilder()
             val ctx = Context(
                 out = builder,
-                indent = indent
+                indent = indent,
+                pretty = pretty
             )
             visit(shape, ctx)
             return builder.toString()
@@ -81,7 +95,7 @@ public object ShapePrinter {
             ctx.start("${node.type}")
             // Sort the constraints
             val constraints = node.constraints.map { c ->
-                stringify(c, ctx.indent + 1)
+                stringify(c, ctx.indent + 1, ctx.pretty)
             }.sortedBy { c ->
                 c.lines().size
             }
@@ -121,9 +135,10 @@ public object ShapePrinter {
 
         override fun visitConstraintFields(node: Fields, ctx: Context) {
             if (node.isClosed) {
-                ctx.start("CLOSED ")
+                ctx.startLine("CLOSED FIELDS (")
+            } else {
+                ctx.startLine("OPEN FIELDS (")
             }
-            ctx.appendLine("FIELDS (")
             val newCtx = ctx.indent()
             node.fields.forEachIndexed { index, f ->
                 newCtx.start(f.key)

@@ -246,7 +246,10 @@ public sealed interface PShape : ShapeNode {
             if (this.canBeType<NullType>()) {
                 return true
             }
-            return this.constraints.any { it.canBeNull() }
+            return when (this.constraints.size) {
+                0 -> true
+                else -> this.constraints.any { it.canBeNull() }
+            }
         }
 
         @Deprecated("Double-check this")
