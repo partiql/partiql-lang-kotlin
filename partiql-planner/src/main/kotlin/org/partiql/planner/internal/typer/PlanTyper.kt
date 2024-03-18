@@ -688,7 +688,7 @@ internal class PlanTyper(
         override fun visitRexOpCase(node: Rex.Op.Case, ctx: StaticType?): Rex {
             // Rewrite CASE-WHEN branches
             val oldBranches = node.branches.toTypedArray()
-            var newBranches = mutableListOf<Rex.Op.Case.Branch>()
+            val newBranches = mutableListOf<Rex.Op.Case.Branch>()
             val typer = DynamicTyper()
             for (i in oldBranches.indices) {
 
@@ -697,15 +697,12 @@ internal class PlanTyper(
                 branch = visitRexOpCaseBranch(branch, branch.rex.type)
 
                 // Check if branch condition is a literal
-                val condition = branch.condition
-                when (boolOrNull(condition.op)) {
-                    true -> return branch.rex // fold
-                    false -> continue // prune
-                    null -> {}
+                if (boolOrNull(branch.condition.op) == false) {
+                    continue // prune
                 }
 
                 // Emit typing error if a branch condition is never a boolean (prune)
-                if (!canBeBoolean(condition.type)) {
+                if (!canBeBoolean(branch.condition.type)) {
                     onProblem.invoke(
                         Problem(
                             UNKNOWN_PROBLEM_LOCATION,
@@ -722,7 +719,7 @@ internal class PlanTyper(
             }
 
             // Rewrite ELSE branch
-            var newDefault = visitRex(node.default, node.default.type)
+            var newDefault = visitRex(node.default, null)
             if (newBranches.isEmpty()) {
                 return newDefault
             }
@@ -751,6 +748,12 @@ internal class PlanTyper(
                     val cast = env.fnResolver.cast(operand, target)
                     newDefault = rex(type, rexOpCallStatic(fnResolved(cast), listOf(newDefault)))
                 }
+            }
+
+            // TODO constant folding in planner which also means branch pruning
+            // This is added for backwards compatibility, we return the first branch if it's true
+            if (boolOrNull(newBranches[0].condition.op) == true) {
+                return newBranches[0].rex
             }
 
             val op = Rex.Op.Case(newBranches, newDefault)

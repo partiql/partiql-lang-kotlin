@@ -67,8 +67,8 @@ object Debug {
 
         // Parse
         val statement = parser.parse(input).root
-        // out.info("-- AST ----------")
-        // AstPrinter.append(out, statement)
+        out.info("-- AST ----------")
+        AstPrinter.append(out, statement)
 
         // Plan
         val sess = PartiQLPlanner.Session(

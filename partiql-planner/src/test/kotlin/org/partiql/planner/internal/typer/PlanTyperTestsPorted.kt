@@ -46,7 +46,7 @@ class PlanTyperTestsPorted {
 
     sealed class TestCase {
         class SuccessTestCase(
-            val name: String,
+            val name: String? = null,
             val key: PartiQLTest.Key? = null,
             val query: String? = null,
             val catalog: String? = null,
@@ -54,7 +54,12 @@ class PlanTyperTestsPorted {
             val expected: StaticType,
             val warnings: ProblemHandler? = null,
         ) : TestCase() {
-            override fun toString(): String = "$name : $query"
+            override fun toString(): String {
+                if (key != null) {
+                    return "${key.group} : ${key.name}"
+                }
+                return "${name!!} : $query"
+            }
         }
 
         class ErrorTestCase(
@@ -2400,6 +2405,52 @@ class PlanTyperTestsPorted {
                         )
                     )
                 )
+            ),
+            //
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-00"),
+                catalog = "pql",
+                expected = StaticType.INT4
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-02"),
+                catalog = "pql",
+                expected = StaticType.INT4
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-03"),
+                catalog = "pql",
+                expected = StaticType.INT8
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-04"),
+                catalog = "pql",
+                expected = StaticType.INT
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-05"),
+                catalog = "pql",
+                expected = StaticType.INT
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-06"),
+                catalog = "pql",
+                expected = StaticType.INT
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-07"),
+                catalog = "pql",
+                expected = StaticType.INT8
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-08"),
+                catalog = "pql",
+                expected = unionOf(StaticType.INT, StaticType.NULL),
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-09"),
+                catalog = "pql",
+                expected = unionOf(StaticType.INT, StaticType.NULL),
             ),
         )
 

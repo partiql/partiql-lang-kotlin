@@ -4,7 +4,6 @@ package org.partiql.planner.internal.typer
 
 import org.partiql.types.MissingType
 import org.partiql.types.NullType
-import org.partiql.types.SingleType
 import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
@@ -62,28 +61,57 @@ internal class DynamicTyper {
     private var missable = false
     private val types = mutableSetOf<StaticType>()
 
+    /**
+     * This primarily unpacks a StaticType because of NULL, MISSING.
+     *
+     *  - T
+     *  - NULL
+     *  - MISSING
+     *  - (NULL)
+     *  - (MISSING)
+     *  - (T..)
+     *  - (T..|NULL)
+     *  - (T..|MISSING)
+     *  - (T..|NULL|MISSING)
+     *  - (NULL|MISSING)
+     *
+     * @param type
+     */
     fun accumulate(type: StaticType) {
-        val arg = type.toRuntimeType()
-        args.add(arg)
-        if (type is SingleType) {
-            when (type) {
-                is MissingType -> missable = true
+        val nonAbsentTypes = mutableSetOf<StaticType>()
+        for (t in type.flatten().allTypes) {
+            when (t) {
                 is NullType -> nullable = true
-                else -> calculate(type, arg)
+                is MissingType -> missable = true
+                else -> nonAbsentTypes.add(t)
             }
-        } else {
-            for (t in type.flatten().allTypes) {
-                when (t) {
-                    is MissingType -> missable = true
-                    is NullType -> nullable = true
-                    else -> calculate(t)
-                }
+        }
+        when (nonAbsentTypes.size) {
+            0 -> {
+                // Ignore in calculating supertype.
+                args.add(NULL)
+            }
+            1 -> {
+                // Had single type
+                val single = nonAbsentTypes.first()
+                val singleRuntime = single.toRuntimeType()
+                types.add(single)
+                args.add(singleRuntime)
+                calculate(singleRuntime)
+            }
+            else -> {
+                // Had a union; use ANY runtime
+                types.addAll(nonAbsentTypes)
+                args.add(ANY)
+                calculate(ANY)
             }
         }
     }
 
     /**
-     * Returns a pair of the return StaticType and the coercion
+     * Returns a pair of the return StaticType and the coercion.
+     *
+     * If the list is null, then no mapping is required.
      *
      * @return
      */
@@ -109,16 +137,15 @@ internal class DynamicTyper {
         }
     }
 
-    private fun calculate(type: StaticType, arg: PartiQLValueType? = null) {
-        types.add(type)
+    private fun calculate(type: PartiQLValueType) {
         // Don't bother calculating the new supertype, we've already hit the top.
         if (supertype == ANY) return
         // Lookup and set the new minimum common supertype
-        val t = arg ?: type.toRuntimeType()
         supertype = when {
-            supertype == NULL -> t // initialize
-            arg == NULL || arg == MISSING || supertype == arg -> return // skip
-            else -> graph[supertype][t] ?: ANY // lookup, if missing then go to top.
+            supertype == NULL -> type // initialize
+            type == ANY -> type
+            type == NULL || type == MISSING || supertype == type -> return // skip
+            else -> graph[supertype][type] ?: ANY // lookup, if missing then go to top.
         }
     }
 
@@ -148,6 +175,9 @@ internal class DynamicTyper {
 
         /**
          * This table defines the rules in the SQL-99 section 9.3 BUT we don't have type constraints yet.
+         *
+         * TODO collection supertypes
+         * TODO datetime supertypes
          */
         @JvmStatic
         internal val graph: SuperGraph = run {
@@ -166,6 +196,7 @@ internal class DynamicTyper {
                 INT8 to INT8,
                 INT16 to INT16,
                 INT32 to INT32,
+                INT64 to INT64,
                 INT to INT,
                 DECIMAL to DECIMAL,
                 DECIMAL_ARBITRARY to DECIMAL_ARBITRARY,
@@ -176,6 +207,7 @@ internal class DynamicTyper {
                 INT8 to INT16,
                 INT16 to INT16,
                 INT32 to INT32,
+                INT64 to INT64,
                 INT to INT,
                 DECIMAL to DECIMAL,
                 DECIMAL_ARBITRARY to DECIMAL_ARBITRARY,
@@ -186,6 +218,7 @@ internal class DynamicTyper {
                 INT8 to INT32,
                 INT16 to INT32,
                 INT32 to INT32,
+                INT64 to INT64,
                 INT to INT,
                 DECIMAL to DECIMAL,
                 DECIMAL_ARBITRARY to DECIMAL_ARBITRARY,
@@ -196,6 +229,7 @@ internal class DynamicTyper {
                 INT8 to INT64,
                 INT16 to INT64,
                 INT32 to INT64,
+                INT64 to INT64,
                 INT to INT,
                 DECIMAL to DECIMAL,
                 DECIMAL_ARBITRARY to DECIMAL_ARBITRARY,
@@ -206,6 +240,7 @@ internal class DynamicTyper {
                 INT8 to INT,
                 INT16 to INT,
                 INT32 to INT,
+                INT64 to INT,
                 INT to INT,
                 DECIMAL to DECIMAL,
                 DECIMAL_ARBITRARY to DECIMAL_ARBITRARY,
@@ -216,6 +251,7 @@ internal class DynamicTyper {
                 INT8 to DECIMAL,
                 INT16 to DECIMAL,
                 INT32 to DECIMAL,
+                INT64 to DECIMAL,
                 INT to DECIMAL,
                 DECIMAL to DECIMAL,
                 DECIMAL_ARBITRARY to DECIMAL_ARBITRARY,
@@ -226,6 +262,7 @@ internal class DynamicTyper {
                 INT8 to DECIMAL_ARBITRARY,
                 INT16 to DECIMAL_ARBITRARY,
                 INT32 to DECIMAL_ARBITRARY,
+                INT64 to DECIMAL_ARBITRARY,
                 INT to DECIMAL_ARBITRARY,
                 DECIMAL to DECIMAL_ARBITRARY,
                 DECIMAL_ARBITRARY to DECIMAL_ARBITRARY,
@@ -236,6 +273,7 @@ internal class DynamicTyper {
                 INT8 to FLOAT32,
                 INT16 to FLOAT32,
                 INT32 to FLOAT32,
+                INT64 to FLOAT32,
                 INT to FLOAT32,
                 DECIMAL to FLOAT32,
                 DECIMAL_ARBITRARY to FLOAT32,
@@ -246,6 +284,7 @@ internal class DynamicTyper {
                 INT8 to FLOAT64,
                 INT16 to FLOAT64,
                 INT32 to FLOAT64,
+                INT64 to FLOAT64,
                 INT to FLOAT64,
                 DECIMAL to FLOAT64,
                 DECIMAL_ARBITRARY to FLOAT64,
