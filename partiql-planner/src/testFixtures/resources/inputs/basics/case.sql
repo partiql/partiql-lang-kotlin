@@ -1,3 +1,7 @@
+-- -----------------------------
+--  Exact Numeric
+-- -----------------------------
+
 --#[case-when-00]
 -- type: (int32)
 CASE t_item.t_bool
@@ -65,12 +69,189 @@ END;
 
 --#[case-when-09]
 -- type: (int|null)
--- nullable branch
 CASE t_item.t_string
     WHEN 'a' THEN t_item.t_int16_null -- cast(.. AS INT)
     WHEN 'b' THEN t_item.t_int32      -- cast(.. AS INT)
     ELSE t_item.t_int
 END;
+
+--#[case-when-10]
+-- type: (decimal|null)
+-- nullable branch
+CASE t_item.t_string
+    WHEN 'a' THEN t_item.t_decimal
+    WHEN 'b' THEN t_item.t_int32
+    ELSE NULL
+END;
+
+--#[case-when-11]
+-- type: (int|null|missing)
+-- TODO should really be (int|missing) but our translation of coalesce doesn't consider types.
+COALESCE(CAST(t_item.t_string AS INT), 1);
+
+-- -----------------------------
+--  Approximate Numeric
+-- -----------------------------
+
+-- TODO model approximate numeric
+-- We do not have the appropriate StaticType for this.
+
+--#[case-when-12]
+-- type: (float64|null)
+CASE t_item.t_string
+    WHEN 'a' THEN t_item.t_int
+    ELSE t_item.t_float64
+END;
+
+--#[case-when-13]
+-- type: (float64|null)
+-- nullable branch
+CASE t_item.t_string
+    WHEN 'a' THEN t_item.t_int
+    WHEN 'b' THEN t_item.t_float64
+    ELSE NULL
+END;
+
+-- -----------------------------
+--  Character Strings
+-- -----------------------------
+
+--#[case-when-14]
+-- type: string
+CASE t_item.t_string
+    WHEN 'a' THEN t_item.t_string
+    ELSE 'default'
+END;
+
+--#[case-when-15]
+-- type: (string|null)
+-- null default
+CASE t_item.t_string
+    WHEN 'a' THEN t_item.t_string
+    ELSE NULL
+END;
+
+--#[case-when-16]
+-- type: clob
+CASE t_item.t_string
+    WHEN 'a' THEN t_item.t_string
+    WHEN 'b' THEN t_item.t_clob
+    ELSE 'default'
+END;
+
+--#[case-when-17]
+-- type: (clob|null)
+-- null default
+CASE t_item.t_string
+    WHEN 'a' THEN t_item.t_string
+    WHEN 'b' THEN t_item.t_clob
+    ELSE NULL
+END;
+
+-- ----------------------------------
+--  Variations of null and missing
+-- ----------------------------------
+
+--#[case-when-18]
+-- type: (string|null)
+CASE t_item.t_string
+    WHEN 'a' THEN NULL
+    ELSE 'default'
+END;
+
+--#[case-when-19]
+-- type: (string|null)
+CASE t_item.t_string
+    WHEN 'a' THEN NULL
+    WHEN 'b' THEN NULL
+    WHEN 'c' THEN NULL
+    WHEN 'd' THEN NULL
+    ELSE 'default'
+END;
+
+--#[case-when-20]
+-- type: null
+-- no default, null anyways
+CASE t_item.t_string
+    WHEN 'a' THEN NULL
+END;
+
+--#[case-when-21]
+-- type: (string|null)
+-- no default
+CASE t_item.t_string
+    WHEN 'a' THEN 'ok!'
+END;
+
+--#[case-when-22]
+-- type: (null|missing|int32)
+CASE t_item.t_string
+    WHEN 'a' THEN t_item.t_absent
+    ELSE -1
+END;
+
+--#[case-when-23]
+-- type: int32
+-- false branch is pruned
+CASE
+    WHEN false THEN t_item.t_absent
+    ELSE -1
+END;
+
+-- -----------------------------
+--  Heterogeneous Branches
+-- -----------------------------
+
+--#[case-when-24]
+-- type: (int32|int64|string)
+CASE t_item.t_string
+    WHEN 'a' THEN t_item.t_int32
+    WHEN 'b' THEN t_item.t_int64
+    ELSE 'default'
+END;
+
+--#[case-when-25]
+-- type: (int32|int64|string|null)
+CASE t_item.t_string
+    WHEN 'a' THEN t_item.t_int32
+    WHEN 'b' THEN t_item.t_int64
+    WHEN 'c' THEN t_item.t_string
+    ELSE NULL
+END;
+
+--#[case-when-26]
+-- type: (int32|int64|string|null)
+CASE t_item.t_string
+    WHEN 'a' THEN t_item.t_int32
+    WHEN 'b' THEN t_item.t_int64_null
+    ELSE 'default'
+END;
+
+--#[case-when-27]
+-- type: (int16|int32|int64|int|decimal|string|clob)
+CASE t_item.t_string
+    WHEN 'a' THEN t_item.t_num_exact
+    WHEN 'b' THEN t_item.t_str
+    ELSE 'default'
+END;
+
+--#[case-when-28]
+-- type: (int16|int32|int64|int|decimal|string|clob|null)
+CASE t_item.t_string
+    WHEN 'a' THEN t_item.t_num_exact
+    WHEN 'b' THEN t_item.t_str
+END;
+
+--#[case-when-29]
+-- type: (struct_a|struct_b|null)
+CASE t_item.t_string
+    WHEN 'a' THEN t_item.t_struct_a
+    WHEN 'b' THEN t_item.t_struct_b
+END;
+
+-- -----------------------------
+--  (Unused) old tests
+-- -----------------------------
 
 --#[old-case-when-00]
 CASE

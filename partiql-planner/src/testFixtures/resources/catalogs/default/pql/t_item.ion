@@ -95,7 +95,20 @@
       name: "t_clob_null",
       type: ["clob", "null"],
     },
-    //
+    // absent
+    {
+      name: "t_null",
+      type: "null",
+    },
+    {
+      name: "t_missing",
+      type: "missing",
+    },
+    {
+      name: "t_absent",
+      type: ["null", "missing"],
+    },
+    // collections
     {
       name: "t_bag",
       type: {
@@ -117,18 +130,55 @@
         items: "any",
       }
     },
+    // structs
+    {
+      name: "t_struct_a",
+      type: {
+        type: "struct",
+        fields: [
+          {
+            name: "x",
+            type: "int32",
+          },
+          {
+            name: "y",
+            type: "int32",
+          },
+        ]
+      },
+    },
+    {
+      name: "t_struct_b",
+      type: {
+        type: "struct",
+        fields: [
+          {
+            name: "x",
+            type: "int64",
+          },
+          {
+            name: "y",
+            type: "int64",
+          },
+        ]
+      },
+    },
     {
       name: "t_any",
       type: "any",
     },
     // unions
     {
-      name: "t_number",
+      name: "t_num_exact",
       type: [ "int16", "int32", "int64", "int", "decimal" ],
     },
     {
-      name: "t_number_null",
+      name: "t_num_exact_null",
       type: [ "int16", "int32", "int64", "int", "decimal", "null" ],
     },
+    {
+      name: "t_str",
+      type: [ "clob", "string" ],
+    }
   ]
 }

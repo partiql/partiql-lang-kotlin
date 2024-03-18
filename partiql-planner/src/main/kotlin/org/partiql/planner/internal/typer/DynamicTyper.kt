@@ -298,15 +298,15 @@ internal class DynamicTyper {
                 CLOB to CLOB,
             )
             graph[STRING] = edges(
-                CHAR to CHAR,
+                CHAR to STRING,
                 STRING to STRING,
                 SYMBOL to STRING,
                 CLOB to CLOB,
             )
             graph[SYMBOL] = edges(
-                CHAR to CHAR,
+                CHAR to SYMBOL,
                 STRING to STRING,
-                SYMBOL to STRING,
+                SYMBOL to SYMBOL,
                 CLOB to CLOB,
             )
             graph[BINARY] = edges(
@@ -324,9 +324,9 @@ internal class DynamicTyper {
                 DATE to DATE,
             )
             graph[CLOB] = edges(
-                CHAR to CHAR,
-                STRING to STRING,
-                SYMBOL to STRING,
+                CHAR to CLOB,
+                STRING to CLOB,
+                SYMBOL to CLOB,
                 CLOB to CLOB,
             )
             graph[TIME] = edges(
