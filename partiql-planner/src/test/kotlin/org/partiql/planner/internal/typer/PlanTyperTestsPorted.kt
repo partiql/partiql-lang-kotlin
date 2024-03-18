@@ -2693,7 +2693,7 @@ class PlanTyperTestsPorted {
                 query = """
                     { 'aBc': 1, 'AbC': 2.0 }['AbC'];
                 """,
-                expected = StaticType.DECIMAL
+                expected = DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(2, 1))
             ),
             // This should fail because the Spec says tuple indexing MUST use a literal string or explicit cast.
             ErrorTestCase(
@@ -3920,7 +3920,7 @@ class PlanTyperTestsPorted {
                 query = "SELECT a FROM << [ 1, 1.0 ] >> AS a",
                 expected = BagType(
                     StructType(
-                        fields = mapOf("a" to ListType(StaticType.unionOf(StaticType.INT4, StaticType.DECIMAL))),
+                        fields = mapOf("a" to ListType(StaticType.unionOf(StaticType.INT4, DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(2, 1))))),
                         contentClosed = true,
                         constraints = setOf(
                             TupleConstraint.Open(false),
@@ -3934,13 +3934,13 @@ class PlanTyperTestsPorted {
                 name = "Non-tuples in SELECT VALUE",
                 query = "SELECT VALUE a FROM << [ 1, 1.0 ] >> AS a",
                 expected =
-                BagType(ListType(StaticType.unionOf(StaticType.INT4, StaticType.DECIMAL)))
+                BagType(ListType(StaticType.unionOf(StaticType.INT4, DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(2, 1)))))
             ),
             SuccessTestCase(
                 name = "SELECT VALUE",
                 query = "SELECT VALUE [1, 1.0] FROM <<>>",
                 expected =
-                BagType(ListType(StaticType.unionOf(StaticType.INT4, StaticType.DECIMAL)))
+                BagType(ListType(StaticType.unionOf(StaticType.INT4, DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(2, 1)))))
             ),
             SuccessTestCase(
                 name = "Duplicate fields in struct",
