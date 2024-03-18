@@ -1284,11 +1284,11 @@ internal class PlanTyper(
             val isNullable = call.agg.signature.isNullable || isMissable
             val returns = call.agg.signature.returns
             val type = when {
-                isNullable -> PartiQLType.fromLegacy(returns)
-                else -> PartiQLType.fromLegacy(returns)
+                isNullable -> PShape.of(PartiQLType.fromLegacy(returns))
+                else -> PShape.of(PartiQLType.fromLegacy(returns), constraint = NotNull)
             }
             //
-            return call to PShape.of(type)
+            return call to type
         }
     }
 
