@@ -29,6 +29,11 @@ import org.partiql.plugins.local.toStaticType
 import org.partiql.plugins.memory.MemoryCatalog
 import org.partiql.plugins.memory.MemoryConnector
 import org.partiql.plugins.memory.MemoryObject
+import org.partiql.shape.AnyOf
+import org.partiql.shape.Constraint
+import org.partiql.shape.Element
+import org.partiql.shape.Fields
+import org.partiql.shape.NotNull
 import org.partiql.shape.PShape
 import org.partiql.shape.visitor.ShapePrinter
 import org.partiql.spi.BindingCase
@@ -44,6 +49,13 @@ import org.partiql.types.SexpType
 import org.partiql.types.StaticType
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
+import org.partiql.value.AnyType
+import org.partiql.value.CharVarUnboundedType
+import org.partiql.value.Int32Type
+import org.partiql.value.MissingType
+import org.partiql.value.NullType
+import org.partiql.value.PartiQLType
+import org.partiql.value.TupleType
 import java.util.stream.Stream
 import kotlin.reflect.KClass
 import kotlin.test.assertEquals
@@ -59,10 +71,23 @@ class PlanTyperTestsPorted {
             val query: String? = null,
             val catalog: String = "pql",
             val catalogPath: List<String> = emptyList(),
-            val expected: StaticType,
+            val expected: PShape,
             val warnings: ProblemHandler? = null,
+            @Deprecated("Please use expected instead.")
+            val expectedStaticType: StaticType? = null
         ) : TestCase() {
+
             override fun toString(): String = "$name : ${query ?: key}"
+
+            constructor(
+                name: String,
+                key: PartiQLTest.Key? = null,
+                query: String? = null,
+                catalog: String = "pql",
+                catalogPath: List<String> = emptyList(),
+                expected: StaticType,
+                warnings: ProblemHandler? = null,
+            ) : this(name, key, query, catalog, catalogPath, PShape.fromStaticType(expected), warnings, expected)
         }
 
         class ErrorTestCase(
@@ -240,6 +265,10 @@ class PlanTyperTestsPorted {
         private fun idQualified(vararg symbol: Pair<String, BindingCase>) = symbol.map {
             BindingName(it.first, it.second)
         }.let { BindingPath(it) }
+
+        private fun PartiQLType.withConstraints(vararg constraints: Constraint): PShape = PShape.of(
+            this, constraints = constraints.toSet()
+        )
 
         //
         // Parameterized Test Source
@@ -2266,32 +2295,57 @@ class PlanTyperTestsPorted {
                         { }
                     >> AS t
                 """,
-                expected = BagType(
-                    StaticType.unionOf(
-                        StaticType.NULL,
-                        StaticType.MISSING,
-                        StructType(
-                            fields = listOf(
-                                StructType.Field("b", StaticType.INT4),
-                            ),
-                            contentClosed = true,
-                            constraints = setOf(
-                                TupleConstraint.Open(false),
-                                TupleConstraint.UniqueAttrs(true),
-                            )
-                        ),
-                        StructType(
-                            fields = listOf(
-                                StructType.Field("b", StaticType.STRING),
-                            ),
-                            contentClosed = true,
-                            constraints = setOf(
-                                TupleConstraint.Open(false),
-                                TupleConstraint.UniqueAttrs(true),
+                expected = org.partiql.value.BagType.withConstraints(
+                    NotNull,
+                    Element(
+                        AnyType.withConstraints(
+                            AnyOf(
+                                NullType.withConstraints(),
+                                MissingType.withConstraints(NotNull),
+                                TupleType.withConstraints(
+                                    NotNull,
+                                    Fields(
+                                        fields = listOf(Fields.Field("b", Int32Type.withConstraints(NotNull))),
+                                        isClosed = true
+                                    )
+                                ),
+                                TupleType.withConstraints(
+                                    NotNull,
+                                    Fields(
+                                        fields = listOf(Fields.Field("b", CharVarUnboundedType.withConstraints(NotNull))),
+                                        isClosed = true
+                                    )
+                                )
                             )
                         )
                     )
-                ),
+                )
+//                expected = BagType(
+//                    StaticType.unionOf(
+//                        StaticType.NULL,
+//                        StaticType.MISSING,
+//                        StructType(
+//                            fields = listOf(
+//                                StructType.Field("b", StaticType.INT4),
+//                            ),
+//                            contentClosed = true,
+//                            constraints = setOf(
+//                                TupleConstraint.Open(false),
+//                                TupleConstraint.UniqueAttrs(true),
+//                            )
+//                        ),
+//                        StructType(
+//                            fields = listOf(
+//                                StructType.Field("b", StaticType.STRING),
+//                            ),
+//                            contentClosed = true,
+//                            constraints = setOf(
+//                                TupleConstraint.Open(false),
+//                                TupleConstraint.UniqueAttrs(true),
+//                            )
+//                        )
+//                    )
+//                ),
             ),
             SuccessTestCase(
                 name = "Tuple Union with Heterogeneous Data (3)",
@@ -2861,7 +2915,7 @@ class PlanTyperTestsPorted {
                 expected = BagType(
                     StructType(
                         fields = mapOf(
-                            "a" to StaticType.DECIMAL,
+                            "a" to DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(2, 1)),
                             "c" to StaticType.INT4,
                             "s" to StaticType.DECIMAL.asNullable(),
                             "m" to StaticType.DECIMAL.asNullable(),
@@ -3317,16 +3371,14 @@ class PlanTyperTestsPorted {
                     }
                 }
                 val actual = statement.root.type
-                // TODO: Make all tests actually use PShape
-                val expectedShape = PShape.fromStaticType(tc.expected)
-                assert(expectedShape == actual) {
+                assert(tc.expected == actual) {
                     buildString {
                         appendLine()
-                        appendLine("Expect: ${tc.expected}")
-                        append("Expect: ")
-                        ShapePrinter.append(this, expectedShape, pretty = true)
+                        appendLine("Expected (Static Type): ${tc.expectedStaticType}")
+                        append("Expected : ")
+                        ShapePrinter.append(this, tc.expected, pretty = true)
                         appendLine()
-                        append("Actual: ")
+                        append("Actual   : ")
                         ShapePrinter.append(this, actual, pretty = true)
                         appendLine()
                         PlanPrinter.append(this, plan)

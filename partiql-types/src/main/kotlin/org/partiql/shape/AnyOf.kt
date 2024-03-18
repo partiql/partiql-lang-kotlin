@@ -7,6 +7,8 @@ public data class AnyOf(
     val shapes: Set<PShape>
 ) : Constraint {
 
+    public constructor(vararg shapes: PShape) : this(shapes.toSet())
+
     override fun validate(type: PartiQLType): PShape.ValidationResult {
         TODO("Not yet implemented")
     }
