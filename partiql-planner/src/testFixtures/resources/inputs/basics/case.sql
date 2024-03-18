@@ -97,7 +97,7 @@ COALESCE(CAST(t_item.t_string AS INT), 1);
 -- We do not have the appropriate StaticType for this.
 
 --#[case-when-12]
--- type: (float64|null)
+-- type: (float64)
 CASE t_item.t_string
     WHEN 'a' THEN t_item.t_int
     ELSE t_item.t_float64
