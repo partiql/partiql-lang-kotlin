@@ -92,6 +92,9 @@ import org.partiql.value.BoolType
 import org.partiql.value.BoolValue
 import org.partiql.value.CharVarType
 import org.partiql.value.CharVarUnboundedType
+import org.partiql.value.Int16Type
+import org.partiql.value.Int32Type
+import org.partiql.value.Int64Type
 import org.partiql.value.Int8Type
 import org.partiql.value.MissingType
 import org.partiql.value.NullType
@@ -476,7 +479,7 @@ internal class PlanTyper(
         override fun visitRexOpPathIndex(node: Rex.Op.Path.Index, ctx: PShape?): Rex {
             val root = visitRex(node.root, node.root.type)
             val key = visitRex(node.key, node.key.type)
-            if (key.type.type !is NumericType) { // TODO: IntType
+            if (!key.type.type.isIntegerType()) {
                 handleAlwaysMissing()
                 return rex(MissingType, rexOpErr("Collections must be indexed with integers, found ${key.type}"))
             }
@@ -488,6 +491,12 @@ internal class PlanTyper(
             }.toSet()
             val finalType = anyOf(elementTypes)
             return rex(finalType, rexOpPathIndex(root, key))
+        }
+
+        private fun PartiQLType.isIntegerType(): Boolean = when (this) {
+            is Int8Type, is Int16Type, is Int32Type, is Int64Type -> true
+            is NumericType -> this.scale == 0
+            else -> false
         }
 
         override fun visitRexOpPathKey(node: Rex.Op.Path.Key, ctx: PShape?): Rex {
