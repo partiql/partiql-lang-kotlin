@@ -50,6 +50,7 @@ import org.partiql.types.StaticType
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
 import org.partiql.value.AnyType
+import org.partiql.value.BoolType
 import org.partiql.value.CharVarUnboundedType
 import org.partiql.value.Int32Type
 import org.partiql.value.MissingType
@@ -762,7 +763,7 @@ class PlanTyperTestsPorted {
             SuccessTestCase(
                 name = "BITWISE_AND_NULL_OPERAND",
                 query = "1 & NULL",
-                expected = StaticType.NULL,
+                expected = Int32Type.withConstraints(), // Nullable INT32
             ),
             ErrorTestCase(
                 name = "BITWISE_AND_MISSING_OPERAND",
@@ -2507,7 +2508,13 @@ class PlanTyperTestsPorted {
                         WHEN 2 THEN FALSE
                     END;
                 """,
-                expected = StaticType.BOOL.asNullable()
+                // TODO: PartiQL will eventually coerce CASE-WHENs to a single output type.
+                expected = AnyType.withConstraints(
+                    AnyOf(
+                        BoolType.withConstraints(NotNull),
+                        NullType.withConstraints()
+                    )
+                )
             ),
             SuccessTestCase(
                 name = "Not folded gives us a nullable without default for query",
@@ -2521,16 +2528,26 @@ class PlanTyperTestsPorted {
                 """,
                 catalog = "pql",
                 catalogPath = listOf("main"),
-                expected = BagType(
-                    StructType(
-                        fields = mapOf(
-                            "breed_descriptor" to StaticType.STRING.asNullable(),
-                        ),
-                        contentClosed = true,
-                        constraints = setOf(
-                            TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(true),
-                            TupleConstraint.Ordered
+                expected = org.partiql.value.BagType.withConstraints(
+                    NotNull,
+                    Element(
+                        TupleType.withConstraints(
+                            NotNull,
+                            Fields(
+                                fields = listOf(
+                                    // TODO: PartiQL will eventually coerce CASE-WHENs to a single output type.
+                                    Fields.Field(
+                                        "breed_descriptor",
+                                        AnyType.withConstraints(
+                                            AnyOf(
+                                                CharVarUnboundedType.withConstraints(NotNull),
+                                                NullType.withConstraints()
+                                            )
+                                        )
+                                    )
+                                ),
+                                isClosed = true
+                            )
                         )
                     )
                 )
@@ -2581,7 +2598,7 @@ class PlanTyperTestsPorted {
                             "breed_descriptor" to StaticType.unionOf(
                                 StaticType.STRING,
                                 StaticType.INT4,
-                                StaticType.DECIMAL
+                                DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(2, 1))
                             ),
                         ),
                         contentClosed = true,
