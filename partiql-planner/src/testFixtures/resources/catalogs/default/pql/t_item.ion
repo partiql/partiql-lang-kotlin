@@ -1,0 +1,184 @@
+// simple item which various types for testing
+{
+  type: "struct",
+  constraints: [ closed, unique ],
+  fields: [
+    // Boolean
+    {
+      name: "t_bool",
+      type: "bool",
+    },
+    {
+      name: "t_bool_nul",
+      type: ["bool","null"],
+    },
+    // Exact Numeric
+//    {
+//      name: "t_int8",
+//      type: "int8",
+//    },
+//    {
+//      name: "t_int8_null",
+//      type: ["int8", "null"],
+//    },
+    {
+      name: "t_int16",
+      type: "int16",
+    },
+    {
+      name: "t_int16_null",
+      type: ["int16", "null"],
+    },
+    {
+      name: "t_int32",
+      type: "int32",
+    },
+    {
+      name: "t_int32_null",
+      type: ["int32", "null"],
+    },
+    {
+      name: "t_int64",
+      type: "int64",
+    },
+    {
+      name: "t_int64_null",
+      type: ["int64", "null"],
+    },
+    {
+      name: "t_int",
+      type: "int",
+    },
+    {
+      name: "t_int_null",
+      type: ["int", "null"],
+    },
+    {
+      name: "t_decimal",
+      type: "decimal",
+    },
+    {
+      name: "t_decimal_null",
+      type: ["decimal", "null"],
+    },
+    // Approximate Numeric
+    {
+      name: "t_float32",
+      type: "float32",
+    },
+    {
+      name: "t_float32_null",
+      type: ["float32", "null"],
+    },
+    {
+      name: "t_float64",
+      type: "float64",
+    },
+    {
+      name: "t_float64_null",
+      type: ["float64", "null"],
+    },
+    // Strings
+    {
+      name: "t_string",
+      type: "string",
+    },
+    {
+      name: "t_string_null",
+      type: ["string", "null"],
+    },
+    {
+      name: "t_clob",
+      type: "clob",
+    },
+    {
+      name: "t_clob_null",
+      type: ["clob", "null"],
+    },
+    // absent
+    {
+      name: "t_null",
+      type: "null",
+    },
+    {
+      name: "t_missing",
+      type: "missing",
+    },
+    {
+      name: "t_absent",
+      type: ["null", "missing"],
+    },
+    // collections
+    {
+      name: "t_bag",
+      type: {
+        type: "bag",
+        items: "any",
+      },
+    },
+    {
+      name: "t_list",
+      type: {
+        type: "list",
+        items: "any",
+      }
+    },
+    {
+      name: "t_sexp",
+      type: {
+        type: "sexp",
+        items: "any",
+      }
+    },
+    // structs
+    {
+      name: "t_struct_a",
+      type: {
+        type: "struct",
+        fields: [
+          {
+            name: "x",
+            type: "int32",
+          },
+          {
+            name: "y",
+            type: "int32",
+          },
+        ]
+      },
+    },
+    {
+      name: "t_struct_b",
+      type: {
+        type: "struct",
+        fields: [
+          {
+            name: "x",
+            type: "int64",
+          },
+          {
+            name: "y",
+            type: "int64",
+          },
+        ]
+      },
+    },
+    {
+      name: "t_any",
+      type: "any",
+    },
+    // unions
+    {
+      name: "t_num_exact",
+      type: [ "int16", "int32", "int64", "int", "decimal" ],
+    },
+    {
+      name: "t_num_exact_null",
+      type: [ "int16", "int32", "int64", "int", "decimal", "null" ],
+    },
+    {
+      name: "t_str",
+      type: [ "clob", "string" ],
+    }
+  ]
+}

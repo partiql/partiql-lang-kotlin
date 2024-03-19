@@ -33,6 +33,7 @@ import org.partiql.types.BagType
 import org.partiql.types.ListType
 import org.partiql.types.SexpType
 import org.partiql.types.StaticType
+import org.partiql.types.StaticType.Companion.MISSING
 import org.partiql.types.StaticType.Companion.unionOf
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
@@ -46,7 +47,7 @@ class PlanTyperTestsPorted {
 
     sealed class TestCase {
         class SuccessTestCase(
-            val name: String,
+            val name: String? = null,
             val key: PartiQLTest.Key? = null,
             val query: String? = null,
             val catalog: String? = null,
@@ -54,7 +55,12 @@ class PlanTyperTestsPorted {
             val expected: StaticType,
             val warnings: ProblemHandler? = null,
         ) : TestCase() {
-            override fun toString(): String = "$name : $query"
+            override fun toString(): String {
+                if (key != null) {
+                    return "${key.group} : ${key.name}"
+                }
+                return "${name!!} : $query"
+            }
         }
 
         class ErrorTestCase(
@@ -2400,6 +2406,171 @@ class PlanTyperTestsPorted {
                         )
                     )
                 )
+            ),
+            //
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-00"),
+                catalog = "pql",
+                expected = StaticType.INT4
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-02"),
+                catalog = "pql",
+                expected = StaticType.INT4
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-03"),
+                catalog = "pql",
+                expected = StaticType.INT8
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-04"),
+                catalog = "pql",
+                expected = StaticType.INT
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-05"),
+                catalog = "pql",
+                expected = StaticType.INT
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-06"),
+                catalog = "pql",
+                expected = StaticType.INT
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-07"),
+                catalog = "pql",
+                expected = StaticType.INT8
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-08"),
+                catalog = "pql",
+                expected = unionOf(StaticType.INT, StaticType.NULL),
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-09"),
+                catalog = "pql",
+                expected = unionOf(StaticType.INT, StaticType.NULL),
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-10"),
+                catalog = "pql",
+                expected = unionOf(StaticType.DECIMAL, StaticType.NULL),
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-11"),
+                catalog = "pql",
+                expected = unionOf(StaticType.INT, StaticType.NULL, StaticType.MISSING),
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-12"),
+                catalog = "pql",
+                expected = StaticType.FLOAT
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-13"),
+                catalog = "pql",
+                expected = unionOf(StaticType.FLOAT, StaticType.NULL),
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-14"),
+                catalog = "pql",
+                expected = StaticType.STRING,
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-15"),
+                catalog = "pql",
+                expected = unionOf(StaticType.STRING, StaticType.NULL),
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-16"),
+                catalog = "pql",
+                expected = StaticType.CLOB,
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-17"),
+                catalog = "pql",
+                expected = unionOf(StaticType.CLOB, StaticType.NULL),
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-18"),
+                catalog = "pql",
+                expected = unionOf(StaticType.STRING, StaticType.NULL),
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-19"),
+                catalog = "pql",
+                expected = unionOf(StaticType.STRING, StaticType.NULL),
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-20"),
+                catalog = "pql",
+                expected = StaticType.NULL,
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-21"),
+                catalog = "pql",
+                expected = unionOf(StaticType.STRING, StaticType.NULL),
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-22"),
+                catalog = "pql",
+                expected = unionOf(StaticType.INT4, StaticType.NULL, StaticType.MISSING),
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-23"),
+                catalog = "pql",
+                expected = StaticType.INT4,
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-24"),
+                catalog = "pql",
+                expected = unionOf(StaticType.INT4, StaticType.INT8, StaticType.STRING),
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-25"),
+                catalog = "pql",
+                expected = unionOf(StaticType.INT4, StaticType.INT8, StaticType.STRING, StaticType.NULL),
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-26"),
+                catalog = "pql",
+                expected = unionOf(StaticType.INT4, StaticType.INT8, StaticType.STRING, StaticType.NULL),
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-27"),
+                catalog = "pql",
+                expected = unionOf(StaticType.INT2, StaticType.INT4, StaticType.INT8, StaticType.INT, StaticType.DECIMAL, StaticType.STRING, StaticType.CLOB),
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-28"),
+                catalog = "pql",
+                expected = unionOf(StaticType.INT2, StaticType.INT4, StaticType.INT8, StaticType.INT, StaticType.DECIMAL, StaticType.STRING, StaticType.CLOB, StaticType.NULL),
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-29"),
+                catalog = "pql",
+                expected = unionOf(
+                    StructType(
+                        fields = listOf(
+                            StructType.Field("x", StaticType.INT4),
+                            StructType.Field("y", StaticType.INT4),
+                        ),
+                    ),
+                    StructType(
+                        fields = listOf(
+                            StructType.Field("x", StaticType.INT8),
+                            StructType.Field("y", StaticType.INT8),
+                        ),
+                    ),
+                    StaticType.NULL,
+                ),
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-30"),
+                catalog = "pql",
+                expected = MISSING
             ),
         )
 

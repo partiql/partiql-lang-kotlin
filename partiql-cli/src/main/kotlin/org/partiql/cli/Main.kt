@@ -15,15 +15,17 @@
 
 package org.partiql.cli
 
-import AstPrinter
 import com.amazon.ion.system.IonSystemBuilder
+import com.amazon.ion.system.IonTextWriterBuilder
 import org.partiql.cli.pico.PartiQLCommand
 import org.partiql.cli.shell.info
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.parser.PartiQLParser
+import org.partiql.plan.Statement
 import org.partiql.plan.debug.PlanPrinter
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.plugins.local.LocalConnector
+import org.partiql.plugins.local.toIon
 import picocli.CommandLine
 import java.io.PrintStream
 import java.nio.file.Paths
@@ -79,6 +81,16 @@ object Debug {
         val result = planner.plan(statement, sess).plan
         out.info("-- Plan ----------")
         PlanPrinter.append(out, result.statement)
+
+        when (val plan = result.statement) {
+            is Statement.Query -> {
+                out.info("-- Schema ----------")
+                val outputSchema = java.lang.StringBuilder()
+                val ionWriter = IonTextWriterBuilder.minimal().withPrettyPrinting().build(outputSchema)
+                plan.root.type.toIon().writeTo(ionWriter)
+                out.info(outputSchema.toString())
+            }
+        }
 
         return "OK"
     }
