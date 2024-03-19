@@ -30,6 +30,7 @@ Thank you to all who have contributed!
 ### Added
 
 ### Changed
+- Change `StaticType.AnyOfType`'s `.toString` to not perform `.flatten()`
 
 ### Deprecated
 
@@ -164,6 +165,7 @@ Thank you to all who have contributed!
 - **BREAKING** Changed modeling of `EXCLUDE` in `partiql-ast`
 
 ### Deprecated
+
 
 ### Fixed
 - Fixes the CLI hanging on invalid queries. See issue #1230.
