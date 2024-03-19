@@ -249,6 +249,14 @@ CASE t_item.t_string
     WHEN 'b' THEN t_item.t_struct_b
 END;
 
+--#[case-when-30]
+-- type: missing
+CASE t_item.t_string
+    WHEN 'a' THEN MISSING
+    WHEN 'b' THEN MISSING
+    ELSE MISSING
+END;
+
 -- -----------------------------
 --  (Unused) old tests
 -- -----------------------------

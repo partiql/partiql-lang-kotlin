@@ -33,6 +33,7 @@ import org.partiql.types.BagType
 import org.partiql.types.ListType
 import org.partiql.types.SexpType
 import org.partiql.types.StaticType
+import org.partiql.types.StaticType.Companion.MISSING
 import org.partiql.types.StaticType.Companion.unionOf
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
@@ -2565,6 +2566,11 @@ class PlanTyperTestsPorted {
                     ),
                     StaticType.NULL,
                 ),
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-30"),
+                catalog = "pql",
+                expected = MISSING
             ),
         )
 

@@ -54,7 +54,7 @@ internal typealias SuperGraph = Array<Array<PartiQLValueType?>>
 @OptIn(PartiQLValueExperimental::class)
 internal class DynamicTyper {
 
-    private var supertype = NULL
+    private var supertype: PartiQLValueType? = null
     private var args = mutableListOf<PartiQLValueType>()
 
     private var nullable = false
@@ -127,9 +127,15 @@ internal class DynamicTyper {
         if (supertype == STRUCT || supertype == BAG || supertype == LIST || supertype == SEXP) {
             return StaticType.unionOf(types + modifiers) to null
         }
+        // If not initialized, then return null, missing, or null|missing.
+        val s = supertype
+        if (s == null) {
+            val t = if (modifiers.isEmpty()) StaticType.MISSING else StaticType.unionOf(modifiers).flatten()
+            return t to null
+        }
         // Otherwise, return the supertype along with the coercion mapping
-        val type = supertype.toNonNullStaticType()
-        val mapping = args.map { it to supertype }
+        val type = s.toNonNullStaticType()
+        val mapping = args.map { it to s }
         return if (modifiers.isEmpty()) {
             type to mapping
         } else {
@@ -138,14 +144,19 @@ internal class DynamicTyper {
     }
 
     private fun calculate(type: PartiQLValueType) {
-        // Don't bother calculating the new supertype, we've already hit the top.
-        if (supertype == ANY) return
+        val s = supertype
+        // Initialize
+        if (s == null) {
+            supertype = type
+            return
+        }
+        // Don't bother calculating the new supertype, we've already hit `dynamic`.
+        if (s == ANY) return
         // Lookup and set the new minimum common supertype
         supertype = when {
-            supertype == NULL -> type // initialize
             type == ANY -> type
-            type == NULL || type == MISSING || supertype == type -> return // skip
-            else -> graph[supertype][type] ?: ANY // lookup, if missing then go to top.
+            type == NULL || type == MISSING || s == type -> return // skip
+            else -> graph[s][type] ?: ANY // lookup, if missing then go to top.
         }
     }
 
