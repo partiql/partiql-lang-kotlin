@@ -2,13 +2,13 @@ package org.partiql.planner.internal.casts
 
 import org.partiql.planner.internal.ir.Ref.Cast
 import org.partiql.planner.internal.ir.refCast
-import org.partiql.value.AnyType
 import org.partiql.value.ArrayType
 import org.partiql.value.BagType
 import org.partiql.value.BoolType
 import org.partiql.value.CharType
 import org.partiql.value.CharVarUnboundedType
 import org.partiql.value.ClobType
+import org.partiql.value.DynamicType
 import org.partiql.value.Float32Type
 import org.partiql.value.Float64Type
 import org.partiql.value.Int16Type
@@ -64,7 +64,7 @@ internal class CastTable private constructor(
 ) {
 
     private val allTypes: List<PartiQLType> = listOf(
-        AnyType,
+        DynamicType,
         MissingType
     )
 
@@ -89,8 +89,10 @@ internal class CastTable private constructor(
      * Returns the CAST function if exists, else null.
      */
     fun lookupCoercion(operand: PartiQLType, target: PartiQLType): Cast? {
-        val i = types.indexOf(operand)
-        val j = types.indexOf(target)
+        // val i = types.indexOf(operand)
+        val i = types.indexOfFirst { it.javaClass == operand.javaClass } // TODO: val i = types.indexOf(target)
+        // val j = types.indexOf(target)
+        val j = types.indexOfFirst { it.javaClass == target.javaClass } // TODO: val i = types.indexOf(target)
         val cast = graph[i][j] ?: return null
         return if (cast.safety == Cast.Safety.COERCION) cast else null
     }
@@ -124,9 +126,9 @@ internal class CastTable private constructor(
                 // initialize all with empty relationships
                 graph[type.first] = arrayOfNulls(N)
             }
-            graph[ANY] = AnyType.relationships(soleTypes) {
-                coercion(AnyType)
-                types.filterNot { it.second is AnyType }.forEach {
+            graph[ANY] = DynamicType.relationships(soleTypes) {
+                coercion(DynamicType)
+                types.filterNot { it.second is DynamicType }.forEach {
                     unsafe(it.second)
                 }
             }

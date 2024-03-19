@@ -2,7 +2,7 @@ package org.partiql.shape
 
 import org.partiql.shape.errors.InternalError
 import org.partiql.shape.visitor.ShapeVisitor
-import org.partiql.value.AnyType
+import org.partiql.value.DynamicType
 import org.partiql.value.PartiQLType
 
 /**
@@ -35,7 +35,7 @@ public data class Multiple private constructor(
 
     override fun validate(type: PartiQLType): PShape.ValidationResult {
         return when (type) {
-            is AnyType -> PShape.ValidationResult.Success
+            is DynamicType -> PShape.ValidationResult.Success
             else -> PShape.ValidationResult.Failure(
                 InternalError("UNION was not an ANY type. It contained a $type")
             )

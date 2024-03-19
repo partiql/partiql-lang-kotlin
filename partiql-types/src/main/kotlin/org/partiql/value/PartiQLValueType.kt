@@ -85,7 +85,7 @@ public sealed interface PartiQLType {
         @OptIn(PartiQLValueExperimental::class)
         @Deprecated("Should not be used")
         public fun fromLegacy(type: PartiQLValueType): PartiQLType = when (type) {
-            PartiQLValueType.ANY -> AnyType
+            PartiQLValueType.ANY -> DynamicType
             PartiQLValueType.BOOL -> BoolType
             PartiQLValueType.INT8 -> Int8Type
             PartiQLValueType.INT16 -> Int16Type
@@ -293,7 +293,7 @@ public sealed interface PartiQLType {
             DATETIME_TYPES +
             COLLECTION_TYPES +
             COMPLEX_TYPES +
-            listOf(AnyType)
+            listOf(DynamicType)
 
         @JvmStatic
         @Deprecated("Will likely be removed")
@@ -306,8 +306,8 @@ public abstract class PartiQLCoreTypeBase : PartiQLType.Runtime.Core {
     override fun toString(): String = this.name
 }
 
-public object AnyType : PartiQLType.Abstract {
-    override val name: String = "ANY"
+public object DynamicType : PartiQLType.Abstract {
+    override val name: String = "DYNAMIC"
     override fun toString(): String = this.name
 }
 

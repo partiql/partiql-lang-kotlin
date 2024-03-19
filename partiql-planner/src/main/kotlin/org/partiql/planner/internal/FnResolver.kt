@@ -6,7 +6,7 @@ import org.partiql.shape.PShape
 import org.partiql.shape.PShape.Companion.allTypes
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnSignature
-import org.partiql.value.AnyType
+import org.partiql.value.DynamicType
 import org.partiql.value.NullType
 import org.partiql.value.PartiQLType
 import org.partiql.value.PartiQLValueExperimental
@@ -128,7 +128,7 @@ internal object FnResolver {
                 // 1. Exact match
                 arg == p.type -> continue
                 // 2. Match ANY, no coercion needed
-                p.type is AnyType -> continue
+                p.type is DynamicType -> continue
                 // 3. Match NULL argument
                 arg is NullType -> continue
                 // 4. Check for a coercion

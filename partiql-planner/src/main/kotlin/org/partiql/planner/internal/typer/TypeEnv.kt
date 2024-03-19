@@ -208,7 +208,7 @@ internal data class TypeEnv(
                 BindingCase.SENSITIVE -> rexOpPathKey(curr, rex(PShape.of(CharVarUnboundedType), rexOpLit(stringValue(step.name))))
                 BindingCase.INSENSITIVE -> rexOpPathSymbol(curr, step.name)
             }
-            rex(PShape.of(org.partiql.value.AnyType), op)
+            rex(PShape.of(org.partiql.value.DynamicType), op)
         }
     }
 }

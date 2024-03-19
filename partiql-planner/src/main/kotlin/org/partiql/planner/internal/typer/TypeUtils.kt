@@ -353,7 +353,7 @@ internal fun CollectionType.exclude(step: Rel.Op.Exclude.Step, lastStepOptional:
  * @return
  */
 internal fun PShape.excludeCollection(step: Rel.Op.Exclude.Step, lastStepOptional: Boolean = false): PShape {
-    var e = this.getSingleElement()?.shape ?: of(org.partiql.value.AnyType)
+    var e = this.getSingleElement()?.shape ?: of(org.partiql.value.DynamicType)
     val substeps = step.substeps
     when (step.type) {
         is Rel.Op.Exclude.Type.CollIndex -> {

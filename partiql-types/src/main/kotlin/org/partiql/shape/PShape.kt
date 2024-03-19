@@ -9,12 +9,12 @@ import org.partiql.types.SexpType
 import org.partiql.types.SingleType
 import org.partiql.types.StaticType
 import org.partiql.types.StructType
-import org.partiql.value.AnyType
 import org.partiql.value.ArrayType
 import org.partiql.value.BagType
 import org.partiql.value.CharType
 import org.partiql.value.CharVarType
 import org.partiql.value.CharVarUnboundedType
+import org.partiql.value.DynamicType
 import org.partiql.value.MissingType
 import org.partiql.value.NullType
 import org.partiql.value.PartiQLType
@@ -95,14 +95,14 @@ public sealed interface PShape : ShapeNode {
         @JvmName("anyOfShapes")
         public fun anyOf(shapes: Set<PShape>): PShape {
             return when (shapes.size) {
-                0 -> Base(AnyType)
+                0 -> Base(DynamicType)
                 1 -> shapes.first()
                 else -> {
                     val flattened = shapes.flatMap { it.allShapes() }.toSet()
                     val type = flattened.first().type.let { first ->
                         when (flattened.all { it.type == first }) {
                             true -> first
-                            false -> AnyType
+                            false -> DynamicType
                         }
                     }
                     Base(type, constraints = setOf(AnyOf(flattened)))
@@ -208,7 +208,7 @@ public sealed interface PShape : ShapeNode {
         @JvmStatic
         @Deprecated("Should we allow this?")
         public fun PShape.getElement(): Element {
-            val default = Element(of(AnyType))
+            val default = Element(of(DynamicType))
             return this.getSingleElement() ?: default
         }
 
@@ -377,7 +377,7 @@ public sealed interface PShape : ShapeNode {
                         constraints = setOf(NotNull)
                     )
                 }
-                is org.partiql.types.AnyType -> of(AnyType)
+                is org.partiql.types.AnyType -> of(DynamicType)
                 is AnyOfType -> {
                     val flattened = type.flatten().allTypes
                     val types = when (flattened.any { it is org.partiql.types.NullType }) {

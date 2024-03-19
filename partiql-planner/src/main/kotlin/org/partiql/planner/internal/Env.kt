@@ -24,7 +24,7 @@ import org.partiql.spi.BindingPath
 import org.partiql.spi.connector.ConnectorMetadata
 import org.partiql.spi.fn.AggSignature
 import org.partiql.spi.fn.FnExperimental
-import org.partiql.value.AnyType
+import org.partiql.value.DynamicType
 import org.partiql.value.NullType
 import org.partiql.value.PartiQLType
 import org.partiql.value.PartiQLValueExperimental
@@ -113,7 +113,7 @@ internal class Env(private val session: PartiQLPlanner.Session) {
                     )
                 }
                 // Rewrite as a dynamic call to be typed by PlanTyper
-                rex(AnyType, rexOpCallDynamic(args, candidates, match.exhaustive))
+                rex(DynamicType, rexOpCallDynamic(args, candidates, match.exhaustive))
             }
             is FnMatch.Static -> {
                 // Create an internal typed reference
@@ -126,11 +126,11 @@ internal class Env(private val session: PartiQLPlanner.Session) {
                 val coercions: List<Rex> = args.mapIndexed { i, arg ->
                     when (val cast = match.mapping[i]) {
                         null -> arg
-                        else -> rex(AnyType, rexOpCastResolved(cast, arg))
+                        else -> rex(DynamicType, rexOpCastResolved(cast, arg))
                     }
                 }
                 // Rewrite as a static call to be typed by PlanTyper
-                rex(AnyType, rexOpCallStatic(ref, coercions))
+                rex(DynamicType, rexOpCallStatic(ref, coercions))
             }
         }
     }
@@ -245,7 +245,7 @@ internal class Env(private val session: PartiQLPlanner.Session) {
         for (i in args.indices) {
             val a = args[i]
             val p = parameters[i]
-            if (p.type !is AnyType && a != p.type) return false
+            if (p.type !is DynamicType && a != p.type) return false
         }
         return true
     }
@@ -266,7 +266,7 @@ internal class Env(private val session: PartiQLPlanner.Session) {
                 // 1. Exact match
                 arg == p.type -> continue
                 // 2. Match ANY, no coercion needed
-                p.type is AnyType -> continue
+                p.type is DynamicType -> continue
                 // 3. Match NULL argument
                 arg is NullType -> continue
                 // 4. Check for a coercion

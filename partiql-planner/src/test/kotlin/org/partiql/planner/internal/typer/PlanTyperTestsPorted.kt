@@ -49,10 +49,10 @@ import org.partiql.types.SexpType
 import org.partiql.types.StaticType
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
-import org.partiql.value.AnyType
 import org.partiql.value.ArrayType
 import org.partiql.value.BoolType
 import org.partiql.value.CharVarUnboundedType
+import org.partiql.value.DynamicType
 import org.partiql.value.Int32Type
 import org.partiql.value.MissingType
 import org.partiql.value.NullType
@@ -2099,7 +2099,7 @@ class PlanTyperTestsPorted {
                                                                     Fields.Field("b", Int32Type.withConstraints(NotNull)),
                                                                     Fields.Field(
                                                                         "c",
-                                                                        AnyType.withConstraints(
+                                                                        DynamicType.withConstraints(
                                                                             AnyOf(
                                                                                 Int32Type.withConstraints(NotNull),
                                                                                 MissingType.withConstraints(NotNull),
@@ -2117,7 +2117,7 @@ class PlanTyperTestsPorted {
                                                                     Fields.Field("b", Int32Type.withConstraints(NotNull)),
                                                                     Fields.Field(
                                                                         "c",
-                                                                        AnyType.withConstraints(
+                                                                        DynamicType.withConstraints(
                                                                             AnyOf(
                                                                                 NullType.withConstraints(),
                                                                                 MissingType.withConstraints(NotNull),
@@ -2135,7 +2135,7 @@ class PlanTyperTestsPorted {
                                                                     Fields.Field("b", Int32Type.withConstraints(NotNull)),
                                                                     Fields.Field(
                                                                         "c",
-                                                                        AnyType.withConstraints(
+                                                                        DynamicType.withConstraints(
                                                                             AnyOf(
                                                                                 // TODO: This should be NumericType(2, 1)
                                                                                 NumericType(1, 1).withConstraints(NotNull),
@@ -2332,7 +2332,7 @@ class PlanTyperTestsPorted {
                 expected = org.partiql.value.BagType.withConstraints(
                     NotNull,
                     Element(
-                        AnyType.withConstraints(
+                        DynamicType.withConstraints(
                             AnyOf(
                                 NullType.withConstraints(),
                                 MissingType.withConstraints(NotNull),
@@ -2542,7 +2542,7 @@ class PlanTyperTestsPorted {
                     END;
                 """,
                 // TODO: PartiQL will eventually coerce CASE-WHENs to a single output type.
-                expected = AnyType.withConstraints(
+                expected = DynamicType.withConstraints(
                     AnyOf(
                         BoolType.withConstraints(NotNull),
                         NullType.withConstraints()
@@ -2571,7 +2571,7 @@ class PlanTyperTestsPorted {
                                     // TODO: PartiQL will eventually coerce CASE-WHENs to a single output type.
                                     Fields.Field(
                                         "breed_descriptor",
-                                        AnyType.withConstraints(
+                                        DynamicType.withConstraints(
                                             AnyOf(
                                                 CharVarUnboundedType.withConstraints(NotNull),
                                                 NullType.withConstraints()
@@ -3259,13 +3259,25 @@ class PlanTyperTestsPorted {
 
     @Test
     fun testSimpleSFW() {
-        val tc = SuccessTestCase(
-            name = "IN",
-            catalog = CATALOG_DB,
-            catalogPath = DB_SCHEMA_MARKETS,
-            query = "order_info.customer_id IN (1, 2, 3)",
-            expected = TYPE_BOOL
-        )
+        val tc =
+            SuccessTestCase(
+                name = "LEFT JOIN",
+                query = "SELECT t1.a, t2.a FROM <<{ 'a': 1 }>> AS t1 LEFT JOIN <<{ 'a': 2.0 }>> AS t2 ON t1.a = t2.a",
+                expected = BagType(
+                    StructType(
+                        fields = listOf(
+                            StructType.Field("a", StaticType.INT4),
+                            StructType.Field("a", StaticType.unionOf(StaticType.NULL, DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(2, 1)))),
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(false),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                )
+            )
         runTest(tc)
     }
 

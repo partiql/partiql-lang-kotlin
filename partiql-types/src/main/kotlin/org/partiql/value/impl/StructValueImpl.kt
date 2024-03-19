@@ -17,7 +17,7 @@ package org.partiql.value.impl
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.toPersistentList
 import org.partiql.value.Annotations
-import org.partiql.value.AnyType
+import org.partiql.value.DynamicType
 import org.partiql.value.PartiQLType
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
@@ -36,7 +36,7 @@ import org.partiql.value.util.PartiQLValueVisitor
 internal class IterableStructValueImpl<T : PartiQLValue>(
     private val delegate: Iterable<Pair<String, T>>?,
     override val annotations: PersistentList<String>,
-    private val fieldsType: PartiQLType = AnyType
+    private val fieldsType: PartiQLType = DynamicType
 ) : StructValue<T>() {
 
     override val type: PartiQLType = TupleType
@@ -92,7 +92,7 @@ internal class IterableStructValueImpl<T : PartiQLValue>(
 internal class MultiMapStructValueImpl<T : PartiQLValue>(
     private val delegate: Map<String, Iterable<T>>?,
     override val annotations: PersistentList<String>,
-    private val fieldsType: PartiQLType = AnyType
+    private val fieldsType: PartiQLType = DynamicType
 ) : StructValue<T>() {
 
     override val type: PartiQLType = TupleType
@@ -135,7 +135,7 @@ internal class MultiMapStructValueImpl<T : PartiQLValue>(
 internal class MapStructValueImpl<T : PartiQLValue>(
     private val delegate: Map<String, T>?,
     override val annotations: PersistentList<String>,
-    private val fieldsType: PartiQLType = AnyType
+    private val fieldsType: PartiQLType = DynamicType
 ) : StructValue<T>() {
 
     override val type: PartiQLType = TupleType

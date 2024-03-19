@@ -85,13 +85,13 @@ import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnSignature
-import org.partiql.value.AnyType
 import org.partiql.value.ArrayType
 import org.partiql.value.BagType
 import org.partiql.value.BoolType
 import org.partiql.value.BoolValue
 import org.partiql.value.CharVarType
 import org.partiql.value.CharVarUnboundedType
+import org.partiql.value.DynamicType
 import org.partiql.value.Int16Type
 import org.partiql.value.Int32Type
 import org.partiql.value.Int64Type
@@ -194,9 +194,9 @@ internal class PlanTyper(
                 t.isType<TupleType>() -> {
                     val fields = t.getFirstAndOnlyFields()
                     when (fields) {
-                        null -> PShape.of(AnyType)
+                        null -> PShape.of(DynamicType)
                         else -> when (fields.isClosed) {
-                            false -> PShape.of(AnyType)
+                            false -> PShape.of(DynamicType)
                             true -> PShape.anyOf(fields.fields.map { it.value }.toSet())
                         }
                     }
@@ -530,7 +530,7 @@ internal class PlanTyper(
                 } else {
                     // cannot infer type of non-literal path step because we don't know its value
                     // we might improve upon this with some constant folding prior to typing
-                    PShape.of(AnyType)
+                    PShape.of(DynamicType)
                 }
             }.toSet()
             val finalType = PShape.anyOf(pathTypes + toAddTypes)
@@ -810,7 +810,7 @@ internal class PlanTyper(
             }
             val values = node.values.map { visitRex(it, it.type) }
             val t = when (values.size) {
-                0 -> PShape.of(AnyType)
+                0 -> PShape.of(DynamicType)
                 else -> values.toUnionType()
             }
             val type = when (ctx.type) {
@@ -999,7 +999,7 @@ internal class PlanTyper(
         }
 
         override fun visitRexOpErr(node: Rex.Op.Err, ctx: PShape?): PlanNode {
-            val type = ctx ?: PShape.of(AnyType)
+            val type = ctx ?: PShape.of(DynamicType)
             return rex(type, node)
         }
 
@@ -1147,7 +1147,7 @@ internal class PlanTyper(
          *   - AND no item is found, return [MissingType]
          *   - AND only one item is present -> grab item and make sensitive.
          *   - AND more than one item is present, keep sensitivity and grab item.
-         * 3. If [struct] is open, return [AnyType]
+         * 3. If [struct] is open, return [DynamicType]
          *
          * @return a [Pair] where the [Pair.first] represents the type of the [step] and the [Pair.second] represents
          * the disambiguated [key].
@@ -1180,7 +1180,7 @@ internal class PlanTyper(
                     }
                 }
                 // 3. Struct is open
-                else -> (key to PShape.of(AnyType))
+                else -> (key to PShape.of(DynamicType))
             }
             return type to name
         }
@@ -1263,7 +1263,7 @@ internal class PlanTyper(
                 if (arg.op is Rex.Op.Err) {
                     // don't attempt to resolve an aggregation with erroneous arguments.
                     handleUnknownAggregation(node)
-                    return node to PShape.of(AnyType)
+                    return node to PShape.of(DynamicType)
                 } else if (arg.type.type is MissingType) {
                     handleAlwaysMissing()
                     return relOpAggregateCallUnresolved(node.name, node.setQuantifier, listOf(rexErr("MissingType"))) to PShape.of(MissingType)
@@ -1277,7 +1277,7 @@ internal class PlanTyper(
             val call = env.resolveAgg(node.name, node.setQuantifier, args)
             if (call == null) {
                 handleUnknownAggregation(node)
-                return node to PShape.of(AnyType)
+                return node to PShape.of(DynamicType)
             }
 
             // Treat MissingType as NULL in aggregations.
@@ -1542,7 +1542,7 @@ internal class PlanTyper(
      */
     private fun Rex.Op.Path.debug(): String {
         val steps = mutableListOf<String>()
-        var curr: Rex = rex(AnyType, this)
+        var curr: Rex = rex(DynamicType, this)
         while (true) {
             curr = when (val op = curr.op) {
                 is Rex.Op.Path.Index -> {

@@ -17,9 +17,9 @@ package org.partiql.value.impl
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.toPersistentList
 import org.partiql.value.Annotations
-import org.partiql.value.AnyType
 import org.partiql.value.BagType
 import org.partiql.value.BagValue
+import org.partiql.value.DynamicType
 import org.partiql.value.PartiQLType
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
@@ -29,7 +29,7 @@ import org.partiql.value.util.PartiQLValueVisitor
 internal class BagValueImpl<T : PartiQLValue>(
     private val delegate: Iterable<T>?,
     override val annotations: PersistentList<String>,
-    private val elementType: PartiQLType = AnyType
+    private val elementType: PartiQLType = DynamicType
 ) : BagValue<T>() {
 
     override val isNull: Boolean = delegate == null

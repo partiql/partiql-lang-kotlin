@@ -72,11 +72,11 @@ import org.partiql.planner.internal.ir.rexOpStructField
 import org.partiql.planner.internal.ir.rexOpVarLocal
 import org.partiql.shape.NotNull
 import org.partiql.shape.PShape
-import org.partiql.value.AnyType
 import org.partiql.value.ArrayType
 import org.partiql.value.BagType
 import org.partiql.value.BoolType
 import org.partiql.value.CharVarUnboundedType
+import org.partiql.value.DynamicType
 import org.partiql.value.Int64Type
 import org.partiql.value.PartiQLType
 import org.partiql.value.PartiQLValueExperimental
@@ -114,7 +114,7 @@ internal object RelConverter {
                     "Expected SELECT VALUE's input to have a single binding. " +
                         "However, it contained: ${rel.type.schema.map { it.name }}."
                 }
-                val constructor = rex(AnyType, rexOpVarLocal(0, 0))
+                val constructor = rex(DynamicType, rexOpVarLocal(0, 0))
                 val op = rexOpSelect(constructor, rel)
                 val type = when (rel.type.props.contains(Rel.Prop.ORDERED)) {
                     true -> ArrayType
@@ -370,7 +370,7 @@ internal object RelConverter {
             val calls = aggregations.mapIndexed { i, expr ->
                 val binding = relBinding(
                     name = syntheticAgg(i),
-                    type = AnyType,
+                    type = DynamicType,
                 )
                 schema.add(binding)
                 val args = expr.args.map { arg -> arg.toRex(env) }
@@ -390,15 +390,15 @@ internal object RelConverter {
             // Add GROUP_AS aggregation
             groupBy?.let { gb ->
                 gb.asAlias?.let { groupAs ->
-                    val binding = relBinding(groupAs.symbol, AnyType)
+                    val binding = relBinding(groupAs.symbol, DynamicType)
                     schema.add(binding)
                     val fields = input.type.schema.mapIndexed { bindingIndex, currBinding ->
                         rexOpStructField(
                             k = rex(CharVarUnboundedType, rexOpLit(stringValue(currBinding.name))),
-                            v = rex(AnyType, rexOpVarLocal(0, bindingIndex))
+                            v = rex(DynamicType, rexOpVarLocal(0, bindingIndex))
                         )
                     }
-                    val arg = listOf(rex(AnyType, rexOpStruct(fields)))
+                    val arg = listOf(rex(DynamicType, rexOpStruct(fields)))
                     calls.add(relOpAggregateCallUnresolved("group_as", Rel.Op.Aggregate.SetQuantifier.ALL, arg))
                 }
             }
@@ -410,7 +410,7 @@ internal object RelConverter {
                     }
                     val binding = relBinding(
                         name = it.asAlias!!.symbol,
-                        type = (AnyType)
+                        type = (DynamicType)
                     )
                     schema.add(binding)
                     it.expr.toRex(env)
