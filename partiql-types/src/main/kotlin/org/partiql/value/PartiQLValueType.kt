@@ -70,7 +70,7 @@ public sealed interface PartiQLType {
         /**
          * This is just to show what we might want to use this for.
          */
-        private interface Custom : Runtime
+        public interface Custom : Runtime
     }
 
     public sealed interface Abstract : PartiQLType {
@@ -423,18 +423,30 @@ public object DateType : PartiQLCoreTypeBase() {
 
 public object Int8Type : PartiQLCoreTypeBase() {
     override val name: String = "INT8"
+    public const val PRECISION: Byte = 3
+    public const val MAX_VALUE: Byte = Byte.MAX_VALUE // 127
+    public const val MIN_VALUE: Byte = Byte.MIN_VALUE // -128
 }
 
 public object Int16Type : PartiQLCoreTypeBase() {
     override val name: String = "INT16"
+    public const val PRECISION: Byte = 5
+    public const val MAX_VALUE: Short = Short.MAX_VALUE // (2^15) - 1 = 32,767
+    public const val MIN_VALUE: Short = Short.MIN_VALUE // -(2^15) = -32,768
 }
 
 public object Int32Type : PartiQLCoreTypeBase() {
     override val name: String = "INT32"
+    public const val PRECISION: Byte = 10
+    public const val MAX_VALUE: Int = Int.MAX_VALUE // (2^31) - 1 = 2,147,483,647
+    public const val MIN_VALUE: Int = Int.MIN_VALUE // -(2^31) = -2,147,483,648
 }
 
 public object Int64Type : PartiQLCoreTypeBase() {
     override val name: String = "INT64"
+    public const val PRECISION: Byte = 19
+    public const val MAX_VALUE: Long = Long.MAX_VALUE // (2^63) - 1 = 9,223,372,036,854,775,807
+    public const val MIN_VALUE: Long = Long.MIN_VALUE // -(2^63) = -9,223,372,036,854,775,808
 }
 
 /**
@@ -458,12 +470,24 @@ public object Float64Type : PartiQLCoreTypeBase() {
 
 /**
  * Aliases include DECIMAL(p, s)
+ *
+ * NUMERIC cannot have a [precision]
+ *
+ * @property precision if NULL, represents an arbitrary (infinite) precision.
+ * @property scale if NULL, represents an arbitrary scale up to [precision].
  */
 public data class NumericType(
     val precision: Int?,
     val scale: Int?
 ) : PartiQLCoreTypeBase() {
     override val name: String = "NUMERIC"
+
+    init {
+        if (precision != null) {
+            assert(scale != null)
+        }
+    }
+
     override fun toString(): String = "${this.name}(${this.precision}, ${this.scale})"
 
     public companion object {

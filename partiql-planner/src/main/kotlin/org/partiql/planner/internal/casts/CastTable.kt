@@ -18,6 +18,7 @@ import org.partiql.value.Int8Type
 import org.partiql.value.MissingType
 import org.partiql.value.NullType
 import org.partiql.value.NumericType
+import org.partiql.value.PartiQLCoreTypeBase
 import org.partiql.value.PartiQLType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
@@ -80,6 +81,42 @@ internal class CastTable private constructor(
     }
 
     fun get(operand: PartiQLType, target: PartiQLType): Cast? {
+        val safety = when (operand) {
+            is NumericType -> {
+                val valuePrecision = operand.precision ?: (NumericType.MAX_PRECISION + 1)
+                val valueScale = operand.scale ?: (NumericType.MAX_SCALE + 1)
+                when (target) {
+                    is NumericType -> {
+                        val targetPrecision = target.precision ?: (NumericType.MAX_PRECISION + 1)
+                        val targetScale = target.scale ?: (NumericType.MAX_SCALE + 1)
+                        when {
+                            targetPrecision < valuePrecision -> Cast.Safety.UNSAFE
+                            targetScale < valueScale -> Cast.Safety.UNSAFE
+                            else -> Cast.Safety.COERCION
+                        }
+                    }
+                    is Int8Type -> if (valuePrecision >= Int8Type.PRECISION) Cast.Safety.UNSAFE else Cast.Safety.COERCION
+                    is Int16Type -> if (valuePrecision >= Int16Type.PRECISION) Cast.Safety.UNSAFE else Cast.Safety.COERCION
+                    is Int32Type -> if (valuePrecision >= Int32Type.PRECISION) Cast.Safety.UNSAFE else Cast.Safety.COERCION
+                    is Int64Type -> if (valuePrecision >= Int64Type.PRECISION) Cast.Safety.UNSAFE else Cast.Safety.COERCION
+                    DynamicType -> getOld(operand, target)?.safety
+                    MissingType -> getOld(operand, target)?.safety
+                    is PartiQLCoreTypeBase -> getOld(operand, target)?.safety
+                    is PartiQLType.Runtime.Custom -> getOld(operand, target)?.safety
+                }
+            }
+            DynamicType -> getOld(operand, target)?.safety
+            MissingType -> getOld(operand, target)?.safety
+            is PartiQLCoreTypeBase -> getOld(operand, target)?.safety
+            is PartiQLType.Runtime.Custom -> getOld(operand, target)?.safety
+        }
+        return when (safety) {
+            null -> null
+            else -> Cast(operand, target, safety)
+        }
+    }
+
+    private fun getOld(operand: PartiQLType, target: PartiQLType): Cast? {
         val i = types.indexOf(operand)
         val j = types.indexOf(target)
         return graph[i][j]
@@ -87,13 +124,10 @@ internal class CastTable private constructor(
 
     /**
      * Returns the CAST function if exists, else null.
+     * TODO: Should we allow UNSAFE coercions? According to SQL, we can coerce NUMERIC(5, 1) to NUMERIC(3, 1)
      */
     fun lookupCoercion(operand: PartiQLType, target: PartiQLType): Cast? {
-        // val i = types.indexOf(operand)
-        val i = types.indexOfFirst { it.javaClass == operand.javaClass } // TODO: val i = types.indexOf(target)
-        // val j = types.indexOf(target)
-        val j = types.indexOfFirst { it.javaClass == target.javaClass } // TODO: val i = types.indexOf(target)
-        val cast = graph[i][j] ?: return null
+        val cast = get(operand, target) ?: return null
         return if (cast.safety == Cast.Safety.COERCION) cast else null
     }
 
