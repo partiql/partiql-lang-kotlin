@@ -35,6 +35,7 @@ Thank you to all who have contributed!
 ### Deprecated
 
 ### Fixed
+- `StaticType.flatten()` on an `AnyOfType` with `AnyType` will return `AnyType`
 
 ### Removed
 
