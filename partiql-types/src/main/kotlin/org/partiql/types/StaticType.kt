@@ -642,21 +642,10 @@ public data class AnyOfType(val types: Set<StaticType>, override val metas: Map<
         }
     }
 
-    override fun toString(): String =
-        when (val flattenedType = flatten()) {
-            is AnyOfType -> {
-                val unionedTypes = flattenedType.types
-                when (unionedTypes.size) {
-                    0 -> "\$null"
-                    1 -> unionedTypes.first().toString()
-                    else -> {
-                        val types = unionedTypes.joinToString { it.toString() }
-                        "union($types)"
-                    }
-                }
-            }
-            else -> flattenedType.toString()
-        }
+    override fun toString(): String {
+        val types = types.joinToString { it.toString() }
+        return "union($types)"
+    }
 
     override val allTypes: List<StaticType>
         get() = this.types.map { it.flatten() }
