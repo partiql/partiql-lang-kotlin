@@ -22,6 +22,14 @@ class EvaluatingCompilerExcludeTests : EvaluatorTestBase() {
                 "SELECT t.* EXCLUDE t.a FROM <<{'a': {'b': 2}, 'foo': 'bar', 'foo2': 'bar2'}>> AS t",
                 """<<{'foo': 'bar', 'foo2': 'bar2'}>>"""
             ),
+            EvaluatorTestCase(
+                """
+                    SELECT tbl2.* EXCLUDE tbl2.derivedColumn FROM 
+                        (SELECT tbl1.*, tbl1.a.b + 2 AS derivedColumn FROM 
+                            <<{'a': {'b': 2}, 'foo': 'bar', 'foo2': 'bar2'}>> AS tbl1) 
+                            AS tbl2""",
+                " <<{'a': {'b': 2}, 'foo': 'bar', 'foo2': 'bar2'}>>"
+            ),
             EvaluatorTestCase( // EXCLUDE tuple attr using bracket syntax; same output as above
                 "SELECT t.* EXCLUDE t['a'] FROM <<{'a': {'b': 2}, 'foo': 'bar', 'foo2': 'bar2'}>> AS t",
                 """<<{'foo': 'bar', 'foo2': 'bar2'}>>"""
