@@ -31,10 +31,13 @@ Thank you to all who have contributed!
 
 ### Changed
 - Change `StaticType.AnyOfType`'s `.toString` to not perform `.flatten()`
+- Function resolution logic: Now the function resolver would match all possible candidate (based on if the argument can be coerced to the Signature parameter type). If there are multiple match it will first attempt to pick the one requires the least cast, then pick the function with the highest precedence.
+- **Behavioral change**: The COUNT aggregate function now returns INT64.
 
 ### Deprecated
 
 ### Fixed
+- Fixes aggregations of attribute references to values of union types. This fix also allows for proper error handling by passing the UnknownAggregateFunction problem to the ProblemCallback. Please note that, with this change, the planner will no longer immediately throw an IllegalStateException for this exact scenario.
 
 ### Removed
 
@@ -42,7 +45,7 @@ Thank you to all who have contributed!
 
 ### Contributors
 Thank you to all who have contributed!
-- @<your-username>
+- @johnedquinn
 
 ## [0.14.4]
 
