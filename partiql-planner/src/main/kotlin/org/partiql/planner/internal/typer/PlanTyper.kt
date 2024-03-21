@@ -67,7 +67,6 @@ import org.partiql.planner.internal.shape.ShapeUtils
 import org.partiql.shape.Constraint
 import org.partiql.shape.Element
 import org.partiql.shape.Fields
-import org.partiql.shape.Multiple
 import org.partiql.shape.NotNull
 import org.partiql.shape.PShape
 import org.partiql.shape.PShape.Companion.allShapes
@@ -1481,16 +1480,11 @@ internal class PlanTyper(
         relBinding(it.name, type)
     }
 
+    // TODO: Add union support
     private fun PShape.withNullableFields(): PShape {
         val constraints = this.constraints.map { constraint ->
             when (constraint) {
                 is Fields -> constraint.withNullableFields()
-                is Multiple -> Multiple.of(
-                    constraint.constraints.map { c ->
-                        c.withNullableFields()
-                    }.toSet()
-                )
-
                 else -> constraint
             }
         }.toSet()

@@ -5,8 +5,6 @@ import org.partiql.shape.Constraint
 import org.partiql.shape.Element
 import org.partiql.shape.Fields
 import org.partiql.shape.Meta
-import org.partiql.shape.Multiple
-import org.partiql.shape.None
 import org.partiql.shape.NotNull
 import org.partiql.shape.PShape
 import org.partiql.shape.ShapeNode
@@ -22,8 +20,6 @@ public abstract class ShapeBaseVisitor<R, C> : ShapeVisitor<R, C> {
         is Element -> visitConstraintElement(node, ctx)
         is Fields -> visitConstraintFields(node, ctx)
         is NotNull -> visitConstraintNotNull(node, ctx)
-        is Multiple -> TODO("Remove")
-        None -> TODO("Remove")
     }
 
     override fun visitConstraintElement(node: Element, ctx: C): R = defaultVisit(node, ctx)

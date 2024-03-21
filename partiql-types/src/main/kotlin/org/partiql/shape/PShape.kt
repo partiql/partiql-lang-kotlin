@@ -187,6 +187,7 @@ public sealed interface PShape : ShapeNode {
 
         @JvmStatic
         @Deprecated("Should we allow this?")
+        // TODO: Add support for union
         public fun PShape.getSingleElement(): Element? {
             val elements = this.constraints.filterIsInstance<Element>()
             return when (elements.size) {
@@ -207,26 +208,6 @@ public sealed interface PShape : ShapeNode {
         public fun PShape.setElement(shape: PShape): PShape {
             val constraints = this.constraints.filterNot { it is Element } + setOf(Element(shape))
             return this.copy(constraints = constraints.toSet())
-        }
-
-        @Deprecated("Should we allow this?")
-        private fun Multiple.getSingleElement(): Element? {
-            return this.constraints.filterIsInstance<Element>().let { elements ->
-                when (elements.size) {
-                    1 -> elements.first()
-                    else -> null
-                }
-            }
-        }
-
-        @Deprecated("Should we allow this?")
-        private fun Multiple.getFirstAndOnlyFields(): Fields? {
-            return this.constraints.filterIsInstance<Fields>().let { fields ->
-                when (fields.size) {
-                    1 -> fields.first()
-                    else -> null
-                }
-            }
         }
 
         @Deprecated("Double-check this")

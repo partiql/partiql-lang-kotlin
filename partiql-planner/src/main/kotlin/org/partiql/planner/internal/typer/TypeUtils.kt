@@ -2,7 +2,6 @@ package org.partiql.planner.internal.typer
 
 import org.partiql.planner.internal.ir.Rel
 import org.partiql.shape.Fields
-import org.partiql.shape.Multiple
 import org.partiql.shape.PShape
 import org.partiql.shape.PShape.Companion.allShapes
 import org.partiql.shape.PShape.Companion.asOptional
@@ -252,10 +251,10 @@ internal fun PShape.excludeTuple(step: Rel.Op.Exclude.Step, lastStepOptional: Bo
         isClosed = fields.isClosed,
         // TODO: isOrdered = fields.isOrdered
     )
+    // TODO: Add support for union
     val constraints = this.constraints.flatMap { c ->
         when (c) {
             is Fields -> emptyList()
-            is Multiple -> c.constraints.filterNot { it is Fields }
             else -> listOf(c)
         } + listOf(newFields)
     }.toSet()
