@@ -41,7 +41,7 @@ import org.partiql.planner.internal.ir.rexOpStructField
 import org.partiql.planner.internal.ir.rexOpSubquery
 import org.partiql.planner.internal.ir.rexOpTupleUnion
 import org.partiql.planner.internal.ir.rexOpVarUnresolved
-import org.partiql.shape.NotNull
+import org.partiql.shape.Constraint.NotNull
 import org.partiql.shape.PShape
 import org.partiql.value.ArrayType
 import org.partiql.value.BoolType

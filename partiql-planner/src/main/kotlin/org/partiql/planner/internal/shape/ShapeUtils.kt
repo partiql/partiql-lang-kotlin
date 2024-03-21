@@ -1,8 +1,8 @@
 package org.partiql.planner.internal.shape
 
-import org.partiql.shape.Element
-import org.partiql.shape.Fields
-import org.partiql.shape.NotNull
+import org.partiql.shape.Constraint.Element
+import org.partiql.shape.Constraint.Fields
+import org.partiql.shape.Constraint.NotNull
 import org.partiql.shape.PShape
 import org.partiql.shape.PShape.Companion.allShapes
 import org.partiql.shape.PShape.Companion.asNullable

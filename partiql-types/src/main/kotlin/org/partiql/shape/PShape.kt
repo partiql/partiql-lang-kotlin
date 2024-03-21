@@ -66,7 +66,7 @@ public sealed interface PShape : ShapeNode {
             metas: Set<Meta> = emptySet()
         ): PShape {
             val newConstraints = when (type) {
-                is MissingType -> constraints + setOf(NotNull)
+                is MissingType -> constraints + setOf(Constraint.NotNull)
                 else -> constraints
             }
             return Base(type, newConstraints, metas)
@@ -95,7 +95,7 @@ public sealed interface PShape : ShapeNode {
                             false -> DynamicType
                         }
                     }
-                    Base(type, constraints = setOf(AnyOf(flattened)))
+                    Base(type, constraints = setOf(Constraint.AnyOf(flattened)))
                 }
             }
         }
@@ -123,8 +123,8 @@ public sealed interface PShape : ShapeNode {
 
         @JvmStatic
         @Deprecated("Should we allow this?")
-        public fun PShape.getAnyOf(): AnyOf {
-            val anyOf = this.constraints.filterIsInstance<AnyOf>()
+        public fun PShape.getAnyOf(): Constraint.AnyOf {
+            val anyOf = this.constraints.filterIsInstance<Constraint.AnyOf>()
             return when (anyOf.size) {
                 0 -> error("None found!")
                 1 -> anyOf.first()
@@ -177,8 +177,8 @@ public sealed interface PShape : ShapeNode {
 
         @JvmStatic
         @Deprecated("Should we allow this?")
-        public fun PShape.getFirstAndOnlyFields(): Fields? {
-            val fields = this.constraints.filterIsInstance<Fields>()
+        public fun PShape.getFirstAndOnlyFields(): Constraint.Fields? {
+            val fields = this.constraints.filterIsInstance<Constraint.Fields>()
             return when (fields.size) {
                 1 -> fields.first()
                 else -> null // TODO: Error or null?
@@ -188,8 +188,8 @@ public sealed interface PShape : ShapeNode {
         @JvmStatic
         @Deprecated("Should we allow this?")
         // TODO: Add support for union
-        public fun PShape.getSingleElement(): Element? {
-            val elements = this.constraints.filterIsInstance<Element>()
+        public fun PShape.getSingleElement(): Constraint.Element? {
+            val elements = this.constraints.filterIsInstance<Constraint.Element>()
             return when (elements.size) {
                 1 -> elements.first()
                 else -> null // TODO: Error or null?
@@ -198,15 +198,15 @@ public sealed interface PShape : ShapeNode {
 
         @JvmStatic
         @Deprecated("Should we allow this?")
-        public fun PShape.getElement(): Element {
-            val default = Element(of(DynamicType))
+        public fun PShape.getElement(): Constraint.Element {
+            val default = Constraint.Element(of(DynamicType))
             return this.getSingleElement() ?: default
         }
 
         @JvmStatic
         @Deprecated("Should we allow this?")
         public fun PShape.setElement(shape: PShape): PShape {
-            val constraints = this.constraints.filterNot { it is Element } + setOf(Element(shape))
+            val constraints = this.constraints.filterNot { it is Constraint.Element } + setOf(Constraint.Element(shape))
             return this.copy(constraints = constraints.toSet())
         }
 
@@ -225,8 +225,8 @@ public sealed interface PShape : ShapeNode {
                 0 -> false
                 else -> this.constraints.any { constraint ->
                     when (constraint) {
-                        is NotNull -> true
-                        is AnyOf -> constraint.shapes.all { it.isNotNullable() }
+                        is Constraint.NotNull -> true
+                        is Constraint.AnyOf -> constraint.shapes.all { it.isNotNullable() }
                         else -> false
                     }
                 }
@@ -236,8 +236,8 @@ public sealed interface PShape : ShapeNode {
         @Deprecated("Double-check this")
         private fun Constraint.isNotNullable(): Boolean {
             return when (this) {
-                is NotNull -> true
-                is AnyOf -> this.shapes.all { it.isNotNullable() }
+                is Constraint.NotNull -> true
+                is Constraint.AnyOf -> this.shapes.all { it.isNotNullable() }
                 else -> false
             }
         }
@@ -252,11 +252,11 @@ public sealed interface PShape : ShapeNode {
 
         @Deprecated("Double-check this")
         public fun PShape.asNullable(): PShape {
-            val constraints = this.constraints.filterNot { it is NotNull }.map { c ->
+            val constraints = this.constraints.filterNot { it is Constraint.NotNull }.map { c ->
                 when (c) {
-                    is AnyOf -> {
+                    is Constraint.AnyOf -> {
                         val shapes = c.shapes.map { it.asNullable() }.toSet()
-                        AnyOf(shapes)
+                        Constraint.AnyOf(shapes)
                     }
                     else -> c
                 }
@@ -314,16 +314,16 @@ public sealed interface PShape : ShapeNode {
                 is SingleType -> when (type) {
                     is StructType -> {
                         val pType = PartiQLType.fromSingleType(type)
-                        val fields = type.fields.map { Fields.Field(it.key, fromStaticType(it.value)) }
+                        val fields = type.fields.map { Constraint.Fields.Field(it.key, fromStaticType(it.value)) }
                         of(
                             type = pType,
                             constraints = setOf(
-                                Fields(
+                                Constraint.Fields(
                                     fields = fields,
                                     isClosed = type.contentClosed,
                                     // TODO: isOrdered = type.constraints.contains(TupleConstraint.Ordered)
                                 ),
-                                NotNull
+                                Constraint.NotNull
                             )
                         )
                     }
@@ -337,15 +337,15 @@ public sealed interface PShape : ShapeNode {
                         PShape.of(
                             type = pType,
                             constraints = setOf(
-                                Element(fromStaticType(element)),
-                                NotNull
+                                Constraint.Element(fromStaticType(element)),
+                                Constraint.NotNull
                             )
                         )
                     }
                     is org.partiql.types.NullType -> of(PartiQLType.fromSingleType(type))
                     else -> of(
                         PartiQLType.fromSingleType(type),
-                        constraints = setOf(NotNull)
+                        constraints = setOf(Constraint.NotNull)
                     )
                 }
                 is org.partiql.types.AnyType -> of(DynamicType)
@@ -367,7 +367,7 @@ public sealed interface PShape : ShapeNode {
         public fun PShape.isUnion(): Boolean = this.constraints.any { it.isUnion() }
 
         public fun Constraint.isUnion(): Boolean = when (this) {
-            is AnyOf -> true
+            is Constraint.AnyOf -> true
             else -> false
         }
     }

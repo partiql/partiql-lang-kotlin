@@ -1,6 +1,6 @@
 package org.partiql.spi.connector.sql.info
 
-import org.partiql.shape.Fields
+import org.partiql.shape.Constraint.Fields
 import org.partiql.shape.PShape
 import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnExperimental

@@ -1,11 +1,11 @@
 package org.partiql.shape.visitor
 
-import org.partiql.shape.AnyOf
 import org.partiql.shape.Constraint
-import org.partiql.shape.Element
-import org.partiql.shape.Fields
+import org.partiql.shape.Constraint.AnyOf
+import org.partiql.shape.Constraint.Element
+import org.partiql.shape.Constraint.Fields
+import org.partiql.shape.Constraint.NotNull
 import org.partiql.shape.Meta
-import org.partiql.shape.NotNull
 import org.partiql.shape.PShape
 import org.partiql.shape.ShapeNode
 

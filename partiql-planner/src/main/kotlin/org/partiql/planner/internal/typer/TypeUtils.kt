@@ -1,7 +1,7 @@
 package org.partiql.planner.internal.typer
 
 import org.partiql.planner.internal.ir.Rel
-import org.partiql.shape.Fields
+import org.partiql.shape.Constraint.Fields
 import org.partiql.shape.PShape
 import org.partiql.shape.PShape.Companion.allShapes
 import org.partiql.shape.PShape.Companion.asOptional

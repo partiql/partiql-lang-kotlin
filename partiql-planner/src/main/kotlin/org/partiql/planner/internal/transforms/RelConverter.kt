@@ -70,7 +70,7 @@ import org.partiql.planner.internal.ir.rexOpSelect
 import org.partiql.planner.internal.ir.rexOpStruct
 import org.partiql.planner.internal.ir.rexOpStructField
 import org.partiql.planner.internal.ir.rexOpVarLocal
-import org.partiql.shape.NotNull
+import org.partiql.shape.Constraint.NotNull
 import org.partiql.shape.PShape
 import org.partiql.value.ArrayType
 import org.partiql.value.BagType
