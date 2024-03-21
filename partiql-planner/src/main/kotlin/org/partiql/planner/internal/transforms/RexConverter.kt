@@ -624,8 +624,8 @@ internal object RexConverter {
                 is Type.Real -> PartiQLValueType.FLOAT64
                 is Type.Float32 -> PartiQLValueType.FLOAT32
                 is Type.Float64 -> PartiQLValueType.FLOAT64
-                is Type.Decimal -> if (type.scale != null) PartiQLValueType.NUMERIC else PartiQLValueType.NUMERIC_ARBITRARY
-                is Type.Numeric -> if (type.scale != null) PartiQLValueType.NUMERIC else PartiQLValueType.NUMERIC_ARBITRARY
+                is Type.Decimal -> if (type.scale != null) PartiQLValueType.DECIMAL else PartiQLValueType.DECIMAL_ARBITRARY
+                is Type.Numeric -> if (type.scale != null) PartiQLValueType.DECIMAL else PartiQLValueType.DECIMAL_ARBITRARY
                 is Type.Char -> PartiQLValueType.CHAR
                 is Type.Varchar -> PartiQLValueType.STRING
                 is Type.String -> PartiQLValueType.STRING

@@ -31,6 +31,8 @@ import org.partiql.value.PartiQLValueType.BYTE
 import org.partiql.value.PartiQLValueType.CHAR
 import org.partiql.value.PartiQLValueType.CLOB
 import org.partiql.value.PartiQLValueType.DATE
+import org.partiql.value.PartiQLValueType.DECIMAL
+import org.partiql.value.PartiQLValueType.DECIMAL_ARBITRARY
 import org.partiql.value.PartiQLValueType.FLOAT32
 import org.partiql.value.PartiQLValueType.FLOAT64
 import org.partiql.value.PartiQLValueType.INT
@@ -42,8 +44,6 @@ import org.partiql.value.PartiQLValueType.INTERVAL
 import org.partiql.value.PartiQLValueType.LIST
 import org.partiql.value.PartiQLValueType.MISSING
 import org.partiql.value.PartiQLValueType.NULL
-import org.partiql.value.PartiQLValueType.NUMERIC
-import org.partiql.value.PartiQLValueType.NUMERIC_ARBITRARY
 import org.partiql.value.PartiQLValueType.SEXP
 import org.partiql.value.PartiQLValueType.STRING
 import org.partiql.value.PartiQLValueType.STRUCT
@@ -312,7 +312,7 @@ internal class CastTable private constructor(
                 explicit(CharVarUnboundedType)
                 explicit(CharVarUnboundedType)
             }
-            graph[NUMERIC] = NumericType(null, null).relationships(soleTypes) {
+            graph[DECIMAL] = NumericType(null, null).relationships(soleTypes) {
                 explicit(BoolType)
                 unsafe(Int8Type)
                 unsafe(Int16Type)
@@ -327,7 +327,7 @@ internal class CastTable private constructor(
                 explicit(CharVarUnboundedType)
                 explicit(CharVarUnboundedType)
             }
-            graph[NUMERIC_ARBITRARY] = NumericType(null, null).relationships(soleTypes) {
+            graph[DECIMAL_ARBITRARY] = NumericType(null, null).relationships(soleTypes) {
                 explicit(BoolType)
                 unsafe(Int8Type)
                 unsafe(Int16Type)

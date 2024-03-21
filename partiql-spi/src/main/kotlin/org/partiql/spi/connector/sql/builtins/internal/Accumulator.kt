@@ -168,8 +168,8 @@ internal fun PartiQLValueType.isNumber(): Boolean = when (this) {
     PartiQLValueType.INT16,
     PartiQLValueType.INT32,
     PartiQLValueType.INT64,
-    PartiQLValueType.NUMERIC,
-    PartiQLValueType.NUMERIC_ARBITRARY,
+    PartiQLValueType.DECIMAL,
+    PartiQLValueType.DECIMAL_ARBITRARY,
     PartiQLValueType.FLOAT32,
     PartiQLValueType.FLOAT64 -> true
     else -> false
@@ -199,7 +199,7 @@ internal fun nullToTargetType(type: PartiQLValueType): PartiQLValue = when (type
     PartiQLValueType.INT32 -> int32Value(null)
     PartiQLValueType.INT64 -> int64Value(null)
     PartiQLValueType.INT -> intValue(null)
-    PartiQLValueType.NUMERIC_ARBITRARY, PartiQLValueType.NUMERIC -> decimalValue(null)
+    PartiQLValueType.DECIMAL_ARBITRARY, PartiQLValueType.DECIMAL -> decimalValue(null)
     else -> TODO("Unsupported target type $type")
 }
 
@@ -211,7 +211,7 @@ internal fun Number.toTargetType(type: PartiQLValueType): PartiQLValue = when (t
     PartiQLValueType.ANY -> this.partiqlValue()
     PartiQLValueType.FLOAT32 -> float32Value(this.toFloat())
     PartiQLValueType.FLOAT64 -> float64Value(this.toDouble())
-    PartiQLValueType.NUMERIC, PartiQLValueType.NUMERIC_ARBITRARY -> {
+    PartiQLValueType.DECIMAL, PartiQLValueType.DECIMAL_ARBITRARY -> {
         when (this) {
             is BigDecimal -> decimalValue(this)
             is BigInteger -> decimalValue(this.toBigDecimal())

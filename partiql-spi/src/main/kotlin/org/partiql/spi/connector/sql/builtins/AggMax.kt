@@ -10,6 +10,7 @@ import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnParameter
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType.ANY
+import org.partiql.value.PartiQLValueType.DECIMAL_ARBITRARY
 import org.partiql.value.PartiQLValueType.FLOAT32
 import org.partiql.value.PartiQLValueType.FLOAT64
 import org.partiql.value.PartiQLValueType.INT
@@ -17,7 +18,6 @@ import org.partiql.value.PartiQLValueType.INT16
 import org.partiql.value.PartiQLValueType.INT32
 import org.partiql.value.PartiQLValueType.INT64
 import org.partiql.value.PartiQLValueType.INT8
-import org.partiql.value.PartiQLValueType.NUMERIC_ARBITRARY
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 public object Agg_MAX__INT8__INT8 : Agg {
@@ -104,9 +104,9 @@ public object Agg_MAX__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY : Agg {
 
     override val signature: AggSignature = AggSignature(
         name = "max",
-        returns = NUMERIC_ARBITRARY,
+        returns = DECIMAL_ARBITRARY,
         parameters = listOf(
-            FnParameter("value", NUMERIC_ARBITRARY),
+            FnParameter("value", DECIMAL_ARBITRARY),
         ),
         isNullable = true,
         isDecomposable = true

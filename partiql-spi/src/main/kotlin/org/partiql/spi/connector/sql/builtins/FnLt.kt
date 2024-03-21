@@ -21,6 +21,7 @@ import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType.BOOL
 import org.partiql.value.PartiQLValueType.DATE
+import org.partiql.value.PartiQLValueType.DECIMAL_ARBITRARY
 import org.partiql.value.PartiQLValueType.FLOAT32
 import org.partiql.value.PartiQLValueType.FLOAT64
 import org.partiql.value.PartiQLValueType.INT
@@ -28,7 +29,6 @@ import org.partiql.value.PartiQLValueType.INT16
 import org.partiql.value.PartiQLValueType.INT32
 import org.partiql.value.PartiQLValueType.INT64
 import org.partiql.value.PartiQLValueType.INT8
-import org.partiql.value.PartiQLValueType.NUMERIC_ARBITRARY
 import org.partiql.value.PartiQLValueType.STRING
 import org.partiql.value.PartiQLValueType.SYMBOL
 import org.partiql.value.PartiQLValueType.TIME
@@ -152,8 +152,8 @@ internal object Fn_LT__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__BOOL : Fn {
         name = "lt",
         returns = BOOL,
         parameters = listOf(
-            FnParameter("lhs", NUMERIC_ARBITRARY),
-            FnParameter("rhs", NUMERIC_ARBITRARY),
+            FnParameter("lhs", DECIMAL_ARBITRARY),
+            FnParameter("rhs", DECIMAL_ARBITRARY),
         ),
         isNullCall = true,
         isNullable = false,

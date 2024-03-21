@@ -35,6 +35,8 @@ import org.partiql.value.PartiQLValueType.BYTE
 import org.partiql.value.PartiQLValueType.CHAR
 import org.partiql.value.PartiQLValueType.CLOB
 import org.partiql.value.PartiQLValueType.DATE
+import org.partiql.value.PartiQLValueType.DECIMAL
+import org.partiql.value.PartiQLValueType.DECIMAL_ARBITRARY
 import org.partiql.value.PartiQLValueType.FLOAT32
 import org.partiql.value.PartiQLValueType.FLOAT64
 import org.partiql.value.PartiQLValueType.INT
@@ -46,8 +48,6 @@ import org.partiql.value.PartiQLValueType.INTERVAL
 import org.partiql.value.PartiQLValueType.LIST
 import org.partiql.value.PartiQLValueType.MISSING
 import org.partiql.value.PartiQLValueType.NULL
-import org.partiql.value.PartiQLValueType.NUMERIC
-import org.partiql.value.PartiQLValueType.NUMERIC_ARBITRARY
 import org.partiql.value.PartiQLValueType.STRING
 import org.partiql.value.PartiQLValueType.STRUCT
 import org.partiql.value.PartiQLValueType.SYMBOL
@@ -235,8 +235,8 @@ internal object Fn_EQ__DECIMAL_DECIMAL__BOOL : Fn {
         name = "eq",
         returns = BOOL,
         parameters = listOf(
-            FnParameter("lhs", NUMERIC),
-            FnParameter("rhs", NUMERIC),
+            FnParameter("lhs", DECIMAL),
+            FnParameter("rhs", DECIMAL),
         ),
         isNullable = false,
         isNullCall = true,
@@ -258,8 +258,8 @@ internal object Fn_EQ__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__BOOL : Fn {
         name = "eq",
         returns = BOOL,
         parameters = listOf(
-            FnParameter("lhs", NUMERIC_ARBITRARY),
-            FnParameter("rhs", NUMERIC_ARBITRARY),
+            FnParameter("lhs", DECIMAL_ARBITRARY),
+            FnParameter("rhs", DECIMAL_ARBITRARY),
         ),
         isNullable = false,
         isNullCall = true,

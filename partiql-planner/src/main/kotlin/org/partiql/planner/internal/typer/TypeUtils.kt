@@ -77,8 +77,8 @@ internal fun PartiQLValueType.toNonNullStaticType(): StaticType = when (this) {
     PartiQLValueType.INT32 -> StaticType.INT4
     PartiQLValueType.INT64 -> StaticType.INT8
     PartiQLValueType.INT -> StaticType.INT
-    PartiQLValueType.NUMERIC_ARBITRARY -> StaticType.DECIMAL
-    PartiQLValueType.NUMERIC -> StaticType.DECIMAL
+    PartiQLValueType.DECIMAL_ARBITRARY -> StaticType.DECIMAL
+    PartiQLValueType.DECIMAL -> StaticType.DECIMAL
     PartiQLValueType.FLOAT32 -> StaticType.FLOAT
     PartiQLValueType.FLOAT64 -> StaticType.FLOAT
     PartiQLValueType.CHAR -> StaticType.CHAR
@@ -134,7 +134,7 @@ private fun StaticType.asRuntimeType(): PartiQLValueType = when (this) {
     is ListType -> PartiQLValueType.LIST
     is SexpType -> PartiQLValueType.SEXP
     is DateType -> PartiQLValueType.DATE
-    is DecimalType -> PartiQLValueType.NUMERIC_ARBITRARY
+    is DecimalType -> PartiQLValueType.DECIMAL_ARBITRARY
     is FloatType -> PartiQLValueType.FLOAT64
     is GraphType -> error("Graph type missing from runtime types")
     is IntType -> when (this.rangeConstraint) {

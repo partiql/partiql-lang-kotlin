@@ -17,6 +17,7 @@ import org.partiql.value.Int8Value
 import org.partiql.value.IntValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.PartiQLValueType.DECIMAL_ARBITRARY
 import org.partiql.value.PartiQLValueType.FLOAT32
 import org.partiql.value.PartiQLValueType.FLOAT64
 import org.partiql.value.PartiQLValueType.INT
@@ -24,7 +25,6 @@ import org.partiql.value.PartiQLValueType.INT16
 import org.partiql.value.PartiQLValueType.INT32
 import org.partiql.value.PartiQLValueType.INT64
 import org.partiql.value.PartiQLValueType.INT8
-import org.partiql.value.PartiQLValueType.NUMERIC_ARBITRARY
 import org.partiql.value.check
 import org.partiql.value.decimalValue
 import org.partiql.value.float32Value
@@ -126,8 +126,8 @@ internal object Fn_NEG__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY : Fn {
 
     override val signature = FnSignature(
         name = "neg",
-        returns = NUMERIC_ARBITRARY,
-        parameters = listOf(FnParameter("value", NUMERIC_ARBITRARY)),
+        returns = DECIMAL_ARBITRARY,
+        parameters = listOf(FnParameter("value", DECIMAL_ARBITRARY)),
         isNullCall = true,
         isNullable = false,
     )

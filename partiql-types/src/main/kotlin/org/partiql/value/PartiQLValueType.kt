@@ -37,8 +37,8 @@ public enum class PartiQLValueType {
     INT64,
     INT,
     // For now, just distinguish between fixed precision and arbitrary precision
-    NUMERIC, // TODO: Simple enum class does not have the power to express the parameterized type
-    NUMERIC_ARBITRARY, // arbitrary precision decimal
+    DECIMAL, // TODO: Simple enum class does not have the power to express the parameterized type
+    DECIMAL_ARBITRARY, // arbitrary precision decimal
     FLOAT32,
     FLOAT64,
     CHAR,
@@ -92,8 +92,8 @@ public sealed interface PartiQLType {
             PartiQLValueType.INT32 -> Int32Type
             PartiQLValueType.INT64 -> Int64Type
             PartiQLValueType.INT -> NumericType(null, 0)
-            PartiQLValueType.NUMERIC -> NumericType(null, null) // TODO: Set Max?
-            PartiQLValueType.NUMERIC_ARBITRARY -> NumericType(null, null)
+            PartiQLValueType.DECIMAL -> NumericType(null, null) // TODO: Set Max?
+            PartiQLValueType.DECIMAL_ARBITRARY -> NumericType(null, null)
             PartiQLValueType.FLOAT32 -> Float32Type
             PartiQLValueType.FLOAT64 -> Float64Type
             PartiQLValueType.CHAR -> CharType(CharType.MAX_LENGTH)

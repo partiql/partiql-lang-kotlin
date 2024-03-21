@@ -32,7 +32,6 @@ public sealed interface PShape : ShapeNode {
 
     public fun validate(): ValidationResult
 
-
     public sealed interface ValidationResult {
 
         public object Success : ValidationResult

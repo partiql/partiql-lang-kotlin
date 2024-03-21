@@ -42,6 +42,5 @@ public interface PartiQLShapeSystem {
         override fun remove(shape: PShape, constraint: Meta) {
             TODO("Not yet implemented")
         }
-
     }
 }

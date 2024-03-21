@@ -61,7 +61,7 @@ internal class ExprCast(val arg: Operator.Expr, val cast: Ref.Cast) : Operator.E
                 PartiQLValueType.INT64 -> castFromNumeric(arg as Int64Value, cast.target)
                 PartiQLValueType.INT -> castFromNumeric(arg as IntValue, cast.target)
                 PartiQLValueType.DECIMAL -> castFromNumeric(arg as DecimalValue, cast.target)
-                PartiQLValueType.NUMERIC_ARBITRARY -> castFromNumeric(arg as DecimalValue, cast.target)
+                PartiQLValueType.DECIMAL_ARBITRARY -> castFromNumeric(arg as DecimalValue, cast.target)
                 PartiQLValueType.FLOAT32 -> castFromNumeric(arg as Float32Value, cast.target)
                 PartiQLValueType.FLOAT64 -> castFromNumeric(arg as Float64Value, cast.target)
                 PartiQLValueType.CHAR -> TODO("Char value implementation is wrong")
@@ -123,7 +123,7 @@ internal class ExprCast(val arg: Operator.Expr, val cast: Ref.Cast) : Operator.E
                 null -> intValue(null)
             }
 
-            PartiQLValueType.DECIMAL, PartiQLValueType.NUMERIC_ARBITRARY -> when (v) {
+            PartiQLValueType.DECIMAL, PartiQLValueType.DECIMAL_ARBITRARY -> when (v) {
                 true -> decimalValue(BigDecimal.ONE)
                 false -> decimalValue(BigDecimal.ZERO)
                 null -> decimalValue(null)
@@ -173,7 +173,7 @@ internal class ExprCast(val arg: Operator.Expr, val cast: Ref.Cast) : Operator.E
             PartiQLValueType.INT64 -> value.toInt64()
             PartiQLValueType.INT -> value.toInt()
             PartiQLValueType.DECIMAL -> value.toDecimal()
-            PartiQLValueType.NUMERIC_ARBITRARY -> value.toDecimal()
+            PartiQLValueType.DECIMAL_ARBITRARY -> value.toDecimal()
             PartiQLValueType.FLOAT32 -> value.toFloat32()
             PartiQLValueType.FLOAT64 -> value.toFloat64()
             PartiQLValueType.CHAR -> TODO("Char value implementation is wrong")
@@ -243,7 +243,7 @@ internal class ExprCast(val arg: Operator.Expr, val cast: Ref.Cast) : Operator.E
                     else -> throw TypeCheckException()
                 }
             }
-            PartiQLValueType.NUMERIC_ARBITRARY -> {
+            PartiQLValueType.DECIMAL_ARBITRARY -> {
                 val stringValue = value.value ?: return int16Value(null, value.annotations)
                 when (val number = getNumberValueFromString(stringValue)) {
                     is Decimal -> decimalValue(number, value.annotations).toDecimal()
