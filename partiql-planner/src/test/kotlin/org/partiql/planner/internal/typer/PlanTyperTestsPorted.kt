@@ -3261,18 +3261,20 @@ class PlanTyperTestsPorted {
     fun testSimpleSFW() {
         val tc =
             SuccessTestCase(
-                name = "LEFT JOIN",
-                query = "SELECT t1.a, t2.a FROM <<{ 'a': 1 }>> AS t1 LEFT JOIN <<{ 'a': 2.0 }>> AS t2 ON t1.a = t2.a",
+                name = "AGGREGATE over DECIMALS",
+                query = "SELECT a, COUNT(*) AS c, SUM(a) AS s, MIN(b) AS m FROM << {'a': 1.0, 'b': 2.0}, {'a': 1.0, 'b': 2.0} >> GROUP BY a",
                 expected = BagType(
                     StructType(
-                        fields = listOf(
-                            StructType.Field("a", StaticType.INT4),
-                            StructType.Field("a", StaticType.unionOf(StaticType.NULL, DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(2, 1)))),
+                        fields = mapOf(
+                            "a" to DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(2, 1)),
+                            "c" to StaticType.INT4,
+                            "s" to StaticType.DECIMAL.asNullable(),
+                            "m" to StaticType.DECIMAL.asNullable(),
                         ),
                         contentClosed = true,
                         constraints = setOf(
                             TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(false),
+                            TupleConstraint.UniqueAttrs(true),
                             TupleConstraint.Ordered
                         )
                     )

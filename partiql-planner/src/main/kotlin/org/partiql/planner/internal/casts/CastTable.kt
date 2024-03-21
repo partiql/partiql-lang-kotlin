@@ -95,10 +95,15 @@ internal class CastTable private constructor(
                             else -> Cast.Safety.COERCION
                         }
                     }
-                    is Int8Type -> if (valuePrecision >= Int8Type.PRECISION) Cast.Safety.UNSAFE else Cast.Safety.COERCION
-                    is Int16Type -> if (valuePrecision >= Int16Type.PRECISION) Cast.Safety.UNSAFE else Cast.Safety.COERCION
-                    is Int32Type -> if (valuePrecision >= Int32Type.PRECISION) Cast.Safety.UNSAFE else Cast.Safety.COERCION
-                    is Int64Type -> if (valuePrecision >= Int64Type.PRECISION) Cast.Safety.UNSAFE else Cast.Safety.COERCION
+                    is Int8Type -> if (valueScale != 0 || valuePrecision >= Int8Type.PRECISION) Cast.Safety.UNSAFE else Cast.Safety.COERCION
+                    is Int16Type -> if (valueScale != 0 || valuePrecision >= Int16Type.PRECISION) Cast.Safety.UNSAFE else Cast.Safety.COERCION
+                    is Int32Type -> if (valueScale != 0 || valuePrecision >= Int32Type.PRECISION) Cast.Safety.UNSAFE else Cast.Safety.COERCION
+                    is Int64Type -> if (valueScale != 0 || valuePrecision >= Int64Type.PRECISION) Cast.Safety.UNSAFE else Cast.Safety.COERCION
+                    is Float32Type -> Cast.Safety.UNSAFE // TODO: Is this correct?
+                    is Float64Type -> when (operand.precision == null) {
+                        true -> Cast.Safety.UNSAFE
+                        false -> Cast.Safety.UNSAFE // TODO: Is this correct? This MIGHT be safe.
+                    }
                     DynamicType -> getOld(operand, target)?.safety
                     MissingType -> getOld(operand, target)?.safety
                     is PartiQLCoreTypeBase -> getOld(operand, target)?.safety
@@ -119,6 +124,11 @@ internal class CastTable private constructor(
     private fun getOld(operand: PartiQLType, target: PartiQLType): Cast? {
         val i = types.indexOf(operand)
         val j = types.indexOf(target)
+        if (i == -1 || j == -1) {
+            return null
+            // TODO: Use this for checking errors:
+            // error("Could not find CAST for value $operand ($i) to target $target ($j).")
+        }
         return graph[i][j]
     }
 

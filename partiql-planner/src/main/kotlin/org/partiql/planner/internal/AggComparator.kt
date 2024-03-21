@@ -1,8 +1,8 @@
 package org.partiql.planner.internal
 
+import org.partiql.spi.fn.AggSignature
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnParameter
-import org.partiql.spi.fn.FnSignature
 import org.partiql.value.PartiQLType
 import org.partiql.value.PartiQLValueExperimental
 
@@ -13,9 +13,9 @@ import org.partiql.value.PartiQLValueExperimental
  *  2. Parameters are compared left-to-right
  */
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
-internal object FnComparator : Comparator<FnSignature> {
+internal object AggComparator : Comparator<AggSignature> {
 
-    override fun compare(fn1: FnSignature, fn2: FnSignature): Int {
+    override fun compare(fn1: AggSignature, fn2: AggSignature): Int {
         // Compare number of arguments
         if (fn1.parameters.size != fn2.parameters.size) {
             return fn1.parameters.size - fn2.parameters.size

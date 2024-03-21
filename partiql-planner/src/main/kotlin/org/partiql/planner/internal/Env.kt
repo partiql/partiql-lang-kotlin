@@ -216,22 +216,31 @@ internal class Env(private val session: PartiQLPlanner.Session) {
 
     @OptIn(FnExperimental::class, PartiQLValueExperimental::class)
     private fun match(candidates: List<AggSignature>, args: List<PartiQLType>): Pair<AggSignature, Array<Ref.Cast?>>? {
+
+        val sortedCandidates = candidates
+            .filter { it.parameters.size == args.size }
+            .sortedWith(AggComparator)
+            .ifEmpty { return null }
+
         // 1. Check for an exact match
-        for (candidate in candidates) {
+        for (candidate in sortedCandidates) {
             if (candidate.matches(args)) {
                 return candidate to arrayOfNulls(args.size)
             }
         }
         // 2. Look for best match.
         var match: Pair<AggSignature, Array<Ref.Cast?>>? = null
-        for (candidate in candidates) {
-            val m = candidate.match(args) ?: continue
+        for (candidate in sortedCandidates) {
+            // Return the first candidate that matches
+            candidate.match(args)?.let {
+                return it
+            }
             // TODO AggMatch comparison
             // if (match != null && m.exact < match.exact) {
             //     // already had a better match.
             //     continue
             // }
-            match = m
+            // match = m
         }
         // 3. Return best match or null
         return match
@@ -245,7 +254,7 @@ internal class Env(private val session: PartiQLPlanner.Session) {
         for (i in args.indices) {
             val a = args[i]
             val p = parameters[i]
-            if (p.type !is DynamicType && a != p.type) return false
+            if (a != p.type) return false
         }
         return true
     }
