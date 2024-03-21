@@ -67,7 +67,6 @@ public object ShapePrinter {
             when (this.pretty) {
                 true -> this.out.appendLine(str)
                 false -> {
-                    this.out.append(" ")
                     this.out.append(str)
                 }
             }
@@ -106,6 +105,9 @@ public object ShapePrinter {
                     ctx.append(c)
                     if (index != constraints.lastIndex) {
                         ctx.append(",")
+                        if (!ctx.pretty) {
+                            ctx.append(" ")
+                        }
                     }
                     ctx.appendLine("")
                 }
@@ -119,6 +121,9 @@ public object ShapePrinter {
                     visitMeta(m, newCtx)
                     if (index != node.metas.size - 1) {
                         newCtx.append(",")
+                        if (!newCtx.pretty) {
+                            newCtx.append(" ")
+                        }
                     }
                     newCtx.appendLine("")
                 }
@@ -141,6 +146,9 @@ public object ShapePrinter {
                 visitShape(s, newCtx)
                 if (index != node.shapes.size - 1) {
                     ctx.append(",")
+                    if (!ctx.pretty) {
+                        ctx.append(" ")
+                    }
                 }
                 ctx.appendLine("")
             }
@@ -161,6 +169,9 @@ public object ShapePrinter {
                 visitShape(f.value, newCtx)
                 if (index != node.fields.lastIndex) {
                     ctx.append(",")
+                    if (!ctx.pretty) {
+                        ctx.append(" ")
+                    }
                 }
                 ctx.appendLine("")
             }
