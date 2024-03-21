@@ -81,39 +81,79 @@ internal class CastTable private constructor(
     }
 
     fun get(operand: PartiQLType, target: PartiQLType): Cast? {
-        val safety = when (operand) {
+        val safety = when (target) {
             is NumericType -> {
-                val valuePrecision = operand.precision ?: (NumericType.MAX_PRECISION + 1)
-                val valueScale = operand.scale ?: (NumericType.MAX_SCALE + 1)
-                when (target) {
+                val targetPrecision = target.precision ?: (NumericType.MAX_PRECISION + 1)
+                val targetScale = target.scale ?: (NumericType.MAX_SCALE + 1)
+                when (operand) {
                     is NumericType -> {
-                        val targetPrecision = target.precision ?: (NumericType.MAX_PRECISION + 1)
-                        val targetScale = target.scale ?: (NumericType.MAX_SCALE + 1)
+                        val valuePrecision = operand.precision ?: (NumericType.MAX_PRECISION + 1)
+                        val valueScale = operand.scale ?: (NumericType.MAX_SCALE + 1)
                         when {
                             targetPrecision < valuePrecision -> Cast.Safety.UNSAFE
                             targetScale < valueScale -> Cast.Safety.UNSAFE
                             else -> Cast.Safety.COERCION
                         }
                     }
-                    is Int8Type -> if (valueScale != 0 || valuePrecision >= Int8Type.PRECISION) Cast.Safety.UNSAFE else Cast.Safety.COERCION
-                    is Int16Type -> if (valueScale != 0 || valuePrecision >= Int16Type.PRECISION) Cast.Safety.UNSAFE else Cast.Safety.COERCION
-                    is Int32Type -> if (valueScale != 0 || valuePrecision >= Int32Type.PRECISION) Cast.Safety.UNSAFE else Cast.Safety.COERCION
-                    is Int64Type -> if (valueScale != 0 || valuePrecision >= Int64Type.PRECISION) Cast.Safety.UNSAFE else Cast.Safety.COERCION
-                    is Float32Type -> Cast.Safety.UNSAFE // TODO: Is this correct?
-                    is Float64Type -> when (operand.precision == null) {
-                        true -> Cast.Safety.UNSAFE
-                        false -> Cast.Safety.UNSAFE // TODO: Is this correct? This MIGHT be safe.
+                    is Int32Type -> {
+                        if (targetPrecision < Int32Type.PRECISION) Cast.Safety.UNSAFE else Cast.Safety.COERCION // TODO: Handle decimals
                     }
-                    DynamicType -> getOld(operand, target)?.safety
-                    MissingType -> getOld(operand, target)?.safety
-                    is PartiQLCoreTypeBase -> getOld(operand, target)?.safety
-                    is PartiQLType.Runtime.Custom -> getOld(operand, target)?.safety
+                    is Int64Type -> {
+                        if (targetPrecision < Int64Type.PRECISION) Cast.Safety.UNSAFE else Cast.Safety.COERCION // TODO: Handle decimals
+                    }
+                    DynamicType -> getOld(operand, target)?.safety // TODO
+                    MissingType -> getOld(operand, target)?.safety // TODO
+                    is PartiQLCoreTypeBase -> getOld(operand, target)?.safety // TODO
+                    is PartiQLType.Runtime.Custom -> getOld(operand, target)?.safety // TODO
                 }
             }
-            DynamicType -> getOld(operand, target)?.safety
-            MissingType -> getOld(operand, target)?.safety
-            is PartiQLCoreTypeBase -> getOld(operand, target)?.safety
-            is PartiQLType.Runtime.Custom -> getOld(operand, target)?.safety
+            is Int8Type -> when (operand) {
+                is NumericType -> {
+                    val valuePrecision = operand.precision ?: (NumericType.MAX_PRECISION + 1)
+                    val valueScale = operand.scale ?: (NumericType.MAX_SCALE + 1)
+                    if (valueScale != 0 || valuePrecision >= Int8Type.PRECISION) Cast.Safety.UNSAFE else Cast.Safety.COERCION
+                }
+                else -> getOld(operand, target)?.safety // TODO
+            }
+            is Int16Type -> when (operand) {
+                is NumericType -> {
+                    val valuePrecision = operand.precision ?: (NumericType.MAX_PRECISION + 1)
+                    val valueScale = operand.scale ?: (NumericType.MAX_SCALE + 1)
+                    if (valueScale != 0 || valuePrecision >= Int16Type.PRECISION) Cast.Safety.UNSAFE else Cast.Safety.COERCION
+                }
+                else -> getOld(operand, target)?.safety // TODO
+            }
+            is Int32Type -> when (operand) {
+                is NumericType -> {
+                    val valuePrecision = operand.precision ?: (NumericType.MAX_PRECISION + 1)
+                    val valueScale = operand.scale ?: (NumericType.MAX_SCALE + 1)
+                    if (valueScale != 0 || valuePrecision >= Int32Type.PRECISION) Cast.Safety.UNSAFE else Cast.Safety.COERCION
+                }
+                else -> getOld(operand, target)?.safety // TODO
+            }
+            is Int64Type -> when (operand) {
+                is NumericType -> {
+                    val valuePrecision = operand.precision ?: (NumericType.MAX_PRECISION + 1)
+                    val valueScale = operand.scale ?: (NumericType.MAX_SCALE + 1)
+                    if (valueScale != 0 || valuePrecision >= Int64Type.PRECISION) Cast.Safety.UNSAFE else Cast.Safety.COERCION
+                }
+                else -> getOld(operand, target)?.safety // TODO
+            }
+            is Float32Type -> when (operand) {
+                is NumericType -> Cast.Safety.UNSAFE // TODO: Is this correct?
+                else -> getOld(operand, target)?.safety // TODO
+            }
+            is Float64Type -> when (operand) {
+                is NumericType -> when (operand.precision == null) {
+                    true -> Cast.Safety.UNSAFE
+                    false -> Cast.Safety.UNSAFE // TODO: Is this correct? This MIGHT be safe.
+                }
+                else -> getOld(operand, target)?.safety // TODO
+            }
+            DynamicType -> getOld(operand, target)?.safety // TODO
+            MissingType -> getOld(operand, target)?.safety // TODO
+            is PartiQLCoreTypeBase -> getOld(operand, target)?.safety // TODO
+            is PartiQLType.Runtime.Custom -> getOld(operand, target)?.safety // TODO
         }
         return when (safety) {
             null -> null

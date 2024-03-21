@@ -3261,15 +3261,19 @@ class PlanTyperTestsPorted {
     fun testSimpleSFW() {
         val tc =
             SuccessTestCase(
-                name = "AGGREGATE over DECIMALS",
-                query = "SELECT a, COUNT(*) AS c, SUM(a) AS s, MIN(b) AS m FROM << {'a': 1.0, 'b': 2.0}, {'a': 1.0, 'b': 2.0} >> GROUP BY a",
+                name = "binary plus on varying types -- this will return missing if one of the operands is not a number",
+                query = """
+                    SELECT t.a + t.b AS c
+                    FROM <<
+                        { 'a': CAST(1 AS INT8), 'b': CAST(1.0 AS DECIMAL) },
+                        { 'a': CAST(1 AS INT4), 'b': TRUE },
+                        { 'a': 'hello world!!', 'b': DATE '2023-01-01' }
+                    >> AS t
+                """.trimIndent(),
                 expected = BagType(
                     StructType(
                         fields = mapOf(
-                            "a" to DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(2, 1)),
-                            "c" to StaticType.INT4,
-                            "s" to StaticType.DECIMAL.asNullable(),
-                            "m" to StaticType.DECIMAL.asNullable(),
+                            "c" to StaticType.unionOf(StaticType.MISSING, StaticType.DECIMAL),
                         ),
                         contentClosed = true,
                         constraints = setOf(
