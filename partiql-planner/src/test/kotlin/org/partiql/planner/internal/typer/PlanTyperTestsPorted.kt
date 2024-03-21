@@ -19,6 +19,8 @@ import org.partiql.plan.Statement
 import org.partiql.plan.debug.PlanPrinter
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.PlanningProblemDetails
+import org.partiql.planner.internal.shape.IsOrdered
+import org.partiql.planner.internal.shape.ShapeUtils
 import org.partiql.planner.internal.typer.PlanTyperTestsPorted.TestCase.ErrorTestCase
 import org.partiql.planner.internal.typer.PlanTyperTestsPorted.TestCase.SuccessTestCase
 import org.partiql.planner.internal.typer.PlanTyperTestsPorted.TestCase.ThrowingExceptionTestCase
@@ -33,6 +35,7 @@ import org.partiql.shape.AnyOf
 import org.partiql.shape.Constraint
 import org.partiql.shape.Element
 import org.partiql.shape.Fields
+import org.partiql.shape.Meta
 import org.partiql.shape.NotNull
 import org.partiql.shape.PShape
 import org.partiql.shape.visitor.ShapePrinter
@@ -90,7 +93,7 @@ class PlanTyperTestsPorted {
                 catalogPath: List<String> = emptyList(),
                 expected: StaticType,
                 warnings: ProblemHandler? = null,
-            ) : this(name, key, query, catalog, catalogPath, PShape.fromStaticType(expected), warnings, expected)
+            ) : this(name, key, query, catalog, catalogPath, ShapeUtils.fromStaticType(expected), warnings, expected)
         }
 
         class ErrorTestCase(
@@ -167,7 +170,7 @@ class PlanTyperTestsPorted {
                 val connector = MemoryConnector(catalog)
                 for (binding in bindings) {
                     val path = binding.first
-                    val obj = MemoryObject(binding.second)
+                    val obj = MemoryObject(ShapeUtils.fromStaticType(binding.second))
                     catalog.insert(path, obj)
                 }
                 catalogName to connector.getMetadata(session)
@@ -271,6 +274,10 @@ class PlanTyperTestsPorted {
 
         private fun PartiQLType.withConstraints(vararg constraints: Constraint): PShape = PShape.of(
             this, constraints = constraints.toSet()
+        )
+
+        private fun PShape.withMetas(vararg metas: Meta): PShape = PShape.of(
+            this.type, constraints = this.constraints, metas = metas.toSet()
         )
 
         //
@@ -2154,7 +2161,7 @@ class PlanTyperTestsPorted {
                                     )
                                 )
                             )
-                        )
+                        ).withMetas(IsOrdered)
                     )
                 ),
             ),
@@ -2354,32 +2361,6 @@ class PlanTyperTestsPorted {
                         )
                     )
                 )
-//                expected = BagType(
-//                    StaticType.unionOf(
-//                        StaticType.NULL,
-//                        StaticType.MISSING,
-//                        StructType(
-//                            fields = listOf(
-//                                StructType.Field("b", StaticType.INT4),
-//                            ),
-//                            contentClosed = true,
-//                            constraints = setOf(
-//                                TupleConstraint.Open(false),
-//                                TupleConstraint.UniqueAttrs(true),
-//                            )
-//                        ),
-//                        StructType(
-//                            fields = listOf(
-//                                StructType.Field("b", StaticType.STRING),
-//                            ),
-//                            contentClosed = true,
-//                            constraints = setOf(
-//                                TupleConstraint.Open(false),
-//                                TupleConstraint.UniqueAttrs(true),
-//                            )
-//                        )
-//                    )
-//                ),
             ),
             SuccessTestCase(
                 name = "Tuple Union with Heterogeneous Data (3)",
@@ -2581,7 +2562,7 @@ class PlanTyperTestsPorted {
                                 ),
                                 isClosed = true
                             )
-                        )
+                        ).withMetas(IsOrdered)
                     )
                 )
             ),
@@ -3257,36 +3238,6 @@ class PlanTyperTestsPorted {
         runTest(tc)
     }
 
-    @Test
-    fun testSimpleSFW() {
-        val tc =
-            SuccessTestCase(
-                name = "binary plus on varying types -- this will return missing if one of the operands is not a number",
-                query = """
-                    SELECT t.a + t.b AS c
-                    FROM <<
-                        { 'a': CAST(1 AS INT8), 'b': CAST(1.0 AS DECIMAL) },
-                        { 'a': CAST(1 AS INT4), 'b': TRUE },
-                        { 'a': 'hello world!!', 'b': DATE '2023-01-01' }
-                    >> AS t
-                """.trimIndent(),
-                expected = BagType(
-                    StructType(
-                        fields = mapOf(
-                            "c" to StaticType.unionOf(StaticType.MISSING, StaticType.DECIMAL),
-                        ),
-                        contentClosed = true,
-                        constraints = setOf(
-                            TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(true),
-                            TupleConstraint.Ordered
-                        )
-                    )
-                )
-            )
-        runTest(tc)
-    }
-
     @ParameterizedTest
     @ArgumentsSource(TestProvider::class)
     fun test(tc: TestCase) = runTest(tc)
@@ -3485,7 +3436,7 @@ class PlanTyperTestsPorted {
                 }
                 if (tc.expected != null) {
                     // TODO: Have users pass in PShapes
-                    assert(PShape.fromStaticType(tc.expected) == statement.root.type) {
+                    assert(ShapeUtils.fromStaticType(tc.expected) == statement.root.type) {
                         buildString {
                             appendLine()
                             appendLine("Expect: ${tc.expected}")

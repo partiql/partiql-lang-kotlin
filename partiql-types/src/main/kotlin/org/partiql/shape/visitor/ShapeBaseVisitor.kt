@@ -4,6 +4,7 @@ import org.partiql.shape.AnyOf
 import org.partiql.shape.Constraint
 import org.partiql.shape.Element
 import org.partiql.shape.Fields
+import org.partiql.shape.Meta
 import org.partiql.shape.Multiple
 import org.partiql.shape.None
 import org.partiql.shape.NotNull
@@ -34,4 +35,6 @@ public abstract class ShapeBaseVisitor<R, C> : ShapeVisitor<R, C> {
     override fun visitConstraintNotNull(node: NotNull, ctx: C): R = defaultVisit(node, ctx)
 
     override fun visitShape(node: PShape, ctx: C): R = defaultVisit(node, ctx)
+
+    override fun visitMeta(node: Meta, ctx: C): R = defaultVisit(node, ctx)
 }

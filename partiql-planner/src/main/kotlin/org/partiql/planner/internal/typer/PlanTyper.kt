@@ -62,6 +62,8 @@ import org.partiql.planner.internal.ir.rexOpSubquery
 import org.partiql.planner.internal.ir.rexOpTupleUnion
 import org.partiql.planner.internal.ir.statementQuery
 import org.partiql.planner.internal.ir.util.PlanRewriter
+import org.partiql.planner.internal.shape.IsOrdered
+import org.partiql.planner.internal.shape.ShapeUtils
 import org.partiql.shape.Constraint
 import org.partiql.shape.Element
 import org.partiql.shape.Fields
@@ -523,7 +525,8 @@ internal class PlanTyper(
                     val lit = key.op.value
                     if (lit is TextValue<*> && !lit.isNull) {
                         val id = identifierSymbol(lit.string!!, Identifier.CaseSensitivity.SENSITIVE)
-                        inferStructLookup(fields, id).first
+                        val isOrdered = ShapeUtils.isOrderedTuple(type)
+                        inferStructLookup(fields, id, isOrdered).first
                     } else {
                         error("Expected text literal, but got $lit")
                     }
@@ -545,8 +548,9 @@ internal class PlanTyper(
                     return@map rex(MissingType, rexOpLit(missingValue()))
                 }
                 val struct = type.getFirstAndOnlyFields() ?: return@map rex(MissingType, rexOpLit(missingValue()))
+                val isOrdered = ShapeUtils.isOrderedTuple(type)
                 val (pathType, replacementId) = inferStructLookup(
-                    struct, identifierSymbol(node.key, Identifier.CaseSensitivity.INSENSITIVE)
+                    struct, identifierSymbol(node.key, Identifier.CaseSensitivity.INSENSITIVE), isOrdered
                 )
                 when (replacementId.caseSensitivity) {
                     Identifier.CaseSensitivity.INSENSITIVE -> rex(pathType, rexOpPathSymbol(root, replacementId.symbol))
@@ -954,6 +958,7 @@ internal class PlanTyper(
             // add the ordered property to the constructor
             if (constructorType.isType<TupleType>()) {
                 // TODO: Do we need to copy the ORDERED constraint/meta?
+                constructorType = PShape.of(constructorType.type, constructorType.constraints, constructorType.metas + setOf(IsOrdered))
                 constructor = rex(constructorType, constructor.op)
             }
             val type = when (rel.isOrdered()) {
@@ -980,10 +985,10 @@ internal class PlanTyper(
                             Fields(
                                 fields = emptyList(),
                                 isClosed = true,
-                                // TODO: isOrdered = true // TODO: This doesn't even matter. What about uniqueness?
                             ),
                             NotNull
-                        )
+                        ),
+                        metas = setOf(IsOrdered)
                     )
                 }
                 else -> {
@@ -1037,14 +1042,14 @@ internal class PlanTyper(
                     arg.isType<TupleType>() -> {
                         val fields = arg.getFirstAndOnlyFields() ?: run {
                             structIsClosed = false
-                            structIsOrdered = false
-                            uniqueAttrs = false // TODO: Do we need the ordering information?
+                            uniqueAttrs = false
+                            structIsOrdered = ShapeUtils.isOrderedTuple(arg)
                             return@forEach
                         }
                         structAmount += 1
                         structFields.addAll(fields.fields)
                         structIsClosed = structIsClosed && fields.isClosed
-                        structIsOrdered = structIsOrdered && fields.isOrdered
+                        structIsOrdered = structIsOrdered && ShapeUtils.isOrderedTuple(arg)
                         uniqueAttrs = uniqueAttrs // TODO: Do we need this?
                     }
                     arg.isUnion() -> {
@@ -1074,11 +1079,14 @@ internal class PlanTyper(
                 constraints = setOf(
                     Fields(
                         isClosed = structIsClosed,
-                        // TODO: isOrdered = structIsOrdered,
                         fields = structFields
                     ),
-                    NotNull
-                )
+                    NotNull,
+                ),
+                metas = when (structIsOrdered) {
+                    true -> setOf(IsOrdered)
+                    false -> emptySet()
+                }
             )
         }
 
@@ -1152,10 +1160,9 @@ internal class PlanTyper(
          * @return a [Pair] where the [Pair.first] represents the type of the [step] and the [Pair.second] represents
          * the disambiguated [key].
          */
-        private fun inferStructLookup(struct: Fields, key: Identifier.Symbol): Pair<PShape, Identifier.Symbol> {
+        private fun inferStructLookup(struct: Fields, key: Identifier.Symbol, isOrdered: Boolean): Pair<PShape, Identifier.Symbol> {
             val binding = key.toBindingName()
             val isClosed = struct.isClosed
-            val isOrdered = struct.isOrdered
             val (name, type) = when {
                 // 1. Struct is closed and ordered
                 isClosed && isOrdered -> {

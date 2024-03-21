@@ -28,19 +28,10 @@ public sealed interface PShape : ShapeNode {
 
     public val constraints: Set<Constraint>
 
-    @Deprecated("This is an example of how we can gather metadata.")
     public val metas: Set<Meta>
 
     public fun validate(): ValidationResult
 
-    /**
-     * TODO: Do we support this?
-     */
-    @Deprecated(
-        "This is an example of how we can gather other descriptors such as PRIMARY KEY, etc. " +
-            "It is distinct from Constraints."
-    )
-    public sealed interface Meta
 
     public sealed interface ValidationResult {
 

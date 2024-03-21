@@ -3,6 +3,7 @@ package org.partiql.shape.visitor
 import org.partiql.shape.AnyOf
 import org.partiql.shape.Element
 import org.partiql.shape.Fields
+import org.partiql.shape.Meta
 import org.partiql.shape.NotNull
 import org.partiql.shape.PShape
 import org.partiql.shape.ShapeNode
@@ -110,6 +111,19 @@ public object ShapePrinter {
                 }
                 ctx.start(")")
             }
+
+            if (node.metas.isNotEmpty()) {
+                ctx.appendLine(" WITH METAS (")
+                node.metas.forEachIndexed { index, m ->
+                    val newCtx = ctx.indent()
+                    visitMeta(m, newCtx)
+                    if (index != node.metas.size - 1) {
+                        newCtx.append(",")
+                    }
+                    newCtx.appendLine("")
+                }
+                ctx.start(")")
+            }
         }
 
         override fun visitConstraintElement(node: Element, ctx: Context) {
@@ -155,6 +169,10 @@ public object ShapePrinter {
 
         override fun visitConstraintNotNull(node: NotNull, ctx: Context) {
             ctx.start("NOT NULL")
+        }
+
+        override fun visitMeta(node: Meta, ctx: Context) {
+            ctx.start(node.toString())
         }
     }
 }
