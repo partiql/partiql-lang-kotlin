@@ -7,9 +7,10 @@ import org.partiql.eval.internal.operator.Operator
 import org.partiql.plan.Ref
 import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnExperimental
+import org.partiql.value.DynamicType
+import org.partiql.value.PartiQLType
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType
 
 /**
  * This represents Dynamic Dispatch.
@@ -49,7 +50,7 @@ internal class ExprCallDynamic(
      */
     internal class Candidate(
         val fn: Fn,
-        val types: Array<PartiQLValueType>,
+        val types: Array<PartiQLType>,
         val coercions: Array<Ref.Cast?>
     ) {
 
@@ -65,7 +66,7 @@ internal class ExprCallDynamic(
 
         internal fun matches(args: Array<PartiQLValue>): Boolean {
             for (i in args.indices) {
-                if (types[i] == PartiQLValueType.ANY) {
+                if (types[i] is DynamicType) {
                     return true
                 }
                 if (args[i].type != types[i]) {

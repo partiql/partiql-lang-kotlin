@@ -1,10 +1,38 @@
 package org.partiql.eval.internal.helpers
 
+import org.partiql.value.ArrayType
+import org.partiql.value.BagType
+import org.partiql.value.BitType
+import org.partiql.value.BitVaryingType
+import org.partiql.value.BlobType
+import org.partiql.value.BoolType
+import org.partiql.value.ByteType
+import org.partiql.value.CharType
+import org.partiql.value.CharVarType
+import org.partiql.value.CharVarUnboundedType
+import org.partiql.value.ClobType
+import org.partiql.value.ClobUnboundedType
+import org.partiql.value.DateType
+import org.partiql.value.DynamicType
+import org.partiql.value.Float32Type
+import org.partiql.value.Float64Type
+import org.partiql.value.Int16Type
+import org.partiql.value.Int32Type
+import org.partiql.value.Int64Type
+import org.partiql.value.Int8Type
+import org.partiql.value.IntervalType
+import org.partiql.value.MissingType
+import org.partiql.value.NullType
+import org.partiql.value.NumericType
+import org.partiql.value.PartiQLType
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType
+import org.partiql.value.TimeType
+import org.partiql.value.TimeWithTimeZoneType
+import org.partiql.value.TimestampType
+import org.partiql.value.TimestampWithTimeZoneType
+import org.partiql.value.TupleType
 import org.partiql.value.bagValue
-import org.partiql.value.binaryValue
 import org.partiql.value.blobValue
 import org.partiql.value.boolValue
 import org.partiql.value.byteValue
@@ -18,15 +46,12 @@ import org.partiql.value.int16Value
 import org.partiql.value.int32Value
 import org.partiql.value.int64Value
 import org.partiql.value.int8Value
-import org.partiql.value.intValue
 import org.partiql.value.intervalValue
 import org.partiql.value.listValue
 import org.partiql.value.missingValue
 import org.partiql.value.nullValue
-import org.partiql.value.sexpValue
 import org.partiql.value.stringValue
 import org.partiql.value.structValue
-import org.partiql.value.symbolValue
 import org.partiql.value.timeValue
 import org.partiql.value.timestampValue
 
@@ -34,89 +59,87 @@ import org.partiql.value.timestampValue
  * Constructor for a typed null.
  */
 @OptIn(PartiQLValueExperimental::class)
-internal fun PartiQLValueType.toNull(): () -> PartiQLValue = when (this) {
-    PartiQLValueType.ANY -> {
+internal fun PartiQLType.toNull(): () -> PartiQLValue = when (this) {
+    is DynamicType -> {
         { nullValue() }
     }
-    PartiQLValueType.BOOL -> {
+    is BoolType -> {
         { boolValue(null) }
     }
-    PartiQLValueType.INT8 -> {
+    is Int8Type -> {
         { int8Value(null) }
     }
-    PartiQLValueType.INT16 -> {
+    is Int16Type -> {
         { int16Value(null) }
     }
-    PartiQLValueType.INT32 -> {
+    is Int32Type -> {
         { int32Value(null) }
     }
-    PartiQLValueType.INT64 -> {
+    is Int64Type -> {
         { int64Value(null) }
     }
-    PartiQLValueType.INT -> {
-        { intValue(null) }
-    }
-    PartiQLValueType.DECIMAL -> {
+    // TODO: BIGINT
+//    PartiQLValueType.INT -> {
+//        { intValue(null) }
+//    }
+    is NumericType -> {
         { decimalValue(null) }
     }
-    PartiQLValueType.FLOAT32 -> {
+    is Float32Type -> {
         { float32Value(null) }
     }
-    PartiQLValueType.FLOAT64 -> {
+    is Float64Type -> {
         { float64Value(null) }
     }
-    PartiQLValueType.CHAR -> {
+    is CharType -> {
         { charValue(null) }
     }
-    PartiQLValueType.STRING -> {
+    is CharVarUnboundedType, is CharVarType -> {
         { stringValue(null) }
     }
-    PartiQLValueType.SYMBOL -> {
-        { symbolValue(null) }
-    }
-    PartiQLValueType.BINARY -> {
-        { binaryValue(null) }
-    }
-    PartiQLValueType.BYTE -> {
-        { byteValue(null) }
-    }
-    PartiQLValueType.BLOB -> {
+    is BlobType -> {
         { blobValue(null) }
     }
-    PartiQLValueType.CLOB -> {
+    // TODO: BINARY?
+//    PartiQLValueType.BLOB -> {
+//        { blobValue(null) }
+//    }
+    is ByteType -> {
+        { byteValue(null) }
+    }
+    is ClobType, is ClobUnboundedType -> {
         { clobValue(null) }
     }
-    PartiQLValueType.DATE -> {
+    is DateType -> {
         { dateValue(null) }
     }
-    PartiQLValueType.TIME -> {
+    is TimeType, is TimeWithTimeZoneType -> {
         { timeValue(null) }
     }
-    PartiQLValueType.TIMESTAMP -> {
+    is TimestampType, is TimestampWithTimeZoneType -> {
         { timestampValue(null) }
     }
-    PartiQLValueType.INTERVAL -> {
+    is IntervalType -> {
         { intervalValue(null) }
     }
-    PartiQLValueType.BAG -> {
+    is BagType -> {
         { bagValue<PartiQLValue>(null) }
     }
-    PartiQLValueType.LIST -> {
+    is ArrayType -> {
         { listValue<PartiQLValue>(null) }
     }
-    PartiQLValueType.SEXP -> {
-        { sexpValue<PartiQLValue>(null) }
-    }
-    PartiQLValueType.STRUCT -> {
+//    PartiQLValueType.SEXP -> {
+//        { sexpValue<PartiQLValue>(null) }
+//    }
+    is TupleType -> {
         { structValue<PartiQLValue>(null) }
     }
-    PartiQLValueType.NULL -> {
+    is NullType -> {
         { nullValue() }
     }
-    PartiQLValueType.MISSING -> {
+    is MissingType -> {
         { missingValue() }
     }
-    PartiQLValueType.DECIMAL_ARBITRARY -> {
-        { decimalValue(null) }
-    }
+    is BitType, is BitVaryingType -> TODO("Not yet supported")
+    is PartiQLType.Runtime.Custom -> TODO("Not yet supported")
 }

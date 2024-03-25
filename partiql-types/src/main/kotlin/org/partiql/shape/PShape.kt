@@ -159,7 +159,7 @@ public sealed interface PShape : ShapeNode {
         public inline fun <reified T> PShape.canBeType(): Boolean {
             return when {
                 this.isUnion() -> this.allShapes().any { it.isSpecificType<T>() }
-                else -> this.isSpecificType<T>()
+                else -> this.isSpecificType<T>() || this.isSpecificType<DynamicType>()
             }
         }
 

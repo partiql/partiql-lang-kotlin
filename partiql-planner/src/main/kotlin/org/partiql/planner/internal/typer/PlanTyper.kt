@@ -73,6 +73,7 @@ import org.partiql.shape.PShape.Companion.allShapes
 import org.partiql.shape.PShape.Companion.allTypes
 import org.partiql.shape.PShape.Companion.anyOf
 import org.partiql.shape.PShape.Companion.asNullable
+import org.partiql.shape.PShape.Companion.canBeType
 import org.partiql.shape.PShape.Companion.copy
 import org.partiql.shape.PShape.Companion.getElement
 import org.partiql.shape.PShape.Companion.getFirstAndOnlyFields
@@ -543,10 +544,11 @@ internal class PlanTyper(
             val root = visitRex(node.root, node.root.type)
 
             val paths = root.type.allShapes().map { type ->
-                if (!type.isType<TupleType>()) {
-                    return@map rex(MissingType, rexOpLit(missingValue()))
+                val struct = when {
+                    type.isType<DynamicType>() -> type.getFirstAndOnlyFields() ?: Fields(emptyList(), isClosed = false)
+                    type.isType<TupleType>() -> type.getFirstAndOnlyFields() ?: Fields(emptyList(), isClosed = false)
+                    else -> return@map rex(MissingType, rexOpLit(missingValue()))
                 }
-                val struct = type.getFirstAndOnlyFields() ?: return@map rex(MissingType, rexOpLit(missingValue()))
                 val isOrdered = ShapeUtils.isOrderedTuple(type)
                 val (pathType, replacementId) = inferStructLookup(
                     struct, identifierSymbol(node.key, Identifier.CaseSensitivity.INSENSITIVE), isOrdered
@@ -1290,8 +1292,8 @@ internal class PlanTyper(
             val isNullable = call.agg.signature.isNullable || isMissable
             val returns = call.agg.signature.returns
             val type = when {
-                isNullable -> PShape.of(PartiQLType.fromLegacy(returns))
-                else -> PShape.of(PartiQLType.fromLegacy(returns), constraint = NotNull)
+                isNullable -> PShape.of(returns)
+                else -> PShape.of(returns, constraint = NotNull)
             }
             //
             return call to type

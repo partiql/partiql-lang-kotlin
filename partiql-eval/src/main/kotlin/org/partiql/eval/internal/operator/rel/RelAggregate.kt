@@ -5,9 +5,9 @@ import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.spi.fn.Agg
 import org.partiql.spi.fn.FnExperimental
+import org.partiql.value.MissingType
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType
 import org.partiql.value.nullValue
 import java.util.TreeMap
 import java.util.TreeSet
@@ -63,7 +63,7 @@ internal class RelAggregate(
             // Initialize the AggregationMap
             val evaluatedGroupByKeys = keys.map {
                 val key = it.eval(env.push(inputRecord))
-                when (key.type == PartiQLValueType.MISSING) {
+                when (key.type is MissingType) {
                     true -> nullValue()
                     false -> key
                 }
@@ -85,7 +85,7 @@ internal class RelAggregate(
             accumulators.forEachIndexed { index, function ->
                 val valueToAggregate = function.args.map { it.eval(env.push(inputRecord)) }
                 // Skip over aggregation if NULL/MISSING
-                if (valueToAggregate.any { it.type == PartiQLValueType.MISSING || it.isNull }) {
+                if (valueToAggregate.any { it.type is MissingType || it.isNull }) {
                     return@forEachIndexed
                 }
                 // Skip over aggregation if DISTINCT and SEEN

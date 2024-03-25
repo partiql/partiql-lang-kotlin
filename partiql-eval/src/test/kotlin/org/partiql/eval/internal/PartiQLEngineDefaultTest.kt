@@ -72,41 +72,48 @@ class PartiQLEngineDefaultTest {
 
     @Test
     fun singleTest() {
-        val tc = SuccessTestCase(
-            input = """
-                    SELECT o.name AS orderName,
-                        (SELECT c.name FROM customers c WHERE c.id=o.custId) AS customerName
-                    FROM orders o
-            """.trimIndent(),
-            expected = bagValue(
-                structValue(
-                    "orderName" to stringValue("foo")
+        val tc =
+            SuccessTestCase(
+                input = """
+                    SELECT
+                        gk_0, SUM(t.c) AS t_c_sum
+                    FROM <<
+                        { 'b': NULL, 'c': 1 },
+                        { 'b': MISSING, 'c': 2 },
+                        { 'b': 1, 'c': 1 },
+                        { 'b': 1, 'c': 2 },
+                        { 'b': 2, 'c': NULL },
+                        { 'b': 2, 'c': 2 },
+                        { 'b': 3, 'c': MISSING },
+                        { 'b': 3, 'c': 2 },
+                        { 'b': 4, 'c': MISSING },
+                        { 'b': 4, 'c': NULL }
+                    >> AS t GROUP BY t.b AS gk_0;
+                """.trimIndent(),
+                expected = org.partiql.value.bagValue(
+                    org.partiql.value.structValue(
+                        "gk_0" to org.partiql.value.int32Value(1),
+                        "t_c_sum" to org.partiql.value.int64Value(3)
+                    ),
+                    org.partiql.value.structValue(
+                        "gk_0" to org.partiql.value.int32Value(2),
+                        "t_c_sum" to org.partiql.value.int64Value(2)
+                    ),
+                    org.partiql.value.structValue(
+                        "gk_0" to org.partiql.value.int32Value(3),
+                        "t_c_sum" to org.partiql.value.int64Value(2)
+                    ),
+                    org.partiql.value.structValue(
+                        "gk_0" to org.partiql.value.int32Value(4),
+                        "t_c_sum" to nullValue()
+                    ),
+                    org.partiql.value.structValue(
+                        "gk_0" to org.partiql.value.nullValue(),
+                        "t_c_sum" to org.partiql.value.int64Value(3)
+                    ),
                 ),
-                structValue(
-                    "orderName" to stringValue("bar"),
-                    "customerName" to stringValue("Helen")
-                ),
-            ),
-            globals = listOf(
-                SuccessTestCase.Global(
-                    name = "customers",
-                    value = """
-                            [{id:1, name: "Mary"},
-                            {id:2, name: "Helen"},
-                            {id:1, name: "John"}
-                            ]
-                        """
-                ),
-                SuccessTestCase.Global(
-                    name = "orders",
-                    value = """
-                            [{custId:1, name: "foo"},
-                            {custId:2, name: "bar"}
-                            ]
-                        """
-                ),
+                mode = org.partiql.eval.PartiQLEngine.Mode.PERMISSIVE
             )
-        )
         tc.assert()
     }
 
@@ -474,23 +481,23 @@ class PartiQLEngineDefaultTest {
                 expected = org.partiql.value.bagValue(
                     org.partiql.value.structValue(
                         "gk_0" to org.partiql.value.int32Value(1),
-                        "t_c_sum" to org.partiql.value.int32Value(3)
+                        "t_c_sum" to org.partiql.value.int64Value(3)
                     ),
                     org.partiql.value.structValue(
                         "gk_0" to org.partiql.value.int32Value(2),
-                        "t_c_sum" to org.partiql.value.int32Value(2)
+                        "t_c_sum" to org.partiql.value.int64Value(2)
                     ),
                     org.partiql.value.structValue(
                         "gk_0" to org.partiql.value.int32Value(3),
-                        "t_c_sum" to org.partiql.value.int32Value(2)
+                        "t_c_sum" to org.partiql.value.int64Value(2)
                     ),
                     org.partiql.value.structValue(
                         "gk_0" to org.partiql.value.int32Value(4),
-                        "t_c_sum" to org.partiql.value.int32Value(null)
+                        "t_c_sum" to nullValue()
                     ),
                     org.partiql.value.structValue(
                         "gk_0" to org.partiql.value.nullValue(),
-                        "t_c_sum" to org.partiql.value.int32Value(3)
+                        "t_c_sum" to org.partiql.value.int64Value(3)
                     ),
                 ),
                 mode = org.partiql.eval.PartiQLEngine.Mode.PERMISSIVE
