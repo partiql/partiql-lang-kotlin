@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Deprecated
 
 ### Fixed
+- Fixes typing of CASE-WHEN by applying the rules from SQL-99 9.3 for minimal common supertype.
 
 ### Removed
 
@@ -21,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Contributors
 Thank you to all who have contributed!
-- @<your-username>
+- @rchowell
 
 -->
 
