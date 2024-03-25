@@ -3,6 +3,7 @@
 
 package org.partiql.spi.connector.sql.builtins
 
+import org.partiql.spi.connector.sql.builtins.internal.FnUtils
 import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnParameter
@@ -15,6 +16,7 @@ import org.partiql.value.Int32Value
 import org.partiql.value.Int64Value
 import org.partiql.value.Int8Value
 import org.partiql.value.IntValue
+import org.partiql.value.NumericType
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType.DECIMAL_ARBITRARY
@@ -122,20 +124,38 @@ internal object Fn_ABS__INT__INT : Fn {
     }
 }
 
+/**
+ * SQL:1999 states:
+ * CREATE FUNCTION "ABS" (
+ *      N NUMERIC ( P, S )
+ * ) RETURNS NUMERIC ( P, S )
+ * SPECIFIC ABSNUMERICP_S
+ * RETURN ABS ( N ) ;
+ *
+ * Let P assume all character string values that are the minimal literal for an exact numeric value
+ * of scale 0 (zero) between 1 (one) and MP, let S assume all character string values that are
+ * the minimal literal for an exact numeric value of scale 0 (zero) between 1 (one) and P
+ */
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
-internal object Fn_ABS__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY : Fn {
+internal object Fn_ABS__NUMERIC__NUMERIC {
+    val ALL = buildList<Fn> {
+        FnUtils.numericTypes().forEach { numeric ->
+            val fn = object : Fn {
+                override val signature = FnSignature(
+                    name = "abs",
+                    returns = numeric,
+                    parameters = listOf(FnParameter("value", numeric)),
+                    isNullCall = true,
+                    isNullable = false,
+                )
 
-    override val signature = FnSignature(
-        name = "abs",
-        returns = DECIMAL_ARBITRARY,
-        parameters = listOf(FnParameter("value", DECIMAL_ARBITRARY)),
-        isNullCall = true,
-        isNullable = false,
-    )
-
-    override fun invoke(args: Array<PartiQLValue>): DecimalValue {
-        val value = args[0].check<DecimalValue>().value!!
-        return decimalValue(value.abs())
+                override fun invoke(args: Array<PartiQLValue>): DecimalValue {
+                    val value = args[0].check<DecimalValue>().value!!
+                    return decimalValue(value.abs())
+                }
+            }
+            add(fn)
+        }
     }
 }
 

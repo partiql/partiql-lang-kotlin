@@ -1,5 +1,6 @@
 package org.partiql.spi.fn
 
+import org.partiql.value.PartiQLType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
 
@@ -23,7 +24,7 @@ import org.partiql.value.PartiQLValueType
 @OptIn(PartiQLValueExperimental::class)
 public class FnSignature(
     @JvmField public val name: String,
-    @JvmField public val returns: PartiQLValueType,
+    @JvmField public val returns: PartiQLType,
     @JvmField public val parameters: List<FnParameter>,
     @JvmField public val description: String? = null,
     @JvmField public val isDeterministic: Boolean = true,
@@ -32,6 +33,28 @@ public class FnSignature(
     @JvmField public val isMissable: Boolean = true,
     @JvmField public val isMissingCall: Boolean = true,
 ) {
+
+    public constructor(
+        name: String,
+        returns: PartiQLValueType,
+        parameters: List<FnParameter>,
+        description: String? = null,
+        isDeterministic: Boolean = true,
+        isNullable: Boolean = true,
+        isNullCall: Boolean = false,
+        isMissable: Boolean = true,
+        isMissingCall: Boolean = true,
+    ) : this(
+        name,
+        PartiQLType.fromLegacy(returns),
+        parameters,
+        description,
+        isDeterministic,
+        isNullable,
+        isNullCall,
+        isMissable,
+        isMissingCall
+    )
 
     /**
      * Symbolic name of this operator of the form NAME__INPUTS__RETURNS

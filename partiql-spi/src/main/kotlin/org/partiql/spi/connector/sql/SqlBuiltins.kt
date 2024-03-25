@@ -19,8 +19,8 @@ internal object SqlBuiltins {
         Fn_ABS__INT32__INT32,
         Fn_ABS__INT64__INT64,
         Fn_ABS__INT__INT,
-        Fn_ABS__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY,
         Fn_ABS__FLOAT32__FLOAT32,
+    ) + Fn_ABS__NUMERIC__NUMERIC.ALL + listOf(
         Fn_ABS__FLOAT64__FLOAT64,
         Fn_CHAR_LENGTH__STRING__INT,
         Fn_CHAR_LENGTH__SYMBOL__INT,

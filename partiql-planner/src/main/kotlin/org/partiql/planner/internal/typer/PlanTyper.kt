@@ -1223,7 +1223,7 @@ internal class PlanTyper(
             // True iff MISSING CALL and had a MISSABLE arg
             val isMissable = (fn.isMissingCall && hadMissable) && fn.isMissable
 
-            val returnType = PartiQLType.fromLegacy(fn.returns)
+            val returnType = fn.returns
             // Return type with calculated nullability
             val type = when {
                 isMissing -> PShape.of(MissingType, constraints = setOf(NotNull))
