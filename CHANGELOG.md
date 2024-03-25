@@ -32,10 +32,14 @@ Thank you to all who have contributed!
 
 ### Changed
 - Change `StaticType.AnyOfType`'s `.toString` to not perform `.flatten()`
+- **Behavioral change**: The COUNT aggregate function now returns INT64.
 
 ### Deprecated
+- Deprecates constructor and properties `variableName` and `caseSensitive` of `org.partiql.planner.PlanningProblemDetails.UndefinedVariable`
+  in favor of newly added constructor and properties `name` and `inScopeVariables`.
 
 ### Fixed
+- Fixes aggregations of attribute references to values of union types. This fix also allows for proper error handling by passing the UnknownAggregateFunction problem to the ProblemCallback. Please note that, with this change, the planner will no longer immediately throw an IllegalStateException for this exact scenario.
 
 ### Removed
 
@@ -43,7 +47,7 @@ Thank you to all who have contributed!
 
 ### Contributors
 Thank you to all who have contributed!
-- @<your-username>
+- @johnedquinn
 
 ## [0.14.4]
 

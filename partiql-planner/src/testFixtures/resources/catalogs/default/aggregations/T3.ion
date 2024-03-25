@@ -1,0 +1,17 @@
+{
+  type: "bag",
+  items: {
+    type: "struct",
+    constraints: [ closed ],
+    fields: [
+      {
+        name: "e",
+        type: "bool",
+      },
+      {
+        name: "f",
+        type: "int32",
+      },
+    ]
+  }
+}

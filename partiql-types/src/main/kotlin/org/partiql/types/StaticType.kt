@@ -599,9 +599,10 @@ public data class StructType(
         get() = listOf(this)
 
     override fun toString(): String {
-        val firstSeveral = fields.take(3).joinToString { "${it.key}: ${it.value}" }
+        val firstFieldsSize = 15
+        val firstSeveral = fields.take(firstFieldsSize).joinToString { "${it.key}: ${it.value}" }
         return when {
-            fields.size <= 3 -> "struct($firstSeveral, $constraints)"
+            fields.size <= firstFieldsSize -> "struct($firstSeveral, $constraints)"
             else -> "struct($firstSeveral, ... and ${fields.size - 3} other field(s), $constraints)"
         }
     }
