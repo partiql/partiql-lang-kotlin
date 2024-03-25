@@ -1,3 +1,17 @@
+/*
+ * Copyright Amazon.com, Inc. or its affiliates.  All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ *  You may not use this file except in compliance with the License.
+ * A copy of the License is located at:
+ *
+ *      http://aws.amazon.com/apache2.0/
+ *
+ *  or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
+ *  language governing permissions and limitations under the License.
+ */
+
 package org.partiql.ast.sql
 
 import org.partiql.ast.AstNode
@@ -32,7 +46,12 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
     /**
      * Default entry-point, can also be us.
      */
-    public fun apply(node: AstNode): SqlBlock = node.accept(this, SqlBlock.Nil)
+    public fun apply(node: AstNode): SqlBlock {
+        val head = SqlBlock.root()
+        val tail = head
+        node.accept(this, tail)
+        return head
+    }
 
     companion object {
 
@@ -40,12 +59,12 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
         public val PARTIQL = object : SqlDialect() {}
     }
 
-    override fun defaultReturn(node: AstNode, head: SqlBlock): SqlBlock =
+    override fun defaultReturn(node: AstNode, tail: SqlBlock): SqlBlock =
         throw UnsupportedOperationException("Cannot print $node")
 
     // STATEMENTS
 
-    override fun visitStatementQuery(node: Statement.Query, head: SqlBlock): SqlBlock = visitExpr(node.expr, head)
+    override fun visitStatementQuery(node: Statement.Query, tail: SqlBlock): SqlBlock = visitExpr(node.expr, tail)
 
     // IDENTIFIERS & PATHS
 
@@ -53,161 +72,166 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
      * Default behavior is to wrap all SFW queries with parentheses.
      *
      * @param node
-     * @param head
+     * @param tail
      */
-    public open fun visitExprWrapped(node: Expr, head: SqlBlock): SqlBlock = when (node) {
+    public open fun visitExprWrapped(node: Expr, tail: SqlBlock): SqlBlock = when (node) {
         is Expr.SFW -> {
-            var h = head
-            h = h concat "("
-            h = visitExprSFW(node, h)
-            h = h concat ")"
-            h
+            var t = tail
+            t = t concat "("
+            t = visitExprSFW(node, t)
+            t = t concat ")"
+            t
         }
-        else -> visitExpr(node, head)
+        else -> visitExpr(node, tail)
     }
 
-    override fun visitIdentifierSymbol(node: Identifier.Symbol, head: SqlBlock): SqlBlock = head concat r(node.sql())
+    override fun visitIdentifierSymbol(node: Identifier.Symbol, tail: SqlBlock): SqlBlock = tail concat node.sql()
 
-    override fun visitIdentifierQualified(node: Identifier.Qualified, head: SqlBlock): SqlBlock {
+    override fun visitIdentifierQualified(node: Identifier.Qualified, tail: SqlBlock): SqlBlock {
         val path = node.steps.fold(node.root.sql()) { p, step -> p + "." + step.sql() }
-        return head concat r(path)
+        return tail concat path
     }
 
-    override fun visitPath(node: Path, head: SqlBlock): SqlBlock {
+    override fun visitPath(node: Path, tail: SqlBlock): SqlBlock {
         val path = node.steps.fold(node.root.sql()) { p, step ->
             when (step) {
                 is Path.Step.Index -> p + "[${step.index}]"
                 is Path.Step.Symbol -> p + "." + step.symbol.sql()
             }
         }
-        return head concat r(path)
+        return tail concat path
     }
 
-    override fun visitExclude(node: Exclude, head: SqlBlock): SqlBlock {
-        var h = head
-        h = h concat " EXCLUDE "
-        h = h concat list(start = null, end = null) { node.items }
-        return h
+    override fun visitExclude(node: Exclude, tail: SqlBlock): SqlBlock {
+        var t = tail
+        t = t concat " EXCLUDE "
+        t = t concat list(start = null, end = null) { node.items }
+        return t
     }
 
-    override fun visitExcludeItem(node: Exclude.Item, head: SqlBlock): SqlBlock {
-        var h = head
-        h = h concat visitExprVar(node.root, SqlBlock.Nil)
-        h = h concat list(delimiter = null, start = null, end = null) { node.steps }
-        return h
+    override fun visitExcludeItem(node: Exclude.Item, tail: SqlBlock): SqlBlock {
+        var t = tail
+        t = visitExprVar(node.root, t)
+        t = t concat list(delimiter = null, start = null, end = null) { node.steps }
+        return t
     }
 
-    override fun visitExcludeStepCollIndex(node: Exclude.Step.CollIndex, head: SqlBlock): SqlBlock {
-        return head concat r("[${node.index}]")
+    override fun visitExcludeStepCollIndex(node: Exclude.Step.CollIndex, tail: SqlBlock): SqlBlock {
+        return tail concat "[${node.index}]"
     }
 
-    override fun visitExcludeStepStructWildcard(node: Exclude.Step.StructWildcard, head: SqlBlock): SqlBlock {
-        return head concat r(".*")
+    override fun visitExcludeStepStructWildcard(node: Exclude.Step.StructWildcard, tail: SqlBlock): SqlBlock {
+        return tail concat ".*"
     }
 
-    override fun visitExcludeStepStructField(node: Exclude.Step.StructField, head: SqlBlock): SqlBlock {
-        var h = head concat r(".")
-        h = h concat visitIdentifierSymbol(node.symbol, SqlBlock.Nil)
-        return h
+    override fun visitExcludeStepStructField(node: Exclude.Step.StructField, tail: SqlBlock): SqlBlock {
+        var t = tail concat "."
+        t = visitIdentifierSymbol(node.symbol, t)
+        return t
     }
 
-    override fun visitExcludeStepCollWildcard(node: Exclude.Step.CollWildcard, head: SqlBlock): SqlBlock {
-        return head concat r("[*]")
+    override fun visitExcludeStepCollWildcard(node: Exclude.Step.CollWildcard, tail: SqlBlock): SqlBlock {
+        return tail concat "[*]"
     }
 
     // cannot write path step outside the context of a path as we don't want it to reflow
-    override fun visitPathStep(node: Path.Step, head: SqlBlock): SqlBlock = error("path step cannot be written directly")
+    override fun visitPathStep(node: Path.Step, tail: SqlBlock): SqlBlock =
+        error("path step cannot be written directly")
 
-    override fun visitPathStepSymbol(node: Path.Step.Symbol, head: SqlBlock): SqlBlock = visitPathStep(node, head)
+    override fun visitPathStepSymbol(node: Path.Step.Symbol, tail: SqlBlock): SqlBlock = visitPathStep(node, tail)
 
-    override fun visitPathStepIndex(node: Path.Step.Index, head: SqlBlock): SqlBlock = visitPathStep(node, head)
+    override fun visitPathStepIndex(node: Path.Step.Index, tail: SqlBlock): SqlBlock = visitPathStep(node, tail)
 
     // TYPES
 
-    override fun visitTypeNullType(node: Type.NullType, head: SqlBlock): SqlBlock = head concat r("NULL")
+    override fun visitTypeNullType(node: Type.NullType, tail: SqlBlock): SqlBlock = tail concat "NULL"
 
-    override fun visitTypeMissing(node: Type.Missing, head: SqlBlock): SqlBlock = head concat r("MISSING")
+    override fun visitTypeMissing(node: Type.Missing, tail: SqlBlock): SqlBlock = tail concat "MISSING"
 
-    override fun visitTypeBool(node: Type.Bool, head: SqlBlock): SqlBlock = head concat r("BOOL")
+    override fun visitTypeBool(node: Type.Bool, tail: SqlBlock): SqlBlock = tail concat "BOOL"
 
-    override fun visitTypeTinyint(node: Type.Tinyint, head: SqlBlock): SqlBlock = head concat r("TINYINT")
+    override fun visitTypeTinyint(node: Type.Tinyint, tail: SqlBlock): SqlBlock = tail concat "TINYINT"
 
-    override fun visitTypeSmallint(node: Type.Smallint, head: SqlBlock): SqlBlock = head concat r("SMALLINT")
+    override fun visitTypeSmallint(node: Type.Smallint, tail: SqlBlock): SqlBlock = tail concat "SMALLINT"
 
-    override fun visitTypeInt2(node: Type.Int2, head: SqlBlock): SqlBlock = head concat r("INT2")
+    override fun visitTypeInt2(node: Type.Int2, tail: SqlBlock): SqlBlock = tail concat "INT2"
 
-    override fun visitTypeInt4(node: Type.Int4, head: SqlBlock): SqlBlock = head concat r("INT4")
+    override fun visitTypeInt4(node: Type.Int4, tail: SqlBlock): SqlBlock = tail concat "INT4"
 
-    override fun visitTypeBigint(node: Type.Bigint, head: SqlBlock): SqlBlock = head concat r("BIGINT")
+    override fun visitTypeBigint(node: Type.Bigint, tail: SqlBlock): SqlBlock = tail concat "BIGINT"
 
-    override fun visitTypeInt8(node: Type.Int8, head: SqlBlock): SqlBlock = head concat r("INT8")
+    override fun visitTypeInt8(node: Type.Int8, tail: SqlBlock): SqlBlock = tail concat "INT8"
 
-    override fun visitTypeInt(node: Type.Int, head: SqlBlock): SqlBlock = head concat r("INT")
+    override fun visitTypeInt(node: Type.Int, tail: SqlBlock): SqlBlock = tail concat "INT"
 
-    override fun visitTypeReal(node: Type.Real, head: SqlBlock): SqlBlock = head concat r("REAL")
+    override fun visitTypeReal(node: Type.Real, tail: SqlBlock): SqlBlock = tail concat "REAL"
 
-    override fun visitTypeFloat32(node: Type.Float32, head: SqlBlock): SqlBlock = head concat r("FLOAT32")
+    override fun visitTypeFloat32(node: Type.Float32, tail: SqlBlock): SqlBlock = tail concat "FLOAT32"
 
-    override fun visitTypeFloat64(node: Type.Float64, head: SqlBlock): SqlBlock = head concat r("DOUBLE PRECISION")
+    override fun visitTypeFloat64(node: Type.Float64, tail: SqlBlock): SqlBlock = tail concat "DOUBLE PRECISION"
 
-    override fun visitTypeDecimal(node: Type.Decimal, head: SqlBlock): SqlBlock =
-        head concat type("DECIMAL", node.precision, node.scale)
+    override fun visitTypeDecimal(node: Type.Decimal, tail: SqlBlock): SqlBlock =
+        tail concat type("DECIMAL", node.precision, node.scale)
 
-    override fun visitTypeNumeric(node: Type.Numeric, head: SqlBlock): SqlBlock =
-        head concat type("NUMERIC", node.precision, node.scale)
+    override fun visitTypeNumeric(node: Type.Numeric, tail: SqlBlock): SqlBlock =
+        tail concat type("NUMERIC", node.precision, node.scale)
 
-    override fun visitTypeChar(node: Type.Char, head: SqlBlock): SqlBlock = head concat type("CHAR", node.length)
+    override fun visitTypeChar(node: Type.Char, tail: SqlBlock): SqlBlock = tail concat type("CHAR", node.length)
 
-    override fun visitTypeVarchar(node: Type.Varchar, head: SqlBlock): SqlBlock = head concat type("VARCHAR", node.length)
+    override fun visitTypeVarchar(node: Type.Varchar, tail: SqlBlock): SqlBlock =
+        tail concat type("VARCHAR", node.length)
 
-    override fun visitTypeString(node: Type.String, head: SqlBlock): SqlBlock = head concat r("STRING")
+    override fun visitTypeString(node: Type.String, tail: SqlBlock): SqlBlock = tail concat "STRING"
 
-    override fun visitTypeSymbol(node: Type.Symbol, head: SqlBlock): SqlBlock = head concat r("SYMBOL")
+    override fun visitTypeSymbol(node: Type.Symbol, tail: SqlBlock): SqlBlock = tail concat "SYMBOL"
 
-    override fun visitTypeBit(node: Type.Bit, head: SqlBlock): SqlBlock = head concat type("BIT", node.length)
+    override fun visitTypeBit(node: Type.Bit, tail: SqlBlock): SqlBlock = tail concat type("BIT", node.length)
 
-    override fun visitTypeBitVarying(node: Type.BitVarying, head: SqlBlock): SqlBlock = head concat type("BINARY", node.length)
+    override fun visitTypeBitVarying(node: Type.BitVarying, tail: SqlBlock): SqlBlock =
+        tail concat type("BINARY", node.length)
 
-    override fun visitTypeByteString(node: Type.ByteString, head: SqlBlock): SqlBlock = head concat type("BYTE", node.length)
+    override fun visitTypeByteString(node: Type.ByteString, tail: SqlBlock): SqlBlock =
+        tail concat type("BYTE", node.length)
 
-    override fun visitTypeBlob(node: Type.Blob, head: SqlBlock): SqlBlock = head concat type("BLOB", node.length)
+    override fun visitTypeBlob(node: Type.Blob, tail: SqlBlock): SqlBlock = tail concat type("BLOB", node.length)
 
-    override fun visitTypeClob(node: Type.Clob, head: SqlBlock): SqlBlock = head concat type("CLOB", node.length)
+    override fun visitTypeClob(node: Type.Clob, tail: SqlBlock): SqlBlock = tail concat type("CLOB", node.length)
 
-    override fun visitTypeBag(node: Type.Bag, head: SqlBlock): SqlBlock = head concat r("BAG")
+    override fun visitTypeBag(node: Type.Bag, tail: SqlBlock): SqlBlock = tail concat "BAG"
 
-    override fun visitTypeList(node: Type.List, head: SqlBlock): SqlBlock = head concat r("LIST")
+    override fun visitTypeList(node: Type.List, tail: SqlBlock): SqlBlock = tail concat "LIST"
 
-    override fun visitTypeSexp(node: Type.Sexp, head: SqlBlock): SqlBlock = head concat r("SEXP")
+    override fun visitTypeSexp(node: Type.Sexp, tail: SqlBlock): SqlBlock = tail concat "SEXP"
 
-    override fun visitTypeTuple(node: Type.Tuple, head: SqlBlock): SqlBlock = head concat r("TUPLE")
+    override fun visitTypeTuple(node: Type.Tuple, tail: SqlBlock): SqlBlock = tail concat "TUPLE"
 
-    override fun visitTypeStruct(node: Type.Struct, head: SqlBlock): SqlBlock = head concat r("STRUCT")
+    override fun visitTypeStruct(node: Type.Struct, tail: SqlBlock): SqlBlock = tail concat "STRUCT"
 
-    override fun visitTypeAny(node: Type.Any, head: SqlBlock): SqlBlock = head concat r("ANY")
+    override fun visitTypeAny(node: Type.Any, tail: SqlBlock): SqlBlock = tail concat "ANY"
 
-    override fun visitTypeDate(node: Type.Date, head: SqlBlock): SqlBlock = head concat r("DATE")
+    override fun visitTypeDate(node: Type.Date, tail: SqlBlock): SqlBlock = tail concat "DATE"
 
-    override fun visitTypeTime(node: Type.Time, head: SqlBlock): SqlBlock = head concat type("TIME", node.precision)
+    override fun visitTypeTime(node: Type.Time, tail: SqlBlock): SqlBlock = tail concat type("TIME", node.precision)
 
-    override fun visitTypeTimeWithTz(node: Type.TimeWithTz, head: SqlBlock): SqlBlock =
-        head concat type("TIME WITH TIMEZONE", node.precision, gap = true)
+    override fun visitTypeTimeWithTz(node: Type.TimeWithTz, tail: SqlBlock): SqlBlock =
+        tail concat type("TIME WITH TIMEZONE", node.precision, gap = true)
 
-    override fun visitTypeTimestamp(node: Type.Timestamp, head: SqlBlock): SqlBlock =
-        head concat type("TIMESTAMP", node.precision)
+    override fun visitTypeTimestamp(node: Type.Timestamp, tail: SqlBlock): SqlBlock =
+        tail concat type("TIMESTAMP", node.precision)
 
-    override fun visitTypeTimestampWithTz(node: Type.TimestampWithTz, head: SqlBlock): SqlBlock =
-        head concat type("TIMESTAMP WITH TIMEZONE", node.precision, gap = true)
+    override fun visitTypeTimestampWithTz(node: Type.TimestampWithTz, tail: SqlBlock): SqlBlock =
+        tail concat type("TIMESTAMP WITH TIMEZONE", node.precision, gap = true)
 
-    override fun visitTypeInterval(node: Type.Interval, head: SqlBlock): SqlBlock = head concat type("INTERVAL", node.precision)
+    override fun visitTypeInterval(node: Type.Interval, tail: SqlBlock): SqlBlock =
+        tail concat type("INTERVAL", node.precision)
 
     // unsupported
-    override fun visitTypeCustom(node: Type.Custom, head: SqlBlock): SqlBlock = defaultReturn(node, head)
+    override fun visitTypeCustom(node: Type.Custom, tail: SqlBlock): SqlBlock = defaultReturn(node, tail)
 
     // Expressions
 
     @OptIn(PartiQLValueExperimental::class)
-    override fun visitExprLit(node: Expr.Lit, head: SqlBlock): SqlBlock {
+    override fun visitExprLit(node: Expr.Lit, tail: SqlBlock): SqlBlock {
         // Simplified PartiQL Value writing, as this intentionally omits formatting
         val value = when (node.value) {
             is MissingValue -> "MISSING" // force uppercase
@@ -219,29 +243,29 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
                 buffer.toString()
             }
         }
-        return head concat r(value)
+        return tail concat value
     }
 
-    override fun visitExprIon(node: Expr.Ion, head: SqlBlock): SqlBlock {
+    override fun visitExprIon(node: Expr.Ion, tail: SqlBlock): SqlBlock {
         // simplified Ion value writing, as this intentionally omits formatting
         val value = node.value.toString()
-        return head concat r("`$value`")
+        return tail concat "`$value`"
     }
 
-    override fun visitExprUnary(node: Expr.Unary, head: SqlBlock): SqlBlock {
+    override fun visitExprUnary(node: Expr.Unary, tail: SqlBlock): SqlBlock {
         val op = when (node.op) {
             Expr.Unary.Op.NOT -> "NOT ("
             Expr.Unary.Op.POS -> "+("
             Expr.Unary.Op.NEG -> "-("
         }
-        var h = head
-        h = h concat r(op)
-        h = visitExprWrapped(node.expr, h)
-        h = h concat r(")")
-        return h
+        var t = tail
+        t = t concat op
+        t = visitExprWrapped(node.expr, t)
+        t = t concat ")"
+        return t
     }
 
-    override fun visitExprBinary(node: Expr.Binary, head: SqlBlock): SqlBlock {
+    override fun visitExprBinary(node: Expr.Binary, tail: SqlBlock): SqlBlock {
         val op = when (node.op) {
             Expr.Binary.Op.PLUS -> "+"
             Expr.Binary.Op.MINUS -> "-"
@@ -259,76 +283,77 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
             Expr.Binary.Op.LTE -> "<="
             Expr.Binary.Op.BITWISE_AND -> "&"
         }
-        var h = head
-        h = visitExprWrapped(node.lhs, h)
-        h = h concat r(" $op ")
-        h = visitExprWrapped(node.rhs, h)
-        return h
+        var t = tail
+        t = visitExprWrapped(node.lhs, t)
+        t = t concat " $op "
+        t = visitExprWrapped(node.rhs, t)
+        return t
     }
 
-    override fun visitExprVar(node: Expr.Var, head: SqlBlock): SqlBlock {
-        var h = head
+    override fun visitExprVar(node: Expr.Var, tail: SqlBlock): SqlBlock {
+        var t = tail
         // Prepend @
         if (node.scope == Expr.Var.Scope.LOCAL) {
-            h = h concat r("@")
+            t = t concat "@"
         }
-        h = visitIdentifier(node.identifier, h)
-        return h
+        t = visitIdentifier(node.identifier, t)
+        return t
     }
 
-    override fun visitExprSessionAttribute(node: Expr.SessionAttribute, head: SqlBlock): SqlBlock =
-        head concat r(node.attribute.name)
+    override fun visitExprSessionAttribute(node: Expr.SessionAttribute, tail: SqlBlock): SqlBlock =
+        tail concat node.attribute.name
 
-    override fun visitExprPath(node: Expr.Path, head: SqlBlock): SqlBlock {
-        var h = visitExprWrapped(node.root, head)
-        h = node.steps.fold(h) { b, step -> visitExprPathStep(step, b) }
-        return h
+    override fun visitExprPath(node: Expr.Path, tail: SqlBlock): SqlBlock {
+        var t = visitExprWrapped(node.root, tail)
+        t = node.steps.fold(t) { b, step -> visitExprPathStep(step, b) }
+        return t
     }
 
-    override fun visitExprPathStepSymbol(node: Expr.Path.Step.Symbol, head: SqlBlock): SqlBlock =
-        head concat r(".${node.symbol.sql()}")
+    override fun visitExprPathStepSymbol(node: Expr.Path.Step.Symbol, tail: SqlBlock): SqlBlock =
+        tail concat ".${node.symbol.sql()}"
 
-    override fun visitExprPathStepIndex(node: Expr.Path.Step.Index, head: SqlBlock): SqlBlock {
-        var h = head
+    override fun visitExprPathStepIndex(node: Expr.Path.Step.Index, tail: SqlBlock): SqlBlock {
+        var t = tail
         val key = node.key
         // use [ ] syntax
-        h = h concat r("[")
-        h = visitExprWrapped(key, h)
-        h = h concat r("]")
-        return h
+        t = t concat "["
+        t = visitExprWrapped(key, t)
+        t = t concat "]"
+        return t
     }
 
-    override fun visitExprPathStepWildcard(node: Expr.Path.Step.Wildcard, head: SqlBlock): SqlBlock = head concat r("[*]")
+    override fun visitExprPathStepWildcard(node: Expr.Path.Step.Wildcard, tail: SqlBlock): SqlBlock = tail concat "[*]"
 
-    override fun visitExprPathStepUnpivot(node: Expr.Path.Step.Unpivot, head: SqlBlock): SqlBlock = head concat r(".*")
+    override fun visitExprPathStepUnpivot(node: Expr.Path.Step.Unpivot, tail: SqlBlock): SqlBlock = tail concat ".*"
 
-    override fun visitExprCall(node: Expr.Call, head: SqlBlock): SqlBlock {
-        var h = head
-        h = visitIdentifier(node.function, h)
-        h = h concat list { node.args }
-        return h
+    override fun visitExprCall(node: Expr.Call, tail: SqlBlock): SqlBlock {
+        var t = tail
+        t = visitIdentifier(node.function, t)
+        t = t concat list { node.args }
+        return t
     }
 
-    override fun visitExprAgg(node: Expr.Agg, head: SqlBlock): SqlBlock {
-        var h = head
+    override fun visitExprAgg(node: Expr.Agg, tail: SqlBlock): SqlBlock {
+        var t = tail
         val f = node.function
         // Special case
         if (f is Identifier.Symbol && f.symbol == "COUNT_STAR") {
-            return h concat r("COUNT(*)")
+            return t concat "COUNT(*)"
         }
         val start = if (node.setq != null) "(${node.setq.name} " else "("
-        h = visitIdentifier(f, h)
-        h = h concat list(start) { node.args }
-        return h
+        t = visitIdentifier(f, t)
+        t = t concat list(start) { node.args }
+        return t
     }
 
-    override fun visitExprParameter(node: Expr.Parameter, head: SqlBlock): SqlBlock = head concat r("?")
+    override fun visitExprParameter(node: Expr.Parameter, tail: SqlBlock): SqlBlock = tail concat "?"
 
-    override fun visitExprValues(node: Expr.Values, head: SqlBlock): SqlBlock = head concat list("VALUES (") { node.rows }
+    override fun visitExprValues(node: Expr.Values, tail: SqlBlock): SqlBlock =
+        tail concat list("VALUES (") { node.rows }
 
-    override fun visitExprValuesRow(node: Expr.Values.Row, head: SqlBlock): SqlBlock = head concat list { node.items }
+    override fun visitExprValuesRow(node: Expr.Values.Row, tail: SqlBlock): SqlBlock = tail concat list { node.items }
 
-    override fun visitExprCollection(node: Expr.Collection, head: SqlBlock): SqlBlock {
+    override fun visitExprCollection(node: Expr.Collection, tail: SqlBlock): SqlBlock {
         val (start, end) = when (node.type) {
             Expr.Collection.Type.BAG -> "<<" to ">>"
             Expr.Collection.Type.ARRAY -> "[" to "]"
@@ -336,226 +361,227 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
             Expr.Collection.Type.LIST -> "(" to ")"
             Expr.Collection.Type.SEXP -> "SEXP (" to ")"
         }
-        return head concat list(start, end) { node.values }
+        return tail concat list(start, end) { node.values }
     }
 
-    override fun visitExprStruct(node: Expr.Struct, head: SqlBlock): SqlBlock = head concat list("{", "}") { node.fields }
+    override fun visitExprStruct(node: Expr.Struct, tail: SqlBlock): SqlBlock =
+        tail concat list("{", "}") { node.fields }
 
-    override fun visitExprStructField(node: Expr.Struct.Field, head: SqlBlock): SqlBlock {
-        var h = head
-        h = visitExprWrapped(node.name, h)
-        h = h concat r(": ")
-        h = visitExprWrapped(node.value, h)
-        return h
+    override fun visitExprStructField(node: Expr.Struct.Field, tail: SqlBlock): SqlBlock {
+        var t = tail
+        t = visitExprWrapped(node.name, t)
+        t = t concat ": "
+        t = visitExprWrapped(node.value, t)
+        return t
     }
 
-    override fun visitExprLike(node: Expr.Like, head: SqlBlock): SqlBlock {
-        var h = head
-        h = visitExprWrapped(node.value, h)
-        h = h concat if (node.not == true) r(" NOT LIKE ") else r(" LIKE ")
-        h = visitExprWrapped(node.pattern, h)
+    override fun visitExprLike(node: Expr.Like, tail: SqlBlock): SqlBlock {
+        var t = tail
+        t = visitExprWrapped(node.value, t)
+        t = t concat if (node.not == true) " NOT LIKE " else " LIKE "
+        t = visitExprWrapped(node.pattern, t)
         if (node.escape != null) {
-            h = h concat r(" ESCAPE ")
-            h = visitExprWrapped(node.escape!!, h)
+            t = t concat " ESCAPE "
+            t = visitExprWrapped(node.escape, t)
         }
-        return h
+        return t
     }
 
-    override fun visitExprBetween(node: Expr.Between, head: SqlBlock): SqlBlock {
-        var h = head
-        h = visitExprWrapped(node.value, h)
-        h = h concat if (node.not == true) r(" NOT BETWEEN ") else r(" BETWEEN ")
-        h = visitExprWrapped(node.from, h)
-        h = h concat r(" AND ")
-        h = visitExprWrapped(node.to, h)
-        return h
+    override fun visitExprBetween(node: Expr.Between, tail: SqlBlock): SqlBlock {
+        var t = tail
+        t = visitExprWrapped(node.value, t)
+        t = t concat if (node.not == true) " NOT BETWEEN " else " BETWEEN "
+        t = visitExprWrapped(node.from, t)
+        t = t concat " AND "
+        t = visitExprWrapped(node.to, t)
+        return t
     }
 
-    override fun visitExprInCollection(node: Expr.InCollection, head: SqlBlock): SqlBlock {
-        var h = head
-        h = visitExprWrapped(node.lhs, h)
-        h = h concat if (node.not == true) r(" NOT IN ") else r(" IN ")
-        h = visitExprWrapped(node.rhs, h)
-        return h
+    override fun visitExprInCollection(node: Expr.InCollection, tail: SqlBlock): SqlBlock {
+        var t = tail
+        t = visitExprWrapped(node.lhs, t)
+        t = t concat if (node.not == true) " NOT IN " else " IN "
+        t = visitExprWrapped(node.rhs, t)
+        return t
     }
 
-    override fun visitExprIsType(node: Expr.IsType, head: SqlBlock): SqlBlock {
-        var h = head
-        h = visitExprWrapped(node.value, h)
-        h = h concat if (node.not == true) r(" IS NOT ") else r(" IS ")
-        h = visitType(node.type, h)
-        return h
+    override fun visitExprIsType(node: Expr.IsType, tail: SqlBlock): SqlBlock {
+        var t = tail
+        t = visitExprWrapped(node.value, t)
+        t = t concat if (node.not == true) " IS NOT " else " IS "
+        t = visitType(node.type, t)
+        return t
     }
 
-    override fun visitExprCase(node: Expr.Case, head: SqlBlock): SqlBlock {
-        var h = head
-        h = h concat r("CASE")
-        h = when (node.expr) {
-            null -> h
-            else -> visitExprWrapped(node.expr!!, h concat r(" "))
+    override fun visitExprCase(node: Expr.Case, tail: SqlBlock): SqlBlock {
+        var t = tail
+        t = t concat "CASE"
+        t = when (node.expr) {
+            null -> t
+            else -> visitExprWrapped(node.expr, t concat " ")
         }
         // WHEN(s)
-        h = node.branches.fold(h) { acc, branch -> visitExprCaseBranch(branch, acc) }
+        t = node.branches.fold(t) { acc, branch -> visitExprCaseBranch(branch, acc) }
         // ELSE
-        h = when (node.default) {
-            null -> h
+        t = when (node.default) {
+            null -> t
             else -> {
-                h = h concat r(" ELSE ")
-                visitExprWrapped(node.default!!, h)
+                t = t concat " ELSE "
+                visitExprWrapped(node.default, t)
             }
         }
-        h = h concat r(" END")
-        return h
+        t = t concat " END"
+        return t
     }
 
-    override fun visitExprCaseBranch(node: Expr.Case.Branch, head: SqlBlock): SqlBlock {
-        var h = head
-        h = h concat r(" WHEN ")
-        h = visitExprWrapped(node.condition, h)
-        h = h concat r(" THEN ")
-        h = visitExprWrapped(node.expr, h)
-        return h
+    override fun visitExprCaseBranch(node: Expr.Case.Branch, tail: SqlBlock): SqlBlock {
+        var t = tail
+        t = t concat " WHEN "
+        t = visitExprWrapped(node.condition, t)
+        t = t concat " THEN "
+        t = visitExprWrapped(node.expr, t)
+        return t
     }
 
-    override fun visitExprCoalesce(node: Expr.Coalesce, head: SqlBlock): SqlBlock {
-        var h = head
-        h = h concat r("COALESCE")
-        h = h concat list { node.args }
-        return h
+    override fun visitExprCoalesce(node: Expr.Coalesce, tail: SqlBlock): SqlBlock {
+        var t = tail
+        t = t concat "COALESCE"
+        t = t concat list { node.args }
+        return t
     }
 
-    override fun visitExprNullIf(node: Expr.NullIf, head: SqlBlock): SqlBlock {
+    override fun visitExprNullIf(node: Expr.NullIf, tail: SqlBlock): SqlBlock {
         val args = listOf(node.value, node.nullifier)
-        var h = head
-        h = h concat r("NULLIF")
-        h = h concat list { args }
-        return h
+        var t = tail
+        t = t concat "NULLIF"
+        t = t concat list { args }
+        return t
     }
 
-    override fun visitExprSubstring(node: Expr.Substring, head: SqlBlock): SqlBlock {
-        var h = head
-        h = h concat r("SUBSTRING(")
-        h = visitExprWrapped(node.value, h)
+    override fun visitExprSubstring(node: Expr.Substring, tail: SqlBlock): SqlBlock {
+        var t = tail
+        t = t concat "SUBSTRING("
+        t = visitExprWrapped(node.value, t)
         if (node.start != null) {
-            h = h concat r(" FROM ")
-            h = visitExprWrapped(node.start!!, h)
+            t = t concat " FROM "
+            t = visitExprWrapped(node.start, t)
         }
         if (node.length != null) {
-            h = h concat r(" FOR ")
-            h = visitExprWrapped(node.length!!, h)
+            t = t concat " FOR "
+            t = visitExprWrapped(node.length, t)
         }
-        h = h concat r(")")
-        return h
+        t = t concat ")"
+        return t
     }
 
-    override fun visitExprPosition(node: Expr.Position, head: SqlBlock): SqlBlock {
-        var h = head
-        h = h concat r("POSITION(")
-        h = visitExprWrapped(node.lhs, h)
-        h = h concat r(" IN ")
-        h = visitExprWrapped(node.rhs, h)
-        h = h concat r(")")
-        return h
+    override fun visitExprPosition(node: Expr.Position, tail: SqlBlock): SqlBlock {
+        var t = tail
+        t = t concat "POSITION("
+        t = visitExprWrapped(node.lhs, t)
+        t = t concat " IN "
+        t = visitExprWrapped(node.rhs, t)
+        t = t concat ")"
+        return t
     }
 
-    override fun visitExprTrim(node: Expr.Trim, head: SqlBlock): SqlBlock {
-        var h = head
-        h = h concat r("TRIM(")
+    override fun visitExprTrim(node: Expr.Trim, tail: SqlBlock): SqlBlock {
+        var t = tail
+        t = t concat "TRIM("
         // [LEADING|TRAILING|BOTH]
         if (node.spec != null) {
-            h = h concat r("${node.spec.name} ")
+            t = t concat "${node.spec.name} "
         }
         // [<chars> FROM]
         if (node.chars != null) {
-            h = visitExprWrapped(node.chars!!, h)
-            h = h concat r(" FROM ")
+            t = visitExprWrapped(node.chars, t)
+            t = t concat " FROM "
         }
-        h = visitExprWrapped(node.value, h)
-        h = h concat r(")")
-        return h
+        t = visitExprWrapped(node.value, t)
+        t = t concat ")"
+        return t
     }
 
-    override fun visitExprOverlay(node: Expr.Overlay, head: SqlBlock): SqlBlock {
-        var h = head
-        h = h concat r("OVERLAY(")
-        h = visitExprWrapped(node.value, h)
-        h = h concat r(" PLACING ")
-        h = visitExprWrapped(node.overlay, h)
-        h = h concat r(" FROM ")
-        h = visitExprWrapped(node.start, h)
+    override fun visitExprOverlay(node: Expr.Overlay, tail: SqlBlock): SqlBlock {
+        var t = tail
+        t = t concat "OVERLAY("
+        t = visitExprWrapped(node.value, t)
+        t = t concat " PLACING "
+        t = visitExprWrapped(node.overlay, t)
+        t = t concat " FROM "
+        t = visitExprWrapped(node.start, t)
         if (node.length != null) {
-            h = h concat r(" FOR ")
-            h = visitExprWrapped(node.length!!, h)
+            t = t concat " FOR "
+            t = visitExprWrapped(node.length, t)
         }
-        h = h concat r(")")
-        return h
+        t = t concat ")"
+        return t
     }
 
-    override fun visitExprExtract(node: Expr.Extract, head: SqlBlock): SqlBlock {
-        var h = head
-        h = h concat r("EXTRACT(")
-        h = h concat r(node.field.name)
-        h = h concat r(" FROM ")
-        h = visitExprWrapped(node.source, h)
-        h = h concat r(")")
-        return h
+    override fun visitExprExtract(node: Expr.Extract, tail: SqlBlock): SqlBlock {
+        var t = tail
+        t = t concat "EXTRACT("
+        t = t concat node.field.name
+        t = t concat " FROM "
+        t = visitExprWrapped(node.source, t)
+        t = t concat ")"
+        return t
     }
 
-    override fun visitExprCast(node: Expr.Cast, head: SqlBlock): SqlBlock {
-        var h = head
-        h = h concat r("CAST(")
-        h = visitExprWrapped(node.value, h)
-        h = h concat r(" AS ")
-        h = visitType(node.asType, h)
-        h = h concat r(")")
-        return h
+    override fun visitExprCast(node: Expr.Cast, tail: SqlBlock): SqlBlock {
+        var t = tail
+        t = t concat "CAST("
+        t = visitExprWrapped(node.value, t)
+        t = t concat " AS "
+        t = visitType(node.asType, t)
+        t = t concat ")"
+        return t
     }
 
-    override fun visitExprCanCast(node: Expr.CanCast, head: SqlBlock): SqlBlock {
-        var h = head
-        h = h concat r("CAN_CAST(")
-        h = visitExprWrapped(node.value, h)
-        h = h concat r(" AS ")
-        h = visitType(node.asType, h)
-        h = h concat r(")")
-        return h
+    override fun visitExprCanCast(node: Expr.CanCast, tail: SqlBlock): SqlBlock {
+        var t = tail
+        t = t concat "CAN_CAST("
+        t = visitExprWrapped(node.value, t)
+        t = t concat " AS "
+        t = visitType(node.asType, t)
+        t = t concat ")"
+        return t
     }
 
-    override fun visitExprCanLosslessCast(node: Expr.CanLosslessCast, head: SqlBlock): SqlBlock {
-        var h = head
-        h = h concat r("CAN_LOSSLESS_CAST(")
-        h = visitExprWrapped(node.value, h)
-        h = h concat r(" AS ")
-        h = visitType(node.asType, h)
-        h = h concat r(")")
-        return h
+    override fun visitExprCanLosslessCast(node: Expr.CanLosslessCast, tail: SqlBlock): SqlBlock {
+        var t = tail
+        t = t concat "CAN_LOSSLESS_CAST("
+        t = visitExprWrapped(node.value, t)
+        t = t concat " AS "
+        t = visitType(node.asType, t)
+        t = t concat ")"
+        return t
     }
 
-    override fun visitExprDateAdd(node: Expr.DateAdd, head: SqlBlock): SqlBlock {
-        var h = head
-        h = h concat r("DATE_ADD(")
-        h = h concat r(node.field.name)
-        h = h concat r(", ")
-        h = visitExprWrapped(node.lhs, h)
-        h = h concat r(", ")
-        h = visitExprWrapped(node.rhs, h)
-        h = h concat r(")")
-        return h
+    override fun visitExprDateAdd(node: Expr.DateAdd, tail: SqlBlock): SqlBlock {
+        var t = tail
+        t = t concat "DATE_ADD("
+        t = t concat node.field.name
+        t = t concat ", "
+        t = visitExprWrapped(node.lhs, t)
+        t = t concat ", "
+        t = visitExprWrapped(node.rhs, t)
+        t = t concat ")"
+        return t
     }
 
-    override fun visitExprDateDiff(node: Expr.DateDiff, head: SqlBlock): SqlBlock {
-        var h = head
-        h = h concat r("DATE_DIFF(")
-        h = h concat r(node.field.name)
-        h = h concat r(", ")
-        h = visitExprWrapped(node.lhs, h)
-        h = h concat r(", ")
-        h = visitExprWrapped(node.rhs, h)
-        h = h concat r(")")
-        return h
+    override fun visitExprDateDiff(node: Expr.DateDiff, tail: SqlBlock): SqlBlock {
+        var t = tail
+        t = t concat "DATE_DIFF("
+        t = t concat node.field.name
+        t = t concat ", "
+        t = visitExprWrapped(node.lhs, t)
+        t = t concat ", "
+        t = visitExprWrapped(node.rhs, t)
+        t = t concat ")"
+        return t
     }
 
-    override fun visitExprBagOp(node: Expr.BagOp, head: SqlBlock): SqlBlock {
+    override fun visitExprBagOp(node: Expr.BagOp, tail: SqlBlock): SqlBlock {
         // [OUTER] [UNION|INTERSECT|EXCEPT] [ALL|DISTINCT]
         val op = mutableListOf<String>()
         when (node.outer) {
@@ -572,205 +598,216 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
             SetQuantifier.DISTINCT -> op.add("DISTINCT")
             null -> {}
         }
-        var h = head
-        h = visitExprWrapped(node.lhs, h)
-        h = h concat r(" ${op.joinToString(" ")} ")
-        h = visitExprWrapped(node.rhs, h)
-        return h
+        var t = tail
+        t = visitExprWrapped(node.lhs, t)
+        t = t concat " ${op.joinToString(" ")} "
+        t = visitExprWrapped(node.rhs, t)
+        return t
     }
 
     // SELECT-FROM-WHERE
 
-    override fun visitExprSFW(node: Expr.SFW, head: SqlBlock): SqlBlock {
-        var h = head
+    override fun visitExprSFW(node: Expr.SFW, tail: SqlBlock): SqlBlock {
+        var t = tail
         // SELECT
-        h = visit(node.select, h)
+        t = visit(node.select, t)
         // EXCLUDE
-        h = node.exclude?.let { visit(it, h) } ?: h
+        t = node.exclude?.let { visit(it, t) } ?: t
         // FROM
-        h = visit(node.from, h concat r(" FROM "))
+        t = visit(node.from, t concat " FROM ")
         // LET
-        h = if (node.let != null) visitLet(node.let, h concat r(" ")) else h
+        t = if (node.let != null) visitLet(node.let, t concat " ") else t
         // WHERE
-        h = if (node.where != null) visitExprWrapped(node.where, h concat r(" WHERE ")) else h
+        t = if (node.where != null) visitExprWrapped(node.where, t concat " WHERE ") else t
         // GROUP BY
-        h = if (node.groupBy != null) visitGroupBy(node.groupBy, h concat r(" ")) else h
+        t = if (node.groupBy != null) visitGroupBy(node.groupBy, t concat " ") else t
         // HAVING
-        h = if (node.having != null) visitExprWrapped(node.having, h concat r(" HAVING ")) else h
+        t = if (node.having != null) visitExprWrapped(node.having, t concat " HAVING ") else t
         // SET OP
-        h = if (node.setOp != null) visitExprSFWSetOp(node.setOp, h concat r(" ")) else h
+        t = if (node.setOp != null) visitExprSFWSetOp(node.setOp, t concat " ") else t
         // ORDER BY
-        h = if (node.orderBy != null) visitOrderBy(node.orderBy, h concat r(" ")) else h
+        t = if (node.orderBy != null) visitOrderBy(node.orderBy, t concat " ") else t
         // LIMIT
-        h = if (node.limit != null) visitExprWrapped(node.limit, h concat r(" LIMIT ")) else h
+        t = if (node.limit != null) visitExprWrapped(node.limit, t concat " LIMIT ") else t
         // OFFSET
-        h = if (node.offset != null) visitExprWrapped(node.offset, h concat r(" OFFSET ")) else h
-        return h
+        t = if (node.offset != null) visitExprWrapped(node.offset, t concat " OFFSET ") else t
+        return t
     }
 
     // SELECT
 
-    override fun visitSelectStar(node: Select.Star, head: SqlBlock): SqlBlock {
+    override fun visitSelectStar(node: Select.Star, tail: SqlBlock): SqlBlock {
         val select = when (node.setq) {
             SetQuantifier.ALL -> "SELECT ALL *"
             SetQuantifier.DISTINCT -> "SELECT DISTINCT *"
             null -> "SELECT *"
         }
-        return head concat r(select)
+        return tail concat select
     }
 
-    override fun visitSelectProject(node: Select.Project, head: SqlBlock): SqlBlock {
+    override fun visitSelectProject(node: Select.Project, tail: SqlBlock): SqlBlock {
         val select = when (node.setq) {
             SetQuantifier.ALL -> "SELECT ALL "
             SetQuantifier.DISTINCT -> "SELECT DISTINCT "
             null -> "SELECT "
         }
-        return head concat list(select, "") { node.items }
+        return tail concat list(select, "") { node.items }
     }
 
-    override fun visitSelectProjectItemAll(node: Select.Project.Item.All, head: SqlBlock): SqlBlock {
-        var h = head
-        h = visitExprWrapped(node.expr, h)
-        h = h concat r(".*")
-        return h
+    override fun visitSelectProjectItemAll(node: Select.Project.Item.All, tail: SqlBlock): SqlBlock {
+        var t = tail
+        t = visitExprWrapped(node.expr, t)
+        t = t concat ".*"
+        return t
     }
 
-    override fun visitSelectProjectItemExpression(node: Select.Project.Item.Expression, head: SqlBlock): SqlBlock {
-        var h = head
-        h = visitExprWrapped(node.expr, h)
-        h = if (node.asAlias != null) h concat r(" AS ${node.asAlias.sql()}") else h
-        return h
+    override fun visitSelectProjectItemExpression(node: Select.Project.Item.Expression, tail: SqlBlock): SqlBlock {
+        var t = tail
+        t = visitExprWrapped(node.expr, t)
+        t = if (node.asAlias != null) t concat " AS ${node.asAlias.sql()}" else t
+        return t
     }
 
-    override fun visitSelectPivot(node: Select.Pivot, head: SqlBlock): SqlBlock {
-        var h = head
-        h = h concat r("PIVOT ")
-        h = visitExprWrapped(node.key, h)
-        h = h concat r(" AT ")
-        h = visitExprWrapped(node.value, h)
-        return h
+    override fun visitSelectPivot(node: Select.Pivot, tail: SqlBlock): SqlBlock {
+        var t = tail
+        t = t concat "PIVOT "
+        t = visitExprWrapped(node.key, t)
+        t = t concat " AT "
+        t = visitExprWrapped(node.value, t)
+        return t
     }
 
-    override fun visitSelectValue(node: Select.Value, head: SqlBlock): SqlBlock {
+    override fun visitSelectValue(node: Select.Value, tail: SqlBlock): SqlBlock {
         val select = when (node.setq) {
             SetQuantifier.ALL -> "SELECT ALL VALUE "
             SetQuantifier.DISTINCT -> "SELECT DISTINCT VALUE "
             null -> "SELECT VALUE "
         }
-        var h = head
-        h = h concat r(select)
-        h = visitExprWrapped(node.constructor, h)
-        return h
+        var t = tail
+        t = t concat select
+        t = visitExprWrapped(node.constructor, t)
+        return t
     }
 
     // FROM
 
-    override fun visitFromValue(node: From.Value, head: SqlBlock): SqlBlock {
-        var h = head
-        h = when (node.type) {
-            From.Value.Type.SCAN -> h
-            From.Value.Type.UNPIVOT -> h concat r("UNPIVOT ")
+    override fun visitFromValue(node: From.Value, tail: SqlBlock): SqlBlock {
+        var t = tail
+        t = when (node.type) {
+            From.Value.Type.SCAN -> t
+            From.Value.Type.UNPIVOT -> t concat "UNPIVOT "
         }
-        h = visitExprWrapped(node.expr, h)
-        h = if (node.asAlias != null) h concat r(" AS ${node.asAlias!!.sql()}") else h
-        h = if (node.atAlias != null) h concat r(" AT ${node.atAlias!!.sql()}") else h
-        h = if (node.byAlias != null) h concat r(" BY ${node.byAlias!!.sql()}") else h
-        return h
+        t = visitExprWrapped(node.expr, t)
+        t = if (node.asAlias != null) t concat " AS ${node.asAlias.sql()}" else t
+        t = if (node.atAlias != null) t concat " AT ${node.atAlias.sql()}" else t
+        t = if (node.byAlias != null) t concat " BY ${node.byAlias.sql()}" else t
+        return t
     }
 
-    override fun visitFromJoin(node: From.Join, head: SqlBlock): SqlBlock {
-        var h = head
-        h = visitFrom(node.lhs, h)
-        h = h concat when (node.type) {
-            From.Join.Type.INNER -> r(" INNER JOIN ")
-            From.Join.Type.LEFT -> r(" LEFT JOIN ")
-            From.Join.Type.LEFT_OUTER -> r(" LEFT OUTER JOIN ")
-            From.Join.Type.RIGHT -> r(" RIGHT JOIN ")
-            From.Join.Type.RIGHT_OUTER -> r(" RIGHT OUTER JOIN ")
-            From.Join.Type.FULL -> r(" FULL JOIN ")
-            From.Join.Type.FULL_OUTER -> r(" FULL OUTER JOIN ")
-            From.Join.Type.CROSS -> r(" CROSS JOIN ")
-            From.Join.Type.COMMA -> r(", ")
-            null -> r(" JOIN ")
+    override fun visitFromJoin(node: From.Join, tail: SqlBlock): SqlBlock {
+        var t = tail
+        t = visitFrom(node.lhs, t)
+        t = t concat when (node.type) {
+            From.Join.Type.INNER -> " INNER JOIN "
+            From.Join.Type.LEFT -> " LEFT JOIN "
+            From.Join.Type.LEFT_OUTER -> " LEFT OUTER JOIN "
+            From.Join.Type.RIGHT -> " RIGHT JOIN "
+            From.Join.Type.RIGHT_OUTER -> " RIGHT OUTER JOIN "
+            From.Join.Type.FULL -> " FULL JOIN "
+            From.Join.Type.FULL_OUTER -> " FULL OUTER JOIN "
+            From.Join.Type.CROSS -> " CROSS JOIN "
+            From.Join.Type.COMMA -> ", "
+            null -> " JOIN "
         }
-        h = visitFrom(node.rhs, h)
-        h = if (node.condition != null) visit(node.condition, h concat r(" ON ")) else h
-        return h
+        t = visitFrom(node.rhs, t)
+        t = if (node.condition != null) visit(node.condition, t concat " ON ") else t
+        return t
     }
 
     // LET
 
-    override fun visitLet(node: Let, head: SqlBlock): SqlBlock = head concat list("LET ", "") { node.bindings }
+    override fun visitLet(node: Let, tail: SqlBlock): SqlBlock = tail concat list("LET ", "") { node.bindings }
 
-    override fun visitLetBinding(node: Let.Binding, head: SqlBlock): SqlBlock {
-        var h = head
-        h = visitExprWrapped(node.expr, h)
-        h = h concat r(" AS ${node.asAlias.sql()}")
-        return h
+    override fun visitLetBinding(node: Let.Binding, tail: SqlBlock): SqlBlock {
+        var t = tail
+        t = visitExprWrapped(node.expr, t)
+        t = t concat " AS ${node.asAlias.sql()}"
+        return t
     }
 
     // GROUP BY
 
-    override fun visitGroupBy(node: GroupBy, head: SqlBlock): SqlBlock {
-        var h = head
-        h = h concat when (node.strategy) {
-            GroupBy.Strategy.FULL -> r("GROUP BY ")
-            GroupBy.Strategy.PARTIAL -> r("GROUP PARTIAL BY ")
+    override fun visitGroupBy(node: GroupBy, tail: SqlBlock): SqlBlock {
+        var t = tail
+        t = t concat when (node.strategy) {
+            GroupBy.Strategy.FULL -> "GROUP BY "
+            GroupBy.Strategy.PARTIAL -> "GROUP PARTIAL BY "
         }
-        h = h concat list("", "") { node.keys }
-        h = if (node.asAlias != null) h concat r(" GROUP AS ${node.asAlias.sql()}") else h
-        return h
+        t = t concat list("", "") { node.keys }
+        t = if (node.asAlias != null) t concat " GROUP AS ${node.asAlias.sql()}" else t
+        return t
     }
 
-    override fun visitGroupByKey(node: GroupBy.Key, head: SqlBlock): SqlBlock {
-        var h = head
-        h = visitExprWrapped(node.expr, h)
-        h = if (node.asAlias != null) h concat r(" AS ${node.asAlias!!.sql()}") else h
-        return h
+    override fun visitGroupByKey(node: GroupBy.Key, tail: SqlBlock): SqlBlock {
+        var t = tail
+        t = visitExprWrapped(node.expr, t)
+        t = if (node.asAlias != null) t concat " AS ${node.asAlias.sql()}" else t
+        return t
     }
 
     // SET OPERATORS
 
-    override fun visitSetOp(node: SetOp, head: SqlBlock): SqlBlock {
+    override fun visitSetOp(node: SetOp, tail: SqlBlock): SqlBlock {
         val op = when (node.setq) {
             null -> node.type.name
             else -> "${node.type.name} ${node.setq.name}"
         }
-        return head concat r(op)
+        return tail concat op
     }
 
-    override fun visitExprSFWSetOp(node: Expr.SFW.SetOp, head: SqlBlock): SqlBlock {
-        var h = head
-        h = visitSetOp(node.type, h)
-        h = h concat r(" ")
-        h = h concat r("(")
-        val subquery = visitExprSFW(node.operand, SqlBlock.Nil)
-        h = h concat SqlBlock.Nest(subquery)
-        h = h concat r(")")
-        return h
+    override fun visitExprSFWSetOp(node: Expr.SFW.SetOp, tail: SqlBlock): SqlBlock {
+        var t = tail
+        t = visitSetOp(node.type, t)
+        t = t concat SqlBlock.Nest(
+            prefix = " (",
+            postfix = ")",
+            child = SqlBlock.root().apply { visitExprSFW(node.operand, this) },
+        )
+        return t
     }
 
     // ORDER BY
 
-    override fun visitOrderBy(node: OrderBy, head: SqlBlock): SqlBlock = head concat list("ORDER BY ", "") { node.sorts }
+    override fun visitOrderBy(node: OrderBy, tail: SqlBlock): SqlBlock =
+        tail concat list("ORDER BY ", "") { node.sorts }
 
-    override fun visitSort(node: Sort, head: SqlBlock): SqlBlock {
-        var h = head
-        h = visitExprWrapped(node.expr, h)
-        h = when (node.dir) {
-            Sort.Dir.ASC -> h concat r(" ASC")
-            Sort.Dir.DESC -> h concat r(" DESC")
-            null -> h
+    override fun visitSort(node: Sort, tail: SqlBlock): SqlBlock {
+        var t = tail
+        t = visitExprWrapped(node.expr, t)
+        t = when (node.dir) {
+            Sort.Dir.ASC -> t concat " ASC"
+            Sort.Dir.DESC -> t concat " DESC"
+            null -> t
         }
-        h = when (node.nulls) {
-            Sort.Nulls.FIRST -> h concat r(" NULLS FIRST")
-            Sort.Nulls.LAST -> h concat r(" NULLS LAST")
-            null -> h
+        t = when (node.nulls) {
+            Sort.Nulls.FIRST -> t concat " NULLS FIRST"
+            Sort.Nulls.LAST -> t concat " NULLS LAST"
+            null -> t
         }
-        return h
+        return t
     }
 
     // --- Block Constructor Helpers
+
+    private infix fun SqlBlock.concat(rhs: String): SqlBlock {
+        next = SqlBlock.Text(rhs)
+        return next!!
+    }
+
+    private infix fun SqlBlock.concat(rhs: SqlBlock): SqlBlock {
+        next = rhs
+        return next!!
+    }
 
     private fun type(symbol: String, vararg args: Int?, gap: Boolean = false): SqlBlock {
         val p = args.filterNotNull()
@@ -785,12 +822,8 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
             }
         }
         // types are modeled as text; as we don't way to reflow
-        return r(t)
+        return SqlBlock.Text(t)
     }
-
-    //  > infix fun Block.concat(rhs: String): SqlBlock.Link = Block.Link(this, Block.Raw(rhs))
-    //  > head concat "foo"
-    private fun r(text: String): SqlBlock = SqlBlock.Text(text)
 
     private fun list(
         start: String? = "(",
@@ -799,13 +832,17 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
         children: () -> List<AstNode>,
     ): SqlBlock {
         val kids = children()
-        var h = start?.let { r(it) } ?: SqlBlock.Nil
+        val h = SqlBlock.root()
+        var t = h
         kids.forEachIndexed { i, child ->
-            h = child.accept(this, h)
-            h = if (delimiter != null && (i + 1) < kids.size) h concat r(delimiter) else h
+            t = child.accept(this, t)
+            t = if (delimiter != null && (i + 1) < kids.size) t concat delimiter else t
         }
-        h = if (end != null) h concat r(end) else h
-        return h
+        return SqlBlock.Nest(
+            prefix = start,
+            postfix = end,
+            child = h,
+        )
     }
 
     private fun Identifier.Symbol.sql() = when (caseSensitivity) {

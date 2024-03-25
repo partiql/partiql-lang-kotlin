@@ -1,3 +1,17 @@
+/*
+ * Copyright Amazon.com, Inc. or its affiliates.  All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ *  You may not use this file except in compliance with the License.
+ * A copy of the License is located at:
+ *
+ *      http://aws.amazon.com/apache2.0/
+ *
+ *  or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
+ *  language governing permissions and limitations under the License.
+ */
+
 package org.partiql.ast.sql
 
 import org.partiql.ast.AstNode
@@ -9,42 +23,12 @@ import org.partiql.ast.AstNode
 public fun AstNode.sql(
     layout: SqlLayout = SqlLayout.DEFAULT,
     dialect: SqlDialect = SqlDialect.PARTIQL,
-): String = accept(dialect, SqlBlock.Nil).sql(layout)
+): String = dialect.apply(this).sql(layout)
 
-// a <> b  <-> a concat b
-
-internal infix fun SqlBlock.concat(rhs: SqlBlock): SqlBlock = link(this, rhs)
-
-internal infix fun SqlBlock.concat(text: String): SqlBlock = link(this, text(text))
-
-internal infix operator fun SqlBlock.plus(rhs: SqlBlock): SqlBlock = link(this, rhs)
-
-internal infix operator fun SqlBlock.plus(text: String): SqlBlock = link(this, text(text))
-
-// Shorthand
-
-internal val NIL = SqlBlock.Nil
-
-internal val NL = SqlBlock.NL
-
-internal fun text(text: String) = SqlBlock.Text(text)
-
-internal fun link(lhs: SqlBlock, rhs: SqlBlock) = SqlBlock.Link(lhs, rhs)
-
-internal fun nest(block: () -> SqlBlock) = SqlBlock.Nest(block())
-
-internal fun list(start: String?, end: String?, delimiter: String? = ",", items: () -> List<SqlBlock>): SqlBlock {
-    var h: SqlBlock = NIL
-    h = if (start != null) h + start else h
-    h += nest {
-        val kids = items()
-        var list: SqlBlock = NIL
-        kids.foldIndexed(list) { i, a, item ->
-            list += item
-            list = if (delimiter != null && (i + 1) < kids.size) a + delimiter else a
-            list
-        }
-    }
-    h = if (end != null) h + end else h
-    return h
-}
+/**
+ * Write this [SqlBlock] tree as SQL text with the given [SqlLayout].
+ *
+ * @param layout    SQL formatting ruleset
+ * @return SQL text
+ */
+public fun SqlBlock.sql(layout: SqlLayout = SqlLayout.DEFAULT): String = layout.format(this)
