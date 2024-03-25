@@ -62,9 +62,9 @@ public class FnSignature(
     public val specific: String = buildString {
         append(name.uppercase())
         append("__")
-        append(parameters.joinToString("_") { it.type.name })
+        append(parameters.joinToString("_") { it.type.toString() }) // TODO: We should probably support some other property like sqlName for NUMERIC_2_1
         append("__")
-        append(returns.name)
+        append(returns.toString()) // TODO: See the above TODO
     }
 
     /**

@@ -3232,7 +3232,7 @@ class PlanTyperTestsPorted {
     fun testSingle() {
         val tc = SuccessTestCase(
             name = "Single test case",
-            query = "{ 'a': 1, 'b': 2 }.a",
+            query = "ABS(1.)",
             expected = StaticType.INT4,
         )
         runTest(tc)
