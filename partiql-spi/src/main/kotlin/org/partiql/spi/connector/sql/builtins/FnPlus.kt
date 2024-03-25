@@ -3,6 +3,7 @@
 
 package org.partiql.spi.connector.sql.builtins
 
+import org.partiql.spi.connector.sql.builtins.internal.FnUtils
 import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnParameter
@@ -17,7 +18,6 @@ import org.partiql.value.Int8Value
 import org.partiql.value.IntValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType.DECIMAL_ARBITRARY
 import org.partiql.value.PartiQLValueType.FLOAT32
 import org.partiql.value.PartiQLValueType.FLOAT64
 import org.partiql.value.PartiQLValueType.INT
@@ -141,24 +141,30 @@ internal object Fn_PLUS__INT_INT__INT : Fn {
     }
 }
 
-@OptIn(PartiQLValueExperimental::class, FnExperimental::class)
-internal object Fn_PLUS__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__DECIMAL_ARBITRARY : Fn {
+internal object Fn_PLUS__NUMERIC_NUMERIC__NUMERIC {
+    @OptIn(FnExperimental::class, PartiQLValueExperimental::class)
+    val ALL = buildList<Fn> {
+        FnUtils.numericTypes().forEach { numeric ->
+            val fn = object : Fn {
+                override val signature = FnSignature(
+                    name = "plus",
+                    returns = numeric,
+                    parameters = listOf(
+                        FnParameter("lhs", numeric),
+                        FnParameter("rhs", numeric),
+                    ),
+                    isNullCall = true,
+                    isNullable = false,
+                )
 
-    override val signature = FnSignature(
-        name = "plus",
-        returns = DECIMAL_ARBITRARY,
-        parameters = listOf(
-            FnParameter("lhs", DECIMAL_ARBITRARY),
-            FnParameter("rhs", DECIMAL_ARBITRARY),
-        ),
-        isNullCall = true,
-        isNullable = false,
-    )
-
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val arg0 = args[0].check<DecimalValue>().value!!
-        val arg1 = args[1].check<DecimalValue>().value!!
-        return decimalValue(arg0 + arg1)
+                override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
+                    val arg0 = args[0].check<DecimalValue>().value!!
+                    val arg1 = args[1].check<DecimalValue>().value!!
+                    return decimalValue(arg0 + arg1)
+                }
+            }
+            add(fn)
+        }
     }
 }
 

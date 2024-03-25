@@ -1314,14 +1314,12 @@ class PartiQLEngineDefaultTest {
     }
 
     @Test
-    @Disabled("CASTS have not yet been implemented.")
     fun testCast1() = SuccessTestCase(
         input = "1 + 2.0",
-        expected = int32Value(3),
+        expected = decimalValue(BigDecimal.valueOf(3.0)),
     ).assert()
 
     @Test
-    @Disabled("CASTS have not yet been implemented.")
     fun testCasts() = SuccessTestCase(
         input = "SELECT DISTINCT VALUE t * 100 FROM <<0, 1, 2.0, 3.0>> AS t;",
         expected = bagValue(int32Value(0), int32Value(100), int32Value(200), int32Value(300))
@@ -1365,7 +1363,6 @@ class PartiQLEngineDefaultTest {
         ).assert()
 
     @Test
-    @Disabled("We don't yet support arrays.")
     fun test7() =
         TypingTestCase(
             name = "PartiQL Specification Section 6.1.4 -- when constructing arrays",
@@ -1392,7 +1389,6 @@ class PartiQLEngineDefaultTest {
         ).assert()
 
     @Test
-    @Disabled("CASTs aren't supported yet.")
     fun test9() =
         TypingTestCase(
             name = "PartiQL Specification Section 7.1 -- Inputs with wrong types Example 27",
@@ -1409,7 +1405,6 @@ class PartiQLEngineDefaultTest {
         ).assert()
 
     @Test
-    @Disabled("Arrays aren't supported yet.")
     fun test10() =
         SuccessTestCase(
             input = "SELECT v, i FROM [ 'a', 'b', 'c' ] AS v AT i",

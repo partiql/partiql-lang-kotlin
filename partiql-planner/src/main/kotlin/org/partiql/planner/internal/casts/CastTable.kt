@@ -64,22 +64,6 @@ internal class CastTable private constructor(
     private val graph: Array<Array<Cast?>>,
 ) {
 
-    private val allTypes: List<PartiQLType> = listOf(
-        DynamicType,
-        MissingType
-    )
-
-    private fun relationships(): Sequence<Cast> = sequence {
-        types.forEachIndexed { t1, _ ->
-            types.forEachIndexed { t2, _ ->
-                val r = graph[t1][t2]
-                if (r != null) {
-                    yield(r)
-                }
-            }
-        }
-    }
-
     fun get(operand: PartiQLType, target: PartiQLType): Cast? {
         val safety = when (target) {
             is NumericType -> {
