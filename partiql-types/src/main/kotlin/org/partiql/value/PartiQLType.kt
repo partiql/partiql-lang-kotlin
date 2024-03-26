@@ -107,7 +107,7 @@ public sealed interface PartiQLType {
         @Deprecated("Will likely be removed")
         public val NUMERIC_BOUND_TYPES: List<NumericType> = buildList {
             repeat(NumericType.MAX_PRECISION + 1) { precision ->
-                repeat(NumericType.MAX_SCALE + 1) { scale ->
+                repeat(precision + 1) { scale ->
                     add(NumericType(precision, scale))
                 }
             }

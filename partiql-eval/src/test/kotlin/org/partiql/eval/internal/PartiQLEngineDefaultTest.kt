@@ -1316,13 +1316,18 @@ class PartiQLEngineDefaultTest {
     @Test
     fun testCast1() = SuccessTestCase(
         input = "1 + 2.0",
-        expected = decimalValue(BigDecimal.valueOf(3.0)),
+        expected = decimalValue(BigDecimal.valueOf(3.0), 2, 1),
     ).assert()
 
     @Test
     fun testCasts() = SuccessTestCase(
-        input = "SELECT DISTINCT VALUE t * 100 FROM <<0, 1, 2.0, 3.0>> AS t;",
-        expected = bagValue(int32Value(0), int32Value(100), int32Value(200), int32Value(300))
+        input = "SELECT DISTINCT VALUE t * 100 FROM <<0, 1, 2.0, 300.0>> AS t;",
+        expected = bagValue(
+            int32Value(0),
+            int32Value(100),
+            decimalValue(BigDecimal.valueOf(200), 38, 2),
+            decimalValue(BigDecimal.valueOf(30000), 38, 2),
+        )
     ).assert()
 
     @Test

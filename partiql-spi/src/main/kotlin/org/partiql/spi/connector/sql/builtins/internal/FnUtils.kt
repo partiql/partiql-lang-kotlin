@@ -1,6 +1,7 @@
 package org.partiql.spi.connector.sql.builtins.internal
 
 import org.partiql.value.NumericType
+import org.partiql.value.PartiQLType
 
 internal object FnUtils {
     /**
@@ -31,4 +32,40 @@ internal object FnUtils {
             yield(NumericType(null, 0))
         }
     }
+
+    class DiadicFunction(
+        val lhs: NumericType,
+        val rhs: NumericType,
+        val result: NumericType
+    )
+
+    internal fun numericMultiplicationTypes(): Iterator<DiadicFunction> {
+        return iterator {
+            // Bounded Numeric Types
+            for (scaleLhs in 1..NumericType.MAX_PRECISION) {
+                for (scaleRhs in 1..NumericType.MAX_PRECISION) {
+                    val scaleResult = scaleLhs + scaleRhs
+                    if (scaleResult <= NumericType.MAX_PRECISION) {
+                        yield(
+                            DiadicFunction(
+                                lhs = NumericType(NumericType.MAX_PRECISION, scaleLhs),
+                                rhs = NumericType(NumericType.MAX_PRECISION, scaleRhs),
+                                result = NumericType(NumericType.MAX_PRECISION, scaleResult),
+                            )
+                        )
+                    }
+                }
+            }
+            // Unbounded Numeric
+            yield(
+                DiadicFunction(
+                    lhs = NumericType(null, null),
+                    rhs = NumericType(null, null),
+                    result = NumericType(null, null),
+                )
+            )
+            // TODO: Unbounded BigInt
+        }
+    }
+
 }

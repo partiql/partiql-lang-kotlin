@@ -149,6 +149,22 @@ public fun decimalValue(
 ): DecimalValue = DecimalValueImpl(value, annotations.toPersistentList())
 
 /**
+ * NUMERIC type value.
+ *
+ * @param value
+ * @param annotations
+ * @return
+ */
+@JvmOverloads
+@PartiQLValueExperimental
+public fun decimalValue(
+    value: BigDecimal?,
+    precision: Int,
+    scale: Int,
+    annotations: Annotations = emptyList(),
+): DecimalValue = DecimalValueImpl(value, precision, scale, annotations.toPersistentList())
+
+/**
  * FLOAT32 type value.
  *
  * @param value
