@@ -38,7 +38,6 @@ public interface SqlLayout {
             }
 
             private tailrec fun format(curr: SqlBlock, ctx: Ctx) {
-                if (ctx.level > 0) ctx.out.append(indent)
                 when (curr) {
                     is SqlBlock.NL -> ctx.out.appendLine()
                     is SqlBlock.Text -> ctx.out.append(curr.text)
