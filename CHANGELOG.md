@@ -35,6 +35,7 @@ Thank you to all who have contributed!
 ### Deprecated
 
 ### Fixed
+- Updates the default `.sql()` method to use a more efficient (internal) printer implementation.
 
 ### Removed
 
@@ -43,6 +44,7 @@ Thank you to all who have contributed!
 ### Contributors
 Thank you to all who have contributed!
 - @<your-username>
+- @rchowell
 
 ## [0.14.4]
 
