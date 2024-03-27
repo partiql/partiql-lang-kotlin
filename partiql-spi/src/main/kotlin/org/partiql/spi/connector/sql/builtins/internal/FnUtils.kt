@@ -2,6 +2,8 @@ package org.partiql.spi.connector.sql.builtins.internal
 
 import org.partiql.value.NumericType
 import org.partiql.value.PartiQLType
+import org.partiql.value.TypeIntBig
+import org.partiql.value.TypeNumericUnbounded
 
 internal object FnUtils {
     /**
@@ -18,7 +20,7 @@ internal object FnUtils {
      * of scale 0 (zero) between 1 (one) and MP, let S assume all character string values that are
      * the minimal literal for an exact numeric value of scale 0 (zero) between 1 (one) and P
      */
-    internal fun numericTypes(): Iterator<NumericType> {
+    internal fun numericTypes(): Iterator<PartiQLType> {
         return iterator {
             // Bounded Numeric Types
             for (p in 1..NumericType.MAX_PRECISION) {
@@ -27,9 +29,9 @@ internal object FnUtils {
                 }
             }
             // Unbounded Numeric
-            yield(NumericType(null, null))
+            yield(TypeNumericUnbounded)
             // Unbounded BigInt
-            yield(NumericType(null, 0))
+            yield(TypeIntBig)
         }
     }
 
@@ -56,16 +58,6 @@ internal object FnUtils {
                     }
                 }
             }
-            // Unbounded Numeric
-            yield(
-                DiadicFunction(
-                    lhs = NumericType(null, null),
-                    rhs = NumericType(null, null),
-                    result = NumericType(null, null),
-                )
-            )
-            // TODO: Unbounded BigInt
         }
     }
-
 }

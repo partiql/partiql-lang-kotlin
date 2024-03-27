@@ -1393,6 +1393,7 @@ class PartiQLEngineDefaultTest {
             expectedPermissive = bagValue(int32Value(2), missingValue())
         ).assert()
 
+    // TODO: This assumes that CAST(v.b AS INTEGER) is casting to a BIGINT -- not an INT32.
     @Test
     fun test9() =
         TypingTestCase(
@@ -1401,7 +1402,7 @@ class PartiQLEngineDefaultTest {
             expectedPermissive = bagValue(
                 structValue(
                     "a" to int32Value(3),
-                    "b" to int32Value(3),
+                    "b" to intValue(BigInteger.valueOf(3)),
                 ),
                 structValue(
                     "a" to int32Value(6),

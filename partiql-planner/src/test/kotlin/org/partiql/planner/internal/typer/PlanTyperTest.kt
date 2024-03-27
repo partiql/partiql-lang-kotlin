@@ -15,9 +15,9 @@ import org.partiql.planner.internal.ir.rexOpStructField
 import org.partiql.planner.internal.ir.rexOpVarGlobal
 import org.partiql.planner.internal.ir.rexOpVarUnresolved
 import org.partiql.planner.internal.ir.statementQuery
+import org.partiql.planner.internal.shape.ShapeUtils
 import org.partiql.planner.util.ProblemCollector
 import org.partiql.plugins.local.LocalConnector
-import org.partiql.shape.PShape
 import org.partiql.types.StaticType
 import org.partiql.types.StaticType.Companion.ANY
 import org.partiql.types.StaticType.Companion.DECIMAL
@@ -42,7 +42,7 @@ class PlanTyperTest {
 
         private fun rex(type: StaticType, op: Rex.Op): Rex {
             return Rex(
-                PShape.fromStaticType(type),
+                ShapeUtils.fromStaticType(type),
                 op
             )
         }
@@ -387,7 +387,7 @@ class PlanTyperTest {
         return rex(
             type,
             rexOpVarGlobal(
-                refObj(catalog = "pql", path = path, PShape.fromStaticType(type))
+                refObj(catalog = "pql", path = path, ShapeUtils.fromStaticType(type))
             )
         )
     }

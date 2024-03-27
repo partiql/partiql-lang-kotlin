@@ -73,7 +73,6 @@ import org.partiql.shape.PShape.Companion.allShapes
 import org.partiql.shape.PShape.Companion.allTypes
 import org.partiql.shape.PShape.Companion.anyOf
 import org.partiql.shape.PShape.Companion.asNullable
-import org.partiql.shape.PShape.Companion.canBeType
 import org.partiql.shape.PShape.Companion.copy
 import org.partiql.shape.PShape.Companion.getElement
 import org.partiql.shape.PShape.Companion.getFirstAndOnlyFields
@@ -105,6 +104,7 @@ import org.partiql.value.PartiQLType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.TextValue
 import org.partiql.value.TupleType
+import org.partiql.value.TypeIntBig
 import org.partiql.value.boolValue
 import org.partiql.value.missingValue
 import org.partiql.value.stringValue
@@ -1371,13 +1371,12 @@ internal class PlanTyper(
 
     private fun assertAsInt(type: PShape) {
         if (type.allTypes().any { variant -> variant.isIntegerType() }.not()) {
-            handleUnexpectedType(type.type, setOf(NumericType(null, 0)))
+            handleUnexpectedType(type.type, setOf(Int16Type, Int32Type, Int64Type, TypeIntBig))
         }
     }
 
     private fun PartiQLType.isIntegerType(): Boolean = when (this) {
-        is Int8Type, is Int16Type, is Int32Type, is Int64Type -> true
-        is NumericType -> this.scale == 0
+        is Int8Type, is Int16Type, is Int32Type, is Int64Type, is TypeIntBig -> true
         else -> false
     }
 

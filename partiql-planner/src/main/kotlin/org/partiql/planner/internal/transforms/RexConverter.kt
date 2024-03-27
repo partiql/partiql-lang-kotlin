@@ -51,13 +51,13 @@ import org.partiql.value.CharVarUnboundedType
 import org.partiql.value.DynamicType
 import org.partiql.value.Int32Type
 import org.partiql.value.NullType
-import org.partiql.value.NumericType
 import org.partiql.value.PartiQLType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
 import org.partiql.value.StringValue
 import org.partiql.value.TimestampType
 import org.partiql.value.TupleType
+import org.partiql.value.TypeIntBig
 import org.partiql.value.int32Value
 import org.partiql.value.int64Value
 import org.partiql.value.io.PartiQLValueIonReaderBuilder
@@ -544,7 +544,7 @@ internal object RexConverter {
             val type = DynamicType
             // Args
             val arg0 = visitExprCoerce(node.value, ctx)
-            val arg1 = node.start?.let { visitExprCoerce(it, ctx) } ?: rex(NumericType(null, 0), rexOpLit(int64Value(1)))
+            val arg1 = node.start?.let { visitExprCoerce(it, ctx) } ?: rex(TypeIntBig, rexOpLit(int64Value(1)))
             val arg2 = node.length?.let { visitExprCoerce(it, ctx) }
             // Call Variants
             val call = when (arg2) {

@@ -51,6 +51,8 @@ import org.partiql.value.PartiQLValueType.SYMBOL
 import org.partiql.value.PartiQLValueType.TIME
 import org.partiql.value.PartiQLValueType.TIMESTAMP
 import org.partiql.value.TupleType
+import org.partiql.value.TypeIntBig
+import org.partiql.value.TypeNumericUnbounded
 
 /**
  * A place to model type relationships (for now this is to answer CAST inquiries).
@@ -66,6 +68,16 @@ internal class CastTable private constructor(
 
     fun get(operand: PartiQLType, target: PartiQLType): Cast? {
         val safety = when (target) {
+            is TypeNumericUnbounded -> when (operand) {
+                is TypeNumericUnbounded -> Cast.Safety.COERCION
+                is NumericType -> Cast.Safety.COERCION
+                is Int8Type -> Cast.Safety.COERCION
+                is Int16Type -> Cast.Safety.COERCION
+                is Int32Type -> Cast.Safety.COERCION
+                is Int64Type -> Cast.Safety.COERCION
+                is TypeIntBig -> Cast.Safety.COERCION
+                else -> getOld(operand, target)?.safety // TODO
+            }
             is NumericType -> {
                 val targetPrecision = target.precision ?: (NumericType.MAX_PRECISION + 1)
                 val targetScale = target.scale ?: (NumericType.MAX_SCALE + 1)
@@ -90,6 +102,15 @@ internal class CastTable private constructor(
                     is PartiQLCoreTypeBase -> getOld(operand, target)?.safety // TODO
                     is PartiQLType.Runtime.Custom -> getOld(operand, target)?.safety // TODO
                 }
+            }
+            is TypeIntBig -> when (operand) {
+                is Int8Type, is Int16Type, is Int32Type, is Int64Type, is TypeIntBig -> Cast.Safety.COERCION
+                is NumericType -> when (operand.scale) {
+                    0 -> Cast.Safety.COERCION
+                    else -> Cast.Safety.UNSAFE // TODO
+                }
+                is CharVarUnboundedType -> Cast.Safety.UNSAFE
+                else -> getOld(operand, target)?.safety // TODO
             }
             is Int8Type -> when (operand) {
                 is NumericType -> {
@@ -146,8 +167,8 @@ internal class CastTable private constructor(
     }
 
     private fun getOld(operand: PartiQLType, target: PartiQLType): Cast? {
-        val i = types.indexOf(operand)
-        val j = types.indexOf(target)
+        val i = types.indexOfFirst { it.javaClass == operand.javaClass }
+        val j = types.indexOfFirst { it.javaClass == target.javaClass }
         if (i == -1 || j == -1) {
             return null
             // TODO: Use this for checking errors:
@@ -212,8 +233,9 @@ internal class CastTable private constructor(
                 explicit(Int16Type)
                 explicit(Int32Type)
                 explicit(Int64Type)
-                explicit(NumericType(null, 0)) // TODO: Int. Go through all the possible values
-                explicit(NumericType(null, null)) // TODO: Unbounded
+                explicit(TypeIntBig)
+                // TODO: Type numeric
+                explicit(TypeNumericUnbounded)
                 explicit(Float32Type)
                 explicit(Float64Type)
                 explicit(CharType(1)) // TODO
@@ -226,10 +248,9 @@ internal class CastTable private constructor(
                 coercion(Int16Type)
                 coercion(Int32Type)
                 coercion(Int64Type)
-                coercion(NumericType(null, null))
-                // coercion(INT)
+                coercion(TypeIntBig)
                 // explicit(NUMERIC) // TODO: How to handle?
-                // coercion(NUMERIC_ARBITRARY)
+                coercion(TypeNumericUnbounded)
                 coercion(Float32Type)
                 coercion(Float64Type)
                 explicit(CharVarUnboundedType)
@@ -241,10 +262,9 @@ internal class CastTable private constructor(
                 coercion(Int16Type)
                 coercion(Int32Type)
                 coercion(Int64Type)
-                coercion(NumericType(null, null))
-                // coercion(INT)
+                coercion(TypeIntBig)
                 // explicit(NUMERIC) // TODO: How to handle?
-                // coercion(NUMERIC_ARBITRARY)
+                coercion(TypeNumericUnbounded)
                 coercion(Float32Type)
                 coercion(Float64Type)
                 explicit(CharVarUnboundedType)
@@ -256,11 +276,9 @@ internal class CastTable private constructor(
                 unsafe(Int16Type)
                 coercion(Int32Type)
                 coercion(Int64Type)
-                coercion(NumericType(null, null))
-                explicit(NumericType(null, null)) // TODO: How to handle
-                // coercion(INT)
+                coercion(TypeIntBig)
                 // explicit(NUMERIC) // TODO: How to handle?
-                // coercion(NUMERIC_ARBITRARY)
+                coercion(TypeNumericUnbounded)
                 coercion(Float32Type)
                 coercion(Float64Type)
                 explicit(CharVarUnboundedType)
@@ -272,55 +290,50 @@ internal class CastTable private constructor(
                 unsafe(Int16Type)
                 unsafe(Int32Type)
                 coercion(Int64Type)
-                coercion(NumericType(null, null))
-                // coercion(INT)
+                coercion(TypeIntBig)
                 // explicit(NUMERIC) // TODO: How to handle?
-                // coercion(NUMERIC_ARBITRARY)
+                coercion(TypeNumericUnbounded)
                 coercion(Float32Type)
                 coercion(Float64Type)
                 explicit(CharVarUnboundedType)
                 explicit(CharVarUnboundedType)
             }
-            graph[INT] = NumericType(null, null).relationships(soleTypes) {
+            graph[INT] = TypeIntBig.relationships(soleTypes) {
                 explicit(BoolType)
                 unsafe(Int8Type)
                 unsafe(Int16Type)
                 unsafe(Int32Type)
                 unsafe(Int64Type)
-                coercion(NumericType(null, null))
-                // coercion(INT)
+                coercion(TypeIntBig)
                 // explicit(NUMERIC) // TODO: How to handle?
-                // coercion(NUMERIC_ARBITRARY)
+                coercion(TypeNumericUnbounded)
                 coercion(Float32Type)
                 coercion(Float64Type)
                 explicit(CharVarUnboundedType)
-                explicit(CharVarUnboundedType)
             }
-            graph[DECIMAL] = NumericType(null, null).relationships(soleTypes) {
+            graph[DECIMAL] = TypeNumericUnbounded.relationships(soleTypes) {
                 explicit(BoolType)
                 unsafe(Int8Type)
                 unsafe(Int16Type)
                 unsafe(Int32Type)
                 unsafe(Int64Type)
-                unsafe(NumericType(null, null))
-                // unsafe(INT)
+                unsafe(TypeIntBig)
                 // coercion(NUMERIC) // TODO: How to handle?
-                // coercion(NUMERIC_ARBITRARY)
+                coercion(TypeNumericUnbounded)
                 explicit(Float32Type)
                 explicit(Float64Type)
                 explicit(CharVarUnboundedType)
                 explicit(CharVarUnboundedType)
             }
-            graph[DECIMAL_ARBITRARY] = NumericType(null, null).relationships(soleTypes) {
+            graph[DECIMAL_ARBITRARY] = TypeNumericUnbounded.relationships(soleTypes) {
                 explicit(BoolType)
                 unsafe(Int8Type)
                 unsafe(Int16Type)
                 unsafe(Int32Type)
                 unsafe(Int64Type)
-                unsafe(NumericType(null, null))
-                // unsafe(INT)
+                unsafe(TypeIntBig)
                 // coercion(NUMERIC) // TODO: How to handle?
-                // coercion(NUMERIC_ARBITRARY)
+                coercion(TypeNumericUnbounded)
                 explicit(Float32Type)
                 explicit(Float64Type)
                 explicit(CharVarUnboundedType)
@@ -332,10 +345,9 @@ internal class CastTable private constructor(
                 unsafe(Int16Type)
                 unsafe(Int32Type)
                 unsafe(Int64Type)
-                unsafe(NumericType(null, null))
-                // unsafe(INT)
+                unsafe(TypeIntBig)
                 // coercion(NUMERIC) // TODO: How to handle?
-                // coercion(NUMERIC_ARBITRARY)
+                coercion(TypeNumericUnbounded)
                 coercion(Float32Type)
                 coercion(Float64Type)
                 explicit(CharVarUnboundedType)
@@ -347,10 +359,9 @@ internal class CastTable private constructor(
                 unsafe(Int16Type)
                 unsafe(Int32Type)
                 unsafe(Int64Type)
-                unsafe(NumericType(null, null))
-                // unsafe(INT)
+                unsafe(TypeIntBig)
                 // unsafe(NUMERIC) // TODO: How to handle?
-                // coercion(NUMERIC_ARBITRARY)
+                coercion(TypeNumericUnbounded)
                 unsafe(Float32Type)
                 coercion(Float64Type)
                 explicit(CharVarUnboundedType)
@@ -368,7 +379,7 @@ internal class CastTable private constructor(
                 unsafe(Int16Type)
                 unsafe(Int32Type)
                 unsafe(Int64Type)
-                unsafe(NumericType(null, null))
+                unsafe(TypeNumericUnbounded)
                 coercion(CharVarUnboundedType)
                 explicit(CharVarUnboundedType)
                 coercion(ClobType(10)) // TODO: Length

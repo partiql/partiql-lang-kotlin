@@ -31,6 +31,7 @@ import org.partiql.value.Int64Type
 import org.partiql.value.Int64Value
 import org.partiql.value.Int8Type
 import org.partiql.value.Int8Value
+import org.partiql.value.IntValue
 import org.partiql.value.MissingType
 import org.partiql.value.NullType
 import org.partiql.value.NumericType
@@ -40,6 +41,7 @@ import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.StringValue
 import org.partiql.value.TextValue
+import org.partiql.value.TypeIntBig
 import org.partiql.value.bagValue
 import org.partiql.value.boolValue
 import org.partiql.value.decimalValue
@@ -68,7 +70,7 @@ internal class ExprCast(val arg: Operator.Expr, val cast: Ref.Cast) : Operator.E
                 is Int16Type -> castFromNumeric(arg as Int16Value, cast.target)
                 is Int32Type -> castFromNumeric(arg as Int32Value, cast.target)
                 is Int64Type -> castFromNumeric(arg as Int64Value, cast.target)
-                // TODO: Handle BIGINT. is NumericType -> castFromNumeric(arg as IntValue, cast.target)
+                is TypeIntBig -> castFromNumeric(arg as IntValue, cast.target)
                 is NumericType -> castFromNumeric(arg as DecimalValue, cast.target)
                 is Float32Type -> castFromNumeric(arg as Float32Value, cast.target)
                 is Float64Type -> castFromNumeric(arg as Float64Value, cast.target)
@@ -113,7 +115,11 @@ internal class ExprCast(val arg: Operator.Expr, val cast: Ref.Cast) : Operator.E
                 false -> int64Value(0)
                 null -> int64Value(null)
             }
-            // TODO: BigInt type?
+            is TypeIntBig -> when (v) {
+                true -> intValue(BigInteger.ONE)
+                false -> intValue(BigInteger.ZERO)
+                null -> intValue(null)
+            }
             is NumericType -> when (v) {
                 true -> decimalValue(BigDecimal.ONE)
                 false -> decimalValue(BigDecimal.ZERO)
@@ -151,7 +157,7 @@ internal class ExprCast(val arg: Operator.Expr, val cast: Ref.Cast) : Operator.E
             is Int16Type -> value.toInt16()
             is Int32Type -> value.toInt32()
             is Int64Type -> value.toInt64()
-            // TODO: BIGINT
+            is TypeIntBig -> value.toInt()
             is NumericType -> value.toDecimal()
             is Float32Type -> value.toFloat32()
             is Float64Type -> value.toFloat64()
@@ -199,7 +205,17 @@ internal class ExprCast(val arg: Operator.Expr, val cast: Ref.Cast) : Operator.E
                     else -> throw TypeCheckException()
                 }
             }
-            // TODO: BIGINT
+            is TypeIntBig -> {
+                val stringValue = value.value ?: return intValue(null, value.annotations)
+                when (val number = getNumberValueFromString(stringValue)) {
+                    is BigInteger? -> intValue(number, value.annotations)
+                    else -> {
+                        val clazz = number?.javaClass?.simpleName ?: "NOT AVAILABLE"
+                        println("Class = $clazz")
+                        throw TypeCheckException()
+                    }
+                }
+            }
             is NumericType -> {
                 val stringValue = value.value ?: return int16Value(null, value.annotations)
                 when (val number = getNumberValueFromString(stringValue)) {

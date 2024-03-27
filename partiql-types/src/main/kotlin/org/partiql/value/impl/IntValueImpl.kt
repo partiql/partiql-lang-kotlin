@@ -26,9 +26,9 @@ import org.partiql.value.Int32Value
 import org.partiql.value.Int64Value
 import org.partiql.value.Int8Value
 import org.partiql.value.IntValue
-import org.partiql.value.NumericType
 import org.partiql.value.PartiQLType
 import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.TypeIntBig
 import org.partiql.value.decimalValue
 import org.partiql.value.float32Value
 import org.partiql.value.float64Value
@@ -45,7 +45,7 @@ internal data class IntValueImpl(
     override val annotations: PersistentList<String>,
 ) : IntValue() {
 
-    override val type: PartiQLType = NumericType(null, null) // Unbounded numeric
+    override val type: PartiQLType = TypeIntBig
 
     override fun copy(annotations: Annotations) = IntValueImpl(value, annotations.toPersistentList())
 

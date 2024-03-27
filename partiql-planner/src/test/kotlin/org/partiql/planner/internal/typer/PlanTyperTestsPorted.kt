@@ -1,7 +1,6 @@
 package org.partiql.planner.internal.typer
 
 import com.amazon.ionelement.api.loadSingleElement
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.junit.jupiter.api.parallel.Execution
@@ -3228,16 +3227,6 @@ class PlanTyperTestsPorted {
     // Parameterized Tests
     //
 
-    @Test
-    fun testSingle() {
-        val tc = SuccessTestCase(
-            name = "Single test case",
-            query = "ABS(1.)",
-            expected = StaticType.INT4,
-        )
-        runTest(tc)
-    }
-
     @ParameterizedTest
     @ArgumentsSource(TestProvider::class)
     fun test(tc: TestCase) = runTest(tc)
@@ -3928,7 +3917,7 @@ class PlanTyperTestsPorted {
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UnexpectedType(StaticType.STRING, setOf(StaticType.INT))
+                        PlanningProblemDetails.UnexpectedType(StaticType.STRING, setOf(StaticType.INT2, StaticType.INT4, StaticType.INT8, StaticType.INT))
                     )
                 }
             ),
@@ -3948,7 +3937,7 @@ class PlanTyperTestsPorted {
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UnexpectedType(StaticType.STRING, setOf(StaticType.INT))
+                        PlanningProblemDetails.UnexpectedType(StaticType.STRING, setOf(StaticType.INT2, StaticType.INT4, StaticType.INT8, StaticType.INT))
                     )
                 }
             ),

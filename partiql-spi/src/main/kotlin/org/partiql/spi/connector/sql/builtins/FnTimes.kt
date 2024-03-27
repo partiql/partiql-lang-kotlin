@@ -20,11 +20,12 @@ import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType.FLOAT32
 import org.partiql.value.PartiQLValueType.FLOAT64
-import org.partiql.value.PartiQLValueType.INT
 import org.partiql.value.PartiQLValueType.INT16
 import org.partiql.value.PartiQLValueType.INT32
 import org.partiql.value.PartiQLValueType.INT64
 import org.partiql.value.PartiQLValueType.INT8
+import org.partiql.value.TypeIntBig
+import org.partiql.value.TypeNumericUnbounded
 import org.partiql.value.check
 import org.partiql.value.decimalValue
 import org.partiql.value.float32Value
@@ -125,10 +126,10 @@ internal object Fn_TIMES__INT_INT__INT : Fn {
 
     override val signature = FnSignature(
         name = "times",
-        returns = INT,
+        returns = TypeIntBig,
         parameters = listOf(
-            FnParameter("lhs", INT),
-            FnParameter("rhs", INT),
+            FnParameter("lhs", TypeIntBig),
+            FnParameter("rhs", TypeIntBig),
         ),
         isNullCall = true,
         isNullable = false,
@@ -166,15 +167,28 @@ internal object Fn_TIMES__NUMERIC_NUMERIC__NUMERIC {
                 override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
                     val arg0 = args[0].check<DecimalValue>().value!!
                     val arg1 = args[1].check<DecimalValue>().value!!
-                    // TODO: Format this a bit better
-                    return if (diadic.result.precision != null && diadic.result.scale != null) {
-                        decimalValue(arg0.times(arg1), diadic.result.precision!!, diadic.result.scale!!)
-                    } else {
-                        decimalValue(arg0.times(arg1))
-                    }
+                    return decimalValue(arg0.times(arg1), diadic.result.precision, diadic.result.scale)
                 }
             }
             add(fn)
+        }
+        val unbounded = object : Fn {
+            override val signature = FnSignature(
+                name = "times",
+                returns = TypeNumericUnbounded,
+                parameters = listOf(
+                    FnParameter("lhs", TypeNumericUnbounded),
+                    FnParameter("rhs", TypeNumericUnbounded),
+                ),
+                isNullCall = true,
+                isNullable = false,
+            )
+
+            override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
+                val arg0 = args[0].check<DecimalValue>().value!!
+                val arg1 = args[1].check<DecimalValue>().value!!
+                return decimalValue(arg0.times(arg1))
+            }
         }
     }
 }

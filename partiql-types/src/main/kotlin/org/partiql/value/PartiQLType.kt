@@ -43,9 +43,9 @@ public sealed interface PartiQLType {
             PartiQLValueType.INT16 -> Int16Type
             PartiQLValueType.INT32 -> Int32Type
             PartiQLValueType.INT64 -> Int64Type
-            PartiQLValueType.INT -> NumericType(null, 0)
-            PartiQLValueType.DECIMAL -> NumericType(null, null) // TODO: Set Max?
-            PartiQLValueType.DECIMAL_ARBITRARY -> NumericType(null, null)
+            PartiQLValueType.INT -> TypeIntBig
+            PartiQLValueType.DECIMAL -> TypeNumericUnbounded
+            PartiQLValueType.DECIMAL_ARBITRARY -> TypeNumericUnbounded
             PartiQLValueType.FLOAT32 -> Float32Type
             PartiQLValueType.FLOAT64 -> Float64Type
             PartiQLValueType.CHAR -> CharType(CharType.MAX_LENGTH)
@@ -79,7 +79,7 @@ public sealed interface PartiQLType {
             is org.partiql.types.DateType -> DateType
             is DecimalType -> {
                 when (val constraint = type.precisionScaleConstraint) {
-                    is DecimalType.PrecisionScaleConstraint.Unconstrained -> NumericType(null, null)
+                    is DecimalType.PrecisionScaleConstraint.Unconstrained -> TypeNumericUnbounded
                     is DecimalType.PrecisionScaleConstraint.Constrained -> NumericType(
                         constraint.precision,
                         constraint.scale
@@ -92,7 +92,7 @@ public sealed interface PartiQLType {
                 IntType.IntRangeConstraint.SHORT -> Int16Type
                 IntType.IntRangeConstraint.INT4 -> Int32Type
                 IntType.IntRangeConstraint.LONG -> Int64Type
-                IntType.IntRangeConstraint.UNCONSTRAINED -> NumericType(null, 0)
+                IntType.IntRangeConstraint.UNCONSTRAINED -> TypeIntBig
             }
             org.partiql.types.MissingType -> MissingType
             is StringType -> CharVarUnboundedType
@@ -111,7 +111,6 @@ public sealed interface PartiQLType {
                     add(NumericType(precision, scale))
                 }
             }
-            add(NumericType.UNCONSTRAINED)
         }
 
         // TODO: I'm pretty sure this is wrong, but I'll just publish this for now
@@ -237,12 +236,12 @@ public sealed interface PartiQLType {
             Int8Type,
             Int16Type,
             Int32Type,
-            Int64Type
+            Int64Type,
+            TypeIntBig
         ) +
             NUMERIC_BOUND_TYPES +
             APPROXIMATE_NUMERIC_TYPES +
             listOf(NumericType.UNCONSTRAINED) +
-            listOf(NumericType(null, 0)) + // Unbound INT
             TEXT_TYPES +
             BINARY_TYPES +
             DATETIME_TYPES +
