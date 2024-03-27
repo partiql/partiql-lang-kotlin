@@ -1,15 +1,38 @@
 package org.partiql.ast.sql
 
 import org.partiql.ast.AstNode
+import org.partiql.ast.sql.internal.InternalSqlDialect
+import org.partiql.ast.sql.internal.InternalSqlLayout
+
+/**
+ * No argument uses optimized internal. Leaving older ones for backwards-compatibility.
+ */
+public fun AstNode.sql(): String {
+    val head = InternalSqlDialect.PARTIQL.apply(this)
+    return InternalSqlLayout.format(head)
+}
 
 /**
  * Pretty-print this [AstNode] as SQL text with the given [SqlLayout]
  */
-@JvmOverloads
 public fun AstNode.sql(
     layout: SqlLayout = SqlLayout.DEFAULT,
+): String = SqlDialect.PARTIQL.apply(this).sql(layout)
+
+/**
+ * Pretty-print this [AstNode] as SQL text with the given [SqlLayout]
+ */
+public fun AstNode.sql(
     dialect: SqlDialect = SqlDialect.PARTIQL,
-): String = accept(dialect, SqlBlock.Nil).sql(layout)
+): String = dialect.apply(this).sql(SqlLayout.DEFAULT)
+
+/**
+ * Pretty-print this [AstNode] as SQL text with the given [SqlLayout]
+ */
+public fun AstNode.sql(
+    layout: SqlLayout,
+    dialect: SqlDialect,
+): String = dialect.apply(this).sql(layout)
 
 // a <> b  <-> a concat b
 
