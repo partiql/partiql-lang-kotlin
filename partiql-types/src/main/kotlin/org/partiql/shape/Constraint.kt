@@ -49,10 +49,9 @@ public sealed interface Constraint : ShapeNode {
     public data class Fields(
         public val fields: List<Field>,
         public val isClosed: Boolean = false,
-    ) : Constraint {
-
         @Deprecated("This should probably be a Meta, not a Constraint.")
         public val isOrdered: Boolean = false
+    ) : Constraint {
 
         override fun validate(type: PartiQLType): PShape.ValidationResult {
             if (type !is TupleType) return PShape.ValidationResult.Failure(

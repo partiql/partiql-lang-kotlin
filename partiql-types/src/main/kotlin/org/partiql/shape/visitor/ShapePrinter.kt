@@ -156,11 +156,15 @@ public object ShapePrinter {
         }
 
         override fun visitConstraintFields(node: Fields, ctx: Context) {
-            if (node.isClosed) {
-                ctx.startLine("CLOSED FIELDS (")
-            } else {
-                ctx.startLine("OPEN FIELDS (")
+            val isClosed = when (node.isClosed) {
+                true -> "CLOSED "
+                false -> "OPEN "
             }
+            val isOrdered = when (node.isOrdered) {
+                true -> "ORDERED "
+                false -> "UNORDERED "
+            }
+            ctx.startLine("$isClosed${isOrdered}FIELDS (")
             val newCtx = ctx.indent()
             node.fields.forEachIndexed { index, f ->
                 newCtx.start(f.key)

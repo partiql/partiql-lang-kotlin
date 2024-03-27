@@ -9,6 +9,7 @@ import org.partiql.types.SexpType
 import org.partiql.types.SingleType
 import org.partiql.types.StaticType
 import org.partiql.types.StructType
+import org.partiql.types.TupleConstraint
 import org.partiql.value.ArrayType
 import org.partiql.value.BagType
 import org.partiql.value.CharType
@@ -310,26 +311,27 @@ public sealed interface PShape : ShapeNode {
          */
         @Deprecated("Should not be used")
         public fun fromStaticType(type: StaticType): PShape {
-            return when (type) {
-                is SingleType -> when (type) {
+            val flattened = type.flatten()
+            return when (flattened) {
+                is SingleType -> when (flattened) {
                     is StructType -> {
-                        val pType = PartiQLType.fromSingleType(type)
-                        val fields = type.fields.map { Constraint.Fields.Field(it.key, fromStaticType(it.value)) }
+                        val pType = PartiQLType.fromSingleType(flattened)
+                        val fields = flattened.fields.map { Constraint.Fields.Field(it.key, fromStaticType(it.value)) }
                         of(
                             type = pType,
                             constraints = setOf(
                                 Constraint.Fields(
                                     fields = fields,
-                                    isClosed = type.contentClosed,
-                                    // TODO: isOrdered = type.constraints.contains(TupleConstraint.Ordered)
+                                    isClosed = flattened.contentClosed,
+                                    isOrdered = flattened.constraints.contains(TupleConstraint.Ordered)
                                 ),
                                 Constraint.NotNull
                             )
                         )
                     }
                     is CollectionType -> {
-                        val element = type.elementType
-                        val pType = when (type) {
+                        val element = flattened.elementType
+                        val pType = when (flattened) {
                             is org.partiql.types.BagType -> BagType
                             is ListType -> ArrayType
                             is SexpType -> ArrayType
@@ -342,15 +344,15 @@ public sealed interface PShape : ShapeNode {
                             )
                         )
                     }
-                    is org.partiql.types.NullType -> of(PartiQLType.fromSingleType(type))
+                    is org.partiql.types.NullType -> of(PartiQLType.fromSingleType(flattened))
                     else -> of(
-                        PartiQLType.fromSingleType(type),
+                        PartiQLType.fromSingleType(flattened),
                         constraints = setOf(Constraint.NotNull)
                     )
                 }
                 is org.partiql.types.AnyType -> of(DynamicType)
                 is AnyOfType -> {
-                    val flattened = type.flatten().allTypes
+                    val flattened = flattened.flatten().allTypes
                     val types = when (flattened.any { it is org.partiql.types.NullType }) {
                         true -> flattened.filterNot { it is org.partiql.types.NullType }.map { child ->
                             fromStaticType(child).asNullable()

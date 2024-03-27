@@ -62,7 +62,6 @@ import org.partiql.planner.internal.ir.rexOpSubquery
 import org.partiql.planner.internal.ir.rexOpTupleUnion
 import org.partiql.planner.internal.ir.statementQuery
 import org.partiql.planner.internal.ir.util.PlanRewriter
-import org.partiql.planner.internal.shape.IsOrdered
 import org.partiql.planner.internal.shape.ShapeUtils
 import org.partiql.shape.Constraint
 import org.partiql.shape.Constraint.Element
@@ -81,6 +80,7 @@ import org.partiql.shape.PShape.Companion.isNullable
 import org.partiql.shape.PShape.Companion.isText
 import org.partiql.shape.PShape.Companion.isType
 import org.partiql.shape.PShape.Companion.isUnion
+import org.partiql.shape.PShape.Companion.of
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
@@ -571,7 +571,10 @@ internal class PlanTyper(
             return rex(type, replacementOp)
         }
 
-        private fun rexString(str: String) = rex(CharVarUnboundedType, rexOpLit(stringValue(str)))
+        private fun rexString(str: String) = rex(
+            of(CharVarUnboundedType, constraints = setOf(NotNull)),
+            rexOpLit(stringValue(str))
+        )
 
         override fun visitRexOpPath(node: Rex.Op.Path, ctx: PShape?): Rex {
             val path = super.visitRexOpPath(node, ctx) as Rex
@@ -959,7 +962,7 @@ internal class PlanTyper(
             // add the ordered property to the constructor
             if (constructorType.isType<TupleType>()) {
                 // TODO: Do we need to copy the ORDERED constraint/meta?
-                constructorType = PShape.of(constructorType.type, constructorType.constraints, constructorType.metas + setOf(IsOrdered))
+                constructorType = ShapeUtils.addOrdering(constructorType)
                 constructor = rex(constructorType, constructor.op)
             }
             val type = when (rel.isOrdered()) {
@@ -986,10 +989,10 @@ internal class PlanTyper(
                             Fields(
                                 fields = emptyList(),
                                 isClosed = true,
+                                isOrdered = true
                             ),
                             NotNull
                         ),
-                        metas = setOf(IsOrdered)
                     )
                 }
                 else -> {
@@ -1080,14 +1083,11 @@ internal class PlanTyper(
                 constraints = setOf(
                     Fields(
                         isClosed = structIsClosed,
-                        fields = structFields
+                        fields = structFields,
+                        isOrdered = structIsOrdered
                     ),
                     NotNull,
                 ),
-                metas = when (structIsOrdered) {
-                    true -> setOf(IsOrdered)
-                    false -> emptySet()
-                }
             )
         }
 

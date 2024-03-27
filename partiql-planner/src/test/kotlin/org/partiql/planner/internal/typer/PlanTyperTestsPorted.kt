@@ -18,7 +18,6 @@ import org.partiql.plan.Statement
 import org.partiql.plan.debug.PlanPrinter
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.PlanningProblemDetails
-import org.partiql.planner.internal.shape.IsOrdered
 import org.partiql.planner.internal.shape.ShapeUtils
 import org.partiql.planner.internal.typer.PlanTyperTestsPorted.TestCase.ErrorTestCase
 import org.partiql.planner.internal.typer.PlanTyperTestsPorted.TestCase.SuccessTestCase
@@ -35,7 +34,6 @@ import org.partiql.shape.Constraint.AnyOf
 import org.partiql.shape.Constraint.Element
 import org.partiql.shape.Constraint.Fields
 import org.partiql.shape.Constraint.NotNull
-import org.partiql.shape.Meta
 import org.partiql.shape.PShape
 import org.partiql.shape.visitor.ShapePrinter
 import org.partiql.spi.BindingCase
@@ -273,10 +271,6 @@ class PlanTyperTestsPorted {
 
         private fun PartiQLType.withConstraints(vararg constraints: Constraint): PShape = PShape.of(
             this, constraints = constraints.toSet()
-        )
-
-        private fun PShape.withMetas(vararg metas: Meta): PShape = PShape.of(
-            this.type, constraints = this.constraints, metas = metas.toSet()
         )
 
         //
@@ -2158,9 +2152,10 @@ class PlanTyperTestsPorted {
                                             )
                                         )
                                     )
-                                )
+                                ),
+                                isOrdered = true
                             )
-                        ).withMetas(IsOrdered)
+                        )
                     )
                 ),
             ),
@@ -2559,9 +2554,10 @@ class PlanTyperTestsPorted {
                                         )
                                     )
                                 ),
-                                isClosed = true
+                                isClosed = true,
+                                isOrdered = true
                             )
-                        ).withMetas(IsOrdered)
+                        )
                     )
                 )
             ),
