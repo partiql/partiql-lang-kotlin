@@ -214,14 +214,29 @@ rex::{
       args: list::[rex],
     },
 
+    // Internal Error Node:
+    // Upon encounter an error, i.e., unknown_function(1)
+    // The an error node will be popoluated in the plan to replace the top node
+    // i.e.,
+    // |_ Rex.Op.Call.Unresolved["unknown_function"]
+    //    |_ Lit[value=Int32ValueImpl(value = 1))]
+    // will be come
+    // |_ Rex.Op.Err[Problem(location = ...., message = "unknown function `unknown function...`)]
+    //    |_ Lit[value=Int32ValueImpl(value = 1))]
     err::{
-      input: '.rex.op',
       problem: problem,
+      traces: list::['.rex.op'],
     },
 
+    // Internal MISSING Node:
+    // Upon encounter an operation that always returns missing,
+    // i.e., t.a where a does not exist in t
+    // The an mising node will be popoluated in the plan to replace the top node
+    // i.e.,
+    //
     missing::{
-      input: '.rex.op',
       problem: problem,
+      traces: list::['.rex.op'],
     },
   ],
 }

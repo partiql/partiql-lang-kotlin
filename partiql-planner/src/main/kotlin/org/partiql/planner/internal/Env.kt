@@ -93,7 +93,7 @@ internal class Env(private val session: PartiQLPlanner.Session) {
         // Invoke FnResolver to determine if we made a match
         val variants = item.handle.entity.getVariants()
         val match = FnResolver.resolve(variants, args.map { it.type })
-        // If Type mismatch, then we return a missingOp whose input is all possible candidates.
+        // If Type mismatch, then we return a missingOp whose trace is all possible candidates.
         if (match == null) {
             val candidates = variants.map { fnSignature ->
                 rexOpCallDynamicCandidate(

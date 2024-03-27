@@ -36,40 +36,12 @@ internal class PartiQLPlannerDefault(
         val internal = org.partiql.planner.internal.ir.PartiQLPlan(typed)
 
         // 4. Assert plan has been resolved — translating to public API
-        var plan = PlanTransform.transform(internal, session.missingOpBehavior, onProblem, false)
+        var plan = PlanTransform.transform(internal, session.missingOpBehavior, onProblem)
 
         // 5. Apply all passes
         for (pass in passes) {
             plan = pass.apply(plan, onProblem)
         }
-
-        return PartiQLPlanner.Result(plan, emptyList())
-    }
-}
-
-internal class PartiQLPlannerDebug() : PartiQLPlanner {
-    override fun plan(
-        statement: Statement,
-        session: PartiQLPlanner.Session,
-        onProblem: ProblemCallback,
-    ): PartiQLPlanner.Result {
-
-        // 0. Initialize the planning environment
-        val env = Env(session)
-
-        // 1. Normalize
-        val ast = statement.normalize()
-
-        // 2. AST to Rel/Rex
-        val root = AstToPlan.apply(ast, env)
-
-        // 3. Resolve variables
-        val typer = PlanTyper(env)
-        val typed = typer.resolve(root)
-        val internal = org.partiql.planner.internal.ir.PartiQLPlan(typed)
-
-        // 4. Assert plan has been resolved — translating to public API
-        var plan = PlanTransform.transform(internal, session.missingOpBehavior, onProblem, true)
 
         return PartiQLPlanner.Result(plan, emptyList())
     }

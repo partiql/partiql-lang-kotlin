@@ -17,9 +17,9 @@ import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
 
 internal class PlannerErrorReportingTests {
-    final val catalogName = "mode_test"
-    final val userId = "test-user"
-    final val queryId = "query"
+    val catalogName = "mode_test"
+    val userId = "test-user"
+    val queryId = "query"
 
     val catalog = MemoryCatalog
         .PartiQL()
@@ -126,6 +126,18 @@ internal class PlannerErrorReportingTests {
                 PartiQLPlanner.Session.MissingOpBehavior.SIGNAL,
                 assertOnProblemCount(0, 0)
             ),
+            // Unresolved variable
+            TestCase(
+                "var_not_exist",
+                PartiQLPlanner.Session.MissingOpBehavior.QUIET,
+                assertOnProblemCount(1, 0)
+            ),
+            TestCase(
+                "var_not_exist",
+                PartiQLPlanner.Session.MissingOpBehavior.SIGNAL,
+                assertOnProblemCount(0, 1)
+            ),
+
             // Function propagates missing in quite mode
             TestCase(
                 "1 + MISSING",
@@ -358,7 +370,7 @@ internal class PlannerErrorReportingTests {
             TestCase(
                 """
                     SELECT * 
-                        EXCLUDE t1.f1  -- no such field
+                        EXCLUDE t1.f1  -- no such root
                     FROM struct_no_missing as t
                 """.trimIndent(),
                 PartiQLPlanner.Session.MissingOpBehavior.QUIET,
@@ -368,7 +380,7 @@ internal class PlannerErrorReportingTests {
             TestCase(
                 """
                     SELECT * 
-                        EXCLUDE t1.f1  -- no such field
+                        EXCLUDE t1.f1  -- no such root
                     FROM struct_no_missing as t
                 """.trimIndent(),
                 PartiQLPlanner.Session.MissingOpBehavior.SIGNAL,
@@ -400,21 +412,28 @@ internal class PlannerErrorReportingTests {
 
     private fun runTestCase(tc: TestCase) {
         val session = session(tc.mode)
-        val planners = listOf(
-            PartiQLPlanner.debug(),
-            PartiQLPlanner.default()
+        val planner = PartiQLPlanner.default()
+        val pc = ProblemCollector()
+        val res = planner.plan(statement(tc.query), session, pc)
+        val problems = pc.problems
+        val plan = res.plan
+        println(
+            buildString {
+                this.appendLine("--------Plan---------")
+                PlanPrinter.append(this, plan)
+
+                this.appendLine("----------problems---------")
+                problems.forEach {
+                    this.appendLine(it.toString())
+                }
+            }
         )
-        planners.forEach {
-            val pc = ProblemCollector()
-            val res = it.plan(statement(tc.query), session, pc)
-            val problems = pc.problems
-            val plan = res.plan
-            assertProblem(
-                plan, problems,
-                *tc.assertion(problems).toTypedArray()
-            )
-            tc.expectedType.assertStaticTypeEqual((plan.statement as org.partiql.plan.Statement.Query).root.type)
-        }
+
+        assertProblem(
+            plan, problems,
+            *tc.assertion(problems).toTypedArray()
+        )
+        tc.expectedType.assertStaticTypeEqual((plan.statement as org.partiql.plan.Statement.Query).root.type)
     }
 
     @ParameterizedTest

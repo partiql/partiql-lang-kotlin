@@ -77,11 +77,5 @@ public interface PartiQLPlanner {
 
         @JvmStatic
         public fun default(): PartiQLPlanner = PartiQLPlannerBuilder().build()
-
-        /**
-         * A planner that preserves the trace of problematic operation for the purpose of debugging.
-         */
-        @JvmStatic
-        public fun debug(): PartiQLPlanner = PartiQLPlannerDebug()
     }
 }

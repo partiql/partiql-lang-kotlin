@@ -39,11 +39,17 @@ internal object ProblemGenerator {
         )
     }
 
-    fun missingRex(input: Rex.Op, problem: Problem): Rex =
-        rex(StaticType.MISSING, rexOpMissing(input, problem))
+    fun missingRex(traces: List<Rex.Op>, problem: Problem): Rex =
+        rex(StaticType.MISSING, rexOpMissing(problem, traces))
 
-    fun errorRex(input: Rex.Op, problem: Problem): Rex =
-        rex(StaticType.ANY, rexOpErr(input, problem))
+    fun missingRex(trace: Rex.Op, problem: Problem): Rex =
+        rex(StaticType.MISSING, rexOpMissing(problem, listOf(trace)))
+
+    fun errorRex(traces: List<Rex.Op>, problem: Problem): Rex =
+        rex(StaticType.ANY, rexOpErr(problem, traces))
+
+    fun errorRex(trace: Rex.Op, problem: Problem): Rex =
+        rex(StaticType.ANY, rexOpErr(problem, listOf(trace)))
 
     private fun InternalIdentifier.debug(): String = when (this) {
         is InternalIdentifier.Qualified -> (listOf(root.debug()) + steps.map { it.debug() }).joinToString(".")
