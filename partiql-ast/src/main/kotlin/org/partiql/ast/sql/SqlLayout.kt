@@ -3,6 +3,7 @@ package org.partiql.ast.sql
 /**
  * [SqlLayout] determines how an [SqlBlock] tree is transformed in SQL text.
  */
+@Deprecated("This will be changed in the next minor version")
 public abstract class SqlLayout {
 
     abstract val indent: Indent

@@ -33,6 +33,7 @@ Thank you to all who have contributed!
 - Change `StaticType.AnyOfType`'s `.toString` to not perform `.flatten()`
 
 ### Deprecated
+- The current SqlBlock, SqlDialect, and SqlLayout are marked as deprecated and will be slightly changed in the next release. 
 
 ### Fixed
 - Updates the default `.sql()` method to use a more efficient (internal) printer implementation.

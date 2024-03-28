@@ -26,6 +26,7 @@ import java.io.PrintStream
 /**
  * SqlDialect represents the base behavior for transforming an [AstNode] tree into a [SqlBlock] tree.
  */
+@Deprecated("This will be changed in the next minor version")
 @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
 public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
 
