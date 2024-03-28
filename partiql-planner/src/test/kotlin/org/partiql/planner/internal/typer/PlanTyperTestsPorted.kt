@@ -2461,7 +2461,7 @@ class PlanTyperTestsPorted {
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "case-when-11"),
                 catalog = "pql",
-                expected = unionOf(StaticType.INT, StaticType.NULL, StaticType.MISSING),
+                expected = unionOf(StaticType.INT, StaticType.MISSING),
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "case-when-12"),
@@ -2571,6 +2571,199 @@ class PlanTyperTestsPorted {
                 key = PartiQLTest.Key("basics", "case-when-30"),
                 catalog = "pql",
                 expected = MISSING
+            ),
+        )
+
+        @JvmStatic
+        fun nullIf() = listOf(
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "nullif-00"),
+                catalog = "pql",
+                expected = StaticType.INT4.asNullable()
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "nullif-01"),
+                catalog = "pql",
+                expected = StaticType.INT4.asNullable()
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "nullif-02"),
+                catalog = "pql",
+                expected = StaticType.INT4.asNullable()
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "nullif-03"),
+                catalog = "pql",
+                expected = StaticType.INT4.asNullable()
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "nullif-04"),
+                catalog = "pql",
+                expected = StaticType.INT8.asNullable()
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "nullif-05"),
+                catalog = "pql",
+                expected = StaticType.INT4.asNullable()
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "nullif-06"),
+                catalog = "pql",
+                expected = StaticType.NULL
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "nullif-07"),
+                catalog = "pql",
+                expected = StaticType.INT4.asNullable()
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "nullif-08"),
+                catalog = "pql",
+                expected = StaticType.NULL_OR_MISSING
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "nullif-09"),
+                catalog = "pql",
+                expected = StaticType.INT4.asNullable()
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "nullif-10"),
+                catalog = "pql",
+                expected = StaticType.INT4.asNullable()
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "nullif-11"),
+                catalog = "pql",
+                expected = StaticType.INT4.asNullable()
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "nullif-12"),
+                catalog = "pql",
+                expected = StaticType.INT8.asNullable()
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "nullif-13"),
+                catalog = "pql",
+                expected = StaticType.INT4.asNullable()
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "nullif-14"),
+                catalog = "pql",
+                expected = StaticType.STRING.asNullable()
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "nullif-15"),
+                catalog = "pql",
+                expected = StaticType.INT4.asNullable()
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "nullif-16"),
+                catalog = "pql",
+                expected = unionOf(StaticType.INT2, StaticType.INT4, StaticType.INT8, StaticType.INT, StaticType.DECIMAL, StaticType.NULL)
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "nullif-17"),
+                catalog = "pql",
+                expected = StaticType.INT4.asNullable()
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "nullif-18"),
+                catalog = "pql",
+                expected = unionOf(StaticType.ANY.allTypes.toSet())
+            ),
+        )
+
+        @JvmStatic
+        fun coalesce() = listOf(
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "coalesce-00"),
+                catalog = "pql",
+                expected = StaticType.INT4
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "coalesce-01"),
+                catalog = "pql",
+                expected = StaticType.INT4
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "coalesce-02"),
+                catalog = "pql",
+                expected = StaticType.DECIMAL
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "coalesce-03"),
+                catalog = "pql",
+                expected = unionOf(StaticType.NULL, StaticType.DECIMAL)
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "coalesce-04"),
+                catalog = "pql",
+                expected = unionOf(StaticType.NULL, StaticType.MISSING, StaticType.DECIMAL)
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "coalesce-05"),
+                catalog = "pql",
+                expected = unionOf(StaticType.NULL, StaticType.MISSING, StaticType.DECIMAL)
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "coalesce-06"),
+                catalog = "pql",
+                expected = StaticType.INT4
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "coalesce-07"),
+                catalog = "pql",
+                expected = StaticType.INT4
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "coalesce-08"),
+                catalog = "pql",
+                expected = StaticType.INT8
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "coalesce-09"),
+                catalog = "pql",
+                expected = StaticType.INT8.asNullable()
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "coalesce-10"),
+                catalog = "pql",
+                expected = unionOf(StaticType.INT8, StaticType.NULL, StaticType.MISSING)
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "coalesce-11"),
+                catalog = "pql",
+                expected = unionOf(StaticType.INT8, StaticType.STRING)
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "coalesce-12"),
+                catalog = "pql",
+                expected = unionOf(StaticType.INT8, StaticType.NULL, StaticType.STRING)
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "coalesce-13"),
+                catalog = "pql",
+                expected = unionOf(StaticType.INT2, StaticType.INT4, StaticType.INT8, StaticType.INT, StaticType.DECIMAL)
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "coalesce-14"),
+                catalog = "pql",
+                expected = unionOf(StaticType.INT2, StaticType.INT4, StaticType.INT8, StaticType.INT, StaticType.DECIMAL, StaticType.STRING)
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "coalesce-15"),
+                catalog = "pql",
+                expected = unionOf(StaticType.INT2, StaticType.INT4, StaticType.INT8, StaticType.INT, StaticType.DECIMAL, StaticType.STRING, StaticType.NULL)
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "coalesce-16"),
+                catalog = "pql",
+                expected = unionOf(StaticType.ANY.allTypes.toSet())
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "coalesce-17"),
+                catalog = "pql",
+                expected = unionOf(StaticType.ANY.allTypes.toSet())
             ),
         )
 
@@ -3226,6 +3419,16 @@ class PlanTyperTestsPorted {
     @MethodSource("caseWhens")
     @Execution(ExecutionMode.CONCURRENT)
     fun testCaseWhens(tc: TestCase) = runTest(tc)
+
+    @ParameterizedTest
+    @MethodSource("nullIf")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun testNullIf(tc: TestCase) = runTest(tc)
+
+    @ParameterizedTest
+    @MethodSource("coalesce")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun testCoalesce(tc: TestCase) = runTest(tc)
 
     @ParameterizedTest
     @MethodSource("subqueryCases")

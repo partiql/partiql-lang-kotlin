@@ -85,8 +85,7 @@ CASE t_item.t_string
 END;
 
 --#[case-when-11]
--- type: (int|null|missing)
--- TODO should really be (int|missing) but our translation of coalesce doesn't consider types.
+-- type: (int|missing)
 COALESCE(CAST(t_item.t_string AS INT), 1);
 
 -- -----------------------------

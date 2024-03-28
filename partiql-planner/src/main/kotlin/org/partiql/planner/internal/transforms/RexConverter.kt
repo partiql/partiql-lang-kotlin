@@ -30,8 +30,10 @@ import org.partiql.planner.internal.ir.identifierQualified
 import org.partiql.planner.internal.ir.identifierSymbol
 import org.partiql.planner.internal.ir.rex
 import org.partiql.planner.internal.ir.rexOpCallStatic
+import org.partiql.planner.internal.ir.rexOpCoalesce
 import org.partiql.planner.internal.ir.rexOpCollection
 import org.partiql.planner.internal.ir.rexOpLit
+import org.partiql.planner.internal.ir.rexOpNullif
 import org.partiql.planner.internal.ir.rexOpPathIndex
 import org.partiql.planner.internal.ir.rexOpPathKey
 import org.partiql.planner.internal.ir.rexOpPathSymbol
@@ -107,7 +109,7 @@ internal object RexConverter {
         private fun visitExprCoerce(node: Expr, ctx: Env, coercion: Rex.Op.Subquery.Coercion = Rex.Op.Subquery.Coercion.SCALAR): Rex {
             val rex = super.visitExpr(node, ctx)
             return when (rex.op is Rex.Op.Select) {
-                true -> rex(StaticType.ANY, rexOpSubquery(rex.op as Rex.Op.Select, coercion))
+                true -> rex(StaticType.ANY, rexOpSubquery(rex.op, coercion))
                 else -> rex
             }
         }
@@ -439,44 +441,21 @@ internal object RexConverter {
             return rex(type, call)
         }
 
-        // coalesce(expr1, expr2, ... exprN) ->
-        //   CASE
-        //     WHEN expr1 IS NOT NULL THEN EXPR1
-        //     ...
-        //     WHEN exprn is NOT NULL THEN exprn
-        //     ELSE NULL END
-        override fun visitExprCoalesce(node: Expr.Coalesce, ctx: Env): Rex = plan {
+        override fun visitExprCoalesce(node: Expr.Coalesce, ctx: Env): Rex {
             val type = StaticType.ANY
-            val createBranch: (Rex) -> Rex.Op.Case.Branch = { expr: Rex ->
-                val updatedCondition = rex(type, negate(call("is_null", expr)))
-                rexOpCaseBranch(updatedCondition, expr)
+            val args = node.args.map { arg ->
+                visitExprCoerce(arg, ctx)
             }
-
-            val branches = node.args.map {
-                createBranch(visitExpr(it, ctx))
-            }.toMutableList()
-
-            val defaultRex = rex(type = StaticType.NULL, op = rexOpLit(value = nullValue()))
-            val op = rexOpCase(branches, defaultRex)
-            rex(type, op)
+            val op = rexOpCoalesce(args)
+            return rex(type, op)
         }
 
-        // nullIf(expr1, expr2) ->
-        //   CASE
-        //     WHEN expr1 = expr2 THEN NULL
-        //     ELSE expr1 END
-        override fun visitExprNullIf(node: Expr.NullIf, ctx: Env): Rex = plan {
+        override fun visitExprNullIf(node: Expr.NullIf, ctx: Env): Rex {
             val type = StaticType.ANY
-            val expr1 = visitExpr(node.value, ctx)
-            val expr2 = visitExpr(node.nullifier, ctx)
-            val id = identifierSymbol(Expr.Binary.Op.EQ.name.lowercase(), Identifier.CaseSensitivity.SENSITIVE)
-            val fn = fnUnresolved(id, true)
-            val call = rexOpCallStatic(fn, listOf(expr1, expr2))
-            val branches = listOf(
-                rexOpCaseBranch(rex(type, call), rex(type = StaticType.NULL, op = rexOpLit(value = nullValue()))),
-            )
-            val op = rexOpCase(branches.toMutableList(), expr1)
-            rex(type, op)
+            val expr1 = visitExprCoerce(node.value, ctx)
+            val expr2 = visitExprCoerce(node.nullifier, ctx)
+            val op = rexOpNullif(expr1, expr2)
+            return rex(type, op)
         }
 
         /**
