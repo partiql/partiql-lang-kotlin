@@ -135,6 +135,15 @@ rex::{
       ],
     },
 
+    nullif::{
+      v1: rex,
+      v2: rex
+    },
+
+    coalesce::{
+      values: list::[rex]
+    },
+
     collection::{
       values: list::[rex],
     },
