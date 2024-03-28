@@ -81,7 +81,7 @@ class PlanTest {
             queryId = test.key.toString(),
             userId = "user_id",
             currentCatalog = "default",
-            currentDirectory = listOf(),
+            currentDirectory = listOf("SCHEMA"),
             catalogs = mapOf("default" to buildMetadata("default")),
             instant = Instant.now(),
             missingOpBehavior = missingOpBehaivor
@@ -97,6 +97,7 @@ class PlanTest {
         // Insert binding
         val name = BindingPath(
             listOf(
+                BindingName("SCHEMA", BindingCase.INSENSITIVE),
                 BindingName("T", BindingCase.INSENSITIVE),
             )
         )

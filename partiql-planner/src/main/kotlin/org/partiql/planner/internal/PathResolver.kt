@@ -61,7 +61,7 @@ internal abstract class PathResolver<T>(
             when (n) {
                 0 -> return null
                 1 -> return get(absPath)
-                2 -> return get(absPath) ?: get(path) ?: search(path)
+                2 -> return get(absPath) ?: get(path)
                 else -> return get(absPath) ?: get(path) ?: search(path)
             }
         } else {
@@ -69,7 +69,7 @@ internal abstract class PathResolver<T>(
             when (n) {
                 0 -> null
                 1 -> get(path)
-                2 -> get(path) ?: search(path)
+                2 -> get(path)
                 else -> get(path) ?: search(path)
             }
         }
