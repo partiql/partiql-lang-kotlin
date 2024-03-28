@@ -19,9 +19,9 @@ import org.partiql.value.CharVarUnboundedType
 import org.partiql.value.CollectionValue
 import org.partiql.value.DecimalValue
 import org.partiql.value.DynamicType
-import org.partiql.value.Float32Type
+import org.partiql.value.TypeReal
 import org.partiql.value.Float32Value
-import org.partiql.value.Float64Type
+import org.partiql.value.TypeDoublePrecision
 import org.partiql.value.Float64Value
 import org.partiql.value.Int16Type
 import org.partiql.value.Int16Value
@@ -72,8 +72,8 @@ internal class ExprCast(val arg: Operator.Expr, val cast: Ref.Cast) : Operator.E
                 is Int64Type -> castFromNumeric(arg as Int64Value, cast.target)
                 is TypeIntBig -> castFromNumeric(arg as IntValue, cast.target)
                 is NumericType -> castFromNumeric(arg as DecimalValue, cast.target)
-                is Float32Type -> castFromNumeric(arg as Float32Value, cast.target)
-                is Float64Type -> castFromNumeric(arg as Float64Value, cast.target)
+                is TypeReal -> castFromNumeric(arg as Float32Value, cast.target)
+                is TypeDoublePrecision -> castFromNumeric(arg as Float64Value, cast.target)
                 is CharType -> TODO("Char value implementation is wrong")
                 // TODO: SEXP?
                 is ArrayType -> castFromCollection(arg as CollectionValue<*>, cast.target)
@@ -125,14 +125,14 @@ internal class ExprCast(val arg: Operator.Expr, val cast: Ref.Cast) : Operator.E
                 false -> decimalValue(BigDecimal.ZERO)
                 null -> decimalValue(null)
             }
-            is Float32Type -> {
+            is TypeReal -> {
                 when (v) {
                     true -> float32Value(1.0.toFloat())
                     false -> float32Value(0.0.toFloat())
                     null -> float32Value(null)
                 }
             }
-            is Float64Type -> when (v) {
+            is TypeDoublePrecision -> when (v) {
                 true -> float64Value(1.0)
                 false -> float64Value(0.0)
                 null -> float64Value(null)
@@ -159,8 +159,8 @@ internal class ExprCast(val arg: Operator.Expr, val cast: Ref.Cast) : Operator.E
             is Int64Type -> value.toInt64()
             is TypeIntBig -> value.toInt()
             is NumericType -> value.toDecimal()
-            is Float32Type -> value.toFloat32()
-            is Float64Type -> value.toFloat64()
+            is TypeReal -> value.toFloat32()
+            is TypeDoublePrecision -> value.toFloat64()
             is CharType -> TODO("Char value implementation is wrong")
             is CharVarType, is CharVarUnboundedType -> stringValue(v?.toString(), value.annotations)
             else -> error("Cannot perform CAST from $value to $t")
@@ -223,14 +223,14 @@ internal class ExprCast(val arg: Operator.Expr, val cast: Ref.Cast) : Operator.E
                     else -> throw TypeCheckException()
                 }
             }
-            is Float32Type -> {
+            is TypeReal -> {
                 val stringValue = value.value ?: return int16Value(null, value.annotations)
                 when (val number = getNumberValueFromString(stringValue)) {
                     is Double -> float64Value(number, value.annotations).toFloat32()
                     else -> throw TypeCheckException()
                 }
             }
-            is Float64Type -> {
+            is TypeDoublePrecision -> {
                 val stringValue = value.value ?: return int16Value(null, value.annotations)
                 when (val number = getNumberValueFromString(stringValue)) {
                     is Double -> float64Value(number, value.annotations).toFloat32()

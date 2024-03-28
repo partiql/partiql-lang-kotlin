@@ -23,9 +23,9 @@ import org.partiql.spi.fn.FnExperimental
 import org.partiql.value.BoolType
 import org.partiql.value.BoolValue
 import org.partiql.value.DecimalValue
-import org.partiql.value.Float32Type
+import org.partiql.value.TypeReal
 import org.partiql.value.Float32Value
-import org.partiql.value.Float64Type
+import org.partiql.value.TypeDoublePrecision
 import org.partiql.value.Float64Value
 import org.partiql.value.Int16Type
 import org.partiql.value.Int16Value
@@ -181,8 +181,8 @@ internal fun PartiQLType.isNumber(): Boolean = when (this) {
     is Int32Type,
     is Int64Type,
     is NumericType,
-    is Float32Type,
-    is Float64Type -> true
+    is TypeReal,
+    is TypeDoublePrecision -> true
     else -> false
 }
 

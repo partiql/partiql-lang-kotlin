@@ -227,7 +227,7 @@ public abstract class DecimalValue : NumericValue<BigDecimal>() {
 @PartiQLValueExperimental
 public abstract class Float32Value : NumericValue<Float>() {
 
-    override val type: PartiQLType = Float32Type
+    override val type: PartiQLType = TypeReal
 
     abstract override fun copy(annotations: Annotations): Float32Value
 
@@ -239,7 +239,7 @@ public abstract class Float32Value : NumericValue<Float>() {
 @PartiQLValueExperimental
 public abstract class Float64Value : NumericValue<Double>() {
 
-    override val type: PartiQLType = Float64Type
+    override val type: PartiQLType = TypeDoublePrecision
 
     abstract override fun copy(annotations: Annotations): Float64Value
 

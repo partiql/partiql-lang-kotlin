@@ -9,8 +9,8 @@ import org.partiql.value.CharType
 import org.partiql.value.CharVarUnboundedType
 import org.partiql.value.ClobType
 import org.partiql.value.DynamicType
-import org.partiql.value.Float32Type
-import org.partiql.value.Float64Type
+import org.partiql.value.TypeReal
+import org.partiql.value.TypeDoublePrecision
 import org.partiql.value.Int16Type
 import org.partiql.value.Int32Type
 import org.partiql.value.Int64Type
@@ -144,11 +144,11 @@ internal class CastTable private constructor(
                 }
                 else -> getOld(operand, target)?.safety // TODO
             }
-            is Float32Type -> when (operand) {
+            is TypeReal -> when (operand) {
                 is NumericType -> Cast.Safety.UNSAFE // TODO: Is this correct?
                 else -> getOld(operand, target)?.safety // TODO
             }
-            is Float64Type -> when (operand) {
+            is TypeDoublePrecision -> when (operand) {
                 is NumericType -> when (operand.precision == null) {
                     true -> Cast.Safety.UNSAFE
                     false -> Cast.Safety.UNSAFE // TODO: Is this correct? This MIGHT be safe.
@@ -236,8 +236,8 @@ internal class CastTable private constructor(
                 explicit(TypeIntBig)
                 // TODO: Type numeric
                 explicit(TypeNumericUnbounded)
-                explicit(Float32Type)
-                explicit(Float64Type)
+                explicit(TypeReal)
+                explicit(TypeDoublePrecision)
                 explicit(CharType(1)) // TODO
                 explicit(CharVarUnboundedType)
                 explicit(CharVarUnboundedType)
@@ -251,8 +251,8 @@ internal class CastTable private constructor(
                 coercion(TypeIntBig)
                 // explicit(NUMERIC) // TODO: How to handle?
                 coercion(TypeNumericUnbounded)
-                coercion(Float32Type)
-                coercion(Float64Type)
+                coercion(TypeReal)
+                coercion(TypeDoublePrecision)
                 explicit(CharVarUnboundedType)
                 explicit(CharVarUnboundedType)
             }
@@ -265,8 +265,8 @@ internal class CastTable private constructor(
                 coercion(TypeIntBig)
                 // explicit(NUMERIC) // TODO: How to handle?
                 coercion(TypeNumericUnbounded)
-                coercion(Float32Type)
-                coercion(Float64Type)
+                coercion(TypeReal)
+                coercion(TypeDoublePrecision)
                 explicit(CharVarUnboundedType)
                 explicit(CharVarUnboundedType)
             }
@@ -279,8 +279,8 @@ internal class CastTable private constructor(
                 coercion(TypeIntBig)
                 // explicit(NUMERIC) // TODO: How to handle?
                 coercion(TypeNumericUnbounded)
-                coercion(Float32Type)
-                coercion(Float64Type)
+                coercion(TypeReal)
+                coercion(TypeDoublePrecision)
                 explicit(CharVarUnboundedType)
                 explicit(CharVarUnboundedType)
             }
@@ -293,8 +293,8 @@ internal class CastTable private constructor(
                 coercion(TypeIntBig)
                 // explicit(NUMERIC) // TODO: How to handle?
                 coercion(TypeNumericUnbounded)
-                coercion(Float32Type)
-                coercion(Float64Type)
+                coercion(TypeReal)
+                coercion(TypeDoublePrecision)
                 explicit(CharVarUnboundedType)
                 explicit(CharVarUnboundedType)
             }
@@ -307,8 +307,8 @@ internal class CastTable private constructor(
                 coercion(TypeIntBig)
                 // explicit(NUMERIC) // TODO: How to handle?
                 coercion(TypeNumericUnbounded)
-                coercion(Float32Type)
-                coercion(Float64Type)
+                coercion(TypeReal)
+                coercion(TypeDoublePrecision)
                 explicit(CharVarUnboundedType)
             }
             graph[DECIMAL] = TypeNumericUnbounded.relationships(soleTypes) {
@@ -320,8 +320,8 @@ internal class CastTable private constructor(
                 unsafe(TypeIntBig)
                 // coercion(NUMERIC) // TODO: How to handle?
                 coercion(TypeNumericUnbounded)
-                explicit(Float32Type)
-                explicit(Float64Type)
+                explicit(TypeReal)
+                explicit(TypeDoublePrecision)
                 explicit(CharVarUnboundedType)
                 explicit(CharVarUnboundedType)
             }
@@ -334,12 +334,12 @@ internal class CastTable private constructor(
                 unsafe(TypeIntBig)
                 // coercion(NUMERIC) // TODO: How to handle?
                 coercion(TypeNumericUnbounded)
-                explicit(Float32Type)
-                explicit(Float64Type)
+                explicit(TypeReal)
+                explicit(TypeDoublePrecision)
                 explicit(CharVarUnboundedType)
                 explicit(CharVarUnboundedType)
             }
-            graph[FLOAT32] = Float32Type.relationships(soleTypes) {
+            graph[FLOAT32] = TypeReal.relationships(soleTypes) {
                 explicit(BoolType)
                 unsafe(Int8Type)
                 unsafe(Int16Type)
@@ -348,12 +348,12 @@ internal class CastTable private constructor(
                 unsafe(TypeIntBig)
                 // coercion(NUMERIC) // TODO: How to handle?
                 coercion(TypeNumericUnbounded)
-                coercion(Float32Type)
-                coercion(Float64Type)
+                coercion(TypeReal)
+                coercion(TypeDoublePrecision)
                 explicit(CharVarUnboundedType)
                 explicit(CharVarUnboundedType)
             }
-            graph[FLOAT64] = Float64Type.relationships(soleTypes) {
+            graph[FLOAT64] = TypeDoublePrecision.relationships(soleTypes) {
                 explicit(BoolType)
                 unsafe(Int8Type)
                 unsafe(Int16Type)
@@ -362,8 +362,8 @@ internal class CastTable private constructor(
                 unsafe(TypeIntBig)
                 // unsafe(NUMERIC) // TODO: How to handle?
                 coercion(TypeNumericUnbounded)
-                unsafe(Float32Type)
-                coercion(Float64Type)
+                unsafe(TypeReal)
+                coercion(TypeDoublePrecision)
                 explicit(CharVarUnboundedType)
                 explicit(CharVarUnboundedType)
             }

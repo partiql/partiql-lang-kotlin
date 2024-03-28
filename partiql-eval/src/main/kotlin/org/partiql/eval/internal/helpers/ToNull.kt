@@ -14,8 +14,8 @@ import org.partiql.value.ClobType
 import org.partiql.value.ClobUnboundedType
 import org.partiql.value.DateType
 import org.partiql.value.DynamicType
-import org.partiql.value.Float32Type
-import org.partiql.value.Float64Type
+import org.partiql.value.TypeReal
+import org.partiql.value.TypeDoublePrecision
 import org.partiql.value.Int16Type
 import org.partiql.value.Int32Type
 import org.partiql.value.Int64Type
@@ -85,10 +85,10 @@ internal fun PartiQLType.toNull(): () -> PartiQLValue = when (this) {
     is NumericType -> {
         { decimalValue(null) }
     }
-    is Float32Type -> {
+    is TypeReal -> {
         { float32Value(null) }
     }
-    is Float64Type -> {
+    is TypeDoublePrecision -> {
         { float64Value(null) }
     }
     is CharType -> {

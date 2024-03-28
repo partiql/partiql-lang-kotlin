@@ -46,8 +46,8 @@ public sealed interface PartiQLType {
             PartiQLValueType.INT -> TypeIntBig
             PartiQLValueType.DECIMAL -> TypeNumericUnbounded
             PartiQLValueType.DECIMAL_ARBITRARY -> TypeNumericUnbounded
-            PartiQLValueType.FLOAT32 -> Float32Type
-            PartiQLValueType.FLOAT64 -> Float64Type
+            PartiQLValueType.FLOAT32 -> TypeReal
+            PartiQLValueType.FLOAT64 -> TypeDoublePrecision
             PartiQLValueType.CHAR -> CharType(CharType.MAX_LENGTH)
             PartiQLValueType.STRING -> CharVarUnboundedType
             PartiQLValueType.SYMBOL -> CharVarUnboundedType
@@ -86,7 +86,7 @@ public sealed interface PartiQLType {
                     )
                 }
             }
-            is FloatType -> Float64Type // TODO: What about Float 32?
+            is FloatType -> TypeDoublePrecision // TODO: What about Float 32?
             is GraphType -> TODO()
             is IntType -> when (type.rangeConstraint) {
                 IntType.IntRangeConstraint.SHORT -> Int16Type
@@ -117,8 +117,8 @@ public sealed interface PartiQLType {
         @JvmStatic
         @Deprecated("Will likely be removed")
         public val APPROXIMATE_NUMERIC_TYPES: List<PartiQLType> = buildList {
-            add(Float32Type)
-            add(Float64Type)
+            add(TypeReal)
+            add(TypeDoublePrecision)
         }
 
         @JvmStatic
