@@ -55,9 +55,11 @@ import org.partiql.planner.internal.ir.rexOpCallDynamic
 import org.partiql.planner.internal.ir.rexOpCallDynamicCandidate
 import org.partiql.planner.internal.ir.rexOpCallStatic
 import org.partiql.planner.internal.ir.rexOpCaseBranch
+import org.partiql.planner.internal.ir.rexOpCoalesce
 import org.partiql.planner.internal.ir.rexOpCollection
 import org.partiql.planner.internal.ir.rexOpErr
 import org.partiql.planner.internal.ir.rexOpLit
+import org.partiql.planner.internal.ir.rexOpNullif
 import org.partiql.planner.internal.ir.rexOpPathIndex
 import org.partiql.planner.internal.ir.rexOpPathKey
 import org.partiql.planner.internal.ir.rexOpPathSymbol
@@ -757,6 +759,46 @@ internal class PlanTyper(
             }
 
             val op = Rex.Op.Case(newBranches, newDefault)
+            return rex(type, op)
+        }
+
+        override fun visitRexOpCoalesce(node: Rex.Op.Coalesce, ctx: StaticType?): Rex {
+            val values = node.values.map { visitRex(it, it.type) }.toMutableList()
+            val typer = DynamicTyper()
+            values.forEach { v ->
+                typer.accumulate(v.type)
+            }
+            val (type, mapping) = typer.mapping()
+            if (mapping != null) {
+                assert(mapping.size == values.size)
+                for (i in values.indices) {
+                    val (operand, target) = mapping[i]
+                    if (operand == target) continue // skip
+                    val cast = env.fnResolver.cast(operand, target)
+                    val rex = rex(type, rexOpCallStatic(fnResolved(cast), listOf(values[i])))
+                    values[i] = rex
+                }
+            }
+            val op = rexOpCoalesce(values)
+            return rex(type, op)
+        }
+
+        // NULLIF(v1, v2)
+        // ==
+        // CASE
+        //     WHEN V1 = V2 THEN NULL -- WHEN branch always a boolean
+        //     ELSE V1
+        // END
+        // --> union(null, <type of V1>)
+        override fun visitRexOpNullif(node: Rex.Op.Nullif, ctx: StaticType?): Rex {
+            val v1 = visitRex(node.v1, node.v1.type)
+            val v2 = visitRex(node.v2, node.v2.type)
+            // reuse dynamic typing logic
+            val typer = DynamicTyper()
+            typer.accumulate(NULL)
+            typer.accumulate(v1.type)
+            val (type, _) = typer.mapping()
+            val op = rexOpNullif(v1, v2)
             return rex(type, op)
         }
 

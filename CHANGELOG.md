@@ -32,6 +32,7 @@ Thank you to all who have contributed!
 
 ### Changed
 - Change `StaticType.AnyOfType`'s `.toString` to not perform `.flatten()`
+- Change modeling of `COALESCE` and `NULLIF` to dedicated nodes in logical plan
 
 ### Deprecated
 
@@ -43,7 +44,7 @@ Thank you to all who have contributed!
 
 ### Contributors
 Thank you to all who have contributed!
-- @<your-username>
+- @alancai98
 
 ## [0.14.4]
 
