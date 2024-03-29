@@ -55,9 +55,11 @@ import org.partiql.planner.internal.ir.rexOpCallDynamic
 import org.partiql.planner.internal.ir.rexOpCallDynamicCandidate
 import org.partiql.planner.internal.ir.rexOpCallStatic
 import org.partiql.planner.internal.ir.rexOpCaseBranch
+import org.partiql.planner.internal.ir.rexOpCoalesce
 import org.partiql.planner.internal.ir.rexOpCollection
 import org.partiql.planner.internal.ir.rexOpErr
 import org.partiql.planner.internal.ir.rexOpLit
+import org.partiql.planner.internal.ir.rexOpNullif
 import org.partiql.planner.internal.ir.rexOpPathIndex
 import org.partiql.planner.internal.ir.rexOpPathKey
 import org.partiql.planner.internal.ir.rexOpPathSymbol
@@ -757,6 +759,54 @@ internal class PlanTyper(
             }
 
             val op = Rex.Op.Case(newBranches, newDefault)
+            return rex(type, op)
+        }
+
+        // COALESCE(v1, v2,..., vN)
+        // ==
+        // CASE
+        //     WHEN v1 IS NOT NULL THEN v1  -- WHEN branch always a boolean
+        //     WHEN v2 IS NOT NULL THEN v2  -- WHEN branch always a boolean
+        //     ... -- similarly for v3..vN-1
+        //     ELSE vN
+        // END
+        // --> minimal common supertype of(<type v1>, <type v2>, ..., <type v3>)
+        override fun visitRexOpCoalesce(node: Rex.Op.Coalesce, ctx: StaticType?): Rex {
+            val args = node.args.map { visitRex(it, it.type) }.toMutableList()
+            val typer = DynamicTyper()
+            args.forEach { v ->
+                typer.accumulate(v.type)
+            }
+            val (type, mapping) = typer.mapping()
+            if (mapping != null) {
+                assert(mapping.size == args.size) { "Coercion mappings `len ${mapping.size}` did not match the number of COALESCE arguments `len ${args.size}`" }
+                for (i in args.indices) {
+                    val (operand, target) = mapping[i]
+                    if (operand == target) continue // skip; no coercion needed
+                    val cast = env.fnResolver.cast(operand, target)
+                    val rex = rex(type, rexOpCallStatic(fnResolved(cast), listOf(args[i])))
+                    args[i] = rex
+                }
+            }
+            val op = rexOpCoalesce(args)
+            return rex(type, op)
+        }
+
+        // NULLIF(v1, v2)
+        // ==
+        // CASE
+        //     WHEN v1 = v2 THEN NULL -- WHEN branch always a boolean
+        //     ELSE v1
+        // END
+        // --> minimal common supertype of (NULL, <type v1>)
+        override fun visitRexOpNullif(node: Rex.Op.Nullif, ctx: StaticType?): Rex {
+            val value = visitRex(node.value, node.value.type)
+            val nullifier = visitRex(node.nullifier, node.nullifier.type)
+            val typer = DynamicTyper()
+            typer.accumulate(NULL)
+            typer.accumulate(value.type)
+            val (type, _) = typer.mapping()
+            val op = rexOpNullif(value, nullifier)
             return rex(type, op)
         }
 

@@ -51,10 +51,12 @@ import org.partiql.planner.internal.ir.builder.RexOpCallDynamicCandidateBuilder
 import org.partiql.planner.internal.ir.builder.RexOpCallStaticBuilder
 import org.partiql.planner.internal.ir.builder.RexOpCaseBranchBuilder
 import org.partiql.planner.internal.ir.builder.RexOpCaseBuilder
+import org.partiql.planner.internal.ir.builder.RexOpCoalesceBuilder
 import org.partiql.planner.internal.ir.builder.RexOpCollectionBuilder
 import org.partiql.planner.internal.ir.builder.RexOpErrBuilder
 import org.partiql.planner.internal.ir.builder.RexOpGlobalBuilder
 import org.partiql.planner.internal.ir.builder.RexOpLitBuilder
+import org.partiql.planner.internal.ir.builder.RexOpNullifBuilder
 import org.partiql.planner.internal.ir.builder.RexOpPathIndexBuilder
 import org.partiql.planner.internal.ir.builder.RexOpPathKeyBuilder
 import org.partiql.planner.internal.ir.builder.RexOpPathSymbolBuilder
@@ -312,6 +314,8 @@ internal data class Rex(
             is Path -> visitor.visitRexOpPath(this, ctx)
             is Call -> visitor.visitRexOpCall(this, ctx)
             is Case -> visitor.visitRexOpCase(this, ctx)
+            is Nullif -> visitor.visitRexOpNullif(this, ctx)
+            is Coalesce -> visitor.visitRexOpCoalesce(this, ctx)
             is Collection -> visitor.visitRexOpCollection(this, ctx)
             is Struct -> visitor.visitRexOpStruct(this, ctx)
             is Pivot -> visitor.visitRexOpPivot(this, ctx)
@@ -564,6 +568,47 @@ internal data class Rex(
             internal companion object {
                 @JvmStatic
                 internal fun builder(): RexOpCaseBuilder = RexOpCaseBuilder()
+            }
+        }
+
+        internal data class Nullif(
+            @JvmField
+            internal val value: Rex,
+            @JvmField
+            internal val nullifier: Rex,
+        ) : Op() {
+            internal override val children: List<PlanNode> by lazy {
+                val kids = mutableListOf<PlanNode?>()
+                kids.add(value)
+                kids.add(nullifier)
+                kids.filterNotNull()
+            }
+
+            internal override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitRexOpNullif(this, ctx)
+
+            internal companion object {
+                @JvmStatic
+                internal fun builder(): RexOpNullifBuilder = RexOpNullifBuilder()
+            }
+        }
+
+        internal data class Coalesce(
+            @JvmField
+            internal val args: List<Rex>,
+        ) : Op() {
+            override val children: List<PlanNode> by lazy {
+                val kids = mutableListOf<PlanNode?>()
+                kids.addAll(args)
+                kids.filterNotNull()
+            }
+
+            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitRexOpCoalesce(this, ctx)
+
+            internal companion object {
+                @JvmStatic
+                internal fun builder(): RexOpCoalesceBuilder = RexOpCoalesceBuilder()
             }
         }
 

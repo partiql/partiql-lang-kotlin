@@ -158,6 +158,15 @@ rex::{
       ],
     },
 
+    nullif::{
+      value: rex,
+      nullifier: rex
+    },
+
+    coalesce::{
+      args: list::[rex]
+    },
+
     collection::{
       values: list::[rex],
     },

@@ -32,6 +32,7 @@ Thank you to all who have contributed!
 
 ### Changed
 - Change `StaticType.AnyOfType`'s `.toString` to not perform `.flatten()`
+- Change modeling of `COALESCE` and `NULLIF` to dedicated nodes in logical plan
 
 ### Deprecated
 - The current SqlBlock, SqlDialect, and SqlLayout are marked as deprecated and will be slightly changed in the next release. 

@@ -180,6 +180,17 @@ internal object PlanTransform : PlanBaseVisitor<PlanNode, ProblemCallback>() {
         branches = node.branches.map { visitRexOpCaseBranch(it, ctx) }, default = visitRex(node.default, ctx)
         )
 
+        override fun visitRexOpNullif(node: Rex.Op.Nullif, ctx: ProblemCallback) =
+            org.partiql.plan.Rex.Op.Nullif(
+                value = visitRex(node.value, ctx),
+                nullifier = visitRex(node.nullifier, ctx),
+            )
+
+        override fun visitRexOpCoalesce(node: Rex.Op.Coalesce, ctx: ProblemCallback) =
+            org.partiql.plan.Rex.Op.Coalesce(
+                args = node.args.map { visitRex(it, ctx) }
+            )
+
         override fun visitRexOpCaseBranch(node: Rex.Op.Case.Branch, ctx: ProblemCallback) =
             org.partiql.plan.Rex.Op.Case.Branch(
                 condition = visitRex(node.condition, ctx), rex = visitRex(node.rex, ctx)
