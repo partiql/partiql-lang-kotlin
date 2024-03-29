@@ -2572,6 +2572,26 @@ class PlanTyperTestsPorted {
                 catalog = "pql",
                 expected = MISSING
             ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-31"),
+                catalog = "pql",
+                expected = StaticType.ANY
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-32"),
+                catalog = "pql",
+                expected = StaticType.ANY
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-33"),
+                catalog = "pql",
+                expected = StaticType.ANY
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-34"),
+                catalog = "pql",
+                expected = StaticType.ANY
+            ),
         )
 
         @JvmStatic
@@ -2669,7 +2689,7 @@ class PlanTyperTestsPorted {
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "nullif-18"),
                 catalog = "pql",
-                expected = unionOf(StaticType.ANY.allTypes.toSet())
+                expected = StaticType.ANY
             ),
         )
 
@@ -2758,12 +2778,12 @@ class PlanTyperTestsPorted {
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "coalesce-16"),
                 catalog = "pql",
-                expected = unionOf(StaticType.ANY.allTypes.toSet())
+                expected = StaticType.ANY
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "coalesce-17"),
                 catalog = "pql",
-                expected = unionOf(StaticType.ANY.allTypes.toSet())
+                expected = StaticType.ANY
             ),
         )
 

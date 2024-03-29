@@ -79,7 +79,15 @@ internal class DynamicTyper {
      */
     fun accumulate(type: StaticType) {
         val nonAbsentTypes = mutableSetOf<StaticType>()
-        for (t in type.flatten().allTypes) {
+        val flatType = type.flatten()
+        if (flatType == StaticType.ANY) {
+            // Use ANY runtime; do not expand ANY
+            types.add(flatType)
+            args.add(ANY)
+            calculate(ANY)
+            return
+        }
+        for (t in flatType.allTypes) {
             when (t) {
                 is NullType -> nullable = true
                 is MissingType -> missable = true
@@ -121,7 +129,7 @@ internal class DynamicTyper {
         if (missable) modifiers.add(StaticType.MISSING)
         // If at top supertype, then return union of all accumulated types
         if (supertype == ANY) {
-            return StaticType.unionOf(types + modifiers) to null
+            return StaticType.unionOf(types + modifiers).flatten() to null
         }
         // If a collection, then return union of all accumulated types as these coercion rules are not defined by SQL.
         if (supertype == STRUCT || supertype == BAG || supertype == LIST || supertype == SEXP) {

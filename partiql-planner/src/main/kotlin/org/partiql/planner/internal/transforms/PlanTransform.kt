@@ -182,8 +182,8 @@ internal object PlanTransform : PlanBaseVisitor<PlanNode, ProblemCallback>() {
 
         override fun visitRexOpNullif(node: Rex.Op.Nullif, ctx: ProblemCallback) =
             org.partiql.plan.Rex.Op.Nullif(
-                v1 = visitRex(node.v1, ctx),
-                v2 = visitRex(node.v2, ctx),
+                value = visitRex(node.value, ctx),
+                nullifier = visitRex(node.nullifier, ctx),
             )
 
         override fun visitRexOpCoalesce(node: Rex.Op.Coalesce, ctx: ProblemCallback) =

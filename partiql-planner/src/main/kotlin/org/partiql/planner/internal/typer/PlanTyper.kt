@@ -800,13 +800,13 @@ internal class PlanTyper(
         // END
         // --> minimal common supertype of (NULL, <type v1>)
         override fun visitRexOpNullif(node: Rex.Op.Nullif, ctx: StaticType?): Rex {
-            val v1 = visitRex(node.v1, node.v1.type)
-            val v2 = visitRex(node.v2, node.v2.type)
+            val value = visitRex(node.value, node.value.type)
+            val nullifier = visitRex(node.nullifier, node.nullifier.type)
             val typer = DynamicTyper()
             typer.accumulate(NULL)
-            typer.accumulate(v1.type)
+            typer.accumulate(value.type)
             val (type, _) = typer.mapping()
-            val op = rexOpNullif(v1, v2)
+            val op = rexOpNullif(value, nullifier)
             return rex(type, op)
         }
 

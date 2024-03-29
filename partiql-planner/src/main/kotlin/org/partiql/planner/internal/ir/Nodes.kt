@@ -573,14 +573,14 @@ internal data class Rex(
 
         internal data class Nullif(
             @JvmField
-            internal val v1: Rex,
+            internal val value: Rex,
             @JvmField
-            internal val v2: Rex,
+            internal val nullifier: Rex,
         ) : Op() {
             internal override val children: List<PlanNode> by lazy {
                 val kids = mutableListOf<PlanNode?>()
-                kids.add(v1)
-                kids.add(v2)
+                kids.add(value)
+                kids.add(nullifier)
                 kids.filterNotNull()
             }
 

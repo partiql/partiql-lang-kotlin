@@ -136,8 +136,8 @@ rex::{
     },
 
     nullif::{
-      v1: rex,
-      v2: rex
+      value: rex,
+      nullifier: rex
     },
 
     coalesce::{

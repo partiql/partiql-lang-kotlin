@@ -257,6 +257,42 @@ CASE t_item.t_string
 END;
 
 -- -----------------------------
+--  Any Branches
+-- -----------------------------
+
+--#[case-when-31]
+-- type: (any)
+CASE t_item.t_string
+    WHEN 'a' THEN t_item.t_any
+    WHEN 'b' THEN t_item.t_int32
+    ELSE NULL
+END;
+
+--#[case-when-32]
+-- type: (any)
+CASE t_item.t_string
+    WHEN 'a' THEN t_item.t_int32
+    WHEN 'b' THEN t_item.t_any
+    ELSE NULL
+END;
+
+--#[case-when-33]
+-- type: (any)
+CASE t_item.t_string
+    WHEN 'a' THEN t_item.t_int32
+    WHEN 'b' THEN NULL
+    ELSE t_item.t_any
+END;
+
+--#[case-when-34]
+-- type: (any)
+CASE t_item.t_string
+    WHEN 'a' THEN t_item.t_int32_null
+    WHEN 'b' THEN t_item.t_any
+    ELSE t_item.t_any
+END;
+
+-- -----------------------------
 --  (Unused) old tests
 -- -----------------------------
 

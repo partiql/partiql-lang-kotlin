@@ -452,9 +452,9 @@ internal object RexConverter {
 
         override fun visitExprNullIf(node: Expr.NullIf, ctx: Env): Rex {
             val type = StaticType.ANY
-            val expr1 = visitExprCoerce(node.value, ctx)
-            val expr2 = visitExprCoerce(node.nullifier, ctx)
-            val op = rexOpNullif(expr1, expr2)
+            val value = visitExprCoerce(node.value, ctx)
+            val nullifier = visitExprCoerce(node.nullifier, ctx)
+            val op = rexOpNullif(value, nullifier)
             return rex(type, op)
         }
 
