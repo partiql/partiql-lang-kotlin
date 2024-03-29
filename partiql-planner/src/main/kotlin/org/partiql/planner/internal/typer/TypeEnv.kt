@@ -168,9 +168,15 @@ internal class TypeEnv(public val schema: List<Rel.Binding>) {
         return when (val type = this.flatten()) {
             is StructType -> type.containsKey(name)
             is AnyOfType -> {
-                val anyKnownToContainKey = type.allTypes.any { it.containsKey(name) == true }
-                val anyKnownToNotContainKey = type.allTypes.any { it.containsKey(name) == false }
-                val anyNotKnownToContainKey = type.allTypes.any { it.containsKey(name) == null }
+                var anyKnownToContainKey = false
+                var anyKnownToNotContainKey = false
+                var anyNotKnownToContainKey = false
+                for (t in type.allTypes) {
+                    val containsKey = t.containsKey(name)
+                    anyKnownToContainKey = anyKnownToContainKey || (containsKey == true)
+                    anyKnownToNotContainKey = anyKnownToNotContainKey || (containsKey == false)
+                    anyNotKnownToContainKey = anyNotKnownToContainKey || (containsKey == null)
+                }
                 when {
                     // There are:
                     // - No subtypes that are known to not contain the key

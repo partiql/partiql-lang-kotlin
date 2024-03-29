@@ -15,6 +15,7 @@ import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.Statement
 import org.partiql.planner.internal.ir.visitor.PlanBaseVisitor
+import org.partiql.planner.internal.utils.PlanUtils
 import org.partiql.types.function.FunctionSignature
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
@@ -351,12 +352,12 @@ internal object PlanTransform : PlanBaseVisitor<PlanNode, ProblemCallback>() {
         override fun visitRelOpAggregateCall(node: Rel.Op.Aggregate.Call, ctx: ProblemCallback): org.partiql.plan.Rel.Op.Aggregate.Call {
             val agg = when (val agg = node.agg) {
                 is Agg.Unresolved -> {
-                    val name = agg.identifier.toNormalizedString()
+                    val name = PlanUtils.identifierToString(visitIdentifier(agg.identifier, ctx))
                     ctx.invoke(
                         Problem(
                             UNKNOWN_PROBLEM_LOCATION,
                             PlanningProblemDetails.UnknownAggregateFunction(
-                                agg.identifier.toString(),
+                                visitIdentifier(agg.identifier, ctx),
                                 node.args.map { it.type }
                             )
                         )
@@ -377,25 +378,6 @@ internal object PlanTransform : PlanBaseVisitor<PlanNode, ProblemCallback>() {
                 agg = agg,
                 args = node.args.map { visitRex(it, ctx) },
             )
-        }
-
-        private fun Identifier.toNormalizedString(): String {
-            return when (this) {
-                is Identifier.Symbol -> this.toNormalizedString()
-                is Identifier.Qualified -> {
-                    val toJoin = listOf(this.root) + this.steps
-                    toJoin.joinToString(separator = ".") { ident ->
-                        ident.toNormalizedString()
-                    }
-                }
-            }
-        }
-
-        private fun Identifier.Symbol.toNormalizedString(): String {
-            return when (this.caseSensitivity) {
-                Identifier.CaseSensitivity.SENSITIVE -> "\"${this.symbol}\""
-                Identifier.CaseSensitivity.INSENSITIVE -> this.symbol
-            }
         }
 
         override fun visitRelOpExclude(node: Rel.Op.Exclude, ctx: ProblemCallback) = org.partiql.plan.Rel.Op.Exclude(

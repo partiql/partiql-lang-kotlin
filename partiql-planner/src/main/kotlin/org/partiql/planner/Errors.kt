@@ -3,6 +3,7 @@ package org.partiql.planner
 import org.partiql.errors.ProblemDetails
 import org.partiql.errors.ProblemSeverity
 import org.partiql.plan.Identifier
+import org.partiql.planner.internal.utils.PlanUtils
 import org.partiql.types.StaticType
 
 /**
@@ -31,7 +32,8 @@ public sealed class PlanningProblemDetails(
     ) : PlanningProblemDetails(
         ProblemSeverity.ERROR,
         {
-            "Variable ${pretty(name)} does not exist in the database environment and is not an attribute of the following in-scope variables $inScopeVariables." +
+            val humanReadableName = PlanUtils.identifierToString(name)
+            "Variable $humanReadableName does not exist in the database environment and is not an attribute of the following in-scope variables $inScopeVariables." +
                 quotationHint(isSymbolAndCaseSensitive(name))
         }
     ) {
@@ -74,16 +76,6 @@ public sealed class PlanningProblemDetails(
             private fun isSymbolAndCaseSensitive(id: Identifier): Boolean = when (id) {
                 is Identifier.Symbol -> id.caseSensitivity == Identifier.CaseSensitivity.SENSITIVE
                 is Identifier.Qualified -> false
-            }
-
-            private fun pretty(id: Identifier): String = when (id) {
-                is Identifier.Symbol -> pretty(id)
-                is Identifier.Qualified -> (listOf(id.root) + id.steps).joinToString(".") { pretty(it) }
-            }
-
-            private fun pretty(id: Identifier.Symbol): String = when (id.caseSensitivity) {
-                Identifier.CaseSensitivity.INSENSITIVE -> id.symbol
-                Identifier.CaseSensitivity.SENSITIVE -> "\"${id.symbol}\""
             }
         }
     }
@@ -150,7 +142,7 @@ public sealed class PlanningProblemDetails(
     })
 
     public data class UnknownAggregateFunction(
-        val identifier: String,
+        val identifier: Identifier,
         val args: List<StaticType>,
     ) : PlanningProblemDetails(ProblemSeverity.ERROR, {
         val types = args.joinToString { "<${it.toString().lowercase()}>" }

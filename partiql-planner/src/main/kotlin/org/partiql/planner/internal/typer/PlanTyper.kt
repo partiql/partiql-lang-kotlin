@@ -70,6 +70,7 @@ import org.partiql.planner.internal.ir.rexOpStructField
 import org.partiql.planner.internal.ir.rexOpTupleUnion
 import org.partiql.planner.internal.ir.statementQuery
 import org.partiql.planner.internal.ir.util.PlanRewriter
+import org.partiql.planner.internal.transforms.PlanTransform
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
@@ -1266,17 +1267,9 @@ internal class PlanTyper(
          *     to each row of T and eliminating null values <--- all NULL values are eliminated as inputs
          */
         fun resolveAgg(agg: Agg.Unresolved, arguments: List<Rex>): Pair<Rel.Op.Aggregate.Call, StaticType> {
-            var missingArg = false
             val args = arguments.map {
                 val arg = visitRex(it, it.type)
-                if (arg.type is MissingType) missingArg = true
                 arg
-            }
-
-            //
-            if (missingArg) {
-                handleAlwaysMissing()
-                return relOpAggregateCall(agg, listOf(rexErr("MISSING"))) to MissingType
             }
 
             // Try to match the arguments to functions defined in the catalog
@@ -1404,7 +1397,7 @@ internal class PlanTyper(
      * [PlanningProblemDetails.UndefinedVariable].
      */
     private fun handleUndefinedVariable(name: Identifier, locals: Set<String>): PlanningProblemDetails.UndefinedVariable {
-        val planName = name.toPlan()
+        val planName = PlanTransform.visitIdentifier(name, onProblem)
         val details = PlanningProblemDetails.UndefinedVariable(planName, locals)
         onProblem(
             Problem(
@@ -1414,26 +1407,6 @@ internal class PlanTyper(
         )
         return details
     }
-
-    private fun Identifier.CaseSensitivity.toPlan(): org.partiql.plan.Identifier.CaseSensitivity = when (this) {
-        Identifier.CaseSensitivity.SENSITIVE -> org.partiql.plan.Identifier.CaseSensitivity.SENSITIVE
-        Identifier.CaseSensitivity.INSENSITIVE -> org.partiql.plan.Identifier.CaseSensitivity.INSENSITIVE
-    }
-
-    private fun Identifier.toPlan(): org.partiql.plan.Identifier = when (this) {
-        is Identifier.Symbol -> this.toPlan()
-        is Identifier.Qualified -> this.toPlan()
-    }
-
-    private fun Identifier.Symbol.toPlan(): org.partiql.plan.Identifier.Symbol = org.partiql.plan.Identifier.Symbol(
-        this.symbol,
-        this.caseSensitivity.toPlan()
-    )
-
-    private fun Identifier.Qualified.toPlan(): org.partiql.plan.Identifier.Qualified = org.partiql.plan.Identifier.Qualified(
-        this.root.toPlan(),
-        this.steps.map { it.toPlan() }
-    )
 
     private fun handleUnexpectedType(actual: StaticType, expected: Set<StaticType>) {
         onProblem(
