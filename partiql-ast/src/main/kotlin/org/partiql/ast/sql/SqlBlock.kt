@@ -6,11 +6,13 @@ package org.partiql.ast.sql
  * @param layout    SQL formatting ruleset
  * @return SQL text
  */
+@Deprecated("To be removed in the next major version")
 public fun SqlBlock.sql(layout: SqlLayout = SqlLayout.DEFAULT): String = layout.format(this)
 
 /**
  * Representation of some textual corpus; akin to Wadler's "A prettier printer" Document type.
  */
+@Deprecated("This will be changed in the next major version")
 sealed interface SqlBlock {
 
     public override fun toString(): String
@@ -54,6 +56,7 @@ sealed interface SqlBlock {
     }
 }
 
+@Deprecated("This will be changed in the next major version")
 public interface BlockVisitor<R, C> {
 
     public fun visit(block: SqlBlock, ctx: C): R
@@ -69,6 +72,7 @@ public interface BlockVisitor<R, C> {
     public fun visitLink(block: SqlBlock.Link, ctx: C): R
 }
 
+@Deprecated("This will be changed in the next major version")
 public abstract class BlockBaseVisitor<R, C> : BlockVisitor<R, C> {
 
     public abstract fun defaultReturn(block: SqlBlock, ctx: C): R
