@@ -630,7 +630,7 @@ public data class AnyOfType(val types: Set<StaticType>, override val metas: Map<
         types = this.types.flatMap {
             when (it) {
                 is SingleType -> listOf(it)
-                is AnyType -> listOf(it)
+                is AnyType -> return@flatten it // if `AnyType`, return `AnyType`
                 is AnyOfType -> it.types
             }
         }.toSet()

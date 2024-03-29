@@ -35,8 +35,12 @@ Thank you to all who have contributed!
 - Change modeling of `COALESCE` and `NULLIF` to dedicated nodes in logical plan
 
 ### Deprecated
+- The current SqlBlock, SqlDialect, and SqlLayout are marked as deprecated and will be slightly changed in the next release. 
 
 ### Fixed
+- `StaticType.flatten()` on an `AnyOfType` with `AnyType` will return `AnyType`
+- Updates the default `.sql()` method to use a more efficient (internal) printer implementation.
+
 
 ### Removed
 
@@ -44,6 +48,8 @@ Thank you to all who have contributed!
 
 ### Contributors
 Thank you to all who have contributed!
+- @<your-username>
+- @rchowell
 - @alancai98
 
 ## [0.14.4]
