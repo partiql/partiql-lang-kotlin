@@ -417,17 +417,6 @@ internal class PlannerErrorReportingTests {
         val res = planner.plan(statement(tc.query), session, pc)
         val problems = pc.problems
         val plan = res.plan
-        println(
-            buildString {
-                this.appendLine("--------Plan---------")
-                PlanPrinter.append(this, plan)
-
-                this.appendLine("----------problems---------")
-                problems.forEach {
-                    this.appendLine(it.toString())
-                }
-            }
-        )
 
         assertProblem(
             plan, problems,
