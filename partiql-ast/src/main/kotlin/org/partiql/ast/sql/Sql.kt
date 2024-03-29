@@ -15,7 +15,7 @@ public fun AstNode.sql(): String {
 /**
  * Pretty-print this [AstNode] as SQL text with the given [SqlLayout]
  */
-@Deprecated("To be removed in the next minor version")
+@Deprecated("To be removed in the next major version")
 public fun AstNode.sql(
     layout: SqlLayout = SqlLayout.DEFAULT,
 ): String = SqlDialect.PARTIQL.apply(this).sql(layout)
@@ -23,7 +23,7 @@ public fun AstNode.sql(
 /**
  * Pretty-print this [AstNode] as SQL text with the given [SqlDialect]
  */
-@Deprecated("To be removed in the next minor version")
+@Deprecated("To be removed in the next major version")
 public fun AstNode.sql(
     dialect: SqlDialect = SqlDialect.PARTIQL,
 ): String = dialect.apply(this).sql(SqlLayout.DEFAULT)
@@ -31,7 +31,7 @@ public fun AstNode.sql(
 /**
  * Pretty-print this [AstNode] as SQL text with the given [SqlLayout] and [SqlDialect]
  */
-@Deprecated("To be removed in the next minor version")
+@Deprecated("To be removed in the next major version")
 public fun AstNode.sql(
     layout: SqlLayout,
     dialect: SqlDialect,
