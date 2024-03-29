@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Deprecated
 
 ### Fixed
+- Fixes typing of CASE-WHEN by applying the rules from SQL-99 9.3 for minimal common supertype.
 
 ### Removed
 
@@ -21,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Contributors
 Thank you to all who have contributed!
-- @<your-username>
+- @rchowell
 
 -->
 
@@ -33,9 +34,12 @@ Thank you to all who have contributed!
 - Change `StaticType.AnyOfType`'s `.toString` to not perform `.flatten()`
 
 ### Deprecated
+- The current SqlBlock, SqlDialect, and SqlLayout are marked as deprecated and will be slightly changed in the next release. 
 
 ### Fixed
 - `StaticType.flatten()` on an `AnyOfType` with `AnyType` will return `AnyType`
+- Updates the default `.sql()` method to use a more efficient (internal) printer implementation.
+
 
 ### Removed
 
@@ -44,6 +48,8 @@ Thank you to all who have contributed!
 ### Contributors
 Thank you to all who have contributed!
 - @<your-username>
+- @rchowell
+- @alancai98
 
 ## [0.14.4]
 
