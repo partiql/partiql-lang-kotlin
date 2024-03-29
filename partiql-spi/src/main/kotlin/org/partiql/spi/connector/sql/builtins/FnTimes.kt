@@ -172,24 +172,26 @@ internal object Fn_TIMES__NUMERIC_NUMERIC__NUMERIC {
             }
             add(fn)
         }
-        val unbounded = object : Fn {
-            override val signature = FnSignature(
-                name = "times",
-                returns = TypeNumericUnbounded,
-                parameters = listOf(
-                    FnParameter("lhs", TypeNumericUnbounded),
-                    FnParameter("rhs", TypeNumericUnbounded),
-                ),
-                isNullCall = true,
-                isNullable = false,
-            )
+    }
+}
 
-            override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-                val arg0 = args[0].check<DecimalValue>().value!!
-                val arg1 = args[1].check<DecimalValue>().value!!
-                return decimalValue(arg0.times(arg1))
-            }
-        }
+@OptIn(PartiQLValueExperimental::class, FnExperimental::class)
+internal object Fn_TIMES__BIGNUMERIC_BIGNUMERIC__BIGNUMERIC : Fn {
+    override val signature = FnSignature(
+        name = "times",
+        returns = TypeNumericUnbounded,
+        parameters = listOf(
+            FnParameter("lhs", TypeNumericUnbounded),
+            FnParameter("rhs", TypeNumericUnbounded),
+        ),
+        isNullCall = true,
+        isNullable = false,
+    )
+
+    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
+        val arg0 = args[0].check<DecimalValue>().value!!
+        val arg1 = args[1].check<DecimalValue>().value!!
+        return decimalValue(arg0.times(arg1))
     }
 }
 

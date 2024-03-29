@@ -19,9 +19,7 @@ import org.partiql.value.CharVarUnboundedType
 import org.partiql.value.CollectionValue
 import org.partiql.value.DecimalValue
 import org.partiql.value.DynamicType
-import org.partiql.value.TypeReal
 import org.partiql.value.Float32Value
-import org.partiql.value.TypeDoublePrecision
 import org.partiql.value.Float64Value
 import org.partiql.value.Int16Type
 import org.partiql.value.Int16Value
@@ -41,7 +39,9 @@ import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.StringValue
 import org.partiql.value.TextValue
+import org.partiql.value.TypeDoublePrecision
 import org.partiql.value.TypeIntBig
+import org.partiql.value.TypeReal
 import org.partiql.value.bagValue
 import org.partiql.value.boolValue
 import org.partiql.value.decimalValue

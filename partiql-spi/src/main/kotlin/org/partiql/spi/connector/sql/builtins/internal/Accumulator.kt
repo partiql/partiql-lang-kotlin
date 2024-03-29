@@ -23,9 +23,7 @@ import org.partiql.spi.fn.FnExperimental
 import org.partiql.value.BoolType
 import org.partiql.value.BoolValue
 import org.partiql.value.DecimalValue
-import org.partiql.value.TypeReal
 import org.partiql.value.Float32Value
-import org.partiql.value.TypeDoublePrecision
 import org.partiql.value.Float64Value
 import org.partiql.value.Int16Type
 import org.partiql.value.Int16Value
@@ -42,6 +40,8 @@ import org.partiql.value.PartiQLType
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
+import org.partiql.value.TypeDoublePrecision
+import org.partiql.value.TypeReal
 import org.partiql.value.decimalValue
 import org.partiql.value.float32Value
 import org.partiql.value.float64Value

@@ -25,6 +25,7 @@ import org.partiql.value.PartiQLValueType.INT16
 import org.partiql.value.PartiQLValueType.INT32
 import org.partiql.value.PartiQLValueType.INT64
 import org.partiql.value.PartiQLValueType.INT8
+import org.partiql.value.TypeNumericUnbounded
 import org.partiql.value.check
 import org.partiql.value.decimalValue
 import org.partiql.value.float32Value
@@ -144,14 +145,14 @@ internal object Fn_PLUS__INT_INT__INT : Fn {
 internal object Fn_PLUS__NUMERIC_NUMERIC__NUMERIC {
     @OptIn(FnExperimental::class, PartiQLValueExperimental::class)
     val ALL = buildList<Fn> {
-        FnUtils.numericTypes().forEach { numeric ->
+        FnUtils.numericAdditionSubtractionTypes().forEach { numeric ->
             val fn = object : Fn {
                 override val signature = FnSignature(
                     name = "plus",
-                    returns = numeric,
+                    returns = numeric.result,
                     parameters = listOf(
-                        FnParameter("lhs", numeric),
-                        FnParameter("rhs", numeric),
+                        FnParameter("lhs", numeric.lhs),
+                        FnParameter("rhs", numeric.rhs),
                     ),
                     isNullCall = true,
                     isNullable = false,
@@ -160,11 +161,31 @@ internal object Fn_PLUS__NUMERIC_NUMERIC__NUMERIC {
                 override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
                     val arg0 = args[0].check<DecimalValue>().value!!
                     val arg1 = args[1].check<DecimalValue>().value!!
-                    return decimalValue(arg0 + arg1)
+                    return decimalValue(arg0 + arg1, numeric.result.precision, numeric.result.scale)
                 }
             }
             add(fn)
         }
+    }
+}
+
+@OptIn(PartiQLValueExperimental::class, FnExperimental::class)
+internal object Fn_PLUS__BIGNUMERIC_BIGNUMERIC__BIGNUMERIC : Fn {
+    override val signature = FnSignature(
+        name = "plus",
+        returns = TypeNumericUnbounded,
+        parameters = listOf(
+            FnParameter("lhs", TypeNumericUnbounded),
+            FnParameter("rhs", TypeNumericUnbounded),
+        ),
+        isNullCall = true,
+        isNullable = false,
+    )
+
+    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
+        val arg0 = args[0].check<DecimalValue>().value!!
+        val arg1 = args[1].check<DecimalValue>().value!!
+        return decimalValue(arg0 + arg1)
     }
 }
 

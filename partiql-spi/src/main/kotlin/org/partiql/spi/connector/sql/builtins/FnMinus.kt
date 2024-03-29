@@ -3,6 +3,7 @@
 
 package org.partiql.spi.connector.sql.builtins
 
+import org.partiql.spi.connector.sql.builtins.internal.FnUtils
 import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnParameter
@@ -17,7 +18,6 @@ import org.partiql.value.Int8Value
 import org.partiql.value.IntValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType.DECIMAL_ARBITRARY
 import org.partiql.value.PartiQLValueType.FLOAT32
 import org.partiql.value.PartiQLValueType.FLOAT64
 import org.partiql.value.PartiQLValueType.INT
@@ -25,6 +25,7 @@ import org.partiql.value.PartiQLValueType.INT16
 import org.partiql.value.PartiQLValueType.INT32
 import org.partiql.value.PartiQLValueType.INT64
 import org.partiql.value.PartiQLValueType.INT8
+import org.partiql.value.TypeNumericUnbounded
 import org.partiql.value.check
 import org.partiql.value.decimalValue
 import org.partiql.value.float32Value
@@ -141,15 +142,42 @@ internal object Fn_MINUS__INT_INT__INT : Fn {
     }
 }
 
+internal object Fn_MINUS__NUMERIC_NUMERIC__NUMERIC {
+    @OptIn(FnExperimental::class, PartiQLValueExperimental::class)
+    val ALL = buildList<Fn> {
+        FnUtils.numericAdditionSubtractionTypes().forEach { numeric ->
+            val fn = object : Fn {
+                override val signature = FnSignature(
+                    name = "minus",
+                    returns = numeric.result,
+                    parameters = listOf(
+                        FnParameter("lhs", numeric.lhs),
+                        FnParameter("rhs", numeric.rhs),
+                    ),
+                    isNullCall = true,
+                    isNullable = false,
+                )
+
+                override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
+                    val arg0 = args[0].check<DecimalValue>().value!!
+                    val arg1 = args[1].check<DecimalValue>().value!!
+                    return decimalValue(arg0 - arg1, numeric.result.precision, numeric.result.scale)
+                }
+            }
+            add(fn)
+        }
+    }
+}
+
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
-internal object Fn_MINUS__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__DECIMAL_ARBITRARY : Fn {
+internal object Fn_MINUS__BIGNUMERIC_BIGNUMERIC__BIGNUMERIC : Fn {
 
     override val signature = FnSignature(
         name = "minus",
-        returns = DECIMAL_ARBITRARY,
+        returns = TypeNumericUnbounded,
         parameters = listOf(
-            FnParameter("lhs", DECIMAL_ARBITRARY),
-            FnParameter("rhs", DECIMAL_ARBITRARY),
+            FnParameter("lhs", TypeNumericUnbounded),
+            FnParameter("rhs", TypeNumericUnbounded),
         ),
         isNullCall = true,
         isNullable = false,

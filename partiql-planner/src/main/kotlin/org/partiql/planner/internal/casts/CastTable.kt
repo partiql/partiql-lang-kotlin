@@ -9,8 +9,6 @@ import org.partiql.value.CharType
 import org.partiql.value.CharVarUnboundedType
 import org.partiql.value.ClobType
 import org.partiql.value.DynamicType
-import org.partiql.value.TypeReal
-import org.partiql.value.TypeDoublePrecision
 import org.partiql.value.Int16Type
 import org.partiql.value.Int32Type
 import org.partiql.value.Int64Type
@@ -51,8 +49,10 @@ import org.partiql.value.PartiQLValueType.SYMBOL
 import org.partiql.value.PartiQLValueType.TIME
 import org.partiql.value.PartiQLValueType.TIMESTAMP
 import org.partiql.value.TupleType
+import org.partiql.value.TypeDoublePrecision
 import org.partiql.value.TypeIntBig
 import org.partiql.value.TypeNumericUnbounded
+import org.partiql.value.TypeReal
 
 /**
  * A place to model type relationships (for now this is to answer CAST inquiries).

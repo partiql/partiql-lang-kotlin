@@ -1,6 +1,7 @@
 package org.partiql.planner.internal.typer
 
 import com.amazon.ionelement.api.loadSingleElement
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.junit.jupiter.api.parallel.Execution
@@ -3222,6 +3223,66 @@ class PlanTyperTestsPorted {
     //
     // Parameterized Tests
     //
+
+    @Test
+    fun singleTest() {
+        val tc =
+            SuccessTestCase(
+                name = "ABS on heterogeneous data",
+                query = """
+                    SELECT VALUE
+                        ABS(v)
+                    FROM <<
+                        1.000,
+                        312.2,
+                        4000.56829,
+                        5
+                    >> AS v
+                """,
+                expected = StaticType.STRING
+            )
+        runTest(tc)
+    }
+
+    @Test
+    fun singleTestProjectionList() {
+        val tc =
+            SuccessTestCase(
+                name = "ABS on heterogeneous data",
+                query = """
+                    SELECT
+                        ABS(v) AS abs_v
+                    FROM <<
+                        1.000,
+                        312.2,
+                        4000.56829,
+                        5
+                    >> AS v
+                """,
+                expected = StaticType.STRING
+            )
+        runTest(tc)
+    }
+
+    @Test
+    fun singleTestEq() {
+        val tc =
+            SuccessTestCase(
+                name = "EQ on heterogeneous data",
+                query = """
+                    SELECT VALUE
+                        v = v
+                    FROM <<
+                        1.000,
+                        312.2,
+                        4000.56829,
+                        5
+                    >> AS v
+                """,
+                expected = StaticType.STRING
+            )
+        runTest(tc)
+    }
 
     @ParameterizedTest
     @ArgumentsSource(TestProvider::class)

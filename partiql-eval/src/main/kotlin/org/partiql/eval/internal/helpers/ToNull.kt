@@ -14,8 +14,6 @@ import org.partiql.value.ClobType
 import org.partiql.value.ClobUnboundedType
 import org.partiql.value.DateType
 import org.partiql.value.DynamicType
-import org.partiql.value.TypeReal
-import org.partiql.value.TypeDoublePrecision
 import org.partiql.value.Int16Type
 import org.partiql.value.Int32Type
 import org.partiql.value.Int64Type
@@ -32,6 +30,8 @@ import org.partiql.value.TimeWithTimeZoneType
 import org.partiql.value.TimestampType
 import org.partiql.value.TimestampWithTimeZoneType
 import org.partiql.value.TupleType
+import org.partiql.value.TypeDoublePrecision
+import org.partiql.value.TypeReal
 import org.partiql.value.bagValue
 import org.partiql.value.blobValue
 import org.partiql.value.boolValue

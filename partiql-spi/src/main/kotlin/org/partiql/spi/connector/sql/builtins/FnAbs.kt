@@ -25,6 +25,7 @@ import org.partiql.value.PartiQLValueType.INT16
 import org.partiql.value.PartiQLValueType.INT32
 import org.partiql.value.PartiQLValueType.INT64
 import org.partiql.value.PartiQLValueType.INT8
+import org.partiql.value.TypeNumericUnbounded
 import org.partiql.value.check
 import org.partiql.value.decimalValue
 import org.partiql.value.float32Value
@@ -137,6 +138,7 @@ internal object Fn_ABS__INT__INT : Fn {
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_ABS__NUMERIC__NUMERIC {
     val ALL = buildList<Fn> {
+        // BOUNDED NUMERIC
         FnUtils.numericTypes().forEach { numeric ->
             val fn = object : Fn {
                 override val signature = FnSignature(
@@ -149,11 +151,28 @@ internal object Fn_ABS__NUMERIC__NUMERIC {
 
                 override fun invoke(args: Array<PartiQLValue>): DecimalValue {
                     val value = args[0].check<DecimalValue>().value!!
-                    return decimalValue(value.abs())
+                    return decimalValue(value.abs(), numeric.precision, numeric.scale)
                 }
             }
             add(fn)
         }
+    }
+}
+
+@OptIn(FnExperimental::class)
+internal object Fn_ABS__BIGNUMERIC__BIGNUMERIC : Fn {
+    override val signature = FnSignature(
+        name = "abs",
+        returns = TypeNumericUnbounded,
+        parameters = listOf(FnParameter("value", TypeNumericUnbounded)),
+        isNullCall = true,
+        isNullable = false,
+    )
+
+    @OptIn(PartiQLValueExperimental::class)
+    override fun invoke(args: Array<PartiQLValue>): DecimalValue {
+        val value = args[0].check<DecimalValue>().value!!
+        return decimalValue(value.abs()) // Unbounded!
     }
 }
 
