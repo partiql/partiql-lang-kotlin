@@ -1,8 +1,11 @@
 package org.partiql.planner.internal.transforms
 
+import org.partiql.errors.Problem
 import org.partiql.errors.ProblemCallback
+import org.partiql.errors.UNKNOWN_PROBLEM_LOCATION
 import org.partiql.plan.PlanNode
 import org.partiql.plan.partiQLPlan
+import org.partiql.planner.PlanningProblemDetails
 import org.partiql.planner.internal.ir.Agg
 import org.partiql.planner.internal.ir.Catalog
 import org.partiql.planner.internal.ir.Fn
@@ -12,7 +15,9 @@ import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.Statement
 import org.partiql.planner.internal.ir.visitor.PlanBaseVisitor
+import org.partiql.types.function.FunctionSignature
 import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.PartiQLValueType
 
 /**
  * This is an internal utility to translate from the internal unresolved plan used for typing to the public plan IR.
@@ -58,7 +63,7 @@ internal object PlanTransform : PlanBaseVisitor<PlanNode, ProblemCallback>() {
     override fun visitAggResolved(node: Agg.Resolved, ctx: ProblemCallback) = org.partiql.plan.Agg(node.signature)
 
     override fun visitAggUnresolved(node: Agg.Unresolved, ctx: ProblemCallback): org.partiql.plan.Rex.Op {
-        error("Unresolved aggregation ${node.identifier}")
+        error("Internal error: This should have been handled somewhere else. Cause: Unresolved aggregation ${node.identifier}.")
     }
 
     override fun visitStatement(node: Statement, ctx: ProblemCallback) =
@@ -342,11 +347,56 @@ internal object PlanTransform : PlanBaseVisitor<PlanNode, ProblemCallback>() {
             groups = node.groups.map { visitRex(it, ctx) },
         )
 
-        override fun visitRelOpAggregateCall(node: Rel.Op.Aggregate.Call, ctx: ProblemCallback) =
-            org.partiql.plan.Rel.Op.Aggregate.Call(
-                agg = visitAgg(node.agg, ctx),
+        @OptIn(PartiQLValueExperimental::class)
+        override fun visitRelOpAggregateCall(node: Rel.Op.Aggregate.Call, ctx: ProblemCallback): org.partiql.plan.Rel.Op.Aggregate.Call {
+            val agg = when (val agg = node.agg) {
+                is Agg.Unresolved -> {
+                    val name = agg.identifier.toNormalizedString()
+                    ctx.invoke(
+                        Problem(
+                            UNKNOWN_PROBLEM_LOCATION,
+                            PlanningProblemDetails.UnknownAggregateFunction(
+                                agg.identifier.toString(),
+                                node.args.map { it.type }
+                            )
+                        )
+                    )
+                    org.partiql.plan.Agg(
+                        FunctionSignature.Aggregation(
+                            "UNKNOWN_AGG::$name",
+                            returns = PartiQLValueType.MISSING,
+                            parameters = emptyList()
+                        )
+                    )
+                }
+                is Agg.Resolved -> {
+                    visitAggResolved(agg, ctx)
+                }
+            }
+            return org.partiql.plan.Rel.Op.Aggregate.Call(
+                agg = agg,
                 args = node.args.map { visitRex(it, ctx) },
             )
+        }
+
+        private fun Identifier.toNormalizedString(): String {
+            return when (this) {
+                is Identifier.Symbol -> this.toNormalizedString()
+                is Identifier.Qualified -> {
+                    val toJoin = listOf(this.root) + this.steps
+                    toJoin.joinToString(separator = ".") { ident ->
+                        ident.toNormalizedString()
+                    }
+                }
+            }
+        }
+
+        private fun Identifier.Symbol.toNormalizedString(): String {
+            return when (this.caseSensitivity) {
+                Identifier.CaseSensitivity.SENSITIVE -> "\"${this.symbol}\""
+                Identifier.CaseSensitivity.INSENSITIVE -> this.symbol
+            }
+        }
 
         override fun visitRelOpExclude(node: Rel.Op.Exclude, ctx: ProblemCallback) = org.partiql.plan.Rel.Op.Exclude(
             input = visitRel(node.input, ctx),

@@ -1,6 +1,8 @@
 package org.partiql.planner.internal.typer
 
 import com.amazon.ionelement.api.loadSingleElement
+import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.junit.jupiter.api.parallel.Execution
@@ -129,6 +131,7 @@ class PlanTyperTestsPorted {
                 }
             }
             map.entries.map {
+                println("Map Entry: ${it.key} to ${it.value}")
                 it.key to MemoryConnector.Metadata.of(*it.value.toTypedArray())
             }
         }
@@ -3063,14 +3066,16 @@ class PlanTyperTestsPorted {
         fun aggregationCases() = listOf(
             SuccessTestCase(
                 name = "AGGREGATE over INTS, without alias",
-                query = "SELECT a, COUNT(*), SUM(a), MIN(b) FROM << {'a': 1, 'b': 2} >> GROUP BY a",
+                query = "SELECT a, COUNT(*), COUNT(a), SUM(a), MIN(b), MAX(a) FROM << {'a': 1, 'b': 2} >> GROUP BY a",
                 expected = BagType(
                     StructType(
                         fields = mapOf(
                             "a" to StaticType.INT4,
-                            "_1" to StaticType.INT4,
-                            "_2" to StaticType.INT4.asNullable(),
+                            "_1" to StaticType.INT8,
+                            "_2" to StaticType.INT8,
                             "_3" to StaticType.INT4.asNullable(),
+                            "_4" to StaticType.INT4.asNullable(),
+                            "_5" to StaticType.INT4.asNullable(),
                         ),
                         contentClosed = true,
                         constraints = setOf(
@@ -3083,12 +3088,13 @@ class PlanTyperTestsPorted {
             ),
             SuccessTestCase(
                 name = "AGGREGATE over INTS, with alias",
-                query = "SELECT a, COUNT(*) AS c, SUM(a) AS s, MIN(b) AS m FROM << {'a': 1, 'b': 2} >> GROUP BY a",
+                query = "SELECT a, COUNT(*) AS c_s, COUNT(a) AS c, SUM(a) AS s, MIN(b) AS m FROM << {'a': 1, 'b': 2} >> GROUP BY a",
                 expected = BagType(
                     StructType(
                         fields = mapOf(
                             "a" to StaticType.INT4,
-                            "c" to StaticType.INT4,
+                            "c_s" to StaticType.INT8,
+                            "c" to StaticType.INT8,
                             "s" to StaticType.INT4.asNullable(),
                             "m" to StaticType.INT4.asNullable(),
                         ),
@@ -3108,9 +3114,90 @@ class PlanTyperTestsPorted {
                     StructType(
                         fields = mapOf(
                             "a" to StaticType.DECIMAL,
-                            "c" to StaticType.INT4,
+                            "c" to StaticType.INT8,
                             "s" to StaticType.DECIMAL.asNullable(),
                             "m" to StaticType.DECIMAL.asNullable(),
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "AGGREGATE over nullable integers",
+                query = """
+                    SELECT
+                        a AS a,
+                        COUNT(*) AS count_star,
+                        COUNT(a) AS count_a,
+                        COUNT(b) AS count_b,
+                        SUM(a) AS sum_a,
+                        SUM(b) AS sum_b,
+                        MIN(a) AS min_a,
+                        MIN(b) AS min_b,
+                        MAX(a) AS max_a,
+                        MAX(b) AS max_b,
+                        AVG(a) AS avg_a,
+                        AVG(b) AS avg_b
+                    FROM <<
+                        { 'a': 1, 'b': 2 },
+                        { 'a': 3, 'b': 4 },
+                        { 'a': 5, 'b': NULL }
+                    >> GROUP BY a
+                """.trimIndent(),
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "a" to StaticType.INT4,
+                            "count_star" to StaticType.INT8,
+                            "count_a" to StaticType.INT8,
+                            "count_b" to StaticType.INT8,
+                            "sum_a" to StaticType.INT4.asNullable(),
+                            "sum_b" to StaticType.INT4.asNullable(),
+                            "min_a" to StaticType.INT4.asNullable(),
+                            "min_b" to StaticType.INT4.asNullable(),
+                            "max_a" to StaticType.INT4.asNullable(),
+                            "max_b" to StaticType.INT4.asNullable(),
+                            "avg_a" to StaticType.INT4.asNullable(),
+                            "avg_b" to StaticType.INT4.asNullable(),
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "AGGREGATE over nullable integers",
+                query = """
+                    SELECT
+                        COUNT(a) AS count_a
+                    FROM <<
+                        { 'a': 1, 'b': 2 }
+                    >> t1 INNER JOIN <<
+                        { 'c': 1, 'd': 3 }
+                    >> t2
+                        ON t1.a = t1.c
+                        AND (
+                            1 = (
+                            SELECT COUNT(e) AS count_e
+                            FROM <<
+                                { 'e': 10 }
+                            >> t3
+                            )
+                        );
+                """.trimIndent(),
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "count_a" to StaticType.INT8
                         ),
                         contentClosed = true,
                         constraints = setOf(
@@ -3371,6 +3458,101 @@ class PlanTyperTestsPorted {
     //
     // Parameterized Tests
     //
+
+    @Test
+    fun failingAggTest() {
+        val tc = SuccessTestCase(
+            name = "AGGREGATE over nullable integers",
+            query = """
+                SELECT T1.a
+                FROM T1
+                    LEFT JOIN T2 AS T2_1
+                        ON T2_1.d =
+                            (
+                                SELECT
+                                    CASE WHEN COUNT(f) = 1 THEN MAX(f) ELSE 0 END AS e
+                                FROM T3 AS T3_mapping
+                            )
+                    LEFT JOIN T2 AS T2_2
+                        ON T2_2.d =
+                            (
+                                SELECT
+                                    CASE WHEN COUNT(f) = 1 THEN MAX(f) ELSE 0 END AS e
+                                FROM T3 AS T3_mapping
+                            )
+                        ;
+            """.trimIndent(),
+            expected = BagType(
+                StructType(
+                    fields = mapOf(
+                        "a" to StaticType.BOOL
+                    ),
+                    contentClosed = true,
+                    constraints = setOf(
+                        TupleConstraint.Open(false),
+                        TupleConstraint.UniqueAttrs(true),
+                        TupleConstraint.Ordered
+                    )
+                )
+            ),
+            catalog = "aggregations"
+        )
+        runTest(tc)
+    }
+
+    @Test
+    @Disabled("The planner doesn't support heterogeneous input to aggregation functions (yet?).")
+    fun failingTest() {
+        val tc = SuccessTestCase(
+            name = "AGGREGATE over heterogeneous data",
+            query = """
+                    SELECT
+                        a AS a,
+                        COUNT(*) AS count_star,
+                        COUNT(a) AS count_a,
+                        COUNT(b) AS count_b,
+                        SUM(a) AS sum_a,
+                        SUM(b) AS sum_b,
+                        MIN(a) AS min_a,
+                        MIN(b) AS min_b,
+                        MAX(a) AS max_a,
+                        MAX(b) AS max_b,
+                        AVG(a) AS avg_a,
+                        AVG(b) AS avg_b
+                    FROM <<
+                        { 'a': 1.0, 'b': 2.0 },
+                        { 'a': 3, 'b': 4 },
+                        { 'a': 5, 'b': NULL }
+                    >> GROUP BY a
+            """.trimIndent(),
+            expected = BagType(
+                StructType(
+                    fields = mapOf(
+                        "a" to StaticType.DECIMAL,
+                        "count_star" to StaticType.INT8,
+                        "count_a" to StaticType.INT8,
+                        "count_b" to StaticType.INT8,
+                        "sum_a" to StaticType.DECIMAL.asNullable(),
+                        "sum_b" to StaticType.DECIMAL.asNullable(),
+                        "min_a" to StaticType.DECIMAL.asNullable(),
+                        "min_b" to StaticType.DECIMAL.asNullable(),
+                        "max_a" to StaticType.DECIMAL.asNullable(),
+                        "max_b" to StaticType.DECIMAL.asNullable(),
+                        "avg_a" to StaticType.DECIMAL.asNullable(),
+                        "avg_b" to StaticType.DECIMAL.asNullable(),
+                    ),
+                    contentClosed = true,
+                    constraints = setOf(
+                        TupleConstraint.Open(false),
+                        TupleConstraint.UniqueAttrs(true),
+                        TupleConstraint.Ordered
+                    )
+                )
+            )
+        )
+        runTest(tc)
+    }
+
     @ParameterizedTest
     @ArgumentsSource(TestProvider::class)
     fun test(tc: TestCase) = runTest(tc)

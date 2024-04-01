@@ -702,13 +702,13 @@ internal object PartiQLHeader : Header() {
     private fun count() = listOf(
         FunctionSignature.Aggregation(
             name = "count",
-            returns = INT32,
+            returns = INT64,
             parameters = listOf(FunctionParameter("value", ANY)),
             isNullable = false,
         ),
         FunctionSignature.Aggregation(
             name = "count_star",
-            returns = INT32,
+            returns = INT64,
             parameters = listOf(),
             isNullable = false,
         ),
@@ -741,6 +741,15 @@ internal object PartiQLHeader : Header() {
         )
     }
 
+    /**
+     * According to SQL:1999 Section 6.16 Syntax Rule 14.c and Rule 14.d:
+     * > If AVG is specified and DT is exact numeric, then the declared type of the result is exact
+     * numeric with implementation-defined precision not less than the precision of DT and
+     * implementation-defined scale not less than the scale of DT.
+     *
+     * > If DT is approximate numeric, then the declared type of the result is approximate numeric
+     * with implementation-defined precision not less than the precision of DT.
+     */
     private fun avg() = types.numeric.map {
         FunctionSignature.Aggregation(
             name = "avg",

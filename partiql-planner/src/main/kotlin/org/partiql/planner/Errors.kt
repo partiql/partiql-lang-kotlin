@@ -94,6 +94,14 @@ public sealed class PlanningProblemDetails(
         "Unknown function `$identifier($types)"
     })
 
+    public data class UnknownAggregateFunction(
+        val identifier: String,
+        val args: List<StaticType>,
+    ) : PlanningProblemDetails(ProblemSeverity.ERROR, {
+        val types = args.joinToString { "<${it.toString().lowercase()}>" }
+        "Unknown aggregate function `$identifier($types)"
+    })
+
     public object ExpressionAlwaysReturnsNullOrMissing : PlanningProblemDetails(
         severity = ProblemSeverity.ERROR,
         messageFormatter = { "Expression always returns null or missing." }

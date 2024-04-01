@@ -33,6 +33,8 @@ Thank you to all who have contributed!
 ### Changed
 - Change `StaticType.AnyOfType`'s `.toString` to not perform `.flatten()`
 - Change modeling of `COALESCE` and `NULLIF` to dedicated nodes in logical plan
+- Function resolution logic: Now the function resolver would match all possible candidate (based on if the argument can be coerced to the Signature parameter type). If there are multiple match it will first attempt to pick the one requires the least cast, then pick the function with the highest precedence.
+- **Behavioral change**: The COUNT aggregate function now returns INT64.
 
 ### Deprecated
 - The current SqlBlock, SqlDialect, and SqlLayout are marked as deprecated and will be slightly changed in the next release. 
@@ -40,7 +42,7 @@ Thank you to all who have contributed!
 ### Fixed
 - `StaticType.flatten()` on an `AnyOfType` with `AnyType` will return `AnyType`
 - Updates the default `.sql()` method to use a more efficient (internal) printer implementation.
-
+- Fixes aggregations of attribute references to values of union types. This fix also allows for proper error handling by passing the UnknownAggregateFunction problem to the ProblemCallback. Please note that, with this change, the planner will no longer immediately throw an IllegalStateException for this exact scenario.
 
 ### Removed
 
@@ -51,6 +53,7 @@ Thank you to all who have contributed!
 - @<your-username>
 - @rchowell
 - @alancai98
+- @johnedquinn
 
 ## [0.14.4]
 

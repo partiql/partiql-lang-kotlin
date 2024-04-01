@@ -1268,8 +1268,8 @@ internal class PlanTyper(
         fun resolveAgg(agg: Agg.Unresolved, arguments: List<Rex>): Pair<Rel.Op.Aggregate.Call, StaticType> {
             var missingArg = false
             val args = arguments.map {
-                val arg = visitRex(it, null)
-                if (arg.type.isMissable()) missingArg = true
+                val arg = visitRex(it, it.type)
+                if (arg.type is MissingType) missingArg = true
                 arg
             }
 
