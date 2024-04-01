@@ -1,7 +1,10 @@
+@file:OptIn(DoNotImplementInterface::class)
+
 package org.partiql.plan.debug
 
 import org.partiql.plan.PlanNode
 import org.partiql.plan.Rel
+import org.partiql.plan.annotation.DoNotImplementInterface
 import org.partiql.plan.visitor.PlanBaseVisitor
 import kotlin.reflect.KVisibility
 import kotlin.reflect.full.isSubclassOf

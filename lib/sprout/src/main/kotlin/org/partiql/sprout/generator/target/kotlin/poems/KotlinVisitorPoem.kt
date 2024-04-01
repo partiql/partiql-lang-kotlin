@@ -15,6 +15,8 @@ import org.partiql.sprout.generator.target.kotlin.KotlinSymbols
 import org.partiql.sprout.generator.target.kotlin.spec.KotlinNodeSpec
 import org.partiql.sprout.generator.target.kotlin.spec.KotlinPackageSpec
 import org.partiql.sprout.generator.target.kotlin.spec.KotlinUniverseSpec
+import org.partiql.sprout.generator.target.kotlin.types.Annotations.DO_NOT_IMPLEMENT_INTERFACE
+import org.partiql.sprout.generator.target.kotlin.types.Annotations.DO_NOT_IMPLEMENT_INTERFACE_WARNING
 import org.partiql.sprout.generator.target.kotlin.types.Parameters
 import org.partiql.sprout.model.TypeDef
 import org.partiql.sprout.model.TypeRef
@@ -183,8 +185,21 @@ class KotlinVisitorPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
                     addFunction(visit)
                 }
             }
+            .apply {
+                if (symbols.restrictInterfaceImpl) {
+                    addKdoc("$DO_NOT_IMPLEMENT_INTERFACE_WARNING. Please extend [$baseVisitorName].")
+                    addAnnotation(ClassName(visitorPackageName, listOf(DO_NOT_IMPLEMENT_INTERFACE)))
+                }
+            }
             .build()
-        return FileSpec.builder(visitorPackageName, visitorName).addType(visitor).build()
+        return FileSpec.builder(visitorPackageName, visitorName)
+            .apply {
+                if (symbols.restrictInterfaceImpl) {
+                    addImport(ClassName(symbols.rootPackage, listOf("annotation")), listOf(DO_NOT_IMPLEMENT_INTERFACE))
+                }
+            }
+            .addType(visitor)
+            .build()
     }
 
     /**

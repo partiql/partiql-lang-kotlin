@@ -52,6 +52,7 @@ val generate = tasks.register<Exec>("generate") {
         "--poems", "builder",
         "--poems", "util",
         "--opt-in", "org.partiql.value.PartiQLValueExperimental",
+        "--restrict-interface-impl",
         "./src/main/resources/partiql_plan.ion"
     )
 }

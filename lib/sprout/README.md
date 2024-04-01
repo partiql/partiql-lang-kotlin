@@ -15,19 +15,22 @@ Sprout is a graphical IR generator. It is inspired by PIG, ANTLR, and Protobuf.
 ```shell
 $ ./lib/sprout/build/install/sprout/bin/sprout generate kotlin --help
 
-Usage: sprout generate kotlin [-hV] [-m=<modifier>] [-o=<out>]
-                              [-p=<packageRoot>] [-u=<id>] [--poems=<poems>]...
-                              <file>
+Usage: sprout generate kotlin [-hV] [--restrict-interface-impl] [-o=<out>]
+                              [-p=<packageRoot>] [-u=<id>]
+                              [--opt-in=<optIns>]... [--poems=<poems>]... <file>
 Generates Kotlin sources from type universe definitions
-      <file>            Type definition file
-  -h, --help            Show this help message and exit.
-  -m, --modifier=<modifier>
-                        Generated node class modifier. Options FINAL, DATA, OPEN
-  -o, --out=<out>       Generated source output directory
+      <file>              Type definition file
+  -h, --help              Show this help message and exit.
+  -o, --out=<out>         Generated source output directory
+      --opt-in=<optIns>   Opt-in annotations to add to generated sources
   -p, --package=<packageRoot>
-                        Package root
-      --poems=<poems>   Poem templates to apply
-  -u, --universe=<id>   Universe identifier
+                          Package root
+      --poems=<poems>     Poem templates to apply
+      --restrict-interface-impl
+                          Restrict interface implementations with an opt-in
+                            annotation
+  -u, --universe=<id>     Universe identifier
+  -V, --version           Print version information and exit.
 ```
 
 **Example**

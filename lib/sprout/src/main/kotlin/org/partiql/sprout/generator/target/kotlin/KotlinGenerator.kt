@@ -9,6 +9,7 @@ import com.squareup.kotlinpoet.TypeSpec
 import net.pearx.kasechange.toCamelCase
 import org.partiql.sprout.generator.Generator
 import org.partiql.sprout.generator.target.kotlin.poems.KotlinBuilderPoem
+import org.partiql.sprout.generator.target.kotlin.poems.KotlinDoNotImplementInterfacePoem
 import org.partiql.sprout.generator.target.kotlin.poems.KotlinFactoryPoem
 import org.partiql.sprout.generator.target.kotlin.poems.KotlinJacksonPoem
 import org.partiql.sprout.generator.target.kotlin.poems.KotlinListenerPoem
@@ -17,6 +18,7 @@ import org.partiql.sprout.generator.target.kotlin.poems.KotlinVisitorPoem
 import org.partiql.sprout.generator.target.kotlin.spec.KotlinFileSpec
 import org.partiql.sprout.generator.target.kotlin.spec.KotlinNodeSpec
 import org.partiql.sprout.generator.target.kotlin.spec.KotlinUniverseSpec
+import org.partiql.sprout.generator.target.kotlin.types.Annotations.DO_NOT_IMPLEMENT_INTERFACE
 import org.partiql.sprout.model.TypeDef
 import org.partiql.sprout.model.TypeProp
 import org.partiql.sprout.model.Universe
@@ -44,6 +46,7 @@ class KotlinGenerator(private val options: KotlinOptions) : Generator<KotlinResu
                 "listener" -> KotlinListenerPoem(symbols)
                 "jackson" -> KotlinJacksonPoem(symbols)
                 "util" -> KotlinUtilsPoem(symbols)
+                DO_NOT_IMPLEMENT_INTERFACE -> KotlinDoNotImplementInterfacePoem(symbols)
                 else -> error("unknown poem $it, expected: visitor, builder, listener, jackson, util")
             }
         }

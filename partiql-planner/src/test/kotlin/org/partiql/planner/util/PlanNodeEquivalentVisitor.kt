@@ -1,3 +1,5 @@
+@file:OptIn(DoNotImplementInterface::class)
+
 package org.partiql.planner.util
 
 import org.partiql.plan.Agg
@@ -7,6 +9,7 @@ import org.partiql.plan.Identifier
 import org.partiql.plan.PlanNode
 import org.partiql.plan.Rel
 import org.partiql.plan.Rex
+import org.partiql.plan.annotation.DoNotImplementInterface
 import org.partiql.plan.visitor.PlanBaseVisitor
 import org.partiql.value.PartiQLValueExperimental
 

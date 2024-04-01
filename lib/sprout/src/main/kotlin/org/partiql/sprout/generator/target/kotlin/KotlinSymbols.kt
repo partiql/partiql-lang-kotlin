@@ -52,6 +52,11 @@ class KotlinSymbols private constructor(
     val base: ClassName = ClassName(rootPackage, "${rootId}Node")
 
     /**
+     * Whether generated interfaces will restrict implementation using an opt-in annotation
+     */
+    val restrictInterfaceImpl = options.restrictInterfaceImpl
+
+    /**
      * Memoize converting a TypeRef.Path to a camel case identifier to be used as method/function names
      */
     private val camels: MutableMap<TypeRef.Path, String> = mutableMapOf()

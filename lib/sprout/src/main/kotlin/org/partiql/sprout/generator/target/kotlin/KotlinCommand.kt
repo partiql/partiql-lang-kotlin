@@ -1,5 +1,6 @@
 package org.partiql.sprout.generator.target.kotlin
 
+import org.partiql.sprout.generator.target.kotlin.types.Annotations.DO_NOT_IMPLEMENT_INTERFACE
 import org.partiql.sprout.parser.SproutParser
 import picocli.CommandLine
 import java.io.BufferedReader
@@ -41,6 +42,12 @@ class KotlinCommand : Callable<Int> {
     lateinit var out: Path
 
     @CommandLine.Option(
+        names = ["--restrict-interface-impl"],
+        description = ["Restrict interface implementations with an opt-in annotation"]
+    )
+    var restrictInterfaceImpl: Boolean = false
+
+    @CommandLine.Option(
         names = ["--poems"],
         description = ["Poem templates to apply"],
     )
@@ -56,10 +63,17 @@ class KotlinCommand : Callable<Int> {
         val input = BufferedReader(FileInputStream(file).reader()).readText()
         val parser = SproutParser.default()
         val universe = parser.parse(id, input)
+        if (restrictInterfaceImpl) {
+            // If interface implementations are restricted, add annotation to opt-in for generated sources.
+            // Currently only applies for the visitor interface.
+            optIns = optIns + "$packageRoot.annotation.$DO_NOT_IMPLEMENT_INTERFACE"
+            poems = poems + DO_NOT_IMPLEMENT_INTERFACE
+        }
         val options = KotlinOptions(
             packageRoot = packageRoot,
             poems = poems,
             optIns = optIns,
+            restrictInterfaceImpl = restrictInterfaceImpl
         )
         val generator = KotlinGenerator(options)
         val result = generator.generate(universe)

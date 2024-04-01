@@ -21,5 +21,9 @@ object Annotations {
 
     val jvmStatic = AnnotationSpec.builder(JvmStatic::class).build()
 
+    internal const val DO_NOT_IMPLEMENT_INTERFACE = "DoNotImplementInterface"
+
+    internal const val DO_NOT_IMPLEMENT_INTERFACE_WARNING = "WARNING: This interface should not be implemented or extended by code outside of this library"
+
     fun suppress(what: String) = AnnotationSpec.builder(Suppress::class).addMember("\"$what\"").build()
 }
