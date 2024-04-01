@@ -38,6 +38,8 @@ Thank you to all who have contributed!
 
 ### Deprecated
 - The current SqlBlock, SqlDialect, and SqlLayout are marked as deprecated and will be slightly changed in the next release. 
+- Deprecates constructor and properties `variableName` and `caseSensitive` of `org.partiql.planner.PlanningProblemDetails.UndefinedVariable`
+  in favor of newly added constructor and properties `name` and `inScopeVariables`.
 
 ### Fixed
 - `StaticType.flatten()` on an `AnyOfType` with `AnyType` will return `AnyType`

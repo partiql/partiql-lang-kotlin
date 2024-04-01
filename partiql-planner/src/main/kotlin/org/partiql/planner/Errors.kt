@@ -2,6 +2,7 @@ package org.partiql.planner
 
 import org.partiql.errors.ProblemDetails
 import org.partiql.errors.ProblemSeverity
+import org.partiql.plan.Identifier
 import org.partiql.types.StaticType
 
 /**
@@ -24,14 +25,68 @@ public sealed class PlanningProblemDetails(
     public data class CompileError(val errorMessage: String) :
         PlanningProblemDetails(ProblemSeverity.ERROR, { errorMessage })
 
-    public data class UndefinedVariable(val variableName: String, val caseSensitive: Boolean) :
-        PlanningProblemDetails(
-            ProblemSeverity.ERROR,
-            {
-                "Undefined variable '$variableName'." +
-                    quotationHint(caseSensitive)
+    public data class UndefinedVariable(
+        val name: Identifier,
+        val inScopeVariables: Set<String>
+    ) : PlanningProblemDetails(
+        ProblemSeverity.ERROR,
+        {
+            "Variable ${pretty(name)} does not exist in the database environment and is not an attribute of the following in-scope variables $inScopeVariables." +
+                quotationHint(isSymbolAndCaseSensitive(name))
+        }
+    ) {
+
+        @Deprecated("This will be removed in a future major version release.", replaceWith = ReplaceWith("name"))
+        val variableName: String = when (name) {
+            is Identifier.Symbol -> name.symbol
+            is Identifier.Qualified -> when (name.steps.size) {
+                0 -> name.root.symbol
+                else -> name.steps.last().symbol
             }
+        }
+
+        @Deprecated("This will be removed in a future major version release.", replaceWith = ReplaceWith("name"))
+        val caseSensitive: Boolean = when (name) {
+            is Identifier.Symbol -> name.caseSensitivity == Identifier.CaseSensitivity.SENSITIVE
+            is Identifier.Qualified -> when (name.steps.size) {
+                0 -> name.root.caseSensitivity == Identifier.CaseSensitivity.SENSITIVE
+                else -> name.steps.last().caseSensitivity == Identifier.CaseSensitivity.SENSITIVE
+            }
+        }
+
+        @Deprecated("This will be removed in a future major version release.", replaceWith = ReplaceWith("UndefinedVariable(Identifier, Set<String>)"))
+        public constructor(variableName: String, caseSensitive: Boolean) : this(
+            Identifier.Symbol(
+                variableName,
+                when (caseSensitive) {
+                    true -> Identifier.CaseSensitivity.SENSITIVE
+                    false -> Identifier.CaseSensitivity.INSENSITIVE
+                }
+            ),
+            emptySet()
         )
+
+        private companion object {
+            /**
+             * Used to check whether the [id] is an [Identifier.Symbol] and whether it is case-sensitive. This is helpful
+             * for giving the [quotationHint] to the user.
+             */
+            private fun isSymbolAndCaseSensitive(id: Identifier): Boolean = when (id) {
+                is Identifier.Symbol -> id.caseSensitivity == Identifier.CaseSensitivity.SENSITIVE
+                is Identifier.Qualified -> false
+            }
+
+            private fun pretty(id: Identifier): String = when (id) {
+                is Identifier.Symbol -> pretty(id)
+                is Identifier.Qualified -> (listOf(id.root) + id.steps).joinToString(".") { pretty(it) }
+            }
+
+            private fun pretty(id: Identifier.Symbol): String = when (id.caseSensitivity) {
+                Identifier.CaseSensitivity.INSENSITIVE -> id.symbol
+                Identifier.CaseSensitivity.SENSITIVE -> "\"${id.symbol}\""
+            }
+        }
+    }
 
     public data class UndefinedDmlTarget(val variableName: String, val caseSensitive: Boolean) :
         PlanningProblemDetails(

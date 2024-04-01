@@ -451,8 +451,8 @@ internal class PlanTyper(
             }
             val resolvedVar = env.resolve(path, locals, strategy)
             if (resolvedVar == null) {
-                handleUndefinedVariable(path.steps.last())
-                return rex(ANY, rexOpErr("Undefined variable ${node.identifier}"))
+                val details = handleUndefinedVariable(node.identifier, locals.schema.map { it.name }.toSet())
+                return rex(ANY, rexOpErr(details.message))
             }
             return visitRex(resolvedVar, null)
         }
@@ -1399,14 +1399,41 @@ internal class PlanTyper(
 
     // ERRORS
 
-    private fun handleUndefinedVariable(name: BindingName) {
+    /**
+     * Invokes [onProblem] with a newly created [PlanningProblemDetails.UndefinedVariable] and returns the
+     * [PlanningProblemDetails.UndefinedVariable].
+     */
+    private fun handleUndefinedVariable(name: Identifier, locals: Set<String>): PlanningProblemDetails.UndefinedVariable {
+        val planName = name.toPlan()
+        val details = PlanningProblemDetails.UndefinedVariable(planName, locals)
         onProblem(
             Problem(
                 sourceLocation = UNKNOWN_PROBLEM_LOCATION,
-                details = PlanningProblemDetails.UndefinedVariable(name.name, name.bindingCase == BindingCase.SENSITIVE)
+                details = details
             )
         )
+        return details
     }
+
+    private fun Identifier.CaseSensitivity.toPlan(): org.partiql.plan.Identifier.CaseSensitivity = when (this) {
+        Identifier.CaseSensitivity.SENSITIVE -> org.partiql.plan.Identifier.CaseSensitivity.SENSITIVE
+        Identifier.CaseSensitivity.INSENSITIVE -> org.partiql.plan.Identifier.CaseSensitivity.INSENSITIVE
+    }
+
+    private fun Identifier.toPlan(): org.partiql.plan.Identifier = when (this) {
+        is Identifier.Symbol -> this.toPlan()
+        is Identifier.Qualified -> this.toPlan()
+    }
+
+    private fun Identifier.Symbol.toPlan(): org.partiql.plan.Identifier.Symbol = org.partiql.plan.Identifier.Symbol(
+        this.symbol,
+        this.caseSensitivity.toPlan()
+    )
+
+    private fun Identifier.Qualified.toPlan(): org.partiql.plan.Identifier.Qualified = org.partiql.plan.Identifier.Qualified(
+        this.root.toPlan(),
+        this.steps.map { it.toPlan() }
+    )
 
     private fun handleUnexpectedType(actual: StaticType, expected: Set<StaticType>) {
         onProblem(

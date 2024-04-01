@@ -15,6 +15,7 @@ import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.errors.Problem
 import org.partiql.errors.UNKNOWN_PROBLEM_LOCATION
 import org.partiql.parser.PartiQLParser
+import org.partiql.plan.Identifier
 import org.partiql.plan.PartiQLPlan
 import org.partiql.plan.Statement
 import org.partiql.plan.debug.PlanPrinter
@@ -104,6 +105,18 @@ class PlanTyperTestsPorted {
             }
         }
 
+        private fun id(vararg parts: Identifier.Symbol): Identifier {
+            return when (parts.size) {
+                0 -> error("Identifier requires more than one part.")
+                1 -> parts.first()
+                else -> Identifier.Qualified(parts.first(), parts.drop(1))
+            }
+        }
+
+        private fun sensitive(part: String): Identifier.Symbol = Identifier.Symbol(part, Identifier.CaseSensitivity.SENSITIVE)
+
+        private fun insensitive(part: String): Identifier.Symbol = Identifier.Symbol(part, Identifier.CaseSensitivity.INSENSITIVE)
+
         /**
          * MemoryConnector.Factory from reading the resources in /resource_path.txt for Github CI/CD.
          */
@@ -131,7 +144,6 @@ class PlanTyperTestsPorted {
                 }
             }
             map.entries.map {
-                println("Map Entry: ${it.key} to ${it.value}")
                 it.key to MemoryConnector.Metadata.of(*it.value.toTypedArray())
             }
         }
@@ -805,7 +817,7 @@ class PlanTyperTestsPorted {
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UndefinedVariable("a", false)
+                        PlanningProblemDetails.UndefinedVariable(insensitive("a"), setOf("t1", "t2"))
                     )
                 }
             ),
@@ -2022,7 +2034,7 @@ class PlanTyperTestsPorted {
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UndefinedVariable("unknown_col", false)
+                        PlanningProblemDetails.UndefinedVariable(insensitive("unknown_col"), setOf("pets"))
                     )
                 }
             ),
@@ -2920,7 +2932,7 @@ class PlanTyperTestsPorted {
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UndefinedVariable("main", true)
+                        PlanningProblemDetails.UndefinedVariable(id(sensitive("pql"), sensitive("main")), setOf())
                     )
                 }
             ),
@@ -2933,7 +2945,7 @@ class PlanTyperTestsPorted {
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UndefinedVariable("pql", true)
+                        PlanningProblemDetails.UndefinedVariable(sensitive("pql"), setOf())
                     )
                 }
             ),
@@ -3177,27 +3189,28 @@ class PlanTyperTestsPorted {
             SuccessTestCase(
                 name = "AGGREGATE over nullable integers",
                 query = """
-                    SELECT
-                        COUNT(a) AS count_a
-                    FROM <<
-                        { 'a': 1, 'b': 2 }
-                    >> t1 INNER JOIN <<
-                        { 'c': 1, 'd': 3 }
-                    >> t2
-                        ON t1.a = t1.c
-                        AND (
-                            1 = (
-                            SELECT COUNT(e) AS count_e
-                            FROM <<
-                                { 'e': 10 }
-                            >> t3
+                    SELECT T1.a
+                    FROM T1
+                        LEFT JOIN T2 AS T2_1
+                            ON T2_1.d =
+                            (
+                                SELECT
+                                    CASE WHEN COUNT(f) = 1 THEN MAX(f) ELSE 0 END AS e
+                                FROM T3 AS T3_mapping
                             )
-                        );
+                        LEFT JOIN T2 AS T2_2
+                            ON T2_2.d =
+                            (
+                                SELECT
+                                    CASE WHEN COUNT(f) = 1 THEN MAX(f) ELSE 0 END AS e
+                                FROM T3 AS T3_mapping
+                            )
+                    ;
                 """.trimIndent(),
                 expected = BagType(
                     StructType(
                         fields = mapOf(
-                            "count_a" to StaticType.INT8
+                            "a" to StaticType.BOOL
                         ),
                         contentClosed = true,
                         constraints = setOf(
@@ -3206,8 +3219,9 @@ class PlanTyperTestsPorted {
                             TupleConstraint.Ordered
                         )
                     )
-                )
-            ),
+                ),
+                catalog = "aggregations"
+            )
         )
 
         @JvmStatic
@@ -3458,47 +3472,6 @@ class PlanTyperTestsPorted {
     //
     // Parameterized Tests
     //
-
-    @Test
-    fun failingAggTest() {
-        val tc = SuccessTestCase(
-            name = "AGGREGATE over nullable integers",
-            query = """
-                SELECT T1.a
-                FROM T1
-                    LEFT JOIN T2 AS T2_1
-                        ON T2_1.d =
-                            (
-                                SELECT
-                                    CASE WHEN COUNT(f) = 1 THEN MAX(f) ELSE 0 END AS e
-                                FROM T3 AS T3_mapping
-                            )
-                    LEFT JOIN T2 AS T2_2
-                        ON T2_2.d =
-                            (
-                                SELECT
-                                    CASE WHEN COUNT(f) = 1 THEN MAX(f) ELSE 0 END AS e
-                                FROM T3 AS T3_mapping
-                            )
-                        ;
-            """.trimIndent(),
-            expected = BagType(
-                StructType(
-                    fields = mapOf(
-                        "a" to StaticType.BOOL
-                    ),
-                    contentClosed = true,
-                    constraints = setOf(
-                        TupleConstraint.Open(false),
-                        TupleConstraint.UniqueAttrs(true),
-                        TupleConstraint.Ordered
-                    )
-                )
-            ),
-            catalog = "aggregations"
-        )
-        runTest(tc)
-    }
 
     @Test
     @Disabled("The planner doesn't support heterogeneous input to aggregation functions (yet?).")
@@ -3824,7 +3797,7 @@ class PlanTyperTestsPorted {
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UndefinedVariable("pets", false)
+                        PlanningProblemDetails.UndefinedVariable(insensitive("pets"), emptySet())
                     )
                 }
             ),
@@ -3857,7 +3830,7 @@ class PlanTyperTestsPorted {
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UndefinedVariable("pets", false)
+                        PlanningProblemDetails.UndefinedVariable(insensitive("pets"), emptySet())
                     )
                 }
             ),
@@ -3924,7 +3897,7 @@ class PlanTyperTestsPorted {
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UndefinedVariable("pets", false)
+                        PlanningProblemDetails.UndefinedVariable(id(insensitive("ddb"), insensitive("pets")), emptySet())
                     )
                 }
             ),
@@ -4194,7 +4167,7 @@ class PlanTyperTestsPorted {
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UndefinedVariable("non_existing_column", false)
+                        PlanningProblemDetails.UndefinedVariable(insensitive("non_existing_column"), emptySet())
                     )
                 }
             ),
@@ -4249,7 +4222,7 @@ class PlanTyperTestsPorted {
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UndefinedVariable("unknown_col", false)
+                        PlanningProblemDetails.UndefinedVariable(insensitive("unknown_col"), setOf("orders"))
                     )
                 }
             ),
