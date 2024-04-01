@@ -40,16 +40,15 @@ internal object Fn_NOT__MISSING__BOOL : Fn {
 
     override val signature = FnSignature(
         name = "not",
-        returns = MISSING,
+        returns = BOOL,
         parameters = listOf(FnParameter("value", MISSING)),
-        isNullable = false,
+        isNullable = true,
         isNullCall = true,
-        isMissable = true,
-        isMissingCall = true,
+        isMissable = false,
+        isMissingCall = false,
     )
 
-    // TODO: determine what this behavior should be
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        throw TypeCheckException()
+        return boolValue(null)
     }
 }

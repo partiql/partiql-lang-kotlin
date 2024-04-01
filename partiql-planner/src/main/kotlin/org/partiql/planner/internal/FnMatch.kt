@@ -54,17 +54,7 @@ internal sealed class FnMatch {
      * @property exhaustive     True if all argument permutations (branches) are matched.
      */
     data class Dynamic(
-        val candidates: List<Candidate>,
+        val candidates: List<Static>,
         val exhaustive: Boolean,
-    ) : FnMatch() {
-
-        /**
-         * Represents a candidate of dynamic dispatch.
-         *
-         * @property fn             Function to invoke.
-         */
-        data class Candidate(
-            val fn: Static
-        )
-    }
+    ) : FnMatch()
 }

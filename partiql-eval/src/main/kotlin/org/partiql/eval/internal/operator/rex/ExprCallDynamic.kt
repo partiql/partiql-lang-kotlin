@@ -21,7 +21,7 @@ import org.partiql.value.PartiQLValueType
  */
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal class ExprCallDynamic(
-    candidates: List<Candidate>,
+    candidates: Array<Candidate>,
     private val args: Array<Operator.Expr>
 ) : Operator.Expr {
 
@@ -48,12 +48,10 @@ internal class ExprCallDynamic(
      *
      * @see ExprCallDynamic
      */
-    internal data class Candidate(
+    data class Candidate(
         val fn: Fn,
         val coercions: Array<Ref.Cast?>
     ) {
-
-        private val signatureParameters = fn.signature.parameters.map { it.type }.toTypedArray()
 
         fun eval(originalArgs: Array<PartiQLValue>, env: Environment): PartiQLValue {
             val args = originalArgs.mapIndexed { i, arg ->
@@ -74,10 +72,47 @@ internal class ExprCallDynamic(
          * Preserves the original ordering of the passed-in candidates while making it faster to lookup matching
          * functions. Utilizes both [Direct] and [Indirect].
          *
+         * Say a user passes in the following ordered candidates:
+         * [
+         *      foo(int16, int16) -> int16,
+         *      foo(int32, int32) -> int32,
+         *      foo(int64, int64) -> int64,
+         *      foo(string, string) -> string,
+         *      foo(struct, struct) -> struct,
+         *      foo(numeric, numeric) -> numeric,
+         *      foo(int64, dynamic) -> dynamic,
+         *      foo(struct, dynamic) -> dynamic,
+         *      foo(bool, bool) -> bool
+         * ]
+         *
+         * With the above candidates, the [CandidateIndex.All] will maintain the original ordering by utilizing:
+         * - [CandidateIndex.Direct] to match hashable runtime types
+         * - [CandidateIndex.Indirect] to match the dynamic type
+         *
+         * For the above example, the internal representation of [CandidateIndex.All] is a list of
+         * [CandidateIndex.Direct] and [CandidateIndex.Indirect] that looks like:
+         * ALL listOf(
+         *      DIRECT hashMap(
+         *          [int16, int16] --> foo(int16, int16) -> int16,
+         *          [int32, int32] --> foo(int32, int32) -> int32,
+         *          [int64, int64] --> foo(int64, int64) -> int64
+         *          [string, string] --> foo(string, string) -> string,
+         *          [struct, struct] --> foo(struct, struct) -> struct,
+         *          [numeric, numeric] --> foo(numeric, numeric) -> numeric
+         *      ),
+         *      INDIRECT listOf(
+         *          foo(int64, dynamic) -> dynamic,
+         *          foo(struct, dynamic) -> dynamic
+         *      ),
+         *      DIRECT hashMap(
+         *          [bool, bool] --> foo(bool, bool) -> bool
+         *      )
+         * )
+         *
          * @param candidates
          */
         class All(
-            candidates: List<Candidate>,
+            candidates: Array<Candidate>,
         ) : CandidateIndex {
 
             private val lookups: List<CandidateIndex>
@@ -143,12 +178,17 @@ internal class ExprCallDynamic(
         }
 
         /**
-         * An O(1) structure to quickly find directly matching dynamic candidates.
+         * An O(1) structure to quickly find directly matching dynamic candidates. This is specifically used for runtime
+         * types that can be matched directly. AKA int32, int64, etc. This does NOT include [PartiQLValueType.ANY].
          */
-        data class Direct private constructor(val directCandidates: Map<List<PartiQLValueType>, Candidate>) : CandidateIndex {
+        data class Direct private constructor(val directCandidates: HashMap<List<PartiQLValueType>, Candidate>) : CandidateIndex {
 
             companion object {
-                internal fun of(candidates: List<Pair<List<PartiQLValueType>, Candidate>>) = Direct(candidates.toMap())
+                internal fun of(candidates: List<Pair<List<PartiQLValueType>, Candidate>>): Direct {
+                    val candidateMap = java.util.HashMap<List<PartiQLValueType>, Candidate>()
+                    candidateMap.putAll(candidates)
+                    return Direct(candidateMap)
+                }
             }
 
             override fun get(args: List<PartiQLValueType>): Candidate? {

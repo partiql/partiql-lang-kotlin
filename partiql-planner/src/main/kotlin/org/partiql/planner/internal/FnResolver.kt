@@ -68,14 +68,14 @@ internal object FnResolver {
         // Order based on original candidate function ordering
         val orderedUniqueMatches = matches.toSet().toList()
         val orderedCandidates = candidates.flatMap { candidate ->
-            orderedUniqueMatches.filter { it.fn.signature == candidate }
+            orderedUniqueMatches.filter { it.signature == candidate }
         }
 
         // Static call iff only one match for every branch
         val n = orderedCandidates.size
         return when {
             n == 0 -> null
-            n == 1 && exhaustive -> orderedCandidates.first().fn
+            n == 1 && exhaustive -> orderedCandidates.first()
             else -> FnMatch.Dynamic(orderedCandidates, exhaustive)
         }
     }
@@ -87,11 +87,11 @@ internal object FnResolver {
      * @param args
      * @return
      */
-    private fun match(candidates: List<FnSignature>, args: List<PartiQLValueType>): FnMatch.Dynamic.Candidate? {
+    private fun match(candidates: List<FnSignature>, args: List<PartiQLValueType>): FnMatch.Static? {
         // 1. Check for an exact match
         for (candidate in candidates) {
             if (candidate.matches(args)) {
-                return FnMatch.Dynamic.Candidate(fn = FnMatch.Static(candidate, arrayOfNulls(args.size)))
+                return FnMatch.Static(candidate, arrayOfNulls(args.size))
             }
         }
         // 2. Look for best match (for now, first match).
@@ -128,7 +128,7 @@ internal object FnResolver {
      * @param args
      * @return
      */
-    private fun FnSignature.match(args: List<PartiQLValueType>): FnMatch.Dynamic.Candidate? {
+    private fun FnSignature.match(args: List<PartiQLValueType>): FnMatch.Static? {
         val mapping = arrayOfNulls<Ref.Cast?>(args.size)
         for (i in args.indices) {
             val arg = args[i]
@@ -145,7 +145,7 @@ internal object FnResolver {
                 }
             }
         }
-        return FnMatch.Dynamic.Candidate(fn = FnMatch.Static(this, mapping))
+        return FnMatch.Static(this, mapping)
     }
 
     private fun buildArgumentPermutations(args: List<StaticType>): List<List<StaticType>> {
