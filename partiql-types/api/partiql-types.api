@@ -1,0 +1,1667 @@
+public final class org/partiql/errors/ErrorAndErrorContextsKt {
+	public static final field UNKNOWN Ljava/lang/String;
+}
+
+public final class org/partiql/errors/ErrorBehaviorInPermissiveMode : java/lang/Enum {
+	public static final field RETURN_MISSING Lorg/partiql/errors/ErrorBehaviorInPermissiveMode;
+	public static final field THROW_EXCEPTION Lorg/partiql/errors/ErrorBehaviorInPermissiveMode;
+	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/errors/ErrorBehaviorInPermissiveMode;
+	public static fun values ()[Lorg/partiql/errors/ErrorBehaviorInPermissiveMode;
+}
+
+public final class org/partiql/errors/ErrorCategory : java/lang/Enum {
+	public static final field EVALUATOR Lorg/partiql/errors/ErrorCategory;
+	public static final field LEXER Lorg/partiql/errors/ErrorCategory;
+	public static final field PARSER Lorg/partiql/errors/ErrorCategory;
+	public static final field SEMANTIC Lorg/partiql/errors/ErrorCategory;
+	public final fun getMessage ()Ljava/lang/String;
+	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/errors/ErrorCategory;
+	public static fun values ()[Lorg/partiql/errors/ErrorCategory;
+}
+
+public class org/partiql/errors/ErrorCode : java/lang/Enum {
+	public static final field EVALUATOR_AMBIGUOUS_BINDING Lorg/partiql/errors/ErrorCode;
+	public static final field EVALUATOR_ARITHMETIC_EXCEPTION Lorg/partiql/errors/ErrorCode;
+	public static final field EVALUATOR_BINDING_DOES_NOT_EXIST Lorg/partiql/errors/ErrorCode;
+	public static final field EVALUATOR_CAST_FAILED Lorg/partiql/errors/ErrorCode;
+	public static final field EVALUATOR_CAST_FAILED_NO_LOCATION Lorg/partiql/errors/ErrorCode;
+	public static final field EVALUATOR_CONCAT_FAILED_DUE_TO_INCOMPATIBLE_TYPE Lorg/partiql/errors/ErrorCode;
+	public static final field EVALUATOR_COUNT_DISTINCT_STAR Lorg/partiql/errors/ErrorCode;
+	public static final field EVALUATOR_COUNT_START_NOT_ALLOWED Lorg/partiql/errors/ErrorCode;
+	public static final field EVALUATOR_CUSTOM_TIMESTAMP_PARSE_FAILURE Lorg/partiql/errors/ErrorCode;
+	public static final field EVALUATOR_DATE_FIELD_OUT_OF_RANGE Lorg/partiql/errors/ErrorCode;
+	public static final field EVALUATOR_DIVIDE_BY_ZERO Lorg/partiql/errors/ErrorCode;
+	public static final field EVALUATOR_ENVIRONMENT_CANNOT_BE_RESOLVED Lorg/partiql/errors/ErrorCode;
+	public static final field EVALUATOR_FEATURE_NOT_SUPPORTED_YET Lorg/partiql/errors/ErrorCode;
+	public static final field EVALUATOR_GENERIC_EXCEPTION Lorg/partiql/errors/ErrorCode;
+	public static final field EVALUATOR_INCOMPLETE_TIMESTAMP_FORMAT_PATTERN Lorg/partiql/errors/ErrorCode;
+	public static final field EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_FUNC_CALL Lorg/partiql/errors/ErrorCode;
+	public static final field EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_PROCEDURE_CALL Lorg/partiql/errors/ErrorCode;
+	public static final field EVALUATOR_INCORRECT_TYPE_OF_ARGUMENTS_TO_FUNC_CALL Lorg/partiql/errors/ErrorCode;
+	public static final field EVALUATOR_INCORRECT_TYPE_OF_ARGUMENTS_TO_PROCEDURE_CALL Lorg/partiql/errors/ErrorCode;
+	public static final field EVALUATOR_INTEGER_OVERFLOW Lorg/partiql/errors/ErrorCode;
+	public static final field EVALUATOR_INVALID_ARGUMENTS_FOR_AGG_FUNCTION Lorg/partiql/errors/ErrorCode;
+	public static final field EVALUATOR_INVALID_ARGUMENTS_FOR_DATE_PART Lorg/partiql/errors/ErrorCode;
+	public static final field EVALUATOR_INVALID_ARGUMENTS_FOR_FUNC_CALL Lorg/partiql/errors/ErrorCode;
+	public static final field EVALUATOR_INVALID_ARGUMENTS_FOR_TRIM Lorg/partiql/errors/ErrorCode;
+	public static final field EVALUATOR_INVALID_BINDING Lorg/partiql/errors/ErrorCode;
+	public static final field EVALUATOR_INVALID_CAST Lorg/partiql/errors/ErrorCode;
+	public static final field EVALUATOR_INVALID_CAST_NO_LOCATION Lorg/partiql/errors/ErrorCode;
+	public static final field EVALUATOR_INVALID_COMPARISION Lorg/partiql/errors/ErrorCode;
+	public static final field EVALUATOR_INVALID_CONVERSION Lorg/partiql/errors/ErrorCode;
+	public static final field EVALUATOR_INVALID_PRECISION_FOR_TIME Lorg/partiql/errors/ErrorCode;
+	public static final field EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN Lorg/partiql/errors/ErrorCode;
+	public static final field EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN_SYMBOL Lorg/partiql/errors/ErrorCode;
+	public static final field EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN_SYMBOL_FOR_PARSING Lorg/partiql/errors/ErrorCode;
+	public static final field EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN_TOKEN Lorg/partiql/errors/ErrorCode;
+	public static final field EVALUATOR_ION_TIMESTAMP_PARSE_FAILURE Lorg/partiql/errors/ErrorCode;
+	public static final field EVALUATOR_LIKE_INVALID_INPUTS Lorg/partiql/errors/ErrorCode;
+	public static final field EVALUATOR_LIKE_PATTERN_INVALID_ESCAPE_SEQUENCE Lorg/partiql/errors/ErrorCode;
+	public static final field EVALUATOR_MODULO_BY_ZERO Lorg/partiql/errors/ErrorCode;
+	public static final field EVALUATOR_NEGATIVE_LIMIT Lorg/partiql/errors/ErrorCode;
+	public static final field EVALUATOR_NEGATIVE_OFFSET Lorg/partiql/errors/ErrorCode;
+	public static final field EVALUATOR_NON_INT_LIMIT_VALUE Lorg/partiql/errors/ErrorCode;
+	public static final field EVALUATOR_NON_INT_OFFSET_VALUE Lorg/partiql/errors/ErrorCode;
+	public static final field EVALUATOR_NON_SINGLETON_COLLECTION Lorg/partiql/errors/ErrorCode;
+	public static final field EVALUATOR_NON_TEXT_STRUCT_FIELD_KEY Lorg/partiql/errors/ErrorCode;
+	public static final field EVALUATOR_NO_SUCH_FUNCTION Lorg/partiql/errors/ErrorCode;
+	public static final field EVALUATOR_NO_SUCH_PROCEDURE Lorg/partiql/errors/ErrorCode;
+	public static final field EVALUATOR_ORDER_BY_NULL_COMPARATOR Lorg/partiql/errors/ErrorCode;
+	public static final field EVALUATOR_PRECISION_LOSS_WHEN_PARSING_TIMESTAMP Lorg/partiql/errors/ErrorCode;
+	public static final field EVALUATOR_QUOTED_BINDING_DOES_NOT_EXIST Lorg/partiql/errors/ErrorCode;
+	public static final field EVALUATOR_TIMESTAMP_FORMAT_PATTERN_DUPLICATE_FIELDS Lorg/partiql/errors/ErrorCode;
+	public static final field EVALUATOR_TIMESTAMP_FORMAT_PATTERN_HOUR_CLOCK_AM_PM_MISMATCH Lorg/partiql/errors/ErrorCode;
+	public static final field EVALUATOR_TIMESTAMP_OUT_OF_BOUNDS Lorg/partiql/errors/ErrorCode;
+	public static final field EVALUATOR_TIME_FIELD_OUT_OF_RANGE Lorg/partiql/errors/ErrorCode;
+	public static final field EVALUATOR_UNBOUND_PARAMETER Lorg/partiql/errors/ErrorCode;
+	public static final field EVALUATOR_UNEXPECTED_VALUE Lorg/partiql/errors/ErrorCode;
+	public static final field EVALUATOR_UNEXPECTED_VALUE_TYPE Lorg/partiql/errors/ErrorCode;
+	public static final field EVALUATOR_UNTERMINATED_TIMESTAMP_FORMAT_PATTERN_TOKEN Lorg/partiql/errors/ErrorCode;
+	public static final field EVALUATOR_VALUE_NOT_INSTANCE_OF_EXPECTED_TYPE Lorg/partiql/errors/ErrorCode;
+	public static final field EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY Lorg/partiql/errors/ErrorCode;
+	public static final field INTERNAL_ERROR Lorg/partiql/errors/ErrorCode;
+	public static final field LEXER_INVALID_CHAR Lorg/partiql/errors/ErrorCode;
+	public static final field LEXER_INVALID_LITERAL Lorg/partiql/errors/ErrorCode;
+	public static final field LEXER_INVALID_TOKEN Lorg/partiql/errors/ErrorCode;
+	public static final field PARSE_EXPECTED_DATE_TIME_PART Lorg/partiql/errors/ErrorCode;
+	public static final field PARSE_EXPECTED_NUMBER Lorg/partiql/errors/ErrorCode;
+	public static final field PARSE_EXPECTED_WINDOW_ORDER_BY Lorg/partiql/errors/ErrorCode;
+	public static final field PARSE_FAILED_STACK_OVERFLOW Lorg/partiql/errors/ErrorCode;
+	public static final field PARSE_INVALID_DATETIME_STRING Lorg/partiql/errors/ErrorCode;
+	public static final field PARSE_INVALID_DATE_STRING Lorg/partiql/errors/ErrorCode;
+	public static final field PARSE_INVALID_PRECISION_FOR_TIME Lorg/partiql/errors/ErrorCode;
+	public static final field PARSE_INVALID_PRECISION_FOR_TIMESTAMP Lorg/partiql/errors/ErrorCode;
+	public static final field PARSE_INVALID_QUERY Lorg/partiql/errors/ErrorCode;
+	public static final field PARSE_INVALID_TIME_STRING Lorg/partiql/errors/ErrorCode;
+	public static final field PARSE_INVALID_TRIM_SPEC Lorg/partiql/errors/ErrorCode;
+	public static final field PARSE_MALFORMED_PARSE_TREE Lorg/partiql/errors/ErrorCode;
+	public static final field PARSE_TYPE_PARAMETER_EXCEEDED_MAXIMUM_VALUE Lorg/partiql/errors/ErrorCode;
+	public static final field PARSE_UNEXPECTED_TOKEN Lorg/partiql/errors/ErrorCode;
+	public static final field PARSE_UNSUPPORTED_LITERALS_GROUPBY Lorg/partiql/errors/ErrorCode;
+	public static final field SEMANTIC_AMBIGUOUS_BINDING Lorg/partiql/errors/ErrorCode;
+	public static final field SEMANTIC_FLOAT_PRECISION_UNSUPPORTED Lorg/partiql/errors/ErrorCode;
+	public static final field SEMANTIC_HAVING_USED_WITHOUT_GROUP_BY Lorg/partiql/errors/ErrorCode;
+	public static final field SEMANTIC_ILLEGAL_GLOBAL_VARIABLE_ACCESS Lorg/partiql/errors/ErrorCode;
+	public static final field SEMANTIC_INVALID_DECIMAL_ARGUMENTS Lorg/partiql/errors/ErrorCode;
+	public static final field SEMANTIC_LITERAL_INT_OVERFLOW Lorg/partiql/errors/ErrorCode;
+	public static final field SEMANTIC_MISSING_AS_NAME Lorg/partiql/errors/ErrorCode;
+	public static final field SEMANTIC_NON_TEXT_STRUCT_FIELD_KEY Lorg/partiql/errors/ErrorCode;
+	public static final field SEMANTIC_PROBLEM Lorg/partiql/errors/ErrorCode;
+	public static final field SEMANTIC_UNBOUND_BINDING Lorg/partiql/errors/ErrorCode;
+	public static final field SEMANTIC_UNBOUND_QUOTED_BINDING Lorg/partiql/errors/ErrorCode;
+	public static final field SEMANTIC_UNION_TYPE_INVALID Lorg/partiql/errors/ErrorCode;
+	public static final field UNIMPLEMENTED_FEATURE Lorg/partiql/errors/ErrorCode;
+	public synthetic fun <init> (Ljava/lang/String;ILorg/partiql/errors/ErrorCategory;Ljava/util/Set;Ljava/lang/String;Lorg/partiql/errors/ErrorBehaviorInPermissiveMode;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	protected fun detailMessagePrefix ()Ljava/lang/String;
+	protected fun detailMessageSuffix (Lorg/partiql/errors/PropertyValueMap;)Ljava/lang/String;
+	public final fun getCategory ()Lorg/partiql/errors/ErrorCategory;
+	public final fun getErrorBehaviorInPermissiveMode ()Lorg/partiql/errors/ErrorBehaviorInPermissiveMode;
+	public fun getErrorMessage (Lorg/partiql/errors/PropertyValueMap;)Ljava/lang/String;
+	public final fun getProperties ()Ljava/util/Set;
+	protected final fun getTokenDescription (Lorg/partiql/errors/PropertyValueMap;)Ljava/lang/String;
+	protected final fun getTokenDescriptionAndTokenValue (Lorg/partiql/errors/PropertyValueMap;)Ljava/lang/String;
+	protected final fun getTokenString (Lorg/partiql/errors/PropertyValueMap;)Ljava/lang/String;
+	protected final fun getTokenValue (Lorg/partiql/errors/PropertyValueMap;)Ljava/lang/String;
+	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/errors/ErrorCode;
+	public static fun values ()[Lorg/partiql/errors/ErrorCode;
+}
+
+public final class org/partiql/errors/Problem {
+	public fun <init> (Lorg/partiql/errors/ProblemLocation;Lorg/partiql/errors/ProblemDetails;)V
+	public final fun component1 ()Lorg/partiql/errors/ProblemLocation;
+	public final fun component2 ()Lorg/partiql/errors/ProblemDetails;
+	public final fun copy (Lorg/partiql/errors/ProblemLocation;Lorg/partiql/errors/ProblemDetails;)Lorg/partiql/errors/Problem;
+	public static synthetic fun copy$default (Lorg/partiql/errors/Problem;Lorg/partiql/errors/ProblemLocation;Lorg/partiql/errors/ProblemDetails;ILjava/lang/Object;)Lorg/partiql/errors/Problem;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDetails ()Lorg/partiql/errors/ProblemDetails;
+	public final fun getSourceLocation ()Lorg/partiql/errors/ProblemLocation;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class org/partiql/errors/ProblemDetails {
+	public abstract fun getMessage ()Ljava/lang/String;
+	public abstract fun getSeverity ()Lorg/partiql/errors/ProblemSeverity;
+}
+
+public abstract interface class org/partiql/errors/ProblemHandler {
+	public abstract fun handleProblem (Lorg/partiql/errors/Problem;)V
+}
+
+public final class org/partiql/errors/ProblemKt {
+	public static final fun getUNKNOWN_PROBLEM_LOCATION ()Lorg/partiql/errors/ProblemLocation;
+}
+
+public final class org/partiql/errors/ProblemLocation {
+	public fun <init> (JJJ)V
+	public synthetic fun <init> (JJJILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()J
+	public final fun component2 ()J
+	public final fun component3 ()J
+	public final fun copy (JJJ)Lorg/partiql/errors/ProblemLocation;
+	public static synthetic fun copy$default (Lorg/partiql/errors/ProblemLocation;JJJILjava/lang/Object;)Lorg/partiql/errors/ProblemLocation;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCharOffset ()J
+	public final fun getLength ()J
+	public final fun getLineNum ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/errors/ProblemSeverity : java/lang/Enum {
+	public static final field ERROR Lorg/partiql/errors/ProblemSeverity;
+	public static final field WARNING Lorg/partiql/errors/ProblemSeverity;
+	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/errors/ProblemSeverity;
+	public static fun values ()[Lorg/partiql/errors/ProblemSeverity;
+}
+
+public final class org/partiql/errors/Property : java/lang/Enum {
+	public static final field ACTUAL_ARGUMENT_TYPES Lorg/partiql/errors/Property;
+	public static final field ACTUAL_ARITY Lorg/partiql/errors/Property;
+	public static final field ACTUAL_TYPE Lorg/partiql/errors/Property;
+	public static final field ARGUMENT_POSITION Lorg/partiql/errors/Property;
+	public static final field BINDING_NAME Lorg/partiql/errors/Property;
+	public static final field BINDING_NAME_MATCHES Lorg/partiql/errors/Property;
+	public static final field BOUND_PARAMETER_COUNT Lorg/partiql/errors/Property;
+	public static final field CAST_FROM Lorg/partiql/errors/Property;
+	public static final field CAST_TO Lorg/partiql/errors/Property;
+	public static final field COLUMN_NUMBER Lorg/partiql/errors/Property;
+	public static final field CONSTANT Lorg/partiql/errors/Property;
+	public static final field EXPECTED_ARGUMENT_TYPES Lorg/partiql/errors/Property;
+	public static final field EXPECTED_ARITY_MAX Lorg/partiql/errors/Property;
+	public static final field EXPECTED_ARITY_MIN Lorg/partiql/errors/Property;
+	public static final field EXPECTED_PARAMETER_ORDINAL Lorg/partiql/errors/Property;
+	public static final field EXPECTED_STATIC_TYPE Lorg/partiql/errors/Property;
+	public static final field FEATURE_NAME Lorg/partiql/errors/Property;
+	public static final field FUNCTION_NAME Lorg/partiql/errors/Property;
+	public static final field INT_SIZE_IN_BYTES Lorg/partiql/errors/Property;
+	public static final field LIKE_ESCAPE Lorg/partiql/errors/Property;
+	public static final field LIKE_PATTERN Lorg/partiql/errors/Property;
+	public static final field LIKE_VALUE Lorg/partiql/errors/Property;
+	public static final field LINE_NUMBER Lorg/partiql/errors/Property;
+	public static final field MESSAGE Lorg/partiql/errors/Property;
+	public static final field PROCEDURE_NAME Lorg/partiql/errors/Property;
+	public static final field TIMESTAMP_FORMAT_PATTERN Lorg/partiql/errors/Property;
+	public static final field TIMESTAMP_FORMAT_PATTERN_FIELDS Lorg/partiql/errors/Property;
+	public static final field TOKEN_DESCRIPTION Lorg/partiql/errors/Property;
+	public static final field TOKEN_STRING Lorg/partiql/errors/Property;
+	public static final field TOKEN_VALUE Lorg/partiql/errors/Property;
+	public final fun getPropertyName ()Ljava/lang/String;
+	public final fun getPropertyType ()Lorg/partiql/errors/PropertyType;
+	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/errors/Property;
+	public static fun values ()[Lorg/partiql/errors/Property;
+}
+
+public final class org/partiql/errors/PropertyType : java/lang/Enum {
+	public static final field INTEGER_CLASS Lorg/partiql/errors/PropertyType;
+	public static final field ION_VALUE_CLASS Lorg/partiql/errors/PropertyType;
+	public static final field LONG_CLASS Lorg/partiql/errors/PropertyType;
+	public static final field STRING_CLASS Lorg/partiql/errors/PropertyType;
+	public static final field TOKEN_CLASS Lorg/partiql/errors/PropertyType;
+	public final fun getType ()Ljava/lang/Class;
+	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/errors/PropertyType;
+	public static fun values ()[Lorg/partiql/errors/PropertyType;
+}
+
+public abstract class org/partiql/errors/PropertyValue {
+	public fun <init> (Lorg/partiql/errors/PropertyType;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getType ()Lorg/partiql/errors/PropertyType;
+	public final fun getValue ()Ljava/lang/Object;
+	public fun hashCode ()I
+	public fun integerValue ()I
+	public fun ionValue ()Lcom/amazon/ion/IonValue;
+	public fun longValue ()J
+	public fun stringValue ()Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+	public fun tokenTypeValue ()Ljava/lang/String;
+}
+
+public final class org/partiql/errors/PropertyValueMap {
+	public fun <init> ()V
+	public fun <init> (Ljava/util/EnumMap;)V
+	public synthetic fun <init> (Ljava/util/EnumMap;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun get (Lorg/partiql/errors/Property;)Lorg/partiql/errors/PropertyValue;
+	public final fun getProperties ()Ljava/util/Set;
+	public final fun hasProperty (Lorg/partiql/errors/Property;)Z
+	public fun hashCode ()I
+	public final fun set (Lorg/partiql/errors/Property;I)V
+	public final fun set (Lorg/partiql/errors/Property;J)V
+	public final fun set (Lorg/partiql/errors/Property;Lcom/amazon/ion/IonValue;)V
+	public final fun set (Lorg/partiql/errors/Property;Ljava/lang/String;)V
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/types/AnyOfType : org/partiql/types/StaticType {
+	public fun <init> (Ljava/util/Set;Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/util/Set;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/util/Set;
+	public final fun component2 ()Ljava/util/Map;
+	public final fun copy (Ljava/util/Set;Ljava/util/Map;)Lorg/partiql/types/AnyOfType;
+	public static synthetic fun copy$default (Lorg/partiql/types/AnyOfType;Ljava/util/Set;Ljava/util/Map;ILjava/lang/Object;)Lorg/partiql/types/AnyOfType;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun flatten ()Lorg/partiql/types/StaticType;
+	public fun getAllTypes ()Ljava/util/List;
+	public fun getMetas ()Ljava/util/Map;
+	public final fun getTypes ()Ljava/util/Set;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/types/AnyType : org/partiql/types/StaticType {
+	public fun <init> ()V
+	public fun <init> (Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/util/Map;
+	public final fun copy (Ljava/util/Map;)Lorg/partiql/types/AnyType;
+	public static synthetic fun copy$default (Lorg/partiql/types/AnyType;Ljava/util/Map;ILjava/lang/Object;)Lorg/partiql/types/AnyType;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun flatten ()Lorg/partiql/types/StaticType;
+	public fun getAllTypes ()Ljava/util/List;
+	public fun getMetas ()Ljava/util/Map;
+	public fun hashCode ()I
+	public final fun toAnyOfType ()Lorg/partiql/types/AnyOfType;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/types/BagType : org/partiql/types/CollectionType {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/types/StaticType;Ljava/util/Map;Ljava/util/Set;)V
+	public synthetic fun <init> (Lorg/partiql/types/StaticType;Ljava/util/Map;Ljava/util/Set;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/partiql/types/StaticType;
+	public final fun component2 ()Ljava/util/Map;
+	public final fun component3 ()Ljava/util/Set;
+	public final fun copy (Lorg/partiql/types/StaticType;Ljava/util/Map;Ljava/util/Set;)Lorg/partiql/types/BagType;
+	public static synthetic fun copy$default (Lorg/partiql/types/BagType;Lorg/partiql/types/StaticType;Ljava/util/Map;Ljava/util/Set;ILjava/lang/Object;)Lorg/partiql/types/BagType;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun flatten ()Lorg/partiql/types/StaticType;
+	public fun getAllTypes ()Ljava/util/List;
+	public fun getConstraints ()Ljava/util/Set;
+	public fun getElementType ()Lorg/partiql/types/StaticType;
+	public fun getMetas ()Ljava/util/Map;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/types/BlobType : org/partiql/types/SingleType {
+	public fun <init> ()V
+	public fun <init> (Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/util/Map;
+	public final fun copy (Ljava/util/Map;)Lorg/partiql/types/BlobType;
+	public static synthetic fun copy$default (Lorg/partiql/types/BlobType;Ljava/util/Map;ILjava/lang/Object;)Lorg/partiql/types/BlobType;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getAllTypes ()Ljava/util/List;
+	public fun getMetas ()Ljava/util/Map;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/types/BoolType : org/partiql/types/SingleType {
+	public fun <init> ()V
+	public fun <init> (Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/util/Map;
+	public final fun copy (Ljava/util/Map;)Lorg/partiql/types/BoolType;
+	public static synthetic fun copy$default (Lorg/partiql/types/BoolType;Ljava/util/Map;ILjava/lang/Object;)Lorg/partiql/types/BoolType;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getAllTypes ()Ljava/util/List;
+	public fun getMetas ()Ljava/util/Map;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/types/ClobType : org/partiql/types/SingleType {
+	public fun <init> ()V
+	public fun <init> (Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/util/Map;
+	public final fun copy (Ljava/util/Map;)Lorg/partiql/types/ClobType;
+	public static synthetic fun copy$default (Lorg/partiql/types/ClobType;Ljava/util/Map;ILjava/lang/Object;)Lorg/partiql/types/ClobType;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getAllTypes ()Ljava/util/List;
+	public fun getMetas ()Ljava/util/Map;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class org/partiql/types/CollectionConstraint {
+}
+
+public final class org/partiql/types/CollectionConstraint$PartitionKey : org/partiql/types/CollectionConstraint, org/partiql/types/TupleCollectionConstraint {
+	public fun <init> (Ljava/util/Set;)V
+	public final fun component1 ()Ljava/util/Set;
+	public final fun copy (Ljava/util/Set;)Lorg/partiql/types/CollectionConstraint$PartitionKey;
+	public static synthetic fun copy$default (Lorg/partiql/types/CollectionConstraint$PartitionKey;Ljava/util/Set;ILjava/lang/Object;)Lorg/partiql/types/CollectionConstraint$PartitionKey;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getKeys ()Ljava/util/Set;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/types/CollectionConstraint$PrimaryKey : org/partiql/types/CollectionConstraint, org/partiql/types/TupleCollectionConstraint {
+	public fun <init> (Ljava/util/Set;)V
+	public final fun component1 ()Ljava/util/Set;
+	public final fun copy (Ljava/util/Set;)Lorg/partiql/types/CollectionConstraint$PrimaryKey;
+	public static synthetic fun copy$default (Lorg/partiql/types/CollectionConstraint$PrimaryKey;Ljava/util/Set;ILjava/lang/Object;)Lorg/partiql/types/CollectionConstraint$PrimaryKey;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getKeys ()Ljava/util/Set;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class org/partiql/types/CollectionType : org/partiql/types/SingleType {
+	public abstract fun getConstraints ()Ljava/util/Set;
+	public abstract fun getElementType ()Lorg/partiql/types/StaticType;
+}
+
+public final class org/partiql/types/DateType : org/partiql/types/SingleType {
+	public fun <init> ()V
+	public fun <init> (Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/util/Map;
+	public final fun copy (Ljava/util/Map;)Lorg/partiql/types/DateType;
+	public static synthetic fun copy$default (Lorg/partiql/types/DateType;Ljava/util/Map;ILjava/lang/Object;)Lorg/partiql/types/DateType;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getAllTypes ()Ljava/util/List;
+	public fun getMetas ()Ljava/util/Map;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/types/DecimalType : org/partiql/types/SingleType {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/types/DecimalType$PrecisionScaleConstraint;Ljava/util/Map;)V
+	public synthetic fun <init> (Lorg/partiql/types/DecimalType$PrecisionScaleConstraint;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/partiql/types/DecimalType$PrecisionScaleConstraint;
+	public final fun component2 ()Ljava/util/Map;
+	public final fun copy (Lorg/partiql/types/DecimalType$PrecisionScaleConstraint;Ljava/util/Map;)Lorg/partiql/types/DecimalType;
+	public static synthetic fun copy$default (Lorg/partiql/types/DecimalType;Lorg/partiql/types/DecimalType$PrecisionScaleConstraint;Ljava/util/Map;ILjava/lang/Object;)Lorg/partiql/types/DecimalType;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getAllTypes ()Ljava/util/List;
+	public fun getMetas ()Ljava/util/Map;
+	public final fun getPrecisionScaleConstraint ()Lorg/partiql/types/DecimalType$PrecisionScaleConstraint;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class org/partiql/types/DecimalType$PrecisionScaleConstraint {
+	public abstract fun matches (Ljava/math/BigDecimal;)Z
+}
+
+public final class org/partiql/types/DecimalType$PrecisionScaleConstraint$Constrained : org/partiql/types/DecimalType$PrecisionScaleConstraint {
+	public fun <init> (II)V
+	public synthetic fun <init> (IIILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()I
+	public final fun component2 ()I
+	public final fun copy (II)Lorg/partiql/types/DecimalType$PrecisionScaleConstraint$Constrained;
+	public static synthetic fun copy$default (Lorg/partiql/types/DecimalType$PrecisionScaleConstraint$Constrained;IIILjava/lang/Object;)Lorg/partiql/types/DecimalType$PrecisionScaleConstraint$Constrained;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getPrecision ()I
+	public final fun getScale ()I
+	public fun hashCode ()I
+	public fun matches (Ljava/math/BigDecimal;)Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/types/DecimalType$PrecisionScaleConstraint$Unconstrained : org/partiql/types/DecimalType$PrecisionScaleConstraint {
+	public static final field INSTANCE Lorg/partiql/types/DecimalType$PrecisionScaleConstraint$Unconstrained;
+	public fun matches (Ljava/math/BigDecimal;)Z
+}
+
+public final class org/partiql/types/FloatType : org/partiql/types/SingleType {
+	public fun <init> ()V
+	public fun <init> (Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/util/Map;
+	public final fun copy (Ljava/util/Map;)Lorg/partiql/types/FloatType;
+	public static synthetic fun copy$default (Lorg/partiql/types/FloatType;Ljava/util/Map;ILjava/lang/Object;)Lorg/partiql/types/FloatType;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getAllTypes ()Ljava/util/List;
+	public fun getMetas ()Ljava/util/Map;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/types/GraphType : org/partiql/types/SingleType {
+	public fun <init> ()V
+	public fun <init> (Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/util/Map;
+	public final fun copy (Ljava/util/Map;)Lorg/partiql/types/GraphType;
+	public static synthetic fun copy$default (Lorg/partiql/types/GraphType;Ljava/util/Map;ILjava/lang/Object;)Lorg/partiql/types/GraphType;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getAllTypes ()Ljava/util/List;
+	public fun getMetas ()Ljava/util/Map;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/types/IntType : org/partiql/types/SingleType {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/types/IntType$IntRangeConstraint;Ljava/util/Map;)V
+	public synthetic fun <init> (Lorg/partiql/types/IntType$IntRangeConstraint;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/partiql/types/IntType$IntRangeConstraint;
+	public final fun component2 ()Ljava/util/Map;
+	public final fun copy (Lorg/partiql/types/IntType$IntRangeConstraint;Ljava/util/Map;)Lorg/partiql/types/IntType;
+	public static synthetic fun copy$default (Lorg/partiql/types/IntType;Lorg/partiql/types/IntType$IntRangeConstraint;Ljava/util/Map;ILjava/lang/Object;)Lorg/partiql/types/IntType;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getAllTypes ()Ljava/util/List;
+	public fun getMetas ()Ljava/util/Map;
+	public final fun getRangeConstraint ()Lorg/partiql/types/IntType$IntRangeConstraint;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/types/IntType$IntRangeConstraint : java/lang/Enum {
+	public static final field INT4 Lorg/partiql/types/IntType$IntRangeConstraint;
+	public static final field LONG Lorg/partiql/types/IntType$IntRangeConstraint;
+	public static final field SHORT Lorg/partiql/types/IntType$IntRangeConstraint;
+	public static final field UNCONSTRAINED Lorg/partiql/types/IntType$IntRangeConstraint;
+	public final fun getNumBytes ()I
+	public final fun getValidRange ()Lkotlin/ranges/LongRange;
+	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/types/IntType$IntRangeConstraint;
+	public static fun values ()[Lorg/partiql/types/IntType$IntRangeConstraint;
+}
+
+public final class org/partiql/types/ListType : org/partiql/types/CollectionType {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/types/StaticType;Ljava/util/Map;Ljava/util/Set;)V
+	public synthetic fun <init> (Lorg/partiql/types/StaticType;Ljava/util/Map;Ljava/util/Set;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/partiql/types/StaticType;
+	public final fun component2 ()Ljava/util/Map;
+	public final fun component3 ()Ljava/util/Set;
+	public final fun copy (Lorg/partiql/types/StaticType;Ljava/util/Map;Ljava/util/Set;)Lorg/partiql/types/ListType;
+	public static synthetic fun copy$default (Lorg/partiql/types/ListType;Lorg/partiql/types/StaticType;Ljava/util/Map;Ljava/util/Set;ILjava/lang/Object;)Lorg/partiql/types/ListType;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun flatten ()Lorg/partiql/types/StaticType;
+	public fun getAllTypes ()Ljava/util/List;
+	public fun getConstraints ()Ljava/util/Set;
+	public fun getElementType ()Lorg/partiql/types/StaticType;
+	public fun getMetas ()Ljava/util/Map;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/types/MissingType : org/partiql/types/SingleType {
+	public static final field INSTANCE Lorg/partiql/types/MissingType;
+	public fun getAllTypes ()Ljava/util/List;
+	public fun getMetas ()Ljava/util/Map;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/types/NullType : org/partiql/types/SingleType {
+	public fun <init> ()V
+	public fun <init> (Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/util/Map;
+	public final fun copy (Ljava/util/Map;)Lorg/partiql/types/NullType;
+	public static synthetic fun copy$default (Lorg/partiql/types/NullType;Ljava/util/Map;ILjava/lang/Object;)Lorg/partiql/types/NullType;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getAllTypes ()Ljava/util/List;
+	public fun getMetas ()Ljava/util/Map;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class org/partiql/types/NumberConstraint {
+	public abstract fun getValue ()I
+	public abstract fun matches (I)Z
+}
+
+public final class org/partiql/types/NumberConstraint$Equals : org/partiql/types/NumberConstraint {
+	public fun <init> (I)V
+	public final fun component1 ()I
+	public final fun copy (I)Lorg/partiql/types/NumberConstraint$Equals;
+	public static synthetic fun copy$default (Lorg/partiql/types/NumberConstraint$Equals;IILjava/lang/Object;)Lorg/partiql/types/NumberConstraint$Equals;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getValue ()I
+	public fun hashCode ()I
+	public fun matches (I)Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/types/NumberConstraint$UpTo : org/partiql/types/NumberConstraint {
+	public fun <init> (I)V
+	public final fun component1 ()I
+	public final fun copy (I)Lorg/partiql/types/NumberConstraint$UpTo;
+	public static synthetic fun copy$default (Lorg/partiql/types/NumberConstraint$UpTo;IILjava/lang/Object;)Lorg/partiql/types/NumberConstraint$UpTo;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getValue ()I
+	public fun hashCode ()I
+	public fun matches (I)Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/types/SexpType : org/partiql/types/CollectionType {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/types/StaticType;Ljava/util/Map;Ljava/util/Set;)V
+	public synthetic fun <init> (Lorg/partiql/types/StaticType;Ljava/util/Map;Ljava/util/Set;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/partiql/types/StaticType;
+	public final fun component2 ()Ljava/util/Map;
+	public final fun component3 ()Ljava/util/Set;
+	public final fun copy (Lorg/partiql/types/StaticType;Ljava/util/Map;Ljava/util/Set;)Lorg/partiql/types/SexpType;
+	public static synthetic fun copy$default (Lorg/partiql/types/SexpType;Lorg/partiql/types/StaticType;Ljava/util/Map;Ljava/util/Set;ILjava/lang/Object;)Lorg/partiql/types/SexpType;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun flatten ()Lorg/partiql/types/StaticType;
+	public fun getAllTypes ()Ljava/util/List;
+	public fun getConstraints ()Ljava/util/Set;
+	public fun getElementType ()Lorg/partiql/types/StaticType;
+	public fun getMetas ()Ljava/util/Map;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class org/partiql/types/SingleType : org/partiql/types/StaticType {
+	public fun flatten ()Lorg/partiql/types/StaticType;
+}
+
+public abstract class org/partiql/types/StaticType {
+	public static final field ANY Lorg/partiql/types/AnyType;
+	public static final field BAG Lorg/partiql/types/BagType;
+	public static final field BLOB Lorg/partiql/types/BlobType;
+	public static final field BOOL Lorg/partiql/types/BoolType;
+	public static final field CHAR Lorg/partiql/types/StaticType;
+	public static final field CLOB Lorg/partiql/types/ClobType;
+	public static final field Companion Lorg/partiql/types/StaticType$Companion;
+	public static final field DATE Lorg/partiql/types/DateType;
+	public static final field DECIMAL Lorg/partiql/types/DecimalType;
+	public static final field FLOAT Lorg/partiql/types/FloatType;
+	public static final field GRAPH Lorg/partiql/types/GraphType;
+	public static final field INT Lorg/partiql/types/IntType;
+	public static final field INT2 Lorg/partiql/types/IntType;
+	public static final field INT4 Lorg/partiql/types/IntType;
+	public static final field INT8 Lorg/partiql/types/IntType;
+	public static final field LIST Lorg/partiql/types/ListType;
+	public static final field MISSING Lorg/partiql/types/MissingType;
+	public static final field NULL Lorg/partiql/types/NullType;
+	public static final field NULL_OR_MISSING Lorg/partiql/types/StaticType;
+	public static final field NUMERIC Lorg/partiql/types/StaticType;
+	public static final field SEXP Lorg/partiql/types/SexpType;
+	public static final field STRING Lorg/partiql/types/StringType;
+	public static final field STRUCT Lorg/partiql/types/StructType;
+	public static final field SYMBOL Lorg/partiql/types/SymbolType;
+	public static final field TEXT Lorg/partiql/types/StaticType;
+	public static final field TIME Lorg/partiql/types/TimeType;
+	public static final field TIMESTAMP Lorg/partiql/types/TimestampType;
+	public final fun asNullable ()Lorg/partiql/types/StaticType;
+	public final fun asOptional ()Lorg/partiql/types/StaticType;
+	public abstract fun flatten ()Lorg/partiql/types/StaticType;
+	public static final fun getALL_TYPES ()Ljava/util/List;
+	public abstract fun getAllTypes ()Ljava/util/List;
+	public abstract fun getMetas ()Ljava/util/Map;
+	public final fun isMissable ()Z
+	public final fun isNullable ()Z
+	public static final fun unionOf (Ljava/util/Set;Ljava/util/Map;)Lorg/partiql/types/StaticType;
+	public static final fun unionOf ([Lorg/partiql/types/StaticType;Ljava/util/Map;)Lorg/partiql/types/StaticType;
+	public final fun withMetas (Ljava/util/Map;)Lorg/partiql/types/StaticType;
+}
+
+public final class org/partiql/types/StaticType$Companion {
+	public final fun getALL_TYPES ()Ljava/util/List;
+	public final fun unionOf (Ljava/util/Set;Ljava/util/Map;)Lorg/partiql/types/StaticType;
+	public final fun unionOf ([Lorg/partiql/types/StaticType;Ljava/util/Map;)Lorg/partiql/types/StaticType;
+	public static synthetic fun unionOf$default (Lorg/partiql/types/StaticType$Companion;Ljava/util/Set;Ljava/util/Map;ILjava/lang/Object;)Lorg/partiql/types/StaticType;
+	public static synthetic fun unionOf$default (Lorg/partiql/types/StaticType$Companion;[Lorg/partiql/types/StaticType;Ljava/util/Map;ILjava/lang/Object;)Lorg/partiql/types/StaticType;
+}
+
+public final class org/partiql/types/StringType : org/partiql/types/SingleType {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/types/NumberConstraint;)V
+	public fun <init> (Lorg/partiql/types/StringType$StringLengthConstraint;Ljava/util/Map;)V
+	public synthetic fun <init> (Lorg/partiql/types/StringType$StringLengthConstraint;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/partiql/types/StringType$StringLengthConstraint;
+	public final fun component2 ()Ljava/util/Map;
+	public final fun copy (Lorg/partiql/types/StringType$StringLengthConstraint;Ljava/util/Map;)Lorg/partiql/types/StringType;
+	public static synthetic fun copy$default (Lorg/partiql/types/StringType;Lorg/partiql/types/StringType$StringLengthConstraint;Ljava/util/Map;ILjava/lang/Object;)Lorg/partiql/types/StringType;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getAllTypes ()Ljava/util/List;
+	public final fun getLengthConstraint ()Lorg/partiql/types/StringType$StringLengthConstraint;
+	public fun getMetas ()Ljava/util/Map;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class org/partiql/types/StringType$StringLengthConstraint {
+}
+
+public final class org/partiql/types/StringType$StringLengthConstraint$Constrained : org/partiql/types/StringType$StringLengthConstraint {
+	public fun <init> (Lorg/partiql/types/NumberConstraint;)V
+	public final fun component1 ()Lorg/partiql/types/NumberConstraint;
+	public final fun copy (Lorg/partiql/types/NumberConstraint;)Lorg/partiql/types/StringType$StringLengthConstraint$Constrained;
+	public static synthetic fun copy$default (Lorg/partiql/types/StringType$StringLengthConstraint$Constrained;Lorg/partiql/types/NumberConstraint;ILjava/lang/Object;)Lorg/partiql/types/StringType$StringLengthConstraint$Constrained;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getLength ()Lorg/partiql/types/NumberConstraint;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/types/StringType$StringLengthConstraint$Unconstrained : org/partiql/types/StringType$StringLengthConstraint {
+	public static final field INSTANCE Lorg/partiql/types/StringType$StringLengthConstraint$Unconstrained;
+}
+
+public final class org/partiql/types/StructType : org/partiql/types/SingleType {
+	public fun <init> ()V
+	public fun <init> (Ljava/util/List;ZLjava/util/List;Ljava/util/Set;Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/util/List;ZLjava/util/List;Ljava/util/Set;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/util/Map;ZLjava/util/List;Ljava/util/Set;Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/util/Map;ZLjava/util/List;Ljava/util/Set;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun component2 ()Z
+	public final fun component3 ()Ljava/util/List;
+	public final fun component4 ()Ljava/util/Set;
+	public final fun component5 ()Ljava/util/Map;
+	public final fun copy (Ljava/util/List;ZLjava/util/List;Ljava/util/Set;Ljava/util/Map;)Lorg/partiql/types/StructType;
+	public static synthetic fun copy$default (Lorg/partiql/types/StructType;Ljava/util/List;ZLjava/util/List;Ljava/util/Set;Ljava/util/Map;ILjava/lang/Object;)Lorg/partiql/types/StructType;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun flatten ()Lorg/partiql/types/StaticType;
+	public fun getAllTypes ()Ljava/util/List;
+	public final fun getConstraints ()Ljava/util/Set;
+	public final fun getContentClosed ()Z
+	public final fun getFields ()Ljava/util/List;
+	public fun getMetas ()Ljava/util/Map;
+	public final fun getPrimaryKeyFields ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/types/StructType$Field {
+	public fun <init> (Ljava/lang/String;Lorg/partiql/types/StaticType;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lorg/partiql/types/StaticType;
+	public final fun copy (Ljava/lang/String;Lorg/partiql/types/StaticType;)Lorg/partiql/types/StructType$Field;
+	public static synthetic fun copy$default (Lorg/partiql/types/StructType$Field;Ljava/lang/String;Lorg/partiql/types/StaticType;ILjava/lang/Object;)Lorg/partiql/types/StructType$Field;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getKey ()Ljava/lang/String;
+	public final fun getValue ()Lorg/partiql/types/StaticType;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/types/SymbolType : org/partiql/types/SingleType {
+	public fun <init> ()V
+	public fun <init> (Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/util/Map;
+	public final fun copy (Ljava/util/Map;)Lorg/partiql/types/SymbolType;
+	public static synthetic fun copy$default (Lorg/partiql/types/SymbolType;Ljava/util/Map;ILjava/lang/Object;)Lorg/partiql/types/SymbolType;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getAllTypes ()Ljava/util/List;
+	public fun getMetas ()Ljava/util/Map;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/types/TimeType : org/partiql/types/SingleType {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/Integer;ZLjava/util/Map;)V
+	public synthetic fun <init> (Ljava/lang/Integer;ZLjava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/Integer;
+	public final fun component2 ()Z
+	public final fun component3 ()Ljava/util/Map;
+	public final fun copy (Ljava/lang/Integer;ZLjava/util/Map;)Lorg/partiql/types/TimeType;
+	public static synthetic fun copy$default (Lorg/partiql/types/TimeType;Ljava/lang/Integer;ZLjava/util/Map;ILjava/lang/Object;)Lorg/partiql/types/TimeType;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getAllTypes ()Ljava/util/List;
+	public fun getMetas ()Ljava/util/Map;
+	public final fun getPrecision ()Ljava/lang/Integer;
+	public final fun getWithTimeZone ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/types/TimestampType : org/partiql/types/SingleType {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/Integer;ZLjava/util/Map;)V
+	public synthetic fun <init> (Ljava/lang/Integer;ZLjava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun copy (Ljava/lang/Integer;ZLjava/util/Map;)Lorg/partiql/types/TimestampType;
+	public final fun copy (Ljava/util/Map;)Lorg/partiql/types/TimestampType;
+	public static synthetic fun copy$default (Lorg/partiql/types/TimestampType;Ljava/lang/Integer;ZLjava/util/Map;ILjava/lang/Object;)Lorg/partiql/types/TimestampType;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getAllTypes ()Ljava/util/List;
+	public fun getMetas ()Ljava/util/Map;
+	public final fun getPrecision ()Ljava/lang/Integer;
+	public final fun getWithTimeZone ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+	public final fun toStringExperimental ()Ljava/lang/String;
+}
+
+public abstract interface class org/partiql/types/TupleCollectionConstraint {
+}
+
+public abstract class org/partiql/types/TupleConstraint {
+}
+
+public final class org/partiql/types/TupleConstraint$Open : org/partiql/types/TupleConstraint {
+	public fun <init> (Z)V
+	public final fun component1 ()Z
+	public final fun copy (Z)Lorg/partiql/types/TupleConstraint$Open;
+	public static synthetic fun copy$default (Lorg/partiql/types/TupleConstraint$Open;ZILjava/lang/Object;)Lorg/partiql/types/TupleConstraint$Open;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getValue ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/types/TupleConstraint$Ordered : org/partiql/types/TupleConstraint {
+	public static final field INSTANCE Lorg/partiql/types/TupleConstraint$Ordered;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/types/TupleConstraint$UniqueAttrs : org/partiql/types/TupleConstraint {
+	public fun <init> (Z)V
+	public final fun component1 ()Z
+	public final fun copy (Z)Lorg/partiql/types/TupleConstraint$UniqueAttrs;
+	public static synthetic fun copy$default (Lorg/partiql/types/TupleConstraint$UniqueAttrs;ZILjava/lang/Object;)Lorg/partiql/types/TupleConstraint$UniqueAttrs;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getValue ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/types/UnsupportedTypeCheckException : java/lang/RuntimeException {
+	public fun <init> (Ljava/lang/String;)V
+}
+
+public final class org/partiql/types/UnsupportedTypeConstraint : java/lang/Exception {
+	public fun <init> (Ljava/lang/String;)V
+}
+
+public final class org/partiql/types/function/FunctionParameter {
+	public fun <init> (Ljava/lang/String;Lorg/partiql/value/PartiQLValueType;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lorg/partiql/value/PartiQLValueType;
+	public final fun copy (Ljava/lang/String;Lorg/partiql/value/PartiQLValueType;)Lorg/partiql/types/function/FunctionParameter;
+	public static synthetic fun copy$default (Lorg/partiql/types/function/FunctionParameter;Ljava/lang/String;Lorg/partiql/value/PartiQLValueType;ILjava/lang/Object;)Lorg/partiql/types/function/FunctionParameter;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getName ()Ljava/lang/String;
+	public final fun getType ()Lorg/partiql/value/PartiQLValueType;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class org/partiql/types/function/FunctionSignature {
+	public final field description Ljava/lang/String;
+	public final field isNullable Z
+	public final field name Ljava/lang/String;
+	public final field parameters Ljava/util/List;
+	public final field returns Lorg/partiql/value/PartiQLValueType;
+	public synthetic fun <init> (Ljava/lang/String;Lorg/partiql/value/PartiQLValueType;Ljava/util/List;Ljava/lang/String;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Lorg/partiql/value/PartiQLValueType;Ljava/util/List;Ljava/lang/String;ZLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getSpecific ()Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/types/function/FunctionSignature$Aggregation : org/partiql/types/function/FunctionSignature {
+	public final field isDecomposable Z
+	public fun <init> (Ljava/lang/String;Lorg/partiql/value/PartiQLValueType;Ljava/util/List;Ljava/lang/String;ZZ)V
+	public synthetic fun <init> (Ljava/lang/String;Lorg/partiql/value/PartiQLValueType;Ljava/util/List;Ljava/lang/String;ZZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+}
+
+public final class org/partiql/types/function/FunctionSignature$Scalar : org/partiql/types/function/FunctionSignature {
+	public final field isDeterministic Z
+	public final field isNullCall Z
+	public fun <init> (Ljava/lang/String;Lorg/partiql/value/PartiQLValueType;Ljava/util/List;Ljava/lang/String;ZZZ)V
+	public synthetic fun <init> (Ljava/lang/String;Lorg/partiql/value/PartiQLValueType;Ljava/util/List;Ljava/lang/String;ZZZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun sql ()Ljava/lang/String;
+}
+
+public abstract class org/partiql/value/BagValue : org/partiql/value/CollectionValue {
+	public fun <init> ()V
+	public abstract fun copy (Ljava/util/List;)Lorg/partiql/value/BagValue;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getType ()Lorg/partiql/value/PartiQLValueType;
+	public fun hashCode ()I
+	public fun iterator ()Ljava/util/Iterator;
+	public abstract fun withAnnotations (Ljava/util/List;)Lorg/partiql/value/BagValue;
+	public abstract fun withoutAnnotations ()Lorg/partiql/value/BagValue;
+}
+
+public abstract class org/partiql/value/BinaryValue : org/partiql/value/ScalarValue {
+	public fun <init> ()V
+	public abstract fun copy (Ljava/util/List;)Lorg/partiql/value/BinaryValue;
+	public fun getType ()Lorg/partiql/value/PartiQLValueType;
+	public fun isNull ()Z
+	public abstract fun withAnnotations (Ljava/util/List;)Lorg/partiql/value/BinaryValue;
+	public abstract fun withoutAnnotations ()Lorg/partiql/value/BinaryValue;
+}
+
+public abstract class org/partiql/value/BlobValue : org/partiql/value/ScalarValue {
+	public fun <init> ()V
+	public abstract fun copy (Ljava/util/List;)Lorg/partiql/value/BlobValue;
+	public fun getType ()Lorg/partiql/value/PartiQLValueType;
+	public fun isNull ()Z
+	public abstract fun withAnnotations (Ljava/util/List;)Lorg/partiql/value/BlobValue;
+	public abstract fun withoutAnnotations ()Lorg/partiql/value/BlobValue;
+}
+
+public abstract class org/partiql/value/BoolValue : org/partiql/value/ScalarValue {
+	public fun <init> ()V
+	public abstract fun copy (Ljava/util/List;)Lorg/partiql/value/BoolValue;
+	public fun getType ()Lorg/partiql/value/PartiQLValueType;
+	public fun isNull ()Z
+	public abstract fun withAnnotations (Ljava/util/List;)Lorg/partiql/value/BoolValue;
+	public abstract fun withoutAnnotations ()Lorg/partiql/value/BoolValue;
+}
+
+public abstract class org/partiql/value/ByteValue : org/partiql/value/ScalarValue {
+	public fun <init> ()V
+	public abstract fun copy (Ljava/util/List;)Lorg/partiql/value/ByteValue;
+	public fun getType ()Lorg/partiql/value/PartiQLValueType;
+	public fun isNull ()Z
+	public abstract fun withAnnotations (Ljava/util/List;)Lorg/partiql/value/ByteValue;
+	public abstract fun withoutAnnotations ()Lorg/partiql/value/ByteValue;
+}
+
+public abstract class org/partiql/value/CharValue : org/partiql/value/TextValue {
+	public fun <init> ()V
+	public abstract fun copy (Ljava/util/List;)Lorg/partiql/value/CharValue;
+	public fun getString ()Ljava/lang/String;
+	public fun getType ()Lorg/partiql/value/PartiQLValueType;
+	public abstract fun withAnnotations (Ljava/util/List;)Lorg/partiql/value/CharValue;
+	public abstract fun withoutAnnotations ()Lorg/partiql/value/CharValue;
+}
+
+public abstract class org/partiql/value/ClobValue : org/partiql/value/TextValue {
+	public fun <init> ()V
+	public abstract fun copy (Ljava/util/List;)Lorg/partiql/value/ClobValue;
+	public fun getString ()Ljava/lang/String;
+	public fun getType ()Lorg/partiql/value/PartiQLValueType;
+	public abstract fun withAnnotations (Ljava/util/List;)Lorg/partiql/value/ClobValue;
+	public abstract fun withoutAnnotations ()Lorg/partiql/value/ClobValue;
+}
+
+public abstract interface class org/partiql/value/CollectionValue : java/lang/Iterable, kotlin/jvm/internal/markers/KMappedMarker, org/partiql/value/PartiQLValue {
+	public abstract fun copy (Ljava/util/List;)Lorg/partiql/value/CollectionValue;
+	public abstract fun isNull ()Z
+	public abstract fun iterator ()Ljava/util/Iterator;
+	public abstract fun withAnnotations (Ljava/util/List;)Lorg/partiql/value/CollectionValue;
+	public abstract fun withoutAnnotations ()Lorg/partiql/value/CollectionValue;
+}
+
+public abstract class org/partiql/value/DateValue : org/partiql/value/ScalarValue {
+	public fun <init> ()V
+	public abstract fun copy (Ljava/util/List;)Lorg/partiql/value/DateValue;
+	public fun getType ()Lorg/partiql/value/PartiQLValueType;
+	public fun isNull ()Z
+	public abstract fun withAnnotations (Ljava/util/List;)Lorg/partiql/value/DateValue;
+	public abstract fun withoutAnnotations ()Lorg/partiql/value/DateValue;
+}
+
+public abstract class org/partiql/value/DecimalValue : org/partiql/value/NumericValue {
+	public fun <init> ()V
+	public abstract fun copy (Ljava/util/List;)Lorg/partiql/value/DecimalValue;
+	public fun getType ()Lorg/partiql/value/PartiQLValueType;
+	public abstract fun withAnnotations (Ljava/util/List;)Lorg/partiql/value/DecimalValue;
+	public abstract fun withoutAnnotations ()Lorg/partiql/value/DecimalValue;
+}
+
+public abstract class org/partiql/value/Float32Value : org/partiql/value/NumericValue {
+	public fun <init> ()V
+	public abstract fun copy (Ljava/util/List;)Lorg/partiql/value/Float32Value;
+	public fun getType ()Lorg/partiql/value/PartiQLValueType;
+	public abstract fun withAnnotations (Ljava/util/List;)Lorg/partiql/value/Float32Value;
+	public abstract fun withoutAnnotations ()Lorg/partiql/value/Float32Value;
+}
+
+public abstract class org/partiql/value/Float64Value : org/partiql/value/NumericValue {
+	public fun <init> ()V
+	public abstract fun copy (Ljava/util/List;)Lorg/partiql/value/Float64Value;
+	public fun getType ()Lorg/partiql/value/PartiQLValueType;
+	public abstract fun withAnnotations (Ljava/util/List;)Lorg/partiql/value/Float64Value;
+	public abstract fun withoutAnnotations ()Lorg/partiql/value/Float64Value;
+}
+
+public abstract class org/partiql/value/Int16Value : org/partiql/value/NumericValue {
+	public fun <init> ()V
+	public abstract fun copy (Ljava/util/List;)Lorg/partiql/value/Int16Value;
+	public fun getType ()Lorg/partiql/value/PartiQLValueType;
+	public abstract fun withAnnotations (Ljava/util/List;)Lorg/partiql/value/Int16Value;
+	public abstract fun withoutAnnotations ()Lorg/partiql/value/Int16Value;
+}
+
+public abstract class org/partiql/value/Int32Value : org/partiql/value/NumericValue {
+	public fun <init> ()V
+	public abstract fun copy (Ljava/util/List;)Lorg/partiql/value/Int32Value;
+	public fun getType ()Lorg/partiql/value/PartiQLValueType;
+	public abstract fun withAnnotations (Ljava/util/List;)Lorg/partiql/value/Int32Value;
+	public abstract fun withoutAnnotations ()Lorg/partiql/value/Int32Value;
+}
+
+public abstract class org/partiql/value/Int64Value : org/partiql/value/NumericValue {
+	public fun <init> ()V
+	public abstract fun copy (Ljava/util/List;)Lorg/partiql/value/Int64Value;
+	public fun getType ()Lorg/partiql/value/PartiQLValueType;
+	public abstract fun withAnnotations (Ljava/util/List;)Lorg/partiql/value/Int64Value;
+	public abstract fun withoutAnnotations ()Lorg/partiql/value/Int64Value;
+}
+
+public abstract class org/partiql/value/Int8Value : org/partiql/value/NumericValue {
+	public fun <init> ()V
+	public abstract fun copy (Ljava/util/List;)Lorg/partiql/value/Int8Value;
+	public fun getType ()Lorg/partiql/value/PartiQLValueType;
+	public abstract fun withAnnotations (Ljava/util/List;)Lorg/partiql/value/Int8Value;
+	public abstract fun withoutAnnotations ()Lorg/partiql/value/Int8Value;
+}
+
+public abstract class org/partiql/value/IntValue : org/partiql/value/NumericValue {
+	public fun <init> ()V
+	public abstract fun copy (Ljava/util/List;)Lorg/partiql/value/IntValue;
+	public fun getType ()Lorg/partiql/value/PartiQLValueType;
+	public abstract fun withAnnotations (Ljava/util/List;)Lorg/partiql/value/IntValue;
+	public abstract fun withoutAnnotations ()Lorg/partiql/value/IntValue;
+}
+
+public abstract class org/partiql/value/IntervalValue : org/partiql/value/ScalarValue {
+	public fun <init> ()V
+	public abstract fun copy (Ljava/util/List;)Lorg/partiql/value/IntervalValue;
+	public fun getType ()Lorg/partiql/value/PartiQLValueType;
+	public fun isNull ()Z
+	public abstract fun withAnnotations (Ljava/util/List;)Lorg/partiql/value/IntervalValue;
+	public abstract fun withoutAnnotations ()Lorg/partiql/value/IntervalValue;
+}
+
+public abstract class org/partiql/value/ListValue : org/partiql/value/CollectionValue {
+	public fun <init> ()V
+	public abstract fun copy (Ljava/util/List;)Lorg/partiql/value/ListValue;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getType ()Lorg/partiql/value/PartiQLValueType;
+	public fun hashCode ()I
+	public fun iterator ()Ljava/util/Iterator;
+	public abstract fun withAnnotations (Ljava/util/List;)Lorg/partiql/value/ListValue;
+	public abstract fun withoutAnnotations ()Lorg/partiql/value/ListValue;
+}
+
+public abstract class org/partiql/value/MissingValue : org/partiql/value/PartiQLValue {
+	public fun <init> ()V
+	public abstract fun copy (Ljava/util/List;)Lorg/partiql/value/MissingValue;
+	public fun getType ()Lorg/partiql/value/PartiQLValueType;
+	public fun isNull ()Z
+	public abstract fun withAnnotations (Ljava/util/List;)Lorg/partiql/value/MissingValue;
+	public abstract fun withoutAnnotations ()Lorg/partiql/value/MissingValue;
+}
+
+public abstract class org/partiql/value/NullValue : org/partiql/value/PartiQLValue {
+	public fun <init> ()V
+	public abstract fun copy (Ljava/util/List;)Lorg/partiql/value/NullValue;
+	public fun getType ()Lorg/partiql/value/PartiQLValueType;
+	public fun isNull ()Z
+	public abstract fun withAnnotations (Ljava/util/List;)Lorg/partiql/value/NullValue;
+	public abstract fun withoutAnnotations ()Lorg/partiql/value/NullValue;
+}
+
+public abstract class org/partiql/value/NumericValue : org/partiql/value/ScalarValue {
+	public abstract fun copy (Ljava/util/List;)Lorg/partiql/value/NumericValue;
+	public final fun getDouble ()Ljava/lang/Double;
+	public final fun getFloat ()Ljava/lang/Float;
+	public final fun getInt ()Ljava/lang/Integer;
+	public final fun getLong ()Ljava/lang/Long;
+	public fun isNull ()Z
+	public abstract fun withAnnotations (Ljava/util/List;)Lorg/partiql/value/NumericValue;
+	public abstract fun withoutAnnotations ()Lorg/partiql/value/NumericValue;
+}
+
+public final class org/partiql/value/PartiQL {
+	public static final fun bagValue (Ljava/lang/Iterable;)Lorg/partiql/value/BagValue;
+	public static final fun bagValue (Ljava/lang/Iterable;Ljava/util/List;)Lorg/partiql/value/BagValue;
+	public static final fun bagValue ([Lorg/partiql/value/PartiQLValue;)Lorg/partiql/value/BagValue;
+	public static final fun bagValue ([Lorg/partiql/value/PartiQLValue;Ljava/util/List;)Lorg/partiql/value/BagValue;
+	public static synthetic fun bagValue$default (Ljava/lang/Iterable;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/value/BagValue;
+	public static synthetic fun bagValue$default ([Lorg/partiql/value/PartiQLValue;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/value/BagValue;
+	public static final fun binaryValue (Ljava/util/BitSet;)Lorg/partiql/value/BinaryValue;
+	public static final fun binaryValue (Ljava/util/BitSet;Ljava/util/List;)Lorg/partiql/value/BinaryValue;
+	public static synthetic fun binaryValue$default (Ljava/util/BitSet;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/value/BinaryValue;
+	public static final fun blobValue ([B)Lorg/partiql/value/BlobValue;
+	public static final fun blobValue ([BLjava/util/List;)Lorg/partiql/value/BlobValue;
+	public static synthetic fun blobValue$default ([BLjava/util/List;ILjava/lang/Object;)Lorg/partiql/value/BlobValue;
+	public static final fun boolValue (Ljava/lang/Boolean;)Lorg/partiql/value/BoolValue;
+	public static final fun boolValue (Ljava/lang/Boolean;Ljava/util/List;)Lorg/partiql/value/BoolValue;
+	public static synthetic fun boolValue$default (Ljava/lang/Boolean;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/value/BoolValue;
+	public static final fun byteValue (Ljava/lang/Byte;)Lorg/partiql/value/ByteValue;
+	public static final fun byteValue (Ljava/lang/Byte;Ljava/util/List;)Lorg/partiql/value/ByteValue;
+	public static synthetic fun byteValue$default (Ljava/lang/Byte;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/value/ByteValue;
+	public static final fun charValue (Ljava/lang/Character;)Lorg/partiql/value/CharValue;
+	public static final fun charValue (Ljava/lang/Character;Ljava/util/List;)Lorg/partiql/value/CharValue;
+	public static synthetic fun charValue$default (Ljava/lang/Character;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/value/CharValue;
+	public static final fun clobValue ([B)Lorg/partiql/value/ClobValue;
+	public static final fun clobValue ([BLjava/util/List;)Lorg/partiql/value/ClobValue;
+	public static synthetic fun clobValue$default ([BLjava/util/List;ILjava/lang/Object;)Lorg/partiql/value/ClobValue;
+	public static final fun dateValue (Lorg/partiql/value/datetime/Date;)Lorg/partiql/value/DateValue;
+	public static final fun dateValue (Lorg/partiql/value/datetime/Date;Ljava/util/List;)Lorg/partiql/value/DateValue;
+	public static synthetic fun dateValue$default (Lorg/partiql/value/datetime/Date;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/value/DateValue;
+	public static final fun decimalValue (Ljava/math/BigDecimal;)Lorg/partiql/value/DecimalValue;
+	public static final fun decimalValue (Ljava/math/BigDecimal;Ljava/util/List;)Lorg/partiql/value/DecimalValue;
+	public static synthetic fun decimalValue$default (Ljava/math/BigDecimal;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/value/DecimalValue;
+	public static final fun float32Value (Ljava/lang/Float;)Lorg/partiql/value/Float32Value;
+	public static final fun float32Value (Ljava/lang/Float;Ljava/util/List;)Lorg/partiql/value/Float32Value;
+	public static synthetic fun float32Value$default (Ljava/lang/Float;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/value/Float32Value;
+	public static final fun float64Value (Ljava/lang/Double;)Lorg/partiql/value/Float64Value;
+	public static final fun float64Value (Ljava/lang/Double;Ljava/util/List;)Lorg/partiql/value/Float64Value;
+	public static synthetic fun float64Value$default (Ljava/lang/Double;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/value/Float64Value;
+	public static final fun int16Value (Ljava/lang/Short;)Lorg/partiql/value/Int16Value;
+	public static final fun int16Value (Ljava/lang/Short;Ljava/util/List;)Lorg/partiql/value/Int16Value;
+	public static synthetic fun int16Value$default (Ljava/lang/Short;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/value/Int16Value;
+	public static final fun int32Value (Ljava/lang/Integer;)Lorg/partiql/value/Int32Value;
+	public static final fun int32Value (Ljava/lang/Integer;Ljava/util/List;)Lorg/partiql/value/Int32Value;
+	public static synthetic fun int32Value$default (Ljava/lang/Integer;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/value/Int32Value;
+	public static final fun int64Value (Ljava/lang/Long;)Lorg/partiql/value/Int64Value;
+	public static final fun int64Value (Ljava/lang/Long;Ljava/util/List;)Lorg/partiql/value/Int64Value;
+	public static synthetic fun int64Value$default (Ljava/lang/Long;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/value/Int64Value;
+	public static final fun int8Value (Ljava/lang/Byte;)Lorg/partiql/value/Int8Value;
+	public static final fun int8Value (Ljava/lang/Byte;Ljava/util/List;)Lorg/partiql/value/Int8Value;
+	public static synthetic fun int8Value$default (Ljava/lang/Byte;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/value/Int8Value;
+	public static final fun intValue (Ljava/math/BigInteger;)Lorg/partiql/value/IntValue;
+	public static final fun intValue (Ljava/math/BigInteger;Ljava/util/List;)Lorg/partiql/value/IntValue;
+	public static synthetic fun intValue$default (Ljava/math/BigInteger;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/value/IntValue;
+	public static final fun intervalValue (Ljava/lang/Long;)Lorg/partiql/value/IntervalValue;
+	public static final fun intervalValue (Ljava/lang/Long;Ljava/util/List;)Lorg/partiql/value/IntervalValue;
+	public static synthetic fun intervalValue$default (Ljava/lang/Long;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/value/IntervalValue;
+	public static final fun listValue (Ljava/lang/Iterable;)Lorg/partiql/value/ListValue;
+	public static final fun listValue (Ljava/lang/Iterable;Ljava/util/List;)Lorg/partiql/value/ListValue;
+	public static final fun listValue ([Lorg/partiql/value/PartiQLValue;)Lorg/partiql/value/ListValue;
+	public static final fun listValue ([Lorg/partiql/value/PartiQLValue;Ljava/util/List;)Lorg/partiql/value/ListValue;
+	public static synthetic fun listValue$default (Ljava/lang/Iterable;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/value/ListValue;
+	public static synthetic fun listValue$default ([Lorg/partiql/value/PartiQLValue;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/value/ListValue;
+	public static final fun missingValue ()Lorg/partiql/value/MissingValue;
+	public static final fun missingValue (Ljava/util/List;)Lorg/partiql/value/MissingValue;
+	public static synthetic fun missingValue$default (Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/value/MissingValue;
+	public static final fun nullValue ()Lorg/partiql/value/NullValue;
+	public static final fun nullValue (Ljava/util/List;)Lorg/partiql/value/NullValue;
+	public static synthetic fun nullValue$default (Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/value/NullValue;
+	public static final fun sexpValue (Ljava/lang/Iterable;)Lorg/partiql/value/SexpValue;
+	public static final fun sexpValue (Ljava/lang/Iterable;Ljava/util/List;)Lorg/partiql/value/SexpValue;
+	public static final fun sexpValue ([Lorg/partiql/value/PartiQLValue;)Lorg/partiql/value/SexpValue;
+	public static final fun sexpValue ([Lorg/partiql/value/PartiQLValue;Ljava/util/List;)Lorg/partiql/value/SexpValue;
+	public static synthetic fun sexpValue$default (Ljava/lang/Iterable;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/value/SexpValue;
+	public static synthetic fun sexpValue$default ([Lorg/partiql/value/PartiQLValue;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/value/SexpValue;
+	public static final fun stringValue (Ljava/lang/String;)Lorg/partiql/value/StringValue;
+	public static final fun stringValue (Ljava/lang/String;Ljava/util/List;)Lorg/partiql/value/StringValue;
+	public static synthetic fun stringValue$default (Ljava/lang/String;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/value/StringValue;
+	public static final fun structValue (Ljava/lang/Iterable;)Lorg/partiql/value/StructValue;
+	public static final fun structValue (Ljava/lang/Iterable;Ljava/util/List;)Lorg/partiql/value/StructValue;
+	public static final fun structValue ([Lkotlin/Pair;)Lorg/partiql/value/StructValue;
+	public static final fun structValue ([Lkotlin/Pair;Ljava/util/List;)Lorg/partiql/value/StructValue;
+	public static synthetic fun structValue$default (Ljava/lang/Iterable;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/value/StructValue;
+	public static synthetic fun structValue$default ([Lkotlin/Pair;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/value/StructValue;
+	public static final fun structValueMap (Ljava/util/Map;)Lorg/partiql/value/StructValue;
+	public static final fun structValueMap (Ljava/util/Map;Ljava/util/List;)Lorg/partiql/value/StructValue;
+	public static synthetic fun structValueMap$default (Ljava/util/Map;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/value/StructValue;
+	public static final fun structValueMultiMap (Ljava/util/Map;)Lorg/partiql/value/StructValue;
+	public static final fun structValueMultiMap (Ljava/util/Map;Ljava/util/List;)Lorg/partiql/value/StructValue;
+	public static synthetic fun structValueMultiMap$default (Ljava/util/Map;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/value/StructValue;
+	public static final fun symbolValue (Ljava/lang/String;)Lorg/partiql/value/SymbolValue;
+	public static final fun symbolValue (Ljava/lang/String;Ljava/util/List;)Lorg/partiql/value/SymbolValue;
+	public static synthetic fun symbolValue$default (Ljava/lang/String;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/value/SymbolValue;
+	public static final fun timeValue (Lorg/partiql/value/datetime/Time;)Lorg/partiql/value/TimeValue;
+	public static final fun timeValue (Lorg/partiql/value/datetime/Time;Ljava/util/List;)Lorg/partiql/value/TimeValue;
+	public static synthetic fun timeValue$default (Lorg/partiql/value/datetime/Time;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/value/TimeValue;
+	public static final fun timestampValue (Lorg/partiql/value/datetime/Timestamp;)Lorg/partiql/value/TimestampValue;
+	public static final fun timestampValue (Lorg/partiql/value/datetime/Timestamp;Ljava/util/List;)Lorg/partiql/value/TimestampValue;
+	public static synthetic fun timestampValue$default (Lorg/partiql/value/datetime/Timestamp;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/value/TimestampValue;
+}
+
+public abstract interface annotation class org/partiql/value/PartiQLTimestampExperimental : java/lang/annotation/Annotation {
+}
+
+public abstract interface class org/partiql/value/PartiQLValue {
+	public abstract fun accept (Lorg/partiql/value/util/PartiQLValueVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun copy (Ljava/util/List;)Lorg/partiql/value/PartiQLValue;
+	public abstract fun getAnnotations ()Ljava/util/List;
+	public abstract fun getType ()Lorg/partiql/value/PartiQLValueType;
+	public abstract fun isNull ()Z
+	public abstract fun withAnnotations (Ljava/util/List;)Lorg/partiql/value/PartiQLValue;
+	public abstract fun withoutAnnotations ()Lorg/partiql/value/PartiQLValue;
+}
+
+public final class org/partiql/value/PartiQLValue$DefaultImpls {
+	public static synthetic fun copy$default (Lorg/partiql/value/PartiQLValue;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/value/PartiQLValue;
+}
+
+public abstract interface annotation class org/partiql/value/PartiQLValueExperimental : java/lang/annotation/Annotation {
+}
+
+public final class org/partiql/value/PartiQLValueKt {
+	public static final fun toIon (Lorg/partiql/value/PartiQLValue;)Lcom/amazon/ionelement/api/IonElement;
+}
+
+public final class org/partiql/value/PartiQLValueType : java/lang/Enum {
+	public static final field ANY Lorg/partiql/value/PartiQLValueType;
+	public static final field BAG Lorg/partiql/value/PartiQLValueType;
+	public static final field BINARY Lorg/partiql/value/PartiQLValueType;
+	public static final field BLOB Lorg/partiql/value/PartiQLValueType;
+	public static final field BOOL Lorg/partiql/value/PartiQLValueType;
+	public static final field BYTE Lorg/partiql/value/PartiQLValueType;
+	public static final field CHAR Lorg/partiql/value/PartiQLValueType;
+	public static final field CLOB Lorg/partiql/value/PartiQLValueType;
+	public static final field DATE Lorg/partiql/value/PartiQLValueType;
+	public static final field DECIMAL Lorg/partiql/value/PartiQLValueType;
+	public static final field DECIMAL_ARBITRARY Lorg/partiql/value/PartiQLValueType;
+	public static final field FLOAT32 Lorg/partiql/value/PartiQLValueType;
+	public static final field FLOAT64 Lorg/partiql/value/PartiQLValueType;
+	public static final field INT Lorg/partiql/value/PartiQLValueType;
+	public static final field INT16 Lorg/partiql/value/PartiQLValueType;
+	public static final field INT32 Lorg/partiql/value/PartiQLValueType;
+	public static final field INT64 Lorg/partiql/value/PartiQLValueType;
+	public static final field INT8 Lorg/partiql/value/PartiQLValueType;
+	public static final field INTERVAL Lorg/partiql/value/PartiQLValueType;
+	public static final field LIST Lorg/partiql/value/PartiQLValueType;
+	public static final field MISSING Lorg/partiql/value/PartiQLValueType;
+	public static final field NULL Lorg/partiql/value/PartiQLValueType;
+	public static final field SEXP Lorg/partiql/value/PartiQLValueType;
+	public static final field STRING Lorg/partiql/value/PartiQLValueType;
+	public static final field STRUCT Lorg/partiql/value/PartiQLValueType;
+	public static final field SYMBOL Lorg/partiql/value/PartiQLValueType;
+	public static final field TIME Lorg/partiql/value/PartiQLValueType;
+	public static final field TIMESTAMP Lorg/partiql/value/PartiQLValueType;
+	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/value/PartiQLValueType;
+	public static fun values ()[Lorg/partiql/value/PartiQLValueType;
+}
+
+public abstract interface class org/partiql/value/ScalarValue : org/partiql/value/PartiQLValue {
+	public abstract fun copy (Ljava/util/List;)Lorg/partiql/value/ScalarValue;
+	public abstract fun getValue ()Ljava/lang/Object;
+	public abstract fun isNull ()Z
+	public abstract fun withAnnotations (Ljava/util/List;)Lorg/partiql/value/ScalarValue;
+	public abstract fun withoutAnnotations ()Lorg/partiql/value/ScalarValue;
+}
+
+public final class org/partiql/value/ScalarValue$DefaultImpls {
+	public static fun isNull (Lorg/partiql/value/ScalarValue;)Z
+}
+
+public abstract class org/partiql/value/SexpValue : org/partiql/value/CollectionValue {
+	public fun <init> ()V
+	public abstract fun copy (Ljava/util/List;)Lorg/partiql/value/SexpValue;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getType ()Lorg/partiql/value/PartiQLValueType;
+	public fun hashCode ()I
+	public fun iterator ()Ljava/util/Iterator;
+	public abstract fun withAnnotations (Ljava/util/List;)Lorg/partiql/value/SexpValue;
+	public abstract fun withoutAnnotations ()Lorg/partiql/value/SexpValue;
+}
+
+public abstract class org/partiql/value/StringValue : org/partiql/value/TextValue {
+	public fun <init> ()V
+	public abstract fun copy (Ljava/util/List;)Lorg/partiql/value/StringValue;
+	public fun getString ()Ljava/lang/String;
+	public fun getType ()Lorg/partiql/value/PartiQLValueType;
+	public abstract fun withAnnotations (Ljava/util/List;)Lorg/partiql/value/StringValue;
+	public abstract fun withoutAnnotations ()Lorg/partiql/value/StringValue;
+}
+
+public abstract class org/partiql/value/StructValue : org/partiql/value/PartiQLValue {
+	public fun <init> ()V
+	public abstract fun copy (Ljava/util/List;)Lorg/partiql/value/StructValue;
+	public fun equals (Ljava/lang/Object;)Z
+	public abstract fun get (Ljava/lang/String;)Lorg/partiql/value/PartiQLValue;
+	public abstract fun getAll (Ljava/lang/String;)Ljava/lang/Iterable;
+	public abstract fun getEntries ()Ljava/lang/Iterable;
+	public abstract fun getFields ()Ljava/lang/Iterable;
+	public fun getType ()Lorg/partiql/value/PartiQLValueType;
+	public abstract fun getValues ()Ljava/lang/Iterable;
+	public fun hashCode ()I
+	public abstract fun withAnnotations (Ljava/util/List;)Lorg/partiql/value/StructValue;
+	public abstract fun withoutAnnotations ()Lorg/partiql/value/StructValue;
+}
+
+public abstract class org/partiql/value/SymbolValue : org/partiql/value/TextValue {
+	public fun <init> ()V
+	public abstract fun copy (Ljava/util/List;)Lorg/partiql/value/SymbolValue;
+	public fun getString ()Ljava/lang/String;
+	public fun getType ()Lorg/partiql/value/PartiQLValueType;
+	public abstract fun withAnnotations (Ljava/util/List;)Lorg/partiql/value/SymbolValue;
+	public abstract fun withoutAnnotations ()Lorg/partiql/value/SymbolValue;
+}
+
+public abstract class org/partiql/value/TextValue : org/partiql/value/ScalarValue {
+	public abstract fun copy (Ljava/util/List;)Lorg/partiql/value/TextValue;
+	public abstract fun getString ()Ljava/lang/String;
+	public fun isNull ()Z
+	public abstract fun withAnnotations (Ljava/util/List;)Lorg/partiql/value/TextValue;
+	public abstract fun withoutAnnotations ()Lorg/partiql/value/TextValue;
+}
+
+public abstract class org/partiql/value/TimeValue : org/partiql/value/ScalarValue {
+	public fun <init> ()V
+	public abstract fun copy (Ljava/util/List;)Lorg/partiql/value/TimeValue;
+	public fun getType ()Lorg/partiql/value/PartiQLValueType;
+	public fun isNull ()Z
+	public abstract fun withAnnotations (Ljava/util/List;)Lorg/partiql/value/TimeValue;
+	public abstract fun withoutAnnotations ()Lorg/partiql/value/TimeValue;
+}
+
+public abstract class org/partiql/value/TimestampValue : org/partiql/value/ScalarValue {
+	public fun <init> ()V
+	public abstract fun copy (Ljava/util/List;)Lorg/partiql/value/TimestampValue;
+	public fun getType ()Lorg/partiql/value/PartiQLValueType;
+	public fun isNull ()Z
+	public abstract fun withAnnotations (Ljava/util/List;)Lorg/partiql/value/TimestampValue;
+	public abstract fun withoutAnnotations ()Lorg/partiql/value/TimestampValue;
+}
+
+public abstract interface class org/partiql/value/datetime/Date : java/lang/Comparable, org/partiql/value/datetime/DateTime {
+	public abstract fun atTime (Lorg/partiql/value/datetime/Time;)Lorg/partiql/value/datetime/Timestamp;
+	public abstract fun compareTo (Lorg/partiql/value/datetime/Date;)I
+	public abstract fun getDay ()Ljava/lang/Integer;
+	public abstract fun getDecimalSecond ()Ljava/math/BigDecimal;
+	public abstract fun getHour ()Ljava/lang/Integer;
+	public abstract fun getMinute ()Ljava/lang/Integer;
+	public abstract fun getMonth ()Ljava/lang/Integer;
+	public abstract fun getTimeZone ()Lorg/partiql/value/datetime/TimeZone;
+	public abstract fun getYear ()Ljava/lang/Integer;
+	public abstract fun plusDays (J)Lorg/partiql/value/datetime/Date;
+	public abstract fun plusMonths (J)Lorg/partiql/value/datetime/Date;
+	public abstract fun plusYears (J)Lorg/partiql/value/datetime/Date;
+}
+
+public final class org/partiql/value/datetime/Date$DefaultImpls {
+	public static fun compareTo (Lorg/partiql/value/datetime/Date;Lorg/partiql/value/datetime/Date;)I
+	public static fun getDecimalSecond (Lorg/partiql/value/datetime/Date;)Ljava/math/BigDecimal;
+	public static fun getHour (Lorg/partiql/value/datetime/Date;)Ljava/lang/Integer;
+	public static fun getMinute (Lorg/partiql/value/datetime/Date;)Ljava/lang/Integer;
+	public static fun getTimeZone (Lorg/partiql/value/datetime/Date;)Lorg/partiql/value/datetime/TimeZone;
+}
+
+public abstract class org/partiql/value/datetime/DateImpl : java/lang/Comparable, org/partiql/value/datetime/Date {
+	public fun <init> ()V
+	public synthetic fun compareTo (Ljava/lang/Object;)I
+	public fun compareTo (Lorg/partiql/value/datetime/Date;)I
+	public final fun equals (Ljava/lang/Object;)Z
+	public fun getDecimalSecond ()Ljava/math/BigDecimal;
+	public fun getHour ()Ljava/lang/Integer;
+	public fun getMinute ()Ljava/lang/Integer;
+	public fun getTimeZone ()Lorg/partiql/value/datetime/TimeZone;
+	public final fun hashCode ()I
+	public final fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class org/partiql/value/datetime/DateTime {
+	public abstract fun equals (Ljava/lang/Object;)Z
+	public abstract fun getDay ()Ljava/lang/Integer;
+	public abstract fun getDecimalSecond ()Ljava/math/BigDecimal;
+	public abstract fun getHour ()Ljava/lang/Integer;
+	public abstract fun getMinute ()Ljava/lang/Integer;
+	public abstract fun getMonth ()Ljava/lang/Integer;
+	public abstract fun getTimeZone ()Lorg/partiql/value/datetime/TimeZone;
+	public abstract fun getYear ()Ljava/lang/Integer;
+	public abstract fun hashCode ()I
+	public abstract fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/value/datetime/DateTimeException : java/lang/RuntimeException {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getCause ()Ljava/lang/Throwable;
+	public fun getMessage ()Ljava/lang/String;
+}
+
+public final class org/partiql/value/datetime/DateTimeValue {
+	public static final field INSTANCE Lorg/partiql/value/datetime/DateTimeValue;
+	public static final fun date (III)Lorg/partiql/value/datetime/Date;
+	public final fun time (III)Lorg/partiql/value/datetime/Time;
+	public final fun time (IIII)Lorg/partiql/value/datetime/Time;
+	public final fun time (IIIILorg/partiql/value/datetime/TimeZone;)Lorg/partiql/value/datetime/Time;
+	public final fun time (IIILorg/partiql/value/datetime/TimeZone;)Lorg/partiql/value/datetime/Time;
+	public final fun time (IILjava/math/BigDecimal;)Lorg/partiql/value/datetime/Time;
+	public final fun time (IILjava/math/BigDecimal;Lorg/partiql/value/datetime/TimeZone;)Lorg/partiql/value/datetime/Time;
+	public static synthetic fun time$default (Lorg/partiql/value/datetime/DateTimeValue;IIIILorg/partiql/value/datetime/TimeZone;ILjava/lang/Object;)Lorg/partiql/value/datetime/Time;
+	public static synthetic fun time$default (Lorg/partiql/value/datetime/DateTimeValue;IIILorg/partiql/value/datetime/TimeZone;ILjava/lang/Object;)Lorg/partiql/value/datetime/Time;
+	public static synthetic fun time$default (Lorg/partiql/value/datetime/DateTimeValue;IILjava/math/BigDecimal;Lorg/partiql/value/datetime/TimeZone;ILjava/lang/Object;)Lorg/partiql/value/datetime/Time;
+	public final fun timestamp (I)Lorg/partiql/value/datetime/Timestamp;
+	public final fun timestamp (II)Lorg/partiql/value/datetime/Timestamp;
+	public final fun timestamp (III)Lorg/partiql/value/datetime/Timestamp;
+	public final fun timestamp (IIII)Lorg/partiql/value/datetime/Timestamp;
+	public final fun timestamp (IIIII)Lorg/partiql/value/datetime/Timestamp;
+	public final fun timestamp (IIIIII)Lorg/partiql/value/datetime/Timestamp;
+	public final fun timestamp (IIIIIILorg/partiql/value/datetime/TimeZone;)Lorg/partiql/value/datetime/Timestamp;
+	public final fun timestamp (IIIIILjava/math/BigDecimal;)Lorg/partiql/value/datetime/Timestamp;
+	public final fun timestamp (IIIIILjava/math/BigDecimal;Lorg/partiql/value/datetime/TimeZone;)Lorg/partiql/value/datetime/Timestamp;
+	public final fun timestamp (Lcom/amazon/ion/Timestamp;)Lorg/partiql/value/datetime/TimestampWithTimeZone;
+	public final fun timestamp (Ljava/math/BigDecimal;Lorg/partiql/value/datetime/TimeZone;)Lorg/partiql/value/datetime/TimestampWithTimeZone;
+	public final fun timestamp (Lorg/partiql/value/datetime/Date;Lorg/partiql/value/datetime/Time;)Lorg/partiql/value/datetime/Timestamp;
+	public static synthetic fun timestamp$default (Lorg/partiql/value/datetime/DateTimeValue;IIIIIILorg/partiql/value/datetime/TimeZone;ILjava/lang/Object;)Lorg/partiql/value/datetime/Timestamp;
+	public static synthetic fun timestamp$default (Lorg/partiql/value/datetime/DateTimeValue;IIIIILjava/math/BigDecimal;Lorg/partiql/value/datetime/TimeZone;ILjava/lang/Object;)Lorg/partiql/value/datetime/Timestamp;
+}
+
+public abstract interface class org/partiql/value/datetime/Time : java/lang/Comparable, org/partiql/value/datetime/DateTime {
+	public abstract fun atDate (Lorg/partiql/value/datetime/Date;)Lorg/partiql/value/datetime/Timestamp;
+	public abstract fun compareTo (Lorg/partiql/value/datetime/Time;)I
+	public abstract fun getDay ()Ljava/lang/Integer;
+	public abstract fun getDecimalSecond ()Ljava/math/BigDecimal;
+	public abstract fun getElapsedSecond ()Ljava/math/BigDecimal;
+	public abstract fun getHour ()Ljava/lang/Integer;
+	public abstract fun getMinute ()Ljava/lang/Integer;
+	public abstract fun getMonth ()Ljava/lang/Integer;
+	public abstract fun getTimeZone ()Lorg/partiql/value/datetime/TimeZone;
+	public abstract fun getYear ()Ljava/lang/Integer;
+	public abstract fun plusHours (J)Lorg/partiql/value/datetime/Time;
+	public abstract fun plusMinutes (J)Lorg/partiql/value/datetime/Time;
+	public abstract fun plusSeconds (J)Lorg/partiql/value/datetime/Time;
+	public abstract fun plusSeconds (Ljava/math/BigDecimal;)Lorg/partiql/value/datetime/Time;
+	public abstract fun toPrecision (I)Lorg/partiql/value/datetime/Time;
+}
+
+public final class org/partiql/value/datetime/Time$DefaultImpls {
+	public static fun compareTo (Lorg/partiql/value/datetime/Time;Lorg/partiql/value/datetime/Time;)I
+	public static fun getDay (Lorg/partiql/value/datetime/Time;)Ljava/lang/Integer;
+	public static fun getMonth (Lorg/partiql/value/datetime/Time;)Ljava/lang/Integer;
+	public static fun getYear (Lorg/partiql/value/datetime/Time;)Ljava/lang/Integer;
+}
+
+public abstract class org/partiql/value/datetime/TimeWithTimeZone : org/partiql/value/datetime/Time {
+	public fun <init> ()V
+	public abstract fun atDate (Lorg/partiql/value/datetime/Date;)Lorg/partiql/value/datetime/TimestampWithTimeZone;
+	public abstract fun atTimeZone (Lorg/partiql/value/datetime/TimeZone;)Lorg/partiql/value/datetime/TimeWithTimeZone;
+	public synthetic fun compareTo (Ljava/lang/Object;)I
+	public fun compareTo (Lorg/partiql/value/datetime/Time;)I
+	public final fun equals (Ljava/lang/Object;)Z
+	public fun getDay ()Ljava/lang/Integer;
+	public fun getMonth ()Ljava/lang/Integer;
+	public abstract fun getTimeZone ()Lorg/partiql/value/datetime/TimeZone;
+	public fun getYear ()Ljava/lang/Integer;
+	public final fun hashCode ()I
+	public abstract fun plusHours (J)Lorg/partiql/value/datetime/TimeWithTimeZone;
+	public abstract fun plusMinutes (J)Lorg/partiql/value/datetime/TimeWithTimeZone;
+	public final fun plusSeconds (J)Lorg/partiql/value/datetime/Time;
+	public abstract fun plusSeconds (Ljava/math/BigDecimal;)Lorg/partiql/value/datetime/TimeWithTimeZone;
+	public synthetic fun toPrecision (I)Lorg/partiql/value/datetime/Time;
+	public final fun toPrecision (I)Lorg/partiql/value/datetime/TimeWithTimeZone;
+	public final fun toString ()Ljava/lang/String;
+	public abstract fun toTimeWithoutTimeZone (Lorg/partiql/value/datetime/TimeZone;)Lorg/partiql/value/datetime/TimeWithoutTimeZone;
+}
+
+public abstract class org/partiql/value/datetime/TimeWithoutTimeZone : org/partiql/value/datetime/Time {
+	public fun <init> ()V
+	public abstract fun atDate (Lorg/partiql/value/datetime/Date;)Lorg/partiql/value/datetime/TimestampWithoutTimeZone;
+	public synthetic fun compareTo (Ljava/lang/Object;)I
+	public fun compareTo (Lorg/partiql/value/datetime/Time;)I
+	public final fun equals (Ljava/lang/Object;)Z
+	public fun getDay ()Ljava/lang/Integer;
+	public fun getMonth ()Ljava/lang/Integer;
+	public final fun getTimeZone ()Lorg/partiql/value/datetime/TimeZone;
+	public fun getYear ()Ljava/lang/Integer;
+	public final fun hashCode ()I
+	public abstract fun plusHours (J)Lorg/partiql/value/datetime/TimeWithoutTimeZone;
+	public abstract fun plusMinutes (J)Lorg/partiql/value/datetime/TimeWithoutTimeZone;
+	public final fun plusSeconds (J)Lorg/partiql/value/datetime/Time;
+	public abstract fun plusSeconds (Ljava/math/BigDecimal;)Lorg/partiql/value/datetime/TimeWithoutTimeZone;
+	public synthetic fun toPrecision (I)Lorg/partiql/value/datetime/Time;
+	public final fun toPrecision (I)Lorg/partiql/value/datetime/TimeWithoutTimeZone;
+	public final fun toString ()Ljava/lang/String;
+	public abstract fun withTimeZone (Lorg/partiql/value/datetime/TimeZone;)Lorg/partiql/value/datetime/TimeWithTimeZone;
+}
+
+public abstract class org/partiql/value/datetime/TimeZone {
+}
+
+public final class org/partiql/value/datetime/TimeZone$UnknownTimeZone : org/partiql/value/datetime/TimeZone {
+	public static final field INSTANCE Lorg/partiql/value/datetime/TimeZone$UnknownTimeZone;
+}
+
+public final class org/partiql/value/datetime/TimeZone$UtcOffset : org/partiql/value/datetime/TimeZone {
+	public static final field Companion Lorg/partiql/value/datetime/TimeZone$UtcOffset$Companion;
+	public synthetic fun <init> (ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()I
+	public final fun copy (I)Lorg/partiql/value/datetime/TimeZone$UtcOffset;
+	public static synthetic fun copy$default (Lorg/partiql/value/datetime/TimeZone$UtcOffset;IILjava/lang/Object;)Lorg/partiql/value/datetime/TimeZone$UtcOffset;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getTotalOffsetMinutes ()I
+	public final fun getTzHour ()I
+	public final fun getTzMinute ()I
+	public fun hashCode ()I
+	public static final fun of (I)Lorg/partiql/value/datetime/TimeZone$UtcOffset;
+	public static final fun of (II)Lorg/partiql/value/datetime/TimeZone$UtcOffset;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/value/datetime/TimeZone$UtcOffset$Companion {
+	public final fun of (I)Lorg/partiql/value/datetime/TimeZone$UtcOffset;
+	public final fun of (II)Lorg/partiql/value/datetime/TimeZone$UtcOffset;
+}
+
+public abstract interface class org/partiql/value/datetime/Timestamp : java/lang/Comparable, org/partiql/value/datetime/DateTime {
+	public abstract fun compareTo (Lorg/partiql/value/datetime/Timestamp;)I
+	public abstract fun getDay ()Ljava/lang/Integer;
+	public abstract fun getDecimalSecond ()Ljava/math/BigDecimal;
+	public abstract fun getHour ()Ljava/lang/Integer;
+	public abstract fun getMinute ()Ljava/lang/Integer;
+	public abstract fun getMonth ()Ljava/lang/Integer;
+	public abstract fun getTimeZone ()Lorg/partiql/value/datetime/TimeZone;
+	public abstract fun getYear ()Ljava/lang/Integer;
+	public abstract fun plusDays (J)Lorg/partiql/value/datetime/Timestamp;
+	public abstract fun plusHours (J)Lorg/partiql/value/datetime/Timestamp;
+	public abstract fun plusMinutes (J)Lorg/partiql/value/datetime/Timestamp;
+	public abstract fun plusMonths (J)Lorg/partiql/value/datetime/Timestamp;
+	public abstract fun plusSeconds (J)Lorg/partiql/value/datetime/Timestamp;
+	public abstract fun plusSeconds (Ljava/math/BigDecimal;)Lorg/partiql/value/datetime/Timestamp;
+	public abstract fun plusYears (J)Lorg/partiql/value/datetime/Timestamp;
+	public abstract fun toDate ()Lorg/partiql/value/datetime/Date;
+	public abstract fun toPrecision (I)Lorg/partiql/value/datetime/Timestamp;
+	public abstract fun toTime ()Lorg/partiql/value/datetime/Time;
+}
+
+public final class org/partiql/value/datetime/Timestamp$DefaultImpls {
+	public static fun compareTo (Lorg/partiql/value/datetime/Timestamp;Lorg/partiql/value/datetime/Timestamp;)I
+	public static fun toDate (Lorg/partiql/value/datetime/Timestamp;)Lorg/partiql/value/datetime/Date;
+}
+
+public abstract class org/partiql/value/datetime/TimestampWithTimeZone : org/partiql/value/datetime/Timestamp {
+	public fun <init> ()V
+	public abstract fun atTimeZone (Lorg/partiql/value/datetime/TimeZone;)Lorg/partiql/value/datetime/TimestampWithTimeZone;
+	public synthetic fun compareTo (Ljava/lang/Object;)I
+	public fun compareTo (Lorg/partiql/value/datetime/Timestamp;)I
+	public final fun equals (Ljava/lang/Object;)Z
+	public final fun getEpochMillis ()Ljava/math/BigDecimal;
+	public abstract fun getEpochSecond ()Ljava/math/BigDecimal;
+	public abstract fun getIonRaw ()Lcom/amazon/ion/Timestamp;
+	public final fun getIonTimestampValue ()Lcom/amazon/ion/Timestamp;
+	public abstract fun getTimeZone ()Lorg/partiql/value/datetime/TimeZone;
+	public final fun hashCode ()I
+	public abstract fun plusDays (J)Lorg/partiql/value/datetime/TimestampWithTimeZone;
+	public abstract fun plusHours (J)Lorg/partiql/value/datetime/TimestampWithTimeZone;
+	public abstract fun plusMinutes (J)Lorg/partiql/value/datetime/TimestampWithTimeZone;
+	public abstract fun plusMonths (J)Lorg/partiql/value/datetime/TimestampWithTimeZone;
+	public synthetic fun plusSeconds (J)Lorg/partiql/value/datetime/Timestamp;
+	public final fun plusSeconds (J)Lorg/partiql/value/datetime/TimestampWithTimeZone;
+	public abstract fun plusSeconds (Ljava/math/BigDecimal;)Lorg/partiql/value/datetime/TimestampWithTimeZone;
+	public abstract fun plusYears (J)Lorg/partiql/value/datetime/TimestampWithTimeZone;
+	public fun toDate ()Lorg/partiql/value/datetime/Date;
+	public synthetic fun toPrecision (I)Lorg/partiql/value/datetime/Timestamp;
+	public final fun toPrecision (I)Lorg/partiql/value/datetime/TimestampWithTimeZone;
+	public final fun toString ()Ljava/lang/String;
+	public synthetic fun toTime ()Lorg/partiql/value/datetime/Time;
+	public final fun toTime ()Lorg/partiql/value/datetime/TimeWithTimeZone;
+	public abstract fun toTimeWithoutTimeZone (Lorg/partiql/value/datetime/TimeZone;)Lorg/partiql/value/datetime/TimestampWithoutTimeZone;
+}
+
+public abstract class org/partiql/value/datetime/TimestampWithoutTimeZone : org/partiql/value/datetime/Timestamp {
+	public fun <init> ()V
+	public synthetic fun compareTo (Ljava/lang/Object;)I
+	public fun compareTo (Lorg/partiql/value/datetime/Timestamp;)I
+	public final fun equals (Ljava/lang/Object;)Z
+	public fun getTimeZone ()Lorg/partiql/value/datetime/TimeZone;
+	public final fun hashCode ()I
+	public abstract fun plusDays (J)Lorg/partiql/value/datetime/TimestampWithoutTimeZone;
+	public abstract fun plusHours (J)Lorg/partiql/value/datetime/TimestampWithoutTimeZone;
+	public abstract fun plusMinutes (J)Lorg/partiql/value/datetime/TimestampWithoutTimeZone;
+	public abstract fun plusMonths (J)Lorg/partiql/value/datetime/TimestampWithoutTimeZone;
+	public synthetic fun plusSeconds (J)Lorg/partiql/value/datetime/Timestamp;
+	public fun plusSeconds (J)Lorg/partiql/value/datetime/TimestampWithoutTimeZone;
+	public abstract fun plusSeconds (Ljava/math/BigDecimal;)Lorg/partiql/value/datetime/TimestampWithoutTimeZone;
+	public abstract fun plusYears (J)Lorg/partiql/value/datetime/TimestampWithoutTimeZone;
+	public fun toDate ()Lorg/partiql/value/datetime/Date;
+	public synthetic fun toPrecision (I)Lorg/partiql/value/datetime/Timestamp;
+	public final fun toPrecision (I)Lorg/partiql/value/datetime/TimestampWithoutTimeZone;
+	public final fun toString ()Ljava/lang/String;
+	public synthetic fun toTime ()Lorg/partiql/value/datetime/Time;
+	public final fun toTime ()Lorg/partiql/value/datetime/TimeWithoutTimeZone;
+	public abstract fun withTimeZone (Lorg/partiql/value/datetime/TimeZone;)Lorg/partiql/value/datetime/TimestampWithTimeZone;
+}
+
+public final class org/partiql/value/io/PartiQLValueIonReaderBuilder {
+	public static final field Companion Lorg/partiql/value/io/PartiQLValueIonReaderBuilder$Companion;
+	public synthetic fun <init> (Lorg/partiql/value/io/PartiQLValueIonReaderBuilder$SourceDataFormat;Lcom/amazon/ion/system/IonReaderBuilder;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build (Lcom/amazon/ionelement/api/IonElement;)Lorg/partiql/value/io/PartiQLValueReader;
+	public final fun build (Ljava/io/InputStream;)Lorg/partiql/value/io/PartiQLValueReader;
+	public final fun ionReaderBuilder (Lcom/amazon/ion/system/IonReaderBuilder;)Lorg/partiql/value/io/PartiQLValueIonReaderBuilder;
+	public final fun sourceDataFormat (Lorg/partiql/value/io/PartiQLValueIonReaderBuilder$SourceDataFormat;)Lorg/partiql/value/io/PartiQLValueIonReaderBuilder;
+	public static final fun standard ()Lorg/partiql/value/io/PartiQLValueIonReaderBuilder;
+}
+
+public final class org/partiql/value/io/PartiQLValueIonReaderBuilder$Companion {
+	public final fun standard ()Lorg/partiql/value/io/PartiQLValueIonReaderBuilder;
+}
+
+public final class org/partiql/value/io/PartiQLValueIonReaderBuilder$SourceDataFormat : java/lang/Enum {
+	public static final field IonForPartiQL Lorg/partiql/value/io/PartiQLValueIonReaderBuilder$SourceDataFormat;
+	public static final field IonGeneric Lorg/partiql/value/io/PartiQLValueIonReaderBuilder$SourceDataFormat;
+	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/value/io/PartiQLValueIonReaderBuilder$SourceDataFormat;
+	public static fun values ()[Lorg/partiql/value/io/PartiQLValueIonReaderBuilder$SourceDataFormat;
+}
+
+public final class org/partiql/value/io/PartiQLValueIonWriter : org/partiql/value/io/PartiQLValueWriter {
+	public fun append (Lorg/partiql/value/PartiQLValue;)Lorg/partiql/value/io/PartiQLValueWriter;
+	public fun close ()V
+}
+
+public final class org/partiql/value/io/PartiQLValueIonWriterBuilder {
+	public static final field Companion Lorg/partiql/value/io/PartiQLValueIonWriterBuilder$Companion;
+	public synthetic fun <init> (Lcom/amazon/ion/system/IonWriterBuilder;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build (Ljava/io/OutputStream;)Lorg/partiql/value/io/PartiQLValueWriter;
+	public final fun ionWriterBuilder (Lcom/amazon/ion/system/IonWriterBuilder;)Lorg/partiql/value/io/PartiQLValueIonWriterBuilder;
+	public static final fun standardIonBinaryBuilder ()Lorg/partiql/value/io/PartiQLValueIonWriterBuilder;
+	public static final fun standardIonTextBuilder ()Lorg/partiql/value/io/PartiQLValueIonWriterBuilder;
+}
+
+public final class org/partiql/value/io/PartiQLValueIonWriterBuilder$Companion {
+	public final fun standardIonBinaryBuilder ()Lorg/partiql/value/io/PartiQLValueIonWriterBuilder;
+	public final fun standardIonTextBuilder ()Lorg/partiql/value/io/PartiQLValueIonWriterBuilder;
+}
+
+public abstract interface class org/partiql/value/io/PartiQLValueReader : java/lang/AutoCloseable {
+	public abstract fun read ()Lorg/partiql/value/PartiQLValue;
+}
+
+public final class org/partiql/value/io/PartiQLValueTextWriter : org/partiql/value/io/PartiQLValueWriter {
+	public fun <init> (Ljava/io/PrintStream;ZLjava/lang/String;)V
+	public synthetic fun <init> (Ljava/io/PrintStream;ZLjava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun append (Lorg/partiql/value/PartiQLValue;)Lorg/partiql/value/io/PartiQLValueWriter;
+	public fun close ()V
+}
+
+public abstract interface class org/partiql/value/io/PartiQLValueWriter : java/lang/AutoCloseable {
+	public abstract fun append (Lorg/partiql/value/PartiQLValue;)Lorg/partiql/value/io/PartiQLValueWriter;
+}
+
+public final class org/partiql/value/io/PartiQLValueWriterBuilder {
+	public static final field Companion Lorg/partiql/value/io/PartiQLValueWriterBuilder$Companion;
+	public final fun build (Ljava/io/OutputStream;)Lorg/partiql/value/io/PartiQLValueWriter;
+	public final fun formatted (Z)Lorg/partiql/value/io/PartiQLValueWriterBuilder;
+	public static synthetic fun formatted$default (Lorg/partiql/value/io/PartiQLValueWriterBuilder;ZILjava/lang/Object;)Lorg/partiql/value/io/PartiQLValueWriterBuilder;
+	public static final fun standard ()Lorg/partiql/value/io/PartiQLValueWriterBuilder;
+}
+
+public final class org/partiql/value/io/PartiQLValueWriterBuilder$Companion {
+	public final fun standard ()Lorg/partiql/value/io/PartiQLValueWriterBuilder;
+}
+
+public abstract class org/partiql/value/util/PartiQLValueBaseVisitor : org/partiql/value/util/PartiQLValueVisitor {
+	public fun <init> ()V
+	public abstract fun defaultReturn (Lorg/partiql/value/PartiQLValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun defaultVisit (Lorg/partiql/value/PartiQLValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visit (Lorg/partiql/value/PartiQLValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitBag (Lorg/partiql/value/BagValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitBinary (Lorg/partiql/value/BinaryValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitBlob (Lorg/partiql/value/BlobValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitBool (Lorg/partiql/value/BoolValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitByte (Lorg/partiql/value/ByteValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitChar (Lorg/partiql/value/CharValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitClob (Lorg/partiql/value/ClobValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitCollection (Lorg/partiql/value/CollectionValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitDate (Lorg/partiql/value/DateValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitDecimal (Lorg/partiql/value/DecimalValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitFloat32 (Lorg/partiql/value/Float32Value;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitFloat64 (Lorg/partiql/value/Float64Value;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitInt (Lorg/partiql/value/IntValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitInt16 (Lorg/partiql/value/Int16Value;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitInt32 (Lorg/partiql/value/Int32Value;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitInt64 (Lorg/partiql/value/Int64Value;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitInt8 (Lorg/partiql/value/Int8Value;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitInterval (Lorg/partiql/value/IntervalValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitList (Lorg/partiql/value/ListValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitMissing (Lorg/partiql/value/MissingValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitNull (Lorg/partiql/value/NullValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitNumeric (Lorg/partiql/value/NumericValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitScalar (Lorg/partiql/value/ScalarValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitSexp (Lorg/partiql/value/SexpValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitString (Lorg/partiql/value/StringValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitStruct (Lorg/partiql/value/StructValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitSymbol (Lorg/partiql/value/SymbolValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitText (Lorg/partiql/value/TextValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitTime (Lorg/partiql/value/TimeValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitTimestamp (Lorg/partiql/value/TimestampValue;Ljava/lang/Object;)Ljava/lang/Object;
+}
+
+public abstract interface class org/partiql/value/util/PartiQLValueVisitor {
+	public abstract fun visit (Lorg/partiql/value/PartiQLValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitBag (Lorg/partiql/value/BagValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitBinary (Lorg/partiql/value/BinaryValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitBlob (Lorg/partiql/value/BlobValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitBool (Lorg/partiql/value/BoolValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitByte (Lorg/partiql/value/ByteValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitChar (Lorg/partiql/value/CharValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitClob (Lorg/partiql/value/ClobValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitCollection (Lorg/partiql/value/CollectionValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitDate (Lorg/partiql/value/DateValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitDecimal (Lorg/partiql/value/DecimalValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitFloat32 (Lorg/partiql/value/Float32Value;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitFloat64 (Lorg/partiql/value/Float64Value;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitInt (Lorg/partiql/value/IntValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitInt16 (Lorg/partiql/value/Int16Value;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitInt32 (Lorg/partiql/value/Int32Value;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitInt64 (Lorg/partiql/value/Int64Value;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitInt8 (Lorg/partiql/value/Int8Value;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitInterval (Lorg/partiql/value/IntervalValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitList (Lorg/partiql/value/ListValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitMissing (Lorg/partiql/value/MissingValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitNull (Lorg/partiql/value/NullValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitNumeric (Lorg/partiql/value/NumericValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitScalar (Lorg/partiql/value/ScalarValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitSexp (Lorg/partiql/value/SexpValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitString (Lorg/partiql/value/StringValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitStruct (Lorg/partiql/value/StructValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitSymbol (Lorg/partiql/value/SymbolValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitText (Lorg/partiql/value/TextValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitTime (Lorg/partiql/value/TimeValue;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitTimestamp (Lorg/partiql/value/TimestampValue;Ljava/lang/Object;)Ljava/lang/Object;
+}
+

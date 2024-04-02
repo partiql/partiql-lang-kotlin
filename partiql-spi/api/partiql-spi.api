@@ -1,0 +1,117 @@
+public final class org/partiql/spi/BindingCase : java/lang/Enum {
+	public static final field INSENSITIVE Lorg/partiql/spi/BindingCase;
+	public static final field SENSITIVE Lorg/partiql/spi/BindingCase;
+	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/spi/BindingCase;
+	public static fun values ()[Lorg/partiql/spi/BindingCase;
+}
+
+public final class org/partiql/spi/BindingName {
+	public fun <init> (Ljava/lang/String;Lorg/partiql/spi/BindingCase;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lorg/partiql/spi/BindingCase;
+	public final fun copy (Ljava/lang/String;Lorg/partiql/spi/BindingCase;)Lorg/partiql/spi/BindingName;
+	public static synthetic fun copy$default (Lorg/partiql/spi/BindingName;Ljava/lang/String;Lorg/partiql/spi/BindingCase;ILjava/lang/Object;)Lorg/partiql/spi/BindingName;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBindingCase ()Lorg/partiql/spi/BindingCase;
+	public final fun getLoweredName ()Ljava/lang/String;
+	public final fun getName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public final fun isEquivalentTo (Ljava/lang/String;)Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/spi/BindingPath {
+	public fun <init> (Ljava/util/List;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;)Lorg/partiql/spi/BindingPath;
+	public static synthetic fun copy$default (Lorg/partiql/spi/BindingPath;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/spi/BindingPath;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getSteps ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class org/partiql/spi/Plugin {
+	public abstract fun getFactory ()Lorg/partiql/spi/connector/Connector$Factory;
+	public abstract fun getFunctions ()Ljava/util/List;
+}
+
+public abstract interface class org/partiql/spi/connector/Connector {
+	public abstract fun getMetadata (Lorg/partiql/spi/connector/ConnectorSession;)Lorg/partiql/spi/connector/ConnectorMetadata;
+}
+
+public abstract interface class org/partiql/spi/connector/Connector$Factory {
+	public abstract fun create (Ljava/lang/String;Lcom/amazon/ionelement/api/StructElement;)Lorg/partiql/spi/connector/Connector;
+	public abstract fun getName ()Ljava/lang/String;
+}
+
+public final class org/partiql/spi/connector/Connector$Factory$DefaultImpls {
+	public static synthetic fun create$default (Lorg/partiql/spi/connector/Connector$Factory;Ljava/lang/String;Lcom/amazon/ionelement/api/StructElement;ILjava/lang/Object;)Lorg/partiql/spi/connector/Connector;
+}
+
+public abstract interface class org/partiql/spi/connector/ConnectorMetadata {
+	public abstract fun getAggregations ()Ljava/util/List;
+	public abstract fun getFunctions ()Ljava/util/List;
+	public abstract fun getObjectHandle (Lorg/partiql/spi/connector/ConnectorSession;Lorg/partiql/spi/BindingPath;)Lorg/partiql/spi/connector/ConnectorObjectHandle;
+	public abstract fun getObjectType (Lorg/partiql/spi/connector/ConnectorSession;Lorg/partiql/spi/connector/ConnectorObjectHandle;)Lorg/partiql/types/StaticType;
+	public abstract fun getOperators ()Ljava/util/List;
+}
+
+public final class org/partiql/spi/connector/ConnectorMetadata$DefaultImpls {
+	public static fun getAggregations (Lorg/partiql/spi/connector/ConnectorMetadata;)Ljava/util/List;
+	public static fun getFunctions (Lorg/partiql/spi/connector/ConnectorMetadata;)Ljava/util/List;
+	public static fun getOperators (Lorg/partiql/spi/connector/ConnectorMetadata;)Ljava/util/List;
+}
+
+public abstract interface class org/partiql/spi/connector/ConnectorObject {
+}
+
+public final class org/partiql/spi/connector/ConnectorObjectHandle {
+	public fun <init> (Lorg/partiql/spi/connector/ConnectorObjectPath;Lorg/partiql/spi/connector/ConnectorObject;)V
+	public final fun getAbsolutePath ()Lorg/partiql/spi/connector/ConnectorObjectPath;
+	public final fun getValue ()Lorg/partiql/spi/connector/ConnectorObject;
+}
+
+public final class org/partiql/spi/connector/ConnectorObjectPath {
+	public fun <init> (Ljava/util/List;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;)Lorg/partiql/spi/connector/ConnectorObjectPath;
+	public static synthetic fun copy$default (Lorg/partiql/spi/connector/ConnectorObjectPath;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/spi/connector/ConnectorObjectPath;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getSteps ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class org/partiql/spi/connector/ConnectorSession {
+	public abstract fun getQueryId ()Ljava/lang/String;
+	public abstract fun getUserId ()Ljava/lang/String;
+}
+
+public final class org/partiql/spi/connector/Constants {
+	public static final field CONFIG_KEY_CONNECTOR_NAME Ljava/lang/String;
+	public static final field INSTANCE Lorg/partiql/spi/connector/Constants;
+}
+
+public abstract interface class org/partiql/spi/function/PartiQLFunction {
+	public abstract fun getSignature ()Lorg/partiql/types/function/FunctionSignature;
+}
+
+public abstract interface class org/partiql/spi/function/PartiQLFunction$Accumulator {
+	public abstract fun next ([Lorg/partiql/value/PartiQLValue;)Lorg/partiql/value/PartiQLValue;
+	public abstract fun value ()Lorg/partiql/value/PartiQLValue;
+}
+
+public abstract interface class org/partiql/spi/function/PartiQLFunction$Aggregation : org/partiql/spi/function/PartiQLFunction {
+	public abstract fun accumulator ()Lorg/partiql/spi/function/PartiQLFunction$Accumulator;
+	public abstract fun getSignature ()Lorg/partiql/types/function/FunctionSignature$Aggregation;
+}
+
+public abstract interface class org/partiql/spi/function/PartiQLFunction$Scalar : org/partiql/spi/function/PartiQLFunction {
+	public abstract fun getSignature ()Lorg/partiql/types/function/FunctionSignature$Scalar;
+	public abstract fun invoke ([Lorg/partiql/value/PartiQLValue;)Lorg/partiql/value/PartiQLValue;
+}
+
+public abstract interface annotation class org/partiql/spi/function/PartiQLFunctionExperimental : java/lang/annotation/Annotation {
+}
+

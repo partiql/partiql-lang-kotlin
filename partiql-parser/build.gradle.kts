@@ -16,6 +16,12 @@ plugins {
     id(Plugins.antlr)
     id(Plugins.conventions)
     id(Plugins.publish)
+    // Use https://github.com/Kotlin/binary-compatibility-validator to maintain list of public binary APIs (defaults
+    // to <project dir>/api/<project dir>.api). When changes are made to public APIs (e.g. modifying a public class,
+    // adding a public function, etc.), the gradle `apiCheck` task will fail. To fix this error, run the `apiDump` task
+    // to update these .api files and commit the changes.
+    // See https://github.com/Kotlin/binary-compatibility-validator#optional-parameters for additional configuration.
+    id(Plugins.binaryCompatibilityValidator) version Versions.binaryCompatibilityValidator
 }
 
 dependencies {

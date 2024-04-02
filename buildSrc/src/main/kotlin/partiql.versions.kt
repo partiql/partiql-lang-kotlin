@@ -26,6 +26,7 @@ object Versions {
     // Dependencies
     const val antlr = "4.10.1"
     const val awsSdk = "1.12.344"
+    const val binaryCompatibilityValidator = "0.14.0"
     const val csv = "1.8"
     const val dotlin = "1.0.2"
     const val gson = "2.10.1"
@@ -115,6 +116,7 @@ object Deps {
 
 object Plugins {
     // PartiQL
+    const val binaryCompatibilityValidator = "org.jetbrains.kotlinx.binary-compatibility-validator"
     const val conventions = "partiql.conventions"
     const val pig = "org.partiql.pig.pig-gradle-plugin"
     const val publish = "org.partiql.gradle.plugin.publish"

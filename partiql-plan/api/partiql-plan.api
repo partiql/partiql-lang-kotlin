@@ -1,0 +1,2384 @@
+public final class org/partiql/plan/Agg : org/partiql/plan/PlanNode {
+	public static final field Companion Lorg/partiql/plan/Agg$Companion;
+	public final field signature Lorg/partiql/types/function/FunctionSignature$Aggregation;
+	public fun <init> (Lorg/partiql/types/function/FunctionSignature$Aggregation;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/AggBuilder;
+	public final fun component1 ()Lorg/partiql/types/function/FunctionSignature$Aggregation;
+	public final fun copy (Lorg/partiql/types/function/FunctionSignature$Aggregation;)Lorg/partiql/plan/Agg;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Agg;Lorg/partiql/types/function/FunctionSignature$Aggregation;ILjava/lang/Object;)Lorg/partiql/plan/Agg;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/Agg$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/AggBuilder;
+}
+
+public final class org/partiql/plan/Catalog : org/partiql/plan/PlanNode {
+	public static final field Companion Lorg/partiql/plan/Catalog$Companion;
+	public final field name Ljava/lang/String;
+	public final field symbols Ljava/util/List;
+	public fun <init> (Ljava/lang/String;Ljava/util/List;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/CatalogBuilder;
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/util/List;
+	public final fun copy (Ljava/lang/String;Ljava/util/List;)Lorg/partiql/plan/Catalog;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Catalog;Ljava/lang/String;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/plan/Catalog;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/Catalog$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/CatalogBuilder;
+}
+
+public final class org/partiql/plan/Catalog$Symbol : org/partiql/plan/PlanNode {
+	public static final field Companion Lorg/partiql/plan/Catalog$Symbol$Companion;
+	public final field path Ljava/util/List;
+	public final field type Lorg/partiql/types/StaticType;
+	public fun <init> (Ljava/util/List;Lorg/partiql/types/StaticType;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/CatalogSymbolBuilder;
+	public final fun component1 ()Ljava/util/List;
+	public final fun component2 ()Lorg/partiql/types/StaticType;
+	public final fun copy (Ljava/util/List;Lorg/partiql/types/StaticType;)Lorg/partiql/plan/Catalog$Symbol;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Catalog$Symbol;Ljava/util/List;Lorg/partiql/types/StaticType;ILjava/lang/Object;)Lorg/partiql/plan/Catalog$Symbol;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/Catalog$Symbol$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/CatalogSymbolBuilder;
+}
+
+public final class org/partiql/plan/Catalog$Symbol$Ref : org/partiql/plan/PlanNode {
+	public static final field Companion Lorg/partiql/plan/Catalog$Symbol$Ref$Companion;
+	public final field catalog I
+	public final field symbol I
+	public fun <init> (II)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/CatalogSymbolRefBuilder;
+	public final fun component1 ()I
+	public final fun component2 ()I
+	public final fun copy (II)Lorg/partiql/plan/Catalog$Symbol$Ref;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Catalog$Symbol$Ref;IIILjava/lang/Object;)Lorg/partiql/plan/Catalog$Symbol$Ref;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/Catalog$Symbol$Ref$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/CatalogSymbolRefBuilder;
+}
+
+public final class org/partiql/plan/Fn : org/partiql/plan/PlanNode {
+	public static final field Companion Lorg/partiql/plan/Fn$Companion;
+	public final field signature Lorg/partiql/types/function/FunctionSignature$Scalar;
+	public fun <init> (Lorg/partiql/types/function/FunctionSignature$Scalar;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/FnBuilder;
+	public final fun component1 ()Lorg/partiql/types/function/FunctionSignature$Scalar;
+	public final fun copy (Lorg/partiql/types/function/FunctionSignature$Scalar;)Lorg/partiql/plan/Fn;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Fn;Lorg/partiql/types/function/FunctionSignature$Scalar;ILjava/lang/Object;)Lorg/partiql/plan/Fn;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/Fn$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/FnBuilder;
+}
+
+public abstract class org/partiql/plan/Identifier : org/partiql/plan/PlanNode {
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class org/partiql/plan/Identifier$CaseSensitivity : java/lang/Enum {
+	public static final field INSENSITIVE Lorg/partiql/plan/Identifier$CaseSensitivity;
+	public static final field SENSITIVE Lorg/partiql/plan/Identifier$CaseSensitivity;
+	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/plan/Identifier$CaseSensitivity;
+	public static fun values ()[Lorg/partiql/plan/Identifier$CaseSensitivity;
+}
+
+public final class org/partiql/plan/Identifier$Qualified : org/partiql/plan/Identifier {
+	public static final field Companion Lorg/partiql/plan/Identifier$Qualified$Companion;
+	public final field root Lorg/partiql/plan/Identifier$Symbol;
+	public final field steps Ljava/util/List;
+	public fun <init> (Lorg/partiql/plan/Identifier$Symbol;Ljava/util/List;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/IdentifierQualifiedBuilder;
+	public final fun component1 ()Lorg/partiql/plan/Identifier$Symbol;
+	public final fun component2 ()Ljava/util/List;
+	public final fun copy (Lorg/partiql/plan/Identifier$Symbol;Ljava/util/List;)Lorg/partiql/plan/Identifier$Qualified;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Identifier$Qualified;Lorg/partiql/plan/Identifier$Symbol;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/plan/Identifier$Qualified;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/Identifier$Qualified$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/IdentifierQualifiedBuilder;
+}
+
+public final class org/partiql/plan/Identifier$Symbol : org/partiql/plan/Identifier {
+	public static final field Companion Lorg/partiql/plan/Identifier$Symbol$Companion;
+	public final field caseSensitivity Lorg/partiql/plan/Identifier$CaseSensitivity;
+	public final field symbol Ljava/lang/String;
+	public fun <init> (Ljava/lang/String;Lorg/partiql/plan/Identifier$CaseSensitivity;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/IdentifierSymbolBuilder;
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lorg/partiql/plan/Identifier$CaseSensitivity;
+	public final fun copy (Ljava/lang/String;Lorg/partiql/plan/Identifier$CaseSensitivity;)Lorg/partiql/plan/Identifier$Symbol;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Identifier$Symbol;Ljava/lang/String;Lorg/partiql/plan/Identifier$CaseSensitivity;ILjava/lang/Object;)Lorg/partiql/plan/Identifier$Symbol;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/Identifier$Symbol$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/IdentifierSymbolBuilder;
+}
+
+public final class org/partiql/plan/PartiQLPlan : org/partiql/plan/PlanNode {
+	public static final field Companion Lorg/partiql/plan/PartiQLPlan$Companion;
+	public final field catalogs Ljava/util/List;
+	public final field statement Lorg/partiql/plan/Statement;
+	public fun <init> (Ljava/util/List;Lorg/partiql/plan/Statement;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/PartiQlPlanBuilder;
+	public final fun component1 ()Ljava/util/List;
+	public final fun component2 ()Lorg/partiql/plan/Statement;
+	public final fun copy (Ljava/util/List;Lorg/partiql/plan/Statement;)Lorg/partiql/plan/PartiQLPlan;
+	public static synthetic fun copy$default (Lorg/partiql/plan/PartiQLPlan;Ljava/util/List;Lorg/partiql/plan/Statement;ILjava/lang/Object;)Lorg/partiql/plan/PartiQLPlan;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/PartiQLPlan$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/PartiQlPlanBuilder;
+}
+
+public final class org/partiql/plan/Plan {
+	public static final fun agg (Lorg/partiql/types/function/FunctionSignature$Aggregation;)Lorg/partiql/plan/Agg;
+	public static final fun catalog (Ljava/lang/String;Ljava/util/List;)Lorg/partiql/plan/Catalog;
+	public static final fun catalogSymbol (Ljava/util/List;Lorg/partiql/types/StaticType;)Lorg/partiql/plan/Catalog$Symbol;
+	public static final fun catalogSymbolRef (II)Lorg/partiql/plan/Catalog$Symbol$Ref;
+	public static final fun fn (Lorg/partiql/types/function/FunctionSignature$Scalar;)Lorg/partiql/plan/Fn;
+	public static final fun identifierQualified (Lorg/partiql/plan/Identifier$Symbol;Ljava/util/List;)Lorg/partiql/plan/Identifier$Qualified;
+	public static final fun identifierSymbol (Ljava/lang/String;Lorg/partiql/plan/Identifier$CaseSensitivity;)Lorg/partiql/plan/Identifier$Symbol;
+	public static final fun partiQLPlan (Ljava/util/List;Lorg/partiql/plan/Statement;)Lorg/partiql/plan/PartiQLPlan;
+	public static final fun rel (Lorg/partiql/plan/Rel$Type;Lorg/partiql/plan/Rel$Op;)Lorg/partiql/plan/Rel;
+	public static final fun relBinding (Ljava/lang/String;Lorg/partiql/types/StaticType;)Lorg/partiql/plan/Rel$Binding;
+	public static final fun relOpAggregate (Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rel$Op$Aggregate$Strategy;Ljava/util/List;Ljava/util/List;)Lorg/partiql/plan/Rel$Op$Aggregate;
+	public static final fun relOpAggregateCall (Lorg/partiql/plan/Agg;Ljava/util/List;)Lorg/partiql/plan/Rel$Op$Aggregate$Call;
+	public static final fun relOpDistinct (Lorg/partiql/plan/Rel;)Lorg/partiql/plan/Rel$Op$Distinct;
+	public static final fun relOpErr (Ljava/lang/String;)Lorg/partiql/plan/Rel$Op$Err;
+	public static final fun relOpExcept (Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rel;)Lorg/partiql/plan/Rel$Op$Except;
+	public static final fun relOpExclude (Lorg/partiql/plan/Rel;Ljava/util/List;)Lorg/partiql/plan/Rel$Op$Exclude;
+	public static final fun relOpExcludeItem (Lorg/partiql/plan/Rex$Op$Var;Ljava/util/List;)Lorg/partiql/plan/Rel$Op$Exclude$Item;
+	public static final fun relOpExcludeStepCollIndex (I)Lorg/partiql/plan/Rel$Op$Exclude$Step$CollIndex;
+	public static final fun relOpExcludeStepCollWildcard ()Lorg/partiql/plan/Rel$Op$Exclude$Step$CollWildcard;
+	public static final fun relOpExcludeStepStructField (Lorg/partiql/plan/Identifier$Symbol;)Lorg/partiql/plan/Rel$Op$Exclude$Step$StructField;
+	public static final fun relOpExcludeStepStructWildcard ()Lorg/partiql/plan/Rel$Op$Exclude$Step$StructWildcard;
+	public static final fun relOpFilter (Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rex;)Lorg/partiql/plan/Rel$Op$Filter;
+	public static final fun relOpIntersect (Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rel;)Lorg/partiql/plan/Rel$Op$Intersect;
+	public static final fun relOpJoin (Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rel$Op$Join$Type;)Lorg/partiql/plan/Rel$Op$Join;
+	public static final fun relOpLimit (Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rex;)Lorg/partiql/plan/Rel$Op$Limit;
+	public static final fun relOpOffset (Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rex;)Lorg/partiql/plan/Rel$Op$Offset;
+	public static final fun relOpProject (Lorg/partiql/plan/Rel;Ljava/util/List;)Lorg/partiql/plan/Rel$Op$Project;
+	public static final fun relOpScan (Lorg/partiql/plan/Rex;)Lorg/partiql/plan/Rel$Op$Scan;
+	public static final fun relOpScanIndexed (Lorg/partiql/plan/Rex;)Lorg/partiql/plan/Rel$Op$ScanIndexed;
+	public static final fun relOpSort (Lorg/partiql/plan/Rel;Ljava/util/List;)Lorg/partiql/plan/Rel$Op$Sort;
+	public static final fun relOpSortSpec (Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rel$Op$Sort$Order;)Lorg/partiql/plan/Rel$Op$Sort$Spec;
+	public static final fun relOpUnion (Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rel;)Lorg/partiql/plan/Rel$Op$Union;
+	public static final fun relOpUnpivot (Lorg/partiql/plan/Rex;)Lorg/partiql/plan/Rel$Op$Unpivot;
+	public static final fun relType (Ljava/util/List;Ljava/util/Set;)Lorg/partiql/plan/Rel$Type;
+	public static final fun rex (Lorg/partiql/types/StaticType;Lorg/partiql/plan/Rex$Op;)Lorg/partiql/plan/Rex;
+	public static final fun rexOpCallDynamic (Ljava/util/List;Ljava/util/List;)Lorg/partiql/plan/Rex$Op$Call$Dynamic;
+	public static final fun rexOpCallDynamicCandidate (Lorg/partiql/plan/Fn;Ljava/util/List;)Lorg/partiql/plan/Rex$Op$Call$Dynamic$Candidate;
+	public static final fun rexOpCallStatic (Lorg/partiql/plan/Fn;Ljava/util/List;)Lorg/partiql/plan/Rex$Op$Call$Static;
+	public static final fun rexOpCase (Ljava/util/List;Lorg/partiql/plan/Rex;)Lorg/partiql/plan/Rex$Op$Case;
+	public static final fun rexOpCaseBranch (Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rex;)Lorg/partiql/plan/Rex$Op$Case$Branch;
+	public static final fun rexOpCoalesce (Ljava/util/List;)Lorg/partiql/plan/Rex$Op$Coalesce;
+	public static final fun rexOpCollection (Ljava/util/List;)Lorg/partiql/plan/Rex$Op$Collection;
+	public static final fun rexOpErr (Ljava/lang/String;)Lorg/partiql/plan/Rex$Op$Err;
+	public static final fun rexOpGlobal (Lorg/partiql/plan/Catalog$Symbol$Ref;)Lorg/partiql/plan/Rex$Op$Global;
+	public static final fun rexOpLit (Lorg/partiql/value/PartiQLValue;)Lorg/partiql/plan/Rex$Op$Lit;
+	public static final fun rexOpNullif (Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rex;)Lorg/partiql/plan/Rex$Op$Nullif;
+	public static final fun rexOpPathIndex (Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rex;)Lorg/partiql/plan/Rex$Op$Path$Index;
+	public static final fun rexOpPathKey (Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rex;)Lorg/partiql/plan/Rex$Op$Path$Key;
+	public static final fun rexOpPathSymbol (Lorg/partiql/plan/Rex;Ljava/lang/String;)Lorg/partiql/plan/Rex$Op$Path$Symbol;
+	public static final fun rexOpPivot (Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rel;)Lorg/partiql/plan/Rex$Op$Pivot;
+	public static final fun rexOpSelect (Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rel;)Lorg/partiql/plan/Rex$Op$Select;
+	public static final fun rexOpStruct (Ljava/util/List;)Lorg/partiql/plan/Rex$Op$Struct;
+	public static final fun rexOpStructField (Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rex;)Lorg/partiql/plan/Rex$Op$Struct$Field;
+	public static final fun rexOpSubquery (Lorg/partiql/plan/Rex$Op$Select;Lorg/partiql/plan/Rex$Op$Subquery$Coercion;)Lorg/partiql/plan/Rex$Op$Subquery;
+	public static final fun rexOpTupleUnion (Ljava/util/List;)Lorg/partiql/plan/Rex$Op$TupleUnion;
+	public static final fun rexOpVar (I)Lorg/partiql/plan/Rex$Op$Var;
+	public static final fun statementQuery (Lorg/partiql/plan/Rex;)Lorg/partiql/plan/Statement$Query;
+}
+
+public abstract class org/partiql/plan/PlanNode {
+	public field tag Ljava/lang/String;
+	public fun <init> ()V
+	public abstract fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun getChildren ()Ljava/util/List;
+}
+
+public final class org/partiql/plan/Rel : org/partiql/plan/PlanNode {
+	public static final field Companion Lorg/partiql/plan/Rel$Companion;
+	public final field op Lorg/partiql/plan/Rel$Op;
+	public final field type Lorg/partiql/plan/Rel$Type;
+	public fun <init> (Lorg/partiql/plan/Rel$Type;Lorg/partiql/plan/Rel$Op;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/RelBuilder;
+	public final fun component1 ()Lorg/partiql/plan/Rel$Type;
+	public final fun component2 ()Lorg/partiql/plan/Rel$Op;
+	public final fun copy (Lorg/partiql/plan/Rel$Type;Lorg/partiql/plan/Rel$Op;)Lorg/partiql/plan/Rel;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rel$Type;Lorg/partiql/plan/Rel$Op;ILjava/lang/Object;)Lorg/partiql/plan/Rel;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/Rel$Binding : org/partiql/plan/PlanNode {
+	public static final field Companion Lorg/partiql/plan/Rel$Binding$Companion;
+	public final field name Ljava/lang/String;
+	public final field type Lorg/partiql/types/StaticType;
+	public fun <init> (Ljava/lang/String;Lorg/partiql/types/StaticType;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/RelBindingBuilder;
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lorg/partiql/types/StaticType;
+	public final fun copy (Ljava/lang/String;Lorg/partiql/types/StaticType;)Lorg/partiql/plan/Rel$Binding;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Rel$Binding;Ljava/lang/String;Lorg/partiql/types/StaticType;ILjava/lang/Object;)Lorg/partiql/plan/Rel$Binding;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/Rel$Binding$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/RelBindingBuilder;
+}
+
+public final class org/partiql/plan/Rel$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/RelBuilder;
+}
+
+public abstract class org/partiql/plan/Rel$Op : org/partiql/plan/PlanNode {
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class org/partiql/plan/Rel$Op$Aggregate : org/partiql/plan/Rel$Op {
+	public static final field Companion Lorg/partiql/plan/Rel$Op$Aggregate$Companion;
+	public final field calls Ljava/util/List;
+	public final field groups Ljava/util/List;
+	public final field input Lorg/partiql/plan/Rel;
+	public final field strategy Lorg/partiql/plan/Rel$Op$Aggregate$Strategy;
+	public fun <init> (Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rel$Op$Aggregate$Strategy;Ljava/util/List;Ljava/util/List;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/RelOpAggregateBuilder;
+	public final fun component1 ()Lorg/partiql/plan/Rel;
+	public final fun component2 ()Lorg/partiql/plan/Rel$Op$Aggregate$Strategy;
+	public final fun component3 ()Ljava/util/List;
+	public final fun component4 ()Ljava/util/List;
+	public final fun copy (Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rel$Op$Aggregate$Strategy;Ljava/util/List;Ljava/util/List;)Lorg/partiql/plan/Rel$Op$Aggregate;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Rel$Op$Aggregate;Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rel$Op$Aggregate$Strategy;Ljava/util/List;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/plan/Rel$Op$Aggregate;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/Rel$Op$Aggregate$Call : org/partiql/plan/PlanNode {
+	public static final field Companion Lorg/partiql/plan/Rel$Op$Aggregate$Call$Companion;
+	public final field agg Lorg/partiql/plan/Agg;
+	public final field args Ljava/util/List;
+	public fun <init> (Lorg/partiql/plan/Agg;Ljava/util/List;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/RelOpAggregateCallBuilder;
+	public final fun component1 ()Lorg/partiql/plan/Agg;
+	public final fun component2 ()Ljava/util/List;
+	public final fun copy (Lorg/partiql/plan/Agg;Ljava/util/List;)Lorg/partiql/plan/Rel$Op$Aggregate$Call;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Rel$Op$Aggregate$Call;Lorg/partiql/plan/Agg;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/plan/Rel$Op$Aggregate$Call;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/Rel$Op$Aggregate$Call$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/RelOpAggregateCallBuilder;
+}
+
+public final class org/partiql/plan/Rel$Op$Aggregate$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/RelOpAggregateBuilder;
+}
+
+public final class org/partiql/plan/Rel$Op$Aggregate$Strategy : java/lang/Enum {
+	public static final field FULL Lorg/partiql/plan/Rel$Op$Aggregate$Strategy;
+	public static final field PARTIAL Lorg/partiql/plan/Rel$Op$Aggregate$Strategy;
+	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/plan/Rel$Op$Aggregate$Strategy;
+	public static fun values ()[Lorg/partiql/plan/Rel$Op$Aggregate$Strategy;
+}
+
+public final class org/partiql/plan/Rel$Op$Distinct : org/partiql/plan/Rel$Op {
+	public static final field Companion Lorg/partiql/plan/Rel$Op$Distinct$Companion;
+	public final field input Lorg/partiql/plan/Rel;
+	public fun <init> (Lorg/partiql/plan/Rel;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/RelOpDistinctBuilder;
+	public final fun component1 ()Lorg/partiql/plan/Rel;
+	public final fun copy (Lorg/partiql/plan/Rel;)Lorg/partiql/plan/Rel$Op$Distinct;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Rel$Op$Distinct;Lorg/partiql/plan/Rel;ILjava/lang/Object;)Lorg/partiql/plan/Rel$Op$Distinct;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/Rel$Op$Distinct$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/RelOpDistinctBuilder;
+}
+
+public final class org/partiql/plan/Rel$Op$Err : org/partiql/plan/Rel$Op {
+	public static final field Companion Lorg/partiql/plan/Rel$Op$Err$Companion;
+	public final field message Ljava/lang/String;
+	public fun <init> (Ljava/lang/String;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/RelOpErrBuilder;
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lorg/partiql/plan/Rel$Op$Err;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Rel$Op$Err;Ljava/lang/String;ILjava/lang/Object;)Lorg/partiql/plan/Rel$Op$Err;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/Rel$Op$Err$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/RelOpErrBuilder;
+}
+
+public final class org/partiql/plan/Rel$Op$Except : org/partiql/plan/Rel$Op {
+	public static final field Companion Lorg/partiql/plan/Rel$Op$Except$Companion;
+	public final field lhs Lorg/partiql/plan/Rel;
+	public final field rhs Lorg/partiql/plan/Rel;
+	public fun <init> (Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rel;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/RelOpExceptBuilder;
+	public final fun component1 ()Lorg/partiql/plan/Rel;
+	public final fun component2 ()Lorg/partiql/plan/Rel;
+	public final fun copy (Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rel;)Lorg/partiql/plan/Rel$Op$Except;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Rel$Op$Except;Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rel;ILjava/lang/Object;)Lorg/partiql/plan/Rel$Op$Except;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/Rel$Op$Except$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/RelOpExceptBuilder;
+}
+
+public final class org/partiql/plan/Rel$Op$Exclude : org/partiql/plan/Rel$Op {
+	public static final field Companion Lorg/partiql/plan/Rel$Op$Exclude$Companion;
+	public final field input Lorg/partiql/plan/Rel;
+	public final field items Ljava/util/List;
+	public fun <init> (Lorg/partiql/plan/Rel;Ljava/util/List;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/RelOpExcludeBuilder;
+	public final fun component1 ()Lorg/partiql/plan/Rel;
+	public final fun component2 ()Ljava/util/List;
+	public final fun copy (Lorg/partiql/plan/Rel;Ljava/util/List;)Lorg/partiql/plan/Rel$Op$Exclude;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Rel$Op$Exclude;Lorg/partiql/plan/Rel;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/plan/Rel$Op$Exclude;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/Rel$Op$Exclude$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/RelOpExcludeBuilder;
+}
+
+public final class org/partiql/plan/Rel$Op$Exclude$Item : org/partiql/plan/PlanNode {
+	public static final field Companion Lorg/partiql/plan/Rel$Op$Exclude$Item$Companion;
+	public final field root Lorg/partiql/plan/Rex$Op$Var;
+	public final field steps Ljava/util/List;
+	public fun <init> (Lorg/partiql/plan/Rex$Op$Var;Ljava/util/List;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/RelOpExcludeItemBuilder;
+	public final fun component1 ()Lorg/partiql/plan/Rex$Op$Var;
+	public final fun component2 ()Ljava/util/List;
+	public final fun copy (Lorg/partiql/plan/Rex$Op$Var;Ljava/util/List;)Lorg/partiql/plan/Rel$Op$Exclude$Item;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Rel$Op$Exclude$Item;Lorg/partiql/plan/Rex$Op$Var;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/plan/Rel$Op$Exclude$Item;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/Rel$Op$Exclude$Item$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/RelOpExcludeItemBuilder;
+}
+
+public abstract class org/partiql/plan/Rel$Op$Exclude$Step : org/partiql/plan/PlanNode {
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class org/partiql/plan/Rel$Op$Exclude$Step$CollIndex : org/partiql/plan/Rel$Op$Exclude$Step {
+	public static final field Companion Lorg/partiql/plan/Rel$Op$Exclude$Step$CollIndex$Companion;
+	public final field index I
+	public fun <init> (I)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/RelOpExcludeStepCollIndexBuilder;
+	public final fun component1 ()I
+	public final fun copy (I)Lorg/partiql/plan/Rel$Op$Exclude$Step$CollIndex;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Rel$Op$Exclude$Step$CollIndex;IILjava/lang/Object;)Lorg/partiql/plan/Rel$Op$Exclude$Step$CollIndex;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/Rel$Op$Exclude$Step$CollIndex$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/RelOpExcludeStepCollIndexBuilder;
+}
+
+public final class org/partiql/plan/Rel$Op$Exclude$Step$CollWildcard : org/partiql/plan/Rel$Op$Exclude$Step {
+	public final field   C
+	public static final field Companion Lorg/partiql/plan/Rel$Op$Exclude$Step$CollWildcard$Companion;
+	public fun <init> ()V
+	public fun <init> (C)V
+	public synthetic fun <init> (CILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/RelOpExcludeStepCollWildcardBuilder;
+	public final fun component1 ()C
+	public final fun copy (C)Lorg/partiql/plan/Rel$Op$Exclude$Step$CollWildcard;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Rel$Op$Exclude$Step$CollWildcard;CILjava/lang/Object;)Lorg/partiql/plan/Rel$Op$Exclude$Step$CollWildcard;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/Rel$Op$Exclude$Step$CollWildcard$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/RelOpExcludeStepCollWildcardBuilder;
+}
+
+public final class org/partiql/plan/Rel$Op$Exclude$Step$StructField : org/partiql/plan/Rel$Op$Exclude$Step {
+	public static final field Companion Lorg/partiql/plan/Rel$Op$Exclude$Step$StructField$Companion;
+	public final field symbol Lorg/partiql/plan/Identifier$Symbol;
+	public fun <init> (Lorg/partiql/plan/Identifier$Symbol;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/RelOpExcludeStepStructFieldBuilder;
+	public final fun component1 ()Lorg/partiql/plan/Identifier$Symbol;
+	public final fun copy (Lorg/partiql/plan/Identifier$Symbol;)Lorg/partiql/plan/Rel$Op$Exclude$Step$StructField;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Rel$Op$Exclude$Step$StructField;Lorg/partiql/plan/Identifier$Symbol;ILjava/lang/Object;)Lorg/partiql/plan/Rel$Op$Exclude$Step$StructField;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/Rel$Op$Exclude$Step$StructField$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/RelOpExcludeStepStructFieldBuilder;
+}
+
+public final class org/partiql/plan/Rel$Op$Exclude$Step$StructWildcard : org/partiql/plan/Rel$Op$Exclude$Step {
+	public final field   C
+	public static final field Companion Lorg/partiql/plan/Rel$Op$Exclude$Step$StructWildcard$Companion;
+	public fun <init> ()V
+	public fun <init> (C)V
+	public synthetic fun <init> (CILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/RelOpExcludeStepStructWildcardBuilder;
+	public final fun component1 ()C
+	public final fun copy (C)Lorg/partiql/plan/Rel$Op$Exclude$Step$StructWildcard;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Rel$Op$Exclude$Step$StructWildcard;CILjava/lang/Object;)Lorg/partiql/plan/Rel$Op$Exclude$Step$StructWildcard;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/Rel$Op$Exclude$Step$StructWildcard$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/RelOpExcludeStepStructWildcardBuilder;
+}
+
+public final class org/partiql/plan/Rel$Op$Filter : org/partiql/plan/Rel$Op {
+	public static final field Companion Lorg/partiql/plan/Rel$Op$Filter$Companion;
+	public final field input Lorg/partiql/plan/Rel;
+	public final field predicate Lorg/partiql/plan/Rex;
+	public fun <init> (Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rex;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/RelOpFilterBuilder;
+	public final fun component1 ()Lorg/partiql/plan/Rel;
+	public final fun component2 ()Lorg/partiql/plan/Rex;
+	public final fun copy (Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rex;)Lorg/partiql/plan/Rel$Op$Filter;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Rel$Op$Filter;Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rex;ILjava/lang/Object;)Lorg/partiql/plan/Rel$Op$Filter;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/Rel$Op$Filter$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/RelOpFilterBuilder;
+}
+
+public final class org/partiql/plan/Rel$Op$Intersect : org/partiql/plan/Rel$Op {
+	public static final field Companion Lorg/partiql/plan/Rel$Op$Intersect$Companion;
+	public final field lhs Lorg/partiql/plan/Rel;
+	public final field rhs Lorg/partiql/plan/Rel;
+	public fun <init> (Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rel;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/RelOpIntersectBuilder;
+	public final fun component1 ()Lorg/partiql/plan/Rel;
+	public final fun component2 ()Lorg/partiql/plan/Rel;
+	public final fun copy (Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rel;)Lorg/partiql/plan/Rel$Op$Intersect;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Rel$Op$Intersect;Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rel;ILjava/lang/Object;)Lorg/partiql/plan/Rel$Op$Intersect;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/Rel$Op$Intersect$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/RelOpIntersectBuilder;
+}
+
+public final class org/partiql/plan/Rel$Op$Join : org/partiql/plan/Rel$Op {
+	public static final field Companion Lorg/partiql/plan/Rel$Op$Join$Companion;
+	public final field lhs Lorg/partiql/plan/Rel;
+	public final field rex Lorg/partiql/plan/Rex;
+	public final field rhs Lorg/partiql/plan/Rel;
+	public final field type Lorg/partiql/plan/Rel$Op$Join$Type;
+	public fun <init> (Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rel$Op$Join$Type;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/RelOpJoinBuilder;
+	public final fun component1 ()Lorg/partiql/plan/Rel;
+	public final fun component2 ()Lorg/partiql/plan/Rel;
+	public final fun component3 ()Lorg/partiql/plan/Rex;
+	public final fun component4 ()Lorg/partiql/plan/Rel$Op$Join$Type;
+	public final fun copy (Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rel$Op$Join$Type;)Lorg/partiql/plan/Rel$Op$Join;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Rel$Op$Join;Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rel$Op$Join$Type;ILjava/lang/Object;)Lorg/partiql/plan/Rel$Op$Join;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/Rel$Op$Join$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/RelOpJoinBuilder;
+}
+
+public final class org/partiql/plan/Rel$Op$Join$Type : java/lang/Enum {
+	public static final field FULL Lorg/partiql/plan/Rel$Op$Join$Type;
+	public static final field INNER Lorg/partiql/plan/Rel$Op$Join$Type;
+	public static final field LEFT Lorg/partiql/plan/Rel$Op$Join$Type;
+	public static final field RIGHT Lorg/partiql/plan/Rel$Op$Join$Type;
+	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/plan/Rel$Op$Join$Type;
+	public static fun values ()[Lorg/partiql/plan/Rel$Op$Join$Type;
+}
+
+public final class org/partiql/plan/Rel$Op$Limit : org/partiql/plan/Rel$Op {
+	public static final field Companion Lorg/partiql/plan/Rel$Op$Limit$Companion;
+	public final field input Lorg/partiql/plan/Rel;
+	public final field limit Lorg/partiql/plan/Rex;
+	public fun <init> (Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rex;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/RelOpLimitBuilder;
+	public final fun component1 ()Lorg/partiql/plan/Rel;
+	public final fun component2 ()Lorg/partiql/plan/Rex;
+	public final fun copy (Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rex;)Lorg/partiql/plan/Rel$Op$Limit;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Rel$Op$Limit;Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rex;ILjava/lang/Object;)Lorg/partiql/plan/Rel$Op$Limit;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/Rel$Op$Limit$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/RelOpLimitBuilder;
+}
+
+public final class org/partiql/plan/Rel$Op$Offset : org/partiql/plan/Rel$Op {
+	public static final field Companion Lorg/partiql/plan/Rel$Op$Offset$Companion;
+	public final field input Lorg/partiql/plan/Rel;
+	public final field offset Lorg/partiql/plan/Rex;
+	public fun <init> (Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rex;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/RelOpOffsetBuilder;
+	public final fun component1 ()Lorg/partiql/plan/Rel;
+	public final fun component2 ()Lorg/partiql/plan/Rex;
+	public final fun copy (Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rex;)Lorg/partiql/plan/Rel$Op$Offset;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Rel$Op$Offset;Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rex;ILjava/lang/Object;)Lorg/partiql/plan/Rel$Op$Offset;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/Rel$Op$Offset$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/RelOpOffsetBuilder;
+}
+
+public final class org/partiql/plan/Rel$Op$Project : org/partiql/plan/Rel$Op {
+	public static final field Companion Lorg/partiql/plan/Rel$Op$Project$Companion;
+	public final field input Lorg/partiql/plan/Rel;
+	public final field projections Ljava/util/List;
+	public fun <init> (Lorg/partiql/plan/Rel;Ljava/util/List;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/RelOpProjectBuilder;
+	public final fun component1 ()Lorg/partiql/plan/Rel;
+	public final fun component2 ()Ljava/util/List;
+	public final fun copy (Lorg/partiql/plan/Rel;Ljava/util/List;)Lorg/partiql/plan/Rel$Op$Project;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Rel$Op$Project;Lorg/partiql/plan/Rel;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/plan/Rel$Op$Project;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/Rel$Op$Project$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/RelOpProjectBuilder;
+}
+
+public final class org/partiql/plan/Rel$Op$Scan : org/partiql/plan/Rel$Op {
+	public static final field Companion Lorg/partiql/plan/Rel$Op$Scan$Companion;
+	public final field rex Lorg/partiql/plan/Rex;
+	public fun <init> (Lorg/partiql/plan/Rex;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/RelOpScanBuilder;
+	public final fun component1 ()Lorg/partiql/plan/Rex;
+	public final fun copy (Lorg/partiql/plan/Rex;)Lorg/partiql/plan/Rel$Op$Scan;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Rel$Op$Scan;Lorg/partiql/plan/Rex;ILjava/lang/Object;)Lorg/partiql/plan/Rel$Op$Scan;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/Rel$Op$Scan$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/RelOpScanBuilder;
+}
+
+public final class org/partiql/plan/Rel$Op$ScanIndexed : org/partiql/plan/Rel$Op {
+	public static final field Companion Lorg/partiql/plan/Rel$Op$ScanIndexed$Companion;
+	public final field rex Lorg/partiql/plan/Rex;
+	public fun <init> (Lorg/partiql/plan/Rex;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/RelOpScanIndexedBuilder;
+	public final fun component1 ()Lorg/partiql/plan/Rex;
+	public final fun copy (Lorg/partiql/plan/Rex;)Lorg/partiql/plan/Rel$Op$ScanIndexed;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Rel$Op$ScanIndexed;Lorg/partiql/plan/Rex;ILjava/lang/Object;)Lorg/partiql/plan/Rel$Op$ScanIndexed;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/Rel$Op$ScanIndexed$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/RelOpScanIndexedBuilder;
+}
+
+public final class org/partiql/plan/Rel$Op$Sort : org/partiql/plan/Rel$Op {
+	public static final field Companion Lorg/partiql/plan/Rel$Op$Sort$Companion;
+	public final field input Lorg/partiql/plan/Rel;
+	public final field specs Ljava/util/List;
+	public fun <init> (Lorg/partiql/plan/Rel;Ljava/util/List;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/RelOpSortBuilder;
+	public final fun component1 ()Lorg/partiql/plan/Rel;
+	public final fun component2 ()Ljava/util/List;
+	public final fun copy (Lorg/partiql/plan/Rel;Ljava/util/List;)Lorg/partiql/plan/Rel$Op$Sort;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Rel$Op$Sort;Lorg/partiql/plan/Rel;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/plan/Rel$Op$Sort;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/Rel$Op$Sort$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/RelOpSortBuilder;
+}
+
+public final class org/partiql/plan/Rel$Op$Sort$Order : java/lang/Enum {
+	public static final field ASC_NULLS_FIRST Lorg/partiql/plan/Rel$Op$Sort$Order;
+	public static final field ASC_NULLS_LAST Lorg/partiql/plan/Rel$Op$Sort$Order;
+	public static final field DESC_NULLS_FIRST Lorg/partiql/plan/Rel$Op$Sort$Order;
+	public static final field DESC_NULLS_LAST Lorg/partiql/plan/Rel$Op$Sort$Order;
+	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/plan/Rel$Op$Sort$Order;
+	public static fun values ()[Lorg/partiql/plan/Rel$Op$Sort$Order;
+}
+
+public final class org/partiql/plan/Rel$Op$Sort$Spec : org/partiql/plan/PlanNode {
+	public static final field Companion Lorg/partiql/plan/Rel$Op$Sort$Spec$Companion;
+	public final field order Lorg/partiql/plan/Rel$Op$Sort$Order;
+	public final field rex Lorg/partiql/plan/Rex;
+	public fun <init> (Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rel$Op$Sort$Order;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/RelOpSortSpecBuilder;
+	public final fun component1 ()Lorg/partiql/plan/Rex;
+	public final fun component2 ()Lorg/partiql/plan/Rel$Op$Sort$Order;
+	public final fun copy (Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rel$Op$Sort$Order;)Lorg/partiql/plan/Rel$Op$Sort$Spec;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Rel$Op$Sort$Spec;Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rel$Op$Sort$Order;ILjava/lang/Object;)Lorg/partiql/plan/Rel$Op$Sort$Spec;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/Rel$Op$Sort$Spec$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/RelOpSortSpecBuilder;
+}
+
+public final class org/partiql/plan/Rel$Op$Union : org/partiql/plan/Rel$Op {
+	public static final field Companion Lorg/partiql/plan/Rel$Op$Union$Companion;
+	public final field lhs Lorg/partiql/plan/Rel;
+	public final field rhs Lorg/partiql/plan/Rel;
+	public fun <init> (Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rel;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/RelOpUnionBuilder;
+	public final fun component1 ()Lorg/partiql/plan/Rel;
+	public final fun component2 ()Lorg/partiql/plan/Rel;
+	public final fun copy (Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rel;)Lorg/partiql/plan/Rel$Op$Union;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Rel$Op$Union;Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rel;ILjava/lang/Object;)Lorg/partiql/plan/Rel$Op$Union;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/Rel$Op$Union$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/RelOpUnionBuilder;
+}
+
+public final class org/partiql/plan/Rel$Op$Unpivot : org/partiql/plan/Rel$Op {
+	public static final field Companion Lorg/partiql/plan/Rel$Op$Unpivot$Companion;
+	public final field rex Lorg/partiql/plan/Rex;
+	public fun <init> (Lorg/partiql/plan/Rex;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/RelOpUnpivotBuilder;
+	public final fun component1 ()Lorg/partiql/plan/Rex;
+	public final fun copy (Lorg/partiql/plan/Rex;)Lorg/partiql/plan/Rel$Op$Unpivot;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Rel$Op$Unpivot;Lorg/partiql/plan/Rex;ILjava/lang/Object;)Lorg/partiql/plan/Rel$Op$Unpivot;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/Rel$Op$Unpivot$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/RelOpUnpivotBuilder;
+}
+
+public final class org/partiql/plan/Rel$Prop : java/lang/Enum {
+	public static final field ORDERED Lorg/partiql/plan/Rel$Prop;
+	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/plan/Rel$Prop;
+	public static fun values ()[Lorg/partiql/plan/Rel$Prop;
+}
+
+public final class org/partiql/plan/Rel$Type : org/partiql/plan/PlanNode {
+	public static final field Companion Lorg/partiql/plan/Rel$Type$Companion;
+	public final field props Ljava/util/Set;
+	public final field schema Ljava/util/List;
+	public fun <init> (Ljava/util/List;Ljava/util/Set;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/RelTypeBuilder;
+	public final fun component1 ()Ljava/util/List;
+	public final fun component2 ()Ljava/util/Set;
+	public final fun copy (Ljava/util/List;Ljava/util/Set;)Lorg/partiql/plan/Rel$Type;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Rel$Type;Ljava/util/List;Ljava/util/Set;ILjava/lang/Object;)Lorg/partiql/plan/Rel$Type;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/Rel$Type$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/RelTypeBuilder;
+}
+
+public final class org/partiql/plan/Rex : org/partiql/plan/PlanNode {
+	public static final field Companion Lorg/partiql/plan/Rex$Companion;
+	public final field op Lorg/partiql/plan/Rex$Op;
+	public final field type Lorg/partiql/types/StaticType;
+	public fun <init> (Lorg/partiql/types/StaticType;Lorg/partiql/plan/Rex$Op;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/RexBuilder;
+	public final fun component1 ()Lorg/partiql/types/StaticType;
+	public final fun component2 ()Lorg/partiql/plan/Rex$Op;
+	public final fun copy (Lorg/partiql/types/StaticType;Lorg/partiql/plan/Rex$Op;)Lorg/partiql/plan/Rex;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Rex;Lorg/partiql/types/StaticType;Lorg/partiql/plan/Rex$Op;ILjava/lang/Object;)Lorg/partiql/plan/Rex;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/Rex$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/RexBuilder;
+}
+
+public abstract class org/partiql/plan/Rex$Op : org/partiql/plan/PlanNode {
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+}
+
+public abstract class org/partiql/plan/Rex$Op$Call : org/partiql/plan/Rex$Op {
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class org/partiql/plan/Rex$Op$Call$Dynamic : org/partiql/plan/Rex$Op$Call {
+	public static final field Companion Lorg/partiql/plan/Rex$Op$Call$Dynamic$Companion;
+	public final field args Ljava/util/List;
+	public final field candidates Ljava/util/List;
+	public fun <init> (Ljava/util/List;Ljava/util/List;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/RexOpCallDynamicBuilder;
+	public final fun component1 ()Ljava/util/List;
+	public final fun component2 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;Ljava/util/List;)Lorg/partiql/plan/Rex$Op$Call$Dynamic;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Rex$Op$Call$Dynamic;Ljava/util/List;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/plan/Rex$Op$Call$Dynamic;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/Rex$Op$Call$Dynamic$Candidate : org/partiql/plan/PlanNode {
+	public static final field Companion Lorg/partiql/plan/Rex$Op$Call$Dynamic$Candidate$Companion;
+	public final field coercions Ljava/util/List;
+	public final field fn Lorg/partiql/plan/Fn;
+	public fun <init> (Lorg/partiql/plan/Fn;Ljava/util/List;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/RexOpCallDynamicCandidateBuilder;
+	public final fun component1 ()Lorg/partiql/plan/Fn;
+	public final fun component2 ()Ljava/util/List;
+	public final fun copy (Lorg/partiql/plan/Fn;Ljava/util/List;)Lorg/partiql/plan/Rex$Op$Call$Dynamic$Candidate;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Rex$Op$Call$Dynamic$Candidate;Lorg/partiql/plan/Fn;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/plan/Rex$Op$Call$Dynamic$Candidate;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/Rex$Op$Call$Dynamic$Candidate$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/RexOpCallDynamicCandidateBuilder;
+}
+
+public final class org/partiql/plan/Rex$Op$Call$Dynamic$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/RexOpCallDynamicBuilder;
+}
+
+public final class org/partiql/plan/Rex$Op$Call$Static : org/partiql/plan/Rex$Op$Call {
+	public static final field Companion Lorg/partiql/plan/Rex$Op$Call$Static$Companion;
+	public final field args Ljava/util/List;
+	public final field fn Lorg/partiql/plan/Fn;
+	public fun <init> (Lorg/partiql/plan/Fn;Ljava/util/List;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/RexOpCallStaticBuilder;
+	public final fun component1 ()Lorg/partiql/plan/Fn;
+	public final fun component2 ()Ljava/util/List;
+	public final fun copy (Lorg/partiql/plan/Fn;Ljava/util/List;)Lorg/partiql/plan/Rex$Op$Call$Static;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Rex$Op$Call$Static;Lorg/partiql/plan/Fn;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/plan/Rex$Op$Call$Static;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/Rex$Op$Call$Static$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/RexOpCallStaticBuilder;
+}
+
+public final class org/partiql/plan/Rex$Op$Case : org/partiql/plan/Rex$Op {
+	public static final field Companion Lorg/partiql/plan/Rex$Op$Case$Companion;
+	public final field branches Ljava/util/List;
+	public final field default Lorg/partiql/plan/Rex;
+	public fun <init> (Ljava/util/List;Lorg/partiql/plan/Rex;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/RexOpCaseBuilder;
+	public final fun component1 ()Ljava/util/List;
+	public final fun component2 ()Lorg/partiql/plan/Rex;
+	public final fun copy (Ljava/util/List;Lorg/partiql/plan/Rex;)Lorg/partiql/plan/Rex$Op$Case;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Rex$Op$Case;Ljava/util/List;Lorg/partiql/plan/Rex;ILjava/lang/Object;)Lorg/partiql/plan/Rex$Op$Case;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/Rex$Op$Case$Branch : org/partiql/plan/PlanNode {
+	public static final field Companion Lorg/partiql/plan/Rex$Op$Case$Branch$Companion;
+	public final field condition Lorg/partiql/plan/Rex;
+	public final field rex Lorg/partiql/plan/Rex;
+	public fun <init> (Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rex;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/RexOpCaseBranchBuilder;
+	public final fun component1 ()Lorg/partiql/plan/Rex;
+	public final fun component2 ()Lorg/partiql/plan/Rex;
+	public final fun copy (Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rex;)Lorg/partiql/plan/Rex$Op$Case$Branch;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Rex$Op$Case$Branch;Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rex;ILjava/lang/Object;)Lorg/partiql/plan/Rex$Op$Case$Branch;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/Rex$Op$Case$Branch$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/RexOpCaseBranchBuilder;
+}
+
+public final class org/partiql/plan/Rex$Op$Case$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/RexOpCaseBuilder;
+}
+
+public final class org/partiql/plan/Rex$Op$Coalesce : org/partiql/plan/Rex$Op {
+	public static final field Companion Lorg/partiql/plan/Rex$Op$Coalesce$Companion;
+	public final field args Ljava/util/List;
+	public fun <init> (Ljava/util/List;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/RexOpCoalesceBuilder;
+	public final fun component1 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;)Lorg/partiql/plan/Rex$Op$Coalesce;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Rex$Op$Coalesce;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/plan/Rex$Op$Coalesce;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/Rex$Op$Coalesce$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/RexOpCoalesceBuilder;
+}
+
+public final class org/partiql/plan/Rex$Op$Collection : org/partiql/plan/Rex$Op {
+	public static final field Companion Lorg/partiql/plan/Rex$Op$Collection$Companion;
+	public final field values Ljava/util/List;
+	public fun <init> (Ljava/util/List;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/RexOpCollectionBuilder;
+	public final fun component1 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;)Lorg/partiql/plan/Rex$Op$Collection;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Rex$Op$Collection;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/plan/Rex$Op$Collection;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/Rex$Op$Collection$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/RexOpCollectionBuilder;
+}
+
+public final class org/partiql/plan/Rex$Op$Err : org/partiql/plan/Rex$Op {
+	public static final field Companion Lorg/partiql/plan/Rex$Op$Err$Companion;
+	public final field message Ljava/lang/String;
+	public fun <init> (Ljava/lang/String;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/RexOpErrBuilder;
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lorg/partiql/plan/Rex$Op$Err;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Rex$Op$Err;Ljava/lang/String;ILjava/lang/Object;)Lorg/partiql/plan/Rex$Op$Err;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/Rex$Op$Err$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/RexOpErrBuilder;
+}
+
+public final class org/partiql/plan/Rex$Op$Global : org/partiql/plan/Rex$Op {
+	public static final field Companion Lorg/partiql/plan/Rex$Op$Global$Companion;
+	public final field ref Lorg/partiql/plan/Catalog$Symbol$Ref;
+	public fun <init> (Lorg/partiql/plan/Catalog$Symbol$Ref;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/RexOpGlobalBuilder;
+	public final fun component1 ()Lorg/partiql/plan/Catalog$Symbol$Ref;
+	public final fun copy (Lorg/partiql/plan/Catalog$Symbol$Ref;)Lorg/partiql/plan/Rex$Op$Global;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Rex$Op$Global;Lorg/partiql/plan/Catalog$Symbol$Ref;ILjava/lang/Object;)Lorg/partiql/plan/Rex$Op$Global;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/Rex$Op$Global$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/RexOpGlobalBuilder;
+}
+
+public final class org/partiql/plan/Rex$Op$Lit : org/partiql/plan/Rex$Op {
+	public static final field Companion Lorg/partiql/plan/Rex$Op$Lit$Companion;
+	public final field value Lorg/partiql/value/PartiQLValue;
+	public fun <init> (Lorg/partiql/value/PartiQLValue;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/RexOpLitBuilder;
+	public final fun component1 ()Lorg/partiql/value/PartiQLValue;
+	public final fun copy (Lorg/partiql/value/PartiQLValue;)Lorg/partiql/plan/Rex$Op$Lit;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Rex$Op$Lit;Lorg/partiql/value/PartiQLValue;ILjava/lang/Object;)Lorg/partiql/plan/Rex$Op$Lit;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/Rex$Op$Lit$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/RexOpLitBuilder;
+}
+
+public final class org/partiql/plan/Rex$Op$Nullif : org/partiql/plan/Rex$Op {
+	public static final field Companion Lorg/partiql/plan/Rex$Op$Nullif$Companion;
+	public final field nullifier Lorg/partiql/plan/Rex;
+	public final field value Lorg/partiql/plan/Rex;
+	public fun <init> (Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rex;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/RexOpNullifBuilder;
+	public final fun component1 ()Lorg/partiql/plan/Rex;
+	public final fun component2 ()Lorg/partiql/plan/Rex;
+	public final fun copy (Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rex;)Lorg/partiql/plan/Rex$Op$Nullif;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Rex$Op$Nullif;Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rex;ILjava/lang/Object;)Lorg/partiql/plan/Rex$Op$Nullif;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/Rex$Op$Nullif$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/RexOpNullifBuilder;
+}
+
+public abstract class org/partiql/plan/Rex$Op$Path : org/partiql/plan/Rex$Op {
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class org/partiql/plan/Rex$Op$Path$Index : org/partiql/plan/Rex$Op$Path {
+	public static final field Companion Lorg/partiql/plan/Rex$Op$Path$Index$Companion;
+	public final field key Lorg/partiql/plan/Rex;
+	public final field root Lorg/partiql/plan/Rex;
+	public fun <init> (Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rex;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/RexOpPathIndexBuilder;
+	public final fun component1 ()Lorg/partiql/plan/Rex;
+	public final fun component2 ()Lorg/partiql/plan/Rex;
+	public final fun copy (Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rex;)Lorg/partiql/plan/Rex$Op$Path$Index;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Rex$Op$Path$Index;Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rex;ILjava/lang/Object;)Lorg/partiql/plan/Rex$Op$Path$Index;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/Rex$Op$Path$Index$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/RexOpPathIndexBuilder;
+}
+
+public final class org/partiql/plan/Rex$Op$Path$Key : org/partiql/plan/Rex$Op$Path {
+	public static final field Companion Lorg/partiql/plan/Rex$Op$Path$Key$Companion;
+	public final field key Lorg/partiql/plan/Rex;
+	public final field root Lorg/partiql/plan/Rex;
+	public fun <init> (Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rex;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/RexOpPathKeyBuilder;
+	public final fun component1 ()Lorg/partiql/plan/Rex;
+	public final fun component2 ()Lorg/partiql/plan/Rex;
+	public final fun copy (Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rex;)Lorg/partiql/plan/Rex$Op$Path$Key;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Rex$Op$Path$Key;Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rex;ILjava/lang/Object;)Lorg/partiql/plan/Rex$Op$Path$Key;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/Rex$Op$Path$Key$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/RexOpPathKeyBuilder;
+}
+
+public final class org/partiql/plan/Rex$Op$Path$Symbol : org/partiql/plan/Rex$Op$Path {
+	public static final field Companion Lorg/partiql/plan/Rex$Op$Path$Symbol$Companion;
+	public final field key Ljava/lang/String;
+	public final field root Lorg/partiql/plan/Rex;
+	public fun <init> (Lorg/partiql/plan/Rex;Ljava/lang/String;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/RexOpPathSymbolBuilder;
+	public final fun component1 ()Lorg/partiql/plan/Rex;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Lorg/partiql/plan/Rex;Ljava/lang/String;)Lorg/partiql/plan/Rex$Op$Path$Symbol;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Rex$Op$Path$Symbol;Lorg/partiql/plan/Rex;Ljava/lang/String;ILjava/lang/Object;)Lorg/partiql/plan/Rex$Op$Path$Symbol;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/Rex$Op$Path$Symbol$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/RexOpPathSymbolBuilder;
+}
+
+public final class org/partiql/plan/Rex$Op$Pivot : org/partiql/plan/Rex$Op {
+	public static final field Companion Lorg/partiql/plan/Rex$Op$Pivot$Companion;
+	public final field key Lorg/partiql/plan/Rex;
+	public final field rel Lorg/partiql/plan/Rel;
+	public final field value Lorg/partiql/plan/Rex;
+	public fun <init> (Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rel;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/RexOpPivotBuilder;
+	public final fun component1 ()Lorg/partiql/plan/Rex;
+	public final fun component2 ()Lorg/partiql/plan/Rex;
+	public final fun component3 ()Lorg/partiql/plan/Rel;
+	public final fun copy (Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rel;)Lorg/partiql/plan/Rex$Op$Pivot;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Rex$Op$Pivot;Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rel;ILjava/lang/Object;)Lorg/partiql/plan/Rex$Op$Pivot;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/Rex$Op$Pivot$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/RexOpPivotBuilder;
+}
+
+public final class org/partiql/plan/Rex$Op$Select : org/partiql/plan/Rex$Op {
+	public static final field Companion Lorg/partiql/plan/Rex$Op$Select$Companion;
+	public final field constructor Lorg/partiql/plan/Rex;
+	public final field rel Lorg/partiql/plan/Rel;
+	public fun <init> (Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rel;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/RexOpSelectBuilder;
+	public final fun component1 ()Lorg/partiql/plan/Rex;
+	public final fun component2 ()Lorg/partiql/plan/Rel;
+	public final fun copy (Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rel;)Lorg/partiql/plan/Rex$Op$Select;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Rex$Op$Select;Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rel;ILjava/lang/Object;)Lorg/partiql/plan/Rex$Op$Select;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/Rex$Op$Select$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/RexOpSelectBuilder;
+}
+
+public final class org/partiql/plan/Rex$Op$Struct : org/partiql/plan/Rex$Op {
+	public static final field Companion Lorg/partiql/plan/Rex$Op$Struct$Companion;
+	public final field fields Ljava/util/List;
+	public fun <init> (Ljava/util/List;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/RexOpStructBuilder;
+	public final fun component1 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;)Lorg/partiql/plan/Rex$Op$Struct;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Rex$Op$Struct;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/plan/Rex$Op$Struct;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/Rex$Op$Struct$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/RexOpStructBuilder;
+}
+
+public final class org/partiql/plan/Rex$Op$Struct$Field : org/partiql/plan/PlanNode {
+	public static final field Companion Lorg/partiql/plan/Rex$Op$Struct$Field$Companion;
+	public final field k Lorg/partiql/plan/Rex;
+	public final field v Lorg/partiql/plan/Rex;
+	public fun <init> (Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rex;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/RexOpStructFieldBuilder;
+	public final fun component1 ()Lorg/partiql/plan/Rex;
+	public final fun component2 ()Lorg/partiql/plan/Rex;
+	public final fun copy (Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rex;)Lorg/partiql/plan/Rex$Op$Struct$Field;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Rex$Op$Struct$Field;Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rex;ILjava/lang/Object;)Lorg/partiql/plan/Rex$Op$Struct$Field;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/Rex$Op$Struct$Field$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/RexOpStructFieldBuilder;
+}
+
+public final class org/partiql/plan/Rex$Op$Subquery : org/partiql/plan/Rex$Op {
+	public static final field Companion Lorg/partiql/plan/Rex$Op$Subquery$Companion;
+	public final field coercion Lorg/partiql/plan/Rex$Op$Subquery$Coercion;
+	public final field select Lorg/partiql/plan/Rex$Op$Select;
+	public fun <init> (Lorg/partiql/plan/Rex$Op$Select;Lorg/partiql/plan/Rex$Op$Subquery$Coercion;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/RexOpSubqueryBuilder;
+	public final fun component1 ()Lorg/partiql/plan/Rex$Op$Select;
+	public final fun component2 ()Lorg/partiql/plan/Rex$Op$Subquery$Coercion;
+	public final fun copy (Lorg/partiql/plan/Rex$Op$Select;Lorg/partiql/plan/Rex$Op$Subquery$Coercion;)Lorg/partiql/plan/Rex$Op$Subquery;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Rex$Op$Subquery;Lorg/partiql/plan/Rex$Op$Select;Lorg/partiql/plan/Rex$Op$Subquery$Coercion;ILjava/lang/Object;)Lorg/partiql/plan/Rex$Op$Subquery;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/Rex$Op$Subquery$Coercion : java/lang/Enum {
+	public static final field ROW Lorg/partiql/plan/Rex$Op$Subquery$Coercion;
+	public static final field SCALAR Lorg/partiql/plan/Rex$Op$Subquery$Coercion;
+	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/plan/Rex$Op$Subquery$Coercion;
+	public static fun values ()[Lorg/partiql/plan/Rex$Op$Subquery$Coercion;
+}
+
+public final class org/partiql/plan/Rex$Op$Subquery$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/RexOpSubqueryBuilder;
+}
+
+public final class org/partiql/plan/Rex$Op$TupleUnion : org/partiql/plan/Rex$Op {
+	public static final field Companion Lorg/partiql/plan/Rex$Op$TupleUnion$Companion;
+	public final field args Ljava/util/List;
+	public fun <init> (Ljava/util/List;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/RexOpTupleUnionBuilder;
+	public final fun component1 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;)Lorg/partiql/plan/Rex$Op$TupleUnion;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Rex$Op$TupleUnion;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/plan/Rex$Op$TupleUnion;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/Rex$Op$TupleUnion$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/RexOpTupleUnionBuilder;
+}
+
+public final class org/partiql/plan/Rex$Op$Var : org/partiql/plan/Rex$Op {
+	public static final field Companion Lorg/partiql/plan/Rex$Op$Var$Companion;
+	public final field ref I
+	public fun <init> (I)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/RexOpVarBuilder;
+	public final fun component1 ()I
+	public final fun copy (I)Lorg/partiql/plan/Rex$Op$Var;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Rex$Op$Var;IILjava/lang/Object;)Lorg/partiql/plan/Rex$Op$Var;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/Rex$Op$Var$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/RexOpVarBuilder;
+}
+
+public abstract class org/partiql/plan/Statement : org/partiql/plan/PlanNode {
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class org/partiql/plan/Statement$Query : org/partiql/plan/Statement {
+	public static final field Companion Lorg/partiql/plan/Statement$Query$Companion;
+	public final field root Lorg/partiql/plan/Rex;
+	public fun <init> (Lorg/partiql/plan/Rex;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/StatementQueryBuilder;
+	public final fun component1 ()Lorg/partiql/plan/Rex;
+	public final fun copy (Lorg/partiql/plan/Rex;)Lorg/partiql/plan/Statement$Query;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Statement$Query;Lorg/partiql/plan/Rex;ILjava/lang/Object;)Lorg/partiql/plan/Statement$Query;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/Statement$Query$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/StatementQueryBuilder;
+}
+
+public final class org/partiql/plan/builder/AggBuilder {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/types/function/FunctionSignature$Aggregation;)V
+	public synthetic fun <init> (Lorg/partiql/types/function/FunctionSignature$Aggregation;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/plan/Agg;
+	public final fun getSignature ()Lorg/partiql/types/function/FunctionSignature$Aggregation;
+	public final fun setSignature (Lorg/partiql/types/function/FunctionSignature$Aggregation;)V
+	public final fun signature (Lorg/partiql/types/function/FunctionSignature$Aggregation;)Lorg/partiql/plan/builder/AggBuilder;
+}
+
+public final class org/partiql/plan/builder/CatalogBuilder {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/util/List;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/plan/Catalog;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getSymbols ()Ljava/util/List;
+	public final fun name (Ljava/lang/String;)Lorg/partiql/plan/builder/CatalogBuilder;
+	public final fun setName (Ljava/lang/String;)V
+	public final fun setSymbols (Ljava/util/List;)V
+	public final fun symbols (Ljava/util/List;)Lorg/partiql/plan/builder/CatalogBuilder;
+}
+
+public final class org/partiql/plan/builder/CatalogSymbolBuilder {
+	public fun <init> ()V
+	public fun <init> (Ljava/util/List;Lorg/partiql/types/StaticType;)V
+	public synthetic fun <init> (Ljava/util/List;Lorg/partiql/types/StaticType;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/plan/Catalog$Symbol;
+	public final fun getPath ()Ljava/util/List;
+	public final fun getType ()Lorg/partiql/types/StaticType;
+	public final fun path (Ljava/util/List;)Lorg/partiql/plan/builder/CatalogSymbolBuilder;
+	public final fun setPath (Ljava/util/List;)V
+	public final fun setType (Lorg/partiql/types/StaticType;)V
+	public final fun type (Lorg/partiql/types/StaticType;)Lorg/partiql/plan/builder/CatalogSymbolBuilder;
+}
+
+public final class org/partiql/plan/builder/CatalogSymbolRefBuilder {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/Integer;Ljava/lang/Integer;)V
+	public synthetic fun <init> (Ljava/lang/Integer;Ljava/lang/Integer;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/plan/Catalog$Symbol$Ref;
+	public final fun catalog (Ljava/lang/Integer;)Lorg/partiql/plan/builder/CatalogSymbolRefBuilder;
+	public final fun getCatalog ()Ljava/lang/Integer;
+	public final fun getSymbol ()Ljava/lang/Integer;
+	public final fun setCatalog (Ljava/lang/Integer;)V
+	public final fun setSymbol (Ljava/lang/Integer;)V
+	public final fun symbol (Ljava/lang/Integer;)Lorg/partiql/plan/builder/CatalogSymbolRefBuilder;
+}
+
+public final class org/partiql/plan/builder/FnBuilder {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/types/function/FunctionSignature$Scalar;)V
+	public synthetic fun <init> (Lorg/partiql/types/function/FunctionSignature$Scalar;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/plan/Fn;
+	public final fun getSignature ()Lorg/partiql/types/function/FunctionSignature$Scalar;
+	public final fun setSignature (Lorg/partiql/types/function/FunctionSignature$Scalar;)V
+	public final fun signature (Lorg/partiql/types/function/FunctionSignature$Scalar;)Lorg/partiql/plan/builder/FnBuilder;
+}
+
+public final class org/partiql/plan/builder/IdentifierQualifiedBuilder {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/plan/Identifier$Symbol;Ljava/util/List;)V
+	public synthetic fun <init> (Lorg/partiql/plan/Identifier$Symbol;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/plan/Identifier$Qualified;
+	public final fun getRoot ()Lorg/partiql/plan/Identifier$Symbol;
+	public final fun getSteps ()Ljava/util/List;
+	public final fun root (Lorg/partiql/plan/Identifier$Symbol;)Lorg/partiql/plan/builder/IdentifierQualifiedBuilder;
+	public final fun setRoot (Lorg/partiql/plan/Identifier$Symbol;)V
+	public final fun setSteps (Ljava/util/List;)V
+	public final fun steps (Ljava/util/List;)Lorg/partiql/plan/builder/IdentifierQualifiedBuilder;
+}
+
+public final class org/partiql/plan/builder/IdentifierSymbolBuilder {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Lorg/partiql/plan/Identifier$CaseSensitivity;)V
+	public synthetic fun <init> (Ljava/lang/String;Lorg/partiql/plan/Identifier$CaseSensitivity;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/plan/Identifier$Symbol;
+	public final fun caseSensitivity (Lorg/partiql/plan/Identifier$CaseSensitivity;)Lorg/partiql/plan/builder/IdentifierSymbolBuilder;
+	public final fun getCaseSensitivity ()Lorg/partiql/plan/Identifier$CaseSensitivity;
+	public final fun getSymbol ()Ljava/lang/String;
+	public final fun setCaseSensitivity (Lorg/partiql/plan/Identifier$CaseSensitivity;)V
+	public final fun setSymbol (Ljava/lang/String;)V
+	public final fun symbol (Ljava/lang/String;)Lorg/partiql/plan/builder/IdentifierSymbolBuilder;
+}
+
+public final class org/partiql/plan/builder/PartiQlPlanBuilder {
+	public fun <init> ()V
+	public fun <init> (Ljava/util/List;Lorg/partiql/plan/Statement;)V
+	public synthetic fun <init> (Ljava/util/List;Lorg/partiql/plan/Statement;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/plan/PartiQLPlan;
+	public final fun catalogs (Ljava/util/List;)Lorg/partiql/plan/builder/PartiQlPlanBuilder;
+	public final fun getCatalogs ()Ljava/util/List;
+	public final fun getStatement ()Lorg/partiql/plan/Statement;
+	public final fun setCatalogs (Ljava/util/List;)V
+	public final fun setStatement (Lorg/partiql/plan/Statement;)V
+	public final fun statement (Lorg/partiql/plan/Statement;)Lorg/partiql/plan/builder/PartiQlPlanBuilder;
+}
+
+public final class org/partiql/plan/builder/PlanBuilder {
+	public fun <init> ()V
+	public final fun agg (Lorg/partiql/types/function/FunctionSignature$Aggregation;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Agg;
+	public static synthetic fun agg$default (Lorg/partiql/plan/builder/PlanBuilder;Lorg/partiql/types/function/FunctionSignature$Aggregation;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Agg;
+	public final fun catalog (Ljava/lang/String;Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Catalog;
+	public static synthetic fun catalog$default (Lorg/partiql/plan/builder/PlanBuilder;Ljava/lang/String;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Catalog;
+	public final fun catalogSymbol (Ljava/util/List;Lorg/partiql/types/StaticType;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Catalog$Symbol;
+	public static synthetic fun catalogSymbol$default (Lorg/partiql/plan/builder/PlanBuilder;Ljava/util/List;Lorg/partiql/types/StaticType;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Catalog$Symbol;
+	public final fun catalogSymbolRef (Ljava/lang/Integer;Ljava/lang/Integer;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Catalog$Symbol$Ref;
+	public static synthetic fun catalogSymbolRef$default (Lorg/partiql/plan/builder/PlanBuilder;Ljava/lang/Integer;Ljava/lang/Integer;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Catalog$Symbol$Ref;
+	public final fun fn (Lorg/partiql/types/function/FunctionSignature$Scalar;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Fn;
+	public static synthetic fun fn$default (Lorg/partiql/plan/builder/PlanBuilder;Lorg/partiql/types/function/FunctionSignature$Scalar;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Fn;
+	public final fun identifierQualified (Lorg/partiql/plan/Identifier$Symbol;Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Identifier$Qualified;
+	public static synthetic fun identifierQualified$default (Lorg/partiql/plan/builder/PlanBuilder;Lorg/partiql/plan/Identifier$Symbol;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Identifier$Qualified;
+	public final fun identifierSymbol (Ljava/lang/String;Lorg/partiql/plan/Identifier$CaseSensitivity;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Identifier$Symbol;
+	public static synthetic fun identifierSymbol$default (Lorg/partiql/plan/builder/PlanBuilder;Ljava/lang/String;Lorg/partiql/plan/Identifier$CaseSensitivity;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Identifier$Symbol;
+	public final fun partiQLPlan (Ljava/util/List;Lorg/partiql/plan/Statement;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/PartiQLPlan;
+	public static synthetic fun partiQLPlan$default (Lorg/partiql/plan/builder/PlanBuilder;Ljava/util/List;Lorg/partiql/plan/Statement;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/PartiQLPlan;
+	public final fun rel (Lorg/partiql/plan/Rel$Type;Lorg/partiql/plan/Rel$Op;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Rel;
+	public static synthetic fun rel$default (Lorg/partiql/plan/builder/PlanBuilder;Lorg/partiql/plan/Rel$Type;Lorg/partiql/plan/Rel$Op;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Rel;
+	public final fun relBinding (Ljava/lang/String;Lorg/partiql/types/StaticType;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Rel$Binding;
+	public static synthetic fun relBinding$default (Lorg/partiql/plan/builder/PlanBuilder;Ljava/lang/String;Lorg/partiql/types/StaticType;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Rel$Binding;
+	public final fun relOpAggregate (Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rel$Op$Aggregate$Strategy;Ljava/util/List;Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Rel$Op$Aggregate;
+	public static synthetic fun relOpAggregate$default (Lorg/partiql/plan/builder/PlanBuilder;Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rel$Op$Aggregate$Strategy;Ljava/util/List;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Rel$Op$Aggregate;
+	public final fun relOpAggregateCall (Lorg/partiql/plan/Agg;Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Rel$Op$Aggregate$Call;
+	public static synthetic fun relOpAggregateCall$default (Lorg/partiql/plan/builder/PlanBuilder;Lorg/partiql/plan/Agg;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Rel$Op$Aggregate$Call;
+	public final fun relOpDistinct (Lorg/partiql/plan/Rel;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Rel$Op$Distinct;
+	public static synthetic fun relOpDistinct$default (Lorg/partiql/plan/builder/PlanBuilder;Lorg/partiql/plan/Rel;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Rel$Op$Distinct;
+	public final fun relOpErr (Ljava/lang/String;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Rel$Op$Err;
+	public static synthetic fun relOpErr$default (Lorg/partiql/plan/builder/PlanBuilder;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Rel$Op$Err;
+	public final fun relOpExcept (Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rel;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Rel$Op$Except;
+	public static synthetic fun relOpExcept$default (Lorg/partiql/plan/builder/PlanBuilder;Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rel;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Rel$Op$Except;
+	public final fun relOpExclude (Lorg/partiql/plan/Rel;Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Rel$Op$Exclude;
+	public static synthetic fun relOpExclude$default (Lorg/partiql/plan/builder/PlanBuilder;Lorg/partiql/plan/Rel;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Rel$Op$Exclude;
+	public final fun relOpExcludeItem (Lorg/partiql/plan/Rex$Op$Var;Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Rel$Op$Exclude$Item;
+	public static synthetic fun relOpExcludeItem$default (Lorg/partiql/plan/builder/PlanBuilder;Lorg/partiql/plan/Rex$Op$Var;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Rel$Op$Exclude$Item;
+	public final fun relOpExcludeStepCollIndex (Ljava/lang/Integer;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Rel$Op$Exclude$Step$CollIndex;
+	public static synthetic fun relOpExcludeStepCollIndex$default (Lorg/partiql/plan/builder/PlanBuilder;Ljava/lang/Integer;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Rel$Op$Exclude$Step$CollIndex;
+	public final fun relOpExcludeStepCollWildcard (Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Rel$Op$Exclude$Step$CollWildcard;
+	public static synthetic fun relOpExcludeStepCollWildcard$default (Lorg/partiql/plan/builder/PlanBuilder;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Rel$Op$Exclude$Step$CollWildcard;
+	public final fun relOpExcludeStepStructField (Lorg/partiql/plan/Identifier$Symbol;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Rel$Op$Exclude$Step$StructField;
+	public static synthetic fun relOpExcludeStepStructField$default (Lorg/partiql/plan/builder/PlanBuilder;Lorg/partiql/plan/Identifier$Symbol;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Rel$Op$Exclude$Step$StructField;
+	public final fun relOpExcludeStepStructWildcard (Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Rel$Op$Exclude$Step$StructWildcard;
+	public static synthetic fun relOpExcludeStepStructWildcard$default (Lorg/partiql/plan/builder/PlanBuilder;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Rel$Op$Exclude$Step$StructWildcard;
+	public final fun relOpFilter (Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rex;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Rel$Op$Filter;
+	public static synthetic fun relOpFilter$default (Lorg/partiql/plan/builder/PlanBuilder;Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rex;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Rel$Op$Filter;
+	public final fun relOpIntersect (Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rel;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Rel$Op$Intersect;
+	public static synthetic fun relOpIntersect$default (Lorg/partiql/plan/builder/PlanBuilder;Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rel;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Rel$Op$Intersect;
+	public final fun relOpJoin (Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rel$Op$Join$Type;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Rel$Op$Join;
+	public static synthetic fun relOpJoin$default (Lorg/partiql/plan/builder/PlanBuilder;Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rel$Op$Join$Type;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Rel$Op$Join;
+	public final fun relOpLimit (Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rex;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Rel$Op$Limit;
+	public static synthetic fun relOpLimit$default (Lorg/partiql/plan/builder/PlanBuilder;Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rex;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Rel$Op$Limit;
+	public final fun relOpOffset (Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rex;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Rel$Op$Offset;
+	public static synthetic fun relOpOffset$default (Lorg/partiql/plan/builder/PlanBuilder;Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rex;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Rel$Op$Offset;
+	public final fun relOpProject (Lorg/partiql/plan/Rel;Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Rel$Op$Project;
+	public static synthetic fun relOpProject$default (Lorg/partiql/plan/builder/PlanBuilder;Lorg/partiql/plan/Rel;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Rel$Op$Project;
+	public final fun relOpScan (Lorg/partiql/plan/Rex;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Rel$Op$Scan;
+	public static synthetic fun relOpScan$default (Lorg/partiql/plan/builder/PlanBuilder;Lorg/partiql/plan/Rex;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Rel$Op$Scan;
+	public final fun relOpScanIndexed (Lorg/partiql/plan/Rex;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Rel$Op$ScanIndexed;
+	public static synthetic fun relOpScanIndexed$default (Lorg/partiql/plan/builder/PlanBuilder;Lorg/partiql/plan/Rex;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Rel$Op$ScanIndexed;
+	public final fun relOpSort (Lorg/partiql/plan/Rel;Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Rel$Op$Sort;
+	public static synthetic fun relOpSort$default (Lorg/partiql/plan/builder/PlanBuilder;Lorg/partiql/plan/Rel;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Rel$Op$Sort;
+	public final fun relOpSortSpec (Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rel$Op$Sort$Order;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Rel$Op$Sort$Spec;
+	public static synthetic fun relOpSortSpec$default (Lorg/partiql/plan/builder/PlanBuilder;Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rel$Op$Sort$Order;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Rel$Op$Sort$Spec;
+	public final fun relOpUnion (Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rel;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Rel$Op$Union;
+	public static synthetic fun relOpUnion$default (Lorg/partiql/plan/builder/PlanBuilder;Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rel;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Rel$Op$Union;
+	public final fun relOpUnpivot (Lorg/partiql/plan/Rex;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Rel$Op$Unpivot;
+	public static synthetic fun relOpUnpivot$default (Lorg/partiql/plan/builder/PlanBuilder;Lorg/partiql/plan/Rex;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Rel$Op$Unpivot;
+	public final fun relType (Ljava/util/List;Ljava/util/Set;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Rel$Type;
+	public static synthetic fun relType$default (Lorg/partiql/plan/builder/PlanBuilder;Ljava/util/List;Ljava/util/Set;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Rel$Type;
+	public final fun rex (Lorg/partiql/types/StaticType;Lorg/partiql/plan/Rex$Op;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Rex;
+	public static synthetic fun rex$default (Lorg/partiql/plan/builder/PlanBuilder;Lorg/partiql/types/StaticType;Lorg/partiql/plan/Rex$Op;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Rex;
+	public final fun rexOpCallDynamic (Ljava/util/List;Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Rex$Op$Call$Dynamic;
+	public static synthetic fun rexOpCallDynamic$default (Lorg/partiql/plan/builder/PlanBuilder;Ljava/util/List;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Rex$Op$Call$Dynamic;
+	public final fun rexOpCallDynamicCandidate (Lorg/partiql/plan/Fn;Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Rex$Op$Call$Dynamic$Candidate;
+	public static synthetic fun rexOpCallDynamicCandidate$default (Lorg/partiql/plan/builder/PlanBuilder;Lorg/partiql/plan/Fn;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Rex$Op$Call$Dynamic$Candidate;
+	public final fun rexOpCallStatic (Lorg/partiql/plan/Fn;Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Rex$Op$Call$Static;
+	public static synthetic fun rexOpCallStatic$default (Lorg/partiql/plan/builder/PlanBuilder;Lorg/partiql/plan/Fn;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Rex$Op$Call$Static;
+	public final fun rexOpCase (Ljava/util/List;Lorg/partiql/plan/Rex;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Rex$Op$Case;
+	public static synthetic fun rexOpCase$default (Lorg/partiql/plan/builder/PlanBuilder;Ljava/util/List;Lorg/partiql/plan/Rex;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Rex$Op$Case;
+	public final fun rexOpCaseBranch (Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rex;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Rex$Op$Case$Branch;
+	public static synthetic fun rexOpCaseBranch$default (Lorg/partiql/plan/builder/PlanBuilder;Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rex;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Rex$Op$Case$Branch;
+	public final fun rexOpCoalesce (Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Rex$Op$Coalesce;
+	public static synthetic fun rexOpCoalesce$default (Lorg/partiql/plan/builder/PlanBuilder;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Rex$Op$Coalesce;
+	public final fun rexOpCollection (Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Rex$Op$Collection;
+	public static synthetic fun rexOpCollection$default (Lorg/partiql/plan/builder/PlanBuilder;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Rex$Op$Collection;
+	public final fun rexOpErr (Ljava/lang/String;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Rex$Op$Err;
+	public static synthetic fun rexOpErr$default (Lorg/partiql/plan/builder/PlanBuilder;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Rex$Op$Err;
+	public final fun rexOpGlobal (Lorg/partiql/plan/Catalog$Symbol$Ref;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Rex$Op$Global;
+	public static synthetic fun rexOpGlobal$default (Lorg/partiql/plan/builder/PlanBuilder;Lorg/partiql/plan/Catalog$Symbol$Ref;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Rex$Op$Global;
+	public final fun rexOpLit (Lorg/partiql/value/PartiQLValue;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Rex$Op$Lit;
+	public static synthetic fun rexOpLit$default (Lorg/partiql/plan/builder/PlanBuilder;Lorg/partiql/value/PartiQLValue;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Rex$Op$Lit;
+	public final fun rexOpNullif (Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rex;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Rex$Op$Nullif;
+	public static synthetic fun rexOpNullif$default (Lorg/partiql/plan/builder/PlanBuilder;Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rex;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Rex$Op$Nullif;
+	public final fun rexOpPathIndex (Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rex;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Rex$Op$Path$Index;
+	public static synthetic fun rexOpPathIndex$default (Lorg/partiql/plan/builder/PlanBuilder;Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rex;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Rex$Op$Path$Index;
+	public final fun rexOpPathKey (Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rex;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Rex$Op$Path$Key;
+	public static synthetic fun rexOpPathKey$default (Lorg/partiql/plan/builder/PlanBuilder;Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rex;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Rex$Op$Path$Key;
+	public final fun rexOpPathSymbol (Lorg/partiql/plan/Rex;Ljava/lang/String;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Rex$Op$Path$Symbol;
+	public static synthetic fun rexOpPathSymbol$default (Lorg/partiql/plan/builder/PlanBuilder;Lorg/partiql/plan/Rex;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Rex$Op$Path$Symbol;
+	public final fun rexOpPivot (Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rel;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Rex$Op$Pivot;
+	public static synthetic fun rexOpPivot$default (Lorg/partiql/plan/builder/PlanBuilder;Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rel;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Rex$Op$Pivot;
+	public final fun rexOpSelect (Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rel;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Rex$Op$Select;
+	public static synthetic fun rexOpSelect$default (Lorg/partiql/plan/builder/PlanBuilder;Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rel;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Rex$Op$Select;
+	public final fun rexOpStruct (Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Rex$Op$Struct;
+	public static synthetic fun rexOpStruct$default (Lorg/partiql/plan/builder/PlanBuilder;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Rex$Op$Struct;
+	public final fun rexOpStructField (Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rex;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Rex$Op$Struct$Field;
+	public static synthetic fun rexOpStructField$default (Lorg/partiql/plan/builder/PlanBuilder;Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rex;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Rex$Op$Struct$Field;
+	public final fun rexOpSubquery (Lorg/partiql/plan/Rex$Op$Select;Lorg/partiql/plan/Rex$Op$Subquery$Coercion;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Rex$Op$Subquery;
+	public static synthetic fun rexOpSubquery$default (Lorg/partiql/plan/builder/PlanBuilder;Lorg/partiql/plan/Rex$Op$Select;Lorg/partiql/plan/Rex$Op$Subquery$Coercion;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Rex$Op$Subquery;
+	public final fun rexOpTupleUnion (Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Rex$Op$TupleUnion;
+	public static synthetic fun rexOpTupleUnion$default (Lorg/partiql/plan/builder/PlanBuilder;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Rex$Op$TupleUnion;
+	public final fun rexOpVar (Ljava/lang/Integer;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Rex$Op$Var;
+	public static synthetic fun rexOpVar$default (Lorg/partiql/plan/builder/PlanBuilder;Ljava/lang/Integer;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Rex$Op$Var;
+	public final fun statementQuery (Lorg/partiql/plan/Rex;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Statement$Query;
+	public static synthetic fun statementQuery$default (Lorg/partiql/plan/builder/PlanBuilder;Lorg/partiql/plan/Rex;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Statement$Query;
+}
+
+public final class org/partiql/plan/builder/PlanBuilderKt {
+	public static final fun plan (Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/PlanNode;
+}
+
+public final class org/partiql/plan/builder/RelBindingBuilder {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Lorg/partiql/types/StaticType;)V
+	public synthetic fun <init> (Ljava/lang/String;Lorg/partiql/types/StaticType;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/plan/Rel$Binding;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getType ()Lorg/partiql/types/StaticType;
+	public final fun name (Ljava/lang/String;)Lorg/partiql/plan/builder/RelBindingBuilder;
+	public final fun setName (Ljava/lang/String;)V
+	public final fun setType (Lorg/partiql/types/StaticType;)V
+	public final fun type (Lorg/partiql/types/StaticType;)Lorg/partiql/plan/builder/RelBindingBuilder;
+}
+
+public final class org/partiql/plan/builder/RelBuilder {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/plan/Rel$Type;Lorg/partiql/plan/Rel$Op;)V
+	public synthetic fun <init> (Lorg/partiql/plan/Rel$Type;Lorg/partiql/plan/Rel$Op;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/plan/Rel;
+	public final fun getOp ()Lorg/partiql/plan/Rel$Op;
+	public final fun getType ()Lorg/partiql/plan/Rel$Type;
+	public final fun op (Lorg/partiql/plan/Rel$Op;)Lorg/partiql/plan/builder/RelBuilder;
+	public final fun setOp (Lorg/partiql/plan/Rel$Op;)V
+	public final fun setType (Lorg/partiql/plan/Rel$Type;)V
+	public final fun type (Lorg/partiql/plan/Rel$Type;)Lorg/partiql/plan/builder/RelBuilder;
+}
+
+public final class org/partiql/plan/builder/RelOpAggregateBuilder {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rel$Op$Aggregate$Strategy;Ljava/util/List;Ljava/util/List;)V
+	public synthetic fun <init> (Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rel$Op$Aggregate$Strategy;Ljava/util/List;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/plan/Rel$Op$Aggregate;
+	public final fun calls (Ljava/util/List;)Lorg/partiql/plan/builder/RelOpAggregateBuilder;
+	public final fun getCalls ()Ljava/util/List;
+	public final fun getGroups ()Ljava/util/List;
+	public final fun getInput ()Lorg/partiql/plan/Rel;
+	public final fun getStrategy ()Lorg/partiql/plan/Rel$Op$Aggregate$Strategy;
+	public final fun groups (Ljava/util/List;)Lorg/partiql/plan/builder/RelOpAggregateBuilder;
+	public final fun input (Lorg/partiql/plan/Rel;)Lorg/partiql/plan/builder/RelOpAggregateBuilder;
+	public final fun setCalls (Ljava/util/List;)V
+	public final fun setGroups (Ljava/util/List;)V
+	public final fun setInput (Lorg/partiql/plan/Rel;)V
+	public final fun setStrategy (Lorg/partiql/plan/Rel$Op$Aggregate$Strategy;)V
+	public final fun strategy (Lorg/partiql/plan/Rel$Op$Aggregate$Strategy;)Lorg/partiql/plan/builder/RelOpAggregateBuilder;
+}
+
+public final class org/partiql/plan/builder/RelOpAggregateCallBuilder {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/plan/Agg;Ljava/util/List;)V
+	public synthetic fun <init> (Lorg/partiql/plan/Agg;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun agg (Lorg/partiql/plan/Agg;)Lorg/partiql/plan/builder/RelOpAggregateCallBuilder;
+	public final fun args (Ljava/util/List;)Lorg/partiql/plan/builder/RelOpAggregateCallBuilder;
+	public final fun build ()Lorg/partiql/plan/Rel$Op$Aggregate$Call;
+	public final fun getAgg ()Lorg/partiql/plan/Agg;
+	public final fun getArgs ()Ljava/util/List;
+	public final fun setAgg (Lorg/partiql/plan/Agg;)V
+	public final fun setArgs (Ljava/util/List;)V
+}
+
+public final class org/partiql/plan/builder/RelOpDistinctBuilder {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/plan/Rel;)V
+	public synthetic fun <init> (Lorg/partiql/plan/Rel;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/plan/Rel$Op$Distinct;
+	public final fun getInput ()Lorg/partiql/plan/Rel;
+	public final fun input (Lorg/partiql/plan/Rel;)Lorg/partiql/plan/builder/RelOpDistinctBuilder;
+	public final fun setInput (Lorg/partiql/plan/Rel;)V
+}
+
+public final class org/partiql/plan/builder/RelOpErrBuilder {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/plan/Rel$Op$Err;
+	public final fun getMessage ()Ljava/lang/String;
+	public final fun message (Ljava/lang/String;)Lorg/partiql/plan/builder/RelOpErrBuilder;
+	public final fun setMessage (Ljava/lang/String;)V
+}
+
+public final class org/partiql/plan/builder/RelOpExceptBuilder {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rel;)V
+	public synthetic fun <init> (Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rel;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/plan/Rel$Op$Except;
+	public final fun getLhs ()Lorg/partiql/plan/Rel;
+	public final fun getRhs ()Lorg/partiql/plan/Rel;
+	public final fun lhs (Lorg/partiql/plan/Rel;)Lorg/partiql/plan/builder/RelOpExceptBuilder;
+	public final fun rhs (Lorg/partiql/plan/Rel;)Lorg/partiql/plan/builder/RelOpExceptBuilder;
+	public final fun setLhs (Lorg/partiql/plan/Rel;)V
+	public final fun setRhs (Lorg/partiql/plan/Rel;)V
+}
+
+public final class org/partiql/plan/builder/RelOpExcludeBuilder {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/plan/Rel;Ljava/util/List;)V
+	public synthetic fun <init> (Lorg/partiql/plan/Rel;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/plan/Rel$Op$Exclude;
+	public final fun getInput ()Lorg/partiql/plan/Rel;
+	public final fun getItems ()Ljava/util/List;
+	public final fun input (Lorg/partiql/plan/Rel;)Lorg/partiql/plan/builder/RelOpExcludeBuilder;
+	public final fun items (Ljava/util/List;)Lorg/partiql/plan/builder/RelOpExcludeBuilder;
+	public final fun setInput (Lorg/partiql/plan/Rel;)V
+	public final fun setItems (Ljava/util/List;)V
+}
+
+public final class org/partiql/plan/builder/RelOpExcludeItemBuilder {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/plan/Rex$Op$Var;Ljava/util/List;)V
+	public synthetic fun <init> (Lorg/partiql/plan/Rex$Op$Var;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/plan/Rel$Op$Exclude$Item;
+	public final fun getRoot ()Lorg/partiql/plan/Rex$Op$Var;
+	public final fun getSteps ()Ljava/util/List;
+	public final fun root (Lorg/partiql/plan/Rex$Op$Var;)Lorg/partiql/plan/builder/RelOpExcludeItemBuilder;
+	public final fun setRoot (Lorg/partiql/plan/Rex$Op$Var;)V
+	public final fun setSteps (Ljava/util/List;)V
+	public final fun steps (Ljava/util/List;)Lorg/partiql/plan/builder/RelOpExcludeItemBuilder;
+}
+
+public final class org/partiql/plan/builder/RelOpExcludeStepCollIndexBuilder {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/Integer;)V
+	public synthetic fun <init> (Ljava/lang/Integer;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/plan/Rel$Op$Exclude$Step$CollIndex;
+	public final fun getIndex ()Ljava/lang/Integer;
+	public final fun index (Ljava/lang/Integer;)Lorg/partiql/plan/builder/RelOpExcludeStepCollIndexBuilder;
+	public final fun setIndex (Ljava/lang/Integer;)V
+}
+
+public final class org/partiql/plan/builder/RelOpExcludeStepCollWildcardBuilder {
+	public fun <init> ()V
+	public final fun build ()Lorg/partiql/plan/Rel$Op$Exclude$Step$CollWildcard;
+}
+
+public final class org/partiql/plan/builder/RelOpExcludeStepStructFieldBuilder {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/plan/Identifier$Symbol;)V
+	public synthetic fun <init> (Lorg/partiql/plan/Identifier$Symbol;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/plan/Rel$Op$Exclude$Step$StructField;
+	public final fun getSymbol ()Lorg/partiql/plan/Identifier$Symbol;
+	public final fun setSymbol (Lorg/partiql/plan/Identifier$Symbol;)V
+	public final fun symbol (Lorg/partiql/plan/Identifier$Symbol;)Lorg/partiql/plan/builder/RelOpExcludeStepStructFieldBuilder;
+}
+
+public final class org/partiql/plan/builder/RelOpExcludeStepStructWildcardBuilder {
+	public fun <init> ()V
+	public final fun build ()Lorg/partiql/plan/Rel$Op$Exclude$Step$StructWildcard;
+}
+
+public final class org/partiql/plan/builder/RelOpFilterBuilder {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rex;)V
+	public synthetic fun <init> (Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rex;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/plan/Rel$Op$Filter;
+	public final fun getInput ()Lorg/partiql/plan/Rel;
+	public final fun getPredicate ()Lorg/partiql/plan/Rex;
+	public final fun input (Lorg/partiql/plan/Rel;)Lorg/partiql/plan/builder/RelOpFilterBuilder;
+	public final fun predicate (Lorg/partiql/plan/Rex;)Lorg/partiql/plan/builder/RelOpFilterBuilder;
+	public final fun setInput (Lorg/partiql/plan/Rel;)V
+	public final fun setPredicate (Lorg/partiql/plan/Rex;)V
+}
+
+public final class org/partiql/plan/builder/RelOpIntersectBuilder {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rel;)V
+	public synthetic fun <init> (Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rel;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/plan/Rel$Op$Intersect;
+	public final fun getLhs ()Lorg/partiql/plan/Rel;
+	public final fun getRhs ()Lorg/partiql/plan/Rel;
+	public final fun lhs (Lorg/partiql/plan/Rel;)Lorg/partiql/plan/builder/RelOpIntersectBuilder;
+	public final fun rhs (Lorg/partiql/plan/Rel;)Lorg/partiql/plan/builder/RelOpIntersectBuilder;
+	public final fun setLhs (Lorg/partiql/plan/Rel;)V
+	public final fun setRhs (Lorg/partiql/plan/Rel;)V
+}
+
+public final class org/partiql/plan/builder/RelOpJoinBuilder {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rel$Op$Join$Type;)V
+	public synthetic fun <init> (Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rel$Op$Join$Type;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/plan/Rel$Op$Join;
+	public final fun getLhs ()Lorg/partiql/plan/Rel;
+	public final fun getRex ()Lorg/partiql/plan/Rex;
+	public final fun getRhs ()Lorg/partiql/plan/Rel;
+	public final fun getType ()Lorg/partiql/plan/Rel$Op$Join$Type;
+	public final fun lhs (Lorg/partiql/plan/Rel;)Lorg/partiql/plan/builder/RelOpJoinBuilder;
+	public final fun rex (Lorg/partiql/plan/Rex;)Lorg/partiql/plan/builder/RelOpJoinBuilder;
+	public final fun rhs (Lorg/partiql/plan/Rel;)Lorg/partiql/plan/builder/RelOpJoinBuilder;
+	public final fun setLhs (Lorg/partiql/plan/Rel;)V
+	public final fun setRex (Lorg/partiql/plan/Rex;)V
+	public final fun setRhs (Lorg/partiql/plan/Rel;)V
+	public final fun setType (Lorg/partiql/plan/Rel$Op$Join$Type;)V
+	public final fun type (Lorg/partiql/plan/Rel$Op$Join$Type;)Lorg/partiql/plan/builder/RelOpJoinBuilder;
+}
+
+public final class org/partiql/plan/builder/RelOpLimitBuilder {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rex;)V
+	public synthetic fun <init> (Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rex;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/plan/Rel$Op$Limit;
+	public final fun getInput ()Lorg/partiql/plan/Rel;
+	public final fun getLimit ()Lorg/partiql/plan/Rex;
+	public final fun input (Lorg/partiql/plan/Rel;)Lorg/partiql/plan/builder/RelOpLimitBuilder;
+	public final fun limit (Lorg/partiql/plan/Rex;)Lorg/partiql/plan/builder/RelOpLimitBuilder;
+	public final fun setInput (Lorg/partiql/plan/Rel;)V
+	public final fun setLimit (Lorg/partiql/plan/Rex;)V
+}
+
+public final class org/partiql/plan/builder/RelOpOffsetBuilder {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rex;)V
+	public synthetic fun <init> (Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rex;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/plan/Rel$Op$Offset;
+	public final fun getInput ()Lorg/partiql/plan/Rel;
+	public final fun getOffset ()Lorg/partiql/plan/Rex;
+	public final fun input (Lorg/partiql/plan/Rel;)Lorg/partiql/plan/builder/RelOpOffsetBuilder;
+	public final fun offset (Lorg/partiql/plan/Rex;)Lorg/partiql/plan/builder/RelOpOffsetBuilder;
+	public final fun setInput (Lorg/partiql/plan/Rel;)V
+	public final fun setOffset (Lorg/partiql/plan/Rex;)V
+}
+
+public final class org/partiql/plan/builder/RelOpProjectBuilder {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/plan/Rel;Ljava/util/List;)V
+	public synthetic fun <init> (Lorg/partiql/plan/Rel;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/plan/Rel$Op$Project;
+	public final fun getInput ()Lorg/partiql/plan/Rel;
+	public final fun getProjections ()Ljava/util/List;
+	public final fun input (Lorg/partiql/plan/Rel;)Lorg/partiql/plan/builder/RelOpProjectBuilder;
+	public final fun projections (Ljava/util/List;)Lorg/partiql/plan/builder/RelOpProjectBuilder;
+	public final fun setInput (Lorg/partiql/plan/Rel;)V
+	public final fun setProjections (Ljava/util/List;)V
+}
+
+public final class org/partiql/plan/builder/RelOpScanBuilder {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/plan/Rex;)V
+	public synthetic fun <init> (Lorg/partiql/plan/Rex;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/plan/Rel$Op$Scan;
+	public final fun getRex ()Lorg/partiql/plan/Rex;
+	public final fun rex (Lorg/partiql/plan/Rex;)Lorg/partiql/plan/builder/RelOpScanBuilder;
+	public final fun setRex (Lorg/partiql/plan/Rex;)V
+}
+
+public final class org/partiql/plan/builder/RelOpScanIndexedBuilder {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/plan/Rex;)V
+	public synthetic fun <init> (Lorg/partiql/plan/Rex;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/plan/Rel$Op$ScanIndexed;
+	public final fun getRex ()Lorg/partiql/plan/Rex;
+	public final fun rex (Lorg/partiql/plan/Rex;)Lorg/partiql/plan/builder/RelOpScanIndexedBuilder;
+	public final fun setRex (Lorg/partiql/plan/Rex;)V
+}
+
+public final class org/partiql/plan/builder/RelOpSortBuilder {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/plan/Rel;Ljava/util/List;)V
+	public synthetic fun <init> (Lorg/partiql/plan/Rel;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/plan/Rel$Op$Sort;
+	public final fun getInput ()Lorg/partiql/plan/Rel;
+	public final fun getSpecs ()Ljava/util/List;
+	public final fun input (Lorg/partiql/plan/Rel;)Lorg/partiql/plan/builder/RelOpSortBuilder;
+	public final fun setInput (Lorg/partiql/plan/Rel;)V
+	public final fun setSpecs (Ljava/util/List;)V
+	public final fun specs (Ljava/util/List;)Lorg/partiql/plan/builder/RelOpSortBuilder;
+}
+
+public final class org/partiql/plan/builder/RelOpSortSpecBuilder {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rel$Op$Sort$Order;)V
+	public synthetic fun <init> (Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rel$Op$Sort$Order;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/plan/Rel$Op$Sort$Spec;
+	public final fun getOrder ()Lorg/partiql/plan/Rel$Op$Sort$Order;
+	public final fun getRex ()Lorg/partiql/plan/Rex;
+	public final fun order (Lorg/partiql/plan/Rel$Op$Sort$Order;)Lorg/partiql/plan/builder/RelOpSortSpecBuilder;
+	public final fun rex (Lorg/partiql/plan/Rex;)Lorg/partiql/plan/builder/RelOpSortSpecBuilder;
+	public final fun setOrder (Lorg/partiql/plan/Rel$Op$Sort$Order;)V
+	public final fun setRex (Lorg/partiql/plan/Rex;)V
+}
+
+public final class org/partiql/plan/builder/RelOpUnionBuilder {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rel;)V
+	public synthetic fun <init> (Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rel;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/plan/Rel$Op$Union;
+	public final fun getLhs ()Lorg/partiql/plan/Rel;
+	public final fun getRhs ()Lorg/partiql/plan/Rel;
+	public final fun lhs (Lorg/partiql/plan/Rel;)Lorg/partiql/plan/builder/RelOpUnionBuilder;
+	public final fun rhs (Lorg/partiql/plan/Rel;)Lorg/partiql/plan/builder/RelOpUnionBuilder;
+	public final fun setLhs (Lorg/partiql/plan/Rel;)V
+	public final fun setRhs (Lorg/partiql/plan/Rel;)V
+}
+
+public final class org/partiql/plan/builder/RelOpUnpivotBuilder {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/plan/Rex;)V
+	public synthetic fun <init> (Lorg/partiql/plan/Rex;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/plan/Rel$Op$Unpivot;
+	public final fun getRex ()Lorg/partiql/plan/Rex;
+	public final fun rex (Lorg/partiql/plan/Rex;)Lorg/partiql/plan/builder/RelOpUnpivotBuilder;
+	public final fun setRex (Lorg/partiql/plan/Rex;)V
+}
+
+public final class org/partiql/plan/builder/RelTypeBuilder {
+	public fun <init> ()V
+	public fun <init> (Ljava/util/List;Ljava/util/Set;)V
+	public synthetic fun <init> (Ljava/util/List;Ljava/util/Set;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/plan/Rel$Type;
+	public final fun getProps ()Ljava/util/Set;
+	public final fun getSchema ()Ljava/util/List;
+	public final fun props (Ljava/util/Set;)Lorg/partiql/plan/builder/RelTypeBuilder;
+	public final fun schema (Ljava/util/List;)Lorg/partiql/plan/builder/RelTypeBuilder;
+	public final fun setProps (Ljava/util/Set;)V
+	public final fun setSchema (Ljava/util/List;)V
+}
+
+public final class org/partiql/plan/builder/RexBuilder {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/types/StaticType;Lorg/partiql/plan/Rex$Op;)V
+	public synthetic fun <init> (Lorg/partiql/types/StaticType;Lorg/partiql/plan/Rex$Op;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/plan/Rex;
+	public final fun getOp ()Lorg/partiql/plan/Rex$Op;
+	public final fun getType ()Lorg/partiql/types/StaticType;
+	public final fun op (Lorg/partiql/plan/Rex$Op;)Lorg/partiql/plan/builder/RexBuilder;
+	public final fun setOp (Lorg/partiql/plan/Rex$Op;)V
+	public final fun setType (Lorg/partiql/types/StaticType;)V
+	public final fun type (Lorg/partiql/types/StaticType;)Lorg/partiql/plan/builder/RexBuilder;
+}
+
+public final class org/partiql/plan/builder/RexOpCallDynamicBuilder {
+	public fun <init> ()V
+	public fun <init> (Ljava/util/List;Ljava/util/List;)V
+	public synthetic fun <init> (Ljava/util/List;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun args (Ljava/util/List;)Lorg/partiql/plan/builder/RexOpCallDynamicBuilder;
+	public final fun build ()Lorg/partiql/plan/Rex$Op$Call$Dynamic;
+	public final fun candidates (Ljava/util/List;)Lorg/partiql/plan/builder/RexOpCallDynamicBuilder;
+	public final fun getArgs ()Ljava/util/List;
+	public final fun getCandidates ()Ljava/util/List;
+	public final fun setArgs (Ljava/util/List;)V
+	public final fun setCandidates (Ljava/util/List;)V
+}
+
+public final class org/partiql/plan/builder/RexOpCallDynamicCandidateBuilder {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/plan/Fn;Ljava/util/List;)V
+	public synthetic fun <init> (Lorg/partiql/plan/Fn;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/plan/Rex$Op$Call$Dynamic$Candidate;
+	public final fun coercions (Ljava/util/List;)Lorg/partiql/plan/builder/RexOpCallDynamicCandidateBuilder;
+	public final fun fn (Lorg/partiql/plan/Fn;)Lorg/partiql/plan/builder/RexOpCallDynamicCandidateBuilder;
+	public final fun getCoercions ()Ljava/util/List;
+	public final fun getFn ()Lorg/partiql/plan/Fn;
+	public final fun setCoercions (Ljava/util/List;)V
+	public final fun setFn (Lorg/partiql/plan/Fn;)V
+}
+
+public final class org/partiql/plan/builder/RexOpCallStaticBuilder {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/plan/Fn;Ljava/util/List;)V
+	public synthetic fun <init> (Lorg/partiql/plan/Fn;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun args (Ljava/util/List;)Lorg/partiql/plan/builder/RexOpCallStaticBuilder;
+	public final fun build ()Lorg/partiql/plan/Rex$Op$Call$Static;
+	public final fun fn (Lorg/partiql/plan/Fn;)Lorg/partiql/plan/builder/RexOpCallStaticBuilder;
+	public final fun getArgs ()Ljava/util/List;
+	public final fun getFn ()Lorg/partiql/plan/Fn;
+	public final fun setArgs (Ljava/util/List;)V
+	public final fun setFn (Lorg/partiql/plan/Fn;)V
+}
+
+public final class org/partiql/plan/builder/RexOpCaseBranchBuilder {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rex;)V
+	public synthetic fun <init> (Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rex;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/plan/Rex$Op$Case$Branch;
+	public final fun condition (Lorg/partiql/plan/Rex;)Lorg/partiql/plan/builder/RexOpCaseBranchBuilder;
+	public final fun getCondition ()Lorg/partiql/plan/Rex;
+	public final fun getRex ()Lorg/partiql/plan/Rex;
+	public final fun rex (Lorg/partiql/plan/Rex;)Lorg/partiql/plan/builder/RexOpCaseBranchBuilder;
+	public final fun setCondition (Lorg/partiql/plan/Rex;)V
+	public final fun setRex (Lorg/partiql/plan/Rex;)V
+}
+
+public final class org/partiql/plan/builder/RexOpCaseBuilder {
+	public fun <init> ()V
+	public fun <init> (Ljava/util/List;Lorg/partiql/plan/Rex;)V
+	public synthetic fun <init> (Ljava/util/List;Lorg/partiql/plan/Rex;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun branches (Ljava/util/List;)Lorg/partiql/plan/builder/RexOpCaseBuilder;
+	public final fun build ()Lorg/partiql/plan/Rex$Op$Case;
+	public final fun default (Lorg/partiql/plan/Rex;)Lorg/partiql/plan/builder/RexOpCaseBuilder;
+	public final fun getBranches ()Ljava/util/List;
+	public final fun getDefault ()Lorg/partiql/plan/Rex;
+	public final fun setBranches (Ljava/util/List;)V
+	public final fun setDefault (Lorg/partiql/plan/Rex;)V
+}
+
+public final class org/partiql/plan/builder/RexOpCoalesceBuilder {
+	public fun <init> ()V
+	public fun <init> (Ljava/util/List;)V
+	public synthetic fun <init> (Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun args (Ljava/util/List;)Lorg/partiql/plan/builder/RexOpCoalesceBuilder;
+	public final fun build ()Lorg/partiql/plan/Rex$Op$Coalesce;
+	public final fun getArgs ()Ljava/util/List;
+	public final fun setArgs (Ljava/util/List;)V
+}
+
+public final class org/partiql/plan/builder/RexOpCollectionBuilder {
+	public fun <init> ()V
+	public fun <init> (Ljava/util/List;)V
+	public synthetic fun <init> (Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/plan/Rex$Op$Collection;
+	public final fun getValues ()Ljava/util/List;
+	public final fun setValues (Ljava/util/List;)V
+	public final fun values (Ljava/util/List;)Lorg/partiql/plan/builder/RexOpCollectionBuilder;
+}
+
+public final class org/partiql/plan/builder/RexOpErrBuilder {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/plan/Rex$Op$Err;
+	public final fun getMessage ()Ljava/lang/String;
+	public final fun message (Ljava/lang/String;)Lorg/partiql/plan/builder/RexOpErrBuilder;
+	public final fun setMessage (Ljava/lang/String;)V
+}
+
+public final class org/partiql/plan/builder/RexOpGlobalBuilder {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/plan/Catalog$Symbol$Ref;)V
+	public synthetic fun <init> (Lorg/partiql/plan/Catalog$Symbol$Ref;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/plan/Rex$Op$Global;
+	public final fun getRef ()Lorg/partiql/plan/Catalog$Symbol$Ref;
+	public final fun ref (Lorg/partiql/plan/Catalog$Symbol$Ref;)Lorg/partiql/plan/builder/RexOpGlobalBuilder;
+	public final fun setRef (Lorg/partiql/plan/Catalog$Symbol$Ref;)V
+}
+
+public final class org/partiql/plan/builder/RexOpLitBuilder {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/value/PartiQLValue;)V
+	public synthetic fun <init> (Lorg/partiql/value/PartiQLValue;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/plan/Rex$Op$Lit;
+	public final fun getValue ()Lorg/partiql/value/PartiQLValue;
+	public final fun setValue (Lorg/partiql/value/PartiQLValue;)V
+	public final fun value (Lorg/partiql/value/PartiQLValue;)Lorg/partiql/plan/builder/RexOpLitBuilder;
+}
+
+public final class org/partiql/plan/builder/RexOpNullifBuilder {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rex;)V
+	public synthetic fun <init> (Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rex;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/plan/Rex$Op$Nullif;
+	public final fun getNullifier ()Lorg/partiql/plan/Rex;
+	public final fun getValue ()Lorg/partiql/plan/Rex;
+	public final fun nullifier (Lorg/partiql/plan/Rex;)Lorg/partiql/plan/builder/RexOpNullifBuilder;
+	public final fun setNullifier (Lorg/partiql/plan/Rex;)V
+	public final fun setValue (Lorg/partiql/plan/Rex;)V
+	public final fun value (Lorg/partiql/plan/Rex;)Lorg/partiql/plan/builder/RexOpNullifBuilder;
+}
+
+public final class org/partiql/plan/builder/RexOpPathIndexBuilder {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rex;)V
+	public synthetic fun <init> (Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rex;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/plan/Rex$Op$Path$Index;
+	public final fun getKey ()Lorg/partiql/plan/Rex;
+	public final fun getRoot ()Lorg/partiql/plan/Rex;
+	public final fun key (Lorg/partiql/plan/Rex;)Lorg/partiql/plan/builder/RexOpPathIndexBuilder;
+	public final fun root (Lorg/partiql/plan/Rex;)Lorg/partiql/plan/builder/RexOpPathIndexBuilder;
+	public final fun setKey (Lorg/partiql/plan/Rex;)V
+	public final fun setRoot (Lorg/partiql/plan/Rex;)V
+}
+
+public final class org/partiql/plan/builder/RexOpPathKeyBuilder {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rex;)V
+	public synthetic fun <init> (Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rex;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/plan/Rex$Op$Path$Key;
+	public final fun getKey ()Lorg/partiql/plan/Rex;
+	public final fun getRoot ()Lorg/partiql/plan/Rex;
+	public final fun key (Lorg/partiql/plan/Rex;)Lorg/partiql/plan/builder/RexOpPathKeyBuilder;
+	public final fun root (Lorg/partiql/plan/Rex;)Lorg/partiql/plan/builder/RexOpPathKeyBuilder;
+	public final fun setKey (Lorg/partiql/plan/Rex;)V
+	public final fun setRoot (Lorg/partiql/plan/Rex;)V
+}
+
+public final class org/partiql/plan/builder/RexOpPathSymbolBuilder {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/plan/Rex;Ljava/lang/String;)V
+	public synthetic fun <init> (Lorg/partiql/plan/Rex;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/plan/Rex$Op$Path$Symbol;
+	public final fun getKey ()Ljava/lang/String;
+	public final fun getRoot ()Lorg/partiql/plan/Rex;
+	public final fun key (Ljava/lang/String;)Lorg/partiql/plan/builder/RexOpPathSymbolBuilder;
+	public final fun root (Lorg/partiql/plan/Rex;)Lorg/partiql/plan/builder/RexOpPathSymbolBuilder;
+	public final fun setKey (Ljava/lang/String;)V
+	public final fun setRoot (Lorg/partiql/plan/Rex;)V
+}
+
+public final class org/partiql/plan/builder/RexOpPivotBuilder {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rel;)V
+	public synthetic fun <init> (Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rel;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/plan/Rex$Op$Pivot;
+	public final fun getKey ()Lorg/partiql/plan/Rex;
+	public final fun getRel ()Lorg/partiql/plan/Rel;
+	public final fun getValue ()Lorg/partiql/plan/Rex;
+	public final fun key (Lorg/partiql/plan/Rex;)Lorg/partiql/plan/builder/RexOpPivotBuilder;
+	public final fun rel (Lorg/partiql/plan/Rel;)Lorg/partiql/plan/builder/RexOpPivotBuilder;
+	public final fun setKey (Lorg/partiql/plan/Rex;)V
+	public final fun setRel (Lorg/partiql/plan/Rel;)V
+	public final fun setValue (Lorg/partiql/plan/Rex;)V
+	public final fun value (Lorg/partiql/plan/Rex;)Lorg/partiql/plan/builder/RexOpPivotBuilder;
+}
+
+public final class org/partiql/plan/builder/RexOpSelectBuilder {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rel;)V
+	public synthetic fun <init> (Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rel;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/plan/Rex$Op$Select;
+	public final fun constructor (Lorg/partiql/plan/Rex;)Lorg/partiql/plan/builder/RexOpSelectBuilder;
+	public final fun getConstructor ()Lorg/partiql/plan/Rex;
+	public final fun getRel ()Lorg/partiql/plan/Rel;
+	public final fun rel (Lorg/partiql/plan/Rel;)Lorg/partiql/plan/builder/RexOpSelectBuilder;
+	public final fun setConstructor (Lorg/partiql/plan/Rex;)V
+	public final fun setRel (Lorg/partiql/plan/Rel;)V
+}
+
+public final class org/partiql/plan/builder/RexOpStructBuilder {
+	public fun <init> ()V
+	public fun <init> (Ljava/util/List;)V
+	public synthetic fun <init> (Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/plan/Rex$Op$Struct;
+	public final fun fields (Ljava/util/List;)Lorg/partiql/plan/builder/RexOpStructBuilder;
+	public final fun getFields ()Ljava/util/List;
+	public final fun setFields (Ljava/util/List;)V
+}
+
+public final class org/partiql/plan/builder/RexOpStructFieldBuilder {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rex;)V
+	public synthetic fun <init> (Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rex;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/plan/Rex$Op$Struct$Field;
+	public final fun getK ()Lorg/partiql/plan/Rex;
+	public final fun getV ()Lorg/partiql/plan/Rex;
+	public final fun k (Lorg/partiql/plan/Rex;)Lorg/partiql/plan/builder/RexOpStructFieldBuilder;
+	public final fun setK (Lorg/partiql/plan/Rex;)V
+	public final fun setV (Lorg/partiql/plan/Rex;)V
+	public final fun v (Lorg/partiql/plan/Rex;)Lorg/partiql/plan/builder/RexOpStructFieldBuilder;
+}
+
+public final class org/partiql/plan/builder/RexOpSubqueryBuilder {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/plan/Rex$Op$Select;Lorg/partiql/plan/Rex$Op$Subquery$Coercion;)V
+	public synthetic fun <init> (Lorg/partiql/plan/Rex$Op$Select;Lorg/partiql/plan/Rex$Op$Subquery$Coercion;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/plan/Rex$Op$Subquery;
+	public final fun coercion (Lorg/partiql/plan/Rex$Op$Subquery$Coercion;)Lorg/partiql/plan/builder/RexOpSubqueryBuilder;
+	public final fun getCoercion ()Lorg/partiql/plan/Rex$Op$Subquery$Coercion;
+	public final fun getSelect ()Lorg/partiql/plan/Rex$Op$Select;
+	public final fun select (Lorg/partiql/plan/Rex$Op$Select;)Lorg/partiql/plan/builder/RexOpSubqueryBuilder;
+	public final fun setCoercion (Lorg/partiql/plan/Rex$Op$Subquery$Coercion;)V
+	public final fun setSelect (Lorg/partiql/plan/Rex$Op$Select;)V
+}
+
+public final class org/partiql/plan/builder/RexOpTupleUnionBuilder {
+	public fun <init> ()V
+	public fun <init> (Ljava/util/List;)V
+	public synthetic fun <init> (Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun args (Ljava/util/List;)Lorg/partiql/plan/builder/RexOpTupleUnionBuilder;
+	public final fun build ()Lorg/partiql/plan/Rex$Op$TupleUnion;
+	public final fun getArgs ()Ljava/util/List;
+	public final fun setArgs (Ljava/util/List;)V
+}
+
+public final class org/partiql/plan/builder/RexOpVarBuilder {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/Integer;)V
+	public synthetic fun <init> (Ljava/lang/Integer;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/plan/Rex$Op$Var;
+	public final fun getRef ()Ljava/lang/Integer;
+	public final fun ref (Ljava/lang/Integer;)Lorg/partiql/plan/builder/RexOpVarBuilder;
+	public final fun setRef (Ljava/lang/Integer;)V
+}
+
+public final class org/partiql/plan/builder/StatementQueryBuilder {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/plan/Rex;)V
+	public synthetic fun <init> (Lorg/partiql/plan/Rex;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/plan/Statement$Query;
+	public final fun getRoot ()Lorg/partiql/plan/Rex;
+	public final fun root (Lorg/partiql/plan/Rex;)Lorg/partiql/plan/builder/StatementQueryBuilder;
+	public final fun setRoot (Lorg/partiql/plan/Rex;)V
+}
+
+public final class org/partiql/plan/debug/PlanPrinter {
+	public static final field INSTANCE Lorg/partiql/plan/debug/PlanPrinter;
+	public final fun append (Ljava/lang/Appendable;Lorg/partiql/plan/PlanNode;)V
+	public final fun toString (Lorg/partiql/plan/PlanNode;)Ljava/lang/String;
+}
+
+public abstract class org/partiql/plan/util/PlanRewriter : org/partiql/plan/visitor/PlanBaseVisitor {
+	public fun <init> ()V
+	public synthetic fun defaultReturn (Lorg/partiql/plan/PlanNode;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun defaultReturn (Lorg/partiql/plan/PlanNode;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitAgg (Lorg/partiql/plan/Agg;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitAgg (Lorg/partiql/plan/Agg;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitCatalog (Lorg/partiql/plan/Catalog;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitCatalog (Lorg/partiql/plan/Catalog;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitCatalogSymbol (Lorg/partiql/plan/Catalog$Symbol;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitCatalogSymbol (Lorg/partiql/plan/Catalog$Symbol;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitCatalogSymbolRef (Lorg/partiql/plan/Catalog$Symbol$Ref;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitCatalogSymbolRef (Lorg/partiql/plan/Catalog$Symbol$Ref;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitFn (Lorg/partiql/plan/Fn;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitFn (Lorg/partiql/plan/Fn;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitIdentifierQualified (Lorg/partiql/plan/Identifier$Qualified;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitIdentifierQualified (Lorg/partiql/plan/Identifier$Qualified;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitIdentifierSymbol (Lorg/partiql/plan/Identifier$Symbol;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitIdentifierSymbol (Lorg/partiql/plan/Identifier$Symbol;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitPartiQLPlan (Lorg/partiql/plan/PartiQLPlan;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitPartiQLPlan (Lorg/partiql/plan/PartiQLPlan;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitRel (Lorg/partiql/plan/Rel;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRel (Lorg/partiql/plan/Rel;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitRelBinding (Lorg/partiql/plan/Rel$Binding;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRelBinding (Lorg/partiql/plan/Rel$Binding;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitRelOpAggregate (Lorg/partiql/plan/Rel$Op$Aggregate;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRelOpAggregate (Lorg/partiql/plan/Rel$Op$Aggregate;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitRelOpAggregateCall (Lorg/partiql/plan/Rel$Op$Aggregate$Call;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRelOpAggregateCall (Lorg/partiql/plan/Rel$Op$Aggregate$Call;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitRelOpDistinct (Lorg/partiql/plan/Rel$Op$Distinct;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRelOpDistinct (Lorg/partiql/plan/Rel$Op$Distinct;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitRelOpErr (Lorg/partiql/plan/Rel$Op$Err;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRelOpErr (Lorg/partiql/plan/Rel$Op$Err;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitRelOpExcept (Lorg/partiql/plan/Rel$Op$Except;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRelOpExcept (Lorg/partiql/plan/Rel$Op$Except;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitRelOpExclude (Lorg/partiql/plan/Rel$Op$Exclude;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRelOpExclude (Lorg/partiql/plan/Rel$Op$Exclude;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitRelOpExcludeItem (Lorg/partiql/plan/Rel$Op$Exclude$Item;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRelOpExcludeItem (Lorg/partiql/plan/Rel$Op$Exclude$Item;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitRelOpExcludeStepCollIndex (Lorg/partiql/plan/Rel$Op$Exclude$Step$CollIndex;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRelOpExcludeStepCollIndex (Lorg/partiql/plan/Rel$Op$Exclude$Step$CollIndex;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitRelOpExcludeStepCollWildcard (Lorg/partiql/plan/Rel$Op$Exclude$Step$CollWildcard;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRelOpExcludeStepCollWildcard (Lorg/partiql/plan/Rel$Op$Exclude$Step$CollWildcard;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitRelOpExcludeStepStructField (Lorg/partiql/plan/Rel$Op$Exclude$Step$StructField;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRelOpExcludeStepStructField (Lorg/partiql/plan/Rel$Op$Exclude$Step$StructField;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitRelOpExcludeStepStructWildcard (Lorg/partiql/plan/Rel$Op$Exclude$Step$StructWildcard;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRelOpExcludeStepStructWildcard (Lorg/partiql/plan/Rel$Op$Exclude$Step$StructWildcard;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitRelOpFilter (Lorg/partiql/plan/Rel$Op$Filter;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRelOpFilter (Lorg/partiql/plan/Rel$Op$Filter;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitRelOpIntersect (Lorg/partiql/plan/Rel$Op$Intersect;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRelOpIntersect (Lorg/partiql/plan/Rel$Op$Intersect;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitRelOpJoin (Lorg/partiql/plan/Rel$Op$Join;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRelOpJoin (Lorg/partiql/plan/Rel$Op$Join;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitRelOpLimit (Lorg/partiql/plan/Rel$Op$Limit;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRelOpLimit (Lorg/partiql/plan/Rel$Op$Limit;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitRelOpOffset (Lorg/partiql/plan/Rel$Op$Offset;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRelOpOffset (Lorg/partiql/plan/Rel$Op$Offset;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitRelOpProject (Lorg/partiql/plan/Rel$Op$Project;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRelOpProject (Lorg/partiql/plan/Rel$Op$Project;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitRelOpScan (Lorg/partiql/plan/Rel$Op$Scan;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRelOpScan (Lorg/partiql/plan/Rel$Op$Scan;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitRelOpScanIndexed (Lorg/partiql/plan/Rel$Op$ScanIndexed;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRelOpScanIndexed (Lorg/partiql/plan/Rel$Op$ScanIndexed;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitRelOpSort (Lorg/partiql/plan/Rel$Op$Sort;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRelOpSort (Lorg/partiql/plan/Rel$Op$Sort;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitRelOpSortSpec (Lorg/partiql/plan/Rel$Op$Sort$Spec;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRelOpSortSpec (Lorg/partiql/plan/Rel$Op$Sort$Spec;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitRelOpUnion (Lorg/partiql/plan/Rel$Op$Union;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRelOpUnion (Lorg/partiql/plan/Rel$Op$Union;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitRelOpUnpivot (Lorg/partiql/plan/Rel$Op$Unpivot;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRelOpUnpivot (Lorg/partiql/plan/Rel$Op$Unpivot;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitRelType (Lorg/partiql/plan/Rel$Type;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRelType (Lorg/partiql/plan/Rel$Type;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitRex (Lorg/partiql/plan/Rex;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRex (Lorg/partiql/plan/Rex;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitRexOpCallDynamic (Lorg/partiql/plan/Rex$Op$Call$Dynamic;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRexOpCallDynamic (Lorg/partiql/plan/Rex$Op$Call$Dynamic;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitRexOpCallDynamicCandidate (Lorg/partiql/plan/Rex$Op$Call$Dynamic$Candidate;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRexOpCallDynamicCandidate (Lorg/partiql/plan/Rex$Op$Call$Dynamic$Candidate;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitRexOpCallStatic (Lorg/partiql/plan/Rex$Op$Call$Static;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRexOpCallStatic (Lorg/partiql/plan/Rex$Op$Call$Static;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitRexOpCase (Lorg/partiql/plan/Rex$Op$Case;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRexOpCase (Lorg/partiql/plan/Rex$Op$Case;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitRexOpCaseBranch (Lorg/partiql/plan/Rex$Op$Case$Branch;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRexOpCaseBranch (Lorg/partiql/plan/Rex$Op$Case$Branch;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitRexOpCoalesce (Lorg/partiql/plan/Rex$Op$Coalesce;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRexOpCoalesce (Lorg/partiql/plan/Rex$Op$Coalesce;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitRexOpCollection (Lorg/partiql/plan/Rex$Op$Collection;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRexOpCollection (Lorg/partiql/plan/Rex$Op$Collection;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitRexOpErr (Lorg/partiql/plan/Rex$Op$Err;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRexOpErr (Lorg/partiql/plan/Rex$Op$Err;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitRexOpGlobal (Lorg/partiql/plan/Rex$Op$Global;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRexOpGlobal (Lorg/partiql/plan/Rex$Op$Global;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitRexOpLit (Lorg/partiql/plan/Rex$Op$Lit;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRexOpLit (Lorg/partiql/plan/Rex$Op$Lit;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitRexOpNullif (Lorg/partiql/plan/Rex$Op$Nullif;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRexOpNullif (Lorg/partiql/plan/Rex$Op$Nullif;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitRexOpPathIndex (Lorg/partiql/plan/Rex$Op$Path$Index;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRexOpPathIndex (Lorg/partiql/plan/Rex$Op$Path$Index;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitRexOpPathKey (Lorg/partiql/plan/Rex$Op$Path$Key;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRexOpPathKey (Lorg/partiql/plan/Rex$Op$Path$Key;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitRexOpPathSymbol (Lorg/partiql/plan/Rex$Op$Path$Symbol;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRexOpPathSymbol (Lorg/partiql/plan/Rex$Op$Path$Symbol;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitRexOpPivot (Lorg/partiql/plan/Rex$Op$Pivot;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRexOpPivot (Lorg/partiql/plan/Rex$Op$Pivot;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitRexOpSelect (Lorg/partiql/plan/Rex$Op$Select;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRexOpSelect (Lorg/partiql/plan/Rex$Op$Select;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitRexOpStruct (Lorg/partiql/plan/Rex$Op$Struct;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRexOpStruct (Lorg/partiql/plan/Rex$Op$Struct;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitRexOpStructField (Lorg/partiql/plan/Rex$Op$Struct$Field;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRexOpStructField (Lorg/partiql/plan/Rex$Op$Struct$Field;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitRexOpSubquery (Lorg/partiql/plan/Rex$Op$Subquery;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRexOpSubquery (Lorg/partiql/plan/Rex$Op$Subquery;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitRexOpTupleUnion (Lorg/partiql/plan/Rex$Op$TupleUnion;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRexOpTupleUnion (Lorg/partiql/plan/Rex$Op$TupleUnion;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitRexOpVar (Lorg/partiql/plan/Rex$Op$Var;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRexOpVar (Lorg/partiql/plan/Rex$Op$Var;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitStatementQuery (Lorg/partiql/plan/Statement$Query;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitStatementQuery (Lorg/partiql/plan/Statement$Query;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+}
+
+public abstract class org/partiql/plan/visitor/PlanBaseVisitor : org/partiql/plan/visitor/PlanVisitor {
+	public fun <init> ()V
+	public abstract fun defaultReturn (Lorg/partiql/plan/PlanNode;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun defaultVisit (Lorg/partiql/plan/PlanNode;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visit (Lorg/partiql/plan/PlanNode;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitAgg (Lorg/partiql/plan/Agg;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitCatalog (Lorg/partiql/plan/Catalog;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitCatalogSymbol (Lorg/partiql/plan/Catalog$Symbol;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitCatalogSymbolRef (Lorg/partiql/plan/Catalog$Symbol$Ref;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitFn (Lorg/partiql/plan/Fn;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitIdentifier (Lorg/partiql/plan/Identifier;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitIdentifierQualified (Lorg/partiql/plan/Identifier$Qualified;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitIdentifierSymbol (Lorg/partiql/plan/Identifier$Symbol;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitPartiQLPlan (Lorg/partiql/plan/PartiQLPlan;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRel (Lorg/partiql/plan/Rel;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRelBinding (Lorg/partiql/plan/Rel$Binding;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRelOp (Lorg/partiql/plan/Rel$Op;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRelOpAggregate (Lorg/partiql/plan/Rel$Op$Aggregate;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRelOpAggregateCall (Lorg/partiql/plan/Rel$Op$Aggregate$Call;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRelOpDistinct (Lorg/partiql/plan/Rel$Op$Distinct;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRelOpErr (Lorg/partiql/plan/Rel$Op$Err;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRelOpExcept (Lorg/partiql/plan/Rel$Op$Except;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRelOpExclude (Lorg/partiql/plan/Rel$Op$Exclude;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRelOpExcludeItem (Lorg/partiql/plan/Rel$Op$Exclude$Item;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRelOpExcludeStep (Lorg/partiql/plan/Rel$Op$Exclude$Step;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRelOpExcludeStepCollIndex (Lorg/partiql/plan/Rel$Op$Exclude$Step$CollIndex;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRelOpExcludeStepCollWildcard (Lorg/partiql/plan/Rel$Op$Exclude$Step$CollWildcard;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRelOpExcludeStepStructField (Lorg/partiql/plan/Rel$Op$Exclude$Step$StructField;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRelOpExcludeStepStructWildcard (Lorg/partiql/plan/Rel$Op$Exclude$Step$StructWildcard;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRelOpFilter (Lorg/partiql/plan/Rel$Op$Filter;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRelOpIntersect (Lorg/partiql/plan/Rel$Op$Intersect;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRelOpJoin (Lorg/partiql/plan/Rel$Op$Join;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRelOpLimit (Lorg/partiql/plan/Rel$Op$Limit;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRelOpOffset (Lorg/partiql/plan/Rel$Op$Offset;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRelOpProject (Lorg/partiql/plan/Rel$Op$Project;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRelOpScan (Lorg/partiql/plan/Rel$Op$Scan;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRelOpScanIndexed (Lorg/partiql/plan/Rel$Op$ScanIndexed;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRelOpSort (Lorg/partiql/plan/Rel$Op$Sort;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRelOpSortSpec (Lorg/partiql/plan/Rel$Op$Sort$Spec;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRelOpUnion (Lorg/partiql/plan/Rel$Op$Union;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRelOpUnpivot (Lorg/partiql/plan/Rel$Op$Unpivot;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRelType (Lorg/partiql/plan/Rel$Type;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRex (Lorg/partiql/plan/Rex;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRexOp (Lorg/partiql/plan/Rex$Op;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRexOpCall (Lorg/partiql/plan/Rex$Op$Call;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRexOpCallDynamic (Lorg/partiql/plan/Rex$Op$Call$Dynamic;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRexOpCallDynamicCandidate (Lorg/partiql/plan/Rex$Op$Call$Dynamic$Candidate;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRexOpCallStatic (Lorg/partiql/plan/Rex$Op$Call$Static;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRexOpCase (Lorg/partiql/plan/Rex$Op$Case;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRexOpCaseBranch (Lorg/partiql/plan/Rex$Op$Case$Branch;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRexOpCoalesce (Lorg/partiql/plan/Rex$Op$Coalesce;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRexOpCollection (Lorg/partiql/plan/Rex$Op$Collection;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRexOpErr (Lorg/partiql/plan/Rex$Op$Err;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRexOpGlobal (Lorg/partiql/plan/Rex$Op$Global;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRexOpLit (Lorg/partiql/plan/Rex$Op$Lit;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRexOpNullif (Lorg/partiql/plan/Rex$Op$Nullif;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRexOpPath (Lorg/partiql/plan/Rex$Op$Path;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRexOpPathIndex (Lorg/partiql/plan/Rex$Op$Path$Index;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRexOpPathKey (Lorg/partiql/plan/Rex$Op$Path$Key;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRexOpPathSymbol (Lorg/partiql/plan/Rex$Op$Path$Symbol;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRexOpPivot (Lorg/partiql/plan/Rex$Op$Pivot;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRexOpSelect (Lorg/partiql/plan/Rex$Op$Select;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRexOpStruct (Lorg/partiql/plan/Rex$Op$Struct;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRexOpStructField (Lorg/partiql/plan/Rex$Op$Struct$Field;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRexOpSubquery (Lorg/partiql/plan/Rex$Op$Subquery;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRexOpTupleUnion (Lorg/partiql/plan/Rex$Op$TupleUnion;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitRexOpVar (Lorg/partiql/plan/Rex$Op$Var;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitStatement (Lorg/partiql/plan/Statement;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitStatementQuery (Lorg/partiql/plan/Statement$Query;Ljava/lang/Object;)Ljava/lang/Object;
+}
+
+public abstract interface class org/partiql/plan/visitor/PlanVisitor {
+	public abstract fun visit (Lorg/partiql/plan/PlanNode;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitAgg (Lorg/partiql/plan/Agg;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitCatalog (Lorg/partiql/plan/Catalog;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitCatalogSymbol (Lorg/partiql/plan/Catalog$Symbol;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitCatalogSymbolRef (Lorg/partiql/plan/Catalog$Symbol$Ref;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitFn (Lorg/partiql/plan/Fn;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitIdentifier (Lorg/partiql/plan/Identifier;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitIdentifierQualified (Lorg/partiql/plan/Identifier$Qualified;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitIdentifierSymbol (Lorg/partiql/plan/Identifier$Symbol;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitPartiQLPlan (Lorg/partiql/plan/PartiQLPlan;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitRel (Lorg/partiql/plan/Rel;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitRelBinding (Lorg/partiql/plan/Rel$Binding;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitRelOp (Lorg/partiql/plan/Rel$Op;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitRelOpAggregate (Lorg/partiql/plan/Rel$Op$Aggregate;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitRelOpAggregateCall (Lorg/partiql/plan/Rel$Op$Aggregate$Call;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitRelOpDistinct (Lorg/partiql/plan/Rel$Op$Distinct;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitRelOpErr (Lorg/partiql/plan/Rel$Op$Err;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitRelOpExcept (Lorg/partiql/plan/Rel$Op$Except;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitRelOpExclude (Lorg/partiql/plan/Rel$Op$Exclude;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitRelOpExcludeItem (Lorg/partiql/plan/Rel$Op$Exclude$Item;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitRelOpExcludeStep (Lorg/partiql/plan/Rel$Op$Exclude$Step;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitRelOpExcludeStepCollIndex (Lorg/partiql/plan/Rel$Op$Exclude$Step$CollIndex;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitRelOpExcludeStepCollWildcard (Lorg/partiql/plan/Rel$Op$Exclude$Step$CollWildcard;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitRelOpExcludeStepStructField (Lorg/partiql/plan/Rel$Op$Exclude$Step$StructField;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitRelOpExcludeStepStructWildcard (Lorg/partiql/plan/Rel$Op$Exclude$Step$StructWildcard;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitRelOpFilter (Lorg/partiql/plan/Rel$Op$Filter;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitRelOpIntersect (Lorg/partiql/plan/Rel$Op$Intersect;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitRelOpJoin (Lorg/partiql/plan/Rel$Op$Join;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitRelOpLimit (Lorg/partiql/plan/Rel$Op$Limit;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitRelOpOffset (Lorg/partiql/plan/Rel$Op$Offset;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitRelOpProject (Lorg/partiql/plan/Rel$Op$Project;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitRelOpScan (Lorg/partiql/plan/Rel$Op$Scan;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitRelOpScanIndexed (Lorg/partiql/plan/Rel$Op$ScanIndexed;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitRelOpSort (Lorg/partiql/plan/Rel$Op$Sort;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitRelOpSortSpec (Lorg/partiql/plan/Rel$Op$Sort$Spec;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitRelOpUnion (Lorg/partiql/plan/Rel$Op$Union;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitRelOpUnpivot (Lorg/partiql/plan/Rel$Op$Unpivot;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitRelType (Lorg/partiql/plan/Rel$Type;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitRex (Lorg/partiql/plan/Rex;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitRexOp (Lorg/partiql/plan/Rex$Op;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitRexOpCall (Lorg/partiql/plan/Rex$Op$Call;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitRexOpCallDynamic (Lorg/partiql/plan/Rex$Op$Call$Dynamic;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitRexOpCallDynamicCandidate (Lorg/partiql/plan/Rex$Op$Call$Dynamic$Candidate;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitRexOpCallStatic (Lorg/partiql/plan/Rex$Op$Call$Static;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitRexOpCase (Lorg/partiql/plan/Rex$Op$Case;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitRexOpCaseBranch (Lorg/partiql/plan/Rex$Op$Case$Branch;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitRexOpCoalesce (Lorg/partiql/plan/Rex$Op$Coalesce;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitRexOpCollection (Lorg/partiql/plan/Rex$Op$Collection;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitRexOpErr (Lorg/partiql/plan/Rex$Op$Err;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitRexOpGlobal (Lorg/partiql/plan/Rex$Op$Global;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitRexOpLit (Lorg/partiql/plan/Rex$Op$Lit;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitRexOpNullif (Lorg/partiql/plan/Rex$Op$Nullif;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitRexOpPath (Lorg/partiql/plan/Rex$Op$Path;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitRexOpPathIndex (Lorg/partiql/plan/Rex$Op$Path$Index;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitRexOpPathKey (Lorg/partiql/plan/Rex$Op$Path$Key;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitRexOpPathSymbol (Lorg/partiql/plan/Rex$Op$Path$Symbol;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitRexOpPivot (Lorg/partiql/plan/Rex$Op$Pivot;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitRexOpSelect (Lorg/partiql/plan/Rex$Op$Select;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitRexOpStruct (Lorg/partiql/plan/Rex$Op$Struct;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitRexOpStructField (Lorg/partiql/plan/Rex$Op$Struct$Field;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitRexOpSubquery (Lorg/partiql/plan/Rex$Op$Subquery;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitRexOpTupleUnion (Lorg/partiql/plan/Rex$Op$TupleUnion;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitRexOpVar (Lorg/partiql/plan/Rex$Op$Var;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitStatement (Lorg/partiql/plan/Statement;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitStatementQuery (Lorg/partiql/plan/Statement$Query;Ljava/lang/Object;)Ljava/lang/Object;
+}
+
