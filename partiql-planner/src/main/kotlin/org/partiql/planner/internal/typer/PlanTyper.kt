@@ -717,100 +717,100 @@ internal class PlanTyper(
                 }
             }
 
-        /**
-         * In this context, Boolean means PartiQLValueType Bool, which can be nullable.
-         * Hence, we permit Static Type BOOL, Static Type NULL, Static Type Missing here.
-         */
-        private fun canBeBoolean(type: StaticType): Boolean {
-            return type.flatten().allTypes.any {
-                // TODO: This is a quick fix to unblock the typing or case expression.
-                //  We need to model the truth value better in typer.
-                it is BoolType || it is NullType || it is MissingType
+            /**
+             * In this context, Boolean means PartiQLValueType Bool, which can be nullable.
+             * Hence, we permit Static Type BOOL, Static Type NULL, Static Type Missing here.
+             */
+            private fun canBeBoolean(type: StaticType): Boolean {
+                return type.flatten().allTypes.any {
+                    // TODO: This is a quick fix to unblock the typing or case expression.
+                    //  We need to model the truth value better in typer.
+                    it is BoolType || it is NullType || it is MissingType
+                }
             }
-        }
 
-        @OptIn(PartiQLValueExperimental::class)
-        private fun isLiteralBool(rex: Rex, bool: Boolean): Boolean {
-            val op = rex.op as? Rex.Op.Lit ?: return false
-            val value = op.value as? BoolValue ?: return false
-            return value.value == bool
-        }
+            @OptIn(PartiQLValueExperimental::class)
+            private fun isLiteralBool(rex: Rex, bool: Boolean): Boolean {
+                val op = rex.op as? Rex.Op.Lit ?: return false
+                val value = op.value as? BoolValue ?: return false
+                return value.value == bool
+            }
 
-        /**
-         * We need special handling for:
-         * ```
-         * CASE
-         *   WHEN a IS STRUCT THEN a
-         *   ELSE { 'a': a }
-         * END
-         * ```
-         * When we type the above, if we know that `a` can be many different types (one of them being a struct),
-         * then when we see the top-level `a IS STRUCT`, then we can assume that the `a` on the RHS is definitely a
-         * struct. We handle this by using [foldCaseBranch].
-         */
-        override fun visitRexOpCaseBranch(node: Rex.Op.Case.Branch, ctx: StaticType?): Rex.Op.Case.Branch {
-            val visitedCondition = visitRex(node.condition, node.condition.type)
-            val visitedReturn = visitRex(node.rex, node.rex.type)
-            return foldCaseBranch(visitedCondition, visitedReturn)
-        }
+            /**
+             * We need special handling for:
+             * ```
+             * CASE
+             *   WHEN a IS STRUCT THEN a
+             *   ELSE { 'a': a }
+             * END
+             * ```
+             * When we type the above, if we know that `a` can be many different types (one of them being a struct),
+             * then when we see the top-level `a IS STRUCT`, then we can assume that the `a` on the RHS is definitely a
+             * struct. We handle this by using [foldCaseBranch].
+             */
+            override fun visitRexOpCaseBranch(node: Rex.Op.Case.Branch, ctx: StaticType?): Rex.Op.Case.Branch {
+                val visitedCondition = visitRex(node.condition, node.condition.type)
+                val visitedReturn = visitRex(node.rex, node.rex.type)
+                return foldCaseBranch(visitedCondition, visitedReturn)
+            }
 
-        /**
-         * This takes in a branch condition and its result expression.
-         *
-         *  1. If the condition is a type check T (ie `<var> IS T`), then this function will be typed as T.
-         *  2. If a branch condition is known to be false, it will be removed.
-         *
-         * TODO: Currently, this only folds type checking for STRUCTs. We need to add support for all other types.
-         *
-         * TODO: I added a check for [Rex.Op.Var.Outer] as it seemed odd to replace a general expression like:
-         *  `WHEN { 'a': { 'b': 1} }.a IS STRUCT THEN { 'a': { 'b': 1} }.a.b`. We can discuss this later, but I'm
-         *  currently limiting the scope of this intentionally.
-         */
-        @OptIn(FnExperimental::class)
-        private fun foldCaseBranch(condition: Rex, result: Rex): Rex.Op.Case.Branch {
-            return when (val call = condition.op) {
-                is Rex.Op.Call.Dynamic -> {
-                    val rex = call.candidates.map { candidate ->
-                        val fn = candidate.fn
+            /**
+             * This takes in a branch condition and its result expression.
+             *
+             *  1. If the condition is a type check T (ie `<var> IS T`), then this function will be typed as T.
+             *  2. If a branch condition is known to be false, it will be removed.
+             *
+             * TODO: Currently, this only folds type checking for STRUCTs. We need to add support for all other types.
+             *
+             * TODO: I added a check for [Rex.Op.Var.Outer] as it seemed odd to replace a general expression like:
+             *  `WHEN { 'a': { 'b': 1} }.a IS STRUCT THEN { 'a': { 'b': 1} }.a.b`. We can discuss this later, but I'm
+             *  currently limiting the scope of this intentionally.
+             */
+            @OptIn(FnExperimental::class)
+            private fun foldCaseBranch(condition: Rex, result: Rex): Rex.Op.Case.Branch {
+                return when (val call = condition.op) {
+                    is Rex.Op.Call.Dynamic -> {
+                        val rex = call.candidates.map { candidate ->
+                            val fn = candidate.fn
+                            if (fn.signature.name.equals("is_struct", ignoreCase = true).not()) {
+                                return rexOpCaseBranch(condition, result)
+                            }
+                            val ref = call.args.getOrNull(0) ?: error("IS STRUCT requires an argument.")
+                            // Replace the result's type
+                            val type = AnyOfType(ref.type.allTypes.filterIsInstance<StructType>().toSet())
+                            val replacementVal = ref.copy(type = type)
+                            when (ref.op is Rex.Op.Var.Local) {
+                                true -> RexReplacer.replace(result, ref, replacementVal)
+                                false -> result
+                            }
+                        }
+                        val type = rex.toUnionType().flatten()
+                        return rexOpCaseBranch(condition, result.copy(type))
+                    }
+                    is Rex.Op.Call.Static -> {
+                        val fn = call.fn
                         if (fn.signature.name.equals("is_struct", ignoreCase = true).not()) {
                             return rexOpCaseBranch(condition, result)
                         }
                         val ref = call.args.getOrNull(0) ?: error("IS STRUCT requires an argument.")
+                        val simplifiedCondition = when {
+                            ref.type.allTypes.all { it is StructType } -> rex(BOOL, rexOpLit(boolValue(true)))
+                            ref.type.allTypes.none { it is StructType } -> rex(BOOL, rexOpLit(boolValue(false)))
+                            else -> condition
+                        }
+
                         // Replace the result's type
                         val type = AnyOfType(ref.type.allTypes.filterIsInstance<StructType>().toSet())
                         val replacementVal = ref.copy(type = type)
-                        when (ref.op is Rex.Op.Var.Local) {
+                        val rex = when (ref.op is Rex.Op.Var.Local) {
                             true -> RexReplacer.replace(result, ref, replacementVal)
                             false -> result
                         }
+                        return rexOpCaseBranch(simplifiedCondition, rex)
                     }
-                    val type = rex.toUnionType().flatten()
-                    return rexOpCaseBranch(condition, result.copy(type))
+                    else -> rexOpCaseBranch(condition, result)
                 }
-                is Rex.Op.Call.Static -> {
-                    val fn = call.fn
-                    if (fn.signature.name.equals("is_struct", ignoreCase = true).not()) {
-                        return rexOpCaseBranch(condition, result)
-                    }
-                    val ref = call.args.getOrNull(0) ?: error("IS STRUCT requires an argument.")
-                    val simplifiedCondition = when {
-                        ref.type.allTypes.all { it is StructType } -> rex(BOOL, rexOpLit(boolValue(true)))
-                        ref.type.allTypes.none { it is StructType } -> rex(BOOL, rexOpLit(boolValue(false)))
-                        else -> condition
-                    }
-
-                    // Replace the result's type
-                    val type = AnyOfType(ref.type.allTypes.filterIsInstance<StructType>().toSet())
-                    val replacementVal = ref.copy(type = type)
-                    val rex = when (ref.op is Rex.Op.Var.Local) {
-                        true -> RexReplacer.replace(result, ref, replacementVal)
-                        false -> result
-                    }
-                    return rexOpCaseBranch(simplifiedCondition, rex)
-                }
-                else -> rexOpCaseBranch(condition, result)
             }
-        }
 
             override fun visitRexOpCollection(node: Rex.Op.Collection, ctx: StaticType?): Rex {
                 if (ctx!! !is CollectionType) {
@@ -890,30 +890,30 @@ internal class PlanTyper(
                 return rex(type, rexOpStruct(fields))
             }
 
-        override fun visitRexOpPivot(node: Rex.Op.Pivot, ctx: StaticType?): Rex {
-            val stack = locals.outer + listOf(locals)
-            val rel = node.rel.type(stack)
-            val typeEnv = TypeEnv(rel.type.schema, stack)
-            val typer = RexTyper(typeEnv, Scope.LOCAL)
-            val key = typer.visitRex(node.key, null)
-            val value = typer.visitRex(node.value, null)
-            val type = StructType(
-                contentClosed = false, constraints = setOf(TupleConstraint.Open(true))
-            )
-            val op = rexOpPivot(key, value, rel)
-            return rex(type, op)
-        }
-
-        override fun visitRexOpSubquery(node: Rex.Op.Subquery, ctx: StaticType?): Rex {
-            val rel = node.rel.type(locals.outer + listOf(locals))
-            val newTypeEnv = TypeEnv(schema = rel.type.schema, outer = locals.outer + listOf(locals))
-            val constructor = node.constructor.type(newTypeEnv)
-            val subquery = rexOpSubquery(constructor, rel, node.coercion)
-            return when (node.coercion) {
-                Rex.Op.Subquery.Coercion.SCALAR -> visitRexOpSubqueryScalar(subquery, constructor.type)
-                Rex.Op.Subquery.Coercion.ROW -> visitRexOpSubqueryRow(subquery, constructor.type)
+            override fun visitRexOpPivot(node: Rex.Op.Pivot, ctx: StaticType?): Rex {
+                val stack = locals.outer + listOf(locals)
+                val rel = node.rel.type(stack)
+                val typeEnv = TypeEnv(rel.type.schema, stack)
+                val typer = RexTyper(typeEnv, Scope.LOCAL)
+                val key = typer.visitRex(node.key, null)
+                val value = typer.visitRex(node.value, null)
+                val type = StructType(
+                    contentClosed = false, constraints = setOf(TupleConstraint.Open(true))
+                )
+                val op = rexOpPivot(key, value, rel)
+                return rex(type, op)
             }
-        }
+
+            override fun visitRexOpSubquery(node: Rex.Op.Subquery, ctx: StaticType?): Rex {
+                val rel = node.rel.type(locals.outer + listOf(locals))
+                val newTypeEnv = TypeEnv(schema = rel.type.schema, outer = locals.outer + listOf(locals))
+                val constructor = node.constructor.type(newTypeEnv)
+                val subquery = rexOpSubquery(constructor, rel, node.coercion)
+                return when (node.coercion) {
+                    Rex.Op.Subquery.Coercion.SCALAR -> visitRexOpSubqueryScalar(subquery, constructor.type)
+                    Rex.Op.Subquery.Coercion.ROW -> visitRexOpSubqueryRow(subquery, constructor.type)
+                }
+            }
 
             /**
              * Calculate output type of a row-value subquery.
@@ -961,51 +961,51 @@ internal class PlanTyper(
                 return rex(type, op)
             }
 
-        override fun visitRexOpSelect(node: Rex.Op.Select, ctx: StaticType?): Rex {
-            val rel = node.rel.type(locals.outer + listOf(locals))
-            val newTypeEnv = TypeEnv(schema = rel.type.schema, outer = locals.outer + listOf(locals))
-            var constructor = node.constructor.type(newTypeEnv)
-            var constructorType = constructor.type
-            // add the ordered property to the constructor
-            if (constructorType is StructType) {
-                // TODO: We shouldn't need to copy the ordered constraint.
-                constructorType = constructorType.copy(
-                    constraints = constructorType.constraints + setOf(TupleConstraint.Ordered)
-                )
-                constructor = rex(constructorType, constructor.op)
-            }
-            val type = when (rel.isOrdered()) {
-                true -> ListType(constructor.type)
-                else -> BagType(constructor.type)
-            }
-            return rex(type, rexOpSelect(constructor, rel))
-        }
-
-        override fun visitRexOpTupleUnion(node: Rex.Op.TupleUnion, ctx: StaticType?): Rex {
-            val args = node.args.map { visitRex(it, ctx) }
-            val type = when (args.size) {
-                0 -> StructType(
-                    fields = emptyMap(), contentClosed = true,
-                    constraints = setOf(
-                        TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered
+            override fun visitRexOpSelect(node: Rex.Op.Select, ctx: StaticType?): Rex {
+                val rel = node.rel.type(locals.outer + listOf(locals))
+                val newTypeEnv = TypeEnv(schema = rel.type.schema, outer = locals.outer + listOf(locals))
+                var constructor = node.constructor.type(newTypeEnv)
+                var constructorType = constructor.type
+                // add the ordered property to the constructor
+                if (constructorType is StructType) {
+                    // TODO: We shouldn't need to copy the ordered constraint.
+                    constructorType = constructorType.copy(
+                        constraints = constructorType.constraints + setOf(TupleConstraint.Ordered)
                     )
-                )
-                else -> {
-                    val argTypes = args.map { it.type }
-                    val potentialTypes = buildArgumentPermutations(argTypes).map { argumentList ->
-                        calculateTupleUnionOutputType(argumentList)
-                    }
-                    unionOf(potentialTypes.toSet()).flatten()
+                    constructor = rex(constructorType, constructor.op)
                 }
+                val type = when (rel.isOrdered()) {
+                    true -> ListType(constructor.type)
+                    else -> BagType(constructor.type)
+                }
+                return rex(type, rexOpSelect(constructor, rel))
             }
-            val op = rexOpTupleUnion(args)
-            return rex(type, op)
-        }
 
-        override fun visitRexOpErr(node: Rex.Op.Err, ctx: StaticType?): PlanNode {
-            val type = ctx ?: ANY
-            return rex(type, node)
-        }
+            override fun visitRexOpTupleUnion(node: Rex.Op.TupleUnion, ctx: StaticType?): Rex {
+                val args = node.args.map { visitRex(it, ctx) }
+                val type = when (args.size) {
+                    0 -> StructType(
+                        fields = emptyMap(), contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered
+                        )
+                    )
+                    else -> {
+                        val argTypes = args.map { it.type }
+                        val potentialTypes = buildArgumentPermutations(argTypes).map { argumentList ->
+                            calculateTupleUnionOutputType(argumentList)
+                        }
+                        unionOf(potentialTypes.toSet()).flatten()
+                    }
+                }
+                val op = rexOpTupleUnion(args)
+                return rex(type, op)
+            }
+
+            override fun visitRexOpErr(node: Rex.Op.Err, ctx: StaticType?): PlanNode {
+                val type = ctx ?: ANY
+                return rex(type, node)
+            }
 
             override fun visitRexOpMissing(node: Rex.Op.Missing, ctx: StaticType?): PlanNode {
                 val type = ctx ?: MISSING
@@ -1078,162 +1078,162 @@ internal class PlanTyper(
                 )
             }
 
-        /**
-         * We are essentially making permutations of arguments that maintain the same initial ordering. For example,
-         * consider the following args:
-         * ```
-         * [ 0 = UNION(INT, STRING), 1 = (DECIMAL, TIMESTAMP) ]
-         * ```
-         * This function will return:
-         * ```
-         * [
-         *   [ 0 = INT, 1 = DECIMAL ],
-         *   [ 0 = INT, 1 = TIMESTAMP ],
-         *   [ 0 = STRING, 1 = DECIMAL ],
-         *   [ 0 = STRING, 1 = TIMESTAMP ]
-         * ]
-         * ```
-         *
-         * Essentially, this becomes useful specifically in the case of TUPLEUNION, since we can make sure that
-         * the ordering of argument's attributes remains the same. For example:
-         * ```
-         * TUPLEUNION( UNION(STRUCT(a, b), STRUCT(c)), UNION(STRUCT(d, e), STRUCT(f)) )
-         * ```
-         *
-         * Then, the output of the tupleunion will have the output types of all of the below:
-         * ```
-         * TUPLEUNION(STRUCT(a,b), STRUCT(d,e)) --> STRUCT(a, b, d, e)
-         * TUPLEUNION(STRUCT(a,b), STRUCT(f)) --> STRUCT(a, b, f)
-         * TUPLEUNION(STRUCT(c), STRUCT(d,e)) --> STRUCT(c, d, e)
-         * TUPLEUNION(STRUCT(c), STRUCT(f)) --> STRUCT(c, f)
-         * ```
-         */
-        private fun buildArgumentPermutations(args: List<StaticType>): Sequence<List<StaticType>> {
-            val flattenedArgs = args.map { it.flatten().allTypes }
-            return buildArgumentPermutations(flattenedArgs, accumulator = emptyList())
-        }
+            /**
+             * We are essentially making permutations of arguments that maintain the same initial ordering. For example,
+             * consider the following args:
+             * ```
+             * [ 0 = UNION(INT, STRING), 1 = (DECIMAL, TIMESTAMP) ]
+             * ```
+             * This function will return:
+             * ```
+             * [
+             *   [ 0 = INT, 1 = DECIMAL ],
+             *   [ 0 = INT, 1 = TIMESTAMP ],
+             *   [ 0 = STRING, 1 = DECIMAL ],
+             *   [ 0 = STRING, 1 = TIMESTAMP ]
+             * ]
+             * ```
+             *
+             * Essentially, this becomes useful specifically in the case of TUPLEUNION, since we can make sure that
+             * the ordering of argument's attributes remains the same. For example:
+             * ```
+             * TUPLEUNION( UNION(STRUCT(a, b), STRUCT(c)), UNION(STRUCT(d, e), STRUCT(f)) )
+             * ```
+             *
+             * Then, the output of the tupleunion will have the output types of all of the below:
+             * ```
+             * TUPLEUNION(STRUCT(a,b), STRUCT(d,e)) --> STRUCT(a, b, d, e)
+             * TUPLEUNION(STRUCT(a,b), STRUCT(f)) --> STRUCT(a, b, f)
+             * TUPLEUNION(STRUCT(c), STRUCT(d,e)) --> STRUCT(c, d, e)
+             * TUPLEUNION(STRUCT(c), STRUCT(f)) --> STRUCT(c, f)
+             * ```
+             */
+            private fun buildArgumentPermutations(args: List<StaticType>): Sequence<List<StaticType>> {
+                val flattenedArgs = args.map { it.flatten().allTypes }
+                return buildArgumentPermutations(flattenedArgs, accumulator = emptyList())
+            }
 
-        private fun buildArgumentPermutations(
-            args: List<List<StaticType>>,
-            accumulator: List<StaticType>,
-        ): Sequence<List<StaticType>> {
-            if (args.isEmpty()) {
-                return sequenceOf(accumulator)
-            }
-            val first = args.first()
-            val rest = when (args.size) {
-                1 -> emptyList()
-                else -> args.subList(1, args.size)
-            }
-            return sequence {
-                first.forEach { argSubType ->
-                    yieldAll(buildArgumentPermutations(rest, accumulator + listOf(argSubType)))
+            private fun buildArgumentPermutations(
+                args: List<List<StaticType>>,
+                accumulator: List<StaticType>,
+            ): Sequence<List<StaticType>> {
+                if (args.isEmpty()) {
+                    return sequenceOf(accumulator)
                 }
-            }
-        }
-
-        // Helpers
-
-        /**
-         * Logic is as follows:
-         * 1. If [struct] is closed and ordered:
-         *   - If no item is found, return [MissingType]
-         *   - Else, grab first matching item and make sensitive.
-         * 2. If [struct] is closed
-         *   - AND no item is found, return [MissingType]
-         *   - AND only one item is present -> grab item and make sensitive.
-         *   - AND more than one item is present, keep sensitivity and grab item.
-         * 3. If [struct] is open, return [AnyType]
-         *
-         * @return a [Pair] where the [Pair.first] represents the type of the [step] and the [Pair.second] represents
-         * the disambiguated [key].
-         */
-        private fun inferStructLookup(struct: StructType, key: Identifier.Symbol): Pair<StaticType, Identifier.Symbol> {
-            val binding = key.toBindingName()
-            val isClosed = struct.constraints.contains(TupleConstraint.Open(false))
-            val isOrdered = struct.constraints.contains(TupleConstraint.Ordered)
-            val (name, type) = when {
-                // 1. Struct is closed and ordered
-                isClosed && isOrdered -> {
-                    struct.fields.firstOrNull { entry -> binding.matches(entry.key) }?.let {
-                        (sensitive(it.key) to it.value)
-                    } ?: (key to MISSING)
+                val first = args.first()
+                val rest = when (args.size) {
+                    1 -> emptyList()
+                    else -> args.subList(1, args.size)
                 }
-                // 2. Struct is closed
-                isClosed -> {
-                    val matches = struct.fields.filter { entry -> binding.matches(entry.key) }
-                    when (matches.size) {
-                        0 -> (key to MISSING)
-                        1 -> matches.first().let { (sensitive(it.key) to it.value) }
-                        else -> {
-                            val firstKey = matches.first().key
-                            val sharedKey = when (matches.all { it.key == firstKey }) {
-                                true -> sensitive(firstKey)
-                                false -> key
-                            }
-                            sharedKey to unionOf(matches.map { it.value }.toSet()).flatten()
-                        }
+                return sequence {
+                    first.forEach { argSubType ->
+                        yieldAll(buildArgumentPermutations(rest, accumulator + listOf(argSubType)))
                     }
                 }
-                // 3. Struct is open
-                else -> (key to ANY)
             }
-            return type to name
-        }
 
-        private fun sensitive(str: String): Identifier.Symbol =
-            identifierSymbol(str, Identifier.CaseSensitivity.SENSITIVE)
+            // Helpers
 
-        @OptIn(FnExperimental::class)
-        private fun inferFnType(fn: FnSignature, args: List<Rex>): StaticType {
-
-            // Determine role of NULL and MISSING in the return type
-            var hadNull = false
-            var hadNullable = false
-            var hadMissing = false
-            var hadMissable = false
-            for (arg in args) {
-                val t = arg.type
-                when {
-                    t is MissingType -> hadMissing = true
-                    t is NullType -> hadNull = true
-                    t.isMissable() -> hadMissable = true
-                    t.isNullable() -> hadNullable = true
+            /**
+             * Logic is as follows:
+             * 1. If [struct] is closed and ordered:
+             *   - If no item is found, return [MissingType]
+             *   - Else, grab first matching item and make sensitive.
+             * 2. If [struct] is closed
+             *   - AND no item is found, return [MissingType]
+             *   - AND only one item is present -> grab item and make sensitive.
+             *   - AND more than one item is present, keep sensitivity and grab item.
+             * 3. If [struct] is open, return [AnyType]
+             *
+             * @return a [Pair] where the [Pair.first] represents the type of the [step] and the [Pair.second] represents
+             * the disambiguated [key].
+             */
+            private fun inferStructLookup(struct: StructType, key: Identifier.Symbol): Pair<StaticType, Identifier.Symbol> {
+                val binding = key.toBindingName()
+                val isClosed = struct.constraints.contains(TupleConstraint.Open(false))
+                val isOrdered = struct.constraints.contains(TupleConstraint.Ordered)
+                val (name, type) = when {
+                    // 1. Struct is closed and ordered
+                    isClosed && isOrdered -> {
+                        struct.fields.firstOrNull { entry -> binding.matches(entry.key) }?.let {
+                            (sensitive(it.key) to it.value)
+                        } ?: (key to MISSING)
+                    }
+                    // 2. Struct is closed
+                    isClosed -> {
+                        val matches = struct.fields.filter { entry -> binding.matches(entry.key) }
+                        when (matches.size) {
+                            0 -> (key to MISSING)
+                            1 -> matches.first().let { (sensitive(it.key) to it.value) }
+                            else -> {
+                                val firstKey = matches.first().key
+                                val sharedKey = when (matches.all { it.key == firstKey }) {
+                                    true -> sensitive(firstKey)
+                                    false -> key
+                                }
+                                sharedKey to unionOf(matches.map { it.value }.toSet()).flatten()
+                            }
+                        }
+                    }
+                    // 3. Struct is open
+                    else -> (key to ANY)
                 }
+                return type to name
             }
 
-            // True iff NULL CALL and had a NULL arg;
-            val isNull = (fn.isNullCall && hadNull)
+            private fun sensitive(str: String): Identifier.Symbol =
+                identifierSymbol(str, Identifier.CaseSensitivity.SENSITIVE)
 
-            // True iff NULL CALL and had a NULLABLE arg; or is a NULLABLE operator
-            val isNullable = (fn.isNullCall && hadNullable) || fn.isNullable
+            @OptIn(FnExperimental::class)
+            private fun inferFnType(fn: FnSignature, args: List<Rex>): StaticType {
 
-            // True iff MISSING CALL and had a MISSING arg.
-            val isMissing = fn.isMissingCall && hadMissing
+                // Determine role of NULL and MISSING in the return type
+                var hadNull = false
+                var hadNullable = false
+                var hadMissing = false
+                var hadMissable = false
+                for (arg in args) {
+                    val t = arg.type
+                    when {
+                        t is MissingType -> hadMissing = true
+                        t is NullType -> hadNull = true
+                        t.isMissable() -> hadMissable = true
+                        t.isNullable() -> hadNullable = true
+                    }
+                }
 
-            // True iff MISSING CALL and had a MISSABLE arg
-            val isMissable = (fn.isMissingCall && hadMissable) && fn.isMissable
+                // True iff NULL CALL and had a NULL arg;
+                val isNull = (fn.isNullCall && hadNull)
 
-            // Return type with calculated nullability
-            var type: StaticType = when {
-                isMissing -> MISSING
-                // Edge cases for EQ and boolean connective
-                // If function can not return missing or null, can not propagate missing or null
-                // AKA, the Function IS MISSING
-                // return signature return type
-                !fn.isMissable && !fn.isMissingCall && !fn.isNullable && !fn.isNullCall -> fn.returns.toNonNullStaticType()
-                isNull || (!fn.isMissable && hadMissing) -> fn.returns.toStaticType()
-                isNullable -> fn.returns.toStaticType()
-                else -> fn.returns.toNonNullStaticType()
+                // True iff NULL CALL and had a NULLABLE arg; or is a NULLABLE operator
+                val isNullable = (fn.isNullCall && hadNullable) || fn.isNullable
+
+                // True iff MISSING CALL and had a MISSING arg.
+                val isMissing = fn.isMissingCall && hadMissing
+
+                // True iff MISSING CALL and had a MISSABLE arg
+                val isMissable = (fn.isMissingCall && hadMissable) && fn.isMissable
+
+                // Return type with calculated nullability
+                var type: StaticType = when {
+                    isMissing -> MISSING
+                    // Edge cases for EQ and boolean connective
+                    // If function can not return missing or null, can not propagate missing or null
+                    // AKA, the Function IS MISSING
+                    // return signature return type
+                    !fn.isMissable && !fn.isMissingCall && !fn.isNullable && !fn.isNullCall -> fn.returns.toNonNullStaticType()
+                    isNull || (!fn.isMissable && hadMissing) -> fn.returns.toStaticType()
+                    isNullable -> fn.returns.toStaticType()
+                    else -> fn.returns.toNonNullStaticType()
+                }
+
+                // Propagate MISSING unless this operator explicitly doesn't return missing (fn.isMissable = false).
+                if (isMissable) {
+                    type = unionOf(type, MISSING)
+                }
+
+                return type.flatten()
             }
-
-            // Propagate MISSING unless this operator explicitly doesn't return missing (fn.isMissable = false).
-            if (isMissable) {
-                type = unionOf(type, MISSING)
-            }
-
-            return type.flatten()
-        }
 
             /**
              * Resolution and typing of aggregation function calls.
@@ -1273,23 +1273,23 @@ internal class PlanTyper(
             }
         }
 
-    // HELPERS
+        // HELPERS
 
-    private fun Rel.type(stack: List<TypeEnv>, strategy: Scope = Scope.LOCAL): Rel =
-        RelTyper(stack, strategy).visitRel(this, null)
+        private fun Rel.type(stack: List<TypeEnv>, strategy: Scope = Scope.LOCAL): Rel =
+            RelTyper(stack, strategy).visitRel(this, null)
 
-    /**
-     * This types the [Rex] given the input record ([input]) and [stack] of [TypeEnv] (representing the outer scopes).
-     */
-    private fun Rex.type(input: List<Rel.Binding>, stack: List<TypeEnv>, strategy: Scope = Scope.LOCAL) =
-        RexTyper(TypeEnv(input, stack), strategy).visitRex(this, this.type)
+        /**
+         * This types the [Rex] given the input record ([input]) and [stack] of [TypeEnv] (representing the outer scopes).
+         */
+        private fun Rex.type(input: List<Rel.Binding>, stack: List<TypeEnv>, strategy: Scope = Scope.LOCAL) =
+            RexTyper(TypeEnv(input, stack), strategy).visitRex(this, this.type)
 
-    /**
-     * This types the [Rex] given a [TypeEnv]. We use the [TypeEnv.schema] as the input schema and the [TypeEnv.outer]
-     * as the outer scopes/
-     */
-    private fun Rex.type(typeEnv: TypeEnv, strategy: Scope = Scope.LOCAL) =
-        RexTyper(typeEnv, strategy).visitRex(this, this.type)
+        /**
+         * This types the [Rex] given a [TypeEnv]. We use the [TypeEnv.schema] as the input schema and the [TypeEnv.outer]
+         * as the outer scopes/
+         */
+        private fun Rex.type(typeEnv: TypeEnv, strategy: Scope = Scope.LOCAL) =
+            RexTyper(typeEnv, strategy).visitRex(this, this.type)
 
         /**
          * I found decorating the tree with the binding names (for resolution) was easier than associating introduced
@@ -1308,37 +1308,37 @@ internal class PlanTyper(
             return this.copy(schema = schema.mapIndexed { i, binding -> binding.copy(type = types[i]) })
         }
 
-    private fun Identifier.toBindingPath() = when (this) {
-        is Identifier.Qualified -> this.toBindingPath()
-        is Identifier.Symbol -> BindingPath(listOf(this.toBindingName()))
-    }
-
-    private fun Identifier.Qualified.toBindingPath() =
-        BindingPath(steps = listOf(this.root.toBindingName()) + steps.map { it.toBindingName() })
-
-    private fun Identifier.Symbol.toBindingName() = BindingName(
-        name = symbol,
-        case = when (caseSensitivity) {
-            Identifier.CaseSensitivity.SENSITIVE -> BindingCase.SENSITIVE
-            Identifier.CaseSensitivity.INSENSITIVE -> BindingCase.INSENSITIVE
+        private fun Identifier.toBindingPath() = when (this) {
+            is Identifier.Qualified -> this.toBindingPath()
+            is Identifier.Symbol -> BindingPath(listOf(this.toBindingName()))
         }
-    )
 
-    private fun Rel.isOrdered(): Boolean = type.props.contains(Rel.Prop.ORDERED)
+        private fun Identifier.Qualified.toBindingPath() =
+            BindingPath(steps = listOf(this.root.toBindingName()) + steps.map { it.toBindingName() })
 
-    /**
-     * Produce a union type from all the
-     */
-    private fun List<Rex>.toUnionType(): StaticType = AnyOfType(map { it.type }.toSet()).flatten()
+        private fun Identifier.Symbol.toBindingName() = BindingName(
+            name = symbol,
+            case = when (caseSensitivity) {
+                Identifier.CaseSensitivity.SENSITIVE -> BindingCase.SENSITIVE
+                Identifier.CaseSensitivity.INSENSITIVE -> BindingCase.INSENSITIVE
+            }
+        )
 
-    private fun getElementTypeForFromSource(fromSourceType: StaticType): StaticType = when (fromSourceType) {
-        is BagType -> fromSourceType.elementType
-        is ListType -> fromSourceType.elementType
-        is AnyType -> ANY
-        is AnyOfType -> AnyOfType(fromSourceType.types.map { getElementTypeForFromSource(it) }.toSet())
-        // All the other types coerce into a bag of themselves (including null/missing/sexp).
-        else -> fromSourceType
-    }
+        private fun Rel.isOrdered(): Boolean = type.props.contains(Rel.Prop.ORDERED)
+
+        /**
+         * Produce a union type from all the
+         */
+        private fun List<Rex>.toUnionType(): StaticType = AnyOfType(map { it.type }.toSet()).flatten()
+
+        private fun getElementTypeForFromSource(fromSourceType: StaticType): StaticType = when (fromSourceType) {
+            is BagType -> fromSourceType.elementType
+            is ListType -> fromSourceType.elementType
+            is AnyType -> ANY
+            is AnyOfType -> AnyOfType(fromSourceType.types.map { getElementTypeForFromSource(it) }.toSet())
+            // All the other types coerce into a bag of themselves (including null/missing/sexp).
+            else -> fromSourceType
+        }
 
         private fun assertAsInt(type: StaticType) =
             type.flatten().allTypes.any { variant -> variant is IntType }
@@ -1357,72 +1357,73 @@ internal class PlanTyper(
             relBinding(it.name, type)
         }
 
-    private fun StructType.withNullableFields(): StructType {
-        return copy(fields.map { it.copy(value = it.value.asNullable()) })
-    }
+        private fun StructType.withNullableFields(): StructType {
+            return copy(fields.map { it.copy(value = it.value.asNullable()) })
+        }
 
-    private fun excludeBindings(input: List<Rel.Binding>, item: Rel.Op.Exclude.Path): List<Rel.Binding> {
-        var matchedRoot = false
-        val output = input.map {
-            when (val root = item.root) {
-                is Rex.Op.Var.Unresolved -> {
-                    when (val id = root.identifier) {
-                        is Identifier.Symbol -> {
-                            if (id.isEquivalentTo(it.name)) {
-                                matchedRoot = true
-                                // recompute the StaticType of this binding after applying the exclusions
-                                val type = it.type.exclude(item.steps, lastStepOptional = false)
-                                it.copy(type = type)
-                            } else {
-                                it
+        private fun excludeBindings(input: List<Rel.Binding>, item: Rel.Op.Exclude.Path): List<Rel.Binding> {
+            var matchedRoot = false
+            val output = input.map {
+                when (val root = item.root) {
+                    is Rex.Op.Var.Unresolved -> {
+                        when (val id = root.identifier) {
+                            is Identifier.Symbol -> {
+                                if (id.isEquivalentTo(it.name)) {
+                                    matchedRoot = true
+                                    // recompute the StaticType of this binding after applying the exclusions
+                                    val type = it.type.exclude(item.steps, lastStepOptional = false)
+                                    it.copy(type = type)
+                                } else {
+                                    it
+                                }
                             }
+                            is Identifier.Qualified -> it
                         }
-                        is Identifier.Qualified -> it
                     }
+                    is Rex.Op.Var.Local, is Rex.Op.Var.Global -> it
                 }
-                is Rex.Op.Var.Local, is Rex.Op.Var.Global -> it
             }
+            if (!matchedRoot && item.root is Rex.Op.Var.Unresolved) handleUnresolvedExcludeRoot(item.root.identifier)
+            return output
         }
-        if (!matchedRoot && item.root is Rex.Op.Var.Unresolved) handleUnresolvedExcludeRoot(item.root.identifier)
-        return output
-    }
 
-    private fun Identifier.Symbol.isEquivalentTo(other: String): Boolean = when (caseSensitivity) {
-        Identifier.CaseSensitivity.SENSITIVE -> symbol.equals(other)
-        Identifier.CaseSensitivity.INSENSITIVE -> symbol.equals(other, ignoreCase = true)
-    }
+        private fun Identifier.Symbol.isEquivalentTo(other: String): Boolean = when (caseSensitivity) {
+            Identifier.CaseSensitivity.SENSITIVE -> symbol.equals(other)
+            Identifier.CaseSensitivity.INSENSITIVE -> symbol.equals(other, ignoreCase = true)
+        }
 
-    /**
-     * Pretty-print a path and its root type.
-     *
-     * @return
-     */
-    private fun Rex.Op.Path.debug(): String {
-        val steps = mutableListOf<String>()
-        var curr: Rex = rex(ANY, this)
-        while (true) {
-            curr = when (val op = curr.op) {
-                is Rex.Op.Path.Index -> {
-                    steps.add("${op.key}")
-                    op.root
-                }
-                is Rex.Op.Path.Key -> {
-                    val k = op.key.op
-                    if (k is Rex.Op.Lit && k.value is TextValue<*>) {
-                        steps.add("${k.value.string}")
-                    } else {
+        /**
+         * Pretty-print a path and its root type.
+         *
+         * @return
+         */
+        private fun Rex.Op.Path.debug(): String {
+            val steps = mutableListOf<String>()
+            var curr: Rex = rex(ANY, this)
+            while (true) {
+                curr = when (val op = curr.op) {
+                    is Rex.Op.Path.Index -> {
                         steps.add("${op.key}")
+                        op.root
                     }
-                    op.root
+                    is Rex.Op.Path.Key -> {
+                        val k = op.key.op
+                        if (k is Rex.Op.Lit && k.value is TextValue<*>) {
+                            steps.add("${k.value.string}")
+                        } else {
+                            steps.add("${op.key}")
+                        }
+                        op.root
+                    }
+                    is Rex.Op.Path.Symbol -> {
+                        steps.add(op.key)
+                        op.root
+                    }
+                    else -> break
                 }
-                is Rex.Op.Path.Symbol -> {
-                    steps.add(op.key)
-                    op.root
-                }
-                else -> break
             }
+            // curr is root
+            return "`${steps.joinToString(".")}` on root $curr"
         }
-        // curr is root
-        return "`${steps.joinToString(".")}` on root $curr"
     }
-}
+    
