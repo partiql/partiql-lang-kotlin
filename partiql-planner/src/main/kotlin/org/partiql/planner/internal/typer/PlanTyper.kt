@@ -1381,9 +1381,9 @@ internal class PlanTyper(
                         }
                     }
                     is Rex.Op.Var.Local, is Rex.Op.Var.Global -> it
+                    else -> it
                 }
             }
-            if (!matchedRoot && item.root is Rex.Op.Var.Unresolved) handleUnresolvedExcludeRoot(item.root.identifier)
             return output
         }
 

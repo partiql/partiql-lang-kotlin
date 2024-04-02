@@ -102,7 +102,6 @@ internal class Env(private val session: PartiQLPlanner.Session) {
                         path = item.handle.path.steps,
                         signature = fnSignature
                     ),
-                    parameters = fnSignature.parameters.map { it.type },
                     coercions = emptyList()
                 )
             }

@@ -3642,7 +3642,7 @@ class PlanTyperTestsPorted {
                 catalog = CATALOG_DB,
                 catalogPath = DB_SCHEMA_MARKETS,
                 query = "order_info.\"CUSTOMER_ID\" = 1",
-                expected = StaticType.NULL
+                expected = TYPE_BOOL
             ),
             SuccessTestCase(
                 name = "Case Sensitive success",
@@ -3677,9 +3677,10 @@ class PlanTyperTestsPorted {
                 catalog = CATALOG_DB,
                 catalogPath = DB_SCHEMA_MARKETS,
                 query = "non_existing_column = 1",
+                // non_existing_column get typed as missing
                 // Function resolves to EQ__ANY_ANY__BOOL
                 // Which can return BOOL Or NULL
-                expected = StaticType.NULL,
+                expected = TYPE_BOOL,
                 problemHandler = assertProblemExists(
                     ProblemGenerator.undefinedVariable(
                         insensitiveId("non_existing_column")

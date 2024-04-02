@@ -7,7 +7,7 @@ import org.partiql.parser.PartiQLParser
 import org.partiql.plan.Statement
 import org.partiql.plan.debug.PlanPrinter
 import org.partiql.planner.PartiQLPlanner
-import org.partiql.planner.PlanningProblemDetails
+import org.partiql.planner.internal.PlanningProblemDetails
 import org.partiql.planner.test.PartiQLTest
 import org.partiql.planner.test.PartiQLTestProvider
 import org.partiql.planner.util.ProblemCollector
