@@ -1,7 +1,7 @@
 package org.partiql.planner.internal.casts
 
+import org.partiql.planner.internal.ir.Ref
 import org.partiql.planner.internal.ir.Ref.Cast
-import org.partiql.planner.internal.ir.refCast
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
 import org.partiql.value.PartiQLValueType.ANY
@@ -107,7 +107,9 @@ internal class CastTable private constructor(
                 }
             }
             graph[NULL] = NULL.relationships {
-                coercion(NULL)
+                PartiQLValueType.values().filterNot { it == ANY || it == MISSING }.forEach {
+                    coercion(it, isNullable = true)
+                }
             }
             graph[MISSING] = MISSING.relationships {
                 coercion(MISSING)
@@ -312,16 +314,16 @@ internal class CastTable private constructor(
 
         fun build() = relationships
 
-        fun coercion(target: PartiQLValueType) {
-            relationships[target] = refCast(operand, target, Cast.Safety.COERCION)
+        fun coercion(target: PartiQLValueType, isNullable: Boolean = false) {
+            relationships[target] = Cast(operand, target, Ref.Cast.Safety.COERCION, isNullable)
         }
 
-        fun explicit(target: PartiQLValueType) {
-            relationships[target] = refCast(operand, target, Cast.Safety.EXPLICIT)
+        fun explicit(target: PartiQLValueType, isNullable: Boolean = false) {
+            relationships[target] = Cast(operand, target, Ref.Cast.Safety.EXPLICIT, isNullable)
         }
 
-        fun unsafe(target: PartiQLValueType) {
-            relationships[target] = refCast(operand, target, Cast.Safety.UNSAFE)
+        fun unsafe(target: PartiQLValueType, isNullable: Boolean = false) {
+            relationships[target] = Cast(operand, target, Ref.Cast.Safety.UNSAFE, isNullable)
         }
     }
 }

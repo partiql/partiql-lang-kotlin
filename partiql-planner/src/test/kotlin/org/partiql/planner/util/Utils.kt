@@ -184,9 +184,11 @@ val castTable: ((StaticType, StaticType) -> CastType) = { from, to ->
             is MissingType -> CastType.COERCION
             else -> CastType.UNSAFE
         }
-        is NullType -> when (to) {
-            is NullType -> CastType.COERCION
-            else -> CastType.UNSAFE
+        is NullType -> {
+            when (to) {
+                is MissingType -> CastType.UNSAFE
+                else -> CastType.COERCION
+            }
         }
         is StringType ->
             when (to) {

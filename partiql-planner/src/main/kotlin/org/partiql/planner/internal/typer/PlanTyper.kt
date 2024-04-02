@@ -580,7 +580,10 @@ internal class PlanTyper(
 
         override fun visitRexOpCastResolved(node: Rex.Op.Cast.Resolved, ctx: StaticType?): Rex {
             val missable = node.arg.type.isMissable() || node.cast.safety == UNSAFE
-            var type = node.cast.target.toNonNullStaticType()
+            var type = when (node.cast.isNullable) {
+                true -> node.cast.target.toStaticType()
+                false -> node.cast.target.toNonNullStaticType()
+            }
             if (missable) {
                 type = unionOf(type, MISSING)
             }
@@ -1182,7 +1185,7 @@ internal class PlanTyper(
                 // AKA, the Function IS MISSING
                 // return signature return type
                 !fn.isMissable && !fn.isMissingCall && !fn.isNullable && !fn.isNullCall -> fn.returns.toNonNullStaticType()
-                isNull || (!fn.isMissable && hadMissing) -> NULL
+                isNull || (!fn.isMissable && hadMissing) -> fn.returns.toStaticType()
                 isNullable -> fn.returns.toStaticType()
                 else -> fn.returns.toNonNullStaticType()
             }

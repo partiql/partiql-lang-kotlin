@@ -21,20 +21,21 @@ import org.partiql.value.PartiQLValueType
  */
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal class ExprCallDynamic(
-    private val candidates: List<Candidate>,
+    candidates: Array<Candidate>,
     private val args: Array<Operator.Expr>
 ) : Operator.Expr {
 
+    private val candidateIndex = CandidateIndex.All(candidates)
+
     override fun eval(env: Environment): PartiQLValue {
         val actualArgs = args.map { it.eval(env) }.toTypedArray()
-        candidates.forEach { candidate ->
-            if (candidate.matches(actualArgs)) {
-                return candidate.eval(actualArgs, env)
-            }
+        val actualTypes = actualArgs.map { it.type }
+        candidateIndex.get(actualTypes)?.let {
+            return it.eval(actualArgs, env)
         }
         val errorString = buildString {
             val argString = actualArgs.joinToString(", ")
-            append("Could not dynamically find function for arguments $argString in $candidates.")
+            append("Could not dynamically find function (${candidateIndex.name}) for arguments $argString.")
         }
         throw TypeCheckException(errorString)
     }
@@ -47,12 +48,10 @@ internal class ExprCallDynamic(
      *
      * @see ExprCallDynamic
      */
-    internal class Candidate(
+    data class Candidate(
         val fn: Fn,
         val coercions: Array<Ref.Cast?>
     ) {
-
-        private val signatureParameters = fn.signature.parameters.map { it.type }.toTypedArray()
 
         fun eval(originalArgs: Array<PartiQLValue>, env: Environment): PartiQLValue {
             val args = originalArgs.mapIndexed { i, arg ->
@@ -63,32 +62,156 @@ internal class ExprCallDynamic(
             }.toTypedArray()
             return fn.invoke(args)
         }
+    }
 
-        internal fun matches(inputs: Array<PartiQLValue>): Boolean {
-            for (i in inputs.indices) {
-                val inputType = inputs[i].type
-                val parameterType = signatureParameters[i]
-                val c = coercions[i]
-                when (c) {
-                    // coercion might be null if one of the following is true
-                    // Function parameter is ANY,
-                    // Input type is null
-                    // input type is the same as function parameter
-                    null -> {
-                        if (!(inputType == parameterType || inputType == PartiQLValueType.NULL || parameterType == PartiQLValueType.ANY)) {
-                            return false
+    private sealed interface CandidateIndex {
+
+        public fun get(args: List<PartiQLValueType>): Candidate?
+
+        /**
+         * Preserves the original ordering of the passed-in candidates while making it faster to lookup matching
+         * functions. Utilizes both [Direct] and [Indirect].
+         *
+         * Say a user passes in the following ordered candidates:
+         * [
+         *      foo(int16, int16) -> int16,
+         *      foo(int32, int32) -> int32,
+         *      foo(int64, int64) -> int64,
+         *      foo(string, string) -> string,
+         *      foo(struct, struct) -> struct,
+         *      foo(numeric, numeric) -> numeric,
+         *      foo(int64, dynamic) -> dynamic,
+         *      foo(struct, dynamic) -> dynamic,
+         *      foo(bool, bool) -> bool
+         * ]
+         *
+         * With the above candidates, the [CandidateIndex.All] will maintain the original ordering by utilizing:
+         * - [CandidateIndex.Direct] to match hashable runtime types
+         * - [CandidateIndex.Indirect] to match the dynamic type
+         *
+         * For the above example, the internal representation of [CandidateIndex.All] is a list of
+         * [CandidateIndex.Direct] and [CandidateIndex.Indirect] that looks like:
+         * ALL listOf(
+         *      DIRECT hashMap(
+         *          [int16, int16] --> foo(int16, int16) -> int16,
+         *          [int32, int32] --> foo(int32, int32) -> int32,
+         *          [int64, int64] --> foo(int64, int64) -> int64
+         *          [string, string] --> foo(string, string) -> string,
+         *          [struct, struct] --> foo(struct, struct) -> struct,
+         *          [numeric, numeric] --> foo(numeric, numeric) -> numeric
+         *      ),
+         *      INDIRECT listOf(
+         *          foo(int64, dynamic) -> dynamic,
+         *          foo(struct, dynamic) -> dynamic
+         *      ),
+         *      DIRECT hashMap(
+         *          [bool, bool] --> foo(bool, bool) -> bool
+         *      )
+         * )
+         *
+         * @param candidates
+         */
+        class All(
+            candidates: Array<Candidate>,
+        ) : CandidateIndex {
+
+            private val lookups: List<CandidateIndex>
+            internal val name: String = candidates.first().fn.signature.name
+
+            init {
+                val lookupsMutable = mutableListOf<CandidateIndex>()
+                val accumulator = mutableListOf<Pair<List<PartiQLValueType>, Candidate>>()
+
+                // Indicates that we are currently processing dynamic candidates that accept ANY.
+                var activelyProcessingAny = true
+
+                candidates.forEach { candidate ->
+                    // Gather the input types to the dynamic invocation
+                    val lookupTypes = candidate.coercions.mapIndexed { index, cast ->
+                        when (cast) {
+                            null -> candidate.fn.signature.parameters[index].type
+                            else -> cast.input
                         }
                     }
-                    else -> {
-                        // checking the input type is expected by the coercion
-                        if (inputType != c.input) return false
-                        // checking the result is expected by the function signature
-                        // this should branch should never be reached, but leave it here for clarity
-                        if (c.target != parameterType) error("Internal Error: Cast Target does not match Function Parameter")
+                    val parametersIncludeAny = lookupTypes.any { it == PartiQLValueType.ANY }
+                    // A way to simplify logic further below. If it's empty, add something and set the processing type.
+                    if (accumulator.isEmpty()) {
+                        activelyProcessingAny = parametersIncludeAny
+                        accumulator.add(lookupTypes to candidate)
+                        return@forEach
+                    }
+                    when (parametersIncludeAny) {
+                        true -> when (activelyProcessingAny) {
+                            true -> accumulator.add(lookupTypes to candidate)
+                            false -> {
+                                activelyProcessingAny = true
+                                lookupsMutable.add(Direct.of(accumulator.toList()))
+                                accumulator.clear()
+                                accumulator.add(lookupTypes to candidate)
+                            }
+                        }
+                        false -> when (activelyProcessingAny) {
+                            false -> accumulator.add(lookupTypes to candidate)
+                            true -> {
+                                activelyProcessingAny = false
+                                lookupsMutable.add(Indirect(accumulator.toList()))
+                                accumulator.clear()
+                                accumulator.add(lookupTypes to candidate)
+                            }
+                        }
                     }
                 }
+                // Add any remaining candidates (that we didn't submit due to not ending while switching)
+                when (accumulator.isEmpty()) {
+                    true -> { /* Do nothing! */ }
+                    false -> when (activelyProcessingAny) {
+                        true -> lookupsMutable.add(Indirect(accumulator.toList()))
+                        false -> lookupsMutable.add(Direct.of(accumulator.toList()))
+                    }
+                }
+                this.lookups = lookupsMutable
             }
-            return true
+
+            override fun get(args: List<PartiQLValueType>): Candidate? {
+                return this.lookups.firstNotNullOfOrNull { it.get(args) }
+            }
+        }
+
+        /**
+         * An O(1) structure to quickly find directly matching dynamic candidates. This is specifically used for runtime
+         * types that can be matched directly. AKA int32, int64, etc. This does NOT include [PartiQLValueType.ANY].
+         */
+        data class Direct private constructor(val directCandidates: HashMap<List<PartiQLValueType>, Candidate>) : CandidateIndex {
+
+            companion object {
+                internal fun of(candidates: List<Pair<List<PartiQLValueType>, Candidate>>): Direct {
+                    val candidateMap = java.util.HashMap<List<PartiQLValueType>, Candidate>()
+                    candidateMap.putAll(candidates)
+                    return Direct(candidateMap)
+                }
+            }
+
+            override fun get(args: List<PartiQLValueType>): Candidate? {
+                return directCandidates[args]
+            }
+        }
+
+        /**
+         * Holds all candidates that expect a [PartiQLValueType.ANY] on input. This maintains the original
+         * precedence order.
+         */
+        data class Indirect(private val candidates: List<Pair<List<PartiQLValueType>, Candidate>>) : CandidateIndex {
+            override fun get(args: List<PartiQLValueType>): Candidate? {
+                candidates.forEach { (types, candidate) ->
+                    for (i in args.indices) {
+                        if (args[i] != types[i] && types[i] != PartiQLValueType.ANY) {
+                            return@forEach
+                        }
+                    }
+                    return candidate
+                }
+                return null
+            }
         }
     }
 }

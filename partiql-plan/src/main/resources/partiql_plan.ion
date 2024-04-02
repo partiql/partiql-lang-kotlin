@@ -41,6 +41,7 @@ ref::{
     cast::{
       input: partiql_value_type,
       target: partiql_value_type,
+      isNullable: bool
     }
   ]
 }
@@ -127,12 +128,10 @@ rex::{
           // ABS(INT32) -> INT32 or ABS(DEC) -> DEC. In this scenario, we maintain the two potential candidates.
           //
           // @param fn - represents the function to invoke (ex: ABS(INT32) -> INT32)
-          // @param parameters - represents the input type(s) to match. (ex: INT32)
           // @param coercions - represents the optional coercion to use on the argument(s). It will be NULL if no coercion
           //  is necessary.
           candidate::{
             fn: ref,
-            parameters: list::[partiql_value_type],
             coercions: list::[optional::'.ref.cast'],
           }
         ]

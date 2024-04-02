@@ -3,7 +3,6 @@
 
 package org.partiql.spi.connector.sql.builtins
 
-import org.partiql.errors.TypeCheckException
 import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnParameter
@@ -26,7 +25,7 @@ internal object Fn_NOT__BOOL__BOOL : Fn {
         isNullable = false,
         isNullCall = true,
         isMissable = false,
-        isMissingCall = false,
+        isMissingCall = true,
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
@@ -42,14 +41,13 @@ internal object Fn_NOT__MISSING__BOOL : Fn {
         name = "not",
         returns = BOOL,
         parameters = listOf(FnParameter("value", MISSING)),
-        isNullable = false,
+        isNullable = true,
         isNullCall = true,
         isMissable = false,
         isMissingCall = false,
     )
 
-    // TODO: determine what this behavior should be
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        throw TypeCheckException()
+        return boolValue(null)
     }
 }
