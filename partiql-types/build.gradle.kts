@@ -24,6 +24,15 @@ plugins {
     id(Plugins.binaryCompatibilityValidator) version Versions.binaryCompatibilityValidator
 }
 
+apiValidation {
+    /**
+     * Set of annotations that exclude API from being public.
+     * Typically, it is all kinds of `@InternalApi` annotations that mark
+     * effectively private API that cannot be actually private for technical reasons.
+     */
+    nonPublicMarkers.addAll(listOf("org.partiql.value.PartiQLValueExperimental", "org.partiql.value.PartiQLTimestampExperimental"))
+}
+
 dependencies {
     implementation(Deps.ionElement)
     implementation(Deps.kotlinxCollections)
