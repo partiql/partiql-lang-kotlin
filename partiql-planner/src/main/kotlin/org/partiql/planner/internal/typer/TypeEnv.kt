@@ -10,6 +10,8 @@ import org.partiql.planner.internal.ir.rexOpVarResolved
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
+import org.partiql.types.AnyOfType
+import org.partiql.types.AnyType
 import org.partiql.types.StaticType
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
@@ -85,30 +87,28 @@ internal class TypeEnv(public val schema: List<Rel.Binding>) {
         for (i in schema.indices) {
             val local = schema[i]
             val type = local.type
-            if (type is StructType) {
-                when (type.containsKey(name)) {
-                    true -> {
-                        if (c != null && known) {
-                            // TODO root was already definitively matched, emit ambiguous error.
+            when (type.containsKey(name)) {
+                true -> {
+                    if (c != null && known) {
+                        // TODO root was already definitively matched, emit ambiguous error.
+                        return null
+                    }
+                    c = rex(type, rexOpVarResolved(i))
+                    known = true
+                }
+                null -> {
+                    if (c != null) {
+                        if (known) {
+                            continue
+                        } else {
+                            // TODO we have more than one possible match, emit ambiguous error.
                             return null
                         }
-                        c = rex(type, rexOpVarResolved(i))
-                        known = true
                     }
-                    null -> {
-                        if (c != null) {
-                            if (known) {
-                                continue
-                            } else {
-                                // TODO we have more than one possible match, emit ambiguous error.
-                                return null
-                            }
-                        }
-                        c = rex(type, rexOpVarResolved(i))
-                        known = false
-                    }
-                    false -> continue
+                    c = rex(type, rexOpVarResolved(i))
+                    known = false
                 }
+                false -> continue
             }
         }
         return c
@@ -151,5 +151,46 @@ internal class TypeEnv(public val schema: List<Rel.Binding>) {
         }
         val closed = constraints.contains(TupleConstraint.Open(false))
         return if (closed) false else null
+    }
+
+    /**
+     * Searches for the [BindingName] within the given [StaticType].
+     *
+     * Returns
+     *  - true  iff known to contain key
+     *  - false iff known to NOT contain key
+     *  - null  iff NOT known to contain key
+     *
+     * @param name
+     * @return
+     */
+    private fun StaticType.containsKey(name: BindingName): Boolean? {
+        return when (val type = this.flatten()) {
+            is StructType -> type.containsKey(name)
+            is AnyOfType -> {
+                var anyKnownToContainKey = false
+                var anyKnownToNotContainKey = false
+                var anyNotKnownToContainKey = false
+                for (t in type.allTypes) {
+                    val containsKey = t.containsKey(name)
+                    anyKnownToContainKey = anyKnownToContainKey || (containsKey == true)
+                    anyKnownToNotContainKey = anyKnownToNotContainKey || (containsKey == false)
+                    anyNotKnownToContainKey = anyNotKnownToContainKey || (containsKey == null)
+                }
+                when {
+                    // There are:
+                    // - No subtypes that are known to not contain the key
+                    // - No subtypes that are not known to contain the key
+                    anyKnownToNotContainKey.not() && anyNotKnownToContainKey.not() -> true
+                    // There are:
+                    // - No subtypes that are known to contain the key
+                    // - No subtypes that are not known to contain the key
+                    anyKnownToContainKey.not() && anyNotKnownToContainKey.not() -> false
+                    else -> null
+                }
+            }
+            is AnyType -> null
+            else -> false
+        }
     }
 }

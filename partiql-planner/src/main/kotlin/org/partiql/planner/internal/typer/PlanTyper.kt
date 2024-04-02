@@ -70,6 +70,7 @@ import org.partiql.planner.internal.ir.rexOpStructField
 import org.partiql.planner.internal.ir.rexOpTupleUnion
 import org.partiql.planner.internal.ir.statementQuery
 import org.partiql.planner.internal.ir.util.PlanRewriter
+import org.partiql.planner.internal.transforms.PlanTransform
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
@@ -451,8 +452,8 @@ internal class PlanTyper(
             }
             val resolvedVar = env.resolve(path, locals, strategy)
             if (resolvedVar == null) {
-                handleUndefinedVariable(path.steps.last())
-                return rex(ANY, rexOpErr("Undefined variable ${node.identifier}"))
+                val details = handleUndefinedVariable(node.identifier, locals.schema.map { it.name }.toSet())
+                return rex(ANY, rexOpErr(details.message))
             }
             return visitRex(resolvedVar, null)
         }
@@ -1266,17 +1267,9 @@ internal class PlanTyper(
          *     to each row of T and eliminating null values <--- all NULL values are eliminated as inputs
          */
         fun resolveAgg(agg: Agg.Unresolved, arguments: List<Rex>): Pair<Rel.Op.Aggregate.Call, StaticType> {
-            var missingArg = false
             val args = arguments.map {
-                val arg = visitRex(it, null)
-                if (arg.type.isMissable()) missingArg = true
+                val arg = visitRex(it, it.type)
                 arg
-            }
-
-            //
-            if (missingArg) {
-                handleAlwaysMissing()
-                return relOpAggregateCall(agg, listOf(rexErr("MISSING"))) to MissingType
             }
 
             // Try to match the arguments to functions defined in the catalog
@@ -1399,13 +1392,20 @@ internal class PlanTyper(
 
     // ERRORS
 
-    private fun handleUndefinedVariable(name: BindingName) {
+    /**
+     * Invokes [onProblem] with a newly created [PlanningProblemDetails.UndefinedVariable] and returns the
+     * [PlanningProblemDetails.UndefinedVariable].
+     */
+    private fun handleUndefinedVariable(name: Identifier, locals: Set<String>): PlanningProblemDetails.UndefinedVariable {
+        val planName = PlanTransform.visitIdentifier(name, onProblem)
+        val details = PlanningProblemDetails.UndefinedVariable(planName, locals)
         onProblem(
             Problem(
                 sourceLocation = UNKNOWN_PROBLEM_LOCATION,
-                details = PlanningProblemDetails.UndefinedVariable(name.name, name.bindingCase == BindingCase.SENSITIVE)
+                details = details
             )
         )
+        return details
     }
 
     private fun handleUnexpectedType(actual: StaticType, expected: Set<StaticType>) {
