@@ -3,8 +3,6 @@ package org.partiql.planner.internal
 import org.partiql.planner.internal.ir.Ref
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnSignature
-import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType
 
 /**
  * Result of matching an unresolved function.
@@ -18,7 +16,7 @@ internal sealed class FnMatch {
      * @property signature
      * @property mapping
      */
-    class Static(
+    data class Static(
         val signature: FnSignature,
         val mapping: Array<Ref.Cast?>,
     ) : FnMatch() {
@@ -29,11 +27,24 @@ internal sealed class FnMatch {
         val exact: Int = mapping.count { it != null }
 
         override fun equals(other: Any?): Boolean {
-            if (other !is Static) return false
-            return signature.equals(other.signature)
+            if (this === other) return true
+            if (javaClass != other?.javaClass) return false
+
+            other as Static
+
+            if (signature != other.signature) return false
+            if (!mapping.contentEquals(other.mapping)) return false
+            if (exact != other.exact) return false
+
+            return true
         }
 
-        override fun hashCode(): Int = signature.hashCode()
+        override fun hashCode(): Int {
+            var result = signature.hashCode()
+            result = 31 * result + mapping.contentHashCode()
+            result = 31 * result + exact
+            return result
+        }
     }
 
     /**
@@ -43,19 +54,7 @@ internal sealed class FnMatch {
      * @property exhaustive     True if all argument permutations (branches) are matched.
      */
     data class Dynamic(
-        val candidates: List<Candidate>,
+        val candidates: List<Static>,
         val exhaustive: Boolean,
-    ) : FnMatch() {
-
-        /**
-         * Represents a candidate of dynamic dispatch.
-         *
-         * @property fn             Function to invoke.
-         * @property parameters     Represents the input type(s) to match. (ex: INT32)
-         */
-        data class Candidate @OptIn(PartiQLValueExperimental::class) constructor(
-            val fn: Static,
-            val parameters: List<PartiQLValueType>
-        )
-    }
+    ) : FnMatch()
 }

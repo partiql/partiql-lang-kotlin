@@ -119,10 +119,9 @@ internal class Env(private val session: PartiQLPlanner.Session) {
                         fn = refFn(
                             catalog = item.catalog,
                             path = item.handle.path.steps,
-                            signature = it.fn.signature,
+                            signature = it.signature,
                         ),
-                        parameters = it.parameters,
-                        coercions = it.fn.mapping.toList(),
+                        coercions = it.mapping.toList(),
                     )
                 }
                 // Rewrite as a dynamic call to be typed by PlanTyper

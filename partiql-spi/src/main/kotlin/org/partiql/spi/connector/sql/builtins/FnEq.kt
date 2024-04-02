@@ -69,6 +69,7 @@ internal object Fn_EQ__ANY_ANY__BOOL : Fn {
 
     private val comparator = PartiQLValue.comparator()
 
+    // Since the ANY_ANY function is the catch-all, we must be able to take in nulls. Therefore, isNullCall must be false.
     override val signature = FnSignature(
         name = "eq",
         returns = BOOL,
@@ -77,7 +78,7 @@ internal object Fn_EQ__ANY_ANY__BOOL : Fn {
             FnParameter("rhs", ANY),
         ),
         isNullable = false,
-        isNullCall = true,
+        isNullCall = false,
         isMissable = false,
         isMissingCall = false,
     )
@@ -110,10 +111,9 @@ internal object Fn_EQ__BOOL_BOOL__BOOL : Fn {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val lhs = args[0]
-        val rhs = args[1]
-        if (lhs.type == MISSING || rhs.type == MISSING) return boolValue(null)
-        return boolValue(lhs.check<BoolValue>() == rhs.check<BoolValue>())
+        val lhs = args[0].check<BoolValue>()
+        val rhs = args[1].check<BoolValue>()
+        return boolValue(lhs == rhs)
     }
 }
 
@@ -134,10 +134,9 @@ internal object Fn_EQ__INT8_INT8__BOOL : Fn {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val lhs = args[0]
-        val rhs = args[1]
-        if (lhs.type == MISSING || rhs.type == MISSING) return boolValue(null)
-        return boolValue(lhs.check<Int8Value>() == rhs.check<Int8Value>())
+        val lhs = args[0].check<Int8Value>()
+        val rhs = args[1].check<Int8Value>()
+        return boolValue(lhs == rhs)
     }
 }
 
@@ -158,10 +157,9 @@ internal object Fn_EQ__INT16_INT16__BOOL : Fn {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val lhs = args[0]
-        val rhs = args[1]
-        if (lhs.type == MISSING || rhs.type == MISSING) return boolValue(null)
-        return boolValue(lhs.check<Int16Value>() == rhs.check<Int16Value>())
+        val lhs = args[0].check<Int16Value>()
+        val rhs = args[1].check<Int16Value>()
+        return boolValue(lhs == rhs)
     }
 }
 
@@ -182,10 +180,9 @@ internal object Fn_EQ__INT32_INT32__BOOL : Fn {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val lhs = args[0]
-        val rhs = args[1]
-        if (lhs.type == MISSING || rhs.type == MISSING) return boolValue(null)
-        return boolValue(lhs.check<Int32Value>() == rhs.check<Int32Value>())
+        val lhs = args[0].check<Int32Value>()
+        val rhs = args[1].check<Int32Value>()
+        return boolValue(lhs == rhs)
     }
 }
 
@@ -206,10 +203,9 @@ internal object Fn_EQ__INT64_INT64__BOOL : Fn {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val lhs = args[0]
-        val rhs = args[1]
-        if (lhs.type == MISSING || rhs.type == MISSING) return boolValue(null)
-        return boolValue(lhs.check<Int64Value>() == rhs.check<Int64Value>())
+        val lhs = args[0].check<Int64Value>()
+        val rhs = args[1].check<Int64Value>()
+        return boolValue(lhs == rhs)
     }
 }
 
@@ -230,10 +226,9 @@ internal object Fn_EQ__INT_INT__BOOL : Fn {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val lhs = args[0]
-        val rhs = args[1]
-        if (lhs.type == MISSING || rhs.type == MISSING) return boolValue(null)
-        return boolValue(lhs.check<IntValue>() == rhs.check<IntValue>())
+        val lhs = args[0].check<IntValue>()
+        val rhs = args[1].check<IntValue>()
+        return boolValue(lhs == rhs)
     }
 }
 
@@ -254,10 +249,9 @@ internal object Fn_EQ__DECIMAL_DECIMAL__BOOL : Fn {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val lhs = args[0]
-        val rhs = args[1]
-        if (lhs.type == MISSING || rhs.type == MISSING) return boolValue(null)
-        return boolValue(lhs.check<DecimalValue>() == rhs.check<DecimalValue>())
+        val lhs = args[0].check<DecimalValue>()
+        val rhs = args[1].check<DecimalValue>()
+        return boolValue(lhs == rhs)
     }
 }
 
@@ -278,10 +272,9 @@ internal object Fn_EQ__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__BOOL : Fn {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val lhs = args[0]
-        val rhs = args[1]
-        if (lhs.type == MISSING || rhs.type == MISSING) return boolValue(null)
-        return boolValue(lhs.check<DecimalValue>() == rhs.check<DecimalValue>())
+        val lhs = args[0].check<DecimalValue>()
+        val rhs = args[1].check<DecimalValue>()
+        return boolValue(lhs == rhs)
     }
 }
 
@@ -302,10 +295,9 @@ internal object Fn_EQ__FLOAT32_FLOAT32__BOOL : Fn {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val lhs = args[0]
-        val rhs = args[1]
-        if (lhs.type == MISSING || rhs.type == MISSING) return boolValue(null)
-        return boolValue(lhs.check<Float32Value>() == rhs.check<Float32Value>())
+        val lhs = args[0].check<Float32Value>()
+        val rhs = args[1].check<Float32Value>()
+        return boolValue(lhs == rhs)
     }
 }
 
@@ -326,10 +318,9 @@ internal object Fn_EQ__FLOAT64_FLOAT64__BOOL : Fn {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val lhs = args[0]
-        val rhs = args[1]
-        if (lhs.type == MISSING || rhs.type == MISSING) return boolValue(null)
-        return boolValue(lhs.check<Float64Value>() == rhs.check<Float64Value>())
+        val lhs = args[0].check<Float64Value>()
+        val rhs = args[1].check<Float64Value>()
+        return boolValue(lhs == rhs)
     }
 }
 
@@ -350,10 +341,9 @@ internal object Fn_EQ__CHAR_CHAR__BOOL : Fn {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val lhs = args[0]
-        val rhs = args[1]
-        if (lhs.type == MISSING || rhs.type == MISSING) return boolValue(null)
-        return boolValue(lhs.check<CharValue>() == rhs.check<CharValue>())
+        val lhs = args[0].check<CharValue>()
+        val rhs = args[1].check<CharValue>()
+        return boolValue(lhs == rhs)
     }
 }
 
@@ -374,10 +364,9 @@ internal object Fn_EQ__STRING_STRING__BOOL : Fn {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val lhs = args[0]
-        val rhs = args[1]
-        if (lhs.type == MISSING || rhs.type == MISSING) return boolValue(null)
-        return boolValue(lhs.check<StringValue>() == rhs.check<StringValue>())
+        val lhs = args[0].check<StringValue>()
+        val rhs = args[1].check<StringValue>()
+        return boolValue(lhs == rhs)
     }
 }
 
@@ -398,10 +387,9 @@ internal object Fn_EQ__SYMBOL_SYMBOL__BOOL : Fn {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val lhs = args[0]
-        val rhs = args[1]
-        if (lhs.type == MISSING || rhs.type == MISSING) return boolValue(null)
-        return boolValue(lhs.check<SymbolValue>() == rhs.check<SymbolValue>())
+        val lhs = args[0].check<SymbolValue>()
+        val rhs = args[1].check<SymbolValue>()
+        return boolValue(lhs == rhs)
     }
 }
 
@@ -422,10 +410,9 @@ internal object Fn_EQ__BINARY_BINARY__BOOL : Fn {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val lhs = args[0]
-        val rhs = args[1]
-        if (lhs.type == MISSING || rhs.type == MISSING) return boolValue(null)
-        return boolValue(lhs.check<BinaryValue>() == rhs.check<BinaryValue>())
+        val lhs = args[0].check<BinaryValue>()
+        val rhs = args[1].check<BinaryValue>()
+        return boolValue(lhs == rhs)
     }
 }
 
@@ -446,10 +433,9 @@ internal object Fn_EQ__BYTE_BYTE__BOOL : Fn {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val lhs = args[0]
-        val rhs = args[1]
-        if (lhs.type == MISSING || rhs.type == MISSING) return boolValue(null)
-        return boolValue(lhs.check<ByteValue>() == rhs.check<ByteValue>())
+        val lhs = args[0].check<ByteValue>()
+        val rhs = args[1].check<ByteValue>()
+        return boolValue(lhs == rhs)
     }
 }
 
@@ -470,10 +456,9 @@ internal object Fn_EQ__BLOB_BLOB__BOOL : Fn {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val lhs = args[0]
-        val rhs = args[1]
-        if (lhs.type == MISSING || rhs.type == MISSING) return boolValue(null)
-        return boolValue(lhs.check<BlobValue>() == rhs.check<BlobValue>())
+        val lhs = args[0].check<BlobValue>()
+        val rhs = args[1].check<BlobValue>()
+        return boolValue(lhs == rhs)
     }
 }
 
@@ -494,10 +479,9 @@ internal object Fn_EQ__CLOB_CLOB__BOOL : Fn {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val lhs = args[0]
-        val rhs = args[1]
-        if (lhs.type == MISSING || rhs.type == MISSING) return boolValue(null)
-        return boolValue(lhs.check<ClobValue>() == rhs.check<ClobValue>())
+        val lhs = args[0].check<ClobValue>()
+        val rhs = args[1].check<ClobValue>()
+        return boolValue(lhs == rhs)
     }
 }
 
@@ -518,10 +502,9 @@ internal object Fn_EQ__DATE_DATE__BOOL : Fn {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val lhs = args[0]
-        val rhs = args[1]
-        if (lhs.type == MISSING || rhs.type == MISSING) return boolValue(null)
-        return boolValue(lhs.check<DateValue>() == rhs.check<DateValue>())
+        val lhs = args[0].check<DateValue>()
+        val rhs = args[1].check<DateValue>()
+        return boolValue(lhs == rhs)
     }
 }
 
@@ -542,10 +525,9 @@ internal object Fn_EQ__TIME_TIME__BOOL : Fn {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val lhs = args[0]
-        val rhs = args[1]
-        if (lhs.type == MISSING || rhs.type == MISSING) return boolValue(null)
-        return boolValue(lhs.check<TimeValue>() == rhs.check<TimeValue>())
+        val lhs = args[0].check<TimeValue>()
+        val rhs = args[1].check<TimeValue>()
+        return boolValue(lhs == rhs)
     }
 }
 
@@ -566,10 +548,9 @@ internal object Fn_EQ__TIMESTAMP_TIMESTAMP__BOOL : Fn {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val lhs = args[0]
-        val rhs = args[1]
-        if (lhs.type == MISSING || rhs.type == MISSING) return boolValue(null)
-        return boolValue(lhs.check<TimestampValue>() == rhs.check<TimestampValue>())
+        val lhs = args[0].check<TimestampValue>()
+        val rhs = args[1].check<TimestampValue>()
+        return boolValue(lhs == rhs)
     }
 }
 
@@ -590,10 +571,9 @@ internal object Fn_EQ__INTERVAL_INTERVAL__BOOL : Fn {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val lhs = args[0]
-        val rhs = args[1]
-        if (lhs.type == MISSING || rhs.type == MISSING) return boolValue(null)
-        return boolValue(lhs.check<IntervalValue>() == rhs.check<IntervalValue>())
+        val lhs = args[0].check<IntervalValue>()
+        val rhs = args[1].check<IntervalValue>()
+        return boolValue(lhs == rhs)
     }
 }
 
@@ -614,10 +594,9 @@ internal object Fn_EQ__BAG_BAG__BOOL : Fn {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val lhs = args[0]
-        val rhs = args[1]
-        if (lhs.type == MISSING || rhs.type == MISSING) return boolValue(null)
-        return boolValue(lhs.check<BagValue<*>>() == rhs.check<BagValue<*>>())
+        val lhs = args[0].check<BagValue<*>>()
+        val rhs = args[1].check<BagValue<*>>()
+        return boolValue(lhs == rhs)
     }
 }
 
@@ -638,10 +617,9 @@ internal object Fn_EQ__LIST_LIST__BOOL : Fn {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val lhs = args[0]
-        val rhs = args[1]
-        if (lhs.type == MISSING || rhs.type == MISSING) return boolValue(null)
-        return boolValue(lhs.check<ListValue<*>>() == rhs.check<ListValue<*>>())
+        val lhs = args[0].check<ListValue<*>>()
+        val rhs = args[1].check<ListValue<*>>()
+        return boolValue(lhs == rhs)
     }
 }
 
@@ -662,10 +640,9 @@ internal object Fn_EQ__SEXP_SEXP__BOOL : Fn {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val lhs = args[0]
-        val rhs = args[1]
-        if (lhs.type == MISSING || rhs.type == MISSING) return boolValue(null)
-        return boolValue(lhs.check<SexpValue<*>>() == rhs.check<SexpValue<*>>())
+        val lhs = args[0].check<SexpValue<*>>()
+        val rhs = args[1].check<SexpValue<*>>()
+        return boolValue(lhs == rhs)
     }
 }
 
@@ -686,10 +663,9 @@ internal object Fn_EQ__STRUCT_STRUCT__BOOL : Fn {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val lhs = args[0]
-        val rhs = args[1]
-        if (lhs.type == MISSING || rhs.type == MISSING) return boolValue(null)
-        return boolValue(lhs.check<StructValue<*>>() == rhs.check<StructValue<*>>())
+        val lhs = args[0].check<StructValue<*>>()
+        val rhs = args[1].check<StructValue<*>>()
+        return boolValue(lhs == rhs)
     }
 }
 
@@ -711,10 +687,8 @@ internal object Fn_EQ__NULL_NULL__BOOL : Fn {
 
     // TODO how does null comparison work? ie null.null == null.null or int8.null == null.null ??
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val lhs = args[0]
-        val rhs = args[1]
-        if (lhs.type == MISSING || rhs.type == MISSING) return boolValue(null)
-        return boolValue(lhs.isNull == rhs.isNull)
+        // According to the conformance tests, NULL = NULL -> NULL
+        return boolValue(null)
     }
 }
 
@@ -729,7 +703,7 @@ internal object Fn_EQ__MISSING_MISSING__BOOL : Fn {
             FnParameter("rhs", MISSING),
         ),
         isNullable = false,
-        isNullCall = true,
+        isNullCall = false,
         isMissable = false,
         isMissingCall = false,
     )
