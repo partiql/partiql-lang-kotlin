@@ -3,7 +3,6 @@
 
 package org.partiql.spi.connector.sql.builtins
 
-import org.partiql.errors.TypeCheckException
 import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnParameter
