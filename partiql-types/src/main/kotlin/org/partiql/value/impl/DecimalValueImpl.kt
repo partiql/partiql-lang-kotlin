@@ -26,6 +26,7 @@ import org.partiql.value.Int32Value
 import org.partiql.value.Int64Value
 import org.partiql.value.Int8Value
 import org.partiql.value.IntValue
+import org.partiql.value.NumericType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.float32Value
 import org.partiql.value.float64Value
@@ -36,13 +37,27 @@ import org.partiql.value.int8Value
 import org.partiql.value.intValue
 import org.partiql.value.util.PartiQLValueVisitor
 import java.math.BigDecimal
+import java.math.MathContext
 import java.math.RoundingMode
 
 @OptIn(PartiQLValueExperimental::class)
-internal data class DecimalValueImpl(
+internal class DecimalValueImpl private constructor(
     override val value: BigDecimal?,
+    override val type: NumericType,
     override val annotations: PersistentList<String>,
 ) : DecimalValue() {
+
+    constructor(value: BigDecimal?, precision: Int, scale: Int, annotations: PersistentList<String>) : this(
+        value?.round(MathContext(precision, RoundingMode.UNNECESSARY))?.setScale(scale),
+        NumericType(precision, scale),
+        annotations
+    )
+
+    constructor(value: BigDecimal?, annotations: PersistentList<String>) : this(
+        value,
+        NumericType(value?.precision() ?: 0, value?.scale() ?: 0),
+        annotations
+    )
 
     override fun copy(annotations: Annotations) = DecimalValueImpl(value, annotations.toPersistentList())
 
@@ -101,4 +116,24 @@ internal data class DecimalValueImpl(
     }
 
     override fun <R, C> accept(visitor: PartiQLValueVisitor<R, C>, ctx: C): R = visitor.visitDecimal(this, ctx)
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as DecimalValue
+
+        if (value != other.value) return false
+        if (type != other.type) return false
+        if (annotations != other.annotations) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = value?.hashCode() ?: 0
+        result = 31 * result + type.hashCode()
+        result = 31 * result + annotations.hashCode()
+        return result
+    }
 }

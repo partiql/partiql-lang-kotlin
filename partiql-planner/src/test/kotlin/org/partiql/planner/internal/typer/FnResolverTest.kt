@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.fail
 import org.partiql.planner.internal.FnMatch
 import org.partiql.planner.internal.FnResolver
+import org.partiql.shape.PShape
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
@@ -63,9 +64,11 @@ class FnResolverTest {
 
         class Success(
             private val variants: List<FnSignature>,
-            private val inputs: List<StaticType>,
+            inputs: List<StaticType>,
             private val expectedImplicitCast: List<Boolean>,
         ) : Case() {
+
+            val inputs: List<PShape> = inputs.map { PShape.fromStaticType(it) }
 
             /**
              * Assert we match the function, and the appropriate implicit CASTs were returned.

@@ -3,6 +3,7 @@
 
 package org.partiql.spi.connector.sql.builtins
 
+import org.partiql.spi.connector.sql.builtins.internal.FnUtils
 import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnParameter
@@ -17,14 +18,14 @@ import org.partiql.value.Int8Value
 import org.partiql.value.IntValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType.DECIMAL_ARBITRARY
 import org.partiql.value.PartiQLValueType.FLOAT32
 import org.partiql.value.PartiQLValueType.FLOAT64
-import org.partiql.value.PartiQLValueType.INT
 import org.partiql.value.PartiQLValueType.INT16
 import org.partiql.value.PartiQLValueType.INT32
 import org.partiql.value.PartiQLValueType.INT64
 import org.partiql.value.PartiQLValueType.INT8
+import org.partiql.value.TypeIntBig
+import org.partiql.value.TypeNumericUnbounded
 import org.partiql.value.check
 import org.partiql.value.decimalValue
 import org.partiql.value.float32Value
@@ -125,10 +126,10 @@ internal object Fn_TIMES__INT_INT__INT : Fn {
 
     override val signature = FnSignature(
         name = "times",
-        returns = INT,
+        returns = TypeIntBig,
         parameters = listOf(
-            FnParameter("lhs", INT),
-            FnParameter("rhs", INT),
+            FnParameter("lhs", TypeIntBig),
+            FnParameter("rhs", TypeIntBig),
         ),
         isNullCall = true,
         isNullable = false,
@@ -141,15 +142,47 @@ internal object Fn_TIMES__INT_INT__INT : Fn {
     }
 }
 
+/**
+ * From SQL:1999 Section 6.26:
+ *
+ * Let S1 and S2 be the scale of the first and second operands respectively... The precision of the result of
+ * multiplication is implementation-defined, and the scale is S1 + S2.
+ */
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
-internal object Fn_TIMES__DECIMAL_ARBITRARY_DECIMAL_ARBITRARY__DECIMAL_ARBITRARY : Fn {
+internal object Fn_TIMES__NUMERIC_NUMERIC__NUMERIC {
+    val ALL = buildList<Fn> {
+        FnUtils.numericMultiplicationTypes().forEach { diadic ->
+            val fn = object : Fn {
+                override val signature = FnSignature(
+                    name = "times",
+                    returns = diadic.result,
+                    parameters = listOf(
+                        FnParameter("lhs", diadic.lhs),
+                        FnParameter("rhs", diadic.rhs),
+                    ),
+                    isNullCall = true,
+                    isNullable = false,
+                )
 
+                override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
+                    val arg0 = args[0].check<DecimalValue>().value!!
+                    val arg1 = args[1].check<DecimalValue>().value!!
+                    return decimalValue(arg0.times(arg1), diadic.result.precision, diadic.result.scale)
+                }
+            }
+            add(fn)
+        }
+    }
+}
+
+@OptIn(PartiQLValueExperimental::class, FnExperimental::class)
+internal object Fn_TIMES__BIGNUMERIC_BIGNUMERIC__BIGNUMERIC : Fn {
     override val signature = FnSignature(
         name = "times",
-        returns = DECIMAL_ARBITRARY,
+        returns = TypeNumericUnbounded,
         parameters = listOf(
-            FnParameter("lhs", DECIMAL_ARBITRARY),
-            FnParameter("rhs", DECIMAL_ARBITRARY),
+            FnParameter("lhs", TypeNumericUnbounded),
+            FnParameter("rhs", TypeNumericUnbounded),
         ),
         isNullCall = true,
         isNullable = false,

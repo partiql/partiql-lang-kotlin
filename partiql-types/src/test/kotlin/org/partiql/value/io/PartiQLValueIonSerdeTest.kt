@@ -234,7 +234,7 @@ class PartiQLValueIonSerdeTest {
                 ION.newFloat(123),
             ),
             oneWayTrip(
-                charValue('C'),
+                charValue("C"),
                 ION.newString("C"),
                 stringValue("C")
             ),

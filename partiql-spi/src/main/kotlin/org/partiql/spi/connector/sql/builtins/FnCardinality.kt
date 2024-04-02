@@ -9,7 +9,6 @@ import org.partiql.value.ListValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
-import org.partiql.value.SexpValue
 import org.partiql.value.StructValue
 import org.partiql.value.check
 import org.partiql.value.int32Value
@@ -48,25 +47,6 @@ internal object Fn_CARDINALITY__LIST__INT32 : Fn {
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val container = args[0].check<ListValue<*>>()
-        return int32Value(container.count())
-    }
-}
-
-@OptIn(PartiQLValueExperimental::class, FnExperimental::class)
-internal object Fn_CARDINALITY__SEXP__INT32 : Fn {
-
-    override val signature = FnSignature(
-        name = "cardinality",
-        returns = PartiQLValueType.INT32,
-        parameters = listOf(
-            FnParameter("container", PartiQLValueType.SEXP),
-        ),
-        isNullCall = true,
-        isNullable = false,
-    )
-
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val container = args[0].check<SexpValue<*>>()
         return int32Value(container.count())
     }
 }

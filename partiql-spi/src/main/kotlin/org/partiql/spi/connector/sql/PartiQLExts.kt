@@ -13,11 +13,9 @@ internal object PartiQLExts {
     val builtins = listOf(
         Fn_EXISTS__BAG__BOOL,
         Fn_EXISTS__LIST__BOOL,
-        Fn_EXISTS__SEXP__BOOL,
         Fn_EXISTS__STRUCT__BOOL,
         Fn_SIZE__BAG__INT32,
         Fn_SIZE__LIST__INT32,
-        Fn_SIZE__SEXP__INT32,
         Fn_SIZE__STRUCT__INT32
     )
 }

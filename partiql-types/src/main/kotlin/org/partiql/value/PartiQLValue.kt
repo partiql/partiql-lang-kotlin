@@ -35,7 +35,7 @@ internal typealias Annotations = List<String>
 @PartiQLValueExperimental
 public sealed interface PartiQLValue {
 
-    public val type: PartiQLValueType
+    public val type: PartiQLType
 
     public val annotations: Annotations
 
@@ -121,7 +121,7 @@ public sealed interface CollectionValue<T : PartiQLValue> : PartiQLValue, Iterab
 @PartiQLValueExperimental
 public abstract class BoolValue : ScalarValue<Boolean?> {
 
-    override val type: PartiQLValueType = PartiQLValueType.BOOL
+    override val type: PartiQLType = BoolType
 
     abstract override fun copy(annotations: Annotations): BoolValue
 
@@ -159,7 +159,7 @@ public sealed class NumericValue<T : Number> : ScalarValue<T> {
 @PartiQLValueExperimental
 public abstract class Int8Value : NumericValue<Byte>() {
 
-    override val type: PartiQLValueType = PartiQLValueType.INT8
+    override val type: PartiQLType = Int8Type
 
     abstract override fun copy(annotations: Annotations): Int8Value
 
@@ -171,7 +171,7 @@ public abstract class Int8Value : NumericValue<Byte>() {
 @PartiQLValueExperimental
 public abstract class Int16Value : NumericValue<Short>() {
 
-    override val type: PartiQLValueType = PartiQLValueType.INT16
+    override val type: PartiQLType = Int16Type
 
     abstract override fun copy(annotations: Annotations): Int16Value
 
@@ -183,7 +183,7 @@ public abstract class Int16Value : NumericValue<Short>() {
 @PartiQLValueExperimental
 public abstract class Int32Value : NumericValue<Int>() {
 
-    override val type: PartiQLValueType = PartiQLValueType.INT32
+    override val type: PartiQLType = Int32Type
 
     abstract override fun copy(annotations: Annotations): Int32Value
 
@@ -195,7 +195,7 @@ public abstract class Int32Value : NumericValue<Int>() {
 @PartiQLValueExperimental
 public abstract class Int64Value : NumericValue<Long>() {
 
-    override val type: PartiQLValueType = PartiQLValueType.INT64
+    override val type: PartiQLType = Int64Type
 
     abstract override fun copy(annotations: Annotations): Int64Value
 
@@ -207,8 +207,6 @@ public abstract class Int64Value : NumericValue<Long>() {
 @PartiQLValueExperimental
 public abstract class IntValue : NumericValue<BigInteger>() {
 
-    override val type: PartiQLValueType = PartiQLValueType.INT
-
     abstract override fun copy(annotations: Annotations): IntValue
 
     abstract override fun withAnnotations(annotations: Annotations): IntValue
@@ -218,8 +216,6 @@ public abstract class IntValue : NumericValue<BigInteger>() {
 
 @PartiQLValueExperimental
 public abstract class DecimalValue : NumericValue<BigDecimal>() {
-
-    override val type: PartiQLValueType = PartiQLValueType.DECIMAL_ARBITRARY
 
     abstract override fun copy(annotations: Annotations): DecimalValue
 
@@ -231,7 +227,7 @@ public abstract class DecimalValue : NumericValue<BigDecimal>() {
 @PartiQLValueExperimental
 public abstract class Float32Value : NumericValue<Float>() {
 
-    override val type: PartiQLValueType = PartiQLValueType.FLOAT32
+    override val type: PartiQLType = TypeReal
 
     abstract override fun copy(annotations: Annotations): Float32Value
 
@@ -243,7 +239,7 @@ public abstract class Float32Value : NumericValue<Float>() {
 @PartiQLValueExperimental
 public abstract class Float64Value : NumericValue<Double>() {
 
-    override val type: PartiQLValueType = PartiQLValueType.FLOAT64
+    override val type: PartiQLType = TypeDoublePrecision
 
     abstract override fun copy(annotations: Annotations): Float64Value
 
@@ -265,9 +261,7 @@ public sealed class TextValue<T> : ScalarValue<T> {
 }
 
 @PartiQLValueExperimental
-public abstract class CharValue : TextValue<Char>() {
-
-    override val type: PartiQLValueType = PartiQLValueType.CHAR
+public abstract class CharValue : TextValue<CharSequence>() {
 
     override val string: String?
         get() = value?.toString()
@@ -282,8 +276,6 @@ public abstract class CharValue : TextValue<Char>() {
 @PartiQLValueExperimental
 public abstract class StringValue : TextValue<String>() {
 
-    override val type: PartiQLValueType = PartiQLValueType.STRING
-
     override val string: String?
         get() = value
 
@@ -296,8 +288,6 @@ public abstract class StringValue : TextValue<String>() {
 
 @PartiQLValueExperimental
 public abstract class SymbolValue : TextValue<String>() {
-
-    override val type: PartiQLValueType = PartiQLValueType.SYMBOL
 
     override val string: String?
         get() = value
@@ -312,8 +302,6 @@ public abstract class SymbolValue : TextValue<String>() {
 @PartiQLValueExperimental
 public abstract class ClobValue : ScalarValue<ByteArray> {
 
-    override val type: PartiQLValueType = PartiQLValueType.CLOB
-
     abstract override fun copy(annotations: Annotations): ClobValue
 
     abstract override fun withAnnotations(annotations: Annotations): ClobValue
@@ -323,8 +311,6 @@ public abstract class ClobValue : ScalarValue<ByteArray> {
 
 @PartiQLValueExperimental
 public abstract class BinaryValue : ScalarValue<BitSet> {
-
-    override val type: PartiQLValueType = PartiQLValueType.BINARY
 
     abstract override fun copy(annotations: Annotations): BinaryValue
 
@@ -336,7 +322,7 @@ public abstract class BinaryValue : ScalarValue<BitSet> {
 @PartiQLValueExperimental
 public abstract class ByteValue : ScalarValue<Byte> {
 
-    override val type: PartiQLValueType = PartiQLValueType.BYTE
+    override val type: PartiQLType = ByteType
 
     abstract override fun copy(annotations: Annotations): ByteValue
 
@@ -346,21 +332,9 @@ public abstract class ByteValue : ScalarValue<Byte> {
 }
 
 @PartiQLValueExperimental
-public abstract class BlobValue : ScalarValue<ByteArray> {
-
-    override val type: PartiQLValueType = PartiQLValueType.BLOB
-
-    abstract override fun copy(annotations: Annotations): BlobValue
-
-    abstract override fun withAnnotations(annotations: Annotations): BlobValue
-
-    abstract override fun withoutAnnotations(): BlobValue
-}
-
-@PartiQLValueExperimental
 public abstract class DateValue : ScalarValue<Date> {
 
-    override val type: PartiQLValueType = PartiQLValueType.DATE
+    override val type: PartiQLType = DateType
 
     abstract override fun copy(annotations: Annotations): DateValue
 
@@ -372,8 +346,6 @@ public abstract class DateValue : ScalarValue<Date> {
 @PartiQLValueExperimental
 public abstract class TimeValue : ScalarValue<Time> {
 
-    override val type: PartiQLValueType = PartiQLValueType.TIME
-
     abstract override fun copy(annotations: Annotations): TimeValue
 
     abstract override fun withAnnotations(annotations: Annotations): TimeValue
@@ -383,8 +355,6 @@ public abstract class TimeValue : ScalarValue<Time> {
 
 @PartiQLValueExperimental
 public abstract class TimestampValue : ScalarValue<Timestamp> {
-
-    override val type: PartiQLValueType = PartiQLValueType.TIMESTAMP
 
     abstract override fun copy(annotations: Annotations): TimestampValue
 
@@ -396,8 +366,6 @@ public abstract class TimestampValue : ScalarValue<Timestamp> {
 @PartiQLValueExperimental
 public abstract class IntervalValue : ScalarValue<Long> {
 
-    override val type: PartiQLValueType = PartiQLValueType.INTERVAL
-
     abstract override fun copy(annotations: Annotations): IntervalValue
 
     abstract override fun withAnnotations(annotations: Annotations): IntervalValue
@@ -407,8 +375,6 @@ public abstract class IntervalValue : ScalarValue<Long> {
 
 @PartiQLValueExperimental
 public abstract class BagValue<T : PartiQLValue> : CollectionValue<T> {
-
-    override val type: PartiQLValueType = PartiQLValueType.BAG
 
     abstract override fun copy(annotations: Annotations): BagValue<T>
 
@@ -441,8 +407,6 @@ public abstract class BagValue<T : PartiQLValue> : CollectionValue<T> {
 @PartiQLValueExperimental
 public abstract class ListValue<T : PartiQLValue> : CollectionValue<T> {
 
-    override val type: PartiQLValueType = PartiQLValueType.LIST
-
     abstract override fun copy(annotations: Annotations): ListValue<T>
 
     abstract override fun withAnnotations(annotations: Annotations): ListValue<T>
@@ -471,40 +435,7 @@ public abstract class ListValue<T : PartiQLValue> : CollectionValue<T> {
 }
 
 @PartiQLValueExperimental
-public abstract class SexpValue<T : PartiQLValue> : CollectionValue<T> {
-
-    override val type: PartiQLValueType = PartiQLValueType.SEXP
-
-    abstract override fun copy(annotations: Annotations): SexpValue<T>
-
-    abstract override fun withAnnotations(annotations: Annotations): SexpValue<T>
-
-    abstract override fun withoutAnnotations(): SexpValue<T>
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is SexpValue<*>) return false
-        if (other.annotations != this.annotations) return false
-
-        // one (or both) null.sexp
-        if (this.isNull || other.isNull) return this.isNull == other.isNull
-
-        // both not null, compare values
-        val lhs = this.toList()
-        val rhs = other.toList()
-        return lhs == rhs
-    }
-
-    override fun hashCode(): Int {
-        // TODO
-        return type.hashCode()
-    }
-}
-
-@PartiQLValueExperimental
 public abstract class StructValue<T : PartiQLValue> : PartiQLValue {
-
-    override val type: PartiQLValueType = PartiQLValueType.STRUCT
 
     public abstract val fields: Iterable<String>
 
@@ -569,7 +500,7 @@ public abstract class StructValue<T : PartiQLValue> : PartiQLValue {
 @PartiQLValueExperimental
 public abstract class NullValue : PartiQLValue {
 
-    override val type: PartiQLValueType = PartiQLValueType.NULL
+    override val type: PartiQLType = NullType
 
     override val isNull: Boolean = true
 
@@ -585,7 +516,7 @@ public abstract class NullValue : PartiQLValue {
 @PartiQLValueExperimental
 public abstract class MissingValue : PartiQLValue {
 
-    override val type: PartiQLValueType = PartiQLValueType.MISSING
+    override val type: PartiQLType = MissingType
 
     override val isNull: Boolean = false
 

@@ -23,6 +23,9 @@ import org.partiql.lang.eval.EvaluationSession
 import org.partiql.parser.PartiQLParser
 import org.partiql.plan.debug.PlanPrinter
 import org.partiql.planner.PartiQLPlanner
+import org.partiql.spi.connector.ConnectorSession
+import org.partiql.spi.connector.sql.SqlConnector
+import org.partiql.spi.connector.sql.SqlMetadata
 import picocli.CommandLine
 import java.io.PrintStream
 import java.nio.file.Paths
@@ -67,12 +70,28 @@ object Debug {
         out.info("-- AST ----------")
         AstPrinter.append(out, statement)
 
+        // Create a generic connector without any UDFs or globals
+        val queryId = UUID.randomUUID().toString()
+        val userId = "debug"
+        val connector = object : SqlConnector() {
+            override fun getMetadata(session: ConnectorSession): SqlMetadata {
+                return SqlMetadata(session, this.info)
+            }
+        }
+        val connectorSession = object : ConnectorSession {
+            override fun getQueryId(): String = queryId
+            override fun getUserId(): String = userId
+        }
+        val metadata = connector.getMetadata(connectorSession)
+
         // Plan
         val sess = PartiQLPlanner.Session(
-            queryId = UUID.randomUUID().toString(),
-            userId = "debug",
+            queryId = queryId,
+            userId = userId,
             currentCatalog = "default",
-            catalogs = emptyMap(),
+            catalogs = mapOf(
+                "default" to metadata
+            ),
         )
         val result = planner.plan(statement, sess).plan
         out.info("-- Plan ----------")

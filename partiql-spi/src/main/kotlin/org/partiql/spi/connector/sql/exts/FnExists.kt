@@ -9,7 +9,6 @@ import org.partiql.value.ListValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
-import org.partiql.value.SexpValue
 import org.partiql.value.StructValue
 import org.partiql.value.boolValue
 import org.partiql.value.check
@@ -49,26 +48,6 @@ internal object Fn_EXISTS__LIST__BOOL : Fn {
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val container = args[0].check<ListValue<*>>()
-        val exists = container.iterator().hasNext()
-        return boolValue(exists)
-    }
-}
-
-@OptIn(PartiQLValueExperimental::class, FnExperimental::class)
-internal object Fn_EXISTS__SEXP__BOOL : Fn {
-
-    override val signature = FnSignature(
-        name = "exists",
-        returns = PartiQLValueType.BOOL,
-        parameters = listOf(
-            FnParameter("container", PartiQLValueType.SEXP),
-        ),
-        isNullCall = true,
-        isNullable = false,
-    )
-
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val container = args[0].check<SexpValue<*>>()
         val exists = container.iterator().hasNext()
         return boolValue(exists)
     }

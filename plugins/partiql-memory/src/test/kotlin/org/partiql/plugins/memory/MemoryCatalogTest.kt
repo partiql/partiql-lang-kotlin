@@ -1,6 +1,7 @@
 package org.partiql.plugins.memory
 
 import org.junit.jupiter.api.Test
+import org.partiql.shape.PShape
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
@@ -44,7 +45,7 @@ class MemoryCatalogTest {
         val handle = catalog.find(requested)
         val descriptor = handle!!.entity.getType()
         assert(requested.matches(handle.path))
-        assert(expected == descriptor)
+        assert(PShape.fromStaticType(expected) == descriptor)
     }
 
     @Test
@@ -72,7 +73,7 @@ class MemoryCatalogTest {
         val expectedObjectType = StructType(fields = listOf(StructType.Field("a", StaticType.INT2)))
 
         assert(expectConnectorPath == handle.path)
-        assert(expectedObjectType == descriptor)
+        assert(PShape.fromStaticType(expectedObjectType) == descriptor)
     }
 
     @Test
@@ -88,7 +89,7 @@ class MemoryCatalogTest {
         val expectedObjectType = BagType(StructType(fields = listOf(StructType.Field("a", StaticType.INT2))))
 
         assert(requested.matches(handle.path))
-        assert(expectedObjectType == descriptor)
+        assert(PShape.fromStaticType(expectedObjectType) == descriptor)
     }
 
     @Test
@@ -106,6 +107,6 @@ class MemoryCatalogTest {
         val expectConnectorPath = ConnectorPath.of("schema", "tbl")
 
         assert(expectConnectorPath == handle.path)
-        assert(expectedObjectType == descriptor)
+        assert(PShape.fromStaticType(expectedObjectType) == descriptor)
     }
 }

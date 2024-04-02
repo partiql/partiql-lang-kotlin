@@ -1,5 +1,6 @@
 package org.partiql.spi.fn
 
+import org.partiql.value.PartiQLType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
 
@@ -23,7 +24,7 @@ import org.partiql.value.PartiQLValueType
 @OptIn(PartiQLValueExperimental::class)
 public data class FnSignature(
     @JvmField public val name: String,
-    @JvmField public val returns: PartiQLValueType,
+    @JvmField public val returns: PartiQLType,
     @JvmField public val parameters: List<FnParameter>,
     @JvmField public val description: String? = null,
     @JvmField public val isDeterministic: Boolean = true,
@@ -33,15 +34,37 @@ public data class FnSignature(
     @JvmField public val isMissingCall: Boolean = true,
 ) {
 
+    public constructor(
+        name: String,
+        returns: PartiQLValueType,
+        parameters: List<FnParameter>,
+        description: String? = null,
+        isDeterministic: Boolean = true,
+        isNullable: Boolean = true,
+        isNullCall: Boolean = false,
+        isMissable: Boolean = true,
+        isMissingCall: Boolean = true,
+    ) : this(
+        name,
+        PartiQLType.fromLegacy(returns),
+        parameters,
+        description,
+        isDeterministic,
+        isNullable,
+        isNullCall,
+        isMissable,
+        isMissingCall
+    )
+
     /**
      * Symbolic name of this operator of the form NAME__INPUTS__RETURNS
      */
     public val specific: String = buildString {
         append(name.uppercase())
         append("__")
-        append(parameters.joinToString("_") { it.type.name })
+        append(parameters.joinToString("_") { it.type.toString() }) // TODO: We should probably support some other property like sqlName for NUMERIC_2_1
         append("__")
-        append(returns.name)
+        append(returns.toString()) // TODO: See the above TODO
     }
 
     /**

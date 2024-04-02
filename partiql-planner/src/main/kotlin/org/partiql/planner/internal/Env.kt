@@ -16,17 +16,18 @@ import org.partiql.planner.internal.ir.rexOpCallStatic
 import org.partiql.planner.internal.ir.rexOpCastResolved
 import org.partiql.planner.internal.ir.rexOpVarGlobal
 import org.partiql.planner.internal.typer.TypeEnv.Companion.toPath
-import org.partiql.planner.internal.typer.toRuntimeType
-import org.partiql.planner.internal.typer.toStaticType
+import org.partiql.shape.PShape
+import org.partiql.shape.PShape.Companion.isMissable
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
 import org.partiql.spi.connector.ConnectorMetadata
 import org.partiql.spi.fn.AggSignature
 import org.partiql.spi.fn.FnExperimental
-import org.partiql.types.StaticType
+import org.partiql.value.DynamicType
+import org.partiql.value.NullType
+import org.partiql.value.PartiQLType
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType
 
 /**
  * [Env] is similar to the database type environment from the PartiQL Specification. This includes resolution of
@@ -111,7 +112,7 @@ internal class Env(private val session: PartiQLPlanner.Session) {
                     )
                 }
                 // Rewrite as a dynamic call to be typed by PlanTyper
-                rex(StaticType.ANY, rexOpCallDynamic(args, candidates, match.exhaustive))
+                rex(DynamicType, rexOpCallDynamic(args, candidates, match.exhaustive))
             }
             is FnMatch.Static -> {
                 // Create an internal typed reference
@@ -124,11 +125,11 @@ internal class Env(private val session: PartiQLPlanner.Session) {
                 val coercions: List<Rex> = args.mapIndexed { i, arg ->
                     when (val cast = match.mapping[i]) {
                         null -> arg
-                        else -> rex(StaticType.ANY, rexOpCastResolved(cast, arg))
+                        else -> rex(DynamicType, rexOpCastResolved(cast, arg))
                     }
                 }
                 // Rewrite as a static call to be typed by PlanTyper
-                rex(StaticType.ANY, rexOpCallStatic(ref, coercions))
+                rex(DynamicType, rexOpCallStatic(ref, coercions))
             }
         }
     }
@@ -144,7 +145,7 @@ internal class Env(private val session: PartiQLPlanner.Session) {
             if (!hadMissingArg && arg.type.isMissable()) {
                 hadMissingArg = true
             }
-            arg.type.toRuntimeType()
+            arg.type.type
         }
         val match = match(candidates, parameters) ?: return null
         val agg = match.first
@@ -155,15 +156,14 @@ internal class Env(private val session: PartiQLPlanner.Session) {
         val coercions: List<Rex> = args.mapIndexed { i, arg ->
             when (val cast = mapping[i]) {
                 null -> arg
-                else -> rex(cast.target.toStaticType(), rexOpCastResolved(cast, arg))
+                else -> rex(cast.target, rexOpCastResolved(cast, arg))
             }
         }
         return relOpAggregateCallResolved(ref, setQuantifier, coercions)
     }
 
-    @OptIn(PartiQLValueExperimental::class)
-    fun resolveCast(input: Rex, target: PartiQLValueType): Rex.Op.Cast.Resolved? {
-        val operand = input.type.toRuntimeType()
+    fun resolveCast(input: Rex, target: PartiQLType): Rex.Op.Cast.Resolved? {
+        val operand = input.type.type
         val cast = casts.get(operand, target) ?: return null
         return rexOpCastResolved(cast, input)
     }
@@ -214,23 +214,32 @@ internal class Env(private val session: PartiQLPlanner.Session) {
     }
 
     @OptIn(FnExperimental::class, PartiQLValueExperimental::class)
-    private fun match(candidates: List<AggSignature>, args: List<PartiQLValueType>): Pair<AggSignature, Array<Ref.Cast?>>? {
+    private fun match(candidates: List<AggSignature>, args: List<PartiQLType>): Pair<AggSignature, Array<Ref.Cast?>>? {
+
+        val sortedCandidates = candidates
+            .filter { it.parameters.size == args.size }
+            .sortedWith(AggComparator)
+            .ifEmpty { return null }
+
         // 1. Check for an exact match
-        for (candidate in candidates) {
+        for (candidate in sortedCandidates) {
             if (candidate.matches(args)) {
                 return candidate to arrayOfNulls(args.size)
             }
         }
         // 2. Look for best match.
         var match: Pair<AggSignature, Array<Ref.Cast?>>? = null
-        for (candidate in candidates) {
-            val m = candidate.match(args) ?: continue
+        for (candidate in sortedCandidates) {
+            // Return the first candidate that matches
+            candidate.match(args)?.let {
+                return it
+            }
             // TODO AggMatch comparison
             // if (match != null && m.exact < match.exact) {
             //     // already had a better match.
             //     continue
             // }
-            match = m
+            // match = m
         }
         // 3. Return best match or null
         return match
@@ -240,11 +249,11 @@ internal class Env(private val session: PartiQLPlanner.Session) {
      * Check if this function accepts the exact input argument types. Assume same arity.
      */
     @OptIn(FnExperimental::class, PartiQLValueExperimental::class)
-    private fun AggSignature.matches(args: List<PartiQLValueType>): Boolean {
+    private fun AggSignature.matches(args: List<PartiQLType>): Boolean {
         for (i in args.indices) {
             val a = args[i]
             val p = parameters[i]
-            if (p.type != PartiQLValueType.ANY && a != p.type) return false
+            if (a != p.type) return false
         }
         return true
     }
@@ -256,7 +265,7 @@ internal class Env(private val session: PartiQLPlanner.Session) {
      * @return
      */
     @OptIn(FnExperimental::class, PartiQLValueExperimental::class)
-    private fun AggSignature.match(args: List<PartiQLValueType>): Pair<AggSignature, Array<Ref.Cast?>>? {
+    private fun AggSignature.match(args: List<PartiQLType>): Pair<AggSignature, Array<Ref.Cast?>>? {
         val mapping = arrayOfNulls<Ref.Cast?>(args.size)
         for (i in args.indices) {
             val arg = args[i]
@@ -265,9 +274,9 @@ internal class Env(private val session: PartiQLPlanner.Session) {
                 // 1. Exact match
                 arg == p.type -> continue
                 // 2. Match ANY, no coercion needed
-                p.type == PartiQLValueType.ANY -> continue
+                p.type is DynamicType -> continue
                 // 3. Match NULL argument
-                arg == PartiQLValueType.NULL -> continue
+                arg is NullType -> continue
                 // 4. Check for a coercion
                 else -> when (val coercion = PathResolverAgg.casts.lookupCoercion(arg, p.type)) {
                     null -> return null // short-circuit
@@ -277,4 +286,9 @@ internal class Env(private val session: PartiQLPlanner.Session) {
         }
         return this to mapping
     }
+
+    private fun rex(type: PartiQLType, op: Rex.Op): Rex = Rex(
+        PShape.of(type),
+        op
+    )
 }

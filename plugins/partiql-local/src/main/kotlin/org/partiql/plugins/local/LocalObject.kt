@@ -14,6 +14,7 @@
 
 package org.partiql.plugins.local
 
+import org.partiql.shape.PShape
 import org.partiql.spi.connector.ConnectorObject
 import org.partiql.types.StaticType
 
@@ -25,7 +26,10 @@ import org.partiql.types.StaticType
  */
 internal class LocalObject(
     val path: List<String>,
-    private val type: StaticType,
+    private val shape: PShape,
 ) : ConnectorObject {
-    override fun getType(): StaticType = type
+
+    constructor(path: List<String>, type: StaticType) : this(path, PShape.fromStaticType(type))
+
+    override fun getType(): PShape = shape
 }

@@ -1,7 +1,23 @@
 package org.partiql.planner.internal.casts
 
-import org.partiql.planner.internal.ir.Ref
 import org.partiql.planner.internal.ir.Ref.Cast
+import org.partiql.planner.internal.ir.refCast
+import org.partiql.value.ArrayType
+import org.partiql.value.BagType
+import org.partiql.value.BoolType
+import org.partiql.value.CharType
+import org.partiql.value.CharVarUnboundedType
+import org.partiql.value.ClobType
+import org.partiql.value.DynamicType
+import org.partiql.value.Int16Type
+import org.partiql.value.Int32Type
+import org.partiql.value.Int64Type
+import org.partiql.value.Int8Type
+import org.partiql.value.MissingType
+import org.partiql.value.NullType
+import org.partiql.value.NumericType
+import org.partiql.value.PartiQLCoreTypeBase
+import org.partiql.value.PartiQLType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
 import org.partiql.value.PartiQLValueType.ANY
@@ -32,6 +48,11 @@ import org.partiql.value.PartiQLValueType.STRUCT
 import org.partiql.value.PartiQLValueType.SYMBOL
 import org.partiql.value.PartiQLValueType.TIME
 import org.partiql.value.PartiQLValueType.TIMESTAMP
+import org.partiql.value.TupleType
+import org.partiql.value.TypeDoublePrecision
+import org.partiql.value.TypeIntBig
+import org.partiql.value.TypeNumericUnbounded
+import org.partiql.value.TypeReal
 
 /**
  * A place to model type relationships (for now this is to answer CAST inquiries).
@@ -41,34 +62,127 @@ import org.partiql.value.PartiQLValueType.TIMESTAMP
  */
 @OptIn(PartiQLValueExperimental::class)
 internal class CastTable private constructor(
-    private val types: Array<PartiQLValueType>,
+    private val types: Array<PartiQLType>,
     private val graph: Array<Array<Cast?>>,
 ) {
 
-    private fun relationships(): Sequence<Cast> = sequence {
-        for (t1 in types) {
-            for (t2 in types) {
-                val r = graph[t1][t2]
-                if (r != null) {
-                    yield(r)
+    fun get(operand: PartiQLType, target: PartiQLType): Cast? {
+        if (operand is NullType) {
+            return Cast(operand, target, Cast.Safety.COERCION, isNullable = true)
+        }
+        val safety = when (target) {
+            is TypeNumericUnbounded -> when (operand) {
+                is TypeNumericUnbounded -> Cast.Safety.COERCION
+                is NumericType -> Cast.Safety.COERCION
+                is Int8Type -> Cast.Safety.COERCION
+                is Int16Type -> Cast.Safety.COERCION
+                is Int32Type -> Cast.Safety.COERCION
+                is Int64Type -> Cast.Safety.COERCION
+                is TypeIntBig -> Cast.Safety.COERCION
+                else -> getOld(operand, target)?.safety // TODO
+            }
+            is NumericType -> {
+                val targetPrecision = target.precision ?: (NumericType.MAX_PRECISION + 1)
+                val targetScale = target.scale ?: (NumericType.MAX_SCALE + 1)
+                when (operand) {
+                    is NumericType -> {
+                        val valuePrecision = operand.precision ?: (NumericType.MAX_PRECISION + 1)
+                        val valueScale = operand.scale ?: (NumericType.MAX_SCALE + 1)
+                        when {
+                            targetPrecision < valuePrecision -> Cast.Safety.UNSAFE
+                            targetScale < valueScale -> Cast.Safety.UNSAFE
+                            else -> Cast.Safety.COERCION
+                        }
+                    }
+                    is Int32Type -> {
+                        if (targetPrecision < Int32Type.PRECISION) Cast.Safety.UNSAFE else Cast.Safety.COERCION // TODO: Handle decimals
+                    }
+                    is Int64Type -> {
+                        if (targetPrecision < Int64Type.PRECISION) Cast.Safety.UNSAFE else Cast.Safety.COERCION // TODO: Handle decimals
+                    }
+                    DynamicType -> getOld(operand, target)?.safety // TODO
+                    MissingType -> getOld(operand, target)?.safety // TODO
+                    is PartiQLCoreTypeBase -> getOld(operand, target)?.safety // TODO
+                    is PartiQLType.Runtime.Custom -> getOld(operand, target)?.safety // TODO
                 }
             }
+            is TypeIntBig -> when (operand) {
+                is Int8Type, is Int16Type, is Int32Type, is Int64Type, is TypeIntBig -> Cast.Safety.COERCION
+                is NumericType -> when (operand.scale) {
+                    0 -> Cast.Safety.COERCION
+                    else -> Cast.Safety.UNSAFE // TODO
+                }
+                is CharVarUnboundedType -> Cast.Safety.UNSAFE
+                else -> getOld(operand, target)?.safety // TODO
+            }
+            is Int8Type -> when (operand) {
+                is NumericType -> {
+                    val valuePrecision = operand.precision ?: (NumericType.MAX_PRECISION + 1)
+                    val valueScale = operand.scale ?: (NumericType.MAX_SCALE + 1)
+                    if (valueScale != 0 || valuePrecision >= Int8Type.PRECISION) Cast.Safety.UNSAFE else Cast.Safety.COERCION
+                }
+                else -> getOld(operand, target)?.safety // TODO
+            }
+            is Int16Type -> when (operand) {
+                is NumericType -> {
+                    val valuePrecision = operand.precision ?: (NumericType.MAX_PRECISION + 1)
+                    val valueScale = operand.scale ?: (NumericType.MAX_SCALE + 1)
+                    if (valueScale != 0 || valuePrecision >= Int16Type.PRECISION) Cast.Safety.UNSAFE else Cast.Safety.COERCION
+                }
+                else -> getOld(operand, target)?.safety // TODO
+            }
+            is Int32Type -> when (operand) {
+                is NumericType -> {
+                    val valuePrecision = operand.precision ?: (NumericType.MAX_PRECISION + 1)
+                    val valueScale = operand.scale ?: (NumericType.MAX_SCALE + 1)
+                    if (valueScale != 0 || valuePrecision >= Int32Type.PRECISION) Cast.Safety.UNSAFE else Cast.Safety.COERCION
+                }
+                else -> getOld(operand, target)?.safety // TODO
+            }
+            is Int64Type -> when (operand) {
+                is NumericType -> {
+                    val valuePrecision = operand.precision ?: (NumericType.MAX_PRECISION + 1)
+                    val valueScale = operand.scale ?: (NumericType.MAX_SCALE + 1)
+                    if (valueScale != 0 || valuePrecision >= Int64Type.PRECISION) Cast.Safety.UNSAFE else Cast.Safety.COERCION
+                }
+                else -> getOld(operand, target)?.safety // TODO
+            }
+            is TypeReal -> when (operand) {
+                is NumericType -> Cast.Safety.UNSAFE // TODO: Is this correct?
+                else -> getOld(operand, target)?.safety // TODO
+            }
+            is TypeDoublePrecision -> when (operand) {
+                is NumericType -> Cast.Safety.UNSAFE // TODO: Is this correct? It may be unsafe
+                else -> getOld(operand, target)?.safety // TODO
+            }
+            DynamicType -> getOld(operand, target)?.safety // TODO
+            MissingType -> getOld(operand, target)?.safety // TODO
+            is PartiQLCoreTypeBase -> getOld(operand, target)?.safety // TODO
+            is PartiQLType.Runtime.Custom -> getOld(operand, target)?.safety // TODO
+        }
+        return when (safety) {
+            null -> null
+            else -> Cast(operand, target, safety, false)
         }
     }
 
-    fun get(operand: PartiQLValueType, target: PartiQLValueType): Cast? {
-        val i = operand.ordinal
-        val j = target.ordinal
+    private fun getOld(operand: PartiQLType, target: PartiQLType): Cast? {
+        val i = types.indexOfFirst { it.javaClass == operand.javaClass }
+        val j = types.indexOfFirst { it.javaClass == target.javaClass }
+        if (i == -1 || j == -1) {
+            return null
+            // TODO: Use this for checking errors:
+            // error("Could not find CAST for value $operand ($i) to target $target ($j).")
+        }
         return graph[i][j]
     }
 
     /**
      * Returns the CAST function if exists, else null.
+     * TODO: Should we allow UNSAFE coercions? According to SQL, we can coerce NUMERIC(5, 1) to NUMERIC(3, 1)
      */
-    fun lookupCoercion(operand: PartiQLValueType, target: PartiQLValueType): Cast? {
-        val i = operand.ordinal
-        val j = target.ordinal
-        val cast = graph[i][j] ?: return null
+    fun lookupCoercion(operand: PartiQLType, target: PartiQLType): Cast? {
+        val cast = get(operand, target) ?: return null
         return if (cast.safety == Cast.Safety.COERCION) cast else null
     }
 
@@ -80,8 +194,8 @@ internal class CastTable private constructor(
 
         private operator fun <T> Array<T>.set(t: PartiQLValueType, value: T): Unit = this.set(t.ordinal, value)
 
-        private fun PartiQLValueType.relationships(block: RelationshipBuilder.() -> Unit): Array<Cast?> {
-            return with(RelationshipBuilder(this)) {
+        private fun PartiQLType.relationships(types: Array<PartiQLType>, block: RelationshipBuilder.() -> Unit): Array<Cast?> {
+            return with(RelationshipBuilder(this, types)) {
                 block()
                 build()
             }
@@ -94,192 +208,190 @@ internal class CastTable private constructor(
          */
         @JvmStatic
         val partiql: CastTable = run {
-            val types = PartiQLValueType.values()
+            val types = PartiQLValueType.values().mapIndexed { idx, pType -> idx to PartiQLType.fromLegacy(pType) }
+            val soleTypes = types.map { it.second }.toTypedArray()
             val graph = arrayOfNulls<Array<Cast?>>(N)
             for (type in types) {
                 // initialize all with empty relationships
-                graph[type] = arrayOfNulls(N)
+                graph[type.first] = arrayOfNulls(N)
             }
-            graph[ANY] = ANY.relationships {
-                coercion(ANY)
-                PartiQLValueType.values().filterNot { it == ANY }.forEach {
-                    unsafe(it)
+            graph[ANY] = DynamicType.relationships(soleTypes) {
+                coercion(DynamicType)
+                types.filterNot { it.second is DynamicType }.forEach {
+                    unsafe(it.second)
                 }
             }
-            graph[NULL] = NULL.relationships {
-                PartiQLValueType.values().filterNot { it == ANY || it == MISSING }.forEach {
-                    coercion(it, isNullable = true)
-                }
+            graph[NULL] = NullType.relationships(soleTypes) {
+                coercion(NullType)
             }
-            graph[MISSING] = MISSING.relationships {
-                coercion(MISSING)
+            graph[MISSING] = MissingType.relationships(soleTypes) {
+                coercion(MissingType)
             }
-            graph[BOOL] = BOOL.relationships {
-                coercion(BOOL)
-                explicit(INT8)
-                explicit(INT16)
-                explicit(INT32)
-                explicit(INT64)
-                explicit(INT)
-                explicit(DECIMAL)
-                explicit(DECIMAL_ARBITRARY)
-                explicit(FLOAT32)
-                explicit(FLOAT64)
-                explicit(CHAR)
-                explicit(STRING)
-                explicit(SYMBOL)
+            graph[BOOL] = BoolType.relationships(soleTypes) {
+                coercion(BoolType)
+                explicit(Int8Type)
+                explicit(Int16Type)
+                explicit(Int32Type)
+                explicit(Int64Type)
+                explicit(TypeIntBig)
+                // TODO: Type numeric
+                explicit(TypeNumericUnbounded)
+                explicit(TypeReal)
+                explicit(TypeDoublePrecision)
+                explicit(CharType(1)) // TODO
+                explicit(CharVarUnboundedType)
+                explicit(CharVarUnboundedType)
             }
-            graph[INT8] = INT8.relationships {
-                explicit(BOOL)
-                coercion(INT8)
-                coercion(INT16)
-                coercion(INT32)
-                coercion(INT64)
-                coercion(INT)
-                explicit(DECIMAL)
-                coercion(DECIMAL_ARBITRARY)
-                coercion(FLOAT32)
-                coercion(FLOAT64)
-                explicit(STRING)
-                explicit(SYMBOL)
+            graph[INT8] = Int8Type.relationships(soleTypes) {
+                explicit(BoolType)
+                coercion(Int8Type)
+                coercion(Int16Type)
+                coercion(Int32Type)
+                coercion(Int64Type)
+                coercion(TypeIntBig)
+                // explicit(NUMERIC) // TODO: How to handle?
+                coercion(TypeNumericUnbounded)
+                coercion(TypeReal)
+                coercion(TypeDoublePrecision)
+                explicit(CharVarUnboundedType)
+                explicit(CharVarUnboundedType)
             }
-            graph[INT16] = INT16.relationships {
-                explicit(BOOL)
-                unsafe(INT8)
-                coercion(INT16)
-                coercion(INT32)
-                coercion(INT64)
-                coercion(INT)
-                explicit(DECIMAL)
-                coercion(DECIMAL_ARBITRARY)
-                coercion(FLOAT32)
-                coercion(FLOAT64)
-                explicit(STRING)
-                explicit(SYMBOL)
+            graph[INT16] = Int16Type.relationships(soleTypes) {
+                explicit(BoolType)
+                unsafe(Int8Type)
+                coercion(Int16Type)
+                coercion(Int32Type)
+                coercion(Int64Type)
+                coercion(TypeIntBig)
+                // explicit(NUMERIC) // TODO: How to handle?
+                coercion(TypeNumericUnbounded)
+                coercion(TypeReal)
+                coercion(TypeDoublePrecision)
+                explicit(CharVarUnboundedType)
+                explicit(CharVarUnboundedType)
             }
-            graph[INT32] = INT32.relationships {
-                explicit(BOOL)
-                unsafe(INT8)
-                unsafe(INT16)
-                coercion(INT32)
-                coercion(INT64)
-                coercion(INT)
-                explicit(DECIMAL)
-                coercion(DECIMAL_ARBITRARY)
-                coercion(FLOAT32)
-                coercion(FLOAT64)
-                explicit(STRING)
-                explicit(SYMBOL)
+            graph[INT32] = Int32Type.relationships(soleTypes) {
+                explicit(BoolType)
+                unsafe(Int8Type)
+                unsafe(Int16Type)
+                coercion(Int32Type)
+                coercion(Int64Type)
+                coercion(TypeIntBig)
+                // explicit(NUMERIC) // TODO: How to handle?
+                coercion(TypeNumericUnbounded)
+                coercion(TypeReal)
+                coercion(TypeDoublePrecision)
+                explicit(CharVarUnboundedType)
+                explicit(CharVarUnboundedType)
             }
-            graph[INT64] = INT64.relationships {
-                explicit(BOOL)
-                unsafe(INT8)
-                unsafe(INT16)
-                unsafe(INT32)
-                coercion(INT64)
-                coercion(INT)
-                explicit(DECIMAL)
-                coercion(DECIMAL_ARBITRARY)
-                coercion(FLOAT32)
-                coercion(FLOAT64)
-                explicit(STRING)
-                explicit(SYMBOL)
+            graph[INT64] = Int64Type.relationships(soleTypes) {
+                explicit(BoolType)
+                unsafe(Int8Type)
+                unsafe(Int16Type)
+                unsafe(Int32Type)
+                coercion(Int64Type)
+                coercion(TypeIntBig)
+                // explicit(NUMERIC) // TODO: How to handle?
+                coercion(TypeNumericUnbounded)
+                coercion(TypeReal)
+                coercion(TypeDoublePrecision)
+                explicit(CharVarUnboundedType)
+                explicit(CharVarUnboundedType)
             }
-            graph[INT] = INT.relationships {
-                explicit(BOOL)
-                unsafe(INT8)
-                unsafe(INT16)
-                unsafe(INT32)
-                unsafe(INT64)
-                coercion(INT)
-                explicit(DECIMAL)
-                coercion(DECIMAL_ARBITRARY)
-                coercion(FLOAT32)
-                coercion(FLOAT64)
-                explicit(STRING)
-                explicit(SYMBOL)
+            graph[INT] = TypeIntBig.relationships(soleTypes) {
+                explicit(BoolType)
+                unsafe(Int8Type)
+                unsafe(Int16Type)
+                unsafe(Int32Type)
+                unsafe(Int64Type)
+                coercion(TypeIntBig)
+                // explicit(NUMERIC) // TODO: How to handle?
+                coercion(TypeNumericUnbounded)
+                coercion(TypeReal)
+                coercion(TypeDoublePrecision)
+                explicit(CharVarUnboundedType)
             }
-            graph[DECIMAL] = DECIMAL.relationships {
-                explicit(BOOL)
-                unsafe(INT8)
-                unsafe(INT16)
-                unsafe(INT32)
-                unsafe(INT64)
-                unsafe(INT)
-                coercion(DECIMAL)
-                coercion(DECIMAL_ARBITRARY)
-                explicit(FLOAT32)
-                explicit(FLOAT64)
-                explicit(STRING)
-                explicit(SYMBOL)
+            graph[DECIMAL] = TypeNumericUnbounded.relationships(soleTypes) {
+                explicit(BoolType)
+                unsafe(Int8Type)
+                unsafe(Int16Type)
+                unsafe(Int32Type)
+                unsafe(Int64Type)
+                unsafe(TypeIntBig)
+                // coercion(NUMERIC) // TODO: How to handle?
+                coercion(TypeNumericUnbounded)
+                explicit(TypeReal)
+                explicit(TypeDoublePrecision)
+                explicit(CharVarUnboundedType)
+                explicit(CharVarUnboundedType)
             }
-            graph[DECIMAL_ARBITRARY] = DECIMAL_ARBITRARY.relationships {
-                explicit(BOOL)
-                unsafe(INT8)
-                unsafe(INT16)
-                unsafe(INT32)
-                unsafe(INT64)
-                unsafe(INT)
-                coercion(DECIMAL)
-                coercion(DECIMAL_ARBITRARY)
-                explicit(FLOAT32)
-                explicit(FLOAT64)
-                explicit(STRING)
-                explicit(SYMBOL)
+            graph[DECIMAL_ARBITRARY] = TypeNumericUnbounded.relationships(soleTypes) {
+                explicit(BoolType)
+                unsafe(Int8Type)
+                unsafe(Int16Type)
+                unsafe(Int32Type)
+                unsafe(Int64Type)
+                unsafe(TypeIntBig)
+                // coercion(NUMERIC) // TODO: How to handle?
+                coercion(TypeNumericUnbounded)
+                explicit(TypeReal)
+                explicit(TypeDoublePrecision)
+                explicit(CharVarUnboundedType)
+                explicit(CharVarUnboundedType)
             }
-            graph[FLOAT32] = FLOAT32.relationships {
-                explicit(BOOL)
-                unsafe(INT8)
-                unsafe(INT16)
-                unsafe(INT32)
-                unsafe(INT64)
-                unsafe(INT)
-                unsafe(DECIMAL)
-                coercion(DECIMAL_ARBITRARY)
-                coercion(FLOAT32)
-                coercion(FLOAT64)
-                explicit(STRING)
-                explicit(SYMBOL)
+            graph[FLOAT32] = TypeReal.relationships(soleTypes) {
+                explicit(BoolType)
+                unsafe(Int8Type)
+                unsafe(Int16Type)
+                unsafe(Int32Type)
+                unsafe(Int64Type)
+                unsafe(TypeIntBig)
+                // coercion(NUMERIC) // TODO: How to handle?
+                coercion(TypeNumericUnbounded)
+                coercion(TypeReal)
+                coercion(TypeDoublePrecision)
+                explicit(CharVarUnboundedType)
+                explicit(CharVarUnboundedType)
             }
-            graph[FLOAT64] = FLOAT64.relationships {
-                explicit(BOOL)
-                unsafe(INT8)
-                unsafe(INT16)
-                unsafe(INT32)
-                unsafe(INT64)
-                unsafe(INT)
-                unsafe(DECIMAL)
-                coercion(DECIMAL_ARBITRARY)
-                unsafe(FLOAT32)
-                coercion(FLOAT64)
-                explicit(STRING)
-                explicit(SYMBOL)
+            graph[FLOAT64] = TypeDoublePrecision.relationships(soleTypes) {
+                explicit(BoolType)
+                unsafe(Int8Type)
+                unsafe(Int16Type)
+                unsafe(Int32Type)
+                unsafe(Int64Type)
+                unsafe(TypeIntBig)
+                // unsafe(NUMERIC) // TODO: How to handle?
+                coercion(TypeNumericUnbounded)
+                unsafe(TypeReal)
+                coercion(TypeDoublePrecision)
+                explicit(CharVarUnboundedType)
+                explicit(CharVarUnboundedType)
             }
-            graph[CHAR] = CHAR.relationships {
-                explicit(BOOL)
-                coercion(CHAR)
-                coercion(STRING)
-                coercion(SYMBOL)
+            graph[CHAR] = CharType(1).relationships(soleTypes) {
+                explicit(BoolType)
+                coercion(CharType(1)) // TODO: Length
+                coercion(CharVarUnboundedType)
+                coercion(CharVarUnboundedType)
             }
-            graph[STRING] = STRING.relationships {
-                explicit(BOOL)
-                unsafe(INT8)
-                unsafe(INT16)
-                unsafe(INT32)
-                unsafe(INT64)
-                unsafe(INT)
-                coercion(STRING)
-                explicit(SYMBOL)
-                coercion(CLOB)
+            graph[STRING] = CharVarUnboundedType.relationships(soleTypes) {
+                explicit(BoolType)
+                unsafe(Int8Type)
+                unsafe(Int16Type)
+                unsafe(Int32Type)
+                unsafe(Int64Type)
+                unsafe(TypeNumericUnbounded)
+                coercion(CharVarUnboundedType)
+                explicit(CharVarUnboundedType)
+                coercion(ClobType(10)) // TODO: Length
             }
-            graph[SYMBOL] = SYMBOL.relationships {
-                explicit(BOOL)
-                coercion(STRING)
-                coercion(SYMBOL)
-                coercion(CLOB)
+            graph[SYMBOL] = CharVarUnboundedType.relationships(soleTypes) {
+                explicit(BoolType)
+                coercion(CharVarUnboundedType)
+                coercion(CharVarUnboundedType)
+                coercion(ClobType(10))
             }
-            graph[CLOB] = CLOB.relationships {
-                coercion(CLOB)
+            graph[CLOB] = ClobType(10).relationships(soleTypes) {
+                coercion(ClobType(10)) // TODO: Handle
             }
             graph[BINARY] = arrayOfNulls(N)
             graph[BYTE] = arrayOfNulls(N)
@@ -288,42 +400,45 @@ internal class CastTable private constructor(
             graph[TIME] = arrayOfNulls(N)
             graph[TIMESTAMP] = arrayOfNulls(N)
             graph[INTERVAL] = arrayOfNulls(N)
-            graph[BAG] = BAG.relationships {
-                coercion(BAG)
+            graph[BAG] = BagType.relationships(soleTypes) {
+                coercion(BagType)
             }
-            graph[LIST] = LIST.relationships {
-                coercion(BAG)
-                coercion(SEXP)
-                coercion(LIST)
+            graph[LIST] = ArrayType.relationships(soleTypes) {
+                coercion(BagType)
+                coercion(ArrayType)
+                coercion(ArrayType)
             }
-            graph[SEXP] = SEXP.relationships {
-                coercion(BAG)
-                coercion(SEXP)
-                coercion(LIST)
+            graph[SEXP] = ArrayType.relationships(soleTypes) {
+                coercion(BagType)
+                coercion(ArrayType)
+                coercion(ArrayType)
             }
-            graph[STRUCT] = STRUCT.relationships {
-                coercion(STRUCT)
+            graph[STRUCT] = TupleType.relationships(soleTypes) {
+                coercion(TupleType)
             }
-            CastTable(types, graph.requireNoNulls())
+            CastTable(soleTypes, graph.requireNoNulls())
         }
     }
 
-    private class RelationshipBuilder(val operand: PartiQLValueType) {
+    private class RelationshipBuilder(val operand: PartiQLType, val types: Array<PartiQLType>) {
 
         private val relationships = arrayOfNulls<Cast?>(N)
 
         fun build() = relationships
 
-        fun coercion(target: PartiQLValueType, isNullable: Boolean = false) {
-            relationships[target] = Cast(operand, target, Ref.Cast.Safety.COERCION, isNullable)
+        fun coercion(target: PartiQLType) {
+            val i = types.indexOfFirst { it.javaClass == target.javaClass } // TODO: val i = types.indexOf(target)
+            relationships[i] = refCast(operand, target, Cast.Safety.COERCION, false)
         }
 
-        fun explicit(target: PartiQLValueType, isNullable: Boolean = false) {
-            relationships[target] = Cast(operand, target, Ref.Cast.Safety.EXPLICIT, isNullable)
+        fun explicit(target: PartiQLType) {
+            val i = types.indexOfFirst { it.javaClass == target.javaClass } // TODO: val i = types.indexOf(target)
+            relationships[i] = refCast(operand, target, Cast.Safety.EXPLICIT, false)
         }
 
-        fun unsafe(target: PartiQLValueType, isNullable: Boolean = false) {
-            relationships[target] = Cast(operand, target, Ref.Cast.Safety.UNSAFE, isNullable)
+        fun unsafe(target: PartiQLType) {
+            val i = types.indexOfFirst { it.javaClass == target.javaClass } // TODO: val i = types.indexOf(target)
+            relationships[i] = refCast(operand, target, Cast.Safety.UNSAFE, false)
         }
     }
 }
