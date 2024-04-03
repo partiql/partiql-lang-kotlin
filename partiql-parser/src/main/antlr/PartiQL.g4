@@ -71,6 +71,9 @@ execCommand
  * Currently, this is a small subset of SQL DDL that is likely to make sense for PartiQL as well.
  */
 
+// <qualified name> ::= [ <schema name> <period> ] <qualified identifier>
+qualifiedName : (qualifier+=symbolPrimitive PERIOD)* name=symbolPrimitive;
+
 tableName : symbolPrimitive;
 tableConstraintName : symbolPrimitive;
 columnName : symbolPrimitive;
@@ -82,12 +85,12 @@ ddl
     ;
 
 createCommand
-    : CREATE TABLE tableName ( PAREN_LEFT tableDef PAREN_RIGHT )?                               # CreateTable
+    : CREATE TABLE qualifiedName ( PAREN_LEFT tableDef PAREN_RIGHT )?                           # CreateTable
     | CREATE INDEX ON symbolPrimitive PAREN_LEFT pathSimple ( COMMA pathSimple )* PAREN_RIGHT   # CreateIndex
     ;
 
 dropCommand
-    : DROP TABLE target=tableName                               # DropTable
+    : DROP TABLE qualifiedName                                  # DropTable
     | DROP INDEX target=symbolPrimitive ON on=symbolPrimitive   # DropIndex
     ;
 
