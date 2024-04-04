@@ -45,15 +45,12 @@ internal class PlannerErrorReportingTests {
         }
     )
 
-    val session: ((PartiQLPlanner.Session.MissingOpBehavior) -> PartiQLPlanner.Session) = { mode ->
-        PartiQLPlanner.Session(
-            queryId = queryId,
-            userId = userId,
-            currentCatalog = catalogName,
-            catalogs = mapOf(catalogName to metadata),
-            missingOpBehavior = mode
-        )
-    }
+    val session = PartiQLPlanner.Session(
+        queryId = queryId,
+        userId = userId,
+        currentCatalog = catalogName,
+        catalogs = mapOf(catalogName to metadata),
+    )
 
     val parser = PartiQLParserBuilder().build()
 
@@ -85,7 +82,7 @@ internal class PlannerErrorReportingTests {
 
     data class TestCase(
         val query: String,
-        val mode: PartiQLPlanner.Session.MissingOpBehavior,
+        val isSignal: Boolean,
         val assertion: (List<Problem>) -> List<() -> Boolean>,
         val expectedType: StaticType = StaticType.MISSING
     )
@@ -118,30 +115,30 @@ internal class PlannerErrorReportingTests {
             // Literal MISSING Does not throw warnings or errors in either mode.
             TestCase(
                 "MISSING",
-                PartiQLPlanner.Session.MissingOpBehavior.QUIET,
+                false,
                 assertOnProblemCount(0, 0)
             ),
             TestCase(
                 "MISSING",
-                PartiQLPlanner.Session.MissingOpBehavior.SIGNAL,
+                true,
                 assertOnProblemCount(0, 0)
             ),
             // Unresolved variable
             TestCase(
                 "var_not_exist",
-                PartiQLPlanner.Session.MissingOpBehavior.QUIET,
+                false,
                 assertOnProblemCount(1, 0)
             ),
             TestCase(
                 "var_not_exist",
-                PartiQLPlanner.Session.MissingOpBehavior.SIGNAL,
+                true,
                 assertOnProblemCount(0, 1)
             ),
 
             // Function propagates missing in quite mode
             TestCase(
                 "1 + MISSING",
-                PartiQLPlanner.Session.MissingOpBehavior.QUIET,
+                false,
                 assertOnProblemCount(1, 0)
             ),
             // This will be a non-resolved function error.
@@ -150,54 +147,54 @@ internal class PlannerErrorReportingTests {
             //  Error in signaling mode.
             TestCase(
                 "1 + MISSING",
-                PartiQLPlanner.Session.MissingOpBehavior.SIGNAL,
+                true,
                 assertOnProblemCount(0, 1)
             ),
             // Attempting to do path navigation(symbol) on missing(which is not tuple)
             //  returns missing in quite mode, and error out in signal mode
             TestCase(
                 "MISSING.a",
-                PartiQLPlanner.Session.MissingOpBehavior.QUIET,
+                false,
                 assertOnProblemCount(1, 0)
             ),
             TestCase(
                 "MISSING.a",
-                PartiQLPlanner.Session.MissingOpBehavior.SIGNAL,
+                true,
                 assertOnProblemCount(0, 1)
             ),
             // Attempting to do path navigation(index) on missing(which is not list)
             //  returns missing in quite mode, and error out in signal mode
             TestCase(
                 "MISSING[1]",
-                PartiQLPlanner.Session.MissingOpBehavior.QUIET,
+                false,
                 assertOnProblemCount(1, 0)
             ),
             TestCase(
                 "MISSING[1]",
-                PartiQLPlanner.Session.MissingOpBehavior.SIGNAL,
+                true,
                 assertOnProblemCount(0, 1)
             ),
             // Attempting to do path navigation(key) on missing(which is tuple)
             //  returns missing in quite mode, and error out in signal mode
             TestCase(
                 "MISSING['a']",
-                PartiQLPlanner.Session.MissingOpBehavior.QUIET,
+                false,
                 assertOnProblemCount(1, 0)
             ),
             TestCase(
                 "MISSING['a']",
-                PartiQLPlanner.Session.MissingOpBehavior.SIGNAL,
+                true,
                 assertOnProblemCount(0, 1)
             ),
             // Chained, demostrate missing trace.
             TestCase(
                 "MISSING['a'].a",
-                PartiQLPlanner.Session.MissingOpBehavior.QUIET,
+                false,
                 assertOnProblemCount(2, 0)
             ),
             TestCase(
                 "MISSING['a'].a",
-                PartiQLPlanner.Session.MissingOpBehavior.SIGNAL,
+                true,
                 assertOnProblemCount(0, 2)
             ),
             TestCase(
@@ -207,7 +204,7 @@ internal class PlannerErrorReportingTests {
                         1 = 1 THEN MISSING
                         ELSE 2 END
                 """.trimIndent(),
-                PartiQLPlanner.Session.MissingOpBehavior.QUIET,
+                false,
                 assertOnProblemCount(0, 0),
                 StaticType.unionOf(StaticType.INT4, StaticType.MISSING)
             ),
@@ -218,7 +215,7 @@ internal class PlannerErrorReportingTests {
                         1 = 1 THEN MISSING
                         ELSE 2 END
                 """.trimIndent(),
-                PartiQLPlanner.Session.MissingOpBehavior.SIGNAL,
+                true,
                 assertOnProblemCount(0, 0),
                 StaticType.unionOf(StaticType.INT4, StaticType.MISSING)
             ),
@@ -229,7 +226,7 @@ internal class PlannerErrorReportingTests {
                         1 = 1 THEN MISSING
                         ELSE MISSING END
                 """.trimIndent(),
-                PartiQLPlanner.Session.MissingOpBehavior.QUIET,
+                false,
                 assertOnProblemCount(1, 0),
             ),
             TestCase(
@@ -239,7 +236,7 @@ internal class PlannerErrorReportingTests {
                         1 = 1 THEN MISSING
                         ELSE MISSING END
                 """.trimIndent(),
-                PartiQLPlanner.Session.MissingOpBehavior.SIGNAL,
+                true,
                 assertOnProblemCount(0, 1),
             ),
         )
@@ -254,13 +251,13 @@ internal class PlannerErrorReportingTests {
             //  as we know for sure that a + b returns missing.
             TestCase(
                 " 'a' + 'b' ",
-                PartiQLPlanner.Session.MissingOpBehavior.QUIET,
+                false,
                 assertOnProblemCount(1, 0),
                 StaticType.MISSING
             ),
             TestCase(
                 " 'a' + 'b' ",
-                PartiQLPlanner.Session.MissingOpBehavior.SIGNAL,
+                true,
                 assertOnProblemCount(0, 1),
                 StaticType.MISSING
             ),
@@ -270,13 +267,13 @@ internal class PlannerErrorReportingTests {
             // The expected type for continuation is ANY.
             TestCase(
                 "not_a_function(1)",
-                PartiQLPlanner.Session.MissingOpBehavior.QUIET,
+                false,
                 assertOnProblemCount(0, 1),
                 StaticType.ANY
             ),
             TestCase(
                 "not_a_function(1)",
-                PartiQLPlanner.Session.MissingOpBehavior.SIGNAL,
+                true,
                 assertOnProblemCount(0, 1),
                 StaticType.ANY
             ),
@@ -285,7 +282,7 @@ internal class PlannerErrorReportingTests {
             //  The continuation will return all numeric type
             TestCase(
                 "1 + not_a_function(1)",
-                PartiQLPlanner.Session.MissingOpBehavior.QUIET,
+                false,
                 assertOnProblemCount(0, 1),
                 StaticType.unionOf(
                     StaticType.INT4,
@@ -300,7 +297,7 @@ internal class PlannerErrorReportingTests {
             ),
             TestCase(
                 "1 + not_a_function(1)",
-                PartiQLPlanner.Session.MissingOpBehavior.QUIET,
+                false,
                 assertOnProblemCount(0, 1),
                 StaticType.unionOf(
                     StaticType.INT4,
@@ -321,7 +318,7 @@ internal class PlannerErrorReportingTests {
                         t.f2 -- no such field
                         FROM struct_no_missing as t
                 """.trimIndent(),
-                PartiQLPlanner.Session.MissingOpBehavior.QUIET,
+                false,
                 assertOnProblemCount(1, 0),
                 BagType(closedStruct(StructType.Field("f1", StaticType.INT2)))
             ),
@@ -332,7 +329,7 @@ internal class PlannerErrorReportingTests {
                         t.f2 -- no such field
                         FROM struct_no_missing as t
                 """.trimIndent(),
-                PartiQLPlanner.Session.MissingOpBehavior.SIGNAL,
+                true,
                 assertOnProblemCount(0, 1),
                 BagType(closedStruct(StructType.Field("f1", StaticType.INT2)))
             ),
@@ -344,7 +341,7 @@ internal class PlannerErrorReportingTests {
                         t.f3 -- no such field
                     FROM struct_with_missing as t
                 """.trimIndent(),
-                PartiQLPlanner.Session.MissingOpBehavior.QUIET,
+                false,
                 assertOnProblemCount(2, 0),
                 BagType(closedStruct(StructType.Field("f1", StaticType.unionOf(StaticType.INT2, StaticType.MISSING))))
             ),
@@ -356,7 +353,7 @@ internal class PlannerErrorReportingTests {
                         t.f3 -- no such field
                     FROM struct_with_missing as t
                 """.trimIndent(),
-                PartiQLPlanner.Session.MissingOpBehavior.SIGNAL,
+                true,
                 assertOnProblemCount(0, 2),
                 BagType(closedStruct(StructType.Field("f1", StaticType.unionOf(StaticType.INT2, StaticType.MISSING))))
             ),
@@ -373,7 +370,7 @@ internal class PlannerErrorReportingTests {
                         EXCLUDE t1.f1  -- no such root
                     FROM struct_no_missing as t
                 """.trimIndent(),
-                PartiQLPlanner.Session.MissingOpBehavior.QUIET,
+                false,
                 assertOnProblemCount(1, 0),
                 BagType(closedStruct(StructType.Field("f1", StaticType.INT2)))
             ),
@@ -383,7 +380,7 @@ internal class PlannerErrorReportingTests {
                         EXCLUDE t1.f1  -- no such root
                     FROM struct_no_missing as t
                 """.trimIndent(),
-                PartiQLPlanner.Session.MissingOpBehavior.SIGNAL,
+                true,
                 assertOnProblemCount(0, 1),
                 BagType(closedStruct(StructType.Field("f1", StaticType.INT2)))
             ),
@@ -393,7 +390,7 @@ internal class PlannerErrorReportingTests {
 //                        EXCLUDE t.f2  -- no such field
 //                    FROM struct_no_missing as t
 //                """.trimIndent(),
-//                PartiQLPlanner.Session.MissingOpBehavior.QUIET,
+//                false,
 //                assertOnProblemCount(1, 0),
 //                BagType(closedStruct(StructType.Field("f1", StaticType.INT2)))
 //            ),
@@ -403,7 +400,7 @@ internal class PlannerErrorReportingTests {
 //                        EXCLUDE t.f2  -- no such field
 //                    FROM struct_no_missing as t
 //                """.trimIndent(),
-//                PartiQLPlanner.Session.MissingOpBehavior.SIGNAL,
+//                true,
 //                assertOnProblemCount(0, 1),
 //                BagType(closedStruct(StructType.Field("f1", StaticType.INT2)))
 //            ),
@@ -411,8 +408,10 @@ internal class PlannerErrorReportingTests {
     }
 
     private fun runTestCase(tc: TestCase) {
-        val session = session(tc.mode)
-        val planner = PartiQLPlanner.default()
+        val planner = when (tc.isSignal) {
+            true -> PartiQLPlanner.builder().signalMode().build()
+            else -> PartiQLPlanner.builder().quiteMode().build()
+        }
         val pc = ProblemCollector()
         val res = planner.plan(statement(tc.query), session, pc)
         val problems = pc.problems

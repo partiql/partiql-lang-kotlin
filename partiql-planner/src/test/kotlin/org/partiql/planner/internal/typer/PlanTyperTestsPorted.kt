@@ -91,7 +91,7 @@ class PlanTyperTestsPorted {
     companion object {
 
         private val parser = PartiQLParser.default()
-        private val planner = PartiQLPlanner.default()
+        private val planner = PartiQLPlanner.builder().signalMode().build()
 
         private fun assertProblemExists(problem: Problem) = ProblemHandler { problems, ignoreSourceLocation ->
             when (ignoreSourceLocation) {
@@ -3218,7 +3218,6 @@ class PlanTyperTestsPorted {
             tc.catalog,
             tc.catalogPath,
             catalogs = mapOf(*catalogs.toTypedArray()),
-            missingOpBehavior = PartiQLPlanner.Session.MissingOpBehavior.SIGNAL,
         )
 
         val hasQuery = tc.query != null
@@ -3260,7 +3259,6 @@ class PlanTyperTestsPorted {
             tc.catalog,
             tc.catalogPath,
             catalogs = mapOf(*catalogs.toTypedArray()),
-            missingOpBehavior = PartiQLPlanner.Session.MissingOpBehavior.SIGNAL,
         )
         val collector = ProblemCollector()
 
@@ -3307,7 +3305,6 @@ class PlanTyperTestsPorted {
             tc.catalog,
             tc.catalogPath,
             catalogs = mapOf(*catalogs.toTypedArray()),
-            missingOpBehavior = PartiQLPlanner.Session.MissingOpBehavior.SIGNAL,
         )
         val collector = ProblemCollector()
         val exception = assertThrows<Throwable> {

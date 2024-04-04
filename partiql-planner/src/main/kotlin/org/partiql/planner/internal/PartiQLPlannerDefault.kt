@@ -1,9 +1,10 @@
-package org.partiql.planner
+package org.partiql.planner.internal
 
 import org.partiql.ast.Statement
 import org.partiql.ast.normalize.normalize
 import org.partiql.errors.ProblemCallback
-import org.partiql.planner.internal.Env
+import org.partiql.planner.PartiQLPlanner
+import org.partiql.planner.PartiQLPlannerPass
 import org.partiql.planner.internal.transforms.AstToPlan
 import org.partiql.planner.internal.transforms.PlanTransform
 import org.partiql.planner.internal.typer.PlanTyper
@@ -13,6 +14,7 @@ import org.partiql.planner.internal.typer.PlanTyper
  */
 internal class PartiQLPlannerDefault(
     private val passes: List<PartiQLPlannerPass>,
+    private val flags: Set<PlannerFlag>
 ) : PartiQLPlanner {
 
     override fun plan(
@@ -36,7 +38,7 @@ internal class PartiQLPlannerDefault(
         val internal = org.partiql.planner.internal.ir.PartiQLPlan(typed)
 
         // 4. Assert plan has been resolved — translating to public API
-        var plan = PlanTransform.transform(internal, session.missingOpBehavior, onProblem)
+        var plan = PlanTransform(flags).transform(internal, onProblem)
 
         // 5. Apply all passes
         for (pass in passes) {

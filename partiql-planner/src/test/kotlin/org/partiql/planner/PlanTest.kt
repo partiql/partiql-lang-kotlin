@@ -76,19 +76,21 @@ class PlanTest {
         override fun getUserId(): String = "user-id"
     }
 
-    val pipeline: (PartiQLTest, PartiQLPlanner.Session.MissingOpBehavior) -> PartiQLPlanner.Result = { test, missingOpBehaivor ->
+    val pipeline: (PartiQLTest, Boolean) -> PartiQLPlanner.Result = { test, isSignalMode ->
         val session = PartiQLPlanner.Session(
             queryId = test.key.toString(),
             userId = "user_id",
             currentCatalog = "default",
             currentDirectory = listOf("SCHEMA"),
             catalogs = mapOf("default" to buildMetadata("default")),
-            instant = Instant.now(),
-            missingOpBehavior = missingOpBehaivor
+            instant = Instant.now()
         )
         val problemCollector = ProblemCollector()
         val ast = PartiQLParser.default().parse(test.statement).root
-        val planner = PartiQLPlanner.default()
+        val planner = when (isSignalMode) {
+            true -> PartiQLPlanner.builder().signalMode().build()
+            else -> PartiQLPlanner.builder().quiteMode().build()
+        }
         planner.plan(ast, session, problemCollector)
     }
 
@@ -139,9 +141,9 @@ class PlanTest {
             DynamicTest.dynamicTest(displayName) {
                 val input = input[test.key] ?: error("no test cases")
 
-                PartiQLPlanner.Session.MissingOpBehavior.values().forEach { missingOpBehavior ->
-                    val inputPlan = pipeline.invoke(input, missingOpBehavior).plan
-                    val outputPlan = pipeline.invoke(test, missingOpBehavior).plan
+                listOf(true, false).forEach { isSignal ->
+                    val inputPlan = pipeline.invoke(input, isSignal).plan
+                    val outputPlan = pipeline.invoke(test, isSignal).plan
                     assertPlanEqual(inputPlan, outputPlan)
                 }
             }
