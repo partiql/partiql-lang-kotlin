@@ -183,6 +183,7 @@ class KotlinVisitorPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
                     addFunction(visit)
                 }
             }
+            .addKdoc("WARNING: This interface should not be implemented or extended by code outside of this library. Please extend [$baseVisitorName].")
             .build()
         return FileSpec.builder(visitorPackageName, visitorName).addType(visitor).build()
     }
