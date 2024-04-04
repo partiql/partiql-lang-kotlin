@@ -30,6 +30,8 @@ Thank you to all who have contributed!
 ## [Unreleased]
 
 ### Added
+- partiql-ast: adds warning not to implement `AstVisitor` interface directly. Please extend `AstBaseVisitor` instead.
+- partiql-plan: adds warning not to implement `PlanVisitor` interface directly. Please extend `PlanBaseVisitor` instead.
 
 ### Changed
 - Change `StaticType.AnyOfType`'s `.toString` to not perform `.flatten()`
