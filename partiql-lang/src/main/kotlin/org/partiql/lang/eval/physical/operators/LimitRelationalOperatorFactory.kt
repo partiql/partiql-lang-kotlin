@@ -19,6 +19,7 @@ import org.partiql.lang.planner.transforms.DEFAULT_IMPL_NAME
  *
  * @param name
  */
+@Deprecated("To be removed in the next major version.", replaceWith = ReplaceWith("LimitRelationalOperatorFactoryAsync"))
 abstract class LimitRelationalOperatorFactory(name: String) : RelationalOperatorFactory {
 
     final override val key = RelationalOperatorFactoryKey(RelationalOperatorKind.LIMIT, name)
@@ -31,6 +32,7 @@ abstract class LimitRelationalOperatorFactory(name: String) : RelationalOperator
      * @param sourceBexpr
      * @return
      */
+    @Deprecated("To be removed in the next major version.", replaceWith = ReplaceWith("LimitRelationalOperatorFactoryAsync.create"))
     abstract fun create(
         impl: PartiqlPhysical.Impl,
         rowCountExpr: ValueExpression,

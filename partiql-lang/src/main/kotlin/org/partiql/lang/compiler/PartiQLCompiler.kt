@@ -23,15 +23,18 @@ import org.partiql.lang.planner.PartiQLPlanner
  * [PartiQLCompiler] is responsible for transforming a [PartiqlPhysical.Plan] into an executable [PartiQLStatement].
  */
 @ExperimentalPartiQLCompilerPipeline
+@Deprecated("To be removed in the next major version.", replaceWith = ReplaceWith("PartiQLCompilerAsync"))
 interface PartiQLCompiler {
 
     /**
      * Compiles the [PartiqlPhysical.Plan] to an executable [PartiQLStatement].
      */
+    @Deprecated("To be removed in the next major version.", replaceWith = ReplaceWith("PartiQLCompilerAsync.compile"))
     fun compile(statement: PartiqlPhysical.Plan): PartiQLStatement
 
     /**
      * Compiles the [PartiqlPhysical.Statement.Explain] with the details provided in [details]
      */
+    @Deprecated("To be removed in the next major version.", replaceWith = ReplaceWith("PartiQLCompilerAsync.compile"))
     fun compile(statement: PartiqlPhysical.Plan, details: PartiQLPlanner.PlanningDetails): PartiQLStatement
 }

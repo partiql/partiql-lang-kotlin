@@ -4,7 +4,9 @@ import com.amazon.ionelement.api.toIonValue
 import org.partiql.annotations.ExperimentalPartiQLCompilerPipeline
 import org.partiql.lang.ION
 import org.partiql.lang.compiler.PartiQLCompilerPipeline
+import org.partiql.lang.compiler.PartiQLCompilerPipelineAsync
 import org.partiql.lang.compiler.memorydb.operators.GetByKeyProjectRelationalOperatorFactory
+import org.partiql.lang.compiler.memorydb.operators.GetByKeyProjectRelationalOperatorFactoryAsync
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.BindingName
@@ -17,6 +19,7 @@ import org.partiql.lang.eval.namedValue
 import org.partiql.lang.planner.GlobalResolutionResult
 import org.partiql.lang.planner.GlobalVariableResolver
 import org.partiql.lang.planner.PartiQLPhysicalPass
+import org.partiql.lang.planner.PartiQLPlannerBuilder
 import org.partiql.lang.planner.StaticTypeResolver
 import org.partiql.lang.planner.transforms.optimizations.createConcatWindowFunctionPass
 import org.partiql.lang.planner.transforms.optimizations.createFilterScanToKeyLookupPass
@@ -36,7 +39,7 @@ internal const val DB_CONTEXT_VAR = "in-memory-database"
  */
 @OptIn(ExperimentalPartiQLCompilerPipeline::class)
 class QueryEngine(val db: MemoryDatabase) {
-    var enableDebugOutput = false
+    private var enableDebugOutput = false
 
     /** Given a [BindingName], inform the planner the unique identifier of the global variable (usually a table). */
     private val globalVariableResolver = GlobalVariableResolver { bindingName ->
@@ -60,7 +63,7 @@ class QueryEngine(val db: MemoryDatabase) {
                 // TODO: nothing in the planner uses the contentClosed property yet, but "technically" do have open
                 // content since nothing is constraining the fields in the table.
                 contentClosed = false,
-                // The FilterScanTokeyLookup pass does use this.
+                // The FilterScanToKeyLookup pass does use this.
                 primaryKeyFields = tableMetadata.primaryKeyFields
             )
         )
@@ -92,75 +95,85 @@ class QueryEngine(val db: MemoryDatabase) {
         }
     }
 
-    private val compilerPipeline = PartiQLCompilerPipeline.build {
-        planner
-            .callback {
-                fun prettyPrint(label: String, data: Any) {
-                    val padding = 10
-                    when (data) {
-                        is DomainNode -> {
-                            println("$label:")
-                            val sexpElement = data.toIonElement()
-                            println(SexpAstPrettyPrinter.format(sexpElement.asAnyElement().toIonValue(ION)))
-                        }
-                        else ->
-                            println("$label:".padEnd(padding) + data.toString())
+    // session data
+    val session = EvaluationSession.build {
+        globals(bindings)
+        // Please note that the context here is immutable once the call to .build above
+        // returns, (Hopefully that will reduce the chances of it being abused.)
+        withContextVariable("in-memory-database", db)
+    }
+
+    private fun PartiQLPlannerBuilder.plannerBlock() = this
+        .callback {
+            fun prettyPrint(label: String, data: Any) {
+                val padding = 10
+                when (data) {
+                    is DomainNode -> {
+                        println("$label:")
+                        val sexpElement = data.toIonElement()
+                        println(SexpAstPrettyPrinter.format(sexpElement.asAnyElement().toIonValue(ION)))
                     }
-                }
-                if (this@QueryEngine.enableDebugOutput) {
-                    prettyPrint("event", it.eventName)
-                    prettyPrint("duration", it.duration)
-                    if (it.eventName == "parse_sql") prettyPrint("input", it.input)
-                    prettyPrint("output", it.output)
+                    else ->
+                        println("$label:".padEnd(padding) + data.toString())
                 }
             }
-            .globalVariableResolver(globalVariableResolver)
-            .physicalPlannerPasses(
-                listOf(
-                    // TODO: push-down filters on top of scans before this pass.
-                    PartiQLPhysicalPass { plan, problemHandler ->
-                        createFilterScanToKeyLookupPass(
-                            customProjectOperatorName = GET_BY_KEY_PROJECT_IMPL_NAME,
-                            staticTypeResolver = staticTypeResolver,
-                            createKeyValueConstructor = { recordType, keyFieldEqualityPredicates ->
-                                require(recordType.primaryKeyFields.size == keyFieldEqualityPredicates.size)
-                                PartiqlPhysical.build {
-                                    list(
-                                        // Key values are expressed to the in-memory storage engine as ordered list. Therefore, we need
-                                        // to ensure that the list we pass in as an argument to the custom_get_by_key project operator
-                                        // impl is in the right order.
-                                        recordType.primaryKeyFields.map { keyFieldName ->
-                                            keyFieldEqualityPredicates.single { it.keyFieldName == keyFieldName }.equivalentValue
-                                        }
-                                    )
-                                }
+            if (this@QueryEngine.enableDebugOutput) {
+                prettyPrint("event", it.eventName)
+                prettyPrint("duration", it.duration)
+                if (it.eventName == "parse_sql") prettyPrint("input", it.input)
+                prettyPrint("output", it.output)
+            }
+        }
+        .globalVariableResolver(globalVariableResolver)
+        .physicalPlannerPasses(
+            listOf(
+                // TODO: push-down filters on top of scans before this pass.
+                PartiQLPhysicalPass { plan, problemHandler ->
+                    createFilterScanToKeyLookupPass(
+                        customProjectOperatorName = GET_BY_KEY_PROJECT_IMPL_NAME,
+                        staticTypeResolver = staticTypeResolver,
+                        createKeyValueConstructor = { recordType, keyFieldEqualityPredicates ->
+                            require(recordType.primaryKeyFields.size == keyFieldEqualityPredicates.size)
+                            PartiqlPhysical.build {
+                                list(
+                                    // Key values are expressed to the in-memory storage engine as ordered list. Therefore, we need
+                                    // to ensure that the list we pass in as an argument to the custom_get_by_key project operator
+                                    // impl is in the right order.
+                                    recordType.primaryKeyFields.map { keyFieldName ->
+                                        keyFieldEqualityPredicates.single { it.keyFieldName == keyFieldName }.equivalentValue
+                                    }
+                                )
                             }
-                        ).apply(plan, problemHandler)
-                    },
-                    // Note that the order of the following plans is relevant--the "remove useless filters" pass
-                    // will not work correctly if "remove useless ands" pass is not executed first.
+                        }
+                    ).apply(plan, problemHandler)
+                },
+                // Note that the order of the following plans is relevant--the "remove useless filters" pass
+                // will not work correctly if "remove useless ands" pass is not executed first.
 
-                    // After the filter-scan-to-key-lookup pass above, we may be left with some `(and ...)` expressions
-                    // whose operands were replaced with `(lit true)`. This pass removes `(lit true)` operands from `and`
-                    // expressions, and replaces any `and` expressions with only `(lit true)` operands with `(lit true)`.
-                    // This happens recursively, so an entire tree of useless `(and ...)` expressions will be replaced
-                    // with a single `(lit true)`.
-                    // A constant folding pass might one day eliminate the need for this, but that is not within the current scope.
-                    PartiQLPhysicalPass { plan, problemHandler ->
-                        createRemoveUselessAndsPass().apply(plan, problemHandler)
-                    },
+                // After the filter-scan-to-key-lookup pass above, we may be left with some `(and ...)` expressions
+                // whose operands were replaced with `(lit true)`. This pass removes `(lit true)` operands from `and`
+                // expressions, and replaces any `and` expressions with only `(lit true)` operands with `(lit true)`.
+                // This happens recursively, so an entire tree of useless `(and ...)` expressions will be replaced
+                // with a single `(lit true)`.
+                // A constant folding pass might one day eliminate the need for this, but that is not within the current scope.
+                PartiQLPhysicalPass { plan, problemHandler ->
+                    createRemoveUselessAndsPass().apply(plan, problemHandler)
+                },
 
-                    // After the previous pass, we may have some `(filter ... )` nodes with `(lit true)` as a predicate.
-                    // This pass removes these useless filter nodes.
-                    PartiQLPhysicalPass { plan, problemHandler ->
-                        createRemoveUselessFiltersPass().apply(plan, problemHandler)
-                    },
+                // After the previous pass, we may have some `(filter ... )` nodes with `(lit true)` as a predicate.
+                // This pass removes these useless filter nodes.
+                PartiQLPhysicalPass { plan, problemHandler ->
+                    createRemoveUselessFiltersPass().apply(plan, problemHandler)
+                },
 
-                    PartiQLPhysicalPass { plan, problemHandler ->
-                        createConcatWindowFunctionPass().apply(plan, problemHandler)
-                    },
-                )
+                PartiQLPhysicalPass { plan, problemHandler ->
+                    createConcatWindowFunctionPass().apply(plan, problemHandler)
+                },
             )
+        )
+
+    private val compilerPipeline = PartiQLCompilerPipeline.build {
+        planner.plannerBlock()
         compiler
             .customOperatorFactories(
                 listOf(
@@ -169,23 +182,38 @@ class QueryEngine(val db: MemoryDatabase) {
             )
     }
 
+    private val compilerPipelineAsync = PartiQLCompilerPipelineAsync.build {
+        planner.plannerBlock()
+        compiler
+            .customOperatorFactories(
+                listOf(
+                    GetByKeyProjectRelationalOperatorFactoryAsync() // using async version here
+                )
+            )
+    }
+
     fun executeQuery(sql: String): ExprValue {
-
-        // session data
-        val session = EvaluationSession.build {
-            globals(bindings)
-            // Please note that the context here is immutable once the call to .build above
-            // returns, (Hopefully that will reduce the chances of it being abused.)
-            withContextVariable("in-memory-database", db)
-        }
-
         // compile query to statement
         val statement = compilerPipeline.compile(sql)
 
         // First step is to plan the query.
         // This parses the query and runs it through all the planner passes:
         // AST -> logical plan -> resolved logical plan -> default physical plan -> custom physical plan
-        return when (val result = statement.eval(session)) {
+        return convertResultToExprValue(statement.eval(session))
+    }
+
+    suspend fun executeQueryAsync(sql: String): ExprValue {
+        // compile query to statement
+        val statement = compilerPipelineAsync.compile(sql)
+
+        // First step is to plan the query.
+        // This parses the query and runs it through all the planner passes:
+        // AST -> logical plan -> resolved logical plan -> default physical plan -> custom physical plan
+        return convertResultToExprValue(statement.eval(session))
+    }
+
+    private fun convertResultToExprValue(result: PartiQLResult): ExprValue =
+        when (result) {
             is PartiQLResult.Value -> result.value
             is PartiQLResult.Delete -> {
                 val targetTableId = UUID.fromString(result.target)
@@ -220,5 +248,4 @@ class QueryEngine(val db: MemoryDatabase) {
             is PartiQLResult.Replace -> TODO("Not implemented yet")
             is PartiQLResult.Explain.Domain -> TODO("Not implemented yet")
         }
-    }
 }

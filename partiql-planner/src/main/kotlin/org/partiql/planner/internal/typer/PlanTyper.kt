@@ -48,9 +48,11 @@ import org.partiql.planner.internal.ir.relOpUnpivot
 import org.partiql.planner.internal.ir.relType
 import org.partiql.planner.internal.ir.rex
 import org.partiql.planner.internal.ir.rexOpCaseBranch
+import org.partiql.planner.internal.ir.rexOpCoalesce
 import org.partiql.planner.internal.ir.rexOpCollection
 import org.partiql.planner.internal.ir.rexOpErr
 import org.partiql.planner.internal.ir.rexOpLit
+import org.partiql.planner.internal.ir.rexOpNullif
 import org.partiql.planner.internal.ir.rexOpPathIndex
 import org.partiql.planner.internal.ir.rexOpPathKey
 import org.partiql.planner.internal.ir.rexOpPathSymbol
@@ -62,6 +64,7 @@ import org.partiql.planner.internal.ir.rexOpSubquery
 import org.partiql.planner.internal.ir.rexOpTupleUnion
 import org.partiql.planner.internal.ir.statementQuery
 import org.partiql.planner.internal.ir.util.PlanRewriter
+import org.partiql.planner.internal.utils.PlanUtils
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
@@ -455,8 +458,8 @@ internal class PlanTyper(
                 Scope.GLOBAL -> env.resolveObj(path) ?: locals.resolve(path)
             }
             if (resolvedVar == null) {
-                handleUndefinedVariable(node.identifier)
-                return rexErr("Undefined variable `${node.identifier.debug()}`")
+                val details = handleUndefinedVariable(node.identifier, locals.schema.map { it.name }.toSet())
+                return rex(ANY, rexOpErr(details.message))
             }
             return visitRex(resolvedVar, null)
         }
@@ -580,10 +583,7 @@ internal class PlanTyper(
 
         override fun visitRexOpCastResolved(node: Rex.Op.Cast.Resolved, ctx: StaticType?): Rex {
             val missable = node.arg.type.isMissable() || node.cast.safety == UNSAFE
-            var type = when (node.cast.isNullable) {
-                true -> node.cast.target.toStaticType()
-                false -> node.cast.target.toNonNullStaticType()
-            }
+            var type = node.cast.target.toNonNullStaticType()
             if (missable) {
                 type = unionOf(type, MISSING)
             }
@@ -671,34 +671,126 @@ internal class PlanTyper(
         }
 
         override fun visitRexOpCase(node: Rex.Op.Case, ctx: StaticType?): Rex {
-            // Type branches and prune branches known to never execute
-            val newBranches = node.branches.map { visitRexOpCaseBranch(it, it.rex.type) }
-                .filterNot { isLiteralBool(it.condition, false) }
+            // Rewrite CASE-WHEN branches
+            val oldBranches = node.branches.toTypedArray()
+            val newBranches = mutableListOf<Rex.Op.Case.Branch>()
+            val typer = DynamicTyper()
+            for (i in oldBranches.indices) {
 
-            newBranches.forEach { branch ->
-                if (canBeBoolean(branch.condition.type).not()) {
+                // Type the branch
+                var branch = oldBranches[i]
+                branch = visitRexOpCaseBranch(branch, branch.rex.type)
+
+                // Check if branch condition is a literal
+                if (boolOrNull(branch.condition.op) == false) {
+                    continue // prune
+                }
+
+                // Emit typing error if a branch condition is never a boolean (prune)
+                if (!canBeBoolean(branch.condition.type)) {
                     onProblem.invoke(
                         Problem(
                             UNKNOWN_PROBLEM_LOCATION,
                             PlanningProblemDetails.IncompatibleTypesForOp(branch.condition.type.allTypes, "CASE_WHEN")
                         )
                     )
+                    // prune, always false
+                    continue
                 }
-            }
-            val default = visitRex(node.default, node.default.type)
 
-            // Calculate final expression (short-circuit to first branch if the condition is always TRUE).
-            val resultTypes = newBranches.map { it.rex }.map { it.type } + listOf(default.type)
-            return when (newBranches.size) {
-                0 -> default
-                else -> when (isLiteralBool(newBranches[0].condition, true)) {
-                    true -> newBranches[0].rex
-                    false -> rex(
-                        type = unionOf(resultTypes.toSet()).flatten(),
-                        node.copy(branches = newBranches, default = default)
-                    )
+                // Accumulate typing information
+                typer.accumulate(branch.rex.type)
+                newBranches.add(branch)
+            }
+
+            // Rewrite ELSE branch
+            var newDefault = visitRex(node.default, null)
+            if (newBranches.isEmpty()) {
+                return newDefault
+            }
+            typer.accumulate(newDefault.type)
+
+            // Compute the CASE-WHEN type from the accumulator
+            val (type, mapping) = typer.mapping()
+
+            // Rewrite branches if we have coercions.
+            if (mapping != null) {
+                val msize = mapping.size
+                val bsize = newBranches.size + 1
+                assert(msize == bsize) { "Coercion mappings `len $msize` did not match the number of CASE-WHEN branches `len $bsize`" }
+                // Rewrite branches
+                for (i in newBranches.indices) {
+                    val (operand, target) = mapping[i]
+                    if (operand == target) continue // skip
+                    val branch = newBranches[i]
+                    val cast = env.resolveCast(branch.rex, target)!!
+                    val rex = rex(type, cast)
+                    newBranches[i] = branch.copy(rex = rex)
+                }
+                // Rewrite default
+                val (operand, target) = mapping.last()
+                if (operand != target) {
+                    val cast = env.resolveCast(newDefault, target)!!
+                    newDefault = rex(type, cast)
                 }
             }
+
+            // TODO constant folding in planner which also means branch pruning
+            // This is added for backwards compatibility, we return the first branch if it's true
+            if (boolOrNull(newBranches[0].condition.op) == true) {
+                return newBranches[0].rex
+            }
+
+            val op = Rex.Op.Case(newBranches, newDefault)
+            return rex(type, op)
+        }
+
+        // COALESCE(v1, v2,..., vN)
+        // ==
+        // CASE
+        //     WHEN v1 IS NOT NULL THEN v1  -- WHEN branch always a boolean
+        //     WHEN v2 IS NOT NULL THEN v2  -- WHEN branch always a boolean
+        //     ... -- similarly for v3..vN-1
+        //     ELSE vN
+        // END
+        // --> minimal common supertype of(<type v1>, <type v2>, ..., <type v3>)
+        override fun visitRexOpCoalesce(node: Rex.Op.Coalesce, ctx: StaticType?): Rex {
+            val args = node.args.map { visitRex(it, it.type) }.toMutableList()
+            val typer = DynamicTyper()
+            args.forEach { v ->
+                typer.accumulate(v.type)
+            }
+            val (type, mapping) = typer.mapping()
+            if (mapping != null) {
+                assert(mapping.size == args.size) { "Coercion mappings `len ${mapping.size}` did not match the number of COALESCE arguments `len ${args.size}`" }
+                for (i in args.indices) {
+                    val (operand, target) = mapping[i]
+                    if (operand == target) continue // skip; no coercion needed
+                    val cast = env.resolveCast(args[i], target)!!
+                    val rex = rex(type, cast)
+                    args[i] = rex
+                }
+            }
+            val op = rexOpCoalesce(args)
+            return rex(type, op)
+        }
+
+        // NULLIF(v1, v2)
+        // ==
+        // CASE
+        //     WHEN v1 = v2 THEN NULL -- WHEN branch always a boolean
+        //     ELSE v1
+        // END
+        // --> minimal common supertype of (NULL, <type v1>)
+        override fun visitRexOpNullif(node: Rex.Op.Nullif, ctx: StaticType?): Rex {
+            val value = visitRex(node.value, node.value.type)
+            val nullifier = visitRex(node.nullifier, node.nullifier.type)
+            val typer = DynamicTyper()
+            typer.accumulate(NULL)
+            typer.accumulate(value.type)
+            val (type, _) = typer.mapping()
+            val op = rexOpNullif(value, nullifier)
+            return rex(type, op)
         }
 
         /**
@@ -713,11 +805,12 @@ internal class PlanTyper(
             }
         }
 
+        /**
+         * Returns the boolean value of the expression. For now, only handle literals.
+         */
         @OptIn(PartiQLValueExperimental::class)
-        private fun isLiteralBool(rex: Rex, bool: Boolean): Boolean {
-            val op = rex.op as? Rex.Op.Lit ?: return false
-            val value = op.value as? BoolValue ?: return false
-            return value.value == bool
+        private fun boolOrNull(op: Rex.Op): Boolean? {
+            return if (op is Rex.Op.Lit && op.value is BoolValue) op.value.value else null
         }
 
         /**
@@ -784,7 +877,7 @@ internal class PlanTyper(
                     }
 
                     // Replace the result's type
-                    val type = AnyOfType(ref.type.allTypes.filterIsInstance<StructType>().toSet())
+                    val type = AnyOfType(ref.type.allTypes.filterIsInstance<StructType>().toSet()).flatten()
                     val replacementVal = ref.copy(type = type)
                     val rex = when (ref.op is Rex.Op.Var.Local) {
                         true -> RexReplacer.replace(result, ref, replacementVal)
@@ -1185,7 +1278,7 @@ internal class PlanTyper(
                 // AKA, the Function IS MISSING
                 // return signature return type
                 !fn.isMissable && !fn.isMissingCall && !fn.isNullable && !fn.isNullCall -> fn.returns.toNonNullStaticType()
-                isNull || (!fn.isMissable && hadMissing) -> fn.returns.toStaticType()
+                isNull || (!fn.isMissable && hadMissing) -> NULL
                 isNullable -> fn.returns.toStaticType()
                 else -> fn.returns.toNonNullStaticType()
             }
@@ -1328,13 +1421,20 @@ internal class PlanTyper(
 
     // ERRORS
 
-    private fun handleUndefinedVariable(id: Identifier) {
-        val publicId = id.toBindingPath()
+    /**
+     * Invokes [onProblem] with a newly created [PlanningProblemDetails.UndefinedVariable] and returns the
+     * [PlanningProblemDetails.UndefinedVariable].
+     */
+    private fun handleUndefinedVariable(name: Identifier, locals: Set<String>): PlanningProblemDetails.UndefinedVariable {
+        val planName = PlanUtils.externalize(name)
+        val details = PlanningProblemDetails.UndefinedVariable(planName, locals)
         onProblem(
             Problem(
-                sourceLocation = UNKNOWN_PROBLEM_LOCATION, details = PlanningProblemDetails.UndefinedVariable(publicId)
+                sourceLocation = UNKNOWN_PROBLEM_LOCATION,
+                details = details
             )
         )
+        return details
     }
 
     private fun handleUnexpectedType(actual: StaticType, expected: Set<StaticType>) {

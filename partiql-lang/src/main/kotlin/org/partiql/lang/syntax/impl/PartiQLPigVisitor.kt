@@ -225,7 +225,11 @@ internal class PartiQLPigVisitor(
     }
 
     override fun visitDropTable(ctx: PartiQLParser.DropTableContext) = PartiqlAst.build {
-        val id = visitSymbolPrimitive(ctx.tableName().symbolPrimitive())
+        val id = if (ctx.qualifiedName().qualifier.isEmpty()) {
+            visitSymbolPrimitive(ctx.qualifiedName().name)
+        } else {
+            throw ParserException("PIG Parser does not support qualified name as table name", ErrorCode.PARSE_UNEXPECTED_TOKEN)
+        }
         dropTable(id.toIdentifier(), ctx.DROP().getSourceMetaContainer())
     }
 
@@ -236,7 +240,11 @@ internal class PartiQLPigVisitor(
     }
 
     override fun visitCreateTable(ctx: PartiQLParser.CreateTableContext) = PartiqlAst.build {
-        val name = visitSymbolPrimitive(ctx.tableName().symbolPrimitive()).name
+        val name = if (ctx.qualifiedName().qualifier.isEmpty()) {
+            visitSymbolPrimitive(ctx.qualifiedName().name).name
+        } else {
+            throw ParserException("PIG Parser does not support qualified name as table name", ErrorCode.PARSE_UNEXPECTED_TOKEN)
+        }
         val def = ctx.tableDef()?.let { visitTableDef(it) }
         createTable_(name, def, ctx.CREATE().getSourceMetaContainer())
     }

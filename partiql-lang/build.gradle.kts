@@ -15,7 +15,7 @@
 
 plugins {
     id(Plugins.conventions)
-    id(Plugins.jmh) version Versions.jmh
+    id(Plugins.jmh) version Versions.jmhGradlePlugin
     id(Plugins.library)
     id(Plugins.publish)
     id(Plugins.testFixtures)
@@ -40,6 +40,7 @@ dependencies {
     implementation(Deps.antlrRuntime)
     implementation(Deps.csv)
     implementation(Deps.kotlinReflect)
+    implementation(Deps.kotlinxCoroutines)
 
     testImplementation(testFixtures(project(":partiql-planner")))
     testImplementation(project(":plugins:partiql-memory"))
@@ -48,6 +49,7 @@ dependencies {
     testImplementation(Deps.junit4Params)
     testImplementation(Deps.junitVintage) // Enables JUnit4
     testImplementation(Deps.mockk)
+    testImplementation(Deps.kotlinxCoroutinesTest)
 
     testFixturesImplementation(project(":lib:isl"))
     testFixturesImplementation(Deps.kotlinTest)
@@ -59,6 +61,18 @@ dependencies {
     testFixturesImplementation(Deps.junitParams)
     testFixturesImplementation(Deps.junitVintage) // Enables JUnit4
     testFixturesImplementation(Deps.mockk)
+
+    // The JMH gradle plugin that we currently use is 0.5.3, which uses JMH version 1.25. The JMH gradle plugin has a
+    // newer version (see https://github.com/melix/jmh-gradle-plugin/releases) which upgrades the JMH version. We can't
+    // use that newer plugin version until we upgrade our gradle version to 8.0+. JMH version 1.25 does not support
+    // creating CPU flamegraphs using the JMH benchmarks, hence why the newer version dependency is specified here.
+    //
+    // When we upgrade gradle to 8.0+, we can upgrade the gradle plugin to the latest and remove this dependency block
+    dependencies {
+        jmh(Deps.jmhCore)
+        jmh(Deps.jmhGeneratorAnnprocess)
+        jmh(Deps.jmhGeneratorBytecode)
+    }
 }
 
 publish {

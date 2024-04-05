@@ -27,6 +27,8 @@ import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestCase
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
 import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
 import org.partiql.lang.eval.evaluatortestframework.MultipleTestAdapter
+import org.partiql.lang.eval.evaluatortestframework.PartiQLCompilerPipelineFactory
+import org.partiql.lang.eval.evaluatortestframework.PartiQLCompilerPipelineFactoryAsync
 import org.partiql.lang.eval.evaluatortestframework.PipelineEvaluatorTestAdapter
 import org.partiql.lang.eval.evaluatortestframework.VisitorTransformBaseTestAdapter
 import org.partiql.lang.graph.ExternalGraphReader
@@ -42,6 +44,7 @@ abstract class EvaluatorTestBase : TestBase() {
         listOf(
             PipelineEvaluatorTestAdapter(CompilerPipelineFactory()),
             PipelineEvaluatorTestAdapter(PartiQLCompilerPipelineFactory()),
+            PipelineEvaluatorTestAdapter(PartiQLCompilerPipelineFactoryAsync()),
             VisitorTransformBaseTestAdapter()
         )
     )

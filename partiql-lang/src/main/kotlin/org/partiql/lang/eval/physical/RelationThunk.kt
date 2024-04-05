@@ -10,6 +10,7 @@ import org.partiql.lang.eval.fillErrorContext
 import org.partiql.lang.eval.relation.RelationIterator
 
 /** A thunk that returns a [RelationIterator], which is the result of evaluating a relational operator. */
+@Deprecated("To be removed in the next major version.", replaceWith = ReplaceWith("RelationThunkEnvAsync"))
 internal typealias RelationThunkEnv = (EvaluatorState) -> RelationIterator
 
 /**
@@ -18,6 +19,7 @@ internal typealias RelationThunkEnv = (EvaluatorState) -> RelationIterator
  * This function is not currently in [ThunkFactory] to avoid complicating it further.  If a need arises, it could be
  * moved.
  */
+@Deprecated("To be removed in the next major version.", replaceWith = ReplaceWith("relationThunkAsync"))
 internal inline fun relationThunk(metas: MetaContainer, crossinline t: RelationThunkEnv): RelationThunkEnv {
     val sourceLocationMeta = metas[SourceLocationMeta.TAG] as? SourceLocationMeta
     return { env: EvaluatorState ->

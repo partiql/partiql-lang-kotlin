@@ -14,6 +14,8 @@ import org.partiql.lang.eval.relation.RelationIterator
  * Like [ValueExpression], this is public API that is supported long term and is intended to avoid exposing
  * implementation details such as [org.partiql.lang.eval.physical.RelationThunkEnv].
  */
+@Deprecated("To be removed in the next major version.", replaceWith = ReplaceWith("RelationExpressionAsync"))
 fun interface RelationExpression {
+    @Deprecated("To be removed in the next major version.", replaceWith = ReplaceWith("RelationExpressionAsync.evaluate"))
     fun evaluate(state: EvaluatorState): RelationIterator
 }

@@ -51,12 +51,77 @@ This is a pre-release containing:
 
 Please note that these changes are subject to future breaking changes without warning.
 
+## [0.14.4]
+
+### Added
+- Added constrained decimal as valid parameter type to functions that take in numeric parameters.
+- Added async version of physical plan evaluator `PartiQLCompilerAsync`.
+  - The following related async APIs have been added:
+    - `org.partiql.lang.compiler` -- `PartiQLCompilerAsync`, `PartiQLCompilerAsyncBuilder`, `PartiQLCompilerAsyncDefault`, `PartiQLCompilerPipelineAsync`
+    - `org.partiql.lang.eval` -- `PartiQLStatementAsync`
+    - `org.partiql.lang.eval.physical` -- `VariableBindingAsync`
+    - `org.partiql.lang.eval.physical.operators` -- `AggregateOperatorFactoryAsync`, `CompiledGroupKeyAsync`, `CompiledAggregateFunctionAsync`, `FilterRelationalOperatorFactoryAsync`, `JoinRelationalOperatorFactoryAsync`, `LetRelationalOperatorFactoryAsync`, `LimitRelationalOperatorFactoryAsync`, `OffsetRelationalOperatorFactoryAsync`, `ProjectRelationalOperatorFactoryAsync`, `RelationExpressionAsync`, `ScanRelationalOperatorFactoryAsync`, `SortOperatorFactoryAsync`, `CompiledSortKeyAsync`, `UnpivotOperatorFactoryAsync`, `ValueExpressionAsync`, `WindowRelationalOperatorFactoryAsync`, `CompiledWindowFunctionAsync`
+    - `org.partiql.lang.eval.physical.window` -- `NavigationWindowFunctionAsync`, `WindowFunctionAsync`
+  - Overall, we see about a 10-20% performance decline in running a single query on the synchronous vs async evaluator
+    - JMH benchmarks added to partiql-lang: `PartiQLCompilerPipelineBenchmark` and `PartiQLCompilerPipelineAsyncBenchmark`
+
+### Changed
+- Function resolution logic: Now the function resolver would match all possible candidate(based on if the argument can be coerced to the Signature parameter type). If there are multiple match it will first attempt to pick the one requires the least cast, then pick the function with the highest precedence.
+- partiql-cli -- experimental version of CLI now uses the async physical plan evaluator
+
+### Deprecated
+- As part of the additions to make an async physical plan evaluator, the synchronous physical plan evaluator `PartiQLCompiler` has been deprecated.
+  - The following related APIs have been deprecated
+    - `org.partiql.lang.compiler` -- `PartiQLCompiler`, `PartiQLCompilerBuilder`, `PartiQLCompilerDefault`, `PartiQLCompilerPipeline`
+    - `org.partiql.lang.eval` -- `PartiQLStatement`
+    - `org.partiql.lang.eval.physical` -- `VariableBinding`
+    - `org.partiql.lang.eval.physical.operators` -- `AggregateOperatorFactory`, `CompiledGroupKey`, `CompiledAggregateFunction`, `FilterRelationalOperatorFactory`, `JoinRelationalOperatorFactory`, `LetRelationalOperatorFactory`, `LimitRelationalOperatorFactory`, `OffsetRelationalOperatorFactory`, `ProjectRelationalOperatorFactory`, `RelationExpression`, `ScanRelationalOperatorFactory`, `SortOperatorFactory`, `CompiledSortKey`, `UnpivotOperatorFactory`, `ValueExpression`, `WindowRelationalOperatorFactory`, `CompiledWindowFunction`
+    - `org.partiql.lang.eval.physical.window` -- `NavigationWindowFunction`, `WindowFunction`
+
+### Fixed
+- partiql-ast: `SqlDialect` will wrap unary ops (`NOT`, `+`, `-`) in parens
+
+### Removed
+
+### Security
+
+### Contributors
+Thank you to all who have contributed!
+- @yliuuuu
+- @alancai98
+
+## [0.14.3] - 2024-02-14
+
+### Fixed
+- Return type of `partiql-ast`'s `SqlDialect` for `defaultReturn` to be a `SqlBlock` rather than `Nothing`
+- Flatten `CASE WHEN` branch type in `PlanTyper`
+
 ### Contributors
 Thank you to all who have contributed!
 - @alancai98
 - @johnedquinn
 - @RCHowell
 - @yliuuuu
+
+## [0.14.2] - 2024-01-25
+
+### Added
+
+### Changed
+- Upgrade IonJava dependency to v1.11.1
+
+### Deprecated
+
+### Fixed
+
+### Removed
+
+### Security
+
+### Contributors
+Thank you to all who have contributed!
+- @RCHowell
+- @alancai98
 
 ## [0.14.1] - 2024-01-03
 
@@ -87,8 +152,8 @@ Thank you to all who have contributed!
 - Adds top-level IR node creation functions.
 - Adds `componentN` functions (destructuring) to IR nodes via Kotlin data classes
 - Adds public `tag` field to IR nodes for associating metadata
-- Adds AST Normalization Pass. 
-- Adds PartiQLPlanner Interface, which is responsible for translate an AST to a Plan. 
+- Adds AST Normalization Pass.
+- Adds PartiQLPlanner Interface, which is responsible for translate an AST to a Plan.
 - **EXPERIMENTAL** Evaluation of `EXCLUDE` in the `EvaluatingCompiler`
   - This is currently marked as experimental until the RFC is approved https://github.com/partiql/partiql-lang/issues/27
   - This will be added to the `PhysicalPlanCompiler` in an upcoming release
@@ -96,19 +161,20 @@ Thank you to all who have contributed!
 
 ### Changed
 - StaticTypeInferencer and PlanTyper will not raise an error when an expression is inferred to `NULL` or `unionOf(NULL, MISSING)`. In these cases the StaticTypeInferencer and PlanTyper will still raise the Problem Code `ExpressionAlwaysReturnsNullOrMissing` but the severity of the problem has been changed to warning. In the case an expression always returns `MISSING`, problem code `ExpressionAlwaysReturnsMissing` will be raised, which will have problem severity of error.
-- **Breaking** The default integer literal type is now 32-bit; if the literal can not fit in a 32-bit integer, it overflows to 64-bit. 
-- **BREAKING** `PartiQLValueType` now distinguishes between Arbitrary Precision Decimal and Fixed Precision Decimal. 
-- **BREAKING** Function Signature Changes. Now Function signature has two subclasses, `Scalar` and `Aggregation`. 
+- **Breaking** The default integer literal type is now 32-bit; if the literal can not fit in a 32-bit integer, it overflows to 64-bit.
+- **BREAKING** `PartiQLValueType` now distinguishes between Arbitrary Precision Decimal and Fixed Precision Decimal.
+- **BREAKING** Function Signature Changes. Now Function signature has two subclasses, `Scalar` and `Aggregation`.
 - **BREAKING** Plugin Changes. Only return one Connector.Factory, use Kotlin fields. JVM signature remains the same.
-- **BREAKING** In the produced plan: 
+- **BREAKING** In the produced plan:
   - The new plan is fully resolved and typed.
-  - Operators will be converted to function call. 
+  - Operators will be converted to function call.
 - Changes the return type of `filter_distinct` to a list if input collection is list
 - Changes the `PartiQLValue` collections to implement Iterable rather than Sequence, allowing for multiple consumption.
 - **BREAKING** Moves PartiQLParserBuilder.standard().build() to be PartiQLParser.default().
 - **BREAKING** Changed modeling of `EXCLUDE` in `partiql-ast`
 
 ### Deprecated
+
 
 ### Fixed
 - Fixes the CLI hanging on invalid queries. See issue #1230.
@@ -119,7 +185,7 @@ Thank you to all who have contributed!
 ### Removed
 - **Breaking** Removed IR factory in favor of static top-level functions. Change `Ast.foo()`
   to `foo()`
-- **Breaking** Removed `org.partiql.lang.planner.transforms.AstToPlan`. Use `org.partiql.planner.PartiQLPlanner`. 
+- **Breaking** Removed `org.partiql.lang.planner.transforms.AstToPlan`. Use `org.partiql.planner.PartiQLPlanner`.
 - **Breaking** Removed `org.partiql.lang.planner.transforms.PartiQLSchemaInferencer`. In order to achieve the same functionality, one would need to use the `org.partiql.planner.PartiQLPlanner`.
   - To get the inferred type of the query result, one can do: `(plan.statement as Statement.Query).root.type`
 
@@ -198,7 +264,7 @@ Thank you to all who have contributed!
 - Parsing of label patterns within node and edge graph patterns now supports
   disjunction `|`, conjunction `&`, negation `!`, and grouping.
 - Adds default `equals` and `hashCode` methods for each generated abstract class of Sprout. This affects the generated
-classes in `:partiql-ast` and `:partiql-plan`.
+  classes in `:partiql-ast` and `:partiql-plan`.
 - Adds README to `partiql-types` package.
 - Initializes PartiQL's Code Coverage library
   - Adds support for BRANCH and BRANCH-CONDITION Coverage
@@ -240,12 +306,12 @@ classes in `:partiql-ast` and `:partiql-plan`.
 - Introduces `isNullCall` and `isNullable` properties to FunctionSignature.
 - Removed `Nullable...Value` implementations of PartiQLValue and made the standard implementations nullable.
 - Using PartiQLValueType requires optin; this was a miss from an earlier commit.
-- Modified timestamp static type to model precision and time zone. 
+- Modified timestamp static type to model precision and time zone.
 
 ### Deprecated
-- **Breaking**: Deprecates the `Arguments`, `RequiredArgs`, `RequiredWithOptional`, and `RequiredWithVariadic` classes, 
-  along with the `callWithOptional()`, `callWithVariadic()`, and the overloaded `call()` methods in the `ExprFunction` class, 
-  marking them with a Deprecation Level of ERROR. Now, it's recommended to use 
+- **Breaking**: Deprecates the `Arguments`, `RequiredArgs`, `RequiredWithOptional`, and `RequiredWithVariadic` classes,
+  along with the `callWithOptional()`, `callWithVariadic()`, and the overloaded `call()` methods in the `ExprFunction` class,
+  marking them with a Deprecation Level of ERROR. Now, it's recommended to use
   `call(session: EvaluationSession, args: List<ExprValue>)` and `callWithRequired()` instead.
 - **Breaking**: Deprecates `optionalParameter` and `variadicParameter` in the `FunctionSignature` with a Deprecation
   Level of ERROR. Please use multiple implementations of ExprFunction and use the LIST ExprValue to
@@ -281,7 +347,7 @@ Thank you to all who have contributed!
 - Moves PartiqlAst, PartiqlLogical, PartiqlLogicalResolved, and PartiqlPhysical (along with the transforms)
   to a new project, `partiql-ast`. These are still imported into `partiql-lang` with the `api` annotation. Therefore,
   no action is required to consume the migrated classes. However, this now gives consumers of the AST, Experimental Plans,
-  Visitors, and VisitorTransforms the option of importing them directly using: `org.partiql:partiql-ast:${VERSION}`. 
+  Visitors, and VisitorTransforms the option of importing them directly using: `org.partiql:partiql-ast:${VERSION}`.
   The file `partiql.ion` is still published in the `partiql-lang-kotlin` JAR.
 - Moves internal class org.partiql.lang.syntax.PartiQLParser to org.partiql.lang.syntax.impl.PartiQLPigParser as we refactor for explicit API.
 - Moves ANTLR grammar to `partiql-parser` package. The files `PartiQL.g4` and `PartiQLTokens.g4` are still published in the `partiql-lang-kotlin` JAR.
@@ -366,15 +432,15 @@ Thank you to all who have contributed!
 
 ### Added
 
-- Adds an initial implementation of GPML (Graph Pattern Matching Language), following 
-  PartiQL [RFC-0025](https://github.com/partiql/partiql-docs/blob/main/RFCs/0025-graph-data-model.md) 
+- Adds an initial implementation of GPML (Graph Pattern Matching Language), following
+  PartiQL [RFC-0025](https://github.com/partiql/partiql-docs/blob/main/RFCs/0025-graph-data-model.md)
   and [RFC-0033](https://github.com/partiql/partiql-docs/blob/main/RFCs/0033-graph-query.md).
   This initial implementation includes:
-  - A file format for external graphs, defined as a schema in ISL (Ion Schema Language), 
+  - A file format for external graphs, defined as a schema in ISL (Ion Schema Language),
     as well as an in-memory graph data model and a reader for loading external graphs into it.
-  - CLI shell commands `!add_graph` and `!add_graph_from_file` for bringing 
-    externally-defined graphs into the evaluation environment. 
-  - Evaluation of straight-path patterns with simple label matching and 
+  - CLI shell commands `!add_graph` and `!add_graph_from_file` for bringing
+    externally-defined graphs into the evaluation environment.
+  - Evaluation of straight-path patterns with simple label matching and
     all directed/undirected edge patterns.
 - Adds new `TupleConstraint` variant, `Ordered`, to represent ordering in `StructType`. See the KDoc for more information.
 
@@ -484,7 +550,7 @@ breaking changes if migrating from v0.9.2. The breaking changes accidentally int
 ### Added
 - Adds ability to pipe queries to the CLI.
 - Adds ability to run PartiQL files as executables by adding support for shebangs.
-- Adds experimental syntax for CREATE TABLE, towards addressing 
+- Adds experimental syntax for CREATE TABLE, towards addressing
   [#36](https://github.com/partiql/partiql-docs/issues/36) of specifying PartiQL DDL.
 
 ### Changed
@@ -985,6 +1051,10 @@ breaking changes if migrating from v0.9.2. The breaking changes accidentally int
 Initial alpha release of PartiQL.
 
 [Unreleased]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.1...HEAD
+[Unreleased]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.4...HEAD
+[0.14.4]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.3...v0.14.4
+[0.14.3]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.2...v0.14.3
+[0.14.2]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.1...v0.14.2
 [0.14.1]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.14.0-alpha...v0.14.1
 [0.14.0-alpha]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.13.2-alpha...v0.14.0-alpha
 [0.13.2-alpha]: https://github.com/partiql/partiql-lang-kotlin/compare/v0.13.1-alpha...v0.13.2-alpha

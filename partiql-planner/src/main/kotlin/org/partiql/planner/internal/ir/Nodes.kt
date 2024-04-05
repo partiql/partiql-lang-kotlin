@@ -50,9 +50,11 @@ import org.partiql.planner.internal.ir.builder.RexOpCaseBranchBuilder
 import org.partiql.planner.internal.ir.builder.RexOpCaseBuilder
 import org.partiql.planner.internal.ir.builder.RexOpCastResolvedBuilder
 import org.partiql.planner.internal.ir.builder.RexOpCastUnresolvedBuilder
+import org.partiql.planner.internal.ir.builder.RexOpCoalesceBuilder
 import org.partiql.planner.internal.ir.builder.RexOpCollectionBuilder
 import org.partiql.planner.internal.ir.builder.RexOpErrBuilder
 import org.partiql.planner.internal.ir.builder.RexOpLitBuilder
+import org.partiql.planner.internal.ir.builder.RexOpNullifBuilder
 import org.partiql.planner.internal.ir.builder.RexOpPathIndexBuilder
 import org.partiql.planner.internal.ir.builder.RexOpPathKeyBuilder
 import org.partiql.planner.internal.ir.builder.RexOpPathSymbolBuilder
@@ -74,6 +76,15 @@ import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
+import kotlin.Boolean
+import kotlin.Char
+import kotlin.Int
+import kotlin.OptIn
+import kotlin.String
+import kotlin.collections.List
+import kotlin.collections.Set
+import kotlin.jvm.JvmField
+import kotlin.jvm.JvmStatic
 import kotlin.random.Random
 
 internal abstract class PlanNode {
@@ -267,6 +278,8 @@ internal data class Rex(
             is Cast -> visitor.visitRexOpCast(this, ctx)
             is Call -> visitor.visitRexOpCall(this, ctx)
             is Case -> visitor.visitRexOpCase(this, ctx)
+            is Nullif -> visitor.visitRexOpNullif(this, ctx)
+            is Coalesce -> visitor.visitRexOpCoalesce(this, ctx)
             is Collection -> visitor.visitRexOpCollection(this, ctx)
             is Struct -> visitor.visitRexOpStruct(this, ctx)
             is Pivot -> visitor.visitRexOpPivot(this, ctx)
@@ -302,7 +315,7 @@ internal data class Rex(
 
             internal data class Local(
                 @JvmField internal val depth: Int,
-                @JvmField internal val ref: Int
+                @JvmField internal val ref: Int,
             ) : Var() {
                 public override val children: List<PlanNode> = emptyList()
 
@@ -594,6 +607,44 @@ internal data class Rex(
             }
         }
 
+        internal data class Nullif(
+            @JvmField internal val `value`: Rex,
+            @JvmField internal val nullifier: Rex,
+        ) : Op() {
+            public override val children: List<PlanNode> by lazy {
+                val kids = mutableListOf<PlanNode?>()
+                kids.add(value)
+                kids.add(nullifier)
+                kids.filterNotNull()
+            }
+
+            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitRexOpNullif(this, ctx)
+
+            internal companion object {
+                @JvmStatic
+                internal fun builder(): RexOpNullifBuilder = RexOpNullifBuilder()
+            }
+        }
+
+        internal data class Coalesce(
+            @JvmField internal val args: List<Rex>,
+        ) : Op() {
+            public override val children: List<PlanNode> by lazy {
+                val kids = mutableListOf<PlanNode?>()
+                kids.addAll(args)
+                kids.filterNotNull()
+            }
+
+            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitRexOpCoalesce(this, ctx)
+
+            internal companion object {
+                @JvmStatic
+                internal fun builder(): RexOpCoalesceBuilder = RexOpCoalesceBuilder()
+            }
+        }
+
         internal data class Collection(
             @JvmField internal val values: List<Rex>,
         ) : Op() {
@@ -673,7 +724,7 @@ internal data class Rex(
         }
 
         internal data class Subquery(
-            @JvmField internal val constructor: Rex,
+            @JvmField internal val `constructor`: Rex,
             @JvmField internal val rel: Rel,
             @JvmField internal val coercion: Coercion,
         ) : Op() {
@@ -1112,6 +1163,10 @@ internal data class Rel(
                 FULL, PARTIAL,
             }
 
+            internal enum class SetQuantifier {
+                ALL, DISTINCT,
+            }
+
             internal sealed class Call : PlanNode() {
                 public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = when (this) {
                     is Unresolved -> visitor.visitRelOpAggregateCallUnresolved(this, ctx)
@@ -1159,10 +1214,6 @@ internal data class Rel(
                         internal fun builder(): RelOpAggregateCallResolvedBuilder = RelOpAggregateCallResolvedBuilder()
                     }
                 }
-            }
-
-            internal enum class SetQuantifier {
-                ALL, DISTINCT,
             }
 
             internal companion object {

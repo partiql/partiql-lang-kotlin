@@ -33,6 +33,18 @@ class DynamicLookupExprFunctionTest : EvaluatorTestBase() {
             target = EvaluatorTestTarget.PARTIQL_PIPELINE
         )
 
+    // Pass test cases
+    @ParameterizedTest
+    @ArgumentsSource(ToStringPassCases::class)
+    fun runPassTestsAsync(testCase: ExprFunctionTestCase) =
+        runEvaluatorTestCase(
+            query = testCase.source,
+            session = session,
+            expectedResult = testCase.expectedLegacyModeResult,
+            expectedResultFormat = ExpectedResultFormat.ION,
+            target = EvaluatorTestTarget.PARTIQL_PIPELINE_ASYNC
+        )
+
     // We rely on the built-in [DEFAULT_COMPARATOR] for the actual definition of equality, which is not being tested
     // here.
     class ToStringPassCases : ArgumentsProviderBase() {
@@ -132,9 +144,20 @@ class DynamicLookupExprFunctionTest : EvaluatorTestBase() {
             session = session
         )
 
+    @ParameterizedTest
+    @ArgumentsSource(MismatchCaseSensitiveCases::class)
+    fun mismatchedCaseSensitiveTestsAsync(testCase: EvaluatorErrorTestCase) =
+        runEvaluatorErrorTestCase(
+            testCase.copy(
+                expectedPermissiveModeResult = "MISSING",
+                targetPipeline = EvaluatorTestTarget.PARTIQL_PIPELINE_ASYNC
+            ),
+            session = session
+        )
+
     class MismatchCaseSensitiveCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
-            // Can't find these variables due to case mismatch when perform case sensitive lookup
+            // Can't find these variables due to case mismatch when perform case-sensitive lookup
             EvaluatorErrorTestCase(
                 query = "\"$DYNAMIC_LOOKUP_FUNCTION_NAME\"(`fOo`, `case_sensitive`, `locals_then_globals`, [f, b])",
                 expectedErrorCode = ErrorCode.EVALUATOR_QUOTED_BINDING_DOES_NOT_EXIST,
@@ -181,6 +204,23 @@ class DynamicLookupExprFunctionTest : EvaluatorTestBase() {
             target = EvaluatorTestTarget.PARTIQL_PIPELINE
         )
 
+    @ParameterizedTest
+    @ArgumentsSource(InvalidArgCases::class)
+    fun invalidArgTypeTestCasesAsync(testCase: InvalidArgTestCase) =
+        runEvaluatorErrorTestCase(
+            query = testCase.source,
+            expectedErrorCode = ErrorCode.EVALUATOR_INCORRECT_TYPE_OF_ARGUMENTS_TO_FUNC_CALL,
+            expectedErrorContext = propertyValueMapOf(
+                1, 1,
+                Property.FUNCTION_NAME to DYNAMIC_LOOKUP_FUNCTION_NAME,
+                Property.EXPECTED_ARGUMENT_TYPES to "SYMBOL",
+                Property.ACTUAL_ARGUMENT_TYPES to testCase.actualArgumentType,
+                Property.ARGUMENT_POSITION to testCase.argumentPosition
+            ),
+            expectedPermissiveModeResult = "MISSING",
+            target = EvaluatorTestTarget.PARTIQL_PIPELINE_ASYNC
+        )
+
     class InvalidArgCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
             InvalidArgTestCase("\"$DYNAMIC_LOOKUP_FUNCTION_NAME\"(1, `case_insensitive`, `locals_then_globals`, [])", 1, "INT"),
@@ -195,5 +235,13 @@ class DynamicLookupExprFunctionTest : EvaluatorTestBase() {
         maxArity = Int.MAX_VALUE,
         minArity = 3,
         targetPipeline = EvaluatorTestTarget.PARTIQL_PIPELINE
+    )
+
+    @Test
+    fun invalidArityTestAsync() = checkInvalidArity(
+        funcName = "\"$DYNAMIC_LOOKUP_FUNCTION_NAME\"",
+        maxArity = Int.MAX_VALUE,
+        minArity = 3,
+        targetPipeline = EvaluatorTestTarget.PARTIQL_PIPELINE_ASYNC
     )
 }

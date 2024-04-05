@@ -227,22 +227,61 @@ class SqlDialectTest {
 
         @JvmStatic
         fun exprOperators() = listOf(
-            expect("NOT NULL") {
+            expect("NOT (NULL)") {
                 exprUnary {
                     op = Expr.Unary.Op.NOT
                     expr = NULL
                 }
             },
-            expect("+NULL") {
+            expect("+(NULL)") {
                 exprUnary {
                     op = Expr.Unary.Op.POS
                     expr = NULL
                 }
             },
-            expect("-NULL") {
+            expect("-(NULL)") {
                 exprUnary {
                     op = Expr.Unary.Op.NEG
                     expr = NULL
+                }
+            },
+            expect("NOT (NOT (NULL))") {
+                exprUnary {
+                    op = Expr.Unary.Op.NOT
+                    expr = exprUnary {
+                        op = Expr.Unary.Op.NOT
+                        expr = NULL
+                    }
+                }
+            },
+            expect("+(+(NULL))") {
+                exprUnary {
+                    op = Expr.Unary.Op.POS
+                    expr = exprUnary {
+                        op = Expr.Unary.Op.POS
+                        expr = NULL
+                    }
+                }
+            },
+            expect("-(-(NULL))") {
+                exprUnary {
+                    op = Expr.Unary.Op.NEG
+                    expr = exprUnary {
+                        op = Expr.Unary.Op.NEG
+                        expr = NULL
+                    }
+                }
+            },
+            expect("+(-(+(NULL)))") {
+                exprUnary {
+                    op = Expr.Unary.Op.POS
+                    expr = exprUnary {
+                        op = Expr.Unary.Op.NEG
+                        expr = exprUnary {
+                            op = Expr.Unary.Op.POS
+                            expr = NULL
+                        }
+                    }
                 }
             },
             expect("NULL + NULL") {

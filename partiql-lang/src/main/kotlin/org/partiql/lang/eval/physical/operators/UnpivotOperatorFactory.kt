@@ -4,10 +4,12 @@ import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.eval.physical.SetVariableFunc
 
 /** Provides an implementation of the [PartiqlPhysical.Bexpr.Scan] operator.*/
+@Deprecated("To be removed in the next major version.", replaceWith = ReplaceWith("UnpivotOperatorFactoryAsync"))
 public abstract class UnpivotOperatorFactory(name: String) : RelationalOperatorFactory {
     public final override val key: RelationalOperatorFactoryKey = RelationalOperatorFactoryKey(RelationalOperatorKind.UNPIVOT, name)
 
     /** Creates a [RelationExpression] instance for [PartiqlPhysical.Bexpr.Scan]. */
+    @Deprecated("To be removed in the next major version.", replaceWith = ReplaceWith("UnpivotOperatorFactoryAsync.create"))
     public abstract fun create(
         /** Invoke to obtain the value to be iterated over.*/
         expr: ValueExpression,

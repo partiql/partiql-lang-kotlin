@@ -8,27 +8,34 @@ import org.partiql.planner.util.cartesianProduct
 import org.partiql.types.StaticType
 import java.util.stream.Stream
 
-// TODO: Model handling of Truth Value in typer better.
+/**
+ * The NULLIF() function returns NULL if two expressions are equal, otherwise it returns the first expression
+ *
+ * The type of NULLIF(arg_0: T_0, arg_1: arg_1) should be (null|T_0).
+ *
+ * CASE
+ *   WHEN x = y THEN NULL
+ *   ELSE x
+ * END
+ *
+ * TODO: Model handling of Truth Value in typer better.
+ */
 class NullIfTest : PartiQLTyperTestBase() {
 
     @TestFactory
     fun nullIf(): Stream<DynamicContainer> {
-        val tests = listOf(
-            "func-00",
-        ).map { inputs.get("basics", it)!! }
 
-        val argsMap = buildMap {
-            val successArgs = cartesianProduct(allSupportedType, allSupportedType)
+        val tests = listOf("func-00").map { inputs.get("basics", it)!! }
+        val argsMap = mutableMapOf<TestResult, Set<List<StaticType>>>()
 
-            successArgs.forEach { args: List<StaticType> ->
-                val returnType = StaticType.unionOf(args.first(), StaticType.NULL).flatten()
-                (this[TestResult.Success(returnType)] ?: setOf(args)).let {
-                    put(TestResult.Success(returnType), it + setOf(args))
-                }
-                Unit
-            }
-            put(TestResult.Failure, emptySet<List<StaticType>>())
+        // Generate all success cases
+        cartesianProduct(allSupportedType, allSupportedType).forEach { args ->
+            val expected = StaticType.unionOf(args[0], StaticType.NULL).flatten()
+            val result = TestResult.Success(expected)
+            argsMap[result] = setOf(args)
         }
+        // No failure case
+        argsMap[TestResult.Failure] = emptySet()
 
         return super.testGen("nullIf", tests, argsMap)
     }

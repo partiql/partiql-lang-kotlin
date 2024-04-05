@@ -1,26 +1,39 @@
 package org.partiql.lang.compiler.operators
 
 import com.amazon.ionelement.api.ionBool
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.annotations.ExperimentalPartiQLCompilerPipeline
 import org.partiql.lang.compiler.PartiQLCompilerPipeline
+import org.partiql.lang.compiler.PartiQLCompilerPipelineAsync
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.eval.physical.EvaluatorState
 import org.partiql.lang.eval.physical.SetVariableFunc
 import org.partiql.lang.eval.physical.VariableBinding
+import org.partiql.lang.eval.physical.VariableBindingAsync
 import org.partiql.lang.eval.physical.operators.FilterRelationalOperatorFactory
+import org.partiql.lang.eval.physical.operators.FilterRelationalOperatorFactoryAsync
 import org.partiql.lang.eval.physical.operators.JoinRelationalOperatorFactory
+import org.partiql.lang.eval.physical.operators.JoinRelationalOperatorFactoryAsync
 import org.partiql.lang.eval.physical.operators.LetRelationalOperatorFactory
+import org.partiql.lang.eval.physical.operators.LetRelationalOperatorFactoryAsync
 import org.partiql.lang.eval.physical.operators.LimitRelationalOperatorFactory
+import org.partiql.lang.eval.physical.operators.LimitRelationalOperatorFactoryAsync
 import org.partiql.lang.eval.physical.operators.OffsetRelationalOperatorFactory
+import org.partiql.lang.eval.physical.operators.OffsetRelationalOperatorFactoryAsync
 import org.partiql.lang.eval.physical.operators.ProjectRelationalOperatorFactory
+import org.partiql.lang.eval.physical.operators.ProjectRelationalOperatorFactoryAsync
 import org.partiql.lang.eval.physical.operators.RelationExpression
+import org.partiql.lang.eval.physical.operators.RelationExpressionAsync
 import org.partiql.lang.eval.physical.operators.RelationalOperatorKind
 import org.partiql.lang.eval.physical.operators.ScanRelationalOperatorFactory
+import org.partiql.lang.eval.physical.operators.ScanRelationalOperatorFactoryAsync
 import org.partiql.lang.eval.physical.operators.ValueExpression
+import org.partiql.lang.eval.physical.operators.ValueExpressionAsync
 import org.partiql.lang.planner.transforms.DEFAULT_IMPL
 import org.partiql.lang.planner.transforms.PLAN_VERSION_NUMBER
 import org.partiql.lang.util.ArgumentsProviderBase
@@ -96,6 +109,67 @@ class CustomOperatorFactoryTests {
         }
     )
 
+    private val fakeAsyncOperatorFactories = listOf(
+        object : ProjectRelationalOperatorFactoryAsync(FAKE_IMPL_NAME) {
+            override fun create(
+                impl: PartiqlPhysical.Impl,
+                setVar: SetVariableFunc,
+                args: List<ValueExpressionAsync>
+            ): RelationExpressionAsync =
+                throw CreateFunctionWasCalledException(RelationalOperatorKind.PROJECT)
+        },
+        object : ScanRelationalOperatorFactoryAsync(FAKE_IMPL_NAME) {
+            override fun create(
+                impl: PartiqlPhysical.Impl,
+                expr: ValueExpressionAsync,
+                setAsVar: SetVariableFunc,
+                setAtVar: SetVariableFunc?,
+                setByVar: SetVariableFunc?
+            ): RelationExpressionAsync =
+                throw CreateFunctionWasCalledException(RelationalOperatorKind.SCAN)
+        },
+        object : FilterRelationalOperatorFactoryAsync(FAKE_IMPL_NAME) {
+            override fun create(impl: PartiqlPhysical.Impl, predicate: ValueExpressionAsync, sourceBexpr: RelationExpressionAsync) =
+                throw CreateFunctionWasCalledException(RelationalOperatorKind.FILTER)
+        },
+        object : JoinRelationalOperatorFactoryAsync(FAKE_IMPL_NAME) {
+            override fun create(
+                impl: PartiqlPhysical.Impl,
+                joinType: PartiqlPhysical.JoinType,
+                leftBexpr: RelationExpressionAsync,
+                rightBexpr: RelationExpressionAsync,
+                predicateExpr: ValueExpressionAsync?,
+                setLeftSideVariablesToNull: (EvaluatorState) -> Unit,
+                setRightSideVariablesToNull: (EvaluatorState) -> Unit
+            ): RelationExpressionAsync =
+                throw CreateFunctionWasCalledException(RelationalOperatorKind.JOIN)
+        },
+        object : OffsetRelationalOperatorFactoryAsync(FAKE_IMPL_NAME) {
+            override fun create(
+                impl: PartiqlPhysical.Impl,
+                rowCountExpr: ValueExpressionAsync,
+                sourceBexpr: RelationExpressionAsync
+            ): RelationExpressionAsync =
+                throw CreateFunctionWasCalledException(RelationalOperatorKind.OFFSET)
+        },
+        object : LimitRelationalOperatorFactoryAsync(FAKE_IMPL_NAME) {
+            override fun create(
+                impl: PartiqlPhysical.Impl,
+                rowCountExpr: ValueExpressionAsync,
+                sourceBexpr: RelationExpressionAsync
+            ): RelationExpressionAsync =
+                throw CreateFunctionWasCalledException(RelationalOperatorKind.LIMIT)
+        },
+        object : LetRelationalOperatorFactoryAsync(FAKE_IMPL_NAME) {
+            override fun create(
+                impl: PartiqlPhysical.Impl,
+                sourceBexpr: RelationExpressionAsync,
+                bindings: List<VariableBindingAsync>
+            ) =
+                throw CreateFunctionWasCalledException(RelationalOperatorKind.LET)
+        }
+    )
+
     @ParameterizedTest
     @ArgumentsSource(CustomOperatorCases::class)
     fun `make sure custom operator implementations are called`(tc: CustomOperatorCases.TestCase) {
@@ -113,11 +187,29 @@ class CustomOperatorFactoryTests {
         assertEquals(tc.expectedThrownFromOperator, ex.thrownFromOperator)
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @ParameterizedTest
+    @ArgumentsSource(CustomOperatorCases::class)
+    fun `make sure custom async operator implementations are called`(tc: CustomOperatorCases.TestCase) = runTest {
+        val pipeline = PartiQLCompilerPipelineAsync.build {
+            compiler
+                .customOperatorFactories(
+                    fakeAsyncOperatorFactories.map {
+                        it
+                    }
+                )
+        }
+        val ex = assertThrows<CreateFunctionWasCalledException> {
+            pipeline.compile(tc.plan)
+        }
+        assertEquals(tc.expectedThrownFromOperator, ex.thrownFromOperator)
+    }
+
     class CustomOperatorCases : ArgumentsProviderBase() {
         class TestCase(val expectedThrownFromOperator: RelationalOperatorKind, val plan: PartiqlPhysical.Plan)
         override fun getParameters() = listOf(
             // The key parts of the cases below are the setting of FAKE_IMPL_NODE which causes the custom operator
-            // factories to be called.  The rest is the minimum gibberish needed to make complete PartiqlPhsyical.Bexpr
+            // factories to be called.  The rest is the minimum gibberish needed to make complete PartiqlPhysical.Bexpr
             // nodes.  There must only be one FAKE_IMPL_NODE per plan otherwise the CreateFunctionWasCalledException
             // might be called for an operator other than the one intended.
             createTestCase(RelationalOperatorKind.PROJECT) { project(FAKE_IMPL_NODE, varDecl(0)) },
