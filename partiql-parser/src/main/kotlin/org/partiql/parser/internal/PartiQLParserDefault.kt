@@ -33,6 +33,7 @@ import org.antlr.v4.runtime.atn.PredictionMode
 import org.antlr.v4.runtime.misc.ParseCancellationException
 import org.antlr.v4.runtime.tree.TerminalNode
 import org.partiql.ast.AstNode
+import org.partiql.ast.Constraint
 import org.partiql.ast.DatetimeField
 import org.partiql.ast.Exclude
 import org.partiql.ast.Expr
@@ -49,8 +50,12 @@ import org.partiql.ast.SetOp
 import org.partiql.ast.SetQuantifier
 import org.partiql.ast.Sort
 import org.partiql.ast.Statement
-import org.partiql.ast.TableDefinition
 import org.partiql.ast.Type
+import org.partiql.ast.constraint
+import org.partiql.ast.constraintBodyCheck
+import org.partiql.ast.constraintBodyNotNull
+import org.partiql.ast.constraintBodyNullable
+import org.partiql.ast.constraintBodyUnique
 import org.partiql.ast.exclude
 import org.partiql.ast.excludeItem
 import org.partiql.ast.excludeStepCollIndex
@@ -169,9 +174,7 @@ import org.partiql.ast.statementExplainTargetDomain
 import org.partiql.ast.statementQuery
 import org.partiql.ast.tableDefinition
 import org.partiql.ast.tableDefinitionColumn
-import org.partiql.ast.tableDefinitionColumnConstraint
-import org.partiql.ast.tableDefinitionColumnConstraintBodyNotNull
-import org.partiql.ast.tableDefinitionColumnConstraintBodyNullable
+import org.partiql.ast.tableProperty
 import org.partiql.ast.typeAny
 import org.partiql.ast.typeBag
 import org.partiql.ast.typeBlob
@@ -221,6 +224,7 @@ import org.partiql.value.decimalValue
 import org.partiql.value.int32Value
 import org.partiql.value.int64Value
 import org.partiql.value.intValue
+import org.partiql.value.listValue
 import org.partiql.value.missingValue
 import org.partiql.value.nullValue
 import org.partiql.value.stringValue
@@ -604,7 +608,27 @@ internal class PartiQLParserDefault : PartiQLParser {
         override fun visitCreateTable(ctx: GeneratedParser.CreateTableContext) = translate(ctx) {
             val table = visitQualifiedName(ctx.qualifiedName())
             val definition = ctx.tableDef()?.let { visitTableDef(it) }
-            statementDDLCreateTable(table, definition)
+            val partitionBy = ctx
+                .tableExtension()
+                .filterIsInstance<GeneratedParser.PartitionByContext>()
+                .let {
+                    if (it.size > 1) throw error(ctx, "EXPECT ONE PARTITION BY CLAUSE")
+                    it.firstOrNull()?.let { visitPartitionBy(it) }
+                }
+            val tblProperties = ctx
+                .tableExtension()
+                .filterIsInstance<GeneratedParser.TblPropertiesContext>()
+                .let {
+                    if (it.size > 1) throw error(ctx, "EXPECT ONE TBLPROPERTIES CLAUSE")
+                    val tblPropertiesCtx = it.firstOrNull()
+                    tblPropertiesCtx?.keyValuePair()?.map {
+                        val key = it.key.getStringValue().lowercase()
+                        val value = visitAs<Expr>(it.value) as? Expr.Lit
+                            ?: throw error(it, "Expect TBLPROPERTIES VALUE to be a literal")
+                        tableProperty(key, value.value)
+                    } ?: emptyList()
+                }
+            statementDDLCreateTable(table, definition, partitionBy, tblProperties)
         }
 
         override fun visitCreateIndex(ctx: GeneratedParser.CreateIndexContext) = translate(ctx) {
@@ -620,30 +644,68 @@ internal class PartiQLParserDefault : PartiQLParser {
             val columns = ctx.tableDefPart().filterIsInstance<GeneratedParser.ColumnDeclarationContext>().map {
                 visitColumnDeclaration(it)
             }
-            tableDefinition(columns)
+
+            val tblConstr = ctx.tableDefPart().filterIsInstance<GeneratedParser.TableConstrDeclartionContext>().map {
+                visitTableConstrDeclartion(it)
+            }
+
+            tableDefinition(columns, tblConstr)
         }
 
         override fun visitColumnDeclaration(ctx: GeneratedParser.ColumnDeclarationContext) = translate(ctx) {
             val name = symbolToString(ctx.columnName().symbolPrimitive())
             val type = visit(ctx.type()) as Type
-            val constraints = ctx.columnConstraint().map {
-                visitColumnConstraint(it)
+            val constraints = ctx.columnConstraint().map { constrCtx ->
+                val identifier = constrCtx.constraintName()?.let { symbolToString(it.symbolPrimitive()) }
+                val body = visit(constrCtx.columnConstraintDef()) as Constraint.Body
+                constraint(identifier, body)
             }
             tableDefinitionColumn(name, type, constraints)
         }
 
-        override fun visitColumnConstraint(ctx: GeneratedParser.ColumnConstraintContext) = translate(ctx) {
-            val identifier = ctx.columnConstraintName()?.let { symbolToString(it.symbolPrimitive()) }
-            val body = visit(ctx.columnConstraintDef()) as TableDefinition.Column.Constraint.Body
-            tableDefinitionColumnConstraint(identifier, body)
-        }
-
         override fun visitColConstrNotNull(ctx: GeneratedParser.ColConstrNotNullContext) = translate(ctx) {
-            tableDefinitionColumnConstraintBodyNotNull()
+            constraintBodyNotNull()
         }
 
         override fun visitColConstrNull(ctx: GeneratedParser.ColConstrNullContext) = translate(ctx) {
-            tableDefinitionColumnConstraintBodyNullable()
+            constraintBodyNullable()
+        }
+
+        override fun visitColConstrUnique(ctx: GeneratedParser.ColConstrUniqueContext) = translate(ctx) {
+            when (ctx.uniqueSpec()) {
+                is GeneratedParser.PrimaryKeyContext -> constraintBodyUnique(null, true)
+                is GeneratedParser.UniqueContext -> constraintBodyUnique(null, false)
+                else -> throw error(ctx, "Expect UNIQUE or PRIMARY KEY")
+            }
+        }
+
+        override fun visitCheckConstraintDef(ctx: GeneratedParser.CheckConstraintDefContext) = translate(ctx) {
+            val searchCondition = visitAs<Expr>(ctx.searchCondition())
+            constraintBodyCheck(searchCondition)
+        }
+
+        override fun visitUniqueConstraintDef(ctx: GeneratedParser.UniqueConstraintDefContext) = translate(ctx) {
+            val isPrimaryKey = when (ctx.uniqueSpec()) {
+                is GeneratedParser.PrimaryKeyContext -> true
+                is GeneratedParser.UniqueContext -> false
+                else -> throw error(ctx, "Expect UNIQUE or PRIMARY KEY")
+            }
+            val columns = ctx.columnName().map { symbolToString(it.symbolPrimitive()) }
+            constraintBodyUnique(columns, isPrimaryKey)
+        }
+
+        override fun visitTableConstrDeclartion(ctx: GeneratedParser.TableConstrDeclartionContext) = translate(ctx) {
+            val identifier = ctx.constraintName()?.let { symbolToString(it.symbolPrimitive()) }
+            val body = visit(ctx.tableConstraintDef()) as Constraint.Body
+            constraint(identifier, body)
+        }
+
+        override fun visitPartitionBy(ctx: org.partiql.parser.antlr.PartiQLParser.PartitionByContext) =
+            ctx.partitionExpr().accept(this) as Expr
+
+        override fun visitPartitionColList(ctx: GeneratedParser.PartitionColListContext) = translate(ctx) {
+            val columns = ctx.columnName().map { stringValue(symbolToString(it.symbolPrimitive())) }
+            exprLit(listValue(columns))
         }
 
         /**

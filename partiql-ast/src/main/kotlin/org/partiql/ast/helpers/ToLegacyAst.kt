@@ -16,6 +16,7 @@ import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.ionSymbol
 import com.amazon.ionelement.api.metaContainerOf
 import org.partiql.ast.AstNode
+import org.partiql.ast.Constraint
 import org.partiql.ast.DatetimeField
 import org.partiql.ast.Exclude
 import org.partiql.ast.Expr
@@ -185,17 +186,13 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
         columnDeclaration(name, type, constraints, metas)
     }
 
-    override fun visitTableDefinitionColumnConstraint(
-        node: TableDefinition.Column.Constraint,
-        ctx: Ctx,
-    ) = translate(node) { metas ->
+    override fun visitConstraint(node: Constraint, ctx: Ctx) = translate(node) {
         val name = node.name
         val def = when (node.body) {
-            is TableDefinition.Column.Constraint.Body.Check -> {
-                throw IllegalArgumentException("PIG AST does not support CHECK (<expr>) constraint")
-            }
-            is TableDefinition.Column.Constraint.Body.NotNull -> columnNotnull()
-            is TableDefinition.Column.Constraint.Body.Nullable -> columnNull()
+            is Constraint.Body.Check -> throw IllegalArgumentException("PIG AST does not support CHECK (<expr>) constraint")
+            is Constraint.Body.NotNull -> columnNotnull()
+            is Constraint.Body.Nullable -> columnNull()
+            is Constraint.Body.Unique -> throw IllegalArgumentException("PIG AST does not support Unique/Primary Key constraint")
         }
         columnConstraint(name, def, metas)
     }
