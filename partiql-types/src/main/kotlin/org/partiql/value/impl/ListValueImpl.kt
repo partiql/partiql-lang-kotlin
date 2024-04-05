@@ -17,7 +17,10 @@ package org.partiql.value.impl
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.toPersistentList
 import org.partiql.value.Annotations
+import org.partiql.value.ArrayType
+import org.partiql.value.DynamicType
 import org.partiql.value.ListValue
+import org.partiql.value.PartiQLType
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.util.PartiQLValueVisitor
@@ -26,7 +29,10 @@ import org.partiql.value.util.PartiQLValueVisitor
 internal class ListValueImpl<T : PartiQLValue>(
     private val delegate: Iterable<T>?,
     override val annotations: PersistentList<String>,
+    private val elementType: PartiQLType = DynamicType
 ) : ListValue<T>() {
+
+    override val type: PartiQLType = ArrayType
 
     override val isNull: Boolean = delegate == null
 

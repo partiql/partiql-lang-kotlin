@@ -9,7 +9,6 @@ import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
 import org.partiql.value.BagValue
 import org.partiql.value.BinaryValue
-import org.partiql.value.BlobValue
 import org.partiql.value.BoolValue
 import org.partiql.value.ByteValue
 import org.partiql.value.CharValue
@@ -25,12 +24,12 @@ import org.partiql.value.Int8Value
 import org.partiql.value.IntValue
 import org.partiql.value.IntervalValue
 import org.partiql.value.ListValue
+import org.partiql.value.MissingType
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType.ANY
 import org.partiql.value.PartiQLValueType.BAG
 import org.partiql.value.PartiQLValueType.BINARY
-import org.partiql.value.PartiQLValueType.BLOB
 import org.partiql.value.PartiQLValueType.BOOL
 import org.partiql.value.PartiQLValueType.BYTE
 import org.partiql.value.PartiQLValueType.CHAR
@@ -49,13 +48,11 @@ import org.partiql.value.PartiQLValueType.INTERVAL
 import org.partiql.value.PartiQLValueType.LIST
 import org.partiql.value.PartiQLValueType.MISSING
 import org.partiql.value.PartiQLValueType.NULL
-import org.partiql.value.PartiQLValueType.SEXP
 import org.partiql.value.PartiQLValueType.STRING
 import org.partiql.value.PartiQLValueType.STRUCT
 import org.partiql.value.PartiQLValueType.SYMBOL
 import org.partiql.value.PartiQLValueType.TIME
 import org.partiql.value.PartiQLValueType.TIMESTAMP
-import org.partiql.value.SexpValue
 import org.partiql.value.StringValue
 import org.partiql.value.StructValue
 import org.partiql.value.SymbolValue
@@ -88,7 +85,7 @@ internal object Fn_EQ__ANY_ANY__BOOL : Fn {
         val lhs = args[0]
         val rhs = args[1]
         return when {
-            lhs.type == MISSING || rhs.type == MISSING -> boolValue(lhs == rhs)
+            lhs.type is MissingType || rhs.type == MissingType -> boolValue(lhs == rhs)
             else -> boolValue(comparator.compare(lhs, rhs) == 0)
         }
     }
@@ -440,29 +437,6 @@ internal object Fn_EQ__BYTE_BYTE__BOOL : Fn {
 }
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
-internal object Fn_EQ__BLOB_BLOB__BOOL : Fn {
-
-    override val signature = FnSignature(
-        name = "eq",
-        returns = BOOL,
-        parameters = listOf(
-            FnParameter("lhs", BLOB),
-            FnParameter("rhs", BLOB),
-        ),
-        isNullable = false,
-        isNullCall = true,
-        isMissable = false,
-        isMissingCall = false,
-    )
-
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val lhs = args[0].check<BlobValue>()
-        val rhs = args[1].check<BlobValue>()
-        return boolValue(lhs == rhs)
-    }
-}
-
-@OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal object Fn_EQ__CLOB_CLOB__BOOL : Fn {
 
     override val signature = FnSignature(
@@ -619,29 +593,6 @@ internal object Fn_EQ__LIST_LIST__BOOL : Fn {
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
         val lhs = args[0].check<ListValue<*>>()
         val rhs = args[1].check<ListValue<*>>()
-        return boolValue(lhs == rhs)
-    }
-}
-
-@OptIn(PartiQLValueExperimental::class, FnExperimental::class)
-internal object Fn_EQ__SEXP_SEXP__BOOL : Fn {
-
-    override val signature = FnSignature(
-        name = "eq",
-        returns = BOOL,
-        parameters = listOf(
-            FnParameter("lhs", SEXP),
-            FnParameter("rhs", SEXP),
-        ),
-        isNullable = false,
-        isNullCall = true,
-        isMissable = false,
-        isMissingCall = false,
-    )
-
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val lhs = args[0].check<SexpValue<*>>()
-        val rhs = args[1].check<SexpValue<*>>()
         return boolValue(lhs == rhs)
     }
 }

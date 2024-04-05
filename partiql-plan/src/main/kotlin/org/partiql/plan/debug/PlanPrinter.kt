@@ -5,7 +5,7 @@ import org.partiql.plan.Rel
 import org.partiql.plan.Rex
 import org.partiql.plan.debug.PlanPrinter.Visitor.primitives
 import org.partiql.plan.visitor.PlanBaseVisitor
-import org.partiql.types.StaticType
+import org.partiql.shape.PShape
 import kotlin.reflect.KVisibility
 import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.memberProperties
@@ -34,7 +34,7 @@ object PlanPrinter {
     ) {
         sealed interface TypeInfo {
             class Rel(val type: org.partiql.plan.Rel.Type) : TypeInfo
-            class Rex(val type: StaticType) : TypeInfo
+            class Rex(val type: PShape) : TypeInfo
             object Nil : TypeInfo
         }
 

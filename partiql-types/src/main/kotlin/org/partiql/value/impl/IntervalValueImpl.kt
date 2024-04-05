@@ -17,7 +17,9 @@ package org.partiql.value.impl
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.toPersistentList
 import org.partiql.value.Annotations
+import org.partiql.value.IntervalType
 import org.partiql.value.IntervalValue
+import org.partiql.value.PartiQLType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.util.PartiQLValueVisitor
 
@@ -27,6 +29,8 @@ internal data class IntervalValueImpl(
     override val annotations: PersistentList<String>,
 ) : IntervalValue() {
 
+    // TODO: What is the Interval supposed to be? Doesn't really look like SQL:1999
+    override val type: PartiQLType = IntervalType(38)
     override fun copy(annotations: Annotations) = IntervalValueImpl(value, annotations.toPersistentList())
 
     override fun withAnnotations(annotations: Annotations): IntervalValue = _withAnnotations(annotations)

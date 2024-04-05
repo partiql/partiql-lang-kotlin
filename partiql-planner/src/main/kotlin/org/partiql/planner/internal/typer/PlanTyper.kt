@@ -8,7 +8,7 @@
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * or in the "license" file accompanying this file. This file is distributed
- * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF AnyType KIND, either
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  *
@@ -62,34 +62,49 @@ import org.partiql.planner.internal.ir.rexOpSubquery
 import org.partiql.planner.internal.ir.rexOpTupleUnion
 import org.partiql.planner.internal.ir.statementQuery
 import org.partiql.planner.internal.ir.util.PlanRewriter
+import org.partiql.planner.internal.shape.ShapeUtils
+import org.partiql.shape.Constraint
+import org.partiql.shape.Constraint.Element
+import org.partiql.shape.Constraint.Fields
+import org.partiql.shape.Constraint.NotNull
+import org.partiql.shape.PShape
+import org.partiql.shape.PShape.Companion.allShapes
+import org.partiql.shape.PShape.Companion.allTypes
+import org.partiql.shape.PShape.Companion.anyOf
+import org.partiql.shape.PShape.Companion.asNullable
+import org.partiql.shape.PShape.Companion.copy
+import org.partiql.shape.PShape.Companion.getElement
+import org.partiql.shape.PShape.Companion.getFirstAndOnlyFields
+import org.partiql.shape.PShape.Companion.isMissable
+import org.partiql.shape.PShape.Companion.isNullable
+import org.partiql.shape.PShape.Companion.isText
+import org.partiql.shape.PShape.Companion.isType
+import org.partiql.shape.PShape.Companion.isUnion
+import org.partiql.shape.PShape.Companion.of
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnSignature
-import org.partiql.types.AnyOfType
-import org.partiql.types.AnyType
-import org.partiql.types.BagType
-import org.partiql.types.BoolType
-import org.partiql.types.CollectionType
-import org.partiql.types.IntType
-import org.partiql.types.ListType
-import org.partiql.types.MissingType
-import org.partiql.types.NullType
-import org.partiql.types.SexpType
-import org.partiql.types.StaticType
-import org.partiql.types.StaticType.Companion.ANY
-import org.partiql.types.StaticType.Companion.BOOL
-import org.partiql.types.StaticType.Companion.MISSING
-import org.partiql.types.StaticType.Companion.NULL
-import org.partiql.types.StaticType.Companion.STRING
-import org.partiql.types.StaticType.Companion.unionOf
-import org.partiql.types.StringType
-import org.partiql.types.StructType
-import org.partiql.types.TupleConstraint
+import org.partiql.value.ArrayType
+import org.partiql.value.BagType
+import org.partiql.value.BoolType
 import org.partiql.value.BoolValue
+import org.partiql.value.CharVarType
+import org.partiql.value.CharVarUnboundedType
+import org.partiql.value.DynamicType
+import org.partiql.value.Int16Type
+import org.partiql.value.Int32Type
+import org.partiql.value.Int64Type
+import org.partiql.value.Int8Type
+import org.partiql.value.MissingType
+import org.partiql.value.NullType
+import org.partiql.value.NumericType
+import org.partiql.value.PartiQLType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.TextValue
+import org.partiql.value.TupleType
+import org.partiql.value.TypeIntBig
 import org.partiql.value.boolValue
 import org.partiql.value.missingValue
 import org.partiql.value.stringValue
@@ -153,7 +168,7 @@ internal class PlanTyper(
             val rex = node.rex.type(emptyList(), outer, Scope.GLOBAL)
             // compute rel type
             val valueT = getElementTypeForFromSource(rex.type)
-            val indexT = StaticType.INT8
+            val indexT = PShape.of(Int64Type, constraint = NotNull) // TODO: Handle MISSING (unordered)
             val type = ctx!!.copyWithSchema(listOf(valueT, indexT))
             // rewrite
             val op = relOpScanIndexed(rex)
@@ -168,22 +183,25 @@ internal class PlanTyper(
             val rex = node.rex.type(emptyList(), outer, Scope.GLOBAL)
 
             // key type, always a string.
-            val kType = STRING
+            val kType = PShape.of(CharVarUnboundedType)
 
             // value type, possibly coerced.
-            val vType = rex.type.allTypes.map { type ->
-                when (type) {
-                    is StructType -> {
-                        if (type.contentClosed || type.constraints.contains(TupleConstraint.Open(false))) {
-                            unionOf(type.fields.map { it.value }.toSet()).flatten()
-                        } else {
-                            ANY
+            val vType = rex.type.allShapes().map { type ->
+                when {
+                    type.isType<TupleType>() -> {
+                        val fields = type.getFirstAndOnlyFields()
+                        when (fields) {
+                            null -> PShape.of(DynamicType)
+                            else -> when (fields.isClosed) {
+                                false -> PShape.of(DynamicType)
+                                true -> PShape.anyOf(fields.fields.map { it.value }.toSet())
+                            }
                         }
                     }
                     else -> type
                 }
             }.let {
-                unionOf(it.toSet()).flatten()
+                PShape.anyOf(it.toSet())
             }
 
             // rewrite
@@ -398,7 +416,7 @@ internal class PlanTyper(
             val groups = node.groups.map { typer.visitRex(it, null) }
 
             // Compute schema using order (calls...groups...)
-            val schema = mutableListOf<StaticType>()
+            val schema = mutableListOf<PShape>()
             schema += calls.map { it.second }
             schema += groups.map { it.type }
 
@@ -426,16 +444,16 @@ internal class PlanTyper(
     private inner class RexTyper(
         private val locals: TypeEnv,
         private val strategy: Scope,
-    ) : PlanRewriter<StaticType?>() {
+    ) : PlanRewriter<PShape?>() {
 
-        override fun visitRex(node: Rex, ctx: StaticType?): Rex = visitRexOp(node.op, node.type) as Rex
+        override fun visitRex(node: Rex, ctx: PShape?): Rex = visitRexOp(node.op, node.type) as Rex
 
-        override fun visitRexOpLit(node: Rex.Op.Lit, ctx: StaticType?): Rex {
+        override fun visitRexOpLit(node: Rex.Op.Lit, ctx: PShape?): Rex {
             // type comes from RexConverter
             return rex(ctx!!, node)
         }
 
-        override fun visitRexOpVarLocal(node: Rex.Op.Var.Local, ctx: StaticType?): Rex {
+        override fun visitRexOpVarLocal(node: Rex.Op.Var.Local, ctx: PShape?): Rex {
             val scope = locals.getScope(node.depth)
             assert(node.ref < scope.schema.size) {
                 "Invalid resolved variable (var ${node.ref}, stack frame ${node.depth}) in env: $locals"
@@ -444,7 +462,7 @@ internal class PlanTyper(
             return rex(type, node)
         }
 
-        override fun visitRexOpVarUnresolved(node: Rex.Op.Var.Unresolved, ctx: StaticType?): Rex {
+        override fun visitRexOpVarUnresolved(node: Rex.Op.Var.Unresolved, ctx: PShape?): Rex {
             val path = node.identifier.toBindingPath()
             val scope = when (node.scope) {
                 Rex.Op.Var.Scope.DEFAULT -> strategy
@@ -461,71 +479,82 @@ internal class PlanTyper(
             return visitRex(resolvedVar, null)
         }
 
-        override fun visitRexOpVarGlobal(node: Rex.Op.Var.Global, ctx: StaticType?): Rex = rex(node.ref.type, node)
+        override fun visitRexOpVarGlobal(node: Rex.Op.Var.Global, ctx: PShape?): Rex = rex(node.ref.type, node)
 
-        override fun visitRexOpPathIndex(node: Rex.Op.Path.Index, ctx: StaticType?): Rex {
+        override fun visitRexOpPathIndex(node: Rex.Op.Path.Index, ctx: PShape?): Rex {
             val root = visitRex(node.root, node.root.type)
             val key = visitRex(node.key, node.key.type)
-            if (key.type !is IntType) {
+            if (!key.type.type.isIntegerType()) {
                 handleAlwaysMissing()
-                return rex(MISSING, rexOpErr("Collections must be indexed with integers, found ${key.type}"))
+                return rex(MissingType, rexOpErr("Collections must be indexed with integers, found ${key.type}"))
             }
-            val elementTypes = root.type.allTypes.map { type ->
-                val rootType = type as? CollectionType ?: return@map MISSING
-                if (rootType !is ListType && rootType !is SexpType) {
-                    return@map MISSING
+            val elementTypes = root.type.allShapes().map { type ->
+                if (!type.isType<ArrayType>()) {
+                    return@map PShape.of(MissingType)
                 }
-                rootType.elementType
+                type.getElement().shape
             }.toSet()
-            val finalType = unionOf(elementTypes).flatten()
-            return rex(finalType.swallowAny(), rexOpPathIndex(root, key))
+            val finalType = anyOf(elementTypes)
+            return rex(finalType, rexOpPathIndex(root, key))
         }
 
-        override fun visitRexOpPathKey(node: Rex.Op.Path.Key, ctx: StaticType?): Rex {
+        private fun PartiQLType.isIntegerType(): Boolean = when (this) {
+            is Int8Type, is Int16Type, is Int32Type, is Int64Type -> true
+            is NumericType -> this.scale == 0
+            else -> false
+        }
+
+        override fun visitRexOpPathKey(node: Rex.Op.Path.Key, ctx: PShape?): Rex {
             val root = visitRex(node.root, node.root.type)
             val key = visitRex(node.key, node.key.type)
 
             // Check Key Type
-            val toAddTypes = key.type.allTypes.mapNotNull { keyType ->
+            val toAddTypes = key.type.allTypes().mapNotNull { keyType ->
                 when (keyType) {
-                    is StringType -> null
-                    is NullType -> NULL
-                    else -> MISSING
+                    is CharVarType -> null
+                    is CharVarUnboundedType -> null
+                    is NullType -> PShape.of(NullType)
+                    else -> PShape.of(MissingType)
                 }
             }
-            if (toAddTypes.size == key.type.allTypes.size && toAddTypes.all { it is MissingType }) {
+            if (toAddTypes.size == key.type.allTypes().size && toAddTypes.all { it.type is MissingType }) {
                 handleAlwaysMissing()
-                return rex(MISSING, rexOpErr("Expected string but found: ${key.type}"))
+                return rex(MissingType, rexOpErr("Expected string but found: ${key.type}"))
             }
 
-            val pathTypes = root.type.allTypes.map { type ->
-                val struct = type as? StructType ?: return@map MISSING
-
+            val pathTypes = root.type.allShapes().map { type ->
+                val fields = type.getFirstAndOnlyFields() ?: return@map PShape.of(MissingType)
                 if (key.op is Rex.Op.Lit) {
                     val lit = key.op.value
                     if (lit is TextValue<*> && !lit.isNull) {
                         val id = identifierSymbol(lit.string!!, Identifier.CaseSensitivity.SENSITIVE)
-                        inferStructLookup(struct, id).first
+                        val isOrdered = ShapeUtils.isOrderedTuple(type)
+                        inferStructLookup(fields, id, isOrdered).first
                     } else {
                         error("Expected text literal, but got $lit")
                     }
                 } else {
                     // cannot infer type of non-literal path step because we don't know its value
                     // we might improve upon this with some constant folding prior to typing
-                    ANY
+                    PShape.of(DynamicType)
                 }
             }.toSet()
-            val finalType = unionOf(pathTypes + toAddTypes).flatten()
-            return rex(finalType.swallowAny(), rexOpPathKey(root, key))
+            val finalType = PShape.anyOf(pathTypes + toAddTypes)
+            return rex(finalType, rexOpPathKey(root, key))
         }
 
-        override fun visitRexOpPathSymbol(node: Rex.Op.Path.Symbol, ctx: StaticType?): Rex {
+        override fun visitRexOpPathSymbol(node: Rex.Op.Path.Symbol, ctx: PShape?): Rex {
             val root = visitRex(node.root, node.root.type)
 
-            val paths = root.type.allTypes.map { type ->
-                val struct = type as? StructType ?: return@map rex(MISSING, rexOpLit(missingValue()))
+            val paths = root.type.allShapes().map { type ->
+                val struct = when {
+                    type.isType<DynamicType>() -> type.getFirstAndOnlyFields() ?: Fields(emptyList(), isClosed = false)
+                    type.isType<TupleType>() -> type.getFirstAndOnlyFields() ?: Fields(emptyList(), isClosed = false)
+                    else -> return@map rex(MissingType, rexOpLit(missingValue()))
+                }
+                val isOrdered = ShapeUtils.isOrderedTuple(type)
                 val (pathType, replacementId) = inferStructLookup(
-                    struct, identifierSymbol(node.key, Identifier.CaseSensitivity.INSENSITIVE)
+                    struct, identifierSymbol(node.key, Identifier.CaseSensitivity.INSENSITIVE), isOrdered
                 )
                 when (replacementId.caseSensitivity) {
                     Identifier.CaseSensitivity.INSENSITIVE -> rex(pathType, rexOpPathSymbol(root, replacementId.symbol))
@@ -534,7 +563,7 @@ internal class PlanTyper(
                     )
                 }
             }
-            val type = unionOf(paths.map { it.type }.toSet()).flatten()
+            val type = PShape.anyOf(paths.map { it.type }.toSet())
 
             // replace step only if all are disambiguated
             val firstPathOp = paths.first().op
@@ -542,55 +571,48 @@ internal class PlanTyper(
                 true -> firstPathOp
                 false -> rexOpPathSymbol(root, node.key)
             }
-            return rex(type.swallowAny(), replacementOp)
+            return rex(type, replacementOp)
         }
 
-        /**
-         * "Swallows" ANY. If ANY is one of the types in the UNION type, we return ANY. If not, we flatten and return
-         * the [type].
-         */
-        private fun StaticType.swallowAny(): StaticType {
-            val flattened = this.flatten()
-            return when (flattened.allTypes.any { it is AnyType }) {
-                true -> ANY
-                false -> flattened
-            }
-        }
+        private fun rexString(str: String) = rex(
+            of(CharVarUnboundedType, constraints = setOf(NotNull)),
+            rexOpLit(stringValue(str))
+        )
 
-        private fun rexString(str: String) = rex(STRING, rexOpLit(stringValue(str)))
-
-        override fun visitRexOpPath(node: Rex.Op.Path, ctx: StaticType?): Rex {
+        override fun visitRexOpPath(node: Rex.Op.Path, ctx: PShape?): Rex {
             val path = super.visitRexOpPath(node, ctx) as Rex
-            if (path.type == MISSING) {
+            if (path.type.type == MissingType) {
                 handleAlwaysMissing()
                 return rexErr("Path always returns missing: ${node.debug()}")
             }
             return path
         }
 
-        override fun visitRexOpCastUnresolved(node: Rex.Op.Cast.Unresolved, ctx: StaticType?): Rex {
+        override fun visitRexOpCastUnresolved(node: Rex.Op.Cast.Unresolved, ctx: PShape?): Rex {
             val arg = visitRex(node.arg, null)
             val cast = env.resolveCast(arg, node.target)
             if (cast == null) {
-                handleUnknownCast(node)
+                handleUnknownCast(node.copy(arg = arg))
                 return rexErr("Invalid CAST operator")
             }
             return visitRexOpCastResolved(cast, null)
         }
 
-        override fun visitRexOpCastResolved(node: Rex.Op.Cast.Resolved, ctx: StaticType?): Rex {
+        override fun visitRexOpCastResolved(node: Rex.Op.Cast.Resolved, ctx: PShape?): Rex {
             val missable = node.arg.type.isMissable() || node.cast.safety == UNSAFE
-            var type = when (node.cast.isNullable) {
-                true -> node.cast.target.toStaticType()
-                false -> node.cast.target.toNonNullStaticType()
-            }
+            // TODO: Nullability?
+//            var type = when (node.cast.isNullable) {
+//                true -> PShape.of(node.cast.target, constraints = setOf(NotNull))
+//                false -> PShape.of(node.cast.target, constraints = setOf(NotNull))
+//            }
+            var type = PShape.of(node.cast.target, constraints = setOf(NotNull))
             if (missable) {
-                type = unionOf(type, MISSING)
+                type = PShape.anyOf(type, PShape.of(MissingType))
             }
             return rex(type, node)
         }
 
-        override fun visitRexOpCallUnresolved(node: Rex.Op.Call.Unresolved, ctx: StaticType?): Rex {
+        override fun visitRexOpCallUnresolved(node: Rex.Op.Call.Unresolved, ctx: PShape?): Rex {
             // Type the arguments
             val args = node.args.map {
                 val arg = visitRex(it, null)
@@ -621,13 +643,13 @@ internal class PlanTyper(
          * @return
          */
         @OptIn(FnExperimental::class)
-        override fun visitRexOpCallStatic(node: Rex.Op.Call.Static, ctx: StaticType?): Rex {
+        override fun visitRexOpCallStatic(node: Rex.Op.Call.Static, ctx: PShape?): Rex {
             // Apply the coercions as explicit casts
             val args: List<Rex> = node.args.map {
-                // Propagate MISSING argument.
-                if (it.type == MissingType && node.fn.signature.isMissingCall) {
+                // Propagate MissingType argument.
+                if (it.type.type is MissingType && node.fn.signature.isMissingCall) {
                     handleAlwaysMissing()
-                    return rex(MISSING, node)
+                    return rex(MissingType, node)
                 }
                 // Type the coercions
                 when (val op = it.op) {
@@ -644,8 +666,8 @@ internal class PlanTyper(
          * Typing of a dynamic function call.
          *
          * isMissable TRUE when the argument permutations may not definitively invoke one of the candidates.
-         * You can think of [isMissable] as being the same as "not exhaustive". For example, if we have ABS(INT | STRING), then
-         * this function call [isMissable] because there isn't an `ABS(STRING)` function signature AKA we haven't exhausted
+         * You can think of [isMissable] as being the same as "not exhaustive". For example, if we have ABS(INT | CharVarUnboundedType), then
+         * this function call [isMissable] because there isn't an `ABS(CharVarUnboundedType)` function signature AKA we haven't exhausted
          * all the arguments. On the other hand, take an "exhaustive" scenario: ABS(INT | DEC). In this case, [isMissable]
          * is false because we have functions for each potential argument AKA we have exhausted the arguments.
          *
@@ -655,7 +677,7 @@ internal class PlanTyper(
          * @return
          */
         @OptIn(FnExperimental::class)
-        override fun visitRexOpCallDynamic(node: Rex.Op.Call.Dynamic, ctx: StaticType?): Rex {
+        override fun visitRexOpCallDynamic(node: Rex.Op.Call.Dynamic, ctx: PShape?): Rex {
             var isMissingCall = false
             val types = node.candidates.map { candidate ->
                 isMissingCall = isMissingCall || candidate.fn.signature.isMissingCall
@@ -664,25 +686,26 @@ internal class PlanTyper(
 
             // We had a branch (arg type permutation) without a candidate.
             if (!node.exhaustive) {
-                types.add(MISSING)
+                types.add(PShape.of(MissingType))
             }
 
-            return rex(type = unionOf(types).flatten(), op = node)
+            return rex(type = PShape.anyOf(types), op = node)
         }
 
-        override fun visitRexOpCase(node: Rex.Op.Case, ctx: StaticType?): Rex {
+        override fun visitRexOpCase(node: Rex.Op.Case, ctx: PShape?): Rex {
             // Type branches and prune branches known to never execute
             val newBranches = node.branches.map { visitRexOpCaseBranch(it, it.rex.type) }
                 .filterNot { isLiteralBool(it.condition, false) }
 
             newBranches.forEach { branch ->
                 if (canBeBoolean(branch.condition.type).not()) {
-                    onProblem.invoke(
-                        Problem(
-                            UNKNOWN_PROBLEM_LOCATION,
-                            PlanningProblemDetails.IncompatibleTypesForOp(branch.condition.type.allTypes, "CASE_WHEN")
-                        )
-                    )
+                    TODO("Not yet implemented")
+//                    onProblem.invoke(
+//                        Problem(
+//                            UNKNOWN_PROBLEM_LOCATION,
+//                            PlanningProblemDetails.IncompatibleTypesForOp(branch.condition.type.allTypes(), "CASE_WHEN")
+//                        )
+//                    )
                 }
             }
             val default = visitRex(node.default, node.default.type)
@@ -694,7 +717,7 @@ internal class PlanTyper(
                 else -> when (isLiteralBool(newBranches[0].condition, true)) {
                     true -> newBranches[0].rex
                     false -> rex(
-                        type = unionOf(resultTypes.toSet()).flatten(),
+                        type = PShape.anyOf(resultTypes.toSet()),
                         node.copy(branches = newBranches, default = default)
                     )
                 }
@@ -703,10 +726,10 @@ internal class PlanTyper(
 
         /**
          * In this context, Boolean means PartiQLValueType Bool, which can be nullable.
-         * Hence, we permit Static Type BOOL, Static Type NULL, Static Type Missing here.
+         * Hence, we permit Static Type BoolType, Static Type NULL, Static Type Missing here.
          */
-        private fun canBeBoolean(type: StaticType): Boolean {
-            return type.flatten().allTypes.any {
+        private fun canBeBoolean(type: PShape): Boolean {
+            return type.allTypes().any {
                 // TODO: This is a quick fix to unblock the typing or case expression.
                 //  We need to model the truth value better in typer.
                 it is BoolType || it is NullType || it is MissingType
@@ -732,7 +755,7 @@ internal class PlanTyper(
          * then when we see the top-level `a IS STRUCT`, then we can assume that the `a` on the RHS is definitely a
          * struct. We handle this by using [foldCaseBranch].
          */
-        override fun visitRexOpCaseBranch(node: Rex.Op.Case.Branch, ctx: StaticType?): Rex.Op.Case.Branch {
+        override fun visitRexOpCaseBranch(node: Rex.Op.Case.Branch, ctx: PShape?): Rex.Op.Case.Branch {
             val visitedCondition = visitRex(node.condition, node.condition.type)
             val visitedReturn = visitRex(node.rex, node.rex.type)
             return foldCaseBranch(visitedCondition, visitedReturn)
@@ -761,14 +784,14 @@ internal class PlanTyper(
                         }
                         val ref = call.args.getOrNull(0) ?: error("IS STRUCT requires an argument.")
                         // Replace the result's type
-                        val type = AnyOfType(ref.type.allTypes.filterIsInstance<StructType>().toSet())
+                        val type = anyOf(ref.type.allShapes().filter { it.isType<TupleType>() }.toSet())
                         val replacementVal = ref.copy(type = type)
                         when (ref.op is Rex.Op.Var.Local) {
                             true -> RexReplacer.replace(result, ref, replacementVal)
                             false -> result
                         }
                     }
-                    val type = rex.toUnionType().flatten()
+                    val type = rex.toUnionType()
                     return rexOpCaseBranch(condition, result.copy(type))
                 }
                 is Rex.Op.Call.Static -> {
@@ -778,13 +801,13 @@ internal class PlanTyper(
                     }
                     val ref = call.args.getOrNull(0) ?: error("IS STRUCT requires an argument.")
                     val simplifiedCondition = when {
-                        ref.type.allTypes.all { it is StructType } -> rex(BOOL, rexOpLit(boolValue(true)))
-                        ref.type.allTypes.none { it is StructType } -> rex(BOOL, rexOpLit(boolValue(false)))
+                        ref.type.allShapes().all { it.isType<TupleType>() } -> rex(BoolType, rexOpLit(boolValue(true)))
+                        ref.type.allShapes().none { it.isType<TupleType>() } -> rex(BoolType, rexOpLit(boolValue(false)))
                         else -> condition
                     }
 
                     // Replace the result's type
-                    val type = AnyOfType(ref.type.allTypes.filterIsInstance<StructType>().toSet())
+                    val type = PShape.anyOf(ref.type.allShapes().filter { it.isType<TupleType>() }.toSet())
                     val replacementVal = ref.copy(type = type)
                     val rex = when (ref.op is Rex.Op.Var.Local) {
                         true -> RexReplacer.replace(result, ref, replacementVal)
@@ -796,37 +819,41 @@ internal class PlanTyper(
             }
         }
 
-        override fun visitRexOpCollection(node: Rex.Op.Collection, ctx: StaticType?): Rex {
-            if (ctx!! !is CollectionType) {
-                handleUnexpectedType(ctx, setOf(StaticType.LIST, StaticType.BAG, StaticType.SEXP))
-                return rex(StaticType.NULL_OR_MISSING, rexOpErr("Expected collection type"))
+        override fun visitRexOpCollection(node: Rex.Op.Collection, ctx: PShape?): Rex {
+            if ((ctx!!.type !is ArrayType) && (ctx.type !is BagType)) {
+                handleUnexpectedType(ctx.type, setOf(BagType, ArrayType))
+                return rex(MissingType, rexOpErr("Expected collection type"))
             }
             val values = node.values.map { visitRex(it, it.type) }
             val t = when (values.size) {
-                0 -> ANY
+                0 -> PShape.of(DynamicType)
                 else -> values.toUnionType()
             }
-            val type = when (ctx as CollectionType) {
-                is BagType -> BagType(t)
-                is ListType -> ListType(t)
-                is SexpType -> SexpType(t)
+            val type = when (ctx.type) {
+                is BagType -> BagType
+                is ArrayType -> ArrayType
+                else -> error("This shouldn't have happened.")
             }
-            return rex(type, rexOpCollection(values))
+            val shape = PShape.of(
+                type = type,
+                constraints = setOf(Element(t), NotNull)
+            )
+            return rex(shape, rexOpCollection(values))
         }
 
         @OptIn(PartiQLValueExperimental::class)
-        override fun visitRexOpStruct(node: Rex.Op.Struct, ctx: StaticType?): Rex {
+        override fun visitRexOpStruct(node: Rex.Op.Struct, ctx: PShape?): Rex {
             val fields = node.fields.mapNotNull {
                 val k = visitRex(it.k, it.k.type)
                 val v = visitRex(it.v, it.v.type)
-                if (v.type is MissingType) {
+                if (v.type.type is MissingType) {
                     null
                 } else {
                     rexOpStructField(k, v)
                 }
             }
             var structIsClosed = true
-            val structTypeFields = mutableListOf<StructType.Field>()
+            val structTypeFields = mutableListOf<Fields.Field>()
             val structKeysSeent = mutableSetOf<String>()
             for (field in fields) {
                 when (field.k.op) {
@@ -837,11 +864,11 @@ internal class PlanTyper(
                             val name = key.value.string!!
                             val type = field.v.type
                             structKeysSeent.add(name)
-                            structTypeFields.add(StructType.Field(name, type))
+                            structTypeFields.add(Fields.Field(name, type))
                         }
                     }
                     else -> {
-                        if (field.k.type.allTypes.any { it.isText() }) {
+                        if (field.k.type.allTypes().any { it.isText() }) {
                             // If the non-literal could be text, StructType will have open content.
                             structIsClosed = false
                         } else {
@@ -850,32 +877,41 @@ internal class PlanTyper(
                     }
                 }
             }
-            val type = StructType(
-                fields = structTypeFields,
-                contentClosed = structIsClosed,
+            val struct = PShape.of(
+                type = TupleType,
                 constraints = setOf(
-                    TupleConstraint.Open(!structIsClosed),
-                    TupleConstraint.UniqueAttrs(structKeysSeent.size == fields.size)
-                ),
+                    Fields(
+                        isClosed = structIsClosed,
+                        fields = structTypeFields
+                    ),
+                    NotNull
+                )
             )
-            return rex(type, rexOpStruct(fields))
+            return rex(struct, rexOpStruct(fields))
         }
 
-        override fun visitRexOpPivot(node: Rex.Op.Pivot, ctx: StaticType?): Rex {
+        override fun visitRexOpPivot(node: Rex.Op.Pivot, ctx: PShape?): Rex {
             val stack = locals.outer + listOf(locals)
             val rel = node.rel.type(stack)
             val typeEnv = TypeEnv(rel.type.schema, stack)
             val typer = RexTyper(typeEnv, Scope.LOCAL)
             val key = typer.visitRex(node.key, null)
             val value = typer.visitRex(node.value, null)
-            val type = StructType(
-                contentClosed = false, constraints = setOf(TupleConstraint.Open(true))
+            val type = PShape.of(
+                type = TupleType,
+                constraints = setOf(
+                    Fields(
+                        fields = emptyList(),
+                        isClosed = false
+                    ),
+                    NotNull
+                )
             )
             val op = rexOpPivot(key, value, rel)
             return rex(type, op)
         }
 
-        override fun visitRexOpSubquery(node: Rex.Op.Subquery, ctx: StaticType?): Rex {
+        override fun visitRexOpSubquery(node: Rex.Op.Subquery, ctx: PShape?): Rex {
             val rel = node.rel.type(locals.outer + listOf(locals))
             val newTypeEnv = TypeEnv(schema = rel.type.schema, outer = locals.outer + listOf(locals))
             val constructor = node.constructor.type(newTypeEnv)
@@ -889,8 +925,8 @@ internal class PlanTyper(
         /**
          * Calculate output type of a row-value subquery.
          */
-        private fun visitRexOpSubqueryRow(subquery: Rex.Op.Subquery, cons: StaticType): Rex {
-            if (cons !is StructType) {
+        private fun visitRexOpSubqueryRow(subquery: Rex.Op.Subquery, cons: PShape): Rex {
+            if (!cons.isType<TupleType>()) {
                 return rexErr("Subquery with non-SQL SELECT cannot be coerced to a row-value expression. Found constructor type: $cons")
             }
             // Do a simple cardinality check for the moment.
@@ -901,7 +937,7 @@ internal class PlanTyper(
             //     return rexErr("Cannot coercion subquery with $m attributes to a row-value-expression with $n attributes")
             // }
             // If we made it this far, then we can coerce this subquery to the desired complex value
-            val type = StaticType.LIST
+            val type = PShape.of(ArrayType) // TODO: Narrow down the element type
             val op = subquery
             return rex(type, op)
         }
@@ -909,63 +945,78 @@ internal class PlanTyper(
         /**
          * Calculate output type of a scalar subquery.
          */
-        private fun visitRexOpSubqueryScalar(subquery: Rex.Op.Subquery, cons: StaticType): Rex {
-            if (cons !is StructType) {
+        private fun visitRexOpSubqueryScalar(subquery: Rex.Op.Subquery, cons: PShape): Rex {
+            if (!cons.isType<TupleType>()) {
                 return rexErr("Subquery with non-SQL SELECT cannot be coerced to a scalar. Found constructor type: $cons")
             }
-            val n = cons.fields.size
+            val fields = cons.getFirstAndOnlyFields() ?: run {
+                return rexErr("Subquery with non-SQL SELECT cannot be coerced to a scalar. Found constructor type: $cons")
+            }
+            val n = fields.fields.size
             if (n != 1) {
                 return rexErr("SELECT constructor with $n attributes cannot be coerced to a scalar. Found constructor type: $cons")
             }
             // If we made it this far, then we can coerce this subquery to a scalar
-            val type = cons.fields.first().value
+            val type = fields.fields.first().value
             val op = subquery
             return rex(type, op)
         }
 
-        override fun visitRexOpSelect(node: Rex.Op.Select, ctx: StaticType?): Rex {
+        override fun visitRexOpSelect(node: Rex.Op.Select, ctx: PShape?): Rex {
             val rel = node.rel.type(locals.outer + listOf(locals))
             val newTypeEnv = TypeEnv(schema = rel.type.schema, outer = locals.outer + listOf(locals))
             var constructor = node.constructor.type(newTypeEnv)
             var constructorType = constructor.type
             // add the ordered property to the constructor
-            if (constructorType is StructType) {
-                // TODO: We shouldn't need to copy the ordered constraint.
-                constructorType = constructorType.copy(
-                    constraints = constructorType.constraints + setOf(TupleConstraint.Ordered)
-                )
+            if (constructorType.isType<TupleType>()) {
+                // TODO: Do we need to copy the ORDERED constraint/meta?
+                constructorType = ShapeUtils.addOrdering(constructorType)
                 constructor = rex(constructorType, constructor.op)
             }
             val type = when (rel.isOrdered()) {
-                true -> ListType(constructor.type)
-                else -> BagType(constructor.type)
+                true -> ArrayType
+                else -> BagType
             }
-            return rex(type, rexOpSelect(constructor, rel))
+            val shape = PShape.of(
+                type = type,
+                constraints = setOf(
+                    Element(constructor.type),
+                    NotNull
+                )
+            )
+            return rex(shape, rexOpSelect(constructor, rel))
         }
 
-        override fun visitRexOpTupleUnion(node: Rex.Op.TupleUnion, ctx: StaticType?): Rex {
+        override fun visitRexOpTupleUnion(node: Rex.Op.TupleUnion, ctx: PShape?): Rex {
             val args = node.args.map { visitRex(it, ctx) }
             val type = when (args.size) {
-                0 -> StructType(
-                    fields = emptyMap(), contentClosed = true,
-                    constraints = setOf(
-                        TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered
+                0 -> {
+                    PShape.of(
+                        type = TupleType,
+                        constraints = setOf(
+                            Fields(
+                                fields = emptyList(),
+                                isClosed = true,
+                                isOrdered = true
+                            ),
+                            NotNull
+                        ),
                     )
-                )
+                }
                 else -> {
                     val argTypes = args.map { it.type }
                     val potentialTypes = buildArgumentPermutations(argTypes).map { argumentList ->
                         calculateTupleUnionOutputType(argumentList)
                     }
-                    unionOf(potentialTypes.toSet()).flatten()
+                    anyOf(potentialTypes.toSet())
                 }
             }
             val op = rexOpTupleUnion(args)
             return rex(type, op)
         }
 
-        override fun visitRexOpErr(node: Rex.Op.Err, ctx: StaticType?): PlanNode {
-            val type = ctx ?: ANY
+        override fun visitRexOpErr(node: Rex.Op.Err, ctx: PShape?): PlanNode {
+            val type = ctx ?: PShape.of(DynamicType)
             return rex(type, node)
         }
 
@@ -979,7 +1030,7 @@ internal class PlanTyper(
          * The signature of TUPLEUNION is: (LIST<STRUCT>) -> STRUCT.
          *
          * If any of the arguments are NULL (or potentially NULL), we return NULL.
-         * If any of the arguments are non-struct, we return MISSING.
+         * If any of the arguments are non-struct, we return MissingType.
          *
          * Now, assuming all the other arguments are STRUCT, then we compute the output based on a number of factors:
          * - closed content
@@ -991,36 +1042,42 @@ internal class PlanTyper(
          * If all arguments contain unique attributes AND all arguments are closed AND no fields clash, the output has
          *  unique attributes.
          */
-        private fun calculateTupleUnionOutputType(args: List<StaticType>): StaticType {
-            val structFields = mutableListOf<StructType.Field>()
+        private fun calculateTupleUnionOutputType(args: List<PShape>): PShape {
+            val structFields = mutableListOf<Fields.Field>()
             var structAmount = 0
             var structIsClosed = true
             var structIsOrdered = true
             var uniqueAttrs = true
-            val possibleOutputTypes = mutableListOf<StaticType>()
+            val possibleOutputTypes = mutableListOf<PShape>()
             args.forEach { arg ->
-                when (arg) {
-                    is StructType -> {
+                when {
+                    arg.isType<TupleType>() -> {
+                        val fields = arg.getFirstAndOnlyFields() ?: run {
+                            structIsClosed = false
+                            uniqueAttrs = false
+                            structIsOrdered = ShapeUtils.isOrderedTuple(arg)
+                            return@forEach
+                        }
                         structAmount += 1
-                        structFields.addAll(arg.fields)
-                        structIsClosed = structIsClosed && arg.constraints.contains(TupleConstraint.Open(false))
-                        structIsOrdered = structIsOrdered && arg.constraints.contains(TupleConstraint.Ordered)
-                        uniqueAttrs = uniqueAttrs && arg.constraints.contains(TupleConstraint.UniqueAttrs(true))
+                        structFields.addAll(fields.fields)
+                        structIsClosed = structIsClosed && fields.isClosed
+                        structIsOrdered = structIsOrdered && ShapeUtils.isOrderedTuple(arg)
+                        uniqueAttrs = uniqueAttrs // TODO: Do we need this?
                     }
-                    is AnyOfType -> {
+                    arg.isUnion() -> {
                         onProblem.invoke(
                             Problem(
                                 UNKNOWN_PROBLEM_LOCATION,
                                 PlanningProblemDetails.CompileError("TupleUnion wasn't normalized to exclude union types.")
                             )
                         )
-                        possibleOutputTypes.add(MISSING)
+                        possibleOutputTypes.add(PShape.of(MissingType))
                     }
-                    is NullType -> {
-                        return NULL
+                    arg.isType<NullType>() -> {
+                        return PShape.of(NullType)
                     }
                     else -> {
-                        return MISSING
+                        return PShape.of(MissingType)
                     }
                 }
             }
@@ -1029,15 +1086,16 @@ internal class PlanTyper(
                 else -> uniqueAttrs
             }
             uniqueAttrs = uniqueAttrs && (structFields.size == structFields.distinctBy { it.key }.size)
-            val orderedConstraint = when (structIsOrdered) {
-                true -> TupleConstraint.Ordered
-                false -> null
-            }
-            val constraints = setOfNotNull(
-                TupleConstraint.Open(!structIsClosed), TupleConstraint.UniqueAttrs(uniqueAttrs), orderedConstraint
-            )
-            return StructType(
-                fields = structFields.map { it }, contentClosed = structIsClosed, constraints = constraints
+            return PShape.of(
+                type = TupleType,
+                constraints = setOf(
+                    Fields(
+                        isClosed = structIsClosed,
+                        fields = structFields,
+                        isOrdered = structIsOrdered
+                    ),
+                    NotNull,
+                ),
             )
         }
 
@@ -1045,15 +1103,15 @@ internal class PlanTyper(
          * We are essentially making permutations of arguments that maintain the same initial ordering. For example,
          * consider the following args:
          * ```
-         * [ 0 = UNION(INT, STRING), 1 = (DECIMAL, TIMESTAMP) ]
+         * [ 0 = UNION(INT, CharVarUnboundedType), 1 = (DECIMAL, TIMESTAMP) ]
          * ```
          * This function will return:
          * ```
          * [
          *   [ 0 = INT, 1 = DECIMAL ],
          *   [ 0 = INT, 1 = TIMESTAMP ],
-         *   [ 0 = STRING, 1 = DECIMAL ],
-         *   [ 0 = STRING, 1 = TIMESTAMP ]
+         *   [ 0 = CharVarUnboundedType, 1 = DECIMAL ],
+         *   [ 0 = CharVarUnboundedType, 1 = TIMESTAMP ]
          * ]
          * ```
          *
@@ -1071,15 +1129,15 @@ internal class PlanTyper(
          * TUPLEUNION(STRUCT(c), STRUCT(f)) --> STRUCT(c, f)
          * ```
          */
-        private fun buildArgumentPermutations(args: List<StaticType>): Sequence<List<StaticType>> {
-            val flattenedArgs = args.map { it.flatten().allTypes }
+        private fun buildArgumentPermutations(args: List<PShape>): Sequence<List<PShape>> {
+            val flattenedArgs = args.map { it.allShapes().toList() }
             return buildArgumentPermutations(flattenedArgs, accumulator = emptyList())
         }
 
         private fun buildArgumentPermutations(
-            args: List<List<StaticType>>,
-            accumulator: List<StaticType>,
-        ): Sequence<List<StaticType>> {
+            args: List<List<PShape>>,
+            accumulator: List<PShape>,
+        ): Sequence<List<PShape>> {
             if (args.isEmpty()) {
                 return sequenceOf(accumulator)
             }
@@ -1106,27 +1164,26 @@ internal class PlanTyper(
          *   - AND no item is found, return [MissingType]
          *   - AND only one item is present -> grab item and make sensitive.
          *   - AND more than one item is present, keep sensitivity and grab item.
-         * 3. If [struct] is open, return [AnyType]
+         * 3. If [struct] is open, return [DynamicType]
          *
          * @return a [Pair] where the [Pair.first] represents the type of the [step] and the [Pair.second] represents
          * the disambiguated [key].
          */
-        private fun inferStructLookup(struct: StructType, key: Identifier.Symbol): Pair<StaticType, Identifier.Symbol> {
+        private fun inferStructLookup(struct: Fields, key: Identifier.Symbol, isOrdered: Boolean): Pair<PShape, Identifier.Symbol> {
             val binding = key.toBindingName()
-            val isClosed = struct.constraints.contains(TupleConstraint.Open(false))
-            val isOrdered = struct.constraints.contains(TupleConstraint.Ordered)
+            val isClosed = struct.isClosed
             val (name, type) = when {
                 // 1. Struct is closed and ordered
                 isClosed && isOrdered -> {
                     struct.fields.firstOrNull { entry -> binding.matches(entry.key) }?.let {
                         (sensitive(it.key) to it.value)
-                    } ?: (key to MISSING)
+                    } ?: (key to PShape.of(MissingType))
                 }
                 // 2. Struct is closed
                 isClosed -> {
                     val matches = struct.fields.filter { entry -> binding.matches(entry.key) }
                     when (matches.size) {
-                        0 -> (key to MISSING)
+                        0 -> (key to PShape.of(MissingType))
                         1 -> matches.first().let { (sensitive(it.key) to it.value) }
                         else -> {
                             val firstKey = matches.first().key
@@ -1134,12 +1191,12 @@ internal class PlanTyper(
                                 true -> sensitive(firstKey)
                                 false -> key
                             }
-                            sharedKey to unionOf(matches.map { it.value }.toSet()).flatten()
+                            sharedKey to PShape.anyOf(matches.map { it.value }.toSet())
                         }
                     }
                 }
                 // 3. Struct is open
-                else -> (key to ANY)
+                else -> (key to PShape.of(DynamicType))
             }
             return type to name
         }
@@ -1148,9 +1205,8 @@ internal class PlanTyper(
             identifierSymbol(str, Identifier.CaseSensitivity.SENSITIVE)
 
         @OptIn(FnExperimental::class)
-        private fun inferFnType(fn: FnSignature, args: List<Rex>): StaticType {
-
-            // Determine role of NULL and MISSING in the return type
+        private fun inferFnType(fn: FnSignature, args: List<Rex>): PShape {
+            // Determine role of NULL and MissingType in the return type
             var hadNull = false
             var hadNullable = false
             var hadMissing = false
@@ -1158,8 +1214,8 @@ internal class PlanTyper(
             for (arg in args) {
                 val t = arg.type
                 when {
-                    t is MissingType -> hadMissing = true
-                    t is NullType -> hadNull = true
+                    t.type is MissingType -> hadMissing = true
+                    t.type is NullType -> hadNull = true
                     t.isMissable() -> hadMissable = true
                     t.isNullable() -> hadNullable = true
                 }
@@ -1177,25 +1233,26 @@ internal class PlanTyper(
             // True iff MISSING CALL and had a MISSABLE arg
             val isMissable = (fn.isMissingCall && hadMissable) && fn.isMissable
 
+            val returnType = fn.returns
             // Return type with calculated nullability
-            var type: StaticType = when {
-                isMissing -> MISSING
+            val type = when {
+                isMissing -> PShape.of(MissingType, constraints = setOf(NotNull))
                 // Edge cases for EQ and boolean connective
                 // If function can not return missing or null, can not propagate missing or null
-                // AKA, the Function IS MISSING
+                // AKA, the Function IS MissingType
                 // return signature return type
-                !fn.isMissable && !fn.isMissingCall && !fn.isNullable && !fn.isNullCall -> fn.returns.toNonNullStaticType()
-                isNull || (!fn.isMissable && hadMissing) -> fn.returns.toStaticType()
-                isNullable -> fn.returns.toStaticType()
-                else -> fn.returns.toNonNullStaticType()
+                !fn.isMissable && !fn.isMissingCall && !fn.isNullable && !fn.isNullCall -> PShape.of(returnType, constraints = setOf(NotNull))
+                isNull || (!fn.isMissable && hadMissing) -> PShape.of(returnType)
+                isNullable -> PShape.of(returnType)
+                else -> PShape.of(returnType, constraints = setOf(NotNull))
             }
 
-            // Propagate MISSING unless this operator explicitly doesn't return missing (fn.isMissable = false).
+            // Propagate MissingType unless this operator explicitly doesn't return missing (fn.isMissable = false).
             if (isMissable) {
-                type = unionOf(type, MISSING)
+                return anyOf(type, PShape.of(MissingType))
             }
 
-            return type.flatten()
+            return type
         }
 
         /**
@@ -1213,7 +1270,7 @@ internal class PlanTyper(
          *     to each row of T and eliminating null values <--- all NULL values are eliminated as inputs
          */
         @OptIn(FnExperimental::class)
-        fun resolveAgg(node: Rel.Op.Aggregate.Call.Unresolved): Pair<Rel.Op.Aggregate.Call, StaticType> {
+        fun resolveAgg(node: Rel.Op.Aggregate.Call.Unresolved): Pair<Rel.Op.Aggregate.Call, PShape> {
 
             // Type the arguments
             var isMissable = false
@@ -1222,10 +1279,10 @@ internal class PlanTyper(
                 if (arg.op is Rex.Op.Err) {
                     // don't attempt to resolve an aggregation with erroneous arguments.
                     handleUnknownAggregation(node)
-                    return node to ANY
-                } else if (arg.type is MissingType) {
+                    return node to PShape.of(DynamicType)
+                } else if (arg.type.type is MissingType) {
                     handleAlwaysMissing()
-                    return relOpAggregateCallUnresolved(node.name, node.setQuantifier, listOf(rexErr("MISSING"))) to MissingType
+                    return relOpAggregateCallUnresolved(node.name, node.setQuantifier, listOf(rexErr("MissingType"))) to PShape.of(MissingType)
                 } else if (arg.type.isMissable()) {
                     isMissable = true
                 }
@@ -1236,15 +1293,15 @@ internal class PlanTyper(
             val call = env.resolveAgg(node.name, node.setQuantifier, args)
             if (call == null) {
                 handleUnknownAggregation(node)
-                return node to ANY
+                return node to PShape.of(DynamicType)
             }
 
-            // Treat MISSING as NULL in aggregations.
+            // Treat MissingType as NULL in aggregations.
             val isNullable = call.agg.signature.isNullable || isMissable
             val returns = call.agg.signature.returns
-            val type: StaticType = when {
-                isNullable -> returns.toStaticType()
-                else -> returns.toNonNullStaticType()
+            val type = when {
+                isNullable -> PShape.of(returns)
+                else -> PShape.of(returns, constraint = NotNull)
             }
             //
             return call to type
@@ -1269,7 +1326,7 @@ internal class PlanTyper(
     private fun Rex.type(typeEnv: TypeEnv, strategy: Scope = Scope.LOCAL) =
         RexTyper(typeEnv, strategy).visitRex(this, this.type)
 
-    private fun rexErr(message: String) = rex(MISSING, rexOpErr(message))
+    private fun rexErr(message: String) = rex(MissingType, rexOpErr(message))
 
     /**
      * I found decorating the tree with the binding names (for resolution) was easier than associating introduced
@@ -1283,7 +1340,7 @@ internal class PlanTyper(
      * We may be able to eliminate this issue by keeping everything internal and running the typing pass first.
      * This is simple enough for now.
      */
-    private fun Rel.Type.copyWithSchema(types: List<StaticType>): Rel.Type {
+    private fun Rel.Type.copyWithSchema(types: List<PShape>): Rel.Type {
         assert(types.size == schema.size) { "Illegal copy, types size does not matching bindings list size" }
         return this.copy(schema = schema.mapIndexed { i, binding -> binding.copy(type = types[i]) })
     }
@@ -1309,21 +1366,26 @@ internal class PlanTyper(
     /**
      * Produce a union type from all the
      */
-    private fun List<Rex>.toUnionType(): StaticType = AnyOfType(map { it.type }.toSet()).flatten()
+    private fun List<Rex>.toUnionType(): PShape = PShape.anyOf(map { it.type }.toSet())
 
-    private fun getElementTypeForFromSource(fromSourceType: StaticType): StaticType = when (fromSourceType) {
-        is BagType -> fromSourceType.elementType
-        is ListType -> fromSourceType.elementType
-        is AnyType -> ANY
-        is AnyOfType -> AnyOfType(fromSourceType.types.map { getElementTypeForFromSource(it) }.toSet())
+    // TODO: How to properly handle union types here?
+    private fun getElementTypeForFromSource(fromSourceType: PShape): PShape = when {
+        fromSourceType.isType<BagType>() -> fromSourceType.getElement().shape
+        fromSourceType.isType<ArrayType>() -> fromSourceType.getElement().shape
+        fromSourceType.isUnion() -> anyOf(fromSourceType.allShapes().map { getElementTypeForFromSource(it) }.toSet())
         // All the other types coerce into a bag of themselves (including null/missing/sexp).
         else -> fromSourceType
     }
 
-    private fun assertAsInt(type: StaticType) {
-        if (type.flatten().allTypes.any { variant -> variant is IntType }.not()) {
-            handleUnexpectedType(type, setOf(StaticType.INT))
+    private fun assertAsInt(type: PShape) {
+        if (type.allTypes().any { variant -> variant.isIntegerType() }.not()) {
+            handleUnexpectedType(type.type, setOf(Int16Type, Int32Type, Int64Type, TypeIntBig))
         }
+    }
+
+    private fun PartiQLType.isIntegerType(): Boolean = when (this) {
+        is Int8Type, is Int16Type, is Int32Type, is Int64Type, is TypeIntBig -> true
+        else -> false
     }
 
     // ERRORS
@@ -1337,11 +1399,15 @@ internal class PlanTyper(
         )
     }
 
-    private fun handleUnexpectedType(actual: StaticType, expected: Set<StaticType>) {
+    private fun handleUnexpectedType(actual: PShape, expected: Set<PShape>) {
+        handleUnexpectedType(actual.type, expected.map { it.type }.toSet())
+    }
+
+    private fun handleUnexpectedType(actual: PartiQLType, expected: Set<PartiQLType>) {
         onProblem(
             Problem(
                 sourceLocation = UNKNOWN_PROBLEM_LOCATION,
-                details = PlanningProblemDetails.UnexpectedType(actual, expected),
+                details = PlanningProblemDetails.UnexpectedType(expected, actual)
             )
         )
     }
@@ -1351,7 +1417,7 @@ internal class PlanTyper(
             Problem(
                 sourceLocation = UNKNOWN_PROBLEM_LOCATION,
                 details = PlanningProblemDetails.UnknownFunction(
-                    identifier = "CAST(<arg> AS ${node.target})", args = listOf(node.arg.type)
+                    args = listOf(node.arg.type.type), identifier = "CAST(<arg> AS ${node.target})"
                 )
             )
         )
@@ -1362,8 +1428,8 @@ internal class PlanTyper(
             Problem(
                 sourceLocation = UNKNOWN_PROBLEM_LOCATION,
                 details = PlanningProblemDetails.UnknownFunction(
-                    identifier = node.name,
-                    args = node.args.map { it.type }
+                    args = node.args.map { it.type.type },
+                    identifier = node.name
                 )
             )
         )
@@ -1374,8 +1440,8 @@ internal class PlanTyper(
             Problem(
                 sourceLocation = UNKNOWN_PROBLEM_LOCATION,
                 details = PlanningProblemDetails.UnknownFunction(
-                    identifier = node.identifier.debug(),
-                    args = args.map { it.type }
+                    args = args.map { it.type.type },
+                    identifier = node.identifier.debug()
                 )
             )
         )
@@ -1415,15 +1481,37 @@ internal class PlanTyper(
      * Note, this does not handle union types or nullable struct types.
      */
     private fun List<Rel.Binding>.pad() = map {
-        val type = when (val t = it.type) {
-            is StructType -> t.withNullableFields()
+        val t = it.type
+        val type = when {
+            t.isType<TupleType>() -> t.withNullableFields()
             else -> t.asNullable()
         }
         relBinding(it.name, type)
     }
 
-    private fun StructType.withNullableFields(): StructType {
-        return copy(fields.map { it.copy(value = it.value.asNullable()) })
+    // TODO: Add union support
+    private fun PShape.withNullableFields(): PShape {
+        val constraints = this.constraints.map { constraint ->
+            when (constraint) {
+                is Fields -> constraint.withNullableFields()
+                else -> constraint
+            }
+        }.toSet()
+        return this.copy(constraints = constraints)
+    }
+
+    private fun Constraint.withNullableFields(): Constraint {
+        return when (this) {
+            is Fields -> this.withNullableFields()
+            else -> this
+        }
+    }
+
+    private fun Fields.withNullableFields(): Fields {
+        val fields = this.fields.map { field ->
+            field.copy(value = field.value.asNullable())
+        }
+        return this.copy(fields)
     }
 
     private fun excludeBindings(input: List<Rel.Binding>, item: Rel.Op.Exclude.Path): List<Rel.Binding> {
@@ -1464,7 +1552,7 @@ internal class PlanTyper(
      */
     private fun Rex.Op.Path.debug(): String {
         val steps = mutableListOf<String>()
-        var curr: Rex = rex(ANY, this)
+        var curr: Rex = rex(DynamicType, this)
         while (true) {
             curr = when (val op = curr.op) {
                 is Rex.Op.Path.Index -> {
@@ -1491,3 +1579,8 @@ internal class PlanTyper(
         return "`${steps.joinToString(".")}` on root $curr"
     }
 }
+
+private fun rex(type: PartiQLType, op: Rex.Op): Rex = Rex(
+    type = PShape.of(type),
+    op = op
+)

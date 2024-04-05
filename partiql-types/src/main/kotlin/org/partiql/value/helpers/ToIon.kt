@@ -12,14 +12,12 @@ import com.amazon.ionelement.api.ionFloat
 import com.amazon.ionelement.api.ionInt
 import com.amazon.ionelement.api.ionListOf
 import com.amazon.ionelement.api.ionNull
-import com.amazon.ionelement.api.ionSexpOf
 import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.ionStructOf
 import com.amazon.ionelement.api.ionSymbol
 import com.amazon.ionelement.api.ionTimestamp
 import org.partiql.value.BagValue
 import org.partiql.value.BinaryValue
-import org.partiql.value.BlobValue
 import org.partiql.value.BoolValue
 import org.partiql.value.ByteValue
 import org.partiql.value.CharValue
@@ -39,7 +37,6 @@ import org.partiql.value.MissingValue
 import org.partiql.value.NullValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.SexpValue
 import org.partiql.value.StringValue
 import org.partiql.value.StructValue
 import org.partiql.value.SymbolValue
@@ -189,13 +186,6 @@ internal object ToIon : PartiQLValueBaseVisitor<IonElement, Unit>() {
         }
     }
 
-    override fun visitBlob(v: BlobValue, ctx: Unit): IonElement = v.annotate {
-        when (val value = v.value) {
-            null -> ionNull(ElementType.BLOB)
-            else -> ionBlob(value)
-        }
-    }
-
     override fun visitDate(v: DateValue, ctx: Unit): IonElement = v.annotate {
         when (val value = v.value) {
             null -> ionNull(ElementType.STRUCT)
@@ -268,13 +258,6 @@ internal object ToIon : PartiQLValueBaseVisitor<IonElement, Unit>() {
         when (v.isNull) {
             true -> ionNull(ElementType.LIST)
             else -> ionListOf(v.map { it.accept(ToIon, Unit) }.toList())
-        }
-    }
-
-    override fun visitSexp(v: SexpValue<*>, ctx: Unit): IonElement = v.annotate {
-        when (v.isNull) {
-            true -> ionNull(ElementType.SEXP)
-            else -> ionSexpOf(v.map { it.accept(ToIon, Unit) }.toList())
         }
     }
 

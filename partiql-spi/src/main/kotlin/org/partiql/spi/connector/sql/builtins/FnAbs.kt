@@ -3,6 +3,7 @@
 
 package org.partiql.spi.connector.sql.builtins
 
+import org.partiql.spi.connector.sql.builtins.internal.FnUtils
 import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnParameter
@@ -17,7 +18,6 @@ import org.partiql.value.Int8Value
 import org.partiql.value.IntValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType.DECIMAL_ARBITRARY
 import org.partiql.value.PartiQLValueType.FLOAT32
 import org.partiql.value.PartiQLValueType.FLOAT64
 import org.partiql.value.PartiQLValueType.INT
@@ -25,6 +25,7 @@ import org.partiql.value.PartiQLValueType.INT16
 import org.partiql.value.PartiQLValueType.INT32
 import org.partiql.value.PartiQLValueType.INT64
 import org.partiql.value.PartiQLValueType.INT8
+import org.partiql.value.TypeNumericUnbounded
 import org.partiql.value.check
 import org.partiql.value.decimalValue
 import org.partiql.value.float32Value
@@ -122,20 +123,56 @@ internal object Fn_ABS__INT__INT : Fn {
     }
 }
 
+/**
+ * SQL:1999 states:
+ * CREATE FUNCTION "ABS" (
+ *      N NUMERIC ( P, S )
+ * ) RETURNS NUMERIC ( P, S )
+ * SPECIFIC ABSNUMERICP_S
+ * RETURN ABS ( N ) ;
+ *
+ * Let P assume all character string values that are the minimal literal for an exact numeric value
+ * of scale 0 (zero) between 1 (one) and MP, let S assume all character string values that are
+ * the minimal literal for an exact numeric value of scale 0 (zero) between 1 (one) and P
+ */
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
-internal object Fn_ABS__DECIMAL_ARBITRARY__DECIMAL_ARBITRARY : Fn {
+internal object Fn_ABS__NUMERIC__NUMERIC {
+    val ALL = buildList<Fn> {
+        // BOUNDED NUMERIC
+        FnUtils.numericTypes().forEach { numeric ->
+            val fn = object : Fn {
+                override val signature = FnSignature(
+                    name = "abs",
+                    returns = numeric,
+                    parameters = listOf(FnParameter("value", numeric)),
+                    isNullCall = true,
+                    isNullable = false,
+                )
 
+                override fun invoke(args: Array<PartiQLValue>): DecimalValue {
+                    val value = args[0].check<DecimalValue>().value!!
+                    return decimalValue(value.abs(), numeric.precision, numeric.scale)
+                }
+            }
+            add(fn)
+        }
+    }
+}
+
+@OptIn(FnExperimental::class)
+internal object Fn_ABS__BIGNUMERIC__BIGNUMERIC : Fn {
     override val signature = FnSignature(
         name = "abs",
-        returns = DECIMAL_ARBITRARY,
-        parameters = listOf(FnParameter("value", DECIMAL_ARBITRARY)),
+        returns = TypeNumericUnbounded,
+        parameters = listOf(FnParameter("value", TypeNumericUnbounded)),
         isNullCall = true,
         isNullable = false,
     )
 
+    @OptIn(PartiQLValueExperimental::class)
     override fun invoke(args: Array<PartiQLValue>): DecimalValue {
         val value = args[0].check<DecimalValue>().value!!
-        return decimalValue(value.abs())
+        return decimalValue(value.abs()) // Unbounded!
     }
 }
 

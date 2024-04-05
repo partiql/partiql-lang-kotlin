@@ -1,6 +1,7 @@
 package org.partiql.plugins.local
 
 import org.junit.jupiter.api.Test
+import org.partiql.shape.PShape
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
@@ -46,7 +47,7 @@ class LocalConnectorMetadataTests {
 
         // Assert
         assert(requested.matches(handle.path))
-        assert(expected == descriptor) {
+        assert(PShape.fromStaticType(expected) == descriptor) {
             buildString {
                 appendLine("Expected: $expected")
                 appendLine("Actual: $descriptor")
@@ -95,7 +96,7 @@ class LocalConnectorMetadataTests {
 
         // Assert
         assertEquals(expectedPath, handle.path)
-        assert(expected == descriptor) {
+        assert(PShape.fromStaticType(expected) == descriptor) {
             buildString {
                 appendLine("Expected: $expected")
                 appendLine("Actual: $descriptor")

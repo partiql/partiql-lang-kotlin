@@ -31,7 +31,6 @@ import org.partiql.value.MissingValue
 import org.partiql.value.NullValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.SexpValue
 import org.partiql.value.StringValue
 import org.partiql.value.StructValue
 import org.partiql.value.SymbolValue
@@ -195,8 +194,6 @@ public class PartiQLValueTextWriter(
         override fun visitBag(v: BagValue<*>, format: Format?) = collection(v, format, "<<" to ">>")
 
         override fun visitList(v: ListValue<*>, format: Format?) = collection(v, format, "[" to "]")
-
-        override fun visitSexp(v: SexpValue<*>, format: Format?) = collection(v, format, "(" to ")", " ")
 
         override fun visitStruct(v: StructValue<*>, format: Format?): String = buildString {
             if (v.isNull) {

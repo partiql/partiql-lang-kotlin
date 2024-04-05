@@ -14,12 +14,14 @@ import org.partiql.planner.util.ProblemCollector
 import org.partiql.plugins.memory.MemoryCatalog
 import org.partiql.plugins.memory.MemoryConnector
 import org.partiql.plugins.memory.MemoryObject
+import org.partiql.shape.PShape
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
 import org.partiql.spi.connector.ConnectorMetadata
 import org.partiql.spi.connector.ConnectorSession
 import org.partiql.types.StaticType
+import org.partiql.value.MissingType
 import java.util.Random
 import java.util.stream.Stream
 
@@ -125,7 +127,7 @@ abstract class PartiQLTyperTestBase {
                             val result = testingPipeline(statement, testName, metadata, pc)
                             val root = (result.plan.statement as Statement.Query).root
                             val actualType = root.type
-                            assert(actualType == StaticType.MISSING) {
+                            assert(actualType == PShape.of(MissingType)) {
                                 buildString {
                                     this.appendLine(" expected Type is : MISSING")
                                     this.appendLine("actual Type is : $actualType")

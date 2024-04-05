@@ -20,18 +20,28 @@ import com.amazon.ion.Decimal
 import org.partiql.errors.TypeCheckException
 import org.partiql.spi.fn.Agg
 import org.partiql.spi.fn.FnExperimental
+import org.partiql.value.BoolType
 import org.partiql.value.BoolValue
 import org.partiql.value.DecimalValue
 import org.partiql.value.Float32Value
 import org.partiql.value.Float64Value
+import org.partiql.value.Int16Type
 import org.partiql.value.Int16Value
+import org.partiql.value.Int32Type
 import org.partiql.value.Int32Value
+import org.partiql.value.Int64Type
 import org.partiql.value.Int64Value
+import org.partiql.value.Int8Type
 import org.partiql.value.Int8Value
 import org.partiql.value.IntValue
+import org.partiql.value.MissingType
+import org.partiql.value.NumericType
+import org.partiql.value.PartiQLType
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
+import org.partiql.value.TypeDoublePrecision
+import org.partiql.value.TypeReal
 import org.partiql.value.decimalValue
 import org.partiql.value.float32Value
 import org.partiql.value.float64Value
@@ -124,13 +134,13 @@ private fun Long.checkOverflowPlus(other: Long): Number {
 
 @OptIn(PartiQLValueExperimental::class)
 internal fun checkIsBooleanType(funcName: String, value: PartiQLValue) {
-    if (value.type != PartiQLValueType.BOOL) {
+    if (value.type !is BoolType) {
         throw TypeCheckException("Expected ${PartiQLValueType.BOOL} but received ${value.type}.")
     }
 }
 
 @OptIn(PartiQLValueExperimental::class)
-internal fun PartiQLValue.isUnknown(): Boolean = this.type == PartiQLValueType.MISSING || this.isNull
+internal fun PartiQLValue.isUnknown(): Boolean = this.type is MissingType || this.isNull
 
 @OptIn(PartiQLValueExperimental::class)
 internal fun PartiQLValue.numberValue(): Number = when (this) {
@@ -162,6 +172,17 @@ internal fun PartiQLValueType.isNumber(): Boolean = when (this) {
     PartiQLValueType.DECIMAL_ARBITRARY,
     PartiQLValueType.FLOAT32,
     PartiQLValueType.FLOAT64 -> true
+    else -> false
+}
+
+internal fun PartiQLType.isNumber(): Boolean = when (this) {
+    is Int8Type,
+    is Int16Type,
+    is Int32Type,
+    is Int64Type,
+    is NumericType,
+    is TypeReal,
+    is TypeDoublePrecision -> true
     else -> false
 }
 

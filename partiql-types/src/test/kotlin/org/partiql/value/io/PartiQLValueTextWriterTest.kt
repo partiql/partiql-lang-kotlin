@@ -154,7 +154,7 @@ class PartiQLValueTextWriterTest {
                 expected = "123.0",
             ),
             case(
-                value = charValue('C'),
+                value = charValue("C"),
                 expected = "'C'",
             ),
             case(
@@ -270,7 +270,7 @@ class PartiQLValueTextWriterTest {
                 expected = "null",
             ),
             case(
-                value = charValue('C'),
+                value = charValue("C"),
                 expected = "'C'",
             ),
             case(
@@ -626,7 +626,7 @@ class PartiQLValueTextWriterTest {
                 expected = "x::y::123.0",
             ),
             case(
-                value = charValue('C', annotations),
+                value = charValue("C", annotations),
                 expected = "x::y::'C'",
             ),
             case(

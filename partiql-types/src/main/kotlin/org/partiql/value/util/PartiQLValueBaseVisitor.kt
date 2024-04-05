@@ -16,7 +16,6 @@ package org.partiql.value.util
 
 import org.partiql.value.BagValue
 import org.partiql.value.BinaryValue
-import org.partiql.value.BlobValue
 import org.partiql.value.BoolValue
 import org.partiql.value.ByteValue
 import org.partiql.value.CharValue
@@ -39,7 +38,6 @@ import org.partiql.value.NumericValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.ScalarValue
-import org.partiql.value.SexpValue
 import org.partiql.value.StringValue
 import org.partiql.value.StructValue
 import org.partiql.value.SymbolValue
@@ -73,7 +71,6 @@ public abstract class PartiQLValueBaseVisitor<R, C> : PartiQLValueVisitor<R, C> 
 
     override fun visitScalar(v: ScalarValue<*>, ctx: C): R = when (v) {
         is BinaryValue -> visitBinary(v, ctx)
-        is BlobValue -> visitBlob(v, ctx)
         is BoolValue -> visitBool(v, ctx)
         is ByteValue -> visitByte(v, ctx)
         is DateValue -> visitDate(v, ctx)
@@ -97,7 +94,6 @@ public abstract class PartiQLValueBaseVisitor<R, C> : PartiQLValueVisitor<R, C> 
     override fun visitCollection(v: CollectionValue<*>, ctx: C): R = when (v) {
         is BagValue -> visitBag(v, ctx)
         is ListValue -> visitList(v, ctx)
-        is SexpValue -> visitSexp(v, ctx)
     }
 
     override fun visitBool(v: BoolValue, ctx: C): R = defaultVisit(v, ctx)
@@ -148,8 +144,6 @@ public abstract class PartiQLValueBaseVisitor<R, C> : PartiQLValueVisitor<R, C> 
 
     override fun visitByte(v: ByteValue, ctx: C): R = defaultVisit(v, ctx)
 
-    override fun visitBlob(v: BlobValue, ctx: C): R = defaultVisit(v, ctx)
-
     override fun visitDate(v: DateValue, ctx: C): R = defaultVisit(v, ctx)
 
     override fun visitTime(v: TimeValue, ctx: C): R = defaultVisit(v, ctx)
@@ -161,8 +155,6 @@ public abstract class PartiQLValueBaseVisitor<R, C> : PartiQLValueVisitor<R, C> 
     override fun visitBag(v: BagValue<*>, ctx: C): R = defaultVisit(v, ctx)
 
     override fun visitList(v: ListValue<*>, ctx: C): R = defaultVisit(v, ctx)
-
-    override fun visitSexp(v: SexpValue<*>, ctx: C): R = defaultVisit(v, ctx)
 
     override fun visitStruct(v: StructValue<*>, ctx: C): R = defaultVisit(v, ctx)
 

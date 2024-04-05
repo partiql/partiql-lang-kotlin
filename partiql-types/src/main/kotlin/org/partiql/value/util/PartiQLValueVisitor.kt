@@ -16,7 +16,6 @@ package org.partiql.value.util
 
 import org.partiql.value.BagValue
 import org.partiql.value.BinaryValue
-import org.partiql.value.BlobValue
 import org.partiql.value.BoolValue
 import org.partiql.value.ByteValue
 import org.partiql.value.CharValue
@@ -39,7 +38,6 @@ import org.partiql.value.NumericValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.ScalarValue
-import org.partiql.value.SexpValue
 import org.partiql.value.StringValue
 import org.partiql.value.StructValue
 import org.partiql.value.SymbolValue
@@ -90,8 +88,6 @@ public interface PartiQLValueVisitor<R, C> {
 
     public fun visitByte(v: ByteValue, ctx: C): R
 
-    public fun visitBlob(v: BlobValue, ctx: C): R
-
     public fun visitDate(v: DateValue, ctx: C): R
 
     public fun visitTime(v: TimeValue, ctx: C): R
@@ -103,8 +99,6 @@ public interface PartiQLValueVisitor<R, C> {
     public fun visitBag(v: BagValue<*>, ctx: C): R
 
     public fun visitList(v: ListValue<*>, ctx: C): R
-
-    public fun visitSexp(v: SexpValue<*>, ctx: C): R
 
     public fun visitStruct(v: StructValue<*>, ctx: C): R
 

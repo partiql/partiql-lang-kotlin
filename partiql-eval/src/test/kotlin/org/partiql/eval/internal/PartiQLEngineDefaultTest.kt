@@ -71,41 +71,48 @@ class PartiQLEngineDefaultTest {
 
     @Test
     fun singleTest() {
-        val tc = SuccessTestCase(
-            input = """
-                    SELECT o.name AS orderName,
-                        (SELECT c.name FROM customers c WHERE c.id=o.custId) AS customerName
-                    FROM orders o
-            """.trimIndent(),
-            expected = bagValue(
-                structValue(
-                    "orderName" to stringValue("foo")
+        val tc =
+            SuccessTestCase(
+                input = """
+                    SELECT
+                        gk_0, SUM(t.c) AS t_c_sum
+                    FROM <<
+                        { 'b': NULL, 'c': 1 },
+                        { 'b': MISSING, 'c': 2 },
+                        { 'b': 1, 'c': 1 },
+                        { 'b': 1, 'c': 2 },
+                        { 'b': 2, 'c': NULL },
+                        { 'b': 2, 'c': 2 },
+                        { 'b': 3, 'c': MISSING },
+                        { 'b': 3, 'c': 2 },
+                        { 'b': 4, 'c': MISSING },
+                        { 'b': 4, 'c': NULL }
+                    >> AS t GROUP BY t.b AS gk_0;
+                """.trimIndent(),
+                expected = org.partiql.value.bagValue(
+                    org.partiql.value.structValue(
+                        "gk_0" to org.partiql.value.int32Value(1),
+                        "t_c_sum" to org.partiql.value.int64Value(3)
+                    ),
+                    org.partiql.value.structValue(
+                        "gk_0" to org.partiql.value.int32Value(2),
+                        "t_c_sum" to org.partiql.value.int64Value(2)
+                    ),
+                    org.partiql.value.structValue(
+                        "gk_0" to org.partiql.value.int32Value(3),
+                        "t_c_sum" to org.partiql.value.int64Value(2)
+                    ),
+                    org.partiql.value.structValue(
+                        "gk_0" to org.partiql.value.int32Value(4),
+                        "t_c_sum" to nullValue()
+                    ),
+                    org.partiql.value.structValue(
+                        "gk_0" to org.partiql.value.nullValue(),
+                        "t_c_sum" to org.partiql.value.int64Value(3)
+                    ),
                 ),
-                structValue(
-                    "orderName" to stringValue("bar"),
-                    "customerName" to stringValue("Helen")
-                ),
-            ),
-            globals = listOf(
-                SuccessTestCase.Global(
-                    name = "customers",
-                    value = """
-                            [{id:1, name: "Mary"},
-                            {id:2, name: "Helen"},
-                            {id:1, name: "John"}
-                            ]
-                        """
-                ),
-                SuccessTestCase.Global(
-                    name = "orders",
-                    value = """
-                            [{custId:1, name: "foo"},
-                            {custId:2, name: "bar"}
-                            ]
-                        """
-                ),
+                mode = org.partiql.eval.PartiQLEngine.Mode.PERMISSIVE
             )
-        )
         tc.assert()
     }
 
@@ -473,23 +480,23 @@ class PartiQLEngineDefaultTest {
                 expected = org.partiql.value.bagValue(
                     org.partiql.value.structValue(
                         "gk_0" to org.partiql.value.int32Value(1),
-                        "t_c_sum" to org.partiql.value.int32Value(3)
+                        "t_c_sum" to org.partiql.value.int64Value(3)
                     ),
                     org.partiql.value.structValue(
                         "gk_0" to org.partiql.value.int32Value(2),
-                        "t_c_sum" to org.partiql.value.int32Value(2)
+                        "t_c_sum" to org.partiql.value.int64Value(2)
                     ),
                     org.partiql.value.structValue(
                         "gk_0" to org.partiql.value.int32Value(3),
-                        "t_c_sum" to org.partiql.value.int32Value(2)
+                        "t_c_sum" to org.partiql.value.int64Value(2)
                     ),
                     org.partiql.value.structValue(
                         "gk_0" to org.partiql.value.int32Value(4),
-                        "t_c_sum" to org.partiql.value.int32Value(null)
+                        "t_c_sum" to nullValue()
                     ),
                     org.partiql.value.structValue(
                         "gk_0" to org.partiql.value.nullValue(),
-                        "t_c_sum" to org.partiql.value.int32Value(3)
+                        "t_c_sum" to org.partiql.value.int64Value(3)
                     ),
                 ),
                 mode = org.partiql.eval.PartiQLEngine.Mode.PERMISSIVE
@@ -1308,18 +1315,22 @@ class PartiQLEngineDefaultTest {
         }
     }
 
+    // TODO: Is this true?
     @Test
-    @Disabled("CASTS have not yet been implemented.")
     fun testCast1() = SuccessTestCase(
         input = "1 + 2.0",
-        expected = int32Value(3),
+        expected = decimalValue(BigDecimal.valueOf(3.0), 38, 1),
     ).assert()
 
     @Test
-    @Disabled("CASTS have not yet been implemented.")
     fun testCasts() = SuccessTestCase(
-        input = "SELECT DISTINCT VALUE t * 100 FROM <<0, 1, 2.0, 3.0>> AS t;",
-        expected = bagValue(int32Value(0), int32Value(100), int32Value(200), int32Value(300))
+        input = "SELECT DISTINCT VALUE t * 100 FROM <<0, 1, 2.0, 300.0>> AS t;",
+        expected = bagValue(
+            int32Value(0),
+            int32Value(100),
+            decimalValue(BigDecimal.valueOf(200), 38, 2),
+            decimalValue(BigDecimal.valueOf(30000), 38, 2),
+        )
     ).assert()
 
     @Test
@@ -1360,7 +1371,6 @@ class PartiQLEngineDefaultTest {
         ).assert()
 
     @Test
-    @Disabled("We don't yet support arrays.")
     fun test7() =
         TypingTestCase(
             name = "PartiQL Specification Section 6.1.4 -- when constructing arrays",
@@ -1386,8 +1396,8 @@ class PartiQLEngineDefaultTest {
             expectedPermissive = bagValue(int32Value(2), missingValue())
         ).assert()
 
+    // TODO: This assumes that CAST(v.b AS INTEGER) is casting to a BIGINT -- not an INT32.
     @Test
-    @Disabled("CASTs aren't supported yet.")
     fun test9() =
         TypingTestCase(
             name = "PartiQL Specification Section 7.1 -- Inputs with wrong types Example 27",
@@ -1395,7 +1405,7 @@ class PartiQLEngineDefaultTest {
             expectedPermissive = bagValue(
                 structValue(
                     "a" to int32Value(3),
-                    "b" to int32Value(3),
+                    "b" to intValue(BigInteger.valueOf(3)),
                 ),
                 structValue(
                     "a" to int32Value(6),
@@ -1404,7 +1414,6 @@ class PartiQLEngineDefaultTest {
         ).assert()
 
     @Test
-    @Disabled("Arrays aren't supported yet.")
     fun test10() =
         SuccessTestCase(
             input = "SELECT v, i FROM [ 'a', 'b', 'c' ] AS v AT i",

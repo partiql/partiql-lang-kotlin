@@ -3,36 +3,8 @@ package org.partiql.planner.internal
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
+import org.partiql.value.PartiQLType
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType
-import org.partiql.value.PartiQLValueType.ANY
-import org.partiql.value.PartiQLValueType.BAG
-import org.partiql.value.PartiQLValueType.BINARY
-import org.partiql.value.PartiQLValueType.BLOB
-import org.partiql.value.PartiQLValueType.BOOL
-import org.partiql.value.PartiQLValueType.BYTE
-import org.partiql.value.PartiQLValueType.CHAR
-import org.partiql.value.PartiQLValueType.CLOB
-import org.partiql.value.PartiQLValueType.DATE
-import org.partiql.value.PartiQLValueType.DECIMAL
-import org.partiql.value.PartiQLValueType.DECIMAL_ARBITRARY
-import org.partiql.value.PartiQLValueType.FLOAT32
-import org.partiql.value.PartiQLValueType.FLOAT64
-import org.partiql.value.PartiQLValueType.INT
-import org.partiql.value.PartiQLValueType.INT16
-import org.partiql.value.PartiQLValueType.INT32
-import org.partiql.value.PartiQLValueType.INT64
-import org.partiql.value.PartiQLValueType.INT8
-import org.partiql.value.PartiQLValueType.INTERVAL
-import org.partiql.value.PartiQLValueType.LIST
-import org.partiql.value.PartiQLValueType.MISSING
-import org.partiql.value.PartiQLValueType.NULL
-import org.partiql.value.PartiQLValueType.SEXP
-import org.partiql.value.PartiQLValueType.STRING
-import org.partiql.value.PartiQLValueType.STRUCT
-import org.partiql.value.PartiQLValueType.SYMBOL
-import org.partiql.value.PartiQLValueType.TIME
-import org.partiql.value.PartiQLValueType.TIMESTAMP
 
 /**
  * Function precedence comparator; this is not formally specified.
@@ -62,44 +34,10 @@ internal object FnComparator : Comparator<FnSignature> {
     private fun FnParameter.compareTo(other: FnParameter): Int =
         comparePrecedence(this.type, other.type)
 
-    private fun comparePrecedence(t1: PartiQLValueType, t2: PartiQLValueType): Int {
+    private fun comparePrecedence(t1: PartiQLType, t2: PartiQLType): Int {
         if (t1 == t2) return 0
-        val p1 = precedence[t1]!!
-        val p2 = precedence[t2]!!
-        return p1 - p2
+        val p1 = PartiQLType.PRECEDENCE_MAP[t1] ?: error("Could not find $t1 in precedence map.")
+        val p2 = PartiQLType.PRECEDENCE_MAP[t2] ?: error("Could not find $t2 in precedence map.")
+        return p1.compareTo(p2)
     }
-
-    // This simply describes some precedence for ordering functions.
-    // This is not explicitly defined in the PartiQL Specification!!
-    // This does not imply the ability to CAST; this defines function resolution behavior.
-    private val precedence: Map<PartiQLValueType, Int> = listOf(
-        NULL,
-        MISSING,
-        BOOL,
-        INT8,
-        INT16,
-        INT32,
-        INT64,
-        INT,
-        DECIMAL,
-        FLOAT32,
-        FLOAT64,
-        DECIMAL_ARBITRARY, // Arbitrary precision decimal has a higher precedence than FLOAT
-        CHAR,
-        STRING,
-        CLOB,
-        SYMBOL,
-        BINARY,
-        BYTE,
-        BLOB,
-        DATE,
-        TIME,
-        TIMESTAMP,
-        INTERVAL,
-        LIST,
-        SEXP,
-        BAG,
-        STRUCT,
-        ANY,
-    ).mapIndexed { precedence, type -> type to precedence }.toMap()
 }

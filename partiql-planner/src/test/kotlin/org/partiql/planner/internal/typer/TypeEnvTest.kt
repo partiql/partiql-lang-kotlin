@@ -6,6 +6,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.relBinding
+import org.partiql.shape.PShape
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
@@ -43,10 +44,12 @@ internal class TypeEnvTest {
             outer = emptyList()
         )
 
-        private fun struct(vararg fields: Pair<String, StaticType>, open: Boolean = false): StructType {
-            return StructType(
-                fields = fields.map { StructType.Field(it.first, it.second) },
-                constraints = setOf(TupleConstraint.Open(open)),
+        private fun struct(vararg fields: Pair<String, StaticType>, open: Boolean = false): PShape {
+            return PShape.fromStaticType(
+                StructType(
+                    fields = fields.map { StructType.Field(it.first, it.second) },
+                    constraints = setOf(TupleConstraint.Open(open)),
+                )
             )
         }
 

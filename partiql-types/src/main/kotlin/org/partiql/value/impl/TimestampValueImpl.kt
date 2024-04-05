@@ -17,7 +17,9 @@ package org.partiql.value.impl
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.toPersistentList
 import org.partiql.value.Annotations
+import org.partiql.value.PartiQLType
 import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.TimestampType
 import org.partiql.value.TimestampValue
 import org.partiql.value.datetime.Timestamp
 import org.partiql.value.util.PartiQLValueVisitor
@@ -27,6 +29,9 @@ internal data class TimestampValueImpl(
     override val value: Timestamp?,
     override val annotations: PersistentList<String>,
 ) : TimestampValue() {
+
+    // TODO: Determine precision
+    override val type: PartiQLType = TimestampType(38)
 
     override fun copy(annotations: Annotations) = TimestampValueImpl(value, annotations.toPersistentList())
 

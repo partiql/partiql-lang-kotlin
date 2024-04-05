@@ -1,18 +1,5 @@
 name: "Build and Report Generation"
-on: 
-  push:
-    branches : [main]
-    paths:
-      - '**'
-      - '!docs/**'
-      - '!**/*.md'
-      - '!**/*.adoc'
-  pull_request:
-    paths:
-      - '**'
-      - '!docs/**'
-      - '!**/*.md'
-      - '!**/*.adoc'
+on: [push, pull_request]
 
 jobs:
   test:

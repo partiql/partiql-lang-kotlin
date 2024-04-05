@@ -7,7 +7,7 @@ import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
-import org.partiql.value.BlobValue
+import org.partiql.value.BinaryValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType.ANY
@@ -26,6 +26,6 @@ internal object Fn_IS_BLOB__ANY__BOOL : Fn {
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        return boolValue(args[0] is BlobValue)
+        return boolValue(args[0].type is BinaryValue)
     }
 }

@@ -3,9 +3,12 @@ package org.partiql.planner
 import org.partiql.errors.ProblemDetails
 import org.partiql.errors.ProblemSeverity
 import org.partiql.plan.Identifier
+import org.partiql.planner.internal.typer.toRuntimeType
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingPath
 import org.partiql.types.StaticType
+import org.partiql.value.PartiQLType
+import org.partiql.value.PartiQLValueExperimental
 
 /**
  * Contains detailed information about errors that may occur during query planning.
@@ -84,19 +87,33 @@ public sealed class PlanningProblemDetails(
         )
 
     public data class UnexpectedType(
-        val actualType: StaticType,
-        val expectedTypes: Set<StaticType>,
+        val expectedTypes: Set<PartiQLType>,
+        val actualType: PartiQLType,
     ) : PlanningProblemDetails(ProblemSeverity.ERROR, {
         "Unexpected type $actualType, expected one of ${expectedTypes.joinToString()}"
-    })
+    }) {
+
+        @OptIn(PartiQLValueExperimental::class)
+        public constructor(actualType: StaticType, expectedTypes: Set<StaticType>) : this(
+            expectedTypes = expectedTypes.map { PartiQLType.fromLegacy(it.toRuntimeType()) }.toSet(),
+            actualType = PartiQLType.fromLegacy(actualType.toRuntimeType())
+        )
+    }
 
     public data class UnknownFunction(
+        val args: List<PartiQLType>,
         val identifier: String,
-        val args: List<StaticType>,
     ) : PlanningProblemDetails(ProblemSeverity.ERROR, {
         val types = args.joinToString { "<${it.toString().lowercase()}>" }
         "Unknown function `$identifier($types)"
-    })
+    }) {
+
+        @OptIn(PartiQLValueExperimental::class)
+        public constructor(identifier: String, args: List<StaticType>) : this(
+            args.map { PartiQLType.fromLegacy(it.toRuntimeType()) },
+            identifier
+        )
+    }
 
     public object ExpressionAlwaysReturnsNullOrMissing : PlanningProblemDetails(
         severity = ProblemSeverity.ERROR,

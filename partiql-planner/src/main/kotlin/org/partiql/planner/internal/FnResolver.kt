@@ -2,15 +2,12 @@ package org.partiql.planner.internal
 
 import org.partiql.planner.internal.casts.CastTable
 import org.partiql.planner.internal.ir.Ref
-import org.partiql.planner.internal.typer.toRuntimeTypeOrNull
+import org.partiql.shape.PShape
+import org.partiql.shape.PShape.Companion.allTypes
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnSignature
-import org.partiql.types.AnyOfType
-import org.partiql.types.NullType
-import org.partiql.types.StaticType
-import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType
-import org.partiql.value.PartiQLValueType.ANY
+import org.partiql.value.DynamicType
+import org.partiql.value.PartiQLType
 
 /**
  *
@@ -27,7 +24,7 @@ import org.partiql.value.PartiQLValueType.ANY
  *
  * Reference https://www.postgresql.org/docs/current/typeconv-func.html
  */
-@OptIn(FnExperimental::class, PartiQLValueExperimental::class)
+@OptIn(FnExperimental::class)
 internal object FnResolver {
 
     @JvmStatic
@@ -40,19 +37,14 @@ internal object FnResolver {
      * @param args
      * @return
      */
-    fun resolve(variants: List<FnSignature>, args: List<StaticType>): FnMatch? {
+    fun resolve(variants: List<FnSignature>, args: List<PShape>): FnMatch? {
 
         val candidates = variants
             .filter { it.parameters.size == args.size }
             .sortedWith(FnComparator)
             .ifEmpty { return null }
 
-        val argPermutations = buildArgumentPermutations(args).mapNotNull { argList ->
-            argList.map { arg ->
-                // Skip over if we cannot convert type to runtime type.
-                arg.toRuntimeTypeOrNull() ?: return@mapNotNull null
-            }
-        }
+        val argPermutations = buildArgumentPermutations(args)
 
         // Match candidates on all argument permutations
         var exhaustive = true
@@ -87,7 +79,7 @@ internal object FnResolver {
      * @param args
      * @return
      */
-    private fun match(candidates: List<FnSignature>, args: List<PartiQLValueType>): FnMatch.Static? {
+    private fun match(candidates: List<FnSignature>, args: List<PartiQLType>): FnMatch.Static? {
         // 1. Check for an exact match
         for (candidate in candidates) {
             if (candidate.matches(args)) {
@@ -113,7 +105,7 @@ internal object FnResolver {
     /**
      * Check if this function accepts the exact input argument types. Assume same arity.
      */
-    private fun FnSignature.matches(args: List<PartiQLValueType>): Boolean {
+    private fun FnSignature.matches(args: List<PartiQLType>): Boolean {
         for (i in args.indices) {
             val a = args[i]
             val p = parameters[i]
@@ -128,7 +120,7 @@ internal object FnResolver {
      * @param args
      * @return
      */
-    private fun FnSignature.match(args: List<PartiQLValueType>): FnMatch.Static? {
+    private fun FnSignature.match(args: List<PartiQLType>): FnMatch.Static? {
         val mapping = arrayOfNulls<Ref.Cast?>(args.size)
         for (i in args.indices) {
             val arg = args[i]
@@ -137,8 +129,7 @@ internal object FnResolver {
                 // 1. Exact match
                 arg == p.type -> continue
                 // 2. Match ANY, no coercion needed
-                p.type == ANY -> continue
-                // 3. Check for a coercion
+                p.type is DynamicType -> continue
                 else -> when (val coercion = casts.lookupCoercion(arg, p.type)) {
                     null -> return null // short-circuit
                     else -> mapping[i] = coercion
@@ -148,21 +139,15 @@ internal object FnResolver {
         return FnMatch.Static(this, mapping)
     }
 
-    private fun buildArgumentPermutations(args: List<StaticType>): List<List<StaticType>> {
-        val flattenedArgs = args.map {
-            if (it is AnyOfType) {
-                it.flatten().allTypes.filter { it !is NullType }
-            } else {
-                it.flatten().allTypes
-            }
-        }
+    private fun buildArgumentPermutations(args: List<PShape>): List<List<PartiQLType>> {
+        val flattenedArgs = args.map { it.allTypes().toList() }
         return buildArgumentPermutations(flattenedArgs, accumulator = emptyList())
     }
 
     private fun buildArgumentPermutations(
-        args: List<List<StaticType>>,
-        accumulator: List<StaticType>,
-    ): List<List<StaticType>> {
+        args: List<List<PartiQLType>>,
+        accumulator: List<PartiQLType>,
+    ): List<List<PartiQLType>> {
         if (args.isEmpty()) {
             return listOf(accumulator)
         }

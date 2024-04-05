@@ -48,26 +48,27 @@ import org.partiql.plan.debug.PlanPrinter
 import org.partiql.plan.visitor.PlanBaseVisitor
 import org.partiql.spi.fn.Agg
 import org.partiql.spi.fn.FnExperimental
-import org.partiql.types.StaticType
+import org.partiql.value.DynamicType
+import org.partiql.value.MissingType
+import org.partiql.value.PartiQLType
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType
 import java.lang.IllegalStateException
 
 internal class Compiler(
     private val plan: PartiQLPlan,
     private val session: PartiQLEngine.Session,
     private val symbols: Symbols
-) : PlanBaseVisitor<Operator, StaticType?>() {
+) : PlanBaseVisitor<Operator, PartiQLType?>() {
 
     fun compile(): Operator.Expr {
         return visitPartiQLPlan(plan, null)
     }
 
-    override fun defaultReturn(node: PlanNode, ctx: StaticType?): Operator {
+    override fun defaultReturn(node: PlanNode, ctx: PartiQLType?): Operator {
         TODO("Not yet implemented")
     }
 
-    override fun visitRexOpErr(node: Rex.Op.Err, ctx: StaticType?): Operator {
+    override fun visitRexOpErr(node: Rex.Op.Err, ctx: PartiQLType?): Operator {
         val message = buildString {
             this.appendLine(node.message)
             PlanPrinter.append(this, plan)
@@ -75,30 +76,30 @@ internal class Compiler(
         throw IllegalStateException(message)
     }
 
-    override fun visitRelOpErr(node: Rel.Op.Err, ctx: StaticType?): Operator {
+    override fun visitRelOpErr(node: Rel.Op.Err, ctx: PartiQLType?): Operator {
         throw IllegalStateException(node.message)
     }
 
-    override fun visitPartiQLPlan(node: PartiQLPlan, ctx: StaticType?): Operator.Expr {
+    override fun visitPartiQLPlan(node: PartiQLPlan, ctx: PartiQLType?): Operator.Expr {
         return visitStatement(node.statement, ctx) as Operator.Expr
     }
 
-    override fun visitStatementQuery(node: Statement.Query, ctx: StaticType?): Operator.Expr {
+    override fun visitStatementQuery(node: Statement.Query, ctx: PartiQLType?): Operator.Expr {
         return visitRex(node.root, ctx).modeHandled()
     }
 
     // REX
 
-    override fun visitRex(node: Rex, ctx: StaticType?): Operator.Expr {
-        return super.visitRexOp(node.op, node.type) as Operator.Expr
+    override fun visitRex(node: Rex, ctx: PartiQLType?): Operator.Expr {
+        return super.visitRexOp(node.op, node.type.type) as Operator.Expr
     }
 
-    override fun visitRexOpCollection(node: Rex.Op.Collection, ctx: StaticType?): Operator {
+    override fun visitRexOpCollection(node: Rex.Op.Collection, ctx: PartiQLType?): Operator {
         val values = node.values.map { visitRex(it, ctx).modeHandled() }
         val type = ctx ?: error("No type provided in ctx")
         return ExprCollection(values, type)
     }
-    override fun visitRexOpStruct(node: Rex.Op.Struct, ctx: StaticType?): Operator {
+    override fun visitRexOpStruct(node: Rex.Op.Struct, ctx: PartiQLType?): Operator {
         val fields = node.fields.map {
             val value = visitRex(it.v, ctx).modeHandled()
             ExprStruct.Field(visitRex(it.k, ctx), value)
@@ -106,14 +107,14 @@ internal class Compiler(
         return ExprStruct(fields)
     }
 
-    override fun visitRexOpSelect(node: Rex.Op.Select, ctx: StaticType?): Operator {
+    override fun visitRexOpSelect(node: Rex.Op.Select, ctx: PartiQLType?): Operator {
         val rel = visitRel(node.rel, ctx)
         val ordered = node.rel.type.props.contains(Rel.Prop.ORDERED)
         val constructor = visitRex(node.constructor, ctx).modeHandled()
         return ExprSelect(rel, constructor, ordered)
     }
 
-    override fun visitRexOpSubquery(node: Rex.Op.Subquery, ctx: StaticType?): Operator {
+    override fun visitRexOpSubquery(node: Rex.Op.Subquery, ctx: PartiQLType?): Operator {
         val constructor = visitRex(node.constructor, ctx)
         val input = visitRel(node.rel, ctx)
         return when (node.coercion) {
@@ -122,7 +123,7 @@ internal class Compiler(
         }
     }
 
-    override fun visitRexOpPivot(node: Rex.Op.Pivot, ctx: StaticType?): Operator {
+    override fun visitRexOpPivot(node: Rex.Op.Pivot, ctx: PartiQLType?): Operator {
         val rel = visitRel(node.rel, ctx)
         val key = visitRex(node.key, ctx)
         val value = visitRex(node.value, ctx)
@@ -138,7 +139,7 @@ internal class Compiler(
      * All variables coming from the stack have a depth > 0. To slightly minimize computation at execution, we subtract
      * the depth by 1 to account for the fact that the local scope is not kept on the stack.
      */
-    override fun visitRexOpVar(node: Rex.Op.Var, ctx: StaticType?): Operator {
+    override fun visitRexOpVar(node: Rex.Op.Var, ctx: PartiQLType?): Operator {
         return when (node.depth) {
             0 -> ExprVarLocal(node.ref)
             else -> {
@@ -147,9 +148,9 @@ internal class Compiler(
         }
     }
 
-    override fun visitRexOpGlobal(node: Rex.Op.Global, ctx: StaticType?): Operator = symbols.getGlobal(node.ref)
+    override fun visitRexOpGlobal(node: Rex.Op.Global, ctx: PartiQLType?): Operator = symbols.getGlobal(node.ref)
 
-    override fun visitRelOpAggregate(node: Rel.Op.Aggregate, ctx: StaticType?): Operator.Relation {
+    override fun visitRelOpAggregate(node: Rel.Op.Aggregate, ctx: PartiQLType?): Operator.Relation {
         val input = visitRel(node.input, ctx)
         val calls = node.calls.map {
             visitRelOpAggregateCall(it, ctx)
@@ -159,8 +160,8 @@ internal class Compiler(
     }
 
     @OptIn(FnExperimental::class)
-    override fun visitRelOpAggregateCall(node: Rel.Op.Aggregate.Call, ctx: StaticType?): Operator.Aggregation {
-        val args = node.args.map { visitRex(it, it.type).modeHandled() }
+    override fun visitRelOpAggregateCall(node: Rel.Op.Aggregate.Call, ctx: PartiQLType?): Operator.Aggregation {
+        val args = node.args.map { visitRex(it, it.type.type).modeHandled() }
         val setQuantifier: Operator.Aggregation.SetQuantifier = when (node.setQuantifier) {
             Rel.Op.Aggregate.Call.SetQuantifier.ALL -> Operator.Aggregation.SetQuantifier.ALL
             Rel.Op.Aggregate.Call.SetQuantifier.DISTINCT -> Operator.Aggregation.SetQuantifier.DISTINCT
@@ -173,30 +174,30 @@ internal class Compiler(
         }
     }
 
-    override fun visitRexOpPathKey(node: Rex.Op.Path.Key, ctx: StaticType?): Operator {
+    override fun visitRexOpPathKey(node: Rex.Op.Path.Key, ctx: PartiQLType?): Operator {
         val root = visitRex(node.root, ctx)
         val key = visitRex(node.key, ctx)
         return ExprPathKey(root, key)
     }
 
-    override fun visitRexOpPathSymbol(node: Rex.Op.Path.Symbol, ctx: StaticType?): Operator {
+    override fun visitRexOpPathSymbol(node: Rex.Op.Path.Symbol, ctx: PartiQLType?): Operator {
         val root = visitRex(node.root, ctx)
         val symbol = node.key
         return ExprPathSymbol(root, symbol)
     }
 
-    override fun visitRexOpPathIndex(node: Rex.Op.Path.Index, ctx: StaticType?): Operator {
+    override fun visitRexOpPathIndex(node: Rex.Op.Path.Index, ctx: PartiQLType?): Operator {
         val root = visitRex(node.root, ctx)
         val index = visitRex(node.key, ctx)
         return ExprPathIndex(root, index)
     }
 
-    @OptIn(FnExperimental::class, PartiQLValueExperimental::class)
-    override fun visitRexOpCallStatic(node: Rex.Op.Call.Static, ctx: StaticType?): Operator {
+    @OptIn(FnExperimental::class)
+    override fun visitRexOpCallStatic(node: Rex.Op.Call.Static, ctx: PartiQLType?): Operator {
         val fn = symbols.getFn(node.fn)
         val args = node.args.map { visitRex(it, ctx) }.toTypedArray()
         val fnTakesInMissing = fn.signature.parameters.any {
-            it.type == PartiQLValueType.MISSING || it.type == PartiQLValueType.ANY
+            it.type is MissingType || it.type is DynamicType
         }
         return when (fnTakesInMissing) {
             true -> ExprCallStatic(fn, args.map { it.modeHandled() }.toTypedArray())
@@ -205,7 +206,7 @@ internal class Compiler(
     }
 
     @OptIn(FnExperimental::class)
-    override fun visitRexOpCallDynamic(node: Rex.Op.Call.Dynamic, ctx: StaticType?): Operator {
+    override fun visitRexOpCallDynamic(node: Rex.Op.Call.Dynamic, ctx: PartiQLType?): Operator {
         val args = node.args.map { visitRex(it, ctx).modeHandled() }.toTypedArray()
         val candidates = Array(node.candidates.size) {
             val candidate = node.candidates[it]
@@ -216,16 +217,16 @@ internal class Compiler(
         return ExprCallDynamic(candidates, args)
     }
 
-    override fun visitRexOpCast(node: Rex.Op.Cast, ctx: StaticType?): Operator {
+    override fun visitRexOpCast(node: Rex.Op.Cast, ctx: PartiQLType?): Operator {
         return ExprCast(visitRex(node.arg, ctx), node.cast)
     }
 
     // REL
-    override fun visitRel(node: Rel, ctx: StaticType?): Operator.Relation {
+    override fun visitRel(node: Rel, ctx: PartiQLType?): Operator.Relation {
         return super.visitRelOp(node.op, ctx) as Operator.Relation
     }
 
-    override fun visitRelOpScan(node: Rel.Op.Scan, ctx: StaticType?): Operator {
+    override fun visitRelOpScan(node: Rel.Op.Scan, ctx: PartiQLType?): Operator {
         val rex = visitRex(node.rex, ctx)
         return when (session.mode) {
             PartiQLEngine.Mode.PERMISSIVE -> RelScanPermissive(rex)
@@ -233,13 +234,13 @@ internal class Compiler(
         }
     }
 
-    override fun visitRelOpProject(node: Rel.Op.Project, ctx: StaticType?): Operator {
+    override fun visitRelOpProject(node: Rel.Op.Project, ctx: PartiQLType?): Operator {
         val input = visitRel(node.input, ctx)
         val projections = node.projections.map { visitRex(it, ctx).modeHandled() }
         return RelProject(input, projections)
     }
 
-    override fun visitRelOpScanIndexed(node: Rel.Op.ScanIndexed, ctx: StaticType?): Operator {
+    override fun visitRelOpScanIndexed(node: Rel.Op.ScanIndexed, ctx: PartiQLType?): Operator {
         val rex = visitRex(node.rex, ctx)
         return when (session.mode) {
             PartiQLEngine.Mode.PERMISSIVE -> RelScanIndexedPermissive(rex)
@@ -247,7 +248,7 @@ internal class Compiler(
         }
     }
 
-    override fun visitRelOpUnpivot(node: Rel.Op.Unpivot, ctx: StaticType?): Operator {
+    override fun visitRelOpUnpivot(node: Rel.Op.Unpivot, ctx: PartiQLType?): Operator {
         val expr = visitRex(node.rex, ctx)
         return when (session.mode) {
             PartiQLEngine.Mode.PERMISSIVE -> RelUnpivot.Permissive(expr)
@@ -255,24 +256,24 @@ internal class Compiler(
         }
     }
 
-    override fun visitRelOpLimit(node: Rel.Op.Limit, ctx: StaticType?): Operator {
+    override fun visitRelOpLimit(node: Rel.Op.Limit, ctx: PartiQLType?): Operator {
         val input = visitRel(node.input, ctx)
         val limit = visitRex(node.limit, ctx)
         return RelLimit(input, limit)
     }
 
-    override fun visitRelOpOffset(node: Rel.Op.Offset, ctx: StaticType?): Operator {
+    override fun visitRelOpOffset(node: Rel.Op.Offset, ctx: PartiQLType?): Operator {
         val input = visitRel(node.input, ctx)
         val offset = visitRex(node.offset, ctx)
         return RelOffset(input, offset)
     }
 
-    override fun visitRexOpTupleUnion(node: Rex.Op.TupleUnion, ctx: StaticType?): Operator {
+    override fun visitRexOpTupleUnion(node: Rex.Op.TupleUnion, ctx: PartiQLType?): Operator {
         val args = node.args.map { visitRex(it, ctx) }.toTypedArray()
         return ExprTupleUnion(args)
     }
 
-    override fun visitRelOpJoin(node: Rel.Op.Join, ctx: StaticType?): Operator {
+    override fun visitRelOpJoin(node: Rel.Op.Join, ctx: PartiQLType?): Operator {
         val lhs = visitRel(node.lhs, ctx)
         val rhs = visitRel(node.rhs, ctx)
         val condition = visitRex(node.rex, ctx)
@@ -284,7 +285,7 @@ internal class Compiler(
         }
     }
 
-    override fun visitRexOpCase(node: Rex.Op.Case, ctx: StaticType?): Operator {
+    override fun visitRexOpCase(node: Rex.Op.Case, ctx: PartiQLType?): Operator {
         val branches = node.branches.map { branch ->
             visitRex(branch.condition, ctx) to visitRex(branch.rex, ctx)
         }
@@ -293,27 +294,27 @@ internal class Compiler(
     }
 
     @OptIn(PartiQLValueExperimental::class)
-    override fun visitRexOpLit(node: Rex.Op.Lit, ctx: StaticType?): Operator {
+    override fun visitRexOpLit(node: Rex.Op.Lit, ctx: PartiQLType?): Operator {
         return ExprLiteral(node.value)
     }
 
-    override fun visitRelOpDistinct(node: Rel.Op.Distinct, ctx: StaticType?): Operator {
+    override fun visitRelOpDistinct(node: Rel.Op.Distinct, ctx: PartiQLType?): Operator {
         val input = visitRel(node.input, ctx)
         return RelDistinct(input)
     }
 
-    override fun visitRelOpFilter(node: Rel.Op.Filter, ctx: StaticType?): Operator {
+    override fun visitRelOpFilter(node: Rel.Op.Filter, ctx: PartiQLType?): Operator {
         val input = visitRel(node.input, ctx)
         val condition = visitRex(node.predicate, ctx)
         return RelFilter(input, condition)
     }
 
-    override fun visitRelOpExclude(node: Rel.Op.Exclude, ctx: StaticType?): Operator {
+    override fun visitRelOpExclude(node: Rel.Op.Exclude, ctx: PartiQLType?): Operator {
         val input = visitRel(node.input, ctx)
         return RelExclude(input, node.paths)
     }
 
-    override fun visitRelOpSort(node: Rel.Op.Sort, ctx: StaticType?): Operator {
+    override fun visitRelOpSort(node: Rel.Op.Sort, ctx: PartiQLType?): Operator {
         val input = visitRel(node.input, ctx)
         val compiledSpecs = node.specs.map { spec ->
             val expr = visitRex(spec.rex, ctx)
