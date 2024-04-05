@@ -112,6 +112,12 @@ statement::[
     create_table::{
       name:       identifier,
       definition: optional::table_definition,
+      // This is a expression for backward compatible reason
+      // For we support PARTITION BY (<id> (, <id>)* ))
+      // But in the future, we might support additional paritition expression:
+      // such as PARTITION BY RANGE(..)
+      partition_by: optional::expr,
+      table_properties: list::[table_property],
     },
 
     // CREATE INDEX [<identifier>] ON <identifier> (<path> [, <path>]...)
@@ -785,25 +791,35 @@ returning::{
 // `( CONSTRAINT <column_constraint_name> )?  <column_constraint_def>`
 table_definition::{
   columns: list::[column],
+  // table level constraints
+  constraints: list::[constraint],
   _: [
     column::{
+      // TODO: We might need to change this to identifier
       name:        string,
       type:        '.type',
-      constraints: list::[constraint],
-      _: [
-        // TODO improve modeling language to avoid these wrapped unions
-        // Also, prefer not to nest more than twice
-        constraint::{
-          name: optional::string,
-          body: [
-            nullable::{},
-            not_null::{},
-            check::{ expr: expr },
-          ],
-        },
-      ],
-    },
+      constraints: list::[constraint]
+    }
   ],
+}
+
+constraint::{
+  name: optional::string,
+  body: [
+    nullable::{},
+    not_null::{},
+    check::{ expr: expr },
+    unique::{
+      // for attribute level constraint, we can set this attribute to null
+      columns: optional::list::[string],
+      is_primary_key: bool,
+    },
+    ],
+}
+
+table_property::{
+  name: string,
+  value: '.value',
 }
 
 // SQL-99 Table 11

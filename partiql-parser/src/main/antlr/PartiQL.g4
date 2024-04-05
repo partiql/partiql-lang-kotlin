@@ -75,9 +75,8 @@ execCommand
 qualifiedName : (qualifier+=symbolPrimitive PERIOD)* name=symbolPrimitive;
 
 tableName : symbolPrimitive;
-tableConstraintName : symbolPrimitive;
 columnName : symbolPrimitive;
-columnConstraintName : symbolPrimitive;
+constraintName : symbolPrimitive;
 
 ddl
     : createCommand
@@ -85,7 +84,7 @@ ddl
     ;
 
 createCommand
-    : CREATE TABLE qualifiedName ( PAREN_LEFT tableDef PAREN_RIGHT )?                           # CreateTable
+    : CREATE TABLE qualifiedName ( PAREN_LEFT tableDef PAREN_RIGHT )? tableExtension*               # CreateTable
     | CREATE INDEX ON symbolPrimitive PAREN_LEFT pathSimple ( COMMA pathSimple )* PAREN_RIGHT   # CreateIndex
     ;
 
@@ -100,17 +99,56 @@ tableDef
 
 tableDefPart
     : columnName type columnConstraint*                             # ColumnDeclaration
+    | ( CONSTRAINT constraintName )?  tableConstraintDef            # TableConstrDeclartion
+    ;
+
+tableConstraintDef
+    : checkConstraintDef                                            # TableConstrCheck
+    | uniqueConstraintDef                                           # TableConstrUnique
     ;
 
 columnConstraint
-    : ( CONSTRAINT columnConstraintName )?  columnConstraintDef
+    : ( CONSTRAINT constraintName )?  columnConstraintDef
     ;
 
 columnConstraintDef
-    : NOT NULL                                  # ColConstrNotNull
-    | NULL                                      # ColConstrNull
+    : NOT NULL                                     # ColConstrNotNull
+    | NULL                                         # ColConstrNull
+    | uniqueSpec                                   # ColConstrUnique
+    | checkConstraintDef                           # ColConstrCheck
     ;
 
+checkConstraintDef
+    : CHECK PAREN_LEFT searchCondition PAREN_RIGHT
+    ;
+
+uniqueSpec
+    : PRIMARY KEY                                # PrimaryKey
+    | UNIQUE                                     # Unique
+    ;
+
+uniqueConstraintDef
+    : uniqueSpec PAREN_LEFT columnName (COMMA columnName)* PAREN_RIGHT
+    ;
+
+// <search condition>    ::= <boolean term> | <search condition> OR <boolean term>
+// we cannot do exactly that for the way expression precedence is structured in the grammar file.
+// but we at least can eliminate SFW query here.
+searchCondition : exprOr;
+
+// SQL Extension, Support additional table metadatas such as partition by, tblProperties, etc.
+tableExtension
+    : PARTITION BY partitionExpr                                                           # PartitionBy
+    | TBLPROPERTIES PAREN_LEFT keyValuePair (COMMA keyValuePair)* PAREN_RIGHT              # TblProperties
+    ;
+
+keyValuePair : key=LITERAL_STRING EQ value=literal;
+
+// For now: just support a list of column name
+// In the future, we might support common partition expression such as Hash(), Range(), etc.
+partitionExpr
+    : PAREN_LEFT columnName (COMMA columnName)* PAREN_RIGHT                   #PartitionColList
+    ;
 /**
  *
  * DATA MANIPULATION LANGUAGE (DML)
@@ -191,9 +229,6 @@ onConflictLegacy
 conflictTarget
     : PAREN_LEFT symbolPrimitive (COMMA symbolPrimitive)* PAREN_RIGHT
     | ON CONSTRAINT constraintName;
-
-constraintName
-    : symbolPrimitive;
 
 conflictAction
     : DO NOTHING
