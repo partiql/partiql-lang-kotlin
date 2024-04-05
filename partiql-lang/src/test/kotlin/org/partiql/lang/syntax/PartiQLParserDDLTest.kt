@@ -35,7 +35,95 @@ internal class PartiQLParserDDLTest : PartiQLParserTestBase() {
                 query = "DROP Table foo.bar",
                 code = ErrorCode.PARSE_UNEXPECTED_TOKEN,
                 context = mapOf(),
-            )
+            ),
+            ParserErrorTestCase(
+                description = "PIG Parser does not support Unique Constraints in CREATE TABLE",
+                query = """
+                    CREATE TABLE tbl (
+                        a INT2 UNIQUE
+                    )
+                """.trimIndent(),
+                code = ErrorCode.PARSE_UNEXPECTED_TOKEN,
+                context = mapOf(),
+            ),
+            ParserErrorTestCase(
+                description = "PIG Parser does not support Primary Key Constraint in CREATE TABLE",
+                query = """
+                    CREATE TABLE tbl (
+                        a INT2 PRIMARY KEY
+                    )
+                """.trimIndent(),
+                code = ErrorCode.PARSE_UNEXPECTED_TOKEN,
+                context = mapOf(),
+            ),
+            ParserErrorTestCase(
+                description = "PIG Parser does not support CHECK Constraint in CREATE TABLE",
+                query = """
+                    CREATE TABLE tbl (
+                        a INT2 CHECK(a > 0)
+                    )
+                """.trimIndent(),
+                code = ErrorCode.PARSE_UNEXPECTED_TOKEN,
+                context = mapOf(),
+            ),
+            ParserErrorTestCase(
+                description = "PIG Parser does not support table constraint in CREATE TABLE",
+                query = """
+                    CREATE TABLE tbl (
+                       check (a > 0)
+                    )
+                """.trimIndent(),
+                code = ErrorCode.PARSE_UNEXPECTED_TOKEN,
+                context = mapOf(),
+            ),
+            ParserErrorTestCase(
+                description = "PIG Parser does not support PARTITION BY In CREATE TABLE",
+                query = """
+                    CREATE TABLE tbl
+                    PARTITION BY (a, b)
+                """.trimIndent(),
+                code = ErrorCode.PARSE_UNEXPECTED_TOKEN,
+                context = mapOf(),
+            ),
+            ParserErrorTestCase(
+                description = "PIG Parser does not support TBLPROPERTIES In CREATE TABLE",
+                query = """
+                    CREATE TABLE tbl
+                    TBLPROPERTIES ('myPropertyKey1' = 'myPropertyValue1', 'myPropertyKey2' = false)
+                """.trimIndent(),
+                code = ErrorCode.PARSE_UNEXPECTED_TOKEN,
+                context = mapOf(),
+            ),
+            ParserErrorTestCase(
+                description = "PIG Parser does not support Optional Field",
+                query = """
+                    CREATE TABLE tbl (
+                        a OPTIONAL INT2
+                    )
+                """.trimIndent(),
+                code = ErrorCode.PARSE_UNEXPECTED_TOKEN,
+                context = mapOf(),
+            ),
+            ParserErrorTestCase(
+                description = "PIG Parser does not support STRUCT Type with fields In CREATE TABLE",
+                query = """
+                    CREATE TABLE tbl (
+                        a STRUCT<b: INT2>
+                    )
+                """.trimIndent(),
+                code = ErrorCode.PARSE_UNEXPECTED_TOKEN,
+                context = mapOf(),
+            ),
+            ParserErrorTestCase(
+                description = "PIG Parser does not support COMMENT In CREATE TABLE",
+                query = """
+                    CREATE TABLE tbl (
+                        a  INT2 COMMENT 'comments'
+                    )
+                """.trimIndent(),
+                code = ErrorCode.PARSE_UNEXPECTED_TOKEN,
+                context = mapOf(),
+            ),
         )
     }
 }
