@@ -283,7 +283,7 @@ internal object NormalizeSelect {
             expr = null,
             branches = listOf(
                 exprCaseBranch(
-                    condition = exprIsType(expr, typeStruct(), null),
+                    condition = exprIsType(expr, typeStruct(emptyList()), null),
                     expr = expr
                 )
             ),
