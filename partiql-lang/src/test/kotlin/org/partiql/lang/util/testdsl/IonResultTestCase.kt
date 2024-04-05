@@ -7,11 +7,11 @@ import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.EVALUATOR_TEST_SUITE
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.PartiQLCompilerPipelineFactory
 import org.partiql.lang.eval.evaluatortestframework.CompilerPipelineFactory
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestCase
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
 import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
-import org.partiql.lang.eval.evaluatortestframework.PartiQLCompilerPipelineFactory
 import org.partiql.lang.eval.evaluatortestframework.PartiQLCompilerPipelineFactoryAsync
 import org.partiql.lang.eval.evaluatortestframework.PipelineEvaluatorTestAdapter
 import org.partiql.lang.mockdb.MockDb

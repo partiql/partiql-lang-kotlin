@@ -8,6 +8,7 @@ import org.partiql.lang.eval.evaluatortestframework.CompilerPipelineFactory
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestCase
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
 import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
+import org.partiql.lang.eval.evaluatortestframework.PartiQLCompilerPipelineFactoryAsync
 import org.partiql.lang.eval.evaluatortestframework.PipelineEvaluatorTestAdapter
 import org.partiql.lang.mockdb.MockDb
 import org.partiql.lang.util.testdsl.IonResultTestCase
@@ -122,6 +123,7 @@ fun IonResultTestCase.runTestCase(
         when (target) {
             EvaluatorTestTarget.COMPILER_PIPELINE -> CompilerPipelineFactory()
             EvaluatorTestTarget.PARTIQL_PIPELINE -> PartiQLCompilerPipelineFactory()
+            EvaluatorTestTarget.PARTIQL_PIPELINE_ASYNC -> PartiQLCompilerPipelineFactoryAsync()
             // We don't support ALL_PIPELINES here because each pipeline needs a separate skip list, which
             // is decided by the caller of this function.
             EvaluatorTestTarget.ALL_PIPELINES -> error("May only test one pipeline at a time with IonResultTestCase")

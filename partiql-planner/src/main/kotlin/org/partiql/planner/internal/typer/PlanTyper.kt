@@ -524,7 +524,6 @@ internal class PlanTyper(
 
         override fun visitRexOpPathSymbol(node: Rex.Op.Path.Symbol, ctx: StaticType?): Rex {
             val root = visitRex(node.root, node.root.type)
-
             val paths = root.type.allTypes.map { type ->
                 val struct = type as? StructType ?: return@map rex(MISSING, rexOpLit(missingValue()))
                 val (pathType, replacementId) = inferStructLookup(
@@ -770,9 +769,11 @@ internal class PlanTyper(
                 for (i in args.indices) {
                     val (operand, target) = mapping[i]
                     if (operand == target) continue // skip; no coercion needed
-                    val cast = env.resolveCast(args[i], target)!!
-                    val rex = rex(type, cast)
-                    args[i] = rex
+                    val cast = env.resolveCast(args[i], target)
+                    if (cast != null) {
+                        val rex = rex(type, cast)
+                        args[i] = rex
+                    }
                 }
             }
             val op = rexOpCoalesce(args)

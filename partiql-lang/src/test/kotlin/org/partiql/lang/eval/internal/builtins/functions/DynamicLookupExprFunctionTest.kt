@@ -10,6 +10,8 @@ import org.partiql.lang.eval.builtins.DYNAMIC_LOOKUP_FUNCTION_NAME
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorErrorTestCase
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
 import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
+import org.partiql.lang.eval.internal.builtins.ExprFunctionTestCase
+import org.partiql.lang.eval.internal.builtins.checkInvalidArity
 import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.lang.util.propertyValueMapOf
 import org.partiql.lang.util.to
