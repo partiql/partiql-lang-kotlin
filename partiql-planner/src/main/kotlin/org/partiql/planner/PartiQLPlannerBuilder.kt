@@ -54,13 +54,6 @@ public class PartiQLPlannerBuilder {
     }
 
     /**
-     * Java style method for setting the planner to quite mode
-     */
-    public fun quiteMode(): PartiQLPlannerBuilder = this.apply {
-        this.flags.remove(PlannerFlag.SIGNAL_MODE)
-    }
-
-    /**
      * Java style method for assigning a Catalog name to [ConnectorMetadata].
      *
      * @param catalog

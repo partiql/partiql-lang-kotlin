@@ -739,11 +739,11 @@ internal data class Rex(
 
         internal data class Err(
             @JvmField internal val problem: Problem,
-            @JvmField internal val traces: List<Op>,
+            @JvmField internal val causes: List<Op>,
         ) : Op() {
             public override val children: List<PlanNode> by lazy {
                 val kids = mutableListOf<PlanNode?>()
-                kids.addAll(traces)
+                kids.addAll(causes)
                 kids.filterNotNull()
             }
 
@@ -757,11 +757,11 @@ internal data class Rex(
 
         internal data class Missing(
             @JvmField internal val problem: Problem,
-            @JvmField internal val traces: List<Op>,
+            @JvmField internal val causes: List<Op>,
         ) : Op() {
             public override val children: List<PlanNode> by lazy {
                 val kids = mutableListOf<PlanNode?>()
-                kids.addAll(traces)
+                kids.addAll(causes)
                 kids.filterNotNull()
             }
 

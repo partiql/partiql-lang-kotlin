@@ -39,14 +39,14 @@ internal object ProblemGenerator {
         )
     }
 
-    fun missingRex(traces: List<Rex.Op>, problem: Problem): Rex =
-        rex(StaticType.MISSING, rexOpMissing(problem, traces))
+    fun missingRex(causes: List<Rex.Op>, problem: Problem): Rex =
+        rex(StaticType.MISSING, rexOpMissing(problem, causes))
 
-    fun missingRex(trace: Rex.Op, problem: Problem): Rex =
-        rex(StaticType.MISSING, rexOpMissing(problem, listOf(trace)))
+    fun missingRex(causes: Rex.Op, problem: Problem): Rex =
+        rex(StaticType.MISSING, rexOpMissing(problem, listOf(causes)))
 
-    fun errorRex(traces: List<Rex.Op>, problem: Problem): Rex =
-        rex(StaticType.ANY, rexOpErr(problem, traces))
+    fun errorRex(causes: List<Rex.Op>, problem: Problem): Rex =
+        rex(StaticType.ANY, rexOpErr(problem, causes))
 
     fun errorRex(trace: Rex.Op, problem: Problem): Rex =
         rex(StaticType.ANY, rexOpErr(problem, listOf(trace)))

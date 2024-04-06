@@ -89,7 +89,7 @@ class PlanTest {
         val ast = PartiQLParser.default().parse(test.statement).root
         val planner = when (isSignalMode) {
             true -> PartiQLPlanner.builder().signalMode().build()
-            else -> PartiQLPlanner.builder().quiteMode().build()
+            else -> PartiQLPlanner.builder().build()
         }
         planner.plan(ast, session, problemCollector)
     }

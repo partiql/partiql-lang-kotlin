@@ -241,7 +241,7 @@ internal class PlanTransform(
 
             override fun visitRexOpErr(node: Rex.Op.Err, ctx: Unit): PlanNode {
                 // track the error in call back
-                val trace = node.traces.map { visitRexOp(it, ctx) }
+                val trace = node.causes.map { visitRexOp(it, ctx) }
                 onProblem(ProblemGenerator.asError(node.problem))
                 return org.partiql.plan.Rex.Op.Err(node.problem.toString(), trace)
             }
@@ -249,7 +249,7 @@ internal class PlanTransform(
             @OptIn(PartiQLValueExperimental::class)
             override fun visitRexOpMissing(node: Rex.Op.Missing, ctx: Unit): PlanNode {
                 // gather problem from subtree.
-                val trace = node.traces.map { visitRexOp(it, ctx) }
+                val trace = node.causes.map { visitRexOp(it, ctx) }
                 return when (signalMode) {
                     true -> {
                         onProblem.invoke(ProblemGenerator.asError(node.problem))

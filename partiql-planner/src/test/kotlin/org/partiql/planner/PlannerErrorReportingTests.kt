@@ -410,7 +410,7 @@ internal class PlannerErrorReportingTests {
     private fun runTestCase(tc: TestCase) {
         val planner = when (tc.isSignal) {
             true -> PartiQLPlanner.builder().signalMode().build()
-            else -> PartiQLPlanner.builder().quiteMode().build()
+            else -> PartiQLPlanner.builder().build()
         }
         val pc = ProblemCollector()
         val res = planner.plan(statement(tc.query), session, pc)

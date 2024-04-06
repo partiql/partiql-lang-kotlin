@@ -195,12 +195,12 @@ rex::{
 
     err::{
       message: string,
-      traces: list::['.rex.op']
+      causes: list::['.rex.op']
     },
 
     missing::{
       message: string,
-      traces: list::['.rex.op']
+      causes: list::['.rex.op']
     },
   ],
 }

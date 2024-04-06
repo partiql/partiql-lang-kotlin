@@ -224,7 +224,7 @@ rex::{
     //    |_ Lit[value=Int32ValueImpl(value = 1))]
     err::{
       problem: problem,
-      traces: list::['.rex.op'],
+      causes: list::['.rex.op'],
     },
 
     // Internal MISSING Node:
@@ -235,7 +235,7 @@ rex::{
     //
     missing::{
       problem: problem,
-      traces: list::['.rex.op'],
+      causes: list::['.rex.op'],
     },
   ],
 }
