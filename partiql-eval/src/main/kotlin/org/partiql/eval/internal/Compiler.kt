@@ -25,6 +25,7 @@ import org.partiql.eval.internal.operator.rex.ExprCase
 import org.partiql.eval.internal.operator.rex.ExprCast
 import org.partiql.eval.internal.operator.rex.ExprCoalesce
 import org.partiql.eval.internal.operator.rex.ExprCollection
+import org.partiql.eval.internal.operator.rex.ExprError
 import org.partiql.eval.internal.operator.rex.ExprLiteral
 import org.partiql.eval.internal.operator.rex.ExprNullIf
 import org.partiql.eval.internal.operator.rex.ExprPathIndex
@@ -69,12 +70,22 @@ internal class Compiler(
         TODO("Not yet implemented")
     }
 
+    /**
+     * [Rex.Op.Err] comes from the inability for the planner to resolve a variable/function/etc. Depending on the
+     * configuration, this will either return MISSING or throw an error.
+     */
+    @OptIn(PartiQLValueExperimental::class)
     override fun visitRexOpErr(node: Rex.Op.Err, ctx: StaticType?): Operator {
-        val message = buildString {
-            this.appendLine(node.message)
-            PlanPrinter.append(this, plan)
+        return when (session.errorHandling) {
+            PartiQLEngine.CompilationErrorHandling.QUIET -> ExprError()
+            PartiQLEngine.CompilationErrorHandling.SIGNALING -> {
+                val message = buildString {
+                    this.appendLine(node.message)
+                    PlanPrinter.append(this, plan)
+                }
+                throw IllegalStateException(message)
+            }
         }
-        throw IllegalStateException(message)
     }
 
     override fun visitRelOpErr(node: Rel.Op.Err, ctx: StaticType?): Operator {
