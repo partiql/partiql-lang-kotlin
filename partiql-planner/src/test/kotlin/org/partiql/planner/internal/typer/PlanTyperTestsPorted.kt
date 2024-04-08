@@ -24,7 +24,7 @@ import org.partiql.planner.internal.typer.PlanTyperTestsPorted.TestCase.Throwing
 import org.partiql.planner.test.PartiQLTest
 import org.partiql.planner.test.PartiQLTestProvider
 import org.partiql.planner.util.ProblemCollector
-import org.partiql.plugins.local.toStaticType
+import org.partiql.plugins.kollider.toStaticType
 import org.partiql.plugins.memory.MemoryCatalog
 import org.partiql.plugins.memory.MemoryConnector
 import org.partiql.plugins.memory.MemoryObject

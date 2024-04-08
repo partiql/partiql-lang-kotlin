@@ -12,20 +12,18 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.plugins.local
+package org.partiql.plugins.kollider
 
-import org.partiql.spi.connector.ConnectorObject
-import org.partiql.types.StaticType
+import org.partiql.plugins.kollider.connector.KolliderConnector
+import org.partiql.spi.Plugin
+import org.partiql.spi.connector.Connector
 
 /**
- * Associate a resolved path with a [StaticType]
+ * LocalPlugin is a PartiQL plugin that provides schemas written in PartiQL Value Schema.
  *
- * @property path
- * @property type
+ * Backed by a memoized catalog tree from the given root dir; global bindings are files.
  */
-internal class LocalObject(
-    val path: List<String>,
-    private val type: StaticType,
-) : ConnectorObject {
-    override fun getType(): StaticType = type
+public class KolliderPlugin : Plugin {
+
+    override val factory: Connector.Factory = KolliderConnector.Factory()
 }

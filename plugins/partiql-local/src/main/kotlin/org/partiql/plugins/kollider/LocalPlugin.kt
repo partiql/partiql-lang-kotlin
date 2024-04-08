@@ -12,7 +12,7 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.plugins.local
+package org.partiql.plugins.kollider
 
 import org.partiql.spi.Plugin
 import org.partiql.spi.connector.Connector

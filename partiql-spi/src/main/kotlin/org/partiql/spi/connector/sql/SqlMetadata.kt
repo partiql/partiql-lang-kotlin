@@ -18,18 +18,15 @@ import org.partiql.spi.BindingPath
 import org.partiql.spi.connector.ConnectorHandle
 import org.partiql.spi.connector.ConnectorMetadata
 import org.partiql.spi.connector.ConnectorPath
-import org.partiql.spi.connector.ConnectorSession
 import org.partiql.spi.connector.sql.info.InfoSchema
 import org.partiql.spi.fn.FnExperimental
 
 /**
  * An instance of [SqlMetadata]
  *
- * @property session
  * @property info
  */
 public open class SqlMetadata(
-    private val session: ConnectorSession,
     private val info: InfoSchema,
 ) : ConnectorMetadata {
 

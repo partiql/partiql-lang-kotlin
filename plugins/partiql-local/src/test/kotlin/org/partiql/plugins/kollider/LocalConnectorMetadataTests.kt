@@ -1,4 +1,4 @@
-package org.partiql.plugins.local
+package org.partiql.plugins.kollider
 
 import org.junit.jupiter.api.Test
 import org.partiql.spi.BindingCase

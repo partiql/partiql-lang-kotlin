@@ -33,7 +33,7 @@ public class MemoryConnector(private val catalog: MemoryCatalog) : SqlConnector(
 
     override fun getBindings(): ConnectorBindings = bindings
 
-    override fun getMetadata(session: ConnectorSession): SqlMetadata = MemoryMetadata(catalog, session, catalog.infoSchema)
+    override fun getMetadata(session: ConnectorSession): SqlMetadata = MemoryMetadata(catalog, catalog.infoSchema)
 
     @OptIn(FnExperimental::class)
     override fun getFunctions(): ConnectorFnProvider = catalog.getFunctions()

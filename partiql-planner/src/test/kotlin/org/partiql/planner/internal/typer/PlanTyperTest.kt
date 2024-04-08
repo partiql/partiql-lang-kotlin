@@ -17,7 +17,7 @@ import org.partiql.planner.internal.ir.rexOpVarGlobal
 import org.partiql.planner.internal.ir.rexOpVarUnresolved
 import org.partiql.planner.internal.ir.statementQuery
 import org.partiql.planner.util.ProblemCollector
-import org.partiql.plugins.local.LocalConnector
+import org.partiql.plugins.kollider.LocalConnector
 import org.partiql.types.StaticType
 import org.partiql.types.StaticType.Companion.ANY
 import org.partiql.types.StaticType.Companion.DECIMAL
