@@ -63,7 +63,10 @@ internal abstract class RelJoinNestedLoop : RelPeeking() {
                 toReturn = join(result.isTrue(), lhsRecord!!, rhsRecord)
             }
             // Move the pointer to the next row for the RHS
-            if (toReturn == null) rhsRecord = rhs.next()
+            if (toReturn == null) rhsRecord = when (rhs.hasNext()) {
+                true -> rhs.next()
+                false -> null
+            }
         }
         while (toReturn == null)
         return toReturn
