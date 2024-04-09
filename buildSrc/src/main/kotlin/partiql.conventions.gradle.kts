@@ -40,6 +40,10 @@ dependencies {
     testImplementation(Deps.kotlinTest)
     testImplementation(Deps.kotlinTestJunit)
     testImplementation(Deps.junitParams)
+    if (hasProperty("custom-ktlint-rules")) {
+        // Adds the custom ktlint rules only if property is set
+        ktlintRuleset(project(":custom-ktlint-rules"))
+    }
 }
 
 java {
@@ -72,6 +76,8 @@ tasks.compileTestKotlin {
 }
 
 configure<KtlintExtension> {
+    version.set(Versions.ktlint)
+    outputToConsole.set(true)
     filter {
         exclude { it.file.path.contains(generatedSrc) }
     }

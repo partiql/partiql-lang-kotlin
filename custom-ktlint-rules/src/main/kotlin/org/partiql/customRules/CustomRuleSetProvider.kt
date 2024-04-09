@@ -1,21 +1,8 @@
 package org.partiql.customRules
 
-import com.pinterest.ktlint.core.RuleProvider
-import com.pinterest.ktlint.core.RuleSetProviderV2
+import com.pinterest.ktlint.core.RuleSet
+import com.pinterest.ktlint.core.RuleSetProvider
 
-public class CustomRuleSetProvider :
-    RuleSetProviderV2(
-        id = "custom",
-        about = About(
-            maintainer = "KtLint",
-            description = "Example of a custom rule set",
-            license = "https://github.com/pinterest/ktlint/blob/master/LICENSE",
-            repositoryUrl = "https://github.com/pinterest/ktlint",
-            issueTrackerUrl = "https://github.com/pinterest/ktlint/issues",
-        ),
-    ) {
-    override fun getRuleProviders(): Set<RuleProvider> =
-        setOf(
-            RuleProvider { NoTopLevelInternalRule() }
-        )
+class CustomRuleSetProvider : RuleSetProvider {
+    override fun get(): RuleSet = RuleSet("custom", NoTopLevelInternalRule())
 }

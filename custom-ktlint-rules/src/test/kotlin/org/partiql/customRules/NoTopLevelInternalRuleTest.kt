@@ -1,31 +1,25 @@
 package org.partiql.customRules
 
-import com.pinterest.ktlint.test.KtLintAssertThat.Companion.assertThatRule
-import com.pinterest.ktlint.test.LintViolation
+import com.pinterest.ktlint.core.LintError
+import com.pinterest.ktlint.test.lint
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
 class NoTopLevelInternalRuleTest {
-    private val wrappingRuleAssertThat = assertThatRule { NoTopLevelInternalRule() }
-
     @Test
     fun `No top level internal`() {
-        // whenever KTLINT_DEBUG env variable is set to "ast" or -DktlintDebug=ast is used
-        // com.pinterest.ktlint.test.(lint|format) will print AST (along with other debug info) to the stderr.
-        // this can be extremely helpful while writing and testing rules.
-        // uncomment the line below to take a quick look at it
-        // System.setProperty("ktlintDebug", "ast")
         val code =
             """
             internal fun internalTopLevelFun() {}   // ktlint error
             
             internal val internalTopLevelVal = 123  // ktlint error
             
-            // No errors for below
+            // No errors for below (for this rule)
             public fun publicTopLevelFun() {}
             
             public val publicTopLevelVal = 123
             
-            public class InternalClass {
+            public class PublicClass {
                 internal fun internalFun() {}
             
                 internal val internalVal = 123
@@ -35,10 +29,9 @@ class NoTopLevelInternalRuleTest {
                 public val publicVal = 123
             }
             """.trimIndent()
-        wrappingRuleAssertThat(code)
-            .hasLintViolationsWithoutAutoCorrect(
-                LintViolation(1, 14, "Top level declaration found: internalTopLevelFun"),
-                LintViolation(3, 14, "Top level declaration found: internalTopLevelVal")
-            )
+        assertThat(NoTopLevelInternalRule().lint(code)).containsExactly(
+            LintError(1, 14, "no-top-level-internal", "Top level internal declaration found: internalTopLevelFun"),
+            LintError(3, 14, "no-top-level-internal", "Top level internal declaration found: internalTopLevelVal")
+        )
     }
 }

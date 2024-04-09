@@ -7,10 +7,10 @@ import org.jetbrains.kotlin.com.intellij.lang.ASTNode
 
 public class NoTopLevelInternalRule : Rule("no-top-level-internal") {
 
-    override fun beforeVisitChildNodes(
+    override fun visit(
         node: ASTNode,
         autoCorrect: Boolean,
-        emit: (offset: Int, errorMessage: String, canBeAutoCorrected: Boolean) -> Unit,
+        emit: (offset: Int, errorMessage: String, canBeAutoCorrected: Boolean) -> Unit
     ) {
         if (node.elementType != ElementType.IDENTIFIER) {
             return
@@ -30,7 +30,7 @@ public class NoTopLevelInternalRule : Rule("no-top-level-internal") {
         if (modifiers != null && modifiers.any { it.elementType == ElementType.INTERNAL_KEYWORD }) {
             emit(
                 node.startOffset,
-                "Top level declaration found: ${node.text}", // TODO add remediation to error message
+                "Top level internal declaration found: ${node.text}",
                 false
             )
         }

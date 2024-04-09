@@ -5,15 +5,11 @@ plugins {
 }
 
 dependencies {
-    implementation("com.pinterest.ktlint:ktlint-core:0.47.0")
+    implementation(Deps.ktlint)
 
-    testImplementation("com.pinterest.ktlint:ktlint-test:0.47.0")
-    testImplementation("org.junit.jupiter:junit-jupiter:5.7.0")
-    testImplementation("org.junit.jupiter:junit-jupiter-params:5.7.0")
-}
-
-tasks.test {
-    useJUnitPlatform() // Enable JUnit5
+    testImplementation(Deps.assertj)
+    testImplementation(Deps.ktlintTest)
+    testImplementation(Deps.junitParams)
 }
 
 repositories {
