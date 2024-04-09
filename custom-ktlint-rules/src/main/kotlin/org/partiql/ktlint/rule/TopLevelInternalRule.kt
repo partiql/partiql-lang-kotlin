@@ -1,11 +1,11 @@
-package org.partiql.customRules
+package org.partiql.ktlint.rule
 
 import com.pinterest.ktlint.core.Rule
 import com.pinterest.ktlint.core.ast.ElementType
 import com.pinterest.ktlint.core.ast.children
 import org.jetbrains.kotlin.com.intellij.lang.ASTNode
 
-public class NoTopLevelInternalRule : Rule("no-top-level-internal") {
+public class TopLevelInternalRule : Rule("top-level-internal") {
 
     override fun visit(
         node: ASTNode,
@@ -30,7 +30,7 @@ public class NoTopLevelInternalRule : Rule("no-top-level-internal") {
         if (modifiers != null && modifiers.any { it.elementType == ElementType.INTERNAL_KEYWORD }) {
             emit(
                 node.startOffset,
-                "Top level internal declaration found: ${node.text}",
+                "Top-level internal declaration found: ${node.text}",
                 false
             )
         }

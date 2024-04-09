@@ -1,13 +1,13 @@
-package org.partiql.customRules
+package org.partiql.ktlint.rule
 
 import com.pinterest.ktlint.core.LintError
 import com.pinterest.ktlint.test.lint
-import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
 
-class NoTopLevelInternalRuleTest {
+class TopLevelInternalRuleTest {
     @Test
-    fun `No top level internal`() {
+    fun `top-level internal`() {
         val code =
             """
             internal fun internalTopLevelFun() {}   // ktlint error
@@ -29,9 +29,9 @@ class NoTopLevelInternalRuleTest {
                 public val publicVal = 123
             }
             """.trimIndent()
-        assertThat(NoTopLevelInternalRule().lint(code)).containsExactly(
-            LintError(1, 14, "no-top-level-internal", "Top level internal declaration found: internalTopLevelFun"),
-            LintError(3, 14, "no-top-level-internal", "Top level internal declaration found: internalTopLevelVal")
+        Assertions.assertThat(TopLevelInternalRule().lint(code)).containsExactly(
+            LintError(1, 14, "top-level-internal", "Top-level internal declaration found: internalTopLevelFun"),
+            LintError(3, 14, "top-level-internal", "Top-level internal declaration found: internalTopLevelVal")
         )
     }
 }
