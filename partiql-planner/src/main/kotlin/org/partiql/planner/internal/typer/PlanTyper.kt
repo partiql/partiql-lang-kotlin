@@ -459,7 +459,7 @@ internal class PlanTyper(
             }
             if (resolvedVar == null) {
                 val details = handleUndefinedVariable(node.identifier, locals.schema.map { it.name }.toSet())
-                return rex(ANY, rexOpErr(details.message))
+                return rex(MISSING, rexOpErr(details.message))
             }
             return visitRex(resolvedVar, null)
         }
@@ -588,7 +588,7 @@ internal class PlanTyper(
             }
             val missable = node.arg.type.isMissable() || node.cast.safety == UNSAFE
             if (missable) {
-                type = unionOf(type, MISSING)
+                type = unionOf(type, MISSING).flatten()
             }
             return rex(type, node)
         }
