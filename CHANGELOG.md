@@ -8,14 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Support parsing of qualified name as table name for DDL command CREATE TABLE and DROP TABLE.
 
 ### Changed
 
 ### Deprecated
 
 ### Fixed
-- Fixes typing of CASE-WHEN by applying the rules from SQL-99 9.3 for minimal common supertype.
 
 ### Removed
 
@@ -23,11 +21,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Contributors
 Thank you to all who have contributed!
-- @rchowell
-
 -->
 
 ## [Unreleased]
+
+### Added
+
+### Changed
+
+### Deprecated
+
+### Fixed
+
+### Removed
+
+### Security
+
+### Contributors
+Thank you to all who have contributed!
+
+## [0.14.5]
 
 ### Added
 - partiql-ast: adds warning not to implement `AstVisitor` interface directly. Please extend `AstBaseVisitor` instead.
@@ -55,7 +68,6 @@ Thank you to all who have contributed!
 
 ### Contributors
 Thank you to all who have contributed!
-- @<your-username>
 - @rchowell
 - @alancai98
 - @johnedquinn
