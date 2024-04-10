@@ -6,5 +6,5 @@ import org.partiql.ktlint.rule.TopLevelInternalRule
 import org.partiql.ktlint.rule.TopLevelPublicRule
 
 class CustomRuleSetProvider : RuleSetProvider {
-    override fun get(): RuleSet = RuleSet("custom", TopLevelInternalRule(), TopLevelPublicRule())
+    override fun get(): RuleSet = RuleSet("custom-ktlint-rules", TopLevelInternalRule(), TopLevelPublicRule())
 }
