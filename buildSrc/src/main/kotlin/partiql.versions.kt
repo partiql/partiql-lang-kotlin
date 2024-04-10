@@ -48,7 +48,7 @@ object Versions {
     const val pig = "0.6.2"
     const val kotlinxCoroutines = "1.6.0"
     const val kotlinxCoroutinesJdk8 = "1.6.0"
-    const val ktlint = "0.42.1"
+    const val ktlint = "0.42.1" // we're on an old version of ktlint. TODO upgrade https://github.com/partiql/partiql-lang-kotlin/issues/1418
 
     // Testing
     const val assertj = "3.11.0"

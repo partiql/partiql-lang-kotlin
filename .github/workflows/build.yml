@@ -41,6 +41,8 @@ jobs:
           GRADLE_OPTS: -Dorg.gradle.jvmargs="-XX:MaxMetaspaceSize=1g"
         run: ./gradlew build jacocoTestReport
 
+      # Custom ktlint rules are only run when the `custom-ktlint-rules` property is set.
+      # Once these rules are run by default, this GH Action step can be removed.
       - name: Run custom ktlint rules
         run: ./gradlew ktlintCheck -Pcustom-ktlint-rules
 

@@ -14,10 +14,20 @@ class TopLevelInternalRuleTest {
             
             internal val internalTopLevelVal = 123  // ktlint error
             
+            internal var internalTopLevelVar = 456    // ktlint error
+            
             // No errors for below (for this rule)
             public fun publicTopLevelFun() {}
             
             public val publicTopLevelVal = 123
+            
+            public var publicTopLevelVar = 456
+            
+            fun publicTopLevelFun2() {}
+            
+            val publicTopLevelVal = 123
+            
+            var publicTopLevelVar = 456
             
             public class PublicClass {
                 internal fun internalFun() {}
@@ -31,7 +41,8 @@ class TopLevelInternalRuleTest {
             """.trimIndent()
         Assertions.assertThat(TopLevelInternalRule().lint(code)).containsExactly(
             LintError(1, 14, "top-level-internal", "Top-level internal declaration found: internalTopLevelFun"),
-            LintError(3, 14, "top-level-internal", "Top-level internal declaration found: internalTopLevelVal")
+            LintError(3, 14, "top-level-internal", "Top-level internal declaration found: internalTopLevelVal"),
+            LintError(5, 14, "top-level-internal", "Top-level internal declaration found: internalTopLevelVar")
         )
     }
 }

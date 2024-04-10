@@ -27,7 +27,7 @@ class TopLevelPublicRuleTest {
             
             internal val internalTopLevelVal = 123
             
-            internal var publicTopLevelVar = 456
+            internal var internalTopLevelVar = 456
             
             public class PublicClass {
                 internal fun internalFun() {}

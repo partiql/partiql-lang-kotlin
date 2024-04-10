@@ -1,4 +1,3 @@
-
 plugins {
     id(Plugins.conventions)
     `java-library`
