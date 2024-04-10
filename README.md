@@ -7,7 +7,7 @@
 # PartiQL Lang Kotlin
 
 This is a Kotlin implementation of the [PartiQL specification](https://partiql.org/assets/PartiQL-Specification.pdf).
-PartiQL is based on SQL-92 and has added support for working with schemaless hierarchical data.
+PartiQL is based on SQL-99 and has added support for working with schemaless hierarchical data.
 PartiQL’s extensions to SQL are easy to understand, treat nested data as first class citizens and
 compose seamlessly with each other and SQL.
 
@@ -31,7 +31,7 @@ This project is published to [Maven Central](https://search.maven.org/artifact/o
 
 | Group ID      | Artifact ID           | Recommended Version |
 |---------------|-----------------------|---------------------|
-| `org.partiql` | `partiql-lang-kotlin` | `0.14.4`            |
+| `org.partiql` | `partiql-lang-kotlin` | `0.14.5`            |
 
 
 For Maven builds, add the following to your `pom.xml`:
@@ -86,13 +86,33 @@ This will build the reference interpreter and test framework, then run all unit 
 
 ## Directory Structure
 
-- `docs` documentation and migration guides as well as source for the GitHub Wiki
-- `examples`
-- `lib` libraries not part of the partiql-lang-kotlin JAR
-- `partiql-cli` contains the source code of the command-line interface and interactive prompt. (CLI/REPL)
-- `partiql-lang` source code for the PartiQL parser and interpreter.
-- `paritql-lang/src/jmh` contains the JMH benchmarks for PartiQL.
-- `partiql-types` PartiQL type system
+```
+$ tree -d -L 2 -I build -I src`
+.
+├── buildSrc                    Gradle multi-project build
+├── docs                        Documentation
+│   ├── upgrades
+│   └── wiki
+├── examples                    Code examples
+├── lib
+│   ├── isl                     Ion Schema DOM
+│   └── sprout                  IR codegen
+├── partiql-ast                 PartiQL ast data structures and utilities
+├── partiql-cli                 CLI & Shell application
+├── partiql-coverage            Code coverage library
+├── partiql-lang                Top-level project containing all subprojects
+├── partiql-parser              PartiQL parser
+├── partiql-plan                PartiQL plan data structures and utilities
+├── partiql-planner             PartiQL planner
+├── partiql-spi                 Service provider interface
+├── partiql-types               PartiQL types
+├── plugins                     PartiQL plugins used in testing 
+│   ├── partiql-local
+│   └── partiql-memory
+└── test
+    ├── partiql-tests           Conformance test data
+    └── partiql-tests-runner    Conformance test runner
+```
 
 ### Running JMH Benchmarks
 
