@@ -36,6 +36,7 @@ import org.partiql.types.BagType
 import org.partiql.types.ListType
 import org.partiql.types.SexpType
 import org.partiql.types.StaticType
+import org.partiql.types.StaticType.Companion.ANY
 import org.partiql.types.StaticType.Companion.MISSING
 import org.partiql.types.StaticType.Companion.unionOf
 import org.partiql.types.StructType
@@ -3634,6 +3635,19 @@ class PlanTyperTestsPorted {
     @MethodSource("castCases")
     @Execution(ExecutionMode.CONCURRENT)
     fun testCasts(tc: TestCase) = runTest(tc)
+
+    @Test
+    fun singleTest() {
+        val query = """
+            SELECT v + 1
+            FROM <<
+                1,
+                MISSING
+            >> v
+        """.trimIndent()
+        val tc = SuccessTestCase(query = query, expected = ANY)
+        runTest(tc)
+    }
 
     // --------- Finish Parameterized Tests ------
 

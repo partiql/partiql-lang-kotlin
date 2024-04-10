@@ -47,6 +47,9 @@ public sealed class FunctionSignature(
      *
      * @property isDeterministic    Flag indicating this function always produces the same output given the same input.
      * @property isNullCall         Flag indicating if any of the call arguments is NULL, then return NULL.
+     * @property isMissable         Indicates whether the function's operator may return MISSING.
+     * @property isMissingCall      Indicates behavior when any of the arguments are MISSING. If set to true, the function
+     * will return MISSING. If false, the operator itself will handle the MISSING.
      * @constructor
      */
     public class Scalar(
@@ -57,6 +60,8 @@ public sealed class FunctionSignature(
         isNullable: Boolean = true,
         @JvmField public val isDeterministic: Boolean = true,
         @JvmField public val isNullCall: Boolean = false,
+        @JvmField public val isMissable: Boolean = false,
+        @JvmField public val isMissingCall: Boolean = true,
     ) : FunctionSignature(name, returns, parameters, description, isNullable) {
 
         override fun equals(other: Any?): Boolean {
