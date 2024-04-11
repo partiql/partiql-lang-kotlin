@@ -1609,7 +1609,7 @@ internal class PartiQLPigVisitor(
             PartiQLParser.BLOB -> blobType(metas)
             PartiQLParser.CLOB -> clobType(metas)
             PartiQLParser.DATE -> dateType(metas)
-            PartiQLParser.STRUCT -> structType(metas)
+//            PartiQLParser.STRUCT -> structType(metas)
             PartiQLParser.TUPLE -> tupleType(metas)
             PartiQLParser.LIST -> listType(metas)
             PartiQLParser.BAG -> bagType(metas)
@@ -1675,6 +1675,11 @@ internal class PartiQLPigVisitor(
             else -> throw ParserException("Invalid custom type name: $name", ErrorCode.PARSE_INVALID_QUERY)
         }
         customType_(SymbolPrimitive(customName, metas), metas)
+    }
+
+    override fun visitTypeStruct(ctx: PartiQLParser.TypeStructContext) = PartiqlAst.build {
+        val metas = ctx.STRUCT().getSourceMetaContainer()
+        structType(metas)
     }
 
     /**

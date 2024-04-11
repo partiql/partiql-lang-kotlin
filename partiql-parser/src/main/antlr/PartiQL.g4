@@ -77,6 +77,7 @@ qualifiedName : (qualifier+=symbolPrimitive PERIOD)* name=symbolPrimitive;
 tableName : symbolPrimitive;
 columnName : symbolPrimitive;
 constraintName : symbolPrimitive;
+comment : COMMENT LITERAL_STRING;
 
 ddl
     : createCommand
@@ -98,7 +99,7 @@ tableDef
     ;
 
 tableDefPart
-    : columnName type columnConstraint*                             # ColumnDeclaration
+    : columnName OPTIONAL? type columnConstraint* comment?          # ColumnDeclaration
     | ( CONSTRAINT constraintName )?  tableConstraintDef            # TableConstrDeclartion
     ;
 
@@ -825,12 +826,17 @@ type
     : datatype=(
         NULL | BOOL | BOOLEAN | SMALLINT | INTEGER2 | INT2 | INTEGER | INT | INTEGER4 | INT4
         | INTEGER8 | INT8 | BIGINT | REAL | CHAR | CHARACTER | MISSING
-        | STRING | SYMBOL | BLOB | CLOB | DATE | STRUCT | TUPLE | LIST | SEXP | BAG | ANY
+        | STRING | SYMBOL | BLOB | CLOB | DATE | TUPLE | LIST | SEXP | BAG | ANY
       )                                                                                                                # TypeAtomic
     | datatype=DOUBLE PRECISION                                                                                        # TypeAtomic
     | datatype=(CHARACTER|CHAR|FLOAT|VARCHAR) ( PAREN_LEFT arg0=LITERAL_INTEGER PAREN_RIGHT )?                         # TypeArgSingle
     | CHARACTER VARYING ( PAREN_LEFT arg0=LITERAL_INTEGER PAREN_RIGHT )?                                               # TypeVarChar
     | datatype=(DECIMAL|DEC|NUMERIC) ( PAREN_LEFT arg0=LITERAL_INTEGER ( COMMA arg1=LITERAL_INTEGER )? PAREN_RIGHT )?  # TypeArgDouble
     | datatype=(TIME|TIMESTAMP) ( PAREN_LEFT precision=LITERAL_INTEGER PAREN_RIGHT )? (WITH TIME ZONE)?                # TypeTimeZone
+    | STRUCT (ANGLE_LEFT structAttr ( COMMA structAttr )* ANGLE_RIGHT)?                                                # TypeStruct
     | symbolPrimitive                                                                                                  # TypeCustom
+    ;
+
+structAttr
+    : columnName OPTIONAL? COLON type columnConstraint* comment?
     ;

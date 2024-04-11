@@ -106,38 +106,9 @@ statement::[
   ],
 
   // Data Definition Language
-  d_d_l::[
-
-    // CREATE TABLE <identifier> [<table_def>]
-    create_table::{
-      name:       identifier,
-      definition: optional::table_definition,
-      // This is a expression for backward compatible reason
-      // For we support PARTITION BY (<id> (, <id>)* ))
-      // But in the future, we might support additional paritition expression:
-      // such as PARTITION BY RANGE(..)
-      partition_by: optional::expr,
-      table_properties: list::[table_property],
-    },
-
-    // CREATE INDEX [<identifier>] ON <identifier> (<path> [, <path>]...)
-    create_index::{
-      index:  optional::identifier,
-      table:  identifier,
-      fields: list::[path],
-    },
-
-    // DROP TABLE <identifier>
-    drop_table::{
-      table: identifier,
-    },
-
-    // DROP INDEX <identifier> ON <identifier>
-    drop_index::{
-      index:  identifier, // <identifier>[0]
-      table:  identifier, // <identifier>[1]
-    },
-  ],
+  d_d_l::{
+    op: ddl_op
+  },
 
   // EXEC <symbol> [<expr>.*]
   exec::{
@@ -154,6 +125,38 @@ statement::[
         format:     optional::string,
       },
     ],
+  },
+]
+
+ddl_op::[
+  // CREATE TABLE <identifier> [<table_def>]
+  create_table::{
+    name:       identifier,
+    definition: optional::table_definition,
+    // This is a expression for backward compatible reason
+    // For we support PARTITION BY (<id> (, <id>)* ))
+    // But in the future, we might support additional paritition expression:
+    // such as PARTITION BY RANGE(..)
+    partition_by: optional::expr,
+    table_properties: list::[table_property],
+  },
+
+  // CREATE INDEX [<identifier>] ON <identifier> (<path> [, <path>]...)
+  create_index::{
+    index:  optional::identifier,
+    table:  identifier,
+    fields: list::[path],
+  },
+
+  // DROP TABLE <identifier>
+  drop_table::{
+    table: identifier,
+  },
+
+  // DROP INDEX <identifier> ON <identifier>
+  drop_index::{
+    index:  identifier, // <identifier>[0]
+    table:  identifier, // <identifier>[1]
   },
 ]
 
@@ -202,7 +205,10 @@ type::[
   list::{},                                                    // LIST
   sexp::{},                                                    // SEXP
   tuple::{},                                                   // TUPLE
-  struct::{},                                                  // STRUCT
+  // TODO: Model this better
+  struct::{
+    fields: list::['.table_definition.column'],
+  },                                                           // STRUCT
   any::{},                                                     // ANY
   custom::{ name: string },                                    // <symbol>
 ]
@@ -798,6 +804,8 @@ table_definition::{
       // TODO: We might need to change this to identifier
       name:        string,
       type:        '.type',
+      // Should this be a constraint?
+      is_optional: bool,
       constraints: list::[constraint]
     }
   ],

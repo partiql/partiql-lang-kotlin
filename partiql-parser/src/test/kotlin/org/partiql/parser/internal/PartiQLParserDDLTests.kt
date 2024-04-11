@@ -7,7 +7,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.ArgumentsProvider
 import org.junit.jupiter.params.provider.ArgumentsSource
-import org.partiql.ast.AstNode
+import org.partiql.ast.DdlOp
 import org.partiql.ast.Expr
 import org.partiql.ast.Identifier
 import org.partiql.ast.Type
@@ -15,13 +15,15 @@ import org.partiql.ast.constraint
 import org.partiql.ast.constraintBodyCheck
 import org.partiql.ast.constraintBodyNotNull
 import org.partiql.ast.constraintBodyUnique
+import org.partiql.ast.ddlOpCreateTable
+import org.partiql.ast.ddlOpDropTable
 import org.partiql.ast.exprBinary
+import org.partiql.ast.exprCollection
 import org.partiql.ast.exprLit
 import org.partiql.ast.exprVar
 import org.partiql.ast.identifierQualified
 import org.partiql.ast.identifierSymbol
-import org.partiql.ast.statementDDLCreateTable
-import org.partiql.ast.statementDDLDropTable
+import org.partiql.ast.statementDDL
 import org.partiql.ast.tableDefinition
 import org.partiql.ast.tableDefinitionColumn
 import org.partiql.ast.tableProperty
@@ -29,7 +31,6 @@ import org.partiql.parser.PartiQLParserException
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.boolValue
 import org.partiql.value.int32Value
-import org.partiql.value.listValue
 import org.partiql.value.stringValue
 import java.util.stream.Stream
 
@@ -40,7 +41,7 @@ class PartiQLParserDDLTests {
     data class SuccessTestCase(
         val description: String? = null,
         val query: String,
-        val node: AstNode
+        val node: DdlOp
     )
 
     data class ErrorTestCase(
@@ -66,7 +67,7 @@ class PartiQLParserDDLTests {
             SuccessTestCase(
                 "CREATE TABLE with unqualified case insensitive name",
                 "CREATE TABLE foo",
-                statementDDLCreateTable(
+                ddlOpCreateTable(
                     identifierSymbol("foo", Identifier.CaseSensitivity.INSENSITIVE),
                     null,
                     null,
@@ -79,7 +80,7 @@ class PartiQLParserDDLTests {
             SuccessTestCase(
                 "CREATE TABLE with unqualified case sensitive name",
                 "CREATE TABLE \"foo\"",
-                statementDDLCreateTable(
+                ddlOpCreateTable(
                     identifierSymbol("foo", Identifier.CaseSensitivity.SENSITIVE),
                     null,
                     null,
@@ -89,7 +90,7 @@ class PartiQLParserDDLTests {
             SuccessTestCase(
                 "CREATE TABLE with qualified case insensitive name",
                 "CREATE TABLE myCatalog.mySchema.foo",
-                statementDDLCreateTable(
+                ddlOpCreateTable(
                     identifierQualified(
                         identifierSymbol("myCatalog", Identifier.CaseSensitivity.INSENSITIVE),
                         listOf(
@@ -105,7 +106,7 @@ class PartiQLParserDDLTests {
             SuccessTestCase(
                 "CREATE TABLE with qualified name with mixed case sensitivity",
                 "CREATE TABLE myCatalog.\"mySchema\".foo",
-                statementDDLCreateTable(
+                ddlOpCreateTable(
                     identifierQualified(
                         identifierSymbol("myCatalog", Identifier.CaseSensitivity.INSENSITIVE),
                         listOf(
@@ -129,13 +130,14 @@ class PartiQLParserDDLTests {
                         a INT2 NOT NULL
                     )
                 """.trimIndent(),
-                statementDDLCreateTable(
+                ddlOpCreateTable(
                     identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
                     tableDefinition(
                         listOf(
                             tableDefinitionColumn(
                                 "a",
                                 Type.Int2(),
+                                false,
                                 listOf(constraint(null, constraintBodyNotNull()))
                             )
                         ),
@@ -153,13 +155,14 @@ class PartiQLParserDDLTests {
                         a INT2 UNIQUE
                     )
                 """.trimIndent(),
-                statementDDLCreateTable(
+                ddlOpCreateTable(
                     identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
                     tableDefinition(
                         listOf(
                             tableDefinitionColumn(
                                 "a",
                                 Type.Int2(),
+                                false,
                                 listOf(constraint(null, constraintBodyUnique(null, false)))
                             )
                         ),
@@ -177,13 +180,14 @@ class PartiQLParserDDLTests {
                         a INT2 PRIMARY KEY
                     )
                 """.trimIndent(),
-                statementDDLCreateTable(
+                ddlOpCreateTable(
                     identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
                     tableDefinition(
                         listOf(
                             tableDefinitionColumn(
                                 "a",
                                 Type.Int2(),
+                                false,
                                 listOf(constraint(null, constraintBodyUnique(null, true)))
                             )
                         ),
@@ -201,13 +205,14 @@ class PartiQLParserDDLTests {
                         a INT2 CHECK (a > 0)
                     )
                 """.trimIndent(),
-                statementDDLCreateTable(
+                ddlOpCreateTable(
                     identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
                     tableDefinition(
                         listOf(
                             tableDefinitionColumn(
                                 "a",
                                 Type.Int2(),
+                                false,
                                 listOf(
                                     constraint(
                                         null,
@@ -236,7 +241,7 @@ class PartiQLParserDDLTests {
                         UNIQUE (a, b)
                     )
                 """.trimIndent(),
-                statementDDLCreateTable(
+                ddlOpCreateTable(
                     identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
                     tableDefinition(
                         emptyList(),
@@ -262,7 +267,7 @@ class PartiQLParserDDLTests {
                         PRIMARY KEY (a, b)
                     )
                 """.trimIndent(),
-                statementDDLCreateTable(
+                ddlOpCreateTable(
                     identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
                     tableDefinition(
                         emptyList(),
@@ -288,7 +293,7 @@ class PartiQLParserDDLTests {
                         CHECK (a > 0)
                     )
                 """.trimIndent(),
-                statementDDLCreateTable(
+                ddlOpCreateTable(
                     identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
                     tableDefinition(
                         emptyList(),
@@ -316,10 +321,13 @@ class PartiQLParserDDLTests {
                     CREATE TABLE tbl
                     PARTITION BY (a, b)
                 """.trimIndent(),
-                statementDDLCreateTable(
+                ddlOpCreateTable(
                     identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
                     null,
-                    exprLit(listValue(listOf(stringValue("a"), stringValue("b")))),
+                    exprCollection(
+                        Expr.Collection.Type.LIST,
+                        listOf(exprLit(stringValue("a")), exprLit(stringValue("b")))
+                    ),
                     emptyList()
                 )
             ),
@@ -330,7 +338,7 @@ class PartiQLParserDDLTests {
                     CREATE TABLE tbl
                     TBLPROPERTIES ('myPropertyKey1' = 'myPropertyValue1', 'myPropertyKey2' = false)
                 """.trimIndent(),
-                statementDDLCreateTable(
+                ddlOpCreateTable(
                     identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
                     null,
                     null,
@@ -346,21 +354,21 @@ class PartiQLParserDDLTests {
             SuccessTestCase(
                 "DROP TABLE with unqualified case insensitive name",
                 "DROP TABLE foo",
-                statementDDLDropTable(
+                ddlOpDropTable(
                     identifierSymbol("foo", Identifier.CaseSensitivity.INSENSITIVE),
                 )
             ),
             SuccessTestCase(
                 "DROP TABLE with unqualified case sensitive name",
                 "DROP TABLE \"foo\"",
-                statementDDLDropTable(
+                ddlOpDropTable(
                     identifierSymbol("foo", Identifier.CaseSensitivity.SENSITIVE),
                 )
             ),
             SuccessTestCase(
                 "DROP TABLE with qualified case insensitive name",
                 "DROP TABLE myCatalog.mySchema.foo",
-                statementDDLDropTable(
+                ddlOpDropTable(
                     identifierQualified(
                         identifierSymbol("myCatalog", Identifier.CaseSensitivity.INSENSITIVE),
                         listOf(
@@ -373,7 +381,7 @@ class PartiQLParserDDLTests {
             SuccessTestCase(
                 "DROP TABLE with qualified name with mixed case sensitivity",
                 "DROP TABLE myCatalog.\"mySchema\".foo",
-                statementDDLDropTable(
+                ddlOpDropTable(
                     identifierQualified(
                         identifierSymbol("myCatalog", Identifier.CaseSensitivity.INSENSITIVE),
                         listOf(
@@ -421,10 +429,10 @@ class PartiQLParserDDLTests {
             errorTestCases.map { Arguments.of(it) }.stream()
     }
 
-    private fun assertExpression(input: String, expected: AstNode) {
+    private fun assertExpression(input: String, expected: DdlOp) {
         val result = parser.parse(input)
         val actual = result.root
-        assertEquals(expected, actual)
+        assertEquals(statementDDL(expected), actual)
     }
 
     // For now, just assert throw

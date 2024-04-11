@@ -18,6 +18,7 @@ import com.amazon.ionelement.api.metaContainerOf
 import org.partiql.ast.AstNode
 import org.partiql.ast.Constraint
 import org.partiql.ast.DatetimeField
+import org.partiql.ast.DdlOp
 import org.partiql.ast.Exclude
 import org.partiql.ast.Expr
 import org.partiql.ast.From
@@ -122,12 +123,14 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
             domain(statement, type, format, metas)
         }
 
-    override fun visitStatementDDL(node: Statement.DDL, ctx: Ctx) = super.visit(node, ctx) as PartiqlAst.Statement.Ddl
+    override fun visitStatementDDL(node: Statement.DDL, ctx: Ctx) = when (val op = node.op) {
+        is DdlOp.CreateIndex -> visitDdlOpCreateIndex(op, ctx)
+        is DdlOp.CreateTable -> visitDdlOpCreateTable(op, ctx)
+        is DdlOp.DropIndex -> visitDdlOpDropIndex(op, ctx)
+        is DdlOp.DropTable -> visitDdlOpDropTable(op, ctx)
+    }
 
-    override fun visitStatementDDLCreateTable(
-        node: Statement.DDL.CreateTable,
-        ctx: Ctx,
-    ) = translate(node) { metas ->
+    override fun visitDdlOpCreateTable(node: DdlOp.CreateTable, ctx: Ctx) = translate(node) { metas ->
         if (node.name !is Identifier.Symbol) {
             error("The legacy AST does not support qualified identifiers as table names")
         }
@@ -136,10 +139,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
         ddl(createTable(tableName, def), metas)
     }
 
-    override fun visitStatementDDLCreateIndex(
-        node: Statement.DDL.CreateIndex,
-        ctx: Ctx,
-    ) = translate(node) { metas ->
+    override fun visitDdlOpCreateIndex(node: DdlOp.CreateIndex, ctx: Ctx) = translate(node) { metas ->
         if (node.index != null) {
             error("The legacy AST does not support index names")
         }
@@ -151,7 +151,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
         ddl(createIndex(tableName, fields), metas)
     }
 
-    override fun visitStatementDDLDropTable(node: Statement.DDL.DropTable, ctx: Ctx) = translate(node) { metas ->
+    override fun visitDdlOpDropTable(node: DdlOp.DropTable, ctx: Ctx) = translate(node) { metas ->
         if (node.table !is Identifier.Symbol) {
             error("The legacy AST does not support qualified identifiers as table names")
         }
@@ -160,7 +160,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
         ddl(dropTable(tableName), metas)
     }
 
-    override fun visitStatementDDLDropIndex(node: Statement.DDL.DropIndex, ctx: Ctx) = translate(node) { metas ->
+    override fun visitDdlOpDropIndex(node: DdlOp.DropIndex, ctx: Ctx) = translate(node) { metas ->
         if (node.index !is Identifier.Symbol) {
             error("The legacy AST does not support qualified identifiers as index names")
         }
@@ -1346,7 +1346,12 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
 
     override fun visitTypeTuple(node: Type.Tuple, ctx: Ctx) = translate(node) { metas -> tupleType(metas) }
 
-    override fun visitTypeStruct(node: Type.Struct, ctx: Ctx) = translate(node) { metas -> structType(metas) }
+    override fun visitTypeStruct(node: Type.Struct, ctx: Ctx) = translate(node) { metas ->
+        if (node.fields.isNotEmpty()) {
+            throw IllegalArgumentException(("PIG AST does not support Field Declaration in Struct"))
+        }
+        structType(metas)
+    }
 
     override fun visitTypeAny(node: Type.Any, ctx: Ctx) = translate(node) { metas -> anyType(metas) }
 

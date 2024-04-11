@@ -35,6 +35,7 @@ import org.antlr.v4.runtime.tree.TerminalNode
 import org.partiql.ast.AstNode
 import org.partiql.ast.Constraint
 import org.partiql.ast.DatetimeField
+import org.partiql.ast.DdlOp
 import org.partiql.ast.Exclude
 import org.partiql.ast.Expr
 import org.partiql.ast.From
@@ -56,6 +57,10 @@ import org.partiql.ast.constraintBodyCheck
 import org.partiql.ast.constraintBodyNotNull
 import org.partiql.ast.constraintBodyNullable
 import org.partiql.ast.constraintBodyUnique
+import org.partiql.ast.ddlOpCreateIndex
+import org.partiql.ast.ddlOpCreateTable
+import org.partiql.ast.ddlOpDropIndex
+import org.partiql.ast.ddlOpDropTable
 import org.partiql.ast.exclude
 import org.partiql.ast.excludeItem
 import org.partiql.ast.excludeStepCollIndex
@@ -149,10 +154,7 @@ import org.partiql.ast.selectStar
 import org.partiql.ast.selectValue
 import org.partiql.ast.setOp
 import org.partiql.ast.sort
-import org.partiql.ast.statementDDLCreateIndex
-import org.partiql.ast.statementDDLCreateTable
-import org.partiql.ast.statementDDLDropIndex
-import org.partiql.ast.statementDDLDropTable
+import org.partiql.ast.statementDDL
 import org.partiql.ast.statementDMLBatchLegacy
 import org.partiql.ast.statementDMLBatchLegacyOpDelete
 import org.partiql.ast.statementDMLBatchLegacyOpInsert
@@ -224,7 +226,6 @@ import org.partiql.value.decimalValue
 import org.partiql.value.int32Value
 import org.partiql.value.int64Value
 import org.partiql.value.intValue
-import org.partiql.value.listValue
 import org.partiql.value.missingValue
 import org.partiql.value.nullValue
 import org.partiql.value.stringValue
@@ -592,17 +593,19 @@ internal class PartiQLParserDefault : PartiQLParser {
          *
          */
 
-        override fun visitQueryDdl(ctx: GeneratedParser.QueryDdlContext): AstNode = visitDdl(ctx.ddl())
+        override fun visitQueryDdl(ctx: GeneratedParser.QueryDdlContext): AstNode = translate(ctx) {
+            statementDDL(visitAs<DdlOp>(ctx.ddl()))
+        }
 
         override fun visitDropTable(ctx: GeneratedParser.DropTableContext) = translate(ctx) {
             val table = visitQualifiedName(ctx.qualifiedName())
-            statementDDLDropTable(table)
+            ddlOpDropTable(table)
         }
 
         override fun visitDropIndex(ctx: GeneratedParser.DropIndexContext) = translate(ctx) {
             val table = visitSymbolPrimitive(ctx.on)
             val index = visitSymbolPrimitive(ctx.target)
-            statementDDLDropIndex(index, table)
+            ddlOpDropIndex(index, table)
         }
 
         override fun visitCreateTable(ctx: GeneratedParser.CreateTableContext) = translate(ctx) {
@@ -628,7 +631,7 @@ internal class PartiQLParserDefault : PartiQLParser {
                         tableProperty(key, value.value)
                     } ?: emptyList()
                 }
-            statementDDLCreateTable(table, definition, partitionBy, tblProperties)
+            ddlOpCreateTable(table, definition, partitionBy, tblProperties)
         }
 
         override fun visitCreateIndex(ctx: GeneratedParser.CreateIndexContext) = translate(ctx) {
@@ -636,7 +639,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             val name: Identifier? = null
             val table = visitSymbolPrimitive(ctx.symbolPrimitive())
             val fields = ctx.pathSimple().map { path -> visitPathSimple(path) }
-            statementDDLCreateIndex(name, table, fields)
+            ddlOpCreateIndex(name, table, fields)
         }
 
         override fun visitTableDef(ctx: GeneratedParser.TableDefContext) = translate(ctx) {
@@ -660,7 +663,11 @@ internal class PartiQLParserDefault : PartiQLParser {
                 val body = visit(constrCtx.columnConstraintDef()) as Constraint.Body
                 constraint(identifier, body)
             }
-            tableDefinitionColumn(name, type, constraints)
+            val optional = when (ctx.OPTIONAL()) {
+                null -> false
+                else -> true
+            }
+            tableDefinitionColumn(name, type, optional, constraints)
         }
 
         override fun visitColConstrNotNull(ctx: GeneratedParser.ColConstrNotNullContext) = translate(ctx) {
@@ -704,8 +711,8 @@ internal class PartiQLParserDefault : PartiQLParser {
             ctx.partitionExpr().accept(this) as Expr
 
         override fun visitPartitionColList(ctx: GeneratedParser.PartitionColListContext) = translate(ctx) {
-            val columns = ctx.columnName().map { stringValue(symbolToString(it.symbolPrimitive())) }
-            exprLit(listValue(columns))
+            val columns = ctx.columnName().map { exprLit(stringValue(symbolToString(it.symbolPrimitive()))) }
+            exprCollection(Expr.Collection.Type.LIST, columns)
         }
 
         /**
@@ -2128,7 +2135,6 @@ internal class PartiQLParserDefault : PartiQLParser {
                 GeneratedParser.BLOB -> typeBlob(null)
                 GeneratedParser.CLOB -> typeClob(null)
                 GeneratedParser.DATE -> typeDate()
-                GeneratedParser.STRUCT -> typeStruct()
                 GeneratedParser.TUPLE -> typeTuple()
                 GeneratedParser.LIST -> typeList()
                 GeneratedParser.SEXP -> typeSexp()
@@ -2190,6 +2196,22 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitTypeCustom(ctx: GeneratedParser.TypeCustomContext) = translate(ctx) {
             typeCustom(ctx.text.uppercase())
+        }
+
+        override fun visitTypeStruct(ctx: GeneratedParser.TypeStructContext) = translate(ctx) {
+            val fields = ctx.structAttr().map {
+                val name = it.columnName().text
+                val type = visitAs<Type>(it.type())
+                val optional = when (it.OPTIONAL()) {
+                    null -> false
+                    else -> true
+                }
+                val constraints = it.columnConstraint().map {
+                    visitAs<Constraint>(it)
+                }
+                tableDefinitionColumn(name, type, optional, constraints)
+            }
+            typeStruct(fields)
         }
 
         private inline fun <reified T : AstNode> visitOrEmpty(ctx: List<ParserRuleContext>?): List<T> = when {

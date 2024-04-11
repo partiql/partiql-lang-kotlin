@@ -4,10 +4,18 @@ import org.partiql.errors.Problem
 import org.partiql.errors.ProblemCallback
 import org.partiql.errors.UNKNOWN_PROBLEM_LOCATION
 import org.partiql.plan.PlanNode
+import org.partiql.plan.ddlConstraint
+import org.partiql.plan.ddlConstraintBodyCheck
+import org.partiql.plan.ddlConstraintBodyUnique
+import org.partiql.plan.ddlCreateTable
+import org.partiql.plan.ddlShape
+import org.partiql.plan.ddlTableProperty
 import org.partiql.plan.partiQLPlan
+import org.partiql.plan.statementDdl
 import org.partiql.planner.PlanningProblemDetails
 import org.partiql.planner.internal.ir.Agg
 import org.partiql.planner.internal.ir.Catalog
+import org.partiql.planner.internal.ir.Ddl
 import org.partiql.planner.internal.ir.Fn
 import org.partiql.planner.internal.ir.Identifier
 import org.partiql.planner.internal.ir.PartiQLPlan
@@ -70,6 +78,49 @@ internal object PlanTransform : PlanBaseVisitor<PlanNode, ProblemCallback>() {
     override fun visitStatement(node: Statement, ctx: ProblemCallback) =
         super.visitStatement(node, ctx) as org.partiql.plan.Statement
 
+    //
+    // DDL
+    //
+    override fun visitStatementDdl(node: Statement.Ddl, ctx: ProblemCallback) =
+        statementDdl(visitDdl(node.statement, ctx))
+
+    override fun visitDdl(node: Ddl, ctx: ProblemCallback) =
+        super.visitDdl(node, ctx) as org.partiql.plan.Ddl
+
+    override fun visitDdlCreateTable(node: Ddl.CreateTable, ctx: ProblemCallback): org.partiql.plan.Ddl.CreateTable {
+        val name = visitIdentifier(node.name, ctx)
+        val inputs = node.input.map { visitDdlShape(it, ctx) }
+        val constraints = node.constraint.map { visitDdlConstraint(it, ctx) }
+        val partition = node.partition
+        val tblProperties = node.tableProperties.map { visitDdlTableProperty(it, ctx) }
+        return ddlCreateTable(name, inputs, constraints, partition, tblProperties)
+    }
+
+    override fun visitDdlShape(node: Ddl.Shape, ctx: ProblemCallback) =
+        ddlShape(node.name, node.type)
+
+    override fun visitDdlConstraint(node: Ddl.Constraint, ctx: ProblemCallback) =
+        ddlConstraint(node.name, visitDdlConstraintBody(node.body, ctx))
+
+    override fun visitDdlConstraintBody(node: Ddl.Constraint.Body, ctx: ProblemCallback) =
+        when (node) {
+            is Ddl.Constraint.Body.Check -> visitDdlConstraintBodyCheck(node, ctx)
+            is Ddl.Constraint.Body.Unique -> visitDdlConstraintBodyUnique(node, ctx)
+        }
+
+    override fun visitDdlConstraintBodyCheck(node: Ddl.Constraint.Body.Check, ctx: ProblemCallback) =
+        ddlConstraintBodyCheck(visitRex(node.expr, ctx))
+
+    override fun visitDdlConstraintBodyUnique(node: Ddl.Constraint.Body.Unique, ctx: ProblemCallback) =
+        ddlConstraintBodyUnique(node.columns, node.isPrimaryKey)
+
+    @OptIn(PartiQLValueExperimental::class)
+    override fun visitDdlTableProperty(node: Ddl.TableProperty, ctx: ProblemCallback) =
+        ddlTableProperty(node.name, node.value)
+
+    //
+    // DQL
+    //
     override fun visitStatementQuery(node: Statement.Query, ctx: ProblemCallback): org.partiql.plan.Statement.Query {
         val root = visitRex(node.root, ctx)
         return org.partiql.plan.Statement.Query(root)

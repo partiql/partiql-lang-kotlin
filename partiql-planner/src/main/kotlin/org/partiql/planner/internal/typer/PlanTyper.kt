@@ -23,6 +23,7 @@ import org.partiql.planner.PlanningProblemDetails
 import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.ResolutionStrategy
 import org.partiql.planner.internal.ir.Agg
+import org.partiql.planner.internal.ir.Ddl
 import org.partiql.planner.internal.ir.Fn
 import org.partiql.planner.internal.ir.Identifier
 import org.partiql.planner.internal.ir.PlanNode
@@ -30,6 +31,8 @@ import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.Statement
 import org.partiql.planner.internal.ir.aggResolved
+import org.partiql.planner.internal.ir.ddlConstraintBodyCheck
+import org.partiql.planner.internal.ir.ddlCreateTable
 import org.partiql.planner.internal.ir.fnResolved
 import org.partiql.planner.internal.ir.identifierSymbol
 import org.partiql.planner.internal.ir.rel
@@ -68,6 +71,7 @@ import org.partiql.planner.internal.ir.rexOpSelect
 import org.partiql.planner.internal.ir.rexOpStruct
 import org.partiql.planner.internal.ir.rexOpStructField
 import org.partiql.planner.internal.ir.rexOpTupleUnion
+import org.partiql.planner.internal.ir.statementDdl
 import org.partiql.planner.internal.ir.statementQuery
 import org.partiql.planner.internal.ir.util.PlanRewriter
 import org.partiql.planner.internal.transforms.PlanTransform
@@ -117,10 +121,20 @@ internal class PlanTyper(
     /**
      * Rewrite the statement with inferred types and resolved variables
      */
-    fun resolve(statement: Statement): Statement {
-        if (statement !is Statement.Query) {
-            throw IllegalArgumentException("PartiQLPlanner only supports Query statements")
+    fun resolve(statement: Statement): Statement =
+        when (statement) {
+            is Statement.Ddl -> resolveDdl(statement)
+            is Statement.Query -> resolveQuery(statement)
         }
+
+    fun resolveDdl(statement: Statement.Ddl): Statement {
+        // root TypeEnv has no bindings
+        val typeEnv = TypeEnv(schema = emptyList())
+        val statement = statement.statement.type(typeEnv)
+        return statementDdl(statement)
+    }
+
+    fun resolveQuery(statement: Statement.Query): Statement.Query {
         // root TypeEnv has no bindings
         val typeEnv = TypeEnv(schema = emptyList())
         val root = statement.root.type(typeEnv)
@@ -1303,6 +1317,48 @@ internal class PlanTyper(
         }
     }
 
+    private inner class DdlTyper(
+        private val locals: TypeEnv,
+        private val strategy: ResolutionStrategy,
+    ) : PlanRewriter<TypeEnv>() {
+        override fun visitDdl(node: Ddl, ctx: TypeEnv) = super.visitDdl(node, ctx) as Ddl
+
+        override fun visitDdlCreateTable(node: Ddl.CreateTable, ctx: TypeEnv): Ddl.CreateTable {
+            // for now, closed and unique
+            val schema = node.input.map {
+                relBinding(it.name, it.type)
+            }.let {
+                TypeEnv(it)
+            }
+            // TODO: For now, do not resolve name
+            val name = node.name
+            // TODO: perhaps here? we allow for non unique?
+            val input = node.input
+            val constraints = node.constraint.map { visitDdlConstraint(it, schema) }
+            val tblProperties = node.tableProperties
+            val partition = node.partition
+
+            return ddlCreateTable(
+                name = name,
+                input = input,
+                constraint = constraints,
+                partition = partition,
+                tableProperties = tblProperties
+            )
+        }
+
+        override fun visitDdlConstraint(node: Ddl.Constraint, ctx: TypeEnv) =
+            super.visitDdlConstraint(node, ctx) as Ddl.Constraint
+
+        override fun visitDdlConstraintBodyCheck(node: Ddl.Constraint.Body.Check, ctx: TypeEnv): Ddl.Constraint.Body.Check {
+            val expr = node.expr.type(ctx)
+            if (expr.type != BOOL) {
+                error("Check expression needs to return a boolean")
+            }
+            return ddlConstraintBodyCheck(expr)
+        }
+    }
+
     // HELPERS
 
     private fun Rel.type(locals: TypeEnv, strategy: ResolutionStrategy = ResolutionStrategy.LOCAL): Rel =
@@ -1310,6 +1366,9 @@ internal class PlanTyper(
 
     private fun Rex.type(locals: TypeEnv, strategy: ResolutionStrategy = ResolutionStrategy.LOCAL) =
         RexTyper(locals, strategy).visitRex(this, this.type)
+
+    private fun Ddl.type(locals: TypeEnv, strategy: ResolutionStrategy = ResolutionStrategy.LOCAL) =
+        DdlTyper(locals, strategy).visitDdl(this, locals)
 
     private fun rexErr(message: String) = rex(MISSING, rexOpErr(message))
 
