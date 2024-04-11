@@ -20,6 +20,7 @@ import com.amazon.ionelement.api.ionInt
 import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.ionStructOf
 import com.amazon.ionelement.api.toIonValue
+import kotlinx.coroutines.runBlocking
 import org.partiql.annotations.ExperimentalPartiQLCompilerPipeline
 import org.partiql.cli.Debug
 import org.partiql.cli.functions.QueryDDB
@@ -28,8 +29,8 @@ import org.partiql.cli.functions.ReadFile_2
 import org.partiql.cli.functions.WriteFile_1
 import org.partiql.cli.functions.WriteFile_2
 import org.partiql.lang.CompilerPipeline
-import org.partiql.lang.compiler.PartiQLCompilerBuilder
-import org.partiql.lang.compiler.PartiQLCompilerPipeline
+import org.partiql.lang.compiler.PartiQLCompilerAsyncBuilder
+import org.partiql.lang.compiler.PartiQLCompilerPipelineAsync
 import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
@@ -49,7 +50,7 @@ import java.nio.file.Path
 import java.time.ZoneOffset
 
 /**
- * A means by which we can run both the EvaluatingCompiler and PartiQLCompilerPipeline
+ * A means by which we can run both the EvaluatingCompiler and [PartiQLCompilerPipelineAsync].
  */
 internal sealed class AbstractPipeline(open val options: PipelineOptions) {
 
@@ -162,7 +163,7 @@ internal sealed class AbstractPipeline(open val options: PipelineOptions) {
     }
 
     /**
-     * Wraps the PartiQLCompilerPipeline
+     * Wraps the [PartiQLCompilerPipelineAsync]
      */
     @OptIn(ExperimentalPartiQLCompilerPipeline::class)
     class PipelineExperimental(options: PipelineOptions) : AbstractPipeline(options) {
@@ -182,17 +183,19 @@ internal sealed class AbstractPipeline(open val options: PipelineOptions) {
 
         override fun compile(input: String, session: EvaluationSession): PartiQLResult {
             val globalVariableResolver = createGlobalVariableResolver(session)
-            val pipeline = PartiQLCompilerPipeline(
+            val pipeline = PartiQLCompilerPipelineAsync(
                 parser = options.parser,
                 planner = PartiQLPlannerBuilder.standard()
                     .options(plannerOptions)
                     .globalVariableResolver(globalVariableResolver)
                     .build(),
-                compiler = PartiQLCompilerBuilder.standard()
+                compiler = PartiQLCompilerAsyncBuilder.standard()
                     .options(evaluatorOptions)
                     .build(),
             )
-            return pipeline.compile(input).eval(session)
+            return runBlocking {
+                pipeline.compile(input).eval(session)
+            }
         }
 
         private fun createGlobalVariableResolver(session: EvaluationSession) = GlobalVariableResolver {

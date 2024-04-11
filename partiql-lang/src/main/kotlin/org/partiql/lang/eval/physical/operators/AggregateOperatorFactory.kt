@@ -31,10 +31,12 @@ import java.util.TreeMap
  *
  * @param name
  */
+@Deprecated("To be removed in the next major version.", replaceWith = ReplaceWith("AggregateOperatorFactoryAsync"))
 public abstract class AggregateOperatorFactory(name: String) : RelationalOperatorFactory {
 
     public override val key = RelationalOperatorFactoryKey(RelationalOperatorKind.AGGREGATE, name)
 
+    @Deprecated("To be removed in the next major version.", replaceWith = ReplaceWith("AggregateOperatorFactoryAsync.create"))
     public abstract fun create(
         source: RelationExpression,
         strategy: PartiqlPhysical.GroupingStrategy,
@@ -43,12 +45,14 @@ public abstract class AggregateOperatorFactory(name: String) : RelationalOperato
     ): RelationExpression
 }
 
+@Deprecated("To be removed in the next major version.", replaceWith = ReplaceWith("CompiledGroupKeyAsync"))
 public class CompiledGroupKey(
     val setGroupKeyVal: SetVariableFunc,
     val value: ValueExpression,
     val variable: PartiqlPhysical.VarDecl
 )
 
+@Deprecated("To be removed in the next major version.", replaceWith = ReplaceWith("CompiledAggregateFunctionAsync"))
 public class CompiledAggregateFunction(
     val name: String,
     val setAggregateVal: SetVariableFunc,

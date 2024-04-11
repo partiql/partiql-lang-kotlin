@@ -20,6 +20,7 @@ import org.partiql.spi.BindingPath
 import org.partiql.spi.connector.ConnectorMetadata
 import org.partiql.spi.connector.ConnectorSession
 import org.partiql.types.StaticType
+import org.partiql.value.PartiQLValueExperimental
 import java.util.Random
 import java.util.stream.Stream
 
@@ -66,6 +67,7 @@ abstract class PartiQLTyperTestBase {
     /**
      * Build a ConnectorMetadata instance from the list of types.
      */
+    @OptIn(PartiQLValueExperimental::class)
     private fun buildMetadata(catalog: String, types: List<StaticType>): ConnectorMetadata {
         val cat = MemoryCatalog.PartiQL().name(catalog).build()
         val connector = MemoryConnector(cat)

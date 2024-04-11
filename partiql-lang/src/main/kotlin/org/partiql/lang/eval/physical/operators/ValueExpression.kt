@@ -11,11 +11,14 @@ import org.partiql.lang.eval.physical.EvaluatorState
  * avoid exposing implementation details (i.e. [org.partiql.lang.eval.physical.PhysicalPlanThunk]) of the evaluator.
  * This implementation accomplishes that and is intended as a publicly usable API that is supported long term.
  */
+@Deprecated("To be removed in the next major version.", replaceWith = ReplaceWith("ValueExpressionAsync"))
 interface ValueExpression {
     /** Evaluates the expression. */
+    @Deprecated("To be removed in the next major version.", replaceWith = ReplaceWith("ValueExpressionAsync.invoke"))
     operator fun invoke(state: EvaluatorState): ExprValue
 
     /** Provides the source location (line & column) of the expression, for error reporting purposes. */
+    @Deprecated("To be removed in the next major version.", replaceWith = ReplaceWith("ValueExpressionAsync.sourceLocation"))
     val sourceLocation: SourceLocationMeta?
 }
 

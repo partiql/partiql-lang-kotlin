@@ -8,14 +8,14 @@ import org.partiql.spi.fn.Agg
 import org.partiql.spi.fn.AggSignature
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType.INT32
+import org.partiql.value.PartiQLValueType.INT64
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 public object Agg_COUNT_STAR____INT32 : Agg {
 
     override val signature: AggSignature = AggSignature(
         name = "count_star",
-        returns = INT32,
+        returns = INT64,
         parameters = listOf(),
         isNullable = false,
         isDecomposable = true

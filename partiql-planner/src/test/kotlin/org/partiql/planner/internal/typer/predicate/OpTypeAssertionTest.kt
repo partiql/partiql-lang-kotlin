@@ -28,7 +28,7 @@ class OpTypeAssertionTest : PartiQLTyperTestBase() {
             }.toSet()
             val failureArgs = setOf(listOf(MissingType))
             accumulateSuccesses(StaticType.BOOL, successArgs)
-            accumulateSuccessNullCall(StaticType.BOOL, listOf(StaticType.NULL))
+            accumulateSuccessNullCall(StaticType.NULL, listOf(StaticType.NULL))
             put(TestResult.Failure, failureArgs)
         }
 

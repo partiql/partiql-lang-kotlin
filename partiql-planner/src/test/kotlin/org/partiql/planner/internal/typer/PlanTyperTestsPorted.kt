@@ -1,6 +1,8 @@
 package org.partiql.planner.internal.typer
 
 import com.amazon.ionelement.api.loadSingleElement
+import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.junit.jupiter.api.parallel.Execution
@@ -13,6 +15,7 @@ import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.errors.Problem
 import org.partiql.errors.UNKNOWN_PROBLEM_LOCATION
 import org.partiql.parser.PartiQLParser
+import org.partiql.plan.Identifier
 import org.partiql.plan.PartiQLPlan
 import org.partiql.plan.Statement
 import org.partiql.plan.debug.PlanPrinter
@@ -38,8 +41,11 @@ import org.partiql.types.BagType
 import org.partiql.types.ListType
 import org.partiql.types.SexpType
 import org.partiql.types.StaticType
+import org.partiql.types.StaticType.Companion.MISSING
+import org.partiql.types.StaticType.Companion.unionOf
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
+import org.partiql.value.PartiQLValueExperimental
 import java.util.stream.Stream
 import kotlin.reflect.KClass
 import kotlin.test.assertEquals
@@ -50,7 +56,7 @@ class PlanTyperTestsPorted {
 
     sealed class TestCase {
         class SuccessTestCase(
-            val name: String,
+            val name: String? = null,
             val key: PartiQLTest.Key? = null,
             val query: String? = null,
             val catalog: String = "pql",
@@ -58,7 +64,12 @@ class PlanTyperTestsPorted {
             val expected: StaticType,
             val warnings: ProblemHandler? = null,
         ) : TestCase() {
-            override fun toString(): String = "$name : ${query ?: key}"
+            override fun toString(): String {
+                if (key != null) {
+                    return "${key.group} : ${key.name}"
+                }
+                return "${name!!} : $query"
+            }
         }
 
         class ErrorTestCase(
@@ -106,9 +117,22 @@ class PlanTyperTestsPorted {
             override fun getUserId(): String = "user-id"
         }
 
+        private fun id(vararg parts: Identifier.Symbol): Identifier {
+            return when (parts.size) {
+                0 -> error("Identifier requires more than one part.")
+                1 -> parts.first()
+                else -> Identifier.Qualified(parts.first(), parts.drop(1))
+            }
+        }
+
+        private fun sensitive(part: String): Identifier.Symbol = Identifier.Symbol(part, Identifier.CaseSensitivity.SENSITIVE)
+
+        private fun insensitive(part: String): Identifier.Symbol = Identifier.Symbol(part, Identifier.CaseSensitivity.INSENSITIVE)
+
         /**
          * MemoryConnector.Factory from reading the resources in /resource_path.txt for Github CI/CD.
          */
+        @OptIn(PartiQLValueExperimental::class)
         val catalogs: List<Pair<String, ConnectorMetadata>> by lazy {
             val inputStream = this::class.java.getResourceAsStream("/resource_path.txt")!!
             val map = mutableMapOf<String, MutableList<Pair<BindingPath, StaticType>>>()
@@ -911,7 +935,7 @@ class PlanTyperTestsPorted {
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UndefinedVariable(insensitiveId("a"))
+                        PlanningProblemDetails.UndefinedVariable(insensitive("a"), setOf("t1", "t2"))
                     )
                 }
             ),
@@ -2129,7 +2153,7 @@ class PlanTyperTestsPorted {
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UndefinedVariable(insensitiveId("unknown_col"))
+                        PlanningProblemDetails.UndefinedVariable(insensitive("unknown_col"), setOf("pets"))
                     )
                 }
             ),
@@ -2517,6 +2541,384 @@ class PlanTyperTestsPorted {
                     )
                 )
             ),
+            //
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-00"),
+                catalog = "pql",
+                expected = StaticType.INT4
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-02"),
+                catalog = "pql",
+                expected = StaticType.INT4
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-03"),
+                catalog = "pql",
+                expected = StaticType.INT8
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-04"),
+                catalog = "pql",
+                expected = StaticType.INT
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-05"),
+                catalog = "pql",
+                expected = StaticType.INT
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-06"),
+                catalog = "pql",
+                expected = StaticType.INT
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-07"),
+                catalog = "pql",
+                expected = StaticType.INT8
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-08"),
+                catalog = "pql",
+                expected = unionOf(StaticType.INT, StaticType.NULL),
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-09"),
+                catalog = "pql",
+                expected = unionOf(StaticType.INT, StaticType.NULL),
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-10"),
+                catalog = "pql",
+                expected = unionOf(StaticType.DECIMAL, StaticType.NULL),
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-11"),
+                catalog = "pql",
+                expected = unionOf(StaticType.INT, StaticType.MISSING),
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-12"),
+                catalog = "pql",
+                expected = StaticType.FLOAT
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-13"),
+                catalog = "pql",
+                expected = unionOf(StaticType.FLOAT, StaticType.NULL),
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-14"),
+                catalog = "pql",
+                expected = StaticType.STRING,
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-15"),
+                catalog = "pql",
+                expected = unionOf(StaticType.STRING, StaticType.NULL),
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-16"),
+                catalog = "pql",
+                expected = StaticType.CLOB,
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-17"),
+                catalog = "pql",
+                expected = unionOf(StaticType.CLOB, StaticType.NULL),
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-18"),
+                catalog = "pql",
+                expected = unionOf(StaticType.STRING, StaticType.NULL),
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-19"),
+                catalog = "pql",
+                expected = unionOf(StaticType.STRING, StaticType.NULL),
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-20"),
+                catalog = "pql",
+                expected = StaticType.NULL,
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-21"),
+                catalog = "pql",
+                expected = unionOf(StaticType.STRING, StaticType.NULL),
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-22"),
+                catalog = "pql",
+                expected = unionOf(StaticType.INT4, StaticType.NULL, StaticType.MISSING),
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-23"),
+                catalog = "pql",
+                expected = StaticType.INT4,
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-24"),
+                catalog = "pql",
+                expected = unionOf(StaticType.INT4, StaticType.INT8, StaticType.STRING),
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-25"),
+                catalog = "pql",
+                expected = unionOf(StaticType.INT4, StaticType.INT8, StaticType.STRING, StaticType.NULL),
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-26"),
+                catalog = "pql",
+                expected = unionOf(StaticType.INT4, StaticType.INT8, StaticType.STRING, StaticType.NULL),
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-27"),
+                catalog = "pql",
+                expected = unionOf(StaticType.INT2, StaticType.INT4, StaticType.INT8, StaticType.INT, StaticType.DECIMAL, StaticType.STRING, StaticType.CLOB),
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-28"),
+                catalog = "pql",
+                expected = unionOf(StaticType.INT2, StaticType.INT4, StaticType.INT8, StaticType.INT, StaticType.DECIMAL, StaticType.STRING, StaticType.CLOB, StaticType.NULL),
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-29"),
+                catalog = "pql",
+                expected = unionOf(
+                    StructType(
+                        fields = listOf(
+                            StructType.Field("x", StaticType.INT4),
+                            StructType.Field("y", StaticType.INT4),
+                        ),
+                    ),
+                    StructType(
+                        fields = listOf(
+                            StructType.Field("x", StaticType.INT8),
+                            StructType.Field("y", StaticType.INT8),
+                        ),
+                    ),
+                    StaticType.NULL,
+                ),
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-30"),
+                catalog = "pql",
+                expected = MISSING
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-31"),
+                catalog = "pql",
+                expected = StaticType.ANY
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-32"),
+                catalog = "pql",
+                expected = StaticType.ANY
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-33"),
+                catalog = "pql",
+                expected = StaticType.ANY
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "case-when-34"),
+                catalog = "pql",
+                expected = StaticType.ANY
+            ),
+        )
+
+        @JvmStatic
+        fun nullIf() = listOf(
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "nullif-00"),
+                catalog = "pql",
+                expected = StaticType.INT4.asNullable()
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "nullif-01"),
+                catalog = "pql",
+                expected = StaticType.INT4.asNullable()
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "nullif-02"),
+                catalog = "pql",
+                expected = StaticType.INT4.asNullable()
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "nullif-03"),
+                catalog = "pql",
+                expected = StaticType.INT4.asNullable()
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "nullif-04"),
+                catalog = "pql",
+                expected = StaticType.INT8.asNullable()
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "nullif-05"),
+                catalog = "pql",
+                expected = StaticType.INT4.asNullable()
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "nullif-06"),
+                catalog = "pql",
+                expected = StaticType.NULL
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "nullif-07"),
+                catalog = "pql",
+                expected = StaticType.INT4.asNullable()
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "nullif-08"),
+                catalog = "pql",
+                expected = StaticType.NULL_OR_MISSING
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "nullif-09"),
+                catalog = "pql",
+                expected = StaticType.INT4.asNullable()
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "nullif-10"),
+                catalog = "pql",
+                expected = StaticType.INT4.asNullable()
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "nullif-11"),
+                catalog = "pql",
+                expected = StaticType.INT4.asNullable()
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "nullif-12"),
+                catalog = "pql",
+                expected = StaticType.INT8.asNullable()
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "nullif-13"),
+                catalog = "pql",
+                expected = StaticType.INT4.asNullable()
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "nullif-14"),
+                catalog = "pql",
+                expected = StaticType.STRING.asNullable()
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "nullif-15"),
+                catalog = "pql",
+                expected = StaticType.INT4.asNullable()
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "nullif-16"),
+                catalog = "pql",
+                expected = unionOf(StaticType.INT2, StaticType.INT4, StaticType.INT8, StaticType.INT, StaticType.DECIMAL, StaticType.NULL)
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "nullif-17"),
+                catalog = "pql",
+                expected = StaticType.INT4.asNullable()
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "nullif-18"),
+                catalog = "pql",
+                expected = StaticType.ANY
+            ),
+        )
+
+        @JvmStatic
+        fun coalesce() = listOf(
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "coalesce-00"),
+                catalog = "pql",
+                expected = StaticType.INT4
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "coalesce-01"),
+                catalog = "pql",
+                expected = StaticType.INT4
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "coalesce-02"),
+                catalog = "pql",
+                expected = StaticType.DECIMAL
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "coalesce-03"),
+                catalog = "pql",
+                expected = unionOf(StaticType.NULL, StaticType.DECIMAL)
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "coalesce-04"),
+                catalog = "pql",
+                expected = unionOf(StaticType.NULL, StaticType.MISSING, StaticType.DECIMAL)
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "coalesce-05"),
+                catalog = "pql",
+                expected = unionOf(StaticType.NULL, StaticType.MISSING, StaticType.DECIMAL)
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "coalesce-06"),
+                catalog = "pql",
+                expected = StaticType.INT4
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "coalesce-07"),
+                catalog = "pql",
+                expected = StaticType.INT4
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "coalesce-08"),
+                catalog = "pql",
+                expected = StaticType.INT8
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "coalesce-09"),
+                catalog = "pql",
+                expected = StaticType.INT8.asNullable()
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "coalesce-10"),
+                catalog = "pql",
+                expected = unionOf(StaticType.INT8, StaticType.NULL, StaticType.MISSING)
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "coalesce-11"),
+                catalog = "pql",
+                expected = unionOf(StaticType.INT8, StaticType.STRING)
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "coalesce-12"),
+                catalog = "pql",
+                expected = unionOf(StaticType.INT8, StaticType.NULL, StaticType.STRING)
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "coalesce-13"),
+                catalog = "pql",
+                expected = unionOf(StaticType.INT2, StaticType.INT4, StaticType.INT8, StaticType.INT, StaticType.DECIMAL)
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "coalesce-14"),
+                catalog = "pql",
+                expected = unionOf(StaticType.INT2, StaticType.INT4, StaticType.INT8, StaticType.INT, StaticType.DECIMAL, StaticType.STRING)
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "coalesce-15"),
+                catalog = "pql",
+                expected = unionOf(StaticType.INT2, StaticType.INT4, StaticType.INT8, StaticType.INT, StaticType.DECIMAL, StaticType.STRING, StaticType.NULL)
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "coalesce-16"),
+                catalog = "pql",
+                expected = StaticType.ANY
+            ),
+            SuccessTestCase(
+                key = PartiQLTest.Key("basics", "coalesce-17"),
+                catalog = "pql",
+                expected = StaticType.ANY
+            ),
         )
 
         @JvmStatic
@@ -2649,7 +3051,7 @@ class PlanTyperTestsPorted {
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UndefinedVariable(idQualified("pql" to BindingCase.SENSITIVE, "main" to BindingCase.SENSITIVE))
+                        PlanningProblemDetails.UndefinedVariable(id(sensitive("pql"), sensitive("main")), setOf())
                     )
                 }
             ),
@@ -2662,7 +3064,7 @@ class PlanTyperTestsPorted {
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UndefinedVariable(sensitiveId("pql"))
+                        PlanningProblemDetails.UndefinedVariable(sensitive("pql"), setOf())
                     )
                 }
             ),
@@ -2795,14 +3197,16 @@ class PlanTyperTestsPorted {
         fun aggregationCases() = listOf(
             SuccessTestCase(
                 name = "AGGREGATE over INTS, without alias",
-                query = "SELECT a, COUNT(*), SUM(a), MIN(b) FROM << {'a': 1, 'b': 2} >> GROUP BY a",
+                query = "SELECT a, COUNT(*), COUNT(a), SUM(a), MIN(b), MAX(a) FROM << {'a': 1, 'b': 2} >> GROUP BY a",
                 expected = BagType(
                     StructType(
                         fields = mapOf(
                             "a" to StaticType.INT4,
-                            "_1" to StaticType.INT4,
-                            "_2" to StaticType.INT4.asNullable(),
+                            "_1" to StaticType.INT8,
+                            "_2" to StaticType.INT8,
                             "_3" to StaticType.INT4.asNullable(),
+                            "_4" to StaticType.INT4.asNullable(),
+                            "_5" to StaticType.INT4.asNullable(),
                         ),
                         contentClosed = true,
                         constraints = setOf(
@@ -2815,12 +3219,13 @@ class PlanTyperTestsPorted {
             ),
             SuccessTestCase(
                 name = "AGGREGATE over INTS, with alias",
-                query = "SELECT a, COUNT(*) AS c, SUM(a) AS s, MIN(b) AS m FROM << {'a': 1, 'b': 2} >> GROUP BY a",
+                query = "SELECT a, COUNT(*) AS c_s, COUNT(a) AS c, SUM(a) AS s, MIN(b) AS m FROM << {'a': 1, 'b': 2} >> GROUP BY a",
                 expected = BagType(
                     StructType(
                         fields = mapOf(
                             "a" to StaticType.INT4,
-                            "c" to StaticType.INT4,
+                            "c_s" to StaticType.INT8,
+                            "c" to StaticType.INT8,
                             "s" to StaticType.INT4.asNullable(),
                             "m" to StaticType.INT4.asNullable(),
                         ),
@@ -2840,7 +3245,7 @@ class PlanTyperTestsPorted {
                     StructType(
                         fields = mapOf(
                             "a" to StaticType.DECIMAL,
-                            "c" to StaticType.INT4,
+                            "c" to StaticType.INT8,
                             "s" to StaticType.DECIMAL.asNullable(),
                             "m" to StaticType.DECIMAL.asNullable(),
                         ),
@@ -2853,6 +3258,89 @@ class PlanTyperTestsPorted {
                     )
                 )
             ),
+            SuccessTestCase(
+                name = "AGGREGATE over nullable integers",
+                query = """
+                    SELECT
+                        a AS a,
+                        COUNT(*) AS count_star,
+                        COUNT(a) AS count_a,
+                        COUNT(b) AS count_b,
+                        SUM(a) AS sum_a,
+                        SUM(b) AS sum_b,
+                        MIN(a) AS min_a,
+                        MIN(b) AS min_b,
+                        MAX(a) AS max_a,
+                        MAX(b) AS max_b,
+                        AVG(a) AS avg_a,
+                        AVG(b) AS avg_b
+                    FROM <<
+                        { 'a': 1, 'b': 2 },
+                        { 'a': 3, 'b': 4 },
+                        { 'a': 5, 'b': NULL }
+                    >> GROUP BY a
+                """.trimIndent(),
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "a" to StaticType.INT4,
+                            "count_star" to StaticType.INT8,
+                            "count_a" to StaticType.INT8,
+                            "count_b" to StaticType.INT8,
+                            "sum_a" to StaticType.INT4.asNullable(),
+                            "sum_b" to StaticType.INT4.asNullable(),
+                            "min_a" to StaticType.INT4.asNullable(),
+                            "min_b" to StaticType.INT4.asNullable(),
+                            "max_a" to StaticType.INT4.asNullable(),
+                            "max_b" to StaticType.INT4.asNullable(),
+                            "avg_a" to StaticType.INT4.asNullable(),
+                            "avg_b" to StaticType.INT4.asNullable(),
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "AGGREGATE over nullable integers",
+                query = """
+                    SELECT T1.a
+                    FROM T1
+                        LEFT JOIN T2 AS T2_1
+                            ON T2_1.d =
+                            (
+                                SELECT
+                                    CASE WHEN COUNT(f) = 1 THEN MAX(f) ELSE 0 END AS e
+                                FROM T3 AS T3_mapping
+                            )
+                        LEFT JOIN T2 AS T2_2
+                            ON T2_2.d =
+                            (
+                                SELECT
+                                    CASE WHEN COUNT(f) = 1 THEN MAX(f) ELSE 0 END AS e
+                                FROM T3 AS T3_mapping
+                            )
+                    ;
+                """.trimIndent(),
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "a" to StaticType.BOOL
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                ),
+                catalog = "aggregations"
+            )
         )
 
         @JvmStatic
@@ -3120,6 +3608,60 @@ class PlanTyperTestsPorted {
     //
     // Parameterized Tests
     //
+
+    @Test
+    @Disabled("The planner doesn't support heterogeneous input to aggregation functions (yet?).")
+    fun failingTest() {
+        val tc = SuccessTestCase(
+            name = "AGGREGATE over heterogeneous data",
+            query = """
+                    SELECT
+                        a AS a,
+                        COUNT(*) AS count_star,
+                        COUNT(a) AS count_a,
+                        COUNT(b) AS count_b,
+                        SUM(a) AS sum_a,
+                        SUM(b) AS sum_b,
+                        MIN(a) AS min_a,
+                        MIN(b) AS min_b,
+                        MAX(a) AS max_a,
+                        MAX(b) AS max_b,
+                        AVG(a) AS avg_a,
+                        AVG(b) AS avg_b
+                    FROM <<
+                        { 'a': 1.0, 'b': 2.0 },
+                        { 'a': 3, 'b': 4 },
+                        { 'a': 5, 'b': NULL }
+                    >> GROUP BY a
+            """.trimIndent(),
+            expected = BagType(
+                StructType(
+                    fields = mapOf(
+                        "a" to StaticType.DECIMAL,
+                        "count_star" to StaticType.INT8,
+                        "count_a" to StaticType.INT8,
+                        "count_b" to StaticType.INT8,
+                        "sum_a" to StaticType.DECIMAL.asNullable(),
+                        "sum_b" to StaticType.DECIMAL.asNullable(),
+                        "min_a" to StaticType.DECIMAL.asNullable(),
+                        "min_b" to StaticType.DECIMAL.asNullable(),
+                        "max_a" to StaticType.DECIMAL.asNullable(),
+                        "max_b" to StaticType.DECIMAL.asNullable(),
+                        "avg_a" to StaticType.DECIMAL.asNullable(),
+                        "avg_b" to StaticType.DECIMAL.asNullable(),
+                    ),
+                    contentClosed = true,
+                    constraints = setOf(
+                        TupleConstraint.Open(false),
+                        TupleConstraint.UniqueAttrs(true),
+                        TupleConstraint.Ordered
+                    )
+                )
+            )
+        )
+        runTest(tc)
+    }
+
     @ParameterizedTest
     @ArgumentsSource(TestProvider::class)
     fun test(tc: TestCase) = runTest(tc)
@@ -3193,6 +3735,16 @@ class PlanTyperTestsPorted {
     @MethodSource("caseWhens")
     @Execution(ExecutionMode.CONCURRENT)
     fun testCaseWhens(tc: TestCase) = runTest(tc)
+
+    @ParameterizedTest
+    @MethodSource("nullIf")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun testNullIf(tc: TestCase) = runTest(tc)
+
+    @ParameterizedTest
+    @MethodSource("coalesce")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun testCoalesce(tc: TestCase) = runTest(tc)
 
     @ParameterizedTest
     @MethodSource("subqueryCases")
@@ -3375,7 +3927,7 @@ class PlanTyperTestsPorted {
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UndefinedVariable(insensitiveId("pets"))
+                        PlanningProblemDetails.UndefinedVariable(insensitive("pets"), emptySet())
                     )
                 }
             ),
@@ -3397,7 +3949,7 @@ class PlanTyperTestsPorted {
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UndefinedVariable(insensitiveId("pets"))
+                        PlanningProblemDetails.UndefinedVariable(insensitive("pets"), emptySet())
                     )
                 }
             ),
@@ -3453,14 +4005,7 @@ class PlanTyperTestsPorted {
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UndefinedVariable(
-                            BindingPath(
-                                steps = listOf(
-                                    BindingName("ddb", BindingCase.INSENSITIVE),
-                                    BindingName("pets", BindingCase.INSENSITIVE),
-                                )
-                            )
-                        )
+                        PlanningProblemDetails.UndefinedVariable(id(insensitive("ddb"), insensitive("pets")), emptySet())
                     )
                 }
             ),
@@ -3726,11 +4271,12 @@ class PlanTyperTestsPorted {
                 query = "non_existing_column = 1",
                 // Function resolves to EQ__ANY_ANY__BOOL
                 // Which can return BOOL Or NULL
+                // TODO this is maybe an error? Depends on -Werror settings..
                 expected = StaticType.MISSING,
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UndefinedVariable(insensitiveId("non_existing_column"))
+                        PlanningProblemDetails.UndefinedVariable(insensitive("non_existing_column"), emptySet())
                     )
                 }
             ),
@@ -3773,7 +4319,7 @@ class PlanTyperTestsPorted {
                 query = "SELECT unknown_col FROM orders WHERE customer_id = 1",
                 expected = BagType(
                     StructType(
-                        fields = emptyList(),
+                        fields = listOf(),
                         contentClosed = true,
                         constraints = setOf(
                             TupleConstraint.Open(false),
@@ -3785,7 +4331,7 @@ class PlanTyperTestsPorted {
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
-                        PlanningProblemDetails.UndefinedVariable(insensitiveId("unknown_col"))
+                        PlanningProblemDetails.UndefinedVariable(insensitive("unknown_col"), setOf("orders"))
                     )
                 }
             ),

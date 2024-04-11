@@ -570,6 +570,18 @@ internal class PartiQLParserDefault : PartiQLParser {
             }
         }
 
+        override fun visitQualifiedName(ctx: org.partiql.parser.antlr.PartiQLParser.QualifiedNameContext) = translate(ctx) {
+            val qualifier = ctx.qualifier.map { visitSymbolPrimitive(it) }
+            val name = visitSymbolPrimitive(ctx.name)
+            if (qualifier.isEmpty()) {
+                name
+            } else {
+                val root = qualifier.first()
+                val steps = qualifier.drop(1) + listOf(name)
+                identifierQualified(root, steps)
+            }
+        }
+
         /**
          *
          * DATA DEFINITION LANGUAGE (DDL)
@@ -579,7 +591,7 @@ internal class PartiQLParserDefault : PartiQLParser {
         override fun visitQueryDdl(ctx: GeneratedParser.QueryDdlContext): AstNode = visitDdl(ctx.ddl())
 
         override fun visitDropTable(ctx: GeneratedParser.DropTableContext) = translate(ctx) {
-            val table = visitSymbolPrimitive(ctx.tableName().symbolPrimitive())
+            val table = visitQualifiedName(ctx.qualifiedName())
             statementDDLDropTable(table)
         }
 
@@ -590,7 +602,7 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitCreateTable(ctx: GeneratedParser.CreateTableContext) = translate(ctx) {
-            val table = visitSymbolPrimitive(ctx.tableName().symbolPrimitive())
+            val table = visitQualifiedName(ctx.qualifiedName())
             val definition = ctx.tableDef()?.let { visitTableDef(it) }
             statementDDLCreateTable(table, definition)
         }

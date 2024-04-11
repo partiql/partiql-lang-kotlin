@@ -3,7 +3,6 @@
 
 package org.partiql.spi.connector.sql.builtins
 
-import org.partiql.errors.TypeCheckException
 import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnParameter
@@ -26,7 +25,6 @@ import org.partiql.value.Int8Value
 import org.partiql.value.IntValue
 import org.partiql.value.IntervalValue
 import org.partiql.value.ListValue
-import org.partiql.value.NullValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType.ANY
@@ -49,8 +47,6 @@ import org.partiql.value.PartiQLValueType.INT64
 import org.partiql.value.PartiQLValueType.INT8
 import org.partiql.value.PartiQLValueType.INTERVAL
 import org.partiql.value.PartiQLValueType.LIST
-import org.partiql.value.PartiQLValueType.MISSING
-import org.partiql.value.PartiQLValueType.NULL
 import org.partiql.value.PartiQLValueType.SEXP
 import org.partiql.value.PartiQLValueType.STRING
 import org.partiql.value.PartiQLValueType.STRUCT
@@ -2247,146 +2243,5 @@ internal object Fn_IN_COLLECTION__STRUCT_SEXP__BOOL : Fn {
             }
         }
         return boolValue(false)
-    }
-}
-
-@OptIn(PartiQLValueExperimental::class, FnExperimental::class)
-internal object Fn_IN_COLLECTION__NULL_BAG__BOOL : Fn {
-
-    override val signature = FnSignature(
-        name = "in_collection",
-        returns = BOOL,
-        parameters = listOf(
-            FnParameter("value", NULL),
-            FnParameter("collection", BAG),
-        ),
-        isNullCall = true,
-        isNullable = false,
-    )
-
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val value = args[0].check<NullValue>()
-        val collection = args[1].check<BagValue<PartiQLValue>>()
-        val iter = collection.iterator()
-        while (iter.hasNext()) {
-            val v = iter.next()
-            if (PartiQLValue.comparator().compare(value, v) == 0) {
-                return boolValue(true)
-            }
-        }
-        return boolValue(false)
-    }
-}
-
-@OptIn(PartiQLValueExperimental::class, FnExperimental::class)
-internal object Fn_IN_COLLECTION__NULL_LIST__BOOL : Fn {
-
-    override val signature = FnSignature(
-        name = "in_collection",
-        returns = BOOL,
-        parameters = listOf(
-            FnParameter("value", NULL),
-            FnParameter("collection", LIST),
-        ),
-        isNullCall = true,
-        isNullable = false,
-    )
-
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val value = args[0].check<NullValue>()
-        val collection = args[1].check<ListValue<PartiQLValue>>()
-        val iter = collection.iterator()
-        while (iter.hasNext()) {
-            val v = iter.next()
-            if (PartiQLValue.comparator().compare(value, v) == 0) {
-                return boolValue(true)
-            }
-        }
-        return boolValue(false)
-    }
-}
-
-@OptIn(PartiQLValueExperimental::class, FnExperimental::class)
-internal object Fn_IN_COLLECTION__NULL_SEXP__BOOL : Fn {
-
-    override val signature = FnSignature(
-        name = "in_collection",
-        returns = BOOL,
-        parameters = listOf(
-            FnParameter("value", NULL),
-            FnParameter("collection", SEXP),
-        ),
-        isNullCall = true,
-        isNullable = false,
-    )
-
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        val value = args[0].check<NullValue>()
-        val collection = args[1].check<SexpValue<PartiQLValue>>()
-        val iter = collection.iterator()
-        while (iter.hasNext()) {
-            val v = iter.next()
-            if (PartiQLValue.comparator().compare(value, v) == 0) {
-                return boolValue(true)
-            }
-        }
-        return boolValue(false)
-    }
-}
-
-@OptIn(PartiQLValueExperimental::class, FnExperimental::class)
-internal object Fn_IN_COLLECTION__MISSING_BAG__BOOL : Fn {
-
-    override val signature = FnSignature(
-        name = "in_collection",
-        returns = BOOL,
-        parameters = listOf(
-            FnParameter("value", MISSING),
-            FnParameter("collection", BAG),
-        ),
-        isNullCall = true,
-        isNullable = false,
-    )
-
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        throw TypeCheckException()
-    }
-}
-
-@OptIn(PartiQLValueExperimental::class, FnExperimental::class)
-internal object Fn_IN_COLLECTION__MISSING_LIST__BOOL : Fn {
-
-    override val signature = FnSignature(
-        name = "in_collection",
-        returns = BOOL,
-        parameters = listOf(
-            FnParameter("value", MISSING),
-            FnParameter("collection", LIST),
-        ),
-        isNullCall = true,
-        isNullable = false,
-    )
-
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        throw TypeCheckException()
-    }
-}
-
-@OptIn(PartiQLValueExperimental::class, FnExperimental::class)
-internal object Fn_IN_COLLECTION__MISSING_SEXP__BOOL : Fn {
-
-    override val signature = FnSignature(
-        name = "in_collection",
-        returns = BOOL,
-        parameters = listOf(
-            FnParameter("value", MISSING),
-            FnParameter("collection", SEXP),
-        ),
-        isNullCall = true,
-        isNullable = false,
-    )
-
-    override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        throw TypeCheckException()
     }
 }

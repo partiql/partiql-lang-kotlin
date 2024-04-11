@@ -52,9 +52,23 @@ internal class EvaluatingCompilerCollectionAggregationsTest : EvaluatorTestBase(
     }
 
     @ParameterizedTest
+    @ArgumentsSource(ValidTestArguments::class)
+    fun validTestsAsync(tc: EvaluatorTestCase) {
+        val newTc = tc.copy(targetPipeline = EvaluatorTestTarget.PARTIQL_PIPELINE_ASYNC)
+        runEvaluatorTestCase(newTc, SESSION)
+    }
+
+    @ParameterizedTest
     @ArgumentsSource(ErrorTestArguments::class)
     fun errorTests(tc: EvaluatorErrorTestCase) {
         val newTc = tc.copy(targetPipeline = EvaluatorTestTarget.PARTIQL_PIPELINE)
+        runEvaluatorErrorTestCase(newTc, SESSION)
+    }
+
+    @ParameterizedTest
+    @ArgumentsSource(ErrorTestArguments::class)
+    fun errorTestsAsync(tc: EvaluatorErrorTestCase) {
+        val newTc = tc.copy(targetPipeline = EvaluatorTestTarget.PARTIQL_PIPELINE_ASYNC)
         runEvaluatorErrorTestCase(newTc, SESSION)
     }
 

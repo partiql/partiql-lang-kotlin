@@ -599,9 +599,10 @@ public data class StructType(
         get() = listOf(this)
 
     override fun toString(): String {
-        val firstSeveral = fields.take(3).joinToString { "${it.key}: ${it.value}" }
+        val firstFieldsSize = 15
+        val firstSeveral = fields.take(firstFieldsSize).joinToString { "${it.key}: ${it.value}" }
         return when {
-            fields.size <= 3 -> "struct($firstSeveral, $constraints)"
+            fields.size <= firstFieldsSize -> "struct($firstSeveral, $constraints)"
             else -> "struct($firstSeveral, ... and ${fields.size - 3} other field(s), $constraints)"
         }
     }
@@ -630,7 +631,7 @@ public data class AnyOfType(val types: Set<StaticType>, override val metas: Map<
         types = this.types.flatMap {
             when (it) {
                 is SingleType -> listOf(it)
-                is AnyType -> listOf(it)
+                is AnyType -> return@flatten it // if `AnyType`, return `AnyType`
                 is AnyOfType -> it.types
             }
         }.toSet()
@@ -642,21 +643,10 @@ public data class AnyOfType(val types: Set<StaticType>, override val metas: Map<
         }
     }
 
-    override fun toString(): String =
-        when (val flattenedType = flatten()) {
-            is AnyOfType -> {
-                val unionedTypes = flattenedType.types
-                when (unionedTypes.size) {
-                    0 -> "\$null"
-                    1 -> unionedTypes.first().toString()
-                    else -> {
-                        val types = unionedTypes.joinToString { it.toString() }
-                        "union($types)"
-                    }
-                }
-            }
-            else -> flattenedType.toString()
-        }
+    override fun toString(): String {
+        val types = types.joinToString { it.toString() }
+        return "union($types)"
+    }
 
     override val allTypes: List<StaticType>
         get() = this.types.map { it.flatten() }

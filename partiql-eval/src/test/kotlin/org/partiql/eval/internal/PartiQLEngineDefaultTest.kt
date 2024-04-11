@@ -666,7 +666,7 @@ class PartiQLEngineDefaultTest {
                     END
                     ;
                 """.trimIndent(),
-                expected = nullValue()
+                expected = stringValue(null)
             ),
             SuccessTestCase(
                 input = """
@@ -849,7 +849,7 @@ class PartiQLEngineDefaultTest {
                     END
                     ;
                 """.trimIndent(),
-                expected = nullValue()
+                expected = stringValue(null)
             ),
             SuccessTestCase(
                 input = """

@@ -1,6 +1,8 @@
 package org.partiql.lang.eval.evaluatortestframework
 
 import org.partiql.lang.CompilerPipeline
+import org.partiql.lang.compiler.PartiQLCompilerPipeline
+import org.partiql.lang.compiler.PartiQLCompilerPipelineAsync
 import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.ExprValue
 
@@ -55,8 +57,8 @@ data class EvaluatorTestCase(
     override val implicitPermissiveModeTest: Boolean = true,
 
     /**
-     * Determines which pipeline this test should run against; the [CompilerPipeline],
-     * [org.partiql.lang.compiler.PartiQLCompilerPipeline] or both.
+     * Determines which pipeline this test should run against; the [CompilerPipeline], [PartiQLCompilerPipeline],
+     * [PartiQLCompilerPipelineAsync], or all of them.
      */
     override val targetPipeline: EvaluatorTestTarget = EvaluatorTestTarget.ALL_PIPELINES,
 

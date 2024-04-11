@@ -1,9 +1,10 @@
 package org.partiql.examples
 
 import com.amazon.ion.system.IonSystemBuilder
+import kotlinx.coroutines.runBlocking
 import org.partiql.annotations.ExperimentalPartiQLCompilerPipeline
 import org.partiql.examples.util.Example
-import org.partiql.lang.compiler.PartiQLCompilerPipeline
+import org.partiql.lang.compiler.PartiQLCompilerPipelineAsync
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
@@ -20,7 +21,7 @@ import java.io.PrintStream
  * One way to do so is to add the `Optin(Experimental<X>::class) before the class. where <X> is the feature name.
  * Also see: https://kotlinlang.org/docs/opt-in-requirements.html#module-wide-opt-in
  */
-class PartiQLCompilerPipelineExample(out: PrintStream) : Example(out) {
+class PartiQLCompilerPipelineAsyncExample(out: PrintStream) : Example(out) {
 
     private val myIonSystem = IonSystemBuilder.standard().build()
 
@@ -59,7 +60,7 @@ class PartiQLCompilerPipelineExample(out: PrintStream) : Example(out) {
         .build()
 
     @OptIn(ExperimentalPartiQLCompilerPipeline::class)
-    private val partiQLCompilerPipeline = PartiQLCompilerPipeline.build {
+    private val partiQLCompilerPipeline = PartiQLCompilerPipelineAsync.build {
         planner
             .globalVariableResolver(globalVariableResolver)
         compiler
@@ -71,7 +72,10 @@ class PartiQLCompilerPipelineExample(out: PrintStream) : Example(out) {
 
         print("PartiQL query:", query)
         @OptIn(ExperimentalPartiQLCompilerPipeline::class)
-        val exprValue = when (val result = partiQLCompilerPipeline.compile(query).eval(session)) {
+        val result = runBlocking {
+            partiQLCompilerPipeline.compile(query).eval(session)
+        }
+        val exprValue = when (result) {
             is PartiQLResult.Value -> result.value
             is PartiQLResult.Delete,
             is PartiQLResult.Explain.Domain,

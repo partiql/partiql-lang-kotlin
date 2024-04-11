@@ -72,7 +72,8 @@ internal object PlanTransform {
         override fun visitRefAgg(node: Ref.Agg, ctx: Unit) = symbols.insert(node)
 
         @OptIn(PartiQLValueExperimental::class)
-        override fun visitRefCast(node: Ref.Cast, ctx: Unit) = org.partiql.plan.refCast(node.input, node.target, node.isNullable)
+        override fun visitRefCast(node: Ref.Cast, ctx: Unit) =
+            org.partiql.plan.refCast(node.input, node.target, node.isNullable)
 
         override fun visitStatement(node: Statement, ctx: Unit) =
             super.visitStatement(node, ctx) as org.partiql.plan.Statement
@@ -194,6 +195,14 @@ internal object PlanTransform {
             branches = node.branches.map { visitRexOpCaseBranch(it, ctx) }, default = visitRex(node.default, ctx)
             )
 
+            override fun visitRexOpNullif(node: Rex.Op.Nullif, ctx: Unit) = org.partiql.plan.Rex.Op.Nullif(
+                value = visitRex(node.value, ctx),
+                nullifier = visitRex(node.nullifier, ctx),
+            )
+
+            override fun visitRexOpCoalesce(node: Rex.Op.Coalesce, ctx: Unit) =
+                org.partiql.plan.Rex.Op.Coalesce(args = node.args.map { visitRex(it, ctx) })
+
             override fun visitRexOpCaseBranch(node: Rex.Op.Case.Branch, ctx: Unit) = org.partiql.plan.Rex.Op.Case.Branch(
                 condition = visitRex(node.condition, ctx), rex = visitRex(node.rex, ctx)
             )
@@ -275,10 +284,11 @@ internal object PlanTransform {
                 predicate = visitRex(node.predicate, ctx),
             )
 
-            override fun visitRelOpSort(node: Rel.Op.Sort, ctx: Unit) = org.partiql.plan.Rel.Op.Sort(
-                input = visitRel(node.input, ctx),
-                specs = node.specs.map { visitRelOpSortSpec(it, ctx) }
-            )
+            override fun visitRelOpSort(node: Rel.Op.Sort, ctx: Unit) =
+                org.partiql.plan.Rel.Op.Sort(
+                    input = visitRel(node.input, ctx),
+                    specs = node.specs.map { visitRelOpSortSpec(it, ctx) }
+                )
 
             override fun visitRelOpSortSpec(node: Rel.Op.Sort.Spec, ctx: Unit) = org.partiql.plan.Rel.Op.Sort.Spec(
                 rex = visitRex(node.rex, ctx),
@@ -366,7 +376,9 @@ internal object PlanTransform {
 
             override fun visitRelOpExcludePath(node: Rel.Op.Exclude.Path, ctx: Unit): org.partiql.plan.Rel.Op.Exclude.Path {
                 val root = when (node.root) {
-                    is Rex.Op.Var.Unresolved -> org.partiql.plan.Rex.Op.Var(-1, -1) // unresolved in `PlanTyper` results in error
+                    is Rex.Op.Var.Unresolved -> org.partiql.plan.Rex.Op.Var(
+                        -1, -1
+                    ) // unresolved in `PlanTyper` results in error
                     is Rex.Op.Var.Local -> visitRexOpVarLocal(node.root, ctx)
                     is Rex.Op.Var.Global -> error("EXCLUDE only disallows values coming from the input record.")
                 }

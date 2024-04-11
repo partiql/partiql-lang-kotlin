@@ -15,6 +15,7 @@ import org.partiql.lang.planner.transforms.DEFAULT_IMPL_NAME
  *
  * @param name
  */
+@Deprecated("To be removed in the next major version.", replaceWith = ReplaceWith("JoinRelationalOperatorFactoryAsync"))
 abstract class JoinRelationalOperatorFactory(name: String) : RelationalOperatorFactory {
 
     final override val key = RelationalOperatorFactoryKey(RelationalOperatorKind.JOIN, name)
@@ -31,6 +32,7 @@ abstract class JoinRelationalOperatorFactory(name: String) : RelationalOperatorF
      * @param setRightSideVariablesToNull
      * @return
      */
+    @Deprecated("To be removed in the next major version.", replaceWith = ReplaceWith("JoinRelationalOperatorFactoryAsync.create"))
     abstract fun create(
         impl: PartiqlPhysical.Impl,
         joinType: PartiqlPhysical.JoinType,
@@ -87,7 +89,7 @@ internal object JoinRelationalOperatorFactoryDefault : JoinRelationalOperatorFac
 /**
  * See specification 5.6
  */
-internal class InnerJoinOperator(
+private class InnerJoinOperator(
     private val lhs: RelationExpression,
     private val rhs: RelationExpression,
     private val condition: (EvaluatorState) -> Boolean
@@ -109,7 +111,7 @@ internal class InnerJoinOperator(
 /**
  * See specification 5.6
  */
-internal class LeftJoinOperator(
+private class LeftJoinOperator(
     private val lhs: RelationExpression,
     private val rhs: RelationExpression,
     private val condition: (EvaluatorState) -> Boolean,
@@ -138,7 +140,7 @@ internal class LeftJoinOperator(
 /**
  * See specification 5.6
  */
-internal class RightJoinOperator(
+private class RightJoinOperator(
     private val lhs: RelationExpression,
     private val rhs: RelationExpression,
     private val condition: (EvaluatorState) -> Boolean,

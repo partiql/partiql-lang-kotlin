@@ -1,5 +1,7 @@
 package org.partiql.lang.compiler
 
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -30,15 +32,24 @@ class TestContext {
         assertEquals(expectedIon, result.toIonValue(ION))
     }
 
+    // Executes query on async evaluator
+    suspend fun executeAndAssertAsync(
+        expectedResultAsIonText: String,
+        sql: String,
+    ) {
+        val expectedIon = ION.singleValue(expectedResultAsIonText)
+        val result = queryEngine.executeQueryAsync(sql)
+        assertEquals(expectedIon, result.toIonValue(ION))
+    }
+
     fun intKey(value: Int) = ExprValue.newList(listOf(ExprValue.newInt(value)))
 }
 
 /**
  * Tests the query planner with some basic DML and SFW queries against using [QueryEngine] and [MemoryDatabase].
  */
-
+@OptIn(ExperimentalCoroutinesApi::class)
 class IntegrationTests {
-
     @Test
     fun `insert, select and delete`() {
         val ctx = TestContext()
@@ -86,6 +97,52 @@ class IntegrationTests {
     }
 
     @Test
+    fun `insert, select and delete async`() = runTest {
+        val ctx = TestContext()
+        val db = ctx.db
+        val customerMetadata = db.findTableMetadata(BindingName("customer", BindingCase.SENSITIVE))!!
+
+        // start by inserting 4 rows
+        ctx.executeAndAssertAsync("{rows_effected:1}", "INSERT INTO customer << { 'id': 1, 'name': 'bob' } >>")
+        ctx.executeAndAssertAsync("{rows_effected:1}", "INSERT INTO customer << { 'id': 2, 'name': 'jane' } >>")
+        ctx.executeAndAssertAsync("{rows_effected:1}", "INSERT INTO customer << { 'id': 3, 'name': 'moe' } >>")
+        ctx.executeAndAssertAsync("{rows_effected:1}", "INSERT INTO customer << { 'id': 4, 'name': 'sue' } >>")
+
+        // assert each of the rows is present in the actual table.
+        assertEquals(4, db.getRowCount(customerMetadata.tableId))
+        assertTrue(db.tableContainsKey(customerMetadata.tableId, ctx.intKey(1)))
+        assertTrue(db.tableContainsKey(customerMetadata.tableId, ctx.intKey(2)))
+        assertTrue(db.tableContainsKey(customerMetadata.tableId, ctx.intKey(3)))
+        assertTrue(db.tableContainsKey(customerMetadata.tableId, ctx.intKey(4)))
+
+        // commented code intentionally kept.  Uncomment to see detailed debug information in the console when
+        // this test is run
+        // ctx.queryEngine.enableDebugOutput = true
+
+        // run some simple SFW queries
+        ctx.executeAndAssertAsync("$BAG_ANNOTATION::[{ name: \"bob\"}]", "SELECT c.name FROM customer AS c WHERE c.id = 1")
+        ctx.executeAndAssertAsync("$BAG_ANNOTATION::[{ name: \"jane\"}]", "SELECT c.name FROM customer AS c WHERE c.id = 2")
+        ctx.executeAndAssertAsync("$BAG_ANNOTATION::[{ name: \"moe\"}]", "SELECT c.name FROM customer AS c WHERE c.id = 3")
+        ctx.executeAndAssertAsync("$BAG_ANNOTATION::[{ name: \"sue\"}]", "SELECT c.name FROM customer AS c WHERE c.id = 4")
+
+        // now delete 2 rows and assert that they are no longer present (test DELETE FROM with WHERE predicate)
+
+        ctx.executeAndAssertAsync("{rows_effected:1}", "DELETE FROM customer AS c WHERE c.id = 2")
+        assertEquals(3, db.getRowCount(customerMetadata.tableId))
+        assertFalse(db.tableContainsKey(customerMetadata.tableId, ctx.intKey(2)))
+
+        ctx.executeAndAssertAsync("{rows_effected:1}", "DELETE FROM customer AS c WHERE c.id = 4")
+        assertFalse(db.tableContainsKey(customerMetadata.tableId, ctx.intKey(4)))
+
+        // finally, delete all remaining rows (test DELETE FROM without WHERE predicate)
+
+        ctx.executeAndAssertAsync("{rows_effected:2}", "DELETE FROM customer")
+        assertEquals(0, db.getRowCount(customerMetadata.tableId))
+        assertFalse(db.tableContainsKey(customerMetadata.tableId, ctx.intKey(1)))
+        assertFalse(db.tableContainsKey(customerMetadata.tableId, ctx.intKey(3)))
+    }
+
+    @Test
     fun `insert with select`() {
         val ctx = TestContext()
         val db = ctx.db
@@ -109,5 +166,31 @@ class IntegrationTests {
         // lastly, assert we have the correct data
         ctx.executeAndAssert("$BAG_ANNOTATION::[{ name: \"bob\"}]", "SELECT c.name FROM more_customer AS c where c.id = 1")
         ctx.executeAndAssert("$BAG_ANNOTATION::[{ name: \"moe\"}]", "SELECT c.name FROM more_customer AS c where c.id = 3")
+    }
+
+    @Test
+    fun `insert with select async`() = runTest {
+        val ctx = TestContext()
+        val db = ctx.db
+        // first put some data into the customer table
+        ctx.executeAndAssertAsync("{rows_effected:1}", "INSERT INTO customer << { 'id': 1, 'name': 'bob' } >>")
+        ctx.executeAndAssertAsync("{rows_effected:1}", "INSERT INTO customer << { 'id': 2, 'name': 'jane' } >>")
+        ctx.executeAndAssertAsync("{rows_effected:1}", "INSERT INTO customer << { 'id': 3, 'name': 'moe' } >>")
+        ctx.executeAndAssertAsync("{rows_effected:1}", "INSERT INTO customer << { 'id': 4, 'name': 'sue' } >>")
+
+        // copy that data into the more_customer table by INSERTing the result of an SFW query
+        ctx.executeAndAssertAsync(
+            "{rows_effected:2}",
+            "INSERT INTO more_customer SELECT c.id, c.name FROM customer AS c WHERE c.id IN (1, 3)"
+        )
+
+        val moreCustomerMetadata = db.findTableMetadata(BindingName("more_customer", BindingCase.SENSITIVE))!!
+        assertEquals(2, db.getRowCount(moreCustomerMetadata.tableId))
+        assertTrue(db.tableContainsKey(moreCustomerMetadata.tableId, ctx.intKey(1)))
+        assertTrue(db.tableContainsKey(moreCustomerMetadata.tableId, ctx.intKey(3)))
+
+        // lastly, assert we have the correct data
+        ctx.executeAndAssertAsync("$BAG_ANNOTATION::[{ name: \"bob\"}]", "SELECT c.name FROM more_customer AS c where c.id = 1")
+        ctx.executeAndAssertAsync("$BAG_ANNOTATION::[{ name: \"moe\"}]", "SELECT c.name FROM more_customer AS c where c.id = 3")
     }
 }
