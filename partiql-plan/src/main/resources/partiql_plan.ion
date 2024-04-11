@@ -195,12 +195,6 @@ rex::{
 
     err::{
       message: string,
-      causes: list::['.rex.op']
-    },
-
-    missing::{
-      message: string,
-      causes: list::['.rex.op']
     },
   ],
 }

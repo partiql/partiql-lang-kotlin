@@ -5,7 +5,6 @@
 
 package org.partiql.planner.`internal`.ir
 
-import org.partiql.errors.Problem
 import org.partiql.planner.internal.ir.builder.IdentifierQualifiedBuilder
 import org.partiql.planner.internal.ir.builder.IdentifierSymbolBuilder
 import org.partiql.planner.internal.ir.builder.PartiQlPlanBuilder
@@ -275,7 +274,6 @@ internal data class Rex(
             is Select -> visitor.visitRexOpSelect(this, ctx)
             is TupleUnion -> visitor.visitRexOpTupleUnion(this, ctx)
             is Err -> visitor.visitRexOpErr(this, ctx)
-            is Missing -> visitor.visitRexOpMissing(this, ctx)
         }
 
         internal data class Lit(
@@ -738,34 +736,11 @@ internal data class Rex(
         }
 
         internal data class Err(
-            @JvmField internal val problem: Problem,
-            @JvmField internal val causes: List<Op>,
+            @JvmField internal val message: String,
         ) : Op() {
-            public override val children: List<PlanNode> by lazy {
-                val kids = mutableListOf<PlanNode?>()
-                kids.addAll(causes)
-                kids.filterNotNull()
-            }
+            public override val children: List<PlanNode> = emptyList()
 
             public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitRexOpErr(this, ctx)
-
-            internal companion object {
-                @JvmStatic
-                internal fun builder(): RexOpErrBuilder = RexOpErrBuilder()
-            }
-        }
-
-        internal data class Missing(
-            @JvmField internal val problem: Problem,
-            @JvmField internal val causes: List<Op>,
-        ) : Op() {
-            public override val children: List<PlanNode> by lazy {
-                val kids = mutableListOf<PlanNode?>()
-                kids.addAll(causes)
-                kids.filterNotNull()
-            }
-
-            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitRexOpMissing(this, ctx)
 
             internal companion object {
                 @JvmStatic
@@ -1211,7 +1186,7 @@ internal data class Rel(
                 visitor.visitRelOpExclude(this, ctx)
 
             internal data class Path(
-                @JvmField internal val root: Rex.Op,
+                @JvmField internal val root: Rex.Op.Var,
                 @JvmField internal val steps: List<Step>,
             ) : PlanNode() {
                 public override val children: List<PlanNode> by lazy {

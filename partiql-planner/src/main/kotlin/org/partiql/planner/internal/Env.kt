@@ -93,22 +93,9 @@ internal class Env(private val session: PartiQLPlanner.Session) {
         // Invoke FnResolver to determine if we made a match
         val variants = item.handle.entity.getVariants()
         val match = FnResolver.resolve(variants, args.map { it.type })
-        // If Type mismatch, then we return a missingOp whose trace is all possible candidates.
         if (match == null) {
-            val candidates = variants.map { fnSignature ->
-                rexOpCallDynamicCandidate(
-                    fn = refFn(
-                        item.catalog,
-                        path = item.handle.path.steps,
-                        signature = fnSignature
-                    ),
-                    coercions = emptyList()
-                )
-            }
-            return ProblemGenerator.missingRex(
-                rexOpCallDynamic(args, candidates, false),
-                ProblemGenerator.incompatibleTypesForOp(args.map { it.type }, path.normalized.joinToString("."))
-            )
+            // unable to make a match, consider returning helpful error messages given the item.variants.
+            return null
         }
         return when (match) {
             is FnMatch.Dynamic -> {

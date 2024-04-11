@@ -6,7 +6,6 @@ import org.junit.jupiter.api.DynamicNode
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
 import org.partiql.parser.PartiQLParser
-import org.partiql.plan.PartiQLPlan
 import org.partiql.plan.PlanNode
 import org.partiql.plan.debug.PlanPrinter
 import org.partiql.planner.test.PartiQLTest
@@ -76,22 +75,22 @@ class PlanTest {
         override fun getUserId(): String = "user-id"
     }
 
-    val pipeline: (PartiQLTest, Boolean) -> PartiQLPlanner.Result = { test, isSignalMode ->
-        val session = PartiQLPlanner.Session(
-            queryId = test.key.toString(),
+    val session: (PartiQLTest.Key) -> PartiQLPlanner.Session = { key ->
+        PartiQLPlanner.Session(
+            queryId = key.toString(),
             userId = "user_id",
             currentCatalog = "default",
-            currentDirectory = listOf("SCHEMA"),
+            currentDirectory = listOf(),
             catalogs = mapOf("default" to buildMetadata("default")),
-            instant = Instant.now()
+            instant = Instant.now(),
         )
+    }
+
+    val pipeline: (PartiQLTest) -> PartiQLPlanner.Result = { test ->
         val problemCollector = ProblemCollector()
         val ast = PartiQLParser.default().parse(test.statement).root
-        val planner = when (isSignalMode) {
-            true -> PartiQLPlanner.builder().signalMode().build()
-            else -> PartiQLPlanner.builder().build()
-        }
-        planner.plan(ast, session, problemCollector)
+        val planner = PartiQLPlanner.default()
+        planner.plan(ast, session(test.key), problemCollector)
     }
 
     fun buildMetadata(catalogName: String): ConnectorMetadata {
@@ -99,8 +98,8 @@ class PlanTest {
         // Insert binding
         val name = BindingPath(
             listOf(
-                BindingName("SCHEMA", BindingCase.INSENSITIVE),
-                BindingName("T", BindingCase.INSENSITIVE),
+                BindingName("default", BindingCase.INSENSITIVE),
+                BindingName("a", BindingCase.INSENSITIVE),
             )
         )
         val obj = MemoryObject(type)
@@ -133,32 +132,26 @@ class PlanTest {
         val group = parent.name
         val tests = parse(group, file)
 
-        val children = tests.map { test ->
+        val children = tests.map {
             // Prepare
-            val displayName = test.key.toString()
+            val displayName = it.key.toString()
 
             // Assert
             DynamicTest.dynamicTest(displayName) {
-                val input = input[test.key] ?: error("no test cases")
+                val input = input[it.key] ?: error("no test cases")
 
-                listOf(true, false).forEach { isSignal ->
-                    val inputPlan = pipeline.invoke(input, isSignal).plan
-                    val outputPlan = pipeline.invoke(test, isSignal).plan
-                    assertPlanEqual(inputPlan, outputPlan)
+                val inputPlan = pipeline.invoke(input).plan
+                val outputPlan = pipeline.invoke(it).plan
+                assert(inputPlan.isEquaivalentTo(outputPlan)) {
+                    buildString {
+                        this.appendLine("expect plan equivalence")
+                        PlanPrinter.append(this, inputPlan)
+                        PlanPrinter.append(this, outputPlan)
+                    }
                 }
             }
         }
         return dynamicContainer(file.nameWithoutExtension, children)
-    }
-
-    private fun assertPlanEqual(inputPlan: PartiQLPlan, outputPlan: PartiQLPlan) {
-        assert(inputPlan.isEquaivalentTo(outputPlan)) {
-            buildString {
-                this.appendLine("expect plan equivalence")
-                PlanPrinter.append(this, inputPlan)
-                PlanPrinter.append(this, outputPlan)
-            }
-        }
     }
 
     private fun parse(group: String, file: File): List<PartiQLTest> {
