@@ -7,6 +7,7 @@ import org.partiql.planner.util.allCollectionType
 import org.partiql.planner.util.allSupportedType
 import org.partiql.planner.util.cartesianProduct
 import org.partiql.types.MissingType
+import org.partiql.types.NullType
 import org.partiql.types.StaticType
 import java.util.stream.Stream
 
@@ -26,9 +27,14 @@ class OpInTest : PartiQLTyperTestBase() {
                     .toSet()
 
             successArgs.forEach { args: List<StaticType> ->
-                if (args.contains(StaticType.NULL)) {
-                    (this[TestResult.Success(StaticType.NULL)] ?: setOf(args)).let {
-                        put(TestResult.Success(StaticType.NULL), it + setOf(args))
+                if (args.all { it is NullType }) {
+                    val nullableHighestPrecedenceType = StaticType.unionOf(StaticType.BOOL, StaticType.NULL)
+                    (this[TestResult.Success(nullableHighestPrecedenceType)] ?: setOf(args)).let {
+                        put(TestResult.Success(nullableHighestPrecedenceType), it + setOf(args))
+                    }
+                } else if (args.contains(StaticType.NULL)) {
+                    (this[TestResult.Success(StaticType.unionOf(StaticType.NULL, StaticType.BOOL))] ?: setOf(args)).let {
+                        put(TestResult.Success(StaticType.unionOf(StaticType.NULL, StaticType.BOOL)), it + setOf(args))
                     }
                 } else {
                     (this[TestResult.Success(StaticType.BOOL)] ?: setOf(args)).let {
@@ -62,9 +68,14 @@ class OpInTest : PartiQLTyperTestBase() {
             }.toSet()
 
             successArgs.forEach { args: List<StaticType> ->
-                if (args.contains(StaticType.NULL)) {
-                    (this[TestResult.Success(StaticType.NULL)] ?: setOf(args)).let {
-                        put(TestResult.Success(StaticType.NULL), it + setOf(args))
+                if (args.all { it is NullType }) {
+                    val nullableHighestPrecedenceType = StaticType.unionOf(StaticType.BOOL, StaticType.NULL)
+                    (this[TestResult.Success(nullableHighestPrecedenceType)] ?: setOf(args)).let {
+                        put(TestResult.Success(nullableHighestPrecedenceType), it + setOf(args))
+                    }
+                } else if (args.contains(StaticType.NULL)) {
+                    (this[TestResult.Success(StaticType.unionOf(StaticType.NULL, StaticType.BOOL))] ?: setOf(args)).let {
+                        put(TestResult.Success(StaticType.unionOf(StaticType.NULL, StaticType.BOOL)), it + setOf(args))
                     }
                 } else {
                     (this[TestResult.Success(StaticType.BOOL)] ?: setOf(args)).let {

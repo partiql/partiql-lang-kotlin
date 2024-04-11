@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Deprecated
 
 ### Fixed
+- Fixes [#1398](https://github.com/partiql/partiql-lang-kotlin/issues/1398) by handling "missable" arguments to
+functions. This fix also adds support for conversion of NULL to typed nulls. **Behavior change**: Function return
+types may now return nullable types when one of their arguments is NULL. For example: `5 + NULL` (INT4 + NULL) is
+now inferred to return a nullable INT4 (union of INT4 and NULL).
 
 ### Removed
 
@@ -21,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Contributors
 Thank you to all who have contributed!
+- @johnedquinn
 -->
 
 ## [Unreleased]

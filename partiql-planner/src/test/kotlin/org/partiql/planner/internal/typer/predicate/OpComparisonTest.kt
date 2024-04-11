@@ -22,13 +22,14 @@ class OpComparisonTest : PartiQLTyperTestBase() {
             val successArgs = cartesianProduct(allSupportedType, allSupportedType)
 
             successArgs.forEach { args: List<StaticType> ->
+
                 if (args.contains(StaticType.MISSING)) {
-                    (this[TestResult.Success(StaticType.NULL)] ?: setOf(args)).let {
-                        put(TestResult.Success(StaticType.NULL), it + setOf(args))
+                    (this[TestResult.Success(StaticType.unionOf(StaticType.NULL, StaticType.BOOL))] ?: setOf(args)).let {
+                        put(TestResult.Success(StaticType.unionOf(StaticType.NULL, StaticType.BOOL)), it + setOf(args))
                     }
                 } else if (args.contains(StaticType.NULL)) {
-                    (this[TestResult.Success(StaticType.NULL)] ?: setOf(args)).let {
-                        put(TestResult.Success(StaticType.NULL), it + setOf(args))
+                    (this[TestResult.Success(StaticType.unionOf(StaticType.NULL, StaticType.BOOL))] ?: setOf(args)).let {
+                        put(TestResult.Success(StaticType.unionOf(StaticType.NULL, StaticType.BOOL)), it + setOf(args))
                     }
                 } else {
                     (this[TestResult.Success(StaticType.BOOL)] ?: setOf(args)).let {
@@ -83,8 +84,8 @@ class OpComparisonTest : PartiQLTyperTestBase() {
 
             successArgs.forEach { args: List<StaticType> ->
                 if (args.contains(StaticType.NULL)) {
-                    (this[TestResult.Success(StaticType.NULL)] ?: setOf(args)).let {
-                        put(TestResult.Success(StaticType.NULL), it + setOf(args))
+                    (this[TestResult.Success(StaticType.unionOf(StaticType.NULL, StaticType.BOOL))] ?: setOf(args)).let {
+                        put(TestResult.Success(StaticType.unionOf(StaticType.NULL, StaticType.BOOL)), it + setOf(args))
                     }
                 } else {
                     (this[TestResult.Success(StaticType.BOOL)] ?: setOf(args)).let {

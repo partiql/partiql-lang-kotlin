@@ -36,8 +36,9 @@ import org.partiql.types.BagType
 import org.partiql.types.ListType
 import org.partiql.types.SexpType
 import org.partiql.types.StaticType
-import org.partiql.types.StaticType.Companion.ANY
+import org.partiql.types.StaticType.Companion.INT4
 import org.partiql.types.StaticType.Companion.MISSING
+import org.partiql.types.StaticType.Companion.NULL
 import org.partiql.types.StaticType.Companion.unionOf
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
@@ -636,7 +637,7 @@ class PlanTyperTestsPorted {
             SuccessTestCase(
                 name = "BITWISE_AND_NULL_OPERAND",
                 query = "1 & NULL",
-                expected = StaticType.NULL,
+                expected = unionOf(StaticType.NULL, INT4),
             ),
             ErrorTestCase(
                 name = "BITWISE_AND_MISSING_OPERAND",
@@ -3636,19 +3637,6 @@ class PlanTyperTestsPorted {
     @Execution(ExecutionMode.CONCURRENT)
     fun testCasts(tc: TestCase) = runTest(tc)
 
-    @Test
-    fun singleTest() {
-        val query = """
-            SELECT v + 1
-            FROM <<
-                1,
-                MISSING
-            >> v
-        """.trimIndent()
-        val tc = SuccessTestCase(query = query, expected = ANY)
-        runTest(tc)
-    }
-
     // --------- Finish Parameterized Tests ------
 
     //
@@ -4140,7 +4128,7 @@ class PlanTyperTestsPorted {
                 catalog = CATALOG_DB,
                 catalogPath = DB_SCHEMA_MARKETS,
                 query = "order_info.\"CUSTOMER_ID\" = 1",
-                expected = StaticType.NULL
+                expected = unionOf(StaticType.NULL, StaticType.BOOL)
             ),
             SuccessTestCase(
                 name = "Case Sensitive success",

@@ -32,22 +32,6 @@ internal class FunctionResolverTest {
     }
 
     @Test
-    fun singleTest() {
-        val tc =
-            Case.ResolveScalarFn(
-                name = "Higher Precedence PLUS",
-                identifier = "plus",
-                args = listOf(StaticType.INT2, StaticType.INT2),
-                expected = FnMatch.Ok(
-                    signature = plus2,
-                    mapping = listOf(null, null),
-                    isMissable = false
-                )
-            )
-        tc.assert()
-    }
-
-    @Test
     fun sanity() {
         // 1 + 1.0 -> 2.0
         val fn = Header.binary(
@@ -81,12 +65,22 @@ internal class FunctionResolverTest {
         val split =
             fn("split", PartiQLValueType.LIST, PartiQLValueType.STRING, PartiQLValueType.STRING, isNullable = false)
 
-        val plus1 = fn("plus", PartiQLValueType.INT, PartiQLValueType.INT, PartiQLValueType.INT, isNullable = false)
-        val plus2 = fn("plus", PartiQLValueType.INT8, PartiQLValueType.INT16, PartiQLValueType.INT16, isNullable = false)
+        // Does NOT handle MISSING
+        val plus__INT_INT__INT__missing_call = fn("plus", PartiQLValueType.INT, PartiQLValueType.INT, PartiQLValueType.INT, isNullable = false)
+        val plus__INT16_INT16__INT16_missing_call = fn("plus", PartiQLValueType.INT16, PartiQLValueType.INT16, PartiQLValueType.INT16, isNullable = false)
 
         // Handles MISSING
-        val eq1 = fn("eq", PartiQLValueType.BOOL, PartiQLValueType.INT16, PartiQLValueType.INT16, isNullable = false, isMissingCall = false)
-        val eq2 = fn("eq", PartiQLValueType.BOOL, PartiQLValueType.ANY, PartiQLValueType.ANY, isNullable = false, isMissingCall = false)
+        val eq__INT16_INT16__BOOL__not_missing_call = fn("eq", PartiQLValueType.BOOL, PartiQLValueType.INT16, PartiQLValueType.INT16, isNullable = false, isMissingCall = false)
+        val eq__ANY_ANY__BOOL__not_missing_call = fn("eq", PartiQLValueType.BOOL, PartiQLValueType.ANY, PartiQLValueType.ANY, isNullable = false, isMissingCall = false)
+
+        // Specifically takes in MISSING and handles MISSING.
+        val foo__MISSING__BOOL__not_missing_call = fn("foo", PartiQLValueType.BOOL, PartiQLValueType.MISSING, isNullable = false, isMissingCall = false)
+
+        // Specifically takes in ANY/DYNAMIC and handles MISSING
+        val bar__ANY__BOOL__not_missing_call = fn("bar", PartiQLValueType.BOOL, PartiQLValueType.ANY, isNullable = false, isMissingCall = false)
+
+        // Specifically takes in ANY/DYNAMIC and does NOT handle MISSING
+        val baz__ANY__BOOL__missing_call = fn("param_is_dynamic_not_missing", PartiQLValueType.BOOL, PartiQLValueType.ANY, isNullable = false, isMissingCall = true)
 
         private fun fn(
             name: String,
@@ -112,10 +106,13 @@ internal class FunctionResolverTest {
 
             override val functions: List<FunctionSignature.Scalar> = listOf(
                 split,
-                plus1,
-                plus2,
-                eq1,
-                eq2
+                plus__INT_INT__INT__missing_call,
+                plus__INT16_INT16__INT16_missing_call,
+                eq__INT16_INT16__BOOL__not_missing_call,
+                eq__ANY_ANY__BOOL__not_missing_call,
+                foo__MISSING__BOOL__not_missing_call,
+                bar__ANY__BOOL__not_missing_call,
+                baz__ANY__BOOL__missing_call
             )
         }
 
@@ -124,63 +121,229 @@ internal class FunctionResolverTest {
         @JvmStatic
         fun allCases() = listOf(
             Case.ResolveScalarFn(
-                name = "Implicit Coercion PLUS",
+                name = "INT PLUS INT4",
                 identifier = "plus",
                 args = listOf(StaticType.INT, StaticType.INT4),
                 expected = FnMatch.Ok(
-                    signature = plus1,
+                    signature = plus__INT_INT__INT__missing_call,
                     mapping = listOf(null, null),
                     isMissable = false
                 )
             ),
             Case.ResolveScalarFn(
-                name = "Higher Precedence PLUS",
+                name = "INT2 PLUS INT2",
                 identifier = "plus",
                 args = listOf(StaticType.INT2, StaticType.INT2),
                 expected = FnMatch.Ok(
-                    signature = plus2,
+                    signature = plus__INT16_INT16__INT16_missing_call,
                     mapping = listOf(null, null),
                     isMissable = false
                 )
             ),
             Case.ResolveScalarFn(
-                name = "UNION PLUS",
+                name = "UNION(INT2|INT4) PLUS INT2",
+                identifier = "plus",
+                args = listOf(StaticType.unionOf(StaticType.INT2, StaticType.INT4), StaticType.INT2),
+                expected = FnMatch.Dynamic(
+                    candidates = listOf(
+                        FnMatch.Ok(
+                            signature = plus__INT16_INT16__INT16_missing_call,
+                            mapping = listOf(null, null),
+                            isMissable = false
+                        ),
+                        FnMatch.Ok(
+                            signature = plus__INT_INT__INT__missing_call,
+                            mapping = listOf(null, null),
+                            isMissable = false
+                        )
+                    ),
+                    isMissable = false
+                )
+            ),
+            Case.ResolveScalarFn(
+                name = "UNION(INT2|MISSING) PLUS INT2",
                 identifier = "plus",
                 args = listOf(StaticType.unionOf(StaticType.INT2, StaticType.MISSING), StaticType.INT2),
                 expected = FnMatch.Ok(
-                    signature = plus2,
+                    signature = plus__INT16_INT16__INT16_missing_call,
                     mapping = listOf(null, null),
-                    isMissable = false
+                    isMissable = true
                 )
             ),
             Case.ResolveScalarFn(
-                name = "Straightforward EQ",
+                name = "UNION(INT2|INT4|MISSING) PLUS INT2",
+                identifier = "plus",
+                args = listOf(StaticType.unionOf(StaticType.INT2, StaticType.INT4, StaticType.MISSING), StaticType.INT2),
+                expected = FnMatch.Dynamic(
+                    candidates = listOf(
+                        FnMatch.Ok(
+                            signature = plus__INT16_INT16__INT16_missing_call,
+                            mapping = listOf(null, null),
+                            isMissable = false
+                        ),
+                        FnMatch.Ok(
+                            signature = plus__INT_INT__INT__missing_call,
+                            mapping = listOf(null, null),
+                            isMissable = false
+                        )
+                    ),
+                    isMissable = true
+                )
+            ),
+            Case.ResolveScalarFn(
+                name = "MISSING PLUS INT2",
+                identifier = "plus",
+                args = listOf(StaticType.MISSING, StaticType.INT2),
+                expected = FnMatch.Error(
+                    candidates = listOf(
+                        plus__INT16_INT16__INT16_missing_call,
+                        plus__INT_INT__INT__missing_call,
+                    ),
+                    identifier = Identifier.Symbol("plus", Identifier.CaseSensitivity.INSENSITIVE),
+                    args = listOf(
+                        Rex(StaticType.MISSING, Rex.Op.Var.Resolved(0)),
+                        Rex(StaticType.INT2, Rex.Op.Var.Resolved(0)),
+                    )
+                )
+            ),
+            Case.ResolveScalarFn(
+                name = "INT2 EQ INT2",
                 identifier = "eq",
                 args = listOf(StaticType.INT2, StaticType.INT2),
                 expected = FnMatch.Ok(
-                    signature = eq1,
+                    signature = eq__INT16_INT16__BOOL__not_missing_call,
                     mapping = listOf(null, null),
                     isMissable = false
                 )
             ),
             Case.ResolveScalarFn(
-                name = "ANY EQ",
+                name = "DECIMAL EQ INT2",
                 identifier = "eq",
-                args = listOf(StaticType.DECIMAL, StaticType.INT8),
+                args = listOf(StaticType.DECIMAL, StaticType.INT2),
                 expected = FnMatch.Ok(
-                    signature = eq2,
+                    signature = eq__ANY_ANY__BOOL__not_missing_call,
                     mapping = listOf(null, null),
                     isMissable = false
                 )
             ),
             Case.ResolveScalarFn(
-                name = "UNION EQ",
+                name = "UNION(DECIMAL|INT) EQ INT2",
                 identifier = "eq",
-                args = listOf(StaticType.unionOf(StaticType.DECIMAL, StaticType.INT), StaticType.INT8),
+                args = listOf(StaticType.unionOf(StaticType.DECIMAL, StaticType.INT), StaticType.INT2),
                 expected = FnMatch.Ok(
-                    signature = eq2,
+                    signature = eq__ANY_ANY__BOOL__not_missing_call,
                     mapping = listOf(null, null),
                     isMissable = false
+                )
+            ),
+            Case.ResolveScalarFn(
+                name = "BAR(INT) -- Parameter is DYNAMIC and handles MISSING. Pass in CONCRETE value.",
+                identifier = bar__ANY__BOOL__not_missing_call.name,
+                args = listOf(StaticType.INT),
+                expected = FnMatch.Ok(
+                    signature = bar__ANY__BOOL__not_missing_call,
+                    mapping = listOf(null),
+                    isMissable = false
+                )
+            ),
+            Case.ResolveScalarFn(
+                name = "BAR(UNION(DECIMAL|INT)) -- Parameter is DYNAMIC and handles MISSING. Pass in UNION value.",
+                identifier = bar__ANY__BOOL__not_missing_call.name,
+                args = listOf(StaticType.unionOf(StaticType.DECIMAL, StaticType.INT)),
+                expected = FnMatch.Ok(
+                    signature = bar__ANY__BOOL__not_missing_call,
+                    mapping = listOf(null),
+                    isMissable = false
+                )
+            ),
+            Case.ResolveScalarFn(
+                name = "BAR(UNION(DECIMAL|INT|MISSING)) -- Parameter is DYNAMIC and handles MISSING. Pass in UNION value with MISSING.",
+                identifier = bar__ANY__BOOL__not_missing_call.name,
+                args = listOf(StaticType.unionOf(StaticType.DECIMAL, StaticType.INT, StaticType.MISSING)),
+                expected = FnMatch.Ok(
+                    signature = bar__ANY__BOOL__not_missing_call,
+                    mapping = listOf(null),
+                    isMissable = false
+                )
+            ),
+            Case.ResolveScalarFn(
+                name = "BAR(MISSING) -- Parameter is DYNAMIC and handles MISSING. Pass in MISSING value.",
+                identifier = bar__ANY__BOOL__not_missing_call.name,
+                args = listOf(StaticType.MISSING),
+                expected = FnMatch.Ok(
+                    signature = bar__ANY__BOOL__not_missing_call,
+                    mapping = listOf(null),
+                    isMissable = false
+                )
+            ),
+            Case.ResolveScalarFn(
+                name = "BAZ(INT) -- Parameter is DYNAMIC but doesn't handle MISSING. Pass in CONCRETE value.",
+                identifier = baz__ANY__BOOL__missing_call.name,
+                args = listOf(StaticType.INT),
+                expected = FnMatch.Ok(
+                    signature = baz__ANY__BOOL__missing_call,
+                    mapping = listOf(null),
+                    isMissable = false
+                )
+            ),
+            Case.ResolveScalarFn(
+                name = "BAZ(UNION(DECIMAL|INT)) -- Parameter is DYNAMIC but doesn't handle MISSING. Pass in UNION value.",
+                identifier = baz__ANY__BOOL__missing_call.name,
+                args = listOf(StaticType.unionOf(StaticType.DECIMAL, StaticType.INT)),
+                expected = FnMatch.Ok(
+                    signature = baz__ANY__BOOL__missing_call,
+                    mapping = listOf(null),
+                    isMissable = false
+                )
+            ),
+            Case.ResolveScalarFn(
+                name = "BAZ(UNION(DECIMAL|INT|MISSING)) -- Parameter is DYNAMIC but doesn't handle MISSING. Pass in UNION value with MISSING.",
+                identifier = baz__ANY__BOOL__missing_call.name,
+                args = listOf(StaticType.unionOf(StaticType.DECIMAL, StaticType.INT, StaticType.MISSING)),
+                expected = FnMatch.Ok(
+                    signature = baz__ANY__BOOL__missing_call,
+                    mapping = listOf(null),
+                    isMissable = true
+                )
+            ),
+            Case.ResolveScalarFn(
+                name = "BAR(MISSING) -- Parameter is DYNAMIC but doesn't handle MISSING. Pass in MISSING value.",
+                identifier = baz__ANY__BOOL__missing_call.name,
+                args = listOf(StaticType.MISSING),
+                expected = FnMatch.Ok(
+                    signature = baz__ANY__BOOL__missing_call,
+                    mapping = listOf(null),
+                    isMissable = true
+                )
+            ),
+            Case.ResolveScalarFn(
+                name = "FOO(MISSING) -- Parameter is MISSING and handles MISSING. Pass in MISSING value.",
+                identifier = foo__MISSING__BOOL__not_missing_call.name,
+                args = listOf(StaticType.MISSING),
+                expected = FnMatch.Ok(
+                    signature = foo__MISSING__BOOL__not_missing_call,
+                    mapping = listOf(null),
+                    isMissable = false
+                )
+            ),
+            Case.ResolveScalarFn(
+                name = "FOO(UNION(INT|MISSING)) -- Parameter is MISSING and handles MISSING. Pass in UNION with MISSING.",
+                identifier = foo__MISSING__BOOL__not_missing_call.name,
+                args = listOf(StaticType.unionOf(StaticType.MISSING, StaticType.INT)),
+                expected = FnMatch.Ok(
+                    signature = foo__MISSING__BOOL__not_missing_call,
+                    mapping = listOf(null),
+                    isMissable = true
+                )
+            ),
+            Case.ResolveScalarFn(
+                name = "FOO(UNION(INT|MISSING)) -- Parameter is MISSING and handles MISSING. Pass in concrete value.",
+                identifier = foo__MISSING__BOOL__not_missing_call.name,
+                args = listOf(StaticType.INT),
+                expected = FnMatch.Error(
+                    identifier = Identifier.Symbol(foo__MISSING__BOOL__not_missing_call.name, Identifier.CaseSensitivity.INSENSITIVE),
+                    args = listOf(Rex(StaticType.INT, Rex.Op.Var.Resolved(0))),
+                    candidates = listOf(foo__MISSING__BOOL__not_missing_call),
                 )
             ),
         )
@@ -190,6 +353,13 @@ internal class FunctionResolverTest {
 
         abstract fun assert()
 
+        /**
+         * A [Case] that specifically tests the dynamic/static functions that are resolved when passing in [args].
+         *
+         * NOTE: The equivalence of [expected] against what actually is returned does NOT take into consideration the
+         * casts. This is due to difficulties in gathering the internal casts. This [Case] implementation is solely
+         * focused on testing which functions are resolved.
+         */
         class ResolveScalarFn(
             private val name: String,
             private val identifier: String,
@@ -201,7 +371,7 @@ internal class FunctionResolverTest {
             override fun assert() {
                 val identifier = Identifier.Symbol(identifier, Identifier.CaseSensitivity.INSENSITIVE)
                 val rexArgs = args.map { Rex(it, Rex.Op.Var.Resolved(0)) }
-                val match = resolver.resolveFnScalar(Fn.Unresolved(identifier, isHidden), rexArgs)
+                val match = resolver.resolveFn(Fn.Unresolved(identifier, isHidden), rexArgs)
                 assert(matches(expected, match)) {
                     errorMessage(expected, match)
                 }

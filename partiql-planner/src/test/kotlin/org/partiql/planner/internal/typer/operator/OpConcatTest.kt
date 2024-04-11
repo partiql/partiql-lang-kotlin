@@ -8,6 +8,7 @@ import org.partiql.planner.util.allSupportedType
 import org.partiql.planner.util.allTextType
 import org.partiql.planner.util.cartesianProduct
 import org.partiql.planner.util.castTable
+import org.partiql.types.NullType
 import org.partiql.types.StaticType
 import java.util.stream.Stream
 
@@ -31,9 +32,20 @@ class OpConcatTest : PartiQLTyperTestBase() {
             successArgs.forEach { args: List<StaticType> ->
                 val arg0 = args.first()
                 val arg1 = args[1]
-                if (args.contains(StaticType.NULL)) {
-                    (this[TestResult.Success(StaticType.NULL)] ?: setOf(args)).let {
-                        put(TestResult.Success(StaticType.NULL), it + setOf(args))
+                // TODO: Since nullable types are modeled as unions of types (where each has their own applicable casts),
+                //  concatenating SYMBOL and NULL will resolve to CONCAT(CAST(<sym> AS STRING), CAST(NULL AS STRING))
+                //  due to type precedence rules.
+                if (args.contains(StaticType.NULL) && args.contains(StaticType.SYMBOL)) {
+                    return@forEach
+                }
+                if (args.all { it is NullType }) {
+                    val nullableHighestPrecedenceType = StaticType.unionOf(StaticType.STRING, StaticType.NULL)
+                    (this[TestResult.Success(nullableHighestPrecedenceType)] ?: setOf(args)).let {
+                        put(TestResult.Success(nullableHighestPrecedenceType), it + setOf(args))
+                    }
+                } else if (args.contains(StaticType.NULL)) {
+                    (this[TestResult.Success(StaticType.unionOf(args.toSet()))] ?: setOf(args)).let {
+                        put(TestResult.Success(StaticType.unionOf(args.toSet())), it + setOf(args))
                     }
                 } else if (arg0 == arg1) {
                     (this[TestResult.Success(arg1)] ?: setOf(args)).let {

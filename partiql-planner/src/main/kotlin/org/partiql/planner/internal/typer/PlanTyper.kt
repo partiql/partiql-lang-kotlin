@@ -584,18 +584,21 @@ internal class PlanTyper(
 
             // Type the arguments
             val fn = node.fn as Fn.Unresolved
-            val isNotMissable = fn.isNotMissable()
             val args = node.args.map { visitRex(it, null) }
 
             // Try to match the arguments to functions defined in the catalog
             return when (val match = env.resolveFn(fn, args)) {
-                is FnMatch.Ok -> toRexCall(match, args, isNotMissable)
+                is FnMatch.Ok -> {
+                    val isNotMissable = !match.isMissable
+                    toRexCall(match, args, isNotMissable)
+                }
                 is FnMatch.Dynamic -> {
                     val types = mutableSetOf<StaticType>()
-                    if (match.isMissable && !isNotMissable) {
+                    if (match.isMissable) {
                         types.add(MISSING)
                     }
                     val candidates = match.candidates.map { candidate ->
+                        val isNotMissable = !match.isMissable
                         val rex = toRexCall(candidate, args, isNotMissable)
                         val staticCall =
                             rex.op as? Rex.Op.Call.Static ?: error("ToRexCall should always return a static call.")
@@ -673,7 +676,7 @@ internal class PlanTyper(
 
             // Return type with calculated nullability
             var type = when {
-                isNull -> NULL
+                isNull -> returns.toStaticType()
                 isNullable -> returns.toStaticType()
                 else -> returns.toNonNullStaticType()
             }
@@ -1375,7 +1378,10 @@ internal class PlanTyper(
             val m = mapping[i]
             if (m != null) {
                 // rewrite
-                val type = m.returns.toNonNullStaticType()
+                val type = when (m.isNullable) {
+                    true -> m.returns.toStaticType()
+                    false -> m.returns.toNonNullStaticType()
+                }
                 val cast = rexOpCallStatic(fnResolved(m), listOf(a))
                 a = rex(type, cast)
             }
@@ -1460,31 +1466,6 @@ internal class PlanTyper(
             Identifier.CaseSensitivity.SENSITIVE -> symbol
             Identifier.CaseSensitivity.INSENSITIVE -> symbol.lowercase()
         }
-    }
-
-    /**
-     * Indicates whether the given functions propagate Missing.
-     *
-     * Currently, Logical Functions : AND, OR, NOT, IS NULL, IS MISSING
-     * the equal function, function do not propagate Missing.
-     */
-    private fun Fn.Unresolved.isNotMissable(): Boolean {
-        return when (identifier) {
-            is Identifier.Qualified -> false
-            is Identifier.Symbol -> when (identifier.symbol) {
-                "and" -> true
-                "or" -> true
-                "not" -> true
-                "eq" -> true
-                "is_null" -> true
-                "is_missing" -> true
-                else -> false
-            }
-        }
-    }
-
-    private fun Fn.Unresolved.isTypeAssertion(): Boolean {
-        return (identifier is Identifier.Symbol && identifier.symbol.startsWith("is"))
     }
 
     /**

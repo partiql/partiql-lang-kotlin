@@ -188,18 +188,28 @@ internal class FnResolver(private val header: Header) {
             m
         }
 
+        // Group all of the matches together (irrelevant of the isMissable status)
+        val orderedUniqueMatches = matches.groupBy { it.signature }.map { groupValues ->
+            if (groupValues.value.any { it.isMissable }) {
+                groupValues.value.first().copy(isMissable = true)
+            } else {
+                groupValues.value.first()
+            }
+        }
         // Order based on original candidate function ordering
-        val orderedUniqueMatches = matches.toSet().toList()
         val orderedCandidates = candidates.flatMap { candidate ->
             orderedUniqueMatches.filter { it.signature == candidate }
         }
 
         // Static call iff only one match for every branch
         val n = orderedCandidates.size
-        return when {
-            n == 0 -> null
-            n == 1 && exhaustive -> orderedCandidates.first()
-            else -> FnMatch.Dynamic(orderedCandidates, exhaustive)
+        return when (n) {
+            0 -> null
+            1 -> when (exhaustive) {
+                true -> orderedCandidates.first()
+                false -> orderedCandidates.first().copy(isMissable = true)
+            }
+            else -> FnMatch.Dynamic(orderedCandidates, !exhaustive)
         }
     }
 
@@ -277,58 +287,26 @@ internal class FnResolver(private val header: Header) {
         return FnMatch.Ok(this, mapping.toList(), isMissable = isMissable)
     }
 
-    fun resolveFnScalar(path: Fn.Unresolved, args: List<Rex>): FnMatch<FunctionSignature.Scalar> {
-        val variants = lookup(path)
+    /**
+     * Leverages a [FnResolver] to find a matching function defined in the [Header] scalar function catalog.
+     *
+     * INTERNAL NOTE: This has largely been ported from V1.
+     */
+    public fun resolveFn(fn: Fn.Unresolved, args: List<Rex>): FnMatch<FunctionSignature.Scalar> {
+        val variants = lookup(fn)
         if (variants.isEmpty()) {
             return FnMatch.Error(
-                path.identifier,
+                fn.identifier,
                 args,
                 variants
             )
         }
         // Invoke FnResolver to determine if we made a match
         return resolve(variants, args.map { it.type }) ?: FnMatch.Error(
-            path.identifier,
+            fn.identifier,
             args,
             variants
         )
-    }
-
-    /**
-     * Leverages a [FnResolver] to find a matching function defined in the [Header] scalar function catalog.
-     */
-    public fun resolveFn(fn: Fn.Unresolved, args: List<Rex>): FnMatch<FunctionSignature.Scalar> {
-        val candidates = lookup(fn)
-        var canReturnMissing = false
-        val parameterPermutations = buildArgumentPermutations(args.map { it.type }).mapNotNull { argList ->
-            argList.mapIndexed { i, arg ->
-                if (arg.isMissable()) {
-                    canReturnMissing = true
-                }
-                // Skip over if we cannot convert type to runtime type.
-                val argType = arg.toRuntimeTypeOrNull() ?: return@mapNotNull null
-                FunctionParameter("arg-$i", argType)
-            }
-        }
-        val potentialFunctions = parameterPermutations.mapNotNull { parameters ->
-            when (val match = match(candidates, parameters)) {
-                null -> {
-                    canReturnMissing = true
-                    null
-                }
-                else -> {
-                    val isMissable = canReturnMissing || isUnsafeCast(match.signature.specific)
-                    FnMatch.Ok(match.signature, match.mapping, isMissable)
-                }
-            }
-        }
-        // Remove duplicates while maintaining order (precedence).
-        val orderedUniqueFunctions = potentialFunctions.toSet().toList()
-        return when (orderedUniqueFunctions.size) {
-            0 -> FnMatch.Error(fn.identifier, args, candidates)
-            1 -> orderedUniqueFunctions.first()
-            else -> FnMatch.Dynamic(orderedUniqueFunctions, canReturnMissing)
-        }
     }
 
     private fun buildArgumentPermutations(args: List<StaticType>): List<List<StaticType>> {
@@ -514,7 +492,9 @@ internal class FnResolver(private val header: Header) {
             for (t2 in types.types) {
                 val r = types.graph[t1.ordinal][t2.ordinal]
                 if (r != null) {
-                    val fn = cast(t1, t2)
+                    val isNullable = t1 == NULL
+                    val isMissable = r.cast == CastType.UNSAFE
+                    val fn = cast(t1, t2, isNullable, isMissable)
                     casts.add(fn)
                     if (r.cast == CastType.UNSAFE) unsafeCastSet.add(fn.specific)
                 }
@@ -532,15 +512,16 @@ internal class FnResolver(private val header: Header) {
      */
     private fun castName(type: PartiQLValueType) = "cast_${type.name.lowercase()}"
 
-    internal fun cast(operand: PartiQLValueType, target: PartiQLValueType) =
+    internal fun cast(operand: PartiQLValueType, target: PartiQLValueType, isNullable: Boolean = false, isMissable: Boolean = false) =
         FunctionSignature.Scalar(
             name = castName(target),
             returns = target,
             parameters = listOf(
                 FunctionParameter("value", operand),
             ),
-            isNullable = false,
-            isNullCall = true
+            isNullable = isNullable,
+            isNullCall = true,
+            isMissable = isMissable
         )
 
     companion object {

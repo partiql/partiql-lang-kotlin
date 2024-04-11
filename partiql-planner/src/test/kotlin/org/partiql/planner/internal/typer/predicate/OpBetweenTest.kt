@@ -51,12 +51,9 @@ class OpBetweenTest : PartiQLTyperTestBase() {
             }.toSet()
 
             successArgs.forEach { args: List<StaticType> ->
-                val arg0 = args.first()
-                val arg1 = args[1]
-                val arg2 = args[2]
                 if (args.contains(StaticType.NULL)) {
-                    (this[TestResult.Success(StaticType.NULL)] ?: setOf(args)).let {
-                        put(TestResult.Success(StaticType.NULL), it + setOf(args))
+                    (this[TestResult.Success(StaticType.unionOf(StaticType.NULL, StaticType.BOOL))] ?: setOf(args)).let {
+                        put(TestResult.Success(StaticType.unionOf(StaticType.NULL, StaticType.BOOL)), it + setOf(args))
                     }
                 } else {
                     (this[TestResult.Success(StaticType.BOOL)] ?: setOf(args)).let {

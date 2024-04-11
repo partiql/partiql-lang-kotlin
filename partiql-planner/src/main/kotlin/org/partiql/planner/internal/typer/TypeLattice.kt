@@ -176,7 +176,7 @@ internal class TypeLattice private constructor(
                 ANY to coercion()
             )
             graph[NULL] = relationships(
-                NULL to coercion()
+                *types.map { it to coercion() }.toTypedArray()
             )
             graph[MISSING] = relationships(
                 MISSING to coercion()

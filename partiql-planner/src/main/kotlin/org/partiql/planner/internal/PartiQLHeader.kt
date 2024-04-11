@@ -164,6 +164,7 @@ internal object PartiQLHeader : Header() {
             isNullCall = true,
             isNullable = false,
             parameters = listOf(FunctionParameter("value", BOOL)),
+            isMissingCall = false
         ),
         FunctionSignature.Scalar(
             name = "not",
@@ -171,6 +172,7 @@ internal object PartiQLHeader : Header() {
             isNullCall = true,
             isNullable = false,
             parameters = listOf(FunctionParameter("value", MISSING)),
+            isMissingCall = false
         ),
     )
 
@@ -182,7 +184,7 @@ internal object PartiQLHeader : Header() {
         unary("neg", t, t)
     }
 
-    private fun eq(): List<FunctionSignature.Scalar> = types.all.map { t ->
+    private fun eq(): List<FunctionSignature.Scalar> = types.all.filterNot { it == ANY || it == MISSING }.map { t ->
         FunctionSignature.Scalar(
             name = "eq",
             returns = BOOL,
@@ -190,7 +192,16 @@ internal object PartiQLHeader : Header() {
             isNullable = false,
             isNullCall = true,
         )
-    }
+    } + listOf(
+        FunctionSignature.Scalar(
+            name = "eq",
+            returns = BOOL,
+            parameters = listOf(FunctionParameter("lhs", ANY), FunctionParameter("rhs", ANY)),
+            isNullable = false,
+            isNullCall = true,
+            isMissingCall = false
+        )
+    )
 
     private fun and(): List<FunctionSignature.Scalar> = listOf(
         FunctionSignature.Scalar(
@@ -199,6 +210,7 @@ internal object PartiQLHeader : Header() {
             isNullCall = false,
             isNullable = true,
             parameters = listOf(FunctionParameter("lhs", BOOL), FunctionParameter("rhs", BOOL)),
+            isMissingCall = false,
         ),
         FunctionSignature.Scalar(
             name = "and",
@@ -206,6 +218,7 @@ internal object PartiQLHeader : Header() {
             isNullCall = false,
             isNullable = true,
             parameters = listOf(FunctionParameter("lhs", MISSING), FunctionParameter("rhs", BOOL)),
+            isMissingCall = false,
         ),
         FunctionSignature.Scalar(
             name = "and",
@@ -213,6 +226,7 @@ internal object PartiQLHeader : Header() {
             isNullCall = false,
             isNullable = true,
             parameters = listOf(FunctionParameter("lhs", BOOL), FunctionParameter("rhs", MISSING)),
+            isMissingCall = false,
         ),
         FunctionSignature.Scalar(
             name = "and",
@@ -220,6 +234,7 @@ internal object PartiQLHeader : Header() {
             isNullCall = false,
             isNullable = true,
             parameters = listOf(FunctionParameter("lhs", MISSING), FunctionParameter("rhs", MISSING)),
+            isMissingCall = false,
         ),
     )
 
@@ -230,6 +245,7 @@ internal object PartiQLHeader : Header() {
             isNullCall = false,
             isNullable = true,
             parameters = listOf(FunctionParameter("lhs", BOOL), FunctionParameter("rhs", BOOL)),
+            isMissingCall = false,
         ),
         FunctionSignature.Scalar(
             name = "or",
@@ -237,6 +253,7 @@ internal object PartiQLHeader : Header() {
             isNullCall = false,
             isNullable = true,
             parameters = listOf(FunctionParameter("lhs", MISSING), FunctionParameter("rhs", BOOL)),
+            isMissingCall = false,
         ),
         FunctionSignature.Scalar(
             name = "or",
@@ -244,6 +261,7 @@ internal object PartiQLHeader : Header() {
             isNullCall = false,
             isNullable = true,
             parameters = listOf(FunctionParameter("lhs", BOOL), FunctionParameter("rhs", MISSING)),
+            isMissingCall = false,
         ),
         FunctionSignature.Scalar(
             name = "or",
@@ -251,6 +269,7 @@ internal object PartiQLHeader : Header() {
             isNullCall = false,
             isNullable = true,
             parameters = listOf(FunctionParameter("lhs", MISSING), FunctionParameter("rhs", MISSING)),
+            isMissingCall = false,
         ),
     )
 
@@ -384,7 +403,8 @@ internal object PartiQLHeader : Header() {
                 FunctionParameter("value", ANY) // TODO: Decide if we need to further segment this
             ),
             isNullCall = false,
-            isNullable = false
+            isNullable = false,
+            isMissingCall = false
         )
     )
 
@@ -396,7 +416,8 @@ internal object PartiQLHeader : Header() {
                 FunctionParameter("value", ANY) // TODO: Decide if we need to further segment this
             ),
             isNullCall = false,
-            isNullable = false
+            isNullable = false,
+            isMissingCall = false
         )
     )
 
