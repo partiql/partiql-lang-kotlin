@@ -61,8 +61,8 @@ class PlanNodeEquivalentVisitor : PlanBaseVisitor<Boolean, PlanNode>() {
 
     override fun visitRexOpErr(node: Rex.Op.Err, ctx: PlanNode): Boolean {
         if (!super.visitRexOpErr(node, ctx)) return false
-//        ctx as Rex.Op.Err
-//        if (node.message != ctx.message) return false
+        ctx as Rex.Op.Err
+        if (node.message != ctx.message) return false
         return true
     }
 
@@ -96,8 +96,8 @@ class PlanNodeEquivalentVisitor : PlanBaseVisitor<Boolean, PlanNode>() {
 
     override fun visitRelOpErr(node: Rel.Op.Err, ctx: PlanNode): Boolean {
         if (!super.visitRelOpErr(node, ctx)) return false
-//        ctx as Rel.Op.Err
-//        if (node.message != ctx.message) return false
+        ctx as Rel.Op.Err
+        if (node.message != ctx.message) return false
         return true
     }
 
@@ -109,16 +109,12 @@ class PlanNodeEquivalentVisitor : PlanBaseVisitor<Boolean, PlanNode>() {
         return true
     }
 
-    override fun defaultVisit(node: PlanNode, ctx: PlanNode): Boolean {
+    override fun defaultReturn(node: PlanNode, ctx: PlanNode): Boolean {
         if (ctx.javaClass != node.javaClass) return false
         if (node.children.size != ctx.children.size) return false
         node.children.forEachIndexed { index, planNode ->
-            if (!planNode.accept(this, ctx.children[index])) return false
+            if (planNode.accept(this, ctx.children[index])) return false
         }
         return true
-    }
-
-    override fun defaultReturn(node: PlanNode, ctx: PlanNode): Boolean {
-        return false
     }
 }

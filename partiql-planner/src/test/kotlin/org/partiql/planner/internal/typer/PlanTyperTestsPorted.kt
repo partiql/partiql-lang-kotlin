@@ -11,12 +11,13 @@ import org.junit.jupiter.params.provider.ArgumentsProvider
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.errors.Problem
+import org.partiql.errors.UNKNOWN_PROBLEM_LOCATION
 import org.partiql.parser.PartiQLParser
 import org.partiql.plan.PartiQLPlan
 import org.partiql.plan.Statement
 import org.partiql.plan.debug.PlanPrinter
 import org.partiql.planner.PartiQLPlanner
-import org.partiql.planner.internal.ProblemGenerator
+import org.partiql.planner.PlanningProblemDetails
 import org.partiql.planner.internal.typer.PlanTyperTestsPorted.TestCase.ErrorTestCase
 import org.partiql.planner.internal.typer.PlanTyperTestsPorted.TestCase.SuccessTestCase
 import org.partiql.planner.internal.typer.PlanTyperTestsPorted.TestCase.ThrowingExceptionTestCase
@@ -91,14 +92,12 @@ class PlanTyperTestsPorted {
     companion object {
 
         private val parser = PartiQLParser.default()
-        private val planner = PartiQLPlanner.builder().signalMode().build()
+        private val planner = PartiQLPlanner.default()
 
-        private fun assertProblemExists(problem: Problem) = ProblemHandler { problems, ignoreSourceLocation ->
+        private fun assertProblemExists(problem: () -> Problem) = ProblemHandler { problems, ignoreSourceLocation ->
             when (ignoreSourceLocation) {
-                true -> assertTrue("Expected to find $problem in $problems") {
-                    problems.any { it.details == problem.details }
-                }
-                false -> assertTrue("Expected to find $problem in $problems") { problems.any { it == problem } }
+                true -> assertTrue("Expected to find ${problem.invoke()} in $problems") { problems.any { it.details == problem.invoke().details } }
+                false -> assertTrue("Expected to find ${problem.invoke()} in $problems") { problems.any { it == problem.invoke() } }
             }
         }
 
@@ -660,15 +659,18 @@ class PlanTyperTestsPorted {
                 name = "Current User (String) PLUS String",
                 query = "CURRENT_USER + 'hello'",
                 expected = StaticType.MISSING,
-                problemHandler = assertProblemExists(
-                    ProblemGenerator.incompatibleTypesForOp(
-                        listOf(
-                            StaticType.unionOf(StaticType.STRING, StaticType.NULL),
-                            StaticType.STRING,
-                        ),
-                        "PLUS",
+                problemHandler = assertProblemExists {
+                    Problem(
+                        UNKNOWN_PROBLEM_LOCATION,
+                        PlanningProblemDetails.UnknownFunction(
+                            "plus",
+                            listOf(
+                                StaticType.unionOf(StaticType.STRING, StaticType.NULL),
+                                StaticType.STRING,
+                            ),
+                        )
                     )
-                )
+                }
             ),
         )
 
@@ -733,23 +735,29 @@ class PlanTyperTestsPorted {
                 name = "BITWISE_AND_MISSING_OPERAND",
                 query = "1 & MISSING",
                 expected = StaticType.MISSING,
-                problemHandler = assertProblemExists(
-                    ProblemGenerator.incompatibleTypesForOp(
-                        listOf(StaticType.INT4, StaticType.MISSING),
-                        "BITWISE_AND",
+                problemHandler = assertProblemExists {
+                    Problem(
+                        sourceLocation = UNKNOWN_PROBLEM_LOCATION,
+                        details = PlanningProblemDetails.UnknownFunction(
+                            "bitwise_and",
+                            listOf(StaticType.INT4, StaticType.MISSING)
+                        )
                     )
-                )
+                }
             ),
             ErrorTestCase(
                 name = "BITWISE_AND_NON_INT_OPERAND",
                 query = "1 & 'NOT AN INT'",
                 expected = StaticType.MISSING,
-                problemHandler = assertProblemExists(
-                    ProblemGenerator.incompatibleTypesForOp(
-                        listOf(StaticType.INT4, StaticType.STRING),
-                        "BITWISE_AND",
+                problemHandler = assertProblemExists {
+                    Problem(
+                        UNKNOWN_PROBLEM_LOCATION,
+                        PlanningProblemDetails.UnknownFunction(
+                            "bitwise_and",
+                            listOf(StaticType.INT4, StaticType.STRING)
+                        )
                     )
-                )
+                }
             ),
         )
 
@@ -900,9 +908,12 @@ class PlanTyperTestsPorted {
                         )
                     )
                 ),
-                problemHandler = assertProblemExists(
-                    ProblemGenerator.undefinedVariable(insensitiveId("a"))
-                )
+                problemHandler = assertProblemExists {
+                    Problem(
+                        UNKNOWN_PROBLEM_LOCATION,
+                        PlanningProblemDetails.UndefinedVariable(insensitiveId("a"))
+                    )
+                }
             ),
         )
 
@@ -2001,9 +2012,12 @@ class PlanTyperTestsPorted {
                         )
                     )
                 ),
-                problemHandler = assertProblemExists(
-                    ProblemGenerator.unresolvedExcludedExprRoot("nonsense")
-                )
+                problemHandler = assertProblemExists {
+                    Problem(
+                        UNKNOWN_PROBLEM_LOCATION,
+                        PlanningProblemDetails.UnresolvedExcludeExprRoot("nonsense")
+                    )
+                }
             ),
             // EXCLUDE regression test (behavior subject to change pending RFC); could give error/warning
             SuccessTestCase(
@@ -2112,9 +2126,12 @@ class PlanTyperTestsPorted {
                 catalogPath = listOf("ddb"),
                 query = "SELECT * FROM pets ORDER BY unknown_col",
                 expected = TABLE_AWS_DDB_PETS_LIST,
-                problemHandler = assertProblemExists(
-                    ProblemGenerator.undefinedVariable(insensitiveId("unknown_col"))
-                )
+                problemHandler = assertProblemExists {
+                    Problem(
+                        UNKNOWN_PROBLEM_LOCATION,
+                        PlanningProblemDetails.UndefinedVariable(insensitiveId("unknown_col"))
+                    )
+                }
             ),
         )
 
@@ -2629,11 +2646,12 @@ class PlanTyperTestsPorted {
                     SELECT VALUE 1 FROM "pql"."main"['employer'] AS e;
                 """,
                 expected = BagType(StaticType.INT4),
-                problemHandler = assertProblemExists(
-                    ProblemGenerator.undefinedVariable(
-                        idQualified("pql" to BindingCase.SENSITIVE, "main" to BindingCase.SENSITIVE)
+                problemHandler = assertProblemExists {
+                    Problem(
+                        UNKNOWN_PROBLEM_LOCATION,
+                        PlanningProblemDetails.UndefinedVariable(idQualified("pql" to BindingCase.SENSITIVE, "main" to BindingCase.SENSITIVE))
                     )
-                )
+                }
             ),
             ErrorTestCase(
                 name = "Show that we can't use [<string>] to reference a schema in a catalog. It can only be used on tuples.",
@@ -2641,9 +2659,12 @@ class PlanTyperTestsPorted {
                     SELECT VALUE 1 FROM "pql"['main']."employer" AS e;
                 """,
                 expected = BagType(StaticType.INT4),
-                problemHandler = assertProblemExists(
-                    ProblemGenerator.undefinedVariable(sensitiveId("pql"))
-                )
+                problemHandler = assertProblemExists {
+                    Problem(
+                        UNKNOWN_PROBLEM_LOCATION,
+                        PlanningProblemDetails.UndefinedVariable(sensitiveId("pql"))
+                    )
+                }
             ),
             SuccessTestCase(
                 name = "Tuple indexing syntax on literal tuple with literal string key",
@@ -2659,9 +2680,12 @@ class PlanTyperTestsPorted {
                     { 'aBc': 1, 'AbC': 2.0 }['Ab' || 'C'];
                 """,
                 expected = StaticType.MISSING,
-                problemHandler = assertProblemExists(
-                    ProblemGenerator.expressionAlwaysReturnsMissing("Path Navigation always returns MISSING")
-                )
+                problemHandler = assertProblemExists {
+                    Problem(
+                        sourceLocation = UNKNOWN_PROBLEM_LOCATION,
+                        details = PlanningProblemDetails.ExpressionAlwaysReturnsNullOrMissing
+                    )
+                }
             ),
             // The reason this is ANY is because we do not have support for constant-folding. We don't know what
             //  CAST('Ab' || 'C' AS STRING) will evaluate to, and therefore, we don't know what the indexing operation
@@ -2940,12 +2964,15 @@ class PlanTyperTestsPorted {
                     >> AS t
                 """.trimIndent(),
                 expected = BagType(StaticType.MISSING),
-                problemHandler = assertProblemExists(
-                    ProblemGenerator.incompatibleTypesForOp(
-                        listOf(StaticType.STRING),
-                        "POS",
+                problemHandler = assertProblemExists {
+                    Problem(
+                        sourceLocation = UNKNOWN_PROBLEM_LOCATION,
+                        details = PlanningProblemDetails.UnknownFunction(
+                            "pos",
+                            listOf(StaticType.STRING)
+                        )
                     )
-                )
+                }
             ),
             ErrorTestCase(
                 name = """
@@ -2960,12 +2987,15 @@ class PlanTyperTestsPorted {
                     >> AS t
                 """.trimIndent(),
                 expected = BagType(StaticType.MISSING),
-                problemHandler = assertProblemExists(
-                    ProblemGenerator.incompatibleTypesForOp(
-                        listOf(StaticType.unionOf(StaticType.STRING, StaticType.BAG)),
-                        "POS",
+                problemHandler = assertProblemExists {
+                    Problem(
+                        sourceLocation = UNKNOWN_PROBLEM_LOCATION,
+                        details = PlanningProblemDetails.UnknownFunction(
+                            "pos",
+                            listOf(StaticType.unionOf(StaticType.STRING, StaticType.BAG))
+                        )
                     )
-                )
+                }
             ),
             ErrorTestCase(
                 name = """
@@ -2980,12 +3010,12 @@ class PlanTyperTestsPorted {
                 """.trimIndent(),
                 expected = BagType(StaticType.MISSING),
                 // This is because we don't attempt to resolve function when args are error
-                problemHandler = assertProblemExists(
-                    ProblemGenerator.incompatibleTypesForOp(
-                        listOf(StaticType.MISSING),
-                        "POS",
+                problemHandler = assertProblemExists {
+                    Problem(
+                        sourceLocation = UNKNOWN_PROBLEM_LOCATION,
+                        details = PlanningProblemDetails.ExpressionAlwaysReturnsNullOrMissing
                     )
-                )
+                }
             ),
             ErrorTestCase(
                 name = """
@@ -2996,12 +3026,15 @@ class PlanTyperTestsPorted {
                     +MISSING
                 """.trimIndent(),
                 expected = StaticType.MISSING,
-                problemHandler = assertProblemExists(
-                    ProblemGenerator.incompatibleTypesForOp(
-                        listOf(StaticType.MISSING),
-                        "POS",
+                problemHandler = assertProblemExists {
+                    Problem(
+                        sourceLocation = UNKNOWN_PROBLEM_LOCATION,
+                        details = PlanningProblemDetails.UnknownFunction(
+                            "pos",
+                            listOf(StaticType.MISSING)
+                        )
                     )
-                )
+                }
             ),
         )
 
@@ -3217,7 +3250,7 @@ class PlanTyperTestsPorted {
             USER_ID,
             tc.catalog,
             tc.catalogPath,
-            catalogs = mapOf(*catalogs.toTypedArray()),
+            catalogs = mapOf(*catalogs.toTypedArray())
         )
 
         val hasQuery = tc.query != null
@@ -3258,7 +3291,7 @@ class PlanTyperTestsPorted {
             USER_ID,
             tc.catalog,
             tc.catalogPath,
-            catalogs = mapOf(*catalogs.toTypedArray()),
+            catalogs = mapOf(*catalogs.toTypedArray())
         )
         val collector = ProblemCollector()
 
@@ -3304,7 +3337,7 @@ class PlanTyperTestsPorted {
             USER_ID,
             tc.catalog,
             tc.catalogPath,
-            catalogs = mapOf(*catalogs.toTypedArray()),
+            catalogs = mapOf(*catalogs.toTypedArray())
         )
         val collector = ProblemCollector()
         val exception = assertThrows<Throwable> {
@@ -3339,9 +3372,12 @@ class PlanTyperTestsPorted {
                         )
                     ),
                 ),
-                problemHandler = assertProblemExists(
-                    ProblemGenerator.undefinedVariable(insensitiveId("pets"))
-                )
+                problemHandler = assertProblemExists {
+                    Problem(
+                        UNKNOWN_PROBLEM_LOCATION,
+                        PlanningProblemDetails.UndefinedVariable(insensitiveId("pets"))
+                    )
+                }
             ),
             TestCase.ErrorTestCase(
                 name = "Pets should not be accessible #2",
@@ -3358,9 +3394,12 @@ class PlanTyperTestsPorted {
                         )
                     ),
                 ),
-                problemHandler = assertProblemExists(
-                    ProblemGenerator.undefinedVariable(insensitiveId("pets"))
-                )
+                problemHandler = assertProblemExists {
+                    Problem(
+                        UNKNOWN_PROBLEM_LOCATION,
+                        PlanningProblemDetails.UndefinedVariable(insensitiveId("pets"))
+                    )
+                }
             ),
             TestCase.SuccessTestCase(
                 name = "Project all explicitly",
@@ -3411,16 +3450,19 @@ class PlanTyperTestsPorted {
                         )
                     ),
                 ),
-                problemHandler = assertProblemExists(
-                    ProblemGenerator.undefinedVariable(
-                        BindingPath(
-                            steps = listOf(
-                                BindingName("ddb", BindingCase.INSENSITIVE),
-                                BindingName("pets", BindingCase.INSENSITIVE),
+                problemHandler = assertProblemExists {
+                    Problem(
+                        UNKNOWN_PROBLEM_LOCATION,
+                        PlanningProblemDetails.UndefinedVariable(
+                            BindingPath(
+                                steps = listOf(
+                                    BindingName("ddb", BindingCase.INSENSITIVE),
+                                    BindingName("pets", BindingCase.INSENSITIVE),
+                                )
                             )
                         )
                     )
-                )
+                }
             ),
             TestCase.SuccessTestCase(
                 name = "Test #10",
@@ -3574,12 +3616,15 @@ class PlanTyperTestsPorted {
                 catalogPath = DB_SCHEMA_MARKETS,
                 query = "order_info.customer_id IN 'hello'",
                 expected = StaticType.MISSING,
-                problemHandler = assertProblemExists(
-                    ProblemGenerator.incompatibleTypesForOp(
-                        listOf(StaticType.INT4, StaticType.STRING),
-                        "IN_COLLECTION"
+                problemHandler = assertProblemExists {
+                    Problem(
+                        UNKNOWN_PROBLEM_LOCATION,
+                        PlanningProblemDetails.UnknownFunction(
+                            "in_collection",
+                            listOf(StaticType.INT4, StaticType.STRING),
+                        )
                     )
-                )
+                }
             ),
             SuccessTestCase(
                 name = "BETWEEN",
@@ -3594,16 +3639,19 @@ class PlanTyperTestsPorted {
                 catalogPath = DB_SCHEMA_MARKETS,
                 query = "order_info.customer_id BETWEEN 1 AND 'a'",
                 expected = StaticType.MISSING,
-                problemHandler = assertProblemExists(
-                    ProblemGenerator.incompatibleTypesForOp(
-                        listOf(
-                            StaticType.INT4,
-                            StaticType.INT4,
-                            StaticType.STRING
-                        ),
-                        "BETWEEN"
+                problemHandler = assertProblemExists {
+                    Problem(
+                        UNKNOWN_PROBLEM_LOCATION,
+                        PlanningProblemDetails.UnknownFunction(
+                            "between",
+                            listOf(
+                                StaticType.INT4,
+                                StaticType.INT4,
+                                StaticType.STRING
+                            ),
+                        )
                     )
-                )
+                }
             ),
             SuccessTestCase(
                 name = "LIKE",
@@ -3618,12 +3666,15 @@ class PlanTyperTestsPorted {
                 catalogPath = DB_SCHEMA_MARKETS,
                 query = "order_info.ship_option LIKE 3",
                 expected = StaticType.MISSING,
-                problemHandler = assertProblemExists(
-                    ProblemGenerator.incompatibleTypesForOp(
-                        listOf(StaticType.STRING, StaticType.INT4),
-                        "LIKE",
+                problemHandler = assertProblemExists {
+                    Problem(
+                        UNKNOWN_PROBLEM_LOCATION,
+                        PlanningProblemDetails.UnknownFunction(
+                            "like",
+                            listOf(StaticType.STRING, StaticType.INT4),
+                        )
                     )
-                )
+                }
             ),
             SuccessTestCase(
                 name = "Case Insensitive success",
@@ -3633,13 +3684,12 @@ class PlanTyperTestsPorted {
                 expected = TYPE_BOOL
             ),
             // MISSING = 1
-            // TODO: Semantic not finalized
             ErrorTestCase(
                 name = "Case Sensitive failure",
                 catalog = CATALOG_DB,
                 catalogPath = DB_SCHEMA_MARKETS,
                 query = "order_info.\"CUSTOMER_ID\" = 1",
-                expected = TYPE_BOOL
+                expected = StaticType.MISSING
             ),
             SuccessTestCase(
                 name = "Case Sensitive success",
@@ -3674,15 +3724,15 @@ class PlanTyperTestsPorted {
                 catalog = CATALOG_DB,
                 catalogPath = DB_SCHEMA_MARKETS,
                 query = "non_existing_column = 1",
-                // non_existing_column get typed as missing
                 // Function resolves to EQ__ANY_ANY__BOOL
                 // Which can return BOOL Or NULL
-                expected = TYPE_BOOL,
-                problemHandler = assertProblemExists(
-                    ProblemGenerator.undefinedVariable(
-                        insensitiveId("non_existing_column")
+                expected = StaticType.MISSING,
+                problemHandler = assertProblemExists {
+                    Problem(
+                        UNKNOWN_PROBLEM_LOCATION,
+                        PlanningProblemDetails.UndefinedVariable(insensitiveId("non_existing_column"))
                     )
-                )
+                }
             ),
             ErrorTestCase(
                 name = "Bad comparison",
@@ -3690,12 +3740,15 @@ class PlanTyperTestsPorted {
                 catalogPath = DB_SCHEMA_MARKETS,
                 query = "order_info.customer_id = 1 AND 1",
                 expected = StaticType.MISSING,
-                problemHandler = assertProblemExists(
-                    ProblemGenerator.incompatibleTypesForOp(
-                        listOf(StaticType.BOOL, StaticType.INT4),
-                        "AND",
+                problemHandler = assertProblemExists {
+                    Problem(
+                        UNKNOWN_PROBLEM_LOCATION,
+                        PlanningProblemDetails.UnknownFunction(
+                            "and",
+                            listOf(StaticType.BOOL, StaticType.INT4),
+                        )
                     )
-                )
+                }
             ),
             ErrorTestCase(
                 name = "Bad comparison",
@@ -3703,12 +3756,15 @@ class PlanTyperTestsPorted {
                 catalogPath = DB_SCHEMA_MARKETS,
                 query = "1 AND order_info.customer_id = 1",
                 expected = StaticType.MISSING,
-                problemHandler = assertProblemExists(
-                    ProblemGenerator.incompatibleTypesForOp(
-                        listOf(StaticType.INT4, StaticType.BOOL),
-                        "AND",
+                problemHandler = assertProblemExists {
+                    Problem(
+                        UNKNOWN_PROBLEM_LOCATION,
+                        PlanningProblemDetails.UnknownFunction(
+                            "and",
+                            listOf(StaticType.INT4, StaticType.BOOL),
+                        )
                     )
-                )
+                }
             ),
             ErrorTestCase(
                 name = "Unknown column",
@@ -3726,9 +3782,12 @@ class PlanTyperTestsPorted {
                         )
                     )
                 ),
-                problemHandler = assertProblemExists(
-                    ProblemGenerator.undefinedVariable(insensitiveId("unknown_col"))
-                )
+                problemHandler = assertProblemExists {
+                    Problem(
+                        UNKNOWN_PROBLEM_LOCATION,
+                        PlanningProblemDetails.UndefinedVariable(insensitiveId("unknown_col"))
+                    )
+                }
             ),
             SuccessTestCase(
                 name = "LIMIT INT",
@@ -3743,11 +3802,12 @@ class PlanTyperTestsPorted {
                 catalogPath = listOf("ddb"),
                 query = "SELECT * FROM pets LIMIT '5'",
                 expected = TABLE_AWS_DDB_PETS,
-                problemHandler = assertProblemExists(
-                    ProblemGenerator.unexpectedType(
-                        StaticType.STRING, setOf(StaticType.INT)
+                problemHandler = assertProblemExists {
+                    Problem(
+                        UNKNOWN_PROBLEM_LOCATION,
+                        PlanningProblemDetails.UnexpectedType(StaticType.STRING, setOf(StaticType.INT))
                     )
-                )
+                }
             ),
             SuccessTestCase(
                 name = "OFFSET INT",
@@ -3762,9 +3822,12 @@ class PlanTyperTestsPorted {
                 catalogPath = listOf("ddb"),
                 query = "SELECT * FROM pets LIMIT 1 OFFSET '5'",
                 expected = TABLE_AWS_DDB_PETS,
-                problemHandler = assertProblemExists(
-                    ProblemGenerator.unexpectedType(StaticType.STRING, setOf(StaticType.INT))
-                )
+                problemHandler = assertProblemExists {
+                    Problem(
+                        UNKNOWN_PROBLEM_LOCATION,
+                        PlanningProblemDetails.UnexpectedType(StaticType.STRING, setOf(StaticType.INT))
+                    )
+                }
             ),
             SuccessTestCase(
                 name = "CAST",
@@ -3930,12 +3993,15 @@ class PlanTyperTestsPorted {
                 name = "TRIM_2_error",
                 query = "trim(2 FROM ' Hello, World! ')",
                 expected = StaticType.MISSING,
-                problemHandler = assertProblemExists(
-                    ProblemGenerator.incompatibleTypesForOp(
-                        listOf(StaticType.STRING, StaticType.INT4),
-                        "TRIM_CHARS",
+                problemHandler = assertProblemExists {
+                    Problem(
+                        UNKNOWN_PROBLEM_LOCATION,
+                        PlanningProblemDetails.UnknownFunction(
+                            "trim_chars",
+                            args = listOf(StaticType.STRING, StaticType.INT4)
+                        )
                     )
-                )
+                }
             ),
         )
     }
