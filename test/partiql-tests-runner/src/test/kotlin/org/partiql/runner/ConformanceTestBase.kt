@@ -3,12 +3,15 @@ package org.partiql.runner
 import org.junit.jupiter.api.Timeout
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
+import org.partiql.lang.eval.CompileOptions
 import org.partiql.runner.schema.TestCase
 import org.partiql.runner.test.TestProvider
 import org.partiql.runner.test.TestRunner
 
 abstract class ConformanceTestBase<T, V> {
     abstract val runner: TestRunner<T, V>
+    abstract val skipListForEvaluation: List<Pair<String, CompileOptions>>
+    abstract val skipListForEquivalence: List<Pair<String, CompileOptions>>
 
     // Tests the eval tests with the Kotlin implementation
     // Unit is second.
@@ -20,7 +23,7 @@ abstract class ConformanceTestBase<T, V> {
     @ArgumentsSource(TestProvider.Eval::class)
     fun validatePartiQLEvalTestData(tc: TestCase) {
         when (tc) {
-            is TestCase.Eval -> runner.test(tc, emptyList())
+            is TestCase.Eval -> runner.test(tc, skipListForEvaluation)
             else -> error("Unsupported test case category")
         }
     }
@@ -31,7 +34,7 @@ abstract class ConformanceTestBase<T, V> {
     @ArgumentsSource(TestProvider.Equiv::class)
     fun validatePartiQLEvalEquivTestData(tc: TestCase) {
         when (tc) {
-            is TestCase.Equiv -> runner.test(tc, emptyList())
+            is TestCase.Equiv -> runner.test(tc, skipListForEquivalence)
             else -> error("Unsupported test case category")
         }
     }

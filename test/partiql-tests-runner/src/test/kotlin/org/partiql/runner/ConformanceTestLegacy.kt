@@ -2,6 +2,7 @@ package org.partiql.runner
 
 import com.amazon.ion.IonValue
 import org.junit.jupiter.api.extension.RegisterExtension
+import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.ExprValue
 import org.partiql.runner.executor.LegacyExecutor
 import org.partiql.runner.report.ReportGenerator
@@ -24,4 +25,7 @@ class ConformanceTestLegacy : ConformanceTestBase<ExprValue, IonValue>() {
 
     private val factory = LegacyExecutor.Factory
     override val runner = TestRunner(factory)
+
+    override val skipListForEvaluation: List<Pair<String, CompileOptions>> = emptyList()
+    override val skipListForEquivalence: List<Pair<String, CompileOptions>> = emptyList()
 }
