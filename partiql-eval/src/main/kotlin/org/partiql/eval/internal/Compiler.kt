@@ -54,6 +54,7 @@ import org.partiql.spi.fn.FnExperimental
 import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
+import org.partiql.value.missingValue
 import java.lang.IllegalStateException
 
 internal class Compiler(
@@ -74,7 +75,6 @@ internal class Compiler(
      * [Rex.Op.Err] comes from the inability for the planner to resolve a variable/function/etc. Depending on the
      * configuration, this will either return MISSING or throw an error.
      */
-    @OptIn(PartiQLValueExperimental::class)
     override fun visitRexOpErr(node: Rex.Op.Err, ctx: StaticType?): Operator {
         return when (session.errorHandling) {
             PartiQLEngine.CompilationErrorHandling.QUIET -> ExprError()
@@ -117,6 +117,11 @@ internal class Compiler(
             ExprStruct.Field(visitRex(it.k, ctx), value)
         }
         return ExprStruct(fields)
+    }
+
+    @OptIn(PartiQLValueExperimental::class)
+    override fun visitRexOpMissing(node: Rex.Op.Missing, ctx: StaticType?): Operator {
+        return ExprLiteral(missingValue())
     }
 
     override fun visitRexOpSelect(node: Rex.Op.Select, ctx: StaticType?): Operator {
