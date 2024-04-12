@@ -42,7 +42,6 @@ import org.partiql.planner.internal.ir.relOpAggregate
 import org.partiql.planner.internal.ir.relOpAggregateCallUnresolved
 import org.partiql.planner.internal.ir.relOpDistinct
 import org.partiql.planner.internal.ir.relOpErr
-import org.partiql.planner.internal.ir.relOpExcept
 import org.partiql.planner.internal.ir.relOpExclude
 import org.partiql.planner.internal.ir.relOpExcludePath
 import org.partiql.planner.internal.ir.relOpExcludeStep
@@ -52,7 +51,6 @@ import org.partiql.planner.internal.ir.relOpExcludeTypeStructKey
 import org.partiql.planner.internal.ir.relOpExcludeTypeStructSymbol
 import org.partiql.planner.internal.ir.relOpExcludeTypeStructWildcard
 import org.partiql.planner.internal.ir.relOpFilter
-import org.partiql.planner.internal.ir.relOpIntersect
 import org.partiql.planner.internal.ir.relOpJoin
 import org.partiql.planner.internal.ir.relOpLimit
 import org.partiql.planner.internal.ir.relOpOffset
@@ -61,7 +59,6 @@ import org.partiql.planner.internal.ir.relOpScan
 import org.partiql.planner.internal.ir.relOpScanIndexed
 import org.partiql.planner.internal.ir.relOpSort
 import org.partiql.planner.internal.ir.relOpSortSpec
-import org.partiql.planner.internal.ir.relOpUnion
 import org.partiql.planner.internal.ir.relOpUnpivot
 import org.partiql.planner.internal.ir.relType
 import org.partiql.planner.internal.ir.rex
@@ -446,11 +443,22 @@ internal object RelConverter {
             val type = input.type.copy(props = emptySet())
             val lhs = input
             val rhs = visitExprSFW(setOp.operand, nil)
-            val op = when (setOp.type.type) {
-                SetOp.Type.UNION -> relOpUnion(lhs, rhs)
-                SetOp.Type.INTERSECT -> relOpIntersect(lhs, rhs)
-                SetOp.Type.EXCEPT -> relOpExcept(lhs, rhs)
+
+            val setType = when (setOp.type.type) {
+                SetOp.Type.UNION -> when (setOp.type.setq) {
+                    SetQuantifier.ALL -> Rel.Op.Set.Type.UNION_ALL
+                    null, SetQuantifier.DISTINCT -> Rel.Op.Set.Type.UNION_DISTINCT
+                }
+                SetOp.Type.EXCEPT -> when (setOp.type.setq) {
+                    SetQuantifier.ALL -> Rel.Op.Set.Type.EXCEPT_ALL
+                    null, SetQuantifier.DISTINCT -> Rel.Op.Set.Type.EXCEPT_DISTINCT
+                }
+                SetOp.Type.INTERSECT -> when (setOp.type.setq) {
+                    SetQuantifier.ALL -> Rel.Op.Set.Type.INTERSECT_ALL
+                    null, SetQuantifier.DISTINCT -> Rel.Op.Set.Type.INTERSECT_DISTINCT
+                }
             }
+            val op = Rel.Op.Set(lhs, rhs, setType)
             return rel(type, op)
         }
 

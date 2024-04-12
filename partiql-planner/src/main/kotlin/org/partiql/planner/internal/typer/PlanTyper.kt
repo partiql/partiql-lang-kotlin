@@ -218,16 +218,10 @@ internal class PlanTyper(private val env: Env) {
             return rel(type, op)
         }
 
-        override fun visitRelOpUnion(node: Rel.Op.Union, ctx: Rel.Type?): Rel {
-            TODO("Type RelOp Union")
-        }
-
-        override fun visitRelOpIntersect(node: Rel.Op.Intersect, ctx: Rel.Type?): Rel {
-            TODO("Type RelOp Intersect")
-        }
-
-        override fun visitRelOpExcept(node: Rel.Op.Except, ctx: Rel.Type?): Rel {
-            TODO("Type RelOp Except")
+        // TODO: Add better typing logic
+        override fun visitRelOpSet(node: Rel.Op.Set, ctx: Rel.Type?): PlanNode {
+            val schema = ctx!!
+            return Rel(schema, node)
         }
 
         override fun visitRelOpLimit(node: Rel.Op.Limit, ctx: Rel.Type?): Rel {

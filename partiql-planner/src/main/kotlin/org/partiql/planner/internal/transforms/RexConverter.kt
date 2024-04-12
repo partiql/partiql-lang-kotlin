@@ -20,6 +20,8 @@ import org.partiql.ast.AstNode
 import org.partiql.ast.DatetimeField
 import org.partiql.ast.Expr
 import org.partiql.ast.Select
+import org.partiql.ast.SetOp
+import org.partiql.ast.SetQuantifier
 import org.partiql.ast.Type
 import org.partiql.ast.visitor.AstBaseVisitor
 import org.partiql.planner.internal.Env
@@ -820,6 +822,46 @@ internal object RexConverter {
         }
 
         override fun visitExprSFW(node: Expr.SFW, context: Env): Rex = RelConverter.apply(node, context)
+
+        override fun visitExprBagOp(node: Expr.BagOp, ctx: Env): Rex {
+            val lhs = Rel(
+                type = Rel.Type(listOf(Rel.Binding("_0", StaticType.ANY)), props = emptySet()),
+                op = Rel.Op.Scan(visitExprCoerce(node.lhs, ctx))
+            )
+            val rhs = Rel(
+                type = Rel.Type(listOf(Rel.Binding("_1", StaticType.ANY)), props = emptySet()),
+                op = Rel.Op.Scan(visitExprCoerce(node.rhs, ctx))
+            )
+            val type = when (node.type.type) {
+                SetOp.Type.UNION -> when (node.type.setq) {
+                    SetQuantifier.ALL -> Rel.Op.Set.Type.UNION_ALL
+                    null, SetQuantifier.DISTINCT -> Rel.Op.Set.Type.UNION_DISTINCT
+                }
+                SetOp.Type.EXCEPT -> when (node.type.setq) {
+                    SetQuantifier.ALL -> Rel.Op.Set.Type.EXCEPT_ALL
+                    null, SetQuantifier.DISTINCT -> Rel.Op.Set.Type.EXCEPT_DISTINCT
+                }
+                SetOp.Type.INTERSECT -> when (node.type.setq) {
+                    SetQuantifier.ALL -> Rel.Op.Set.Type.INTERSECT_ALL
+                    null, SetQuantifier.DISTINCT -> Rel.Op.Set.Type.INTERSECT_DISTINCT
+                }
+            }
+            val op = Rel.Op.Set(lhs, rhs, type)
+            val rel = Rel(
+                type = Rel.Type(listOf(Rel.Binding("_0", StaticType.ANY)), props = emptySet()),
+                op = op
+            )
+            return Rex(
+                type = StaticType.ANY,
+                op = Rex.Op.Select(
+                    constructor = Rex(
+                        StaticType.ANY,
+                        Rex.Op.Var.Unresolved(Identifier.Symbol("_0", Identifier.CaseSensitivity.SENSITIVE), Rex.Op.Var.Scope.LOCAL)
+                    ),
+                    rel = rel
+                )
+            )
+        }
 
         // Helpers
 

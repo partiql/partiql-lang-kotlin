@@ -328,19 +328,17 @@ internal class PlanTransform(
                 }
             )
 
-            override fun visitRelOpUnion(node: Rel.Op.Union, ctx: Unit) = org.partiql.plan.Rel.Op.Union(
+            override fun visitRelOpSet(node: Rel.Op.Set, ctx: Unit) = org.partiql.plan.Rel.Op.Set(
                 lhs = visitRel(node.lhs, ctx),
                 rhs = visitRel(node.rhs, ctx),
-            )
-
-            override fun visitRelOpIntersect(node: Rel.Op.Intersect, ctx: Unit) = org.partiql.plan.Rel.Op.Intersect(
-                lhs = visitRel(node.lhs, ctx),
-                rhs = visitRel(node.rhs, ctx),
-            )
-
-            override fun visitRelOpExcept(node: Rel.Op.Except, ctx: Unit) = org.partiql.plan.Rel.Op.Except(
-                lhs = visitRel(node.lhs, ctx),
-                rhs = visitRel(node.rhs, ctx),
+                type = when (node.type) {
+                    Rel.Op.Set.Type.UNION_ALL -> org.partiql.plan.Rel.Op.Set.Type.UNION_ALL
+                    Rel.Op.Set.Type.UNION_DISTINCT -> org.partiql.plan.Rel.Op.Set.Type.UNION_DISTINCT
+                    Rel.Op.Set.Type.EXCEPT_ALL -> org.partiql.plan.Rel.Op.Set.Type.EXCEPT_ALL
+                    Rel.Op.Set.Type.EXCEPT_DISTINCT -> org.partiql.plan.Rel.Op.Set.Type.EXCEPT_DISTINCT
+                    Rel.Op.Set.Type.INTERSECT_ALL -> org.partiql.plan.Rel.Op.Set.Type.INTERSECT_ALL
+                    Rel.Op.Set.Type.INTERSECT_DISTINCT -> org.partiql.plan.Rel.Op.Set.Type.INTERSECT_DISTINCT
+                }
             )
 
             override fun visitRelOpLimit(node: Rel.Op.Limit, ctx: Unit) = org.partiql.plan.Rel.Op.Limit(

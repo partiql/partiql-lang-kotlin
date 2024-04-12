@@ -10,7 +10,7 @@ import org.partiql.eval.internal.operator.Operator
  * @property lhs
  * @property rhs
  */
-internal class RelExcept(
+internal class RelExceptDistinct(
     private val lhs: Operator.Relation,
     private val rhs: Operator.Relation,
 ) : RelPeeking() {

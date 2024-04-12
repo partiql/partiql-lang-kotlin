@@ -4,8 +4,12 @@ import org.partiql.eval.PartiQLEngine
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.eval.internal.operator.rel.RelAggregate
 import org.partiql.eval.internal.operator.rel.RelDistinct
+import org.partiql.eval.internal.operator.rel.RelExceptAll
+import org.partiql.eval.internal.operator.rel.RelExceptDistinct
 import org.partiql.eval.internal.operator.rel.RelExclude
 import org.partiql.eval.internal.operator.rel.RelFilter
+import org.partiql.eval.internal.operator.rel.RelIntersectAll
+import org.partiql.eval.internal.operator.rel.RelIntersectDistinct
 import org.partiql.eval.internal.operator.rel.RelJoinInner
 import org.partiql.eval.internal.operator.rel.RelJoinLeft
 import org.partiql.eval.internal.operator.rel.RelJoinOuterFull
@@ -18,6 +22,8 @@ import org.partiql.eval.internal.operator.rel.RelScanIndexed
 import org.partiql.eval.internal.operator.rel.RelScanIndexedPermissive
 import org.partiql.eval.internal.operator.rel.RelScanPermissive
 import org.partiql.eval.internal.operator.rel.RelSort
+import org.partiql.eval.internal.operator.rel.RelUnionAll
+import org.partiql.eval.internal.operator.rel.RelUnionDistinct
 import org.partiql.eval.internal.operator.rel.RelUnpivot
 import org.partiql.eval.internal.operator.rex.ExprCallDynamic
 import org.partiql.eval.internal.operator.rex.ExprCallStatic
@@ -305,6 +311,19 @@ internal class Compiler(
         return when (session.mode) {
             PartiQLEngine.Mode.PERMISSIVE -> RelUnpivot.Permissive(expr)
             PartiQLEngine.Mode.STRICT -> RelUnpivot.Strict(expr)
+        }
+    }
+
+    override fun visitRelOpSet(node: Rel.Op.Set, ctx: StaticType?): Operator {
+        val lhs = visitRel(node.lhs, ctx)
+        val rhs = visitRel(node.rhs, ctx)
+        return when (node.type) {
+            Rel.Op.Set.Type.UNION_ALL -> RelUnionAll(lhs, rhs)
+            Rel.Op.Set.Type.UNION_DISTINCT -> RelUnionDistinct(lhs, rhs)
+            Rel.Op.Set.Type.INTERSECT_ALL -> RelIntersectAll(lhs, rhs)
+            Rel.Op.Set.Type.INTERSECT_DISTINCT -> RelIntersectDistinct(lhs, rhs)
+            Rel.Op.Set.Type.EXCEPT_ALL -> RelExceptAll(lhs, rhs)
+            Rel.Op.Set.Type.EXCEPT_DISTINCT -> RelExceptDistinct(lhs, rhs)
         }
     }
 

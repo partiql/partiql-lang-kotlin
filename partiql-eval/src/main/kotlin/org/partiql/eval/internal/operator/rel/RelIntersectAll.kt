@@ -4,19 +4,19 @@ import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
 
-internal class RelIntersect(
+internal class RelIntersectAll(
     private val lhs: Operator.Relation,
     private val rhs: Operator.Relation,
 ) : RelPeeking() {
 
-    private var seen: MutableSet<Record> = mutableSetOf()
+    private val seen: MutableMap<Record, Int> = mutableMapOf()
     private var init: Boolean = false
 
     override fun open(env: Environment) {
         lhs.open(env)
         rhs.open(env)
         init = false
-        seen = mutableSetOf()
+        seen.clear()
         super.open(env)
     }
 
@@ -25,9 +25,12 @@ internal class RelIntersect(
             seed()
         }
         for (row in rhs) {
-            if (seen.contains(row)) {
-                return row
-            }
+            seen.computeIfPresent(row) { _, y ->
+                when (y) {
+                    0 -> null
+                    else -> y - 1
+                }
+            }?.let { return row }
         }
         return null
     }
@@ -44,9 +47,10 @@ internal class RelIntersect(
      */
     private fun seed() {
         init = true
-        while (true) {
-            val row = lhs.next() ?: break
-            seen.add(row)
+        for (row in lhs) {
+            seen.computeIfPresent(row) { _, y ->
+                y + 1
+            } ?: seen.put(row, 1)
         }
     }
 }
