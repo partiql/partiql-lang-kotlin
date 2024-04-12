@@ -708,8 +708,8 @@ internal class PlanTyper(private val env: Env) {
                 var branch = oldBranches[i]
                 branch = visitRexOpCaseBranch(branch, branch.rex.type)
 
-                // Check if branch condition is a literal
-                if (boolOrNull(branch.condition.op) == false) {
+                // Check if branch condition is falsey
+                if (boolOrNull(branch.condition.op) == false || branch.condition.type == MISSING) {
                     continue // prune
                 }
 
@@ -736,7 +736,7 @@ internal class PlanTyper(private val env: Env) {
 
             if (type is MissingType) {
                 return ProblemGenerator.missingRex(
-                    causes = node,
+                    causes = newBranches.map { it.rex.op },
                     problem = ProblemGenerator.expressionAlwaysReturnsMissing("CASE-WHEN always returns missing"),
                 )
             }
@@ -945,7 +945,7 @@ internal class PlanTyper(private val env: Env) {
                 val k = visitRex(it.k, it.k.type)
                 val v = visitRex(it.v, it.v.type)
                 if (v.op is Rex.Op.Missing) {
-                    rexOpStructField(k, v)
+                    null
                 } else if (v.type is MissingType) {
                     null
                 } else {
@@ -1073,12 +1073,18 @@ internal class PlanTyper(private val env: Env) {
         override fun visitRexOpTupleUnion(node: Rex.Op.TupleUnion, ctx: StaticType?): Rex {
             val args = node.args.map { visitRex(it, ctx) }
             val type = when (args.size) {
-                0 -> StructType(
-                    fields = emptyMap(), contentClosed = true,
-                    constraints = setOf(
-                        TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered
+                0 -> {
+                    // empty struct
+                    StructType(
+                        fields = emptyMap(),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered,
+                        )
                     )
-                )
+                }
                 else -> {
                     val argTypes = args.map { it.type }
                     val potentialTypes = buildArgumentPermutations(argTypes).map { argumentList ->
@@ -1124,7 +1130,6 @@ internal class PlanTyper(private val env: Env) {
             var structIsClosed = true
             var structIsOrdered = true
             var uniqueAttrs = true
-            val possibleOutputTypes = mutableListOf<StaticType>()
             args.forEach { arg ->
                 when (arg) {
                     is StructType -> {

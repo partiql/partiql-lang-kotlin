@@ -2703,10 +2703,11 @@ class PlanTyperTestsPorted {
                     StaticType.NULL,
                 ),
             ),
-            SuccessTestCase(
+            ErrorTestCase(
+                name = "CASE-WHEN always MISSING",
                 key = PartiQLTest.Key("basics", "case-when-30"),
                 catalog = "pql",
-                expected = MISSING
+                expected = MISSING,
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "case-when-31"),
