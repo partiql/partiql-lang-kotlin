@@ -1,0 +1,2684 @@
+public abstract interface annotation class org/partiql/annotations/ExperimentalPartiQLCompilerPipeline : java/lang/annotation/Annotation {
+}
+
+public abstract interface annotation class org/partiql/annotations/ExperimentalWindowFunctions : java/lang/annotation/Annotation {
+}
+
+public abstract interface class org/partiql/lang/CompilerPipeline {
+	public static final field Companion Lorg/partiql/lang/CompilerPipeline$Companion;
+	public static fun builder ()Lorg/partiql/lang/CompilerPipeline$Builder;
+	public abstract fun compile (Ljava/lang/String;)Lorg/partiql/lang/eval/Expression;
+	public abstract fun compile (Lorg/partiql/lang/domains/PartiqlAst$Statement;)Lorg/partiql/lang/eval/Expression;
+	public abstract fun getCompileOptions ()Lorg/partiql/lang/eval/CompileOptions;
+	public abstract fun getCustomDataTypes ()Ljava/util/List;
+	public abstract fun getFunctions ()Ljava/util/Map;
+	public abstract fun getGlobalTypeBindings ()Lorg/partiql/lang/eval/Bindings;
+	public abstract fun getProcedures ()Ljava/util/Map;
+	public static fun standard ()Lorg/partiql/lang/CompilerPipeline;
+}
+
+public final class org/partiql/lang/CompilerPipeline$Builder {
+	public fun <init> ()V
+	public final fun addFunction (Lorg/partiql/lang/eval/ExprFunction;)Lorg/partiql/lang/CompilerPipeline$Builder;
+	public final fun addPreprocessingStep (Lkotlin/jvm/functions/Function2;)Lorg/partiql/lang/CompilerPipeline$Builder;
+	public final fun addProcedure (Lorg/partiql/lang/eval/builtins/storedprocedure/StoredProcedure;)Lorg/partiql/lang/CompilerPipeline$Builder;
+	public final fun build ()Lorg/partiql/lang/CompilerPipeline;
+	public final fun compileOptions (Lkotlin/jvm/functions/Function1;)Lorg/partiql/lang/CompilerPipeline$Builder;
+	public final fun compileOptions (Lorg/partiql/lang/eval/CompileOptions;)Lorg/partiql/lang/CompilerPipeline$Builder;
+	public final fun customDataTypes (Ljava/util/List;)Lorg/partiql/lang/CompilerPipeline$Builder;
+	public final fun globalTypeBindings (Lorg/partiql/lang/eval/Bindings;)Lorg/partiql/lang/CompilerPipeline$Builder;
+	public final fun sqlParser (Lorg/partiql/lang/syntax/Parser;)Lorg/partiql/lang/CompilerPipeline$Builder;
+	public final fun withCoverageStatistics (Z)Lorg/partiql/lang/CompilerPipeline$Builder;
+}
+
+public final class org/partiql/lang/CompilerPipeline$Companion {
+	public final fun build (Lkotlin/jvm/functions/Function1;)Lorg/partiql/lang/CompilerPipeline;
+	public final fun builder ()Lorg/partiql/lang/CompilerPipeline$Builder;
+	public final fun standard ()Lorg/partiql/lang/CompilerPipeline;
+}
+
+public class org/partiql/lang/SqlException : java/lang/RuntimeException {
+	public fun <init> (Ljava/lang/String;Lorg/partiql/errors/ErrorCode;Lorg/partiql/errors/PropertyValueMap;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Lorg/partiql/errors/ErrorCode;Lorg/partiql/errors/PropertyValueMap;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lorg/partiql/errors/ErrorCode;Lorg/partiql/errors/PropertyValueMap;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Lorg/partiql/errors/ErrorCode;Lorg/partiql/errors/PropertyValueMap;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun generateMessage ()Ljava/lang/String;
+	public final fun generateMessageNoLocation ()Ljava/lang/String;
+	public final fun getErrorCode ()Lorg/partiql/errors/ErrorCode;
+	public final fun getErrorContext ()Lorg/partiql/errors/PropertyValueMap;
+	public fun getInternal ()Z
+	public fun getMessage ()Ljava/lang/String;
+	public fun setMessage (Ljava/lang/String;)V
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/lang/StepContext {
+	public fun <init> (Lorg/partiql/lang/eval/CompileOptions;Ljava/util/Map;Ljava/util/Map;)V
+	public final fun component1 ()Lorg/partiql/lang/eval/CompileOptions;
+	public final fun component2 ()Ljava/util/Map;
+	public final fun component3 ()Ljava/util/Map;
+	public final fun copy (Lorg/partiql/lang/eval/CompileOptions;Ljava/util/Map;Ljava/util/Map;)Lorg/partiql/lang/StepContext;
+	public static synthetic fun copy$default (Lorg/partiql/lang/StepContext;Lorg/partiql/lang/eval/CompileOptions;Ljava/util/Map;Ljava/util/Map;ILjava/lang/Object;)Lorg/partiql/lang/StepContext;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCompileOptions ()Lorg/partiql/lang/eval/CompileOptions;
+	public final fun getFunctions ()Ljava/util/Map;
+	public final fun getProcedures ()Ljava/util/Map;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/lang/ast/StaticTypeMeta : org/partiql/lang/ast/Meta {
+	public static final field Companion Lorg/partiql/lang/ast/StaticTypeMeta$Companion;
+	public static final field TAG Ljava/lang/String;
+	public fun <init> (Lorg/partiql/types/StaticType;)V
+	public final fun component1 ()Lorg/partiql/types/StaticType;
+	public final fun copy (Lorg/partiql/types/StaticType;)Lorg/partiql/lang/ast/StaticTypeMeta;
+	public static synthetic fun copy$default (Lorg/partiql/lang/ast/StaticTypeMeta;Lorg/partiql/types/StaticType;ILjava/lang/Object;)Lorg/partiql/lang/ast/StaticTypeMeta;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getShouldSerialize ()Z
+	public fun getTag ()Ljava/lang/String;
+	public final fun getType ()Lorg/partiql/types/StaticType;
+	public fun hashCode ()I
+	public fun serialize (Lcom/amazon/ion/IonWriter;)V
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/lang/ast/StaticTypeMeta$Companion {
+}
+
+public final class org/partiql/lang/ast/passes/SemanticException : org/partiql/lang/SqlException {
+	public fun <init> (Ljava/lang/String;Lorg/partiql/errors/ErrorCode;Lorg/partiql/errors/PropertyValueMap;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Lorg/partiql/errors/ErrorCode;Lorg/partiql/errors/PropertyValueMap;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lorg/partiql/errors/Problem;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Lorg/partiql/errors/Problem;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public abstract class org/partiql/lang/ast/passes/SemanticProblemDetails : org/partiql/errors/ProblemDetails {
+	public synthetic fun <init> (Lorg/partiql/errors/ProblemSeverity;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getMessage ()Ljava/lang/String;
+	public final fun getMessageFormatter ()Lkotlin/jvm/functions/Function0;
+	public fun getSeverity ()Lorg/partiql/errors/ProblemSeverity;
+}
+
+public final class org/partiql/lang/ast/passes/SemanticProblemDetails$CoercionError : org/partiql/lang/ast/passes/SemanticProblemDetails {
+	public fun <init> (Lorg/partiql/types/StaticType;)V
+	public final fun component1 ()Lorg/partiql/types/StaticType;
+	public final fun copy (Lorg/partiql/types/StaticType;)Lorg/partiql/lang/ast/passes/SemanticProblemDetails$CoercionError;
+	public static synthetic fun copy$default (Lorg/partiql/lang/ast/passes/SemanticProblemDetails$CoercionError;Lorg/partiql/types/StaticType;ILjava/lang/Object;)Lorg/partiql/lang/ast/passes/SemanticProblemDetails$CoercionError;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getActualType ()Lorg/partiql/types/StaticType;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/lang/ast/passes/SemanticProblemDetails$DuplicateAliasesInSelectListItem : org/partiql/lang/ast/passes/SemanticProblemDetails {
+	public static final field INSTANCE Lorg/partiql/lang/ast/passes/SemanticProblemDetails$DuplicateAliasesInSelectListItem;
+}
+
+public final class org/partiql/lang/ast/passes/SemanticProblemDetails$ExpressionAlwaysReturnsMissing : org/partiql/lang/ast/passes/SemanticProblemDetails {
+	public static final field INSTANCE Lorg/partiql/lang/ast/passes/SemanticProblemDetails$ExpressionAlwaysReturnsMissing;
+}
+
+public final class org/partiql/lang/ast/passes/SemanticProblemDetails$ExpressionAlwaysReturnsNullOrMissing : org/partiql/lang/ast/passes/SemanticProblemDetails {
+	public static final field INSTANCE Lorg/partiql/lang/ast/passes/SemanticProblemDetails$ExpressionAlwaysReturnsNullOrMissing;
+}
+
+public final class org/partiql/lang/ast/passes/SemanticProblemDetails$IncompatibleDataTypeForExpr : org/partiql/lang/ast/passes/SemanticProblemDetails {
+	public fun <init> (Lorg/partiql/types/StaticType;Lorg/partiql/types/StaticType;)V
+	public final fun component1 ()Lorg/partiql/types/StaticType;
+	public final fun component2 ()Lorg/partiql/types/StaticType;
+	public final fun copy (Lorg/partiql/types/StaticType;Lorg/partiql/types/StaticType;)Lorg/partiql/lang/ast/passes/SemanticProblemDetails$IncompatibleDataTypeForExpr;
+	public static synthetic fun copy$default (Lorg/partiql/lang/ast/passes/SemanticProblemDetails$IncompatibleDataTypeForExpr;Lorg/partiql/types/StaticType;Lorg/partiql/types/StaticType;ILjava/lang/Object;)Lorg/partiql/lang/ast/passes/SemanticProblemDetails$IncompatibleDataTypeForExpr;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getActualType ()Lorg/partiql/types/StaticType;
+	public final fun getExpectedType ()Lorg/partiql/types/StaticType;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/lang/ast/passes/SemanticProblemDetails$IncompatibleDatatypesForOp : org/partiql/lang/ast/passes/SemanticProblemDetails {
+	public fun <init> (Ljava/util/List;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/util/List;Ljava/lang/String;)Lorg/partiql/lang/ast/passes/SemanticProblemDetails$IncompatibleDatatypesForOp;
+	public static synthetic fun copy$default (Lorg/partiql/lang/ast/passes/SemanticProblemDetails$IncompatibleDatatypesForOp;Ljava/util/List;Ljava/lang/String;ILjava/lang/Object;)Lorg/partiql/lang/ast/passes/SemanticProblemDetails$IncompatibleDatatypesForOp;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getActualArgumentTypes ()Ljava/util/List;
+	public final fun getNAryOp ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/lang/ast/passes/SemanticProblemDetails$IncorrectNumberOfArgumentsToFunctionCall : org/partiql/lang/ast/passes/SemanticProblemDetails {
+	public fun <init> (Ljava/lang/String;Lkotlin/ranges/IntRange;I)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lkotlin/ranges/IntRange;
+	public final fun component3 ()I
+	public final fun copy (Ljava/lang/String;Lkotlin/ranges/IntRange;I)Lorg/partiql/lang/ast/passes/SemanticProblemDetails$IncorrectNumberOfArgumentsToFunctionCall;
+	public static synthetic fun copy$default (Lorg/partiql/lang/ast/passes/SemanticProblemDetails$IncorrectNumberOfArgumentsToFunctionCall;Ljava/lang/String;Lkotlin/ranges/IntRange;IILjava/lang/Object;)Lorg/partiql/lang/ast/passes/SemanticProblemDetails$IncorrectNumberOfArgumentsToFunctionCall;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getActualArity ()I
+	public final fun getExpectedArity ()Lkotlin/ranges/IntRange;
+	public final fun getFunctionName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/lang/ast/passes/SemanticProblemDetails$InvalidArgumentTypeForFunction : org/partiql/lang/ast/passes/SemanticProblemDetails {
+	public fun <init> (Ljava/lang/String;Lorg/partiql/types/StaticType;Lorg/partiql/types/StaticType;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lorg/partiql/types/StaticType;
+	public final fun component3 ()Lorg/partiql/types/StaticType;
+	public final fun copy (Ljava/lang/String;Lorg/partiql/types/StaticType;Lorg/partiql/types/StaticType;)Lorg/partiql/lang/ast/passes/SemanticProblemDetails$InvalidArgumentTypeForFunction;
+	public static synthetic fun copy$default (Lorg/partiql/lang/ast/passes/SemanticProblemDetails$InvalidArgumentTypeForFunction;Ljava/lang/String;Lorg/partiql/types/StaticType;Lorg/partiql/types/StaticType;ILjava/lang/Object;)Lorg/partiql/lang/ast/passes/SemanticProblemDetails$InvalidArgumentTypeForFunction;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getActualType ()Lorg/partiql/types/StaticType;
+	public final fun getExpectedType ()Lorg/partiql/types/StaticType;
+	public final fun getFunctionName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/lang/ast/passes/SemanticProblemDetails$MissingAlias : org/partiql/lang/ast/passes/SemanticProblemDetails {
+	public static final field INSTANCE Lorg/partiql/lang/ast/passes/SemanticProblemDetails$MissingAlias;
+}
+
+public final class org/partiql/lang/ast/passes/SemanticProblemDetails$NoSuchFunction : org/partiql/lang/ast/passes/SemanticProblemDetails {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lorg/partiql/lang/ast/passes/SemanticProblemDetails$NoSuchFunction;
+	public static synthetic fun copy$default (Lorg/partiql/lang/ast/passes/SemanticProblemDetails$NoSuchFunction;Ljava/lang/String;ILjava/lang/Object;)Lorg/partiql/lang/ast/passes/SemanticProblemDetails$NoSuchFunction;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getFunctionName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/lang/ast/passes/SemanticProblemDetails$NullOrMissingFunctionArgument : org/partiql/lang/ast/passes/SemanticProblemDetails {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lorg/partiql/lang/ast/passes/SemanticProblemDetails$NullOrMissingFunctionArgument;
+	public static synthetic fun copy$default (Lorg/partiql/lang/ast/passes/SemanticProblemDetails$NullOrMissingFunctionArgument;Ljava/lang/String;ILjava/lang/Object;)Lorg/partiql/lang/ast/passes/SemanticProblemDetails$NullOrMissingFunctionArgument;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getFunctionName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/lang/ast/passes/StatementRedactorKt {
+	public static final field INPUT_AST_STATEMENT_MISMATCH Ljava/lang/String;
+	public static final field INVALID_NUM_ARGS Ljava/lang/String;
+	public static final fun redact (Ljava/lang/String;Ljava/util/Set;Ljava/util/Map;)Ljava/lang/String;
+	public static final fun redact (Ljava/lang/String;Lorg/partiql/lang/domains/PartiqlAst$Statement;Ljava/util/Set;Ljava/util/Map;)Ljava/lang/String;
+	public static synthetic fun redact$default (Ljava/lang/String;Ljava/util/Set;Ljava/util/Map;ILjava/lang/Object;)Ljava/lang/String;
+	public static synthetic fun redact$default (Ljava/lang/String;Lorg/partiql/lang/domains/PartiqlAst$Statement;Ljava/util/Set;Ljava/util/Map;ILjava/lang/Object;)Ljava/lang/String;
+	public static final fun skipRedaction (Lorg/partiql/lang/domains/PartiqlAst$Expr;Ljava/util/Set;)Z
+}
+
+public final class org/partiql/lang/ast/passes/inference/StaticTypeInferencer {
+	public fun <init> (Lorg/partiql/lang/eval/Bindings;Ljava/util/List;Ljava/util/Map;)V
+	public final fun inferStaticType (Lorg/partiql/lang/domains/PartiqlAst$Statement;)Lorg/partiql/lang/ast/passes/inference/StaticTypeInferencer$InferenceResult;
+}
+
+public abstract class org/partiql/lang/ast/passes/inference/StaticTypeInferencer$InferenceResult {
+	public abstract fun getProblems ()Ljava/util/List;
+}
+
+public final class org/partiql/lang/ast/passes/inference/StaticTypeInferencer$InferenceResult$Failure : org/partiql/lang/ast/passes/inference/StaticTypeInferencer$InferenceResult {
+	public fun <init> (Lorg/partiql/types/StaticType;Lorg/partiql/lang/domains/PartiqlAst$Statement;Ljava/util/List;)V
+	public final fun component3 ()Ljava/util/List;
+	public final fun copy (Lorg/partiql/types/StaticType;Lorg/partiql/lang/domains/PartiqlAst$Statement;Ljava/util/List;)Lorg/partiql/lang/ast/passes/inference/StaticTypeInferencer$InferenceResult$Failure;
+	public static synthetic fun copy$default (Lorg/partiql/lang/ast/passes/inference/StaticTypeInferencer$InferenceResult$Failure;Lorg/partiql/types/StaticType;Lorg/partiql/lang/domains/PartiqlAst$Statement;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/lang/ast/passes/inference/StaticTypeInferencer$InferenceResult$Failure;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getProblems ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/lang/ast/passes/inference/StaticTypeInferencer$InferenceResult$Success : org/partiql/lang/ast/passes/inference/StaticTypeInferencer$InferenceResult {
+	public fun <init> (Lorg/partiql/types/StaticType;Ljava/util/List;)V
+	public final fun component1 ()Lorg/partiql/types/StaticType;
+	public final fun component2 ()Ljava/util/List;
+	public final fun copy (Lorg/partiql/types/StaticType;Ljava/util/List;)Lorg/partiql/lang/ast/passes/inference/StaticTypeInferencer$InferenceResult$Success;
+	public static synthetic fun copy$default (Lorg/partiql/lang/ast/passes/inference/StaticTypeInferencer$InferenceResult$Success;Lorg/partiql/types/StaticType;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/lang/ast/passes/inference/StaticTypeInferencer$InferenceResult$Success;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getProblems ()Ljava/util/List;
+	public final fun getStaticType ()Lorg/partiql/types/StaticType;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/lang/ast/passes/inference/StaticTypeInferencerKt {
+	public static final fun staticTypeOrError (Lorg/partiql/lang/ast/passes/inference/StaticTypeInferencer$InferenceResult;)Lorg/partiql/types/StaticType;
+}
+
+public abstract interface class org/partiql/lang/compiler/PartiQLCompiler {
+	public abstract fun compile (Lorg/partiql/lang/domains/PartiqlPhysical$Plan;)Lorg/partiql/lang/eval/PartiQLStatement;
+	public abstract fun compile (Lorg/partiql/lang/domains/PartiqlPhysical$Plan;Lorg/partiql/lang/planner/PartiQLPlanner$PlanningDetails;)Lorg/partiql/lang/eval/PartiQLStatement;
+}
+
+public abstract interface class org/partiql/lang/compiler/PartiQLCompilerAsync {
+	public abstract fun compile (Lorg/partiql/lang/domains/PartiqlPhysical$Plan;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun compile (Lorg/partiql/lang/domains/PartiqlPhysical$Plan;Lorg/partiql/lang/planner/PartiQLPlanner$PlanningDetails;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/partiql/lang/compiler/PartiQLCompilerAsyncBuilder {
+	public static final field Companion Lorg/partiql/lang/compiler/PartiQLCompilerAsyncBuilder$Companion;
+	public final fun build ()Lorg/partiql/lang/compiler/PartiQLCompilerAsync;
+	public final fun customFunctions (Ljava/util/List;)Lorg/partiql/lang/compiler/PartiQLCompilerAsyncBuilder;
+	public final fun customOperatorFactories (Ljava/util/List;)Lorg/partiql/lang/compiler/PartiQLCompilerAsyncBuilder;
+	public final fun customProcedures (Ljava/util/List;)Lorg/partiql/lang/compiler/PartiQLCompilerAsyncBuilder;
+	public final fun customTypes (Ljava/util/List;)Lorg/partiql/lang/compiler/PartiQLCompilerAsyncBuilder;
+	public final fun options (Lorg/partiql/lang/planner/EvaluatorOptions;)Lorg/partiql/lang/compiler/PartiQLCompilerAsyncBuilder;
+	public static final fun standard ()Lorg/partiql/lang/compiler/PartiQLCompilerAsyncBuilder;
+}
+
+public final class org/partiql/lang/compiler/PartiQLCompilerAsyncBuilder$Companion {
+	public final fun standard ()Lorg/partiql/lang/compiler/PartiQLCompilerAsyncBuilder;
+}
+
+public final class org/partiql/lang/compiler/PartiQLCompilerBuilder {
+	public static final field Companion Lorg/partiql/lang/compiler/PartiQLCompilerBuilder$Companion;
+	public final fun build ()Lorg/partiql/lang/compiler/PartiQLCompiler;
+	public final fun customFunctions (Ljava/util/List;)Lorg/partiql/lang/compiler/PartiQLCompilerBuilder;
+	public final fun customOperatorFactories (Ljava/util/List;)Lorg/partiql/lang/compiler/PartiQLCompilerBuilder;
+	public final fun customProcedures (Ljava/util/List;)Lorg/partiql/lang/compiler/PartiQLCompilerBuilder;
+	public final fun customTypes (Ljava/util/List;)Lorg/partiql/lang/compiler/PartiQLCompilerBuilder;
+	public final fun options (Lorg/partiql/lang/planner/EvaluatorOptions;)Lorg/partiql/lang/compiler/PartiQLCompilerBuilder;
+	public static final fun standard ()Lorg/partiql/lang/compiler/PartiQLCompilerBuilder;
+}
+
+public final class org/partiql/lang/compiler/PartiQLCompilerBuilder$Companion {
+	public final fun standard ()Lorg/partiql/lang/compiler/PartiQLCompilerBuilder;
+}
+
+public final class org/partiql/lang/compiler/PartiQLCompilerPipeline$Builder {
+	public final fun getCompiler ()Lorg/partiql/lang/compiler/PartiQLCompilerBuilder;
+	public final fun getParser ()Lorg/partiql/lang/syntax/PartiQLParserBuilder;
+	public final fun getPlanner ()Lorg/partiql/lang/planner/PartiQLPlannerBuilder;
+	public final fun setCompiler (Lorg/partiql/lang/compiler/PartiQLCompilerBuilder;)V
+	public final fun setParser (Lorg/partiql/lang/syntax/PartiQLParserBuilder;)V
+	public final fun setPlanner (Lorg/partiql/lang/planner/PartiQLPlannerBuilder;)V
+}
+
+public final class org/partiql/lang/compiler/PartiQLCompilerPipeline$Companion {
+	public final fun build (Lkotlin/jvm/functions/Function1;)Lorg/partiql/lang/compiler/PartiQLCompilerPipeline;
+	public final fun standard ()Lorg/partiql/lang/compiler/PartiQLCompilerPipeline;
+}
+
+public final class org/partiql/lang/compiler/PartiQLCompilerPipelineAsync {
+	public static final field Companion Lorg/partiql/lang/compiler/PartiQLCompilerPipelineAsync$Companion;
+	public fun <init> (Lorg/partiql/lang/syntax/Parser;Lorg/partiql/lang/planner/PartiQLPlanner;Lorg/partiql/lang/compiler/PartiQLCompilerAsync;)V
+	public final fun compile (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun compile (Lorg/partiql/lang/domains/PartiqlAst$Statement;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun compile (Lorg/partiql/lang/domains/PartiqlPhysical$Plan;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun compile (Lorg/partiql/lang/domains/PartiqlPhysical$Plan;Lorg/partiql/lang/planner/PartiQLPlanner$PlanningDetails;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun compile$default (Lorg/partiql/lang/compiler/PartiQLCompilerPipelineAsync;Lorg/partiql/lang/domains/PartiqlPhysical$Plan;Lorg/partiql/lang/planner/PartiQLPlanner$PlanningDetails;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun standard ()Lorg/partiql/lang/compiler/PartiQLCompilerPipelineAsync;
+}
+
+public final class org/partiql/lang/compiler/PartiQLCompilerPipelineAsync$Builder {
+	public final fun getCompiler ()Lorg/partiql/lang/compiler/PartiQLCompilerAsyncBuilder;
+	public final fun getParser ()Lorg/partiql/lang/syntax/PartiQLParserBuilder;
+	public final fun getPlanner ()Lorg/partiql/lang/planner/PartiQLPlannerBuilder;
+	public final fun setCompiler (Lorg/partiql/lang/compiler/PartiQLCompilerAsyncBuilder;)V
+	public final fun setParser (Lorg/partiql/lang/syntax/PartiQLParserBuilder;)V
+	public final fun setPlanner (Lorg/partiql/lang/planner/PartiQLPlannerBuilder;)V
+}
+
+public final class org/partiql/lang/compiler/PartiQLCompilerPipelineAsync$Companion {
+	public final fun build (Lkotlin/jvm/functions/Function1;)Lorg/partiql/lang/compiler/PartiQLCompilerPipelineAsync;
+	public final fun standard ()Lorg/partiql/lang/compiler/PartiQLCompilerPipelineAsync;
+}
+
+public final class org/partiql/lang/domains/UtilKt {
+	public static final fun addSourceLocation (Lorg/partiql/errors/PropertyValueMap;Ljava/util/Map;)Lorg/partiql/errors/PropertyValueMap;
+	public static final fun extractSourceLocation (Lorg/partiql/lang/domains/PartiqlAst$PartiqlAstNode;)Ljava/util/Map;
+	public static final fun getStaticType (Ljava/util/Map;)Lorg/partiql/lang/ast/StaticTypeMeta;
+	public static final fun id (Lorg/partiql/lang/domains/PartiqlAst$Builder;Ljava/lang/String;)Lorg/partiql/lang/domains/PartiqlAst$Expr$Id;
+	public static final fun id (Lorg/partiql/lang/domains/PartiqlLogical$Builder;Ljava/lang/String;)Lorg/partiql/lang/domains/PartiqlLogical$Expr$Id;
+	public static final fun metaContainerOf ([Lorg/partiql/lang/ast/Meta;)Ljava/util/Map;
+	public static final fun pathExpr (Lorg/partiql/lang/domains/PartiqlLogical$Builder;Lorg/partiql/lang/domains/PartiqlLogical$Expr;)Lorg/partiql/lang/domains/PartiqlLogical$PathStep$PathExpr;
+	public static final fun toBindingCase (Lorg/partiql/lang/domains/PartiqlAst$CaseSensitivity;)Lorg/partiql/lang/eval/BindingCase;
+	public static final fun toBindingCase (Lorg/partiql/lang/domains/PartiqlLogical$CaseSensitivity;)Lorg/partiql/lang/eval/BindingCase;
+	public static final fun toBindingCase (Lorg/partiql/lang/domains/PartiqlPhysical$CaseSensitivity;)Lorg/partiql/lang/eval/BindingCase;
+}
+
+public final class org/partiql/lang/errors/PartiQLException : java/lang/RuntimeException {
+	public fun <init> (Ljava/lang/String;)V
+	public fun getMessage ()Ljava/lang/String;
+}
+
+public abstract interface class org/partiql/lang/eval/Addressed {
+	public abstract fun getAddress ()Lorg/partiql/lang/eval/ExprValue;
+}
+
+public abstract class org/partiql/lang/eval/Arguments {
+}
+
+public abstract class org/partiql/lang/eval/BaseExprValue : org/partiql/lang/eval/ExprValue {
+	public fun <init> ()V
+	public final fun asFacet (Ljava/lang/Class;)Ljava/lang/Object;
+	public fun getBindings ()Lorg/partiql/lang/eval/Bindings;
+	public fun getGraphValue ()Lorg/partiql/lang/graph/Graph;
+	public fun getOrdinalBindings ()Lorg/partiql/lang/eval/OrdinalBindings;
+	public fun getScalar ()Lorg/partiql/lang/eval/Scalar;
+	public fun iterator ()Ljava/util/Iterator;
+	public fun provideFacet (Ljava/lang/Class;)Ljava/lang/Object;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/lang/eval/BindingCase : java/lang/Enum {
+	public static final field Companion Lorg/partiql/lang/eval/BindingCase$Companion;
+	public static final field INSENSITIVE Lorg/partiql/lang/eval/BindingCase;
+	public static final field SENSITIVE Lorg/partiql/lang/eval/BindingCase;
+	public final fun toSymbol (Lcom/amazon/ion/IonSystem;)Lcom/amazon/ion/IonSymbol;
+	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/lang/eval/BindingCase;
+	public static fun values ()[Lorg/partiql/lang/eval/BindingCase;
+}
+
+public final class org/partiql/lang/eval/BindingCase$Companion {
+	public final fun fromIonValue (Lcom/amazon/ion/IonValue;)Lorg/partiql/lang/eval/BindingCase;
+}
+
+public final class org/partiql/lang/eval/BindingName {
+	public fun <init> (Ljava/lang/String;Lorg/partiql/lang/eval/BindingCase;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lorg/partiql/lang/eval/BindingCase;
+	public final fun copy (Ljava/lang/String;Lorg/partiql/lang/eval/BindingCase;)Lorg/partiql/lang/eval/BindingName;
+	public static synthetic fun copy$default (Lorg/partiql/lang/eval/BindingName;Ljava/lang/String;Lorg/partiql/lang/eval/BindingCase;ILjava/lang/Object;)Lorg/partiql/lang/eval/BindingName;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBindingCase ()Lorg/partiql/lang/eval/BindingCase;
+	public final fun getLoweredName ()Ljava/lang/String;
+	public final fun getName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public final fun isEquivalentTo (Ljava/lang/String;)Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class org/partiql/lang/eval/Bindings {
+	public static final field Companion Lorg/partiql/lang/eval/Bindings$Companion;
+	public abstract fun get (Lorg/partiql/lang/eval/BindingName;)Ljava/lang/Object;
+	public static fun lazyBindingsBuilder ()Lorg/partiql/lang/eval/Bindings$LazyBindingBuilder;
+	public static fun ofIonStruct (Lcom/amazon/ion/IonStruct;)Lorg/partiql/lang/eval/Bindings;
+	public static fun ofMap (Ljava/util/Map;)Lorg/partiql/lang/eval/Bindings;
+}
+
+public final class org/partiql/lang/eval/Bindings$Companion {
+	public final fun buildLazyBindings (Lkotlin/jvm/functions/Function1;)Lorg/partiql/lang/eval/Bindings;
+	public final fun empty ()Lorg/partiql/lang/eval/Bindings;
+	public final fun lazyBindingsBuilder ()Lorg/partiql/lang/eval/Bindings$LazyBindingBuilder;
+	public final fun ofIonStruct (Lcom/amazon/ion/IonStruct;)Lorg/partiql/lang/eval/Bindings;
+	public final fun ofMap (Ljava/util/Map;)Lorg/partiql/lang/eval/Bindings;
+	public final fun over (Lkotlin/jvm/functions/Function1;)Lorg/partiql/lang/eval/Bindings;
+}
+
+public final class org/partiql/lang/eval/Bindings$LazyBindingBuilder {
+	public fun <init> ()V
+	public final fun addBinding (Ljava/lang/String;Lkotlin/jvm/functions/Function0;)Lorg/partiql/lang/eval/Bindings$LazyBindingBuilder;
+	public final fun build ()Lorg/partiql/lang/eval/Bindings;
+}
+
+public final class org/partiql/lang/eval/BindingsExtensionsKt {
+	public static final fun delegate (Lorg/partiql/lang/eval/Bindings;Lorg/partiql/lang/eval/Bindings;)Lorg/partiql/lang/eval/Bindings;
+}
+
+public final class org/partiql/lang/eval/BindingsKt {
+	public static final fun toBindingCase (Lorg/partiql/lang/domains/PartiqlAst$CaseSensitivity;)Lorg/partiql/lang/eval/BindingCase;
+}
+
+public final class org/partiql/lang/eval/CompileOptions {
+	public static final field Companion Lorg/partiql/lang/eval/CompileOptions$Companion;
+	public static final fun builder ()Lorg/partiql/lang/eval/CompileOptions$Builder;
+	public static final fun builder (Lorg/partiql/lang/eval/CompileOptions;)Lorg/partiql/lang/eval/CompileOptions$Builder;
+	public final fun component1 ()Lorg/partiql/lang/eval/UndefinedVariableBehavior;
+	public final fun component2 ()Lorg/partiql/lang/eval/ProjectionIterationBehavior;
+	public final fun component3 ()Lorg/partiql/lang/eval/VisitorTransformMode;
+	public final fun component4 ()Lorg/partiql/lang/eval/ThunkOptions;
+	public final fun component5 ()Lorg/partiql/lang/eval/TypingMode;
+	public final fun component6 ()Lorg/partiql/lang/eval/TypedOpBehavior;
+	public final fun component7 ()Ljava/time/ZoneOffset;
+	public final fun component8 ()Z
+	public final fun copy (Lorg/partiql/lang/eval/UndefinedVariableBehavior;Lorg/partiql/lang/eval/ProjectionIterationBehavior;Lorg/partiql/lang/eval/VisitorTransformMode;Lorg/partiql/lang/eval/ThunkOptions;Lorg/partiql/lang/eval/TypingMode;Lorg/partiql/lang/eval/TypedOpBehavior;Ljava/time/ZoneOffset;Z)Lorg/partiql/lang/eval/CompileOptions;
+	public static synthetic fun copy$default (Lorg/partiql/lang/eval/CompileOptions;Lorg/partiql/lang/eval/UndefinedVariableBehavior;Lorg/partiql/lang/eval/ProjectionIterationBehavior;Lorg/partiql/lang/eval/VisitorTransformMode;Lorg/partiql/lang/eval/ThunkOptions;Lorg/partiql/lang/eval/TypingMode;Lorg/partiql/lang/eval/TypedOpBehavior;Ljava/time/ZoneOffset;ZILjava/lang/Object;)Lorg/partiql/lang/eval/CompileOptions;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDefaultTimezoneOffset ()Ljava/time/ZoneOffset;
+	public final fun getInterruptible ()Z
+	public final fun getProjectionIteration ()Lorg/partiql/lang/eval/ProjectionIterationBehavior;
+	public final fun getThunkOptions ()Lorg/partiql/lang/eval/ThunkOptions;
+	public final fun getTypedOpBehavior ()Lorg/partiql/lang/eval/TypedOpBehavior;
+	public final fun getTypingMode ()Lorg/partiql/lang/eval/TypingMode;
+	public final fun getUndefinedVariable ()Lorg/partiql/lang/eval/UndefinedVariableBehavior;
+	public final fun getVisitorTransformMode ()Lorg/partiql/lang/eval/VisitorTransformMode;
+	public fun hashCode ()I
+	public static final fun standard ()Lorg/partiql/lang/eval/CompileOptions;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/lang/eval/CompileOptions$Builder {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/lang/eval/CompileOptions;)V
+	public synthetic fun <init> (Lorg/partiql/lang/eval/CompileOptions;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/lang/eval/CompileOptions;
+	public final fun defaultTimezoneOffset (Ljava/time/ZoneOffset;)Lorg/partiql/lang/eval/CompileOptions$Builder;
+	public final fun isInterruptible (Z)Lorg/partiql/lang/eval/CompileOptions$Builder;
+	public final fun projectionIteration (Lorg/partiql/lang/eval/ProjectionIterationBehavior;)Lorg/partiql/lang/eval/CompileOptions$Builder;
+	public final fun thunkOptions (Lkotlin/jvm/functions/Function1;)Lorg/partiql/lang/eval/CompileOptions$Builder;
+	public final fun thunkOptions (Lorg/partiql/lang/eval/ThunkOptions;)Lorg/partiql/lang/eval/CompileOptions$Builder;
+	public final fun typedOpBehavior (Lorg/partiql/lang/eval/TypedOpBehavior;)Lorg/partiql/lang/eval/CompileOptions$Builder;
+	public final fun typingMode (Lorg/partiql/lang/eval/TypingMode;)Lorg/partiql/lang/eval/CompileOptions$Builder;
+	public final fun undefinedVariable (Lorg/partiql/lang/eval/UndefinedVariableBehavior;)Lorg/partiql/lang/eval/CompileOptions$Builder;
+	public final fun visitorTransformMode (Lorg/partiql/lang/eval/VisitorTransformMode;)Lorg/partiql/lang/eval/CompileOptions$Builder;
+}
+
+public final class org/partiql/lang/eval/CompileOptions$Companion {
+	public final fun build (Lkotlin/jvm/functions/Function1;)Lorg/partiql/lang/eval/CompileOptions;
+	public final fun build (Lorg/partiql/lang/eval/CompileOptions;Lkotlin/jvm/functions/Function1;)Lorg/partiql/lang/eval/CompileOptions;
+	public final fun builder ()Lorg/partiql/lang/eval/CompileOptions$Builder;
+	public final fun builder (Lorg/partiql/lang/eval/CompileOptions;)Lorg/partiql/lang/eval/CompileOptions$Builder;
+	public final fun standard ()Lorg/partiql/lang/eval/CompileOptions;
+}
+
+public final class org/partiql/lang/eval/CoverageData {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/lang/eval/CoverageData$ExecutionCount;Lorg/partiql/lang/eval/CoverageData$ExecutionCount;)V
+	public synthetic fun <init> (Lorg/partiql/lang/eval/CoverageData$ExecutionCount;Lorg/partiql/lang/eval/CoverageData$ExecutionCount;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/partiql/lang/eval/CoverageData$ExecutionCount;
+	public final fun component2 ()Lorg/partiql/lang/eval/CoverageData$ExecutionCount;
+	public final fun copy (Lorg/partiql/lang/eval/CoverageData$ExecutionCount;Lorg/partiql/lang/eval/CoverageData$ExecutionCount;)Lorg/partiql/lang/eval/CoverageData;
+	public static synthetic fun copy$default (Lorg/partiql/lang/eval/CoverageData;Lorg/partiql/lang/eval/CoverageData$ExecutionCount;Lorg/partiql/lang/eval/CoverageData$ExecutionCount;ILjava/lang/Object;)Lorg/partiql/lang/eval/CoverageData;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBranchConditionCount ()Lorg/partiql/lang/eval/CoverageData$ExecutionCount;
+	public final fun getBranchCount ()Lorg/partiql/lang/eval/CoverageData$ExecutionCount;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/lang/eval/CoverageData$ExecutionCount : java/util/Map, kotlin/jvm/internal/markers/KMappedMarker {
+	public fun <init> (Ljava/util/Map;)V
+	public fun clear ()V
+	public synthetic fun compute (Ljava/lang/Object;Ljava/util/function/BiFunction;)Ljava/lang/Object;
+	public fun compute (Ljava/lang/String;Ljava/util/function/BiFunction;)Ljava/lang/Long;
+	public synthetic fun computeIfAbsent (Ljava/lang/Object;Ljava/util/function/Function;)Ljava/lang/Object;
+	public fun computeIfAbsent (Ljava/lang/String;Ljava/util/function/Function;)Ljava/lang/Long;
+	public synthetic fun computeIfPresent (Ljava/lang/Object;Ljava/util/function/BiFunction;)Ljava/lang/Object;
+	public fun computeIfPresent (Ljava/lang/String;Ljava/util/function/BiFunction;)Ljava/lang/Long;
+	public final fun containsKey (Ljava/lang/Object;)Z
+	public fun containsKey (Ljava/lang/String;)Z
+	public fun containsValue (J)Z
+	public final fun containsValue (Ljava/lang/Object;)Z
+	public final fun entrySet ()Ljava/util/Set;
+	public final fun get (Ljava/lang/Object;)Ljava/lang/Long;
+	public final synthetic fun get (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun get (Ljava/lang/String;)Ljava/lang/Long;
+	public fun getEntries ()Ljava/util/Set;
+	public fun getKeys ()Ljava/util/Set;
+	public fun getSize ()I
+	public fun getValues ()Ljava/util/Collection;
+	public fun isEmpty ()Z
+	public final fun keySet ()Ljava/util/Set;
+	public synthetic fun merge (Ljava/lang/Object;Ljava/lang/Object;Ljava/util/function/BiFunction;)Ljava/lang/Object;
+	public fun merge (Ljava/lang/String;Ljava/lang/Long;Ljava/util/function/BiFunction;)Ljava/lang/Long;
+	public synthetic fun put (Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun put (Ljava/lang/String;J)Ljava/lang/Long;
+	public fun putAll (Ljava/util/Map;)V
+	public synthetic fun putIfAbsent (Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun putIfAbsent (Ljava/lang/String;Ljava/lang/Long;)Ljava/lang/Long;
+	public fun remove (Ljava/lang/Object;)Ljava/lang/Long;
+	public synthetic fun remove (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun remove (Ljava/lang/Object;Ljava/lang/Object;)Z
+	public synthetic fun replace (Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
+	public synthetic fun replace (Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Z
+	public fun replace (Ljava/lang/String;Ljava/lang/Long;)Ljava/lang/Long;
+	public fun replace (Ljava/lang/String;Ljava/lang/Long;Ljava/lang/Long;)Z
+	public fun replaceAll (Ljava/util/function/BiFunction;)V
+	public final fun size ()I
+	public final fun values ()Ljava/util/Collection;
+}
+
+public final class org/partiql/lang/eval/CoverageStructure {
+	public fun <init> ()V
+	public fun <init> (Ljava/util/Map;Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/util/Map;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/util/Map;
+	public final fun component2 ()Ljava/util/Map;
+	public final fun copy (Ljava/util/Map;Ljava/util/Map;)Lorg/partiql/lang/eval/CoverageStructure;
+	public static synthetic fun copy$default (Lorg/partiql/lang/eval/CoverageStructure;Ljava/util/Map;Ljava/util/Map;ILjava/lang/Object;)Lorg/partiql/lang/eval/CoverageStructure;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBranchConditions ()Ljava/util/Map;
+	public final fun getBranches ()Ljava/util/Map;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/lang/eval/CoverageStructure$Branch {
+	public fun <init> (Ljava/lang/String;Lorg/partiql/lang/eval/CoverageStructure$Branch$Type;Lorg/partiql/lang/eval/CoverageStructure$Branch$Outcome;J)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lorg/partiql/lang/eval/CoverageStructure$Branch$Type;
+	public final fun component3 ()Lorg/partiql/lang/eval/CoverageStructure$Branch$Outcome;
+	public final fun component4 ()J
+	public final fun copy (Ljava/lang/String;Lorg/partiql/lang/eval/CoverageStructure$Branch$Type;Lorg/partiql/lang/eval/CoverageStructure$Branch$Outcome;J)Lorg/partiql/lang/eval/CoverageStructure$Branch;
+	public static synthetic fun copy$default (Lorg/partiql/lang/eval/CoverageStructure$Branch;Ljava/lang/String;Lorg/partiql/lang/eval/CoverageStructure$Branch$Type;Lorg/partiql/lang/eval/CoverageStructure$Branch$Outcome;JILjava/lang/Object;)Lorg/partiql/lang/eval/CoverageStructure$Branch;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getId ()Ljava/lang/String;
+	public final fun getLine ()J
+	public final fun getOutcome ()Lorg/partiql/lang/eval/CoverageStructure$Branch$Outcome;
+	public final fun getType ()Lorg/partiql/lang/eval/CoverageStructure$Branch$Type;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/lang/eval/CoverageStructure$Branch$Outcome : java/lang/Enum {
+	public static final field FALSE Lorg/partiql/lang/eval/CoverageStructure$Branch$Outcome;
+	public static final field TRUE Lorg/partiql/lang/eval/CoverageStructure$Branch$Outcome;
+	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/lang/eval/CoverageStructure$Branch$Outcome;
+	public static fun values ()[Lorg/partiql/lang/eval/CoverageStructure$Branch$Outcome;
+}
+
+public final class org/partiql/lang/eval/CoverageStructure$Branch$Type : java/lang/Enum {
+	public static final field CASE_WHEN Lorg/partiql/lang/eval/CoverageStructure$Branch$Type;
+	public static final field HAVING Lorg/partiql/lang/eval/CoverageStructure$Branch$Type;
+	public static final field WHERE Lorg/partiql/lang/eval/CoverageStructure$Branch$Type;
+	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/lang/eval/CoverageStructure$Branch$Type;
+	public static fun values ()[Lorg/partiql/lang/eval/CoverageStructure$Branch$Type;
+}
+
+public final class org/partiql/lang/eval/CoverageStructure$BranchCondition {
+	public fun <init> (Ljava/lang/String;Lorg/partiql/lang/eval/CoverageStructure$BranchCondition$Type;Lorg/partiql/lang/eval/CoverageStructure$BranchCondition$Outcome;J)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lorg/partiql/lang/eval/CoverageStructure$BranchCondition$Type;
+	public final fun component3 ()Lorg/partiql/lang/eval/CoverageStructure$BranchCondition$Outcome;
+	public final fun component4 ()J
+	public final fun copy (Ljava/lang/String;Lorg/partiql/lang/eval/CoverageStructure$BranchCondition$Type;Lorg/partiql/lang/eval/CoverageStructure$BranchCondition$Outcome;J)Lorg/partiql/lang/eval/CoverageStructure$BranchCondition;
+	public static synthetic fun copy$default (Lorg/partiql/lang/eval/CoverageStructure$BranchCondition;Ljava/lang/String;Lorg/partiql/lang/eval/CoverageStructure$BranchCondition$Type;Lorg/partiql/lang/eval/CoverageStructure$BranchCondition$Outcome;JILjava/lang/Object;)Lorg/partiql/lang/eval/CoverageStructure$BranchCondition;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getId ()Ljava/lang/String;
+	public final fun getLine ()J
+	public final fun getOutcome ()Lorg/partiql/lang/eval/CoverageStructure$BranchCondition$Outcome;
+	public final fun getType ()Lorg/partiql/lang/eval/CoverageStructure$BranchCondition$Type;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/lang/eval/CoverageStructure$BranchCondition$Outcome : java/lang/Enum {
+	public static final field FALSE Lorg/partiql/lang/eval/CoverageStructure$BranchCondition$Outcome;
+	public static final field MISSING Lorg/partiql/lang/eval/CoverageStructure$BranchCondition$Outcome;
+	public static final field NULL Lorg/partiql/lang/eval/CoverageStructure$BranchCondition$Outcome;
+	public static final field TRUE Lorg/partiql/lang/eval/CoverageStructure$BranchCondition$Outcome;
+	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/lang/eval/CoverageStructure$BranchCondition$Outcome;
+	public static fun values ()[Lorg/partiql/lang/eval/CoverageStructure$BranchCondition$Outcome;
+}
+
+public final class org/partiql/lang/eval/CoverageStructure$BranchCondition$Type : java/lang/Enum {
+	public static final field AND Lorg/partiql/lang/eval/CoverageStructure$BranchCondition$Type;
+	public static final field BETWEEN Lorg/partiql/lang/eval/CoverageStructure$BranchCondition$Type;
+	public static final field CAN_CAST Lorg/partiql/lang/eval/CoverageStructure$BranchCondition$Type;
+	public static final field CAN_LOSSLESS_CAST Lorg/partiql/lang/eval/CoverageStructure$BranchCondition$Type;
+	public static final field EQ Lorg/partiql/lang/eval/CoverageStructure$BranchCondition$Type;
+	public static final field GT Lorg/partiql/lang/eval/CoverageStructure$BranchCondition$Type;
+	public static final field GTE Lorg/partiql/lang/eval/CoverageStructure$BranchCondition$Type;
+	public static final field IN Lorg/partiql/lang/eval/CoverageStructure$BranchCondition$Type;
+	public static final field IS Lorg/partiql/lang/eval/CoverageStructure$BranchCondition$Type;
+	public static final field LIKE Lorg/partiql/lang/eval/CoverageStructure$BranchCondition$Type;
+	public static final field LT Lorg/partiql/lang/eval/CoverageStructure$BranchCondition$Type;
+	public static final field LTE Lorg/partiql/lang/eval/CoverageStructure$BranchCondition$Type;
+	public static final field NEQ Lorg/partiql/lang/eval/CoverageStructure$BranchCondition$Type;
+	public static final field NOT Lorg/partiql/lang/eval/CoverageStructure$BranchCondition$Type;
+	public static final field OR Lorg/partiql/lang/eval/CoverageStructure$BranchCondition$Type;
+	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/lang/eval/CoverageStructure$BranchCondition$Type;
+	public static fun values ()[Lorg/partiql/lang/eval/CoverageStructure$BranchCondition$Type;
+}
+
+public class org/partiql/lang/eval/EvaluationException : org/partiql/lang/SqlException {
+	public fun <init> (Ljava/lang/String;Lorg/partiql/errors/ErrorCode;Lorg/partiql/errors/PropertyValueMap;Ljava/lang/Throwable;Z)V
+	public synthetic fun <init> (Ljava/lang/String;Lorg/partiql/errors/ErrorCode;Lorg/partiql/errors/PropertyValueMap;Ljava/lang/Throwable;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/Throwable;Lorg/partiql/errors/ErrorCode;Lorg/partiql/errors/PropertyValueMap;Z)V
+	public synthetic fun <init> (Ljava/lang/Throwable;Lorg/partiql/errors/ErrorCode;Lorg/partiql/errors/PropertyValueMap;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getInternal ()Z
+}
+
+public final class org/partiql/lang/eval/EvaluationSession {
+	public static final field Companion Lorg/partiql/lang/eval/EvaluationSession$Companion;
+	public synthetic fun <init> (Lorg/partiql/lang/eval/Bindings;Ljava/util/List;Ljava/util/Map;Lcom/amazon/ion/Timestamp;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public static final fun builder ()Lorg/partiql/lang/eval/EvaluationSession$Builder;
+	public final fun getContext ()Ljava/util/Map;
+	public final fun getGlobals ()Lorg/partiql/lang/eval/Bindings;
+	public final fun getNow ()Lcom/amazon/ion/Timestamp;
+	public final fun getParameters ()Ljava/util/List;
+	public static final fun standard ()Lorg/partiql/lang/eval/EvaluationSession;
+}
+
+public final class org/partiql/lang/eval/EvaluationSession$Builder {
+	public fun <init> ()V
+	public final fun build ()Lorg/partiql/lang/eval/EvaluationSession;
+	public final fun globals (Lorg/partiql/lang/eval/Bindings;)Lorg/partiql/lang/eval/EvaluationSession$Builder;
+	public final fun now (Lcom/amazon/ion/Timestamp;)Lorg/partiql/lang/eval/EvaluationSession$Builder;
+	public final fun parameters (Ljava/util/List;)Lorg/partiql/lang/eval/EvaluationSession$Builder;
+	public final fun user (Ljava/lang/String;)Lorg/partiql/lang/eval/EvaluationSession$Builder;
+	public final fun withContextVariable (Ljava/lang/String;Ljava/lang/Object;)Lorg/partiql/lang/eval/EvaluationSession$Builder;
+}
+
+public final class org/partiql/lang/eval/EvaluationSession$Companion {
+	public final fun build (Lkotlin/jvm/functions/Function1;)Lorg/partiql/lang/eval/EvaluationSession;
+	public final fun builder ()Lorg/partiql/lang/eval/EvaluationSession$Builder;
+	public final fun standard ()Lorg/partiql/lang/eval/EvaluationSession;
+}
+
+public final class org/partiql/lang/eval/EvaluationSession$Constants {
+	public static final field CURRENT_USER_KEY Ljava/lang/String;
+	public static final field INSTANCE Lorg/partiql/lang/eval/EvaluationSession$Constants;
+}
+
+public final class org/partiql/lang/eval/ExceptionsKt {
+	public static final fun errorContextFrom (Ljava/util/Map;)Lorg/partiql/errors/PropertyValueMap;
+	public static final fun errorContextFrom (Lorg/partiql/lang/ast/SourceLocationMeta;)Lorg/partiql/errors/PropertyValueMap;
+	public static final fun fillErrorContext (Lorg/partiql/errors/PropertyValueMap;Lorg/partiql/lang/ast/SourceLocationMeta;)V
+}
+
+public abstract interface class org/partiql/lang/eval/ExprFunction {
+	public abstract fun callWithOptional (Lorg/partiql/lang/eval/EvaluationSession;Ljava/util/List;Lorg/partiql/lang/eval/ExprValue;)Lorg/partiql/lang/eval/ExprValue;
+	public abstract fun callWithRequired (Lorg/partiql/lang/eval/EvaluationSession;Ljava/util/List;)Lorg/partiql/lang/eval/ExprValue;
+	public abstract fun callWithVariadic (Lorg/partiql/lang/eval/EvaluationSession;Ljava/util/List;Ljava/util/List;)Lorg/partiql/lang/eval/ExprValue;
+	public abstract fun getSignature ()Lorg/partiql/lang/types/FunctionSignature;
+}
+
+public final class org/partiql/lang/eval/ExprFunction$DefaultImpls {
+	public static fun callWithOptional (Lorg/partiql/lang/eval/ExprFunction;Lorg/partiql/lang/eval/EvaluationSession;Ljava/util/List;Lorg/partiql/lang/eval/ExprValue;)Lorg/partiql/lang/eval/ExprValue;
+	public static fun callWithRequired (Lorg/partiql/lang/eval/ExprFunction;Lorg/partiql/lang/eval/EvaluationSession;Ljava/util/List;)Lorg/partiql/lang/eval/ExprValue;
+	public static fun callWithVariadic (Lorg/partiql/lang/eval/ExprFunction;Lorg/partiql/lang/eval/EvaluationSession;Ljava/util/List;Ljava/util/List;)Lorg/partiql/lang/eval/ExprValue;
+}
+
+public final class org/partiql/lang/eval/ExprFunctionKt {
+	public static final fun call (Lorg/partiql/lang/eval/ExprFunction;Lorg/partiql/lang/eval/EvaluationSession;Ljava/util/List;)Lorg/partiql/lang/eval/ExprValue;
+	public static final fun call (Lorg/partiql/lang/eval/ExprFunction;Lorg/partiql/lang/eval/EvaluationSession;Lorg/partiql/lang/eval/Arguments;)Lorg/partiql/lang/eval/ExprValue;
+}
+
+public abstract interface class org/partiql/lang/eval/ExprValue : com/amazon/ion/facet/Faceted, java/lang/Iterable, kotlin/jvm/internal/markers/KMappedMarker {
+	public static final field Companion Lorg/partiql/lang/eval/ExprValue$Companion;
+	public abstract fun getBindings ()Lorg/partiql/lang/eval/Bindings;
+	public static fun getEmptyBag ()Lorg/partiql/lang/eval/ExprValue;
+	public static fun getEmptyList ()Lorg/partiql/lang/eval/ExprValue;
+	public static fun getEmptySexp ()Lorg/partiql/lang/eval/ExprValue;
+	public static fun getEmptyStruct ()Lorg/partiql/lang/eval/ExprValue;
+	public abstract fun getGraphValue ()Lorg/partiql/lang/graph/Graph;
+	public static fun getMissingValue ()Lorg/partiql/lang/eval/ExprValue;
+	public static fun getNullValue ()Lorg/partiql/lang/eval/ExprValue;
+	public abstract fun getOrdinalBindings ()Lorg/partiql/lang/eval/OrdinalBindings;
+	public abstract fun getScalar ()Lorg/partiql/lang/eval/Scalar;
+	public abstract fun getType ()Lorg/partiql/lang/eval/ExprValueType;
+	public abstract fun iterator ()Ljava/util/Iterator;
+	public static fun newBag (Ljava/lang/Iterable;)Lorg/partiql/lang/eval/ExprValue;
+	public static fun newBag (Lkotlin/sequences/Sequence;)Lorg/partiql/lang/eval/ExprValue;
+	public static fun newBlob ([B)Lorg/partiql/lang/eval/ExprValue;
+	public static fun newBoolean (Z)Lorg/partiql/lang/eval/ExprValue;
+	public static fun newClob ([B)Lorg/partiql/lang/eval/ExprValue;
+	public static fun newDate (III)Lorg/partiql/lang/eval/ExprValue;
+	public static fun newDate (Ljava/lang/String;)Lorg/partiql/lang/eval/ExprValue;
+	public static fun newDate (Ljava/time/LocalDate;)Lorg/partiql/lang/eval/ExprValue;
+	public static fun newDecimal (I)Lorg/partiql/lang/eval/ExprValue;
+	public static fun newDecimal (J)Lorg/partiql/lang/eval/ExprValue;
+	public static fun newDecimal (Ljava/math/BigDecimal;)Lorg/partiql/lang/eval/ExprValue;
+	public static fun newFloat (D)Lorg/partiql/lang/eval/ExprValue;
+	public static fun newFromIonReader (Lcom/amazon/ion/IonSystem;Lcom/amazon/ion/IonReader;)Lorg/partiql/lang/eval/ExprValue;
+	public static fun newGraph (Lorg/partiql/lang/graph/Graph;)Lorg/partiql/lang/eval/ExprValue;
+	public static fun newInt (I)Lorg/partiql/lang/eval/ExprValue;
+	public static fun newInt (J)Lorg/partiql/lang/eval/ExprValue;
+	public static fun newList (Ljava/lang/Iterable;)Lorg/partiql/lang/eval/ExprValue;
+	public static fun newList (Lkotlin/sequences/Sequence;)Lorg/partiql/lang/eval/ExprValue;
+	public static fun newNull (Lcom/amazon/ion/IonType;)Lorg/partiql/lang/eval/ExprValue;
+	public static fun newSexp (Ljava/lang/Iterable;)Lorg/partiql/lang/eval/ExprValue;
+	public static fun newSexp (Lkotlin/sequences/Sequence;)Lorg/partiql/lang/eval/ExprValue;
+	public static fun newString (Ljava/lang/String;)Lorg/partiql/lang/eval/ExprValue;
+	public static fun newStruct (Ljava/lang/Iterable;Lorg/partiql/lang/eval/StructOrdering;)Lorg/partiql/lang/eval/ExprValue;
+	public static fun newStruct (Lkotlin/sequences/Sequence;Lorg/partiql/lang/eval/StructOrdering;)Lorg/partiql/lang/eval/ExprValue;
+	public static fun newSymbol (Ljava/lang/String;)Lorg/partiql/lang/eval/ExprValue;
+	public static fun newTime (Lorg/partiql/lang/eval/time/Time;)Lorg/partiql/lang/eval/ExprValue;
+	public static fun newTimestamp (Lcom/amazon/ion/Timestamp;)Lorg/partiql/lang/eval/ExprValue;
+	public static fun of (Lcom/amazon/ion/IonValue;)Lorg/partiql/lang/eval/ExprValue;
+}
+
+public final class org/partiql/lang/eval/ExprValue$Companion {
+	public final fun getEmptyBag ()Lorg/partiql/lang/eval/ExprValue;
+	public final fun getEmptyList ()Lorg/partiql/lang/eval/ExprValue;
+	public final fun getEmptySexp ()Lorg/partiql/lang/eval/ExprValue;
+	public final fun getEmptyStruct ()Lorg/partiql/lang/eval/ExprValue;
+	public final fun getMissingValue ()Lorg/partiql/lang/eval/ExprValue;
+	public final fun getNullValue ()Lorg/partiql/lang/eval/ExprValue;
+	public final fun newBag (Ljava/lang/Iterable;)Lorg/partiql/lang/eval/ExprValue;
+	public final fun newBag (Lkotlin/sequences/Sequence;)Lorg/partiql/lang/eval/ExprValue;
+	public final fun newBlob ([B)Lorg/partiql/lang/eval/ExprValue;
+	public final fun newBoolean (Z)Lorg/partiql/lang/eval/ExprValue;
+	public final fun newClob ([B)Lorg/partiql/lang/eval/ExprValue;
+	public final fun newDate (III)Lorg/partiql/lang/eval/ExprValue;
+	public final fun newDate (Ljava/lang/String;)Lorg/partiql/lang/eval/ExprValue;
+	public final fun newDate (Ljava/time/LocalDate;)Lorg/partiql/lang/eval/ExprValue;
+	public final fun newDecimal (I)Lorg/partiql/lang/eval/ExprValue;
+	public final fun newDecimal (J)Lorg/partiql/lang/eval/ExprValue;
+	public final fun newDecimal (Ljava/math/BigDecimal;)Lorg/partiql/lang/eval/ExprValue;
+	public final fun newFloat (D)Lorg/partiql/lang/eval/ExprValue;
+	public final fun newFromIonReader (Lcom/amazon/ion/IonSystem;Lcom/amazon/ion/IonReader;)Lorg/partiql/lang/eval/ExprValue;
+	public final fun newGraph (Lorg/partiql/lang/graph/Graph;)Lorg/partiql/lang/eval/ExprValue;
+	public final fun newInt (I)Lorg/partiql/lang/eval/ExprValue;
+	public final fun newInt (J)Lorg/partiql/lang/eval/ExprValue;
+	public final fun newList (Ljava/lang/Iterable;)Lorg/partiql/lang/eval/ExprValue;
+	public final fun newList (Lkotlin/sequences/Sequence;)Lorg/partiql/lang/eval/ExprValue;
+	public final fun newNull (Lcom/amazon/ion/IonType;)Lorg/partiql/lang/eval/ExprValue;
+	public final fun newSexp (Ljava/lang/Iterable;)Lorg/partiql/lang/eval/ExprValue;
+	public final fun newSexp (Lkotlin/sequences/Sequence;)Lorg/partiql/lang/eval/ExprValue;
+	public final fun newString (Ljava/lang/String;)Lorg/partiql/lang/eval/ExprValue;
+	public final fun newStruct (Ljava/lang/Iterable;Lorg/partiql/lang/eval/StructOrdering;)Lorg/partiql/lang/eval/ExprValue;
+	public final fun newStruct (Lkotlin/sequences/Sequence;Lorg/partiql/lang/eval/StructOrdering;)Lorg/partiql/lang/eval/ExprValue;
+	public final fun newSymbol (Ljava/lang/String;)Lorg/partiql/lang/eval/ExprValue;
+	public final fun newTime (Lorg/partiql/lang/eval/time/Time;)Lorg/partiql/lang/eval/ExprValue;
+	public final fun newTimestamp (Lcom/amazon/ion/Timestamp;)Lorg/partiql/lang/eval/ExprValue;
+	public final fun of (Lcom/amazon/ion/IonValue;)Lorg/partiql/lang/eval/ExprValue;
+}
+
+public abstract interface class org/partiql/lang/eval/ExprValueBagOp {
+	public static final field Companion Lorg/partiql/lang/eval/ExprValueBagOp$Companion;
+	public abstract fun eval (Lkotlin/sequences/Sequence;Lkotlin/sequences/Sequence;)Lkotlin/sequences/Sequence;
+	public abstract fun eval (Lorg/partiql/lang/eval/ExprValue;Lorg/partiql/lang/eval/ExprValue;)Lkotlin/sequences/Sequence;
+}
+
+public final class org/partiql/lang/eval/ExprValueBagOp$Companion {
+	public final fun create (Lorg/partiql/pig/runtime/DomainNode;Ljava/util/Map;)Lorg/partiql/lang/eval/ExprValueBagOp;
+}
+
+public final class org/partiql/lang/eval/ExprValueBagOp$DefaultImpls {
+	public static fun eval (Lorg/partiql/lang/eval/ExprValueBagOp;Lorg/partiql/lang/eval/ExprValue;Lorg/partiql/lang/eval/ExprValue;)Lkotlin/sequences/Sequence;
+}
+
+public final class org/partiql/lang/eval/ExprValueExtensionsKt {
+	public static final field BAG_ANNOTATION Ljava/lang/String;
+	public static final field DATE_ANNOTATION Ljava/lang/String;
+	public static final field GRAPH_ANNOTATION Ljava/lang/String;
+	public static final field MISSING_ANNOTATION Ljava/lang/String;
+	public static final field TIME_ANNOTATION Ljava/lang/String;
+	public static final fun asNamed (Lorg/partiql/lang/eval/ExprValue;)Lorg/partiql/lang/eval/Named;
+	public static final fun bigDecimalValue (Lorg/partiql/lang/eval/ExprValue;)Ljava/math/BigDecimal;
+	public static final fun booleanValue (Lorg/partiql/lang/eval/ExprValue;)Z
+	public static final fun bytesValue (Lorg/partiql/lang/eval/ExprValue;)[B
+	public static final fun cast (Lorg/partiql/lang/eval/ExprValue;Lorg/partiql/types/SingleType;Lorg/partiql/lang/eval/TypedOpBehavior;Lorg/partiql/lang/ast/SourceLocationMeta;Ljava/time/ZoneOffset;)Lorg/partiql/lang/eval/ExprValue;
+	public static final fun compareTo (Lorg/partiql/lang/eval/ExprValue;Lorg/partiql/lang/eval/ExprValue;)I
+	public static final fun dateValue (Lorg/partiql/lang/eval/ExprValue;)Ljava/time/LocalDate;
+	public static final fun distinct (Lkotlin/sequences/Sequence;)Lkotlin/sequences/Sequence;
+	public static final fun exprEquals (Lorg/partiql/lang/eval/ExprValue;Lorg/partiql/lang/eval/ExprValue;)Z
+	public static final fun getAddress (Lorg/partiql/lang/eval/ExprValue;)Lorg/partiql/lang/eval/ExprValue;
+	public static final fun getDEFAULT_COMPARATOR ()Lorg/partiql/lang/eval/NaturalExprValueComparators;
+	public static final fun getName (Lorg/partiql/lang/eval/ExprValue;)Lorg/partiql/lang/eval/ExprValue;
+	public static final fun getOrderedNames (Lorg/partiql/lang/eval/ExprValue;)Ljava/util/List;
+	public static final fun intValue (Lorg/partiql/lang/eval/ExprValue;)I
+	public static final fun longValue (Lorg/partiql/lang/eval/ExprValue;)J
+	public static final fun multiplicities (Lkotlin/sequences/Sequence;)Ljava/util/TreeMap;
+	public static final fun namedValue (Lorg/partiql/lang/eval/ExprValue;Lorg/partiql/lang/eval/ExprValue;)Lorg/partiql/lang/eval/ExprValue;
+	public static final fun numberValue (Lorg/partiql/lang/eval/ExprValue;)Ljava/lang/Number;
+	public static final fun orderedNamesValue (Lorg/partiql/lang/eval/ExprValue;Ljava/util/List;)Lorg/partiql/lang/eval/ExprValue;
+	public static final fun rangeOver (Lorg/partiql/lang/eval/ExprValue;)Ljava/lang/Iterable;
+	public static final fun stringValue (Lorg/partiql/lang/eval/ExprValue;)Ljava/lang/String;
+	public static final fun stringify (Lorg/partiql/lang/eval/ExprValue;)Ljava/lang/String;
+	public static final fun timeValue (Lorg/partiql/lang/eval/ExprValue;)Lorg/partiql/lang/eval/time/Time;
+	public static final fun timestampValue (Lorg/partiql/lang/eval/ExprValue;)Lcom/amazon/ion/Timestamp;
+	public static final fun toIonValue (Lorg/partiql/lang/eval/ExprValue;Lcom/amazon/ion/IonSystem;)Lcom/amazon/ion/IonValue;
+	public static final fun unnamedValue (Lorg/partiql/lang/eval/ExprValue;)Lorg/partiql/lang/eval/ExprValue;
+}
+
+public final class org/partiql/lang/eval/ExprValueType : java/lang/Enum {
+	public static final field BAG Lorg/partiql/lang/eval/ExprValueType;
+	public static final field BLOB Lorg/partiql/lang/eval/ExprValueType;
+	public static final field BOOL Lorg/partiql/lang/eval/ExprValueType;
+	public static final field CLOB Lorg/partiql/lang/eval/ExprValueType;
+	public static final field Companion Lorg/partiql/lang/eval/ExprValueType$Companion;
+	public static final field DATE Lorg/partiql/lang/eval/ExprValueType;
+	public static final field DECIMAL Lorg/partiql/lang/eval/ExprValueType;
+	public static final field FLOAT Lorg/partiql/lang/eval/ExprValueType;
+	public static final field GRAPH Lorg/partiql/lang/eval/ExprValueType;
+	public static final field INT Lorg/partiql/lang/eval/ExprValueType;
+	public static final field LIST Lorg/partiql/lang/eval/ExprValueType;
+	public static final field MISSING Lorg/partiql/lang/eval/ExprValueType;
+	public static final field NULL Lorg/partiql/lang/eval/ExprValueType;
+	public static final field SEXP Lorg/partiql/lang/eval/ExprValueType;
+	public static final field STRING Lorg/partiql/lang/eval/ExprValueType;
+	public static final field STRUCT Lorg/partiql/lang/eval/ExprValueType;
+	public static final field SYMBOL Lorg/partiql/lang/eval/ExprValueType;
+	public static final field TIME Lorg/partiql/lang/eval/ExprValueType;
+	public static final field TIMESTAMP Lorg/partiql/lang/eval/ExprValueType;
+	public final fun isDirectlyComparableTo (Lorg/partiql/lang/eval/ExprValueType;)Z
+	public final fun isLob ()Z
+	public final fun isNumber ()Z
+	public final fun isRangedFrom ()Z
+	public final fun isScalar ()Z
+	public final fun isSequence ()Z
+	public final fun isText ()Z
+	public final fun isUnknown ()Z
+	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/lang/eval/ExprValueType;
+	public static fun values ()[Lorg/partiql/lang/eval/ExprValueType;
+}
+
+public final class org/partiql/lang/eval/ExprValueType$Companion {
+	public final fun fromIonType (Lcom/amazon/ion/IonType;)Lorg/partiql/lang/eval/ExprValueType;
+}
+
+public abstract interface class org/partiql/lang/eval/Expression {
+	public abstract fun eval (Lorg/partiql/lang/eval/EvaluationSession;)Lorg/partiql/lang/eval/ExprValue;
+	public abstract fun evaluate (Lorg/partiql/lang/eval/EvaluationSession;)Lorg/partiql/lang/eval/PartiQLResult;
+	public abstract fun getCoverageStructure ()Lorg/partiql/lang/eval/CoverageStructure;
+}
+
+public final class org/partiql/lang/eval/FunctionNotFoundException : java/lang/Exception {
+	public fun <init> (Ljava/lang/String;)V
+}
+
+public final class org/partiql/lang/eval/MapBindings : org/partiql/lang/eval/Bindings {
+	public fun <init> (Ljava/util/Map;)V
+	public fun get (Lorg/partiql/lang/eval/BindingName;)Ljava/lang/Object;
+	public final fun getOriginalCaseMap ()Ljava/util/Map;
+}
+
+public abstract interface class org/partiql/lang/eval/Named {
+	public abstract fun getName ()Lorg/partiql/lang/eval/ExprValue;
+}
+
+public final class org/partiql/lang/eval/NaturalExprValueComparators : java/lang/Enum, java/util/Comparator {
+	public static final field Companion Lorg/partiql/lang/eval/NaturalExprValueComparators$Companion;
+	public static final field NULLS_FIRST_ASC Lorg/partiql/lang/eval/NaturalExprValueComparators;
+	public static final field NULLS_FIRST_DESC Lorg/partiql/lang/eval/NaturalExprValueComparators;
+	public static final field NULLS_LAST_ASC Lorg/partiql/lang/eval/NaturalExprValueComparators;
+	public static final field NULLS_LAST_DESC Lorg/partiql/lang/eval/NaturalExprValueComparators;
+	public synthetic fun compare (Ljava/lang/Object;Ljava/lang/Object;)I
+	public fun compare (Lorg/partiql/lang/eval/ExprValue;Lorg/partiql/lang/eval/ExprValue;)I
+	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/lang/eval/NaturalExprValueComparators;
+	public static fun values ()[Lorg/partiql/lang/eval/NaturalExprValueComparators;
+}
+
+public final class org/partiql/lang/eval/NaturalExprValueComparators$Companion {
+}
+
+public abstract interface class org/partiql/lang/eval/OrderedBindNames {
+	public abstract fun getOrderedNames ()Ljava/util/List;
+}
+
+public abstract interface class org/partiql/lang/eval/OrdinalBindings {
+	public static final field Companion Lorg/partiql/lang/eval/OrdinalBindings$Companion;
+	public abstract fun get (I)Lorg/partiql/lang/eval/ExprValue;
+	public static fun ofList (Ljava/util/List;)Lorg/partiql/lang/eval/OrdinalBindings;
+}
+
+public final class org/partiql/lang/eval/OrdinalBindings$Companion {
+	public final fun getEMPTY ()Lorg/partiql/lang/eval/OrdinalBindings;
+	public final fun ofList (Ljava/util/List;)Lorg/partiql/lang/eval/OrdinalBindings;
+}
+
+public abstract class org/partiql/lang/eval/PartiQLResult {
+	public abstract fun getCoverageData ()Lorg/partiql/lang/eval/CoverageData;
+	public abstract fun getCoverageStructure ()Lorg/partiql/lang/eval/CoverageStructure;
+}
+
+public final class org/partiql/lang/eval/PartiQLResult$Delete : org/partiql/lang/eval/PartiQLResult {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Iterable;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function0;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Iterable;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function0;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getCoverageData ()Lorg/partiql/lang/eval/CoverageData;
+	public fun getCoverageStructure ()Lorg/partiql/lang/eval/CoverageStructure;
+	public final fun getRows ()Ljava/lang/Iterable;
+	public final fun getTarget ()Ljava/lang/String;
+}
+
+public abstract class org/partiql/lang/eval/PartiQLResult$Explain : org/partiql/lang/eval/PartiQLResult {
+}
+
+public final class org/partiql/lang/eval/PartiQLResult$Explain$Domain : org/partiql/lang/eval/PartiQLResult$Explain {
+	public fun <init> (Lorg/partiql/pig/runtime/DomainNode;Ljava/lang/String;)V
+	public final fun component1 ()Lorg/partiql/pig/runtime/DomainNode;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Lorg/partiql/pig/runtime/DomainNode;Ljava/lang/String;)Lorg/partiql/lang/eval/PartiQLResult$Explain$Domain;
+	public static synthetic fun copy$default (Lorg/partiql/lang/eval/PartiQLResult$Explain$Domain;Lorg/partiql/pig/runtime/DomainNode;Ljava/lang/String;ILjava/lang/Object;)Lorg/partiql/lang/eval/PartiQLResult$Explain$Domain;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getCoverageData ()Lorg/partiql/lang/eval/CoverageData;
+	public fun getCoverageStructure ()Lorg/partiql/lang/eval/CoverageStructure;
+	public final fun getFormat ()Ljava/lang/String;
+	public final fun getValue ()Lorg/partiql/pig/runtime/DomainNode;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/lang/eval/PartiQLResult$Insert : org/partiql/lang/eval/PartiQLResult {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Iterable;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function0;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Iterable;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function0;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getCoverageData ()Lorg/partiql/lang/eval/CoverageData;
+	public fun getCoverageStructure ()Lorg/partiql/lang/eval/CoverageStructure;
+	public final fun getRows ()Ljava/lang/Iterable;
+	public final fun getTarget ()Ljava/lang/String;
+}
+
+public final class org/partiql/lang/eval/PartiQLResult$Replace : org/partiql/lang/eval/PartiQLResult {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Iterable;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function0;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Iterable;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function0;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getCoverageData ()Lorg/partiql/lang/eval/CoverageData;
+	public fun getCoverageStructure ()Lorg/partiql/lang/eval/CoverageStructure;
+	public final fun getRows ()Ljava/lang/Iterable;
+	public final fun getTarget ()Ljava/lang/String;
+}
+
+public final class org/partiql/lang/eval/PartiQLResult$Value : org/partiql/lang/eval/PartiQLResult {
+	public fun <init> (Lorg/partiql/lang/eval/ExprValue;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function0;)V
+	public synthetic fun <init> (Lorg/partiql/lang/eval/ExprValue;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function0;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getCoverageData ()Lorg/partiql/lang/eval/CoverageData;
+	public fun getCoverageStructure ()Lorg/partiql/lang/eval/CoverageStructure;
+	public final fun getValue ()Lorg/partiql/lang/eval/ExprValue;
+}
+
+public abstract interface class org/partiql/lang/eval/PartiQLStatement {
+	public abstract fun eval (Lorg/partiql/lang/eval/EvaluationSession;)Lorg/partiql/lang/eval/PartiQLResult;
+}
+
+public abstract interface class org/partiql/lang/eval/PartiQLStatementAsync {
+	public abstract fun eval (Lorg/partiql/lang/eval/EvaluationSession;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/partiql/lang/eval/PartiqlAstExtensionsKt {
+	public static final fun extractColumnAlias (Lorg/partiql/lang/domains/PartiqlAst$Expr$Path;I)Ljava/lang/String;
+	public static final fun extractColumnAlias (Lorg/partiql/lang/domains/PartiqlAst$Expr;I)Ljava/lang/String;
+	public static final fun getStartingSourceLocationMeta (Lorg/partiql/lang/domains/PartiqlAst$Expr;)Lorg/partiql/lang/ast/SourceLocationMeta;
+}
+
+public final class org/partiql/lang/eval/ProjectionIterationBehavior : java/lang/Enum {
+	public static final field FILTER_MISSING Lorg/partiql/lang/eval/ProjectionIterationBehavior;
+	public static final field UNFILTERED Lorg/partiql/lang/eval/ProjectionIterationBehavior;
+	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/lang/eval/ProjectionIterationBehavior;
+	public static fun values ()[Lorg/partiql/lang/eval/ProjectionIterationBehavior;
+}
+
+public final class org/partiql/lang/eval/RequiredArgs : org/partiql/lang/eval/Arguments {
+	public fun <init> (Ljava/util/List;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;)Lorg/partiql/lang/eval/RequiredArgs;
+	public static synthetic fun copy$default (Lorg/partiql/lang/eval/RequiredArgs;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/lang/eval/RequiredArgs;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getRequired ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/lang/eval/RequiredWithOptional : org/partiql/lang/eval/Arguments {
+	public fun <init> (Ljava/util/List;Lorg/partiql/lang/eval/ExprValue;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun component2 ()Lorg/partiql/lang/eval/ExprValue;
+	public final fun copy (Ljava/util/List;Lorg/partiql/lang/eval/ExprValue;)Lorg/partiql/lang/eval/RequiredWithOptional;
+	public static synthetic fun copy$default (Lorg/partiql/lang/eval/RequiredWithOptional;Ljava/util/List;Lorg/partiql/lang/eval/ExprValue;ILjava/lang/Object;)Lorg/partiql/lang/eval/RequiredWithOptional;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getOpt ()Lorg/partiql/lang/eval/ExprValue;
+	public final fun getRequired ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/lang/eval/RequiredWithVariadic : org/partiql/lang/eval/Arguments {
+	public fun <init> (Ljava/util/List;Ljava/util/List;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun component2 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;Ljava/util/List;)Lorg/partiql/lang/eval/RequiredWithVariadic;
+	public static synthetic fun copy$default (Lorg/partiql/lang/eval/RequiredWithVariadic;Ljava/util/List;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/lang/eval/RequiredWithVariadic;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getRequired ()Ljava/util/List;
+	public final fun getVariadic ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class org/partiql/lang/eval/Scalar {
+	public static final field Companion Lorg/partiql/lang/eval/Scalar$Companion;
+	public static final field EMPTY Lorg/partiql/lang/eval/Scalar;
+	public abstract fun booleanValue ()Ljava/lang/Boolean;
+	public abstract fun bytesValue ()[B
+	public abstract fun dateValue ()Ljava/time/LocalDate;
+	public abstract fun numberValue ()Ljava/lang/Number;
+	public abstract fun stringValue ()Ljava/lang/String;
+	public abstract fun timeValue ()Lorg/partiql/lang/eval/time/Time;
+	public abstract fun timestampValue ()Lcom/amazon/ion/Timestamp;
+}
+
+public final class org/partiql/lang/eval/Scalar$Companion {
+}
+
+public final class org/partiql/lang/eval/Scalar$DefaultImpls {
+	public static fun booleanValue (Lorg/partiql/lang/eval/Scalar;)Ljava/lang/Boolean;
+	public static fun bytesValue (Lorg/partiql/lang/eval/Scalar;)[B
+	public static fun dateValue (Lorg/partiql/lang/eval/Scalar;)Ljava/time/LocalDate;
+	public static fun numberValue (Lorg/partiql/lang/eval/Scalar;)Ljava/lang/Number;
+	public static fun stringValue (Lorg/partiql/lang/eval/Scalar;)Ljava/lang/String;
+	public static fun timeValue (Lorg/partiql/lang/eval/Scalar;)Lorg/partiql/lang/eval/time/Time;
+	public static fun timestampValue (Lorg/partiql/lang/eval/Scalar;)Lcom/amazon/ion/Timestamp;
+}
+
+public final class org/partiql/lang/eval/StandardNamesKt {
+	public static final fun syntheticColumnName (I)Ljava/lang/String;
+}
+
+public final class org/partiql/lang/eval/StructOrdering : java/lang/Enum {
+	public static final field ORDERED Lorg/partiql/lang/eval/StructOrdering;
+	public static final field UNORDERED Lorg/partiql/lang/eval/StructOrdering;
+	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/lang/eval/StructOrdering;
+	public static fun values ()[Lorg/partiql/lang/eval/StructOrdering;
+}
+
+public final class org/partiql/lang/eval/ThunkOptions {
+	public static final field Companion Lorg/partiql/lang/eval/ThunkOptions$Companion;
+	public static final fun builder ()Lorg/partiql/lang/eval/ThunkOptions$Builder;
+	public final fun component1 ()Lkotlin/jvm/functions/Function2;
+	public final fun component2 ()Lkotlin/jvm/functions/Function2;
+	public final fun component3 ()Lorg/partiql/lang/eval/ThunkReturnTypeAssertions;
+	public final fun copy (Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Lorg/partiql/lang/eval/ThunkReturnTypeAssertions;)Lorg/partiql/lang/eval/ThunkOptions;
+	public static synthetic fun copy$default (Lorg/partiql/lang/eval/ThunkOptions;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Lorg/partiql/lang/eval/ThunkReturnTypeAssertions;ILjava/lang/Object;)Lorg/partiql/lang/eval/ThunkOptions;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getHandleExceptionForLegacyMode ()Lkotlin/jvm/functions/Function2;
+	public final fun getHandleExceptionForPermissiveMode ()Lkotlin/jvm/functions/Function2;
+	public final fun getThunkReturnTypeAssertions ()Lorg/partiql/lang/eval/ThunkReturnTypeAssertions;
+	public fun hashCode ()I
+	public static final fun standard ()Lorg/partiql/lang/eval/ThunkOptions;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/lang/eval/ThunkOptions$Builder {
+	public fun <init> ()V
+	public final fun build ()Lorg/partiql/lang/eval/ThunkOptions;
+	public final fun evaluationTimeTypeChecks (Lorg/partiql/lang/eval/ThunkReturnTypeAssertions;)Lorg/partiql/lang/eval/ThunkOptions$Builder;
+	public final fun handleExceptionForLegacyMode (Lkotlin/jvm/functions/Function2;)Lorg/partiql/lang/eval/ThunkOptions$Builder;
+	public final fun handleExceptionForPermissiveMode (Lkotlin/jvm/functions/Function2;)Lorg/partiql/lang/eval/ThunkOptions$Builder;
+}
+
+public final class org/partiql/lang/eval/ThunkOptions$Companion {
+	public final fun build (Lkotlin/jvm/functions/Function1;)Lorg/partiql/lang/eval/ThunkOptions;
+	public final fun builder ()Lorg/partiql/lang/eval/ThunkOptions$Builder;
+	public final fun standard ()Lorg/partiql/lang/eval/ThunkOptions;
+}
+
+public final class org/partiql/lang/eval/ThunkReturnTypeAssertions : java/lang/Enum {
+	public static final field DISABLED Lorg/partiql/lang/eval/ThunkReturnTypeAssertions;
+	public static final field ENABLED Lorg/partiql/lang/eval/ThunkReturnTypeAssertions;
+	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/lang/eval/ThunkReturnTypeAssertions;
+	public static fun values ()[Lorg/partiql/lang/eval/ThunkReturnTypeAssertions;
+}
+
+public final class org/partiql/lang/eval/TypedOpBehavior : java/lang/Enum {
+	public static final field HONOR_PARAMETERS Lorg/partiql/lang/eval/TypedOpBehavior;
+	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/lang/eval/TypedOpBehavior;
+	public static fun values ()[Lorg/partiql/lang/eval/TypedOpBehavior;
+}
+
+public final class org/partiql/lang/eval/TypingMode : java/lang/Enum {
+	public static final field LEGACY Lorg/partiql/lang/eval/TypingMode;
+	public static final field PERMISSIVE Lorg/partiql/lang/eval/TypingMode;
+	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/lang/eval/TypingMode;
+	public static fun values ()[Lorg/partiql/lang/eval/TypingMode;
+}
+
+public final class org/partiql/lang/eval/UndefinedVariableBehavior : java/lang/Enum {
+	public static final field ERROR Lorg/partiql/lang/eval/UndefinedVariableBehavior;
+	public static final field MISSING Lorg/partiql/lang/eval/UndefinedVariableBehavior;
+	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/lang/eval/UndefinedVariableBehavior;
+	public static fun values ()[Lorg/partiql/lang/eval/UndefinedVariableBehavior;
+}
+
+public abstract class org/partiql/lang/eval/VisitorTransformMode : java/lang/Enum {
+	public static final field DEFAULT Lorg/partiql/lang/eval/VisitorTransformMode;
+	public static final field NONE Lorg/partiql/lang/eval/VisitorTransformMode;
+	public synthetic fun <init> (Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/lang/eval/VisitorTransformMode;
+	public static fun values ()[Lorg/partiql/lang/eval/VisitorTransformMode;
+}
+
+public final class org/partiql/lang/eval/binding/Alias {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lorg/partiql/lang/eval/binding/Alias;
+	public static synthetic fun copy$default (Lorg/partiql/lang/eval/binding/Alias;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/partiql/lang/eval/binding/Alias;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAsName ()Ljava/lang/String;
+	public final fun getAtName ()Ljava/lang/String;
+	public final fun getByName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class org/partiql/lang/eval/binding/LocalsBinder {
+	public fun <init> ()V
+	public final fun bindLocals (Ljava/util/List;)Lorg/partiql/lang/eval/Bindings;
+	public abstract fun binderForName (Lorg/partiql/lang/eval/BindingName;)Lkotlin/jvm/functions/Function1;
+}
+
+public final class org/partiql/lang/eval/binding/LocalsBinderKt {
+	public static final fun localsBinder (Ljava/util/List;Lorg/partiql/lang/eval/ExprValue;)Lorg/partiql/lang/eval/binding/LocalsBinder;
+}
+
+public final class org/partiql/lang/eval/builtins/DynamicLookupExprFunction : org/partiql/lang/eval/ExprFunction {
+	public fun <init> ()V
+	public fun callWithOptional (Lorg/partiql/lang/eval/EvaluationSession;Ljava/util/List;Lorg/partiql/lang/eval/ExprValue;)Lorg/partiql/lang/eval/ExprValue;
+	public fun callWithRequired (Lorg/partiql/lang/eval/EvaluationSession;Ljava/util/List;)Lorg/partiql/lang/eval/ExprValue;
+	public fun callWithVariadic (Lorg/partiql/lang/eval/EvaluationSession;Ljava/util/List;Ljava/util/List;)Lorg/partiql/lang/eval/ExprValue;
+	public fun getSignature ()Lorg/partiql/lang/types/FunctionSignature;
+}
+
+public final class org/partiql/lang/eval/builtins/DynamicLookupExprFunctionKt {
+	public static final field DYNAMIC_LOOKUP_FUNCTION_NAME Ljava/lang/String;
+}
+
+public abstract interface class org/partiql/lang/eval/builtins/storedprocedure/StoredProcedure {
+	public abstract fun call (Lorg/partiql/lang/eval/EvaluationSession;Ljava/util/List;)Lorg/partiql/lang/eval/ExprValue;
+	public abstract fun getSignature ()Lorg/partiql/lang/eval/builtins/storedprocedure/StoredProcedureSignature;
+}
+
+public final class org/partiql/lang/eval/builtins/storedprocedure/StoredProcedureSignature {
+	public fun <init> (Ljava/lang/String;I)V
+	public fun <init> (Ljava/lang/String;Lkotlin/ranges/IntRange;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lkotlin/ranges/IntRange;
+	public final fun copy (Ljava/lang/String;Lkotlin/ranges/IntRange;)Lorg/partiql/lang/eval/builtins/storedprocedure/StoredProcedureSignature;
+	public static synthetic fun copy$default (Lorg/partiql/lang/eval/builtins/storedprocedure/StoredProcedureSignature;Ljava/lang/String;Lkotlin/ranges/IntRange;ILjava/lang/Object;)Lorg/partiql/lang/eval/builtins/storedprocedure/StoredProcedureSignature;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getArity ()Lkotlin/ranges/IntRange;
+	public final fun getName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/lang/eval/builtins/timestamp/TimestampTemporalAccessor : java/time/temporal/TemporalAccessor {
+	public fun <init> (Lcom/amazon/ion/Timestamp;)V
+	public fun getLong (Ljava/time/temporal/TemporalField;)J
+	public final fun getTs ()Lcom/amazon/ion/Timestamp;
+	public fun isSupported (Ljava/time/temporal/TemporalField;)Z
+}
+
+public final class org/partiql/lang/eval/internal/ext/ExprValueExtKt {
+	public static final fun distinct (Lkotlin/sequences/Sequence;)Lkotlin/sequences/Sequence;
+	public static final fun rangeOver (Lorg/partiql/lang/eval/ExprValue;)Ljava/lang/Iterable;
+}
+
+public final class org/partiql/lang/eval/io/DelimitedValues {
+	public static final field INSTANCE Lorg/partiql/lang/eval/io/DelimitedValues;
+	public static final fun exprValue (Ljava/io/Reader;Lorg/apache/commons/csv/CSVFormat;Lorg/partiql/lang/eval/io/DelimitedValues$ConversionMode;)Lorg/partiql/lang/eval/ExprValue;
+	public static final fun writeTo (Lcom/amazon/ion/IonSystem;Ljava/io/Writer;Lorg/partiql/lang/eval/ExprValue;CLjava/lang/String;Z)V
+}
+
+public final class org/partiql/lang/eval/io/DelimitedValues$ConversionMode : java/lang/Enum {
+	public static final field AUTO Lorg/partiql/lang/eval/io/DelimitedValues$ConversionMode;
+	public static final field NONE Lorg/partiql/lang/eval/io/DelimitedValues$ConversionMode;
+	public synthetic fun <init> (Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public abstract fun convert (Ljava/lang/String;)Lorg/partiql/lang/eval/ExprValue;
+	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/lang/eval/io/DelimitedValues$ConversionMode;
+	public static fun values ()[Lorg/partiql/lang/eval/io/DelimitedValues$ConversionMode;
+}
+
+public final class org/partiql/lang/eval/physical/EvaluatorState {
+	public fun <init> (Lorg/partiql/lang/eval/EvaluationSession;[Lorg/partiql/lang/eval/ExprValue;)V
+	public final fun getSession ()Lorg/partiql/lang/eval/EvaluationSession;
+}
+
+public final class org/partiql/lang/eval/physical/VariableBinding {
+	public fun <init> (Lkotlin/jvm/functions/Function2;Lorg/partiql/lang/eval/physical/operators/ValueExpression;)V
+	public final fun getExpr ()Lorg/partiql/lang/eval/physical/operators/ValueExpression;
+	public final fun getSetFunc ()Lkotlin/jvm/functions/Function2;
+}
+
+public final class org/partiql/lang/eval/physical/VariableBindingAsync {
+	public fun <init> (Lkotlin/jvm/functions/Function2;Lorg/partiql/lang/eval/physical/operators/ValueExpressionAsync;)V
+	public final fun getExpr ()Lorg/partiql/lang/eval/physical/operators/ValueExpressionAsync;
+	public final fun getSetFunc ()Lkotlin/jvm/functions/Function2;
+}
+
+public abstract class org/partiql/lang/eval/physical/operators/AggregateOperatorFactory : org/partiql/lang/eval/physical/operators/RelationalOperatorFactory {
+	public fun <init> (Ljava/lang/String;)V
+	public abstract fun create (Lorg/partiql/lang/eval/physical/operators/RelationExpression;Lorg/partiql/lang/domains/PartiqlPhysical$GroupingStrategy;Ljava/util/List;Ljava/util/List;)Lorg/partiql/lang/eval/physical/operators/RelationExpression;
+	public fun getKey ()Lorg/partiql/lang/eval/physical/operators/RelationalOperatorFactoryKey;
+}
+
+public abstract class org/partiql/lang/eval/physical/operators/AggregateOperatorFactoryAsync : org/partiql/lang/eval/physical/operators/RelationalOperatorFactory {
+	public fun <init> (Ljava/lang/String;)V
+	public abstract fun create (Lorg/partiql/lang/eval/physical/operators/RelationExpressionAsync;Lorg/partiql/lang/domains/PartiqlPhysical$GroupingStrategy;Ljava/util/List;Ljava/util/List;)Lorg/partiql/lang/eval/physical/operators/RelationExpressionAsync;
+	public fun getKey ()Lorg/partiql/lang/eval/physical/operators/RelationalOperatorFactoryKey;
+}
+
+public final class org/partiql/lang/eval/physical/operators/CompiledAggregateFunction {
+	public fun <init> (Ljava/lang/String;Lkotlin/jvm/functions/Function2;Lorg/partiql/lang/eval/physical/operators/ValueExpression;Lorg/partiql/lang/domains/PartiqlPhysical$SetQuantifier;)V
+	public final fun getName ()Ljava/lang/String;
+	public final fun getQuantifier ()Lorg/partiql/lang/domains/PartiqlPhysical$SetQuantifier;
+	public final fun getSetAggregateVal ()Lkotlin/jvm/functions/Function2;
+	public final fun getValue ()Lorg/partiql/lang/eval/physical/operators/ValueExpression;
+}
+
+public final class org/partiql/lang/eval/physical/operators/CompiledAggregateFunctionAsync {
+	public fun <init> (Ljava/lang/String;Lkotlin/jvm/functions/Function2;Lorg/partiql/lang/eval/physical/operators/ValueExpressionAsync;Lorg/partiql/lang/domains/PartiqlPhysical$SetQuantifier;)V
+	public final fun getName ()Ljava/lang/String;
+	public final fun getQuantifier ()Lorg/partiql/lang/domains/PartiqlPhysical$SetQuantifier;
+	public final fun getSetAggregateVal ()Lkotlin/jvm/functions/Function2;
+	public final fun getValue ()Lorg/partiql/lang/eval/physical/operators/ValueExpressionAsync;
+}
+
+public final class org/partiql/lang/eval/physical/operators/CompiledGroupKey {
+	public fun <init> (Lkotlin/jvm/functions/Function2;Lorg/partiql/lang/eval/physical/operators/ValueExpression;Lorg/partiql/lang/domains/PartiqlPhysical$VarDecl;)V
+	public final fun getSetGroupKeyVal ()Lkotlin/jvm/functions/Function2;
+	public final fun getValue ()Lorg/partiql/lang/eval/physical/operators/ValueExpression;
+	public final fun getVariable ()Lorg/partiql/lang/domains/PartiqlPhysical$VarDecl;
+}
+
+public final class org/partiql/lang/eval/physical/operators/CompiledGroupKeyAsync {
+	public fun <init> (Lkotlin/jvm/functions/Function2;Lorg/partiql/lang/eval/physical/operators/ValueExpressionAsync;Lorg/partiql/lang/domains/PartiqlPhysical$VarDecl;)V
+	public final fun getSetGroupKeyVal ()Lkotlin/jvm/functions/Function2;
+	public final fun getValue ()Lorg/partiql/lang/eval/physical/operators/ValueExpressionAsync;
+	public final fun getVariable ()Lorg/partiql/lang/domains/PartiqlPhysical$VarDecl;
+}
+
+public final class org/partiql/lang/eval/physical/operators/CompiledSortKey {
+	public fun <init> (Lorg/partiql/lang/eval/NaturalExprValueComparators;Lorg/partiql/lang/eval/physical/operators/ValueExpression;)V
+	public final fun getComparator ()Lorg/partiql/lang/eval/NaturalExprValueComparators;
+	public final fun getValue ()Lorg/partiql/lang/eval/physical/operators/ValueExpression;
+}
+
+public final class org/partiql/lang/eval/physical/operators/CompiledSortKeyAsync {
+	public fun <init> (Lorg/partiql/lang/eval/NaturalExprValueComparators;Lorg/partiql/lang/eval/physical/operators/ValueExpressionAsync;)V
+	public final fun getComparator ()Lorg/partiql/lang/eval/NaturalExprValueComparators;
+	public final fun getValue ()Lorg/partiql/lang/eval/physical/operators/ValueExpressionAsync;
+}
+
+public final class org/partiql/lang/eval/physical/operators/CompiledWindowFunction {
+	public fun <init> (Lorg/partiql/lang/eval/physical/window/WindowFunction;Ljava/util/List;Lorg/partiql/lang/domains/PartiqlPhysical$VarDecl;)V
+	public final fun getFunc ()Lorg/partiql/lang/eval/physical/window/WindowFunction;
+	public final fun getParameters ()Ljava/util/List;
+	public final fun getWindowVarDecl ()Lorg/partiql/lang/domains/PartiqlPhysical$VarDecl;
+}
+
+public final class org/partiql/lang/eval/physical/operators/CompiledWindowFunctionAsync {
+	public fun <init> (Lorg/partiql/lang/eval/physical/window/NavigationWindowFunctionAsync;Ljava/util/List;Lorg/partiql/lang/domains/PartiqlPhysical$VarDecl;)V
+	public final fun getFunc ()Lorg/partiql/lang/eval/physical/window/NavigationWindowFunctionAsync;
+	public final fun getParameters ()Ljava/util/List;
+	public final fun getWindowVarDecl ()Lorg/partiql/lang/domains/PartiqlPhysical$VarDecl;
+}
+
+public abstract class org/partiql/lang/eval/physical/operators/FilterRelationalOperatorFactory : org/partiql/lang/eval/physical/operators/RelationalOperatorFactory {
+	public fun <init> (Ljava/lang/String;)V
+	public abstract fun create (Lorg/partiql/lang/domains/PartiqlPhysical$Impl;Lorg/partiql/lang/eval/physical/operators/ValueExpression;Lorg/partiql/lang/eval/physical/operators/RelationExpression;)Lorg/partiql/lang/eval/physical/operators/RelationExpression;
+	public final fun getKey ()Lorg/partiql/lang/eval/physical/operators/RelationalOperatorFactoryKey;
+}
+
+public abstract class org/partiql/lang/eval/physical/operators/FilterRelationalOperatorFactoryAsync : org/partiql/lang/eval/physical/operators/RelationalOperatorFactory {
+	public fun <init> (Ljava/lang/String;)V
+	public abstract fun create (Lorg/partiql/lang/domains/PartiqlPhysical$Impl;Lorg/partiql/lang/eval/physical/operators/ValueExpressionAsync;Lorg/partiql/lang/eval/physical/operators/RelationExpressionAsync;)Lorg/partiql/lang/eval/physical/operators/RelationExpressionAsync;
+	public final fun getKey ()Lorg/partiql/lang/eval/physical/operators/RelationalOperatorFactoryKey;
+}
+
+public abstract class org/partiql/lang/eval/physical/operators/JoinRelationalOperatorFactory : org/partiql/lang/eval/physical/operators/RelationalOperatorFactory {
+	public fun <init> (Ljava/lang/String;)V
+	public abstract fun create (Lorg/partiql/lang/domains/PartiqlPhysical$Impl;Lorg/partiql/lang/domains/PartiqlPhysical$JoinType;Lorg/partiql/lang/eval/physical/operators/RelationExpression;Lorg/partiql/lang/eval/physical/operators/RelationExpression;Lorg/partiql/lang/eval/physical/operators/ValueExpression;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lorg/partiql/lang/eval/physical/operators/RelationExpression;
+	public final fun getKey ()Lorg/partiql/lang/eval/physical/operators/RelationalOperatorFactoryKey;
+}
+
+public abstract class org/partiql/lang/eval/physical/operators/JoinRelationalOperatorFactoryAsync : org/partiql/lang/eval/physical/operators/RelationalOperatorFactory {
+	public fun <init> (Ljava/lang/String;)V
+	public abstract fun create (Lorg/partiql/lang/domains/PartiqlPhysical$Impl;Lorg/partiql/lang/domains/PartiqlPhysical$JoinType;Lorg/partiql/lang/eval/physical/operators/RelationExpressionAsync;Lorg/partiql/lang/eval/physical/operators/RelationExpressionAsync;Lorg/partiql/lang/eval/physical/operators/ValueExpressionAsync;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lorg/partiql/lang/eval/physical/operators/RelationExpressionAsync;
+	public final fun getKey ()Lorg/partiql/lang/eval/physical/operators/RelationalOperatorFactoryKey;
+}
+
+public abstract class org/partiql/lang/eval/physical/operators/LetRelationalOperatorFactory : org/partiql/lang/eval/physical/operators/RelationalOperatorFactory {
+	public fun <init> (Ljava/lang/String;)V
+	public abstract fun create (Lorg/partiql/lang/domains/PartiqlPhysical$Impl;Lorg/partiql/lang/eval/physical/operators/RelationExpression;Ljava/util/List;)Lorg/partiql/lang/eval/physical/operators/RelationExpression;
+	public final fun getKey ()Lorg/partiql/lang/eval/physical/operators/RelationalOperatorFactoryKey;
+}
+
+public abstract class org/partiql/lang/eval/physical/operators/LetRelationalOperatorFactoryAsync : org/partiql/lang/eval/physical/operators/RelationalOperatorFactory {
+	public fun <init> (Ljava/lang/String;)V
+	public abstract fun create (Lorg/partiql/lang/domains/PartiqlPhysical$Impl;Lorg/partiql/lang/eval/physical/operators/RelationExpressionAsync;Ljava/util/List;)Lorg/partiql/lang/eval/physical/operators/RelationExpressionAsync;
+	public final fun getKey ()Lorg/partiql/lang/eval/physical/operators/RelationalOperatorFactoryKey;
+}
+
+public abstract class org/partiql/lang/eval/physical/operators/LimitRelationalOperatorFactory : org/partiql/lang/eval/physical/operators/RelationalOperatorFactory {
+	public fun <init> (Ljava/lang/String;)V
+	public abstract fun create (Lorg/partiql/lang/domains/PartiqlPhysical$Impl;Lorg/partiql/lang/eval/physical/operators/ValueExpression;Lorg/partiql/lang/eval/physical/operators/RelationExpression;)Lorg/partiql/lang/eval/physical/operators/RelationExpression;
+	public final fun getKey ()Lorg/partiql/lang/eval/physical/operators/RelationalOperatorFactoryKey;
+}
+
+public abstract class org/partiql/lang/eval/physical/operators/LimitRelationalOperatorFactoryAsync : org/partiql/lang/eval/physical/operators/RelationalOperatorFactory {
+	public fun <init> (Ljava/lang/String;)V
+	public abstract fun create (Lorg/partiql/lang/domains/PartiqlPhysical$Impl;Lorg/partiql/lang/eval/physical/operators/ValueExpressionAsync;Lorg/partiql/lang/eval/physical/operators/RelationExpressionAsync;)Lorg/partiql/lang/eval/physical/operators/RelationExpressionAsync;
+	public final fun getKey ()Lorg/partiql/lang/eval/physical/operators/RelationalOperatorFactoryKey;
+}
+
+public abstract class org/partiql/lang/eval/physical/operators/OffsetRelationalOperatorFactory : org/partiql/lang/eval/physical/operators/RelationalOperatorFactory {
+	public fun <init> (Ljava/lang/String;)V
+	public abstract fun create (Lorg/partiql/lang/domains/PartiqlPhysical$Impl;Lorg/partiql/lang/eval/physical/operators/ValueExpression;Lorg/partiql/lang/eval/physical/operators/RelationExpression;)Lorg/partiql/lang/eval/physical/operators/RelationExpression;
+	public final fun getKey ()Lorg/partiql/lang/eval/physical/operators/RelationalOperatorFactoryKey;
+}
+
+public abstract class org/partiql/lang/eval/physical/operators/OffsetRelationalOperatorFactoryAsync : org/partiql/lang/eval/physical/operators/RelationalOperatorFactory {
+	public fun <init> (Ljava/lang/String;)V
+	public abstract fun create (Lorg/partiql/lang/domains/PartiqlPhysical$Impl;Lorg/partiql/lang/eval/physical/operators/ValueExpressionAsync;Lorg/partiql/lang/eval/physical/operators/RelationExpressionAsync;)Lorg/partiql/lang/eval/physical/operators/RelationExpressionAsync;
+	public final fun getKey ()Lorg/partiql/lang/eval/physical/operators/RelationalOperatorFactoryKey;
+}
+
+public abstract class org/partiql/lang/eval/physical/operators/ProjectRelationalOperatorFactory : org/partiql/lang/eval/physical/operators/RelationalOperatorFactory {
+	public fun <init> (Ljava/lang/String;)V
+	public abstract fun create (Lorg/partiql/lang/domains/PartiqlPhysical$Impl;Lkotlin/jvm/functions/Function2;Ljava/util/List;)Lorg/partiql/lang/eval/physical/operators/RelationExpression;
+	public final fun getKey ()Lorg/partiql/lang/eval/physical/operators/RelationalOperatorFactoryKey;
+}
+
+public abstract class org/partiql/lang/eval/physical/operators/ProjectRelationalOperatorFactoryAsync : org/partiql/lang/eval/physical/operators/RelationalOperatorFactory {
+	public fun <init> (Ljava/lang/String;)V
+	public abstract fun create (Lorg/partiql/lang/domains/PartiqlPhysical$Impl;Lkotlin/jvm/functions/Function2;Ljava/util/List;)Lorg/partiql/lang/eval/physical/operators/RelationExpressionAsync;
+	public final fun getKey ()Lorg/partiql/lang/eval/physical/operators/RelationalOperatorFactoryKey;
+}
+
+public abstract interface class org/partiql/lang/eval/physical/operators/RelationExpression {
+	public abstract fun evaluate (Lorg/partiql/lang/eval/physical/EvaluatorState;)Lorg/partiql/lang/eval/relation/RelationIterator;
+}
+
+public abstract interface class org/partiql/lang/eval/physical/operators/RelationExpressionAsync {
+	public abstract fun evaluate (Lorg/partiql/lang/eval/physical/EvaluatorState;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class org/partiql/lang/eval/physical/operators/RelationalOperatorFactory {
+	public abstract fun getKey ()Lorg/partiql/lang/eval/physical/operators/RelationalOperatorFactoryKey;
+}
+
+public final class org/partiql/lang/eval/physical/operators/RelationalOperatorFactoryKey {
+	public fun <init> (Lorg/partiql/lang/eval/physical/operators/RelationalOperatorKind;Ljava/lang/String;)V
+	public final fun component1 ()Lorg/partiql/lang/eval/physical/operators/RelationalOperatorKind;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Lorg/partiql/lang/eval/physical/operators/RelationalOperatorKind;Ljava/lang/String;)Lorg/partiql/lang/eval/physical/operators/RelationalOperatorFactoryKey;
+	public static synthetic fun copy$default (Lorg/partiql/lang/eval/physical/operators/RelationalOperatorFactoryKey;Lorg/partiql/lang/eval/physical/operators/RelationalOperatorKind;Ljava/lang/String;ILjava/lang/Object;)Lorg/partiql/lang/eval/physical/operators/RelationalOperatorFactoryKey;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getName ()Ljava/lang/String;
+	public final fun getOperator ()Lorg/partiql/lang/eval/physical/operators/RelationalOperatorKind;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/lang/eval/physical/operators/RelationalOperatorKind : java/lang/Enum {
+	public static final field AGGREGATE Lorg/partiql/lang/eval/physical/operators/RelationalOperatorKind;
+	public static final field FILTER Lorg/partiql/lang/eval/physical/operators/RelationalOperatorKind;
+	public static final field JOIN Lorg/partiql/lang/eval/physical/operators/RelationalOperatorKind;
+	public static final field LET Lorg/partiql/lang/eval/physical/operators/RelationalOperatorKind;
+	public static final field LIMIT Lorg/partiql/lang/eval/physical/operators/RelationalOperatorKind;
+	public static final field OFFSET Lorg/partiql/lang/eval/physical/operators/RelationalOperatorKind;
+	public static final field PROJECT Lorg/partiql/lang/eval/physical/operators/RelationalOperatorKind;
+	public static final field SCAN Lorg/partiql/lang/eval/physical/operators/RelationalOperatorKind;
+	public static final field SORT Lorg/partiql/lang/eval/physical/operators/RelationalOperatorKind;
+	public static final field UNPIVOT Lorg/partiql/lang/eval/physical/operators/RelationalOperatorKind;
+	public static final field WINDOW Lorg/partiql/lang/eval/physical/operators/RelationalOperatorKind;
+	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/lang/eval/physical/operators/RelationalOperatorKind;
+	public static fun values ()[Lorg/partiql/lang/eval/physical/operators/RelationalOperatorKind;
+}
+
+public abstract class org/partiql/lang/eval/physical/operators/ScanRelationalOperatorFactory : org/partiql/lang/eval/physical/operators/RelationalOperatorFactory {
+	public fun <init> (Ljava/lang/String;)V
+	public abstract fun create (Lorg/partiql/lang/domains/PartiqlPhysical$Impl;Lorg/partiql/lang/eval/physical/operators/ValueExpression;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;)Lorg/partiql/lang/eval/physical/operators/RelationExpression;
+	public final fun getKey ()Lorg/partiql/lang/eval/physical/operators/RelationalOperatorFactoryKey;
+}
+
+public abstract class org/partiql/lang/eval/physical/operators/ScanRelationalOperatorFactoryAsync : org/partiql/lang/eval/physical/operators/RelationalOperatorFactory {
+	public fun <init> (Ljava/lang/String;)V
+	public abstract fun create (Lorg/partiql/lang/domains/PartiqlPhysical$Impl;Lorg/partiql/lang/eval/physical/operators/ValueExpressionAsync;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;)Lorg/partiql/lang/eval/physical/operators/RelationExpressionAsync;
+	public final fun getKey ()Lorg/partiql/lang/eval/physical/operators/RelationalOperatorFactoryKey;
+}
+
+public abstract class org/partiql/lang/eval/physical/operators/SortOperatorFactory : org/partiql/lang/eval/physical/operators/RelationalOperatorFactory {
+	public fun <init> (Ljava/lang/String;)V
+	public abstract fun create (Ljava/util/List;Lorg/partiql/lang/eval/physical/operators/RelationExpression;)Lorg/partiql/lang/eval/physical/operators/RelationExpression;
+	public final fun getKey ()Lorg/partiql/lang/eval/physical/operators/RelationalOperatorFactoryKey;
+}
+
+public abstract class org/partiql/lang/eval/physical/operators/SortOperatorFactoryAsync : org/partiql/lang/eval/physical/operators/RelationalOperatorFactory {
+	public fun <init> (Ljava/lang/String;)V
+	public abstract fun create (Ljava/util/List;Lorg/partiql/lang/eval/physical/operators/RelationExpressionAsync;)Lorg/partiql/lang/eval/physical/operators/RelationExpressionAsync;
+	public final fun getKey ()Lorg/partiql/lang/eval/physical/operators/RelationalOperatorFactoryKey;
+}
+
+public abstract class org/partiql/lang/eval/physical/operators/UnpivotOperatorFactory : org/partiql/lang/eval/physical/operators/RelationalOperatorFactory {
+	public fun <init> (Ljava/lang/String;)V
+	public abstract fun create (Lorg/partiql/lang/eval/physical/operators/ValueExpression;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;)Lorg/partiql/lang/eval/physical/operators/RelationExpression;
+	public final fun getKey ()Lorg/partiql/lang/eval/physical/operators/RelationalOperatorFactoryKey;
+}
+
+public abstract class org/partiql/lang/eval/physical/operators/UnpivotOperatorFactoryAsync : org/partiql/lang/eval/physical/operators/RelationalOperatorFactory {
+	public fun <init> (Ljava/lang/String;)V
+	public abstract fun create (Lorg/partiql/lang/eval/physical/operators/ValueExpressionAsync;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;)Lorg/partiql/lang/eval/physical/operators/RelationExpressionAsync;
+	public final fun getKey ()Lorg/partiql/lang/eval/physical/operators/RelationalOperatorFactoryKey;
+}
+
+public abstract interface class org/partiql/lang/eval/physical/operators/ValueExpression {
+	public abstract fun getSourceLocation ()Lorg/partiql/lang/ast/SourceLocationMeta;
+	public abstract fun invoke (Lorg/partiql/lang/eval/physical/EvaluatorState;)Lorg/partiql/lang/eval/ExprValue;
+}
+
+public abstract interface class org/partiql/lang/eval/physical/operators/ValueExpressionAsync {
+	public abstract fun getSourceLocation ()Lorg/partiql/lang/ast/SourceLocationMeta;
+	public abstract fun invoke (Lorg/partiql/lang/eval/physical/EvaluatorState;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract class org/partiql/lang/eval/physical/operators/WindowRelationalOperatorFactory : org/partiql/lang/eval/physical/operators/RelationalOperatorFactory {
+	public fun <init> (Ljava/lang/String;)V
+	public abstract fun create (Lorg/partiql/lang/eval/physical/operators/RelationExpression;Ljava/util/List;Ljava/util/List;Ljava/util/List;)Lorg/partiql/lang/eval/physical/operators/RelationExpression;
+	public final fun getKey ()Lorg/partiql/lang/eval/physical/operators/RelationalOperatorFactoryKey;
+}
+
+public abstract class org/partiql/lang/eval/physical/operators/WindowRelationalOperatorFactoryAsync : org/partiql/lang/eval/physical/operators/RelationalOperatorFactory {
+	public fun <init> (Ljava/lang/String;)V
+	public abstract fun create (Lorg/partiql/lang/eval/physical/operators/RelationExpressionAsync;Ljava/util/List;Ljava/util/List;Ljava/util/List;)Lorg/partiql/lang/eval/physical/operators/RelationExpressionAsync;
+	public final fun getKey ()Lorg/partiql/lang/eval/physical/operators/RelationalOperatorFactoryKey;
+}
+
+public abstract class org/partiql/lang/eval/physical/window/NavigationWindowFunction : org/partiql/lang/eval/physical/window/WindowFunction {
+	public field currentPartition Ljava/util/List;
+	public fun <init> ()V
+	public final fun getCurrentPartition ()Ljava/util/List;
+	public abstract fun processRow (Lorg/partiql/lang/eval/physical/EvaluatorState;Ljava/util/List;I)Lorg/partiql/lang/eval/ExprValue;
+	public fun processRow (Lorg/partiql/lang/eval/physical/EvaluatorState;Ljava/util/List;Lorg/partiql/lang/domains/PartiqlPhysical$VarDecl;)V
+	public fun reset (Ljava/util/List;)V
+	public final fun setCurrentPartition (Ljava/util/List;)V
+}
+
+public abstract class org/partiql/lang/eval/physical/window/NavigationWindowFunctionAsync : org/partiql/lang/eval/physical/window/WindowFunctionAsync {
+	public field currentPartition Ljava/util/List;
+	public fun <init> ()V
+	public final fun getCurrentPartition ()Ljava/util/List;
+	public abstract fun processRow (Lorg/partiql/lang/eval/physical/EvaluatorState;Ljava/util/List;ILkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun processRow (Lorg/partiql/lang/eval/physical/EvaluatorState;Ljava/util/List;Lorg/partiql/lang/domains/PartiqlPhysical$VarDecl;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun reset (Ljava/util/List;)V
+	public final fun setCurrentPartition (Ljava/util/List;)V
+}
+
+public abstract interface class org/partiql/lang/eval/physical/window/WindowFunction {
+	public abstract fun getName ()Ljava/lang/String;
+	public abstract fun processRow (Lorg/partiql/lang/eval/physical/EvaluatorState;Ljava/util/List;Lorg/partiql/lang/domains/PartiqlPhysical$VarDecl;)V
+	public abstract fun reset (Ljava/util/List;)V
+}
+
+public abstract interface class org/partiql/lang/eval/physical/window/WindowFunctionAsync {
+	public abstract fun getName ()Ljava/lang/String;
+	public abstract fun processRow (Lorg/partiql/lang/eval/physical/EvaluatorState;Ljava/util/List;Lorg/partiql/lang/domains/PartiqlPhysical$VarDecl;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun reset (Ljava/util/List;)V
+}
+
+public abstract interface annotation class org/partiql/lang/eval/relation/RelationDsl : java/lang/annotation/Annotation {
+}
+
+public abstract interface class org/partiql/lang/eval/relation/RelationIterator {
+	public abstract fun getRelType ()Lorg/partiql/lang/eval/relation/RelationType;
+	public abstract fun nextRow ()Z
+}
+
+public final class org/partiql/lang/eval/relation/RelationKt {
+	public static final fun relation (Lorg/partiql/lang/eval/relation/RelationType;Lkotlin/jvm/functions/Function2;)Lorg/partiql/lang/eval/relation/RelationIterator;
+}
+
+public abstract interface class org/partiql/lang/eval/relation/RelationScope {
+	public abstract fun yield (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun yieldAll (Lorg/partiql/lang/eval/relation/RelationIterator;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class org/partiql/lang/eval/relation/RelationType : java/lang/Enum {
+	public static final field BAG Lorg/partiql/lang/eval/relation/RelationType;
+	public static final field LIST Lorg/partiql/lang/eval/relation/RelationType;
+	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/lang/eval/relation/RelationType;
+	public static fun values ()[Lorg/partiql/lang/eval/relation/RelationType;
+}
+
+public final class org/partiql/lang/eval/time/Time {
+	public static final field Companion Lorg/partiql/lang/eval/time/Time$Companion;
+	public synthetic fun <init> (Ljava/time/LocalTime;ILjava/time/ZoneOffset;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/time/LocalTime;
+	public final fun component2 ()I
+	public final fun component3 ()Ljava/time/ZoneOffset;
+	public final fun copy (Ljava/time/LocalTime;ILjava/time/ZoneOffset;)Lorg/partiql/lang/eval/time/Time;
+	public static synthetic fun copy$default (Lorg/partiql/lang/eval/time/Time;Ljava/time/LocalTime;ILjava/time/ZoneOffset;ILjava/lang/Object;)Lorg/partiql/lang/eval/time/Time;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getLocalTime ()Ljava/time/LocalTime;
+	public final fun getOffsetTime ()Ljava/time/OffsetTime;
+	public final fun getPrecision ()I
+	public final fun getSecondsWithFractionalPart ()Ljava/math/BigDecimal;
+	public final fun getTimezoneHour ()Ljava/lang/Integer;
+	public final fun getTimezoneMinute ()Ljava/lang/Integer;
+	public final fun getZoneOffset ()Ljava/time/ZoneOffset;
+	public fun hashCode ()I
+	public final fun isDirectlyComparableTo (Lorg/partiql/lang/eval/time/Time;)Z
+	public final fun naturalOrderCompareTo (Lorg/partiql/lang/eval/time/Time;)I
+	public static final fun of (IIIII)Lorg/partiql/lang/eval/time/Time;
+	public static final fun of (IIIIILjava/lang/Integer;)Lorg/partiql/lang/eval/time/Time;
+	public static final fun of (Ljava/time/LocalTime;I)Lorg/partiql/lang/eval/time/Time;
+	public static final fun of (Ljava/time/LocalTime;ILjava/time/ZoneOffset;)Lorg/partiql/lang/eval/time/Time;
+	public final fun toIonValue (Lcom/amazon/ion/IonSystem;)Lcom/amazon/ion/IonStruct;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/lang/eval/time/Time$Companion {
+	public final fun of (IIIII)Lorg/partiql/lang/eval/time/Time;
+	public final fun of (IIIIILjava/lang/Integer;)Lorg/partiql/lang/eval/time/Time;
+	public final fun of (Ljava/time/LocalTime;I)Lorg/partiql/lang/eval/time/Time;
+	public final fun of (Ljava/time/LocalTime;ILjava/time/ZoneOffset;)Lorg/partiql/lang/eval/time/Time;
+	public static synthetic fun of$default (Lorg/partiql/lang/eval/time/Time$Companion;IIIIILjava/lang/Integer;ILjava/lang/Object;)Lorg/partiql/lang/eval/time/Time;
+	public static synthetic fun of$default (Lorg/partiql/lang/eval/time/Time$Companion;Ljava/time/LocalTime;ILjava/time/ZoneOffset;ILjava/lang/Object;)Lorg/partiql/lang/eval/time/Time;
+}
+
+public final class org/partiql/lang/eval/visitors/AggregateSupportVisitorTransform : org/partiql/lang/eval/visitors/VisitorTransformBase {
+	public fun <init> ()V
+	public fun transformExprCallAgg (Lorg/partiql/lang/domains/PartiqlAst$Expr$CallAgg;)Lorg/partiql/lang/domains/PartiqlAst$Expr;
+	public fun transformExprSelect (Lorg/partiql/lang/domains/PartiqlAst$Expr$Select;)Lorg/partiql/lang/domains/PartiqlAst$Expr;
+	public fun transformExprSelect_metas (Lorg/partiql/lang/domains/PartiqlAst$Expr$Select;)Ljava/util/Map;
+	public fun transformProjectionProjectValue_value (Lorg/partiql/lang/domains/PartiqlAst$Projection$ProjectValue;)Lorg/partiql/lang/domains/PartiqlAst$Expr;
+}
+
+public final class org/partiql/lang/eval/visitors/FromSourceAliasVisitorTransform : org/partiql/lang/eval/visitors/VisitorTransformBase {
+	public fun <init> ()V
+	public fun transformExprSelect_from (Lorg/partiql/lang/domains/PartiqlAst$Expr$Select;)Lorg/partiql/lang/domains/PartiqlAst$FromSource;
+	public fun transformStatementDml_from (Lorg/partiql/lang/domains/PartiqlAst$Statement$Dml;)Lorg/partiql/lang/domains/PartiqlAst$FromSource;
+}
+
+public final class org/partiql/lang/eval/visitors/GroupByItemAliasVisitorTransform : org/partiql/lang/eval/visitors/VisitorTransformBase {
+	public fun <init> ()V
+	public fun <init> (I)V
+	public synthetic fun <init> (IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getNestLevel ()I
+	public final fun setNestLevel (I)V
+	public fun transformExprSelect (Lorg/partiql/lang/domains/PartiqlAst$Expr$Select;)Lorg/partiql/lang/domains/PartiqlAst$Expr;
+	public fun transformGroupBy (Lorg/partiql/lang/domains/PartiqlAst$GroupBy;)Lorg/partiql/lang/domains/PartiqlAst$GroupBy;
+}
+
+public final class org/partiql/lang/eval/visitors/GroupByPathExpressionVisitorTransform : org/partiql/lang/eval/visitors/SubstitutionVisitorTransform {
+	public static final field Companion Lorg/partiql/lang/eval/visitors/GroupByPathExpressionVisitorTransform$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun transformExprCallAgg (Lorg/partiql/lang/domains/PartiqlAst$Expr$CallAgg;)Lorg/partiql/lang/domains/PartiqlAst$Expr;
+	public fun transformExprSelect (Lorg/partiql/lang/domains/PartiqlAst$Expr$Select;)Lorg/partiql/lang/domains/PartiqlAst$Expr;
+}
+
+public final class org/partiql/lang/eval/visitors/GroupByPathExpressionVisitorTransform$Companion {
+	public final fun canBeSubstituted (Lorg/partiql/lang/domains/PartiqlAst$GroupKey;)Z
+	public final fun collectAliases (Lorg/partiql/lang/domains/PartiqlAst$FromSource;)Ljava/util/List;
+}
+
+public final class org/partiql/lang/eval/visitors/PartiqlAstSanityValidator : org/partiql/lang/domains/PartiqlAst$Visitor {
+	public fun <init> ()V
+	public final fun validate (Lorg/partiql/lang/domains/PartiqlAst$Statement;Lorg/partiql/lang/eval/CompileOptions;)V
+	public static synthetic fun validate$default (Lorg/partiql/lang/eval/visitors/PartiqlAstSanityValidator;Lorg/partiql/lang/domains/PartiqlAst$Statement;Lorg/partiql/lang/eval/CompileOptions;ILjava/lang/Object;)V
+}
+
+public final class org/partiql/lang/eval/visitors/PipelinedVisitorTransform : org/partiql/lang/domains/PartiqlAst$VisitorTransform {
+	public fun <init> ([Lorg/partiql/lang/domains/PartiqlAst$VisitorTransform;)V
+	public final fun appendVisitorTransforms ([Lorg/partiql/lang/domains/PartiqlAst$VisitorTransform;)Lorg/partiql/lang/eval/visitors/PipelinedVisitorTransform;
+	public fun transformStatement (Lorg/partiql/lang/domains/PartiqlAst$Statement;)Lorg/partiql/lang/domains/PartiqlAst$Statement;
+}
+
+public final class org/partiql/lang/eval/visitors/SelectListItemAliasVisitorTransform : org/partiql/lang/eval/visitors/VisitorTransformBase {
+	public fun <init> ()V
+	public fun transformProjectionProjectList (Lorg/partiql/lang/domains/PartiqlAst$Projection$ProjectList;)Lorg/partiql/lang/domains/PartiqlAst$Projection;
+}
+
+public final class org/partiql/lang/eval/visitors/SelectStarVisitorTransform : org/partiql/lang/eval/visitors/VisitorTransformBase {
+	public fun <init> ()V
+	public fun transformExprSelect (Lorg/partiql/lang/domains/PartiqlAst$Expr$Select;)Lorg/partiql/lang/domains/PartiqlAst$Expr;
+}
+
+public final class org/partiql/lang/eval/visitors/StaticTypeVisitorTransform : org/partiql/lang/eval/visitors/VisitorTransformBase {
+	public fun <init> (Lcom/amazon/ion/IonSystem;Lorg/partiql/lang/eval/Bindings;Ljava/util/Set;)V
+	public synthetic fun <init> (Lcom/amazon/ion/IonSystem;Lorg/partiql/lang/eval/Bindings;Ljava/util/Set;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun transformStatement (Lorg/partiql/lang/domains/PartiqlAst$Statement;)Lorg/partiql/lang/domains/PartiqlAst$Statement;
+}
+
+public final class org/partiql/lang/eval/visitors/StaticTypeVisitorTransformConstraints : java/lang/Enum {
+	public static final field PREVENT_GLOBALS_EXCEPT_IN_FROM Lorg/partiql/lang/eval/visitors/StaticTypeVisitorTransformConstraints;
+	public static final field PREVENT_GLOBALS_IN_NESTED_QUERIES Lorg/partiql/lang/eval/visitors/StaticTypeVisitorTransformConstraints;
+	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/lang/eval/visitors/StaticTypeVisitorTransformConstraints;
+	public static fun values ()[Lorg/partiql/lang/eval/visitors/StaticTypeVisitorTransformConstraints;
+}
+
+public final class org/partiql/lang/eval/visitors/SubqueryCoercionVisitorTransform : org/partiql/lang/eval/visitors/VisitorTransformBase {
+	public fun <init> ()V
+	public fun transformExpr (Lorg/partiql/lang/domains/PartiqlAst$Expr;)Lorg/partiql/lang/domains/PartiqlAst$Expr;
+}
+
+public final class org/partiql/lang/eval/visitors/SubstitutionPair {
+	public fun <init> (Lorg/partiql/lang/domains/PartiqlAst$Expr;Lorg/partiql/lang/domains/PartiqlAst$Expr;)V
+	public final fun component1 ()Lorg/partiql/lang/domains/PartiqlAst$Expr;
+	public final fun component2 ()Lorg/partiql/lang/domains/PartiqlAst$Expr;
+	public final fun copy (Lorg/partiql/lang/domains/PartiqlAst$Expr;Lorg/partiql/lang/domains/PartiqlAst$Expr;)Lorg/partiql/lang/eval/visitors/SubstitutionPair;
+	public static synthetic fun copy$default (Lorg/partiql/lang/eval/visitors/SubstitutionPair;Lorg/partiql/lang/domains/PartiqlAst$Expr;Lorg/partiql/lang/domains/PartiqlAst$Expr;ILjava/lang/Object;)Lorg/partiql/lang/eval/visitors/SubstitutionPair;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getReplacement ()Lorg/partiql/lang/domains/PartiqlAst$Expr;
+	public final fun getTarget ()Lorg/partiql/lang/domains/PartiqlAst$Expr;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public class org/partiql/lang/eval/visitors/SubstitutionVisitorTransform : org/partiql/lang/eval/visitors/VisitorTransformBase {
+	public fun <init> (Ljava/util/Map;)V
+	protected final fun getSubstitutions ()Ljava/util/Map;
+	public fun transformExpr (Lorg/partiql/lang/domains/PartiqlAst$Expr;)Lorg/partiql/lang/domains/PartiqlAst$Expr;
+}
+
+public abstract class org/partiql/lang/eval/visitors/VisitorTransformBase : org/partiql/lang/domains/PartiqlAst$VisitorTransform {
+	public fun <init> ()V
+	public final fun transformDataManipulationEvaluationOrder (Lorg/partiql/lang/domains/PartiqlAst$Statement$Dml;)Lorg/partiql/lang/domains/PartiqlAst$Statement;
+	public fun transformExpr (Lorg/partiql/lang/domains/PartiqlAst$Expr;)Lorg/partiql/lang/domains/PartiqlAst$Expr;
+	public final fun transformExprSelectEvaluationOrder (Lorg/partiql/lang/domains/PartiqlAst$Expr$Select;)Lorg/partiql/lang/domains/PartiqlAst$Expr;
+}
+
+public final class org/partiql/lang/eval/visitors/VisitorTransformsKt {
+	public static final fun basicVisitorTransforms ()Lorg/partiql/lang/eval/visitors/PipelinedVisitorTransform;
+}
+
+public final class org/partiql/lang/graph/DirSpec : java/lang/Enum {
+	public static final field DirLUR Lorg/partiql/lang/graph/DirSpec;
+	public static final field DirLU_ Lorg/partiql/lang/graph/DirSpec;
+	public static final field DirL_R Lorg/partiql/lang/graph/DirSpec;
+	public static final field DirL__ Lorg/partiql/lang/graph/DirSpec;
+	public static final field Dir_UR Lorg/partiql/lang/graph/DirSpec;
+	public static final field Dir_U_ Lorg/partiql/lang/graph/DirSpec;
+	public static final field Dir__R Lorg/partiql/lang/graph/DirSpec;
+	public final fun getWantLeft ()Z
+	public final fun getWantRight ()Z
+	public final fun getWantUndir ()Z
+	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/lang/graph/DirSpec;
+	public static fun values ()[Lorg/partiql/lang/graph/DirSpec;
+}
+
+public final class org/partiql/lang/graph/EdgeSpec : org/partiql/lang/graph/ElemSpec {
+	public fun <init> (Ljava/lang/String;Lorg/partiql/lang/graph/LabelSpec;Lorg/partiql/lang/graph/DirSpec;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lorg/partiql/lang/graph/LabelSpec;
+	public final fun component3 ()Lorg/partiql/lang/graph/DirSpec;
+	public final fun copy (Ljava/lang/String;Lorg/partiql/lang/graph/LabelSpec;Lorg/partiql/lang/graph/DirSpec;)Lorg/partiql/lang/graph/EdgeSpec;
+	public static synthetic fun copy$default (Lorg/partiql/lang/graph/EdgeSpec;Ljava/lang/String;Lorg/partiql/lang/graph/LabelSpec;Lorg/partiql/lang/graph/DirSpec;ILjava/lang/Object;)Lorg/partiql/lang/graph/EdgeSpec;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getBinder ()Ljava/lang/String;
+	public final fun getDir ()Lorg/partiql/lang/graph/DirSpec;
+	public final fun getLabel ()Lorg/partiql/lang/graph/LabelSpec;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class org/partiql/lang/graph/ElemSpec {
+	public abstract fun getBinder ()Ljava/lang/String;
+}
+
+public abstract class org/partiql/lang/graph/ExternalGraphException : java/lang/RuntimeException {
+	public fun <init> (Ljava/lang/String;)V
+	public fun getMessage ()Ljava/lang/String;
+}
+
+public final class org/partiql/lang/graph/ExternalGraphReader {
+	public static final field INSTANCE Lorg/partiql/lang/graph/ExternalGraphReader;
+	public final fun read (Lcom/amazon/ion/IonValue;)Lorg/partiql/lang/graph/SimpleGraph;
+	public final fun read (Ljava/lang/String;)Lorg/partiql/lang/graph/SimpleGraph;
+	public final fun validate (Lcom/amazon/ion/IonValue;)V
+	public final fun validate (Ljava/io/File;)V
+	public final fun validate (Ljava/lang/String;)V
+}
+
+public final class org/partiql/lang/graph/GpmlTranslator {
+	public static final field INSTANCE Lorg/partiql/lang/graph/GpmlTranslator;
+	public final fun normalizeElemList (Ljava/util/List;)Ljava/util/List;
+	public final fun translateDirection (Lorg/partiql/lang/domains/PartiqlAst$GraphMatchDirection;)Lorg/partiql/lang/graph/DirSpec;
+	public final fun translateEdgePat (Lorg/partiql/lang/domains/PartiqlAst$GraphMatchPatternPart$Edge;)Lorg/partiql/lang/graph/EdgeSpec;
+	public final fun translateGpmlPattern (Lorg/partiql/lang/domains/PartiqlAst$GpmlPattern;)Lorg/partiql/lang/graph/MatchSpec;
+	public final fun translateLabels (Lorg/partiql/lang/domains/PartiqlAst$GraphLabelSpec;)Lorg/partiql/lang/graph/LabelSpec;
+	public final fun translateNodePat (Lorg/partiql/lang/domains/PartiqlAst$GraphMatchPatternPart$Node;)Lorg/partiql/lang/graph/NodeSpec;
+	public final fun translatePartPat (Lorg/partiql/lang/domains/PartiqlAst$GraphMatchPatternPart;)Ljava/util/List;
+	public final fun translatePathPat (Lorg/partiql/lang/domains/PartiqlAst$GraphMatchPattern;)Ljava/util/List;
+}
+
+public abstract interface class org/partiql/lang/graph/Graph {
+	public abstract fun scanDirectedBlunt (Lkotlin/Triple;)Ljava/util/List;
+	public abstract fun scanDirectedFlipped (Lkotlin/Triple;)Ljava/util/List;
+	public abstract fun scanDirectedStraight (Lkotlin/Triple;)Ljava/util/List;
+	public abstract fun scanNodes (Lorg/partiql/lang/graph/LabelSpec;)Ljava/util/List;
+	public abstract fun scanUndir (Lkotlin/Triple;)Ljava/util/List;
+}
+
+public abstract interface class org/partiql/lang/graph/Graph$Edge : org/partiql/lang/graph/Graph$Elem {
+}
+
+public abstract interface class org/partiql/lang/graph/Graph$EdgeDirected : org/partiql/lang/graph/Graph$Edge {
+}
+
+public abstract interface class org/partiql/lang/graph/Graph$EdgeUndir : org/partiql/lang/graph/Graph$Edge {
+}
+
+public abstract interface class org/partiql/lang/graph/Graph$Elem {
+	public abstract fun getLabels ()Ljava/util/Set;
+	public abstract fun getPayload ()Lorg/partiql/lang/eval/ExprValue;
+}
+
+public abstract interface class org/partiql/lang/graph/Graph$Node : org/partiql/lang/graph/Graph$Elem {
+}
+
+public final class org/partiql/lang/graph/GraphEngine {
+	public static final field INSTANCE Lorg/partiql/lang/graph/GraphEngine;
+	public final fun evaluate (Lorg/partiql/lang/graph/Graph;Lorg/partiql/lang/graph/MatchSpec;)Lorg/partiql/lang/graph/MatchResult;
+	public final fun getMatchingSteps (Lorg/partiql/lang/graph/Graph;Lorg/partiql/lang/graph/StepSpec;)Ljava/util/List;
+	public final fun joinAdjacentStrides (Lorg/partiql/lang/graph/StrideResult;Lorg/partiql/lang/graph/StrideResult;)Lorg/partiql/lang/graph/StrideResult;
+	public final fun joinStridesOnBinders (Ljava/util/List;)Lorg/partiql/lang/graph/MatchResult;
+	public final fun stridesJoinable (Lorg/partiql/lang/graph/StrideSpec;Lorg/partiql/lang/graph/StrideSpec;)Lkotlin/jvm/functions/Function2;
+}
+
+public final class org/partiql/lang/graph/GraphIonException : org/partiql/lang/graph/ExternalGraphException {
+	public fun <init> (Ljava/lang/String;)V
+}
+
+public final class org/partiql/lang/graph/GraphReadException : org/partiql/lang/graph/ExternalGraphException {
+	public fun <init> (Ljava/lang/String;)V
+}
+
+public final class org/partiql/lang/graph/GraphValidationException : org/partiql/lang/graph/ExternalGraphException {
+	public fun <init> (Ljava/lang/String;)V
+}
+
+public abstract class org/partiql/lang/graph/LabelSpec {
+}
+
+public final class org/partiql/lang/graph/LabelSpec$Name : org/partiql/lang/graph/LabelSpec {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lorg/partiql/lang/graph/LabelSpec$Name;
+	public static synthetic fun copy$default (Lorg/partiql/lang/graph/LabelSpec$Name;Ljava/lang/String;ILjava/lang/Object;)Lorg/partiql/lang/graph/LabelSpec$Name;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/lang/graph/LabelSpec$Wildcard : org/partiql/lang/graph/LabelSpec {
+	public static final field INSTANCE Lorg/partiql/lang/graph/LabelSpec$Wildcard;
+}
+
+public final class org/partiql/lang/graph/MatchResult {
+	public fun <init> (Ljava/util/List;Ljava/util/List;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun component2 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;Ljava/util/List;)Lorg/partiql/lang/graph/MatchResult;
+	public static synthetic fun copy$default (Lorg/partiql/lang/graph/MatchResult;Ljava/util/List;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/lang/graph/MatchResult;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getResult ()Ljava/util/List;
+	public final fun getSpecs ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/lang/graph/MatchSpec {
+	public fun <init> (Ljava/util/List;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;)Lorg/partiql/lang/graph/MatchSpec;
+	public static synthetic fun copy$default (Lorg/partiql/lang/graph/MatchSpec;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/lang/graph/MatchSpec;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getStrides ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/lang/graph/NodeSpec : org/partiql/lang/graph/ElemSpec {
+	public fun <init> (Ljava/lang/String;Lorg/partiql/lang/graph/LabelSpec;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lorg/partiql/lang/graph/LabelSpec;
+	public final fun copy (Ljava/lang/String;Lorg/partiql/lang/graph/LabelSpec;)Lorg/partiql/lang/graph/NodeSpec;
+	public static synthetic fun copy$default (Lorg/partiql/lang/graph/NodeSpec;Ljava/lang/String;Lorg/partiql/lang/graph/LabelSpec;ILjava/lang/Object;)Lorg/partiql/lang/graph/NodeSpec;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getBinder ()Ljava/lang/String;
+	public final fun getLabel ()Lorg/partiql/lang/graph/LabelSpec;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/lang/graph/SimpleGraph : org/partiql/lang/graph/Graph {
+	public static final field Companion Lorg/partiql/lang/graph/SimpleGraph$Companion;
+	public fun <init> (Ljava/util/List;Ljava/util/List;Ljava/util/List;)V
+	public final fun getDirected ()Ljava/util/List;
+	public final fun getNodes ()Ljava/util/List;
+	public final fun getUndir ()Ljava/util/List;
+	public fun scanDirectedBlunt (Lkotlin/Triple;)Ljava/util/List;
+	public fun scanDirectedFlipped (Lkotlin/Triple;)Ljava/util/List;
+	public fun scanDirectedStraight (Lkotlin/Triple;)Ljava/util/List;
+	public fun scanNodes (Lorg/partiql/lang/graph/LabelSpec;)Ljava/util/List;
+	public fun scanUndir (Lkotlin/Triple;)Ljava/util/List;
+}
+
+public final class org/partiql/lang/graph/SimpleGraph$Companion {
+	public final fun getEmpty ()Lorg/partiql/lang/graph/Graph;
+}
+
+public abstract class org/partiql/lang/graph/SimpleGraph$Edge : org/partiql/lang/graph/Graph$Edge {
+	public fun <init> ()V
+}
+
+public final class org/partiql/lang/graph/SimpleGraph$EdgeDirected : org/partiql/lang/graph/SimpleGraph$Edge, org/partiql/lang/graph/Graph$EdgeDirected {
+	public fun <init> (Ljava/util/Set;Lorg/partiql/lang/eval/ExprValue;)V
+	public fun getLabels ()Ljava/util/Set;
+	public fun getPayload ()Lorg/partiql/lang/eval/ExprValue;
+}
+
+public final class org/partiql/lang/graph/SimpleGraph$EdgeUndir : org/partiql/lang/graph/SimpleGraph$Edge, org/partiql/lang/graph/Graph$EdgeUndir {
+	public fun <init> (Ljava/util/Set;Lorg/partiql/lang/eval/ExprValue;)V
+	public fun getLabels ()Ljava/util/Set;
+	public fun getPayload ()Lorg/partiql/lang/eval/ExprValue;
+}
+
+public final class org/partiql/lang/graph/SimpleGraph$Node : org/partiql/lang/graph/Graph$Node {
+	public fun <init> (Ljava/util/Set;Lorg/partiql/lang/eval/ExprValue;)V
+	public fun getLabels ()Ljava/util/Set;
+	public fun getPayload ()Lorg/partiql/lang/eval/ExprValue;
+}
+
+public final class org/partiql/lang/graph/StepSpec {
+	public fun <init> (Lorg/partiql/lang/graph/DirSpec;Lkotlin/Triple;)V
+	public final fun component1 ()Lorg/partiql/lang/graph/DirSpec;
+	public final fun component2 ()Lkotlin/Triple;
+	public final fun copy (Lorg/partiql/lang/graph/DirSpec;Lkotlin/Triple;)Lorg/partiql/lang/graph/StepSpec;
+	public static synthetic fun copy$default (Lorg/partiql/lang/graph/StepSpec;Lorg/partiql/lang/graph/DirSpec;Lkotlin/Triple;ILjava/lang/Object;)Lorg/partiql/lang/graph/StepSpec;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDirSpec ()Lorg/partiql/lang/graph/DirSpec;
+	public final fun getTripleSpec ()Lkotlin/Triple;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/lang/graph/Stride {
+	public fun <init> (Ljava/util/List;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;)Lorg/partiql/lang/graph/Stride;
+	public static synthetic fun copy$default (Lorg/partiql/lang/graph/Stride;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/lang/graph/Stride;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getElems ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/lang/graph/StrideJoin : org/partiql/lang/graph/StrideTree {
+	public fun <init> (Lorg/partiql/lang/graph/StrideTree;Lorg/partiql/lang/graph/StrideTree;)V
+	public final fun component1 ()Lorg/partiql/lang/graph/StrideTree;
+	public final fun component2 ()Lorg/partiql/lang/graph/StrideTree;
+	public final fun copy (Lorg/partiql/lang/graph/StrideTree;Lorg/partiql/lang/graph/StrideTree;)Lorg/partiql/lang/graph/StrideJoin;
+	public static synthetic fun copy$default (Lorg/partiql/lang/graph/StrideJoin;Lorg/partiql/lang/graph/StrideTree;Lorg/partiql/lang/graph/StrideTree;ILjava/lang/Object;)Lorg/partiql/lang/graph/StrideJoin;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getLeft ()Lorg/partiql/lang/graph/StrideTree;
+	public final fun getRight ()Lorg/partiql/lang/graph/StrideTree;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/lang/graph/StrideLeaf : org/partiql/lang/graph/StrideTree {
+	public fun <init> (Lorg/partiql/lang/graph/StrideSpec;)V
+	public final fun component1 ()Lorg/partiql/lang/graph/StrideSpec;
+	public final fun copy (Lorg/partiql/lang/graph/StrideSpec;)Lorg/partiql/lang/graph/StrideLeaf;
+	public static synthetic fun copy$default (Lorg/partiql/lang/graph/StrideLeaf;Lorg/partiql/lang/graph/StrideSpec;ILjava/lang/Object;)Lorg/partiql/lang/graph/StrideLeaf;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getStride ()Lorg/partiql/lang/graph/StrideSpec;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/lang/graph/StrideResult {
+	public fun <init> (Lorg/partiql/lang/graph/StrideSpec;Ljava/util/Set;)V
+	public final fun component1 ()Lorg/partiql/lang/graph/StrideSpec;
+	public final fun component2 ()Ljava/util/Set;
+	public final fun copy (Lorg/partiql/lang/graph/StrideSpec;Ljava/util/Set;)Lorg/partiql/lang/graph/StrideResult;
+	public static synthetic fun copy$default (Lorg/partiql/lang/graph/StrideResult;Lorg/partiql/lang/graph/StrideSpec;Ljava/util/Set;ILjava/lang/Object;)Lorg/partiql/lang/graph/StrideResult;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getResult ()Ljava/util/Set;
+	public final fun getSpec ()Lorg/partiql/lang/graph/StrideSpec;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/lang/graph/StrideSpec {
+	public fun <init> (Ljava/util/List;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;)Lorg/partiql/lang/graph/StrideSpec;
+	public static synthetic fun copy$default (Lorg/partiql/lang/graph/StrideSpec;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/lang/graph/StrideSpec;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getElems ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class org/partiql/lang/graph/StrideTree {
+}
+
+public final class org/partiql/lang/planner/DmlAction : java/lang/Enum {
+	public static final field Companion Lorg/partiql/lang/planner/DmlAction$Companion;
+	public static final field DELETE Lorg/partiql/lang/planner/DmlAction;
+	public static final field INSERT Lorg/partiql/lang/planner/DmlAction;
+	public static final field REPLACE Lorg/partiql/lang/planner/DmlAction;
+	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/lang/planner/DmlAction;
+	public static fun values ()[Lorg/partiql/lang/planner/DmlAction;
+}
+
+public final class org/partiql/lang/planner/DmlAction$Companion {
+	public final fun safeValueOf (Ljava/lang/String;)Lorg/partiql/lang/planner/DmlAction;
+}
+
+public final class org/partiql/lang/planner/ErrorsKt {
+	public static final fun handleUnimplementedFeature (Lorg/partiql/errors/ProblemHandler;Lorg/partiql/pig/runtime/DomainNode;Ljava/lang/String;)V
+}
+
+public final class org/partiql/lang/planner/EvaluatorOptions {
+	public static final field Companion Lorg/partiql/lang/planner/EvaluatorOptions$Companion;
+	public static final fun builder ()Lorg/partiql/lang/planner/EvaluatorOptions$Builder;
+	public static final fun builder (Lorg/partiql/lang/planner/EvaluatorOptions;)Lorg/partiql/lang/planner/EvaluatorOptions$Builder;
+	public final fun component1 ()Lorg/partiql/lang/eval/ProjectionIterationBehavior;
+	public final fun component2 ()Lorg/partiql/lang/eval/ThunkOptions;
+	public final fun component3 ()Lorg/partiql/lang/eval/TypingMode;
+	public final fun component4 ()Lorg/partiql/lang/eval/TypedOpBehavior;
+	public final fun component5 ()Ljava/time/ZoneOffset;
+	public final fun copy (Lorg/partiql/lang/eval/ProjectionIterationBehavior;Lorg/partiql/lang/eval/ThunkOptions;Lorg/partiql/lang/eval/TypingMode;Lorg/partiql/lang/eval/TypedOpBehavior;Ljava/time/ZoneOffset;)Lorg/partiql/lang/planner/EvaluatorOptions;
+	public static synthetic fun copy$default (Lorg/partiql/lang/planner/EvaluatorOptions;Lorg/partiql/lang/eval/ProjectionIterationBehavior;Lorg/partiql/lang/eval/ThunkOptions;Lorg/partiql/lang/eval/TypingMode;Lorg/partiql/lang/eval/TypedOpBehavior;Ljava/time/ZoneOffset;ILjava/lang/Object;)Lorg/partiql/lang/planner/EvaluatorOptions;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDefaultTimezoneOffset ()Ljava/time/ZoneOffset;
+	public final fun getProjectionIteration ()Lorg/partiql/lang/eval/ProjectionIterationBehavior;
+	public final fun getThunkOptions ()Lorg/partiql/lang/eval/ThunkOptions;
+	public final fun getTypedOpBehavior ()Lorg/partiql/lang/eval/TypedOpBehavior;
+	public final fun getTypingMode ()Lorg/partiql/lang/eval/TypingMode;
+	public fun hashCode ()I
+	public static final fun standard ()Lorg/partiql/lang/planner/EvaluatorOptions;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/lang/planner/EvaluatorOptions$Builder {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/lang/planner/EvaluatorOptions;)V
+	public synthetic fun <init> (Lorg/partiql/lang/planner/EvaluatorOptions;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/lang/planner/EvaluatorOptions;
+	public final fun defaultTimezoneOffset (Ljava/time/ZoneOffset;)Lorg/partiql/lang/planner/EvaluatorOptions$Builder;
+	public final fun projectionIteration (Lorg/partiql/lang/eval/ProjectionIterationBehavior;)Lorg/partiql/lang/planner/EvaluatorOptions$Builder;
+	public final fun thunkOptions (Lorg/partiql/lang/eval/ThunkOptions;)Lorg/partiql/lang/planner/EvaluatorOptions$Builder;
+	public final fun typedOpBehavior (Lorg/partiql/lang/eval/TypedOpBehavior;)Lorg/partiql/lang/planner/EvaluatorOptions$Builder;
+	public final fun typingMode (Lorg/partiql/lang/eval/TypingMode;)Lorg/partiql/lang/planner/EvaluatorOptions$Builder;
+}
+
+public final class org/partiql/lang/planner/EvaluatorOptions$Companion {
+	public final fun build (Lkotlin/jvm/functions/Function1;)Lorg/partiql/lang/planner/EvaluatorOptions;
+	public final fun build (Lorg/partiql/lang/planner/EvaluatorOptions;Lkotlin/jvm/functions/Function1;)Lorg/partiql/lang/planner/EvaluatorOptions;
+	public final fun builder ()Lorg/partiql/lang/planner/EvaluatorOptions$Builder;
+	public final fun builder (Lorg/partiql/lang/planner/EvaluatorOptions;)Lorg/partiql/lang/planner/EvaluatorOptions$Builder;
+	public final fun standard ()Lorg/partiql/lang/planner/EvaluatorOptions;
+}
+
+public abstract class org/partiql/lang/planner/GlobalResolutionResult {
+}
+
+public final class org/partiql/lang/planner/GlobalResolutionResult$GlobalVariable : org/partiql/lang/planner/GlobalResolutionResult {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lorg/partiql/lang/planner/GlobalResolutionResult$GlobalVariable;
+	public static synthetic fun copy$default (Lorg/partiql/lang/planner/GlobalResolutionResult$GlobalVariable;Ljava/lang/String;ILjava/lang/Object;)Lorg/partiql/lang/planner/GlobalResolutionResult$GlobalVariable;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getUniqueId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/lang/planner/GlobalResolutionResult$Undefined : org/partiql/lang/planner/GlobalResolutionResult {
+	public static final field INSTANCE Lorg/partiql/lang/planner/GlobalResolutionResult$Undefined;
+}
+
+public abstract interface class org/partiql/lang/planner/GlobalVariableResolver {
+	public static final field Companion Lorg/partiql/lang/planner/GlobalVariableResolver$Companion;
+	public abstract fun resolveGlobal (Lorg/partiql/lang/eval/BindingName;)Lorg/partiql/lang/planner/GlobalResolutionResult;
+}
+
+public final class org/partiql/lang/planner/GlobalVariableResolver$Companion {
+	public final fun getEMPTY ()Lorg/partiql/lang/planner/GlobalVariableResolver;
+}
+
+public abstract interface class org/partiql/lang/planner/PartiQLPhysicalPass : org/partiql/lang/planner/PartiQLPlannerPass {
+}
+
+public abstract interface class org/partiql/lang/planner/PartiQLPlanner {
+	public static final field Companion Lorg/partiql/lang/planner/PartiQLPlanner$Companion;
+	public static final field PLAN_VERSION Ljava/lang/String;
+	public abstract fun plan (Lorg/partiql/lang/domains/PartiqlAst$Statement;)Lorg/partiql/lang/planner/PartiQLPlanner$Result;
+}
+
+public final class org/partiql/lang/planner/PartiQLPlanner$Companion {
+	public static final field PLAN_VERSION Ljava/lang/String;
+}
+
+public final class org/partiql/lang/planner/PartiQLPlanner$Options {
+	public fun <init> ()V
+	public fun <init> (ZLorg/partiql/lang/eval/TypedOpBehavior;)V
+	public synthetic fun <init> (ZLorg/partiql/lang/eval/TypedOpBehavior;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getAllowedUndefinedVariables ()Z
+	public final fun getTypedOpBehavior ()Lorg/partiql/lang/eval/TypedOpBehavior;
+}
+
+public final class org/partiql/lang/planner/PartiQLPlanner$PlanningDetails {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/lang/domains/PartiqlAst$Statement;Lorg/partiql/lang/domains/PartiqlAst$Statement;Lorg/partiql/lang/domains/PartiqlLogical$Plan;Lorg/partiql/lang/domains/PartiqlLogicalResolved$Plan;Lorg/partiql/lang/domains/PartiqlPhysical$Plan;Lorg/partiql/lang/domains/PartiqlPhysical$Plan;)V
+	public synthetic fun <init> (Lorg/partiql/lang/domains/PartiqlAst$Statement;Lorg/partiql/lang/domains/PartiqlAst$Statement;Lorg/partiql/lang/domains/PartiqlLogical$Plan;Lorg/partiql/lang/domains/PartiqlLogicalResolved$Plan;Lorg/partiql/lang/domains/PartiqlPhysical$Plan;Lorg/partiql/lang/domains/PartiqlPhysical$Plan;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/partiql/lang/domains/PartiqlAst$Statement;
+	public final fun component2 ()Lorg/partiql/lang/domains/PartiqlAst$Statement;
+	public final fun component3 ()Lorg/partiql/lang/domains/PartiqlLogical$Plan;
+	public final fun component4 ()Lorg/partiql/lang/domains/PartiqlLogicalResolved$Plan;
+	public final fun component5 ()Lorg/partiql/lang/domains/PartiqlPhysical$Plan;
+	public final fun component6 ()Lorg/partiql/lang/domains/PartiqlPhysical$Plan;
+	public final fun copy (Lorg/partiql/lang/domains/PartiqlAst$Statement;Lorg/partiql/lang/domains/PartiqlAst$Statement;Lorg/partiql/lang/domains/PartiqlLogical$Plan;Lorg/partiql/lang/domains/PartiqlLogicalResolved$Plan;Lorg/partiql/lang/domains/PartiqlPhysical$Plan;Lorg/partiql/lang/domains/PartiqlPhysical$Plan;)Lorg/partiql/lang/planner/PartiQLPlanner$PlanningDetails;
+	public static synthetic fun copy$default (Lorg/partiql/lang/planner/PartiQLPlanner$PlanningDetails;Lorg/partiql/lang/domains/PartiqlAst$Statement;Lorg/partiql/lang/domains/PartiqlAst$Statement;Lorg/partiql/lang/domains/PartiqlLogical$Plan;Lorg/partiql/lang/domains/PartiqlLogicalResolved$Plan;Lorg/partiql/lang/domains/PartiqlPhysical$Plan;Lorg/partiql/lang/domains/PartiqlPhysical$Plan;ILjava/lang/Object;)Lorg/partiql/lang/planner/PartiQLPlanner$PlanningDetails;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAst ()Lorg/partiql/lang/domains/PartiqlAst$Statement;
+	public final fun getAstNormalized ()Lorg/partiql/lang/domains/PartiqlAst$Statement;
+	public final fun getLogical ()Lorg/partiql/lang/domains/PartiqlLogical$Plan;
+	public final fun getLogicalResolved ()Lorg/partiql/lang/domains/PartiqlLogicalResolved$Plan;
+	public final fun getPhysical ()Lorg/partiql/lang/domains/PartiqlPhysical$Plan;
+	public final fun getPhysicalTransformed ()Lorg/partiql/lang/domains/PartiqlPhysical$Plan;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class org/partiql/lang/planner/PartiQLPlanner$Result {
+}
+
+public final class org/partiql/lang/planner/PartiQLPlanner$Result$Error : org/partiql/lang/planner/PartiQLPlanner$Result {
+	public fun <init> (Ljava/util/List;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;)Lorg/partiql/lang/planner/PartiQLPlanner$Result$Error;
+	public static synthetic fun copy$default (Lorg/partiql/lang/planner/PartiQLPlanner$Result$Error;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/lang/planner/PartiQLPlanner$Result$Error;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getProblems ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/lang/planner/PartiQLPlanner$Result$Success : org/partiql/lang/planner/PartiQLPlanner$Result {
+	public fun <init> (Lorg/partiql/lang/domains/PartiqlPhysical$Plan;Ljava/util/List;)V
+	public fun <init> (Lorg/partiql/lang/domains/PartiqlPhysical$Plan;Ljava/util/List;Lorg/partiql/lang/planner/PartiQLPlanner$PlanningDetails;)V
+	public synthetic fun <init> (Lorg/partiql/lang/domains/PartiqlPhysical$Plan;Ljava/util/List;Lorg/partiql/lang/planner/PartiQLPlanner$PlanningDetails;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/partiql/lang/domains/PartiqlPhysical$Plan;
+	public final fun component2 ()Ljava/util/List;
+	public final fun component3 ()Lorg/partiql/lang/planner/PartiQLPlanner$PlanningDetails;
+	public final fun copy (Lorg/partiql/lang/domains/PartiqlPhysical$Plan;Ljava/util/List;Lorg/partiql/lang/planner/PartiQLPlanner$PlanningDetails;)Lorg/partiql/lang/planner/PartiQLPlanner$Result$Success;
+	public static synthetic fun copy$default (Lorg/partiql/lang/planner/PartiQLPlanner$Result$Success;Lorg/partiql/lang/domains/PartiqlPhysical$Plan;Ljava/util/List;Lorg/partiql/lang/planner/PartiQLPlanner$PlanningDetails;ILjava/lang/Object;)Lorg/partiql/lang/planner/PartiQLPlanner$Result$Success;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDetails ()Lorg/partiql/lang/planner/PartiQLPlanner$PlanningDetails;
+	public final fun getPlan ()Lorg/partiql/lang/domains/PartiqlPhysical$Plan;
+	public final fun getWarnings ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/lang/planner/PartiQLPlannerBuilder {
+	public static final field Companion Lorg/partiql/lang/planner/PartiQLPlannerBuilder$Companion;
+	public final fun build ()Lorg/partiql/lang/planner/PartiQLPlanner;
+	public final fun callback (Lkotlin/jvm/functions/Function1;)Lorg/partiql/lang/planner/PartiQLPlannerBuilder;
+	public final fun globalVariableResolver (Lorg/partiql/lang/planner/GlobalVariableResolver;)Lorg/partiql/lang/planner/PartiQLPlannerBuilder;
+	public final fun options (Lorg/partiql/lang/planner/PartiQLPlanner$Options;)Lorg/partiql/lang/planner/PartiQLPlannerBuilder;
+	public final fun physicalPlannerPasses (Ljava/util/List;)Lorg/partiql/lang/planner/PartiQLPlannerBuilder;
+	public static final fun standard ()Lorg/partiql/lang/planner/PartiQLPlannerBuilder;
+}
+
+public final class org/partiql/lang/planner/PartiQLPlannerBuilder$Companion {
+	public final fun standard ()Lorg/partiql/lang/planner/PartiQLPlannerBuilder;
+}
+
+public abstract interface class org/partiql/lang/planner/PartiQLPlannerPass {
+	public abstract fun apply (Lorg/partiql/pig/runtime/DomainNode;Lorg/partiql/errors/ProblemHandler;)Lorg/partiql/pig/runtime/DomainNode;
+}
+
+public final class org/partiql/lang/planner/PlannerEvent {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;Ljava/time/Duration;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/Object;
+	public final fun component3 ()Ljava/lang/Object;
+	public final fun component4 ()Ljava/time/Duration;
+	public final fun copy (Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;Ljava/time/Duration;)Lorg/partiql/lang/planner/PlannerEvent;
+	public static synthetic fun copy$default (Lorg/partiql/lang/planner/PlannerEvent;Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;Ljava/time/Duration;ILjava/lang/Object;)Lorg/partiql/lang/planner/PlannerEvent;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDuration ()Ljava/time/Duration;
+	public final fun getEventName ()Ljava/lang/String;
+	public final fun getInput ()Ljava/lang/Object;
+	public final fun getOutput ()Ljava/lang/Object;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class org/partiql/lang/planner/PlanningProblemDetails : org/partiql/errors/ProblemDetails {
+	public synthetic fun <init> (Lorg/partiql/errors/ProblemSeverity;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getMessage ()Ljava/lang/String;
+	public final fun getMessageFormatter ()Lkotlin/jvm/functions/Function0;
+	public fun getSeverity ()Lorg/partiql/errors/ProblemSeverity;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/lang/planner/PlanningProblemDetails$CompileError : org/partiql/lang/planner/PlanningProblemDetails {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lorg/partiql/lang/planner/PlanningProblemDetails$CompileError;
+	public static synthetic fun copy$default (Lorg/partiql/lang/planner/PlanningProblemDetails$CompileError;Ljava/lang/String;ILjava/lang/Object;)Lorg/partiql/lang/planner/PlanningProblemDetails$CompileError;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getErrorMessage ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/lang/planner/PlanningProblemDetails$InsertValueDisallowed : org/partiql/lang/planner/PlanningProblemDetails {
+	public static final field INSTANCE Lorg/partiql/lang/planner/PlanningProblemDetails$InsertValueDisallowed;
+}
+
+public final class org/partiql/lang/planner/PlanningProblemDetails$InsertValuesDisallowed : org/partiql/lang/planner/PlanningProblemDetails {
+	public static final field INSTANCE Lorg/partiql/lang/planner/PlanningProblemDetails$InsertValuesDisallowed;
+}
+
+public final class org/partiql/lang/planner/PlanningProblemDetails$InvalidDmlTarget : org/partiql/lang/planner/PlanningProblemDetails {
+	public static final field INSTANCE Lorg/partiql/lang/planner/PlanningProblemDetails$InvalidDmlTarget;
+}
+
+public final class org/partiql/lang/planner/PlanningProblemDetails$ParseError : org/partiql/lang/planner/PlanningProblemDetails {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lorg/partiql/lang/planner/PlanningProblemDetails$ParseError;
+	public static synthetic fun copy$default (Lorg/partiql/lang/planner/PlanningProblemDetails$ParseError;Ljava/lang/String;ILjava/lang/Object;)Lorg/partiql/lang/planner/PlanningProblemDetails$ParseError;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getParseErrorMessage ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/lang/planner/PlanningProblemDetails$UndefinedDmlTarget : org/partiql/lang/planner/PlanningProblemDetails {
+	public fun <init> (Ljava/lang/String;Z)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Z
+	public final fun copy (Ljava/lang/String;Z)Lorg/partiql/lang/planner/PlanningProblemDetails$UndefinedDmlTarget;
+	public static synthetic fun copy$default (Lorg/partiql/lang/planner/PlanningProblemDetails$UndefinedDmlTarget;Ljava/lang/String;ZILjava/lang/Object;)Lorg/partiql/lang/planner/PlanningProblemDetails$UndefinedDmlTarget;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCaseSensitive ()Z
+	public final fun getVariableName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/lang/planner/PlanningProblemDetails$UndefinedVariable : org/partiql/lang/planner/PlanningProblemDetails {
+	public fun <init> (Ljava/lang/String;Z)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Z
+	public final fun copy (Ljava/lang/String;Z)Lorg/partiql/lang/planner/PlanningProblemDetails$UndefinedVariable;
+	public static synthetic fun copy$default (Lorg/partiql/lang/planner/PlanningProblemDetails$UndefinedVariable;Ljava/lang/String;ZILjava/lang/Object;)Lorg/partiql/lang/planner/PlanningProblemDetails$UndefinedVariable;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCaseSensitive ()Z
+	public final fun getVariableName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/lang/planner/PlanningProblemDetails$UnimplementedFeature : org/partiql/lang/planner/PlanningProblemDetails {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lorg/partiql/lang/planner/PlanningProblemDetails$UnimplementedFeature;
+	public static synthetic fun copy$default (Lorg/partiql/lang/planner/PlanningProblemDetails$UnimplementedFeature;Ljava/lang/String;ILjava/lang/Object;)Lorg/partiql/lang/planner/PlanningProblemDetails$UnimplementedFeature;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getFeatureName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/lang/planner/PlanningProblemDetails$UnresolvedExcludeExprRoot : org/partiql/lang/planner/PlanningProblemDetails {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lorg/partiql/lang/planner/PlanningProblemDetails$UnresolvedExcludeExprRoot;
+	public static synthetic fun copy$default (Lorg/partiql/lang/planner/PlanningProblemDetails$UnresolvedExcludeExprRoot;Ljava/lang/String;ILjava/lang/Object;)Lorg/partiql/lang/planner/PlanningProblemDetails$UnresolvedExcludeExprRoot;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getRoot ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/lang/planner/PlanningProblemDetails$VariablePreviouslyDefined : org/partiql/lang/planner/PlanningProblemDetails {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lorg/partiql/lang/planner/PlanningProblemDetails$VariablePreviouslyDefined;
+	public static synthetic fun copy$default (Lorg/partiql/lang/planner/PlanningProblemDetails$VariablePreviouslyDefined;Ljava/lang/String;ILjava/lang/Object;)Lorg/partiql/lang/planner/PlanningProblemDetails$VariablePreviouslyDefined;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getVariableName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class org/partiql/lang/planner/QueryPlan {
+	public abstract fun eval (Lorg/partiql/lang/eval/EvaluationSession;)Lorg/partiql/lang/planner/QueryResult;
+}
+
+public abstract class org/partiql/lang/planner/QueryResult {
+}
+
+public final class org/partiql/lang/planner/QueryResult$DmlCommand : org/partiql/lang/planner/QueryResult {
+	public fun <init> (Lorg/partiql/lang/planner/DmlAction;Ljava/lang/String;Ljava/lang/Iterable;)V
+	public final fun component1 ()Lorg/partiql/lang/planner/DmlAction;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/Iterable;
+	public final fun copy (Lorg/partiql/lang/planner/DmlAction;Ljava/lang/String;Ljava/lang/Iterable;)Lorg/partiql/lang/planner/QueryResult$DmlCommand;
+	public static synthetic fun copy$default (Lorg/partiql/lang/planner/QueryResult$DmlCommand;Lorg/partiql/lang/planner/DmlAction;Ljava/lang/String;Ljava/lang/Iterable;ILjava/lang/Object;)Lorg/partiql/lang/planner/QueryResult$DmlCommand;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAction ()Lorg/partiql/lang/planner/DmlAction;
+	public final fun getRows ()Ljava/lang/Iterable;
+	public final fun getTargetUniqueId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/lang/planner/QueryResult$Value : org/partiql/lang/planner/QueryResult {
+	public fun <init> (Lorg/partiql/lang/eval/ExprValue;)V
+	public final fun getValue ()Lorg/partiql/lang/eval/ExprValue;
+}
+
+public abstract interface class org/partiql/lang/planner/StaticTypeResolver {
+	public abstract fun getVariableStaticType (Ljava/lang/String;)Lorg/partiql/types/StaticType;
+}
+
+public final class org/partiql/lang/planner/transforms/AstNormalizeKt {
+	public static final fun normalize (Lorg/partiql/lang/domains/PartiqlAst$Statement;)Lorg/partiql/lang/domains/PartiqlAst$Statement;
+}
+
+public final class org/partiql/lang/planner/transforms/PlannerSession {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/Map;Ljava/time/Instant;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/Map;Ljava/time/Instant;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getCatalogConfig ()Ljava/util/Map;
+	public final fun getCurrentCatalog ()Ljava/lang/String;
+	public final fun getCurrentDirectory ()Ljava/util/List;
+	public final fun getInstant ()Ljava/time/Instant;
+	public final fun getQueryId ()Ljava/lang/String;
+	public final fun getUserId ()Ljava/lang/String;
+}
+
+public final class org/partiql/lang/planner/transforms/UtilKt {
+	public static final field PLAN_VERSION_NUMBER Ljava/lang/String;
+	public static final fun isLitTrue (Lorg/partiql/lang/domains/PartiqlPhysical$Expr;)Z
+}
+
+public final class org/partiql/lang/planner/transforms/optimizations/FieldEqualityPredicate {
+	public fun <init> (Ljava/lang/String;Lorg/partiql/lang/domains/PartiqlPhysical$Expr;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lorg/partiql/lang/domains/PartiqlPhysical$Expr;
+	public final fun copy (Ljava/lang/String;Lorg/partiql/lang/domains/PartiqlPhysical$Expr;)Lorg/partiql/lang/planner/transforms/optimizations/FieldEqualityPredicate;
+	public static synthetic fun copy$default (Lorg/partiql/lang/planner/transforms/optimizations/FieldEqualityPredicate;Ljava/lang/String;Lorg/partiql/lang/domains/PartiqlPhysical$Expr;ILjava/lang/Object;)Lorg/partiql/lang/planner/transforms/optimizations/FieldEqualityPredicate;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEquivalentValue ()Lorg/partiql/lang/domains/PartiqlPhysical$Expr;
+	public final fun getKeyFieldName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/lang/planner/transforms/optimizations/FilterScanToKeyLookupKt {
+	public static final fun createFilterScanToKeyLookupPass (Ljava/lang/String;Lorg/partiql/lang/planner/StaticTypeResolver;Lkotlin/jvm/functions/Function2;)Lorg/partiql/lang/planner/PartiQLPhysicalPass;
+}
+
+public final class org/partiql/lang/planner/transforms/optimizations/RemoveUselessAndsKt {
+	public static final fun createRemoveUselessAndsPass ()Lorg/partiql/lang/planner/PartiQLPhysicalPass;
+}
+
+public final class org/partiql/lang/planner/transforms/optimizations/RemoveUselessFiltersKt {
+	public static final fun createRemoveUselessFiltersPass ()Lorg/partiql/lang/planner/PartiQLPhysicalPass;
+}
+
+public final class org/partiql/lang/planner/validators/PartiqlLogicalResolvedValidator : org/partiql/lang/domains/PartiqlLogicalResolved$Visitor {
+	public fun <init> ()V
+	public fun visitPlan (Lorg/partiql/lang/domains/PartiqlLogicalResolved$Plan;)V
+}
+
+public final class org/partiql/lang/planner/validators/PartiqlLogicalValidator : org/partiql/lang/domains/PartiqlLogical$Visitor {
+	public fun <init> (Lorg/partiql/lang/eval/TypedOpBehavior;)V
+}
+
+public final class org/partiql/lang/prettyprint/ASTPrettyPrinter {
+	public fun <init> ()V
+	public final fun prettyPrintAST (Ljava/lang/String;)Ljava/lang/String;
+	public final fun prettyPrintAST (Lorg/partiql/lang/domains/PartiqlAst$Statement;)Ljava/lang/String;
+}
+
+public final class org/partiql/lang/prettyprint/QueryPrettyPrinter {
+	public fun <init> ()V
+	public final fun astToPrettyQuery (Lorg/partiql/lang/domains/PartiqlAst$Statement;)Ljava/lang/String;
+	public final fun prettyPrintQuery (Ljava/lang/String;)Ljava/lang/String;
+}
+
+public final class org/partiql/lang/prettyprint/RecursionTree {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun convertToString ()Ljava/lang/String;
+}
+
+public class org/partiql/lang/syntax/LexerException : org/partiql/lang/syntax/SyntaxException {
+	public fun <init> (Ljava/lang/String;Lorg/partiql/errors/ErrorCode;Lorg/partiql/errors/PropertyValueMap;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Lorg/partiql/errors/ErrorCode;Lorg/partiql/errors/PropertyValueMap;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public abstract interface class org/partiql/lang/syntax/Parser {
+	public abstract fun parseAstStatement (Ljava/lang/String;)Lorg/partiql/lang/domains/PartiqlAst$Statement;
+}
+
+public class org/partiql/lang/syntax/ParserException : org/partiql/lang/syntax/SyntaxException {
+	public fun <init> (Ljava/lang/String;Lorg/partiql/errors/ErrorCode;Lorg/partiql/errors/PropertyValueMap;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Lorg/partiql/errors/ErrorCode;Lorg/partiql/errors/PropertyValueMap;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class org/partiql/lang/syntax/PartiQLParserBuilder {
+	public static final field Companion Lorg/partiql/lang/syntax/PartiQLParserBuilder$Companion;
+	public fun <init> ()V
+	public final fun build ()Lorg/partiql/lang/syntax/Parser;
+	public final fun customTypes (Ljava/util/List;)Lorg/partiql/lang/syntax/PartiQLParserBuilder;
+	public static final fun experimental ()Lorg/partiql/lang/syntax/PartiQLParserBuilder;
+	public static final fun standard ()Lorg/partiql/lang/syntax/PartiQLParserBuilder;
+}
+
+public final class org/partiql/lang/syntax/PartiQLParserBuilder$Companion {
+	public final fun experimental ()Lorg/partiql/lang/syntax/PartiQLParserBuilder;
+	public final fun standard ()Lorg/partiql/lang/syntax/PartiQLParserBuilder;
+}
+
+public class org/partiql/lang/syntax/SyntaxException : org/partiql/lang/SqlException {
+	public fun <init> (Ljava/lang/String;Lorg/partiql/errors/ErrorCode;Lorg/partiql/errors/PropertyValueMap;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Lorg/partiql/errors/ErrorCode;Lorg/partiql/errors/PropertyValueMap;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class org/partiql/lang/types/CustomType {
+	public fun <init> (Ljava/lang/String;Lorg/partiql/lang/types/TypedOpParameter;Ljava/util/List;)V
+	public synthetic fun <init> (Ljava/lang/String;Lorg/partiql/lang/types/TypedOpParameter;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lorg/partiql/lang/types/TypedOpParameter;
+	public final fun component3 ()Ljava/util/List;
+	public final fun copy (Ljava/lang/String;Lorg/partiql/lang/types/TypedOpParameter;Ljava/util/List;)Lorg/partiql/lang/types/CustomType;
+	public static synthetic fun copy$default (Lorg/partiql/lang/types/CustomType;Ljava/lang/String;Lorg/partiql/lang/types/TypedOpParameter;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/lang/types/CustomType;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAliases ()Ljava/util/List;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getTypedOpParameter ()Lorg/partiql/lang/types/TypedOpParameter;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/lang/types/FunctionSignature {
+	public fun <init> (Ljava/lang/String;Ljava/util/List;Lorg/partiql/lang/types/VarargFormalParameter;Lorg/partiql/types/StaticType;Lorg/partiql/lang/types/UnknownArguments;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/util/List;Lorg/partiql/lang/types/VarargFormalParameter;Lorg/partiql/types/StaticType;Lorg/partiql/lang/types/UnknownArguments;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Ljava/util/List;Lorg/partiql/types/StaticType;Lorg/partiql/lang/types/UnknownArguments;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/util/List;Lorg/partiql/types/StaticType;Lorg/partiql/lang/types/UnknownArguments;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Ljava/util/List;Lorg/partiql/types/StaticType;Lorg/partiql/lang/types/VarargFormalParameter;Lorg/partiql/types/StaticType;Lorg/partiql/lang/types/UnknownArguments;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/util/List;Lorg/partiql/types/StaticType;Lorg/partiql/lang/types/VarargFormalParameter;Lorg/partiql/types/StaticType;Lorg/partiql/lang/types/UnknownArguments;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Ljava/util/List;Lorg/partiql/types/StaticType;Lorg/partiql/types/StaticType;Lorg/partiql/lang/types/UnknownArguments;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/util/List;Lorg/partiql/types/StaticType;Lorg/partiql/types/StaticType;Lorg/partiql/lang/types/UnknownArguments;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getArity ()Lkotlin/ranges/IntRange;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getRequiredParameters ()Ljava/util/List;
+	public final fun getReturnType ()Lorg/partiql/types/StaticType;
+	public final fun getUnknownArguments ()Lorg/partiql/lang/types/UnknownArguments;
+}
+
+public final class org/partiql/lang/types/StaticTypeUtils {
+	public static final field INSTANCE Lorg/partiql/lang/types/StaticTypeUtils;
+	public static final fun areStaticTypesComparable (Lorg/partiql/types/StaticType;Lorg/partiql/types/StaticType;)Z
+	public static final fun getRuntimeType (Lorg/partiql/types/SingleType;)Lorg/partiql/lang/eval/ExprValueType;
+	public static final fun getTypeDomain (Lorg/partiql/types/StaticType;)Ljava/util/Set;
+	public static final fun isInstance (Lorg/partiql/lang/eval/ExprValue;Lorg/partiql/types/StaticType;)Z
+	public static final fun isSubTypeOf (Lorg/partiql/types/StaticType;Lorg/partiql/types/StaticType;)Z
+	public static final fun staticTypeFromExprValue (Lorg/partiql/lang/eval/ExprValue;)Lorg/partiql/types/StaticType;
+	public static final fun staticTypeFromExprValueType (Lorg/partiql/lang/eval/ExprValueType;)Lorg/partiql/types/StaticType;
+	public static final fun stringLengthConstraintMatches (Lorg/partiql/types/StringType$StringLengthConstraint;Lorg/partiql/lang/eval/ExprValue;)Z
+}
+
+public final class org/partiql/lang/types/TypedOpParameter {
+	public fun <init> (Lorg/partiql/types/StaticType;Lkotlin/jvm/functions/Function1;)V
+	public synthetic fun <init> (Lorg/partiql/types/StaticType;Lkotlin/jvm/functions/Function1;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lorg/partiql/types/StaticType;
+	public final fun component2 ()Lkotlin/jvm/functions/Function1;
+	public final fun copy (Lorg/partiql/types/StaticType;Lkotlin/jvm/functions/Function1;)Lorg/partiql/lang/types/TypedOpParameter;
+	public static synthetic fun copy$default (Lorg/partiql/lang/types/TypedOpParameter;Lorg/partiql/types/StaticType;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/lang/types/TypedOpParameter;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getStaticType ()Lorg/partiql/types/StaticType;
+	public final fun getValidationThunk ()Lkotlin/jvm/functions/Function1;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/lang/types/UnknownArguments : java/lang/Enum {
+	public static final field PASS_THRU Lorg/partiql/lang/types/UnknownArguments;
+	public static final field PROPAGATE Lorg/partiql/lang/types/UnknownArguments;
+	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/lang/types/UnknownArguments;
+	public static fun values ()[Lorg/partiql/lang/types/UnknownArguments;
+}
+
+public final class org/partiql/lang/types/VarargFormalParameter {
+	public fun <init> (Lorg/partiql/types/StaticType;I)V
+	public fun <init> (Lorg/partiql/types/StaticType;Lkotlin/ranges/IntRange;)V
+	public final fun component1 ()Lorg/partiql/types/StaticType;
+	public final fun component2 ()Lkotlin/ranges/IntRange;
+	public final fun copy (Lorg/partiql/types/StaticType;Lkotlin/ranges/IntRange;)Lorg/partiql/lang/types/VarargFormalParameter;
+	public static synthetic fun copy$default (Lorg/partiql/lang/types/VarargFormalParameter;Lorg/partiql/types/StaticType;Lkotlin/ranges/IntRange;ILjava/lang/Object;)Lorg/partiql/lang/types/VarargFormalParameter;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getArityRange ()Lkotlin/ranges/IntRange;
+	public final fun getType ()Lorg/partiql/types/StaticType;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class org/partiql/lang/util/BindingHelper {
+	public static final field Companion Lorg/partiql/lang/util/BindingHelper$Companion;
+	public static final fun bindingNameEquals (Ljava/lang/String;Ljava/lang/String;Lorg/partiql/lang/eval/BindingCase;)Z
+	public static final fun throwAmbiguousBindingEvaluationException (Ljava/lang/String;Ljava/util/List;)Ljava/lang/Void;
+}
+
+public final class org/partiql/lang/util/BindingHelper$Companion {
+	public final fun bindingNameEquals (Ljava/lang/String;Ljava/lang/String;Lorg/partiql/lang/eval/BindingCase;)Z
+	public final fun throwAmbiguousBindingEvaluationException (Ljava/lang/String;Ljava/util/List;)Ljava/lang/Void;
+}
+
+public final class org/partiql/lang/util/BindingHelpersKt {
+	public static final fun caseInsensitiveEquivalent (Ljava/lang/String;Ljava/lang/String;)Z
+	public static final fun isBindingNameEquivalent (Ljava/lang/String;Ljava/lang/String;Lorg/partiql/lang/eval/BindingCase;)Z
+}
+
+public final class org/partiql/lang/util/CollectionExtensionsKt {
+	public static final fun cartesianProduct (Ljava/util/List;)Ljava/util/List;
+	public static final fun foldLeftProduct (Ljava/util/List;Ljava/lang/Object;Lkotlin/jvm/functions/Function2;)Ljava/lang/Iterable;
+	public static final fun forAll (Ljava/util/List;Lkotlin/jvm/functions/Function1;)Z
+	public static final fun getHead (Ljava/util/List;)Ljava/lang/Object;
+	public static final fun getTail (Ljava/util/List;)Ljava/util/List;
+	public static final fun isAnyMissing (Ljava/lang/Iterable;)Z
+	public static final fun isAnyNull (Ljava/lang/Iterable;)Z
+	public static final fun isAnyUnknown (Ljava/lang/Iterable;)Z
+	public static final fun product (Ljava/util/List;)Ljava/lang/Iterable;
+}
+
+public final class org/partiql/lang/util/ConfigurableExprValueFormatter : org/partiql/lang/util/ExprValueFormatter {
+	public static final field Companion Lorg/partiql/lang/util/ConfigurableExprValueFormatter$Companion;
+	public fun <init> (Lorg/partiql/lang/util/ConfigurableExprValueFormatter$Configuration;)V
+	public fun format (Lorg/partiql/lang/eval/ExprValue;)Ljava/lang/String;
+	public fun formatTo (Lorg/partiql/lang/eval/ExprValue;Ljava/lang/Appendable;)V
+	public static final fun getPretty ()Lorg/partiql/lang/util/ConfigurableExprValueFormatter;
+	public static final fun getStandard ()Lorg/partiql/lang/util/ConfigurableExprValueFormatter;
+}
+
+public final class org/partiql/lang/util/ConfigurableExprValueFormatter$Companion {
+	public final fun getPretty ()Lorg/partiql/lang/util/ConfigurableExprValueFormatter;
+	public final fun getStandard ()Lorg/partiql/lang/util/ConfigurableExprValueFormatter;
+}
+
+public final class org/partiql/lang/util/ConfigurableExprValueFormatter$Configuration {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;)Lorg/partiql/lang/util/ConfigurableExprValueFormatter$Configuration;
+	public static synthetic fun copy$default (Lorg/partiql/lang/util/ConfigurableExprValueFormatter$Configuration;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lorg/partiql/lang/util/ConfigurableExprValueFormatter$Configuration;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getContainerValueSeparator ()Ljava/lang/String;
+	public final fun getIndentation ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class org/partiql/lang/util/ExprValueFormatter {
+	public abstract fun format (Lorg/partiql/lang/eval/ExprValue;)Ljava/lang/String;
+	public abstract fun formatTo (Lorg/partiql/lang/eval/ExprValue;Ljava/lang/Appendable;)V
+}
+
+public final class org/partiql/lang/util/ExprValueFormatter$DefaultImpls {
+	public static fun format (Lorg/partiql/lang/util/ExprValueFormatter;Lorg/partiql/lang/eval/ExprValue;)Ljava/lang/String;
+}
+
+public final class org/partiql/lang/util/FacetExtensionsKt {
+	public static final fun downcast (Ljava/lang/Object;Ljava/lang/Class;)Ljava/lang/Object;
+}
+
+public final class org/partiql/lang/util/IonValueExtensionsKt {
+	public static final fun asIonInt (Lcom/amazon/ion/IonValue;)Lcom/amazon/ion/IonInt;
+	public static final fun asIonSexp (Lcom/amazon/ion/IonValue;)Lcom/amazon/ion/IonSexp;
+	public static final fun asIonStruct (Lcom/amazon/ion/IonValue;)Lcom/amazon/ion/IonStruct;
+	public static final fun asIonSymbol (Lcom/amazon/ion/IonValue;)Lcom/amazon/ion/IonSymbol;
+	public static final fun asSequence (Lcom/amazon/ion/IonValue;)Lkotlin/sequences/Sequence;
+	public static final fun bigDecimalValue (Lcom/amazon/ion/IonValue;)Ljava/math/BigDecimal;
+	public static final fun bigDecimalValueOrNull (Lcom/amazon/ion/IonValue;)Ljava/math/BigDecimal;
+	public static final fun booleanValue (Lcom/amazon/ion/IonValue;)Z
+	public static final fun booleanValueOrNull (Lcom/amazon/ion/IonValue;)Ljava/lang/Boolean;
+	public static final fun bytesValue (Lcom/amazon/ion/IonValue;)[B
+	public static final fun bytesValueOrNull (Lcom/amazon/ion/IonValue;)[B
+	public static final fun doubleValue (Lcom/amazon/ion/IonValue;)D
+	public static final fun doubleValueOrNull (Lcom/amazon/ion/IonValue;)Ljava/lang/Double;
+	public static final fun field (Lcom/amazon/ion/IonStruct;Ljava/lang/String;)Lcom/amazon/ion/IonValue;
+	public static final fun filterMetaNodes (Lcom/amazon/ion/IonSexp;)Lcom/amazon/ion/IonValue;
+	public static final fun get (Lcom/amazon/ion/IonValue;I)Lcom/amazon/ion/IonValue;
+	public static final fun get (Lcom/amazon/ion/IonValue;Ljava/lang/String;)Lcom/amazon/ion/IonValue;
+	public static final fun getArgs (Lcom/amazon/ion/IonSexp;)Ljava/util/List;
+	public static final fun getArity (Lcom/amazon/ion/IonSexp;)I
+	public static final fun getLastIndex (Lcom/amazon/ion/IonValue;)I
+	public static final fun getOrdinal (Lcom/amazon/ion/IonValue;)I
+	public static final fun getSize (Lcom/amazon/ion/IonValue;)I
+	public static final fun getTagText (Lcom/amazon/ion/IonSexp;)Ljava/lang/String;
+	public static final fun isAstLiteral (Lcom/amazon/ion/IonValue;)Z
+	public static final fun isBag (Lcom/amazon/ion/IonValue;)Z
+	public static final fun isDate (Lcom/amazon/ion/IonValue;)Z
+	public static final fun isMissing (Lcom/amazon/ion/IonValue;)Z
+	public static final fun isNonNullText (Lcom/amazon/ion/IonValue;)Z
+	public static final fun isNumeric (Lcom/amazon/ion/IonValue;)Z
+	public static final fun isText (Lcom/amazon/ion/IonValue;)Z
+	public static final fun isTime (Lcom/amazon/ion/IonValue;)Z
+	public static final fun isUnsignedInteger (Lcom/amazon/ion/IonValue;)Z
+	public static final fun iterator (Lcom/amazon/ion/IonValue;)Ljava/util/Iterator;
+	public static final fun javaValue (Lcom/amazon/ion/IonInt;)Ljava/lang/Number;
+	public static final fun longValue (Lcom/amazon/ion/IonValue;)J
+	public static final fun longValueOrNull (Lcom/amazon/ion/IonValue;)Ljava/lang/Long;
+	public static final fun numberValue (Lcom/amazon/ion/IonValue;)Ljava/lang/Number;
+	public static final fun numberValueOrNull (Lcom/amazon/ion/IonValue;)Ljava/lang/Number;
+	public static final fun seal (Lcom/amazon/ion/IonValue;)Lcom/amazon/ion/IonValue;
+	public static final fun singleArgWithTag (Lcom/amazon/ion/IonSexp;Ljava/lang/String;)Lcom/amazon/ion/IonValue;
+	public static final fun singleArgWithTagOrNull (Lcom/amazon/ion/IonSexp;Ljava/lang/String;)Lcom/amazon/ion/IonValue;
+	public static final fun stringValue (Lcom/amazon/ion/IonValue;)Ljava/lang/String;
+	public static final fun stringValueOrNull (Lcom/amazon/ion/IonValue;)Ljava/lang/String;
+	public static final fun timestampValue (Lcom/amazon/ion/IonValue;)Lcom/amazon/ion/Timestamp;
+	public static final fun timestampValueOrNull (Lcom/amazon/ion/IonValue;)Lcom/amazon/ion/Timestamp;
+	public static final fun toListOfIonSexp (Ljava/lang/Iterable;)Ljava/util/List;
+}
+
+public final class org/partiql/lang/util/IonWriterContext {
+	public fun <init> (Lcom/amazon/ion/IonWriter;)V
+	public final fun bool (Ljava/lang/String;Z)V
+	public final fun bool (Z)V
+	public final fun getWriter ()Lcom/amazon/ion/IonWriter;
+	public final fun int (J)V
+	public final fun int (Ljava/lang/String;J)V
+	public final fun list (Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+	public final fun list (Lkotlin/jvm/functions/Function1;)V
+	public final fun nullBlob ()V
+	public final fun nullBlob (Ljava/lang/String;)V
+	public final fun nullBool ()V
+	public final fun nullBool (Ljava/lang/String;)V
+	public final fun nullClob ()V
+	public final fun nullClob (Ljava/lang/String;)V
+	public final fun nullDecimal ()V
+	public final fun nullDecimal (Ljava/lang/String;)V
+	public final fun nullFloat ()V
+	public final fun nullFloat (Ljava/lang/String;)V
+	public final fun nullInt ()V
+	public final fun nullInt (Ljava/lang/String;)V
+	public final fun nullList ()V
+	public final fun nullList (Ljava/lang/String;)V
+	public final fun nullSexp ()V
+	public final fun nullSexp (Ljava/lang/String;)V
+	public final fun nullString ()V
+	public final fun nullString (Ljava/lang/String;)V
+	public final fun nullStruct ()V
+	public final fun nullStruct (Ljava/lang/String;)V
+	public final fun nullSymbol ()V
+	public final fun nullSymbol (Ljava/lang/String;)V
+	public final fun setNextFieldName (Ljava/lang/String;)V
+	public final fun sexp (Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+	public final fun sexp (Lkotlin/jvm/functions/Function1;)V
+	public final fun string (Ljava/lang/String;)V
+	public final fun string (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun struct (Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+	public final fun struct (Lkotlin/jvm/functions/Function1;)V
+	public final fun symbol (Ljava/lang/String;)V
+	public final fun symbol (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun untypedNull ()V
+	public final fun untypedNull (Ljava/lang/String;)V
+	public final fun value (Lcom/amazon/ion/IonValue;)V
+	public final fun value (Ljava/lang/String;Lcom/amazon/ion/IonValue;)V
+}
+
+public final class org/partiql/lang/util/LongExtensionsKt {
+	public static final fun toIntExact (J)I
+}
+
+public final class org/partiql/lang/util/NumberExtensionsKt {
+	public static final fun bigDecimalOf (Ljava/lang/Number;Ljava/math/MathContext;)Ljava/math/BigDecimal;
+	public static final fun bigDecimalOf (Ljava/lang/String;Ljava/math/MathContext;)Ljava/math/BigDecimal;
+	public static synthetic fun bigDecimalOf$default (Ljava/lang/Number;Ljava/math/MathContext;ILjava/lang/Object;)Ljava/math/BigDecimal;
+	public static synthetic fun bigDecimalOf$default (Ljava/lang/String;Ljava/math/MathContext;ILjava/lang/Object;)Ljava/math/BigDecimal;
+	public static final fun coerce (Ljava/lang/Number;Ljava/lang/Class;)Ljava/lang/Number;
+	public static final fun coerceNumbers (Ljava/lang/Number;Ljava/lang/Number;)Lkotlin/Pair;
+	public static final fun compareTo (Ljava/lang/Number;Ljava/lang/Number;)I
+	public static final fun div (Ljava/lang/Number;Ljava/lang/Number;)Ljava/lang/Number;
+	public static final fun exp (Ljava/math/BigDecimal;Ljava/math/MathContext;)Ljava/math/BigDecimal;
+	public static synthetic fun exp$default (Ljava/math/BigDecimal;Ljava/math/MathContext;ILjava/lang/Object;)Ljava/math/BigDecimal;
+	public static final fun ionValue (Ljava/lang/Number;Lcom/amazon/ion/IonSystem;)Lcom/amazon/ion/IonValue;
+	public static final fun isNaN (Ljava/lang/Number;)Z
+	public static final fun isNegInf (Ljava/lang/Number;)Z
+	public static final fun isPosInf (Ljava/lang/Number;)Z
+	public static final fun ln (Ljava/math/BigDecimal;Ljava/math/MathContext;)Ljava/math/BigDecimal;
+	public static synthetic fun ln$default (Ljava/math/BigDecimal;Ljava/math/MathContext;ILjava/lang/Object;)Ljava/math/BigDecimal;
+	public static final fun minus (Ljava/lang/Number;Ljava/lang/Number;)Ljava/lang/Number;
+	public static final fun plus (Ljava/lang/Number;Ljava/lang/Number;)Ljava/lang/Number;
+	public static final fun power (Ljava/math/BigDecimal;Ljava/math/BigDecimal;Ljava/math/MathContext;)Ljava/math/BigDecimal;
+	public static synthetic fun power$default (Ljava/math/BigDecimal;Ljava/math/BigDecimal;Ljava/math/MathContext;ILjava/lang/Object;)Ljava/math/BigDecimal;
+	public static final fun rem (Ljava/lang/Number;Ljava/lang/Number;)Ljava/lang/Number;
+	public static final fun squareRoot (Ljava/math/BigDecimal;Ljava/math/MathContext;)Ljava/math/BigDecimal;
+	public static synthetic fun squareRoot$default (Ljava/math/BigDecimal;Ljava/math/MathContext;ILjava/lang/Object;)Ljava/math/BigDecimal;
+	public static final fun times (Ljava/lang/Number;Ljava/lang/Number;)Ljava/lang/Number;
+	public static final fun unaryMinus (Lcom/amazon/ion/Decimal;)Lcom/amazon/ion/Decimal;
+	public static final fun unaryMinus (Ljava/lang/Number;)Ljava/lang/Number;
+}
+
+public final class org/partiql/lang/util/PropertyMapHelpersKt {
+	public static final fun propertyValueMapOf (II[Lkotlin/Pair;)Lorg/partiql/errors/PropertyValueMap;
+	public static final fun propertyValueMapOf ([Lkotlin/Pair;)Lorg/partiql/errors/PropertyValueMap;
+	public static final fun to (Lorg/partiql/errors/Property;Ljava/lang/Object;)Lkotlin/Pair;
+}
+
+public final class org/partiql/lang/util/StringExtensionsKt {
+	public static final fun codePointSequence (Ljava/lang/String;)Lkotlin/sequences/Sequence;
+}
+
+public final class org/partiql/lang/util/WhenAsExpressionHelper {
+	public static final field Companion Lorg/partiql/lang/util/WhenAsExpressionHelper$Companion;
+	public final fun toUnit ()V
+}
+
+public final class org/partiql/lang/util/WhenAsExpressionHelper$Companion {
+	public final fun getInstance ()Lorg/partiql/lang/util/WhenAsExpressionHelper;
+}
+
+public final class org/partiql/lang/util/WhenAsExpressionKt {
+	public static final fun case (Lkotlin/jvm/functions/Function0;)Lorg/partiql/lang/util/WhenAsExpressionHelper;
+}
+
+public final class org/partiql/lang/util/impl/ResourceAuthority : com/amazon/ionschema/Authority {
+	public static final field Companion Lorg/partiql/lang/util/impl/ResourceAuthority$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/ClassLoader;Lcom/amazon/ion/IonSystem;)V
+	public final fun getIon ()Lcom/amazon/ion/IonSystem;
+	public fun iteratorFor (Lcom/amazon/ionschema/IonSchemaSystem;Ljava/lang/String;)Lcom/amazon/ionschema/util/CloseableIterator;
+}
+
+public final class org/partiql/lang/util/impl/ResourceAuthority$Companion {
+	public final fun getResourceAuthority (Lcom/amazon/ion/IonSystem;)Lorg/partiql/lang/util/impl/ResourceAuthority;
+}
+
