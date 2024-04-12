@@ -50,7 +50,6 @@ public interface PartiQLPlanner {
         public val catalogs: Map<String, ConnectorMetadata> = emptyMap(),
         public val instant: Instant = Instant.now(),
     )
-
     public companion object {
 
         @JvmStatic
