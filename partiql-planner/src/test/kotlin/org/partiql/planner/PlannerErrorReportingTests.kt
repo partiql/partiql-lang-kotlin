@@ -71,7 +71,7 @@ internal class PlannerErrorReportingTests {
                     this.appendLine("--------Plan---------")
                     PlanPrinter.append(this, plan)
 
-                    this.appendLine("----------problems---------")
+                    this.appendLine("----------Problems---------")
                     problems.forEach {
                         this.appendLine(it.toString())
                     }
@@ -123,12 +123,7 @@ internal class PlannerErrorReportingTests {
                 true,
                 assertOnProblemCount(0, 0)
             ),
-            // Unresolved variable
-            TestCase(
-                "var_not_exist",
-                false,
-                assertOnProblemCount(1, 0)
-            ),
+            // Unresolved variable always signals (10.1.3)
             TestCase(
                 "var_not_exist",
                 true,
@@ -269,13 +264,13 @@ internal class PlannerErrorReportingTests {
                 "not_a_function(1)",
                 false,
                 assertOnProblemCount(0, 1),
-                StaticType.ANY
+                StaticType.MISSING
             ),
             TestCase(
                 "not_a_function(1)",
                 true,
                 assertOnProblemCount(0, 1),
-                StaticType.ANY
+                StaticType.MISSING
             ),
 
             // 1 + not_a_function(1)
@@ -283,32 +278,14 @@ internal class PlannerErrorReportingTests {
             TestCase(
                 "1 + not_a_function(1)",
                 false,
-                assertOnProblemCount(0, 1),
-                StaticType.unionOf(
-                    StaticType.INT4,
-                    StaticType.INT8,
-                    StaticType.INT8,
-                    StaticType.INT,
-                    StaticType.FLOAT,
-                    StaticType.DECIMAL, // Parameter?
-                    StaticType.MISSING,
-//                  StaticType.NULL // TODO: There is a bug in function resolution, null type is not there.
-                ).flatten()
+                assertOnProblemCount(1, 1),
+                StaticType.MISSING,
             ),
             TestCase(
                 "1 + not_a_function(1)",
                 false,
-                assertOnProblemCount(0, 1),
-                StaticType.unionOf(
-                    StaticType.INT4,
-                    StaticType.INT8,
-                    StaticType.INT8,
-                    StaticType.INT,
-                    StaticType.FLOAT,
-                    StaticType.DECIMAL, // Parameter?
-                    StaticType.MISSING,
-//                  StaticType.NULL // TODO: There is a bug in function resolution, null type is not there.
-                ).flatten()
+                assertOnProblemCount(1, 1),
+                StaticType.MISSING,
             ),
 
             TestCase(

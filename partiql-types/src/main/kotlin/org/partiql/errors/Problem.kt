@@ -12,7 +12,7 @@ public typealias ProblemCallback = (Problem) -> Unit
  * @param details details related to the problem's severity and a human-readable message
  */
 public data class Problem(val sourceLocation: ProblemLocation, val details: ProblemDetails) {
-    override fun toString(): String = "$sourceLocation: ${details.message}"
+    override fun toString(): String = "${details.severity}: [$sourceLocation] ${details.message}"
 }
 
 /**

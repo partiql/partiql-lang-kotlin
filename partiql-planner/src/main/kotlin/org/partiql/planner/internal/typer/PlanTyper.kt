@@ -477,7 +477,7 @@ internal class PlanTyper(private val env: Env) {
             if (resolvedVar == null) {
                 val id = PlanUtils.externalize(node.identifier)
                 val inScopeVariables = locals.schema.map { it.name }.toSet()
-                val err = ProblemGenerator.missingRex(
+                val err = ProblemGenerator.errorRex(
                     causes = emptyList(),
                     problem = ProblemGenerator.undefinedVariable(id, inScopeVariables)
                 )
@@ -751,6 +751,9 @@ internal class PlanTyper(private val env: Env) {
                     val (operand, target) = mapping[i]
                     if (operand == target) continue // skip
                     val branch = newBranches[i]
+                    if (branch.rex.type is MissingType) {
+                        continue // skip
+                    }
                     val cast = env.resolveCast(branch.rex, target)!!
                     val rex = rex(type, cast)
                     newBranches[i] = branch.copy(rex = rex)
@@ -944,8 +947,8 @@ internal class PlanTyper(private val env: Env) {
             val fields = node.fields.mapNotNull {
                 val k = visitRex(it.k, it.k.type)
                 val v = visitRex(it.v, it.v.type)
-                if (v.op is Rex.Op.Missing) {
-                    null
+                if (k.op is Rex.Op.Err || k.op is Rex.Op.Missing || v.op is Rex.Op.Err || v.op is Rex.Op.Missing) {
+                    rexOpStructField(k, v)
                 } else if (v.type is MissingType) {
                     null
                 } else {
@@ -964,7 +967,9 @@ internal class PlanTyper(private val env: Env) {
                             val name = key.value.string!!
                             val type = field.v.type
                             structKeysSeent.add(name)
-                            structTypeFields.add(StructType.Field(name, type))
+                            if (field.v.type !is MissingType) {
+                                structTypeFields.add(StructType.Field(name, type))
+                            }
                         }
                     }
                     else -> {
