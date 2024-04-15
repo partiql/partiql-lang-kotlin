@@ -1,5 +1,7 @@
 package org.partiql.planner
 
+import org.partiql.planner.internal.PartiQLPlannerDefault
+import org.partiql.planner.internal.PlannerFlag
 import org.partiql.spi.connector.ConnectorMetadata
 
 /**
@@ -7,10 +9,13 @@ import org.partiql.spi.connector.ConnectorMetadata
  *
  * Usage:
  *      PartiQLPlanner.builder()
+ *                    .signalMode()
  *                    .addPass(myPass)
  *                    .build()
  */
 public class PartiQLPlannerBuilder {
+
+    private val flags: MutableSet<PlannerFlag> = mutableSetOf()
 
     private val passes: MutableList<PartiQLPlannerPass> = mutableListOf()
 
@@ -19,7 +24,7 @@ public class PartiQLPlannerBuilder {
      *
      * @return
      */
-    public fun build(): PartiQLPlanner = PartiQLPlannerDefault(passes)
+    public fun build(): PartiQLPlanner = PartiQLPlannerDefault(passes, flags)
 
     /**
      * Java style method for adding a planner pass to this planner builder.
@@ -39,6 +44,13 @@ public class PartiQLPlannerBuilder {
      */
     public fun addPasses(vararg passes: PartiQLPlannerPass): PartiQLPlannerBuilder = this.apply {
         this.passes.addAll(passes)
+    }
+
+    /**
+     * Java style method for setting the planner to signal mode
+     */
+    public fun signalMode(): PartiQLPlannerBuilder = this.apply {
+        this.flags.add(PlannerFlag.SIGNAL_MODE)
     }
 
     /**

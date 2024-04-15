@@ -33,11 +33,12 @@ internal class RelOffset(
 
     override fun hasNext(): Boolean {
         if (!init) {
-            for (record in input) {
+            while (input.hasNext()) {
                 if (_seen >= _offset) {
                     break
                 }
                 _seen = _seen.add(BigInteger.ONE)
+                input.next()
             }
             init = true
         }
