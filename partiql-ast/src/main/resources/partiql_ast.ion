@@ -211,6 +211,7 @@ type::[
       field :: {
         name: '.identifier.symbol',
         type: '.type',
+        constraints: list::[constraint],
         is_optional: bool,
         comment: optional::string,
       }

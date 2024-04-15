@@ -18,6 +18,7 @@ package org.partiql.planner.internal.transforms
 
 import org.partiql.ast.AstNode
 import org.partiql.ast.Expr
+import org.partiql.ast.Statement
 import org.partiql.ast.visitor.AstBaseVisitor
 import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.ir.identifierQualified
@@ -41,6 +42,10 @@ internal object AstToPlan {
     private object ToPlanStatement : AstBaseVisitor<PlanStatement, Env>() {
 
         override fun defaultReturn(node: AstNode, env: Env) = throw IllegalArgumentException("Unsupported statement")
+
+        override fun visitStatementDDL(node: Statement.DDL, ctx: Env): PlanStatement {
+            return DDLConverter.apply(node, ctx)
+        }
 
         override fun visitStatementQuery(node: AstStatement.Query, env: Env): PlanStatement {
             val rex = when (val expr = node.expr) {

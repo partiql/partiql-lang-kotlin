@@ -53,7 +53,54 @@ statement::[
   query::{
     root: rex,
   },
+  d_d_l::{
+    op: ddl_op,
+  },
 ]
+
+ddl_op::[
+  create_table::{
+    // Table Name, unresolved
+    name: identifier,
+    // column definition
+    shape: static_type,
+    // constraints, inline constraints should be retreived.
+    constraint: list::[constraint],
+    // for now, just a list of string...
+    partition_expr: optional::partition_expr,
+    // table proproties:
+    table_properties: list::[table_property],
+  },
+]
+
+// Constraints
+// needed for DDL and DML.
+constraint::{
+  // Keep this optional at the internal plan node so it is easier to sanitize...
+  name: optional::string,
+  body: [
+    check::{
+      lowered: rex,
+      unlowered: string,
+    },
+    unique::{
+      columns: list::['.identifier.symbol'],
+      is_primary_key: bool,
+    },
+  ],
+}
+
+// We might need to allow using DML to update partition expression and table properties
+partition_expr::[
+  column_list::{
+    columns: list::['.identifier.symbol']
+  }
+]
+
+table_property::{
+  name: string,
+  value: partiql_value,
+}
 
 // Identifiers
 

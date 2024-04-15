@@ -52,7 +52,43 @@ statement::[
   query::{
     root: rex,
   },
+  d_d_l::{
+    op: ddl_op,
+  },
 ]
+
+ddl_op::[
+  create_table::{
+    name: identifier,
+    shape: static_type,
+    constraint: list::[constraint],
+    partition_expr: optional::partition_expr,
+    table_properties: list::[table_property],
+  },
+]
+
+// Constraints
+constraint::{
+  name: string,
+  body: [
+    check::{ lowered: rex, unlowered: string },
+    unique::{
+      columns: list::['.identifier.symbol'],
+      is_primary_key: bool,
+    },
+  ],
+}
+
+partition_expr::[
+  column_list::{
+    columns: list::['.identifier.symbol']
+  }
+]
+
+table_property::{
+  name: string,
+  value: partiql_value,
+}
 
 // Identifiers
 

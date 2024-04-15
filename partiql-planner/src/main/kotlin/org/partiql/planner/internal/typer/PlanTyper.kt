@@ -22,12 +22,18 @@ import org.partiql.errors.UNKNOWN_PROBLEM_LOCATION
 import org.partiql.planner.PlanningProblemDetails
 import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.exclude.ExcludeRepr
+import org.partiql.planner.internal.ir.Constraint
+import org.partiql.planner.internal.ir.DdlOp
 import org.partiql.planner.internal.ir.Identifier
 import org.partiql.planner.internal.ir.PlanNode
 import org.partiql.planner.internal.ir.Ref.Cast.Safety.UNSAFE
 import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.Statement
+import org.partiql.planner.internal.ir.constraint
+import org.partiql.planner.internal.ir.constraintBodyCheck
+import org.partiql.planner.internal.ir.constraintBodyUnique
+import org.partiql.planner.internal.ir.ddlOpCreateTable
 import org.partiql.planner.internal.ir.identifierSymbol
 import org.partiql.planner.internal.ir.rel
 import org.partiql.planner.internal.ir.relBinding
@@ -62,6 +68,7 @@ import org.partiql.planner.internal.ir.rexOpStruct
 import org.partiql.planner.internal.ir.rexOpStructField
 import org.partiql.planner.internal.ir.rexOpSubquery
 import org.partiql.planner.internal.ir.rexOpTupleUnion
+import org.partiql.planner.internal.ir.statementDDL
 import org.partiql.planner.internal.ir.statementQuery
 import org.partiql.planner.internal.ir.util.PlanRewriter
 import org.partiql.planner.internal.utils.PlanUtils
@@ -112,11 +119,18 @@ internal class PlanTyper(
     /**
      * Rewrite the statement with inferred types and resolved variables
      */
-    fun resolve(statement: Statement): Statement {
-        if (statement !is Statement.Query) {
-            throw IllegalArgumentException("PartiQLPlanner only supports Query statements")
+    fun resolve(statement: Statement): Statement =
+        when (statement) {
+            is Statement.DDL -> resolveDdl(statement)
+            is Statement.Query -> resolveQuery(statement)
         }
-        // root TypeEnv has no bindings
+
+    fun resolveDdl(statement: Statement.DDL): Statement {
+        val statement = statement.type()
+        return statement
+    }
+
+    fun resolveQuery(statement: Statement.Query): Statement.Query {
         val root = statement.root.type(emptyList(), emptyList(), Scope.GLOBAL)
         return statementQuery(root)
     }
@@ -1367,6 +1381,8 @@ internal class PlanTyper(
     private fun Rex.type(typeEnv: TypeEnv, strategy: Scope = Scope.LOCAL) =
         RexTyper(typeEnv, strategy).visitRex(this, this.type)
 
+    private fun Statement.DDL.type() = DdlTyper().visitStatementDDL(this, ANY)
+
     private fun rexErr(message: String) = rex(MISSING, rexOpErr(message))
 
     /**
@@ -1594,5 +1610,50 @@ internal class PlanTyper(
         }
         // curr is root
         return "`${steps.joinToString(".")}` on root $curr"
+    }
+
+    // For now: Verify check constraint expression is valid PartiQL and is typed to Boolean
+    private inner class DdlTyper() : PlanRewriter<StaticType>() {
+
+        override fun visitStatementDDL(node: Statement.DDL, ctx: StaticType): Statement.DDL {
+            val op = when (node.op) {
+                is DdlOp.CreateTable -> visitDdlOpCreateTable(node.op, ctx)
+            }
+            return statementDDL(op)
+        }
+
+        override fun visitDdlOpCreateTable(node: DdlOp.CreateTable, ctx: StaticType): DdlOp {
+            val name = node.name
+            val shape = node.shape
+            val constraints = node.constraint.map { visitConstraint(it, shape) }
+            return ddlOpCreateTable(node.name, shape, constraints, node.partitionExpr, node.tableProperties)
+        }
+
+        override fun visitConstraint(node: Constraint, ctx: StaticType): Constraint {
+            return when (node.body) {
+                is Constraint.Body.Check -> constraint(node.name, visitConstraintBodyCheck(node.body, ctx))
+                is Constraint.Body.Unique -> constraint(node.name, visitConstraintBodyUnique(node.body, ctx))
+            }
+        }
+
+        // verfiy check constraint. using rex typer to assert on valid expression
+        // Constraint handler to lower if needed.
+        override fun visitConstraintBodyCheck(node: Constraint.Body.Check, ctx: StaticType): Constraint.Body.Check {
+            // construct Type Env
+            val shapeStruct = (ctx as BagType).elementType as StructType
+            val bindings = shapeStruct.fields.map {
+                Rel.Binding(
+                    it.key,
+                    it.value
+                )
+            }
+            val typeEnv = TypeEnv(bindings, emptyList())
+            val resolvedRex = RexTyper(typeEnv, Scope.LOCAL).visitRex(node.lowered, null)
+            if (resolvedRex.type !is BoolType) TODO("Check expression not type to boolean")
+            return constraintBodyCheck(resolvedRex, node.unlowered)
+        }
+
+        override fun visitConstraintBodyUnique(node: Constraint.Body.Unique, ctx: StaticType) =
+            constraintBodyUnique(node.columns, node.isPrimaryKey)
     }
 }
