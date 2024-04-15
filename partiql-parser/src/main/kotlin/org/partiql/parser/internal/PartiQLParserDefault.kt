@@ -661,17 +661,27 @@ internal class PartiQLParserDefault : PartiQLParser {
         override fun visitColumnDeclaration(ctx: GeneratedParser.ColumnDeclarationContext) = translate(ctx) {
             val name = visitAs<Identifier.Symbol> (ctx.columnName().symbolPrimitive())
             val type = visit(ctx.type()) as Type
-            val constraints = ctx.columnConstraint().map { constrCtx ->
-                val identifier = constrCtx.constraintName()?.let { symbolToString(it.symbolPrimitive()) }
-                val body = visit(constrCtx.columnConstraintDef()) as Constraint.Body
-                constraint(identifier, body)
-            }
+            val constraints = ctx.columnConstraint().map { visitColumnConstraint(it) }
             val optional = when (ctx.OPTIONAL()) {
                 null -> false
                 else -> true
             }
             val comment = ctx.comment()?.LITERAL_STRING()?.getStringValue()
             tableDefinitionColumn(name, type, optional, constraints, comment)
+        }
+
+        override fun visitColumnConstraint(ctx: org.partiql.parser.antlr.PartiQLParser.ColumnConstraintContext) = translate(ctx) {
+            val identifier = ctx.constraintName()?.let { symbolToString(it.symbolPrimitive()) }
+            val body = visit(ctx.columnConstraintDef()) as Constraint.Body
+            when (body) {
+                is Constraint.Body.Check, is Constraint.Body.Unique -> constraint(identifier, body)
+                is Constraint.Body.NotNull, is Constraint.Body.Nullable -> {
+                    if (identifier != null)
+                        throw error(ctx.constraintName(), "named NULL / NOT NULL constraint not supported")
+                    else
+                        constraint(identifier, body)
+                }
+            }
         }
 
         override fun visitColConstrNotNull(ctx: GeneratedParser.ColConstrNotNullContext) = translate(ctx) {
@@ -2233,12 +2243,9 @@ internal class PartiQLParserDefault : PartiQLParser {
                     else -> true
                 }
                 val comment = it.comment()?.LITERAL_STRING()?.getStringValue()
-                // TODO: Figure out should we support Field level check constraints
-                if (it.columnConstraint().isNotEmpty()) {
-                    throw error(it.columnConstraint().first(), "Declare Check Constraint on Struct Field has not been support yet, please move those as table constraints")
-                }
+                val constraints = it.columnConstraint().map { visitColumnConstraint(it) }
 
-                typeStructField(name, type, optional, comment)
+                typeStructField(name, type, constraints, optional, comment)
             }
             typeStruct(fields)
         }

@@ -590,7 +590,8 @@ public data class StructType(
      */
     public data class Field(
         val key: String,
-        val value: StaticType
+        val value: StaticType,
+        val meta: Map<String, Any> = mapOf()
     )
 
     override fun flatten(): StaticType = this

@@ -2,17 +2,29 @@ package org.partiql.planner.internal.transforms
 
 import org.partiql.errors.ProblemCallback
 import org.partiql.plan.PlanNode
+import org.partiql.plan.constraint
+import org.partiql.plan.constraintBodyCheck
+import org.partiql.plan.constraintBodyUnique
+import org.partiql.plan.ddlOpCreateTable
 import org.partiql.plan.partiQLPlan
+import org.partiql.plan.partitionExprColumnList
 import org.partiql.plan.rexOpCast
+
 import org.partiql.plan.rexOpErr
 import org.partiql.planner.internal.PlannerFlag
 import org.partiql.planner.internal.ProblemGenerator
+import org.partiql.plan.statementDDL
+import org.partiql.plan.tableProperty
+import org.partiql.planner.internal.ir.Constraint
+import org.partiql.planner.internal.ir.DdlOp
 import org.partiql.planner.internal.ir.Identifier
 import org.partiql.planner.internal.ir.PartiQLPlan
+import org.partiql.planner.internal.ir.PartitionExpr
 import org.partiql.planner.internal.ir.Ref
 import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.Statement
+import org.partiql.planner.internal.ir.TableProperty
 import org.partiql.planner.internal.ir.visitor.PlanBaseVisitor
 import org.partiql.value.PartiQLValueExperimental
 
@@ -84,6 +96,55 @@ internal class PlanTransform(
 
         override fun visitStatement(node: Statement, ctx: Unit) =
             super.visitStatement(node, ctx) as org.partiql.plan.Statement
+
+        //
+        // DDL
+        //
+        override fun visitStatementDDL(node: Statement.DDL, ctx: Unit) =
+            statementDDL(
+                op = visitDdlOp(node.op, ctx)
+            )
+
+        override fun visitDdlOp(node: DdlOp, ctx: Unit) =
+            when (node) {
+                is DdlOp.CreateTable -> visitDdlOpCreateTable(node, ctx)
+            }
+        override fun visitDdlOpCreateTable(node: DdlOp.CreateTable, ctx: Unit) =
+            ddlOpCreateTable(
+                name = visitIdentifier(node.name, ctx),
+                shape = node.shape,
+                constraint = node.constraint.map { visitConstraint(it, ctx) },
+                partitionExpr = node.partitionExpr?.let { visitPartitionExpr(it, ctx) },
+                tableProperties = node.tableProperties.map { visitTableProperty(it, ctx) }
+            )
+
+        override fun visitConstraint(node: Constraint, ctx: Unit) =
+            constraint(
+                node.name ?: error("Internal error, constraint name should not be null"),
+                visitConstraintBody(node.body, ctx)
+            )
+
+        override fun visitConstraintBody(node: Constraint.Body, ctx: Unit) = when (node) {
+            is Constraint.Body.Check -> visitConstraintBodyCheck(node, ctx)
+            is Constraint.Body.Unique -> visitConstraintBodyUnique(node, ctx)
+        }
+
+        override fun visitConstraintBodyCheck(node: Constraint.Body.Check, ctx: Unit) =
+            constraintBodyCheck(visitRex(node.lowered, ctx), node.unlowered)
+
+        override fun visitConstraintBodyUnique(node: Constraint.Body.Unique, ctx: Unit) =
+            constraintBodyUnique(node.columns.map { visitIdentifierSymbol(it, ctx) }, node.isPrimaryKey)
+
+        override fun visitPartitionExpr(node: PartitionExpr, ctx: Unit) = when (node) {
+            is PartitionExpr.ColumnList -> visitPartitionExprColumnList(node, ctx)
+        }
+
+        override fun visitPartitionExprColumnList(node: PartitionExpr.ColumnList, ctx: Unit) =
+            partitionExprColumnList(node.columns.map { visitIdentifierSymbol(it, ctx) })
+
+        @OptIn(PartiQLValueExperimental::class)
+        override fun visitTableProperty(node: TableProperty, ctx: Unit) =
+            tableProperty(node.name, node.value)
 
         override fun visitStatementQuery(node: Statement.Query, ctx: Unit): org.partiql.plan.Statement.Query {
             val root = visitRex(node.root, ctx)
