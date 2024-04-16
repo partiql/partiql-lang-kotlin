@@ -21,6 +21,7 @@ import org.partiql.planner.internal.ir.partitionExprColumnList
 import org.partiql.planner.internal.ir.statementDDL
 import org.partiql.planner.internal.ir.tableProperty
 import org.partiql.planner.internal.transforms.AstToPlan.convert
+import org.partiql.planner.internal.transforms.DDLConverter.ToDdl.FieldDefinition.Companion.containsAll
 import org.partiql.planner.internal.transforms.DDLConverter.ToDdl.FieldDefinition.Companion.pushDownPK
 import org.partiql.types.BagType
 import org.partiql.types.DecimalType
@@ -34,6 +35,7 @@ import org.partiql.value.PartiQLTimestampExperimental
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.planner.internal.ir.Constraint as PlanConstraint
 
+// TODO: Clean up this code
 internal object DDLConverter {
     internal fun apply(statement: Statement.DDL, env: Env): DDL = statement.accept(ToDdl, Ctx(env, null)) as DDL
 
@@ -96,6 +98,8 @@ internal object DDLConverter {
                 it.body.columns
             } ?: emptyList()
 
+            if (!fieldDefs.containsAll(primaryKeys)) TODO("Undeclared field in primary key")
+
             val fields = fieldDefs.pushDownPK(primaryKeys)
 
             val type = fields.map { it.toStructField() }.let { BagType(StructType(it)) }
@@ -131,6 +135,8 @@ internal object DDLConverter {
                     }
 
             val partition = node.partitionBy?.let { getPartitionColumn(it) }
+
+            if (!fieldDefs.containsAll(partition?.let { it.columns } ?: emptyList())) TODO("Undeclared column in Partition Key")
             val tableProperties = node.tableProperties.map {
                 tableProperty(it.name, it.value)
             }
@@ -293,7 +299,7 @@ internal object DDLConverter {
                     else it
                 }.let {
                     if (isNullable) it.asNullable()
-                    it
+                    else it
                 }
 
                 val meta = if (comment != null) {
@@ -334,6 +340,14 @@ internal object DDLConverter {
                         }
                         field
                     }
+
+                fun List<FieldDefinition>.containsAll(attrList: List<Identifier.Symbol>): Boolean {
+                    val fieldNames = this.map { it.name.normalize() }
+                    attrList.forEach {
+                        if (!fieldNames.contains(it.normalize())) return false
+                    }
+                    return true
+                }
             }
         }
 
