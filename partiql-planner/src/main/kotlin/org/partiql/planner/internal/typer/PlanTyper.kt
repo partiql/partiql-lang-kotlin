@@ -1649,7 +1649,9 @@ internal class PlanTyper(
             }
             val typeEnv = TypeEnv(bindings, emptyList())
             val resolvedRex = RexTyper(typeEnv, Scope.LOCAL).visitRex(node.lowered, null)
-            if (resolvedRex.type !is BoolType) TODO("Check expression not type to boolean")
+            val resolvedType = StaticType.unionOf(resolvedRex.type.allTypes.filterNot { it is NullType }.toSet()).flatten()
+
+            if (resolvedType !is BoolType) TODO("Check expression not type to boolean")
             return constraintBodyCheck(resolvedRex, node.unlowered)
         }
 

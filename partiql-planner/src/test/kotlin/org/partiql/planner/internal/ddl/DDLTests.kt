@@ -60,18 +60,11 @@ class DDLTests {
     @Test
     fun sanity2() {
         val query = """
-            CREATE TABLE andes."PROVIDER_NAME".TABLE_NAME_v3
-                        (
-                            "COLUMN_ONE" CHAR(20) COMMENT 'Comment one',
-                            "COLUMN_TWO" CHAR(15) COMMENT 'Comment two',
-                            "COLUMN_THREE" TIMESTAMP(0) COMMENT 'Comment three'
-                        )
-                        PARTITION BY (COLUMN_ONE)
-                        TBLPROPERTIES (
-                            'DATAPLANE' = 'Cairns',
-                            'PARTITION_TYPE' = 'APPEND',
-                            'CONTENT_TYPE' = 'application/parquet'
-                        );
+            CREATE TABLE andes.myProvider.Tbl_v2 (
+                "COLUMN_ONE" INT2 CHECK("COLUMN_ONE" > 0) COMMENT 'Comment one',
+                "COLUMN_TWO" CHAR(15) COMMENT 'Comment two',
+                "COLUMN_THREE" TIMESTAMP(0) COMMENT 'Comment three'
+            );
         """.trimIndent()
         val ast = parser.parse(query).root
         val plan = planner
