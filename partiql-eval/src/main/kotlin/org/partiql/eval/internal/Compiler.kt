@@ -47,14 +47,12 @@ import org.partiql.plan.Ref
 import org.partiql.plan.Rel
 import org.partiql.plan.Rex
 import org.partiql.plan.Statement
-import org.partiql.plan.debug.PlanPrinter
 import org.partiql.plan.visitor.PlanBaseVisitor
 import org.partiql.spi.fn.Agg
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
-import org.partiql.value.missingValue
 import java.lang.IllegalStateException
 
 internal class Compiler(
@@ -72,20 +70,16 @@ internal class Compiler(
     }
 
     /**
-     * [Rex.Op.Err] comes from the inability for the planner to resolve a variable/function/etc. Depending on the
-     * configuration, this will either return MISSING or throw an error.
+     * Realistically, this should never execute -- since the problems of severity ERROR are sent to the problem handler
+     * at planning time. Implementors SHOULD fail compilation, however, if they decide not to, we will allow its execution
+     * and will treat this identically to [visitRexOpMissing].
      */
     override fun visitRexOpErr(node: Rex.Op.Err, ctx: StaticType?): Operator {
-        return when (session.errorHandling) {
-            PartiQLEngine.CompilationErrorHandling.QUIET -> ExprError()
-            PartiQLEngine.CompilationErrorHandling.SIGNALING -> {
-                val message = buildString {
-                    this.appendLine(node.message)
-                    PlanPrinter.append(this, plan)
-                }
-                throw IllegalStateException(message)
-            }
-        }
+        return ExprError(node.message)
+    }
+
+    override fun visitRexOpMissing(node: Rex.Op.Missing, ctx: StaticType?): Operator {
+        return ExprError(node.message)
     }
 
     override fun visitRelOpErr(node: Rel.Op.Err, ctx: StaticType?): Operator {
@@ -117,11 +111,6 @@ internal class Compiler(
             ExprStruct.Field(visitRex(it.k, ctx), value)
         }
         return ExprStruct(fields)
-    }
-
-    @OptIn(PartiQLValueExperimental::class)
-    override fun visitRexOpMissing(node: Rex.Op.Missing, ctx: StaticType?): Operator {
-        return ExprLiteral(missingValue())
     }
 
     override fun visitRexOpSelect(node: Rex.Op.Select, ctx: StaticType?): Operator {

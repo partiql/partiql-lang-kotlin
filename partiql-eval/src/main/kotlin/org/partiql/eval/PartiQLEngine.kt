@@ -36,40 +36,11 @@ public interface PartiQLEngine {
 
     public class Session(
         val catalogs: Map<String, Connector> = mapOf(),
-        val mode: Mode = Mode.PERMISSIVE,
-        val errorHandling: CompilationErrorHandling = CompilationErrorHandling.SIGNALING
+        val mode: Mode = Mode.PERMISSIVE
     )
 
-    /**
-     * This determines the behavior when the evaluator encounters scenarios in which a type check exception occurs.
-     */
     public enum class Mode {
-        /**
-         * Returns MISSING when a type check exception occurs.
-         */
         PERMISSIVE,
-
-        /**
-         * Propagates the type check exception.
-         */
         STRICT // AKA, Type Checking Mode in the PartiQL Specification
-    }
-
-    /**
-     * When the PartiQL Plan has determined that a function call or variable reference will always error, the
-     * [CompilationErrorHandling] will determine how the internal compiler will treat the error. Note that this is subtly
-     * different than [Mode]. [CompilationErrorHandling] is specifically used when nodes are known to ALWAYS return
-     * MISSING. The difference can be understood as compile-time ([CompilationErrorHandling]) vs run-time ([Mode]).
-     */
-    public enum class CompilationErrorHandling {
-        /**
-         * Returns a literal MISSING.
-         */
-        QUIET,
-
-        /**
-         * Errors out.
-         */
-        SIGNALING
     }
 }
