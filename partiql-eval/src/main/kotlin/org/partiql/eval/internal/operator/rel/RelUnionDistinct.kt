@@ -11,12 +11,13 @@ internal class RelUnionDistinct(
 ) : RelPeeking() {
 
     private val seen: MutableSet<Record> = mutableSetOf()
-    private val input = IteratorChain(listOf(lhs, rhs))
+    private lateinit var input: Iterator<Record>
 
     override fun open(env: Environment) {
         lhs.open(env)
         rhs.open(env)
         seen.clear()
+        input = IteratorChain(listOf(lhs, rhs))
         super.open(env)
     }
 

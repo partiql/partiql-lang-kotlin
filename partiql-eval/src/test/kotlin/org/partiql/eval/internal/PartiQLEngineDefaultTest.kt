@@ -74,9 +74,7 @@ class PartiQLEngineDefaultTest {
     fun singleTest() {
         val tc = SuccessTestCase(
             input = """
-                    SELECT o.name AS orderName,
-                        (SELECT c.name FROM customers c WHERE c.id=o.custId) AS customerName
-                    FROM orders o
+                    SELECT * FROM << 1 >> OUTER UNION << 'A' >>
             """.trimIndent(),
             expected = bagValue(
                 structValue(
@@ -105,7 +103,8 @@ class PartiQLEngineDefaultTest {
                             ]
                         """
                 ),
-            )
+            ),
+            mode = PartiQLEngine.Mode.STRICT
         )
         tc.assert()
     }

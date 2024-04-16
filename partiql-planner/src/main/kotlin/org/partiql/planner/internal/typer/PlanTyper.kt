@@ -91,6 +91,7 @@ import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.TextValue
 import org.partiql.value.boolValue
 import org.partiql.value.stringValue
+import kotlin.math.max
 
 /**
  * Rewrites an untyped algebraic translation of the query to be both typed and have resolved variables.
@@ -218,10 +219,24 @@ internal class PlanTyper(private val env: Env) {
             return rel(type, op)
         }
 
-        // TODO: Add better typing logic
         override fun visitRelOpSet(node: Rel.Op.Set, ctx: Rel.Type?): PlanNode {
-            val schema = ctx!!
-            return Rel(schema, node)
+            val lhs = visitRel(node.lhs, node.lhs.type)
+            val rhs = visitRel(node.rhs, node.rhs.type)
+            val set = node.copy(lhs = lhs, rhs = rhs)
+
+            // Compute Schema
+            val size = max(lhs.type.schema.size, rhs.type.schema.size)
+            val schema = List(size) {
+                val lhsBinding = lhs.type.schema.getOrNull(it) ?: Rel.Binding("_$it", MISSING)
+                val rhsBinding = rhs.type.schema.getOrNull(it) ?: Rel.Binding("_$it", MISSING)
+                val bindingName = when (lhsBinding.name == rhsBinding.name) {
+                    true -> lhsBinding.name
+                    false -> "_$it"
+                }
+                Rel.Binding(bindingName, unionOf(lhsBinding.type, rhsBinding.type))
+            }
+            val type = Rel.Type(schema, props = emptySet())
+            return Rel(type, set)
         }
 
         override fun visitRelOpLimit(node: Rel.Op.Limit, ctx: Rel.Type?): Rel {

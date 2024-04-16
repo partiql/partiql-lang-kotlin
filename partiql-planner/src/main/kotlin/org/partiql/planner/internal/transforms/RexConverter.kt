@@ -826,11 +826,11 @@ internal object RexConverter {
         override fun visitExprBagOp(node: Expr.BagOp, ctx: Env): Rex {
             val lhs = Rel(
                 type = Rel.Type(listOf(Rel.Binding("_0", StaticType.ANY)), props = emptySet()),
-                op = Rel.Op.Scan(visitExprCoerce(node.lhs, ctx))
+                op = Rel.Op.Scan(visitExpr(node.lhs, ctx))
             )
             val rhs = Rel(
                 type = Rel.Type(listOf(Rel.Binding("_1", StaticType.ANY)), props = emptySet()),
-                op = Rel.Op.Scan(visitExprCoerce(node.rhs, ctx))
+                op = Rel.Op.Scan(visitExpr(node.rhs, ctx))
             )
             val type = when (node.type.type) {
                 SetOp.Type.UNION -> when (node.type.setq) {
