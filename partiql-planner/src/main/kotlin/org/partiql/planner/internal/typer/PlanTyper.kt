@@ -219,6 +219,9 @@ internal class PlanTyper(private val env: Env) {
             return rel(type, op)
         }
 
+        // TODO: [RFC-0007](https://github.com/partiql/partiql-lang/blob/main/RFCs/0007-rfc-bag-operators.md)
+        //  states that the types must be "comparable". The below code ONLY makes sure that types need to be
+        //  the same. In the future, we need to add support for checking comparable types.
         override fun visitRelOpSet(node: Rel.Op.Set, ctx: Rel.Type?): Rel {
             val lhs = visitRel(node.lhs, node.lhs.type)
             val rhs = visitRel(node.rhs, node.rhs.type)
@@ -232,9 +235,6 @@ internal class PlanTyper(private val env: Env) {
                 for (i in 0..lhs.type.schema.lastIndex) {
                     val lhsBindingType = lhs.type.schema[i].type
                     val rhsBindingType = rhs.type.schema[i].type
-                    // TODO: [RFC-0007](https://github.com/partiql/partiql-lang/blob/main/RFCs/0007-rfc-bag-operators.md)
-                    //  states that the types must be "comparable". The below code ONLY makes sure that types need to be
-                    //  the same. In the future, we need to add support for checking comparable types.
                     if (lhsBindingType != rhsBindingType) {
                         return Rel(Rel.Type(emptyList(), emptySet()), Rel.Op.Err("LHS and RHS of SET OP do not have the same type."))
                     }

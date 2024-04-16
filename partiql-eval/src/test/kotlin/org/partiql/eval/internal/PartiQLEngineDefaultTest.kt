@@ -70,45 +70,6 @@ class PartiQLEngineDefaultTest {
     @Execution(ExecutionMode.CONCURRENT)
     fun globalsTests(tc: SuccessTestCase) = tc.assert()
 
-    @Test
-    fun singleTest() {
-        val tc = SuccessTestCase(
-            input = """
-                    SELECT * FROM << 1 >> OUTER UNION << 'A' >>
-            """.trimIndent(),
-            expected = bagValue(
-                structValue(
-                    "orderName" to stringValue("foo")
-                ),
-                structValue(
-                    "orderName" to stringValue("bar"),
-                    "customerName" to stringValue("Helen")
-                ),
-            ),
-            globals = listOf(
-                SuccessTestCase.Global(
-                    name = "customers",
-                    value = """
-                            [{id:1, name: "Mary"},
-                            {id:2, name: "Helen"},
-                            {id:1, name: "John"}
-                            ]
-                        """
-                ),
-                SuccessTestCase.Global(
-                    name = "orders",
-                    value = """
-                            [{custId:1, name: "foo"},
-                            {custId:2, name: "bar"}
-                            ]
-                        """
-                ),
-            ),
-            mode = PartiQLEngine.Mode.STRICT
-        )
-        tc.assert()
-    }
-
     companion object {
 
         @JvmStatic
