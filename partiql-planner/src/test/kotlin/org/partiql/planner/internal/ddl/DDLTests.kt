@@ -1,16 +1,16 @@
 package org.partiql.planner.internal.ddl
 
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.partiql.parser.PartiQLParser
 import org.partiql.plan.debug.PlanPrinter
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.plugins.memory.MemoryCatalog
 import org.partiql.plugins.memory.MemoryConnector
 import org.partiql.spi.connector.ConnectorSession
-import org.partiql.types.StaticType
 import java.util.Random
 
-class DdlTests {
+class DDLTests {
 
     private val parser = PartiQLParser.default()
     private val planner = PartiQLPlanner.default()
@@ -38,21 +38,23 @@ class DdlTests {
 
     @Test
     fun sanity() {
-        val query = """
+        assertThrows<NotImplementedError> {
+            val query = """
             CREATE TABLE my_catalog.my_schema.tbl(
                 a INT2 PRIMARY KEY, 
                 CHECK(a != b)
-            ) PARTITION BY (a)
+            ) PARTITION BY (b)
             TBLPROPERTIES ('my_property1' = 'my_value1')
-        """.trimIndent()
-        val ast = parser.parse(query).root
-        val plan = planner
-            .plan(ast, plannerSession) {}
-            .plan
-        val res = buildString {
-            PlanPrinter.append(this, plan)
+            """.trimIndent()
+            val ast = parser.parse(query).root
+            val plan = planner
+                .plan(ast, plannerSession) {}
+                .plan
+            val res = buildString {
+                PlanPrinter.append(this, plan)
+            }
+            println(res)
         }
-        println(res)
     }
 
     @Test
