@@ -219,23 +219,46 @@ internal class PlanTyper(private val env: Env) {
             return rel(type, op)
         }
 
-        override fun visitRelOpSet(node: Rel.Op.Set, ctx: Rel.Type?): PlanNode {
+        override fun visitRelOpSet(node: Rel.Op.Set, ctx: Rel.Type?): Rel {
             val lhs = visitRel(node.lhs, node.lhs.type)
             val rhs = visitRel(node.rhs, node.rhs.type)
             val set = node.copy(lhs = lhs, rhs = rhs)
 
-            // Compute Schema
-            val size = max(lhs.type.schema.size, rhs.type.schema.size)
-            val schema = List(size) {
-                val lhsBinding = lhs.type.schema.getOrNull(it) ?: Rel.Binding("_$it", MISSING)
-                val rhsBinding = rhs.type.schema.getOrNull(it) ?: Rel.Binding("_$it", MISSING)
-                val bindingName = when (lhsBinding.name == rhsBinding.name) {
-                    true -> lhsBinding.name
-                    false -> "_$it"
+            // Check that types are comparable
+            if (!node.isOuter) {
+                if (lhs.type.schema.size != rhs.type.schema.size) {
+                    return Rel(Rel.Type(emptyList(), emptySet()), Rel.Op.Err("LHS and RHS of SET OP do not have the same number of bindings."))
                 }
-                Rel.Binding(bindingName, unionOf(lhsBinding.type, rhsBinding.type))
+                for (i in 0..lhs.type.schema.lastIndex) {
+                    val lhsBindingType = lhs.type.schema[i].type
+                    val rhsBindingType = rhs.type.schema[i].type
+                    // TODO: [RFC-0007](https://github.com/partiql/partiql-lang/blob/main/RFCs/0007-rfc-bag-operators.md)
+                    //  states that the types must be "comparable". The below code ONLY makes sure that types need to be
+                    //  the same. In the future, we need to add support for checking comparable types.
+                    if (lhsBindingType != rhsBindingType) {
+                        return Rel(Rel.Type(emptyList(), emptySet()), Rel.Op.Err("LHS and RHS of SET OP do not have the same type."))
+                    }
+                }
             }
-            val type = Rel.Type(schema, props = emptySet())
+
+            // Compute Output Schema
+            val size = max(lhs.type.schema.size, rhs.type.schema.size)
+            val type = when (node.type) {
+                Rel.Op.Set.Type.EXCEPT_DISTINCT, Rel.Op.Set.Type.EXCEPT_ALL -> lhs.type
+                Rel.Op.Set.Type.INTERSECT_ALL, Rel.Op.Set.Type.INTERSECT_DISTINCT,
+                Rel.Op.Set.Type.UNION_ALL, Rel.Op.Set.Type.UNION_DISTINCT -> {
+                    val schema = List(size) {
+                        val lhsBinding = lhs.type.schema.getOrNull(it) ?: Rel.Binding("_$it", MISSING)
+                        val rhsBinding = rhs.type.schema.getOrNull(it) ?: Rel.Binding("_$it", MISSING)
+                        val bindingName = when (lhsBinding.name == rhsBinding.name) {
+                            true -> lhsBinding.name
+                            false -> "_$it"
+                        }
+                        Rel.Binding(bindingName, unionOf(lhsBinding.type, rhsBinding.type))
+                    }
+                    Rel.Type(schema, props = emptySet())
+                }
+            }
             return Rel(type, set)
         }
 

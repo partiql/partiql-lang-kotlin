@@ -846,7 +846,7 @@ internal object RexConverter {
                     null, SetQuantifier.DISTINCT -> Rel.Op.Set.Type.INTERSECT_DISTINCT
                 }
             }
-            val op = Rel.Op.Set(lhs, rhs, type)
+            val op = Rel.Op.Set(lhs, rhs, type, isOuter = node.outer == true)
             val rel = Rel(
                 type = Rel.Type(listOf(Rel.Binding("_0", StaticType.ANY)), props = emptySet()),
                 op = op

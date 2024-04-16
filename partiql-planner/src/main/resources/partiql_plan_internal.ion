@@ -308,7 +308,13 @@ rel::{
         INTERSECT_DISTINCT,
         EXCEPT_ALL,
         EXCEPT_DISTINCT
-      ]
+      ],
+      // This is an internal-only field. It is specifically used to aid in typing the plan and throwing potential errors.
+      // For example, if a user were to write: `<< { 'a': 1 } >>` UNION << { 'b': 'hello' } >>, then this would FAIL
+      // due to [RFC-0007](https://github.com/partiql/partiql-lang/blob/main/RFCs/0007-rfc-bag-operators.md). However,
+      // if a user were to use OUTER UNION, then it would work. Under the hood at execution, the operator is the same --
+      // however, at planning time, with static type analysis, we can fail queries prior to their execution.
+      is_outer: bool
     },
 
     limit::{

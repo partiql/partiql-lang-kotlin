@@ -458,7 +458,7 @@ internal object RelConverter {
                     null, SetQuantifier.DISTINCT -> Rel.Op.Set.Type.INTERSECT_DISTINCT
                 }
             }
-            val op = Rel.Op.Set(lhs, rhs, setType)
+            val op = Rel.Op.Set(lhs, rhs, setType, isOuter = false)
             return rel(type, op)
         }
 

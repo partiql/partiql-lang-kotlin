@@ -1021,6 +1021,7 @@ internal data class Rel(
             @JvmField internal val lhs: Rel,
             @JvmField internal val rhs: Rel,
             @JvmField internal val type: Type,
+            @JvmField internal val isOuter: Boolean
         ) : Op() {
             public override val children: List<PlanNode> by lazy {
                 val kids = mutableListOf<PlanNode?>()
