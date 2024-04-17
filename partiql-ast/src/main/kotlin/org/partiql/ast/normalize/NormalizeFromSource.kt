@@ -53,8 +53,10 @@ internal object NormalizeFromSource : AstPass {
         override fun visitFromValue(node: From.Value, ctx: Int): From {
             val expr = visitExpr(node.expr, ctx) as Expr
             val asAlias = node.asAlias ?: expr.toBinder(ctx)
-            return if (expr !== node.expr || asAlias !== node.asAlias) {
-                node.copy(expr = expr, asAlias = asAlias)
+            val atAlias = node.atAlias ?: expr.toBinder(ctx + 1)
+            val byAlias = node.byAlias ?: expr.toBinder(ctx + 2)
+            return if (expr !== node.expr || asAlias !== node.asAlias || atAlias !== node.atAlias || byAlias !== node.byAlias) {
+                node.copy(expr = expr, asAlias = asAlias, atAlias = atAlias, byAlias = byAlias)
             } else {
                 node
             }

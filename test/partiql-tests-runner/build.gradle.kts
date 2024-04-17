@@ -64,8 +64,8 @@ val generateTestReport by tasks.registering(Test::class) {
     environment(Env.PARTIQL_EQUIV, file("$tests/eval-equiv/").absolutePath)
     environment("conformanceReportDir", reportDir)
     include("org/partiql/runner/ConformanceTestEval.class", "org/partiql/runner/ConformanceTestLegacy.class")
-    if (project.hasProperty("Engine")) {
-        val engine = property("Engine")!! as String
+    if (project.hasProperty("engine")) {
+        val engine = project.property("engine")!! as String
         if (engine.toLowerCase() == "legacy") {
             exclude("org/partiql/runner/ConformanceTestEval.class")
         } else if (engine.toLowerCase() == "eval") {
