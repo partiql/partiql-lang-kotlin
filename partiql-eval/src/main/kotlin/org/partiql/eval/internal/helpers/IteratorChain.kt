@@ -1,29 +1,27 @@
 package org.partiql.eval.internal.helpers
 
-/**
- * WARNING: You must invoke [hasNext] before calling [next].
- */
 internal class IteratorChain<T>(
-    iterators: Iterable<Iterator<T>>
-) : Iterator<T> {
+    iterators: Array<Iterator<T>>
+) : IteratorPeeking<T>() {
 
-    private var iterator = iterators.iterator()
-    private var current = iterator.next()
+    private var iterator: Iterator<Iterator<T>> = when (iterators.isEmpty()) {
+        true -> listOf(emptyList<T>().iterator()).iterator()
+        false -> iterators.iterator()
+    }
+    private var current: Iterator<T> = iterator.next()
 
-    override fun hasNext(): Boolean {
+    override fun peek(): T? {
         return when (current.hasNext()) {
-            true -> true
+            true -> current.next()
             false -> {
-                if (!iterator.hasNext()) {
-                    return false
+                while (iterator.hasNext()) {
+                    current = iterator.next()
+                    if (current.hasNext()) {
+                        return current.next()
+                    }
                 }
-                current = iterator.next()
-                current.hasNext()
+                return null
             }
         }
-    }
-
-    override fun next(): T {
-        return current.next()
     }
 }

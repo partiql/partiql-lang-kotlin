@@ -17,7 +17,7 @@ internal class RelUnionDistinct(
         lhs.open(env)
         rhs.open(env)
         seen.clear()
-        input = IteratorChain(listOf(lhs, rhs))
+        input = IteratorChain(arrayOf(lhs, rhs))
         super.open(env)
     }
 
