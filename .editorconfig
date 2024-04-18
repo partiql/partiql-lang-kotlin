@@ -1,0 +1,3 @@
+# Ignore custom ktlint rules for tests
+[**/test/**.kt]
+disabled_rules = custom-ktlint-rules:top-level-internal,custom-ktlint-rules:top-level-public
