@@ -25,7 +25,6 @@ import org.partiql.eval.internal.operator.rex.ExprCase
 import org.partiql.eval.internal.operator.rex.ExprCast
 import org.partiql.eval.internal.operator.rex.ExprCoalesce
 import org.partiql.eval.internal.operator.rex.ExprCollection
-import org.partiql.eval.internal.operator.rex.ExprError
 import org.partiql.eval.internal.operator.rex.ExprLiteral
 import org.partiql.eval.internal.operator.rex.ExprNullIf
 import org.partiql.eval.internal.operator.rex.ExprPathIndex
@@ -47,6 +46,7 @@ import org.partiql.plan.Ref
 import org.partiql.plan.Rel
 import org.partiql.plan.Rex
 import org.partiql.plan.Statement
+import org.partiql.plan.debug.PlanPrinter
 import org.partiql.plan.visitor.PlanBaseVisitor
 import org.partiql.spi.fn.Agg
 import org.partiql.spi.fn.FnExperimental
@@ -69,17 +69,12 @@ internal class Compiler(
         TODO("Not yet implemented")
     }
 
-    /**
-     * Realistically, this should never execute -- since the problems of severity ERROR are sent to the problem handler
-     * at planning time. Implementors SHOULD fail compilation, however, if they decide not to, we will allow its execution
-     * and will treat this identically to [visitRexOpMissing].
-     */
     override fun visitRexOpErr(node: Rex.Op.Err, ctx: StaticType?): Operator {
-        return ExprError(node.message)
-    }
-
-    override fun visitRexOpMissing(node: Rex.Op.Missing, ctx: StaticType?): Operator {
-        return ExprError(node.message)
+        val message = buildString {
+            this.appendLine(node.message)
+            PlanPrinter.append(this, plan)
+        }
+        throw IllegalStateException(message)
     }
 
     override fun visitRelOpErr(node: Rel.Op.Err, ctx: StaticType?): Operator {
