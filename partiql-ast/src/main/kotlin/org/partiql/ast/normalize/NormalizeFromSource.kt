@@ -52,9 +52,19 @@ internal object NormalizeFromSource : AstPass {
 
         override fun visitFromValue(node: From.Value, ctx: Int): From {
             val expr = visitExpr(node.expr, ctx) as Expr
-            val asAlias = node.asAlias ?: expr.toBinder(ctx)
-            return if (expr !== node.expr || asAlias !== node.asAlias) {
-                node.copy(expr = expr, asAlias = asAlias)
+            var i = ctx
+            var asAlias = node.asAlias
+            var atAlias = node.atAlias
+            // derive AS alias
+            if (asAlias == null) {
+                asAlias = expr.toBinder(i++)
+            }
+            // derive AT binder
+            if (atAlias == null && node.type == From.Value.Type.UNPIVOT) {
+                atAlias = expr.toBinder(i++)
+            }
+            return if (expr !== node.expr || asAlias !== node.asAlias || atAlias !== node.atAlias) {
+                node.copy(expr = expr, asAlias = asAlias, atAlias = atAlias)
             } else {
                 node
             }

@@ -158,17 +158,13 @@ internal class PlanTyper(private val env: Env) {
          * TODO handle NULL|STRUCT type
          */
         override fun visitRelOpUnpivot(node: Rel.Op.Unpivot, ctx: Rel.Type?): Rel {
-            // descend, with GLOBAL resolution strategy
             val rex = node.rex.type(emptyList(), outer, Scope.GLOBAL)
 
-            // key type, always a string.
             val kType = STRING
-
-            // value type, possibly coerced.
-            val vType = rex.type.allTypes.map { type ->
+            val vTypes = rex.type.allTypes.map { type ->
                 when (type) {
                     is StructType -> {
-                        if (type.contentClosed || type.constraints.contains(TupleConstraint.Open(false))) {
+                        if ((type.contentClosed || type.constraints.contains(TupleConstraint.Open(false))) && type.fields.isNotEmpty()) {
                             unionOf(type.fields.map { it.value }.toSet()).flatten()
                         } else {
                             ANY
@@ -176,9 +172,8 @@ internal class PlanTyper(private val env: Env) {
                     }
                     else -> type
                 }
-            }.let {
-                unionOf(it.toSet()).flatten()
             }
+            val vType = unionOf(vTypes.toSet()).flatten()
 
             // rewrite
             val type = ctx!!.copyWithSchema(listOf(kType, vType))
