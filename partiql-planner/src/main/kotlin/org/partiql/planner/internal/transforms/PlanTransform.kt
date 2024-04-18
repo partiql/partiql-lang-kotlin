@@ -328,18 +328,28 @@ internal class PlanTransform(
                 }
             )
 
-            override fun visitRelOpSet(node: Rel.Op.Set, ctx: Unit) = org.partiql.plan.Rel.Op.Set(
+            override fun visitRelOpSetExcept(node: Rel.Op.Set.Except, ctx: Unit) = org.partiql.plan.Rel.Op.Set.Except(
                 lhs = visitRel(node.lhs, ctx),
                 rhs = visitRel(node.rhs, ctx),
-                type = when (node.type) {
-                    Rel.Op.Set.Type.UNION_ALL -> org.partiql.plan.Rel.Op.Set.Type.UNION_ALL
-                    Rel.Op.Set.Type.UNION_DISTINCT -> org.partiql.plan.Rel.Op.Set.Type.UNION_DISTINCT
-                    Rel.Op.Set.Type.EXCEPT_ALL -> org.partiql.plan.Rel.Op.Set.Type.EXCEPT_ALL
-                    Rel.Op.Set.Type.EXCEPT_DISTINCT -> org.partiql.plan.Rel.Op.Set.Type.EXCEPT_DISTINCT
-                    Rel.Op.Set.Type.INTERSECT_ALL -> org.partiql.plan.Rel.Op.Set.Type.INTERSECT_ALL
-                    Rel.Op.Set.Type.INTERSECT_DISTINCT -> org.partiql.plan.Rel.Op.Set.Type.INTERSECT_DISTINCT
-                }
+                quantifier = visitRelOpSetQuantifier(node.quantifier)
             )
+
+            override fun visitRelOpSetIntersect(node: Rel.Op.Set.Intersect, ctx: Unit) = org.partiql.plan.Rel.Op.Set.Intersect(
+                lhs = visitRel(node.lhs, ctx),
+                rhs = visitRel(node.rhs, ctx),
+                quantifier = visitRelOpSetQuantifier(node.quantifier)
+            )
+
+            override fun visitRelOpSetUnion(node: Rel.Op.Set.Union, ctx: Unit) = org.partiql.plan.Rel.Op.Set.Union(
+                lhs = visitRel(node.lhs, ctx),
+                rhs = visitRel(node.rhs, ctx),
+                quantifier = visitRelOpSetQuantifier(node.quantifier)
+            )
+
+            private fun visitRelOpSetQuantifier(node: Rel.Op.Set.Quantifier) = when (node) {
+                Rel.Op.Set.Quantifier.ALL -> org.partiql.plan.Rel.Op.Set.Quantifier.ALL
+                Rel.Op.Set.Quantifier.DISTINCT -> org.partiql.plan.Rel.Op.Set.Quantifier.DISTINCT
+            }
 
             override fun visitRelOpLimit(node: Rel.Op.Limit, ctx: Unit) = org.partiql.plan.Rel.Op.Limit(
                 input = visitRel(node.input, ctx),

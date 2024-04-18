@@ -832,21 +832,16 @@ internal object RexConverter {
                 type = Rel.Type(listOf(Rel.Binding("_1", StaticType.ANY)), props = emptySet()),
                 op = Rel.Op.Scan(visitExpr(node.rhs, ctx))
             )
-            val type = when (node.type.type) {
-                SetOp.Type.UNION -> when (node.type.setq) {
-                    SetQuantifier.ALL -> Rel.Op.Set.Type.UNION_ALL
-                    null, SetQuantifier.DISTINCT -> Rel.Op.Set.Type.UNION_DISTINCT
-                }
-                SetOp.Type.EXCEPT -> when (node.type.setq) {
-                    SetQuantifier.ALL -> Rel.Op.Set.Type.EXCEPT_ALL
-                    null, SetQuantifier.DISTINCT -> Rel.Op.Set.Type.EXCEPT_DISTINCT
-                }
-                SetOp.Type.INTERSECT -> when (node.type.setq) {
-                    SetQuantifier.ALL -> Rel.Op.Set.Type.INTERSECT_ALL
-                    null, SetQuantifier.DISTINCT -> Rel.Op.Set.Type.INTERSECT_DISTINCT
-                }
+            val quantifier = when (node.type.setq) {
+                SetQuantifier.ALL -> Rel.Op.Set.Quantifier.ALL
+                null, SetQuantifier.DISTINCT -> Rel.Op.Set.Quantifier.DISTINCT
             }
-            val op = Rel.Op.Set(lhs, rhs, type, isOuter = node.outer == true)
+            val isOuter = node.outer == true
+            val op = when (node.type.type) {
+                SetOp.Type.UNION -> Rel.Op.Set.Union(quantifier, lhs, rhs, isOuter)
+                SetOp.Type.EXCEPT -> Rel.Op.Set.Except(quantifier, lhs, rhs, isOuter)
+                SetOp.Type.INTERSECT -> Rel.Op.Set.Intersect(quantifier, lhs, rhs, isOuter)
+            }
             val rel = Rel(
                 type = Rel.Type(listOf(Rel.Binding("_0", StaticType.ANY)), props = emptySet()),
                 op = op

@@ -432,9 +432,6 @@ internal object RelConverter {
 
         /**
          * Append SQL set operator if present
-         *
-         * TODO combine/compare schemas
-         * TODO set quantifier
          */
         private fun convertSetOp(input: Rel, setOp: Expr.SFW.SetOp?): Rel {
             if (setOp == null) {
@@ -443,22 +440,15 @@ internal object RelConverter {
             val type = input.type.copy(props = emptySet())
             val lhs = input
             val rhs = visitExprSFW(setOp.operand, nil)
-
-            val setType = when (setOp.type.type) {
-                SetOp.Type.UNION -> when (setOp.type.setq) {
-                    SetQuantifier.ALL -> Rel.Op.Set.Type.UNION_ALL
-                    null, SetQuantifier.DISTINCT -> Rel.Op.Set.Type.UNION_DISTINCT
-                }
-                SetOp.Type.EXCEPT -> when (setOp.type.setq) {
-                    SetQuantifier.ALL -> Rel.Op.Set.Type.EXCEPT_ALL
-                    null, SetQuantifier.DISTINCT -> Rel.Op.Set.Type.EXCEPT_DISTINCT
-                }
-                SetOp.Type.INTERSECT -> when (setOp.type.setq) {
-                    SetQuantifier.ALL -> Rel.Op.Set.Type.INTERSECT_ALL
-                    null, SetQuantifier.DISTINCT -> Rel.Op.Set.Type.INTERSECT_DISTINCT
-                }
+            val quantifier = when (setOp.type.setq) {
+                SetQuantifier.ALL -> Rel.Op.Set.Quantifier.ALL
+                null, SetQuantifier.DISTINCT -> Rel.Op.Set.Quantifier.DISTINCT
             }
-            val op = Rel.Op.Set(lhs, rhs, setType, isOuter = false)
+            val op = when (setOp.type.type) {
+                SetOp.Type.UNION -> Rel.Op.Set.Union(quantifier, lhs, rhs, false)
+                SetOp.Type.EXCEPT -> Rel.Op.Set.Except(quantifier, lhs, rhs, false)
+                SetOp.Type.INTERSECT -> Rel.Op.Set.Intersect(quantifier, lhs, rhs, false)
+            }
             return rel(type, op)
         }
 

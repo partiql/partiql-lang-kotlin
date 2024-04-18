@@ -314,16 +314,30 @@ internal class Compiler(
         }
     }
 
-    override fun visitRelOpSet(node: Rel.Op.Set, ctx: StaticType?): Operator {
+    override fun visitRelOpSetExcept(node: Rel.Op.Set.Except, ctx: StaticType?): Operator {
         val lhs = visitRel(node.lhs, ctx)
         val rhs = visitRel(node.rhs, ctx)
-        return when (node.type) {
-            Rel.Op.Set.Type.UNION_ALL -> RelUnionAll(lhs, rhs)
-            Rel.Op.Set.Type.UNION_DISTINCT -> RelUnionDistinct(lhs, rhs)
-            Rel.Op.Set.Type.INTERSECT_ALL -> RelIntersectAll(lhs, rhs)
-            Rel.Op.Set.Type.INTERSECT_DISTINCT -> RelIntersectDistinct(lhs, rhs)
-            Rel.Op.Set.Type.EXCEPT_ALL -> RelExceptAll(lhs, rhs)
-            Rel.Op.Set.Type.EXCEPT_DISTINCT -> RelExceptDistinct(lhs, rhs)
+        return when (node.quantifier) {
+            Rel.Op.Set.Quantifier.ALL -> RelExceptAll(lhs, rhs)
+            Rel.Op.Set.Quantifier.DISTINCT -> RelExceptDistinct(lhs, rhs)
+        }
+    }
+
+    override fun visitRelOpSetIntersect(node: Rel.Op.Set.Intersect, ctx: StaticType?): Operator {
+        val lhs = visitRel(node.lhs, ctx)
+        val rhs = visitRel(node.rhs, ctx)
+        return when (node.quantifier) {
+            Rel.Op.Set.Quantifier.ALL -> RelIntersectAll(lhs, rhs)
+            Rel.Op.Set.Quantifier.DISTINCT -> RelIntersectDistinct(lhs, rhs)
+        }
+    }
+
+    override fun visitRelOpSetUnion(node: Rel.Op.Set.Union, ctx: StaticType?): Operator {
+        val lhs = visitRel(node.lhs, ctx)
+        val rhs = visitRel(node.rhs, ctx)
+        return when (node.quantifier) {
+            Rel.Op.Set.Quantifier.ALL -> RelUnionAll(lhs, rhs)
+            Rel.Op.Set.Quantifier.DISTINCT -> RelUnionDistinct(lhs, rhs)
         }
     }
 

@@ -261,20 +261,29 @@ rel::{
       ],
     },
 
-    // From Substrait: "The set operation encompasses several set-level operations that support combining datasets, ...
-    //  possibly excluding records based on various types of record level matching."
-    set::{
-      lhs: rel,
-      rhs: rel,
-      type: [
-        UNION_ALL,
-        UNION_DISTINCT,
-        INTERSECT_ALL,
-        INTERSECT_DISTINCT,
-        EXCEPT_ALL,
-        EXCEPT_DISTINCT
+    set::[
+      union::{
+        quantifier: quantifier,
+        lhs: rel,
+        rhs: rel,
+      },
+
+      intersect::{
+        quantifier: quantifier,
+        lhs: rel,
+        rhs: rel,
+      },
+
+      except::{
+        quantifier: quantifier,
+        lhs: rel,
+        rhs: rel,
+      },
+
+      _::[
+        quantifier::[ ALL, DISTINCT ],
       ]
-    },
+    ],
 
     limit::{
       input:  rel,
