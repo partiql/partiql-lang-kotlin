@@ -2,7 +2,7 @@ package org.partiql.eval.internal.operator.rex
 
 import org.partiql.errors.TypeCheckException
 import org.partiql.eval.internal.Environment
-import org.partiql.eval.internal.Record
+import org.partiql.eval.internal.helpers.toNull
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.plan.Ref
 import org.partiql.spi.fn.Fn
@@ -21,7 +21,8 @@ import org.partiql.value.PartiQLValueType
  */
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
 internal class ExprCallDynamic(
-    candidates: Array<Candidate>,
+    private val name: String,
+    private val candidates: Array<Candidate>,
     private val args: Array<Operator.Expr>
 ) : Operator.Expr {
 
@@ -35,7 +36,7 @@ internal class ExprCallDynamic(
         }
         val errorString = buildString {
             val argString = actualArgs.joinToString(", ")
-            append("Could not dynamically find function (${candidateIndex.name}) for arguments $argString.")
+            append("Could not dynamically find function ($name) for arguments $argString.")
         }
         throw TypeCheckException(errorString)
     }
@@ -53,8 +54,16 @@ internal class ExprCallDynamic(
         val coercions: Array<Ref.Cast?>
     ) {
 
+        /**
+         * Memoize creation of nulls
+         */
+        private val nil = fn.signature.returns.toNull()
+
         fun eval(originalArgs: Array<PartiQLValue>, env: Environment): PartiQLValue {
             val args = originalArgs.mapIndexed { i, arg ->
+                if (arg.isNull && fn.signature.isNullCall) {
+                    return nil()
+                }
                 when (val c = coercions[i]) {
                     null -> arg
                     else -> ExprCast(ExprLiteral(arg), c).eval(env)
@@ -111,12 +120,9 @@ internal class ExprCallDynamic(
          *
          * @param candidates
          */
-        class All(
-            candidates: Array<Candidate>,
-        ) : CandidateIndex {
+        class All(private val candidates: Array<Candidate>) : CandidateIndex {
 
             private val lookups: List<CandidateIndex>
-            internal val name: String = candidates.first().fn.signature.name
 
             init {
                 val lookupsMutable = mutableListOf<CandidateIndex>()

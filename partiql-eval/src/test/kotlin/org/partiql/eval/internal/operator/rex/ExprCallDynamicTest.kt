@@ -36,7 +36,11 @@ class ExprCallDynamicTest {
 
         @OptIn(PartiQLValueExperimental::class)
         fun assert() {
-            val expr = ExprCallDynamic(candidates, args = arrayOf(ExprLiteral(lhs), ExprLiteral(rhs)))
+            val expr = ExprCallDynamic(
+                name = "example_function",
+                candidates = candidates,
+                args = arrayOf(ExprLiteral(lhs), ExprLiteral(rhs)),
+            )
             val result = expr.eval(Environment.empty).check<Int32Value>()
             assertEquals(expectedIndex, result.value)
         }
@@ -72,6 +76,7 @@ class ExprCallDynamicTest {
                                 FnParameter("second", type = it.second),
                             )
                         )
+
                         override fun invoke(args: Array<PartiQLValue>): PartiQLValue = int32Value(index)
                     },
                     coercions = arrayOf(null, null)

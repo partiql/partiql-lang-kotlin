@@ -60,7 +60,7 @@ import java.lang.IllegalStateException
 internal class Compiler(
     private val plan: PartiQLPlan,
     private val session: PartiQLEngine.Session,
-    private val symbols: Symbols
+    private val symbols: Symbols,
 ) : PlanBaseVisitor<Operator, StaticType?>() {
 
     fun compile(): Operator.Expr {
@@ -102,6 +102,7 @@ internal class Compiler(
         val type = ctx ?: error("No type provided in ctx")
         return ExprCollection(values, type)
     }
+
     override fun visitRexOpStruct(node: Rex.Op.Struct, ctx: StaticType?): Operator {
         val fields = node.fields.map {
             val value = visitRex(it.v, ctx).modeHandled()
@@ -222,13 +223,37 @@ internal class Compiler(
     @OptIn(FnExperimental::class)
     override fun visitRexOpCallDynamic(node: Rex.Op.Call.Dynamic, ctx: StaticType?): Operator {
         val args = node.args.map { visitRex(it, ctx).modeHandled() }.toTypedArray()
+        // Check candidate list size
+        when (node.candidates.size) {
+            0 -> error("Rex.Op.Call.Dynamic had an empty candidates list: $node.")
+            // TODO this seems like it should be an error, but is possible if the fn match was non-exhaustive
+            // 1 -> error("Rex.Op.Call.Dynamic had a single candidate; should be Rex.Op.Call.Static")
+        }
+        // Check candidate name and arity for uniformity
+        var arity: Int = -1
+        var name: String = "unknown"
+        // Compile the candidates
         val candidates = Array(node.candidates.size) {
             val candidate = node.candidates[it]
             val fn = symbols.getFn(candidate.fn)
             val coercions = candidate.coercions.toTypedArray()
+            // Check this candidate
+            val fnArity = fn.signature.parameters.size
+            val fnName = fn.signature.name
+            if (arity == -1) {
+                arity = fnArity
+                name = fnName
+            } else {
+                if (fnArity != arity) {
+                    error("Dynamic call candidate had different arity than others; found $fnArity but expected $arity")
+                }
+                if (fnName != name) {
+                    error("Dynamic call candidate had different name than others; found $fnName but expected $name")
+                }
+            }
             ExprCallDynamic.Candidate(fn, coercions)
         }
-        return ExprCallDynamic(candidates, args)
+        return ExprCallDynamic(name, candidates, args)
     }
 
     override fun visitRexOpCast(node: Rex.Op.Cast, ctx: StaticType?): Operator {
