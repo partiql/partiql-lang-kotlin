@@ -25,12 +25,12 @@ internal class RelExceptAll(
             seed()
         }
         for (row in lhs) {
-            seen.computeIfPresent(row) { _, y ->
-                when (y) {
-                    0 -> null
-                    else -> y - 1
-                }
-            } ?: return row
+            val remaining = seen[row] ?: 0
+            if (remaining > 0) {
+                seen[row] = remaining - 1
+                continue
+            }
+            return row
         }
         return null
     }
@@ -43,7 +43,7 @@ internal class RelExceptAll(
     }
 
     /**
-     * Read the entire left-hand-side into our search structure.
+     * Read the entire right-hand-side into our search structure.
      */
     private fun seed() {
         init = true
