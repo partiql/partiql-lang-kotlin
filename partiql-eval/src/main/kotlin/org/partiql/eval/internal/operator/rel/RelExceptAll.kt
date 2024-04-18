@@ -48,9 +48,8 @@ internal class RelExceptAll(
     private fun seed() {
         init = true
         for (row in rhs) {
-            seen.computeIfPresent(row) { _, y ->
-                y + 1
-            } ?: seen.put(row, 1)
+            val n = seen[row] ?: 0;
+            seen[row] = n + 1;
         }
     }
 }
