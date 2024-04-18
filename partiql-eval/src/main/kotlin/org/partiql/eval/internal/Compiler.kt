@@ -23,8 +23,10 @@ import org.partiql.eval.internal.operator.rex.ExprCallDynamic
 import org.partiql.eval.internal.operator.rex.ExprCallStatic
 import org.partiql.eval.internal.operator.rex.ExprCase
 import org.partiql.eval.internal.operator.rex.ExprCast
+import org.partiql.eval.internal.operator.rex.ExprCoalesce
 import org.partiql.eval.internal.operator.rex.ExprCollection
 import org.partiql.eval.internal.operator.rex.ExprLiteral
+import org.partiql.eval.internal.operator.rex.ExprNullIf
 import org.partiql.eval.internal.operator.rex.ExprPathIndex
 import org.partiql.eval.internal.operator.rex.ExprPathKey
 import org.partiql.eval.internal.operator.rex.ExprPathSymbol
@@ -130,6 +132,17 @@ internal class Compiler(
             PartiQLEngine.Mode.PERMISSIVE -> ExprPivotPermissive(rel, key, value)
             PartiQLEngine.Mode.STRICT -> ExprPivot(rel, key, value)
         }
+    }
+
+    override fun visitRexOpCoalesce(node: Rex.Op.Coalesce, ctx: StaticType?): Operator {
+        val args = Array(node.args.size) { visitRex(node.args[it], node.args[it].type) }
+        return ExprCoalesce(args)
+    }
+
+    override fun visitRexOpNullif(node: Rex.Op.Nullif, ctx: StaticType?): Operator {
+        val value = visitRex(node.value, node.value.type)
+        val nullifier = visitRex(node.nullifier, node.value.type)
+        return ExprNullIf(value, nullifier)
     }
 
     /**
