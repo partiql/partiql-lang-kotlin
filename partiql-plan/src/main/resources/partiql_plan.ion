@@ -291,6 +291,8 @@ rel::{
       projections:  list::[rex],
     },
 
+    // TODO: Specify that this is a LATERAL JOIN. Create a separate JOIN. Also, determine the allowable types of JOIN.
+    // For context: Oracle SQL doesn't allow ... FULL OUTER JOIN LATERAL ... or ... RIGHT OUTER JOIN LATERAL ...
     join::{
       lhs: rel,
       rhs: rel,
