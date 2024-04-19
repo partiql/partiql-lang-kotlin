@@ -28,6 +28,7 @@ object Versions {
     const val kotlin = "1.6.20"
     const val ktlint = "10.2.1"
     const val pig = "0.6.1"
+    const val shadow = "7.1.2"
 }
 
 object Plugins {
@@ -36,6 +37,7 @@ object Plugins {
     const val kotlinGradle = "org.jetbrains.kotlin:kotlin-gradle-plugin:${Versions.kotlin}"
     const val ktlint = "org.jlleitschuh.gradle:ktlint-gradle:${Versions.ktlint}"
     const val pig = "org.partiql:pig-gradle-plugin:${Versions.pig}"
+    const val shadow = "gradle.plugin.com.github.johnrengelman:shadow:${Versions.shadow}"
 }
 
 dependencies {
@@ -44,6 +46,7 @@ dependencies {
     implementation(Plugins.kotlinGradle)
     implementation(Plugins.ktlint)
     implementation(Plugins.pig)
+    implementation(Plugins.shadow)
 }
 
 allprojects {

@@ -15,6 +15,8 @@
 
 package org.partiql.gradle.plugin.publish
 
+import com.github.jengelman.gradle.plugins.shadow.ShadowExtension
+import com.github.jengelman.gradle.plugins.shadow.ShadowPlugin
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPlugin
@@ -35,10 +37,11 @@ import org.jetbrains.dokka.gradle.DokkaTask
 import org.jetbrains.kotlin.gradle.dsl.ExplicitApiMode
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 import java.io.File
+import org.gradle.kotlin.dsl.configure
 
 /**
  * Gradle plugin to consolidates the following publishing logic
- * - Maven Publising
+ * - Maven Publishing
  * - Signing
  * - SourcesJar
  * - Dokka + JavadocJar
@@ -51,6 +54,7 @@ abstract class PublishPlugin : Plugin<Project> {
         pluginManager.apply(MavenPublishPlugin::class.java)
         pluginManager.apply(SigningPlugin::class.java)
         pluginManager.apply(DokkaPlugin::class.java)
+        pluginManager.apply(ShadowPlugin::class.java)
         extensions.getByType(KotlinJvmProjectExtension::class.java).explicitApi = ExplicitApiMode.Strict
         val ext = extensions.create("publish", PublishExtension::class.java)
         target.afterEvaluate { publish(ext) }
@@ -86,57 +90,63 @@ abstract class PublishPlugin : Plugin<Project> {
         }
 
         // Setup Maven Central Publishing
-        val publishing = extensions.getByType(PublishingExtension::class.java).apply {
-            publications {
-                create<MavenPublication>("maven") {
-                    artifactId = ext.artifactId
-                    from(components["java"])
-                    pom {
-                        packaging = "jar"
-                        name.set(ext.name)
-                        description.set(ext.description)
-                        url.set(ext.url)
-                        scm {
-                            connection.set("scm:git@github.com:partiql/partiql-lang-kotlin.git")
-                            developerConnection.set("scm:git@github.com:partiql/partiql-lang-kotlin.git")
-                            url.set("git@github.com:partiql/partiql-lang-kotlin.git")
+        afterEvaluate {
+            val publishing = extensions.getByType(PublishingExtension::class.java).apply {
+                publications {
+                    create<MavenPublication>("maven") {
+                        project.extensions.configure<ShadowExtension> {
+                            component(this@create)
                         }
-                        licenses {
-                            license {
-                                name.set("The Apache License, Version 2.0")
-                                url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
-                            }
-                        }
-                        developers {
-                            developer {
-                                name.set("PartiQL Team")
-                                email.set("partiql-dev@amazon.com")
-                                organization.set("PartiQL")
-                                organizationUrl.set("https://github.com/partiql")
-                            }
-                        }
-                    }
-                }
-            }
-            repositories {
-                maven {
-                    url = uri("https://aws.oss.sonatype.org/service/local/staging/deploy/maven2")
-                    credentials {
-                        val ossrhUsername: String by rootProject
-                        val ossrhPassword: String by rootProject
-                        username = ossrhUsername
-                        password = ossrhPassword
-                    }
-                }
-            }
-        }
 
-        // Sign only if publishing to Maven Central
-        extensions.getByType(SigningExtension::class.java).run {
-            setRequired {
-                releaseVersion && gradle.taskGraph.allTasks.any { it is PublishToMavenRepository }
+                        artifactId = ext.artifactId
+                        from(components["java"])
+                        pom {
+                            packaging = "jar"
+                            name.set(ext.name)
+                            description.set(ext.description)
+                            url.set(ext.url)
+                            scm {
+                                connection.set("scm:git@github.com:partiql/partiql-lang-kotlin.git")
+                                developerConnection.set("scm:git@github.com:partiql/partiql-lang-kotlin.git")
+                                url.set("git@github.com:partiql/partiql-lang-kotlin.git")
+                            }
+                            licenses {
+                                license {
+                                    name.set("The Apache License, Version 2.0")
+                                    url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
+                                }
+                            }
+                            developers {
+                                developer {
+                                    name.set("PartiQL Team")
+                                    email.set("partiql-dev@amazon.com")
+                                    organization.set("PartiQL")
+                                    organizationUrl.set("https://github.com/partiql")
+                                }
+                            }
+                        }
+                    }
+                }
+                repositories {
+                    maven {
+                        url = uri("https://aws.oss.sonatype.org/service/local/staging/deploy/maven2")
+                        credentials {
+                            val ossrhUsername: String by rootProject
+                            val ossrhPassword: String by rootProject
+                            username = ossrhUsername
+                            password = ossrhPassword
+                        }
+                    }
+                }
             }
-            sign(publishing.publications["maven"])
+
+            // Sign only if publishing to Maven Central
+            extensions.getByType(SigningExtension::class.java).run {
+                setRequired {
+                    releaseVersion && gradle.taskGraph.allTasks.any { it is PublishToMavenRepository }
+                }
+                sign(publishing.publications["maven"])
+            }
         }
     }
 }

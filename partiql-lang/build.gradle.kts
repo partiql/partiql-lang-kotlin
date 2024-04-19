@@ -64,6 +64,16 @@ dependencies {
     }
 }
 
+val relocations = mapOf(
+    "org.antlr" to "org.partiql.thirdparty.antlr"
+)
+
+tasks.shadowJar {
+    for ((from, to) in relocations) {
+        relocate(from, to)
+    }
+}
+
 publish {
     artifactId = "partiql-lang-kotlin"
     name = "PartiQL Lang Kotlin"

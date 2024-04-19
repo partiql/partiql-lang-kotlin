@@ -26,6 +26,17 @@ dependencies {
     implementation(Deps.antlrRuntime)
 }
 
+val relocations = mapOf(
+    "org.antlr" to "org.partiql.thirdparty.antlr"
+)
+
+tasks.shadowJar {
+    dependsOn(tasks.named("generateGrammarSource"))
+    for ((from, to) in relocations) {
+        relocate(from, to)
+    }
+}
+
 tasks.generateGrammarSource {
     val antlrPackage = "org.partiql.parser.antlr"
     val antlrSources = "$buildDir/generated-src/${antlrPackage.replace('.', '/')}"
