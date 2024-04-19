@@ -317,7 +317,7 @@ internal class Compiler(
 
     override fun visitRelOpFilter(node: Rel.Op.Filter, ctx: StaticType?): Operator {
         val input = visitRel(node.input, ctx)
-        val condition = visitRex(node.predicate, ctx)
+        val condition = visitRex(node.predicate, ctx).modeHandled()
         return RelFilter(input, condition)
     }
 
