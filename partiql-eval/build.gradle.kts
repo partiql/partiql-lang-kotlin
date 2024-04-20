@@ -36,6 +36,8 @@ dependencies {
     testImplementation(Deps.junit4)
     testImplementation(Deps.junit4Params)
     testImplementation(Deps.junitVintage) // Enables JUnit4
+    testImplementation(project(":plugins:partiql-base-jdbc"))
+    testImplementation("org.postgresql:postgresql:42.7.3")
 }
 
 // Disabled for partiql-eval project at initialization.

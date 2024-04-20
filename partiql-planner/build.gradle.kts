@@ -34,6 +34,8 @@ dependencies {
     testImplementation(project(":partiql-parser"))
     testImplementation(project(":plugins:partiql-local"))
     testImplementation(project(":plugins:partiql-memory"))
+    testImplementation(project(":plugins:partiql-base-jdbc"))
+    testImplementation("org.postgresql:postgresql:42.7.3")
     // Test Fixtures
     testFixturesImplementation(project(":partiql-spi"))
 }
