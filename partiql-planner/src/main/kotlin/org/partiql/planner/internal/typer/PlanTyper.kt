@@ -1505,7 +1505,6 @@ internal class PlanTyper(private val env: Env) {
         Identifier.CaseSensitivity.INSENSITIVE -> symbol.equals(other, ignoreCase = true)
     }
 
-
     /**
      * Pretty-print a path and its root type.
      *

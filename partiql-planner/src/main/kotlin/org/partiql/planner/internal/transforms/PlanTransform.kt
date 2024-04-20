@@ -9,12 +9,11 @@ import org.partiql.plan.ddlOpCreateTable
 import org.partiql.plan.partiQLPlan
 import org.partiql.plan.partitionExprColumnList
 import org.partiql.plan.rexOpCast
-
 import org.partiql.plan.rexOpErr
-import org.partiql.planner.internal.PlannerFlag
-import org.partiql.planner.internal.ProblemGenerator
 import org.partiql.plan.statementDDL
 import org.partiql.plan.tableProperty
+import org.partiql.planner.internal.PlannerFlag
+import org.partiql.planner.internal.ProblemGenerator
 import org.partiql.planner.internal.ir.Constraint
 import org.partiql.planner.internal.ir.DdlOp
 import org.partiql.planner.internal.ir.Identifier
