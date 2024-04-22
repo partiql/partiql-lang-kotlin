@@ -26,6 +26,7 @@ import org.partiql.eval.internal.operator.rex.ExprCast
 import org.partiql.eval.internal.operator.rex.ExprCoalesce
 import org.partiql.eval.internal.operator.rex.ExprCollection
 import org.partiql.eval.internal.operator.rex.ExprLiteral
+import org.partiql.eval.internal.operator.rex.ExprMissing
 import org.partiql.eval.internal.operator.rex.ExprNullIf
 import org.partiql.eval.internal.operator.rex.ExprPathIndex
 import org.partiql.eval.internal.operator.rex.ExprPathKey
@@ -47,6 +48,7 @@ import org.partiql.plan.Rel
 import org.partiql.plan.Rex
 import org.partiql.plan.Statement
 import org.partiql.plan.debug.PlanPrinter
+import org.partiql.plan.rexOpErr
 import org.partiql.plan.visitor.PlanBaseVisitor
 import org.partiql.spi.fn.Agg
 import org.partiql.spi.fn.FnExperimental
@@ -231,6 +233,19 @@ internal class Compiler(
 
     override fun visitRexOpCast(node: Rex.Op.Cast, ctx: StaticType?): Operator {
         return ExprCast(visitRex(node.arg, ctx), node.cast)
+    }
+
+    override fun visitRexOpMissing(node: Rex.Op.Missing, ctx: StaticType?): Operator {
+        return when (session.mode) {
+            PartiQLEngine.Mode.PERMISSIVE -> {
+                // Make a runtime TypeCheckException.
+                ExprMissing(node.message)
+            }
+            PartiQLEngine.Mode.STRICT -> {
+                // Promote to error.
+                visitRexOpErr(rexOpErr(node.message, node.causes), null)
+            }
+        }
     }
 
     // REL
