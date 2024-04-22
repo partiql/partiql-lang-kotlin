@@ -84,6 +84,6 @@ public interface ConnectorMetadata {
         checkExpression: List<String>,
         unique: List<String>,
         primaryKey: List<String>
-    ) : ConnectorHandle.Data =
+    ): ConnectorHandle.Data =
         throw PartiQLException("Create Table Operation is not Implemented for this connector")
 }
