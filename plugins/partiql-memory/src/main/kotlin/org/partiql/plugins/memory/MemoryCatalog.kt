@@ -20,7 +20,9 @@ import org.partiql.spi.BindingPath
 import org.partiql.spi.connector.ConnectorFnProvider
 import org.partiql.spi.connector.ConnectorHandle
 import org.partiql.spi.connector.ConnectorPath
+import org.partiql.spi.connector.IdentifierMapping
 import org.partiql.spi.connector.sql.SqlFnProvider
+import org.partiql.spi.connector.sql.SqlIdentifierMapping
 import org.partiql.spi.connector.sql.info.InfoSchema
 import org.partiql.spi.fn.FnExperimental
 
@@ -31,7 +33,11 @@ import org.partiql.spi.fn.FnExperimental
  *
  * @property name
  */
-public class MemoryCatalog(public val name: String, public val infoSchema: InfoSchema) {
+public class MemoryCatalog(
+    public val name: String,
+    public val infoSchema: InfoSchema,
+    public val identifierMapping: IdentifierMapping = SqlIdentifierMapping()
+) {
 
     @OptIn(FnExperimental::class)
     public fun getFunctions(): ConnectorFnProvider = SqlFnProvider(infoSchema.functions)
@@ -55,8 +61,8 @@ public class MemoryCatalog(public val name: String, public val infoSchema: InfoS
         // insert entity in current dir
         curr.insert(
             binding.name,
-            ConnectorHandle.Obj(
-                path = ConnectorPath(path.steps.map { it.name }),
+            ConnectorHandle.Data(
+                path = identifierMapping.fromBindingPath(path),
                 entity = obj,
             )
         )
@@ -73,7 +79,7 @@ public class MemoryCatalog(public val name: String, public val infoSchema: InfoS
      * @param path
      * @return
      */
-    public fun find(path: BindingPath): ConnectorHandle.Obj? {
+    public fun find(path: BindingPath): ConnectorHandle.Data? {
         var currItems = listOf<Tree.Item>()
         var currDirs = listOf<Tree.Dir>(root)
         for (name in path.steps) {
@@ -177,7 +183,7 @@ public class MemoryCatalog(public val name: String, public val infoSchema: InfoS
              * @param obj
              * @return
              */
-            fun insert(name: String, obj: ConnectorHandle.Obj): Item {
+            fun insert(name: String, obj: ConnectorHandle.Data): Item {
                 if (children[name] is Dir) {
                     error("Directory exists: `$name`")
                 }
@@ -216,6 +222,6 @@ public class MemoryCatalog(public val name: String, public val infoSchema: InfoS
          * @property name
          * @property obj
          */
-        class Item(override val name: String, val obj: ConnectorHandle.Obj) : Tree
+        class Item(override val name: String, val obj: ConnectorHandle.Data) : Tree
     }
 }

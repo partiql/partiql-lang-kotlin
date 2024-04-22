@@ -39,7 +39,7 @@ public open class SqlMetadata(
      * @param path
      * @return
      */
-    override fun getObject(path: BindingPath): ConnectorHandle.Obj? = null
+    override fun getObject(path: BindingPath): ConnectorHandle.Data? = null
 
     @FnExperimental
     override fun getFunction(path: BindingPath): ConnectorHandle.Fn? {

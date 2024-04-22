@@ -14,6 +14,9 @@
 
 package org.partiql.spi.connector
 
+import org.partiql.spi.fn.AggSignature
+import org.partiql.spi.fn.FnExperimental
+import org.partiql.spi.fn.FnSignature
 import org.partiql.types.StaticType
 
 /**
@@ -27,18 +30,39 @@ import org.partiql.types.StaticType
  * 2. Scalar Function
  * 3. Aggregation function.
  *
- * TODO: We should consider rename this interface or treat this as a marker interface, because in SQL object can also means
- *   constraints, indexes, and triggers (they don't necessarily have a type)
- *
  */
-public interface ConnectorObject {
+public sealed interface ConnectorObject {
 
-    /**
-     * Returns the type descriptor of an object in a catalog.
-     *
-     * If the handle is unable to produce a [StaticType], implementers should return null.
-     *
-     * @return
-     */
-    public fun getType(): StaticType
+    public interface Fn : ConnectorObject {
+        /**
+         * Returns a function's variants.
+         *
+         * @return
+         */
+        @OptIn(FnExperimental::class)
+        public fun getVariants(): List<FnSignature>
+    }
+
+    public interface Agg : ConnectorObject {
+        /**
+         * Returns a function's variants.
+         *
+         * @return
+         */
+        @OptIn(FnExperimental::class)
+        public fun getVariants(): List<AggSignature>
+    }
+
+    // TODO: Come up with a better name
+    public interface Data : ConnectorObject {
+
+        /**
+         * Returns the type descriptor of a data object in a catalog.
+         *
+         * If the handle is unable to produce a [StaticType], implementers should return null.
+         *
+         * @return
+         */
+        public fun getType(): StaticType
+    }
 }

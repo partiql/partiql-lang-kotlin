@@ -13,7 +13,7 @@ internal class MemoryMetadata(
     info: InfoSchema,
 ) : SqlMetadata(session, info) {
 
-    override fun getObject(path: BindingPath): ConnectorHandle.Obj? {
+    override fun getObject(path: BindingPath): ConnectorHandle.Data? {
         return super.getObject(path) ?: catalog.find(path)
     }
 

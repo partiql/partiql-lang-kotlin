@@ -5,10 +5,6 @@ import java.util.function.Consumer
 
 /**
  * A list of string that is used to uniquely identifier an entity in external resources.
- *
- * Implementation of the connector interface needs to convert [org.partiql.spi.BindingPath] to ConnectorPath.
- *
- * TODO: Have an API to implement the conversion logic, or consolidate binding path and conversion path.
  */
 public data class ConnectorPath(public val steps: List<String>) : Iterable<String> {
 

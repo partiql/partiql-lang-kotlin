@@ -14,8 +14,7 @@
 
 package org.partiql.spi.connector.sql
 
-import org.partiql.spi.connector.ConnectorAgg
-import org.partiql.spi.connector.ConnectorFn
+import org.partiql.spi.connector.ConnectorObject
 import org.partiql.spi.fn.AggSignature
 import org.partiql.spi.fn.FnExperimental
 
@@ -29,7 +28,7 @@ import org.partiql.spi.fn.FnExperimental
 public class SqlAgg(
     private val name: String,
     private val variants: List<AggSignature>,
-) : ConnectorAgg {
+) : ConnectorObject.Agg {
 
     override fun getVariants(): List<AggSignature> = variants
 }

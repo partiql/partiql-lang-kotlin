@@ -24,7 +24,7 @@ import org.partiql.value.PartiQLValueExperimental
 public class MemoryObject(
     private val type: StaticType,
     private val value: PartiQLValue? = null,
-) : ConnectorObject {
+) : ConnectorObject.Data {
 
     public fun getValue(): PartiQLValue? = value
 

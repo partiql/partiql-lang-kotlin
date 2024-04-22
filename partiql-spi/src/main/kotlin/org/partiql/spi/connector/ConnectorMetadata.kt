@@ -38,7 +38,7 @@ public interface ConnectorMetadata {
      *
      * If the [path] does not correspond to an existing [ConnectorObject], implementers should return null.
      */
-    public fun getObject(path: BindingPath): ConnectorHandle.Obj?
+    public fun getObject(path: BindingPath): ConnectorHandle.Data?
 
     /**
      * Returns all function signatures matching the given path.

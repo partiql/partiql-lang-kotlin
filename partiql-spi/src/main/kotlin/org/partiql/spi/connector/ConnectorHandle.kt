@@ -19,7 +19,7 @@ package org.partiql.spi.connector
  *
  * In the context of the SPI package, handles are used to represent entity in an external data source.
  */
-public sealed class ConnectorHandle<T> {
+public sealed class ConnectorHandle<T : ConnectorObject> {
 
     /**
      * The case-normal-form path to an entity in a catalog.
@@ -31,18 +31,19 @@ public sealed class ConnectorHandle<T> {
      */
     public abstract val entity: T
 
-    public data class Obj(
+    // TODO: Decide a better naming
+    public data class Data(
         override val path: ConnectorPath,
-        override val entity: ConnectorObject,
-    ) : ConnectorHandle<ConnectorObject>()
+        override val entity: ConnectorObject.Data,
+    ) : ConnectorHandle<ConnectorObject.Data>()
 
     public data class Fn(
         override val path: ConnectorPath,
-        override val entity: ConnectorFn,
-    ) : ConnectorHandle<ConnectorFn>()
+        override val entity: ConnectorObject.Fn,
+    ) : ConnectorHandle<ConnectorObject.Fn>()
 
     public data class Agg(
         override val path: ConnectorPath,
-        override val entity: ConnectorAgg,
-    ) : ConnectorHandle<ConnectorAgg>()
+        override val entity: ConnectorObject.Agg,
+    ) : ConnectorHandle<ConnectorObject.Agg>()
 }

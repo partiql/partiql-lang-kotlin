@@ -26,6 +26,6 @@ import org.partiql.types.StaticType
 internal class LocalObject(
     val path: List<String>,
     private val type: StaticType,
-) : ConnectorObject {
+) : ConnectorObject.Data {
     override fun getType(): StaticType = type
 }

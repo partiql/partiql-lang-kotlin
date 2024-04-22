@@ -15,7 +15,7 @@ import org.partiql.spi.connector.ConnectorObject
 internal class PathResolverObj(
     catalog: ConnectorMetadata,
     session: PartiQLPlanner.Session,
-) : PathResolver<ConnectorObject>(catalog, session) {
+) : PathResolver<ConnectorObject.Data>(catalog, session) {
 
-    override fun get(metadata: ConnectorMetadata, path: BindingPath): ConnectorHandle.Obj? = metadata.getObject(path)
+    override fun get(metadata: ConnectorMetadata, path: BindingPath): ConnectorHandle.Data? = metadata.getObject(path)
 }
