@@ -52,7 +52,7 @@ object Versions {
 
     // Testing
     const val assertj = "3.11.0"
-    const val jacoco = "0.8.8"
+    const val jacoco = "0.8.11"
     const val junit5 = "5.9.3"
     const val junit5PlatformLauncher = "1.9.3"
     const val junit4 = "4.12"

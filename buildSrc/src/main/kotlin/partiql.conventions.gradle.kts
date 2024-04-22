@@ -49,7 +49,10 @@ java {
 
 tasks.test {
     useJUnitPlatform() // Enable JUnit5
-    jvmArgs.addAll(listOf("-Duser.language=en", "-Duser.country=US"))
+    jvmArgs(
+        "-Duser.language=en",
+        "-Duser.country=US"
+    )
     maxHeapSize = "4g"
     testLogging {
         events.add(TestLogEvent.FAILED)

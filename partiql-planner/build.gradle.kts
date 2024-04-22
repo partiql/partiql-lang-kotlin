@@ -112,14 +112,14 @@ tasks.register<Copy>("copyUtils") {
 //
 // !! IMPORTANT !! — only run manually, as this will overwrite the existing ir/Nodes.kt.
 //
-tasks.register<Copy>("copyNodes") {
-    includeEmptyDirs = false
-    dependsOn("codegen")
-    filter { it.replace(Regex("public (?!(override|(fun visit)))"), "internal ") }
-    from("$buildDir/tmp")
-    include("**/Nodes.kt")
-    into("src/main/kotlin")
-}
+// tasks.register<Copy>("copyNodes") {
+//     includeEmptyDirs = false
+//     dependsOn("codegen")
+//     filter { it.replace(Regex("public (?!(override|(fun visit)))"), "internal ") }
+//     from("$buildDir/tmp")
+//     include("**/Nodes.kt")
+//     into("src/main/kotlin")
+// }
 
 tasks.register("generate") {
     dependsOn("codegen", "copyUtils")
@@ -127,4 +127,31 @@ tasks.register("generate") {
 
 tasks.compileKotlin {
     dependsOn("generate")
+    dependsOn(tasks.withType<Copy>())
+}
+
+tasks.withType<org.jlleitschuh.gradle.ktlint.tasks.KtLintFormatTask>().configureEach {
+    dependsOn(tasks.withType<Copy>())
+}
+
+tasks.withType<org.jlleitschuh.gradle.ktlint.tasks.KtLintCheckTask>().configureEach {
+    dependsOn(tasks.withType<Copy>())
+}
+
+tasks.withType<Jar>().configureEach {
+    dependsOn(tasks.withType<Copy>())
+}
+
+tasks.detekt {
+    dependsOn(tasks.withType<Copy>())
+}
+
+tasks.withType<org.jetbrains.dokka.gradle.DokkaTask>().configureEach {
+    dependsOn(tasks.withType<Copy>())
+}
+
+configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
+    filter {
+        exclude { it.file.path.contains("Nodes.kt") }
+    }
 }

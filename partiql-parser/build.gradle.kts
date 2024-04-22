@@ -53,8 +53,21 @@ tasks.compileKotlin {
     dependsOn(tasks.generateGrammarSource)
 }
 
-tasks.findByName("sourcesJar")?.apply {
-    dependsOn(tasks.generateGrammarSource)
+tasks.compileTestKotlin {
+    dependsOn(tasks.withType<AntlrTask>())
+}
+
+tasks.withType<Jar>().configureEach {
+    // ensure "generateGrammarSource" is called before "sourcesJar".
+    dependsOn(tasks.withType<AntlrTask>())
+}
+
+tasks.withType<org.jetbrains.dokka.gradle.DokkaTask>().configureEach {
+    dependsOn(tasks.withType<AntlrTask>())
+}
+
+tasks.runKtlintCheckOverTestSourceSet {
+    dependsOn(tasks.withType<AntlrTask>())
 }
 
 tasks.processResources {
