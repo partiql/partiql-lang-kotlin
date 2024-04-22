@@ -19,6 +19,8 @@ import org.partiql.spi.connector.ConnectorPath
 /**
  * A [BindingPath] represents an SQL-qualified identifier which is composed of case-sensitive and case-insensitive steps.
  *
+ * This is used to hold PartiQL Identifier information as SPI does not have a dependency on the Planner.
+ *
  * @property steps
  */
 public class BindingPath(public val steps: List<BindingName>) {

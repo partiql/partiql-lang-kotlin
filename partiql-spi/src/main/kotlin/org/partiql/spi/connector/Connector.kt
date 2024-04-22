@@ -18,7 +18,7 @@ import com.amazon.ionelement.api.StructElement
 import org.partiql.spi.fn.FnExperimental
 
 /**
- * A [Connector] is used by the PartiQL compiler and engine to implement a catalog.
+ * A [Connector] is used by the PartiQL compiler and engine to access and query data from external data source.
  */
 public interface Connector {
 

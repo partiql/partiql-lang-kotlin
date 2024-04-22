@@ -17,9 +17,19 @@ package org.partiql.spi.connector
 import org.partiql.types.StaticType
 
 /**
- * An object's representation within a Catalog. This is used by plugin implementers to store logic in relation to the
- * [ConnectorMetadata]. An example implementation of [ConnectorObject] could represent an object of a Catalog that holds
- * the serialized [org.partiql.types.StaticType].
+ * A ConnectorObject represents an object in an external data source connected to PartiQL.
+ *
+ * This is used by plugin implementers to store logic in relation to the [ConnectorMetadata].
+ *
+ * At the moment, objects supported by PartiQL are
+ *
+ * 1. Data
+ * 2. Scalar Function
+ * 3. Aggregation function.
+ *
+ * TODO: We should consider rename this interface or treat this as a marker interface, because in SQL object can also means
+ *   constraints, indexes, and triggers (they don't necessarily have a type)
+ *
  */
 public interface ConnectorObject {
 

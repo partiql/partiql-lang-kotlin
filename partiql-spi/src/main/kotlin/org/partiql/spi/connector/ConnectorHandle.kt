@@ -15,7 +15,9 @@
 package org.partiql.spi.connector
 
 /**
- * A handle holds a reference to an entity within a catalog.
+ * A handle refers to a lightweight reference to a specific resource.
+ *
+ * In the context of the SPI package, handles are used to represent entity in an external data source.
  */
 public sealed class ConnectorHandle<T> {
 

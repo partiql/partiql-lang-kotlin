@@ -18,7 +18,9 @@ import org.partiql.spi.BindingPath
 import org.partiql.spi.fn.FnExperimental
 
 /**
- * Aids in retrieving relevant Catalog metadata for the purpose of planning and execution.
+ * The ConnectorMetadata interface defines methods for retrieving metadata on objects stored in remote data source.
+ *
+ * Those method are called by PartiQL Planner for query planning purposes.
  */
 public interface ConnectorMetadata {
 
