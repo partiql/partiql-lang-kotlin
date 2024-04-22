@@ -69,6 +69,7 @@ val relocations = mapOf(
 )
 
 tasks.shadowJar {
+    archiveClassifier.set("shaded")
     for ((from, to) in relocations) {
         relocate(from, to)
     }

@@ -81,6 +81,10 @@ abstract class PublishPlugin : Plugin<Project> {
             outputDirectory.set(File("${buildDir}/javadoc"))
         }
 
+        tasks.getByName<Jar>("jar") {
+            enabled = false
+        }
+
         // Add dokkaHtml output to the javadocJar
         tasks.getByName<Jar>("javadocJar") {
             onlyIf { runDokka }
@@ -97,9 +101,7 @@ abstract class PublishPlugin : Plugin<Project> {
                         project.extensions.configure<ShadowExtension> {
                             component(this@create)
                         }
-
                         artifactId = ext.artifactId
-                        from(components["java"])
                         pom {
                             packaging = "jar"
                             name.set(ext.name)

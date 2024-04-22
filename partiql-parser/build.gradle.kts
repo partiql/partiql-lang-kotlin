@@ -32,6 +32,7 @@ val relocations = mapOf(
 
 tasks.shadowJar {
     dependsOn(tasks.named("generateGrammarSource"))
+    archiveClassifier.set("shaded")
     for ((from, to) in relocations) {
         relocate(from, to)
     }
