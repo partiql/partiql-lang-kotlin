@@ -106,9 +106,9 @@ public class LocalConnector(
          */
         private var catalog = LocalCatalog.load(root)
 
-        override fun getObject(path: BindingPath): ConnectorHandle.Obj? {
+        override fun getObject(path: BindingPath): ConnectorHandle.Data? {
             val value = catalog.lookup(path) ?: return null
-            return ConnectorHandle.Obj(
+            return ConnectorHandle.Data(
                 path = ConnectorPath(value.path),
                 entity = value,
             )

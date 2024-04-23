@@ -6,6 +6,7 @@ import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
 import org.partiql.spi.connector.ConnectorHandle
 import org.partiql.spi.connector.ConnectorMetadata
+import org.partiql.spi.connector.ConnectorObject
 
 /**
  * This is the base behavior for name resolution.
@@ -26,7 +27,7 @@ import org.partiql.spi.connector.ConnectorMetadata
  * @property catalog
  * @property session
  */
-internal abstract class PathResolver<T>(
+internal abstract class PathResolver<T : ConnectorObject>(
     private val catalog: ConnectorMetadata,
     private val session: PartiQLPlanner.Session,
 ) {

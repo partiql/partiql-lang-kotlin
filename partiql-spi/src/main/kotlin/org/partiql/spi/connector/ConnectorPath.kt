@@ -4,9 +4,7 @@ import java.util.Spliterator
 import java.util.function.Consumer
 
 /**
- * Thin wrapper over a list of strings.
- *
- * @property steps
+ * A list of string that is used to uniquely identifier an entity in external resources.
  */
 public data class ConnectorPath(public val steps: List<String>) : Iterable<String> {
 

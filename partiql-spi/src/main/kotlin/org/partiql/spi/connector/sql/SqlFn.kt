@@ -14,7 +14,7 @@
 
 package org.partiql.spi.connector.sql
 
-import org.partiql.spi.connector.ConnectorFn
+import org.partiql.spi.connector.ConnectorObject
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnSignature
 
@@ -28,7 +28,7 @@ import org.partiql.spi.fn.FnSignature
 public class SqlFn(
     private val name: String,
     private val variants: List<FnSignature>,
-) : ConnectorFn {
+) : ConnectorObject.Fn {
 
     override fun getVariants(): List<FnSignature> = variants
 }

@@ -3,9 +3,9 @@ package org.partiql.planner.internal
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
-import org.partiql.spi.connector.ConnectorFn
 import org.partiql.spi.connector.ConnectorHandle
 import org.partiql.spi.connector.ConnectorMetadata
+import org.partiql.spi.connector.ConnectorObject
 import org.partiql.spi.fn.FnExperimental
 
 /**
@@ -19,7 +19,7 @@ import org.partiql.spi.fn.FnExperimental
 internal class PathResolverFn(
     catalog: ConnectorMetadata,
     session: PartiQLPlanner.Session,
-) : PathResolver<ConnectorFn>(catalog, session) {
+) : PathResolver<ConnectorObject.Fn>(catalog, session) {
 
     /**
      * Default INFORMATION_SCHEMA.ROUTINES. Keep empty for now for top-level lookup.

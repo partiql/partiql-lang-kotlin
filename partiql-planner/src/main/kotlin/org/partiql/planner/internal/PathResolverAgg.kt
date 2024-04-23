@@ -3,9 +3,9 @@ package org.partiql.planner.internal
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.internal.casts.CastTable
 import org.partiql.spi.BindingPath
-import org.partiql.spi.connector.ConnectorAgg
 import org.partiql.spi.connector.ConnectorHandle
 import org.partiql.spi.connector.ConnectorMetadata
+import org.partiql.spi.connector.ConnectorObject
 import org.partiql.spi.fn.FnExperimental
 
 /**
@@ -25,7 +25,7 @@ import org.partiql.spi.fn.FnExperimental
 internal class PathResolverAgg(
     catalog: ConnectorMetadata,
     session: PartiQLPlanner.Session,
-) : PathResolver<ConnectorAgg>(catalog, session) {
+) : PathResolver<ConnectorObject.Agg>(catalog, session) {
 
     companion object {
         @JvmStatic

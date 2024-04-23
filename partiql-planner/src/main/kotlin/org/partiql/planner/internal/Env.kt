@@ -87,7 +87,7 @@ internal class Env(private val session: PartiQLPlanner.Session) {
         return if (tail.isEmpty()) root else root.toPath(tail)
     }
 
-    @OptIn(FnExperimental::class, PartiQLValueExperimental::class)
+    @OptIn(FnExperimental::class)
     fun resolveFn(path: BindingPath, args: List<Rex>): Rex? {
         val item = fns.lookup(path) ?: return null
         // Invoke FnResolver to determine if we made a match
