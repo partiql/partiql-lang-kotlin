@@ -81,10 +81,6 @@ abstract class PublishPlugin : Plugin<Project> {
             outputDirectory.set(File("${buildDir}/javadoc"))
         }
 
-        tasks.getByName<Jar>("jar") {
-            enabled = false
-        }
-
         // Add dokkaHtml output to the javadocJar
         tasks.getByName<Jar>("javadocJar") {
             onlyIf { runDokka }
