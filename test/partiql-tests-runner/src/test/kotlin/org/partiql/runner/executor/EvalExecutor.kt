@@ -26,8 +26,10 @@ import org.partiql.spi.BindingPath
 import org.partiql.spi.connector.Connector
 import org.partiql.spi.connector.ConnectorSession
 import org.partiql.types.StaticType
+import org.partiql.value.PartiQLCursor
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.PartiQLValueLoader
 import org.partiql.value.io.PartiQLValueIonReaderBuilder
 import org.partiql.value.toIon
 
@@ -49,20 +51,23 @@ class EvalExecutor(
 
     override fun fromIon(value: IonValue): PartiQLResult {
         val partiql = PartiQLValueIonReaderBuilder.standard().build(value.toIonElement()).read()
-
-        return PartiQLResult.Value(partiql)
+        val data = PartiQLCursor.of(partiql)
+        return PartiQLResult.Value(data)
     }
 
     override fun toIon(value: PartiQLResult): IonValue {
         if (value is PartiQLResult.Value) {
-            return value.value.toIon().toIonValue(ION)
+            val actualValue = PartiQLValueLoader.standard().load(value.value)
+            return actualValue.toIon().toIonValue(ION)
         }
         error("PartiQLResult cannot be converted to Ion")
     }
 
     override fun compare(actual: PartiQLResult, expect: PartiQLResult): Boolean {
         if (actual is PartiQLResult.Value && expect is PartiQLResult.Value) {
-            return valueComparison(actual.value, expect.value)
+            val value = PartiQLValueLoader.standard().load(actual.value)
+            val expectedValue = PartiQLValueLoader.standard().load(expect.value)
+            return valueComparison(value, expectedValue)
         }
         error("Cannot compare different types of PartiQLResult")
     }

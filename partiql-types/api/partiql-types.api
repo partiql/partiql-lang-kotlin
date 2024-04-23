@@ -1108,6 +1108,37 @@ public final class org/partiql/value/PartiQL {
 	public static synthetic fun timestampValue$default (Lorg/partiql/value/datetime/Timestamp;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/value/TimestampValue;
 }
 
+public abstract interface class org/partiql/value/PartiQLCursor : java/lang/AutoCloseable, java/util/Iterator {
+	public abstract fun getBinaryValue ()[B
+	public abstract fun getBlobValue ()[B
+	public abstract fun getBoolValue ()Z
+	public abstract fun getByteValue ()B
+	public abstract fun getCharValue ()Ljava/lang/String;
+	public abstract fun getClobValue ()[B
+	public abstract fun getDateValue ()Lorg/partiql/value/datetime/Date;
+	public abstract fun getDecimalArbitraryValue ()Ljava/math/BigDecimal;
+	public abstract fun getDecimalValue ()Ljava/math/BigDecimal;
+	public abstract fun getFieldName ()Ljava/lang/String;
+	public abstract fun getFloat32Value ()F
+	public abstract fun getFloat64Value ()D
+	public abstract fun getInt16Value ()S
+	public abstract fun getInt32Value ()I
+	public abstract fun getInt64Value ()J
+	public abstract fun getInt8Value ()B
+	public abstract fun getIntValue ()Ljava/math/BigInteger;
+	public abstract fun getIntervalValue ()J
+	public abstract fun getStringValue ()Ljava/lang/String;
+	public abstract fun getSymbolValue ()Ljava/lang/String;
+	public abstract fun getTimeValue ()Lorg/partiql/value/datetime/Time;
+	public abstract fun getTimestampValue ()Lorg/partiql/value/datetime/Timestamp;
+	public abstract fun getType ()Lorg/partiql/value/PartiQLValueType;
+	public abstract fun isMissingValue ()Z
+	public abstract fun isNullValue ()Z
+	public static fun of (Lorg/partiql/value/PartiQLValue;)Lorg/partiql/value/PartiQLCursor;
+	public abstract fun stepIn ()V
+	public abstract fun stepOut ()V
+}
+
 public abstract interface annotation class org/partiql/value/PartiQLTimestampExperimental : java/lang/annotation/Annotation {
 }
 
@@ -1139,6 +1170,11 @@ public abstract interface annotation class org/partiql/value/PartiQLValueExperim
 
 public final class org/partiql/value/PartiQLValueKt {
 	public static final fun toIon (Lorg/partiql/value/PartiQLValue;)Lcom/amazon/ionelement/api/IonElement;
+}
+
+public abstract interface class org/partiql/value/PartiQLValueLoader {
+	public abstract fun load (Lorg/partiql/value/PartiQLCursor;)Lorg/partiql/value/PartiQLValue;
+	public static fun standard ()Lorg/partiql/value/PartiQLValueLoader;
 }
 
 public final class org/partiql/value/PartiQLValueType : java/lang/Enum {
