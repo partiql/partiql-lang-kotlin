@@ -22,16 +22,19 @@ import org.jline.reader.Parser.ParseContext.UNSPECIFIED
 import org.jline.reader.impl.DefaultParser
 
 /**
- * Line parser which executes on successive newlines, ';', or ``\n!!`` for printing the AST.
+ * Line parser which executes on successive newlines or ';'.
  */
 object ShellParser : Parser {
 
     private val default = DefaultParser()
     private val nonTerminal = setOf(ACCEPT_LINE, UNSPECIFIED)
-    private val suffixes = setOf("\n", ";", "!!")
+    private val suffixes = setOf("\n", ";")
 
     override fun parse(line: String, cursor: Int, ctx: Parser.ParseContext): ParsedLine {
         if (line.isBlank() || ctx == Parser.ParseContext.COMPLETE) {
+            return default.parse(line, cursor, ctx)
+        }
+        if (line.startsWith(".")) {
             return default.parse(line, cursor, ctx)
         }
         if (nonTerminal.contains(ctx) && !line.endsWith(suffixes)) {

@@ -14,7 +14,6 @@
 
 package org.partiql.cli.shell
 
-import com.google.common.base.CharMatcher
 import com.google.common.util.concurrent.Uninterruptibles
 import org.fusesource.jansi.AnsiConsole
 import org.jline.reader.EndOfFileException
@@ -22,7 +21,6 @@ import org.jline.reader.History
 import org.jline.reader.LineReader
 import org.jline.reader.LineReaderBuilder
 import org.jline.reader.UserInterruptException
-import org.jline.reader.impl.completer.AggregateCompleter
 import org.jline.terminal.Terminal
 import org.jline.terminal.TerminalBuilder
 import org.jline.utils.AttributedString
@@ -30,32 +28,13 @@ import org.jline.utils.AttributedStringBuilder
 import org.jline.utils.AttributedStyle
 import org.jline.utils.InfoCmp
 import org.joda.time.Duration
-import org.partiql.cli.format.ExplainFormatter
-import org.partiql.cli.pipeline.AbstractPipeline
-import org.partiql.lang.SqlException
-import org.partiql.lang.eval.Bindings
-import org.partiql.lang.eval.EvaluationSession
-import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.PartiQLResult
-import org.partiql.lang.eval.delegate
-import org.partiql.lang.eval.namedValue
-import org.partiql.lang.graph.ExternalGraphException
-import org.partiql.lang.graph.ExternalGraphReader
-import org.partiql.lang.syntax.PartiQLParserBuilder
-import org.partiql.lang.util.ConfigurableExprValueFormatter
 import java.io.Closeable
-import java.io.File
-import java.io.OutputStream
 import java.io.PrintStream
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.util.Locale
 import java.util.Properties
-import java.util.concurrent.ArrayBlockingQueue
-import java.util.concurrent.BlockingQueue
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.annotation.concurrent.GuardedBy
@@ -64,71 +43,77 @@ private const val PROMPT_1 = "PartiQL> "
 private const val PROMPT_2 = "   | "
 internal const val BAR_1 = "===' "
 internal const val BAR_2 = "--- "
-private const val WELCOME_MSG = "Welcome to the PartiQL shell!"
-private const val DEBUG_MSG = """    
-■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
 
-    ██████╗ ███████╗██████╗ ██╗   ██╗ ██████╗ 
-    ██╔══██╗██╔════╝██╔══██╗██║   ██║██╔════╝ 
-    ██║  ██║█████╗  ██████╔╝██║   ██║██║  ███╗
-    ██║  ██║██╔══╝  ██╔══██╗██║   ██║██║   ██║
-    ██████╔╝███████╗██████╔╝╚██████╔╝╚██████╔╝
-    ╚═════╝ ╚══════╝╚═════╝  ╚═════╝  ╚═════╝ 
-    
-■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
-"""
-
+/**
+ * Commands based upon:
+ *  - https://sqlite.org/cli.html
+ *  - https://duckdb.org/docs/api/cli/dot_commands
+ *  - https://www.postgresql.org/docs/current/app-psql.html
+ *
+ * Legacy commands
+ * ------------------------
+ * !list_commands        Prints this message
+ * !help                 Prints this message
+ * !add_to_global_env    Adds to the global environment key/value pairs of the supplied struct
+ * !global_env           Displays the current global environment
+ * !add_graph            Adds to the global environment a name and a graph supplied as Ion
+ * !add_graph_from_file  Adds to the global environment a name and a graph from an Ion file
+ * !history              Prints command history
+ * !exit                 Exits the shell
+ * !clear                Clears the screen
+ */
 private const val HELP = """
-!list_commands        Prints this message
-!help                 Prints this message
-!add_to_global_env    Adds to the global environment key/value pairs of the supplied struct
-!global_env           Displays the current global environment
-!add_graph            Adds to the global environment a name and a graph supplied as Ion
-!add_graph_from_file  Adds to the global environment a name and a graph from an Ion file
-!history              Prints command history
-!exit                 Exits the shell
-!clear                Clears the screen
+.cd <path>              Changes the current directory.
+.clear                  Clears the screen.
+.debug on|off           Toggle debug printing.
+.exit                   Exits the shell.
+.help                   Prints this message.
+.history                Prints command history.
+.import <file>          Imports the data in the given file.
+.path                   Prints the current search path.
+.pwd                    Prints the current directory.
+.run <file>             Runs the script.
+.set <name> <value>     Sets the shell variable to the given value.
 """
+
+/**
+ */
+
+private val EXIT_DELAY: Duration = Duration(3000)
 
 private val SUCCESS: AttributedStyle = AttributedStyle.DEFAULT.foreground(AttributedStyle.GREEN)
 private val ERROR: AttributedStyle = AttributedStyle.DEFAULT.foreground(AttributedStyle.RED)
 private val INFO: AttributedStyle = AttributedStyle.DEFAULT
 private val WARN: AttributedStyle = AttributedStyle.DEFAULT.foreground(AttributedStyle.YELLOW)
 
-private val EXIT_DELAY: Duration = Duration(3000)
-
-/**
- * Initial work to replace the REPL with JLine3. I have attempted to keep this similar to Repl.kt, but have some
- * opinions on ways to clean this up in later PRs.
- */
+private fun ansi(string: String, style: AttributedStyle) = AttributedString(string, style).toAnsi()
+internal fun PrintStream.success(string: String) = this.println(ansi(string, SUCCESS))
+internal fun PrintStream.error(string: String) = this.println(ansi(string, ERROR))
+internal fun PrintStream.info(string: String) = this.println(ansi(string, INFO))
+internal fun PrintStream.warn(string: String) = this.println(ansi(string, WARN))
 
 val exiting = AtomicBoolean(false)
 val doneCompiling = AtomicBoolean(true)
 val donePrinting = AtomicBoolean(true)
 
 internal class Shell(
-    output: OutputStream,
-    private val compiler: AbstractPipeline,
-    initialGlobal: Bindings<ExprValue>,
-    private val config: ShellConfiguration = ShellConfiguration()
+    private val state: State,
 ) {
-    private val homeDir: Path = Paths.get(System.getProperty("user.home"))
-    private val globals = ShellGlobalBinding().add(initialGlobal)
-    private var previousResult = ExprValue.nullValue
-    private val out = PrintStream(output)
-    private val currentUser = System.getProperty("user.name")
 
-    private val inputs: BlockingQueue<RunnablePipeline.Input> = ArrayBlockingQueue(1)
-    private val results: BlockingQueue<RunnablePipeline.Output> = ArrayBlockingQueue(1)
-    private var pipelineService: ExecutorService = Executors.newFixedThreadPool(1)
-    private val values: BlockingQueue<RunnablePipeline.Output> = ArrayBlockingQueue(1)
-    private var printingService: ExecutorService = Executors.newFixedThreadPool(1)
+    class State(
+        @JvmField var debug: Boolean,
+    )
+
+    private val home: Path = Paths.get(System.getProperty("user.home"))
+    private val plugins: Path = home.resolve(".partiql").resolve("plugins")
+    private val user = System.getProperty("user.name")
+    private val out = PrintStream(System.out)
 
     fun start() {
         val interrupter = ThreadInterrupter()
         val exited = CountDownLatch(1)
-        pipelineService.submit(RunnablePipeline(inputs, results, compiler, doneCompiling))
-        printingService.submit(RunnableWriter(out, ConfigurableExprValueFormatter.pretty, values, donePrinting))
+        // pipelineService.submit(RunnablePipeline(inputs, results, compiler, doneCompiling))
+        // printingService.submit(RunnableWriter(out, ConfigurableExprValueFormatter.pretty, values, donePrinting))
         Runtime
             .getRuntime()
             .addShutdownHook(
@@ -161,34 +146,20 @@ internal class Shell(
         .nativeSignals(true)
         .signalHandler(signalHandler)
         .build().use { terminal ->
-
-            val highlighter = when {
-                this.config.isMonochrome -> null
-                else -> ShellHighlighter()
-            }
-            val completer = AggregateCompleter(CompleterDefault())
             val reader = LineReaderBuilder.builder()
                 .terminal(terminal)
                 .parser(ShellParser)
-                .completer(completer)
+                .completer(ShellCompleter)
                 .option(LineReader.Option.GROUP_PERSIST, true)
                 .option(LineReader.Option.AUTO_LIST, true)
                 .option(LineReader.Option.CASE_INSENSITIVE, true)
                 .variable(LineReader.LIST_MAX, 10)
-                .highlighter(highlighter)
-                .expander(ShellExpander)
-                .variable(LineReader.HISTORY_FILE, homeDir.resolve(".partiql/.history"))
+                .highlighter(ShellHighlighter)
+                .variable(LineReader.HISTORY_FILE, home.resolve(".partiql/.history"))
                 .variable(LineReader.SECONDARY_PROMPT_PATTERN, PROMPT_2)
                 .build()
-
-            out.info(WELCOME_MSG)
-            out.info("Typing mode: ${compiler.options.typingMode.name}")
-            out.info("Using version: ${retrievePartiQLVersionAndHash()}")
-            if (compiler is AbstractPipeline.PipelineDebug) {
-                out.println("\n\n")
-                out.success(DEBUG_MSG)
-                out.println("\n\n")
-            }
+            // out.info("Typing mode: ${compiler.options.typingMode.name}")
+            // out.info("Using version: ${retrievePartiQLVersionAndHash()}")
 
             while (!exiting.get()) {
                 val line: String = try {
@@ -203,92 +174,62 @@ internal class Shell(
                     return
                 }
 
-                // Pretty print AST
-                if (line.endsWith("\n!!")) {
-                    printAST(line.removeSuffix("!!"))
-                    continue
-                }
-
                 if (line.isBlank()) {
                     out.success("OK!")
                     continue
                 }
 
-                // Handle commands
-                val command = when (val end: Int = CharMatcher.`is`(';').or(CharMatcher.whitespace()).indexIn(line)) {
-                    -1 -> ""
-                    else -> line.substring(0, end)
-                }.lowercase(Locale.ENGLISH).trim()
-                when (command) {
-                    "!exit" -> return
-                    "!add_to_global_env" -> {
-                        // Consider PicoCLI + Jline, but it doesn't easily place nice with commands + raw SQL
-                        // https://github.com/partiql/partiql-lang-kotlin/issues/63
-                        val arg = requireInput(line, command) ?: continue
-                        executeAndPrint {
-                            val locals = refreshBindings()
-                            val result = evaluatePartiQL(
-                                arg,
-                                locals,
-                                exiting
-                            )
-                            when (result) {
-                                is RunnablePipeline.Output.Result -> {
-                                    when (result.result) {
-                                        is PartiQLResult.Value -> {
-                                            globals.add(result.result.value.bindings)
-                                            result
-                                        }
-                                        else -> RunnablePipeline.Output.Error(IllegalStateException("Need to pass VALUE to !add_to_global_env"))
-                                    }
-                                }
-                                is RunnablePipeline.Output.Error -> { result }
+                if (line.startsWith(".")) {
+                    // Handle commands, consider an actual arg parsing library
+                    val args = line.trim().substring(1).split(" ")
+                    if (state.debug) {
+                        out.info("argv: [${args.joinToString()}]")
+                    }
+                    val command = args[0]
+                    when (command) {
+                        "help" -> {
+                            // Print help
+                            out.info(HELP)
+                        }
+                        "history" -> {
+                            // Print history
+                            for (entry in reader.history) {
+                                out.println(entry.pretty())
                             }
                         }
-                        continue
-                    }
-                    "!add_graph" -> {
-                        val input = requireInput(line, command) ?: continue
-                        val (name, graphStr) = requireTokenAndMore(input, command) ?: continue
-                        bringGraph(name, graphStr)
-                        continue
-                    }
-                    "!add_graph_from_file" -> {
-                        val input = requireInput(line, command) ?: continue
-                        val (name, filename) = requireTokenAndMore(input, command) ?: continue
-                        val graphStr = readTextFile(filename) ?: continue
-                        bringGraph(name, graphStr)
-                        continue
-                    }
-                    "!global_env" -> {
-                        executeAndPrint {
-                            RunnablePipeline.Output.Result(AbstractPipeline.convertExprValue(globals.asExprValue()))
+                        "clear" -> {
+                            // Clear screen
+                            terminal.puts(InfoCmp.Capability.clear_screen)
+                            terminal.flush()
                         }
-                        continue
-                    }
-                    "!clear" -> {
-                        terminal.puts(InfoCmp.Capability.clear_screen)
-                        terminal.flush()
-                        continue
-                    }
-                    "!history" -> {
-                        for (entry in reader.history) {
-                            out.println(entry.pretty())
+                        "debug" -> {
+                            // Toggle debug printing
+                            val arg1 = args.getOrNull(1)
+                            if (arg1 == null) {
+                                out.info("debug: ${state.debug}")
+                                continue
+                            }
+                            when (arg1) {
+                                "on" -> state.debug = true
+                                "off" -> state.debug = false
+                                else -> out.error("Expected on|off")
+                            }
                         }
-                        continue
+                        "exit" -> {
+                            // Exit
+                            System.exit(0)
+                        }
+                        else -> out.error("Unrecognized command .$command")
                     }
-                    "!list_commands", "!help" -> {
-                        out.info(HELP)
-                        continue
-                    }
+                } else {
+                    println("Placeholder: $line")
+                    // // Execute PartiQL
+                    // executeAndPrint {
+                    //     val locals = refreshBindings()
+                    //     evaluatePartiQL(line, locals, exiting)
+                    // }
+                    // waitUntil(true, donePrinting)
                 }
-
-                // Execute PartiQL
-                executeAndPrint {
-                    val locals = refreshBindings()
-                    evaluatePartiQL(line, locals, exiting)
-                }
-                waitUntil(true, donePrinting)
             }
             out.println("Thanks for using PartiQL!")
         }
@@ -317,61 +258,6 @@ internal class Shell(
         return Pair(token, rest)
     }
 
-    private fun readTextFile(filename: String): String? =
-        try {
-            val file = File(filename)
-            file.readText()
-        } catch (ex: Exception) {
-            out.error("Could not read text from file '$filename'${ex.message?.let { ":\n$it" } ?: "."}")
-            null
-        }
-
-    /** Prepare bindings to use for the next evaluation. */
-    private fun refreshBindings(): Bindings<ExprValue> {
-        return Bindings.buildLazyBindings<ExprValue> {
-            addBinding("_") {
-                previousResult
-            }
-        }.delegate(globals.bindings)
-    }
-
-    /** Evaluate a textual PartiQL query [textPartiQL] in the context of given [bindings]. */
-    private fun evaluatePartiQL(
-        textPartiQL: String,
-        bindings: Bindings<ExprValue>,
-        exiting: AtomicBoolean
-    ): RunnablePipeline.Output {
-        catchCancellation(doneCompiling, exiting, pipelineService) {
-            inputs.put(
-                RunnablePipeline.Input(
-                    textPartiQL,
-                    EvaluationSession.build {
-                        globals(bindings)
-                        user(currentUser)
-                    }
-                )
-            )
-        }
-        return results.poll(5, TimeUnit.SECONDS)!!
-    }
-
-    private fun bringGraph(name: String, graphIonText: String) {
-        try {
-            val graph = ExprValue.newGraph(ExternalGraphReader.read(graphIonText))
-            val namedGraph = graph.namedValue(ExprValue.newString(name))
-            globals.add(Bindings.ofMap(mapOf(name to namedGraph)))
-            out.info("""Bound identifier "$name" to a graph. """)
-        } catch (ex: ExternalGraphException) {
-            out.error(ex.message)
-        }
-    }
-
-    private fun executeAndPrint(func: () -> RunnablePipeline.Output) {
-        catchCancellation(donePrinting, exiting, printingService) {
-            values.put(func.invoke())
-        }
-    }
-
     /**
      * If nothing was caught and execution finished: return null
      * If something was caught: resets service and returns defaultReturn
@@ -380,7 +266,7 @@ internal class Shell(
         doneExecuting: AtomicBoolean,
         cancellationFlag: AtomicBoolean,
         service: ExecutorService,
-        addToQueue: () -> Unit
+        addToQueue: () -> Unit,
     ) {
         doneExecuting.set(false)
         addToQueue.invoke()
@@ -397,26 +283,6 @@ internal class Shell(
         val properties = Properties()
         properties.load(this.javaClass.getResourceAsStream("/partiql.properties"))
         return "${properties.getProperty("version")}-${properties.getProperty("commit")}"
-    }
-
-    private fun printAST(query: String) {
-        if (query.isNotBlank()) {
-            val parser = PartiQLParserBuilder.standard().build()
-            val ast = try {
-                parser.parseAstStatement(query)
-            } catch (ex: SqlException) {
-                out.error(ex.generateMessage())
-                out.error(ex.message)
-                out.error("ERROR!")
-                out.flush()
-                return
-            }
-            val explain = PartiQLResult.Explain.Domain(value = ast, format = null)
-            val output = ExplainFormatter.format(explain)
-            out.println(output)
-            out.success("OK!")
-            out.flush()
-        }
     }
 
     private fun waitUntil(until: Boolean, actual: AtomicBoolean) {
@@ -448,17 +314,8 @@ private fun History.Entry.pretty(): String {
         .toAnsi()
 }
 
-private fun ansi(string: String, style: AttributedStyle) = AttributedString(string, style).toAnsi()
-
-fun PrintStream.success(string: String) = this.println(ansi(string, SUCCESS))
-
-internal fun PrintStream.error(string: String) = this.println(ansi(string, ERROR))
-
-fun PrintStream.info(string: String) = this.println(ansi(string, INFO))
-
-fun PrintStream.warn(string: String) = this.println(ansi(string, WARN))
-
 private class ThreadInterrupter : Closeable {
+
     private val thread = Thread.currentThread()
 
     @GuardedBy("this")

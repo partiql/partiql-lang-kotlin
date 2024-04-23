@@ -19,10 +19,8 @@ plugins {
 }
 
 dependencies {
-    // EvaluatingCompiler / ExprValue
-    implementation(project(":partiql-lang"))
-    //
     implementation(project(":partiql-ast"))
+    implementation(project(":partiql-eval"))
     implementation(project(":partiql-parser"))
     implementation(project(":partiql-plan"))
     implementation(project(":partiql-planner"))

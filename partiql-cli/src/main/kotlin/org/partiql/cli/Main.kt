@@ -15,81 +15,171 @@
 
 package org.partiql.cli
 
-import com.amazon.ion.system.IonSystemBuilder
-import com.amazon.ion.system.IonTextWriterBuilder
-import org.partiql.cli.pico.PartiQLCommand
-import org.partiql.cli.shell.info
-import org.partiql.lang.eval.EvaluationSession
-import org.partiql.parser.PartiQLParser
-import org.partiql.plan.Statement
-import org.partiql.plan.debug.PlanPrinter
-import org.partiql.planner.PartiQLPlanner
-import org.partiql.plugins.local.toIon
+import org.partiql.cli.io.Format
 import picocli.CommandLine
-import java.io.PrintStream
-import java.nio.file.Paths
-import java.util.UUID
+import java.io.File
+import java.util.Properties
 import kotlin.system.exitProcess
 
 /**
- * Runs the PartiQL CLI.
+ * Entry-point to the PartiQL command-line utility.
  */
 fun main(args: Array<String>) {
-    val ion = IonSystemBuilder.standard().build()
-    val command = CommandLine(PartiQLCommand(ion))
+    val command = CommandLine(MainCommand())
     val exitCode = command.execute(*args)
     exitProcess(exitCode)
 }
 
 /**
- * Highly visible place to modify shell behavior for debugging
- *
- * Consider giving this access to the print stream in Shell.
- * It would have been too hacky without a slight refactor, so now let's just assume System.out for debugging
+ * Reads the version and git hash from the generated properties file.
  */
-object Debug {
+internal class Version : CommandLine.IVersionProvider {
+    override fun getVersion(): Array<String> {
+        val properties = Properties()
+        properties.load(this.javaClass.getResourceAsStream("/partiql.properties"))
+        return Array(1) { "PartiQL ${properties.getProperty("version")}-${properties.getProperty("commit")}" }
+    }
+}
 
-    private const val USER_ID = "DEBUG_USER_ID"
+/**
+ * The PartiQL root command.
+ */
+@CommandLine.Command(
+    name = "partiql",
+    mixinStandardHelpOptions = true,
+    versionProvider = Version::class,
+    descriptionHeading = "%n@|bold,underline SYNOPSIS|@%n",
+    description = [
+        "%nThe PartiQL command-line utility executes queries against the input data (files or stdin).%n",
+        "@|bold,underline OPTIONS|@%n",
+        "Execute `partiql` without a query or without -i to launch an interactive shell%n",
+    ],
+    showDefaultValues = true
+)
+internal class MainCommand() : Runnable {
 
-    private val root = Paths.get(System.getProperty("user.home")).resolve(".partiql/local")
+    internal companion object {
+        private const val SHEBANG_PREFIX = "#!"
+    }
 
-    private val parser = PartiQLParser.default()
-    private val planner = PartiQLPlanner.default()
+    @CommandLine.Option(
+        names = ["-d", "--dir"],
+        description = ["Path to the database directory"],
+    )
+    var dir: File? = null
 
-    // !!
-    // IMPLEMENT DEBUG BEHAVIOR HERE
-    // !!
-    @Suppress("UNUSED_PARAMETER")
-    @Throws(Exception::class)
-    fun action(input: String, session: EvaluationSession): String {
-        val out = PrintStream(System.out)
+    @CommandLine.Option(
+        names = ["--strict"],
+        description = ["Execute in strict (type-checking) mode."],
+    )
+    var strict: Boolean? = false
 
-        // Parse
-        val statement = parser.parse(input).root
-        out.info("-- AST ----------")
-        AstPrinter.append(out, statement)
+    @CommandLine.Option(
+        names = ["-f", "--format"],
+        description = ["The data format, using the form <input>[:<output>]."],
+        paramLabel = "<input[:output]>",
+        converter = [Format.Converter::class],
+    )
+    var format: Pair<Format, Format>? = null
 
-        // Plan
-        val sess = PartiQLPlanner.Session(
-            queryId = UUID.randomUUID().toString(),
-            userId = "debug",
-            currentCatalog = "default",
-            catalogs = emptyMap(),
-        )
-        val result = planner.plan(statement, sess).plan
-        out.info("-- Plan ----------")
-        PlanPrinter.append(out, result.statement)
+    @CommandLine.Option(
+        names = ["-i", "--include"],
+        description = ["An optional PartiQL script."],
+    )
+    var include: File? = null
 
-        when (val plan = result.statement) {
-            is Statement.Query -> {
-                out.info("-- Schema ----------")
-                val outputSchema = java.lang.StringBuilder()
-                val ionWriter = IonTextWriterBuilder.minimal().withPrettyPrinting().build(outputSchema)
-                plan.root.type.toIon().writeTo(ionWriter)
-                out.info(outputSchema.toString())
+    @CommandLine.Parameters(
+        index = "0",
+        arity = "0..1",
+        description = ["An optional PartiQL statement string."],
+        paramLabel = "'statement'",
+        converter = [PairConverter::class],
+    )
+    var program: Pair<String?, File?>? = null
+
+    @CommandLine.Parameters(
+        index = "1..*",
+        arity = "0..*",
+        description = ["An optional list of files to execute the statement against."],
+    )
+    var files: Array<File>? = null
+
+    /**
+     * Run the CLI or Shell (default)
+     */
+    override fun run() {
+        val statement: String? = statement()
+        println(statement)
+    }
+
+    /**
+     * Returns the query text if present by parsing either the program string or the query file.
+     */
+    private fun statement(): String? {
+        if (program != null && program!!.first != null && include != null) {
+            error("Cannot specify both a query file and query string.")
+        }
+        return program?.first ?: include?.readText()
+    }
+
+    // /**
+    //  * Runs the CLI
+    //  */
+    // private fun runCli(exec: ExecutionOptions, stream: InputStream) {
+    //     val input = when (exec.inputFile) {
+    //         null -> EmptyInputStream()
+    //         else -> FileInputStream(exec.inputFile!!)
+    //     }
+    //     val output = when (exec.outputFile) {
+    //         null -> UnclosableOutputStream(System.out)
+    //         else -> FileOutputStream(exec.outputFile!!)
+    //     }
+    //     val query = stream.readBytes().toString(Charsets.UTF_8)
+    //     val queryLines = query.lines()
+    //     val queryWithoutShebang = when (queryLines.firstOrNull()?.startsWith(SHEBANG_PREFIX)) {
+    //         false -> query
+    //         else -> queryLines.subList(1, queryLines.size).joinToString(System.lineSeparator())
+    //     }
+    //     input.use { src ->
+    //         output.use { out ->
+    //             Cli(
+    //                 ion,
+    //                 src,
+    //                 exec.inputFormat,
+    //                 out,
+    //                 exec.outputFormat,
+    //                 options.pipeline,
+    //                 options.environment,
+    //                 queryWithoutShebang,
+    //                 exec.wrapIon
+    //             ).run()
+    //             out.write(System.lineSeparator().toByteArray(Charsets.UTF_8))
+    //         }
+    //     }
+    // }
+    //
+    // /**
+    //  * Runs the interactive shell
+    //  */
+    // private fun runShell(shell: ShellOptions = ShellOptions()) {
+    //     val config = Shell.ShellConfiguration(isMonochrome = shell.isMonochrome)
+    //     Shell(System.out, options.pipeline, options.environment, config).start()
+    // }
+
+    private class PairConverter : CommandLine.ITypeConverter<Pair<String?, File?>> {
+
+        override fun convert(value: String?): Pair<String?, File?>? {
+            if (value == null) {
+                return null
+            }
+            val str = value.trim()
+            return if (File(str).exists()) {
+                // file path
+                (null to File(str))
+            } else {
+                // statement string
+                (str.trim('\'') to (null as File?))
             }
         }
-
-        return "OK"
     }
 }

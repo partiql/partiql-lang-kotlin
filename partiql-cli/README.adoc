@@ -1,0 +1,148 @@
+= PartiQL CLI
+
+Command Line Interface for executing PartiQL queries. For more information, please see the CLI tutorials on our xref:https://github.com/partiql/partiql-lang-kotlin/wiki[wiki].
+
+== Usage
+
+This section shows how the _**partiql**_ utility can be used as both a command-line tool and interactive shell.
+
+[source,shell]
+----
+# interactive shell
+partiql                     # No arguments
+partiql -d=/path/to/db      # Launch an interactive shell for the database in /path/to/db
+partiql sample.ion    # Load sample.ion into the database environment as the binding `stdin`
+partiql sample.csv    # '' format derived from extension
+
+# stdin
+cat sample.ion | partiql -i ion    # Load from stdin with the specified input format (-i) Ion.
+
+# program string
+partiql 'SELECT * FROM stdin' sample.ion
+cat sample.ion | partiql -i ion 'SELECT * FROM stdin'
+
+# program script
+#   > cat script.sql
+#   > SELECT * FROM stdin
+partiql -q script.sql sample.ion
+cat sample.ion | partiql -i ion 'SELECT * FROM stdin'
+----
+
+[source,shell,subs=normal]
+----
+man partiql
+
+**NAME**
+    **partiql** -- PartiQL command-line utility
+
+**SYNOPSIS**
+    **partiql** [options] ['statement'|-i file] [file ...]
+
+**DESCRIPTION**
+    The **partiql** command-line utility executes queries against the given input files.
+    Execute **partiql** without a query to launch the database shell.
+    The following options are available:
+
+**OPTIONS**
+    -d file, --dir=file
+        The database directory.
+
+    -f format, --format=format
+        Specify the input:output data format.
+
+    -i file, --include=file
+        Reads input from the file and executes it.
+
+    --strict
+        Strict mode (type-checking) throws runtime exceptions on mistyped operations.
+----
+
+
+== Development
+
+> PLACEHOLDER
+
+.Debugging
+[source, shell]
+----
+JAVA_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=localhost:5050
+----
+
+== Prior Art
+
+=== Shell
+
+* link:https://www.postgresql.org/docs/current/app-psql.html[psql]
+* link:https://sqlite.org/cli.html[sqlite]
+* link:https://duckdb.org/docs/api/cli/dot_commands[duckdb]
+
+=== CLI
+
+.Utilities
+* psql
+* sqlite
+* duckdb
+* ffmpeg
+* jq
+* grep
+* awk
+* python/node/ruby
+
+.Capabilities
+* Data on stdin (jq, awk, grep)
+* Data from glob of files (jq, awk, grep)
+* Query from argument (jq, awk, grep)
+* Load into the name `stdin`
+
+.Formatting
+* Specify input format (ffmpeg)
+* Specify output format (ffmpeg,duckdb)
+
+[source,shell]
+----
+# Example
+partiql 'SELECT * FROM stdin' -i json -o csv example.json > example.csv
+
+# ffmpeg
+#   > formats precede input/output arguments
+#   > input pattern (like our .sql file) is an argument
+#   > output pattern goes at the end
+#   > ffmpeg patterns are much more advanced so this is comparison focuses on how input/output formatting is specified.
+ffmpeg [-f format] -i INPUT [-f format] OUTPUT
+
+# node
+#   > program files list at the end is analogous to our "query" so this isn't a great comparison
+node [files ...]
+
+# awk
+#   > program string or explicit file argument
+#   > data files at the end (or stdin)
+awk ['prog'|-f progfile] [files ...]
+
+# jq
+#   > program (filter) precedes data
+#   > data files at the end (or stdin)
+jq 'filter' [files ...]
+
+# grep
+#   > program (pattern) precedes data
+#   > data files at the end (or stdin)
+grep 'pattern' [files ...]
+----
+
+=== Formats
+
+The input format is derived from the extension, or can be explicitly specified with the `-i <format>` option. Ideally
+we can support many more output modes such as those found in xref:https://duckdb.org/docs/api/cli/output_formats.html[DuckDB].
+
+.Formats
+[cols="1,2m"]
+|===
+| Format | Extensions
+
+| CSV | .csv
+| TSV | .tsv
+| JSON | .json
+| Ion | .ion .10n
+|===
+
