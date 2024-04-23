@@ -15,7 +15,6 @@
 package org.partiql.cli.shell
 
 import com.amazon.ion.system.IonSystemBuilder
-import com.amazon.ion.system.IonTextWriterBuilder
 import com.amazon.ionelement.api.toIonValue
 import com.google.common.util.concurrent.Uninterruptibles
 import org.fusesource.jansi.AnsiConsole
@@ -41,7 +40,6 @@ import org.partiql.spi.BindingPath
 import org.partiql.spi.connector.ConnectorHandle
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.io.PartiQLValueTextWriter
-import software.amazon.ion.IonSystem
 import java.io.Closeable
 import java.io.PrintStream
 import java.nio.file.Path

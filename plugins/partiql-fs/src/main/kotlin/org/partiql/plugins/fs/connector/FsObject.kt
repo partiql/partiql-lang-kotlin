@@ -11,5 +11,4 @@ import org.partiql.types.StaticType
 internal class FsObject(private val type: StaticType) : ConnectorObject {
 
     override fun getType(): StaticType = type
-
 }

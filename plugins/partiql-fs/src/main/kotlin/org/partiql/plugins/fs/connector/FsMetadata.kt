@@ -4,7 +4,6 @@ import org.partiql.plugins.fs.index.FsIndex
 import org.partiql.plugins.fs.index.FsNode
 import org.partiql.spi.BindingPath
 import org.partiql.spi.connector.ConnectorHandle
-import org.partiql.spi.connector.ConnectorObject
 import org.partiql.spi.connector.ConnectorPath
 import org.partiql.spi.connector.ConnectorSession
 import org.partiql.spi.connector.sql.SqlMetadata
