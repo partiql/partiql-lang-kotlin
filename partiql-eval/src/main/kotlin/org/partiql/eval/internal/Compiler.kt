@@ -239,7 +239,7 @@ internal class Compiler(
             val coercions = candidate.coercions.toTypedArray()
             // Check this candidate
             val fnArity = fn.signature.parameters.size
-            val fnName = fn.signature.name
+            val fnName = fn.signature.name.uppercase()
             if (arity == -1) {
                 arity = fnArity
                 name = fnName
