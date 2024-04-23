@@ -11,13 +11,11 @@ import org.partiql.eval.internal.operator.Operator
  */
 internal abstract class RelPeeking : Operator.Relation, IteratorPeeking<Record>() {
 
-    private var _next: Record? = null
-
     override fun open(env: Environment) {
-        _next = null
+        next = null
     }
 
     override fun close() {
-        _next = null
+        next = null
     }
 }
