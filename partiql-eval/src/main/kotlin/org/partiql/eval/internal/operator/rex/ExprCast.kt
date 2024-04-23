@@ -318,7 +318,7 @@ internal class ExprCast(val arg: Operator.Expr, val cast: Ref.Cast) : Operator.E
             PartiQLValueType.INTERVAL,
             PartiQLValueType.BAG, PartiQLValueType.LIST,
             PartiQLValueType.SEXP,
-            PartiQLValueType.STRUCT -> error("can not perform cast from INT8 to $t")
+            PartiQLValueType.STRUCT -> error("can not perform cast from struct to $t")
             PartiQLValueType.NULL -> error("cast to null not supported")
             PartiQLValueType.MISSING -> error("cast to missing not supported")
         }

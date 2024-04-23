@@ -9,6 +9,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.eval.PartiQLEngine
 import org.partiql.eval.PartiQLResult
+import org.partiql.eval.internal.PartiQLEngineDefaultTest.SuccessTestCase.Global
 import org.partiql.parser.PartiQLParser
 import org.partiql.plan.PartiQLPlan
 import org.partiql.plan.debug.PlanPrinter
@@ -1171,7 +1172,7 @@ class PartiQLEngineDefaultTest {
         val input: String,
         val expected: PartiQLValue,
         val mode: PartiQLEngine.Mode = PartiQLEngine.Mode.PERMISSIVE,
-        val globals: List<Global> = emptyList()
+        val globals: List<Global> = emptyList(),
     ) {
 
         private val engine = PartiQLEngine.builder().build()
@@ -1243,7 +1244,7 @@ class PartiQLEngineDefaultTest {
     public class TypingTestCase @OptIn(PartiQLValueExperimental::class) constructor(
         val name: String,
         val input: String,
-        val expectedPermissive: PartiQLValue
+        val expectedPermissive: PartiQLValue,
     ) {
 
         private val engine = PartiQLEngine.builder().build()

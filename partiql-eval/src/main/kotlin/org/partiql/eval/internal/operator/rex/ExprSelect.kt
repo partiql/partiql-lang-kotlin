@@ -51,10 +51,6 @@ internal class ExprSelect(
         }
     }
 
-    /**
-     * @param record
-     * @return
-     */
     @PartiQLValueExperimental
     override fun eval(env: Environment): PartiQLValue {
         val elements = Elements(input, constructor, env)
