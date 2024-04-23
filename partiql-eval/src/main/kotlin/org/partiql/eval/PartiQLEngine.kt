@@ -35,7 +35,7 @@ public interface PartiQLEngine {
     }
 
     public class Session(
-        val catalogs: Map<String, Connector> = mapOf(),
+        val connectors: Map<String, Connector> = mapOf(),
         val mode: Mode = Mode.PERMISSIVE
     )
 

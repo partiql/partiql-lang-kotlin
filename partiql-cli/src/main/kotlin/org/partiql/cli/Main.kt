@@ -15,9 +15,29 @@
 
 package org.partiql.cli
 
+import com.amazon.ion.system.IonReaderBuilder
+import com.amazon.ion.system.IonTextWriterBuilder
+import com.amazon.ionelement.api.ionListOf
+import com.amazon.ionelement.api.ionNull
+import com.amazon.ionelement.api.loadAllElements
 import org.partiql.cli.io.Format
+import org.partiql.cli.pipeline.Pipeline
+import org.partiql.cli.shell.Shell
+import org.partiql.eval.PartiQLEngine
+import org.partiql.eval.PartiQLResult
+import org.partiql.plugins.memory.MemoryCatalog
+import org.partiql.plugins.memory.MemoryConnector
+import org.partiql.spi.connector.Connector
+import org.partiql.spi.connector.sql.info.InfoSchema
+import org.partiql.types.StaticType
+import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.toIon
 import picocli.CommandLine
 import java.io.File
+import java.io.InputStream
+import java.io.SequenceInputStream
+import java.time.Instant
+import java.util.Collections
 import java.util.Properties
 import kotlin.system.exitProcess
 
@@ -72,7 +92,7 @@ internal class MainCommand() : Runnable {
         names = ["--strict"],
         description = ["Execute in strict (type-checking) mode."],
     )
-    var strict: Boolean? = false
+    var strict: Boolean = false
 
     @CommandLine.Option(
         names = ["-f", "--format"],
@@ -80,7 +100,7 @@ internal class MainCommand() : Runnable {
         paramLabel = "<input[:output]>",
         converter = [Format.Converter::class],
     )
-    var format: Pair<Format, Format>? = null
+    lateinit var format: Pair<Format, Format>
 
     @CommandLine.Option(
         names = ["-i", "--include"],
@@ -108,8 +128,10 @@ internal class MainCommand() : Runnable {
      * Run the CLI or Shell (default)
      */
     override fun run() {
-        val statement: String? = statement()
-        println(statement)
+        when (val statement = statement()) {
+            null -> shell()
+            else -> run(statement)
+        }
     }
 
     /**
@@ -122,49 +144,100 @@ internal class MainCommand() : Runnable {
         return program?.first ?: include?.readText()
     }
 
-    // /**
-    //  * Runs the CLI
-    //  */
-    // private fun runCli(exec: ExecutionOptions, stream: InputStream) {
-    //     val input = when (exec.inputFile) {
-    //         null -> EmptyInputStream()
-    //         else -> FileInputStream(exec.inputFile!!)
-    //     }
-    //     val output = when (exec.outputFile) {
-    //         null -> UnclosableOutputStream(System.out)
-    //         else -> FileOutputStream(exec.outputFile!!)
-    //     }
-    //     val query = stream.readBytes().toString(Charsets.UTF_8)
-    //     val queryLines = query.lines()
-    //     val queryWithoutShebang = when (queryLines.firstOrNull()?.startsWith(SHEBANG_PREFIX)) {
-    //         false -> query
-    //         else -> queryLines.subList(1, queryLines.size).joinToString(System.lineSeparator())
-    //     }
-    //     input.use { src ->
-    //         output.use { out ->
-    //             Cli(
-    //                 ion,
-    //                 src,
-    //                 exec.inputFormat,
-    //                 out,
-    //                 exec.outputFormat,
-    //                 options.pipeline,
-    //                 options.environment,
-    //                 queryWithoutShebang,
-    //                 exec.wrapIon
-    //             ).run()
-    //             out.write(System.lineSeparator().toByteArray(Charsets.UTF_8))
-    //         }
-    //     }
-    // }
-    //
-    // /**
-    //  * Runs the interactive shell
-    //  */
-    // private fun runShell(shell: ShellOptions = ShellOptions()) {
-    //     val config = Shell.ShellConfiguration(isMonochrome = shell.isMonochrome)
-    //     Shell(System.out, options.pipeline, options.environment, config).start()
-    // }
+    private fun shell() {
+        val pipeline = when (strict) {
+            true -> Pipeline.strict()
+            else -> Pipeline.default()
+        }
+        Shell(pipeline).start()
+    }
+
+    @OptIn(PartiQLValueExperimental::class)
+    private fun run(statement: String) {
+        val pipeline = when (strict) {
+            true -> Pipeline.strict()
+            else -> Pipeline.default()
+        }
+        val program = statement.trimHashBang()
+        val session = session()
+        val result = pipeline.execute(program, session)
+        when (result) {
+            is PartiQLResult.Error -> {
+                error(result.cause.stackTrace)
+            }
+            is PartiQLResult.Value -> {
+                // TODO handle output format
+                val ion = result.value.toIon()
+                val writer = IonTextWriterBuilder.pretty().build(System.out as Appendable)
+                ion.writeTo(writer)
+                println()
+            }
+        }
+    }
+
+    private fun session() = Pipeline.Session(
+        queryId = "cli",
+        userId = System.getProperty("user.name"),
+        currentCatalog = "default",
+        currentDirectory = emptyList(),
+        connectors = connectors(),
+        instant = Instant.now(),
+        debug = false,
+        mode = when (strict) {
+            true -> PartiQLEngine.Mode.STRICT
+            else -> PartiQLEngine.Mode.PERMISSIVE
+        }
+    )
+
+    /**
+     * Produce a list of connectors
+     */
+    private fun connectors(): Map<String, Connector> {
+        if (dir != null && files != null && files!!.isNotEmpty()) {
+            error("Cannot specify both a database directory and a list of files.")
+        }
+        if (dir != null) {
+            TODO("Support local directory database")
+        }
+        // Derive a `default catalog from stdin (or file streams)
+        var streams: List<InputStream> = files?.map { it.inputStream() } ?: emptyList()
+        if (streams.isEmpty() && System.`in`.available() != 0) {
+            streams = listOf(System.`in`)
+        }
+        val value = if (streams.isNotEmpty()) {
+            val stream = SequenceInputStream(Collections.enumeration(streams))
+            val reader = IonReaderBuilder.standard().build(stream)
+            val values = loadAllElements(reader).toList()
+            when (values.size) {
+                0 -> ionNull()
+                1 -> values.first()
+                else -> ionListOf(values)
+            }
+        } else {
+            ionNull()
+        }
+
+        val catalog = MemoryCatalog.builder()
+            .name("default")
+            .info(InfoSchema.ext())
+            .define(
+                name = "stdin",
+                type = StaticType.ANY,
+                value = value,
+            )
+            .build()
+        return mapOf(
+            "default" to MemoryConnector(catalog)
+        )
+    }
+
+    private fun String.trimHashBang(): String {
+        val lines = this.lines()
+        return when (lines.firstOrNull()?.startsWith(SHEBANG_PREFIX)) {
+            false -> this
+            else -> lines.subList(1, lines.size).joinToString(System.lineSeparator())
+        }
+    }
 
     private class PairConverter : CommandLine.ITypeConverter<Pair<String?, File?>> {
 

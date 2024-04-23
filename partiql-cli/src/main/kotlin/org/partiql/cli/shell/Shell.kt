@@ -28,6 +28,7 @@ import org.jline.utils.AttributedStringBuilder
 import org.jline.utils.AttributedStyle
 import org.jline.utils.InfoCmp
 import org.joda.time.Duration
+import org.partiql.cli.pipeline.Pipeline
 import java.io.Closeable
 import java.io.PrintStream
 import java.nio.file.Path
@@ -97,16 +98,16 @@ val doneCompiling = AtomicBoolean(true)
 val donePrinting = AtomicBoolean(true)
 
 internal class Shell(
-    private val state: State,
+    private val pipeline: Pipeline,
 ) {
 
-    class State(
-        @JvmField var debug: Boolean,
+    private var state: State = State(false)
+
+    private class State(
+        @JvmField var debug: Boolean
     )
 
     private val home: Path = Paths.get(System.getProperty("user.home"))
-    private val plugins: Path = home.resolve(".partiql").resolve("plugins")
-    private val user = System.getProperty("user.name")
     private val out = PrintStream(System.out)
 
     fun start() {

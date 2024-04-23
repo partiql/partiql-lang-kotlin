@@ -15,9 +15,9 @@ internal enum class Format {
         private const val ENUM = "[a-z][a-z0-9_]*"
         private const val PATTERN = "($ENUM)(:$ENUM)?"
 
-        override fun convert(value: String?): Pair<Format, Format>? {
+        override fun convert(value: String?): Pair<Format, Format> {
             if (value == null) {
-                return null
+                return PARTIQL to PARTIQL
             }
             if (value.matches(Regex(PATTERN))) {
                 error("Format argument does not match $PATTERN")

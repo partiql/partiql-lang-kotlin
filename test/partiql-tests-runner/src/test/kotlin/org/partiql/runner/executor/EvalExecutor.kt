@@ -136,7 +136,7 @@ class EvalExecutor(
             }
 
             val evalSession = PartiQLEngine.Session(
-                catalogs = mutableMapOf(
+                connectors = mutableMapOf(
                     "default" to connector
                 ),
                 mode = mode

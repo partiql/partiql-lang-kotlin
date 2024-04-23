@@ -80,7 +80,7 @@ internal class Symbols private constructor(private val catalogs: Array<C>) {
         @JvmStatic
         fun build(plan: PartiQLPlan, session: PartiQLEngine.Session): Symbols {
             val catalogs = plan.catalogs.map {
-                val connector = session.catalogs[it.name]
+                val connector = session.connectors[it.name]
                     ?: error("The plan contains a catalog `${it.name}`, but this was absent from the engine's session")
                 C(
                     name = it.name,
