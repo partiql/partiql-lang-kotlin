@@ -97,6 +97,8 @@ abstract class PublishPlugin : Plugin<Project> {
                         project.extensions.configure<ShadowExtension> {
                             component(this@create)
                         }
+//                        from(components["java"])
+//                        artifact(tasks["shadowJar"])
                         artifactId = ext.artifactId
                         pom {
                             packaging = "jar"

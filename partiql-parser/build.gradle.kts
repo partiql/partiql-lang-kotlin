@@ -23,7 +23,7 @@ dependencies {
     api(project(":partiql-ast"))
     api(project(":partiql-types"))
     implementation(Deps.ionElement)
-    implementation(Deps.antlrRuntime)
+    shadow(Deps.antlrRuntime)
 }
 
 val relocations = mapOf(
@@ -32,9 +32,17 @@ val relocations = mapOf(
 
 tasks.shadowJar {
     dependsOn(tasks.named("generateGrammarSource"))
+    configurations = listOf(project.configurations.shadow.get())
     archiveClassifier.set("shaded")
     for ((from, to) in relocations) {
         relocate(from, to)
+    }
+}
+
+// Workaround for https://github.com/johnrengelman/shadow/issues/651
+components.withType(AdhocComponentWithVariants::class.java).forEach { c ->
+    c.withVariantsFromConfiguration(project.configurations.shadowRuntimeElements.get()) {
+        skip()
     }
 }
 
