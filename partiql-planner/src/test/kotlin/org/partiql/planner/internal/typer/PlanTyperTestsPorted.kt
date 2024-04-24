@@ -3317,8 +3317,8 @@ class PlanTyperTestsPorted {
                             "min_b" to StaticType.INT4.asNullable(),
                             "max_a" to StaticType.INT4.asNullable(),
                             "max_b" to StaticType.INT4.asNullable(),
-                            "avg_a" to StaticType.INT4.asNullable(),
-                            "avg_b" to StaticType.INT4.asNullable(),
+                            "avg_a" to StaticType.DECIMAL.asNullable(),
+                            "avg_b" to StaticType.DECIMAL.asNullable(),
                         ),
                         contentClosed = true,
                         constraints = setOf(
