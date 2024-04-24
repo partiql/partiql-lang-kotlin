@@ -124,8 +124,9 @@ abstract class PublishPlugin : Plugin<Project> {
                             withXml {
                                 val dependenciesNode = asNode().appendNode("dependencies")
                                 val apiDeps = project.configurations["api"].allDependencies
+                                    .filter { it.name !in ext.excludedDependencies }
                                 val implDeps = project.configurations["implementation"].allDependencies
-                                    .filter { it !in apiDeps }
+                                    .filter { it !in apiDeps && it.name !in ext.excludedDependencies }
                                 // Add Gradle 'api' dependencies; mapped to Maven 'compile'
                                 apiDeps.forEach { dependency ->
                                     val dependencyNode = dependenciesNode.appendNode("dependency")
@@ -175,6 +176,7 @@ abstract class PublishExtension {
     var name: String = ""
     var description: String = ""
     var url: String = "https://github.com/partiql/partiql-lang-kotlin"
+    var excludedDependencies: Set<String> = setOf()
     override fun toString(): String {
         return "PublishExtension(artifactId='$artifactId', name='$name', description='$description', url='$url')"
     }

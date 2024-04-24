@@ -46,14 +46,6 @@ components.withType(AdhocComponentWithVariants::class.java).forEach { c ->
     }
 }
 
-// `antlr` dependency configuration adds the ANTLR API configuration (and Maven `compile` dependency scope on publish)
-// It's a known issue w/ the ANTLR gradle plugin. Follow
-// https://github.com/gradle/gradle/issues/820#issuecomment-808315335 to remove ANTLR dependency (non-runtime) from
-// Gradle API configurations
-configurations[JavaPlugin.API_CONFIGURATION_NAME].let { apiConfiguration ->
-    apiConfiguration.setExtendsFrom(apiConfiguration.extendsFrom.filter { it.name != "antlr" })
-}
-
 tasks.generateGrammarSource {
     val antlrPackage = "org.partiql.parser.antlr"
     val antlrSources = "$buildDir/generated-src/${antlrPackage.replace('.', '/')}"
@@ -97,4 +89,9 @@ publish {
     artifactId = "partiql-parser"
     name = "PartiQL Parser"
     description = "PartiQL's experimental Parser"
+    // `antlr` dependency configuration adds the ANTLR API configuration (and Maven `compile` dependency scope on
+    // publish). It's a known issue w/ the ANTLR gradle plugin. Follow https://github.com/gradle/gradle/issues/820
+    // for context. In the maven publishing step, any API or IMPLEMENTATION dependencies w/ "antlr4" non-runtime
+    // dependency will be omitted from the created Maven POM.
+    excludedDependencies = setOf("antlr4")
 }
