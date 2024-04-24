@@ -92,7 +92,8 @@ abstract class PublishPlugin : Plugin<Project> {
             val publishing = extensions.getByType(PublishingExtension::class.java).apply {
                 publications {
                     create<MavenPublication>("maven") {
-                        // Publish the shadow jar
+                        // Publish the shadow jar; create dependencies separately since `ShadowExtension.component`
+                        // does not include non-shadowed in POM dependencies
                         artifact(tasks["shadowJar"])
                         artifactId = ext.artifactId
                         pom {
@@ -122,12 +123,24 @@ abstract class PublishPlugin : Plugin<Project> {
                             // Publish the dependencies
                             withXml {
                                 val dependenciesNode = asNode().appendNode("dependencies")
-                                project.configurations["api"].allDependencies.forEach { dependency ->
+                                val apiDeps = project.configurations["api"].allDependencies
+                                val implDeps = project.configurations["implementation"].allDependencies
+                                    .filter { it !in apiDeps }
+                                // Add Gradle 'api' dependencies; mapped to Maven 'compile'
+                                apiDeps.forEach { dependency ->
                                     val dependencyNode = dependenciesNode.appendNode("dependency")
                                     dependencyNode.appendNode("groupId", dependency.group)
                                     dependencyNode.appendNode("artifactId", dependency.name)
                                     dependencyNode.appendNode("version", dependency.version)
                                     dependencyNode.appendNode("scope", "compile")
+                                }
+                                // Add Gradle 'implementation' dependencies; mapped to Maven 'runtime'
+                                implDeps.forEach { dependency ->
+                                    val dependencyNode = dependenciesNode.appendNode("dependency")
+                                    dependencyNode.appendNode("groupId", dependency.group)
+                                    dependencyNode.appendNode("artifactId", dependency.name)
+                                    dependencyNode.appendNode("version", dependency.version)
+                                    dependencyNode.appendNode("scope", "runtime")
                                 }
                             }
                         }
