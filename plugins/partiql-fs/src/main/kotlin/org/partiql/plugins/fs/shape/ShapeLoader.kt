@@ -91,6 +91,7 @@ public fun StringElement.toStaticType(): StaticType = when (textValue) {
     "date" -> StaticType.DATE
     "time" -> StaticType.TIME
     "timestamp" -> StaticType.TIMESTAMP
+    "datetime" -> StaticType.TIMESTAMP
     "interval" -> error("`interval` is currently not supported")
     "bag" -> error("`bag` is not an atomic type")
     "list" -> error("`list` is not an atomic type")

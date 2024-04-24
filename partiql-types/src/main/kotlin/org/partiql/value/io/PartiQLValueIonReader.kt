@@ -62,12 +62,16 @@ internal class PartiQLValueIonReader(
 
     @Throws(IOException::class)
     override fun read(): PartiQLValue {
-        val value = if (ionReader.next() != null) {
-            fromIon(ionReader)
-        } else {
-            throw IOException("End of File.")
+        val values:  MutableList<PartiQLValue> = mutableListOf()
+        while (ionReader.next() != null) {
+            val v = fromIon(ionReader)
+            values.add(v)
         }
-        return value
+        return when (values.size) {
+            0 -> nullValue()
+            1 -> values.first()
+            else -> bagValue(values)
+        }
     }
 
     override fun close() {
