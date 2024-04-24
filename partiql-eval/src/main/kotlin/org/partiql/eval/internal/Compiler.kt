@@ -192,7 +192,7 @@ internal class Compiler(
     override fun visitRexOpPathKey(node: Rex.Op.Path.Key, ctx: StaticType?): Operator {
         val root = visitRex(node.root, ctx)
         val key = visitRex(node.key, ctx)
-        return ExprPathKey(root, key)
+        return ExprPathKey(root, key, ctx!!)
     }
 
     override fun visitRexOpPathSymbol(node: Rex.Op.Path.Symbol, ctx: StaticType?): Operator {

@@ -602,5 +602,19 @@ public fun PartiQLValue.toIon(): IonElement = accept(ToIon, Unit)
 @PartiQLValueExperimental
 @Throws(TypeCheckException::class)
 public inline fun <reified T : PartiQLValue> PartiQLValue.check(): T {
-    if (this is T) return this else throw TypeCheckException("Expected ${T::class.java} but received $this.")
+    if (this is T) {
+        return this
+    }
+    if (this is NullValue && T::class.java != NullValue::class.java) {
+        return when (T::class.java) {
+            BoolValue::class.java -> boolValue(null) as T
+            Int8Value::class.java -> int8Value(null) as T
+            Int16Value::class.java -> int16Value(null) as T
+            Int32Value::class.java -> int32Value(null) as T
+            Int64Value::class.java -> int64Value(null) as T
+            StructValue::class.java -> structValue<PartiQLValue>(null) as T
+            else -> throw TypeCheckException("Expected ${T::class.java} but received $this.")
+        }
+    }
+    throw TypeCheckException("Expected ${T::class.java} but received $this.")
 }

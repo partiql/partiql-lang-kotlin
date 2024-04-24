@@ -3,6 +3,7 @@ package org.partiql.eval.internal.operator.rex
 import org.partiql.errors.TypeCheckException
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.operator.Operator
+import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.StringValue
@@ -12,7 +13,8 @@ import org.partiql.value.nullValue
 
 internal class ExprPathKey(
     @JvmField val root: Operator.Expr,
-    @JvmField val key: Operator.Expr
+    @JvmField val key: Operator.Expr,
+    @JvmField val type: StaticType // TODO: Remove
 ) : Operator.Expr {
 
     @OptIn(PartiQLValueExperimental::class)

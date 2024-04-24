@@ -198,6 +198,97 @@ class PartiQLEngineDefaultTest {
                     ),
                 )
             ),
+            SuccessTestCase(
+                input = """
+                    SELECT * FROM j1_tbl LEFT JOIN j2_tbl ON j1_tbl.i = j2_tbl.i WHERE (j2_tbl.k = 1);
+                """.trimIndent(),
+                expected = bagValue(
+                    intValue(BigInteger.valueOf(1)),
+                    intValue(BigInteger.valueOf(1)),
+                    intValue(BigInteger.valueOf(2)),
+                    intValue(BigInteger.valueOf(2)),
+                ),
+                globals = listOf(
+                    SuccessTestCase.Global(
+                        name = "j1_tbl",
+                        value = """
+                            [
+      {
+        i:1,
+        j:4,
+        t:"one"
+      },
+      {
+        i:2,
+        j:3,
+        t:"two"
+      },
+      {
+        i:3,
+        j:2,
+        t:"three"
+      },
+      {
+        i:4,
+        j:1,
+        t:"four"
+      },
+      {
+        i:5,
+        j:0,
+        t:"five"
+      },
+      {
+        i:6,
+        j:6,
+        t:"six"
+      },
+      {
+        i:7,
+        j:7,
+        t:"seven"
+      },
+      {
+        i:8,
+        j:8,
+        t:"eight"
+      }
+    ]
+                        """
+                    ),
+                    Global(
+                        name = "j2_tbl",
+                        value = """
+                            [
+      {
+        i:1,
+        k:-1
+      },
+      {
+        i:2,
+        k:2
+      },
+      {
+        i:3,
+        k:-3
+      },
+      {
+        i:2,
+        k:4
+      },
+      {
+        i:5,
+        k:-5
+      },
+      {
+        i:5,
+        k:-5
+      }
+    ]
+                        """
+                    )
+                )
+            ),
         )
 
         @JvmStatic
