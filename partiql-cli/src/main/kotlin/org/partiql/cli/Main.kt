@@ -25,6 +25,7 @@ import org.partiql.cli.pipeline.Pipeline
 import org.partiql.cli.shell.Shell
 import org.partiql.eval.PartiQLEngine
 import org.partiql.eval.PartiQLResult
+import org.partiql.plugins.fs.FsPlugin
 import org.partiql.plugins.memory.MemoryCatalog
 import org.partiql.plugins.memory.MemoryConnector
 import org.partiql.spi.connector.Connector
@@ -125,7 +126,7 @@ internal class MainCommand() : Runnable {
     var files: Array<File>? = null
 
     /**
-     * Run the CLI or Shell (default)
+     * Run the CLI or Shell (default).
      */
     override fun run() {
         when (val statement = statement()) {
@@ -190,14 +191,16 @@ internal class MainCommand() : Runnable {
     )
 
     /**
-     * Produce a list of connectors
+     * Produce the connector map for planning and execution.
      */
     private fun connectors(): Map<String, Connector> {
         if (dir != null && files != null && files!!.isNotEmpty()) {
             error("Cannot specify both a database directory and a list of files.")
         }
         if (dir != null) {
-            TODO("Support local directory database")
+            var root = dir!!
+            val connector = FsPlugin.create(root.toPath())
+            return mapOf("default" to connector)
         }
         // Derive a `default catalog from stdin (or file streams)
         val stream = stream()
@@ -212,7 +215,6 @@ internal class MainCommand() : Runnable {
         } else {
             ionNull()
         }
-
         val catalog = MemoryCatalog.builder()
             .name("default")
             .info(InfoSchema.ext())

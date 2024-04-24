@@ -14,6 +14,9 @@
 
 package org.partiql.cli.shell
 
+import com.amazon.ion.system.IonSystemBuilder
+import com.amazon.ion.system.IonTextWriterBuilder
+import com.amazon.ionelement.api.toIonValue
 import com.google.common.util.concurrent.Uninterruptibles
 import org.fusesource.jansi.AnsiConsole
 import org.jline.reader.EndOfFileException
@@ -31,8 +34,14 @@ import org.jline.utils.InfoCmp
 import org.joda.time.Duration
 import org.partiql.cli.pipeline.Pipeline
 import org.partiql.eval.PartiQLResult
+import org.partiql.plugins.fs.toIon
+import org.partiql.spi.BindingCase
+import org.partiql.spi.BindingName
+import org.partiql.spi.BindingPath
+import org.partiql.spi.connector.ConnectorHandle
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.io.PartiQLValueTextWriter
+import software.amazon.ion.IonSystem
 import java.io.Closeable
 import java.io.PrintStream
 import java.nio.file.Path
@@ -81,6 +90,8 @@ private const val HELP = """
 .help                   Prints this message.
 .history                Prints command history.
 .import <file>          Imports the data in the given file.
+.info                   Prints catalog information
+.session                Prints session information
 .path                   Prints the current search path.
 .pwd                    Prints the current directory.
 .run <file>             Runs the script.
@@ -175,72 +186,124 @@ internal class Shell(
             out.info(AttributedStringBuilder().styled(BOLD, WELCOME_MSG).toAnsi())
             out.info("Version: ${version()}")
             out.println()
+            try {
 
-            while (!exiting.get()) {
-                val line: String = try {
-                    reader.readLine(PROMPT_1)
-                } catch (ex: UserInterruptException) {
-                    if (ex.partialLine.isNotEmpty()) {
-                        reader.history.add(ex.partialLine)
+                while (!exiting.get()) {
+                    val line: String = try {
+                        reader.readLine(PROMPT_1)
+                    } catch (ex: UserInterruptException) {
+                        if (ex.partialLine.isNotEmpty()) {
+                            reader.history.add(ex.partialLine)
+                        }
+                        continue
+                    } catch (ex: EndOfFileException) {
+                        out.info("^D")
+                        return
                     }
-                    continue
-                } catch (ex: EndOfFileException) {
-                    out.info("^D")
-                    return
-                }
 
-                if (line.isBlank()) {
-                    out.success("OK!")
-                    continue
-                }
+                    if (line.isBlank()) {
+                        out.success("OK!")
+                        continue
+                    }
 
-                if (line.startsWith(".")) {
-                    // Handle commands, consider an actual arg parsing library
-                    val args = line.trim().substring(1).split(" ")
-                    if (state.debug) {
-                        out.info("argv: [${args.joinToString()}]")
-                    }
-                    val command = args[0]
-                    when (command) {
-                        "help" -> {
-                            // Print help
-                            out.info(HELP)
+                    if (line.startsWith(".")) {
+                        // Handle commands, consider an actual arg parsing library
+                        val args = line.trim().substring(1).split(" ")
+                        if (state.debug) {
+                            out.info("argv: [${args.joinToString()}]")
                         }
-                        "history" -> {
-                            // Print history
-                            for (entry in reader.history) {
-                                out.println(entry.pretty())
+                        val command = args[0]
+                        when (command) {
+                            "clear" -> {
+                                // Clear screen
+                                terminal.puts(InfoCmp.Capability.clear_screen)
+                                terminal.flush()
                             }
-                        }
-                        "clear" -> {
-                            // Clear screen
-                            terminal.puts(InfoCmp.Capability.clear_screen)
-                            terminal.flush()
-                        }
-                        "debug" -> {
-                            // Toggle debug printing
-                            val arg1 = args.getOrNull(1)
-                            if (arg1 == null) {
-                                out.info("debug: ${state.debug}")
-                                continue
+                            "debug" -> {
+                                // Toggle debug printing
+                                val arg1 = args.getOrNull(1)
+                                if (arg1 == null) {
+                                    out.info("debug: ${state.debug}")
+                                    continue
+                                }
+                                when (arg1) {
+                                    "on" -> state.debug = true
+                                    "off" -> state.debug = false
+                                    else -> out.error("Expected on|off")
+                                }
                             }
-                            when (arg1) {
-                                "on" -> state.debug = true
-                                "off" -> state.debug = false
-                                else -> out.error("Expected on|off")
+                            "exit" -> {
+                                // Exit
+                                return
                             }
+                            "help" -> {
+                                // Print help
+                                out.info(HELP)
+                            }
+                            "history" -> {
+                                // Print history
+                                for (entry in reader.history) {
+                                    out.println(entry.pretty())
+                                }
+                            }
+                            "info" -> {
+                                // Print catalog information
+                                val connector = session.connectors[session.currentCatalog]
+                                if (connector == null) {
+                                    out.error("No connector for catalog ${session.currentCatalog}.")
+                                    continue
+                                }
+                                // Create a path from the arg
+                                val arg1 = args.getOrNull(1)
+                                val path = if (arg1 == null) {
+                                    emptyList<BindingName>()
+                                } else {
+                                    arg1.split(".").map { BindingName(it, BindingCase.INSENSITIVE) }
+                                }
+                                // Query connector metadata
+                                val metadata = connector.getMetadata(session.connector)
+                                val handles = metadata.ls(BindingPath(path))
+                                if (handles.size == 1) {
+                                    val h = handles.first()
+                                    val name = h.path.toString()
+                                    val type = when (h) {
+                                        is ConnectorHandle.Agg -> "AGG"
+                                        is ConnectorHandle.Fn -> "FN"
+                                        is ConnectorHandle.Obj -> {
+                                            val ion = h.entity.getType().toIon()
+                                            ion.toIonValue(IonSystemBuilder.standard().build()).toPrettyString()
+                                        }
+                                        is ConnectorHandle.Scope -> "SCOPE"
+                                    }
+                                    out.info("$name     $type")
+                                } else {
+                                    for (h in handles) {
+                                        val name = h.path.toString()
+                                        val type = when (h) {
+                                            is ConnectorHandle.Agg -> "AGG"
+                                            is ConnectorHandle.Fn -> "FN"
+                                            is ConnectorHandle.Obj -> "OBJ"
+                                            is ConnectorHandle.Scope -> "SCOPE"
+                                        }
+                                        out.info("$name     $type")
+                                    }
+                                }
+                                out.println()
+                            }
+                            "session" -> {
+                                // Print session information
+                                out.info("user:     ${session.userId}")
+                                out.info("mode:     ${session.mode.name.lowercase()}")
+                                out.info("catalog:  ${session.currentCatalog}")
+                                out.info("path:     [${session.currentDirectory.joinToString(".")}]")
+                                out.println()
+                            }
+                            "version" -> {
+                                out.info(version())
+                            }
+                            else -> out.error("Unrecognized command .$command")
                         }
-                        "exit" -> {
-                            // Exit
-                            return
-                        }
-                        "version" -> {
-                            out.info(version())
-                        }
-                        else -> out.error("Unrecognized command .$command")
-                    }
-                } else {
-                    try {
+                    } else {
                         val result = pipeline.execute(line, session)
                         when (result) {
                             is PartiQLResult.Error -> throw result.cause
@@ -252,10 +315,10 @@ internal class Shell(
                                 out.info("OK!")
                             }
                         }
-                    } catch (ex: Exception) {
-                        out.error(ex.stackTraceToString())
                     }
                 }
+            } catch (ex: Exception) {
+                out.error(ex.stackTraceToString())
             }
         }
 

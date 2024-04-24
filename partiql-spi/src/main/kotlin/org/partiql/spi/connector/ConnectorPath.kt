@@ -23,4 +23,6 @@ public data class ConnectorPath(public val steps: List<String>) : Iterable<Strin
     override fun iterator(): Iterator<String> = steps.iterator()
 
     override fun spliterator(): Spliterator<String> = steps.spliterator()
+
+    override fun toString(): String = steps.joinToString(".")
 }

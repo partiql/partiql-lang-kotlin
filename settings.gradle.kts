@@ -25,6 +25,7 @@ include(
     "partiql-planner",
     "partiql-spi",
     "partiql-types",
+    "plugins:partiql-fs",
     "plugins:partiql-local",
     "plugins:partiql-memory",
     "lib:isl",

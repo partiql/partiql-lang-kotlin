@@ -29,6 +29,11 @@ public sealed class ConnectorHandle<T> {
      */
     public abstract val entity: T
 
+    public data class Scope(
+        override val path: ConnectorPath,
+        override val entity: String,
+    ) : ConnectorHandle<String>()
+
     public data class Obj(
         override val path: ConnectorPath,
         override val entity: ConnectorObject,

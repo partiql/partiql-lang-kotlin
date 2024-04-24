@@ -39,6 +39,11 @@ public interface ConnectorMetadata {
     public fun getObject(path: BindingPath): ConnectorHandle.Obj?
 
     /**
+     * Lists all scopes and objects at the given path.
+     */
+    public fun ls(path: BindingPath): List<ConnectorHandle<*>> = emptyList()
+
+    /**
      * Returns all function signatures matching the given path.
      *
      * @param path
@@ -55,4 +60,5 @@ public interface ConnectorMetadata {
      */
     @FnExperimental
     public fun getAggregation(path: BindingPath): ConnectorHandle.Agg?
+
 }

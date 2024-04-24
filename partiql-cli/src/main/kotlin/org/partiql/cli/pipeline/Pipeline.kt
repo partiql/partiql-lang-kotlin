@@ -22,7 +22,7 @@ internal class Pipeline private constructor(
     /**
      * Combined planner and engine session.
      */
-    data class Session(
+    internal data class Session(
         @JvmField val queryId: String,
         @JvmField val userId: String,
         @JvmField val currentCatalog: String,
@@ -33,7 +33,7 @@ internal class Pipeline private constructor(
         @JvmField val mode: PartiQLEngine.Mode,
     ) {
 
-        private val connector = object : ConnectorSession {
+        val connector = object : ConnectorSession {
             override fun getQueryId(): String = queryId
             override fun getUserId(): String = userId
         }
