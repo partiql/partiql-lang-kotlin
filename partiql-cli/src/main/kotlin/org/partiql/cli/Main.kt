@@ -149,7 +149,7 @@ internal class MainCommand() : Runnable {
             true -> Pipeline.strict()
             else -> Pipeline.default()
         }
-        Shell(pipeline).start()
+        Shell(pipeline, session()).start()
     }
 
     @OptIn(PartiQLValueExperimental::class)
@@ -200,12 +200,8 @@ internal class MainCommand() : Runnable {
             TODO("Support local directory database")
         }
         // Derive a `default catalog from stdin (or file streams)
-        var streams: List<InputStream> = files?.map { it.inputStream() } ?: emptyList()
-        if (streams.isEmpty() && System.`in`.available() != 0) {
-            streams = listOf(System.`in`)
-        }
-        val value = if (streams.isNotEmpty()) {
-            val stream = SequenceInputStream(Collections.enumeration(streams))
+        val stream = stream()
+        val value = if (stream != null) {
             val reader = IonReaderBuilder.standard().build(stream)
             val values = loadAllElements(reader).toList()
             when (values.size) {
@@ -229,6 +225,27 @@ internal class MainCommand() : Runnable {
         return mapOf(
             "default" to MemoryConnector(catalog)
         )
+    }
+
+    /**
+     * Produce a stream of all input files (or stdin)
+     */
+    private fun stream(): InputStream? {
+        val streams: MutableList<InputStream> = mutableListOf()
+        if (program?.second != null) {
+            streams.add(program!!.second!!.inputStream())
+        }
+        if (files != null) {
+            streams.addAll(files!!.map { it.inputStream() })
+        }
+        if (streams.isEmpty() && System.`in`.available() != 0) {
+            streams.add(System.`in`)
+        }
+        return when (streams.size) {
+            0 -> null
+            1 -> streams.first()
+            else -> SequenceInputStream(Collections.enumeration(streams))
+        }
     }
 
     private fun String.trimHashBang(): String {

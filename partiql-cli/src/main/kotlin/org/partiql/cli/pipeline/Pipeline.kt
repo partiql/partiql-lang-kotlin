@@ -72,7 +72,7 @@ internal class Pipeline private constructor(
         val result = planner.plan(statement, session.planner(), callback)
         val errors = callback.problems.filter { it.details.severity == ProblemSeverity.ERROR }
         if (errors.isNotEmpty()) {
-            throw RuntimeException("Planner encountered errors: ${errors.joinToString()}")
+            throw RuntimeException(errors.joinToString())
         }
         return result.plan
     }

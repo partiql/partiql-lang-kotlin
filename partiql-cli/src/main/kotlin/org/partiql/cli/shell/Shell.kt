@@ -26,9 +26,13 @@ import org.jline.terminal.TerminalBuilder
 import org.jline.utils.AttributedString
 import org.jline.utils.AttributedStringBuilder
 import org.jline.utils.AttributedStyle
+import org.jline.utils.AttributedStyle.BOLD
 import org.jline.utils.InfoCmp
 import org.joda.time.Duration
 import org.partiql.cli.pipeline.Pipeline
+import org.partiql.eval.PartiQLResult
+import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.io.PartiQLValueTextWriter
 import java.io.Closeable
 import java.io.PrintStream
 import java.nio.file.Path
@@ -40,10 +44,16 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.annotation.concurrent.GuardedBy
 
-private const val PROMPT_1 = "PartiQL> "
+private val PROMPT_1 = AttributedStringBuilder()
+    .styled(BOLD, "partiql")
+    .append(" ▶ ")
+    .toAnsi()
 private const val PROMPT_2 = "   | "
 internal const val BAR_1 = "===' "
 internal const val BAR_2 = "--- "
+
+private const val WELCOME_MSG = """
+PartiQL Shell"""
 
 /**
  * Commands based upon:
@@ -75,6 +85,7 @@ private const val HELP = """
 .pwd                    Prints the current directory.
 .run <file>             Runs the script.
 .set <name> <value>     Sets the shell variable to the given value.
+.version                Prints the PartiQL version.
 """
 
 /**
@@ -99,12 +110,13 @@ val donePrinting = AtomicBoolean(true)
 
 internal class Shell(
     private val pipeline: Pipeline,
+    private val session: Pipeline.Session,
 ) {
 
     private var state: State = State(false)
 
     private class State(
-        @JvmField var debug: Boolean
+        @JvmField var debug: Boolean,
     )
 
     private val home: Path = Paths.get(System.getProperty("user.home"))
@@ -142,6 +154,7 @@ internal class Shell(
         }
     }
 
+    @OptIn(PartiQLValueExperimental::class)
     private fun run(exiting: AtomicBoolean) = TerminalBuilder.builder()
         .name("PartiQL")
         .nativeSignals(true)
@@ -159,8 +172,9 @@ internal class Shell(
                 .variable(LineReader.HISTORY_FILE, home.resolve(".partiql/.history"))
                 .variable(LineReader.SECONDARY_PROMPT_PATTERN, PROMPT_2)
                 .build()
-            // out.info("Typing mode: ${compiler.options.typingMode.name}")
-            // out.info("Using version: ${retrievePartiQLVersionAndHash()}")
+            out.info(AttributedStringBuilder().styled(BOLD, WELCOME_MSG).toAnsi())
+            out.info("Version: ${version()}")
+            out.println()
 
             while (!exiting.get()) {
                 val line: String = try {
@@ -218,21 +232,31 @@ internal class Shell(
                         }
                         "exit" -> {
                             // Exit
-                            System.exit(0)
+                            return
+                        }
+                        "version" -> {
+                            out.info(version())
                         }
                         else -> out.error("Unrecognized command .$command")
                     }
                 } else {
-                    println("Placeholder: $line")
-                    // // Execute PartiQL
-                    // executeAndPrint {
-                    //     val locals = refreshBindings()
-                    //     evaluatePartiQL(line, locals, exiting)
-                    // }
-                    // waitUntil(true, donePrinting)
+                    try {
+                        val result = pipeline.execute(line, session)
+                        when (result) {
+                            is PartiQLResult.Error -> throw result.cause
+                            is PartiQLResult.Value -> {
+                                val writer = PartiQLValueTextWriter(out)
+                                writer.append(result.value)
+                                out.appendLine()
+                                out.appendLine()
+                                out.info("OK!")
+                            }
+                        }
+                    } catch (ex: Exception) {
+                        out.error(ex.stackTraceToString())
+                    }
                 }
             }
-            out.println("Thanks for using PartiQL!")
         }
 
     /** After a command [detectedCommand] has been detected to start the user input,
@@ -280,7 +304,7 @@ internal class Shell(
         }
     }
 
-    private fun retrievePartiQLVersionAndHash(): String {
+    private fun version(): String {
         val properties = Properties()
         properties.load(this.javaClass.getResourceAsStream("/partiql.properties"))
         return "${properties.getProperty("version")}-${properties.getProperty("commit")}"
@@ -293,26 +317,20 @@ internal class Shell(
     }
 
     /**
-     * A configuration class representing any configurations specified by the user
-     * @param isMonochrome specifies the removal of syntax highlighting
+     * Pretty print a History.Entry with a gutter for the entry index
      */
-    class ShellConfiguration(val isMonochrome: Boolean = false)
-}
-
-/**
- * Pretty print a History.Entry with a gutter for the entry index
- */
-private fun History.Entry.pretty(): String {
-    val entry = StringBuilder()
-    for (line in this.line().lines()) {
-        entry.append('\t').append(line).append('\n')
+    private fun History.Entry.pretty(): String {
+        val entry = StringBuilder()
+        for (line in this.line().lines()) {
+            entry.append('\t').append(line).append('\n')
+        }
+        return AttributedStringBuilder()
+            .style(AttributedStyle.DEFAULT.foreground(AttributedStyle.CYAN))
+            .append(java.lang.String.format("%5d", this.index() + 1))
+            .style(AttributedStyle.DEFAULT)
+            .append(entry.trimEnd())
+            .toAnsi()
     }
-    return AttributedStringBuilder()
-        .style(AttributedStyle.DEFAULT.foreground(AttributedStyle.CYAN))
-        .append(java.lang.String.format("%5d", this.index() + 1))
-        .style(AttributedStyle.DEFAULT)
-        .append(entry.trimEnd())
-        .toAnsi()
 }
 
 private class ThreadInterrupter : Closeable {
