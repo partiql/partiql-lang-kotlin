@@ -32,6 +32,7 @@ import org.partiql.spi.connector.Connector
 import org.partiql.spi.connector.sql.info.InfoSchema
 import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.PartiQLValueLoader
 import org.partiql.value.toIon
 import picocli.CommandLine
 import java.io.File
@@ -77,7 +78,8 @@ internal class Version : CommandLine.IVersionProvider {
     ],
     showDefaultValues = true
 )
-internal class MainCommand() : Runnable {
+internal class MainCommand : Runnable {
+    // TODO: Need to add tests to CLI. All tests were removed in the same commit as this TODO. See Git blame.
 
     internal companion object {
         private const val SHEBANG_PREFIX = "#!"
@@ -168,7 +170,9 @@ internal class MainCommand() : Runnable {
             }
             is PartiQLResult.Value -> {
                 // TODO handle output format
-                val ion = result.value.toIon()
+                val data = result.value
+                val value = PartiQLValueLoader.standard().loadSingleValue(data)
+                val ion = value.toIon()
                 val writer = IonTextWriterBuilder.pretty().build(System.out as Appendable)
                 ion.writeTo(writer)
                 println()

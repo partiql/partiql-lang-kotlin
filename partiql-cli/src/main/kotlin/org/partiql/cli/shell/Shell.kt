@@ -39,6 +39,7 @@ import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
 import org.partiql.spi.connector.ConnectorHandle
 import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.PartiQLValueLoader
 import org.partiql.value.io.PartiQLValueTextWriter
 import java.io.Closeable
 import java.io.PrintStream
@@ -306,8 +307,9 @@ internal class Shell(
                         when (result) {
                             is PartiQLResult.Error -> throw result.cause
                             is PartiQLResult.Value -> {
+                                val value = PartiQLValueLoader.standard().loadSingleValue(result.value)
                                 val writer = PartiQLValueTextWriter(out)
-                                writer.append(result.value)
+                                writer.append(value)
                                 out.appendLine()
                                 out.appendLine()
                                 out.info("OK!")

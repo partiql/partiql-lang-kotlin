@@ -1,3 +1,3 @@
 package org.partiql.plugins.fs.index
 
-internal typealias KMatch = List<String>
+internal typealias FsMatch = List<String>
