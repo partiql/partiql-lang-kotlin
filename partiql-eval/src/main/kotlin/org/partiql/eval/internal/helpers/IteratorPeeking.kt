@@ -29,7 +29,7 @@ internal abstract class IteratorPeeking<T> : Iterator<T> {
     override fun next(): T {
         val next = next
             ?: peek()
-            ?: error("There was no more elements, however, next() was called. Please use hasNext() beforehand.")
+            ?: error("There were no more elements, however, next() was called. Please use hasNext() beforehand.")
         this.next = null
         return next
     }
