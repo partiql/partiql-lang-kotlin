@@ -1,0 +1,65 @@
+public abstract interface class org/partiql/eval/PartiQLEngine {
+	public static final field Companion Lorg/partiql/eval/PartiQLEngine$Companion;
+	public static fun builder ()Lorg/partiql/eval/PartiQLEngineBuilder;
+	public static fun default ()Lorg/partiql/eval/PartiQLEngine;
+	public abstract fun execute (Lorg/partiql/eval/PartiQLStatement;)Lorg/partiql/eval/PartiQLResult;
+	public abstract fun prepare (Lorg/partiql/plan/PartiQLPlan;Lorg/partiql/eval/PartiQLEngine$Session;)Lorg/partiql/eval/PartiQLStatement;
+}
+
+public final class org/partiql/eval/PartiQLEngine$Companion {
+	public final fun builder ()Lorg/partiql/eval/PartiQLEngineBuilder;
+	public final fun default ()Lorg/partiql/eval/PartiQLEngine;
+}
+
+public final class org/partiql/eval/PartiQLEngine$Mode : java/lang/Enum {
+	public static final field PERMISSIVE Lorg/partiql/eval/PartiQLEngine$Mode;
+	public static final field STRICT Lorg/partiql/eval/PartiQLEngine$Mode;
+	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/eval/PartiQLEngine$Mode;
+	public static fun values ()[Lorg/partiql/eval/PartiQLEngine$Mode;
+}
+
+public final class org/partiql/eval/PartiQLEngine$Session {
+	public fun <init> ()V
+	public fun <init> (Ljava/util/Map;Lorg/partiql/eval/PartiQLEngine$Mode;)V
+	public synthetic fun <init> (Ljava/util/Map;Lorg/partiql/eval/PartiQLEngine$Mode;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getCatalogs ()Ljava/util/Map;
+	public final fun getMode ()Lorg/partiql/eval/PartiQLEngine$Mode;
+}
+
+public final class org/partiql/eval/PartiQLEngineBuilder {
+	public fun <init> ()V
+	public final fun build ()Lorg/partiql/eval/PartiQLEngine;
+}
+
+public abstract interface class org/partiql/eval/PartiQLResult {
+}
+
+public final class org/partiql/eval/PartiQLResult$Error : org/partiql/eval/PartiQLResult {
+	public fun <init> (Ljava/lang/Throwable;)V
+	public final fun component1 ()Ljava/lang/Throwable;
+	public final fun copy (Ljava/lang/Throwable;)Lorg/partiql/eval/PartiQLResult$Error;
+	public static synthetic fun copy$default (Lorg/partiql/eval/PartiQLResult$Error;Ljava/lang/Throwable;ILjava/lang/Object;)Lorg/partiql/eval/PartiQLResult$Error;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCause ()Ljava/lang/Throwable;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/eval/PartiQLResult$Value : org/partiql/eval/PartiQLResult {
+	public fun <init> (Lorg/partiql/value/PartiQLValue;)V
+	public final fun component1 ()Lorg/partiql/value/PartiQLValue;
+	public final fun copy (Lorg/partiql/value/PartiQLValue;)Lorg/partiql/eval/PartiQLResult$Value;
+	public static synthetic fun copy$default (Lorg/partiql/eval/PartiQLResult$Value;Lorg/partiql/value/PartiQLValue;ILjava/lang/Object;)Lorg/partiql/eval/PartiQLResult$Value;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getValue ()Lorg/partiql/value/PartiQLValue;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class org/partiql/eval/PartiQLStatement {
+	public abstract fun execute ()Ljava/lang/Object;
+}
+
+public abstract interface class org/partiql/eval/PartiQLStatement$Query : org/partiql/eval/PartiQLStatement {
+}
+

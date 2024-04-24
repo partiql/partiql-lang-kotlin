@@ -1,0 +1,14 @@
+public abstract interface annotation class org/partiql/coverage/api/PartiQLTest : java/lang/annotation/Annotation {
+	public abstract fun provider ()Ljava/lang/Class;
+}
+
+public abstract interface class org/partiql/coverage/api/PartiQLTestCase {
+	public abstract fun getSession ()Lorg/partiql/lang/eval/EvaluationSession;
+}
+
+public abstract interface class org/partiql/coverage/api/PartiQLTestProvider {
+	public abstract fun getPipelineBuilder ()Lorg/partiql/lang/CompilerPipeline$Builder;
+	public abstract fun getStatement ()Ljava/lang/String;
+	public abstract fun getTestCases ()Ljava/lang/Iterable;
+}
+

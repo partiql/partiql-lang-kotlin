@@ -75,6 +75,18 @@ dependencies {
     }
 }
 
+apiValidation {
+    /**
+     * Classes (fully qualified) that are excluded from public API dumps even if they
+     * contain public API.
+     */
+    ignoredClasses.addAll(
+        listOf(
+            "org.partiql.lang.compiler.PartiQLCompilerPipeline" // deprecated
+        )
+    )
+}
+
 publish {
     artifactId = "partiql-lang-kotlin"
     name = "PartiQL Lang Kotlin"

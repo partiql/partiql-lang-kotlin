@@ -23,6 +23,7 @@ repositories {
 }
 
 object Versions {
+    const val binaryCompatibilityValidator = "0.14.0"
     const val detekt = "1.20.0-RC1"
     const val dokka = "1.6.10"
     const val kotlin = "1.6.20"
@@ -31,6 +32,7 @@ object Versions {
 }
 
 object Plugins {
+    const val binaryCompatibilityValidator = "org.jetbrains.kotlinx:binary-compatibility-validator:${Versions.binaryCompatibilityValidator}"
     const val detekt = "io.gitlab.arturbosch.detekt:detekt-gradle-plugin:${Versions.detekt}"
     const val dokka = "org.jetbrains.dokka:dokka-gradle-plugin:${Versions.dokka}"
     const val kotlinGradle = "org.jetbrains.kotlin:kotlin-gradle-plugin:${Versions.kotlin}"
@@ -44,6 +46,7 @@ dependencies {
     implementation(Plugins.kotlinGradle)
     implementation(Plugins.ktlint)
     implementation(Plugins.pig)
+    implementation(Plugins.binaryCompatibilityValidator)
 }
 
 allprojects {

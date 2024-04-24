@@ -1,0 +1,222 @@
+public abstract interface class org/partiql/planner/PartiQLPlanner {
+	public static final field Companion Lorg/partiql/planner/PartiQLPlanner$Companion;
+	public static fun builder ()Lorg/partiql/planner/PartiQLPlannerBuilder;
+	public static fun default ()Lorg/partiql/planner/PartiQLPlanner;
+	public abstract fun plan (Lorg/partiql/ast/Statement;Lorg/partiql/planner/PartiQLPlanner$Session;Lkotlin/jvm/functions/Function1;)Lorg/partiql/planner/PartiQLPlanner$Result;
+}
+
+public final class org/partiql/planner/PartiQLPlanner$Companion {
+	public final fun builder ()Lorg/partiql/planner/PartiQLPlannerBuilder;
+	public final fun default ()Lorg/partiql/planner/PartiQLPlanner;
+}
+
+public final class org/partiql/planner/PartiQLPlanner$DefaultImpls {
+	public static synthetic fun plan$default (Lorg/partiql/planner/PartiQLPlanner;Lorg/partiql/ast/Statement;Lorg/partiql/planner/PartiQLPlanner$Session;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/planner/PartiQLPlanner$Result;
+}
+
+public final class org/partiql/planner/PartiQLPlanner$Result {
+	public fun <init> (Lorg/partiql/plan/PartiQLPlan;Ljava/util/List;)V
+	public final fun getPlan ()Lorg/partiql/plan/PartiQLPlan;
+	public final fun getProblems ()Ljava/util/List;
+}
+
+public final class org/partiql/planner/PartiQLPlanner$Session {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/Map;Ljava/time/Instant;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/Map;Ljava/time/Instant;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getCatalogs ()Ljava/util/Map;
+	public final fun getCurrentCatalog ()Ljava/lang/String;
+	public final fun getCurrentDirectory ()Ljava/util/List;
+	public final fun getInstant ()Ljava/time/Instant;
+	public final fun getQueryId ()Ljava/lang/String;
+	public final fun getUserId ()Ljava/lang/String;
+}
+
+public final class org/partiql/planner/PartiQLPlannerBuilder {
+	public fun <init> ()V
+	public final fun addCatalog (Ljava/lang/String;Lorg/partiql/spi/connector/ConnectorMetadata;)Lorg/partiql/planner/PartiQLPlannerBuilder;
+	public final fun addPass (Lorg/partiql/planner/PartiQLPlannerPass;)Lorg/partiql/planner/PartiQLPlannerBuilder;
+	public final fun addPasses ([Lorg/partiql/planner/PartiQLPlannerPass;)Lorg/partiql/planner/PartiQLPlannerBuilder;
+	public final fun build ()Lorg/partiql/planner/PartiQLPlanner;
+	public final fun catalogs ([Lkotlin/Pair;)Lorg/partiql/planner/PartiQLPlannerBuilder;
+	public final fun passes (Ljava/util/List;)Lorg/partiql/planner/PartiQLPlannerBuilder;
+}
+
+public abstract interface class org/partiql/planner/PartiQLPlannerPass {
+	public abstract fun apply (Lorg/partiql/plan/PartiQLPlan;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/PartiQLPlan;
+}
+
+public abstract class org/partiql/planner/PlanningProblemDetails : org/partiql/errors/ProblemDetails {
+	public synthetic fun <init> (Lorg/partiql/errors/ProblemSeverity;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getMessage ()Ljava/lang/String;
+	public final fun getMessageFormatter ()Lkotlin/jvm/functions/Function0;
+	public fun getSeverity ()Lorg/partiql/errors/ProblemSeverity;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/planner/PlanningProblemDetails$CompileError : org/partiql/planner/PlanningProblemDetails {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lorg/partiql/planner/PlanningProblemDetails$CompileError;
+	public static synthetic fun copy$default (Lorg/partiql/planner/PlanningProblemDetails$CompileError;Ljava/lang/String;ILjava/lang/Object;)Lorg/partiql/planner/PlanningProblemDetails$CompileError;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getErrorMessage ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/planner/PlanningProblemDetails$ExpressionAlwaysReturnsNullOrMissing : org/partiql/planner/PlanningProblemDetails {
+	public static final field INSTANCE Lorg/partiql/planner/PlanningProblemDetails$ExpressionAlwaysReturnsNullOrMissing;
+}
+
+public final class org/partiql/planner/PlanningProblemDetails$IncompatibleTypesForOp : org/partiql/planner/PlanningProblemDetails {
+	public fun <init> (Ljava/util/List;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/util/List;Ljava/lang/String;)Lorg/partiql/planner/PlanningProblemDetails$IncompatibleTypesForOp;
+	public static synthetic fun copy$default (Lorg/partiql/planner/PlanningProblemDetails$IncompatibleTypesForOp;Ljava/util/List;Ljava/lang/String;ILjava/lang/Object;)Lorg/partiql/planner/PlanningProblemDetails$IncompatibleTypesForOp;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getActualTypes ()Ljava/util/List;
+	public final fun getOperator ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/planner/PlanningProblemDetails$InsertValueDisallowed : org/partiql/planner/PlanningProblemDetails {
+	public static final field INSTANCE Lorg/partiql/planner/PlanningProblemDetails$InsertValueDisallowed;
+}
+
+public final class org/partiql/planner/PlanningProblemDetails$InsertValuesDisallowed : org/partiql/planner/PlanningProblemDetails {
+	public static final field INSTANCE Lorg/partiql/planner/PlanningProblemDetails$InsertValuesDisallowed;
+}
+
+public final class org/partiql/planner/PlanningProblemDetails$InvalidArgumentTypeForFunction : org/partiql/planner/PlanningProblemDetails {
+	public fun <init> (Ljava/lang/String;Lorg/partiql/types/StaticType;Lorg/partiql/types/StaticType;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lorg/partiql/types/StaticType;
+	public final fun component3 ()Lorg/partiql/types/StaticType;
+	public final fun copy (Ljava/lang/String;Lorg/partiql/types/StaticType;Lorg/partiql/types/StaticType;)Lorg/partiql/planner/PlanningProblemDetails$InvalidArgumentTypeForFunction;
+	public static synthetic fun copy$default (Lorg/partiql/planner/PlanningProblemDetails$InvalidArgumentTypeForFunction;Ljava/lang/String;Lorg/partiql/types/StaticType;Lorg/partiql/types/StaticType;ILjava/lang/Object;)Lorg/partiql/planner/PlanningProblemDetails$InvalidArgumentTypeForFunction;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getActualType ()Lorg/partiql/types/StaticType;
+	public final fun getExpectedType ()Lorg/partiql/types/StaticType;
+	public final fun getFunctionName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/planner/PlanningProblemDetails$InvalidDmlTarget : org/partiql/planner/PlanningProblemDetails {
+	public static final field INSTANCE Lorg/partiql/planner/PlanningProblemDetails$InvalidDmlTarget;
+}
+
+public final class org/partiql/planner/PlanningProblemDetails$ParseError : org/partiql/planner/PlanningProblemDetails {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lorg/partiql/planner/PlanningProblemDetails$ParseError;
+	public static synthetic fun copy$default (Lorg/partiql/planner/PlanningProblemDetails$ParseError;Ljava/lang/String;ILjava/lang/Object;)Lorg/partiql/planner/PlanningProblemDetails$ParseError;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getParseErrorMessage ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/planner/PlanningProblemDetails$UndefinedDmlTarget : org/partiql/planner/PlanningProblemDetails {
+	public fun <init> (Ljava/lang/String;Z)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Z
+	public final fun copy (Ljava/lang/String;Z)Lorg/partiql/planner/PlanningProblemDetails$UndefinedDmlTarget;
+	public static synthetic fun copy$default (Lorg/partiql/planner/PlanningProblemDetails$UndefinedDmlTarget;Ljava/lang/String;ZILjava/lang/Object;)Lorg/partiql/planner/PlanningProblemDetails$UndefinedDmlTarget;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCaseSensitive ()Z
+	public final fun getVariableName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/planner/PlanningProblemDetails$UndefinedVariable : org/partiql/planner/PlanningProblemDetails {
+	public fun <init> (Ljava/lang/String;Z)V
+	public fun <init> (Lorg/partiql/plan/Identifier;Ljava/util/Set;)V
+	public final fun component1 ()Lorg/partiql/plan/Identifier;
+	public final fun component2 ()Ljava/util/Set;
+	public final fun copy (Lorg/partiql/plan/Identifier;Ljava/util/Set;)Lorg/partiql/planner/PlanningProblemDetails$UndefinedVariable;
+	public static synthetic fun copy$default (Lorg/partiql/planner/PlanningProblemDetails$UndefinedVariable;Lorg/partiql/plan/Identifier;Ljava/util/Set;ILjava/lang/Object;)Lorg/partiql/planner/PlanningProblemDetails$UndefinedVariable;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCaseSensitive ()Z
+	public final fun getInScopeVariables ()Ljava/util/Set;
+	public final fun getName ()Lorg/partiql/plan/Identifier;
+	public final fun getVariableName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/planner/PlanningProblemDetails$UnexpectedType : org/partiql/planner/PlanningProblemDetails {
+	public fun <init> (Lorg/partiql/types/StaticType;Ljava/util/Set;)V
+	public final fun component1 ()Lorg/partiql/types/StaticType;
+	public final fun component2 ()Ljava/util/Set;
+	public final fun copy (Lorg/partiql/types/StaticType;Ljava/util/Set;)Lorg/partiql/planner/PlanningProblemDetails$UnexpectedType;
+	public static synthetic fun copy$default (Lorg/partiql/planner/PlanningProblemDetails$UnexpectedType;Lorg/partiql/types/StaticType;Ljava/util/Set;ILjava/lang/Object;)Lorg/partiql/planner/PlanningProblemDetails$UnexpectedType;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getActualType ()Lorg/partiql/types/StaticType;
+	public final fun getExpectedTypes ()Ljava/util/Set;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/planner/PlanningProblemDetails$UnimplementedFeature : org/partiql/planner/PlanningProblemDetails {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lorg/partiql/planner/PlanningProblemDetails$UnimplementedFeature;
+	public static synthetic fun copy$default (Lorg/partiql/planner/PlanningProblemDetails$UnimplementedFeature;Ljava/lang/String;ILjava/lang/Object;)Lorg/partiql/planner/PlanningProblemDetails$UnimplementedFeature;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getFeatureName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/planner/PlanningProblemDetails$UnknownAggregateFunction : org/partiql/planner/PlanningProblemDetails {
+	public fun <init> (Lorg/partiql/plan/Identifier;Ljava/util/List;)V
+	public final fun component1 ()Lorg/partiql/plan/Identifier;
+	public final fun component2 ()Ljava/util/List;
+	public final fun copy (Lorg/partiql/plan/Identifier;Ljava/util/List;)Lorg/partiql/planner/PlanningProblemDetails$UnknownAggregateFunction;
+	public static synthetic fun copy$default (Lorg/partiql/planner/PlanningProblemDetails$UnknownAggregateFunction;Lorg/partiql/plan/Identifier;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/planner/PlanningProblemDetails$UnknownAggregateFunction;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getArgs ()Ljava/util/List;
+	public final fun getIdentifier ()Lorg/partiql/plan/Identifier;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/planner/PlanningProblemDetails$UnknownFunction : org/partiql/planner/PlanningProblemDetails {
+	public fun <init> (Ljava/lang/String;Ljava/util/List;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/util/List;
+	public final fun copy (Ljava/lang/String;Ljava/util/List;)Lorg/partiql/planner/PlanningProblemDetails$UnknownFunction;
+	public static synthetic fun copy$default (Lorg/partiql/planner/PlanningProblemDetails$UnknownFunction;Ljava/lang/String;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/planner/PlanningProblemDetails$UnknownFunction;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getArgs ()Ljava/util/List;
+	public final fun getIdentifier ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/planner/PlanningProblemDetails$UnresolvedExcludeExprRoot : org/partiql/planner/PlanningProblemDetails {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lorg/partiql/planner/PlanningProblemDetails$UnresolvedExcludeExprRoot;
+	public static synthetic fun copy$default (Lorg/partiql/planner/PlanningProblemDetails$UnresolvedExcludeExprRoot;Ljava/lang/String;ILjava/lang/Object;)Lorg/partiql/planner/PlanningProblemDetails$UnresolvedExcludeExprRoot;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getRoot ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/planner/PlanningProblemDetails$VariablePreviouslyDefined : org/partiql/planner/PlanningProblemDetails {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lorg/partiql/planner/PlanningProblemDetails$VariablePreviouslyDefined;
+	public static synthetic fun copy$default (Lorg/partiql/planner/PlanningProblemDetails$VariablePreviouslyDefined;Ljava/lang/String;ILjava/lang/Object;)Lorg/partiql/planner/PlanningProblemDetails$VariablePreviouslyDefined;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getVariableName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
