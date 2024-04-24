@@ -25,7 +25,6 @@ import org.partiql.planner.internal.ir.builder.RelOpAggregateBuilder
 import org.partiql.planner.internal.ir.builder.RelOpAggregateCallBuilder
 import org.partiql.planner.internal.ir.builder.RelOpDistinctBuilder
 import org.partiql.planner.internal.ir.builder.RelOpErrBuilder
-import org.partiql.planner.internal.ir.builder.RelOpExceptBuilder
 import org.partiql.planner.internal.ir.builder.RelOpExcludeBuilder
 import org.partiql.planner.internal.ir.builder.RelOpExcludeItemBuilder
 import org.partiql.planner.internal.ir.builder.RelOpExcludeStepCollIndexBuilder
@@ -33,16 +32,17 @@ import org.partiql.planner.internal.ir.builder.RelOpExcludeStepCollWildcardBuild
 import org.partiql.planner.internal.ir.builder.RelOpExcludeStepStructFieldBuilder
 import org.partiql.planner.internal.ir.builder.RelOpExcludeStepStructWildcardBuilder
 import org.partiql.planner.internal.ir.builder.RelOpFilterBuilder
-import org.partiql.planner.internal.ir.builder.RelOpIntersectBuilder
 import org.partiql.planner.internal.ir.builder.RelOpJoinBuilder
 import org.partiql.planner.internal.ir.builder.RelOpLimitBuilder
 import org.partiql.planner.internal.ir.builder.RelOpOffsetBuilder
 import org.partiql.planner.internal.ir.builder.RelOpProjectBuilder
 import org.partiql.planner.internal.ir.builder.RelOpScanBuilder
 import org.partiql.planner.internal.ir.builder.RelOpScanIndexedBuilder
+import org.partiql.planner.internal.ir.builder.RelOpSetExceptBuilder
+import org.partiql.planner.internal.ir.builder.RelOpSetIntersectBuilder
+import org.partiql.planner.internal.ir.builder.RelOpSetUnionBuilder
 import org.partiql.planner.internal.ir.builder.RelOpSortBuilder
 import org.partiql.planner.internal.ir.builder.RelOpSortSpecBuilder
-import org.partiql.planner.internal.ir.builder.RelOpUnionBuilder
 import org.partiql.planner.internal.ir.builder.RelOpUnpivotBuilder
 import org.partiql.planner.internal.ir.builder.RelTypeBuilder
 import org.partiql.planner.internal.ir.builder.RexBuilder
@@ -810,9 +810,7 @@ internal data class Rel(
             is Distinct -> visitor.visitRelOpDistinct(this, ctx)
             is Filter -> visitor.visitRelOpFilter(this, ctx)
             is Sort -> visitor.visitRelOpSort(this, ctx)
-            is Union -> visitor.visitRelOpUnion(this, ctx)
-            is Intersect -> visitor.visitRelOpIntersect(this, ctx)
-            is Except -> visitor.visitRelOpExcept(this, ctx)
+            is Set -> visitor.visitRelOpSet(this, ctx)
             is Limit -> visitor.visitRelOpLimit(this, ctx)
             is Offset -> visitor.visitRelOpOffset(this, ctx)
             is Project -> visitor.visitRelOpProject(this, ctx)
@@ -950,61 +948,82 @@ internal data class Rel(
                 internal fun builder(): RelOpSortBuilder = RelOpSortBuilder()
             }
         }
+        internal sealed class Set : Op() {
 
-        internal data class Union(
-            @JvmField internal val lhs: Rel,
-            @JvmField internal val rhs: Rel,
-        ) : Op() {
-            override val children: List<PlanNode> by lazy {
-                val kids = mutableListOf<PlanNode?>()
-                kids.add(lhs)
-                kids.add(rhs)
-                kids.filterNotNull()
+            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = when (this) {
+                is Union -> visitor.visitRelOpSetUnion(this, ctx)
+                is Intersect -> visitor.visitRelOpSetIntersect(this, ctx)
+                is Except -> visitor.visitRelOpSetExcept(this, ctx)
             }
 
-            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitRelOpUnion(this, ctx)
+            internal data class Union(
+                @JvmField internal val quantifier: Quantifier,
+                @JvmField internal val lhs: Rel,
+                @JvmField internal val rhs: Rel,
+                @JvmField internal val isOuter: Boolean,
+            ) : Set() {
+                public override val children: List<PlanNode> by lazy {
+                    val kids = mutableListOf<PlanNode?>()
+                    kids.add(lhs)
+                    kids.add(rhs)
+                    kids.filterNotNull()
+                }
 
-            internal companion object {
-                @JvmStatic
-                internal fun builder(): RelOpUnionBuilder = RelOpUnionBuilder()
-            }
-        }
+                public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                    visitor.visitRelOpSetUnion(this, ctx)
 
-        internal data class Intersect(
-            @JvmField internal val lhs: Rel,
-            @JvmField internal val rhs: Rel,
-        ) : Op() {
-            override val children: List<PlanNode> by lazy {
-                val kids = mutableListOf<PlanNode?>()
-                kids.add(lhs)
-                kids.add(rhs)
-                kids.filterNotNull()
-            }
-
-            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitRelOpIntersect(this, ctx)
-
-            internal companion object {
-                @JvmStatic
-                internal fun builder(): RelOpIntersectBuilder = RelOpIntersectBuilder()
-            }
-        }
-
-        internal data class Except(
-            @JvmField internal val lhs: Rel,
-            @JvmField internal val rhs: Rel,
-        ) : Op() {
-            override val children: List<PlanNode> by lazy {
-                val kids = mutableListOf<PlanNode?>()
-                kids.add(lhs)
-                kids.add(rhs)
-                kids.filterNotNull()
+                internal companion object {
+                    @JvmStatic
+                    internal fun builder(): RelOpSetUnionBuilder = RelOpSetUnionBuilder()
+                }
             }
 
-            override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitRelOpExcept(this, ctx)
+            internal data class Intersect(
+                @JvmField internal val quantifier: Quantifier,
+                @JvmField internal val lhs: Rel,
+                @JvmField internal val rhs: Rel,
+                @JvmField internal val isOuter: Boolean,
+            ) : Set() {
+                public override val children: List<PlanNode> by lazy {
+                    val kids = mutableListOf<PlanNode?>()
+                    kids.add(lhs)
+                    kids.add(rhs)
+                    kids.filterNotNull()
+                }
 
-            internal companion object {
-                @JvmStatic
-                internal fun builder(): RelOpExceptBuilder = RelOpExceptBuilder()
+                public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                    visitor.visitRelOpSetIntersect(this, ctx)
+
+                internal companion object {
+                    @JvmStatic
+                    internal fun builder(): RelOpSetIntersectBuilder = RelOpSetIntersectBuilder()
+                }
+            }
+
+            internal data class Except(
+                @JvmField internal val quantifier: Quantifier,
+                @JvmField internal val lhs: Rel,
+                @JvmField internal val rhs: Rel,
+                @JvmField internal val isOuter: Boolean,
+            ) : Set() {
+                public override val children: List<PlanNode> by lazy {
+                    val kids = mutableListOf<PlanNode?>()
+                    kids.add(lhs)
+                    kids.add(rhs)
+                    kids.filterNotNull()
+                }
+
+                public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                    visitor.visitRelOpSetExcept(this, ctx)
+
+                internal companion object {
+                    @JvmStatic
+                    internal fun builder(): RelOpSetExceptBuilder = RelOpSetExceptBuilder()
+                }
+            }
+
+            internal enum class Quantifier {
+                ALL, DISTINCT
             }
         }
 

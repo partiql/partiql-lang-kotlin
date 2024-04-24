@@ -240,20 +240,29 @@ rel::{
       ],
     },
 
-    union::{
-      lhs: rel,
-      rhs: rel,
-    },
+    set::[
+      union::{
+        quantifier: quantifier,
+        lhs: rel,
+        rhs: rel,
+      },
 
-    intersect::{
-      lhs: rel,
-      rhs: rel,
-    },
+      intersect::{
+        quantifier: quantifier,
+        lhs: rel,
+        rhs: rel,
+      },
 
-    except::{
-      lhs: rel,
-      rhs: rel,
-    },
+      except::{
+        quantifier: quantifier,
+        lhs: rel,
+        rhs: rel,
+      },
+
+      _::[
+        quantifier::[ ALL, DISTINCT ],
+      ]
+    ],
 
     limit::{
       input:  rel,
