@@ -12,12 +12,11 @@ internal class RelExceptAll(
     private val seen: MutableMap<Record, Int> = mutableMapOf()
     private var init: Boolean = false
 
-    override fun open(env: Environment) {
+    override fun openPeeking(env: Environment) {
         lhs.open(env)
         rhs.open(env)
         init = false
         seen.clear()
-        super.open(env)
     }
 
     override fun peek(): Record? {
@@ -35,11 +34,10 @@ internal class RelExceptAll(
         return null
     }
 
-    override fun close() {
+    override fun closePeeking() {
         lhs.close()
         rhs.close()
         seen.clear()
-        super.close()
     }
 
     /**

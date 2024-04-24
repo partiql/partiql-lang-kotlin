@@ -18,12 +18,11 @@ internal class RelExceptDistinct(
     private var seen: MutableSet<Record> = mutableSetOf()
     private var init: Boolean = false
 
-    override fun open(env: Environment) {
+    override fun openPeeking(env: Environment) {
         lhs.open(env)
         rhs.open(env)
         init = false
         seen = mutableSetOf()
-        super.open(env)
     }
 
     override fun peek(): Record? {
@@ -38,11 +37,10 @@ internal class RelExceptDistinct(
         return null
     }
 
-    override fun close() {
+    override fun closePeeking() {
         lhs.close()
         rhs.close()
         seen.clear()
-        super.close()
     }
 
     /**

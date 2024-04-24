@@ -19,7 +19,7 @@ internal abstract class RelJoinNestedLoop : RelPeeking() {
     private var lhsRecord: Record? = null
     private lateinit var env: Environment
 
-    override fun open(env: Environment) {
+    override fun openPeeking(env: Environment) {
         this.env = env
         lhs.open(env)
         if (lhs.hasNext().not()) {
@@ -27,7 +27,6 @@ internal abstract class RelJoinNestedLoop : RelPeeking() {
         }
         lhsRecord = lhs.next()
         rhs.open(env.push(lhsRecord!!))
-        super.open(env)
     }
 
     abstract fun join(condition: Boolean, lhs: Record, rhs: Record): Record?
@@ -69,10 +68,9 @@ internal abstract class RelJoinNestedLoop : RelPeeking() {
         return toReturn
     }
 
-    override fun close() {
+    override fun closePeeking() {
         lhs.close()
         rhs.close()
-        super.close()
     }
 
     @OptIn(PartiQLValueExperimental::class)

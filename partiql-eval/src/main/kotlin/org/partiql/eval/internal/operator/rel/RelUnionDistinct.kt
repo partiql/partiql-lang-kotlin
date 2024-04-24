@@ -13,12 +13,11 @@ internal class RelUnionDistinct(
     private val seen: MutableSet<Record> = mutableSetOf()
     private lateinit var input: Iterator<Record>
 
-    override fun open(env: Environment) {
+    override fun openPeeking(env: Environment) {
         lhs.open(env)
         rhs.open(env)
         seen.clear()
         input = IteratorChain(arrayOf(lhs, rhs))
-        super.open(env)
     }
 
     override fun peek(): Record? {
@@ -31,10 +30,9 @@ internal class RelUnionDistinct(
         return null
     }
 
-    override fun close() {
+    override fun closePeeking() {
         lhs.close()
         rhs.close()
         seen.clear()
-        super.close()
     }
 }

@@ -11,11 +11,29 @@ import org.partiql.eval.internal.operator.Operator
  */
 internal abstract class RelPeeking : Operator.Relation, IteratorPeeking<Record>() {
 
+    /**
+     * This shall have the same functionality as [open]. Implementers of [RelPeeking] shall not override [open].
+     */
+    abstract fun openPeeking(env: Environment)
+
+    /**
+     * This shall have the same functionality as [close]. Implementers of [RelPeeking] shall not override [close].
+     */
+    abstract fun closePeeking()
+
+    /**
+     * Implementers shall not override this method.
+     */
     override fun open(env: Environment) {
         next = null
+        openPeeking(env)
     }
 
+    /**
+     * Implementers shall not override this method.
+     */
     override fun close() {
         next = null
+        closePeeking()
     }
 }
