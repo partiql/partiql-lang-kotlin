@@ -13,10 +13,9 @@ internal class RelFilter(
 
     private lateinit var env: Environment
 
-    override fun open(env: Environment) {
+    override fun openPeeking(env: Environment) {
         this.env = env
         input.open(env)
-        super.open(env)
     }
 
     override fun peek(): Record? {
@@ -28,9 +27,8 @@ internal class RelFilter(
         return null
     }
 
-    override fun close() {
+    override fun closePeeking() {
         input.close()
-        super.close()
     }
 
     @OptIn(PartiQLValueExperimental::class)

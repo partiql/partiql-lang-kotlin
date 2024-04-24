@@ -20,6 +20,8 @@ import org.partiql.ast.AstNode
 import org.partiql.ast.DatetimeField
 import org.partiql.ast.Expr
 import org.partiql.ast.Select
+import org.partiql.ast.SetOp
+import org.partiql.ast.SetQuantifier
 import org.partiql.ast.Type
 import org.partiql.ast.visitor.AstBaseVisitor
 import org.partiql.planner.internal.Env
@@ -820,6 +822,41 @@ internal object RexConverter {
         }
 
         override fun visitExprSFW(node: Expr.SFW, context: Env): Rex = RelConverter.apply(node, context)
+
+        override fun visitExprBagOp(node: Expr.BagOp, ctx: Env): Rex {
+            val lhs = Rel(
+                type = Rel.Type(listOf(Rel.Binding("_0", StaticType.ANY)), props = emptySet()),
+                op = Rel.Op.Scan(visitExpr(node.lhs, ctx))
+            )
+            val rhs = Rel(
+                type = Rel.Type(listOf(Rel.Binding("_1", StaticType.ANY)), props = emptySet()),
+                op = Rel.Op.Scan(visitExpr(node.rhs, ctx))
+            )
+            val quantifier = when (node.type.setq) {
+                SetQuantifier.ALL -> Rel.Op.Set.Quantifier.ALL
+                null, SetQuantifier.DISTINCT -> Rel.Op.Set.Quantifier.DISTINCT
+            }
+            val isOuter = node.outer == true
+            val op = when (node.type.type) {
+                SetOp.Type.UNION -> Rel.Op.Set.Union(quantifier, lhs, rhs, isOuter)
+                SetOp.Type.EXCEPT -> Rel.Op.Set.Except(quantifier, lhs, rhs, isOuter)
+                SetOp.Type.INTERSECT -> Rel.Op.Set.Intersect(quantifier, lhs, rhs, isOuter)
+            }
+            val rel = Rel(
+                type = Rel.Type(listOf(Rel.Binding("_0", StaticType.ANY)), props = emptySet()),
+                op = op
+            )
+            return Rex(
+                type = StaticType.ANY,
+                op = Rex.Op.Select(
+                    constructor = Rex(
+                        StaticType.ANY,
+                        Rex.Op.Var.Unresolved(Identifier.Symbol("_0", Identifier.CaseSensitivity.SENSITIVE), Rex.Op.Var.Scope.LOCAL)
+                    ),
+                    rel = rel
+                )
+            )
+        }
 
         // Helpers
 

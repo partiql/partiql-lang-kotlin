@@ -10,9 +10,8 @@ internal class RelDistinct(
 
     private val seen = mutableSetOf<Record>()
 
-    override fun open(env: Environment) {
+    override fun openPeeking(env: Environment) {
         input.open(env)
-        super.open(env)
     }
 
     override fun peek(): Record? {
@@ -25,9 +24,8 @@ internal class RelDistinct(
         return null
     }
 
-    override fun close() {
+    override fun closePeeking() {
         seen.clear()
         input.close()
-        super.close()
     }
 }

@@ -4,7 +4,7 @@ import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
 
-internal class RelUnion(
+internal class RelUnionAll(
     private val lhs: Operator.Relation,
     private val rhs: Operator.Relation,
 ) : Operator.Relation {

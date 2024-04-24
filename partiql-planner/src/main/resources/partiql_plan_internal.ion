@@ -296,20 +296,38 @@ rel::{
       ],
     },
 
-    union::{
-      lhs: rel,
-      rhs: rel,
-    },
 
-    intersect::{
-      lhs: rel,
-      rhs: rel,
-    },
+    // In each variant, is_outer is an internal-only field. It is specifically used to aid in typing the plan and throwing potential errors.
+    // For example, if a user were to write: `<< { 'a': 1 } >>` UNION << { 'b': 'hello' } >>, then this would FAIL
+    // due to [RFC-0007](https://github.com/partiql/partiql-lang/blob/main/RFCs/0007-rfc-bag-operators.md). However,
+    // if a user were to use OUTER UNION, then it would work. Under the hood at execution, the operator is the same --
+    // however, at planning time, with static type analysis, we can fail queries prior to their execution.
+    set::[
+      union::{
+        quantifier: quantifier,
+        lhs: rel,
+        rhs: rel,
+        is_outer: bool
+      },
 
-    except::{
-      lhs: rel,
-      rhs: rel,
-    },
+      intersect::{
+        quantifier: quantifier,
+        lhs: rel,
+        rhs: rel,
+        is_outer: bool
+      },
+
+      except::{
+        quantifier: quantifier,
+        lhs: rel,
+        rhs: rel,
+        is_outer: bool
+      },
+
+      _::[
+        quantifier::[ ALL, DISTINCT ],
+      ]
+    ],
 
     limit::{
       input:  rel,

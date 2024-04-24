@@ -10,7 +10,7 @@ import org.partiql.eval.internal.operator.Operator
  * @property lhs
  * @property rhs
  */
-internal class RelExcept(
+internal class RelExceptDistinct(
     private val lhs: Operator.Relation,
     private val rhs: Operator.Relation,
 ) : RelPeeking() {
@@ -18,12 +18,11 @@ internal class RelExcept(
     private var seen: MutableSet<Record> = mutableSetOf()
     private var init: Boolean = false
 
-    override fun open(env: Environment) {
+    override fun openPeeking(env: Environment) {
         lhs.open(env)
         rhs.open(env)
         init = false
         seen = mutableSetOf()
-        super.open(env)
     }
 
     override fun peek(): Record? {
@@ -38,11 +37,10 @@ internal class RelExcept(
         return null
     }
 
-    override fun close() {
+    override fun closePeeking() {
         lhs.close()
         rhs.close()
         seen.clear()
-        super.close()
     }
 
     /**

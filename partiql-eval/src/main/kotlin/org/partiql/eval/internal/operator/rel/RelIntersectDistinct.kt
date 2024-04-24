@@ -4,20 +4,19 @@ import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
 
-internal class RelIntersect(
+internal class RelIntersectDistinct(
     private val lhs: Operator.Relation,
     private val rhs: Operator.Relation,
 ) : RelPeeking() {
 
-    private var seen: MutableSet<Record> = mutableSetOf()
+    private val seen: MutableSet<Record> = mutableSetOf()
     private var init: Boolean = false
 
-    override fun open(env: Environment) {
+    override fun openPeeking(env: Environment) {
         lhs.open(env)
         rhs.open(env)
         init = false
-        seen = mutableSetOf()
-        super.open(env)
+        seen.clear()
     }
 
     override fun peek(): Record? {
@@ -25,18 +24,17 @@ internal class RelIntersect(
             seed()
         }
         for (row in rhs) {
-            if (seen.contains(row)) {
+            if (seen.remove(row)) {
                 return row
             }
         }
         return null
     }
 
-    override fun close() {
+    override fun closePeeking() {
         lhs.close()
         rhs.close()
         seen.clear()
-        super.close()
     }
 
     /**
@@ -44,8 +42,7 @@ internal class RelIntersect(
      */
     private fun seed() {
         init = true
-        while (true) {
-            val row = lhs.next() ?: break
+        for (row in lhs) {
             seen.add(row)
         }
     }
