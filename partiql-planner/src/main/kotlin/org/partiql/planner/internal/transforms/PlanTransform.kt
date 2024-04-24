@@ -296,20 +296,28 @@ internal object PlanTransform : PlanBaseVisitor<PlanNode, ProblemCallback>() {
             }
         )
 
-        override fun visitRelOpUnion(node: Rel.Op.Union, ctx: ProblemCallback) = org.partiql.plan.Rel.Op.Union(
+        override fun visitRelOpSetExcept(node: Rel.Op.Set.Except, ctx: ProblemCallback) = org.partiql.plan.Rel.Op.Set.Except(
             lhs = visitRel(node.lhs, ctx),
             rhs = visitRel(node.rhs, ctx),
+            quantifier = visitRelOpSetQuantifier(node.quantifier)
         )
 
-        override fun visitRelOpIntersect(node: Rel.Op.Intersect, ctx: ProblemCallback) = org.partiql.plan.Rel.Op.Intersect(
+        override fun visitRelOpSetIntersect(node: Rel.Op.Set.Intersect, ctx: ProblemCallback) = org.partiql.plan.Rel.Op.Set.Intersect(
             lhs = visitRel(node.lhs, ctx),
             rhs = visitRel(node.rhs, ctx),
+            quantifier = visitRelOpSetQuantifier(node.quantifier)
         )
 
-        override fun visitRelOpExcept(node: Rel.Op.Except, ctx: ProblemCallback) = org.partiql.plan.Rel.Op.Except(
+        override fun visitRelOpSetUnion(node: Rel.Op.Set.Union, ctx: ProblemCallback) = org.partiql.plan.Rel.Op.Set.Union(
             lhs = visitRel(node.lhs, ctx),
             rhs = visitRel(node.rhs, ctx),
+            quantifier = visitRelOpSetQuantifier(node.quantifier)
         )
+
+        private fun visitRelOpSetQuantifier(node: Rel.Op.Set.Quantifier) = when (node) {
+            Rel.Op.Set.Quantifier.ALL -> org.partiql.plan.Rel.Op.Set.Quantifier.ALL
+            Rel.Op.Set.Quantifier.DISTINCT -> org.partiql.plan.Rel.Op.Set.Quantifier.DISTINCT
+        }
 
         override fun visitRelOpLimit(node: Rel.Op.Limit, ctx: ProblemCallback) = org.partiql.plan.Rel.Op.Limit(
             input = visitRel(node.input, ctx),
