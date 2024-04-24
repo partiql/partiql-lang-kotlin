@@ -15,7 +15,6 @@
 
 package org.partiql.gradle.plugin.publish
 
-import com.github.jengelman.gradle.plugins.shadow.ShadowExtension
 import com.github.jengelman.gradle.plugins.shadow.ShadowPlugin
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -37,7 +36,6 @@ import org.jetbrains.dokka.gradle.DokkaTask
 import org.jetbrains.kotlin.gradle.dsl.ExplicitApiMode
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 import java.io.File
-import org.gradle.kotlin.dsl.configure
 
 /**
  * Gradle plugin to consolidates the following publishing logic
@@ -94,11 +92,8 @@ abstract class PublishPlugin : Plugin<Project> {
             val publishing = extensions.getByType(PublishingExtension::class.java).apply {
                 publications {
                     create<MavenPublication>("maven") {
-                        project.extensions.configure<ShadowExtension> {
-                            component(this@create)
-                        }
-//                        from(components["java"])
-//                        artifact(tasks["shadowJar"])
+                        // Publish the shadow jar
+                        artifact(tasks["shadowJar"])
                         artifactId = ext.artifactId
                         pom {
                             packaging = "jar"
@@ -122,6 +117,17 @@ abstract class PublishPlugin : Plugin<Project> {
                                     email.set("partiql-dev@amazon.com")
                                     organization.set("PartiQL")
                                     organizationUrl.set("https://github.com/partiql")
+                                }
+                            }
+                            // Publish the dependencies
+                            withXml {
+                                val dependenciesNode = asNode().appendNode("dependencies")
+                                project.configurations["api"].allDependencies.forEach { dependency ->
+                                    val dependencyNode = dependenciesNode.appendNode("dependency")
+                                    dependencyNode.appendNode("groupId", dependency.group)
+                                    dependencyNode.appendNode("artifactId", dependency.name)
+                                    dependencyNode.appendNode("version", dependency.version)
+                                    dependencyNode.appendNode("scope", "compile")
                                 }
                             }
                         }
