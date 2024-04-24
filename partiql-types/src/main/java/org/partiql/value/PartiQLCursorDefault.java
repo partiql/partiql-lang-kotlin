@@ -46,6 +46,7 @@ class PartiQLCursorDefault implements PartiQLCursor {
         return currentIter.hasNext();
     }
 
+    @NotNull
     @Override
     public PartiQLValueType next() {
         currentValue = currentIter.next();

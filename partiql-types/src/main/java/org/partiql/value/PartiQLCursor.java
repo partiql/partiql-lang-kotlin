@@ -20,6 +20,10 @@ import org.partiql.value.datetime.Timestamp;
  */
 public interface PartiQLCursor extends AutoCloseable, Iterator<PartiQLValueType> {
 
+    @Override
+    @NotNull
+    PartiQLValueType next();
+
     /**
      * Positions the reader just before the contents of the current value, which must be a container (list, bag,
      * sexp, or struct). There's no current value immediately after stepping in, so the next thing you'll want to do is call

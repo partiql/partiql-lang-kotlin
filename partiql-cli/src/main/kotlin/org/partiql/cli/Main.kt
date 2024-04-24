@@ -16,11 +16,11 @@
 package org.partiql.cli
 
 import com.amazon.ion.system.IonReaderBuilder
-import com.amazon.ion.system.IonTextWriterBuilder
 import com.amazon.ionelement.api.ionListOf
 import com.amazon.ionelement.api.ionNull
 import com.amazon.ionelement.api.loadAllElements
 import org.partiql.cli.io.Format
+import org.partiql.cli.io.PartiQLCursorWriter
 import org.partiql.cli.pipeline.Pipeline
 import org.partiql.cli.shell.Shell
 import org.partiql.eval.PartiQLEngine
@@ -32,8 +32,6 @@ import org.partiql.spi.connector.Connector
 import org.partiql.spi.connector.sql.info.InfoSchema
 import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueLoader
-import org.partiql.value.toIon
 import picocli.CommandLine
 import java.io.File
 import java.io.InputStream
@@ -98,6 +96,13 @@ internal class MainCommand : Runnable {
     var strict: Boolean = false
 
     @CommandLine.Option(
+        names = ["--debug"],
+        description = ["THIS IS FOR INTERNAL DEVELOPMENT USE ONLY. Shows typing information in the output."],
+        hidden = true
+    )
+    var debug: Boolean = false
+
+    @CommandLine.Option(
         names = ["-f", "--format"],
         description = ["The data format, using the form <input>[:<output>]."],
         paramLabel = "<input[:output]>",
@@ -152,7 +157,7 @@ internal class MainCommand : Runnable {
             true -> Pipeline.strict()
             else -> Pipeline.default()
         }
-        Shell(pipeline, session()).start()
+        Shell(pipeline, session(), debug).start()
     }
 
     @OptIn(PartiQLValueExperimental::class)
@@ -169,12 +174,8 @@ internal class MainCommand : Runnable {
                 error(result.cause.stackTrace)
             }
             is PartiQLResult.Value -> {
-                // TODO handle output format
-                val data = result.value
-                val value = PartiQLValueLoader.standard().loadSingleValue(data)
-                val ion = value.toIon()
-                val writer = IonTextWriterBuilder.pretty().build(System.out as Appendable)
-                ion.writeTo(writer)
+                val writer = PartiQLCursorWriter(System.out, debug)
+                writer.append(result.value)
                 println()
             }
         }

@@ -31,6 +31,7 @@ import org.jline.utils.AttributedStyle
 import org.jline.utils.AttributedStyle.BOLD
 import org.jline.utils.InfoCmp
 import org.joda.time.Duration
+import org.partiql.cli.io.PartiQLCursorWriter
 import org.partiql.cli.pipeline.Pipeline
 import org.partiql.eval.PartiQLResult
 import org.partiql.plugins.fs.toIon
@@ -39,8 +40,6 @@ import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
 import org.partiql.spi.connector.ConnectorHandle
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueLoader
-import org.partiql.value.io.PartiQLValueTextWriter
 import java.io.Closeable
 import java.io.PrintStream
 import java.nio.file.Path
@@ -118,9 +117,13 @@ val exiting = AtomicBoolean(false)
 val doneCompiling = AtomicBoolean(true)
 val donePrinting = AtomicBoolean(true)
 
+/**
+ * @param debug specifies whether to print typing information or not.
+ */
 internal class Shell(
     private val pipeline: Pipeline,
     private val session: Pipeline.Session,
+    private val debug: Boolean
 ) {
 
     private var state: State = State(false)
@@ -307,9 +310,8 @@ internal class Shell(
                         when (result) {
                             is PartiQLResult.Error -> throw result.cause
                             is PartiQLResult.Value -> {
-                                val value = PartiQLValueLoader.standard().loadSingleValue(result.value)
-                                val writer = PartiQLValueTextWriter(out)
-                                writer.append(value)
+                                val writer = PartiQLCursorWriter(out, debug)
+                                writer.append(result.value)
                                 out.appendLine()
                                 out.appendLine()
                                 out.info("OK!")
