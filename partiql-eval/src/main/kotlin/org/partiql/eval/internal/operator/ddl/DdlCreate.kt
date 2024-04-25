@@ -21,6 +21,7 @@ import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.StringValue
 import org.partiql.value.int32Value
+import org.partiql.value.stringValue
 
 internal class DdlCreate(
     val name: Identifier,
@@ -50,12 +51,8 @@ internal class DdlCreate(
             override fun getUserId(): String = "u"
         }
 
-        // if prefix is 0, how do we choose the default one ????
-        val catalog = when(prefix.size) {
-            0 -> catalogs.values.first()
-            1 -> catalogs.values.first()
-            else -> catalogs[prefix.first()] ?: error("no such connector")
-        }
+        // always assumes the first connector?
+        val catalog = catalogs.values.first()
 
         val checkExpression = constraint
             .filter { it.body is Constraint.Body.Check }
@@ -92,7 +89,7 @@ internal class DdlCreate(
             )
             int32Value(1)
         } catch (e: Exception) {
-            int32Value(-1)
+            stringValue(e.message ?: "unknown message")
         }
     }
 

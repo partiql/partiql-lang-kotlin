@@ -75,32 +75,20 @@ internal class FsMetadata(
         primaryKey: List<String>
     ): ConnectorHandle.Obj {
         val (tableName, dirs) =  when (path.steps.size){
-            1 -> path.steps.first().normalize() to null
+            1 -> path.steps.first().normalize() to BindingPath(emptyList())
             else -> path.steps.last().normalize() to BindingPath(path.steps.dropLast(1))
         }
 
-        // if we are not creating under root
-        val dirPath = if (dirs != null) {
-            val handles = ls(dirs)
-            when(handles.size) {
-                0 -> throw PartiQLException("dir not exist")
-                1 -> {
-                    val handle = handles.first()
-                    when(handle) {
-                        is ConnectorHandle.Scope -> handle.path
-                        else -> throw PartiQLException("Path did not bind to a scope")
-                    }
-                }
-                else -> throw PartiQLException("ambiguous binding")
-            }
-        } else {
-            null
+        val handles = ls(dirs)
+        // ls (dirs) to make sure dirs is a valid path
+        val dirPath = when(handles.size) {
+            0 -> throw PartiQLException("dir not exist")
+                // either a scope contains 1 object
+            else -> ConnectorPath(dirs.normalized)
         }
 
-        // check table already exists
-        if (ls(path).any { it is ConnectorHandle.Obj }) throw PartiQLException("Table already exists")
-
-
+        if (handles.any { it is ConnectorHandle.Obj && it.path.steps.last() == tableName })
+            throw PartiQLException("Table already exists")
 
         index.createTable(
             dirPath,

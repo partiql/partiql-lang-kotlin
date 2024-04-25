@@ -2,6 +2,7 @@ package org.partiql.plugins.fs.index
 
 import org.partiql.types.StaticType
 import java.io.File
+import java.nio.file.Path
 
 /**
  * The Fs equivalent of an inode.
@@ -9,9 +10,11 @@ import java.io.File
 internal sealed interface FsNode {
 
     val name: String
+    val path: Path
 
     data class Scope(
         override val name: String,
+        override val path: Path,
         val children: List<FsNode>,
     ) : FsNode {
 
@@ -30,6 +33,7 @@ internal sealed interface FsNode {
 
     data class Obj(
         override val name: String,
+        override val path: Path,
         val shape: StaticType,
         val data: File? = null,
     ) : FsNode {

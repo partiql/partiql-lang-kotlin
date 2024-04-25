@@ -162,6 +162,7 @@ internal class MainCommand() : Runnable {
             else -> Pipeline.default()
         }
         val program = statement.trimHashBang()
+
         val session = session()
         val result = pipeline.execute(program, session)
         when (result) {

@@ -18,20 +18,17 @@ import com.amazon.ionelement.api.StringElement
 import com.amazon.ionelement.api.StructElement
 import org.partiql.plugins.fs.FsDB
 import org.partiql.plugins.fs.getAngry
-import org.partiql.plugins.fs.index.FsIndex
 import org.partiql.spi.connector.Connector
 import org.partiql.spi.connector.ConnectorBindings
 import org.partiql.spi.connector.ConnectorSession
 import org.partiql.spi.connector.sql.SqlConnector
 import org.partiql.spi.connector.sql.SqlMetadata
 import java.nio.file.Paths
-import kotlin.let
-import kotlin.properties.Delegates
 
 /**
  * Fs connector implementation wraps a database.
  */
-internal class FsConnector(private var database: FsDB) : SqlConnector() {
+internal class FsConnector(private val database: FsDB) : SqlConnector() {
 
     private val bindings = FsBindings(database.index)
 
@@ -59,6 +56,8 @@ internal class FsConnector(private var database: FsDB) : SqlConnector() {
             assert(config != null) { "Fs plugin requires non-null config" }
             val root = config!!.getAngry<StringElement>("root").let { Paths.get(it.textValue) }
             val db = FsDB.load(root)
+            val listener = Thread(db, "listener thread")
+            listener.start()
             return FsConnector(db)
         }
     }

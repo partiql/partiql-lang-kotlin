@@ -33,6 +33,8 @@ public class FsPlugin : Plugin {
         // workaround for simplicity
         public fun create(root: Path): Connector {
             val db = FsDB.load(root)
+            val listener = Thread(db, "listener thread")
+            listener.start()
             return FsConnector(db)
         }
     }

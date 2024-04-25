@@ -70,13 +70,13 @@ internal class FsIndex(private var root: FsNode) {
         primaryKey: List<String>
     ) {
         val path = buildString {
-            this.append("${root.name}/")
+            this.append("${root.path.toAbsolutePath()}/")
             dirs?.let {
                 it.steps.forEach {
                     this.append("$it/")
                 }
             }
-            this.append("$tableName")
+            this.append("$tableName.ion")
         }
 
         val shapeContent = buildString {
@@ -111,7 +111,7 @@ internal class FsIndex(private var root: FsNode) {
                 val parts = f.name.split('.')
                 val name = parts[0]
                 val kind = parts[1]
-                var obj = objs[name] ?: FsNode.Obj(name, StaticType.ANY)
+                var obj = objs[name] ?: FsNode.Obj(name, Path("$absolutePath/$name.ion"), StaticType.ANY)
                 obj = when (kind) {
                     "ion" -> obj.copy(data = f.data())
                     "shape" -> obj.copy(shape = f.shape())
@@ -120,7 +120,7 @@ internal class FsIndex(private var root: FsNode) {
                 objs[name] = obj
             }
             children.addAll(objs.values)
-            return FsNode.Scope(name, children)
+            return FsNode.Scope(name, this.toPath(), children)
         }
 
         private fun File.data(): File = this
