@@ -1,4 +1,13 @@
 public final class org/partiql/ast/Ast {
+	public static final fun constraint (Ljava/lang/String;Lorg/partiql/ast/Constraint$Definition;)Lorg/partiql/ast/Constraint;
+	public static final fun constraintDefinitionCheck (Lorg/partiql/ast/Expr;)Lorg/partiql/ast/Constraint$Definition$Check;
+	public static final fun constraintDefinitionNotNull ()Lorg/partiql/ast/Constraint$Definition$NotNull;
+	public static final fun constraintDefinitionNullable ()Lorg/partiql/ast/Constraint$Definition$Nullable;
+	public static final fun constraintDefinitionUnique (Ljava/util/List;Z)Lorg/partiql/ast/Constraint$Definition$Unique;
+	public static final fun ddlOpCreateIndex (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/Identifier;Ljava/util/List;)Lorg/partiql/ast/DdlOp$CreateIndex;
+	public static final fun ddlOpCreateTable (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/TableDefinition;)Lorg/partiql/ast/DdlOp$CreateTable;
+	public static final fun ddlOpDropIndex (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/Identifier;)Lorg/partiql/ast/DdlOp$DropIndex;
+	public static final fun ddlOpDropTable (Lorg/partiql/ast/Identifier;)Lorg/partiql/ast/DdlOp$DropTable;
 	public static final fun exclude (Ljava/util/List;)Lorg/partiql/ast/Exclude;
 	public static final fun excludeItem (Lorg/partiql/ast/Expr$Var;Ljava/util/List;)Lorg/partiql/ast/Exclude$Item;
 	public static final fun excludeStepCollIndex (I)Lorg/partiql/ast/Exclude$Step$CollIndex;
@@ -95,10 +104,7 @@ public final class org/partiql/ast/Ast {
 	public static final fun selectValue (Lorg/partiql/ast/Expr;Lorg/partiql/ast/SetQuantifier;)Lorg/partiql/ast/Select$Value;
 	public static final fun setOp (Lorg/partiql/ast/SetOp$Type;Lorg/partiql/ast/SetQuantifier;)Lorg/partiql/ast/SetOp;
 	public static final fun sort (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Sort$Dir;Lorg/partiql/ast/Sort$Nulls;)Lorg/partiql/ast/Sort;
-	public static final fun statementDDLCreateIndex (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/Identifier;Ljava/util/List;)Lorg/partiql/ast/Statement$DDL$CreateIndex;
-	public static final fun statementDDLCreateTable (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/TableDefinition;)Lorg/partiql/ast/Statement$DDL$CreateTable;
-	public static final fun statementDDLDropIndex (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/Identifier;)Lorg/partiql/ast/Statement$DDL$DropIndex;
-	public static final fun statementDDLDropTable (Lorg/partiql/ast/Identifier;)Lorg/partiql/ast/Statement$DDL$DropTable;
+	public static final fun statementDDL (Lorg/partiql/ast/DdlOp;)Lorg/partiql/ast/Statement$DDL;
 	public static final fun statementDMLBatchLegacy (Ljava/util/List;Lorg/partiql/ast/From;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Returning;)Lorg/partiql/ast/Statement$DML$BatchLegacy;
 	public static final fun statementDMLBatchLegacyOpDelete ()Lorg/partiql/ast/Statement$DML$BatchLegacy$Op$Delete;
 	public static final fun statementDMLBatchLegacyOpInsert (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Identifier$Symbol;Lorg/partiql/ast/OnConflict;)Lorg/partiql/ast/Statement$DML$BatchLegacy$Op$Insert;
@@ -118,12 +124,8 @@ public final class org/partiql/ast/Ast {
 	public static final fun statementExplain (Lorg/partiql/ast/Statement$Explain$Target;)Lorg/partiql/ast/Statement$Explain;
 	public static final fun statementExplainTargetDomain (Lorg/partiql/ast/Statement;Ljava/lang/String;Ljava/lang/String;)Lorg/partiql/ast/Statement$Explain$Target$Domain;
 	public static final fun statementQuery (Lorg/partiql/ast/Expr;)Lorg/partiql/ast/Statement$Query;
-	public static final fun tableDefinition (Ljava/util/List;)Lorg/partiql/ast/TableDefinition;
-	public static final fun tableDefinitionColumn (Ljava/lang/String;Lorg/partiql/ast/Type;Ljava/util/List;)Lorg/partiql/ast/TableDefinition$Column;
-	public static final fun tableDefinitionColumnConstraint (Ljava/lang/String;Lorg/partiql/ast/TableDefinition$Column$Constraint$Body;)Lorg/partiql/ast/TableDefinition$Column$Constraint;
-	public static final fun tableDefinitionColumnConstraintBodyCheck (Lorg/partiql/ast/Expr;)Lorg/partiql/ast/TableDefinition$Column$Constraint$Body$Check;
-	public static final fun tableDefinitionColumnConstraintBodyNotNull ()Lorg/partiql/ast/TableDefinition$Column$Constraint$Body$NotNull;
-	public static final fun tableDefinitionColumnConstraintBodyNullable ()Lorg/partiql/ast/TableDefinition$Column$Constraint$Body$Nullable;
+	public static final fun tableDefinition (Ljava/util/List;Ljava/util/List;)Lorg/partiql/ast/TableDefinition;
+	public static final fun tableDefinitionAttribute (Lorg/partiql/ast/Identifier$Symbol;Lorg/partiql/ast/Type;Ljava/util/List;)Lorg/partiql/ast/TableDefinition$Attribute;
 	public static final fun typeAny ()Lorg/partiql/ast/Type$Any;
 	public static final fun typeBag ()Lorg/partiql/ast/Type$Bag;
 	public static final fun typeBigint ()Lorg/partiql/ast/Type$Bigint;
@@ -170,6 +172,113 @@ public abstract class org/partiql/ast/AstNode {
 	public abstract fun getChildren ()Ljava/util/List;
 }
 
+public final class org/partiql/ast/Constraint : org/partiql/ast/AstNode {
+	public static final field Companion Lorg/partiql/ast/Constraint$Companion;
+	public final field definition Lorg/partiql/ast/Constraint$Definition;
+	public final field name Ljava/lang/String;
+	public fun <init> (Ljava/lang/String;Lorg/partiql/ast/Constraint$Definition;)V
+	public fun accept (Lorg/partiql/ast/visitor/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/ast/builder/ConstraintBuilder;
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lorg/partiql/ast/Constraint$Definition;
+	public final fun copy (Ljava/lang/String;Lorg/partiql/ast/Constraint$Definition;)Lorg/partiql/ast/Constraint;
+	public static synthetic fun copy$default (Lorg/partiql/ast/Constraint;Ljava/lang/String;Lorg/partiql/ast/Constraint$Definition;ILjava/lang/Object;)Lorg/partiql/ast/Constraint;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/ast/Constraint$Companion {
+	public final fun builder ()Lorg/partiql/ast/builder/ConstraintBuilder;
+}
+
+public abstract class org/partiql/ast/Constraint$Definition : org/partiql/ast/AstNode {
+	public fun accept (Lorg/partiql/ast/visitor/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class org/partiql/ast/Constraint$Definition$Check : org/partiql/ast/Constraint$Definition {
+	public static final field Companion Lorg/partiql/ast/Constraint$Definition$Check$Companion;
+	public final field expr Lorg/partiql/ast/Expr;
+	public fun <init> (Lorg/partiql/ast/Expr;)V
+	public fun accept (Lorg/partiql/ast/visitor/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/ast/builder/ConstraintDefinitionCheckBuilder;
+	public final fun component1 ()Lorg/partiql/ast/Expr;
+	public final fun copy (Lorg/partiql/ast/Expr;)Lorg/partiql/ast/Constraint$Definition$Check;
+	public static synthetic fun copy$default (Lorg/partiql/ast/Constraint$Definition$Check;Lorg/partiql/ast/Expr;ILjava/lang/Object;)Lorg/partiql/ast/Constraint$Definition$Check;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/ast/Constraint$Definition$Check$Companion {
+	public final fun builder ()Lorg/partiql/ast/builder/ConstraintDefinitionCheckBuilder;
+}
+
+public final class org/partiql/ast/Constraint$Definition$NotNull : org/partiql/ast/Constraint$Definition {
+	public final field   C
+	public static final field Companion Lorg/partiql/ast/Constraint$Definition$NotNull$Companion;
+	public fun <init> ()V
+	public fun <init> (C)V
+	public synthetic fun <init> (CILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun accept (Lorg/partiql/ast/visitor/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/ast/builder/ConstraintDefinitionNotNullBuilder;
+	public final fun component1 ()C
+	public final fun copy (C)Lorg/partiql/ast/Constraint$Definition$NotNull;
+	public static synthetic fun copy$default (Lorg/partiql/ast/Constraint$Definition$NotNull;CILjava/lang/Object;)Lorg/partiql/ast/Constraint$Definition$NotNull;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/ast/Constraint$Definition$NotNull$Companion {
+	public final fun builder ()Lorg/partiql/ast/builder/ConstraintDefinitionNotNullBuilder;
+}
+
+public final class org/partiql/ast/Constraint$Definition$Nullable : org/partiql/ast/Constraint$Definition {
+	public final field   C
+	public static final field Companion Lorg/partiql/ast/Constraint$Definition$Nullable$Companion;
+	public fun <init> ()V
+	public fun <init> (C)V
+	public synthetic fun <init> (CILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun accept (Lorg/partiql/ast/visitor/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/ast/builder/ConstraintDefinitionNullableBuilder;
+	public final fun component1 ()C
+	public final fun copy (C)Lorg/partiql/ast/Constraint$Definition$Nullable;
+	public static synthetic fun copy$default (Lorg/partiql/ast/Constraint$Definition$Nullable;CILjava/lang/Object;)Lorg/partiql/ast/Constraint$Definition$Nullable;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/ast/Constraint$Definition$Nullable$Companion {
+	public final fun builder ()Lorg/partiql/ast/builder/ConstraintDefinitionNullableBuilder;
+}
+
+public final class org/partiql/ast/Constraint$Definition$Unique : org/partiql/ast/Constraint$Definition {
+	public static final field Companion Lorg/partiql/ast/Constraint$Definition$Unique$Companion;
+	public final field attributes Ljava/util/List;
+	public final field isPrimaryKey Z
+	public fun <init> (Ljava/util/List;Z)V
+	public fun accept (Lorg/partiql/ast/visitor/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/ast/builder/ConstraintDefinitionUniqueBuilder;
+	public final fun component1 ()Ljava/util/List;
+	public final fun component2 ()Z
+	public final fun copy (Ljava/util/List;Z)Lorg/partiql/ast/Constraint$Definition$Unique;
+	public static synthetic fun copy$default (Lorg/partiql/ast/Constraint$Definition$Unique;Ljava/util/List;ZILjava/lang/Object;)Lorg/partiql/ast/Constraint$Definition$Unique;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/ast/Constraint$Definition$Unique$Companion {
+	public final fun builder ()Lorg/partiql/ast/builder/ConstraintDefinitionUniqueBuilder;
+}
+
 public final class org/partiql/ast/DatetimeField : java/lang/Enum {
 	public static final field DAY Lorg/partiql/ast/DatetimeField;
 	public static final field HOUR Lorg/partiql/ast/DatetimeField;
@@ -181,6 +290,94 @@ public final class org/partiql/ast/DatetimeField : java/lang/Enum {
 	public static final field YEAR Lorg/partiql/ast/DatetimeField;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/ast/DatetimeField;
 	public static fun values ()[Lorg/partiql/ast/DatetimeField;
+}
+
+public abstract class org/partiql/ast/DdlOp : org/partiql/ast/AstNode {
+	public fun accept (Lorg/partiql/ast/visitor/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class org/partiql/ast/DdlOp$CreateIndex : org/partiql/ast/DdlOp {
+	public static final field Companion Lorg/partiql/ast/DdlOp$CreateIndex$Companion;
+	public final field fields Ljava/util/List;
+	public final field index Lorg/partiql/ast/Identifier;
+	public final field table Lorg/partiql/ast/Identifier;
+	public fun <init> (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/Identifier;Ljava/util/List;)V
+	public fun accept (Lorg/partiql/ast/visitor/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/ast/builder/DdlOpCreateIndexBuilder;
+	public final fun component1 ()Lorg/partiql/ast/Identifier;
+	public final fun component2 ()Lorg/partiql/ast/Identifier;
+	public final fun component3 ()Ljava/util/List;
+	public final fun copy (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/Identifier;Ljava/util/List;)Lorg/partiql/ast/DdlOp$CreateIndex;
+	public static synthetic fun copy$default (Lorg/partiql/ast/DdlOp$CreateIndex;Lorg/partiql/ast/Identifier;Lorg/partiql/ast/Identifier;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/ast/DdlOp$CreateIndex;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/ast/DdlOp$CreateIndex$Companion {
+	public final fun builder ()Lorg/partiql/ast/builder/DdlOpCreateIndexBuilder;
+}
+
+public final class org/partiql/ast/DdlOp$CreateTable : org/partiql/ast/DdlOp {
+	public static final field Companion Lorg/partiql/ast/DdlOp$CreateTable$Companion;
+	public final field definition Lorg/partiql/ast/TableDefinition;
+	public final field name Lorg/partiql/ast/Identifier;
+	public fun <init> (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/TableDefinition;)V
+	public fun accept (Lorg/partiql/ast/visitor/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/ast/builder/DdlOpCreateTableBuilder;
+	public final fun component1 ()Lorg/partiql/ast/Identifier;
+	public final fun component2 ()Lorg/partiql/ast/TableDefinition;
+	public final fun copy (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/TableDefinition;)Lorg/partiql/ast/DdlOp$CreateTable;
+	public static synthetic fun copy$default (Lorg/partiql/ast/DdlOp$CreateTable;Lorg/partiql/ast/Identifier;Lorg/partiql/ast/TableDefinition;ILjava/lang/Object;)Lorg/partiql/ast/DdlOp$CreateTable;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/ast/DdlOp$CreateTable$Companion {
+	public final fun builder ()Lorg/partiql/ast/builder/DdlOpCreateTableBuilder;
+}
+
+public final class org/partiql/ast/DdlOp$DropIndex : org/partiql/ast/DdlOp {
+	public static final field Companion Lorg/partiql/ast/DdlOp$DropIndex$Companion;
+	public final field index Lorg/partiql/ast/Identifier;
+	public final field table Lorg/partiql/ast/Identifier;
+	public fun <init> (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/Identifier;)V
+	public fun accept (Lorg/partiql/ast/visitor/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/ast/builder/DdlOpDropIndexBuilder;
+	public final fun component1 ()Lorg/partiql/ast/Identifier;
+	public final fun component2 ()Lorg/partiql/ast/Identifier;
+	public final fun copy (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/Identifier;)Lorg/partiql/ast/DdlOp$DropIndex;
+	public static synthetic fun copy$default (Lorg/partiql/ast/DdlOp$DropIndex;Lorg/partiql/ast/Identifier;Lorg/partiql/ast/Identifier;ILjava/lang/Object;)Lorg/partiql/ast/DdlOp$DropIndex;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/ast/DdlOp$DropIndex$Companion {
+	public final fun builder ()Lorg/partiql/ast/builder/DdlOpDropIndexBuilder;
+}
+
+public final class org/partiql/ast/DdlOp$DropTable : org/partiql/ast/DdlOp {
+	public static final field Companion Lorg/partiql/ast/DdlOp$DropTable$Companion;
+	public final field table Lorg/partiql/ast/Identifier;
+	public fun <init> (Lorg/partiql/ast/Identifier;)V
+	public fun accept (Lorg/partiql/ast/visitor/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/ast/builder/DdlOpDropTableBuilder;
+	public final fun component1 ()Lorg/partiql/ast/Identifier;
+	public final fun copy (Lorg/partiql/ast/Identifier;)Lorg/partiql/ast/DdlOp$DropTable;
+	public static synthetic fun copy$default (Lorg/partiql/ast/DdlOp$DropTable;Lorg/partiql/ast/Identifier;ILjava/lang/Object;)Lorg/partiql/ast/DdlOp$DropTable;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/ast/DdlOp$DropTable$Companion {
+	public final fun builder ()Lorg/partiql/ast/builder/DdlOpDropTableBuilder;
 }
 
 public final class org/partiql/ast/Exclude : org/partiql/ast/AstNode {
@@ -2450,92 +2647,23 @@ public abstract class org/partiql/ast/Statement : org/partiql/ast/AstNode {
 	public fun accept (Lorg/partiql/ast/visitor/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 }
 
-public abstract class org/partiql/ast/Statement$DDL : org/partiql/ast/Statement {
+public final class org/partiql/ast/Statement$DDL : org/partiql/ast/Statement {
+	public static final field Companion Lorg/partiql/ast/Statement$DDL$Companion;
+	public final field op Lorg/partiql/ast/DdlOp;
+	public fun <init> (Lorg/partiql/ast/DdlOp;)V
 	public fun accept (Lorg/partiql/ast/visitor/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-}
-
-public final class org/partiql/ast/Statement$DDL$CreateIndex : org/partiql/ast/Statement$DDL {
-	public static final field Companion Lorg/partiql/ast/Statement$DDL$CreateIndex$Companion;
-	public final field fields Ljava/util/List;
-	public final field index Lorg/partiql/ast/Identifier;
-	public final field table Lorg/partiql/ast/Identifier;
-	public fun <init> (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/Identifier;Ljava/util/List;)V
-	public fun accept (Lorg/partiql/ast/visitor/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public static final fun builder ()Lorg/partiql/ast/builder/StatementDdlCreateIndexBuilder;
-	public final fun component1 ()Lorg/partiql/ast/Identifier;
-	public final fun component2 ()Lorg/partiql/ast/Identifier;
-	public final fun component3 ()Ljava/util/List;
-	public final fun copy (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/Identifier;Ljava/util/List;)Lorg/partiql/ast/Statement$DDL$CreateIndex;
-	public static synthetic fun copy$default (Lorg/partiql/ast/Statement$DDL$CreateIndex;Lorg/partiql/ast/Identifier;Lorg/partiql/ast/Identifier;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/ast/Statement$DDL$CreateIndex;
+	public static final fun builder ()Lorg/partiql/ast/builder/StatementDdlBuilder;
+	public final fun component1 ()Lorg/partiql/ast/DdlOp;
+	public final fun copy (Lorg/partiql/ast/DdlOp;)Lorg/partiql/ast/Statement$DDL;
+	public static synthetic fun copy$default (Lorg/partiql/ast/Statement$DDL;Lorg/partiql/ast/DdlOp;ILjava/lang/Object;)Lorg/partiql/ast/Statement$DDL;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getChildren ()Ljava/util/List;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
 
-public final class org/partiql/ast/Statement$DDL$CreateIndex$Companion {
-	public final fun builder ()Lorg/partiql/ast/builder/StatementDdlCreateIndexBuilder;
-}
-
-public final class org/partiql/ast/Statement$DDL$CreateTable : org/partiql/ast/Statement$DDL {
-	public static final field Companion Lorg/partiql/ast/Statement$DDL$CreateTable$Companion;
-	public final field definition Lorg/partiql/ast/TableDefinition;
-	public final field name Lorg/partiql/ast/Identifier;
-	public fun <init> (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/TableDefinition;)V
-	public fun accept (Lorg/partiql/ast/visitor/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public static final fun builder ()Lorg/partiql/ast/builder/StatementDdlCreateTableBuilder;
-	public final fun component1 ()Lorg/partiql/ast/Identifier;
-	public final fun component2 ()Lorg/partiql/ast/TableDefinition;
-	public final fun copy (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/TableDefinition;)Lorg/partiql/ast/Statement$DDL$CreateTable;
-	public static synthetic fun copy$default (Lorg/partiql/ast/Statement$DDL$CreateTable;Lorg/partiql/ast/Identifier;Lorg/partiql/ast/TableDefinition;ILjava/lang/Object;)Lorg/partiql/ast/Statement$DDL$CreateTable;
-	public fun equals (Ljava/lang/Object;)Z
-	public fun getChildren ()Ljava/util/List;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final class org/partiql/ast/Statement$DDL$CreateTable$Companion {
-	public final fun builder ()Lorg/partiql/ast/builder/StatementDdlCreateTableBuilder;
-}
-
-public final class org/partiql/ast/Statement$DDL$DropIndex : org/partiql/ast/Statement$DDL {
-	public static final field Companion Lorg/partiql/ast/Statement$DDL$DropIndex$Companion;
-	public final field index Lorg/partiql/ast/Identifier;
-	public final field table Lorg/partiql/ast/Identifier;
-	public fun <init> (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/Identifier;)V
-	public fun accept (Lorg/partiql/ast/visitor/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public static final fun builder ()Lorg/partiql/ast/builder/StatementDdlDropIndexBuilder;
-	public final fun component1 ()Lorg/partiql/ast/Identifier;
-	public final fun component2 ()Lorg/partiql/ast/Identifier;
-	public final fun copy (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/Identifier;)Lorg/partiql/ast/Statement$DDL$DropIndex;
-	public static synthetic fun copy$default (Lorg/partiql/ast/Statement$DDL$DropIndex;Lorg/partiql/ast/Identifier;Lorg/partiql/ast/Identifier;ILjava/lang/Object;)Lorg/partiql/ast/Statement$DDL$DropIndex;
-	public fun equals (Ljava/lang/Object;)Z
-	public fun getChildren ()Ljava/util/List;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final class org/partiql/ast/Statement$DDL$DropIndex$Companion {
-	public final fun builder ()Lorg/partiql/ast/builder/StatementDdlDropIndexBuilder;
-}
-
-public final class org/partiql/ast/Statement$DDL$DropTable : org/partiql/ast/Statement$DDL {
-	public static final field Companion Lorg/partiql/ast/Statement$DDL$DropTable$Companion;
-	public final field table Lorg/partiql/ast/Identifier;
-	public fun <init> (Lorg/partiql/ast/Identifier;)V
-	public fun accept (Lorg/partiql/ast/visitor/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public static final fun builder ()Lorg/partiql/ast/builder/StatementDdlDropTableBuilder;
-	public final fun component1 ()Lorg/partiql/ast/Identifier;
-	public final fun copy (Lorg/partiql/ast/Identifier;)Lorg/partiql/ast/Statement$DDL$DropTable;
-	public static synthetic fun copy$default (Lorg/partiql/ast/Statement$DDL$DropTable;Lorg/partiql/ast/Identifier;ILjava/lang/Object;)Lorg/partiql/ast/Statement$DDL$DropTable;
-	public fun equals (Ljava/lang/Object;)Z
-	public fun getChildren ()Ljava/util/List;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final class org/partiql/ast/Statement$DDL$DropTable$Companion {
-	public final fun builder ()Lorg/partiql/ast/builder/StatementDdlDropTableBuilder;
+public final class org/partiql/ast/Statement$DDL$Companion {
+	public final fun builder ()Lorg/partiql/ast/builder/StatementDdlBuilder;
 }
 
 public abstract class org/partiql/ast/Statement$DML : org/partiql/ast/Statement {
@@ -2973,126 +3101,42 @@ public final class org/partiql/ast/Statement$Query$Companion {
 
 public final class org/partiql/ast/TableDefinition : org/partiql/ast/AstNode {
 	public static final field Companion Lorg/partiql/ast/TableDefinition$Companion;
-	public final field columns Ljava/util/List;
-	public fun <init> (Ljava/util/List;)V
+	public final field attributes Ljava/util/List;
+	public final field constraints Ljava/util/List;
+	public fun <init> (Ljava/util/List;Ljava/util/List;)V
 	public fun accept (Lorg/partiql/ast/visitor/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static final fun builder ()Lorg/partiql/ast/builder/TableDefinitionBuilder;
 	public final fun component1 ()Ljava/util/List;
-	public final fun copy (Ljava/util/List;)Lorg/partiql/ast/TableDefinition;
-	public static synthetic fun copy$default (Lorg/partiql/ast/TableDefinition;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/ast/TableDefinition;
+	public final fun component2 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;Ljava/util/List;)Lorg/partiql/ast/TableDefinition;
+	public static synthetic fun copy$default (Lorg/partiql/ast/TableDefinition;Ljava/util/List;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/ast/TableDefinition;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getChildren ()Ljava/util/List;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
 
-public final class org/partiql/ast/TableDefinition$Column : org/partiql/ast/AstNode {
-	public static final field Companion Lorg/partiql/ast/TableDefinition$Column$Companion;
+public final class org/partiql/ast/TableDefinition$Attribute : org/partiql/ast/AstNode {
+	public static final field Companion Lorg/partiql/ast/TableDefinition$Attribute$Companion;
 	public final field constraints Ljava/util/List;
-	public final field name Ljava/lang/String;
+	public final field name Lorg/partiql/ast/Identifier$Symbol;
 	public final field type Lorg/partiql/ast/Type;
-	public fun <init> (Ljava/lang/String;Lorg/partiql/ast/Type;Ljava/util/List;)V
+	public fun <init> (Lorg/partiql/ast/Identifier$Symbol;Lorg/partiql/ast/Type;Ljava/util/List;)V
 	public fun accept (Lorg/partiql/ast/visitor/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public static final fun builder ()Lorg/partiql/ast/builder/TableDefinitionColumnBuilder;
-	public final fun component1 ()Ljava/lang/String;
+	public static final fun builder ()Lorg/partiql/ast/builder/TableDefinitionAttributeBuilder;
+	public final fun component1 ()Lorg/partiql/ast/Identifier$Symbol;
 	public final fun component2 ()Lorg/partiql/ast/Type;
 	public final fun component3 ()Ljava/util/List;
-	public final fun copy (Ljava/lang/String;Lorg/partiql/ast/Type;Ljava/util/List;)Lorg/partiql/ast/TableDefinition$Column;
-	public static synthetic fun copy$default (Lorg/partiql/ast/TableDefinition$Column;Ljava/lang/String;Lorg/partiql/ast/Type;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/ast/TableDefinition$Column;
+	public final fun copy (Lorg/partiql/ast/Identifier$Symbol;Lorg/partiql/ast/Type;Ljava/util/List;)Lorg/partiql/ast/TableDefinition$Attribute;
+	public static synthetic fun copy$default (Lorg/partiql/ast/TableDefinition$Attribute;Lorg/partiql/ast/Identifier$Symbol;Lorg/partiql/ast/Type;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/ast/TableDefinition$Attribute;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getChildren ()Ljava/util/List;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
 
-public final class org/partiql/ast/TableDefinition$Column$Companion {
-	public final fun builder ()Lorg/partiql/ast/builder/TableDefinitionColumnBuilder;
-}
-
-public final class org/partiql/ast/TableDefinition$Column$Constraint : org/partiql/ast/AstNode {
-	public static final field Companion Lorg/partiql/ast/TableDefinition$Column$Constraint$Companion;
-	public final field body Lorg/partiql/ast/TableDefinition$Column$Constraint$Body;
-	public final field name Ljava/lang/String;
-	public fun <init> (Ljava/lang/String;Lorg/partiql/ast/TableDefinition$Column$Constraint$Body;)V
-	public fun accept (Lorg/partiql/ast/visitor/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public static final fun builder ()Lorg/partiql/ast/builder/TableDefinitionColumnConstraintBuilder;
-	public final fun component1 ()Ljava/lang/String;
-	public final fun component2 ()Lorg/partiql/ast/TableDefinition$Column$Constraint$Body;
-	public final fun copy (Ljava/lang/String;Lorg/partiql/ast/TableDefinition$Column$Constraint$Body;)Lorg/partiql/ast/TableDefinition$Column$Constraint;
-	public static synthetic fun copy$default (Lorg/partiql/ast/TableDefinition$Column$Constraint;Ljava/lang/String;Lorg/partiql/ast/TableDefinition$Column$Constraint$Body;ILjava/lang/Object;)Lorg/partiql/ast/TableDefinition$Column$Constraint;
-	public fun equals (Ljava/lang/Object;)Z
-	public fun getChildren ()Ljava/util/List;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public abstract class org/partiql/ast/TableDefinition$Column$Constraint$Body : org/partiql/ast/AstNode {
-	public fun accept (Lorg/partiql/ast/visitor/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-}
-
-public final class org/partiql/ast/TableDefinition$Column$Constraint$Body$Check : org/partiql/ast/TableDefinition$Column$Constraint$Body {
-	public static final field Companion Lorg/partiql/ast/TableDefinition$Column$Constraint$Body$Check$Companion;
-	public final field expr Lorg/partiql/ast/Expr;
-	public fun <init> (Lorg/partiql/ast/Expr;)V
-	public fun accept (Lorg/partiql/ast/visitor/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public static final fun builder ()Lorg/partiql/ast/builder/TableDefinitionColumnConstraintBodyCheckBuilder;
-	public final fun component1 ()Lorg/partiql/ast/Expr;
-	public final fun copy (Lorg/partiql/ast/Expr;)Lorg/partiql/ast/TableDefinition$Column$Constraint$Body$Check;
-	public static synthetic fun copy$default (Lorg/partiql/ast/TableDefinition$Column$Constraint$Body$Check;Lorg/partiql/ast/Expr;ILjava/lang/Object;)Lorg/partiql/ast/TableDefinition$Column$Constraint$Body$Check;
-	public fun equals (Ljava/lang/Object;)Z
-	public fun getChildren ()Ljava/util/List;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final class org/partiql/ast/TableDefinition$Column$Constraint$Body$Check$Companion {
-	public final fun builder ()Lorg/partiql/ast/builder/TableDefinitionColumnConstraintBodyCheckBuilder;
-}
-
-public final class org/partiql/ast/TableDefinition$Column$Constraint$Body$NotNull : org/partiql/ast/TableDefinition$Column$Constraint$Body {
-	public final field   C
-	public static final field Companion Lorg/partiql/ast/TableDefinition$Column$Constraint$Body$NotNull$Companion;
-	public fun <init> ()V
-	public fun <init> (C)V
-	public synthetic fun <init> (CILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public fun accept (Lorg/partiql/ast/visitor/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public static final fun builder ()Lorg/partiql/ast/builder/TableDefinitionColumnConstraintBodyNotNullBuilder;
-	public final fun component1 ()C
-	public final fun copy (C)Lorg/partiql/ast/TableDefinition$Column$Constraint$Body$NotNull;
-	public static synthetic fun copy$default (Lorg/partiql/ast/TableDefinition$Column$Constraint$Body$NotNull;CILjava/lang/Object;)Lorg/partiql/ast/TableDefinition$Column$Constraint$Body$NotNull;
-	public fun equals (Ljava/lang/Object;)Z
-	public fun getChildren ()Ljava/util/List;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final class org/partiql/ast/TableDefinition$Column$Constraint$Body$NotNull$Companion {
-	public final fun builder ()Lorg/partiql/ast/builder/TableDefinitionColumnConstraintBodyNotNullBuilder;
-}
-
-public final class org/partiql/ast/TableDefinition$Column$Constraint$Body$Nullable : org/partiql/ast/TableDefinition$Column$Constraint$Body {
-	public final field   C
-	public static final field Companion Lorg/partiql/ast/TableDefinition$Column$Constraint$Body$Nullable$Companion;
-	public fun <init> ()V
-	public fun <init> (C)V
-	public synthetic fun <init> (CILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public fun accept (Lorg/partiql/ast/visitor/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public static final fun builder ()Lorg/partiql/ast/builder/TableDefinitionColumnConstraintBodyNullableBuilder;
-	public final fun component1 ()C
-	public final fun copy (C)Lorg/partiql/ast/TableDefinition$Column$Constraint$Body$Nullable;
-	public static synthetic fun copy$default (Lorg/partiql/ast/TableDefinition$Column$Constraint$Body$Nullable;CILjava/lang/Object;)Lorg/partiql/ast/TableDefinition$Column$Constraint$Body$Nullable;
-	public fun equals (Ljava/lang/Object;)Z
-	public fun getChildren ()Ljava/util/List;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final class org/partiql/ast/TableDefinition$Column$Constraint$Body$Nullable$Companion {
-	public final fun builder ()Lorg/partiql/ast/builder/TableDefinitionColumnConstraintBodyNullableBuilder;
-}
-
-public final class org/partiql/ast/TableDefinition$Column$Constraint$Companion {
-	public final fun builder ()Lorg/partiql/ast/builder/TableDefinitionColumnConstraintBuilder;
+public final class org/partiql/ast/TableDefinition$Attribute$Companion {
+	public final fun builder ()Lorg/partiql/ast/builder/TableDefinitionAttributeBuilder;
 }
 
 public final class org/partiql/ast/TableDefinition$Companion {
@@ -3854,6 +3898,24 @@ public final class org/partiql/ast/Type$Varchar$Companion {
 
 public final class org/partiql/ast/builder/AstBuilder {
 	public fun <init> ()V
+	public final fun constraint (Ljava/lang/String;Lorg/partiql/ast/Constraint$Definition;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Constraint;
+	public static synthetic fun constraint$default (Lorg/partiql/ast/builder/AstBuilder;Ljava/lang/String;Lorg/partiql/ast/Constraint$Definition;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Constraint;
+	public final fun constraintDefinitionCheck (Lorg/partiql/ast/Expr;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Constraint$Definition$Check;
+	public static synthetic fun constraintDefinitionCheck$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Expr;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Constraint$Definition$Check;
+	public final fun constraintDefinitionNotNull (Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Constraint$Definition$NotNull;
+	public static synthetic fun constraintDefinitionNotNull$default (Lorg/partiql/ast/builder/AstBuilder;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Constraint$Definition$NotNull;
+	public final fun constraintDefinitionNullable (Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Constraint$Definition$Nullable;
+	public static synthetic fun constraintDefinitionNullable$default (Lorg/partiql/ast/builder/AstBuilder;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Constraint$Definition$Nullable;
+	public final fun constraintDefinitionUnique (Ljava/util/List;Ljava/lang/Boolean;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Constraint$Definition$Unique;
+	public static synthetic fun constraintDefinitionUnique$default (Lorg/partiql/ast/builder/AstBuilder;Ljava/util/List;Ljava/lang/Boolean;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Constraint$Definition$Unique;
+	public final fun ddlOpCreateIndex (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/Identifier;Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/DdlOp$CreateIndex;
+	public static synthetic fun ddlOpCreateIndex$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Identifier;Lorg/partiql/ast/Identifier;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/DdlOp$CreateIndex;
+	public final fun ddlOpCreateTable (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/TableDefinition;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/DdlOp$CreateTable;
+	public static synthetic fun ddlOpCreateTable$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Identifier;Lorg/partiql/ast/TableDefinition;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/DdlOp$CreateTable;
+	public final fun ddlOpDropIndex (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/Identifier;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/DdlOp$DropIndex;
+	public static synthetic fun ddlOpDropIndex$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Identifier;Lorg/partiql/ast/Identifier;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/DdlOp$DropIndex;
+	public final fun ddlOpDropTable (Lorg/partiql/ast/Identifier;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/DdlOp$DropTable;
+	public static synthetic fun ddlOpDropTable$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Identifier;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/DdlOp$DropTable;
 	public final fun exclude (Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Exclude;
 	public static synthetic fun exclude$default (Lorg/partiql/ast/builder/AstBuilder;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Exclude;
 	public final fun excludeItem (Lorg/partiql/ast/Expr$Var;Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Exclude$Item;
@@ -4046,14 +4108,8 @@ public final class org/partiql/ast/builder/AstBuilder {
 	public static synthetic fun setOp$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/SetOp$Type;Lorg/partiql/ast/SetQuantifier;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/SetOp;
 	public final fun sort (Lorg/partiql/ast/Expr;Lorg/partiql/ast/Sort$Dir;Lorg/partiql/ast/Sort$Nulls;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Sort;
 	public static synthetic fun sort$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Sort$Dir;Lorg/partiql/ast/Sort$Nulls;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Sort;
-	public final fun statementDDLCreateIndex (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/Identifier;Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Statement$DDL$CreateIndex;
-	public static synthetic fun statementDDLCreateIndex$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Identifier;Lorg/partiql/ast/Identifier;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Statement$DDL$CreateIndex;
-	public final fun statementDDLCreateTable (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/TableDefinition;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Statement$DDL$CreateTable;
-	public static synthetic fun statementDDLCreateTable$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Identifier;Lorg/partiql/ast/TableDefinition;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Statement$DDL$CreateTable;
-	public final fun statementDDLDropIndex (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/Identifier;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Statement$DDL$DropIndex;
-	public static synthetic fun statementDDLDropIndex$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Identifier;Lorg/partiql/ast/Identifier;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Statement$DDL$DropIndex;
-	public final fun statementDDLDropTable (Lorg/partiql/ast/Identifier;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Statement$DDL$DropTable;
-	public static synthetic fun statementDDLDropTable$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Identifier;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Statement$DDL$DropTable;
+	public final fun statementDDL (Lorg/partiql/ast/DdlOp;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Statement$DDL;
+	public static synthetic fun statementDDL$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/DdlOp;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Statement$DDL;
 	public final fun statementDMLBatchLegacy (Ljava/util/List;Lorg/partiql/ast/From;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Returning;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Statement$DML$BatchLegacy;
 	public static synthetic fun statementDMLBatchLegacy$default (Lorg/partiql/ast/builder/AstBuilder;Ljava/util/List;Lorg/partiql/ast/From;Lorg/partiql/ast/Expr;Lorg/partiql/ast/Returning;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Statement$DML$BatchLegacy;
 	public final fun statementDMLBatchLegacyOpDelete (Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Statement$DML$BatchLegacy$Op$Delete;
@@ -4092,18 +4148,10 @@ public final class org/partiql/ast/builder/AstBuilder {
 	public static synthetic fun statementExplainTargetDomain$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Statement;Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Statement$Explain$Target$Domain;
 	public final fun statementQuery (Lorg/partiql/ast/Expr;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Statement$Query;
 	public static synthetic fun statementQuery$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Expr;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Statement$Query;
-	public final fun tableDefinition (Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/TableDefinition;
-	public static synthetic fun tableDefinition$default (Lorg/partiql/ast/builder/AstBuilder;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/TableDefinition;
-	public final fun tableDefinitionColumn (Ljava/lang/String;Lorg/partiql/ast/Type;Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/TableDefinition$Column;
-	public static synthetic fun tableDefinitionColumn$default (Lorg/partiql/ast/builder/AstBuilder;Ljava/lang/String;Lorg/partiql/ast/Type;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/TableDefinition$Column;
-	public final fun tableDefinitionColumnConstraint (Ljava/lang/String;Lorg/partiql/ast/TableDefinition$Column$Constraint$Body;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/TableDefinition$Column$Constraint;
-	public static synthetic fun tableDefinitionColumnConstraint$default (Lorg/partiql/ast/builder/AstBuilder;Ljava/lang/String;Lorg/partiql/ast/TableDefinition$Column$Constraint$Body;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/TableDefinition$Column$Constraint;
-	public final fun tableDefinitionColumnConstraintBodyCheck (Lorg/partiql/ast/Expr;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/TableDefinition$Column$Constraint$Body$Check;
-	public static synthetic fun tableDefinitionColumnConstraintBodyCheck$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Expr;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/TableDefinition$Column$Constraint$Body$Check;
-	public final fun tableDefinitionColumnConstraintBodyNotNull (Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/TableDefinition$Column$Constraint$Body$NotNull;
-	public static synthetic fun tableDefinitionColumnConstraintBodyNotNull$default (Lorg/partiql/ast/builder/AstBuilder;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/TableDefinition$Column$Constraint$Body$NotNull;
-	public final fun tableDefinitionColumnConstraintBodyNullable (Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/TableDefinition$Column$Constraint$Body$Nullable;
-	public static synthetic fun tableDefinitionColumnConstraintBodyNullable$default (Lorg/partiql/ast/builder/AstBuilder;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/TableDefinition$Column$Constraint$Body$Nullable;
+	public final fun tableDefinition (Ljava/util/List;Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/TableDefinition;
+	public static synthetic fun tableDefinition$default (Lorg/partiql/ast/builder/AstBuilder;Ljava/util/List;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/TableDefinition;
+	public final fun tableDefinitionAttribute (Lorg/partiql/ast/Identifier$Symbol;Lorg/partiql/ast/Type;Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/TableDefinition$Attribute;
+	public static synthetic fun tableDefinitionAttribute$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Identifier$Symbol;Lorg/partiql/ast/Type;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/TableDefinition$Attribute;
 	public final fun typeAny (Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Type$Any;
 	public static synthetic fun typeAny$default (Lorg/partiql/ast/builder/AstBuilder;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Type$Any;
 	public final fun typeBag (Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Type$Bag;
@@ -4182,6 +4230,104 @@ public final class org/partiql/ast/builder/AstBuilder {
 
 public final class org/partiql/ast/builder/AstBuilderKt {
 	public static final fun ast (Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/AstNode;
+}
+
+public final class org/partiql/ast/builder/ConstraintBuilder {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Lorg/partiql/ast/Constraint$Definition;)V
+	public synthetic fun <init> (Ljava/lang/String;Lorg/partiql/ast/Constraint$Definition;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/ast/Constraint;
+	public final fun definition (Lorg/partiql/ast/Constraint$Definition;)Lorg/partiql/ast/builder/ConstraintBuilder;
+	public final fun getDefinition ()Lorg/partiql/ast/Constraint$Definition;
+	public final fun getName ()Ljava/lang/String;
+	public final fun name (Ljava/lang/String;)Lorg/partiql/ast/builder/ConstraintBuilder;
+	public final fun setDefinition (Lorg/partiql/ast/Constraint$Definition;)V
+	public final fun setName (Ljava/lang/String;)V
+}
+
+public final class org/partiql/ast/builder/ConstraintDefinitionCheckBuilder {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/ast/Expr;)V
+	public synthetic fun <init> (Lorg/partiql/ast/Expr;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/ast/Constraint$Definition$Check;
+	public final fun expr (Lorg/partiql/ast/Expr;)Lorg/partiql/ast/builder/ConstraintDefinitionCheckBuilder;
+	public final fun getExpr ()Lorg/partiql/ast/Expr;
+	public final fun setExpr (Lorg/partiql/ast/Expr;)V
+}
+
+public final class org/partiql/ast/builder/ConstraintDefinitionNotNullBuilder {
+	public fun <init> ()V
+	public final fun build ()Lorg/partiql/ast/Constraint$Definition$NotNull;
+}
+
+public final class org/partiql/ast/builder/ConstraintDefinitionNullableBuilder {
+	public fun <init> ()V
+	public final fun build ()Lorg/partiql/ast/Constraint$Definition$Nullable;
+}
+
+public final class org/partiql/ast/builder/ConstraintDefinitionUniqueBuilder {
+	public fun <init> ()V
+	public fun <init> (Ljava/util/List;Ljava/lang/Boolean;)V
+	public synthetic fun <init> (Ljava/util/List;Ljava/lang/Boolean;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun attributes (Ljava/util/List;)Lorg/partiql/ast/builder/ConstraintDefinitionUniqueBuilder;
+	public final fun build ()Lorg/partiql/ast/Constraint$Definition$Unique;
+	public final fun getAttributes ()Ljava/util/List;
+	public final fun isPrimaryKey ()Ljava/lang/Boolean;
+	public final fun isPrimaryKey (Ljava/lang/Boolean;)Lorg/partiql/ast/builder/ConstraintDefinitionUniqueBuilder;
+	public final fun setAttributes (Ljava/util/List;)V
+	public final fun setPrimaryKey (Ljava/lang/Boolean;)V
+}
+
+public final class org/partiql/ast/builder/DdlOpCreateIndexBuilder {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/Identifier;Ljava/util/List;)V
+	public synthetic fun <init> (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/Identifier;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/ast/DdlOp$CreateIndex;
+	public final fun fields (Ljava/util/List;)Lorg/partiql/ast/builder/DdlOpCreateIndexBuilder;
+	public final fun getFields ()Ljava/util/List;
+	public final fun getIndex ()Lorg/partiql/ast/Identifier;
+	public final fun getTable ()Lorg/partiql/ast/Identifier;
+	public final fun index (Lorg/partiql/ast/Identifier;)Lorg/partiql/ast/builder/DdlOpCreateIndexBuilder;
+	public final fun setFields (Ljava/util/List;)V
+	public final fun setIndex (Lorg/partiql/ast/Identifier;)V
+	public final fun setTable (Lorg/partiql/ast/Identifier;)V
+	public final fun table (Lorg/partiql/ast/Identifier;)Lorg/partiql/ast/builder/DdlOpCreateIndexBuilder;
+}
+
+public final class org/partiql/ast/builder/DdlOpCreateTableBuilder {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/TableDefinition;)V
+	public synthetic fun <init> (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/TableDefinition;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/ast/DdlOp$CreateTable;
+	public final fun definition (Lorg/partiql/ast/TableDefinition;)Lorg/partiql/ast/builder/DdlOpCreateTableBuilder;
+	public final fun getDefinition ()Lorg/partiql/ast/TableDefinition;
+	public final fun getName ()Lorg/partiql/ast/Identifier;
+	public final fun name (Lorg/partiql/ast/Identifier;)Lorg/partiql/ast/builder/DdlOpCreateTableBuilder;
+	public final fun setDefinition (Lorg/partiql/ast/TableDefinition;)V
+	public final fun setName (Lorg/partiql/ast/Identifier;)V
+}
+
+public final class org/partiql/ast/builder/DdlOpDropIndexBuilder {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/Identifier;)V
+	public synthetic fun <init> (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/Identifier;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/ast/DdlOp$DropIndex;
+	public final fun getIndex ()Lorg/partiql/ast/Identifier;
+	public final fun getTable ()Lorg/partiql/ast/Identifier;
+	public final fun index (Lorg/partiql/ast/Identifier;)Lorg/partiql/ast/builder/DdlOpDropIndexBuilder;
+	public final fun setIndex (Lorg/partiql/ast/Identifier;)V
+	public final fun setTable (Lorg/partiql/ast/Identifier;)V
+	public final fun table (Lorg/partiql/ast/Identifier;)Lorg/partiql/ast/builder/DdlOpDropIndexBuilder;
+}
+
+public final class org/partiql/ast/builder/DdlOpDropTableBuilder {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/ast/Identifier;)V
+	public synthetic fun <init> (Lorg/partiql/ast/Identifier;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/ast/DdlOp$DropTable;
+	public final fun getTable ()Lorg/partiql/ast/Identifier;
+	public final fun setTable (Lorg/partiql/ast/Identifier;)V
+	public final fun table (Lorg/partiql/ast/Identifier;)Lorg/partiql/ast/builder/DdlOpDropTableBuilder;
 }
 
 public final class org/partiql/ast/builder/ExcludeBuilder {
@@ -5391,56 +5537,14 @@ public final class org/partiql/ast/builder/SortBuilder {
 	public final fun setNulls (Lorg/partiql/ast/Sort$Nulls;)V
 }
 
-public final class org/partiql/ast/builder/StatementDdlCreateIndexBuilder {
+public final class org/partiql/ast/builder/StatementDdlBuilder {
 	public fun <init> ()V
-	public fun <init> (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/Identifier;Ljava/util/List;)V
-	public synthetic fun <init> (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/Identifier;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun build ()Lorg/partiql/ast/Statement$DDL$CreateIndex;
-	public final fun fields (Ljava/util/List;)Lorg/partiql/ast/builder/StatementDdlCreateIndexBuilder;
-	public final fun getFields ()Ljava/util/List;
-	public final fun getIndex ()Lorg/partiql/ast/Identifier;
-	public final fun getTable ()Lorg/partiql/ast/Identifier;
-	public final fun index (Lorg/partiql/ast/Identifier;)Lorg/partiql/ast/builder/StatementDdlCreateIndexBuilder;
-	public final fun setFields (Ljava/util/List;)V
-	public final fun setIndex (Lorg/partiql/ast/Identifier;)V
-	public final fun setTable (Lorg/partiql/ast/Identifier;)V
-	public final fun table (Lorg/partiql/ast/Identifier;)Lorg/partiql/ast/builder/StatementDdlCreateIndexBuilder;
-}
-
-public final class org/partiql/ast/builder/StatementDdlCreateTableBuilder {
-	public fun <init> ()V
-	public fun <init> (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/TableDefinition;)V
-	public synthetic fun <init> (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/TableDefinition;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun build ()Lorg/partiql/ast/Statement$DDL$CreateTable;
-	public final fun definition (Lorg/partiql/ast/TableDefinition;)Lorg/partiql/ast/builder/StatementDdlCreateTableBuilder;
-	public final fun getDefinition ()Lorg/partiql/ast/TableDefinition;
-	public final fun getName ()Lorg/partiql/ast/Identifier;
-	public final fun name (Lorg/partiql/ast/Identifier;)Lorg/partiql/ast/builder/StatementDdlCreateTableBuilder;
-	public final fun setDefinition (Lorg/partiql/ast/TableDefinition;)V
-	public final fun setName (Lorg/partiql/ast/Identifier;)V
-}
-
-public final class org/partiql/ast/builder/StatementDdlDropIndexBuilder {
-	public fun <init> ()V
-	public fun <init> (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/Identifier;)V
-	public synthetic fun <init> (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/Identifier;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun build ()Lorg/partiql/ast/Statement$DDL$DropIndex;
-	public final fun getIndex ()Lorg/partiql/ast/Identifier;
-	public final fun getTable ()Lorg/partiql/ast/Identifier;
-	public final fun index (Lorg/partiql/ast/Identifier;)Lorg/partiql/ast/builder/StatementDdlDropIndexBuilder;
-	public final fun setIndex (Lorg/partiql/ast/Identifier;)V
-	public final fun setTable (Lorg/partiql/ast/Identifier;)V
-	public final fun table (Lorg/partiql/ast/Identifier;)Lorg/partiql/ast/builder/StatementDdlDropIndexBuilder;
-}
-
-public final class org/partiql/ast/builder/StatementDdlDropTableBuilder {
-	public fun <init> ()V
-	public fun <init> (Lorg/partiql/ast/Identifier;)V
-	public synthetic fun <init> (Lorg/partiql/ast/Identifier;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun build ()Lorg/partiql/ast/Statement$DDL$DropTable;
-	public final fun getTable ()Lorg/partiql/ast/Identifier;
-	public final fun setTable (Lorg/partiql/ast/Identifier;)V
-	public final fun table (Lorg/partiql/ast/Identifier;)Lorg/partiql/ast/builder/StatementDdlDropTableBuilder;
+	public fun <init> (Lorg/partiql/ast/DdlOp;)V
+	public synthetic fun <init> (Lorg/partiql/ast/DdlOp;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/ast/Statement$DDL;
+	public final fun getOp ()Lorg/partiql/ast/DdlOp;
+	public final fun op (Lorg/partiql/ast/DdlOp;)Lorg/partiql/ast/builder/StatementDdlBuilder;
+	public final fun setOp (Lorg/partiql/ast/DdlOp;)V
 }
 
 public final class org/partiql/ast/builder/StatementDmlBatchLegacyBuilder {
@@ -5715,63 +5819,33 @@ public final class org/partiql/ast/builder/StatementQueryBuilder {
 	public final fun setExpr (Lorg/partiql/ast/Expr;)V
 }
 
+public final class org/partiql/ast/builder/TableDefinitionAttributeBuilder {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/ast/Identifier$Symbol;Lorg/partiql/ast/Type;Ljava/util/List;)V
+	public synthetic fun <init> (Lorg/partiql/ast/Identifier$Symbol;Lorg/partiql/ast/Type;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/ast/TableDefinition$Attribute;
+	public final fun constraints (Ljava/util/List;)Lorg/partiql/ast/builder/TableDefinitionAttributeBuilder;
+	public final fun getConstraints ()Ljava/util/List;
+	public final fun getName ()Lorg/partiql/ast/Identifier$Symbol;
+	public final fun getType ()Lorg/partiql/ast/Type;
+	public final fun name (Lorg/partiql/ast/Identifier$Symbol;)Lorg/partiql/ast/builder/TableDefinitionAttributeBuilder;
+	public final fun setConstraints (Ljava/util/List;)V
+	public final fun setName (Lorg/partiql/ast/Identifier$Symbol;)V
+	public final fun setType (Lorg/partiql/ast/Type;)V
+	public final fun type (Lorg/partiql/ast/Type;)Lorg/partiql/ast/builder/TableDefinitionAttributeBuilder;
+}
+
 public final class org/partiql/ast/builder/TableDefinitionBuilder {
 	public fun <init> ()V
-	public fun <init> (Ljava/util/List;)V
-	public synthetic fun <init> (Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/util/List;Ljava/util/List;)V
+	public synthetic fun <init> (Ljava/util/List;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun attributes (Ljava/util/List;)Lorg/partiql/ast/builder/TableDefinitionBuilder;
 	public final fun build ()Lorg/partiql/ast/TableDefinition;
-	public final fun columns (Ljava/util/List;)Lorg/partiql/ast/builder/TableDefinitionBuilder;
-	public final fun getColumns ()Ljava/util/List;
-	public final fun setColumns (Ljava/util/List;)V
-}
-
-public final class org/partiql/ast/builder/TableDefinitionColumnBuilder {
-	public fun <init> ()V
-	public fun <init> (Ljava/lang/String;Lorg/partiql/ast/Type;Ljava/util/List;)V
-	public synthetic fun <init> (Ljava/lang/String;Lorg/partiql/ast/Type;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun build ()Lorg/partiql/ast/TableDefinition$Column;
-	public final fun constraints (Ljava/util/List;)Lorg/partiql/ast/builder/TableDefinitionColumnBuilder;
+	public final fun constraints (Ljava/util/List;)Lorg/partiql/ast/builder/TableDefinitionBuilder;
+	public final fun getAttributes ()Ljava/util/List;
 	public final fun getConstraints ()Ljava/util/List;
-	public final fun getName ()Ljava/lang/String;
-	public final fun getType ()Lorg/partiql/ast/Type;
-	public final fun name (Ljava/lang/String;)Lorg/partiql/ast/builder/TableDefinitionColumnBuilder;
+	public final fun setAttributes (Ljava/util/List;)V
 	public final fun setConstraints (Ljava/util/List;)V
-	public final fun setName (Ljava/lang/String;)V
-	public final fun setType (Lorg/partiql/ast/Type;)V
-	public final fun type (Lorg/partiql/ast/Type;)Lorg/partiql/ast/builder/TableDefinitionColumnBuilder;
-}
-
-public final class org/partiql/ast/builder/TableDefinitionColumnConstraintBodyCheckBuilder {
-	public fun <init> ()V
-	public fun <init> (Lorg/partiql/ast/Expr;)V
-	public synthetic fun <init> (Lorg/partiql/ast/Expr;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun build ()Lorg/partiql/ast/TableDefinition$Column$Constraint$Body$Check;
-	public final fun expr (Lorg/partiql/ast/Expr;)Lorg/partiql/ast/builder/TableDefinitionColumnConstraintBodyCheckBuilder;
-	public final fun getExpr ()Lorg/partiql/ast/Expr;
-	public final fun setExpr (Lorg/partiql/ast/Expr;)V
-}
-
-public final class org/partiql/ast/builder/TableDefinitionColumnConstraintBodyNotNullBuilder {
-	public fun <init> ()V
-	public final fun build ()Lorg/partiql/ast/TableDefinition$Column$Constraint$Body$NotNull;
-}
-
-public final class org/partiql/ast/builder/TableDefinitionColumnConstraintBodyNullableBuilder {
-	public fun <init> ()V
-	public final fun build ()Lorg/partiql/ast/TableDefinition$Column$Constraint$Body$Nullable;
-}
-
-public final class org/partiql/ast/builder/TableDefinitionColumnConstraintBuilder {
-	public fun <init> ()V
-	public fun <init> (Ljava/lang/String;Lorg/partiql/ast/TableDefinition$Column$Constraint$Body;)V
-	public synthetic fun <init> (Ljava/lang/String;Lorg/partiql/ast/TableDefinition$Column$Constraint$Body;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun body (Lorg/partiql/ast/TableDefinition$Column$Constraint$Body;)Lorg/partiql/ast/builder/TableDefinitionColumnConstraintBuilder;
-	public final fun build ()Lorg/partiql/ast/TableDefinition$Column$Constraint;
-	public final fun getBody ()Lorg/partiql/ast/TableDefinition$Column$Constraint$Body;
-	public final fun getName ()Ljava/lang/String;
-	public final fun name (Ljava/lang/String;)Lorg/partiql/ast/builder/TableDefinitionColumnConstraintBuilder;
-	public final fun setBody (Lorg/partiql/ast/TableDefinition$Column$Constraint$Body;)V
-	public final fun setName (Ljava/lang/String;)V
 }
 
 public final class org/partiql/ast/builder/TypeAnyBuilder {
@@ -6397,6 +6471,24 @@ public abstract class org/partiql/ast/util/AstRewriter : org/partiql/ast/visitor
 	public fun <init> ()V
 	public synthetic fun defaultReturn (Lorg/partiql/ast/AstNode;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun defaultReturn (Lorg/partiql/ast/AstNode;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitConstraint (Lorg/partiql/ast/Constraint;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitConstraint (Lorg/partiql/ast/Constraint;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitConstraintDefinitionCheck (Lorg/partiql/ast/Constraint$Definition$Check;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitConstraintDefinitionCheck (Lorg/partiql/ast/Constraint$Definition$Check;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitConstraintDefinitionNotNull (Lorg/partiql/ast/Constraint$Definition$NotNull;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitConstraintDefinitionNotNull (Lorg/partiql/ast/Constraint$Definition$NotNull;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitConstraintDefinitionNullable (Lorg/partiql/ast/Constraint$Definition$Nullable;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitConstraintDefinitionNullable (Lorg/partiql/ast/Constraint$Definition$Nullable;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitConstraintDefinitionUnique (Lorg/partiql/ast/Constraint$Definition$Unique;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitConstraintDefinitionUnique (Lorg/partiql/ast/Constraint$Definition$Unique;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitDdlOpCreateIndex (Lorg/partiql/ast/DdlOp$CreateIndex;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitDdlOpCreateIndex (Lorg/partiql/ast/DdlOp$CreateIndex;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitDdlOpCreateTable (Lorg/partiql/ast/DdlOp$CreateTable;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitDdlOpCreateTable (Lorg/partiql/ast/DdlOp$CreateTable;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitDdlOpDropIndex (Lorg/partiql/ast/DdlOp$DropIndex;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitDdlOpDropIndex (Lorg/partiql/ast/DdlOp$DropIndex;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitDdlOpDropTable (Lorg/partiql/ast/DdlOp$DropTable;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitDdlOpDropTable (Lorg/partiql/ast/DdlOp$DropTable;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitExclude (Lorg/partiql/ast/Exclude;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExclude (Lorg/partiql/ast/Exclude;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitExcludeItem (Lorg/partiql/ast/Exclude$Item;Ljava/lang/Object;)Ljava/lang/Object;
@@ -6589,14 +6681,8 @@ public abstract class org/partiql/ast/util/AstRewriter : org/partiql/ast/visitor
 	public fun visitSetOp (Lorg/partiql/ast/SetOp;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitSort (Lorg/partiql/ast/Sort;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitSort (Lorg/partiql/ast/Sort;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
-	public synthetic fun visitStatementDDLCreateIndex (Lorg/partiql/ast/Statement$DDL$CreateIndex;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitStatementDDLCreateIndex (Lorg/partiql/ast/Statement$DDL$CreateIndex;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
-	public synthetic fun visitStatementDDLCreateTable (Lorg/partiql/ast/Statement$DDL$CreateTable;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitStatementDDLCreateTable (Lorg/partiql/ast/Statement$DDL$CreateTable;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
-	public synthetic fun visitStatementDDLDropIndex (Lorg/partiql/ast/Statement$DDL$DropIndex;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitStatementDDLDropIndex (Lorg/partiql/ast/Statement$DDL$DropIndex;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
-	public synthetic fun visitStatementDDLDropTable (Lorg/partiql/ast/Statement$DDL$DropTable;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitStatementDDLDropTable (Lorg/partiql/ast/Statement$DDL$DropTable;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitStatementDDL (Lorg/partiql/ast/Statement$DDL;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitStatementDDL (Lorg/partiql/ast/Statement$DDL;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitStatementDMLBatchLegacy (Lorg/partiql/ast/Statement$DML$BatchLegacy;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitStatementDMLBatchLegacy (Lorg/partiql/ast/Statement$DML$BatchLegacy;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitStatementDMLBatchLegacyOpDelete (Lorg/partiql/ast/Statement$DML$BatchLegacy$Op$Delete;Ljava/lang/Object;)Ljava/lang/Object;
@@ -6637,16 +6723,8 @@ public abstract class org/partiql/ast/util/AstRewriter : org/partiql/ast/visitor
 	public fun visitStatementQuery (Lorg/partiql/ast/Statement$Query;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitTableDefinition (Lorg/partiql/ast/TableDefinition;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitTableDefinition (Lorg/partiql/ast/TableDefinition;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
-	public synthetic fun visitTableDefinitionColumn (Lorg/partiql/ast/TableDefinition$Column;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitTableDefinitionColumn (Lorg/partiql/ast/TableDefinition$Column;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
-	public synthetic fun visitTableDefinitionColumnConstraint (Lorg/partiql/ast/TableDefinition$Column$Constraint;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitTableDefinitionColumnConstraint (Lorg/partiql/ast/TableDefinition$Column$Constraint;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
-	public synthetic fun visitTableDefinitionColumnConstraintBodyCheck (Lorg/partiql/ast/TableDefinition$Column$Constraint$Body$Check;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitTableDefinitionColumnConstraintBodyCheck (Lorg/partiql/ast/TableDefinition$Column$Constraint$Body$Check;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
-	public synthetic fun visitTableDefinitionColumnConstraintBodyNotNull (Lorg/partiql/ast/TableDefinition$Column$Constraint$Body$NotNull;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitTableDefinitionColumnConstraintBodyNotNull (Lorg/partiql/ast/TableDefinition$Column$Constraint$Body$NotNull;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
-	public synthetic fun visitTableDefinitionColumnConstraintBodyNullable (Lorg/partiql/ast/TableDefinition$Column$Constraint$Body$Nullable;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitTableDefinitionColumnConstraintBodyNullable (Lorg/partiql/ast/TableDefinition$Column$Constraint$Body$Nullable;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitTableDefinitionAttribute (Lorg/partiql/ast/TableDefinition$Attribute;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitTableDefinitionAttribute (Lorg/partiql/ast/TableDefinition$Attribute;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitTypeAny (Lorg/partiql/ast/Type$Any;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitTypeAny (Lorg/partiql/ast/Type$Any;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitTypeBag (Lorg/partiql/ast/Type$Bag;Ljava/lang/Object;)Ljava/lang/Object;
@@ -6728,6 +6806,17 @@ public abstract class org/partiql/ast/visitor/AstBaseVisitor : org/partiql/ast/v
 	public abstract fun defaultReturn (Lorg/partiql/ast/AstNode;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun defaultVisit (Lorg/partiql/ast/AstNode;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visit (Lorg/partiql/ast/AstNode;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitConstraint (Lorg/partiql/ast/Constraint;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitConstraintDefinition (Lorg/partiql/ast/Constraint$Definition;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitConstraintDefinitionCheck (Lorg/partiql/ast/Constraint$Definition$Check;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitConstraintDefinitionNotNull (Lorg/partiql/ast/Constraint$Definition$NotNull;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitConstraintDefinitionNullable (Lorg/partiql/ast/Constraint$Definition$Nullable;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitConstraintDefinitionUnique (Lorg/partiql/ast/Constraint$Definition$Unique;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitDdlOp (Lorg/partiql/ast/DdlOp;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitDdlOpCreateIndex (Lorg/partiql/ast/DdlOp$CreateIndex;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitDdlOpCreateTable (Lorg/partiql/ast/DdlOp$CreateTable;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitDdlOpDropIndex (Lorg/partiql/ast/DdlOp$DropIndex;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitDdlOpDropTable (Lorg/partiql/ast/DdlOp$DropTable;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExclude (Lorg/partiql/ast/Exclude;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExcludeItem (Lorg/partiql/ast/Exclude$Item;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitExcludeStep (Lorg/partiql/ast/Exclude$Step;Ljava/lang/Object;)Ljava/lang/Object;
@@ -6840,10 +6929,6 @@ public abstract class org/partiql/ast/visitor/AstBaseVisitor : org/partiql/ast/v
 	public fun visitSort (Lorg/partiql/ast/Sort;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitStatement (Lorg/partiql/ast/Statement;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitStatementDDL (Lorg/partiql/ast/Statement$DDL;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitStatementDDLCreateIndex (Lorg/partiql/ast/Statement$DDL$CreateIndex;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitStatementDDLCreateTable (Lorg/partiql/ast/Statement$DDL$CreateTable;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitStatementDDLDropIndex (Lorg/partiql/ast/Statement$DDL$DropIndex;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitStatementDDLDropTable (Lorg/partiql/ast/Statement$DDL$DropTable;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitStatementDML (Lorg/partiql/ast/Statement$DML;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitStatementDMLBatchLegacy (Lorg/partiql/ast/Statement$DML$BatchLegacy;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitStatementDMLBatchLegacyOp (Lorg/partiql/ast/Statement$DML$BatchLegacy$Op;Ljava/lang/Object;)Ljava/lang/Object;
@@ -6867,12 +6952,7 @@ public abstract class org/partiql/ast/visitor/AstBaseVisitor : org/partiql/ast/v
 	public fun visitStatementExplainTargetDomain (Lorg/partiql/ast/Statement$Explain$Target$Domain;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitStatementQuery (Lorg/partiql/ast/Statement$Query;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitTableDefinition (Lorg/partiql/ast/TableDefinition;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitTableDefinitionColumn (Lorg/partiql/ast/TableDefinition$Column;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitTableDefinitionColumnConstraint (Lorg/partiql/ast/TableDefinition$Column$Constraint;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitTableDefinitionColumnConstraintBody (Lorg/partiql/ast/TableDefinition$Column$Constraint$Body;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitTableDefinitionColumnConstraintBodyCheck (Lorg/partiql/ast/TableDefinition$Column$Constraint$Body$Check;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitTableDefinitionColumnConstraintBodyNotNull (Lorg/partiql/ast/TableDefinition$Column$Constraint$Body$NotNull;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitTableDefinitionColumnConstraintBodyNullable (Lorg/partiql/ast/TableDefinition$Column$Constraint$Body$Nullable;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitTableDefinitionAttribute (Lorg/partiql/ast/TableDefinition$Attribute;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitType (Lorg/partiql/ast/Type;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitTypeAny (Lorg/partiql/ast/Type$Any;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitTypeBag (Lorg/partiql/ast/Type$Bag;Ljava/lang/Object;)Ljava/lang/Object;
@@ -6915,6 +6995,17 @@ public abstract class org/partiql/ast/visitor/AstBaseVisitor : org/partiql/ast/v
 
 public abstract interface class org/partiql/ast/visitor/AstVisitor {
 	public abstract fun visit (Lorg/partiql/ast/AstNode;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitConstraint (Lorg/partiql/ast/Constraint;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitConstraintDefinition (Lorg/partiql/ast/Constraint$Definition;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitConstraintDefinitionCheck (Lorg/partiql/ast/Constraint$Definition$Check;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitConstraintDefinitionNotNull (Lorg/partiql/ast/Constraint$Definition$NotNull;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitConstraintDefinitionNullable (Lorg/partiql/ast/Constraint$Definition$Nullable;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitConstraintDefinitionUnique (Lorg/partiql/ast/Constraint$Definition$Unique;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitDdlOp (Lorg/partiql/ast/DdlOp;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitDdlOpCreateIndex (Lorg/partiql/ast/DdlOp$CreateIndex;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitDdlOpCreateTable (Lorg/partiql/ast/DdlOp$CreateTable;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitDdlOpDropIndex (Lorg/partiql/ast/DdlOp$DropIndex;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitDdlOpDropTable (Lorg/partiql/ast/DdlOp$DropTable;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExclude (Lorg/partiql/ast/Exclude;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExcludeItem (Lorg/partiql/ast/Exclude$Item;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitExcludeStep (Lorg/partiql/ast/Exclude$Step;Ljava/lang/Object;)Ljava/lang/Object;
@@ -7027,10 +7118,6 @@ public abstract interface class org/partiql/ast/visitor/AstVisitor {
 	public abstract fun visitSort (Lorg/partiql/ast/Sort;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitStatement (Lorg/partiql/ast/Statement;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitStatementDDL (Lorg/partiql/ast/Statement$DDL;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitStatementDDLCreateIndex (Lorg/partiql/ast/Statement$DDL$CreateIndex;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitStatementDDLCreateTable (Lorg/partiql/ast/Statement$DDL$CreateTable;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitStatementDDLDropIndex (Lorg/partiql/ast/Statement$DDL$DropIndex;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitStatementDDLDropTable (Lorg/partiql/ast/Statement$DDL$DropTable;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitStatementDML (Lorg/partiql/ast/Statement$DML;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitStatementDMLBatchLegacy (Lorg/partiql/ast/Statement$DML$BatchLegacy;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitStatementDMLBatchLegacyOp (Lorg/partiql/ast/Statement$DML$BatchLegacy$Op;Ljava/lang/Object;)Ljava/lang/Object;
@@ -7054,12 +7141,7 @@ public abstract interface class org/partiql/ast/visitor/AstVisitor {
 	public abstract fun visitStatementExplainTargetDomain (Lorg/partiql/ast/Statement$Explain$Target$Domain;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitStatementQuery (Lorg/partiql/ast/Statement$Query;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitTableDefinition (Lorg/partiql/ast/TableDefinition;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitTableDefinitionColumn (Lorg/partiql/ast/TableDefinition$Column;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitTableDefinitionColumnConstraint (Lorg/partiql/ast/TableDefinition$Column$Constraint;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitTableDefinitionColumnConstraintBody (Lorg/partiql/ast/TableDefinition$Column$Constraint$Body;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitTableDefinitionColumnConstraintBodyCheck (Lorg/partiql/ast/TableDefinition$Column$Constraint$Body$Check;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitTableDefinitionColumnConstraintBodyNotNull (Lorg/partiql/ast/TableDefinition$Column$Constraint$Body$NotNull;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitTableDefinitionColumnConstraintBodyNullable (Lorg/partiql/ast/TableDefinition$Column$Constraint$Body$Nullable;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitTableDefinitionAttribute (Lorg/partiql/ast/TableDefinition$Attribute;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitType (Lorg/partiql/ast/Type;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitTypeAny (Lorg/partiql/ast/Type$Any;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitTypeBag (Lorg/partiql/ast/Type$Bag;Ljava/lang/Object;)Ljava/lang/Object;
