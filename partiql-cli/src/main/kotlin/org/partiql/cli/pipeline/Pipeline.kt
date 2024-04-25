@@ -51,6 +51,10 @@ internal class Pipeline private constructor(
             connectors = connectors,
             mode = mode
         )
+
+        fun refresh(connectors: Map<String, Connector>) = this.copy(
+            connectors = connectors
+        )
     }
 
     /**

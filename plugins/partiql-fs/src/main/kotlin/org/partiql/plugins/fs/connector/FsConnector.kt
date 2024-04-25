@@ -18,6 +18,7 @@ import com.amazon.ionelement.api.StringElement
 import com.amazon.ionelement.api.StructElement
 import org.partiql.plugins.fs.FsDB
 import org.partiql.plugins.fs.getAngry
+import org.partiql.plugins.fs.index.FsIndex
 import org.partiql.spi.connector.Connector
 import org.partiql.spi.connector.ConnectorBindings
 import org.partiql.spi.connector.ConnectorSession
@@ -25,11 +26,12 @@ import org.partiql.spi.connector.sql.SqlConnector
 import org.partiql.spi.connector.sql.SqlMetadata
 import java.nio.file.Paths
 import kotlin.let
+import kotlin.properties.Delegates
 
 /**
  * Fs connector implementation wraps a database.
  */
-internal class FsConnector(private val database: FsDB) : SqlConnector() {
+internal class FsConnector(private var database: FsDB) : SqlConnector() {
 
     private val bindings = FsBindings(database.index)
 
@@ -42,6 +44,9 @@ internal class FsConnector(private val database: FsDB) : SqlConnector() {
      * Access to the <obj>.ion files.
      */
     override fun getBindings(): ConnectorBindings = bindings
+
+    // we need a way to reload the connector upon write op
+    // observer?
 
     /**
      * Load a FsDB from the given root.

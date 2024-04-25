@@ -2,6 +2,7 @@ package org.partiql.eval.internal
 
 import org.partiql.eval.PartiQLEngine
 import org.partiql.eval.internal.operator.Operator
+import org.partiql.eval.internal.operator.ddl.DdlCreate
 import org.partiql.eval.internal.operator.rel.RelAggregate
 import org.partiql.eval.internal.operator.rel.RelDistinct
 import org.partiql.eval.internal.operator.rel.RelExclude
@@ -41,6 +42,7 @@ import org.partiql.eval.internal.operator.rex.ExprTupleUnion
 import org.partiql.eval.internal.operator.rex.ExprVarLocal
 import org.partiql.eval.internal.operator.rex.ExprVarOuter
 import org.partiql.plan.Catalog
+import org.partiql.plan.DdlOp
 import org.partiql.plan.PartiQLPlan
 import org.partiql.plan.PlanNode
 import org.partiql.plan.Ref
@@ -63,7 +65,7 @@ internal class Compiler(
     private val symbols: Symbols
 ) : PlanBaseVisitor<Operator, StaticType?>() {
 
-    fun compile(): Operator.Expr {
+    fun compile(): Operator {
         return visitPartiQLPlan(plan, null)
     }
 
@@ -83,12 +85,25 @@ internal class Compiler(
         throw IllegalStateException(node.message)
     }
 
-    override fun visitPartiQLPlan(node: PartiQLPlan, ctx: StaticType?): Operator.Expr {
-        return visitStatement(node.statement, ctx) as Operator.Expr
+    override fun visitPartiQLPlan(node: PartiQLPlan, ctx: StaticType?): Operator {
+        return visitStatement(node.statement, ctx)
     }
 
     override fun visitStatementQuery(node: Statement.Query, ctx: StaticType?): Operator.Expr {
         return visitRex(node.root, ctx).modeHandled()
+    }
+
+    override fun visitStatementDDL(node: Statement.DDL, ctx: StaticType?): Operator.Ddl {
+        return when (val op = node.op) {
+            is DdlOp.CreateTable -> DdlCreate(
+                op.name,
+                op.shape,
+                op.constraint,
+                op.partitionExpr,
+                op.tableProperties,
+                session.connectors
+            )
+        }
     }
 
     // REX

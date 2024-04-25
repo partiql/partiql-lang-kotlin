@@ -1396,8 +1396,6 @@ internal class PlanTyper(private val env: Env) {
 
     private fun Statement.DDL.type() = DdlTyper().visitStatementDDL(this, ANY)
 
-    private fun rexErr(message: String) = rex(MISSING, rexOpErr(message))
-
     /**
      * I found decorating the tree with the binding names (for resolution) was easier than associating introduced
      * bindings with a node via an id->list<string> map. ONLY because right now I don't think we have a good way

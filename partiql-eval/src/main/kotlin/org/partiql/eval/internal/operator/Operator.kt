@@ -42,4 +42,9 @@ internal sealed interface Operator {
             DISTINCT
         }
     }
+
+    interface Ddl : Operator {
+        @OptIn(PartiQLValueExperimental::class)
+        fun create(): PartiQLValue
+    }
 }

@@ -78,7 +78,7 @@ internal class Version : CommandLine.IVersionProvider {
     showDefaultValues = true
 )
 internal class MainCommand() : Runnable {
-
+    var shell : Shell? = null
     internal companion object {
         private const val SHEBANG_PREFIX = "#!"
     }
@@ -150,7 +150,9 @@ internal class MainCommand() : Runnable {
             true -> Pipeline.strict()
             else -> Pipeline.default()
         }
-        Shell(pipeline, session()).start()
+        shell = Shell(pipeline, session())
+
+        shell!!.start()
     }
 
     @OptIn(PartiQLValueExperimental::class)

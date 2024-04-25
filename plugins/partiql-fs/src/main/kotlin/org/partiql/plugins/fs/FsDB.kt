@@ -1,5 +1,6 @@
 package org.partiql.plugins.fs
 
+import org.partiql.plugins.fs.connector.FsConnector
 import org.partiql.plugins.fs.index.FsIndex
 import java.nio.file.Path
 
@@ -8,9 +9,8 @@ import java.nio.file.Path
  */
 internal class FsDB(
     internal val version: Int,
-    internal val index: FsIndex,
+    internal var index: FsIndex,
 ) {
-
     companion object {
 
         @JvmStatic

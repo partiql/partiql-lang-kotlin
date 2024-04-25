@@ -15,7 +15,9 @@
 package org.partiql.spi.connector
 
 import org.partiql.spi.BindingPath
+import org.partiql.spi.PartiQLException
 import org.partiql.spi.fn.FnExperimental
+import org.partiql.types.StaticType
 
 /**
  * Aids in retrieving relevant Catalog metadata for the purpose of planning and execution.
@@ -61,4 +63,30 @@ public interface ConnectorMetadata {
     @FnExperimental
     public fun getAggregation(path: BindingPath): ConnectorHandle.Agg?
 
+    /**
+     * Write Operation: Attempts to create a table into the remote binding source.
+     *
+     * For now: validations like `assertion on if table already exists` or `schema does not exist`
+     * should be done at connector level.
+     *
+     * Implementation should throw a [PartiQLException] with appropriate error message when validation failed.
+     *
+     * @param path [BindingPath] represents the qualified table name.
+     * @param shape The shape of the table to be created, represented in PartiQL Type system.
+     * @param checkExpression Expression used in check constraints.
+     * Note that PartiQL Planner does not have an concept of attribute level constraint,
+     * all attribute constraints will be normalized to tuple level constraints.
+     *  TODO: modify those constraints modeling in connector, one aspect that is missing is constraint name.
+     * @param unique a list of column that has been tagged with Unique constraint.
+     * @param primaryKey a list of column that has been tag with primary key.
+     *
+     */
+    public fun createTable(
+        path: BindingPath,
+        shape: StaticType,
+        checkExpression: List<String>,
+        unique: List<String>,
+        primaryKey: List<String>
+    ): ConnectorHandle.Obj =
+        throw PartiQLException("Create Table Operation is not Implemented for this connector")
 }

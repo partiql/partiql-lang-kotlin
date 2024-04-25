@@ -62,7 +62,7 @@ internal class PartiQLValueIonReader(
 
     @Throws(IOException::class)
     override fun read(): PartiQLValue {
-        val values:  MutableList<PartiQLValue> = mutableListOf()
+        val values: MutableList<PartiQLValue> = mutableListOf()
         while (ionReader.next() != null) {
             val v = fromIon(ionReader)
             values.add(v)

@@ -12,4 +12,7 @@ sealed interface PartiQLStatement<T> {
 
     @OptIn(PartiQLValueExperimental::class)
     interface Query : PartiQLStatement<PartiQLValue>
+
+    @OptIn(PartiQLValueExperimental::class)
+    interface Ddl : PartiQLStatement<PartiQLValue>
 }

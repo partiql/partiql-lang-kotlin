@@ -15,7 +15,6 @@
 package org.partiql.cli.shell
 
 import com.amazon.ion.system.IonSystemBuilder
-import com.amazon.ion.system.IonTextWriterBuilder
 import com.amazon.ionelement.api.toIonValue
 import com.google.common.util.concurrent.Uninterruptibles
 import org.fusesource.jansi.AnsiConsole
@@ -33,6 +32,7 @@ import org.jline.utils.AttributedStyle.BOLD
 import org.jline.utils.InfoCmp
 import org.joda.time.Duration
 import org.partiql.cli.pipeline.Pipeline
+import org.partiql.eval.PartiQLEngine
 import org.partiql.eval.PartiQLResult
 import org.partiql.plugins.fs.toIon
 import org.partiql.spi.BindingCase
@@ -41,11 +41,11 @@ import org.partiql.spi.BindingPath
 import org.partiql.spi.connector.ConnectorHandle
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.io.PartiQLValueTextWriter
-import software.amazon.ion.IonSystem
 import java.io.Closeable
 import java.io.PrintStream
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.time.Instant
 import java.util.Properties
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ExecutorService
@@ -121,7 +121,7 @@ val donePrinting = AtomicBoolean(true)
 
 internal class Shell(
     private val pipeline: Pipeline,
-    private val session: Pipeline.Session,
+    private var session: Pipeline.Session,
 ) {
 
     private var state: State = State(false)

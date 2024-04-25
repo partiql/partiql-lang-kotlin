@@ -1,16 +1,20 @@
 package org.partiql.plugins.fs.index
 
+import com.amazon.ion.system.IonTextWriterBuilder
 import com.amazon.ionelement.api.loadSingleElement
+import org.partiql.plugins.fs.toIon
 import org.partiql.plugins.fs.toStaticType
 import org.partiql.spi.BindingPath
+import org.partiql.spi.connector.ConnectorPath
 import org.partiql.types.StaticType
 import java.io.File
 import java.nio.file.Path
+import kotlin.io.path.Path
 
 /**
  *
  */
-internal class FsIndex(private val root: FsNode) {
+internal class FsIndex(private var root: FsNode) {
 
     /**
      * Search the FsNode for the type.
@@ -38,7 +42,7 @@ internal class FsIndex(private val root: FsNode) {
     /**
      * List all FsNodes in the path.
      */
-    fun list(path: BindingPath):  List<FsNode> {
+    fun list(path: BindingPath): List<FsNode> {
         var curr: FsNode? = root
         for (step in path.steps) {
             if (curr == null) return emptyList()
@@ -55,6 +59,34 @@ internal class FsIndex(private val root: FsNode) {
             is FsNode.Scope -> curr.children
             null -> emptyList()
         }
+    }
+
+    fun createTable(
+        dirs: ConnectorPath?,
+        tableName: String,
+        shape: StaticType,
+        checkExpression: List<String>,
+        unique: List<String>,
+        primaryKey: List<String>
+    ) {
+        val path = buildString {
+            this.append("${root.name}/")
+            dirs?.let {
+                it.steps.forEach {
+                    this.append("$it/")
+                }
+            }
+            this.append("$tableName")
+        }
+
+        val shapeContent = buildString {
+            val writer = IonTextWriterBuilder.pretty().build(this)
+            shape.toIon().writeTo(writer)
+        }
+
+        val file = File(path)
+        file.createNewFile()
+        file.writeText(shapeContent)
     }
 
     companion object {
