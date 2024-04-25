@@ -99,7 +99,7 @@ tableDef
 
 tableDefPart
     : columnName type columnConstraint*                             # ColumnDeclaration
-    | ( CONSTRAINT constraintName )?  tableConstraintDef            # TableConstrDeclartion
+    | ( CONSTRAINT constraintName )?  tableConstraintDef            # TableConstrDeclaration
     ;
 
 tableConstraintDef
