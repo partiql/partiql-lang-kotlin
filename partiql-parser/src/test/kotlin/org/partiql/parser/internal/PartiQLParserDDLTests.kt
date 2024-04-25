@@ -11,9 +11,9 @@ import org.partiql.ast.Expr
 import org.partiql.ast.Identifier
 import org.partiql.ast.Type
 import org.partiql.ast.constraint
-import org.partiql.ast.constraintBodyCheck
-import org.partiql.ast.constraintBodyNotNull
-import org.partiql.ast.constraintBodyUnique
+import org.partiql.ast.constraintDefinitionCheck
+import org.partiql.ast.constraintDefinitionNotNull
+import org.partiql.ast.constraintDefinitionUnique
 import org.partiql.ast.ddlOpCreateTable
 import org.partiql.ast.ddlOpDropTable
 import org.partiql.ast.exprBinary
@@ -23,7 +23,7 @@ import org.partiql.ast.identifierQualified
 import org.partiql.ast.identifierSymbol
 import org.partiql.ast.statementDDL
 import org.partiql.ast.tableDefinition
-import org.partiql.ast.tableDefinitionColumn
+import org.partiql.ast.tableDefinitionAttribute
 import org.partiql.parser.PartiQLParserException
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.int32Value
@@ -122,10 +122,10 @@ class PartiQLParserDDLTests {
                     identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
                     tableDefinition(
                         listOf(
-                            tableDefinitionColumn(
+                            tableDefinitionAttribute(
                                 identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE),
                                 Type.Int2(),
-                                listOf(constraint(null, constraintBodyNotNull())),
+                                listOf(constraint(null, constraintDefinitionNotNull())),
                             )
                         ),
                         emptyList()
@@ -144,10 +144,10 @@ class PartiQLParserDDLTests {
                     identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
                     tableDefinition(
                         listOf(
-                            tableDefinitionColumn(
+                            tableDefinitionAttribute(
                                 identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE),
                                 Type.Int2(),
-                                listOf(constraint(null, constraintBodyUnique(null, false))),
+                                listOf(constraint(null, constraintDefinitionUnique(null, false))),
                             )
                         ),
                         emptyList()
@@ -166,10 +166,10 @@ class PartiQLParserDDLTests {
                     identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
                     tableDefinition(
                         listOf(
-                            tableDefinitionColumn(
+                            tableDefinitionAttribute(
                                 identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE),
                                 Type.Int2(),
-                                listOf(constraint(null, constraintBodyUnique(null, true))),
+                                listOf(constraint(null, constraintDefinitionUnique(null, true))),
                             )
                         ),
                         emptyList()
@@ -188,13 +188,13 @@ class PartiQLParserDDLTests {
                     identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
                     tableDefinition(
                         listOf(
-                            tableDefinitionColumn(
+                            tableDefinitionAttribute(
                                 identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE),
                                 Type.Int2(),
                                 listOf(
                                     constraint(
                                         null,
-                                        constraintBodyCheck(
+                                        constraintDefinitionCheck(
                                             exprBinary(
                                                 Expr.Binary.Op.GT,
                                                 exprVar(identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE), Expr.Var.Scope.DEFAULT),
@@ -224,7 +224,7 @@ class PartiQLParserDDLTests {
                         listOf(
                             constraint(
                                 null,
-                                constraintBodyUnique(
+                                constraintDefinitionUnique(
                                     listOf(
                                         identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE),
                                         identifierSymbol("b", Identifier.CaseSensitivity.INSENSITIVE),
@@ -251,7 +251,7 @@ class PartiQLParserDDLTests {
                         listOf(
                             constraint(
                                 null,
-                                constraintBodyUnique(
+                                constraintDefinitionUnique(
                                     listOf(
                                         identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE),
                                         identifierSymbol("b", Identifier.CaseSensitivity.INSENSITIVE),
@@ -278,7 +278,7 @@ class PartiQLParserDDLTests {
                         listOf(
                             constraint(
                                 null,
-                                constraintBodyCheck(
+                                constraintDefinitionCheck(
                                     exprBinary(
                                         Expr.Binary.Op.GT,
                                         exprVar(identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE), Expr.Var.Scope.DEFAULT),
@@ -302,7 +302,7 @@ class PartiQLParserDDLTests {
                     identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
                     tableDefinition(
                         listOf(
-                            tableDefinitionColumn(
+                            tableDefinitionAttribute(
                                 identifierSymbol("a", Identifier.CaseSensitivity.SENSITIVE),
                                 Type.Int2(),
                                 emptyList(),

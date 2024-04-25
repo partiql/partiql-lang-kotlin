@@ -784,14 +784,12 @@ returning::{
   ],
 }
 
-// `<column_name> <type> <column_constraint>*`
-// `( CONSTRAINT <column_constraint_name> )?  <column_constraint_def>`
 table_definition::{
-  columns: list::[column],
+  attributes: list::[attribute],
   // table level constraints
   constraints: list::[constraint],
   _: [
-    column::{
+    attribute::{
       name:        '.identifier.symbol',
       type:        '.type',
       constraints: list::[constraint],
@@ -801,13 +799,13 @@ table_definition::{
 
 constraint::{
   name: optional::string,
-  body: [
+  definition: [
     nullable::{},
     not_null::{},
     check::{ expr: expr },
     unique::{
       // for attribute level constraint, we can set this attribute to null
-      columns: optional::list::['.identifier.symbol'],
+      attributes: optional::list::['.identifier.symbol'],
       is_primary_key: bool,
     },
   ],

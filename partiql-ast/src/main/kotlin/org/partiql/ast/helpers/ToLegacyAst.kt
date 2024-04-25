@@ -175,14 +175,14 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
     }
 
     override fun visitTableDefinition(node: TableDefinition, ctx: Ctx) = translate(node) { metas ->
-        val parts = node.columns.translate<PartiqlAst.TableDefPart>(ctx)
+        val parts = node.attributes.translate<PartiqlAst.TableDefPart>(ctx)
         if (node.constraints.isNotEmpty()) {
             error("The legacy AST does not support table level constraint declaration")
         }
         tableDef(parts, metas)
     }
 
-    override fun visitTableDefinitionColumn(node: TableDefinition.Column, ctx: Ctx) = translate(node) { metas ->
+    override fun visitTableDefinitionAttribute(node: TableDefinition.Attribute, ctx: Ctx) = translate(node) { metas ->
         // Legacy AST treat table name as a case-sensitive string
         val name = node.name.symbol
         val type = visitType(node.type, ctx)
@@ -192,11 +192,11 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
 
     override fun visitConstraint(node: Constraint, ctx: Ctx) = translate(node) {
         val name = node.name
-        val def = when (node.body) {
-            is Constraint.Body.Check -> throw IllegalArgumentException("PIG AST does not support CHECK (<expr>) constraint")
-            is Constraint.Body.NotNull -> columnNotnull()
-            is Constraint.Body.Nullable -> columnNull()
-            is Constraint.Body.Unique -> throw IllegalArgumentException("PIG AST does not support Unique/Primary Key constraint")
+        val def = when (node.definition) {
+            is Constraint.Definition.Check -> throw IllegalArgumentException("PIG AST does not support CHECK (<expr>) constraint")
+            is Constraint.Definition.NotNull -> columnNotnull()
+            is Constraint.Definition.Nullable -> columnNull()
+            is Constraint.Definition.Unique -> throw IllegalArgumentException("PIG AST does not support Unique/Primary Key constraint")
         }
         columnConstraint(name, def, metas)
     }
