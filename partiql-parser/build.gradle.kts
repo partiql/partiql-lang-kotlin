@@ -16,6 +16,7 @@ plugins {
     id(Plugins.antlr)
     id(Plugins.conventions)
     id(Plugins.publish)
+    id("com.github.johnrengelman.shadow") version "7.1.2"
 }
 
 dependencies {
@@ -56,4 +57,14 @@ publish {
     artifactId = "partiql-parser"
     name = "PartiQL Parser"
     description = "PartiQL's experimental Parser"
+}
+
+tasks.shadowJar {
+    dependencies {
+        exclude(project(":partiql-ast"))
+        exclude(project(":partiql-types"))
+    }
+    archiveBaseName.set("partiql-parser")
+    archiveClassifier.set("SNAPSHOT")
+    archiveVersion.set("1.0.0")
 }

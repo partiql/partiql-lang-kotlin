@@ -1067,7 +1067,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
 
     @Test
     fun prefilters() = assertExpression(
-        "SELECT u as banCandidate FROM g MATCH (p:Post Where p.isFlagged = true) <-[:createdPost]- (u:Usr WHERE u.isBanned = false AND u.karma < 20) -[:createdComment]->(c:Comment WHERE c.isFlagged = true) WHERE p.title LIKE '%considered harmful%'",
+        "SELECT u as banCandidate FROM g MATCH (p:Post Where p.isFlagged = true) <-[:createdPost]- (u:Usr WHERE u.isBanned = false AND u.karma < 20) -[:createdComment]->(c:\"Comment\" WHERE c.isFlagged = true) WHERE p.title LIKE '%considered harmful%'",
     ) {
         PartiqlAst.build {
             select(
