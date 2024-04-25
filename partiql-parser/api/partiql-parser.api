@@ -131,12 +131,14 @@ public class org/partiql/parser/antlr/PartiQLBaseListener : org/partiql/parser/a
 	public fun enterCanLosslessCast (Lorg/partiql/parser/antlr/PartiQLParser$CanLosslessCastContext;)V
 	public fun enterCaseExpr (Lorg/partiql/parser/antlr/PartiQLParser$CaseExprContext;)V
 	public fun enterCast (Lorg/partiql/parser/antlr/PartiQLParser$CastContext;)V
+	public fun enterCheckConstraintDef (Lorg/partiql/parser/antlr/PartiQLParser$CheckConstraintDefContext;)V
 	public fun enterCoalesce (Lorg/partiql/parser/antlr/PartiQLParser$CoalesceContext;)V
+	public fun enterColConstrCheck (Lorg/partiql/parser/antlr/PartiQLParser$ColConstrCheckContext;)V
 	public fun enterColConstrNotNull (Lorg/partiql/parser/antlr/PartiQLParser$ColConstrNotNullContext;)V
 	public fun enterColConstrNull (Lorg/partiql/parser/antlr/PartiQLParser$ColConstrNullContext;)V
+	public fun enterColConstrUnique (Lorg/partiql/parser/antlr/PartiQLParser$ColConstrUniqueContext;)V
 	public fun enterCollection (Lorg/partiql/parser/antlr/PartiQLParser$CollectionContext;)V
 	public fun enterColumnConstraint (Lorg/partiql/parser/antlr/PartiQLParser$ColumnConstraintContext;)V
-	public fun enterColumnConstraintName (Lorg/partiql/parser/antlr/PartiQLParser$ColumnConstraintNameContext;)V
 	public fun enterColumnDeclaration (Lorg/partiql/parser/antlr/PartiQLParser$ColumnDeclarationContext;)V
 	public fun enterColumnName (Lorg/partiql/parser/antlr/PartiQLParser$ColumnNameContext;)V
 	public fun enterConflictAction (Lorg/partiql/parser/antlr/PartiQLParser$ConflictActionContext;)V
@@ -275,6 +277,7 @@ public class org/partiql/parser/antlr/PartiQLBaseListener : org/partiql/parser/a
 	public fun enterPredicateIn (Lorg/partiql/parser/antlr/PartiQLParser$PredicateInContext;)V
 	public fun enterPredicateIs (Lorg/partiql/parser/antlr/PartiQLParser$PredicateIsContext;)V
 	public fun enterPredicateLike (Lorg/partiql/parser/antlr/PartiQLParser$PredicateLikeContext;)V
+	public fun enterPrimaryKey (Lorg/partiql/parser/antlr/PartiQLParser$PrimaryKeyContext;)V
 	public fun enterProjectionItem (Lorg/partiql/parser/antlr/PartiQLParser$ProjectionItemContext;)V
 	public fun enterProjectionItems (Lorg/partiql/parser/antlr/PartiQLParser$ProjectionItemsContext;)V
 	public fun enterQualifiedName (Lorg/partiql/parser/antlr/PartiQLParser$QualifiedNameContext;)V
@@ -288,6 +291,7 @@ public class org/partiql/parser/antlr/PartiQLBaseListener : org/partiql/parser/a
 	public fun enterReturningClause (Lorg/partiql/parser/antlr/PartiQLParser$ReturningClauseContext;)V
 	public fun enterReturningColumn (Lorg/partiql/parser/antlr/PartiQLParser$ReturningColumnContext;)V
 	public fun enterRoot (Lorg/partiql/parser/antlr/PartiQLParser$RootContext;)V
+	public fun enterSearchCondition (Lorg/partiql/parser/antlr/PartiQLParser$SearchConditionContext;)V
 	public fun enterSelectAll (Lorg/partiql/parser/antlr/PartiQLParser$SelectAllContext;)V
 	public fun enterSelectItems (Lorg/partiql/parser/antlr/PartiQLParser$SelectItemsContext;)V
 	public fun enterSelectPivot (Lorg/partiql/parser/antlr/PartiQLParser$SelectPivotContext;)V
@@ -306,7 +310,9 @@ public class org/partiql/parser/antlr/PartiQLBaseListener : org/partiql/parser/a
 	public fun enterTableBaseRefClauses (Lorg/partiql/parser/antlr/PartiQLParser$TableBaseRefClausesContext;)V
 	public fun enterTableBaseRefMatch (Lorg/partiql/parser/antlr/PartiQLParser$TableBaseRefMatchContext;)V
 	public fun enterTableBaseRefSymbol (Lorg/partiql/parser/antlr/PartiQLParser$TableBaseRefSymbolContext;)V
-	public fun enterTableConstraintName (Lorg/partiql/parser/antlr/PartiQLParser$TableConstraintNameContext;)V
+	public fun enterTableConstrCheck (Lorg/partiql/parser/antlr/PartiQLParser$TableConstrCheckContext;)V
+	public fun enterTableConstrDeclaration (Lorg/partiql/parser/antlr/PartiQLParser$TableConstrDeclarationContext;)V
+	public fun enterTableConstrUnique (Lorg/partiql/parser/antlr/PartiQLParser$TableConstrUniqueContext;)V
 	public fun enterTableCrossJoin (Lorg/partiql/parser/antlr/PartiQLParser$TableCrossJoinContext;)V
 	public fun enterTableDef (Lorg/partiql/parser/antlr/PartiQLParser$TableDefContext;)V
 	public fun enterTableName (Lorg/partiql/parser/antlr/PartiQLParser$TableNameContext;)V
@@ -324,6 +330,8 @@ public class org/partiql/parser/antlr/PartiQLBaseListener : org/partiql/parser/a
 	public fun enterTypeTimeZone (Lorg/partiql/parser/antlr/PartiQLParser$TypeTimeZoneContext;)V
 	public fun enterTypeVarChar (Lorg/partiql/parser/antlr/PartiQLParser$TypeVarCharContext;)V
 	public fun enterUnion (Lorg/partiql/parser/antlr/PartiQLParser$UnionContext;)V
+	public fun enterUnique (Lorg/partiql/parser/antlr/PartiQLParser$UniqueContext;)V
+	public fun enterUniqueConstraintDef (Lorg/partiql/parser/antlr/PartiQLParser$UniqueConstraintDefContext;)V
 	public fun enterUpdateClause (Lorg/partiql/parser/antlr/PartiQLParser$UpdateClauseContext;)V
 	public fun enterUpsertCommand (Lorg/partiql/parser/antlr/PartiQLParser$UpsertCommandContext;)V
 	public fun enterValueExpr (Lorg/partiql/parser/antlr/PartiQLParser$ValueExprContext;)V
@@ -347,12 +355,14 @@ public class org/partiql/parser/antlr/PartiQLBaseListener : org/partiql/parser/a
 	public fun exitCanLosslessCast (Lorg/partiql/parser/antlr/PartiQLParser$CanLosslessCastContext;)V
 	public fun exitCaseExpr (Lorg/partiql/parser/antlr/PartiQLParser$CaseExprContext;)V
 	public fun exitCast (Lorg/partiql/parser/antlr/PartiQLParser$CastContext;)V
+	public fun exitCheckConstraintDef (Lorg/partiql/parser/antlr/PartiQLParser$CheckConstraintDefContext;)V
 	public fun exitCoalesce (Lorg/partiql/parser/antlr/PartiQLParser$CoalesceContext;)V
+	public fun exitColConstrCheck (Lorg/partiql/parser/antlr/PartiQLParser$ColConstrCheckContext;)V
 	public fun exitColConstrNotNull (Lorg/partiql/parser/antlr/PartiQLParser$ColConstrNotNullContext;)V
 	public fun exitColConstrNull (Lorg/partiql/parser/antlr/PartiQLParser$ColConstrNullContext;)V
+	public fun exitColConstrUnique (Lorg/partiql/parser/antlr/PartiQLParser$ColConstrUniqueContext;)V
 	public fun exitCollection (Lorg/partiql/parser/antlr/PartiQLParser$CollectionContext;)V
 	public fun exitColumnConstraint (Lorg/partiql/parser/antlr/PartiQLParser$ColumnConstraintContext;)V
-	public fun exitColumnConstraintName (Lorg/partiql/parser/antlr/PartiQLParser$ColumnConstraintNameContext;)V
 	public fun exitColumnDeclaration (Lorg/partiql/parser/antlr/PartiQLParser$ColumnDeclarationContext;)V
 	public fun exitColumnName (Lorg/partiql/parser/antlr/PartiQLParser$ColumnNameContext;)V
 	public fun exitConflictAction (Lorg/partiql/parser/antlr/PartiQLParser$ConflictActionContext;)V
@@ -491,6 +501,7 @@ public class org/partiql/parser/antlr/PartiQLBaseListener : org/partiql/parser/a
 	public fun exitPredicateIn (Lorg/partiql/parser/antlr/PartiQLParser$PredicateInContext;)V
 	public fun exitPredicateIs (Lorg/partiql/parser/antlr/PartiQLParser$PredicateIsContext;)V
 	public fun exitPredicateLike (Lorg/partiql/parser/antlr/PartiQLParser$PredicateLikeContext;)V
+	public fun exitPrimaryKey (Lorg/partiql/parser/antlr/PartiQLParser$PrimaryKeyContext;)V
 	public fun exitProjectionItem (Lorg/partiql/parser/antlr/PartiQLParser$ProjectionItemContext;)V
 	public fun exitProjectionItems (Lorg/partiql/parser/antlr/PartiQLParser$ProjectionItemsContext;)V
 	public fun exitQualifiedName (Lorg/partiql/parser/antlr/PartiQLParser$QualifiedNameContext;)V
@@ -504,6 +515,7 @@ public class org/partiql/parser/antlr/PartiQLBaseListener : org/partiql/parser/a
 	public fun exitReturningClause (Lorg/partiql/parser/antlr/PartiQLParser$ReturningClauseContext;)V
 	public fun exitReturningColumn (Lorg/partiql/parser/antlr/PartiQLParser$ReturningColumnContext;)V
 	public fun exitRoot (Lorg/partiql/parser/antlr/PartiQLParser$RootContext;)V
+	public fun exitSearchCondition (Lorg/partiql/parser/antlr/PartiQLParser$SearchConditionContext;)V
 	public fun exitSelectAll (Lorg/partiql/parser/antlr/PartiQLParser$SelectAllContext;)V
 	public fun exitSelectItems (Lorg/partiql/parser/antlr/PartiQLParser$SelectItemsContext;)V
 	public fun exitSelectPivot (Lorg/partiql/parser/antlr/PartiQLParser$SelectPivotContext;)V
@@ -522,7 +534,9 @@ public class org/partiql/parser/antlr/PartiQLBaseListener : org/partiql/parser/a
 	public fun exitTableBaseRefClauses (Lorg/partiql/parser/antlr/PartiQLParser$TableBaseRefClausesContext;)V
 	public fun exitTableBaseRefMatch (Lorg/partiql/parser/antlr/PartiQLParser$TableBaseRefMatchContext;)V
 	public fun exitTableBaseRefSymbol (Lorg/partiql/parser/antlr/PartiQLParser$TableBaseRefSymbolContext;)V
-	public fun exitTableConstraintName (Lorg/partiql/parser/antlr/PartiQLParser$TableConstraintNameContext;)V
+	public fun exitTableConstrCheck (Lorg/partiql/parser/antlr/PartiQLParser$TableConstrCheckContext;)V
+	public fun exitTableConstrDeclaration (Lorg/partiql/parser/antlr/PartiQLParser$TableConstrDeclarationContext;)V
+	public fun exitTableConstrUnique (Lorg/partiql/parser/antlr/PartiQLParser$TableConstrUniqueContext;)V
 	public fun exitTableCrossJoin (Lorg/partiql/parser/antlr/PartiQLParser$TableCrossJoinContext;)V
 	public fun exitTableDef (Lorg/partiql/parser/antlr/PartiQLParser$TableDefContext;)V
 	public fun exitTableName (Lorg/partiql/parser/antlr/PartiQLParser$TableNameContext;)V
@@ -540,6 +554,8 @@ public class org/partiql/parser/antlr/PartiQLBaseListener : org/partiql/parser/a
 	public fun exitTypeTimeZone (Lorg/partiql/parser/antlr/PartiQLParser$TypeTimeZoneContext;)V
 	public fun exitTypeVarChar (Lorg/partiql/parser/antlr/PartiQLParser$TypeVarCharContext;)V
 	public fun exitUnion (Lorg/partiql/parser/antlr/PartiQLParser$UnionContext;)V
+	public fun exitUnique (Lorg/partiql/parser/antlr/PartiQLParser$UniqueContext;)V
+	public fun exitUniqueConstraintDef (Lorg/partiql/parser/antlr/PartiQLParser$UniqueConstraintDefContext;)V
 	public fun exitUpdateClause (Lorg/partiql/parser/antlr/PartiQLParser$UpdateClauseContext;)V
 	public fun exitUpsertCommand (Lorg/partiql/parser/antlr/PartiQLParser$UpsertCommandContext;)V
 	public fun exitValueExpr (Lorg/partiql/parser/antlr/PartiQLParser$ValueExprContext;)V
@@ -569,12 +585,14 @@ public class org/partiql/parser/antlr/PartiQLBaseVisitor : org/antlr/v4/runtime/
 	public fun visitCanLosslessCast (Lorg/partiql/parser/antlr/PartiQLParser$CanLosslessCastContext;)Ljava/lang/Object;
 	public fun visitCaseExpr (Lorg/partiql/parser/antlr/PartiQLParser$CaseExprContext;)Ljava/lang/Object;
 	public fun visitCast (Lorg/partiql/parser/antlr/PartiQLParser$CastContext;)Ljava/lang/Object;
+	public fun visitCheckConstraintDef (Lorg/partiql/parser/antlr/PartiQLParser$CheckConstraintDefContext;)Ljava/lang/Object;
 	public fun visitCoalesce (Lorg/partiql/parser/antlr/PartiQLParser$CoalesceContext;)Ljava/lang/Object;
+	public fun visitColConstrCheck (Lorg/partiql/parser/antlr/PartiQLParser$ColConstrCheckContext;)Ljava/lang/Object;
 	public fun visitColConstrNotNull (Lorg/partiql/parser/antlr/PartiQLParser$ColConstrNotNullContext;)Ljava/lang/Object;
 	public fun visitColConstrNull (Lorg/partiql/parser/antlr/PartiQLParser$ColConstrNullContext;)Ljava/lang/Object;
+	public fun visitColConstrUnique (Lorg/partiql/parser/antlr/PartiQLParser$ColConstrUniqueContext;)Ljava/lang/Object;
 	public fun visitCollection (Lorg/partiql/parser/antlr/PartiQLParser$CollectionContext;)Ljava/lang/Object;
 	public fun visitColumnConstraint (Lorg/partiql/parser/antlr/PartiQLParser$ColumnConstraintContext;)Ljava/lang/Object;
-	public fun visitColumnConstraintName (Lorg/partiql/parser/antlr/PartiQLParser$ColumnConstraintNameContext;)Ljava/lang/Object;
 	public fun visitColumnDeclaration (Lorg/partiql/parser/antlr/PartiQLParser$ColumnDeclarationContext;)Ljava/lang/Object;
 	public fun visitColumnName (Lorg/partiql/parser/antlr/PartiQLParser$ColumnNameContext;)Ljava/lang/Object;
 	public fun visitConflictAction (Lorg/partiql/parser/antlr/PartiQLParser$ConflictActionContext;)Ljava/lang/Object;
@@ -712,6 +730,7 @@ public class org/partiql/parser/antlr/PartiQLBaseVisitor : org/antlr/v4/runtime/
 	public fun visitPredicateIn (Lorg/partiql/parser/antlr/PartiQLParser$PredicateInContext;)Ljava/lang/Object;
 	public fun visitPredicateIs (Lorg/partiql/parser/antlr/PartiQLParser$PredicateIsContext;)Ljava/lang/Object;
 	public fun visitPredicateLike (Lorg/partiql/parser/antlr/PartiQLParser$PredicateLikeContext;)Ljava/lang/Object;
+	public fun visitPrimaryKey (Lorg/partiql/parser/antlr/PartiQLParser$PrimaryKeyContext;)Ljava/lang/Object;
 	public fun visitProjectionItem (Lorg/partiql/parser/antlr/PartiQLParser$ProjectionItemContext;)Ljava/lang/Object;
 	public fun visitProjectionItems (Lorg/partiql/parser/antlr/PartiQLParser$ProjectionItemsContext;)Ljava/lang/Object;
 	public fun visitQualifiedName (Lorg/partiql/parser/antlr/PartiQLParser$QualifiedNameContext;)Ljava/lang/Object;
@@ -725,6 +744,7 @@ public class org/partiql/parser/antlr/PartiQLBaseVisitor : org/antlr/v4/runtime/
 	public fun visitReturningClause (Lorg/partiql/parser/antlr/PartiQLParser$ReturningClauseContext;)Ljava/lang/Object;
 	public fun visitReturningColumn (Lorg/partiql/parser/antlr/PartiQLParser$ReturningColumnContext;)Ljava/lang/Object;
 	public fun visitRoot (Lorg/partiql/parser/antlr/PartiQLParser$RootContext;)Ljava/lang/Object;
+	public fun visitSearchCondition (Lorg/partiql/parser/antlr/PartiQLParser$SearchConditionContext;)Ljava/lang/Object;
 	public fun visitSelectAll (Lorg/partiql/parser/antlr/PartiQLParser$SelectAllContext;)Ljava/lang/Object;
 	public fun visitSelectItems (Lorg/partiql/parser/antlr/PartiQLParser$SelectItemsContext;)Ljava/lang/Object;
 	public fun visitSelectPivot (Lorg/partiql/parser/antlr/PartiQLParser$SelectPivotContext;)Ljava/lang/Object;
@@ -743,7 +763,9 @@ public class org/partiql/parser/antlr/PartiQLBaseVisitor : org/antlr/v4/runtime/
 	public fun visitTableBaseRefClauses (Lorg/partiql/parser/antlr/PartiQLParser$TableBaseRefClausesContext;)Ljava/lang/Object;
 	public fun visitTableBaseRefMatch (Lorg/partiql/parser/antlr/PartiQLParser$TableBaseRefMatchContext;)Ljava/lang/Object;
 	public fun visitTableBaseRefSymbol (Lorg/partiql/parser/antlr/PartiQLParser$TableBaseRefSymbolContext;)Ljava/lang/Object;
-	public fun visitTableConstraintName (Lorg/partiql/parser/antlr/PartiQLParser$TableConstraintNameContext;)Ljava/lang/Object;
+	public fun visitTableConstrCheck (Lorg/partiql/parser/antlr/PartiQLParser$TableConstrCheckContext;)Ljava/lang/Object;
+	public fun visitTableConstrDeclaration (Lorg/partiql/parser/antlr/PartiQLParser$TableConstrDeclarationContext;)Ljava/lang/Object;
+	public fun visitTableConstrUnique (Lorg/partiql/parser/antlr/PartiQLParser$TableConstrUniqueContext;)Ljava/lang/Object;
 	public fun visitTableCrossJoin (Lorg/partiql/parser/antlr/PartiQLParser$TableCrossJoinContext;)Ljava/lang/Object;
 	public fun visitTableDef (Lorg/partiql/parser/antlr/PartiQLParser$TableDefContext;)Ljava/lang/Object;
 	public fun visitTableName (Lorg/partiql/parser/antlr/PartiQLParser$TableNameContext;)Ljava/lang/Object;
@@ -761,6 +783,8 @@ public class org/partiql/parser/antlr/PartiQLBaseVisitor : org/antlr/v4/runtime/
 	public fun visitTypeTimeZone (Lorg/partiql/parser/antlr/PartiQLParser$TypeTimeZoneContext;)Ljava/lang/Object;
 	public fun visitTypeVarChar (Lorg/partiql/parser/antlr/PartiQLParser$TypeVarCharContext;)Ljava/lang/Object;
 	public fun visitUnion (Lorg/partiql/parser/antlr/PartiQLParser$UnionContext;)Ljava/lang/Object;
+	public fun visitUnique (Lorg/partiql/parser/antlr/PartiQLParser$UniqueContext;)Ljava/lang/Object;
+	public fun visitUniqueConstraintDef (Lorg/partiql/parser/antlr/PartiQLParser$UniqueConstraintDefContext;)Ljava/lang/Object;
 	public fun visitUpdateClause (Lorg/partiql/parser/antlr/PartiQLParser$UpdateClauseContext;)Ljava/lang/Object;
 	public fun visitUpsertCommand (Lorg/partiql/parser/antlr/PartiQLParser$UpsertCommandContext;)Ljava/lang/Object;
 	public fun visitValueExpr (Lorg/partiql/parser/antlr/PartiQLParser$ValueExprContext;)Ljava/lang/Object;
@@ -787,12 +811,14 @@ public abstract interface class org/partiql/parser/antlr/PartiQLListener : org/a
 	public abstract fun enterCanLosslessCast (Lorg/partiql/parser/antlr/PartiQLParser$CanLosslessCastContext;)V
 	public abstract fun enterCaseExpr (Lorg/partiql/parser/antlr/PartiQLParser$CaseExprContext;)V
 	public abstract fun enterCast (Lorg/partiql/parser/antlr/PartiQLParser$CastContext;)V
+	public abstract fun enterCheckConstraintDef (Lorg/partiql/parser/antlr/PartiQLParser$CheckConstraintDefContext;)V
 	public abstract fun enterCoalesce (Lorg/partiql/parser/antlr/PartiQLParser$CoalesceContext;)V
+	public abstract fun enterColConstrCheck (Lorg/partiql/parser/antlr/PartiQLParser$ColConstrCheckContext;)V
 	public abstract fun enterColConstrNotNull (Lorg/partiql/parser/antlr/PartiQLParser$ColConstrNotNullContext;)V
 	public abstract fun enterColConstrNull (Lorg/partiql/parser/antlr/PartiQLParser$ColConstrNullContext;)V
+	public abstract fun enterColConstrUnique (Lorg/partiql/parser/antlr/PartiQLParser$ColConstrUniqueContext;)V
 	public abstract fun enterCollection (Lorg/partiql/parser/antlr/PartiQLParser$CollectionContext;)V
 	public abstract fun enterColumnConstraint (Lorg/partiql/parser/antlr/PartiQLParser$ColumnConstraintContext;)V
-	public abstract fun enterColumnConstraintName (Lorg/partiql/parser/antlr/PartiQLParser$ColumnConstraintNameContext;)V
 	public abstract fun enterColumnDeclaration (Lorg/partiql/parser/antlr/PartiQLParser$ColumnDeclarationContext;)V
 	public abstract fun enterColumnName (Lorg/partiql/parser/antlr/PartiQLParser$ColumnNameContext;)V
 	public abstract fun enterConflictAction (Lorg/partiql/parser/antlr/PartiQLParser$ConflictActionContext;)V
@@ -930,6 +956,7 @@ public abstract interface class org/partiql/parser/antlr/PartiQLListener : org/a
 	public abstract fun enterPredicateIn (Lorg/partiql/parser/antlr/PartiQLParser$PredicateInContext;)V
 	public abstract fun enterPredicateIs (Lorg/partiql/parser/antlr/PartiQLParser$PredicateIsContext;)V
 	public abstract fun enterPredicateLike (Lorg/partiql/parser/antlr/PartiQLParser$PredicateLikeContext;)V
+	public abstract fun enterPrimaryKey (Lorg/partiql/parser/antlr/PartiQLParser$PrimaryKeyContext;)V
 	public abstract fun enterProjectionItem (Lorg/partiql/parser/antlr/PartiQLParser$ProjectionItemContext;)V
 	public abstract fun enterProjectionItems (Lorg/partiql/parser/antlr/PartiQLParser$ProjectionItemsContext;)V
 	public abstract fun enterQualifiedName (Lorg/partiql/parser/antlr/PartiQLParser$QualifiedNameContext;)V
@@ -943,6 +970,7 @@ public abstract interface class org/partiql/parser/antlr/PartiQLListener : org/a
 	public abstract fun enterReturningClause (Lorg/partiql/parser/antlr/PartiQLParser$ReturningClauseContext;)V
 	public abstract fun enterReturningColumn (Lorg/partiql/parser/antlr/PartiQLParser$ReturningColumnContext;)V
 	public abstract fun enterRoot (Lorg/partiql/parser/antlr/PartiQLParser$RootContext;)V
+	public abstract fun enterSearchCondition (Lorg/partiql/parser/antlr/PartiQLParser$SearchConditionContext;)V
 	public abstract fun enterSelectAll (Lorg/partiql/parser/antlr/PartiQLParser$SelectAllContext;)V
 	public abstract fun enterSelectItems (Lorg/partiql/parser/antlr/PartiQLParser$SelectItemsContext;)V
 	public abstract fun enterSelectPivot (Lorg/partiql/parser/antlr/PartiQLParser$SelectPivotContext;)V
@@ -961,7 +989,9 @@ public abstract interface class org/partiql/parser/antlr/PartiQLListener : org/a
 	public abstract fun enterTableBaseRefClauses (Lorg/partiql/parser/antlr/PartiQLParser$TableBaseRefClausesContext;)V
 	public abstract fun enterTableBaseRefMatch (Lorg/partiql/parser/antlr/PartiQLParser$TableBaseRefMatchContext;)V
 	public abstract fun enterTableBaseRefSymbol (Lorg/partiql/parser/antlr/PartiQLParser$TableBaseRefSymbolContext;)V
-	public abstract fun enterTableConstraintName (Lorg/partiql/parser/antlr/PartiQLParser$TableConstraintNameContext;)V
+	public abstract fun enterTableConstrCheck (Lorg/partiql/parser/antlr/PartiQLParser$TableConstrCheckContext;)V
+	public abstract fun enterTableConstrDeclaration (Lorg/partiql/parser/antlr/PartiQLParser$TableConstrDeclarationContext;)V
+	public abstract fun enterTableConstrUnique (Lorg/partiql/parser/antlr/PartiQLParser$TableConstrUniqueContext;)V
 	public abstract fun enterTableCrossJoin (Lorg/partiql/parser/antlr/PartiQLParser$TableCrossJoinContext;)V
 	public abstract fun enterTableDef (Lorg/partiql/parser/antlr/PartiQLParser$TableDefContext;)V
 	public abstract fun enterTableName (Lorg/partiql/parser/antlr/PartiQLParser$TableNameContext;)V
@@ -979,6 +1009,8 @@ public abstract interface class org/partiql/parser/antlr/PartiQLListener : org/a
 	public abstract fun enterTypeTimeZone (Lorg/partiql/parser/antlr/PartiQLParser$TypeTimeZoneContext;)V
 	public abstract fun enterTypeVarChar (Lorg/partiql/parser/antlr/PartiQLParser$TypeVarCharContext;)V
 	public abstract fun enterUnion (Lorg/partiql/parser/antlr/PartiQLParser$UnionContext;)V
+	public abstract fun enterUnique (Lorg/partiql/parser/antlr/PartiQLParser$UniqueContext;)V
+	public abstract fun enterUniqueConstraintDef (Lorg/partiql/parser/antlr/PartiQLParser$UniqueConstraintDefContext;)V
 	public abstract fun enterUpdateClause (Lorg/partiql/parser/antlr/PartiQLParser$UpdateClauseContext;)V
 	public abstract fun enterUpsertCommand (Lorg/partiql/parser/antlr/PartiQLParser$UpsertCommandContext;)V
 	public abstract fun enterValueExpr (Lorg/partiql/parser/antlr/PartiQLParser$ValueExprContext;)V
@@ -1002,12 +1034,14 @@ public abstract interface class org/partiql/parser/antlr/PartiQLListener : org/a
 	public abstract fun exitCanLosslessCast (Lorg/partiql/parser/antlr/PartiQLParser$CanLosslessCastContext;)V
 	public abstract fun exitCaseExpr (Lorg/partiql/parser/antlr/PartiQLParser$CaseExprContext;)V
 	public abstract fun exitCast (Lorg/partiql/parser/antlr/PartiQLParser$CastContext;)V
+	public abstract fun exitCheckConstraintDef (Lorg/partiql/parser/antlr/PartiQLParser$CheckConstraintDefContext;)V
 	public abstract fun exitCoalesce (Lorg/partiql/parser/antlr/PartiQLParser$CoalesceContext;)V
+	public abstract fun exitColConstrCheck (Lorg/partiql/parser/antlr/PartiQLParser$ColConstrCheckContext;)V
 	public abstract fun exitColConstrNotNull (Lorg/partiql/parser/antlr/PartiQLParser$ColConstrNotNullContext;)V
 	public abstract fun exitColConstrNull (Lorg/partiql/parser/antlr/PartiQLParser$ColConstrNullContext;)V
+	public abstract fun exitColConstrUnique (Lorg/partiql/parser/antlr/PartiQLParser$ColConstrUniqueContext;)V
 	public abstract fun exitCollection (Lorg/partiql/parser/antlr/PartiQLParser$CollectionContext;)V
 	public abstract fun exitColumnConstraint (Lorg/partiql/parser/antlr/PartiQLParser$ColumnConstraintContext;)V
-	public abstract fun exitColumnConstraintName (Lorg/partiql/parser/antlr/PartiQLParser$ColumnConstraintNameContext;)V
 	public abstract fun exitColumnDeclaration (Lorg/partiql/parser/antlr/PartiQLParser$ColumnDeclarationContext;)V
 	public abstract fun exitColumnName (Lorg/partiql/parser/antlr/PartiQLParser$ColumnNameContext;)V
 	public abstract fun exitConflictAction (Lorg/partiql/parser/antlr/PartiQLParser$ConflictActionContext;)V
@@ -1145,6 +1179,7 @@ public abstract interface class org/partiql/parser/antlr/PartiQLListener : org/a
 	public abstract fun exitPredicateIn (Lorg/partiql/parser/antlr/PartiQLParser$PredicateInContext;)V
 	public abstract fun exitPredicateIs (Lorg/partiql/parser/antlr/PartiQLParser$PredicateIsContext;)V
 	public abstract fun exitPredicateLike (Lorg/partiql/parser/antlr/PartiQLParser$PredicateLikeContext;)V
+	public abstract fun exitPrimaryKey (Lorg/partiql/parser/antlr/PartiQLParser$PrimaryKeyContext;)V
 	public abstract fun exitProjectionItem (Lorg/partiql/parser/antlr/PartiQLParser$ProjectionItemContext;)V
 	public abstract fun exitProjectionItems (Lorg/partiql/parser/antlr/PartiQLParser$ProjectionItemsContext;)V
 	public abstract fun exitQualifiedName (Lorg/partiql/parser/antlr/PartiQLParser$QualifiedNameContext;)V
@@ -1158,6 +1193,7 @@ public abstract interface class org/partiql/parser/antlr/PartiQLListener : org/a
 	public abstract fun exitReturningClause (Lorg/partiql/parser/antlr/PartiQLParser$ReturningClauseContext;)V
 	public abstract fun exitReturningColumn (Lorg/partiql/parser/antlr/PartiQLParser$ReturningColumnContext;)V
 	public abstract fun exitRoot (Lorg/partiql/parser/antlr/PartiQLParser$RootContext;)V
+	public abstract fun exitSearchCondition (Lorg/partiql/parser/antlr/PartiQLParser$SearchConditionContext;)V
 	public abstract fun exitSelectAll (Lorg/partiql/parser/antlr/PartiQLParser$SelectAllContext;)V
 	public abstract fun exitSelectItems (Lorg/partiql/parser/antlr/PartiQLParser$SelectItemsContext;)V
 	public abstract fun exitSelectPivot (Lorg/partiql/parser/antlr/PartiQLParser$SelectPivotContext;)V
@@ -1176,7 +1212,9 @@ public abstract interface class org/partiql/parser/antlr/PartiQLListener : org/a
 	public abstract fun exitTableBaseRefClauses (Lorg/partiql/parser/antlr/PartiQLParser$TableBaseRefClausesContext;)V
 	public abstract fun exitTableBaseRefMatch (Lorg/partiql/parser/antlr/PartiQLParser$TableBaseRefMatchContext;)V
 	public abstract fun exitTableBaseRefSymbol (Lorg/partiql/parser/antlr/PartiQLParser$TableBaseRefSymbolContext;)V
-	public abstract fun exitTableConstraintName (Lorg/partiql/parser/antlr/PartiQLParser$TableConstraintNameContext;)V
+	public abstract fun exitTableConstrCheck (Lorg/partiql/parser/antlr/PartiQLParser$TableConstrCheckContext;)V
+	public abstract fun exitTableConstrDeclaration (Lorg/partiql/parser/antlr/PartiQLParser$TableConstrDeclarationContext;)V
+	public abstract fun exitTableConstrUnique (Lorg/partiql/parser/antlr/PartiQLParser$TableConstrUniqueContext;)V
 	public abstract fun exitTableCrossJoin (Lorg/partiql/parser/antlr/PartiQLParser$TableCrossJoinContext;)V
 	public abstract fun exitTableDef (Lorg/partiql/parser/antlr/PartiQLParser$TableDefContext;)V
 	public abstract fun exitTableName (Lorg/partiql/parser/antlr/PartiQLParser$TableNameContext;)V
@@ -1194,6 +1232,8 @@ public abstract interface class org/partiql/parser/antlr/PartiQLListener : org/a
 	public abstract fun exitTypeTimeZone (Lorg/partiql/parser/antlr/PartiQLParser$TypeTimeZoneContext;)V
 	public abstract fun exitTypeVarChar (Lorg/partiql/parser/antlr/PartiQLParser$TypeVarCharContext;)V
 	public abstract fun exitUnion (Lorg/partiql/parser/antlr/PartiQLParser$UnionContext;)V
+	public abstract fun exitUnique (Lorg/partiql/parser/antlr/PartiQLParser$UniqueContext;)V
+	public abstract fun exitUniqueConstraintDef (Lorg/partiql/parser/antlr/PartiQLParser$UniqueConstraintDefContext;)V
 	public abstract fun exitUpdateClause (Lorg/partiql/parser/antlr/PartiQLParser$UpdateClauseContext;)V
 	public abstract fun exitUpsertCommand (Lorg/partiql/parser/antlr/PartiQLParser$UpsertCommandContext;)V
 	public abstract fun exitValueExpr (Lorg/partiql/parser/antlr/PartiQLParser$ValueExprContext;)V
@@ -1468,11 +1508,11 @@ public class org/partiql/parser/antlr/PartiQLParser : org/antlr/v4/runtime/Parse
 	public static final field RULE_canLosslessCast I
 	public static final field RULE_caseExpr I
 	public static final field RULE_cast I
+	public static final field RULE_checkConstraintDef I
 	public static final field RULE_coalesce I
 	public static final field RULE_collection I
 	public static final field RULE_columnConstraint I
 	public static final field RULE_columnConstraintDef I
-	public static final field RULE_columnConstraintName I
 	public static final field RULE_columnName I
 	public static final field RULE_conflictAction I
 	public static final field RULE_conflictTarget I
@@ -1566,6 +1606,7 @@ public class org/partiql/parser/antlr/PartiQLParser : org/antlr/v4/runtime/Parse
 	public static final field RULE_returningClause I
 	public static final field RULE_returningColumn I
 	public static final field RULE_root I
+	public static final field RULE_searchCondition I
 	public static final field RULE_selectClause I
 	public static final field RULE_sequenceConstructor I
 	public static final field RULE_setAssignment I
@@ -1575,7 +1616,7 @@ public class org/partiql/parser/antlr/PartiQLParser : org/antlr/v4/runtime/Parse
 	public static final field RULE_substring I
 	public static final field RULE_symbolPrimitive I
 	public static final field RULE_tableBaseReference I
-	public static final field RULE_tableConstraintName I
+	public static final field RULE_tableConstraintDef I
 	public static final field RULE_tableDef I
 	public static final field RULE_tableDefPart I
 	public static final field RULE_tableName I
@@ -1585,6 +1626,8 @@ public class org/partiql/parser/antlr/PartiQLParser : org/antlr/v4/runtime/Parse
 	public static final field RULE_trimFunction I
 	public static final field RULE_tuple I
 	public static final field RULE_type I
+	public static final field RULE_uniqueConstraintDef I
+	public static final field RULE_uniqueSpec I
 	public static final field RULE_updateClause I
 	public static final field RULE_upsertCommand I
 	public static final field RULE_valueExpr I
@@ -1677,11 +1720,11 @@ public class org/partiql/parser/antlr/PartiQLParser : org/antlr/v4/runtime/Parse
 	public final fun canLosslessCast ()Lorg/partiql/parser/antlr/PartiQLParser$CanLosslessCastContext;
 	public final fun caseExpr ()Lorg/partiql/parser/antlr/PartiQLParser$CaseExprContext;
 	public final fun cast ()Lorg/partiql/parser/antlr/PartiQLParser$CastContext;
+	public final fun checkConstraintDef ()Lorg/partiql/parser/antlr/PartiQLParser$CheckConstraintDefContext;
 	public final fun coalesce ()Lorg/partiql/parser/antlr/PartiQLParser$CoalesceContext;
 	public final fun collection ()Lorg/partiql/parser/antlr/PartiQLParser$CollectionContext;
 	public final fun columnConstraint ()Lorg/partiql/parser/antlr/PartiQLParser$ColumnConstraintContext;
 	public final fun columnConstraintDef ()Lorg/partiql/parser/antlr/PartiQLParser$ColumnConstraintDefContext;
-	public final fun columnConstraintName ()Lorg/partiql/parser/antlr/PartiQLParser$ColumnConstraintNameContext;
 	public final fun columnName ()Lorg/partiql/parser/antlr/PartiQLParser$ColumnNameContext;
 	public final fun conflictAction ()Lorg/partiql/parser/antlr/PartiQLParser$ConflictActionContext;
 	public final fun conflictTarget ()Lorg/partiql/parser/antlr/PartiQLParser$ConflictTargetContext;
@@ -1781,6 +1824,7 @@ public class org/partiql/parser/antlr/PartiQLParser : org/antlr/v4/runtime/Parse
 	public final fun returningClause ()Lorg/partiql/parser/antlr/PartiQLParser$ReturningClauseContext;
 	public final fun returningColumn ()Lorg/partiql/parser/antlr/PartiQLParser$ReturningColumnContext;
 	public final fun root ()Lorg/partiql/parser/antlr/PartiQLParser$RootContext;
+	public final fun searchCondition ()Lorg/partiql/parser/antlr/PartiQLParser$SearchConditionContext;
 	public final fun selectClause ()Lorg/partiql/parser/antlr/PartiQLParser$SelectClauseContext;
 	public fun sempred (Lorg/antlr/v4/runtime/RuleContext;II)Z
 	public final fun sequenceConstructor ()Lorg/partiql/parser/antlr/PartiQLParser$SequenceConstructorContext;
@@ -1791,7 +1835,7 @@ public class org/partiql/parser/antlr/PartiQLParser : org/antlr/v4/runtime/Parse
 	public final fun substring ()Lorg/partiql/parser/antlr/PartiQLParser$SubstringContext;
 	public final fun symbolPrimitive ()Lorg/partiql/parser/antlr/PartiQLParser$SymbolPrimitiveContext;
 	public final fun tableBaseReference ()Lorg/partiql/parser/antlr/PartiQLParser$TableBaseReferenceContext;
-	public final fun tableConstraintName ()Lorg/partiql/parser/antlr/PartiQLParser$TableConstraintNameContext;
+	public final fun tableConstraintDef ()Lorg/partiql/parser/antlr/PartiQLParser$TableConstraintDefContext;
 	public final fun tableDef ()Lorg/partiql/parser/antlr/PartiQLParser$TableDefContext;
 	public final fun tableDefPart ()Lorg/partiql/parser/antlr/PartiQLParser$TableDefPartContext;
 	public final fun tableName ()Lorg/partiql/parser/antlr/PartiQLParser$TableNameContext;
@@ -1801,6 +1845,8 @@ public class org/partiql/parser/antlr/PartiQLParser : org/antlr/v4/runtime/Parse
 	public final fun trimFunction ()Lorg/partiql/parser/antlr/PartiQLParser$TrimFunctionContext;
 	public final fun tuple ()Lorg/partiql/parser/antlr/PartiQLParser$TupleContext;
 	public final fun type ()Lorg/partiql/parser/antlr/PartiQLParser$TypeContext;
+	public final fun uniqueConstraintDef ()Lorg/partiql/parser/antlr/PartiQLParser$UniqueConstraintDefContext;
+	public final fun uniqueSpec ()Lorg/partiql/parser/antlr/PartiQLParser$UniqueSpecContext;
 	public final fun updateClause ()Lorg/partiql/parser/antlr/PartiQLParser$UpdateClauseContext;
 	public final fun upsertCommand ()Lorg/partiql/parser/antlr/PartiQLParser$UpsertCommandContext;
 	public final fun valueExpr ()Lorg/partiql/parser/antlr/PartiQLParser$ValueExprContext;
@@ -1977,6 +2023,18 @@ public class org/partiql/parser/antlr/PartiQLParser$CastContext : org/antlr/v4/r
 	public fun type ()Lorg/partiql/parser/antlr/PartiQLParser$TypeContext;
 }
 
+public class org/partiql/parser/antlr/PartiQLParser$CheckConstraintDefContext : org/antlr/v4/runtime/ParserRuleContext {
+	public fun <init> (Lorg/antlr/v4/runtime/ParserRuleContext;I)V
+	public fun CHECK ()Lorg/antlr/v4/runtime/tree/TerminalNode;
+	public fun PAREN_LEFT ()Lorg/antlr/v4/runtime/tree/TerminalNode;
+	public fun PAREN_RIGHT ()Lorg/antlr/v4/runtime/tree/TerminalNode;
+	public fun accept (Lorg/antlr/v4/runtime/tree/ParseTreeVisitor;)Ljava/lang/Object;
+	public fun enterRule (Lorg/antlr/v4/runtime/tree/ParseTreeListener;)V
+	public fun exitRule (Lorg/antlr/v4/runtime/tree/ParseTreeListener;)V
+	public fun getRuleIndex ()I
+	public fun searchCondition ()Lorg/partiql/parser/antlr/PartiQLParser$SearchConditionContext;
+}
+
 public class org/partiql/parser/antlr/PartiQLParser$CoalesceContext : org/antlr/v4/runtime/ParserRuleContext {
 	public fun <init> (Lorg/antlr/v4/runtime/ParserRuleContext;I)V
 	public fun COALESCE ()Lorg/antlr/v4/runtime/tree/TerminalNode;
@@ -1990,6 +2048,14 @@ public class org/partiql/parser/antlr/PartiQLParser$CoalesceContext : org/antlr/
 	public fun expr ()Ljava/util/List;
 	public fun expr (I)Lorg/partiql/parser/antlr/PartiQLParser$ExprContext;
 	public fun getRuleIndex ()I
+}
+
+public class org/partiql/parser/antlr/PartiQLParser$ColConstrCheckContext : org/partiql/parser/antlr/PartiQLParser$ColumnConstraintDefContext {
+	public fun <init> (Lorg/partiql/parser/antlr/PartiQLParser$ColumnConstraintDefContext;)V
+	public fun accept (Lorg/antlr/v4/runtime/tree/ParseTreeVisitor;)Ljava/lang/Object;
+	public fun checkConstraintDef ()Lorg/partiql/parser/antlr/PartiQLParser$CheckConstraintDefContext;
+	public fun enterRule (Lorg/antlr/v4/runtime/tree/ParseTreeListener;)V
+	public fun exitRule (Lorg/antlr/v4/runtime/tree/ParseTreeListener;)V
 }
 
 public class org/partiql/parser/antlr/PartiQLParser$ColConstrNotNullContext : org/partiql/parser/antlr/PartiQLParser$ColumnConstraintDefContext {
@@ -2009,6 +2075,14 @@ public class org/partiql/parser/antlr/PartiQLParser$ColConstrNullContext : org/p
 	public fun exitRule (Lorg/antlr/v4/runtime/tree/ParseTreeListener;)V
 }
 
+public class org/partiql/parser/antlr/PartiQLParser$ColConstrUniqueContext : org/partiql/parser/antlr/PartiQLParser$ColumnConstraintDefContext {
+	public fun <init> (Lorg/partiql/parser/antlr/PartiQLParser$ColumnConstraintDefContext;)V
+	public fun accept (Lorg/antlr/v4/runtime/tree/ParseTreeVisitor;)Ljava/lang/Object;
+	public fun enterRule (Lorg/antlr/v4/runtime/tree/ParseTreeListener;)V
+	public fun exitRule (Lorg/antlr/v4/runtime/tree/ParseTreeListener;)V
+	public fun uniqueSpec ()Lorg/partiql/parser/antlr/PartiQLParser$UniqueSpecContext;
+}
+
 public class org/partiql/parser/antlr/PartiQLParser$CollectionContext : org/antlr/v4/runtime/ParserRuleContext {
 	public fun <init> (Lorg/antlr/v4/runtime/ParserRuleContext;I)V
 	public fun accept (Lorg/antlr/v4/runtime/tree/ParseTreeVisitor;)Ljava/lang/Object;
@@ -2024,7 +2098,7 @@ public class org/partiql/parser/antlr/PartiQLParser$ColumnConstraintContext : or
 	public fun CONSTRAINT ()Lorg/antlr/v4/runtime/tree/TerminalNode;
 	public fun accept (Lorg/antlr/v4/runtime/tree/ParseTreeVisitor;)Ljava/lang/Object;
 	public fun columnConstraintDef ()Lorg/partiql/parser/antlr/PartiQLParser$ColumnConstraintDefContext;
-	public fun columnConstraintName ()Lorg/partiql/parser/antlr/PartiQLParser$ColumnConstraintNameContext;
+	public fun constraintName ()Lorg/partiql/parser/antlr/PartiQLParser$ConstraintNameContext;
 	public fun enterRule (Lorg/antlr/v4/runtime/tree/ParseTreeListener;)V
 	public fun exitRule (Lorg/antlr/v4/runtime/tree/ParseTreeListener;)V
 	public fun getRuleIndex ()I
@@ -2035,15 +2109,6 @@ public class org/partiql/parser/antlr/PartiQLParser$ColumnConstraintDefContext :
 	public fun <init> (Lorg/antlr/v4/runtime/ParserRuleContext;I)V
 	public fun copyFrom (Lorg/partiql/parser/antlr/PartiQLParser$ColumnConstraintDefContext;)V
 	public fun getRuleIndex ()I
-}
-
-public class org/partiql/parser/antlr/PartiQLParser$ColumnConstraintNameContext : org/antlr/v4/runtime/ParserRuleContext {
-	public fun <init> (Lorg/antlr/v4/runtime/ParserRuleContext;I)V
-	public fun accept (Lorg/antlr/v4/runtime/tree/ParseTreeVisitor;)Ljava/lang/Object;
-	public fun enterRule (Lorg/antlr/v4/runtime/tree/ParseTreeListener;)V
-	public fun exitRule (Lorg/antlr/v4/runtime/tree/ParseTreeListener;)V
-	public fun getRuleIndex ()I
-	public fun symbolPrimitive ()Lorg/partiql/parser/antlr/PartiQLParser$SymbolPrimitiveContext;
 }
 
 public class org/partiql/parser/antlr/PartiQLParser$ColumnDeclarationContext : org/partiql/parser/antlr/PartiQLParser$TableDefPartContext {
@@ -3865,6 +3930,15 @@ public class org/partiql/parser/antlr/PartiQLParser$PredicateLikeContext : org/p
 	public fun mathOp00 ()Lorg/partiql/parser/antlr/PartiQLParser$MathOp00Context;
 }
 
+public class org/partiql/parser/antlr/PartiQLParser$PrimaryKeyContext : org/partiql/parser/antlr/PartiQLParser$UniqueSpecContext {
+	public fun <init> (Lorg/partiql/parser/antlr/PartiQLParser$UniqueSpecContext;)V
+	public fun KEY ()Lorg/antlr/v4/runtime/tree/TerminalNode;
+	public fun PRIMARY ()Lorg/antlr/v4/runtime/tree/TerminalNode;
+	public fun accept (Lorg/antlr/v4/runtime/tree/ParseTreeVisitor;)Ljava/lang/Object;
+	public fun enterRule (Lorg/antlr/v4/runtime/tree/ParseTreeListener;)V
+	public fun exitRule (Lorg/antlr/v4/runtime/tree/ParseTreeListener;)V
+}
+
 public class org/partiql/parser/antlr/PartiQLParser$ProjectionItemContext : org/antlr/v4/runtime/ParserRuleContext {
 	public fun <init> (Lorg/antlr/v4/runtime/ParserRuleContext;I)V
 	public fun AS ()Lorg/antlr/v4/runtime/tree/TerminalNode;
@@ -4019,6 +4093,15 @@ public class org/partiql/parser/antlr/PartiQLParser$RootContext : org/antlr/v4/r
 	public fun explainOption (I)Lorg/partiql/parser/antlr/PartiQLParser$ExplainOptionContext;
 	public fun getRuleIndex ()I
 	public fun statement ()Lorg/partiql/parser/antlr/PartiQLParser$StatementContext;
+}
+
+public class org/partiql/parser/antlr/PartiQLParser$SearchConditionContext : org/antlr/v4/runtime/ParserRuleContext {
+	public fun <init> (Lorg/antlr/v4/runtime/ParserRuleContext;I)V
+	public fun accept (Lorg/antlr/v4/runtime/tree/ParseTreeVisitor;)Ljava/lang/Object;
+	public fun enterRule (Lorg/antlr/v4/runtime/tree/ParseTreeListener;)V
+	public fun exitRule (Lorg/antlr/v4/runtime/tree/ParseTreeListener;)V
+	public fun exprOr ()Lorg/partiql/parser/antlr/PartiQLParser$ExprOrContext;
+	public fun getRuleIndex ()I
 }
 
 public class org/partiql/parser/antlr/PartiQLParser$SelectAllContext : org/partiql/parser/antlr/PartiQLParser$SelectClauseContext {
@@ -4266,13 +4349,37 @@ public class org/partiql/parser/antlr/PartiQLParser$TableBaseReferenceContext : 
 	public fun getRuleIndex ()I
 }
 
-public class org/partiql/parser/antlr/PartiQLParser$TableConstraintNameContext : org/antlr/v4/runtime/ParserRuleContext {
-	public fun <init> (Lorg/antlr/v4/runtime/ParserRuleContext;I)V
+public class org/partiql/parser/antlr/PartiQLParser$TableConstrCheckContext : org/partiql/parser/antlr/PartiQLParser$TableConstraintDefContext {
+	public fun <init> (Lorg/partiql/parser/antlr/PartiQLParser$TableConstraintDefContext;)V
+	public fun accept (Lorg/antlr/v4/runtime/tree/ParseTreeVisitor;)Ljava/lang/Object;
+	public fun checkConstraintDef ()Lorg/partiql/parser/antlr/PartiQLParser$CheckConstraintDefContext;
+	public fun enterRule (Lorg/antlr/v4/runtime/tree/ParseTreeListener;)V
+	public fun exitRule (Lorg/antlr/v4/runtime/tree/ParseTreeListener;)V
+}
+
+public class org/partiql/parser/antlr/PartiQLParser$TableConstrDeclarationContext : org/partiql/parser/antlr/PartiQLParser$TableDefPartContext {
+	public fun <init> (Lorg/partiql/parser/antlr/PartiQLParser$TableDefPartContext;)V
+	public fun CONSTRAINT ()Lorg/antlr/v4/runtime/tree/TerminalNode;
+	public fun accept (Lorg/antlr/v4/runtime/tree/ParseTreeVisitor;)Ljava/lang/Object;
+	public fun constraintName ()Lorg/partiql/parser/antlr/PartiQLParser$ConstraintNameContext;
+	public fun enterRule (Lorg/antlr/v4/runtime/tree/ParseTreeListener;)V
+	public fun exitRule (Lorg/antlr/v4/runtime/tree/ParseTreeListener;)V
+	public fun tableConstraintDef ()Lorg/partiql/parser/antlr/PartiQLParser$TableConstraintDefContext;
+}
+
+public class org/partiql/parser/antlr/PartiQLParser$TableConstrUniqueContext : org/partiql/parser/antlr/PartiQLParser$TableConstraintDefContext {
+	public fun <init> (Lorg/partiql/parser/antlr/PartiQLParser$TableConstraintDefContext;)V
 	public fun accept (Lorg/antlr/v4/runtime/tree/ParseTreeVisitor;)Ljava/lang/Object;
 	public fun enterRule (Lorg/antlr/v4/runtime/tree/ParseTreeListener;)V
 	public fun exitRule (Lorg/antlr/v4/runtime/tree/ParseTreeListener;)V
+	public fun uniqueConstraintDef ()Lorg/partiql/parser/antlr/PartiQLParser$UniqueConstraintDefContext;
+}
+
+public class org/partiql/parser/antlr/PartiQLParser$TableConstraintDefContext : org/antlr/v4/runtime/ParserRuleContext {
+	public fun <init> ()V
+	public fun <init> (Lorg/antlr/v4/runtime/ParserRuleContext;I)V
+	public fun copyFrom (Lorg/partiql/parser/antlr/PartiQLParser$TableConstraintDefContext;)V
 	public fun getRuleIndex ()I
-	public fun symbolPrimitive ()Lorg/partiql/parser/antlr/PartiQLParser$SymbolPrimitiveContext;
 }
 
 public class org/partiql/parser/antlr/PartiQLParser$TableCrossJoinContext : org/partiql/parser/antlr/PartiQLParser$TableReferenceContext {
@@ -4543,6 +4650,36 @@ public class org/partiql/parser/antlr/PartiQLParser$UnionContext : org/partiql/p
 	public fun exitRule (Lorg/antlr/v4/runtime/tree/ParseTreeListener;)V
 	public fun exprBagOp ()Lorg/partiql/parser/antlr/PartiQLParser$ExprBagOpContext;
 	public fun exprSelect ()Lorg/partiql/parser/antlr/PartiQLParser$ExprSelectContext;
+}
+
+public class org/partiql/parser/antlr/PartiQLParser$UniqueConstraintDefContext : org/antlr/v4/runtime/ParserRuleContext {
+	public fun <init> (Lorg/antlr/v4/runtime/ParserRuleContext;I)V
+	public fun COMMA ()Ljava/util/List;
+	public fun COMMA (I)Lorg/antlr/v4/runtime/tree/TerminalNode;
+	public fun PAREN_LEFT ()Lorg/antlr/v4/runtime/tree/TerminalNode;
+	public fun PAREN_RIGHT ()Lorg/antlr/v4/runtime/tree/TerminalNode;
+	public fun accept (Lorg/antlr/v4/runtime/tree/ParseTreeVisitor;)Ljava/lang/Object;
+	public fun columnName ()Ljava/util/List;
+	public fun columnName (I)Lorg/partiql/parser/antlr/PartiQLParser$ColumnNameContext;
+	public fun enterRule (Lorg/antlr/v4/runtime/tree/ParseTreeListener;)V
+	public fun exitRule (Lorg/antlr/v4/runtime/tree/ParseTreeListener;)V
+	public fun getRuleIndex ()I
+	public fun uniqueSpec ()Lorg/partiql/parser/antlr/PartiQLParser$UniqueSpecContext;
+}
+
+public class org/partiql/parser/antlr/PartiQLParser$UniqueContext : org/partiql/parser/antlr/PartiQLParser$UniqueSpecContext {
+	public fun <init> (Lorg/partiql/parser/antlr/PartiQLParser$UniqueSpecContext;)V
+	public fun UNIQUE ()Lorg/antlr/v4/runtime/tree/TerminalNode;
+	public fun accept (Lorg/antlr/v4/runtime/tree/ParseTreeVisitor;)Ljava/lang/Object;
+	public fun enterRule (Lorg/antlr/v4/runtime/tree/ParseTreeListener;)V
+	public fun exitRule (Lorg/antlr/v4/runtime/tree/ParseTreeListener;)V
+}
+
+public class org/partiql/parser/antlr/PartiQLParser$UniqueSpecContext : org/antlr/v4/runtime/ParserRuleContext {
+	public fun <init> ()V
+	public fun <init> (Lorg/antlr/v4/runtime/ParserRuleContext;I)V
+	public fun copyFrom (Lorg/partiql/parser/antlr/PartiQLParser$UniqueSpecContext;)V
+	public fun getRuleIndex ()I
 }
 
 public class org/partiql/parser/antlr/PartiQLParser$UpdateClauseContext : org/antlr/v4/runtime/ParserRuleContext {
@@ -5057,12 +5194,14 @@ public abstract interface class org/partiql/parser/antlr/PartiQLVisitor : org/an
 	public abstract fun visitCanLosslessCast (Lorg/partiql/parser/antlr/PartiQLParser$CanLosslessCastContext;)Ljava/lang/Object;
 	public abstract fun visitCaseExpr (Lorg/partiql/parser/antlr/PartiQLParser$CaseExprContext;)Ljava/lang/Object;
 	public abstract fun visitCast (Lorg/partiql/parser/antlr/PartiQLParser$CastContext;)Ljava/lang/Object;
+	public abstract fun visitCheckConstraintDef (Lorg/partiql/parser/antlr/PartiQLParser$CheckConstraintDefContext;)Ljava/lang/Object;
 	public abstract fun visitCoalesce (Lorg/partiql/parser/antlr/PartiQLParser$CoalesceContext;)Ljava/lang/Object;
+	public abstract fun visitColConstrCheck (Lorg/partiql/parser/antlr/PartiQLParser$ColConstrCheckContext;)Ljava/lang/Object;
 	public abstract fun visitColConstrNotNull (Lorg/partiql/parser/antlr/PartiQLParser$ColConstrNotNullContext;)Ljava/lang/Object;
 	public abstract fun visitColConstrNull (Lorg/partiql/parser/antlr/PartiQLParser$ColConstrNullContext;)Ljava/lang/Object;
+	public abstract fun visitColConstrUnique (Lorg/partiql/parser/antlr/PartiQLParser$ColConstrUniqueContext;)Ljava/lang/Object;
 	public abstract fun visitCollection (Lorg/partiql/parser/antlr/PartiQLParser$CollectionContext;)Ljava/lang/Object;
 	public abstract fun visitColumnConstraint (Lorg/partiql/parser/antlr/PartiQLParser$ColumnConstraintContext;)Ljava/lang/Object;
-	public abstract fun visitColumnConstraintName (Lorg/partiql/parser/antlr/PartiQLParser$ColumnConstraintNameContext;)Ljava/lang/Object;
 	public abstract fun visitColumnDeclaration (Lorg/partiql/parser/antlr/PartiQLParser$ColumnDeclarationContext;)Ljava/lang/Object;
 	public abstract fun visitColumnName (Lorg/partiql/parser/antlr/PartiQLParser$ColumnNameContext;)Ljava/lang/Object;
 	public abstract fun visitConflictAction (Lorg/partiql/parser/antlr/PartiQLParser$ConflictActionContext;)Ljava/lang/Object;
@@ -5200,6 +5339,7 @@ public abstract interface class org/partiql/parser/antlr/PartiQLVisitor : org/an
 	public abstract fun visitPredicateIn (Lorg/partiql/parser/antlr/PartiQLParser$PredicateInContext;)Ljava/lang/Object;
 	public abstract fun visitPredicateIs (Lorg/partiql/parser/antlr/PartiQLParser$PredicateIsContext;)Ljava/lang/Object;
 	public abstract fun visitPredicateLike (Lorg/partiql/parser/antlr/PartiQLParser$PredicateLikeContext;)Ljava/lang/Object;
+	public abstract fun visitPrimaryKey (Lorg/partiql/parser/antlr/PartiQLParser$PrimaryKeyContext;)Ljava/lang/Object;
 	public abstract fun visitProjectionItem (Lorg/partiql/parser/antlr/PartiQLParser$ProjectionItemContext;)Ljava/lang/Object;
 	public abstract fun visitProjectionItems (Lorg/partiql/parser/antlr/PartiQLParser$ProjectionItemsContext;)Ljava/lang/Object;
 	public abstract fun visitQualifiedName (Lorg/partiql/parser/antlr/PartiQLParser$QualifiedNameContext;)Ljava/lang/Object;
@@ -5213,6 +5353,7 @@ public abstract interface class org/partiql/parser/antlr/PartiQLVisitor : org/an
 	public abstract fun visitReturningClause (Lorg/partiql/parser/antlr/PartiQLParser$ReturningClauseContext;)Ljava/lang/Object;
 	public abstract fun visitReturningColumn (Lorg/partiql/parser/antlr/PartiQLParser$ReturningColumnContext;)Ljava/lang/Object;
 	public abstract fun visitRoot (Lorg/partiql/parser/antlr/PartiQLParser$RootContext;)Ljava/lang/Object;
+	public abstract fun visitSearchCondition (Lorg/partiql/parser/antlr/PartiQLParser$SearchConditionContext;)Ljava/lang/Object;
 	public abstract fun visitSelectAll (Lorg/partiql/parser/antlr/PartiQLParser$SelectAllContext;)Ljava/lang/Object;
 	public abstract fun visitSelectItems (Lorg/partiql/parser/antlr/PartiQLParser$SelectItemsContext;)Ljava/lang/Object;
 	public abstract fun visitSelectPivot (Lorg/partiql/parser/antlr/PartiQLParser$SelectPivotContext;)Ljava/lang/Object;
@@ -5231,7 +5372,9 @@ public abstract interface class org/partiql/parser/antlr/PartiQLVisitor : org/an
 	public abstract fun visitTableBaseRefClauses (Lorg/partiql/parser/antlr/PartiQLParser$TableBaseRefClausesContext;)Ljava/lang/Object;
 	public abstract fun visitTableBaseRefMatch (Lorg/partiql/parser/antlr/PartiQLParser$TableBaseRefMatchContext;)Ljava/lang/Object;
 	public abstract fun visitTableBaseRefSymbol (Lorg/partiql/parser/antlr/PartiQLParser$TableBaseRefSymbolContext;)Ljava/lang/Object;
-	public abstract fun visitTableConstraintName (Lorg/partiql/parser/antlr/PartiQLParser$TableConstraintNameContext;)Ljava/lang/Object;
+	public abstract fun visitTableConstrCheck (Lorg/partiql/parser/antlr/PartiQLParser$TableConstrCheckContext;)Ljava/lang/Object;
+	public abstract fun visitTableConstrDeclaration (Lorg/partiql/parser/antlr/PartiQLParser$TableConstrDeclarationContext;)Ljava/lang/Object;
+	public abstract fun visitTableConstrUnique (Lorg/partiql/parser/antlr/PartiQLParser$TableConstrUniqueContext;)Ljava/lang/Object;
 	public abstract fun visitTableCrossJoin (Lorg/partiql/parser/antlr/PartiQLParser$TableCrossJoinContext;)Ljava/lang/Object;
 	public abstract fun visitTableDef (Lorg/partiql/parser/antlr/PartiQLParser$TableDefContext;)Ljava/lang/Object;
 	public abstract fun visitTableName (Lorg/partiql/parser/antlr/PartiQLParser$TableNameContext;)Ljava/lang/Object;
@@ -5249,6 +5392,8 @@ public abstract interface class org/partiql/parser/antlr/PartiQLVisitor : org/an
 	public abstract fun visitTypeTimeZone (Lorg/partiql/parser/antlr/PartiQLParser$TypeTimeZoneContext;)Ljava/lang/Object;
 	public abstract fun visitTypeVarChar (Lorg/partiql/parser/antlr/PartiQLParser$TypeVarCharContext;)Ljava/lang/Object;
 	public abstract fun visitUnion (Lorg/partiql/parser/antlr/PartiQLParser$UnionContext;)Ljava/lang/Object;
+	public abstract fun visitUnique (Lorg/partiql/parser/antlr/PartiQLParser$UniqueContext;)Ljava/lang/Object;
+	public abstract fun visitUniqueConstraintDef (Lorg/partiql/parser/antlr/PartiQLParser$UniqueConstraintDefContext;)Ljava/lang/Object;
 	public abstract fun visitUpdateClause (Lorg/partiql/parser/antlr/PartiQLParser$UpdateClauseContext;)Ljava/lang/Object;
 	public abstract fun visitUpsertCommand (Lorg/partiql/parser/antlr/PartiQLParser$UpsertCommandContext;)Ljava/lang/Object;
 	public abstract fun visitValueExpr (Lorg/partiql/parser/antlr/PartiQLParser$ValueExprContext;)Ljava/lang/Object;
