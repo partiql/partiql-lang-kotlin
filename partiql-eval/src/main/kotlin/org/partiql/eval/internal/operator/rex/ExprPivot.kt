@@ -1,10 +1,12 @@
 package org.partiql.eval.internal.operator.rex
 
+import org.partiql.eval.PQLValue
+import org.partiql.eval.StructField
 import org.partiql.eval.internal.Environment
+import org.partiql.eval.internal.helpers.ValueUtility.check
 import org.partiql.eval.internal.operator.Operator
-import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.StringValue
+import org.partiql.value.PartiQLValueType
 import org.partiql.value.check
 import org.partiql.value.structValue
 
@@ -15,17 +17,17 @@ internal class ExprPivot(
     private val value: Operator.Expr,
 ) : Operator.Expr {
 
-    override fun eval(env: Environment): PartiQLValue {
+    override fun eval(env: Environment): PQLValue {
         input.open(env)
-        val fields = mutableListOf<Pair<String, PartiQLValue>>()
+        val fields = mutableListOf<StructField>()
         while (input.hasNext()) {
             val row = input.next()
             val newEnv = env.push(row)
-            val k = key.eval(newEnv).check<StringValue>()
+            val k = key.eval(newEnv).check(PartiQLValueType.STRING)
             val v = value.eval(newEnv)
-            fields.add(k.value!! to v)
+            fields.add(StructField.of(k.stringValue, v))
         }
         input.close()
-        return structValue(fields)
+        return PQLValue.structValue(fields)
     }
 }

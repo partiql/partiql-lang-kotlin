@@ -2,14 +2,13 @@ package org.partiql.eval.internal.operator.rex
 
 import org.partiql.errors.CardinalityViolation
 import org.partiql.errors.TypeCheckException
+import org.partiql.eval.PQLValue
 import org.partiql.eval.internal.Environment
+import org.partiql.eval.internal.helpers.ValueUtility.check
 import org.partiql.eval.internal.operator.Operator
-import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.PartiQLValueType
 import org.partiql.value.StructValue
-import org.partiql.value.check
-import org.partiql.value.listValue
-import org.partiql.value.nullValue
 
 /**
  * The PartiQL Specification talks about subqueries and how they are coerced. Specifically, subqueries are
@@ -29,10 +28,10 @@ internal abstract class ExprSubquery : Operator.Expr {
     ) : ExprSubquery() {
 
         @PartiQLValueExperimental
-        override fun eval(env: Environment): PartiQLValue {
-            val tuple = getFirst(env) ?: return nullValue()
-            val values = tuple.values.iterator()
-            return listValue(values.asSequence().toList())
+        override fun eval(env: Environment): PQLValue {
+            val tuple = getFirst(env) ?: return PQLValue.nullValue()
+            val values = tuple.structFields.asSequence().map { it.value }
+            return PQLValue.listValue(values.asIterable())
         }
     }
 
@@ -42,9 +41,9 @@ internal abstract class ExprSubquery : Operator.Expr {
     ) : ExprSubquery() {
 
         @PartiQLValueExperimental
-        override fun eval(env: Environment): PartiQLValue {
-            val tuple = getFirst(env) ?: return nullValue()
-            val values = tuple.values.iterator()
+        override fun eval(env: Environment): PQLValue {
+            val tuple = getFirst(env) ?: return PQLValue.nullValue()
+            val values = tuple.structFields.asSequence().map { it.value }.iterator()
             if (values.hasNext().not()) {
                 throw TypeCheckException()
             }
@@ -65,14 +64,14 @@ internal abstract class ExprSubquery : Operator.Expr {
      * @throws TypeCheckException when the constructor is not a [StructValue].
      */
     @OptIn(PartiQLValueExperimental::class)
-    fun getFirst(env: Environment): StructValue<*>? {
+    fun getFirst(env: Environment): PQLValue? {
         input.open(env)
         if (input.hasNext().not()) {
             input.close()
             return null
         }
         val firstRecord = input.next()
-        val tuple = constructor.eval(env.push(firstRecord)).check<StructValue<*>>()
+        val tuple = constructor.eval(env.push(firstRecord)).check(PartiQLValueType.STRUCT)
         if (input.hasNext()) {
             input.close()
             throw CardinalityViolation()

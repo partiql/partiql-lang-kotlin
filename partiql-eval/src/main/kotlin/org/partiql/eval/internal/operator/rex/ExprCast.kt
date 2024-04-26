@@ -6,6 +6,7 @@ import com.amazon.ionelement.api.IonElementException
 import com.amazon.ionelement.api.createIonElementLoader
 import org.partiql.errors.DataException
 import org.partiql.errors.TypeCheckException
+import org.partiql.eval.PQLValue
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.plan.Ref
@@ -60,10 +61,10 @@ import java.math.BigInteger
 // TODO: This is incomplete
 internal class ExprCast(val arg: Operator.Expr, val cast: Ref.Cast) : Operator.Expr {
     @OptIn(PartiQLValueExperimental::class)
-    override fun eval(env: Environment): PartiQLValue {
+    override fun eval(env: Environment): PQLValue {
         val arg = arg.eval(env)
         try {
-            return when (arg.type) {
+            val partiqlValue = when (arg.type) {
                 PartiQLValueType.ANY -> TODO("Not Possible")
                 PartiQLValueType.BOOL -> castFromBool(arg as BoolValue, cast.target)
                 PartiQLValueType.INT8 -> castFromNumeric(arg as Int8Value, cast.target)
@@ -93,6 +94,7 @@ internal class ExprCast(val arg: Operator.Expr, val cast: Ref.Cast) : Operator.E
                 PartiQLValueType.NULL -> castFromNull(arg as NullValue, cast.target)
                 PartiQLValueType.MISSING -> error("cast from MISSING should be handled by Typer")
             }
+            return PQLValue.of(partiqlValue)
         } catch (e: DataException) {
             throw TypeCheckException()
         }

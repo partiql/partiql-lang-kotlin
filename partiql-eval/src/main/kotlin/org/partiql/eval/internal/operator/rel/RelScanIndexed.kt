@@ -1,32 +1,31 @@
 package org.partiql.eval.internal.operator.rel
 
 import org.partiql.errors.TypeCheckException
+import org.partiql.eval.PQLValue
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
-import org.partiql.value.BagValue
-import org.partiql.value.CollectionValue
-import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.int64Value
+import org.partiql.value.PartiQLValueType
 
 @OptIn(PartiQLValueExperimental::class)
 internal class RelScanIndexed(
     private val expr: Operator.Expr
 ) : Operator.Relation {
 
-    private lateinit var iterator: Iterator<PartiQLValue>
+    private lateinit var iterator: Iterator<PQLValue>
     private var index: Long = 0
 
     override fun open(env: Environment) {
         val r = expr.eval(env.push(Record.empty))
         index = 0
-        iterator = when (r) {
-            is BagValue<*> -> {
+        iterator = when (r.type) {
+            PartiQLValueType.BAG -> {
                 close()
                 throw TypeCheckException()
             }
-            is CollectionValue<*> -> r.iterator()
+            PartiQLValueType.LIST -> r.listValues
+            PartiQLValueType.SEXP -> r.sexpValues
             else -> {
                 close()
                 throw TypeCheckException()
@@ -42,7 +41,7 @@ internal class RelScanIndexed(
         val i = index
         val v = iterator.next()
         index += 1
-        return Record.of(v, int64Value(i))
+        return Record.of(v, PQLValue.int64Value(i))
     }
 
     override fun close() {}

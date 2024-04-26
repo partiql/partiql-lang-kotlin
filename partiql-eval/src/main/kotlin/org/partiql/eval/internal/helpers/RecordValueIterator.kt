@@ -1,15 +1,13 @@
 package org.partiql.eval.internal.helpers
 
+import org.partiql.eval.PQLValue
 import org.partiql.eval.internal.Record
-import org.partiql.value.CollectionValue
-import org.partiql.value.PartiQLValueExperimental
 
 /**
- * An [Iterator] over a [CollectionValue] lazily producing [Record]s as you call [next].
+ * An [Iterator] over an [Iterator] lazily producing [Record]s as you call [next].
  */
-@OptIn(PartiQLValueExperimental::class)
 internal class RecordValueIterator(
-    collectionValue: CollectionValue<*>
+    collectionValue: Iterator<PQLValue>
 ) : Iterator<Record> {
 
     private val collectionIter = collectionValue.iterator()

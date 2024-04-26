@@ -1,5 +1,7 @@
 package org.partiql.eval.internal.operator.rel
 
+import org.partiql.eval.PQLValue
+import org.partiql.eval.StructField
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
@@ -9,18 +11,9 @@ import org.partiql.plan.relOpExcludeTypeCollWildcard
 import org.partiql.plan.relOpExcludeTypeStructKey
 import org.partiql.plan.relOpExcludeTypeStructSymbol
 import org.partiql.plan.relOpExcludeTypeStructWildcard
-import org.partiql.value.BagValue
-import org.partiql.value.CollectionValue
-import org.partiql.value.ListValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
-import org.partiql.value.SexpValue
-import org.partiql.value.StructValue
-import org.partiql.value.bagValue
-import org.partiql.value.listValue
-import org.partiql.value.sexpValue
-import org.partiql.value.structValue
 
 internal class RelExclude(
     private val input: Operator.Relation,
@@ -41,7 +34,7 @@ internal class RelExclude(
         exclusions.forEach { path ->
             val root = path.root.ref
             val value = record.values[root]
-            record.values[root] = exclude(value, path.steps)
+            record.values[root] = excludeValue(value, path.steps)
         }
         return record
     }
@@ -51,10 +44,10 @@ internal class RelExclude(
     }
 
     @OptIn(PartiQLValueExperimental::class)
-    private fun exclude(
-        structValue: StructValue<*>,
+    private fun excludeStruct(
+        structValue: PQLValue,
         exclusions: List<Rel.Op.Exclude.Step>
-    ): PartiQLValue {
+    ): PQLValue {
         val structSymbolsToRemove = mutableSetOf<String>()
         val structKeysToRemove = mutableSetOf<String>() // keys stored as lowercase strings
         val branches = mutableMapOf<Rel.Op.Exclude.Type, List<Rel.Op.Exclude.Step>>()
@@ -64,7 +57,7 @@ internal class RelExclude(
                     when (val leafType = exclusion.type) {
                         is Rel.Op.Exclude.Type.StructWildcard -> {
                             // struct wildcard at current level. return empty struct
-                            return structValue<PartiQLValue>()
+                            return PQLValue.structValue(emptyList())
                         }
                         is Rel.Op.Exclude.Type.StructSymbol -> structSymbolsToRemove.add(leafType.symbol)
                         is Rel.Op.Exclude.Type.StructKey -> structKeysToRemove.add(leafType.key.lowercase())
@@ -80,33 +73,33 @@ internal class RelExclude(
                 }
             }
         }
-        val finalStruct = structValue.entries.mapNotNull { structField ->
-            if (structSymbolsToRemove.contains(structField.first) || structKeysToRemove.contains(structField.first.lowercase())) {
+        val finalStruct = structValue.structFields.asSequence().mapNotNull { structField ->
+            if (structSymbolsToRemove.contains(structField.name) || structKeysToRemove.contains(structField.name.lowercase())) {
                 // struct attr is to be removed at current level
                 null
             } else {
                 // deeper level exclusions
-                val name = structField.first
-                var value = structField.second
+                val name = structField.name
+                var value = structField.value
                 // apply struct key exclusions at deeper levels
                 val structKey = relOpExcludeTypeStructKey(name)
                 branches[structKey]?.let {
-                    value = exclude(value, it)
+                    value = excludeValue(value, it)
                 }
                 // apply struct symbol exclusions at deeper levels
                 val structSymbol = relOpExcludeTypeStructSymbol(name)
                 branches[structSymbol]?.let {
-                    value = exclude(value, it)
+                    value = excludeValue(value, it)
                 }
                 // apply struct wildcard exclusions at deeper levels
                 val structWildcard = relOpExcludeTypeStructWildcard()
                 branches[structWildcard]?.let {
-                    value = exclude(value, it)
+                    value = excludeValue(value, it)
                 }
                 Pair(name, value)
             }
-        }
-        return structValue(finalStruct)
+        }.map { StructField.of(it.first, it.second) }.asIterable()
+        return PQLValue.structValue(finalStruct)
     }
 
     /**
@@ -114,21 +107,21 @@ internal class RelExclude(
      * (i.e. [PartiQLValueType.LIST], [PartiQLValueType.BAG], or [PartiQLValueType.SEXP]).
      */
     @OptIn(PartiQLValueExperimental::class)
-    private fun newCollValue(type: PartiQLValueType, coll: Iterable<PartiQLValue>): PartiQLValue {
+    private fun newCollValue(type: PartiQLValueType, coll: Iterable<PQLValue>): PQLValue {
         return when (type) {
-            PartiQLValueType.LIST -> listValue(coll)
-            PartiQLValueType.BAG -> bagValue(coll)
-            PartiQLValueType.SEXP -> sexpValue(coll)
+            PartiQLValueType.LIST -> PQLValue.listValue(coll)
+            PartiQLValueType.BAG -> PQLValue.bagValue(coll)
+            PartiQLValueType.SEXP -> PQLValue.sexpValue(coll)
             else -> error("Collection type required")
         }
     }
 
     @OptIn(PartiQLValueExperimental::class)
-    private fun exclude(
-        coll: CollectionValue<*>,
+    private fun excludeCollection(
+        coll: Iterator<PQLValue>,
         type: PartiQLValueType,
         exclusions: List<Rel.Op.Exclude.Step>
-    ): PartiQLValue {
+    ): PQLValue {
         val indexesToRemove = mutableSetOf<Int>()
         val branches = mutableMapOf<Rel.Op.Exclude.Type, List<Rel.Op.Exclude.Step>>()
         exclusions.forEach { exclusion ->
@@ -154,38 +147,38 @@ internal class RelExclude(
                 }
             }
         }
-        val finalColl = coll.mapIndexedNotNull { index, element ->
+        val finalColl = coll.asSequence().mapIndexedNotNull { index, element ->
             if (indexesToRemove.contains(index)) {
                 // coll index is to be removed at current level
                 null
             } else {
                 // deeper level exclusions
                 var value = element
-                if (coll is ListValue || coll is SexpValue) {
+                if (type == PartiQLValueType.LIST || type == PartiQLValueType.SEXP) {
                     // apply collection index exclusions at deeper levels for lists and sexps
                     val collIndex = relOpExcludeTypeCollIndex(index)
                     branches[collIndex]?.let {
-                        value = exclude(element, it)
+                        value = excludeValue(element, it)
                     }
                 }
                 // apply collection wildcard exclusions at deeper levels for lists, bags, and sexps
                 val collWildcard = relOpExcludeTypeCollWildcard()
                 branches[collWildcard]?.let {
-                    value = exclude(value, it)
+                    value = excludeValue(value, it)
                 }
                 value
             }
-        }
+        }.asIterable()
         return newCollValue(type, finalColl)
     }
 
     @OptIn(PartiQLValueExperimental::class)
-    private fun exclude(initialPartiQLValue: PartiQLValue, exclusions: List<Rel.Op.Exclude.Step>): PartiQLValue {
-        return when (initialPartiQLValue) {
-            is StructValue<*> -> exclude(initialPartiQLValue, exclusions)
-            is BagValue<*> -> exclude(initialPartiQLValue, PartiQLValueType.BAG, exclusions)
-            is ListValue<*> -> exclude(initialPartiQLValue, PartiQLValueType.LIST, exclusions)
-            is SexpValue<*> -> exclude(initialPartiQLValue, PartiQLValueType.SEXP, exclusions)
+    private fun excludeValue(initialPartiQLValue: PQLValue, exclusions: List<Rel.Op.Exclude.Step>): PQLValue {
+        return when (initialPartiQLValue.type) {
+            PartiQLValueType.STRUCT -> excludeStruct(initialPartiQLValue, exclusions)
+            PartiQLValueType.BAG -> excludeCollection(initialPartiQLValue.bagValues, initialPartiQLValue.type, exclusions)
+            PartiQLValueType.LIST -> excludeCollection(initialPartiQLValue.listValues, initialPartiQLValue.type, exclusions)
+            PartiQLValueType.SEXP -> excludeCollection(initialPartiQLValue.sexpValues, initialPartiQLValue.type, exclusions)
             else -> {
                 initialPartiQLValue
             }
