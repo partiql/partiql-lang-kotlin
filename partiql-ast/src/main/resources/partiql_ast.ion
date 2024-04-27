@@ -196,10 +196,29 @@ type::[
   timestamp_with_tz::{ precision: optional::int },             // TIMESTAMP [(<int>)] WITH TIMEZONE
   interval::{ precision: optional::int },                      // INTERVAL
   bag::{},                                                     // BAG
+  // Keep the list type for backward compatible reason
+  // user should migrate to the array type
   list::{},                                                    // LIST
+  array::{ type: optional::type },                             // ARRAY
   sexp::{},                                                    // SEXP
+  // Keep the tuple type for backward compatible reason
+  // migration: in v0.15.0: struct modeling should NOT be Introduced,
+  //  users of struct type should be migrate to tuple type.
+  //  in v1.0.0: introduce the struct modeling change, all users from tuple type should migrate to struct type.
   tuple::{},                                                   // TUPLE
-  struct::{},                                                  // STRUCT
+  struct::{
+    fields: list::[field],
+    _ : [
+      field :: {
+        name: '.identifier.symbol',
+        type: '.type',
+        // This could be a boolean flag since we only support NOT NULL constraint
+        // for struct subfield. But modeling this to be a list of constraints
+        // to prevent future breaking changes.
+        constraints: list::[constraint],
+      }
+    ],
+  },                                                           // STRUCT
   any::{},                                                     // ANY
   custom::{ name: string },                                    // <symbol>
 ]

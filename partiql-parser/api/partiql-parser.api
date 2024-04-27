@@ -305,6 +305,7 @@ public class org/partiql/parser/antlr/PartiQLBaseListener : org/partiql/parser/a
 	public fun enterSetQuantifierStrategy (Lorg/partiql/parser/antlr/PartiQLParser$SetQuantifierStrategyContext;)V
 	public fun enterSfwBase (Lorg/partiql/parser/antlr/PartiQLParser$SfwBaseContext;)V
 	public fun enterSfwQuery (Lorg/partiql/parser/antlr/PartiQLParser$SfwQueryContext;)V
+	public fun enterStructAttr (Lorg/partiql/parser/antlr/PartiQLParser$StructAttrContext;)V
 	public fun enterSubstring (Lorg/partiql/parser/antlr/PartiQLParser$SubstringContext;)V
 	public fun enterSymbolPrimitive (Lorg/partiql/parser/antlr/PartiQLParser$SymbolPrimitiveContext;)V
 	public fun enterTableBaseRefClauses (Lorg/partiql/parser/antlr/PartiQLParser$TableBaseRefClausesContext;)V
@@ -326,7 +327,10 @@ public class org/partiql/parser/antlr/PartiQLBaseListener : org/partiql/parser/a
 	public fun enterTypeArgDouble (Lorg/partiql/parser/antlr/PartiQLParser$TypeArgDoubleContext;)V
 	public fun enterTypeArgSingle (Lorg/partiql/parser/antlr/PartiQLParser$TypeArgSingleContext;)V
 	public fun enterTypeAtomic (Lorg/partiql/parser/antlr/PartiQLParser$TypeAtomicContext;)V
+	public fun enterTypeComplexLegacy (Lorg/partiql/parser/antlr/PartiQLParser$TypeComplexLegacyContext;)V
 	public fun enterTypeCustom (Lorg/partiql/parser/antlr/PartiQLParser$TypeCustomContext;)V
+	public fun enterTypeList (Lorg/partiql/parser/antlr/PartiQLParser$TypeListContext;)V
+	public fun enterTypeStruct (Lorg/partiql/parser/antlr/PartiQLParser$TypeStructContext;)V
 	public fun enterTypeTimeZone (Lorg/partiql/parser/antlr/PartiQLParser$TypeTimeZoneContext;)V
 	public fun enterTypeVarChar (Lorg/partiql/parser/antlr/PartiQLParser$TypeVarCharContext;)V
 	public fun enterUnion (Lorg/partiql/parser/antlr/PartiQLParser$UnionContext;)V
@@ -529,6 +533,7 @@ public class org/partiql/parser/antlr/PartiQLBaseListener : org/partiql/parser/a
 	public fun exitSetQuantifierStrategy (Lorg/partiql/parser/antlr/PartiQLParser$SetQuantifierStrategyContext;)V
 	public fun exitSfwBase (Lorg/partiql/parser/antlr/PartiQLParser$SfwBaseContext;)V
 	public fun exitSfwQuery (Lorg/partiql/parser/antlr/PartiQLParser$SfwQueryContext;)V
+	public fun exitStructAttr (Lorg/partiql/parser/antlr/PartiQLParser$StructAttrContext;)V
 	public fun exitSubstring (Lorg/partiql/parser/antlr/PartiQLParser$SubstringContext;)V
 	public fun exitSymbolPrimitive (Lorg/partiql/parser/antlr/PartiQLParser$SymbolPrimitiveContext;)V
 	public fun exitTableBaseRefClauses (Lorg/partiql/parser/antlr/PartiQLParser$TableBaseRefClausesContext;)V
@@ -550,7 +555,10 @@ public class org/partiql/parser/antlr/PartiQLBaseListener : org/partiql/parser/a
 	public fun exitTypeArgDouble (Lorg/partiql/parser/antlr/PartiQLParser$TypeArgDoubleContext;)V
 	public fun exitTypeArgSingle (Lorg/partiql/parser/antlr/PartiQLParser$TypeArgSingleContext;)V
 	public fun exitTypeAtomic (Lorg/partiql/parser/antlr/PartiQLParser$TypeAtomicContext;)V
+	public fun exitTypeComplexLegacy (Lorg/partiql/parser/antlr/PartiQLParser$TypeComplexLegacyContext;)V
 	public fun exitTypeCustom (Lorg/partiql/parser/antlr/PartiQLParser$TypeCustomContext;)V
+	public fun exitTypeList (Lorg/partiql/parser/antlr/PartiQLParser$TypeListContext;)V
+	public fun exitTypeStruct (Lorg/partiql/parser/antlr/PartiQLParser$TypeStructContext;)V
 	public fun exitTypeTimeZone (Lorg/partiql/parser/antlr/PartiQLParser$TypeTimeZoneContext;)V
 	public fun exitTypeVarChar (Lorg/partiql/parser/antlr/PartiQLParser$TypeVarCharContext;)V
 	public fun exitUnion (Lorg/partiql/parser/antlr/PartiQLParser$UnionContext;)V
@@ -758,6 +766,7 @@ public class org/partiql/parser/antlr/PartiQLBaseVisitor : org/antlr/v4/runtime/
 	public fun visitSetQuantifierStrategy (Lorg/partiql/parser/antlr/PartiQLParser$SetQuantifierStrategyContext;)Ljava/lang/Object;
 	public fun visitSfwBase (Lorg/partiql/parser/antlr/PartiQLParser$SfwBaseContext;)Ljava/lang/Object;
 	public fun visitSfwQuery (Lorg/partiql/parser/antlr/PartiQLParser$SfwQueryContext;)Ljava/lang/Object;
+	public fun visitStructAttr (Lorg/partiql/parser/antlr/PartiQLParser$StructAttrContext;)Ljava/lang/Object;
 	public fun visitSubstring (Lorg/partiql/parser/antlr/PartiQLParser$SubstringContext;)Ljava/lang/Object;
 	public fun visitSymbolPrimitive (Lorg/partiql/parser/antlr/PartiQLParser$SymbolPrimitiveContext;)Ljava/lang/Object;
 	public fun visitTableBaseRefClauses (Lorg/partiql/parser/antlr/PartiQLParser$TableBaseRefClausesContext;)Ljava/lang/Object;
@@ -779,7 +788,10 @@ public class org/partiql/parser/antlr/PartiQLBaseVisitor : org/antlr/v4/runtime/
 	public fun visitTypeArgDouble (Lorg/partiql/parser/antlr/PartiQLParser$TypeArgDoubleContext;)Ljava/lang/Object;
 	public fun visitTypeArgSingle (Lorg/partiql/parser/antlr/PartiQLParser$TypeArgSingleContext;)Ljava/lang/Object;
 	public fun visitTypeAtomic (Lorg/partiql/parser/antlr/PartiQLParser$TypeAtomicContext;)Ljava/lang/Object;
+	public fun visitTypeComplexLegacy (Lorg/partiql/parser/antlr/PartiQLParser$TypeComplexLegacyContext;)Ljava/lang/Object;
 	public fun visitTypeCustom (Lorg/partiql/parser/antlr/PartiQLParser$TypeCustomContext;)Ljava/lang/Object;
+	public fun visitTypeList (Lorg/partiql/parser/antlr/PartiQLParser$TypeListContext;)Ljava/lang/Object;
+	public fun visitTypeStruct (Lorg/partiql/parser/antlr/PartiQLParser$TypeStructContext;)Ljava/lang/Object;
 	public fun visitTypeTimeZone (Lorg/partiql/parser/antlr/PartiQLParser$TypeTimeZoneContext;)Ljava/lang/Object;
 	public fun visitTypeVarChar (Lorg/partiql/parser/antlr/PartiQLParser$TypeVarCharContext;)Ljava/lang/Object;
 	public fun visitUnion (Lorg/partiql/parser/antlr/PartiQLParser$UnionContext;)Ljava/lang/Object;
@@ -984,6 +996,7 @@ public abstract interface class org/partiql/parser/antlr/PartiQLListener : org/a
 	public abstract fun enterSetQuantifierStrategy (Lorg/partiql/parser/antlr/PartiQLParser$SetQuantifierStrategyContext;)V
 	public abstract fun enterSfwBase (Lorg/partiql/parser/antlr/PartiQLParser$SfwBaseContext;)V
 	public abstract fun enterSfwQuery (Lorg/partiql/parser/antlr/PartiQLParser$SfwQueryContext;)V
+	public abstract fun enterStructAttr (Lorg/partiql/parser/antlr/PartiQLParser$StructAttrContext;)V
 	public abstract fun enterSubstring (Lorg/partiql/parser/antlr/PartiQLParser$SubstringContext;)V
 	public abstract fun enterSymbolPrimitive (Lorg/partiql/parser/antlr/PartiQLParser$SymbolPrimitiveContext;)V
 	public abstract fun enterTableBaseRefClauses (Lorg/partiql/parser/antlr/PartiQLParser$TableBaseRefClausesContext;)V
@@ -1005,7 +1018,10 @@ public abstract interface class org/partiql/parser/antlr/PartiQLListener : org/a
 	public abstract fun enterTypeArgDouble (Lorg/partiql/parser/antlr/PartiQLParser$TypeArgDoubleContext;)V
 	public abstract fun enterTypeArgSingle (Lorg/partiql/parser/antlr/PartiQLParser$TypeArgSingleContext;)V
 	public abstract fun enterTypeAtomic (Lorg/partiql/parser/antlr/PartiQLParser$TypeAtomicContext;)V
+	public abstract fun enterTypeComplexLegacy (Lorg/partiql/parser/antlr/PartiQLParser$TypeComplexLegacyContext;)V
 	public abstract fun enterTypeCustom (Lorg/partiql/parser/antlr/PartiQLParser$TypeCustomContext;)V
+	public abstract fun enterTypeList (Lorg/partiql/parser/antlr/PartiQLParser$TypeListContext;)V
+	public abstract fun enterTypeStruct (Lorg/partiql/parser/antlr/PartiQLParser$TypeStructContext;)V
 	public abstract fun enterTypeTimeZone (Lorg/partiql/parser/antlr/PartiQLParser$TypeTimeZoneContext;)V
 	public abstract fun enterTypeVarChar (Lorg/partiql/parser/antlr/PartiQLParser$TypeVarCharContext;)V
 	public abstract fun enterUnion (Lorg/partiql/parser/antlr/PartiQLParser$UnionContext;)V
@@ -1207,6 +1223,7 @@ public abstract interface class org/partiql/parser/antlr/PartiQLListener : org/a
 	public abstract fun exitSetQuantifierStrategy (Lorg/partiql/parser/antlr/PartiQLParser$SetQuantifierStrategyContext;)V
 	public abstract fun exitSfwBase (Lorg/partiql/parser/antlr/PartiQLParser$SfwBaseContext;)V
 	public abstract fun exitSfwQuery (Lorg/partiql/parser/antlr/PartiQLParser$SfwQueryContext;)V
+	public abstract fun exitStructAttr (Lorg/partiql/parser/antlr/PartiQLParser$StructAttrContext;)V
 	public abstract fun exitSubstring (Lorg/partiql/parser/antlr/PartiQLParser$SubstringContext;)V
 	public abstract fun exitSymbolPrimitive (Lorg/partiql/parser/antlr/PartiQLParser$SymbolPrimitiveContext;)V
 	public abstract fun exitTableBaseRefClauses (Lorg/partiql/parser/antlr/PartiQLParser$TableBaseRefClausesContext;)V
@@ -1228,7 +1245,10 @@ public abstract interface class org/partiql/parser/antlr/PartiQLListener : org/a
 	public abstract fun exitTypeArgDouble (Lorg/partiql/parser/antlr/PartiQLParser$TypeArgDoubleContext;)V
 	public abstract fun exitTypeArgSingle (Lorg/partiql/parser/antlr/PartiQLParser$TypeArgSingleContext;)V
 	public abstract fun exitTypeAtomic (Lorg/partiql/parser/antlr/PartiQLParser$TypeAtomicContext;)V
+	public abstract fun exitTypeComplexLegacy (Lorg/partiql/parser/antlr/PartiQLParser$TypeComplexLegacyContext;)V
 	public abstract fun exitTypeCustom (Lorg/partiql/parser/antlr/PartiQLParser$TypeCustomContext;)V
+	public abstract fun exitTypeList (Lorg/partiql/parser/antlr/PartiQLParser$TypeListContext;)V
+	public abstract fun exitTypeStruct (Lorg/partiql/parser/antlr/PartiQLParser$TypeStructContext;)V
 	public abstract fun exitTypeTimeZone (Lorg/partiql/parser/antlr/PartiQLParser$TypeTimeZoneContext;)V
 	public abstract fun exitTypeVarChar (Lorg/partiql/parser/antlr/PartiQLParser$TypeVarCharContext;)V
 	public abstract fun exitUnion (Lorg/partiql/parser/antlr/PartiQLParser$UnionContext;)V
@@ -1263,6 +1283,7 @@ public class org/partiql/parser/antlr/PartiQLParser : org/antlr/v4/runtime/Parse
 	public static final field ANGLE_RIGHT I
 	public static final field ANY I
 	public static final field ARE I
+	public static final field ARRAY I
 	public static final field AS I
 	public static final field ASC I
 	public static final field ASSERTION I
@@ -1613,6 +1634,7 @@ public class org/partiql/parser/antlr/PartiQLParser : org/antlr/v4/runtime/Parse
 	public static final field RULE_setCommand I
 	public static final field RULE_setQuantifierStrategy I
 	public static final field RULE_statement I
+	public static final field RULE_structAttr I
 	public static final field RULE_substring I
 	public static final field RULE_symbolPrimitive I
 	public static final field RULE_tableBaseReference I
@@ -1832,6 +1854,7 @@ public class org/partiql/parser/antlr/PartiQLParser : org/antlr/v4/runtime/Parse
 	public final fun setCommand ()Lorg/partiql/parser/antlr/PartiQLParser$SetCommandContext;
 	public final fun setQuantifierStrategy ()Lorg/partiql/parser/antlr/PartiQLParser$SetQuantifierStrategyContext;
 	public final fun statement ()Lorg/partiql/parser/antlr/PartiQLParser$StatementContext;
+	public final fun structAttr ()Lorg/partiql/parser/antlr/PartiQLParser$StructAttrContext;
 	public final fun substring ()Lorg/partiql/parser/antlr/PartiQLParser$SubstringContext;
 	public final fun symbolPrimitive ()Lorg/partiql/parser/antlr/PartiQLParser$SymbolPrimitiveContext;
 	public final fun tableBaseReference ()Lorg/partiql/parser/antlr/PartiQLParser$TableBaseReferenceContext;
@@ -4280,6 +4303,19 @@ public class org/partiql/parser/antlr/PartiQLParser$StatementContext : org/antlr
 	public fun getRuleIndex ()I
 }
 
+public class org/partiql/parser/antlr/PartiQLParser$StructAttrContext : org/antlr/v4/runtime/ParserRuleContext {
+	public fun <init> (Lorg/antlr/v4/runtime/ParserRuleContext;I)V
+	public fun COLON ()Lorg/antlr/v4/runtime/tree/TerminalNode;
+	public fun accept (Lorg/antlr/v4/runtime/tree/ParseTreeVisitor;)Ljava/lang/Object;
+	public fun columnConstraint ()Ljava/util/List;
+	public fun columnConstraint (I)Lorg/partiql/parser/antlr/PartiQLParser$ColumnConstraintContext;
+	public fun columnName ()Lorg/partiql/parser/antlr/PartiQLParser$ColumnNameContext;
+	public fun enterRule (Lorg/antlr/v4/runtime/tree/ParseTreeListener;)V
+	public fun exitRule (Lorg/antlr/v4/runtime/tree/ParseTreeListener;)V
+	public fun getRuleIndex ()I
+	public fun type ()Lorg/partiql/parser/antlr/PartiQLParser$TypeContext;
+}
+
 public class org/partiql/parser/antlr/PartiQLParser$SubstringContext : org/antlr/v4/runtime/ParserRuleContext {
 	public fun <init> (Lorg/antlr/v4/runtime/ParserRuleContext;I)V
 	public fun COMMA ()Ljava/util/List;
@@ -4576,7 +4612,6 @@ public class org/partiql/parser/antlr/PartiQLParser$TypeAtomicContext : org/part
 	public fun INTEGER2 ()Lorg/antlr/v4/runtime/tree/TerminalNode;
 	public fun INTEGER4 ()Lorg/antlr/v4/runtime/tree/TerminalNode;
 	public fun INTEGER8 ()Lorg/antlr/v4/runtime/tree/TerminalNode;
-	public fun LIST ()Lorg/antlr/v4/runtime/tree/TerminalNode;
 	public fun MISSING ()Lorg/antlr/v4/runtime/tree/TerminalNode;
 	public fun NULL ()Lorg/antlr/v4/runtime/tree/TerminalNode;
 	public fun PRECISION ()Lorg/antlr/v4/runtime/tree/TerminalNode;
@@ -4584,8 +4619,17 @@ public class org/partiql/parser/antlr/PartiQLParser$TypeAtomicContext : org/part
 	public fun SEXP ()Lorg/antlr/v4/runtime/tree/TerminalNode;
 	public fun SMALLINT ()Lorg/antlr/v4/runtime/tree/TerminalNode;
 	public fun STRING ()Lorg/antlr/v4/runtime/tree/TerminalNode;
-	public fun STRUCT ()Lorg/antlr/v4/runtime/tree/TerminalNode;
 	public fun SYMBOL ()Lorg/antlr/v4/runtime/tree/TerminalNode;
+	public fun accept (Lorg/antlr/v4/runtime/tree/ParseTreeVisitor;)Ljava/lang/Object;
+	public fun enterRule (Lorg/antlr/v4/runtime/tree/ParseTreeListener;)V
+	public fun exitRule (Lorg/antlr/v4/runtime/tree/ParseTreeListener;)V
+}
+
+public class org/partiql/parser/antlr/PartiQLParser$TypeComplexLegacyContext : org/partiql/parser/antlr/PartiQLParser$TypeContext {
+	public field datatype Lorg/antlr/v4/runtime/Token;
+	public fun <init> (Lorg/partiql/parser/antlr/PartiQLParser$TypeContext;)V
+	public fun LIST ()Lorg/antlr/v4/runtime/tree/TerminalNode;
+	public fun STRUCT ()Lorg/antlr/v4/runtime/tree/TerminalNode;
 	public fun TUPLE ()Lorg/antlr/v4/runtime/tree/TerminalNode;
 	public fun accept (Lorg/antlr/v4/runtime/tree/ParseTreeVisitor;)Ljava/lang/Object;
 	public fun enterRule (Lorg/antlr/v4/runtime/tree/ParseTreeListener;)V
@@ -4605,6 +4649,35 @@ public class org/partiql/parser/antlr/PartiQLParser$TypeCustomContext : org/part
 	public fun enterRule (Lorg/antlr/v4/runtime/tree/ParseTreeListener;)V
 	public fun exitRule (Lorg/antlr/v4/runtime/tree/ParseTreeListener;)V
 	public fun symbolPrimitive ()Lorg/partiql/parser/antlr/PartiQLParser$SymbolPrimitiveContext;
+}
+
+public class org/partiql/parser/antlr/PartiQLParser$TypeListContext : org/partiql/parser/antlr/PartiQLParser$TypeContext {
+	public field datatype Lorg/antlr/v4/runtime/Token;
+	public fun <init> (Lorg/partiql/parser/antlr/PartiQLParser$TypeContext;)V
+	public fun ANGLE_LEFT ()Lorg/antlr/v4/runtime/tree/TerminalNode;
+	public fun ANGLE_RIGHT ()Lorg/antlr/v4/runtime/tree/TerminalNode;
+	public fun ARRAY ()Lorg/antlr/v4/runtime/tree/TerminalNode;
+	public fun LIST ()Lorg/antlr/v4/runtime/tree/TerminalNode;
+	public fun accept (Lorg/antlr/v4/runtime/tree/ParseTreeVisitor;)Ljava/lang/Object;
+	public fun enterRule (Lorg/antlr/v4/runtime/tree/ParseTreeListener;)V
+	public fun exitRule (Lorg/antlr/v4/runtime/tree/ParseTreeListener;)V
+	public fun type ()Lorg/partiql/parser/antlr/PartiQLParser$TypeContext;
+}
+
+public class org/partiql/parser/antlr/PartiQLParser$TypeStructContext : org/partiql/parser/antlr/PartiQLParser$TypeContext {
+	public field datatype Lorg/antlr/v4/runtime/Token;
+	public fun <init> (Lorg/partiql/parser/antlr/PartiQLParser$TypeContext;)V
+	public fun ANGLE_LEFT ()Lorg/antlr/v4/runtime/tree/TerminalNode;
+	public fun ANGLE_RIGHT ()Lorg/antlr/v4/runtime/tree/TerminalNode;
+	public fun COMMA ()Ljava/util/List;
+	public fun COMMA (I)Lorg/antlr/v4/runtime/tree/TerminalNode;
+	public fun STRUCT ()Lorg/antlr/v4/runtime/tree/TerminalNode;
+	public fun TUPLE ()Lorg/antlr/v4/runtime/tree/TerminalNode;
+	public fun accept (Lorg/antlr/v4/runtime/tree/ParseTreeVisitor;)Ljava/lang/Object;
+	public fun enterRule (Lorg/antlr/v4/runtime/tree/ParseTreeListener;)V
+	public fun exitRule (Lorg/antlr/v4/runtime/tree/ParseTreeListener;)V
+	public fun structAttr ()Ljava/util/List;
+	public fun structAttr (I)Lorg/partiql/parser/antlr/PartiQLParser$StructAttrContext;
 }
 
 public class org/partiql/parser/antlr/PartiQLParser$TypeTimeZoneContext : org/partiql/parser/antlr/PartiQLParser$TypeContext {
@@ -4864,6 +4937,7 @@ public class org/partiql/parser/antlr/PartiQLTokens : org/antlr/v4/runtime/Lexer
 	public static final field ANGLE_RIGHT I
 	public static final field ANY I
 	public static final field ARE I
+	public static final field ARRAY I
 	public static final field AS I
 	public static final field ASC I
 	public static final field ASSERTION I
@@ -5367,6 +5441,7 @@ public abstract interface class org/partiql/parser/antlr/PartiQLVisitor : org/an
 	public abstract fun visitSetQuantifierStrategy (Lorg/partiql/parser/antlr/PartiQLParser$SetQuantifierStrategyContext;)Ljava/lang/Object;
 	public abstract fun visitSfwBase (Lorg/partiql/parser/antlr/PartiQLParser$SfwBaseContext;)Ljava/lang/Object;
 	public abstract fun visitSfwQuery (Lorg/partiql/parser/antlr/PartiQLParser$SfwQueryContext;)Ljava/lang/Object;
+	public abstract fun visitStructAttr (Lorg/partiql/parser/antlr/PartiQLParser$StructAttrContext;)Ljava/lang/Object;
 	public abstract fun visitSubstring (Lorg/partiql/parser/antlr/PartiQLParser$SubstringContext;)Ljava/lang/Object;
 	public abstract fun visitSymbolPrimitive (Lorg/partiql/parser/antlr/PartiQLParser$SymbolPrimitiveContext;)Ljava/lang/Object;
 	public abstract fun visitTableBaseRefClauses (Lorg/partiql/parser/antlr/PartiQLParser$TableBaseRefClausesContext;)Ljava/lang/Object;
@@ -5388,7 +5463,10 @@ public abstract interface class org/partiql/parser/antlr/PartiQLVisitor : org/an
 	public abstract fun visitTypeArgDouble (Lorg/partiql/parser/antlr/PartiQLParser$TypeArgDoubleContext;)Ljava/lang/Object;
 	public abstract fun visitTypeArgSingle (Lorg/partiql/parser/antlr/PartiQLParser$TypeArgSingleContext;)Ljava/lang/Object;
 	public abstract fun visitTypeAtomic (Lorg/partiql/parser/antlr/PartiQLParser$TypeAtomicContext;)Ljava/lang/Object;
+	public abstract fun visitTypeComplexLegacy (Lorg/partiql/parser/antlr/PartiQLParser$TypeComplexLegacyContext;)Ljava/lang/Object;
 	public abstract fun visitTypeCustom (Lorg/partiql/parser/antlr/PartiQLParser$TypeCustomContext;)Ljava/lang/Object;
+	public abstract fun visitTypeList (Lorg/partiql/parser/antlr/PartiQLParser$TypeListContext;)Ljava/lang/Object;
+	public abstract fun visitTypeStruct (Lorg/partiql/parser/antlr/PartiQLParser$TypeStructContext;)Ljava/lang/Object;
 	public abstract fun visitTypeTimeZone (Lorg/partiql/parser/antlr/PartiQLParser$TypeTimeZoneContext;)Ljava/lang/Object;
 	public abstract fun visitTypeVarChar (Lorg/partiql/parser/antlr/PartiQLParser$TypeVarCharContext;)Ljava/lang/Object;
 	public abstract fun visitUnion (Lorg/partiql/parser/antlr/PartiQLParser$UnionContext;)Ljava/lang/Object;

@@ -76,6 +76,26 @@ internal class PartiQLParserDDLTest : PartiQLParserTestBase() {
                 code = ErrorCode.PARSE_UNEXPECTED_TOKEN,
                 context = mapOf(),
             ),
+            ParserErrorTestCase(
+                description = "PIG Parser does not support Struct Type with field declaration",
+                query = """
+                    CREATE TABLE tbl (
+                       a STRUCT<b : INT2>
+                    )
+                """.trimIndent(),
+                code = ErrorCode.PARSE_UNEXPECTED_TOKEN,
+                context = mapOf(),
+            ),
+            ParserErrorTestCase(
+                description = "PIG Parser does not support element type declaration in Array Type",
+                query = """
+                    CREATE TABLE tbl (
+                       a ARRAY<INT2>
+                    )
+                """.trimIndent(),
+                code = ErrorCode.PARSE_UNEXPECTED_TOKEN,
+                context = mapOf(),
+            ),
         )
     }
 }

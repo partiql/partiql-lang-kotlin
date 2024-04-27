@@ -312,6 +312,60 @@ class PartiQLParserDDLTests {
                     ),
                 )
             ),
+
+            SuccessTestCase(
+                "CREATE TABLE with CASE SENSITIVE Identifier as column name",
+                """
+                    CREATE TABLE tbl (
+                        a STRUCT <
+                           b: INT2
+                        >
+                    )
+                """.trimIndent(),
+                ddlOpCreateTable(
+                    identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
+                    tableDefinition(
+                        listOf(
+                            tableDefinitionAttribute(
+                                identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE),
+                                Type.Struct(
+                                    listOf(
+                                        Type.Struct.Field(
+                                            identifierSymbol("b", Identifier.CaseSensitivity.INSENSITIVE),
+                                            Type.Int2(),
+                                            emptyList()
+                                        )
+                                    )
+                                ),
+                                emptyList(),
+                            )
+                        ),
+                        emptyList()
+                    ),
+                )
+            ),
+
+            SuccessTestCase(
+                "CREATE TABLE with CASE SENSITIVE Identifier as column name",
+                """
+                    CREATE TABLE tbl (
+                        a ARRAY <INT2>
+                    )
+                """.trimIndent(),
+                ddlOpCreateTable(
+                    identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
+                    tableDefinition(
+                        listOf(
+                            tableDefinitionAttribute(
+                                identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE),
+                                Type.Array(Type.Int2()),
+                                emptyList(),
+                            )
+                        ),
+                        emptyList()
+                    ),
+                )
+            ),
         )
 
         val dropTableTests = listOf(
