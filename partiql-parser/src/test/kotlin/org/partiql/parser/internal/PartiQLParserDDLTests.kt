@@ -317,7 +317,7 @@ class PartiQLParserDDLTests {
                 "CREATE TABLE with CASE SENSITIVE Identifier as column name",
                 """
                     CREATE TABLE tbl (
-                        a STRUCT <
+                        a STRUCT<
                            b: INT2
                         >
                     )
@@ -349,7 +349,7 @@ class PartiQLParserDDLTests {
                 "CREATE TABLE with CASE SENSITIVE Identifier as column name",
                 """
                     CREATE TABLE tbl (
-                        a ARRAY <INT2>
+                        a ARRAY<INT2>
                     )
                 """.trimIndent(),
                 ddlOpCreateTable(
@@ -425,7 +425,40 @@ class PartiQLParserDDLTests {
                         CHECK (SELECT a FROM foo)
                     )
                 """.trimIndent()
-            )
+            ),
+            ErrorTestCase(
+                "NULL not allowed as type in type decalration",
+                """
+                    CREATE TABLE TBL(
+                        a NULL
+                    )
+                """.trimIndent()
+            ),
+            ErrorTestCase(
+                "MISSING not allowed as type in type decalration",
+                """
+                    CREATE TABLE TBL(
+                        a MISSING
+                    )
+                """.trimIndent()
+            ),
+            // TODO: Move this to another place as part of parser test porting process
+            ErrorTestCase(
+                "Struct Field declaration not allowed for is Operator",
+                "a IS STRUCT<b : INT2>"
+            ),
+            ErrorTestCase(
+                "Struct Field declaration not allowed for CAST Operator",
+                "CAST(a AS STRUCT<b : INT2>)"
+            ),
+            ErrorTestCase(
+                "ELEMENT declaration for LIST Type not allowed for is Operator",
+                "a IS LIST<INT2>"
+            ),
+            ErrorTestCase(
+                "Struct Field declaration not allowed for CAST Operator",
+                "CAST(a AS LIST<INT2>)"
+            ),
         )
         override fun provideArguments(p0: ExtensionContext?): Stream<out Arguments> =
             errorTestCases.map { Arguments.of(it) }.stream()

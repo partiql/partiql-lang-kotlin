@@ -1692,7 +1692,7 @@ internal class PartiQLPigVisitor(
         )
     }
 
-    override fun visitTypeList(ctx: PartiQLParser.TypeListContext?): PartiqlAst.PartiqlAstNode {
+    override fun visitTypeList(ctx: PartiQLParser.TypeListContext): PartiqlAst.PartiqlAstNode {
         throw ParserException(
             "PIG Parser does not support element type declaration for list",
             ErrorCode.PARSE_UNEXPECTED_TOKEN,
