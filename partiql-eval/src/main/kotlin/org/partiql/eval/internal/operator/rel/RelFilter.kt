@@ -2,9 +2,8 @@ package org.partiql.eval.internal.operator.rel
 
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
+import org.partiql.eval.internal.helpers.ValueUtility.isTrue
 import org.partiql.eval.internal.operator.Operator
-import org.partiql.value.BoolValue
-import org.partiql.value.PartiQLValueExperimental
 
 internal class RelFilter(
     val input: Operator.Relation,
@@ -31,9 +30,8 @@ internal class RelFilter(
         input.close()
     }
 
-    @OptIn(PartiQLValueExperimental::class)
     private fun conditionIsTrue(record: Record, expr: Operator.Expr): Boolean {
         val condition = expr.eval(env.push(record))
-        return condition is BoolValue && condition.value == true
+        return condition.isTrue()
     }
 }

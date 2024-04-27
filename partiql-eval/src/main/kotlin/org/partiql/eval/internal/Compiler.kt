@@ -1,5 +1,6 @@
 package org.partiql.eval.internal
 
+import org.partiql.eval.PQLValue
 import org.partiql.eval.PartiQLEngine
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.eval.internal.operator.rel.RelAggregate
@@ -380,7 +381,7 @@ internal class Compiler(
 
     @OptIn(PartiQLValueExperimental::class)
     override fun visitRexOpLit(node: Rex.Op.Lit, ctx: StaticType?): Operator {
-        return ExprLiteral(node.value)
+        return ExprLiteral(PQLValue.of(node.value))
     }
 
     override fun visitRelOpDistinct(node: Rel.Op.Distinct, ctx: StaticType?): Operator {

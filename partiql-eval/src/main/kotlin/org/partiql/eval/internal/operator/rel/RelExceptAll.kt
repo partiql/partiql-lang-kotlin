@@ -2,16 +2,22 @@ package org.partiql.eval.internal.operator.rel
 
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
+import org.partiql.eval.internal.helpers.RecordUtility.toPartiQLValueList
 import org.partiql.eval.internal.operator.Operator
+import org.partiql.value.PartiQLValue
+import org.partiql.value.PartiQLValueExperimental
 
 internal class RelExceptAll(
     private val lhs: Operator.Relation,
     private val rhs: Operator.Relation,
 ) : RelPeeking() {
 
-    private val seen: MutableMap<Record, Int> = mutableMapOf()
+    // TODO: Add support for equals/hashcode in PQLValue
+    @OptIn(PartiQLValueExperimental::class)
+    private val seen: MutableMap<List<PartiQLValue>, Int> = mutableMapOf()
     private var init: Boolean = false
 
+    @OptIn(PartiQLValueExperimental::class)
     override fun openPeeking(env: Environment) {
         lhs.open(env)
         rhs.open(env)
@@ -19,14 +25,16 @@ internal class RelExceptAll(
         seen.clear()
     }
 
+    @OptIn(PartiQLValueExperimental::class)
     override fun peek(): Record? {
         if (!init) {
             seed()
         }
         for (row in lhs) {
-            val remaining = seen[row] ?: 0
+            val partiqlRow = row.toPartiQLValueList()
+            val remaining = seen[partiqlRow] ?: 0
             if (remaining > 0) {
-                seen[row] = remaining - 1
+                seen[partiqlRow] = remaining - 1
                 continue
             }
             return row
@@ -34,6 +42,7 @@ internal class RelExceptAll(
         return null
     }
 
+    @OptIn(PartiQLValueExperimental::class)
     override fun closePeeking() {
         lhs.close()
         rhs.close()
@@ -43,11 +52,13 @@ internal class RelExceptAll(
     /**
      * Read the entire right-hand-side into our search structure.
      */
+    @OptIn(PartiQLValueExperimental::class)
     private fun seed() {
         init = true
         for (row in rhs) {
-            val n = seen[row] ?: 0
-            seen[row] = n + 1
+            val partiqlRow = row.toPartiQLValueList()
+            val n = seen[partiqlRow] ?: 0
+            seen[partiqlRow] = n + 1
         }
     }
 }

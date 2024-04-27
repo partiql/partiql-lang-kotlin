@@ -32,8 +32,9 @@ internal class RelSort(
     private val comparator = object : Comparator<Record> {
         override fun compare(l: Record, r: Record): Int {
             specs.forEach { spec ->
-                val lVal = spec.first.eval(env.push(l))
-                val rVal = spec.first.eval(env.push(r))
+                // TODO: Write comparator for PQLValue
+                val lVal = spec.first.eval(env.push(l)).toPartiQLValue()
+                val rVal = spec.first.eval(env.push(r)).toPartiQLValue()
 
                 // DESC_NULLS_FIRST(l, r) == ASC_NULLS_LAST(r, l)
                 // DESC_NULLS_LAST(l, r) == ASC_NULLS_FIRST(r, l)
