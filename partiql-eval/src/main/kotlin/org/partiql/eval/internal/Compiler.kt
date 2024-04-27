@@ -11,9 +11,9 @@ import org.partiql.eval.internal.operator.rel.RelFilter
 import org.partiql.eval.internal.operator.rel.RelIntersectAll
 import org.partiql.eval.internal.operator.rel.RelIntersectDistinct
 import org.partiql.eval.internal.operator.rel.RelJoinInner
-import org.partiql.eval.internal.operator.rel.RelJoinLeft
 import org.partiql.eval.internal.operator.rel.RelJoinOuterFull
-import org.partiql.eval.internal.operator.rel.RelJoinRight
+import org.partiql.eval.internal.operator.rel.RelJoinOuterLeft
+import org.partiql.eval.internal.operator.rel.RelJoinOuterRight
 import org.partiql.eval.internal.operator.rel.RelLimit
 import org.partiql.eval.internal.operator.rel.RelOffset
 import org.partiql.eval.internal.operator.rel.RelProject
@@ -364,9 +364,9 @@ internal class Compiler(
         val condition = visitRex(node.rex, ctx)
         return when (node.type) {
             Rel.Op.Join.Type.INNER -> RelJoinInner(lhs, rhs, condition)
-            Rel.Op.Join.Type.LEFT -> RelJoinLeft(lhs, rhs, condition)
-            Rel.Op.Join.Type.RIGHT -> RelJoinRight(lhs, rhs, condition)
-            Rel.Op.Join.Type.FULL -> RelJoinOuterFull(lhs, rhs, condition)
+            Rel.Op.Join.Type.LEFT -> RelJoinOuterLeft(lhs, rhs, condition, rhsType = node.rhs.type)
+            Rel.Op.Join.Type.RIGHT -> RelJoinOuterRight(lhs, rhs, condition, lhsType = node.lhs.type)
+            Rel.Op.Join.Type.FULL -> RelJoinOuterFull(lhs, rhs, condition, lhsType = node.lhs.type, rhsType = node.rhs.type)
         }
     }
 

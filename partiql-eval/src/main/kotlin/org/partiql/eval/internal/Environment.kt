@@ -18,7 +18,11 @@ internal class Environment(
 
     @OptIn(PartiQLValueExperimental::class)
     operator fun get(index: Int): PartiQLValue {
-        return this.bindings[index]
+        try {
+            return this.bindings[index]
+        } catch (_: Throwable) {
+            throw IllegalStateException("Received error when searching for binding at index $index. Current bindings are: $this.")
+        }
     }
 
     @OptIn(PartiQLValueExperimental::class)
