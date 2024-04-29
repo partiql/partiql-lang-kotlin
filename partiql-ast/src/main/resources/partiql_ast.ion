@@ -199,7 +199,7 @@ type::[
   // Keep the list type for backward compatible reason
   // user should migrate to the array type
   list::{},                                                    // LIST
-  array::{ type: optional::type },                             // ARRAY
+  array::{ type: optional::type },                             // ARRAY [<type>]
   sexp::{},                                                    // SEXP
   // Keep the tuple type for backward compatible reason
   // migration: in v0.15.0: struct modeling should NOT be Introduced,
@@ -218,7 +218,7 @@ type::[
         constraints: list::[constraint],
       }
     ],
-  },                                                           // STRUCT
+  },                                                           // STRUCT <fields>
   any::{},                                                     // ANY
   custom::{ name: string },                                    // <symbol>
 ]

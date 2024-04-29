@@ -657,11 +657,11 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         private fun isValidTypeParameterOrThrow(type: Type, ctx: GeneratedParser.TypeContext) = when (type) {
             is Type.Struct -> {
-                if (type.fields.isNotEmpty()) throw error(ctx, "use parameterized struct as type parameter is not supported")
+                if (type.fields.isNotEmpty()) throw error(ctx, "using parameterized struct as type parameter is not supported")
                 else Unit
             }
             is Type.Array -> {
-                if (type.type != null) throw error(ctx, "use parameterized list as type parameter is not supported")
+                if (type.type != null) throw error(ctx, "using parameterized array as type parameter is not supported")
                 else Unit
             }
             else -> Unit
