@@ -14,7 +14,6 @@
 
 package org.partiql.cli.format
 
-
 // internal object ExplainFormatter {
 //
 //     internal fun format(result: PartiQLResult.Explain.Domain): String {

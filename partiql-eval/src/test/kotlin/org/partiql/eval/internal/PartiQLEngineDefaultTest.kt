@@ -21,6 +21,7 @@ import org.partiql.types.StaticType
 import org.partiql.value.CollectionValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.PartiQLValueLoader
 import org.partiql.value.bagValue
 import org.partiql.value.boolValue
 import org.partiql.value.decimalValue
@@ -1215,7 +1216,7 @@ class PartiQLEngineDefaultTest {
                     throw returned.cause
                 }
             }
-            val output = result.value
+            val output = PartiQLValueLoader.standard().load(result.value)
             assert(expected == output) {
                 comparisonString(expected, output, plan.plan)
             }
@@ -1284,7 +1285,7 @@ class PartiQLEngineDefaultTest {
             val plan = planner.plan(statement, session)
             val prepared = engine.prepare(plan.plan, PartiQLEngine.Session(mapOf("memory" to connector), mode = mode))
             when (val result = engine.execute(prepared)) {
-                is PartiQLResult.Value -> return result.value to plan.plan
+                is PartiQLResult.Value -> return PartiQLValueLoader.standard().load(result.value) to plan.plan
                 is PartiQLResult.Error -> throw result.cause
             }
         }

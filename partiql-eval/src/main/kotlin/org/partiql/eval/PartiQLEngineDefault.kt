@@ -4,6 +4,7 @@ import org.partiql.eval.internal.Compiler
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Symbols
 import org.partiql.plan.PartiQLPlan
+import org.partiql.value.PartiQLCursor
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 
@@ -33,7 +34,8 @@ internal class PartiQLEngineDefault : PartiQLEngine {
         return when (statement) {
             is PartiQLStatement.Query -> try {
                 val value = statement.execute()
-                PartiQLResult.Value(value)
+                val data = PartiQLCursor.of(value)
+                PartiQLResult.Value(data)
             } catch (ex: Exception) {
                 PartiQLResult.Error(ex)
             }

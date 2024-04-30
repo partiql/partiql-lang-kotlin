@@ -15,7 +15,7 @@ internal class FsIndex(private val root: FsNode) {
     /**
      * Search the FsNode for the type.
      */
-    fun search(path: BindingPath): Pair<FsNode.Obj, KMatch>? {
+    fun search(path: BindingPath): Pair<FsNode.Obj, FsMatch>? {
         val match = mutableListOf<String>()
         var curr: FsNode? = root
         for (step in path.steps) {
@@ -38,7 +38,7 @@ internal class FsIndex(private val root: FsNode) {
     /**
      * List all FsNodes in the path.
      */
-    fun list(path: BindingPath):  List<FsNode> {
+    fun list(path: BindingPath): List<FsNode> {
         var curr: FsNode? = root
         for (step in path.steps) {
             if (curr == null) return emptyList()

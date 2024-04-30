@@ -60,5 +60,4 @@ public interface ConnectorMetadata {
      */
     @FnExperimental
     public fun getAggregation(path: BindingPath): ConnectorHandle.Agg?
-
 }
