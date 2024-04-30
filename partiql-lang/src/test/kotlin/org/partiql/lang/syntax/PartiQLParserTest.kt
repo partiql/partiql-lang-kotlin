@@ -29,7 +29,7 @@ import org.partiql.lang.ast.sourceLocation
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.id
 import org.partiql.lang.util.getAntlrDisplayString
-import org.partiql.parser.antlr.PartiQLParser
+import org.partiql.parser.internal.antlr.PartiQLParser
 import kotlin.concurrent.thread
 
 /**

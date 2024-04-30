@@ -27,11 +27,19 @@ dependencies {
 }
 
 tasks.generateGrammarSource {
-    val antlrPackage = "org.partiql.parser.antlr"
+    val antlrPackage = "org.partiql.parser.internal.antlr"
     val antlrSources = "$buildDir/generated-src/${antlrPackage.replace('.', '/')}"
     maxHeapSize = "64m"
     arguments = listOf("-visitor", "-long-messages", "-package", antlrPackage)
     outputDirectory = File(antlrSources)
+}
+
+apiValidation {
+    ignoredPackages.addAll(
+        listOf(
+            "org.partiql.parser.internal"
+        )
+    )
 }
 
 tasks.javadoc {

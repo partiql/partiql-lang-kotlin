@@ -39,8 +39,8 @@ import org.partiql.lang.types.CustomType
 import org.partiql.lang.util.checkThreadInterrupted
 import org.partiql.lang.util.getAntlrDisplayString
 import org.partiql.lang.util.getIonValue
-import org.partiql.parser.antlr.PartiQLParser
-import org.partiql.parser.antlr.PartiQLTokens
+import org.partiql.parser.internal.antlr.PartiQLParser
+import org.partiql.parser.internal.antlr.PartiQLTokens
 import java.io.InputStream
 import java.nio.channels.ClosedByInterruptException
 import java.nio.charset.StandardCharsets

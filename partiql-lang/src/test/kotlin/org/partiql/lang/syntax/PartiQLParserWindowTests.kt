@@ -4,7 +4,7 @@ import org.junit.Test
 import org.partiql.errors.ErrorCode
 import org.partiql.errors.Property
 import org.partiql.lang.util.getAntlrDisplayString
-import org.partiql.parser.antlr.PartiQLParser
+import org.partiql.parser.internal.antlr.PartiQLParser
 
 class PartiQLParserWindowTests : PartiQLParserTestBase() {
 

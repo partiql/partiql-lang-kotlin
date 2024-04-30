@@ -23,8 +23,8 @@ import org.jline.reader.LineReader
 import org.jline.utils.AttributedString
 import org.jline.utils.AttributedStringBuilder
 import org.jline.utils.AttributedStyle
-import org.partiql.parser.antlr.PartiQLParser
-import org.partiql.parser.antlr.PartiQLTokens
+import org.partiql.parser.internal.antlr.PartiQLParser
+import org.partiql.parser.internal.antlr.PartiQLTokens
 import java.nio.charset.StandardCharsets
 import java.util.regex.Pattern
 
