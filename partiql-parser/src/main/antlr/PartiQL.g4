@@ -814,7 +814,7 @@ type
         | INTEGER8 | INT8 | BIGINT | REAL | CHAR | CHARACTER | MISSING
         | STRING | SYMBOL | BLOB | CLOB | DATE | SEXP | BAG | ANY
       )                                                                                                                # TypeAtomic
-    | datatype=(STRUCT|TUPLE|LIST)                                                                                     # TypeComplexLegacy
+    | datatype=(STRUCT|TUPLE|LIST|ARRAY)                                                                               # TypeComplexUnparameterized
     | datatype=DOUBLE PRECISION                                                                                        # TypeAtomic
     | datatype=(CHARACTER|CHAR|FLOAT|VARCHAR) ( PAREN_LEFT arg0=LITERAL_INTEGER PAREN_RIGHT )?                         # TypeArgSingle
     | CHARACTER VARYING ( PAREN_LEFT arg0=LITERAL_INTEGER PAREN_RIGHT )?                                               # TypeVarChar

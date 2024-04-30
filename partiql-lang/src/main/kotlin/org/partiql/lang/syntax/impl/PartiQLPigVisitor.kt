@@ -1674,7 +1674,7 @@ internal class PartiQLPigVisitor(
         customType_(SymbolPrimitive(customName, metas), metas)
     }
 
-    override fun visitTypeComplexLegacy(ctx: PartiQLParser.TypeComplexLegacyContext) = PartiqlAst.build {
+    override fun visitTypeComplexUnparameterized(ctx: PartiQLParser.TypeComplexUnparameterizedContext) = PartiqlAst.build {
         val metas = ctx.datatype.getSourceMetaContainer()
         when (ctx.datatype.type) {
             PartiQLParser.TUPLE -> tupleType(metas)

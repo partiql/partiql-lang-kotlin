@@ -2214,7 +2214,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             typeCustom(ctx.text.uppercase())
         }
 
-        override fun visitTypeComplexLegacy(ctx: GeneratedParser.TypeComplexLegacyContext) = translate(ctx) {
+        override fun visitTypeComplexUnparameterized(ctx: GeneratedParser.TypeComplexUnparameterizedContext) = translate(ctx) {
             when (ctx.datatype.type) {
                 GeneratedParser.STRUCT, GeneratedParser.TUPLE -> typeStruct(emptyList())
                 GeneratedParser.ARRAY, GeneratedParser.LIST -> typeArray(null)

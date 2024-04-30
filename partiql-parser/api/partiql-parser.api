@@ -327,7 +327,7 @@ public class org/partiql/parser/antlr/PartiQLBaseListener : org/partiql/parser/a
 	public fun enterTypeArgDouble (Lorg/partiql/parser/antlr/PartiQLParser$TypeArgDoubleContext;)V
 	public fun enterTypeArgSingle (Lorg/partiql/parser/antlr/PartiQLParser$TypeArgSingleContext;)V
 	public fun enterTypeAtomic (Lorg/partiql/parser/antlr/PartiQLParser$TypeAtomicContext;)V
-	public fun enterTypeComplexLegacy (Lorg/partiql/parser/antlr/PartiQLParser$TypeComplexLegacyContext;)V
+	public fun enterTypeComplexUnparameterized (Lorg/partiql/parser/antlr/PartiQLParser$TypeComplexUnparameterizedContext;)V
 	public fun enterTypeCustom (Lorg/partiql/parser/antlr/PartiQLParser$TypeCustomContext;)V
 	public fun enterTypeList (Lorg/partiql/parser/antlr/PartiQLParser$TypeListContext;)V
 	public fun enterTypeStruct (Lorg/partiql/parser/antlr/PartiQLParser$TypeStructContext;)V
@@ -555,7 +555,7 @@ public class org/partiql/parser/antlr/PartiQLBaseListener : org/partiql/parser/a
 	public fun exitTypeArgDouble (Lorg/partiql/parser/antlr/PartiQLParser$TypeArgDoubleContext;)V
 	public fun exitTypeArgSingle (Lorg/partiql/parser/antlr/PartiQLParser$TypeArgSingleContext;)V
 	public fun exitTypeAtomic (Lorg/partiql/parser/antlr/PartiQLParser$TypeAtomicContext;)V
-	public fun exitTypeComplexLegacy (Lorg/partiql/parser/antlr/PartiQLParser$TypeComplexLegacyContext;)V
+	public fun exitTypeComplexUnparameterized (Lorg/partiql/parser/antlr/PartiQLParser$TypeComplexUnparameterizedContext;)V
 	public fun exitTypeCustom (Lorg/partiql/parser/antlr/PartiQLParser$TypeCustomContext;)V
 	public fun exitTypeList (Lorg/partiql/parser/antlr/PartiQLParser$TypeListContext;)V
 	public fun exitTypeStruct (Lorg/partiql/parser/antlr/PartiQLParser$TypeStructContext;)V
@@ -788,7 +788,7 @@ public class org/partiql/parser/antlr/PartiQLBaseVisitor : org/antlr/v4/runtime/
 	public fun visitTypeArgDouble (Lorg/partiql/parser/antlr/PartiQLParser$TypeArgDoubleContext;)Ljava/lang/Object;
 	public fun visitTypeArgSingle (Lorg/partiql/parser/antlr/PartiQLParser$TypeArgSingleContext;)Ljava/lang/Object;
 	public fun visitTypeAtomic (Lorg/partiql/parser/antlr/PartiQLParser$TypeAtomicContext;)Ljava/lang/Object;
-	public fun visitTypeComplexLegacy (Lorg/partiql/parser/antlr/PartiQLParser$TypeComplexLegacyContext;)Ljava/lang/Object;
+	public fun visitTypeComplexUnparameterized (Lorg/partiql/parser/antlr/PartiQLParser$TypeComplexUnparameterizedContext;)Ljava/lang/Object;
 	public fun visitTypeCustom (Lorg/partiql/parser/antlr/PartiQLParser$TypeCustomContext;)Ljava/lang/Object;
 	public fun visitTypeList (Lorg/partiql/parser/antlr/PartiQLParser$TypeListContext;)Ljava/lang/Object;
 	public fun visitTypeStruct (Lorg/partiql/parser/antlr/PartiQLParser$TypeStructContext;)Ljava/lang/Object;
@@ -1018,7 +1018,7 @@ public abstract interface class org/partiql/parser/antlr/PartiQLListener : org/a
 	public abstract fun enterTypeArgDouble (Lorg/partiql/parser/antlr/PartiQLParser$TypeArgDoubleContext;)V
 	public abstract fun enterTypeArgSingle (Lorg/partiql/parser/antlr/PartiQLParser$TypeArgSingleContext;)V
 	public abstract fun enterTypeAtomic (Lorg/partiql/parser/antlr/PartiQLParser$TypeAtomicContext;)V
-	public abstract fun enterTypeComplexLegacy (Lorg/partiql/parser/antlr/PartiQLParser$TypeComplexLegacyContext;)V
+	public abstract fun enterTypeComplexUnparameterized (Lorg/partiql/parser/antlr/PartiQLParser$TypeComplexUnparameterizedContext;)V
 	public abstract fun enterTypeCustom (Lorg/partiql/parser/antlr/PartiQLParser$TypeCustomContext;)V
 	public abstract fun enterTypeList (Lorg/partiql/parser/antlr/PartiQLParser$TypeListContext;)V
 	public abstract fun enterTypeStruct (Lorg/partiql/parser/antlr/PartiQLParser$TypeStructContext;)V
@@ -1245,7 +1245,7 @@ public abstract interface class org/partiql/parser/antlr/PartiQLListener : org/a
 	public abstract fun exitTypeArgDouble (Lorg/partiql/parser/antlr/PartiQLParser$TypeArgDoubleContext;)V
 	public abstract fun exitTypeArgSingle (Lorg/partiql/parser/antlr/PartiQLParser$TypeArgSingleContext;)V
 	public abstract fun exitTypeAtomic (Lorg/partiql/parser/antlr/PartiQLParser$TypeAtomicContext;)V
-	public abstract fun exitTypeComplexLegacy (Lorg/partiql/parser/antlr/PartiQLParser$TypeComplexLegacyContext;)V
+	public abstract fun exitTypeComplexUnparameterized (Lorg/partiql/parser/antlr/PartiQLParser$TypeComplexUnparameterizedContext;)V
 	public abstract fun exitTypeCustom (Lorg/partiql/parser/antlr/PartiQLParser$TypeCustomContext;)V
 	public abstract fun exitTypeList (Lorg/partiql/parser/antlr/PartiQLParser$TypeListContext;)V
 	public abstract fun exitTypeStruct (Lorg/partiql/parser/antlr/PartiQLParser$TypeStructContext;)V
@@ -4625,9 +4625,10 @@ public class org/partiql/parser/antlr/PartiQLParser$TypeAtomicContext : org/part
 	public fun exitRule (Lorg/antlr/v4/runtime/tree/ParseTreeListener;)V
 }
 
-public class org/partiql/parser/antlr/PartiQLParser$TypeComplexLegacyContext : org/partiql/parser/antlr/PartiQLParser$TypeContext {
+public class org/partiql/parser/antlr/PartiQLParser$TypeComplexUnparameterizedContext : org/partiql/parser/antlr/PartiQLParser$TypeContext {
 	public field datatype Lorg/antlr/v4/runtime/Token;
 	public fun <init> (Lorg/partiql/parser/antlr/PartiQLParser$TypeContext;)V
+	public fun ARRAY ()Lorg/antlr/v4/runtime/tree/TerminalNode;
 	public fun LIST ()Lorg/antlr/v4/runtime/tree/TerminalNode;
 	public fun STRUCT ()Lorg/antlr/v4/runtime/tree/TerminalNode;
 	public fun TUPLE ()Lorg/antlr/v4/runtime/tree/TerminalNode;
@@ -5463,7 +5464,7 @@ public abstract interface class org/partiql/parser/antlr/PartiQLVisitor : org/an
 	public abstract fun visitTypeArgDouble (Lorg/partiql/parser/antlr/PartiQLParser$TypeArgDoubleContext;)Ljava/lang/Object;
 	public abstract fun visitTypeArgSingle (Lorg/partiql/parser/antlr/PartiQLParser$TypeArgSingleContext;)Ljava/lang/Object;
 	public abstract fun visitTypeAtomic (Lorg/partiql/parser/antlr/PartiQLParser$TypeAtomicContext;)Ljava/lang/Object;
-	public abstract fun visitTypeComplexLegacy (Lorg/partiql/parser/antlr/PartiQLParser$TypeComplexLegacyContext;)Ljava/lang/Object;
+	public abstract fun visitTypeComplexUnparameterized (Lorg/partiql/parser/antlr/PartiQLParser$TypeComplexUnparameterizedContext;)Ljava/lang/Object;
 	public abstract fun visitTypeCustom (Lorg/partiql/parser/antlr/PartiQLParser$TypeCustomContext;)Ljava/lang/Object;
 	public abstract fun visitTypeList (Lorg/partiql/parser/antlr/PartiQLParser$TypeListContext;)Ljava/lang/Object;
 	public abstract fun visitTypeStruct (Lorg/partiql/parser/antlr/PartiQLParser$TypeStructContext;)Ljava/lang/Object;
