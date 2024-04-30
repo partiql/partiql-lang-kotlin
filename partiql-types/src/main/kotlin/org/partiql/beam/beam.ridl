@@ -1,0 +1,113 @@
+// PartiQL Shapes
+type shape union {
+
+    // Bool type
+    t_bool: unit,
+
+    // Exact-numeric types
+    t_int8: unit,
+    t_int16: unit,
+    t_int32: unit,
+    t_int64: unit,
+    t_integer: unit, // Ion int
+    t_decimal: unit, // Ion decimal
+    t_numeric: struct {
+        precision: int,
+        scale: int,
+    },
+
+    // Approximate-numeric types
+    t_float32: unit,
+    t_float64: unit,
+    t_float: struct { precision: int },
+
+    // Character String Shapes
+    t_char_fixed: struct {
+        length: int,
+    },
+    t_char_varying: struct {
+        length: int,
+    },
+    t_string: unit,
+    t_symbol: unit,
+    t_clob: unit,
+
+    // Bit String Shapes
+    t_bit_fixed: struct {
+        length: int,
+    },
+    t_bit_varying: struct {
+        length: int,
+    },
+
+    // Byte String Shapes
+    t_binary: unit,
+    t_byte_fixed: struct {
+        length: int,
+    },
+    t_byte_varying: struct {
+        length: int,
+    },
+    t_blob: unit,
+
+    // Date/Time Shapes
+    t_date: unit,
+    t_time: struct {
+        precision: int,
+    },
+    t_time_tz: struct {
+        precision: int,
+        offset_hour: int,
+        offset_minute: int,
+    },
+    t_timestamp: struct {
+        precision: int,
+    },
+    t_timestamp_tz: struct {
+        precision: int,
+        offset_hour: int,
+        offset_minute: int,
+    },
+
+    // Collection Shapes
+    t_bag: struct {
+        items: shape,
+    },
+    t_list: struct {
+        items: shape,
+    },
+    t_sexp: struct {
+        items: shape,
+    },
+
+    // Struct Shape (currently assuming open/closed/ordered)
+    t_struct: struct {
+        fields: fields,
+        is_closed: bool,
+        is_ordered: bool,
+        has_unique_fields: bool,
+    },
+
+    // Absent Shapes
+    t_null: unit,
+    t_missing: unit,
+
+    // Union Shape
+    t_union: struct {
+        shapes: shapes,
+    },
+
+    // Dynamic shape
+    t_dynamic: unit,
+};
+
+type shapes shape[];
+
+type fields field[];
+
+type field struct {
+  name: string,
+  shape: shape,
+};
+
+// Plans to follow

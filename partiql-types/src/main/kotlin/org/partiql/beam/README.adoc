@@ -1,0 +1,25 @@
+= PartiQL Beam
+
+PartiQL shape and plan encodings.
+
+== Usage
+
+[source,kotlin]
+----
+// toString
+val example = Shape.TNumeric(38, 0)
+println(example)
+// Output:
+//   'shape.numeric'::{
+//       precision: 38,
+//       scale: 0
+//    }
+
+// write
+val writer = BeamWriter.text(out)
+writer.write(example) // base
+writer.writeShapeTNumeric(example) // concrete
+
+// read
+// similar to writer, ignore for now
+----

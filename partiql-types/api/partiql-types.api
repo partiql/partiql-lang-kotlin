@@ -1,3 +1,645 @@
+public final class org/partiql/beam/BeamStaticKt {
+	public static final fun beam (Lorg/partiql/types/StaticType;)Lorg/partiql/beam/io/Beam$Shape;
+}
+
+public final class org/partiql/beam/io/Beam {
+	public static final field Companion Lorg/partiql/beam/io/Beam$Companion;
+	public static final fun toString (Lorg/partiql/beam/io/Beam$$Serializable;)Ljava/lang/String;
+}
+
+public abstract interface class org/partiql/beam/io/Beam$$Serializable {
+	public abstract fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$$Serializable;
+	public abstract fun write (Lorg/partiql/beam/io/BeamWriter;)V
+}
+
+public final class org/partiql/beam/io/Beam$Companion {
+	public final fun toString (Lorg/partiql/beam/io/Beam$$Serializable;)Ljava/lang/String;
+}
+
+public final class org/partiql/beam/io/Beam$Field : org/partiql/beam/io/Beam$$Serializable {
+	public field name Ljava/lang/String;
+	public field shape Lorg/partiql/beam/io/Beam$Shape;
+	public fun <init> (Ljava/lang/String;Lorg/partiql/beam/io/Beam$Shape;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lorg/partiql/beam/io/Beam$Shape;
+	public final fun copy (Ljava/lang/String;Lorg/partiql/beam/io/Beam$Shape;)Lorg/partiql/beam/io/Beam$Field;
+	public static synthetic fun copy$default (Lorg/partiql/beam/io/Beam$Field;Ljava/lang/String;Lorg/partiql/beam/io/Beam$Shape;ILjava/lang/Object;)Lorg/partiql/beam/io/Beam$Field;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$$Serializable;
+	public fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Field;
+	public fun toString ()Ljava/lang/String;
+	public fun write (Lorg/partiql/beam/io/BeamWriter;)V
+}
+
+public final class org/partiql/beam/io/Beam$Fields : org/partiql/beam/io/runtime/RidlList, org/partiql/beam/io/Beam$$Serializable {
+	public fun <init> (Ljava/util/ArrayList;)V
+	public final fun contains (Ljava/lang/Object;)Z
+	public fun contains (Lorg/partiql/beam/io/Beam$Field;)Z
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$$Serializable;
+	public fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Fields;
+	public fun toString ()Ljava/lang/String;
+	public fun write (Lorg/partiql/beam/io/BeamWriter;)V
+}
+
+public abstract interface class org/partiql/beam/io/Beam$Shape : org/partiql/beam/io/Beam$$Serializable {
+	public abstract fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape;
+	public abstract fun write (Lorg/partiql/beam/io/BeamWriter;)V
+}
+
+public final class org/partiql/beam/io/Beam$Shape$DefaultImpls {
+	public static fun read (Lorg/partiql/beam/io/Beam$Shape;Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape;
+	public static fun write (Lorg/partiql/beam/io/Beam$Shape;Lorg/partiql/beam/io/BeamWriter;)V
+}
+
+public final class org/partiql/beam/io/Beam$Shape$TBag : org/partiql/beam/io/Beam$Shape {
+	public field items Lorg/partiql/beam/io/Beam$Shape;
+	public fun <init> (Lorg/partiql/beam/io/Beam$Shape;)V
+	public final fun component1 ()Lorg/partiql/beam/io/Beam$Shape;
+	public final fun copy (Lorg/partiql/beam/io/Beam$Shape;)Lorg/partiql/beam/io/Beam$Shape$TBag;
+	public static synthetic fun copy$default (Lorg/partiql/beam/io/Beam$Shape$TBag;Lorg/partiql/beam/io/Beam$Shape;ILjava/lang/Object;)Lorg/partiql/beam/io/Beam$Shape$TBag;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$$Serializable;
+	public fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape$TBag;
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape;
+	public fun toString ()Ljava/lang/String;
+	public fun write (Lorg/partiql/beam/io/BeamWriter;)V
+}
+
+public final class org/partiql/beam/io/Beam$Shape$TBinary : org/partiql/beam/io/Beam$Shape {
+	public static final field INSTANCE Lorg/partiql/beam/io/Beam$Shape$TBinary;
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$$Serializable;
+	public fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape$TBinary;
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape;
+	public fun toString ()Ljava/lang/String;
+	public fun write (Lorg/partiql/beam/io/BeamWriter;)V
+}
+
+public final class org/partiql/beam/io/Beam$Shape$TBitFixed : org/partiql/beam/io/Beam$Shape {
+	public field length J
+	public fun <init> (J)V
+	public final fun component1 ()J
+	public final fun copy (J)Lorg/partiql/beam/io/Beam$Shape$TBitFixed;
+	public static synthetic fun copy$default (Lorg/partiql/beam/io/Beam$Shape$TBitFixed;JILjava/lang/Object;)Lorg/partiql/beam/io/Beam$Shape$TBitFixed;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$$Serializable;
+	public fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape$TBitFixed;
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape;
+	public fun toString ()Ljava/lang/String;
+	public fun write (Lorg/partiql/beam/io/BeamWriter;)V
+}
+
+public final class org/partiql/beam/io/Beam$Shape$TBitVarying : org/partiql/beam/io/Beam$Shape {
+	public field length J
+	public fun <init> (J)V
+	public final fun component1 ()J
+	public final fun copy (J)Lorg/partiql/beam/io/Beam$Shape$TBitVarying;
+	public static synthetic fun copy$default (Lorg/partiql/beam/io/Beam$Shape$TBitVarying;JILjava/lang/Object;)Lorg/partiql/beam/io/Beam$Shape$TBitVarying;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$$Serializable;
+	public fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape$TBitVarying;
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape;
+	public fun toString ()Ljava/lang/String;
+	public fun write (Lorg/partiql/beam/io/BeamWriter;)V
+}
+
+public final class org/partiql/beam/io/Beam$Shape$TBlob : org/partiql/beam/io/Beam$Shape {
+	public static final field INSTANCE Lorg/partiql/beam/io/Beam$Shape$TBlob;
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$$Serializable;
+	public fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape$TBlob;
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape;
+	public fun toString ()Ljava/lang/String;
+	public fun write (Lorg/partiql/beam/io/BeamWriter;)V
+}
+
+public final class org/partiql/beam/io/Beam$Shape$TBool : org/partiql/beam/io/Beam$Shape {
+	public static final field INSTANCE Lorg/partiql/beam/io/Beam$Shape$TBool;
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$$Serializable;
+	public fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape$TBool;
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape;
+	public fun toString ()Ljava/lang/String;
+	public fun write (Lorg/partiql/beam/io/BeamWriter;)V
+}
+
+public final class org/partiql/beam/io/Beam$Shape$TByteFixed : org/partiql/beam/io/Beam$Shape {
+	public field length J
+	public fun <init> (J)V
+	public final fun component1 ()J
+	public final fun copy (J)Lorg/partiql/beam/io/Beam$Shape$TByteFixed;
+	public static synthetic fun copy$default (Lorg/partiql/beam/io/Beam$Shape$TByteFixed;JILjava/lang/Object;)Lorg/partiql/beam/io/Beam$Shape$TByteFixed;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$$Serializable;
+	public fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape$TByteFixed;
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape;
+	public fun toString ()Ljava/lang/String;
+	public fun write (Lorg/partiql/beam/io/BeamWriter;)V
+}
+
+public final class org/partiql/beam/io/Beam$Shape$TByteVarying : org/partiql/beam/io/Beam$Shape {
+	public field length J
+	public fun <init> (J)V
+	public final fun component1 ()J
+	public final fun copy (J)Lorg/partiql/beam/io/Beam$Shape$TByteVarying;
+	public static synthetic fun copy$default (Lorg/partiql/beam/io/Beam$Shape$TByteVarying;JILjava/lang/Object;)Lorg/partiql/beam/io/Beam$Shape$TByteVarying;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$$Serializable;
+	public fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape$TByteVarying;
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape;
+	public fun toString ()Ljava/lang/String;
+	public fun write (Lorg/partiql/beam/io/BeamWriter;)V
+}
+
+public final class org/partiql/beam/io/Beam$Shape$TCharFixed : org/partiql/beam/io/Beam$Shape {
+	public field length J
+	public fun <init> (J)V
+	public final fun component1 ()J
+	public final fun copy (J)Lorg/partiql/beam/io/Beam$Shape$TCharFixed;
+	public static synthetic fun copy$default (Lorg/partiql/beam/io/Beam$Shape$TCharFixed;JILjava/lang/Object;)Lorg/partiql/beam/io/Beam$Shape$TCharFixed;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$$Serializable;
+	public fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape$TCharFixed;
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape;
+	public fun toString ()Ljava/lang/String;
+	public fun write (Lorg/partiql/beam/io/BeamWriter;)V
+}
+
+public final class org/partiql/beam/io/Beam$Shape$TCharVarying : org/partiql/beam/io/Beam$Shape {
+	public field length J
+	public fun <init> (J)V
+	public final fun component1 ()J
+	public final fun copy (J)Lorg/partiql/beam/io/Beam$Shape$TCharVarying;
+	public static synthetic fun copy$default (Lorg/partiql/beam/io/Beam$Shape$TCharVarying;JILjava/lang/Object;)Lorg/partiql/beam/io/Beam$Shape$TCharVarying;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$$Serializable;
+	public fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape$TCharVarying;
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape;
+	public fun toString ()Ljava/lang/String;
+	public fun write (Lorg/partiql/beam/io/BeamWriter;)V
+}
+
+public final class org/partiql/beam/io/Beam$Shape$TClob : org/partiql/beam/io/Beam$Shape {
+	public static final field INSTANCE Lorg/partiql/beam/io/Beam$Shape$TClob;
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$$Serializable;
+	public fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape$TClob;
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape;
+	public fun toString ()Ljava/lang/String;
+	public fun write (Lorg/partiql/beam/io/BeamWriter;)V
+}
+
+public final class org/partiql/beam/io/Beam$Shape$TDate : org/partiql/beam/io/Beam$Shape {
+	public static final field INSTANCE Lorg/partiql/beam/io/Beam$Shape$TDate;
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$$Serializable;
+	public fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape$TDate;
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape;
+	public fun toString ()Ljava/lang/String;
+	public fun write (Lorg/partiql/beam/io/BeamWriter;)V
+}
+
+public final class org/partiql/beam/io/Beam$Shape$TDecimal : org/partiql/beam/io/Beam$Shape {
+	public static final field INSTANCE Lorg/partiql/beam/io/Beam$Shape$TDecimal;
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$$Serializable;
+	public fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape$TDecimal;
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape;
+	public fun toString ()Ljava/lang/String;
+	public fun write (Lorg/partiql/beam/io/BeamWriter;)V
+}
+
+public final class org/partiql/beam/io/Beam$Shape$TDynamic : org/partiql/beam/io/Beam$Shape {
+	public static final field INSTANCE Lorg/partiql/beam/io/Beam$Shape$TDynamic;
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$$Serializable;
+	public fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape$TDynamic;
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape;
+	public fun toString ()Ljava/lang/String;
+	public fun write (Lorg/partiql/beam/io/BeamWriter;)V
+}
+
+public final class org/partiql/beam/io/Beam$Shape$TFloat : org/partiql/beam/io/Beam$Shape {
+	public field precision J
+	public fun <init> (J)V
+	public final fun component1 ()J
+	public final fun copy (J)Lorg/partiql/beam/io/Beam$Shape$TFloat;
+	public static synthetic fun copy$default (Lorg/partiql/beam/io/Beam$Shape$TFloat;JILjava/lang/Object;)Lorg/partiql/beam/io/Beam$Shape$TFloat;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$$Serializable;
+	public fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape$TFloat;
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape;
+	public fun toString ()Ljava/lang/String;
+	public fun write (Lorg/partiql/beam/io/BeamWriter;)V
+}
+
+public final class org/partiql/beam/io/Beam$Shape$TFloat32 : org/partiql/beam/io/Beam$Shape {
+	public static final field INSTANCE Lorg/partiql/beam/io/Beam$Shape$TFloat32;
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$$Serializable;
+	public fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape$TFloat32;
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape;
+	public fun toString ()Ljava/lang/String;
+	public fun write (Lorg/partiql/beam/io/BeamWriter;)V
+}
+
+public final class org/partiql/beam/io/Beam$Shape$TFloat64 : org/partiql/beam/io/Beam$Shape {
+	public static final field INSTANCE Lorg/partiql/beam/io/Beam$Shape$TFloat64;
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$$Serializable;
+	public fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape$TFloat64;
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape;
+	public fun toString ()Ljava/lang/String;
+	public fun write (Lorg/partiql/beam/io/BeamWriter;)V
+}
+
+public final class org/partiql/beam/io/Beam$Shape$TInt16 : org/partiql/beam/io/Beam$Shape {
+	public static final field INSTANCE Lorg/partiql/beam/io/Beam$Shape$TInt16;
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$$Serializable;
+	public fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape$TInt16;
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape;
+	public fun toString ()Ljava/lang/String;
+	public fun write (Lorg/partiql/beam/io/BeamWriter;)V
+}
+
+public final class org/partiql/beam/io/Beam$Shape$TInt32 : org/partiql/beam/io/Beam$Shape {
+	public static final field INSTANCE Lorg/partiql/beam/io/Beam$Shape$TInt32;
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$$Serializable;
+	public fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape$TInt32;
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape;
+	public fun toString ()Ljava/lang/String;
+	public fun write (Lorg/partiql/beam/io/BeamWriter;)V
+}
+
+public final class org/partiql/beam/io/Beam$Shape$TInt64 : org/partiql/beam/io/Beam$Shape {
+	public static final field INSTANCE Lorg/partiql/beam/io/Beam$Shape$TInt64;
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$$Serializable;
+	public fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape$TInt64;
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape;
+	public fun toString ()Ljava/lang/String;
+	public fun write (Lorg/partiql/beam/io/BeamWriter;)V
+}
+
+public final class org/partiql/beam/io/Beam$Shape$TInt8 : org/partiql/beam/io/Beam$Shape {
+	public static final field INSTANCE Lorg/partiql/beam/io/Beam$Shape$TInt8;
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$$Serializable;
+	public fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape$TInt8;
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape;
+	public fun toString ()Ljava/lang/String;
+	public fun write (Lorg/partiql/beam/io/BeamWriter;)V
+}
+
+public final class org/partiql/beam/io/Beam$Shape$TInteger : org/partiql/beam/io/Beam$Shape {
+	public static final field INSTANCE Lorg/partiql/beam/io/Beam$Shape$TInteger;
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$$Serializable;
+	public fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape$TInteger;
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape;
+	public fun toString ()Ljava/lang/String;
+	public fun write (Lorg/partiql/beam/io/BeamWriter;)V
+}
+
+public final class org/partiql/beam/io/Beam$Shape$TList : org/partiql/beam/io/Beam$Shape {
+	public field items Lorg/partiql/beam/io/Beam$Shape;
+	public fun <init> (Lorg/partiql/beam/io/Beam$Shape;)V
+	public final fun component1 ()Lorg/partiql/beam/io/Beam$Shape;
+	public final fun copy (Lorg/partiql/beam/io/Beam$Shape;)Lorg/partiql/beam/io/Beam$Shape$TList;
+	public static synthetic fun copy$default (Lorg/partiql/beam/io/Beam$Shape$TList;Lorg/partiql/beam/io/Beam$Shape;ILjava/lang/Object;)Lorg/partiql/beam/io/Beam$Shape$TList;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$$Serializable;
+	public fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape$TList;
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape;
+	public fun toString ()Ljava/lang/String;
+	public fun write (Lorg/partiql/beam/io/BeamWriter;)V
+}
+
+public final class org/partiql/beam/io/Beam$Shape$TMissing : org/partiql/beam/io/Beam$Shape {
+	public static final field INSTANCE Lorg/partiql/beam/io/Beam$Shape$TMissing;
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$$Serializable;
+	public fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape$TMissing;
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape;
+	public fun toString ()Ljava/lang/String;
+	public fun write (Lorg/partiql/beam/io/BeamWriter;)V
+}
+
+public final class org/partiql/beam/io/Beam$Shape$TNull : org/partiql/beam/io/Beam$Shape {
+	public static final field INSTANCE Lorg/partiql/beam/io/Beam$Shape$TNull;
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$$Serializable;
+	public fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape$TNull;
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape;
+	public fun toString ()Ljava/lang/String;
+	public fun write (Lorg/partiql/beam/io/BeamWriter;)V
+}
+
+public final class org/partiql/beam/io/Beam$Shape$TNumeric : org/partiql/beam/io/Beam$Shape {
+	public field precision J
+	public field scale J
+	public fun <init> (JJ)V
+	public final fun component1 ()J
+	public final fun component2 ()J
+	public final fun copy (JJ)Lorg/partiql/beam/io/Beam$Shape$TNumeric;
+	public static synthetic fun copy$default (Lorg/partiql/beam/io/Beam$Shape$TNumeric;JJILjava/lang/Object;)Lorg/partiql/beam/io/Beam$Shape$TNumeric;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$$Serializable;
+	public fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape$TNumeric;
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape;
+	public fun toString ()Ljava/lang/String;
+	public fun write (Lorg/partiql/beam/io/BeamWriter;)V
+}
+
+public final class org/partiql/beam/io/Beam$Shape$TSexp : org/partiql/beam/io/Beam$Shape {
+	public field items Lorg/partiql/beam/io/Beam$Shape;
+	public fun <init> (Lorg/partiql/beam/io/Beam$Shape;)V
+	public final fun component1 ()Lorg/partiql/beam/io/Beam$Shape;
+	public final fun copy (Lorg/partiql/beam/io/Beam$Shape;)Lorg/partiql/beam/io/Beam$Shape$TSexp;
+	public static synthetic fun copy$default (Lorg/partiql/beam/io/Beam$Shape$TSexp;Lorg/partiql/beam/io/Beam$Shape;ILjava/lang/Object;)Lorg/partiql/beam/io/Beam$Shape$TSexp;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$$Serializable;
+	public fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape$TSexp;
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape;
+	public fun toString ()Ljava/lang/String;
+	public fun write (Lorg/partiql/beam/io/BeamWriter;)V
+}
+
+public final class org/partiql/beam/io/Beam$Shape$TString : org/partiql/beam/io/Beam$Shape {
+	public static final field INSTANCE Lorg/partiql/beam/io/Beam$Shape$TString;
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$$Serializable;
+	public fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape$TString;
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape;
+	public fun toString ()Ljava/lang/String;
+	public fun write (Lorg/partiql/beam/io/BeamWriter;)V
+}
+
+public final class org/partiql/beam/io/Beam$Shape$TStruct : org/partiql/beam/io/Beam$Shape {
+	public field fields Lorg/partiql/beam/io/Beam$Fields;
+	public field hasUniqueFields Z
+	public field isClosed Z
+	public field isOrdered Z
+	public fun <init> (Lorg/partiql/beam/io/Beam$Fields;ZZZ)V
+	public final fun component1 ()Lorg/partiql/beam/io/Beam$Fields;
+	public final fun component2 ()Z
+	public final fun component3 ()Z
+	public final fun component4 ()Z
+	public final fun copy (Lorg/partiql/beam/io/Beam$Fields;ZZZ)Lorg/partiql/beam/io/Beam$Shape$TStruct;
+	public static synthetic fun copy$default (Lorg/partiql/beam/io/Beam$Shape$TStruct;Lorg/partiql/beam/io/Beam$Fields;ZZZILjava/lang/Object;)Lorg/partiql/beam/io/Beam$Shape$TStruct;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$$Serializable;
+	public fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape$TStruct;
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape;
+	public fun toString ()Ljava/lang/String;
+	public fun write (Lorg/partiql/beam/io/BeamWriter;)V
+}
+
+public final class org/partiql/beam/io/Beam$Shape$TSymbol : org/partiql/beam/io/Beam$Shape {
+	public static final field INSTANCE Lorg/partiql/beam/io/Beam$Shape$TSymbol;
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$$Serializable;
+	public fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape$TSymbol;
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape;
+	public fun toString ()Ljava/lang/String;
+	public fun write (Lorg/partiql/beam/io/BeamWriter;)V
+}
+
+public final class org/partiql/beam/io/Beam$Shape$TTime : org/partiql/beam/io/Beam$Shape {
+	public field precision J
+	public fun <init> (J)V
+	public final fun component1 ()J
+	public final fun copy (J)Lorg/partiql/beam/io/Beam$Shape$TTime;
+	public static synthetic fun copy$default (Lorg/partiql/beam/io/Beam$Shape$TTime;JILjava/lang/Object;)Lorg/partiql/beam/io/Beam$Shape$TTime;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$$Serializable;
+	public fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape$TTime;
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape;
+	public fun toString ()Ljava/lang/String;
+	public fun write (Lorg/partiql/beam/io/BeamWriter;)V
+}
+
+public final class org/partiql/beam/io/Beam$Shape$TTimeTz : org/partiql/beam/io/Beam$Shape {
+	public field offsetHour J
+	public field offsetMinute J
+	public field precision J
+	public fun <init> (JJJ)V
+	public final fun component1 ()J
+	public final fun component2 ()J
+	public final fun component3 ()J
+	public final fun copy (JJJ)Lorg/partiql/beam/io/Beam$Shape$TTimeTz;
+	public static synthetic fun copy$default (Lorg/partiql/beam/io/Beam$Shape$TTimeTz;JJJILjava/lang/Object;)Lorg/partiql/beam/io/Beam$Shape$TTimeTz;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$$Serializable;
+	public fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape$TTimeTz;
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape;
+	public fun toString ()Ljava/lang/String;
+	public fun write (Lorg/partiql/beam/io/BeamWriter;)V
+}
+
+public final class org/partiql/beam/io/Beam$Shape$TTimestamp : org/partiql/beam/io/Beam$Shape {
+	public field precision J
+	public fun <init> (J)V
+	public final fun component1 ()J
+	public final fun copy (J)Lorg/partiql/beam/io/Beam$Shape$TTimestamp;
+	public static synthetic fun copy$default (Lorg/partiql/beam/io/Beam$Shape$TTimestamp;JILjava/lang/Object;)Lorg/partiql/beam/io/Beam$Shape$TTimestamp;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$$Serializable;
+	public fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape$TTimestamp;
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape;
+	public fun toString ()Ljava/lang/String;
+	public fun write (Lorg/partiql/beam/io/BeamWriter;)V
+}
+
+public final class org/partiql/beam/io/Beam$Shape$TTimestampTz : org/partiql/beam/io/Beam$Shape {
+	public field offsetHour J
+	public field offsetMinute J
+	public field precision J
+	public fun <init> (JJJ)V
+	public final fun component1 ()J
+	public final fun component2 ()J
+	public final fun component3 ()J
+	public final fun copy (JJJ)Lorg/partiql/beam/io/Beam$Shape$TTimestampTz;
+	public static synthetic fun copy$default (Lorg/partiql/beam/io/Beam$Shape$TTimestampTz;JJJILjava/lang/Object;)Lorg/partiql/beam/io/Beam$Shape$TTimestampTz;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$$Serializable;
+	public fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape$TTimestampTz;
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape;
+	public fun toString ()Ljava/lang/String;
+	public fun write (Lorg/partiql/beam/io/BeamWriter;)V
+}
+
+public final class org/partiql/beam/io/Beam$Shape$TUnion : org/partiql/beam/io/Beam$Shape {
+	public field shapes Lorg/partiql/beam/io/Beam$Shapes;
+	public fun <init> (Lorg/partiql/beam/io/Beam$Shapes;)V
+	public final fun component1 ()Lorg/partiql/beam/io/Beam$Shapes;
+	public final fun copy (Lorg/partiql/beam/io/Beam$Shapes;)Lorg/partiql/beam/io/Beam$Shape$TUnion;
+	public static synthetic fun copy$default (Lorg/partiql/beam/io/Beam$Shape$TUnion;Lorg/partiql/beam/io/Beam$Shapes;ILjava/lang/Object;)Lorg/partiql/beam/io/Beam$Shape$TUnion;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$$Serializable;
+	public fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape$TUnion;
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shape;
+	public fun toString ()Ljava/lang/String;
+	public fun write (Lorg/partiql/beam/io/BeamWriter;)V
+}
+
+public final class org/partiql/beam/io/Beam$Shapes : org/partiql/beam/io/runtime/RidlList, org/partiql/beam/io/Beam$$Serializable {
+	public fun <init> (Ljava/util/ArrayList;)V
+	public final fun contains (Ljava/lang/Object;)Z
+	public fun contains (Lorg/partiql/beam/io/Beam$Shape;)Z
+	public synthetic fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$$Serializable;
+	public fun read (Lorg/partiql/beam/io/BeamReader;)Lorg/partiql/beam/io/Beam$Shapes;
+	public fun toString ()Ljava/lang/String;
+	public fun write (Lorg/partiql/beam/io/BeamWriter;)V
+}
+
+public abstract class org/partiql/beam/io/BeamReader : org/partiql/beam/io/runtime/RidlReader {
+	public static final field Companion Lorg/partiql/beam/io/BeamReader$Companion;
+	public fun <init> (Lcom/amazon/ion/IonReader;)V
+	public static final fun packed (Lcom/amazon/ion/IonReader;)Lorg/partiql/beam/io/BeamReader;
+	public final fun read (Lorg/partiql/beam/io/Beam$$Serializable;)Lorg/partiql/beam/io/Beam$$Serializable;
+	public abstract fun readField ()Lorg/partiql/beam/io/Beam$Field;
+	public abstract fun readFields ()Lorg/partiql/beam/io/Beam$Fields;
+	public abstract fun readShape ()Lorg/partiql/beam/io/Beam$Shape;
+	public abstract fun readShapeTBag ()Lorg/partiql/beam/io/Beam$Shape$TBag;
+	public abstract fun readShapeTBinary ()Lorg/partiql/beam/io/Beam$Shape$TBinary;
+	public abstract fun readShapeTBitFixed ()Lorg/partiql/beam/io/Beam$Shape$TBitFixed;
+	public abstract fun readShapeTBitVarying ()Lorg/partiql/beam/io/Beam$Shape$TBitVarying;
+	public abstract fun readShapeTBlob ()Lorg/partiql/beam/io/Beam$Shape$TBlob;
+	public abstract fun readShapeTBool ()Lorg/partiql/beam/io/Beam$Shape$TBool;
+	public abstract fun readShapeTByteFixed ()Lorg/partiql/beam/io/Beam$Shape$TByteFixed;
+	public abstract fun readShapeTByteVarying ()Lorg/partiql/beam/io/Beam$Shape$TByteVarying;
+	public abstract fun readShapeTCharFixed ()Lorg/partiql/beam/io/Beam$Shape$TCharFixed;
+	public abstract fun readShapeTCharVarying ()Lorg/partiql/beam/io/Beam$Shape$TCharVarying;
+	public abstract fun readShapeTClob ()Lorg/partiql/beam/io/Beam$Shape$TClob;
+	public abstract fun readShapeTDate ()Lorg/partiql/beam/io/Beam$Shape$TDate;
+	public abstract fun readShapeTDecimal ()Lorg/partiql/beam/io/Beam$Shape$TDecimal;
+	public abstract fun readShapeTDynamic ()Lorg/partiql/beam/io/Beam$Shape$TDynamic;
+	public abstract fun readShapeTFloat ()Lorg/partiql/beam/io/Beam$Shape$TFloat;
+	public abstract fun readShapeTFloat32 ()Lorg/partiql/beam/io/Beam$Shape$TFloat32;
+	public abstract fun readShapeTFloat64 ()Lorg/partiql/beam/io/Beam$Shape$TFloat64;
+	public abstract fun readShapeTInt16 ()Lorg/partiql/beam/io/Beam$Shape$TInt16;
+	public abstract fun readShapeTInt32 ()Lorg/partiql/beam/io/Beam$Shape$TInt32;
+	public abstract fun readShapeTInt64 ()Lorg/partiql/beam/io/Beam$Shape$TInt64;
+	public abstract fun readShapeTInt8 ()Lorg/partiql/beam/io/Beam$Shape$TInt8;
+	public abstract fun readShapeTInteger ()Lorg/partiql/beam/io/Beam$Shape$TInteger;
+	public abstract fun readShapeTList ()Lorg/partiql/beam/io/Beam$Shape$TList;
+	public abstract fun readShapeTMissing ()Lorg/partiql/beam/io/Beam$Shape$TMissing;
+	public abstract fun readShapeTNull ()Lorg/partiql/beam/io/Beam$Shape$TNull;
+	public abstract fun readShapeTNumeric ()Lorg/partiql/beam/io/Beam$Shape$TNumeric;
+	public abstract fun readShapeTSexp ()Lorg/partiql/beam/io/Beam$Shape$TSexp;
+	public abstract fun readShapeTString ()Lorg/partiql/beam/io/Beam$Shape$TString;
+	public abstract fun readShapeTStruct ()Lorg/partiql/beam/io/Beam$Shape$TStruct;
+	public abstract fun readShapeTSymbol ()Lorg/partiql/beam/io/Beam$Shape$TSymbol;
+	public abstract fun readShapeTTime ()Lorg/partiql/beam/io/Beam$Shape$TTime;
+	public abstract fun readShapeTTimeTz ()Lorg/partiql/beam/io/Beam$Shape$TTimeTz;
+	public abstract fun readShapeTTimestamp ()Lorg/partiql/beam/io/Beam$Shape$TTimestamp;
+	public abstract fun readShapeTTimestampTz ()Lorg/partiql/beam/io/Beam$Shape$TTimestampTz;
+	public abstract fun readShapeTUnion ()Lorg/partiql/beam/io/Beam$Shape$TUnion;
+	public abstract fun readShapes ()Lorg/partiql/beam/io/Beam$Shapes;
+	public static final fun text (Lcom/amazon/ion/IonReader;)Lorg/partiql/beam/io/BeamReader;
+}
+
+public final class org/partiql/beam/io/BeamReader$Companion {
+	public final fun packed (Lcom/amazon/ion/IonReader;)Lorg/partiql/beam/io/BeamReader;
+	public final fun text (Lcom/amazon/ion/IonReader;)Lorg/partiql/beam/io/BeamReader;
+}
+
+public abstract class org/partiql/beam/io/BeamWriter : org/partiql/beam/io/runtime/RidlWriter {
+	public static final field Companion Lorg/partiql/beam/io/BeamWriter$Companion;
+	public fun <init> (Lcom/amazon/ion/IonWriter;)V
+	public static final fun packed (Lcom/amazon/ion/IonWriter;)Lorg/partiql/beam/io/BeamWriter;
+	public static final fun packed (Ljava/io/OutputStream;)Lorg/partiql/beam/io/BeamWriter;
+	public static final fun text (Lcom/amazon/ion/IonWriter;)Lorg/partiql/beam/io/BeamWriter;
+	public static final fun text (Ljava/lang/Appendable;)Lorg/partiql/beam/io/BeamWriter;
+	public final fun write (Lorg/partiql/beam/io/Beam$$Serializable;)V
+	public abstract fun writeField (Lorg/partiql/beam/io/Beam$Field;)V
+	public abstract fun writeFields (Lorg/partiql/beam/io/Beam$Fields;)V
+	public abstract fun writeShape (Lorg/partiql/beam/io/Beam$Shape;)V
+	public abstract fun writeShapeTBag (Lorg/partiql/beam/io/Beam$Shape$TBag;)V
+	public abstract fun writeShapeTBinary (Lorg/partiql/beam/io/Beam$Shape$TBinary;)V
+	public abstract fun writeShapeTBitFixed (Lorg/partiql/beam/io/Beam$Shape$TBitFixed;)V
+	public abstract fun writeShapeTBitVarying (Lorg/partiql/beam/io/Beam$Shape$TBitVarying;)V
+	public abstract fun writeShapeTBlob (Lorg/partiql/beam/io/Beam$Shape$TBlob;)V
+	public abstract fun writeShapeTBool (Lorg/partiql/beam/io/Beam$Shape$TBool;)V
+	public abstract fun writeShapeTByteFixed (Lorg/partiql/beam/io/Beam$Shape$TByteFixed;)V
+	public abstract fun writeShapeTByteVarying (Lorg/partiql/beam/io/Beam$Shape$TByteVarying;)V
+	public abstract fun writeShapeTCharFixed (Lorg/partiql/beam/io/Beam$Shape$TCharFixed;)V
+	public abstract fun writeShapeTCharVarying (Lorg/partiql/beam/io/Beam$Shape$TCharVarying;)V
+	public abstract fun writeShapeTClob (Lorg/partiql/beam/io/Beam$Shape$TClob;)V
+	public abstract fun writeShapeTDate (Lorg/partiql/beam/io/Beam$Shape$TDate;)V
+	public abstract fun writeShapeTDecimal (Lorg/partiql/beam/io/Beam$Shape$TDecimal;)V
+	public abstract fun writeShapeTDynamic (Lorg/partiql/beam/io/Beam$Shape$TDynamic;)V
+	public abstract fun writeShapeTFloat (Lorg/partiql/beam/io/Beam$Shape$TFloat;)V
+	public abstract fun writeShapeTFloat32 (Lorg/partiql/beam/io/Beam$Shape$TFloat32;)V
+	public abstract fun writeShapeTFloat64 (Lorg/partiql/beam/io/Beam$Shape$TFloat64;)V
+	public abstract fun writeShapeTInt16 (Lorg/partiql/beam/io/Beam$Shape$TInt16;)V
+	public abstract fun writeShapeTInt32 (Lorg/partiql/beam/io/Beam$Shape$TInt32;)V
+	public abstract fun writeShapeTInt64 (Lorg/partiql/beam/io/Beam$Shape$TInt64;)V
+	public abstract fun writeShapeTInt8 (Lorg/partiql/beam/io/Beam$Shape$TInt8;)V
+	public abstract fun writeShapeTInteger (Lorg/partiql/beam/io/Beam$Shape$TInteger;)V
+	public abstract fun writeShapeTList (Lorg/partiql/beam/io/Beam$Shape$TList;)V
+	public abstract fun writeShapeTMissing (Lorg/partiql/beam/io/Beam$Shape$TMissing;)V
+	public abstract fun writeShapeTNull (Lorg/partiql/beam/io/Beam$Shape$TNull;)V
+	public abstract fun writeShapeTNumeric (Lorg/partiql/beam/io/Beam$Shape$TNumeric;)V
+	public abstract fun writeShapeTSexp (Lorg/partiql/beam/io/Beam$Shape$TSexp;)V
+	public abstract fun writeShapeTString (Lorg/partiql/beam/io/Beam$Shape$TString;)V
+	public abstract fun writeShapeTStruct (Lorg/partiql/beam/io/Beam$Shape$TStruct;)V
+	public abstract fun writeShapeTSymbol (Lorg/partiql/beam/io/Beam$Shape$TSymbol;)V
+	public abstract fun writeShapeTTime (Lorg/partiql/beam/io/Beam$Shape$TTime;)V
+	public abstract fun writeShapeTTimeTz (Lorg/partiql/beam/io/Beam$Shape$TTimeTz;)V
+	public abstract fun writeShapeTTimestamp (Lorg/partiql/beam/io/Beam$Shape$TTimestamp;)V
+	public abstract fun writeShapeTTimestampTz (Lorg/partiql/beam/io/Beam$Shape$TTimestampTz;)V
+	public abstract fun writeShapeTUnion (Lorg/partiql/beam/io/Beam$Shape$TUnion;)V
+	public abstract fun writeShapes (Lorg/partiql/beam/io/Beam$Shapes;)V
+}
+
+public final class org/partiql/beam/io/BeamWriter$Companion {
+	public final fun packed (Lcom/amazon/ion/IonWriter;)Lorg/partiql/beam/io/BeamWriter;
+	public final fun packed (Ljava/io/OutputStream;)Lorg/partiql/beam/io/BeamWriter;
+	public final fun text (Lcom/amazon/ion/IonWriter;)Lorg/partiql/beam/io/BeamWriter;
+	public final fun text (Ljava/lang/Appendable;)Lorg/partiql/beam/io/BeamWriter;
+}
+
+public abstract class org/partiql/beam/io/runtime/RidlArray {
+	public fun <init> ([Ljava/lang/Object;)V
+	public final fun get (I)Ljava/lang/Object;
+	public final fun getSize ()I
+	public final fun iterator ()Ljava/util/Iterator;
+	public final fun set (ILjava/lang/Object;)V
+}
+
+public abstract class org/partiql/beam/io/runtime/RidlList : java/util/Collection, kotlin/jvm/internal/markers/KMappedMarker {
+	public fun <init> (Ljava/util/ArrayList;)V
+	public fun add (Ljava/lang/Object;)Z
+	public fun addAll (Ljava/util/Collection;)Z
+	public fun clear ()V
+	public fun contains (Ljava/lang/Object;)Z
+	public fun containsAll (Ljava/util/Collection;)Z
+	public fun getSize ()I
+	public fun isEmpty ()Z
+	public fun iterator ()Ljava/util/Iterator;
+	public fun remove (Ljava/lang/Object;)Z
+	public fun removeAll (Ljava/util/Collection;)Z
+	public fun removeIf (Ljava/util/function/Predicate;)Z
+	public fun retainAll (Ljava/util/Collection;)Z
+	public final fun size ()I
+	public fun toArray ()[Ljava/lang/Object;
+	public fun toArray ([Ljava/lang/Object;)[Ljava/lang/Object;
+}
+
+public abstract class org/partiql/beam/io/runtime/RidlReader {
+	public fun <init> (Lcom/amazon/ion/IonReader;)V
+	public final fun assertKey (Ljava/lang/String;)V
+	public final fun assertTag (Lcom/amazon/ion/IonType;Ljava/lang/String;)V
+}
+
+public abstract class org/partiql/beam/io/runtime/RidlWriter {
+	public fun <init> (Lcom/amazon/ion/IonWriter;)V
+}
+
 public final class org/partiql/errors/CardinalityViolation : java/lang/RuntimeException {
 	public fun <init> ()V
 	public fun fillInStackTrace ()Ljava/lang/Throwable;
