@@ -574,7 +574,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             }
         }
 
-        override fun visitQualifiedName(ctx: org.partiql.parser.internal.antlr.PartiQLParser.QualifiedNameContext) = translate(ctx) {
+        override fun visitQualifiedName(ctx: GeneratedParser.QualifiedNameContext) = translate(ctx) {
             val qualifier = ctx.qualifier.map { visitSymbolPrimitive(it) }
             val name = visitSymbolPrimitive(ctx.name)
             if (qualifier.isEmpty()) {
@@ -1162,12 +1162,12 @@ internal class PartiQLParserDefault : PartiQLParser {
                 excludeStepStructField(identifier)
             }
 
-        override fun visitExcludeExprCollectionWildcard(ctx: org.partiql.parser.internal.antlr.PartiQLParser.ExcludeExprCollectionWildcardContext) =
+        override fun visitExcludeExprCollectionWildcard(ctx: GeneratedParser.ExcludeExprCollectionWildcardContext) =
             translate(ctx) {
                 excludeStepCollWildcard()
             }
 
-        override fun visitExcludeExprTupleWildcard(ctx: org.partiql.parser.internal.antlr.PartiQLParser.ExcludeExprTupleWildcardContext) =
+        override fun visitExcludeExprTupleWildcard(ctx: GeneratedParser.ExcludeExprTupleWildcardContext) =
             translate(ctx) {
                 excludeStepStructWildcard()
             }
@@ -1762,7 +1762,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             exprSessionAttribute(Expr.SessionAttribute.Attribute.CURRENT_USER)
         }
 
-        override fun visitExprTermCurrentDate(ctx: org.partiql.parser.internal.antlr.PartiQLParser.ExprTermCurrentDateContext) =
+        override fun visitExprTermCurrentDate(ctx: GeneratedParser.ExprTermCurrentDateContext) =
             translate(ctx) {
                 exprSessionAttribute(Expr.SessionAttribute.Attribute.CURRENT_DATE)
             }
