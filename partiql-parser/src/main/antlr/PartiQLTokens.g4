@@ -334,7 +334,6 @@ BANG: '!';
 LT_EQ: '<=';
 GT_EQ: '>=';
 EQ: '=';
-//NEQ: '<>' | '!=';
 CONCAT: '||';
 ANGLE_LEFT: '<';
 ANGLE_RIGHT: '>';
