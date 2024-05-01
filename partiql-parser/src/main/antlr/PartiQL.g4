@@ -583,13 +583,23 @@ exprNot
     ;
 
 exprPredicate
-    : lhs=exprPredicate op=(LT_EQ|GT_EQ|ANGLE_LEFT|ANGLE_RIGHT|NEQ|EQ) rhs=mathOp00  # PredicateComparison
+    : lhs=exprPredicate op=comparisonOp rhs=mathOp00  # PredicateComparison
     | lhs=exprPredicate IS NOT? type                                                 # PredicateIs
     | lhs=exprPredicate NOT? IN PAREN_LEFT expr PAREN_RIGHT                          # PredicateIn
     | lhs=exprPredicate NOT? IN rhs=mathOp00                                         # PredicateIn
     | lhs=exprPredicate NOT? LIKE rhs=mathOp00 ( ESCAPE escape=expr )?               # PredicateLike
     | lhs=exprPredicate NOT? BETWEEN lower=mathOp00 AND upper=mathOp00               # PredicateBetween
     | parent=mathOp00                                                                # PredicateBase
+    ;
+
+comparisonOp
+    : LT_EQ
+    | GT_EQ
+    | ANGLE_LEFT
+    | ANGLE_RIGHT
+    | EQ
+    | ANGLE_LEFT ANGLE_RIGHT
+    | BANG EQ
     ;
 
 // TODO : Opreator precedence of BITWISE_AND (&) may change in the future.
@@ -786,7 +796,7 @@ array
     : BRACKET_LEFT ( expr ( COMMA expr )* )? BRACKET_RIGHT;
 
 bag
-    : ANGLE_DOUBLE_LEFT ( expr ( COMMA expr )* )? ANGLE_DOUBLE_RIGHT;
+    : ANGLE_LEFT ANGLE_LEFT ( expr ( COMMA expr )* )? ANGLE_RIGHT ANGLE_RIGHT;
 
 tuple
     : BRACE_LEFT ( pair ( COMMA pair )* )? BRACE_RIGHT;

@@ -1089,20 +1089,20 @@ internal class PartiQLPigVisitor(
      * SIMPLE EXPRESSIONS
      */
 
-    override fun visitOr(ctx: PartiQLParser.OrContext) = visitBinaryOperation(ctx.lhs, ctx.rhs, ctx.OR().symbol, null)
+    override fun visitOr(ctx: PartiQLParser.OrContext) = visitBinaryOperation(ctx.lhs, ctx.rhs, listOf(ctx.OR().symbol), null)
 
-    override fun visitAnd(ctx: PartiQLParser.AndContext) = visitBinaryOperation(ctx.lhs, ctx.rhs, ctx.op, null)
+    override fun visitAnd(ctx: PartiQLParser.AndContext) = visitBinaryOperation(ctx.lhs, ctx.rhs, listOf(ctx.op), null)
 
     override fun visitNot(ctx: PartiQLParser.NotContext) = visitUnaryOperation(ctx.rhs, ctx.op, null)
 
     override fun visitMathOp00(ctx: PartiQLParser.MathOp00Context): PartiqlAst.PartiqlAstNode =
-        visitBinaryOperation(ctx.lhs, ctx.rhs, ctx.op, ctx.parent)
+        visitBinaryOperation(ctx.lhs, ctx.rhs, listOf(ctx.op), ctx.parent)
 
     override fun visitMathOp01(ctx: PartiQLParser.MathOp01Context): PartiqlAst.PartiqlAstNode =
-        visitBinaryOperation(ctx.lhs, ctx.rhs, ctx.op, ctx.parent)
+        visitBinaryOperation(ctx.lhs, ctx.rhs, listOf(ctx.op), ctx.parent)
 
     override fun visitMathOp02(ctx: PartiQLParser.MathOp02Context): PartiqlAst.PartiqlAstNode =
-        visitBinaryOperation(ctx.lhs, ctx.rhs, ctx.op, ctx.parent)
+        visitBinaryOperation(ctx.lhs, ctx.rhs, listOf(ctx.op), ctx.parent)
 
     override fun visitValueExpr(ctx: PartiQLParser.ValueExprContext) =
         visitUnaryOperation(ctx.rhs, ctx.sign, ctx.parent)
@@ -1114,7 +1114,7 @@ internal class PartiQLPigVisitor(
      */
 
     override fun visitPredicateComparison(ctx: PartiQLParser.PredicateComparisonContext) =
-        visitBinaryOperation(ctx.lhs, ctx.rhs, ctx.op)
+        visitBinaryOperation(ctx.lhs, ctx.rhs, ctx.op.children.map { (it as TerminalNode).symbol })
 
     /**
      * Note: This predicate can take a wrapped expression on the RHS, and it will wrap it in a LIST. However, if the
@@ -1474,7 +1474,7 @@ internal class PartiQLPigVisitor(
 
     override fun visitBag(ctx: PartiQLParser.BagContext) = PartiqlAst.build {
         val exprList = ctx.expr().map { visitExpr(it) }
-        bag(exprList, ctx.ANGLE_DOUBLE_LEFT().getSourceMetaContainer())
+        bag(exprList, ctx.ANGLE_LEFT(0).getSourceMetaContainer())
     }
 
     override fun visitLiteralDecimal(ctx: PartiQLParser.LiteralDecimalContext) = PartiqlAst.build {
@@ -1718,6 +1718,14 @@ internal class PartiQLPigVisitor(
         return com.amazon.ionelement.api.metaContainerOf(Pair(metas.tag, metas))
     }
 
+    private fun List<Token>.getSourceMetaContainer(): MetaContainer {
+        val base = this.firstOrNull() ?: return emptyMetaContainer()
+        val length = this.fold(0) { acc, token ->
+            acc + token.stopIndex - token.startIndex + 1
+        }
+        return metaContainerOf(SourceLocationMeta(base.line.toLong(), base.charPositionInLine.toLong() + 1, length.toLong()))
+    }
+
     private fun TerminalNode.getSourceMetas(): SourceLocationMeta = this.symbol.getSourceMetas()
 
     private fun Token.getSourceMetas(): SourceLocationMeta {
@@ -1728,13 +1736,13 @@ internal class PartiQLPigVisitor(
     private fun visitBinaryOperation(
         lhs: ParserRuleContext?,
         rhs: ParserRuleContext?,
-        op: Token?,
+        op: List<Token>,
         parent: ParserRuleContext? = null,
     ) = PartiqlAst.build {
         if (parent != null) return@build visit(parent) as PartiqlAst.Expr
         val args = listOf(lhs!!, rhs!!).map { visit(it) as PartiqlAst.Expr }
         val metas = op.getSourceMetaContainer()
-        when (op!!.type) {
+        when (op.first().type) {
             PartiQLParser.AND -> and(args, metas)
             PartiQLParser.OR -> or(args, metas)
             PartiQLParser.ASTERISK -> times(args, metas)
@@ -1743,11 +1751,14 @@ internal class PartiQLPigVisitor(
             PartiQLParser.MINUS -> minus(args, metas)
             PartiQLParser.PERCENT -> modulo(args, metas)
             PartiQLParser.CONCAT -> concat(args, metas)
-            PartiQLParser.ANGLE_LEFT -> lt(args, metas)
+            PartiQLParser.ANGLE_LEFT -> {
+                if (op.size > 1) ne(args, metas)
+                else lt(args, metas)
+            }
             PartiQLParser.LT_EQ -> lte(args, metas)
             PartiQLParser.ANGLE_RIGHT -> gt(args, metas)
             PartiQLParser.GT_EQ -> gte(args, metas)
-            PartiQLParser.NEQ -> ne(args, metas)
+            PartiQLParser.BANG -> ne(args, metas)
             PartiQLParser.EQ -> eq(args, metas)
             PartiQLParser.AMPERSAND -> bitwiseAnd(args, metas)
             else -> throw ParserException("Unknown binary operator", ErrorCode.PARSE_INVALID_QUERY)

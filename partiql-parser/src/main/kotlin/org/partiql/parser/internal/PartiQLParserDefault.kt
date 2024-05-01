@@ -1539,17 +1539,17 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitMathOp00(ctx: GeneratedParser.MathOp00Context) = translate(ctx) {
             if (ctx.parent != null) return@translate visit(ctx.parent)
-            convertBinaryExpr(ctx.lhs, ctx.rhs, convertBinaryOp(ctx.op))
+            convertBinaryExpr(ctx.lhs, ctx.rhs, convertBinaryMathOp(ctx.op))
         }
 
         override fun visitMathOp01(ctx: GeneratedParser.MathOp01Context) = translate(ctx) {
             if (ctx.parent != null) return@translate visit(ctx.parent)
-            convertBinaryExpr(ctx.lhs, ctx.rhs, convertBinaryOp(ctx.op))
+            convertBinaryExpr(ctx.lhs, ctx.rhs, convertBinaryMathOp(ctx.op))
         }
 
         override fun visitMathOp02(ctx: GeneratedParser.MathOp02Context) = translate(ctx) {
             if (ctx.parent != null) return@translate visit(ctx.parent)
-            convertBinaryExpr(ctx.lhs, ctx.rhs, convertBinaryOp(ctx.op))
+            convertBinaryExpr(ctx.lhs, ctx.rhs, convertBinaryMathOp(ctx.op))
         }
 
         override fun visitValueExpr(ctx: GeneratedParser.ValueExprContext) = translate(ctx) {
@@ -1564,7 +1564,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             return exprBinary(op, l, r)
         }
 
-        private fun convertBinaryOp(token: Token) = when (token.type) {
+        private fun convertBinaryOp(ctx: GeneratedParser.ComparisonOpContext) = when (ctx.start.type) {
             GeneratedParser.AMPERSAND -> Expr.Binary.Op.BITWISE_AND
             GeneratedParser.AND -> Expr.Binary.Op.AND
             GeneratedParser.OR -> Expr.Binary.Op.OR
@@ -1574,13 +1574,27 @@ internal class PartiQLParserDefault : PartiQLParser {
             GeneratedParser.MINUS -> Expr.Binary.Op.MINUS
             GeneratedParser.PERCENT -> Expr.Binary.Op.MODULO
             GeneratedParser.CONCAT -> Expr.Binary.Op.CONCAT
-            GeneratedParser.ANGLE_LEFT -> Expr.Binary.Op.LT
+            GeneratedParser.ANGLE_LEFT -> {
+                if (ctx.stop.type == GeneratedParser.ANGLE_RIGHT) Expr.Binary.Op.NE
+                else Expr.Binary.Op.LT
+            }
             GeneratedParser.LT_EQ -> Expr.Binary.Op.LTE
             GeneratedParser.ANGLE_RIGHT -> Expr.Binary.Op.GT
             GeneratedParser.GT_EQ -> Expr.Binary.Op.GTE
-            GeneratedParser.NEQ -> Expr.Binary.Op.NE
+            GeneratedParser.BANG -> Expr.Binary.Op.NE
             GeneratedParser.EQ -> Expr.Binary.Op.EQ
-            else -> throw error(token, "Invalid binary operator")
+            else -> throw error(ctx.start, "Invalid binary operator")
+        }
+
+        private fun convertBinaryMathOp(token: Token) = when (token.type) {
+            GeneratedParser.AMPERSAND -> Expr.Binary.Op.BITWISE_AND
+            GeneratedParser.CONCAT -> Expr.Binary.Op.CONCAT
+            GeneratedParser.PLUS -> Expr.Binary.Op.PLUS
+            GeneratedParser.MINUS -> Expr.Binary.Op.MINUS
+            GeneratedParser.PERCENT -> Expr.Binary.Op.MODULO
+            GeneratedParser.ASTERISK -> Expr.Binary.Op.TIMES
+            GeneratedParser.SLASH_FORWARD -> Expr.Binary.Op.DIVIDE
+            else -> throw error(token, "Invalid binary math operator")
         }
 
         private fun convertUnaryOp(token: Token) = when (token.type) {
