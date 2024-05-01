@@ -583,13 +583,23 @@ exprNot
     ;
 
 exprPredicate
-    : lhs=exprPredicate op=(LT_EQ|GT_EQ|ANGLE_LEFT|ANGLE_RIGHT|NEQ|EQ) rhs=mathOp00  # PredicateComparison
+    : lhs=exprPredicate op=comparisonOp rhs=mathOp00  # PredicateComparison
     | lhs=exprPredicate IS NOT? type                                                 # PredicateIs
     | lhs=exprPredicate NOT? IN PAREN_LEFT expr PAREN_RIGHT                          # PredicateIn
     | lhs=exprPredicate NOT? IN rhs=mathOp00                                         # PredicateIn
     | lhs=exprPredicate NOT? LIKE rhs=mathOp00 ( ESCAPE escape=expr )?               # PredicateLike
     | lhs=exprPredicate NOT? BETWEEN lower=mathOp00 AND upper=mathOp00               # PredicateBetween
     | parent=mathOp00                                                                # PredicateBase
+    ;
+
+comparisonOp
+    : LT_EQ
+    | GT_EQ
+    | ANGLE_LEFT
+    | ANGLE_RIGHT
+    | EQ
+    | ANGLE_LEFT ANGLE_RIGHT
+    | BANG EQ
     ;
 
 // TODO : Opreator precedence of BITWISE_AND (&) may change in the future.
@@ -786,7 +796,7 @@ array
     : BRACKET_LEFT ( expr ( COMMA expr )* )? BRACKET_RIGHT;
 
 bag
-    : ANGLE_DOUBLE_LEFT ( expr ( COMMA expr )* )? ANGLE_DOUBLE_RIGHT;
+    : ANGLE_LEFT ANGLE_LEFT ( expr ( COMMA expr )* )? ANGLE_RIGHT ANGLE_RIGHT;
 
 tuple
     : BRACE_LEFT ( pair ( COMMA pair )* )? BRACE_RIGHT;
@@ -812,12 +822,19 @@ type
     : datatype=(
         NULL | BOOL | BOOLEAN | SMALLINT | INTEGER2 | INT2 | INTEGER | INT | INTEGER4 | INT4
         | INTEGER8 | INT8 | BIGINT | REAL | CHAR | CHARACTER | MISSING
-        | STRING | SYMBOL | BLOB | CLOB | DATE | STRUCT | TUPLE | LIST | SEXP | BAG | ANY
+        | STRING | SYMBOL | BLOB | CLOB | DATE | SEXP | BAG | ANY
       )                                                                                                                # TypeAtomic
+    | datatype=(STRUCT|TUPLE|LIST|ARRAY)                                                                               # TypeComplexUnparameterized
     | datatype=DOUBLE PRECISION                                                                                        # TypeAtomic
     | datatype=(CHARACTER|CHAR|FLOAT|VARCHAR) ( PAREN_LEFT arg0=LITERAL_INTEGER PAREN_RIGHT )?                         # TypeArgSingle
     | CHARACTER VARYING ( PAREN_LEFT arg0=LITERAL_INTEGER PAREN_RIGHT )?                                               # TypeVarChar
     | datatype=(DECIMAL|DEC|NUMERIC) ( PAREN_LEFT arg0=LITERAL_INTEGER ( COMMA arg1=LITERAL_INTEGER )? PAREN_RIGHT )?  # TypeArgDouble
     | datatype=(TIME|TIMESTAMP) ( PAREN_LEFT precision=LITERAL_INTEGER PAREN_RIGHT )? (WITH TIME ZONE)?                # TypeTimeZone
+    | datatype=(STRUCT|TUPLE) (ANGLE_LEFT structField ( COMMA structField )* ANGLE_RIGHT)                                # TypeStruct
+    | datatype=(LIST|ARRAY) ANGLE_LEFT type ANGLE_RIGHT                                                                # TypeList
     | symbolPrimitive                                                                                                  # TypeCustom
+    ;
+
+structField
+    : columnName COLON type columnConstraint*
     ;

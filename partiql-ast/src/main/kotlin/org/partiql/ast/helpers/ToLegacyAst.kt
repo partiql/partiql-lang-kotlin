@@ -1346,11 +1346,22 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
 
     override fun visitTypeList(node: Type.List, ctx: Ctx) = translate(node) { metas -> listType(metas) }
 
+    override fun visitTypeArray(node: Type.Array, ctx: Ctx) = translate(node) { metas ->
+        if (node.type != null) {
+            error("The legacy AST does not support element type declaration for list")
+        }
+        listType(metas)
+    }
     override fun visitTypeSexp(node: Type.Sexp, ctx: Ctx) = translate(node) { metas -> sexpType(metas) }
 
     override fun visitTypeTuple(node: Type.Tuple, ctx: Ctx) = translate(node) { metas -> tupleType(metas) }
 
-    override fun visitTypeStruct(node: Type.Struct, ctx: Ctx) = translate(node) { metas -> structType(metas) }
+    override fun visitTypeStruct(node: Type.Struct, ctx: Ctx) = translate(node) { metas ->
+        if (node.fields.isNotEmpty()) {
+            error("The legacy AST does not support field declaration in struct type")
+        }
+        structType(metas)
+    }
 
     override fun visitTypeAny(node: Type.Any, ctx: Ctx) = translate(node) { metas -> anyType(metas) }
 

@@ -293,7 +293,7 @@ NOTHING: 'NOTHING';
  * DATA TYPES
  *
  */
-
+ARRAY: 'ARRAY';
 TUPLE: 'TUPLE';
 INTEGER2: 'INTEGER2';
 INT2: 'INT2';
@@ -334,12 +334,9 @@ BANG: '!';
 LT_EQ: '<=';
 GT_EQ: '>=';
 EQ: '=';
-NEQ: '<>' | '!=';
 CONCAT: '||';
 ANGLE_LEFT: '<';
 ANGLE_RIGHT: '>';
-ANGLE_DOUBLE_LEFT: '<<';
-ANGLE_DOUBLE_RIGHT: '>>';
 BRACKET_LEFT: '[';
 BRACKET_RIGHT: ']';
 BRACE_LEFT: '{';

@@ -6,6 +6,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.ArgumentsProvider
 import org.junit.jupiter.params.provider.ArgumentsSource
+import org.partiql.ast.Constraint
 import org.partiql.ast.DdlOp
 import org.partiql.ast.Expr
 import org.partiql.ast.Identifier
@@ -312,6 +313,220 @@ class PartiQLParserDDLTests {
                     ),
                 )
             ),
+
+            SuccessTestCase(
+                "CREATE TABLE with STRUCT",
+                """
+                    CREATE TABLE tbl (
+                        a STRUCT<
+                           b: INT2,
+                           c: INT2 NOT NULL
+                        >
+                    )
+                """.trimIndent(),
+                ddlOpCreateTable(
+                    identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
+                    tableDefinition(
+                        listOf(
+                            tableDefinitionAttribute(
+                                identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE),
+                                Type.Struct(
+                                    listOf(
+                                        Type.Struct.Field(
+                                            identifierSymbol("b", Identifier.CaseSensitivity.INSENSITIVE),
+                                            Type.Int2(),
+                                            emptyList()
+                                        ),
+                                        Type.Struct.Field(
+                                            identifierSymbol("c", Identifier.CaseSensitivity.INSENSITIVE),
+                                            Type.Int2(),
+                                            listOf(Constraint(null, Constraint.Definition.NotNull()))
+                                        )
+                                    )
+                                ),
+                                emptyList(),
+                            )
+                        ),
+                        emptyList()
+                    ),
+                )
+            ),
+
+            SuccessTestCase(
+                "CREATE TABLE with STRUCT of complex",
+                """
+                    CREATE TABLE tbl (
+                        a STRUCT<
+                           b: STRUCT <c: INT2>,
+                           d: ARRAY<INT2>
+                        >
+                    )
+                """.trimIndent(),
+                ddlOpCreateTable(
+                    identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
+                    tableDefinition(
+                        listOf(
+                            tableDefinitionAttribute(
+                                identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE),
+                                Type.Struct(
+                                    listOf(
+                                        Type.Struct.Field(
+                                            identifierSymbol("b", Identifier.CaseSensitivity.INSENSITIVE),
+                                            Type.Struct(
+                                                listOf(
+                                                    Type.Struct.Field(
+                                                        identifierSymbol("c", Identifier.CaseSensitivity.INSENSITIVE),
+                                                        Type.Int2(),
+                                                        emptyList()
+                                                    ),
+                                                )
+                                            ),
+                                            emptyList()
+                                        ),
+                                        Type.Struct.Field(
+                                            identifierSymbol("d", Identifier.CaseSensitivity.INSENSITIVE),
+                                            Type.Array(Type.Int2()),
+                                            emptyList()
+                                        )
+                                    )
+                                ),
+                                emptyList(),
+                            )
+                        ),
+                        emptyList()
+                    ),
+                )
+            ),
+
+            SuccessTestCase(
+                "CREATE TABLE with empty",
+                """
+                    CREATE TABLE tbl (
+                        a STRUCT
+                    )
+                """.trimIndent(),
+                ddlOpCreateTable(
+                    identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
+                    tableDefinition(
+                        listOf(
+                            tableDefinitionAttribute(
+                                identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE),
+                                Type.Struct(
+                                    emptyList()
+                                ),
+                                emptyList(),
+                            )
+                        ),
+                        emptyList()
+                    ),
+                )
+            ),
+
+            SuccessTestCase(
+                "CREATE TABLE with ARRAY",
+                """
+                    CREATE TABLE tbl (
+                        a ARRAY<INT2>
+                    )
+                """.trimIndent(),
+                ddlOpCreateTable(
+                    identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
+                    tableDefinition(
+                        listOf(
+                            tableDefinitionAttribute(
+                                identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE),
+                                Type.Array(Type.Int2()),
+                                emptyList(),
+                            )
+                        ),
+                        emptyList()
+                    ),
+                )
+            ),
+            SuccessTestCase(
+                "CREATE TABLE with ARRAY of Struct",
+                """
+                    CREATE TABLE tbl (
+                        a ARRAY< STRUCT< b:INT2 > >
+                    )
+                """.trimIndent(),
+                ddlOpCreateTable(
+                    identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
+                    tableDefinition(
+                        listOf(
+                            tableDefinitionAttribute(
+                                identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE),
+                                Type.Array(
+                                    Type.Struct(
+                                        listOf(
+                                            Type.Struct.Field(
+                                                identifierSymbol("b", Identifier.CaseSensitivity.INSENSITIVE),
+                                                Type.Int2(),
+                                                emptyList()
+                                            ),
+                                        )
+                                    ),
+                                ),
+                                emptyList(),
+                            )
+                        ),
+                        emptyList()
+                    ),
+                )
+            ),
+            SuccessTestCase(
+                "CREATE TABLE no space between angle right",
+                """
+                    CREATE TABLE tbl(
+                        a LIST<STRUCT<b:INT2>>
+                    )
+                """.trimIndent(),
+                ddlOpCreateTable(
+                    identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
+                    tableDefinition(
+                        listOf(
+                            tableDefinitionAttribute(
+                                identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE),
+                                Type.Array(
+                                    Type.Struct(
+                                        listOf(
+                                            Type.Struct.Field(
+                                                identifierSymbol("b", Identifier.CaseSensitivity.INSENSITIVE),
+                                                Type.Int2(),
+                                                emptyList()
+                                            ),
+                                        )
+                                    ),
+                                ),
+                                emptyList(),
+                            )
+                        ),
+                        emptyList()
+                    ),
+                )
+            ),
+
+            SuccessTestCase(
+                "CREATE TABLE with ARRAY without element type",
+                """
+                    CREATE TABLE tbl (
+                        a ARRAY
+                    )
+                """.trimIndent(),
+                ddlOpCreateTable(
+                    identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
+                    tableDefinition(
+                        listOf(
+                            tableDefinitionAttribute(
+                                identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE),
+                                Type.Array(null),
+                                emptyList(),
+                            )
+                        ),
+                        emptyList()
+                    ),
+                )
+            ),
         )
 
         val dropTableTests = listOf(
@@ -371,7 +586,57 @@ class PartiQLParserDDLTests {
                         CHECK (SELECT a FROM foo)
                     )
                 """.trimIndent()
-            )
+            ),
+            ErrorTestCase(
+                "NULL not allowed as type in type declaration",
+                """
+                    CREATE TABLE TBL(
+                        a NULL
+                    )
+                """.trimIndent()
+            ),
+            ErrorTestCase(
+                "MISSING not allowed as type in type declaration",
+                """
+                    CREATE TABLE TBL(
+                        a MISSING
+                    )
+                """.trimIndent()
+            ),
+            ErrorTestCase(
+                "STRUCT<> NOT Supported",
+                """
+                    CREATE TABLE TBL(
+                        a STRUCT<>
+                    )
+                """.trimIndent()
+            ),
+            ErrorTestCase(
+                "LIST<> NOT Supported",
+                """
+                    CREATE TABLE TBL(
+                        a LIST<>
+                    )
+                """.trimIndent()
+            ),
+
+            // TODO: Move this to another place as part of parser test porting process
+            ErrorTestCase(
+                "Struct Field declaration not allowed for is Operator",
+                "a IS STRUCT<b : INT2>"
+            ),
+            ErrorTestCase(
+                "Struct Field declaration not allowed for CAST Operator",
+                "CAST(a AS STRUCT<b : INT2>)"
+            ),
+            ErrorTestCase(
+                "ELEMENT declaration for LIST Type not allowed for is Operator",
+                "a IS LIST<INT2>"
+            ),
+            ErrorTestCase(
+                "Struct Field declaration not allowed for CAST Operator",
+                "CAST(a AS LIST<INT2>)"
+            ),
         )
         override fun provideArguments(p0: ExtensionContext?): Stream<out Arguments> =
             errorTestCases.map { Arguments.of(it) }.stream()
