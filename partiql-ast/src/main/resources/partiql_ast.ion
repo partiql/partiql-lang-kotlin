@@ -196,7 +196,7 @@ type::[
   timestamp_with_tz::{ precision: optional::int },             // TIMESTAMP [(<int>)] WITH TIMEZONE
   interval::{ precision: optional::int },                      // INTERVAL
   bag::{},                                                     // BAG
-  // Potential migration stretegy:
+  // Potential migration strategy:
   // v0.14.x -- the current state in `main`
   // typeList()
   //
@@ -210,7 +210,7 @@ type::[
   list::{},                                                    // LIST
   array::{ type: optional::type },                             // ARRAY [<type>]
   sexp::{},                                                    // SEXP
-  // Potential migration stretegy:
+  // Potential migration strategy:
   // v0.14.x -- the current state in `main`
   // typeTuple()
   // typeStruct()

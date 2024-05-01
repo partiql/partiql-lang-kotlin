@@ -1594,7 +1594,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             GeneratedParser.PERCENT -> Expr.Binary.Op.MODULO
             GeneratedParser.ASTERISK -> Expr.Binary.Op.TIMES
             GeneratedParser.SLASH_FORWARD -> Expr.Binary.Op.DIVIDE
-            else -> throw error(token, "Invalid binary math operator")
+            else -> throw error(token, "Invalid binary operator")
         }
 
         private fun convertUnaryOp(token: Token) = when (token.type) {

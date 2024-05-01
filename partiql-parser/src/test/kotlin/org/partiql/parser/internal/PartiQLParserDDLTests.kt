@@ -507,7 +507,7 @@ class PartiQLParserDDLTests {
             ),
 
             SuccessTestCase(
-                "CREATE TABLE with LIST without element type",
+                "CREATE TABLE with ARRAY without element type",
                 """
                     CREATE TABLE tbl (
                         a ARRAY
@@ -588,7 +588,7 @@ class PartiQLParserDDLTests {
                 """.trimIndent()
             ),
             ErrorTestCase(
-                "NULL not allowed as type in type decalration",
+                "NULL not allowed as type in type declaration",
                 """
                     CREATE TABLE TBL(
                         a NULL
@@ -596,7 +596,7 @@ class PartiQLParserDDLTests {
                 """.trimIndent()
             ),
             ErrorTestCase(
-                "MISSING not allowed as type in type decalration",
+                "MISSING not allowed as type in type declaration",
                 """
                     CREATE TABLE TBL(
                         a MISSING
