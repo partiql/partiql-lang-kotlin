@@ -141,6 +141,7 @@ public class org/partiql/parser/antlr/PartiQLBaseListener : org/partiql/parser/a
 	public fun enterColumnConstraint (Lorg/partiql/parser/antlr/PartiQLParser$ColumnConstraintContext;)V
 	public fun enterColumnDeclaration (Lorg/partiql/parser/antlr/PartiQLParser$ColumnDeclarationContext;)V
 	public fun enterColumnName (Lorg/partiql/parser/antlr/PartiQLParser$ColumnNameContext;)V
+	public fun enterComparisonOp (Lorg/partiql/parser/antlr/PartiQLParser$ComparisonOpContext;)V
 	public fun enterConflictAction (Lorg/partiql/parser/antlr/PartiQLParser$ConflictActionContext;)V
 	public fun enterConflictTarget (Lorg/partiql/parser/antlr/PartiQLParser$ConflictTargetContext;)V
 	public fun enterConstraintName (Lorg/partiql/parser/antlr/PartiQLParser$ConstraintNameContext;)V
@@ -369,6 +370,7 @@ public class org/partiql/parser/antlr/PartiQLBaseListener : org/partiql/parser/a
 	public fun exitColumnConstraint (Lorg/partiql/parser/antlr/PartiQLParser$ColumnConstraintContext;)V
 	public fun exitColumnDeclaration (Lorg/partiql/parser/antlr/PartiQLParser$ColumnDeclarationContext;)V
 	public fun exitColumnName (Lorg/partiql/parser/antlr/PartiQLParser$ColumnNameContext;)V
+	public fun exitComparisonOp (Lorg/partiql/parser/antlr/PartiQLParser$ComparisonOpContext;)V
 	public fun exitConflictAction (Lorg/partiql/parser/antlr/PartiQLParser$ConflictActionContext;)V
 	public fun exitConflictTarget (Lorg/partiql/parser/antlr/PartiQLParser$ConflictTargetContext;)V
 	public fun exitConstraintName (Lorg/partiql/parser/antlr/PartiQLParser$ConstraintNameContext;)V
@@ -603,6 +605,7 @@ public class org/partiql/parser/antlr/PartiQLBaseVisitor : org/antlr/v4/runtime/
 	public fun visitColumnConstraint (Lorg/partiql/parser/antlr/PartiQLParser$ColumnConstraintContext;)Ljava/lang/Object;
 	public fun visitColumnDeclaration (Lorg/partiql/parser/antlr/PartiQLParser$ColumnDeclarationContext;)Ljava/lang/Object;
 	public fun visitColumnName (Lorg/partiql/parser/antlr/PartiQLParser$ColumnNameContext;)Ljava/lang/Object;
+	public fun visitComparisonOp (Lorg/partiql/parser/antlr/PartiQLParser$ComparisonOpContext;)Ljava/lang/Object;
 	public fun visitConflictAction (Lorg/partiql/parser/antlr/PartiQLParser$ConflictActionContext;)Ljava/lang/Object;
 	public fun visitConflictTarget (Lorg/partiql/parser/antlr/PartiQLParser$ConflictTargetContext;)Ljava/lang/Object;
 	public fun visitConstraintName (Lorg/partiql/parser/antlr/PartiQLParser$ConstraintNameContext;)Ljava/lang/Object;
@@ -833,6 +836,7 @@ public abstract interface class org/partiql/parser/antlr/PartiQLListener : org/a
 	public abstract fun enterColumnConstraint (Lorg/partiql/parser/antlr/PartiQLParser$ColumnConstraintContext;)V
 	public abstract fun enterColumnDeclaration (Lorg/partiql/parser/antlr/PartiQLParser$ColumnDeclarationContext;)V
 	public abstract fun enterColumnName (Lorg/partiql/parser/antlr/PartiQLParser$ColumnNameContext;)V
+	public abstract fun enterComparisonOp (Lorg/partiql/parser/antlr/PartiQLParser$ComparisonOpContext;)V
 	public abstract fun enterConflictAction (Lorg/partiql/parser/antlr/PartiQLParser$ConflictActionContext;)V
 	public abstract fun enterConflictTarget (Lorg/partiql/parser/antlr/PartiQLParser$ConflictTargetContext;)V
 	public abstract fun enterConstraintName (Lorg/partiql/parser/antlr/PartiQLParser$ConstraintNameContext;)V
@@ -1060,6 +1064,7 @@ public abstract interface class org/partiql/parser/antlr/PartiQLListener : org/a
 	public abstract fun exitColumnConstraint (Lorg/partiql/parser/antlr/PartiQLParser$ColumnConstraintContext;)V
 	public abstract fun exitColumnDeclaration (Lorg/partiql/parser/antlr/PartiQLParser$ColumnDeclarationContext;)V
 	public abstract fun exitColumnName (Lorg/partiql/parser/antlr/PartiQLParser$ColumnNameContext;)V
+	public abstract fun exitComparisonOp (Lorg/partiql/parser/antlr/PartiQLParser$ComparisonOpContext;)V
 	public abstract fun exitConflictAction (Lorg/partiql/parser/antlr/PartiQLParser$ConflictActionContext;)V
 	public abstract fun exitConflictTarget (Lorg/partiql/parser/antlr/PartiQLParser$ConflictTargetContext;)V
 	public abstract fun exitConstraintName (Lorg/partiql/parser/antlr/PartiQLParser$ConstraintNameContext;)V
@@ -1277,8 +1282,6 @@ public class org/partiql/parser/antlr/PartiQLParser : org/antlr/v4/runtime/Parse
 	public static final field ALTER I
 	public static final field AMPERSAND I
 	public static final field AND I
-	public static final field ANGLE_DOUBLE_LEFT I
-	public static final field ANGLE_DOUBLE_RIGHT I
 	public static final field ANGLE_LEFT I
 	public static final field ANGLE_RIGHT I
 	public static final field ANY I
@@ -1462,7 +1465,6 @@ public class org/partiql/parser/antlr/PartiQLParser : org/antlr/v4/runtime/Parse
 	public static final field NATIONAL I
 	public static final field NATURAL I
 	public static final field NCHAR I
-	public static final field NEQ I
 	public static final field NEW I
 	public static final field NEXT I
 	public static final field NO I
@@ -1535,6 +1537,7 @@ public class org/partiql/parser/antlr/PartiQLParser : org/antlr/v4/runtime/Parse
 	public static final field RULE_columnConstraint I
 	public static final field RULE_columnConstraintDef I
 	public static final field RULE_columnName I
+	public static final field RULE_comparisonOp I
 	public static final field RULE_conflictAction I
 	public static final field RULE_conflictTarget I
 	public static final field RULE_constraintName I
@@ -1748,6 +1751,7 @@ public class org/partiql/parser/antlr/PartiQLParser : org/antlr/v4/runtime/Parse
 	public final fun columnConstraint ()Lorg/partiql/parser/antlr/PartiQLParser$ColumnConstraintContext;
 	public final fun columnConstraintDef ()Lorg/partiql/parser/antlr/PartiQLParser$ColumnConstraintDefContext;
 	public final fun columnName ()Lorg/partiql/parser/antlr/PartiQLParser$ColumnNameContext;
+	public final fun comparisonOp ()Lorg/partiql/parser/antlr/PartiQLParser$ComparisonOpContext;
 	public final fun conflictAction ()Lorg/partiql/parser/antlr/PartiQLParser$ConflictActionContext;
 	public final fun conflictTarget ()Lorg/partiql/parser/antlr/PartiQLParser$ConflictTargetContext;
 	public final fun constraintName ()Lorg/partiql/parser/antlr/PartiQLParser$ConstraintNameContext;
@@ -1960,8 +1964,10 @@ public class org/partiql/parser/antlr/PartiQLParser$AtIdentContext : org/antlr/v
 
 public class org/partiql/parser/antlr/PartiQLParser$BagContext : org/antlr/v4/runtime/ParserRuleContext {
 	public fun <init> (Lorg/antlr/v4/runtime/ParserRuleContext;I)V
-	public fun ANGLE_DOUBLE_LEFT ()Lorg/antlr/v4/runtime/tree/TerminalNode;
-	public fun ANGLE_DOUBLE_RIGHT ()Lorg/antlr/v4/runtime/tree/TerminalNode;
+	public fun ANGLE_LEFT ()Ljava/util/List;
+	public fun ANGLE_LEFT (I)Lorg/antlr/v4/runtime/tree/TerminalNode;
+	public fun ANGLE_RIGHT ()Ljava/util/List;
+	public fun ANGLE_RIGHT (I)Lorg/antlr/v4/runtime/tree/TerminalNode;
 	public fun COMMA ()Ljava/util/List;
 	public fun COMMA (I)Lorg/antlr/v4/runtime/tree/TerminalNode;
 	public fun accept (Lorg/antlr/v4/runtime/tree/ParseTreeVisitor;)Ljava/lang/Object;
@@ -2152,6 +2158,20 @@ public class org/partiql/parser/antlr/PartiQLParser$ColumnNameContext : org/antl
 	public fun exitRule (Lorg/antlr/v4/runtime/tree/ParseTreeListener;)V
 	public fun getRuleIndex ()I
 	public fun symbolPrimitive ()Lorg/partiql/parser/antlr/PartiQLParser$SymbolPrimitiveContext;
+}
+
+public class org/partiql/parser/antlr/PartiQLParser$ComparisonOpContext : org/antlr/v4/runtime/ParserRuleContext {
+	public fun <init> (Lorg/antlr/v4/runtime/ParserRuleContext;I)V
+	public fun ANGLE_LEFT ()Lorg/antlr/v4/runtime/tree/TerminalNode;
+	public fun ANGLE_RIGHT ()Lorg/antlr/v4/runtime/tree/TerminalNode;
+	public fun BANG ()Lorg/antlr/v4/runtime/tree/TerminalNode;
+	public fun EQ ()Lorg/antlr/v4/runtime/tree/TerminalNode;
+	public fun GT_EQ ()Lorg/antlr/v4/runtime/tree/TerminalNode;
+	public fun LT_EQ ()Lorg/antlr/v4/runtime/tree/TerminalNode;
+	public fun accept (Lorg/antlr/v4/runtime/tree/ParseTreeVisitor;)Ljava/lang/Object;
+	public fun enterRule (Lorg/antlr/v4/runtime/tree/ParseTreeListener;)V
+	public fun exitRule (Lorg/antlr/v4/runtime/tree/ParseTreeListener;)V
+	public fun getRuleIndex ()I
 }
 
 public class org/partiql/parser/antlr/PartiQLParser$ConflictActionContext : org/antlr/v4/runtime/ParserRuleContext {
@@ -3893,16 +3913,11 @@ public class org/partiql/parser/antlr/PartiQLParser$PredicateBetweenContext : or
 
 public class org/partiql/parser/antlr/PartiQLParser$PredicateComparisonContext : org/partiql/parser/antlr/PartiQLParser$ExprPredicateContext {
 	public field lhs Lorg/partiql/parser/antlr/PartiQLParser$ExprPredicateContext;
-	public field op Lorg/antlr/v4/runtime/Token;
+	public field op Lorg/partiql/parser/antlr/PartiQLParser$ComparisonOpContext;
 	public field rhs Lorg/partiql/parser/antlr/PartiQLParser$MathOp00Context;
 	public fun <init> (Lorg/partiql/parser/antlr/PartiQLParser$ExprPredicateContext;)V
-	public fun ANGLE_LEFT ()Lorg/antlr/v4/runtime/tree/TerminalNode;
-	public fun ANGLE_RIGHT ()Lorg/antlr/v4/runtime/tree/TerminalNode;
-	public fun EQ ()Lorg/antlr/v4/runtime/tree/TerminalNode;
-	public fun GT_EQ ()Lorg/antlr/v4/runtime/tree/TerminalNode;
-	public fun LT_EQ ()Lorg/antlr/v4/runtime/tree/TerminalNode;
-	public fun NEQ ()Lorg/antlr/v4/runtime/tree/TerminalNode;
 	public fun accept (Lorg/antlr/v4/runtime/tree/ParseTreeVisitor;)Ljava/lang/Object;
+	public fun comparisonOp ()Lorg/partiql/parser/antlr/PartiQLParser$ComparisonOpContext;
 	public fun enterRule (Lorg/antlr/v4/runtime/tree/ParseTreeListener;)V
 	public fun exitRule (Lorg/antlr/v4/runtime/tree/ParseTreeListener;)V
 	public fun exprPredicate ()Lorg/partiql/parser/antlr/PartiQLParser$ExprPredicateContext;
@@ -4932,8 +4947,6 @@ public class org/partiql/parser/antlr/PartiQLTokens : org/antlr/v4/runtime/Lexer
 	public static final field ALTER I
 	public static final field AMPERSAND I
 	public static final field AND I
-	public static final field ANGLE_DOUBLE_LEFT I
-	public static final field ANGLE_DOUBLE_RIGHT I
 	public static final field ANGLE_LEFT I
 	public static final field ANGLE_RIGHT I
 	public static final field ANY I
@@ -5118,7 +5131,6 @@ public class org/partiql/parser/antlr/PartiQLTokens : org/antlr/v4/runtime/Lexer
 	public static final field NATIONAL I
 	public static final field NATURAL I
 	public static final field NCHAR I
-	public static final field NEQ I
 	public static final field NEW I
 	public static final field NEXT I
 	public static final field NO I
@@ -5279,6 +5291,7 @@ public abstract interface class org/partiql/parser/antlr/PartiQLVisitor : org/an
 	public abstract fun visitColumnConstraint (Lorg/partiql/parser/antlr/PartiQLParser$ColumnConstraintContext;)Ljava/lang/Object;
 	public abstract fun visitColumnDeclaration (Lorg/partiql/parser/antlr/PartiQLParser$ColumnDeclarationContext;)Ljava/lang/Object;
 	public abstract fun visitColumnName (Lorg/partiql/parser/antlr/PartiQLParser$ColumnNameContext;)Ljava/lang/Object;
+	public abstract fun visitComparisonOp (Lorg/partiql/parser/antlr/PartiQLParser$ComparisonOpContext;)Ljava/lang/Object;
 	public abstract fun visitConflictAction (Lorg/partiql/parser/antlr/PartiQLParser$ConflictActionContext;)Ljava/lang/Object;
 	public abstract fun visitConflictTarget (Lorg/partiql/parser/antlr/PartiQLParser$ConflictTargetContext;)Ljava/lang/Object;
 	public abstract fun visitConstraintName (Lorg/partiql/parser/antlr/PartiQLParser$ConstraintNameContext;)Ljava/lang/Object;

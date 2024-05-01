@@ -474,6 +474,37 @@ class PartiQLParserDDLTests {
                     ),
                 )
             ),
+            SuccessTestCase(
+                "CREATE TABLE no space between angle right",
+                """
+                    CREATE TABLE tbl(
+                        a LIST<STRUCT<b:INT2>>
+                    )
+                """.trimIndent(),
+                ddlOpCreateTable(
+                    identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
+                    tableDefinition(
+                        listOf(
+                            tableDefinitionAttribute(
+                                identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE),
+                                Type.Array(
+                                    Type.Struct(
+                                        listOf(
+                                            Type.Struct.Field(
+                                                identifierSymbol("b", Identifier.CaseSensitivity.INSENSITIVE),
+                                                Type.Int2(),
+                                                emptyList()
+                                            ),
+                                        )
+                                    ),
+                                ),
+                                emptyList(),
+                            )
+                        ),
+                        emptyList()
+                    ),
+                )
+            ),
 
             SuccessTestCase(
                 "CREATE TABLE with LIST without element type",
@@ -589,18 +620,6 @@ class PartiQLParserDDLTests {
                 """.trimIndent()
             ),
 
-            // TODO: Fix Me
-            //  Potentially modify the bag grammar to use
-            //  ANGLE_LEFT ANGLE_LEFT ( expr ( COMMA expr )* )? ANGLE_RIGHT ANGLE_RIGHT
-            //  We should look into the multi-character token in ANTLR grammar
-            ErrorTestCase(
-                "ANTLR PARSER ISSUE",
-                """
-                    CREATE TABLE TBL(
-                        a LIST<STRUCT<a:INT2>> -- the ANTLR LEXER tokenize the >> to ANGLE_DOUBLE_RIGHT
-                    )
-                """.trimIndent()
-            ),
             // TODO: Move this to another place as part of parser test porting process
             ErrorTestCase(
                 "Struct Field declaration not allowed for is Operator",
