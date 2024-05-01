@@ -2243,12 +2243,12 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitTypeStruct(ctx: GeneratedParser.TypeStructContext) = translate(ctx) {
-            val fields = ctx.structAttr().map { structAttrCtx ->
-                val name = visitAs<Identifier.Symbol> (structAttrCtx.columnName())
-                val type = visitAs<Type>(structAttrCtx.type())
-                    .also { isValidTypeDeclarationOrThrow(it, structAttrCtx.type()) }
+            val fields = ctx.structField().map { structFieldCtx ->
+                val name = visitAs<Identifier.Symbol> (structFieldCtx.columnName())
+                val type = visitAs<Type>(structFieldCtx.type())
+                    .also { isValidTypeDeclarationOrThrow(it, structFieldCtx.type()) }
 
-                val constraints = structAttrCtx.columnConstraint().map {
+                val constraints = structFieldCtx.columnConstraint().map {
                     when (it.columnConstraintDef()) {
                         is GeneratedParser.ColConstrNullContext,
                         is GeneratedParser.ColConstrNotNullContext -> visitColumnConstraint(it)

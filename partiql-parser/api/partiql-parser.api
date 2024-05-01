@@ -306,7 +306,7 @@ public class org/partiql/parser/antlr/PartiQLBaseListener : org/partiql/parser/a
 	public fun enterSetQuantifierStrategy (Lorg/partiql/parser/antlr/PartiQLParser$SetQuantifierStrategyContext;)V
 	public fun enterSfwBase (Lorg/partiql/parser/antlr/PartiQLParser$SfwBaseContext;)V
 	public fun enterSfwQuery (Lorg/partiql/parser/antlr/PartiQLParser$SfwQueryContext;)V
-	public fun enterStructAttr (Lorg/partiql/parser/antlr/PartiQLParser$StructAttrContext;)V
+	public fun enterStructField (Lorg/partiql/parser/antlr/PartiQLParser$StructFieldContext;)V
 	public fun enterSubstring (Lorg/partiql/parser/antlr/PartiQLParser$SubstringContext;)V
 	public fun enterSymbolPrimitive (Lorg/partiql/parser/antlr/PartiQLParser$SymbolPrimitiveContext;)V
 	public fun enterTableBaseRefClauses (Lorg/partiql/parser/antlr/PartiQLParser$TableBaseRefClausesContext;)V
@@ -535,7 +535,7 @@ public class org/partiql/parser/antlr/PartiQLBaseListener : org/partiql/parser/a
 	public fun exitSetQuantifierStrategy (Lorg/partiql/parser/antlr/PartiQLParser$SetQuantifierStrategyContext;)V
 	public fun exitSfwBase (Lorg/partiql/parser/antlr/PartiQLParser$SfwBaseContext;)V
 	public fun exitSfwQuery (Lorg/partiql/parser/antlr/PartiQLParser$SfwQueryContext;)V
-	public fun exitStructAttr (Lorg/partiql/parser/antlr/PartiQLParser$StructAttrContext;)V
+	public fun exitStructField (Lorg/partiql/parser/antlr/PartiQLParser$StructFieldContext;)V
 	public fun exitSubstring (Lorg/partiql/parser/antlr/PartiQLParser$SubstringContext;)V
 	public fun exitSymbolPrimitive (Lorg/partiql/parser/antlr/PartiQLParser$SymbolPrimitiveContext;)V
 	public fun exitTableBaseRefClauses (Lorg/partiql/parser/antlr/PartiQLParser$TableBaseRefClausesContext;)V
@@ -769,7 +769,7 @@ public class org/partiql/parser/antlr/PartiQLBaseVisitor : org/antlr/v4/runtime/
 	public fun visitSetQuantifierStrategy (Lorg/partiql/parser/antlr/PartiQLParser$SetQuantifierStrategyContext;)Ljava/lang/Object;
 	public fun visitSfwBase (Lorg/partiql/parser/antlr/PartiQLParser$SfwBaseContext;)Ljava/lang/Object;
 	public fun visitSfwQuery (Lorg/partiql/parser/antlr/PartiQLParser$SfwQueryContext;)Ljava/lang/Object;
-	public fun visitStructAttr (Lorg/partiql/parser/antlr/PartiQLParser$StructAttrContext;)Ljava/lang/Object;
+	public fun visitStructField (Lorg/partiql/parser/antlr/PartiQLParser$StructFieldContext;)Ljava/lang/Object;
 	public fun visitSubstring (Lorg/partiql/parser/antlr/PartiQLParser$SubstringContext;)Ljava/lang/Object;
 	public fun visitSymbolPrimitive (Lorg/partiql/parser/antlr/PartiQLParser$SymbolPrimitiveContext;)Ljava/lang/Object;
 	public fun visitTableBaseRefClauses (Lorg/partiql/parser/antlr/PartiQLParser$TableBaseRefClausesContext;)Ljava/lang/Object;
@@ -1000,7 +1000,7 @@ public abstract interface class org/partiql/parser/antlr/PartiQLListener : org/a
 	public abstract fun enterSetQuantifierStrategy (Lorg/partiql/parser/antlr/PartiQLParser$SetQuantifierStrategyContext;)V
 	public abstract fun enterSfwBase (Lorg/partiql/parser/antlr/PartiQLParser$SfwBaseContext;)V
 	public abstract fun enterSfwQuery (Lorg/partiql/parser/antlr/PartiQLParser$SfwQueryContext;)V
-	public abstract fun enterStructAttr (Lorg/partiql/parser/antlr/PartiQLParser$StructAttrContext;)V
+	public abstract fun enterStructField (Lorg/partiql/parser/antlr/PartiQLParser$StructFieldContext;)V
 	public abstract fun enterSubstring (Lorg/partiql/parser/antlr/PartiQLParser$SubstringContext;)V
 	public abstract fun enterSymbolPrimitive (Lorg/partiql/parser/antlr/PartiQLParser$SymbolPrimitiveContext;)V
 	public abstract fun enterTableBaseRefClauses (Lorg/partiql/parser/antlr/PartiQLParser$TableBaseRefClausesContext;)V
@@ -1228,7 +1228,7 @@ public abstract interface class org/partiql/parser/antlr/PartiQLListener : org/a
 	public abstract fun exitSetQuantifierStrategy (Lorg/partiql/parser/antlr/PartiQLParser$SetQuantifierStrategyContext;)V
 	public abstract fun exitSfwBase (Lorg/partiql/parser/antlr/PartiQLParser$SfwBaseContext;)V
 	public abstract fun exitSfwQuery (Lorg/partiql/parser/antlr/PartiQLParser$SfwQueryContext;)V
-	public abstract fun exitStructAttr (Lorg/partiql/parser/antlr/PartiQLParser$StructAttrContext;)V
+	public abstract fun exitStructField (Lorg/partiql/parser/antlr/PartiQLParser$StructFieldContext;)V
 	public abstract fun exitSubstring (Lorg/partiql/parser/antlr/PartiQLParser$SubstringContext;)V
 	public abstract fun exitSymbolPrimitive (Lorg/partiql/parser/antlr/PartiQLParser$SymbolPrimitiveContext;)V
 	public abstract fun exitTableBaseRefClauses (Lorg/partiql/parser/antlr/PartiQLParser$TableBaseRefClausesContext;)V
@@ -1637,7 +1637,7 @@ public class org/partiql/parser/antlr/PartiQLParser : org/antlr/v4/runtime/Parse
 	public static final field RULE_setCommand I
 	public static final field RULE_setQuantifierStrategy I
 	public static final field RULE_statement I
-	public static final field RULE_structAttr I
+	public static final field RULE_structField I
 	public static final field RULE_substring I
 	public static final field RULE_symbolPrimitive I
 	public static final field RULE_tableBaseReference I
@@ -1858,7 +1858,7 @@ public class org/partiql/parser/antlr/PartiQLParser : org/antlr/v4/runtime/Parse
 	public final fun setCommand ()Lorg/partiql/parser/antlr/PartiQLParser$SetCommandContext;
 	public final fun setQuantifierStrategy ()Lorg/partiql/parser/antlr/PartiQLParser$SetQuantifierStrategyContext;
 	public final fun statement ()Lorg/partiql/parser/antlr/PartiQLParser$StatementContext;
-	public final fun structAttr ()Lorg/partiql/parser/antlr/PartiQLParser$StructAttrContext;
+	public final fun structField ()Lorg/partiql/parser/antlr/PartiQLParser$StructFieldContext;
 	public final fun substring ()Lorg/partiql/parser/antlr/PartiQLParser$SubstringContext;
 	public final fun symbolPrimitive ()Lorg/partiql/parser/antlr/PartiQLParser$SymbolPrimitiveContext;
 	public final fun tableBaseReference ()Lorg/partiql/parser/antlr/PartiQLParser$TableBaseReferenceContext;
@@ -4318,7 +4318,7 @@ public class org/partiql/parser/antlr/PartiQLParser$StatementContext : org/antlr
 	public fun getRuleIndex ()I
 }
 
-public class org/partiql/parser/antlr/PartiQLParser$StructAttrContext : org/antlr/v4/runtime/ParserRuleContext {
+public class org/partiql/parser/antlr/PartiQLParser$StructFieldContext : org/antlr/v4/runtime/ParserRuleContext {
 	public fun <init> (Lorg/antlr/v4/runtime/ParserRuleContext;I)V
 	public fun COLON ()Lorg/antlr/v4/runtime/tree/TerminalNode;
 	public fun accept (Lorg/antlr/v4/runtime/tree/ParseTreeVisitor;)Ljava/lang/Object;
@@ -4692,8 +4692,8 @@ public class org/partiql/parser/antlr/PartiQLParser$TypeStructContext : org/part
 	public fun accept (Lorg/antlr/v4/runtime/tree/ParseTreeVisitor;)Ljava/lang/Object;
 	public fun enterRule (Lorg/antlr/v4/runtime/tree/ParseTreeListener;)V
 	public fun exitRule (Lorg/antlr/v4/runtime/tree/ParseTreeListener;)V
-	public fun structAttr ()Ljava/util/List;
-	public fun structAttr (I)Lorg/partiql/parser/antlr/PartiQLParser$StructAttrContext;
+	public fun structField ()Ljava/util/List;
+	public fun structField (I)Lorg/partiql/parser/antlr/PartiQLParser$StructFieldContext;
 }
 
 public class org/partiql/parser/antlr/PartiQLParser$TypeTimeZoneContext : org/partiql/parser/antlr/PartiQLParser$TypeContext {
@@ -5455,7 +5455,7 @@ public abstract interface class org/partiql/parser/antlr/PartiQLVisitor : org/an
 	public abstract fun visitSetQuantifierStrategy (Lorg/partiql/parser/antlr/PartiQLParser$SetQuantifierStrategyContext;)Ljava/lang/Object;
 	public abstract fun visitSfwBase (Lorg/partiql/parser/antlr/PartiQLParser$SfwBaseContext;)Ljava/lang/Object;
 	public abstract fun visitSfwQuery (Lorg/partiql/parser/antlr/PartiQLParser$SfwQueryContext;)Ljava/lang/Object;
-	public abstract fun visitStructAttr (Lorg/partiql/parser/antlr/PartiQLParser$StructAttrContext;)Ljava/lang/Object;
+	public abstract fun visitStructField (Lorg/partiql/parser/antlr/PartiQLParser$StructFieldContext;)Ljava/lang/Object;
 	public abstract fun visitSubstring (Lorg/partiql/parser/antlr/PartiQLParser$SubstringContext;)Ljava/lang/Object;
 	public abstract fun visitSymbolPrimitive (Lorg/partiql/parser/antlr/PartiQLParser$SymbolPrimitiveContext;)Ljava/lang/Object;
 	public abstract fun visitTableBaseRefClauses (Lorg/partiql/parser/antlr/PartiQLParser$TableBaseRefClausesContext;)Ljava/lang/Object;

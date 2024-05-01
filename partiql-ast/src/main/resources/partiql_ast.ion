@@ -196,15 +196,32 @@ type::[
   timestamp_with_tz::{ precision: optional::int },             // TIMESTAMP [(<int>)] WITH TIMEZONE
   interval::{ precision: optional::int },                      // INTERVAL
   bag::{},                                                     // BAG
-  // Keep the list type for backward compatible reason
-  // user should migrate to the array type
+  // Potential migration stretegy:
+  // v0.14.x -- the current state in `main`
+  // typeList()
+  //
+  // v0.15.x -- the next release
+  // @Deprecated // recommend using `typeArray()`
+  // typeList()
+  // typeArray(...)
+  //
+  // v1.0.x
+  // typeArray(...) // `typeList` now deleted
   list::{},                                                    // LIST
   array::{ type: optional::type },                             // ARRAY [<type>]
   sexp::{},                                                    // SEXP
-  // Keep the tuple type for backward compatible reason
-  // migration: in v0.15.0: struct modeling should NOT be Introduced,
-  //  users of struct type should be migrate to tuple type.
-  //  in v1.0.0: introduce the struct modeling change, all users from tuple type should migrate to struct type.
+  // Potential migration stretegy:
+  // v0.14.x -- the current state in `main`
+  // typeTuple()
+  // typeStruct()
+  //
+  // v0.15.x -- the next release
+  // @Deprecated // recommend using `typeStruct`
+  // typeTuple()
+  // typeStruct(fields = ...)
+  //
+  // v1.0.x
+  // typeStruct(fields = ...) // `typeTuple` now deleted
   tuple::{},                                                   // TUPLE
   struct::{
     fields: list::[field],
