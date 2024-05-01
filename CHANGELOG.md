@@ -21,6 +21,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Contributors
 Thank you to all who have contributed!
+-->
+
+## [Unreleased]
+
+### Added
+
+### Changed
+
+### Deprecated
+
+### Fixed
+
+### Removed
+
+### Security
+
+### Contributors
+Thank you to all who have contributed!
+
+## [0.14.5]
+
+### Added
+- partiql-ast: adds warning not to implement `AstVisitor` interface directly. Please extend `AstBaseVisitor` instead.
+- partiql-plan: adds warning not to implement `PlanVisitor` interface directly. Please extend `PlanBaseVisitor` instead.
+
+### Changed
+- Change `StaticType.AnyOfType`'s `.toString` to not perform `.flatten()`
+- Change modeling of `COALESCE` and `NULLIF` to dedicated nodes in logical plan
+- Function resolution logic: Now the function resolver would match all possible candidate (based on if the argument can be coerced to the Signature parameter type). If there are multiple match it will first attempt to pick the one requires the least cast, then pick the function with the highest precedence.
+- **Behavioral change**: The COUNT aggregate function now returns INT64.
+
+### Deprecated
+- The current SqlBlock, SqlDialect, and SqlLayout are marked as deprecated and will be slightly changed in the next release. 
+- Deprecates constructor and properties `variableName` and `caseSensitive` of `org.partiql.planner.PlanningProblemDetails.UndefinedVariable`
+  in favor of newly added constructor and properties `name` and `inScopeVariables`.
+
+### Fixed
+- `StaticType.flatten()` on an `AnyOfType` with `AnyType` will return `AnyType`
+- Updates the default `.sql()` method to use a more efficient (internal) printer implementation.
+- Fixes aggregations of attribute references to values of union types. This fix also allows for proper error handling by passing the UnknownAggregateFunction problem to the ProblemCallback. Please note that, with this change, the planner will no longer immediately throw an IllegalStateException for this exact scenario.
+
+### Removed
+
+### Security
+
+### Contributors
+Thank you to all who have contributed!
+<<<<<<< HEAD
 - @<your-username>
 
 -->
@@ -50,6 +98,11 @@ This is a pre-release containing:
 - Several breaking changes under `org.partiql.plan` and `org.partiql.types` and `org.partiql.spi`.
 
 Please note that these changes are subject to future breaking changes without warning.
+=======
+- @rchowell
+- @alancai98
+- @johnedquinn
+>>>>>>> origin
 
 ## [0.14.4]
 

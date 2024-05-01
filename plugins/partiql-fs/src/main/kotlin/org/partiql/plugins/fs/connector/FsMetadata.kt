@@ -51,7 +51,7 @@ internal class FsMetadata(
         }
     }
 
-    private fun BindingName.normalize() = when(this.case) {
+    private fun BindingName.normalize() = when (this.case) {
         BindingCase.SENSITIVE -> this.name
         BindingCase.INSENSITIVE -> this.name.uppercase()
     }
@@ -74,16 +74,16 @@ internal class FsMetadata(
         unique: List<String>,
         primaryKey: List<String>
     ): ConnectorHandle.Obj {
-        val (tableName, dirs) =  when (path.steps.size){
+        val (tableName, dirs) = when (path.steps.size) {
             1 -> path.steps.first().normalize() to BindingPath(emptyList())
             else -> path.steps.last().normalize() to BindingPath(path.steps.dropLast(1))
         }
 
         val handles = ls(dirs)
         // ls (dirs) to make sure dirs is a valid path
-        val dirPath = when(handles.size) {
+        val dirPath = when (handles.size) {
             0 -> throw PartiQLException("dir not exist")
-                // either a scope contains 1 object
+            // either a scope contains 1 object
             else -> ConnectorPath(dirs.normalized)
         }
 

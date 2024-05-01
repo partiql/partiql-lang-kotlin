@@ -7,13 +7,11 @@ import java.nio.file.FileVisitResult
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.SimpleFileVisitor
-import java.nio.file.StandardWatchEventKinds
 import java.nio.file.StandardWatchEventKinds.ENTRY_CREATE
 import java.nio.file.StandardWatchEventKinds.ENTRY_DELETE
 import java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY
 import java.nio.file.WatchKey
 import java.nio.file.attribute.BasicFileAttributes
-
 
 /**
  * Database simply holds the [FsIndex] object.
@@ -52,13 +50,16 @@ internal class FsDB internal constructor(
      */
     private fun registerAll(start: Path) {
         // register directory and sub-directories
-        Files.walkFileTree(start, object : SimpleFileVisitor<Path>() {
-            @Throws(IOException::class)
-            override fun preVisitDirectory(dir: Path, attrs: BasicFileAttributes): FileVisitResult {
-                register(dir)
-                return FileVisitResult.CONTINUE
+        Files.walkFileTree(
+            start,
+            object : SimpleFileVisitor<Path>() {
+                @Throws(IOException::class)
+                override fun preVisitDirectory(dir: Path, attrs: BasicFileAttributes): FileVisitResult {
+                    register(dir)
+                    return FileVisitResult.CONTINUE
+                }
             }
-        })
+        )
     }
 
     override fun run() {

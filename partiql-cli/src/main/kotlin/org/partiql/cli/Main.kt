@@ -78,7 +78,7 @@ internal class Version : CommandLine.IVersionProvider {
     showDefaultValues = true
 )
 internal class MainCommand() : Runnable {
-    var shell : Shell? = null
+    var shell: Shell? = null
     internal companion object {
         private const val SHEBANG_PREFIX = "#!"
     }
@@ -200,6 +200,7 @@ internal class MainCommand() : Runnable {
         if (dir != null && files != null && files!!.isNotEmpty()) {
             error("Cannot specify both a database directory and a list of files.")
         }
+        // Hack in jdbc for demo
         if (dir != null) {
             var root = dir!!
             val connector = FsPlugin.create(root.toPath())

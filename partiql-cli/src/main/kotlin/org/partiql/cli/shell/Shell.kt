@@ -32,7 +32,6 @@ import org.jline.utils.AttributedStyle.BOLD
 import org.jline.utils.InfoCmp
 import org.joda.time.Duration
 import org.partiql.cli.pipeline.Pipeline
-import org.partiql.eval.PartiQLEngine
 import org.partiql.eval.PartiQLResult
 import org.partiql.plugins.fs.toIon
 import org.partiql.spi.BindingCase
@@ -45,7 +44,6 @@ import java.io.Closeable
 import java.io.PrintStream
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.time.Instant
 import java.util.Properties
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ExecutorService
