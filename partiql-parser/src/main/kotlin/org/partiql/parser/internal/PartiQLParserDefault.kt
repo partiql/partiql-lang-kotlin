@@ -212,7 +212,7 @@ import org.partiql.parser.PartiQLParserException
 import org.partiql.parser.PartiQLSyntaxException
 import org.partiql.parser.SourceLocation
 import org.partiql.parser.SourceLocations
-import org.partiql.parser.antlr.PartiQLBaseVisitor
+import org.partiql.parser.internal.antlr.PartiQLBaseVisitor
 import org.partiql.parser.internal.util.DateTimeUtils
 import org.partiql.value.NumericValue
 import org.partiql.value.PartiQLValueExperimental
@@ -239,8 +239,8 @@ import java.nio.charset.StandardCharsets
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
-import org.partiql.parser.antlr.PartiQLParser as GeneratedParser
-import org.partiql.parser.antlr.PartiQLTokens as GeneratedLexer
+import org.partiql.parser.internal.antlr.PartiQLParser as GeneratedParser
+import org.partiql.parser.internal.antlr.PartiQLTokens as GeneratedLexer
 
 /**
  * ANTLR Based Implementation of a PartiQLParser
@@ -574,7 +574,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             }
         }
 
-        override fun visitQualifiedName(ctx: org.partiql.parser.antlr.PartiQLParser.QualifiedNameContext) = translate(ctx) {
+        override fun visitQualifiedName(ctx: GeneratedParser.QualifiedNameContext) = translate(ctx) {
             val qualifier = ctx.qualifier.map { visitSymbolPrimitive(it) }
             val name = visitSymbolPrimitive(ctx.name)
             if (qualifier.isEmpty()) {
@@ -1162,12 +1162,12 @@ internal class PartiQLParserDefault : PartiQLParser {
                 excludeStepStructField(identifier)
             }
 
-        override fun visitExcludeExprCollectionWildcard(ctx: org.partiql.parser.antlr.PartiQLParser.ExcludeExprCollectionWildcardContext) =
+        override fun visitExcludeExprCollectionWildcard(ctx: GeneratedParser.ExcludeExprCollectionWildcardContext) =
             translate(ctx) {
                 excludeStepCollWildcard()
             }
 
-        override fun visitExcludeExprTupleWildcard(ctx: org.partiql.parser.antlr.PartiQLParser.ExcludeExprTupleWildcardContext) =
+        override fun visitExcludeExprTupleWildcard(ctx: GeneratedParser.ExcludeExprTupleWildcardContext) =
             translate(ctx) {
                 excludeStepStructWildcard()
             }
@@ -1762,7 +1762,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             exprSessionAttribute(Expr.SessionAttribute.Attribute.CURRENT_USER)
         }
 
-        override fun visitExprTermCurrentDate(ctx: org.partiql.parser.antlr.PartiQLParser.ExprTermCurrentDateContext) =
+        override fun visitExprTermCurrentDate(ctx: GeneratedParser.ExprTermCurrentDateContext) =
             translate(ctx) {
                 exprSessionAttribute(Expr.SessionAttribute.Attribute.CURRENT_DATE)
             }
