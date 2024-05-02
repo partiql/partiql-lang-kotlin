@@ -53,7 +53,6 @@ import org.partiql.plan.Ref
 import org.partiql.plan.Rel
 import org.partiql.plan.Rex
 import org.partiql.plan.Statement
-import org.partiql.plan.debug.PlanPrinter
 import org.partiql.plan.rexOpErr
 import org.partiql.plan.visitor.PlanBaseVisitor
 import org.partiql.spi.fn.Agg
@@ -77,12 +76,24 @@ internal class Compiler(
         TODO("Not yet implemented")
     }
 
+    /**
+     * Currently, this returns MISSING as the conformance tests work under the assumption that all permissive mode
+     * tests shall not fail during compilation and should still return MISSING in this scenarios. That being said, this
+     * is likely WRONG.
+     *
+     * In the PartiQL Specification:
+     * > For example, in the presence of schema validation, an PartiQL query processor can throw a compile-time error
+     * > when given the path expression {a:1, b:2}.c. In a more important and common case, an PartiQL implementation can
+     * > utilize the input data schema to prove that a path expression always returns MISSING and thus throw a
+     * > compile-time error.
+     *
+     * TODO: The usage of "can throw a compile-time error" is NOT reflected in the PartiQL Conformance Tests. The
+     *  existing conformance tests do not fail during compilation. We likely want to fail at compilation, however,
+     *  it is not against the specification to fail during evaluation. As such, while the current implementation isn't
+     *  wrong conformance-wise, it is not ideal.
+     */
     override fun visitRexOpErr(node: Rex.Op.Err, ctx: StaticType?): Operator {
-        val message = buildString {
-            this.appendLine(node.message)
-            PlanPrinter.append(this, plan)
-        }
-        throw IllegalStateException(message)
+        return ExprMissing(node.message)
     }
 
     override fun visitRelOpErr(node: Rel.Op.Err, ctx: StaticType?): Operator {
