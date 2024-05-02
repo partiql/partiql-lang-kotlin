@@ -49,10 +49,7 @@ public abstract class BaseJdbcClient(
         }
         val columns = getJdbcColumns(session, connection, resultSetMetaData)
         return JdbcTable(catalog, schema, columns)
-
-
     }
-
 
     @OptIn(PartiQLValueExperimental::class)
     override fun getJdbcColumns(session: ConnectorSession, connection: Connection, metadata: ResultSetMetaData): List<JdbcColumn> =
@@ -105,12 +102,19 @@ public abstract class BaseJdbcClient(
         }
     }
 
+    override fun createTable(session: ConnectorSession, query: String) {
+        val connection = connectionFactory.openConnection(session) ?: error("Failed to establish connection")
+        val stmt = connection.createStatement()
+        stmt.executeUpdate(query)
+        stmt.close()
+    }
+
     private fun listSchema(connection: Connection): Set<String> {
         //  Single catalog; multiple schema; multiple tables under each schema
         val catalog = connection.catalog
         val schemas = connection.metaData.getSchemas(catalog, null)
         return buildSet {
-            while(schemas.next()) {
+            while (schemas.next()) {
                 val schemaName = schemas.getString("TABLE_SCHEM")
                 this.add(schemaName)
             }

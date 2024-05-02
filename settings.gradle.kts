@@ -29,6 +29,7 @@ include(
     "plugins:partiql-fs",
     "plugins:partiql-local",
     "plugins:partiql-memory",
+    "plugins:partiql-base-jdbc",
     "lib:isl",
     "lib:sprout",
     "test:coverage-tests",
@@ -37,5 +38,5 @@ include(
     "test:sprout-tests",
     "examples",
 )
-include("plugins:partiql-base-jdbc")
-findProject(":plugins:partiql-base-jdbc")?.name = "partiql-base-jdbc"
+include("plugins:partiql-postgresql")
+findProject(":plugins:partiql-postgresql")?.name = "partiql-postgresql"

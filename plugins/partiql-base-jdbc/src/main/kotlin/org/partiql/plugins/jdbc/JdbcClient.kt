@@ -1,9 +1,6 @@
 package org.partiql.plugins.jdbc
 
-import org.partiql.spi.BindingPath
 import org.partiql.spi.connector.ConnectorBindings
-import org.partiql.spi.connector.ConnectorHandle
-import org.partiql.spi.connector.ConnectorPath
 import org.partiql.spi.connector.ConnectorSession
 import java.sql.Connection
 import java.sql.ResultSetMetaData
@@ -13,7 +10,7 @@ import java.sql.ResultSetMetaData
  */
 public interface JdbcClient {
 
-    public fun getJdbcSchema(session: ConnectorSession) : Set<String>
+    public fun getJdbcSchema(session: ConnectorSession): Set<String>
 
     public fun getJdbcTable(session: ConnectorSession, catalog: String?, schema: String?, tableName: String?): JdbcTable?
 
@@ -21,5 +18,7 @@ public interface JdbcClient {
 
     public fun toColumnMapping(session: ConnectorSession, connection: Connection, jdbcType: JdbcType): ColumnMapping
 
-    public fun getBinding(session: ConnectorSession) : ConnectorBindings
+    public fun getBinding(session: ConnectorSession): ConnectorBindings
+
+    public fun createTable(session: ConnectorSession, query: String)
 }

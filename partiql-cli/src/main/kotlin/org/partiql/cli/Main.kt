@@ -17,6 +17,9 @@ package org.partiql.cli
 
 import com.amazon.ion.system.IonReaderBuilder
 import com.amazon.ion.system.IonTextWriterBuilder
+import com.amazon.ionelement.api.StringElement
+import com.amazon.ionelement.api.StructElement
+import com.amazon.ionelement.api.createIonElementLoader
 import com.amazon.ionelement.api.ionListOf
 import com.amazon.ionelement.api.ionNull
 import com.amazon.ionelement.api.loadAllElements
@@ -25,14 +28,18 @@ import org.partiql.cli.pipeline.Pipeline
 import org.partiql.cli.shell.Shell
 import org.partiql.eval.PartiQLEngine
 import org.partiql.eval.PartiQLResult
+import org.partiql.plugins.BaseJdbcConnector
 import org.partiql.plugins.fs.FsPlugin
+import org.partiql.plugins.jdbc.DriverConnectionFactory
 import org.partiql.plugins.memory.MemoryCatalog
 import org.partiql.plugins.memory.MemoryConnector
+import org.partiql.postgresql.PostgresClient
 import org.partiql.spi.connector.Connector
 import org.partiql.spi.connector.sql.info.InfoSchema
 import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.toIon
+import org.postgresql.Driver
 import picocli.CommandLine
 import java.io.File
 import java.io.InputStream
@@ -82,6 +89,13 @@ internal class MainCommand() : Runnable {
     internal companion object {
         private const val SHEBANG_PREFIX = "#!"
     }
+
+    @CommandLine.Option(
+        names = ["-c", "--connectorSetting"],
+        description = ["connectorSetting"]
+    )
+
+    var c: File? = null
 
     @CommandLine.Option(
         names = ["-d", "--dir"],
@@ -197,10 +211,25 @@ internal class MainCommand() : Runnable {
      * Produce the connector map for planning and execution.
      */
     private fun connectors(): Map<String, Connector> {
+        // Hack in jdbc for demo
+        if (c != null) {
+            if (!c!!.isFile) error("expect configure to be a file")
+
+            val ion = createIonElementLoader().loadSingleElement(c!!.readText()) as StructElement
+
+            val connection = ion["connection"] as StringElement
+            val driver = Driver()
+
+            val connectionFactory = DriverConnectionFactory(driver, connection.textValue)
+
+            val client = PostgresClient(connectionFactory)
+
+            val connector = BaseJdbcConnector(client)
+            return mapOf("default" to connector)
+        }
         if (dir != null && files != null && files!!.isNotEmpty()) {
             error("Cannot specify both a database directory and a list of files.")
         }
-        // Hack in jdbc for demo
         if (dir != null) {
             var root = dir!!
             val connector = FsPlugin.create(root.toPath())

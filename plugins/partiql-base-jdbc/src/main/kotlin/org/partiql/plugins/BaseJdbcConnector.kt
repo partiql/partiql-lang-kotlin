@@ -15,13 +15,13 @@ public class BaseJdbcConnector(
     override fun getMetadata(session: ConnectorSession): SqlMetadata =
         BaseJdbcMetadata(client, session, InfoSchema.default())
 
-    //Temporary hack: to supply a foo session
+    // Temporary hack: to supply a foo session
     // We need to better abstract the binding with connector
     override fun getBindings(): ConnectorBindings = client.getBinding(
-        object: ConnectorSession {
+        object : ConnectorSession {
             override fun getQueryId(): String = "q"
             override fun getUserId(): String = "u"
-                                 }
+        }
     )
 
     @FnExperimental
