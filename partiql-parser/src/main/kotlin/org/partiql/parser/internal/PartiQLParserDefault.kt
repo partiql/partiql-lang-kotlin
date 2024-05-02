@@ -44,6 +44,7 @@ import org.partiql.ast.GroupBy
 import org.partiql.ast.Identifier
 import org.partiql.ast.Let
 import org.partiql.ast.OnConflict
+import org.partiql.ast.PartitionExpr
 import org.partiql.ast.Path
 import org.partiql.ast.Returning
 import org.partiql.ast.Select
@@ -139,6 +140,7 @@ import org.partiql.ast.onConflictActionDoUpdate
 import org.partiql.ast.onConflictTargetConstraint
 import org.partiql.ast.onConflictTargetSymbols
 import org.partiql.ast.orderBy
+import org.partiql.ast.partitionExprAttrList
 import org.partiql.ast.path
 import org.partiql.ast.pathStepIndex
 import org.partiql.ast.pathStepSymbol
@@ -176,6 +178,7 @@ import org.partiql.ast.statementExplainTargetDomain
 import org.partiql.ast.statementQuery
 import org.partiql.ast.tableDefinition
 import org.partiql.ast.tableDefinitionAttribute
+import org.partiql.ast.tableProperty
 import org.partiql.ast.typeAny
 import org.partiql.ast.typeArray
 import org.partiql.ast.typeBag
@@ -610,7 +613,27 @@ internal class PartiQLParserDefault : PartiQLParser {
         override fun visitCreateTable(ctx: GeneratedParser.CreateTableContext) = translate(ctx) {
             val table = visitQualifiedName(ctx.qualifiedName())
             val definition = ctx.tableDef()?.let { visitTableDef(it) }
-            ddlOpCreateTable(table, definition)
+            val partitionBy = ctx
+                .tableExtension()
+                .filterIsInstance<GeneratedParser.PartitionByContext>()
+                .let {
+                    if (it.size > 1) throw error(ctx, "EXPECT ONE PARTITION BY CLAUSE")
+                    it.firstOrNull()?.let { visitPartitionBy(it) }
+                }
+            val tblProperties = ctx
+                .tableExtension()
+                .filterIsInstance<GeneratedParser.TblPropertiesContext>()
+                .let {
+                    if (it.size > 1) throw error(ctx, "EXPECT ONE TBLPROPERTIES CLAUSE")
+                    val tblPropertiesCtx = it.firstOrNull()
+                    tblPropertiesCtx?.keyValuePair()?.map {
+                        val key = it.key.getStringValue().lowercase()
+                        val value = visitAs<Expr>(it.value) as? Expr.Lit
+                            ?: throw error(it, "Expect TBLPROPERTIES VALUE to be a literal")
+                        tableProperty(key, value.value)
+                    } ?: emptyList()
+                }
+            ddlOpCreateTable(table, definition, partitionBy, tblProperties)
         }
 
         override fun visitCreateIndex(ctx: GeneratedParser.CreateIndexContext) = translate(ctx) {
@@ -640,7 +663,12 @@ internal class PartiQLParserDefault : PartiQLParser {
                 isValidTypeDeclarationOrThrow(it, ctx.type())
             }
             val constraints = ctx.columnConstraint().map { visitColumnConstraint(it) }
-            tableDefinitionAttribute(name, type, constraints)
+            val optional = when (ctx.OPTIONAL()) {
+                null -> false
+                else -> true
+            }
+            val comment = ctx.comment()?.LITERAL_STRING()?.getStringValue()
+            tableDefinitionAttribute(name, type, constraints, optional, comment)
         }
 
         /**
@@ -708,6 +736,13 @@ internal class PartiQLParserDefault : PartiQLParser {
             val identifier = ctx.constraintName()?.let { symbolToString(it.symbolPrimitive()) }
             val body = visit(ctx.tableConstraintDef()) as Constraint.Definition
             constraint(identifier, body)
+        }
+
+        override fun visitPartitionBy(ctx: GeneratedParser.PartitionByContext) =
+            ctx.partitionExpr().accept(this) as PartitionExpr
+
+        override fun visitPartitionColList(ctx: GeneratedParser.PartitionColListContext) = translate(ctx) {
+            partitionExprAttrList(ctx.columnName().map { visitAs<Identifier.Symbol> (it.symbolPrimitive()) })
         }
 
         /**
@@ -2255,8 +2290,13 @@ internal class PartiQLParserDefault : PartiQLParser {
                         else -> throw error(it, "Only NULL Constraint and NOT NULL Constraint are allowed in Struct field")
                     }
                 }
+                val optional = when (structFieldCtx.OPTIONAL()) {
+                    null -> false
+                    else -> true
+                }
+                val comment = structFieldCtx.comment()?.LITERAL_STRING()?.getStringValue()
 
-                typeStructField(name, type, constraints)
+                typeStructField(name, type, constraints, optional, comment)
             }
             typeStruct(fields)
         }
