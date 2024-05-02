@@ -1,10 +1,10 @@
 package org.partiql.eval.internal.operator.rel
 
+import org.partiql.eval.PQLValue
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.helpers.TypesUtility.toRuntimeType
 import org.partiql.eval.internal.helpers.ValueUtility.isTrue
-import org.partiql.eval.internal.helpers.toNull
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.plan.Rel
 import org.partiql.value.PartiQLValueExperimental
@@ -18,7 +18,7 @@ internal class RelJoinOuterLeft(
 
     @OptIn(PartiQLValueExperimental::class)
     private val rhsPadded = Record(
-        Array(rhsType.schema.size) { rhsType.schema[it].type.toRuntimeType().toNull().invoke() }
+        Array(rhsType.schema.size) { PQLValue.nullValue(rhsType.schema[it].type.toRuntimeType()) }
     )
 
     private lateinit var env: Environment
