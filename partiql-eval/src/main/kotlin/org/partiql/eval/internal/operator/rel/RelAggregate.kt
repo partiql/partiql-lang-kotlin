@@ -1,5 +1,6 @@
 package org.partiql.eval.internal.operator.rel
 
+import org.partiql.eval.PQLValue
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
@@ -65,7 +66,7 @@ internal class RelAggregate(
                 val key = it.eval(env.push(inputRecord))
                 when (key.type == PartiQLValueType.MISSING) {
                     true -> nullValue()
-                    false -> key
+                    false -> key.toPartiQLValue()
                 }
             }
             val accumulators = aggregationMap.getOrPut(evaluatedGroupByKeys) {
@@ -83,7 +84,8 @@ internal class RelAggregate(
 
             // Aggregate Values in Aggregation State
             accumulators.forEachIndexed { index, function ->
-                val valueToAggregate = function.args.map { it.eval(env.push(inputRecord)) }
+                // TODO: Add support for aggregating PQLValues directly
+                val valueToAggregate = function.args.map { it.eval(env.push(inputRecord)).toPartiQLValue() }
                 // Skip over aggregation if NULL/MISSING
                 if (valueToAggregate.any { it.type == PartiQLValueType.MISSING || it.isNull }) {
                     return@forEachIndexed
@@ -98,10 +100,10 @@ internal class RelAggregate(
 
         // No Aggregations Created
         if (keys.isEmpty() && aggregationMap.isEmpty()) {
-            val record = mutableListOf<PartiQLValue>()
+            val record = mutableListOf<PQLValue>()
             functions.forEach { function ->
                 val accumulator = function.delegate.accumulator()
-                record.add(accumulator.value())
+                record.add(PQLValue.of(accumulator.value()))
             }
             records = iterator { yield(Record.of(*record.toTypedArray())) }
             return
@@ -109,7 +111,7 @@ internal class RelAggregate(
 
         records = iterator {
             aggregationMap.forEach { (keysEvaluated, accumulators) ->
-                val recordValues = accumulators.map { acc -> acc.delegate.value() } + keysEvaluated.map { value -> value }
+                val recordValues = accumulators.map { acc -> PQLValue.of(acc.delegate.value()) } + keysEvaluated.map { value -> PQLValue.of(value) }
                 yield(Record.of(*recordValues.toTypedArray()))
             }
         }

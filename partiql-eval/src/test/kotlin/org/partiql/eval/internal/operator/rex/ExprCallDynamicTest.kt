@@ -5,21 +5,21 @@ import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
+import org.partiql.eval.PQLValue
+import org.partiql.eval.PQLValue.bagValue
+import org.partiql.eval.PQLValue.boolValue
+import org.partiql.eval.PQLValue.int32Value
+import org.partiql.eval.PQLValue.listValue
+import org.partiql.eval.PQLValue.stringValue
 import org.partiql.eval.internal.Environment
+import org.partiql.eval.internal.helpers.ValueUtility.check
 import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
-import org.partiql.value.Int32Value
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
-import org.partiql.value.bagValue
-import org.partiql.value.boolValue
-import org.partiql.value.check
-import org.partiql.value.int32Value
-import org.partiql.value.listValue
-import org.partiql.value.stringValue
 
 class ExprCallDynamicTest {
 
@@ -29,8 +29,8 @@ class ExprCallDynamicTest {
     fun sanityTests(tc: DynamicTestCase) = tc.assert()
 
     public class DynamicTestCase @OptIn(PartiQLValueExperimental::class) constructor(
-        val lhs: PartiQLValue,
-        val rhs: PartiQLValue,
+        val lhs: PQLValue,
+        val rhs: PQLValue,
         val expectedIndex: Int,
     ) {
 
@@ -41,8 +41,8 @@ class ExprCallDynamicTest {
                 candidates = candidates,
                 args = arrayOf(ExprLiteral(lhs), ExprLiteral(rhs)),
             )
-            val result = expr.eval(Environment.empty).check<Int32Value>()
-            assertEquals(expectedIndex, result.value)
+            val result = expr.eval(Environment.empty).check(PartiQLValueType.INT32)
+            assertEquals(expectedIndex, result.int32Value)
         }
 
         companion object {
@@ -77,7 +77,7 @@ class ExprCallDynamicTest {
                             )
                         )
 
-                        override fun invoke(args: Array<PartiQLValue>): PartiQLValue = int32Value(index)
+                        override fun invoke(args: Array<PartiQLValue>): PartiQLValue = int32Value(index).toPartiQLValue()
                     },
                     coercions = arrayOf(null, null)
                 )

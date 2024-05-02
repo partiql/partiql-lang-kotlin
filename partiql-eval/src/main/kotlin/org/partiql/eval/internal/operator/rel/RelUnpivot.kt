@@ -1,15 +1,13 @@
 package org.partiql.eval.internal.operator.rel
 
 import org.partiql.errors.TypeCheckException
+import org.partiql.eval.PQLValue
+import org.partiql.eval.StructField
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
-import org.partiql.value.MissingValue
-import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.StructValue
-import org.partiql.value.stringValue
-import org.partiql.value.structValue
+import org.partiql.value.PartiQLValueType
 
 /**
  * The unpivot operator produces a bag of records from a struct.
@@ -23,21 +21,21 @@ internal sealed class RelUnpivot : Operator.Relation {
     /**
      * Iterator of the struct fields.
      */
-    private lateinit var _iterator: Iterator<Pair<String, PartiQLValue>>
+    private lateinit var _iterator: Iterator<StructField>
 
     internal lateinit var env: Environment
 
     /**
      * Each mode overrides.
      */
-    abstract fun struct(): StructValue<*>
+    abstract fun struct(): PQLValue
 
     /**
      * Initialize the _iterator from the concrete implementation's struct()
      */
     override fun open(env: Environment) {
         this.env = env
-        _iterator = struct().entries.iterator()
+        _iterator = struct().structFields
     }
 
     override fun hasNext(): Boolean {
@@ -46,8 +44,8 @@ internal sealed class RelUnpivot : Operator.Relation {
 
     override fun next(): Record {
         val f = _iterator.next()
-        val k = stringValue(f.first)
-        val v = f.second
+        val k = PQLValue.stringValue(f.name)
+        val v = f.value
         return Record.of(k, v)
     }
 
@@ -60,9 +58,9 @@ internal sealed class RelUnpivot : Operator.Relation {
      */
     class Strict(private val expr: Operator.Expr) : RelUnpivot() {
 
-        override fun struct(): StructValue<*> {
+        override fun struct(): PQLValue {
             val v = expr.eval(env.push(Record.empty))
-            if (v !is StructValue<*>) {
+            if (v.type != PartiQLValueType.STRUCT) {
                 throw TypeCheckException()
             }
             return v
@@ -80,10 +78,13 @@ internal sealed class RelUnpivot : Operator.Relation {
      */
     class Permissive(private val expr: Operator.Expr) : RelUnpivot() {
 
-        override fun struct(): StructValue<*> = when (val v = expr.eval(env.push(Record.empty))) {
-            is StructValue<*> -> v
-            is MissingValue -> structValue<PartiQLValue>()
-            else -> structValue("_1" to v)
+        override fun struct(): PQLValue {
+            val v = expr.eval(env.push(Record.empty))
+            return when (v.type) {
+                PartiQLValueType.STRUCT -> v
+                PartiQLValueType.MISSING -> PQLValue.structValue(emptyList())
+                else -> PQLValue.structValue(listOf(StructField.of("_1", v)))
+            }
         }
     }
 }

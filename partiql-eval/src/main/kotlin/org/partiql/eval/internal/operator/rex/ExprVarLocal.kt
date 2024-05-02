@@ -1,8 +1,8 @@
 package org.partiql.eval.internal.operator.rex
 
+import org.partiql.eval.PQLValue
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.operator.Operator
-import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 
 /**
@@ -13,7 +13,7 @@ internal class ExprVarLocal(
 ) : Operator.Expr {
 
     @PartiQLValueExperimental
-    override fun eval(env: Environment): PartiQLValue {
+    override fun eval(env: Environment): PQLValue {
         return env[ref]
     }
 }
