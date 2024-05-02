@@ -78,7 +78,7 @@ internal object Fn_EQ__ANY_ANY__BOOL : Fn {
             FnParameter("rhs", ANY),
         ),
         isNullable = false,
-        isNullCall = false,
+        isNullCall = true,
         isMissable = false,
         isMissingCall = false,
     )
@@ -88,7 +88,7 @@ internal object Fn_EQ__ANY_ANY__BOOL : Fn {
         val lhs = args[0]
         val rhs = args[1]
         return when {
-            lhs.type == MISSING || rhs.type == MISSING -> boolValue(lhs == rhs)
+            lhs.type == MISSING || rhs.type == MISSING -> boolValue(null)
             else -> boolValue(comparator.compare(lhs, rhs) == 0)
         }
     }
@@ -703,13 +703,13 @@ internal object Fn_EQ__MISSING_MISSING__BOOL : Fn {
             FnParameter("rhs", MISSING),
         ),
         isNullable = false,
-        isNullCall = false,
+        isNullCall = true,
         isMissable = false,
         isMissingCall = false,
     )
 
     // TODO how does `=` work with MISSING? As of now, always false.
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {
-        return boolValue(false)
+        return boolValue(null)
     }
 }

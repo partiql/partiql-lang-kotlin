@@ -327,9 +327,15 @@ internal class ExprCast(val arg: Operator.Expr, val cast: Ref.Cast) : Operator.E
     // TODO: Fix NULL Collection
     @OptIn(PartiQLValueExperimental::class)
     private fun castFromCollection(value: CollectionValue<*>, t: PartiQLValueType): PartiQLValue {
-        val elements = mutableListOf<PartiQLValue>()
-        value.iterator().forEachRemaining {
-            elements.add(it)
+        val elements = when (value.isNull) {
+            true -> null
+            false -> {
+                val elements = mutableListOf<PartiQLValue>()
+                value.iterator().forEachRemaining {
+                    elements.add(it)
+                }
+                elements
+            }
         }
         return when (t) {
             PartiQLValueType.BAG -> bagValue(elements)
