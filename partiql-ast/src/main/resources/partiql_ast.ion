@@ -133,10 +133,10 @@ ddl_op::[
   create_table::{
     name:       identifier,
     definition: optional::table_definition,
-    // This is a expression for backward compatible reason
-    // For we support PARTITION BY (<id> (, <id>)* ))
-    // But in the future, we might support additional paritition expression:
-    // such as PARTITION BY RANGE(..)
+    // This is an expression for backward compatibility
+    // For now, we support `PARTITION BY (<id> (, <id>)* ))`
+    // But in the future, we might support additional partition expressions:
+    // such as `PARTITION BY RANGE(..)`
     partition_by: optional::partition_expr,
     table_properties: list::[table_property],
   },
