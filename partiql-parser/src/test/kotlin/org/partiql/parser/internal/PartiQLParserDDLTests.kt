@@ -10,7 +10,7 @@ import org.partiql.ast.Constraint
 import org.partiql.ast.DdlOp
 import org.partiql.ast.Expr
 import org.partiql.ast.Identifier
-import org.partiql.ast.PartitionExpr
+import org.partiql.ast.PartitionBy
 import org.partiql.ast.Type
 import org.partiql.ast.constraint
 import org.partiql.ast.constraintDefinitionCheck
@@ -817,7 +817,7 @@ class PartiQLParserDDLTests {
                 ddlOpCreateTable(
                     identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
                     null,
-                    PartitionExpr.AttrList(
+                    PartitionBy.AttrList(
                         listOf(
                             identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE),
                         )
@@ -835,7 +835,7 @@ class PartiQLParserDDLTests {
                 ddlOpCreateTable(
                     identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
                     null,
-                    PartitionExpr.AttrList(
+                    PartitionBy.AttrList(
                         listOf(
                             identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE),
                             identifierSymbol("b", Identifier.CaseSensitivity.INSENSITIVE),
@@ -861,10 +861,24 @@ class PartiQLParserDDLTests {
             ),
 
             SuccessTestCase(
+                "CREATE TABLE with TBLPROPERTIES preserve case sensitivity",
+                """
+                    CREATE TABLE tbl
+                    TBLPROPERTIES ('K1k' = 'V1v')
+                """.trimIndent(),
+                ddlOpCreateTable(
+                    identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
+                    null,
+                    null,
+                    listOf(tableProperty("K1k", stringValue("V1v")))
+                )
+            ),
+
+            SuccessTestCase(
                 "CREATE TABLE with TBLPROPERTIES multiple properties",
                 """
                     CREATE TABLE tbl
-                    TBLPROPERTIES ('k1' = 'v1', 'k2' = 2)
+                    TBLPROPERTIES ('k1' = 'v1', 'k2' = 'v2')
                 """.trimIndent(),
                 ddlOpCreateTable(
                     identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
@@ -872,8 +886,23 @@ class PartiQLParserDDLTests {
                     null,
                     listOf(
                         tableProperty("k1", stringValue("v1")),
-                        tableProperty("k2", int32Value(2))
+                        tableProperty("k2", stringValue("v2"))
                     )
+                )
+            ),
+
+            SuccessTestCase(
+                "CREATE TABLE with TBLPROPERTIES and PARTITION BY",
+                """
+                    CREATE TABLE tbl
+                    PARTITION BY (a)
+                    TBLPROPERTIES ('k1' = 'v1')
+                """.trimIndent(),
+                ddlOpCreateTable(
+                    identifierSymbol("tbl", Identifier.CaseSensitivity.INSENSITIVE),
+                    null,
+                    PartitionBy.AttrList(listOf(identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE),),),
+                    listOf(tableProperty("k1", stringValue("v1")),)
                 )
             ),
         )
@@ -998,6 +1027,22 @@ class PartiQLParserDDLTests {
                 """
                     CREATE TABLE TBL
                         TBLPROPERTIES()
+                """.trimIndent()
+            ),
+
+            ErrorTestCase(
+                "TBLPROPERTIES only allowed String value",
+                """
+                    CREATE TABLE TBL
+                        TBLPROPERTIES('k1' = 1)
+                """.trimIndent()
+            ),
+
+            ErrorTestCase(
+                "TBLPROPERTIES only allowed String key",
+                """
+                    CREATE TABLE TBL
+                        TBLPROPERTIES(1 = '1')
                 """.trimIndent()
             ),
 

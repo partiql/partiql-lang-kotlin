@@ -137,7 +137,7 @@ ddl_op::[
     // For now, we support `PARTITION BY (<id> (, <id>)* ))`
     // But in the future, we might support additional partition expressions:
     // such as `PARTITION BY RANGE(..)`
-    partition_by: optional::partition_expr,
+    partition_by: optional::partition_by,
     table_properties: list::[table_property],
   },
 
@@ -837,7 +837,7 @@ table_definition::{
       name:        '.identifier.symbol',
       type:        '.type',
       constraints: list::[constraint],
-      // Should this be a constraint?
+      // TODO: Consider to model this as a constraint?
       is_optional: bool,
       comment: optional::string,
     }
@@ -858,7 +858,7 @@ constraint::{
   ],
 }
 
-partition_expr::[
+partition_by::[
   attr_list :: {
     list: list::['.identifier.symbol']
   },

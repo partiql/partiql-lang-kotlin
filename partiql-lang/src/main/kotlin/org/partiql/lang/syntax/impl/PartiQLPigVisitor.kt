@@ -290,9 +290,9 @@ internal class PartiQLPigVisitor(
 
     override fun visitTableConstrDeclaration(ctx: PartiQLParser.TableConstrDeclarationContext) = throw ParserException("PIG Parser does not support tuple level constraint", ErrorCode.PARSE_UNEXPECTED_TOKEN)
 
-    override fun visitPartitionBy(ctx: PartiQLParser.PartitionByContext) = throw ParserException("PIG Parser does not support PARTITION BY Clause", ErrorCode.PARSE_UNEXPECTED_TOKEN)
+    override fun visitTblExtensionPartition(ctx: PartiQLParser.TblExtensionPartitionContext) = throw ParserException("PIG Parser does not support PARTITION BY Clause", ErrorCode.PARSE_UNEXPECTED_TOKEN)
 
-    override fun visitTblProperties(ctx: PartiQLParser.TblPropertiesContext) = throw ParserException("PIG Parser does not support TBLPROPERTIES Clause", ErrorCode.PARSE_UNEXPECTED_TOKEN)
+    override fun visitTblExtensionTblProperties(ctx: PartiQLParser.TblExtensionTblPropertiesContext) = throw ParserException("PIG Parser does not support TBLPROPERTIES Clause", ErrorCode.PARSE_UNEXPECTED_TOKEN)
 
     /**
      *

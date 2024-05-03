@@ -139,15 +139,16 @@ searchCondition : exprOr;
 
 // SQL/HIVE DDL Extension, Support additional table metadatas such as partition by, tblProperties, etc.
 tableExtension
-    : PARTITION BY partitionExpr                                                           # PartitionBy
-    | TBLPROPERTIES PAREN_LEFT keyValuePair (COMMA keyValuePair)* PAREN_RIGHT              # TblProperties
+    : PARTITION BY partitionBy                                                             # TblExtensionPartition
+    | TBLPROPERTIES PAREN_LEFT keyValuePair (COMMA keyValuePair)* PAREN_RIGHT              # TblExtensionTblProperties
     ;
 
-keyValuePair : key=LITERAL_STRING EQ value=literal;
+// Limiting the scope to only allow String as valid value for now
+keyValuePair : key=LITERAL_STRING EQ value=LITERAL_STRING;
 
 // For now: just support a list of column name
 // In the future, we might support common partition expression such as Hash(), Range(), etc.
-partitionExpr
+partitionBy
     : PAREN_LEFT columnName (COMMA columnName)* PAREN_RIGHT                   #PartitionColList
     ;
 /**

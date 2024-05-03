@@ -5,7 +5,7 @@ public final class org/partiql/ast/Ast {
 	public static final fun constraintDefinitionNullable ()Lorg/partiql/ast/Constraint$Definition$Nullable;
 	public static final fun constraintDefinitionUnique (Ljava/util/List;Z)Lorg/partiql/ast/Constraint$Definition$Unique;
 	public static final fun ddlOpCreateIndex (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/Identifier;Ljava/util/List;)Lorg/partiql/ast/DdlOp$CreateIndex;
-	public static final fun ddlOpCreateTable (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/TableDefinition;Lorg/partiql/ast/PartitionExpr;Ljava/util/List;)Lorg/partiql/ast/DdlOp$CreateTable;
+	public static final fun ddlOpCreateTable (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/TableDefinition;Lorg/partiql/ast/PartitionBy;Ljava/util/List;)Lorg/partiql/ast/DdlOp$CreateTable;
 	public static final fun ddlOpDropIndex (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/Identifier;)Lorg/partiql/ast/DdlOp$DropIndex;
 	public static final fun ddlOpDropTable (Lorg/partiql/ast/Identifier;)Lorg/partiql/ast/DdlOp$DropTable;
 	public static final fun exclude (Ljava/util/List;)Lorg/partiql/ast/Exclude;
@@ -89,7 +89,7 @@ public final class org/partiql/ast/Ast {
 	public static final fun onConflictTargetConstraint (Lorg/partiql/ast/Identifier;)Lorg/partiql/ast/OnConflict$Target$Constraint;
 	public static final fun onConflictTargetSymbols (Ljava/util/List;)Lorg/partiql/ast/OnConflict$Target$Symbols;
 	public static final fun orderBy (Ljava/util/List;)Lorg/partiql/ast/OrderBy;
-	public static final fun partitionExprAttrList (Ljava/util/List;)Lorg/partiql/ast/PartitionExpr$AttrList;
+	public static final fun partitionByAttrList (Ljava/util/List;)Lorg/partiql/ast/PartitionBy$AttrList;
 	public static final fun path (Lorg/partiql/ast/Identifier$Symbol;Ljava/util/List;)Lorg/partiql/ast/Path;
 	public static final fun pathStepIndex (I)Lorg/partiql/ast/Path$Step$Index;
 	public static final fun pathStepSymbol (Lorg/partiql/ast/Identifier$Symbol;)Lorg/partiql/ast/Path$Step$Symbol;
@@ -327,17 +327,17 @@ public final class org/partiql/ast/DdlOp$CreateTable : org/partiql/ast/DdlOp {
 	public static final field Companion Lorg/partiql/ast/DdlOp$CreateTable$Companion;
 	public final field definition Lorg/partiql/ast/TableDefinition;
 	public final field name Lorg/partiql/ast/Identifier;
-	public final field partitionBy Lorg/partiql/ast/PartitionExpr;
+	public final field partitionBy Lorg/partiql/ast/PartitionBy;
 	public final field tableProperties Ljava/util/List;
-	public fun <init> (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/TableDefinition;Lorg/partiql/ast/PartitionExpr;Ljava/util/List;)V
+	public fun <init> (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/TableDefinition;Lorg/partiql/ast/PartitionBy;Ljava/util/List;)V
 	public fun accept (Lorg/partiql/ast/visitor/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static final fun builder ()Lorg/partiql/ast/builder/DdlOpCreateTableBuilder;
 	public final fun component1 ()Lorg/partiql/ast/Identifier;
 	public final fun component2 ()Lorg/partiql/ast/TableDefinition;
-	public final fun component3 ()Lorg/partiql/ast/PartitionExpr;
+	public final fun component3 ()Lorg/partiql/ast/PartitionBy;
 	public final fun component4 ()Ljava/util/List;
-	public final fun copy (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/TableDefinition;Lorg/partiql/ast/PartitionExpr;Ljava/util/List;)Lorg/partiql/ast/DdlOp$CreateTable;
-	public static synthetic fun copy$default (Lorg/partiql/ast/DdlOp$CreateTable;Lorg/partiql/ast/Identifier;Lorg/partiql/ast/TableDefinition;Lorg/partiql/ast/PartitionExpr;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/ast/DdlOp$CreateTable;
+	public final fun copy (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/TableDefinition;Lorg/partiql/ast/PartitionBy;Ljava/util/List;)Lorg/partiql/ast/DdlOp$CreateTable;
+	public static synthetic fun copy$default (Lorg/partiql/ast/DdlOp$CreateTable;Lorg/partiql/ast/Identifier;Lorg/partiql/ast/TableDefinition;Lorg/partiql/ast/PartitionBy;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/ast/DdlOp$CreateTable;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getChildren ()Ljava/util/List;
 	public fun hashCode ()I
@@ -2285,27 +2285,27 @@ public final class org/partiql/ast/OrderBy$Companion {
 	public final fun builder ()Lorg/partiql/ast/builder/OrderByBuilder;
 }
 
-public abstract class org/partiql/ast/PartitionExpr : org/partiql/ast/AstNode {
+public abstract class org/partiql/ast/PartitionBy : org/partiql/ast/AstNode {
 	public fun accept (Lorg/partiql/ast/visitor/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 }
 
-public final class org/partiql/ast/PartitionExpr$AttrList : org/partiql/ast/PartitionExpr {
-	public static final field Companion Lorg/partiql/ast/PartitionExpr$AttrList$Companion;
+public final class org/partiql/ast/PartitionBy$AttrList : org/partiql/ast/PartitionBy {
+	public static final field Companion Lorg/partiql/ast/PartitionBy$AttrList$Companion;
 	public final field list Ljava/util/List;
 	public fun <init> (Ljava/util/List;)V
 	public fun accept (Lorg/partiql/ast/visitor/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
-	public static final fun builder ()Lorg/partiql/ast/builder/PartitionExprAttrListBuilder;
+	public static final fun builder ()Lorg/partiql/ast/builder/PartitionByAttrListBuilder;
 	public final fun component1 ()Ljava/util/List;
-	public final fun copy (Ljava/util/List;)Lorg/partiql/ast/PartitionExpr$AttrList;
-	public static synthetic fun copy$default (Lorg/partiql/ast/PartitionExpr$AttrList;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/ast/PartitionExpr$AttrList;
+	public final fun copy (Ljava/util/List;)Lorg/partiql/ast/PartitionBy$AttrList;
+	public static synthetic fun copy$default (Lorg/partiql/ast/PartitionBy$AttrList;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/ast/PartitionBy$AttrList;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getChildren ()Ljava/util/List;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
 
-public final class org/partiql/ast/PartitionExpr$AttrList$Companion {
-	public final fun builder ()Lorg/partiql/ast/builder/PartitionExprAttrListBuilder;
+public final class org/partiql/ast/PartitionBy$AttrList$Companion {
+	public final fun builder ()Lorg/partiql/ast/builder/PartitionByAttrListBuilder;
 }
 
 public final class org/partiql/ast/Path : org/partiql/ast/AstNode {
@@ -4010,8 +4010,8 @@ public final class org/partiql/ast/builder/AstBuilder {
 	public static synthetic fun constraintDefinitionUnique$default (Lorg/partiql/ast/builder/AstBuilder;Ljava/util/List;Ljava/lang/Boolean;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Constraint$Definition$Unique;
 	public final fun ddlOpCreateIndex (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/Identifier;Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/DdlOp$CreateIndex;
 	public static synthetic fun ddlOpCreateIndex$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Identifier;Lorg/partiql/ast/Identifier;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/DdlOp$CreateIndex;
-	public final fun ddlOpCreateTable (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/TableDefinition;Lorg/partiql/ast/PartitionExpr;Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/DdlOp$CreateTable;
-	public static synthetic fun ddlOpCreateTable$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Identifier;Lorg/partiql/ast/TableDefinition;Lorg/partiql/ast/PartitionExpr;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/DdlOp$CreateTable;
+	public final fun ddlOpCreateTable (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/TableDefinition;Lorg/partiql/ast/PartitionBy;Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/DdlOp$CreateTable;
+	public static synthetic fun ddlOpCreateTable$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Identifier;Lorg/partiql/ast/TableDefinition;Lorg/partiql/ast/PartitionBy;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/DdlOp$CreateTable;
 	public final fun ddlOpDropIndex (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/Identifier;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/DdlOp$DropIndex;
 	public static synthetic fun ddlOpDropIndex$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Identifier;Lorg/partiql/ast/Identifier;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/DdlOp$DropIndex;
 	public final fun ddlOpDropTable (Lorg/partiql/ast/Identifier;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/DdlOp$DropTable;
@@ -4178,8 +4178,8 @@ public final class org/partiql/ast/builder/AstBuilder {
 	public static synthetic fun onConflictTargetSymbols$default (Lorg/partiql/ast/builder/AstBuilder;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/OnConflict$Target$Symbols;
 	public final fun orderBy (Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/OrderBy;
 	public static synthetic fun orderBy$default (Lorg/partiql/ast/builder/AstBuilder;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/OrderBy;
-	public final fun partitionExprAttrList (Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/PartitionExpr$AttrList;
-	public static synthetic fun partitionExprAttrList$default (Lorg/partiql/ast/builder/AstBuilder;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/PartitionExpr$AttrList;
+	public final fun partitionByAttrList (Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/PartitionBy$AttrList;
+	public static synthetic fun partitionByAttrList$default (Lorg/partiql/ast/builder/AstBuilder;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/PartitionBy$AttrList;
 	public final fun path (Lorg/partiql/ast/Identifier$Symbol;Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Path;
 	public static synthetic fun path$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Identifier$Symbol;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Path;
 	public final fun pathStepIndex (Ljava/lang/Integer;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Path$Step$Index;
@@ -4404,19 +4404,19 @@ public final class org/partiql/ast/builder/DdlOpCreateIndexBuilder {
 
 public final class org/partiql/ast/builder/DdlOpCreateTableBuilder {
 	public fun <init> ()V
-	public fun <init> (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/TableDefinition;Lorg/partiql/ast/PartitionExpr;Ljava/util/List;)V
-	public synthetic fun <init> (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/TableDefinition;Lorg/partiql/ast/PartitionExpr;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/TableDefinition;Lorg/partiql/ast/PartitionBy;Ljava/util/List;)V
+	public synthetic fun <init> (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/TableDefinition;Lorg/partiql/ast/PartitionBy;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun build ()Lorg/partiql/ast/DdlOp$CreateTable;
 	public final fun definition (Lorg/partiql/ast/TableDefinition;)Lorg/partiql/ast/builder/DdlOpCreateTableBuilder;
 	public final fun getDefinition ()Lorg/partiql/ast/TableDefinition;
 	public final fun getName ()Lorg/partiql/ast/Identifier;
-	public final fun getPartitionBy ()Lorg/partiql/ast/PartitionExpr;
+	public final fun getPartitionBy ()Lorg/partiql/ast/PartitionBy;
 	public final fun getTableProperties ()Ljava/util/List;
 	public final fun name (Lorg/partiql/ast/Identifier;)Lorg/partiql/ast/builder/DdlOpCreateTableBuilder;
-	public final fun partitionBy (Lorg/partiql/ast/PartitionExpr;)Lorg/partiql/ast/builder/DdlOpCreateTableBuilder;
+	public final fun partitionBy (Lorg/partiql/ast/PartitionBy;)Lorg/partiql/ast/builder/DdlOpCreateTableBuilder;
 	public final fun setDefinition (Lorg/partiql/ast/TableDefinition;)V
 	public final fun setName (Lorg/partiql/ast/Identifier;)V
-	public final fun setPartitionBy (Lorg/partiql/ast/PartitionExpr;)V
+	public final fun setPartitionBy (Lorg/partiql/ast/PartitionBy;)V
 	public final fun setTableProperties (Ljava/util/List;)V
 	public final fun tableProperties (Ljava/util/List;)Lorg/partiql/ast/builder/DdlOpCreateTableBuilder;
 }
@@ -5476,13 +5476,13 @@ public final class org/partiql/ast/builder/OrderByBuilder {
 	public final fun sorts (Ljava/util/List;)Lorg/partiql/ast/builder/OrderByBuilder;
 }
 
-public final class org/partiql/ast/builder/PartitionExprAttrListBuilder {
+public final class org/partiql/ast/builder/PartitionByAttrListBuilder {
 	public fun <init> ()V
 	public fun <init> (Ljava/util/List;)V
 	public synthetic fun <init> (Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun build ()Lorg/partiql/ast/PartitionExpr$AttrList;
+	public final fun build ()Lorg/partiql/ast/PartitionBy$AttrList;
 	public final fun getList ()Ljava/util/List;
-	public final fun list (Ljava/util/List;)Lorg/partiql/ast/builder/PartitionExprAttrListBuilder;
+	public final fun list (Ljava/util/List;)Lorg/partiql/ast/builder/PartitionByAttrListBuilder;
 	public final fun setList (Ljava/util/List;)V
 }
 
@@ -6831,8 +6831,8 @@ public abstract class org/partiql/ast/util/AstRewriter : org/partiql/ast/visitor
 	public fun visitOnConflictTargetSymbols (Lorg/partiql/ast/OnConflict$Target$Symbols;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitOrderBy (Lorg/partiql/ast/OrderBy;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitOrderBy (Lorg/partiql/ast/OrderBy;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
-	public synthetic fun visitPartitionExprAttrList (Lorg/partiql/ast/PartitionExpr$AttrList;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitPartitionExprAttrList (Lorg/partiql/ast/PartitionExpr$AttrList;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitPartitionByAttrList (Lorg/partiql/ast/PartitionBy$AttrList;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitPartitionByAttrList (Lorg/partiql/ast/PartitionBy$AttrList;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitPath (Lorg/partiql/ast/Path;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitPath (Lorg/partiql/ast/Path;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitPathStepIndex (Lorg/partiql/ast/Path$Step$Index;Ljava/lang/Object;)Ljava/lang/Object;
@@ -7096,8 +7096,8 @@ public abstract class org/partiql/ast/visitor/AstBaseVisitor : org/partiql/ast/v
 	public fun visitOnConflictTargetConstraint (Lorg/partiql/ast/OnConflict$Target$Constraint;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitOnConflictTargetSymbols (Lorg/partiql/ast/OnConflict$Target$Symbols;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitOrderBy (Lorg/partiql/ast/OrderBy;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitPartitionExpr (Lorg/partiql/ast/PartitionExpr;Ljava/lang/Object;)Ljava/lang/Object;
-	public fun visitPartitionExprAttrList (Lorg/partiql/ast/PartitionExpr$AttrList;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitPartitionBy (Lorg/partiql/ast/PartitionBy;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitPartitionByAttrList (Lorg/partiql/ast/PartitionBy$AttrList;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitPath (Lorg/partiql/ast/Path;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitPathStep (Lorg/partiql/ast/Path$Step;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitPathStepIndex (Lorg/partiql/ast/Path$Step$Index;Ljava/lang/Object;)Ljava/lang/Object;
@@ -7290,8 +7290,8 @@ public abstract interface class org/partiql/ast/visitor/AstVisitor {
 	public abstract fun visitOnConflictTargetConstraint (Lorg/partiql/ast/OnConflict$Target$Constraint;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitOnConflictTargetSymbols (Lorg/partiql/ast/OnConflict$Target$Symbols;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitOrderBy (Lorg/partiql/ast/OrderBy;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitPartitionExpr (Lorg/partiql/ast/PartitionExpr;Ljava/lang/Object;)Ljava/lang/Object;
-	public abstract fun visitPartitionExprAttrList (Lorg/partiql/ast/PartitionExpr$AttrList;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitPartitionBy (Lorg/partiql/ast/PartitionBy;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitPartitionByAttrList (Lorg/partiql/ast/PartitionBy$AttrList;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitPath (Lorg/partiql/ast/Path;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitPathStep (Lorg/partiql/ast/Path$Step;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitPathStepIndex (Lorg/partiql/ast/Path$Step$Index;Ljava/lang/Object;)Ljava/lang/Object;
