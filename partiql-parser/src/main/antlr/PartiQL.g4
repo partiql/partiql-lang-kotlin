@@ -137,7 +137,7 @@ uniqueConstraintDef
 // but we at least can eliminate SFW query here.
 searchCondition : exprOr;
 
-// SQL Extension, Support additional table metadatas such as partition by, tblProperties, etc.
+// SQL/HIVE DDL Extension, Support additional table metadatas such as partition by, tblProperties, etc.
 tableExtension
     : PARTITION BY partitionExpr                                                           # PartitionBy
     | TBLPROPERTIES PAREN_LEFT keyValuePair (COMMA keyValuePair)* PAREN_RIGHT              # TblProperties
