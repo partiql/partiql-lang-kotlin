@@ -77,6 +77,7 @@ qualifiedName : (qualifier+=symbolPrimitive PERIOD)* name=symbolPrimitive;
 tableName : symbolPrimitive;
 columnName : symbolPrimitive;
 constraintName : symbolPrimitive;
+comment : COMMENT LITERAL_STRING;
 
 ddl
     : createCommand
@@ -84,7 +85,7 @@ ddl
     ;
 
 createCommand
-    : CREATE TABLE qualifiedName ( PAREN_LEFT tableDef PAREN_RIGHT )?                           # CreateTable
+    : CREATE TABLE qualifiedName ( PAREN_LEFT tableDef PAREN_RIGHT )? tableExtension*               # CreateTable
     | CREATE INDEX ON symbolPrimitive PAREN_LEFT pathSimple ( COMMA pathSimple )* PAREN_RIGHT   # CreateIndex
     ;
 
@@ -98,7 +99,7 @@ tableDef
     ;
 
 tableDefPart
-    : columnName type columnConstraint*                             # ColumnDeclaration
+    : columnName OPTIONAL? type columnConstraint* comment?          # ColumnDeclaration
     | ( CONSTRAINT constraintName )?  tableConstraintDef            # TableConstrDeclaration
     ;
 
@@ -136,6 +137,20 @@ uniqueConstraintDef
 // but we at least can eliminate SFW query here.
 searchCondition : exprOr;
 
+// SQL/HIVE DDL Extension, Support additional table metadatas such as partition by, tblProperties, etc.
+tableExtension
+    : PARTITION BY partitionBy                                                             # TblExtensionPartition
+    | TBLPROPERTIES PAREN_LEFT keyValuePair (COMMA keyValuePair)* PAREN_RIGHT              # TblExtensionTblProperties
+    ;
+
+// Limiting the scope to only allow String as valid value for now
+keyValuePair : key=LITERAL_STRING EQ value=LITERAL_STRING;
+
+// For now: just support a list of column name
+// In the future, we might support common partition expression such as Hash(), Range(), etc.
+partitionBy
+    : PAREN_LEFT columnName (COMMA columnName)* PAREN_RIGHT                   #PartitionColList
+    ;
 /**
  *
  * DATA MANIPULATION LANGUAGE (DML)
@@ -836,5 +851,5 @@ type
     ;
 
 structField
-    : columnName COLON type columnConstraint*
+    : columnName OPTIONAL? COLON type columnConstraint* comment?
     ;

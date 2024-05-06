@@ -246,6 +246,7 @@ internal class PartiQLPigVisitor(
             throw ParserException("PIG Parser does not support qualified name as table name", ErrorCode.PARSE_UNEXPECTED_TOKEN)
         }
         val def = ctx.tableDef()?.let { visitTableDef(it) }
+        ctx.tableExtension().map { visit(it) }
         createTable_(name, def, ctx.CREATE().getSourceMetaContainer())
     }
 
@@ -264,6 +265,12 @@ internal class PartiQLPigVisitor(
         val name = visitSymbolPrimitive(ctx.columnName().symbolPrimitive()).name.text
         val type = visit(ctx.type()) as PartiqlAst.Type
         val constrs = ctx.columnConstraint().map { visitColumnConstraint(it) }
+        if (ctx.OPTIONAL() != null) {
+            throw ParserException("PIG Parser does not support OPTIONAL Field", ErrorCode.PARSE_UNEXPECTED_TOKEN)
+        }
+        if (ctx.comment() != null) {
+            throw ParserException("PIG Parser does not support COMMENT Clause", ErrorCode.PARSE_UNEXPECTED_TOKEN)
+        }
         columnDeclaration(name, type, constrs)
     }
 
@@ -280,6 +287,12 @@ internal class PartiQLPigVisitor(
     override fun visitColConstrNull(ctx: PartiQLParser.ColConstrNullContext) = PartiqlAst.build {
         columnNull()
     }
+
+    override fun visitTableConstrDeclaration(ctx: PartiQLParser.TableConstrDeclarationContext) = throw ParserException("PIG Parser does not support tuple level constraint", ErrorCode.PARSE_UNEXPECTED_TOKEN)
+
+    override fun visitTblExtensionPartition(ctx: PartiQLParser.TblExtensionPartitionContext) = throw ParserException("PIG Parser does not support PARTITION BY Clause", ErrorCode.PARSE_UNEXPECTED_TOKEN)
+
+    override fun visitTblExtensionTblProperties(ctx: PartiQLParser.TblExtensionTblPropertiesContext) = throw ParserException("PIG Parser does not support TBLPROPERTIES Clause", ErrorCode.PARSE_UNEXPECTED_TOKEN)
 
     /**
      *

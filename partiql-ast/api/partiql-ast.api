@@ -5,7 +5,7 @@ public final class org/partiql/ast/Ast {
 	public static final fun constraintDefinitionNullable ()Lorg/partiql/ast/Constraint$Definition$Nullable;
 	public static final fun constraintDefinitionUnique (Ljava/util/List;Z)Lorg/partiql/ast/Constraint$Definition$Unique;
 	public static final fun ddlOpCreateIndex (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/Identifier;Ljava/util/List;)Lorg/partiql/ast/DdlOp$CreateIndex;
-	public static final fun ddlOpCreateTable (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/TableDefinition;)Lorg/partiql/ast/DdlOp$CreateTable;
+	public static final fun ddlOpCreateTable (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/TableDefinition;Lorg/partiql/ast/PartitionBy;Ljava/util/List;)Lorg/partiql/ast/DdlOp$CreateTable;
 	public static final fun ddlOpDropIndex (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/Identifier;)Lorg/partiql/ast/DdlOp$DropIndex;
 	public static final fun ddlOpDropTable (Lorg/partiql/ast/Identifier;)Lorg/partiql/ast/DdlOp$DropTable;
 	public static final fun exclude (Ljava/util/List;)Lorg/partiql/ast/Exclude;
@@ -89,6 +89,7 @@ public final class org/partiql/ast/Ast {
 	public static final fun onConflictTargetConstraint (Lorg/partiql/ast/Identifier;)Lorg/partiql/ast/OnConflict$Target$Constraint;
 	public static final fun onConflictTargetSymbols (Ljava/util/List;)Lorg/partiql/ast/OnConflict$Target$Symbols;
 	public static final fun orderBy (Ljava/util/List;)Lorg/partiql/ast/OrderBy;
+	public static final fun partitionByAttrList (Ljava/util/List;)Lorg/partiql/ast/PartitionBy$AttrList;
 	public static final fun path (Lorg/partiql/ast/Identifier$Symbol;Ljava/util/List;)Lorg/partiql/ast/Path;
 	public static final fun pathStepIndex (I)Lorg/partiql/ast/Path$Step$Index;
 	public static final fun pathStepSymbol (Lorg/partiql/ast/Identifier$Symbol;)Lorg/partiql/ast/Path$Step$Symbol;
@@ -125,7 +126,8 @@ public final class org/partiql/ast/Ast {
 	public static final fun statementExplainTargetDomain (Lorg/partiql/ast/Statement;Ljava/lang/String;Ljava/lang/String;)Lorg/partiql/ast/Statement$Explain$Target$Domain;
 	public static final fun statementQuery (Lorg/partiql/ast/Expr;)Lorg/partiql/ast/Statement$Query;
 	public static final fun tableDefinition (Ljava/util/List;Ljava/util/List;)Lorg/partiql/ast/TableDefinition;
-	public static final fun tableDefinitionAttribute (Lorg/partiql/ast/Identifier$Symbol;Lorg/partiql/ast/Type;Ljava/util/List;)Lorg/partiql/ast/TableDefinition$Attribute;
+	public static final fun tableDefinitionAttribute (Lorg/partiql/ast/Identifier$Symbol;Lorg/partiql/ast/Type;Ljava/util/List;ZLjava/lang/String;)Lorg/partiql/ast/TableDefinition$Attribute;
+	public static final fun tableProperty (Ljava/lang/String;Lorg/partiql/value/PartiQLValue;)Lorg/partiql/ast/TableProperty;
 	public static final fun typeAny ()Lorg/partiql/ast/Type$Any;
 	public static final fun typeArray (Lorg/partiql/ast/Type;)Lorg/partiql/ast/Type$Array;
 	public static final fun typeBag ()Lorg/partiql/ast/Type$Bag;
@@ -156,7 +158,7 @@ public final class org/partiql/ast/Ast {
 	public static final fun typeSmallint ()Lorg/partiql/ast/Type$Smallint;
 	public static final fun typeString (Ljava/lang/Integer;)Lorg/partiql/ast/Type$String;
 	public static final fun typeStruct (Ljava/util/List;)Lorg/partiql/ast/Type$Struct;
-	public static final fun typeStructField (Lorg/partiql/ast/Identifier$Symbol;Lorg/partiql/ast/Type;Ljava/util/List;)Lorg/partiql/ast/Type$Struct$Field;
+	public static final fun typeStructField (Lorg/partiql/ast/Identifier$Symbol;Lorg/partiql/ast/Type;Ljava/util/List;ZLjava/lang/String;)Lorg/partiql/ast/Type$Struct$Field;
 	public static final fun typeSymbol ()Lorg/partiql/ast/Type$Symbol;
 	public static final fun typeTime (Ljava/lang/Integer;)Lorg/partiql/ast/Type$Time;
 	public static final fun typeTimeWithTz (Ljava/lang/Integer;)Lorg/partiql/ast/Type$TimeWithTz;
@@ -325,13 +327,17 @@ public final class org/partiql/ast/DdlOp$CreateTable : org/partiql/ast/DdlOp {
 	public static final field Companion Lorg/partiql/ast/DdlOp$CreateTable$Companion;
 	public final field definition Lorg/partiql/ast/TableDefinition;
 	public final field name Lorg/partiql/ast/Identifier;
-	public fun <init> (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/TableDefinition;)V
+	public final field partitionBy Lorg/partiql/ast/PartitionBy;
+	public final field tableProperties Ljava/util/List;
+	public fun <init> (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/TableDefinition;Lorg/partiql/ast/PartitionBy;Ljava/util/List;)V
 	public fun accept (Lorg/partiql/ast/visitor/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static final fun builder ()Lorg/partiql/ast/builder/DdlOpCreateTableBuilder;
 	public final fun component1 ()Lorg/partiql/ast/Identifier;
 	public final fun component2 ()Lorg/partiql/ast/TableDefinition;
-	public final fun copy (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/TableDefinition;)Lorg/partiql/ast/DdlOp$CreateTable;
-	public static synthetic fun copy$default (Lorg/partiql/ast/DdlOp$CreateTable;Lorg/partiql/ast/Identifier;Lorg/partiql/ast/TableDefinition;ILjava/lang/Object;)Lorg/partiql/ast/DdlOp$CreateTable;
+	public final fun component3 ()Lorg/partiql/ast/PartitionBy;
+	public final fun component4 ()Ljava/util/List;
+	public final fun copy (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/TableDefinition;Lorg/partiql/ast/PartitionBy;Ljava/util/List;)Lorg/partiql/ast/DdlOp$CreateTable;
+	public static synthetic fun copy$default (Lorg/partiql/ast/DdlOp$CreateTable;Lorg/partiql/ast/Identifier;Lorg/partiql/ast/TableDefinition;Lorg/partiql/ast/PartitionBy;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/ast/DdlOp$CreateTable;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getChildren ()Ljava/util/List;
 	public fun hashCode ()I
@@ -2279,6 +2285,29 @@ public final class org/partiql/ast/OrderBy$Companion {
 	public final fun builder ()Lorg/partiql/ast/builder/OrderByBuilder;
 }
 
+public abstract class org/partiql/ast/PartitionBy : org/partiql/ast/AstNode {
+	public fun accept (Lorg/partiql/ast/visitor/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class org/partiql/ast/PartitionBy$AttrList : org/partiql/ast/PartitionBy {
+	public static final field Companion Lorg/partiql/ast/PartitionBy$AttrList$Companion;
+	public final field list Ljava/util/List;
+	public fun <init> (Ljava/util/List;)V
+	public fun accept (Lorg/partiql/ast/visitor/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/ast/builder/PartitionByAttrListBuilder;
+	public final fun component1 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;)Lorg/partiql/ast/PartitionBy$AttrList;
+	public static synthetic fun copy$default (Lorg/partiql/ast/PartitionBy$AttrList;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/ast/PartitionBy$AttrList;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/ast/PartitionBy$AttrList$Companion {
+	public final fun builder ()Lorg/partiql/ast/builder/PartitionByAttrListBuilder;
+}
+
 public final class org/partiql/ast/Path : org/partiql/ast/AstNode {
 	public static final field Companion Lorg/partiql/ast/Path$Companion;
 	public final field root Lorg/partiql/ast/Identifier$Symbol;
@@ -3120,17 +3149,21 @@ public final class org/partiql/ast/TableDefinition : org/partiql/ast/AstNode {
 
 public final class org/partiql/ast/TableDefinition$Attribute : org/partiql/ast/AstNode {
 	public static final field Companion Lorg/partiql/ast/TableDefinition$Attribute$Companion;
+	public final field comment Ljava/lang/String;
 	public final field constraints Ljava/util/List;
+	public final field isOptional Z
 	public final field name Lorg/partiql/ast/Identifier$Symbol;
 	public final field type Lorg/partiql/ast/Type;
-	public fun <init> (Lorg/partiql/ast/Identifier$Symbol;Lorg/partiql/ast/Type;Ljava/util/List;)V
+	public fun <init> (Lorg/partiql/ast/Identifier$Symbol;Lorg/partiql/ast/Type;Ljava/util/List;ZLjava/lang/String;)V
 	public fun accept (Lorg/partiql/ast/visitor/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static final fun builder ()Lorg/partiql/ast/builder/TableDefinitionAttributeBuilder;
 	public final fun component1 ()Lorg/partiql/ast/Identifier$Symbol;
 	public final fun component2 ()Lorg/partiql/ast/Type;
 	public final fun component3 ()Ljava/util/List;
-	public final fun copy (Lorg/partiql/ast/Identifier$Symbol;Lorg/partiql/ast/Type;Ljava/util/List;)Lorg/partiql/ast/TableDefinition$Attribute;
-	public static synthetic fun copy$default (Lorg/partiql/ast/TableDefinition$Attribute;Lorg/partiql/ast/Identifier$Symbol;Lorg/partiql/ast/Type;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/ast/TableDefinition$Attribute;
+	public final fun component4 ()Z
+	public final fun component5 ()Ljava/lang/String;
+	public final fun copy (Lorg/partiql/ast/Identifier$Symbol;Lorg/partiql/ast/Type;Ljava/util/List;ZLjava/lang/String;)Lorg/partiql/ast/TableDefinition$Attribute;
+	public static synthetic fun copy$default (Lorg/partiql/ast/TableDefinition$Attribute;Lorg/partiql/ast/Identifier$Symbol;Lorg/partiql/ast/Type;Ljava/util/List;ZLjava/lang/String;ILjava/lang/Object;)Lorg/partiql/ast/TableDefinition$Attribute;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getChildren ()Ljava/util/List;
 	public fun hashCode ()I
@@ -3143,6 +3176,27 @@ public final class org/partiql/ast/TableDefinition$Attribute$Companion {
 
 public final class org/partiql/ast/TableDefinition$Companion {
 	public final fun builder ()Lorg/partiql/ast/builder/TableDefinitionBuilder;
+}
+
+public final class org/partiql/ast/TableProperty : org/partiql/ast/AstNode {
+	public static final field Companion Lorg/partiql/ast/TableProperty$Companion;
+	public final field name Ljava/lang/String;
+	public final field value Lorg/partiql/value/PartiQLValue;
+	public fun <init> (Ljava/lang/String;Lorg/partiql/value/PartiQLValue;)V
+	public fun accept (Lorg/partiql/ast/visitor/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/ast/builder/TablePropertyBuilder;
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lorg/partiql/value/PartiQLValue;
+	public final fun copy (Ljava/lang/String;Lorg/partiql/value/PartiQLValue;)Lorg/partiql/ast/TableProperty;
+	public static synthetic fun copy$default (Lorg/partiql/ast/TableProperty;Ljava/lang/String;Lorg/partiql/value/PartiQLValue;ILjava/lang/Object;)Lorg/partiql/ast/TableProperty;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/ast/TableProperty$Companion {
+	public final fun builder ()Lorg/partiql/ast/builder/TablePropertyBuilder;
 }
 
 public abstract class org/partiql/ast/Type : org/partiql/ast/AstNode {
@@ -3759,17 +3813,21 @@ public final class org/partiql/ast/Type$Struct$Companion {
 
 public final class org/partiql/ast/Type$Struct$Field : org/partiql/ast/AstNode {
 	public static final field Companion Lorg/partiql/ast/Type$Struct$Field$Companion;
+	public final field comment Ljava/lang/String;
 	public final field constraints Ljava/util/List;
+	public final field isOptional Z
 	public final field name Lorg/partiql/ast/Identifier$Symbol;
 	public final field type Lorg/partiql/ast/Type;
-	public fun <init> (Lorg/partiql/ast/Identifier$Symbol;Lorg/partiql/ast/Type;Ljava/util/List;)V
+	public fun <init> (Lorg/partiql/ast/Identifier$Symbol;Lorg/partiql/ast/Type;Ljava/util/List;ZLjava/lang/String;)V
 	public fun accept (Lorg/partiql/ast/visitor/AstVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 	public static final fun builder ()Lorg/partiql/ast/builder/TypeStructFieldBuilder;
 	public final fun component1 ()Lorg/partiql/ast/Identifier$Symbol;
 	public final fun component2 ()Lorg/partiql/ast/Type;
 	public final fun component3 ()Ljava/util/List;
-	public final fun copy (Lorg/partiql/ast/Identifier$Symbol;Lorg/partiql/ast/Type;Ljava/util/List;)Lorg/partiql/ast/Type$Struct$Field;
-	public static synthetic fun copy$default (Lorg/partiql/ast/Type$Struct$Field;Lorg/partiql/ast/Identifier$Symbol;Lorg/partiql/ast/Type;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/ast/Type$Struct$Field;
+	public final fun component4 ()Z
+	public final fun component5 ()Ljava/lang/String;
+	public final fun copy (Lorg/partiql/ast/Identifier$Symbol;Lorg/partiql/ast/Type;Ljava/util/List;ZLjava/lang/String;)Lorg/partiql/ast/Type$Struct$Field;
+	public static synthetic fun copy$default (Lorg/partiql/ast/Type$Struct$Field;Lorg/partiql/ast/Identifier$Symbol;Lorg/partiql/ast/Type;Ljava/util/List;ZLjava/lang/String;ILjava/lang/Object;)Lorg/partiql/ast/Type$Struct$Field;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getChildren ()Ljava/util/List;
 	public fun hashCode ()I
@@ -3952,8 +4010,8 @@ public final class org/partiql/ast/builder/AstBuilder {
 	public static synthetic fun constraintDefinitionUnique$default (Lorg/partiql/ast/builder/AstBuilder;Ljava/util/List;Ljava/lang/Boolean;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Constraint$Definition$Unique;
 	public final fun ddlOpCreateIndex (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/Identifier;Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/DdlOp$CreateIndex;
 	public static synthetic fun ddlOpCreateIndex$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Identifier;Lorg/partiql/ast/Identifier;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/DdlOp$CreateIndex;
-	public final fun ddlOpCreateTable (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/TableDefinition;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/DdlOp$CreateTable;
-	public static synthetic fun ddlOpCreateTable$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Identifier;Lorg/partiql/ast/TableDefinition;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/DdlOp$CreateTable;
+	public final fun ddlOpCreateTable (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/TableDefinition;Lorg/partiql/ast/PartitionBy;Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/DdlOp$CreateTable;
+	public static synthetic fun ddlOpCreateTable$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Identifier;Lorg/partiql/ast/TableDefinition;Lorg/partiql/ast/PartitionBy;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/DdlOp$CreateTable;
 	public final fun ddlOpDropIndex (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/Identifier;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/DdlOp$DropIndex;
 	public static synthetic fun ddlOpDropIndex$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Identifier;Lorg/partiql/ast/Identifier;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/DdlOp$DropIndex;
 	public final fun ddlOpDropTable (Lorg/partiql/ast/Identifier;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/DdlOp$DropTable;
@@ -4120,6 +4178,8 @@ public final class org/partiql/ast/builder/AstBuilder {
 	public static synthetic fun onConflictTargetSymbols$default (Lorg/partiql/ast/builder/AstBuilder;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/OnConflict$Target$Symbols;
 	public final fun orderBy (Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/OrderBy;
 	public static synthetic fun orderBy$default (Lorg/partiql/ast/builder/AstBuilder;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/OrderBy;
+	public final fun partitionByAttrList (Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/PartitionBy$AttrList;
+	public static synthetic fun partitionByAttrList$default (Lorg/partiql/ast/builder/AstBuilder;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/PartitionBy$AttrList;
 	public final fun path (Lorg/partiql/ast/Identifier$Symbol;Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Path;
 	public static synthetic fun path$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Identifier$Symbol;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Path;
 	public final fun pathStepIndex (Ljava/lang/Integer;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Path$Step$Index;
@@ -4192,8 +4252,10 @@ public final class org/partiql/ast/builder/AstBuilder {
 	public static synthetic fun statementQuery$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Expr;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Statement$Query;
 	public final fun tableDefinition (Ljava/util/List;Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/TableDefinition;
 	public static synthetic fun tableDefinition$default (Lorg/partiql/ast/builder/AstBuilder;Ljava/util/List;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/TableDefinition;
-	public final fun tableDefinitionAttribute (Lorg/partiql/ast/Identifier$Symbol;Lorg/partiql/ast/Type;Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/TableDefinition$Attribute;
-	public static synthetic fun tableDefinitionAttribute$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Identifier$Symbol;Lorg/partiql/ast/Type;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/TableDefinition$Attribute;
+	public final fun tableDefinitionAttribute (Lorg/partiql/ast/Identifier$Symbol;Lorg/partiql/ast/Type;Ljava/util/List;Ljava/lang/Boolean;Ljava/lang/String;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/TableDefinition$Attribute;
+	public static synthetic fun tableDefinitionAttribute$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Identifier$Symbol;Lorg/partiql/ast/Type;Ljava/util/List;Ljava/lang/Boolean;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/TableDefinition$Attribute;
+	public final fun tableProperty (Ljava/lang/String;Lorg/partiql/value/PartiQLValue;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/TableProperty;
+	public static synthetic fun tableProperty$default (Lorg/partiql/ast/builder/AstBuilder;Ljava/lang/String;Lorg/partiql/value/PartiQLValue;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/TableProperty;
 	public final fun typeAny (Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Type$Any;
 	public static synthetic fun typeAny$default (Lorg/partiql/ast/builder/AstBuilder;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Type$Any;
 	public final fun typeArray (Lorg/partiql/ast/Type;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Type$Array;
@@ -4254,8 +4316,8 @@ public final class org/partiql/ast/builder/AstBuilder {
 	public static synthetic fun typeString$default (Lorg/partiql/ast/builder/AstBuilder;Ljava/lang/Integer;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Type$String;
 	public final fun typeStruct (Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Type$Struct;
 	public static synthetic fun typeStruct$default (Lorg/partiql/ast/builder/AstBuilder;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Type$Struct;
-	public final fun typeStructField (Lorg/partiql/ast/Identifier$Symbol;Lorg/partiql/ast/Type;Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Type$Struct$Field;
-	public static synthetic fun typeStructField$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Identifier$Symbol;Lorg/partiql/ast/Type;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Type$Struct$Field;
+	public final fun typeStructField (Lorg/partiql/ast/Identifier$Symbol;Lorg/partiql/ast/Type;Ljava/util/List;Ljava/lang/Boolean;Ljava/lang/String;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Type$Struct$Field;
+	public static synthetic fun typeStructField$default (Lorg/partiql/ast/builder/AstBuilder;Lorg/partiql/ast/Identifier$Symbol;Lorg/partiql/ast/Type;Ljava/util/List;Ljava/lang/Boolean;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Type$Struct$Field;
 	public final fun typeSymbol (Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Type$Symbol;
 	public static synthetic fun typeSymbol$default (Lorg/partiql/ast/builder/AstBuilder;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/ast/Type$Symbol;
 	public final fun typeTime (Ljava/lang/Integer;Lkotlin/jvm/functions/Function1;)Lorg/partiql/ast/Type$Time;
@@ -4342,15 +4404,21 @@ public final class org/partiql/ast/builder/DdlOpCreateIndexBuilder {
 
 public final class org/partiql/ast/builder/DdlOpCreateTableBuilder {
 	public fun <init> ()V
-	public fun <init> (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/TableDefinition;)V
-	public synthetic fun <init> (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/TableDefinition;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/TableDefinition;Lorg/partiql/ast/PartitionBy;Ljava/util/List;)V
+	public synthetic fun <init> (Lorg/partiql/ast/Identifier;Lorg/partiql/ast/TableDefinition;Lorg/partiql/ast/PartitionBy;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun build ()Lorg/partiql/ast/DdlOp$CreateTable;
 	public final fun definition (Lorg/partiql/ast/TableDefinition;)Lorg/partiql/ast/builder/DdlOpCreateTableBuilder;
 	public final fun getDefinition ()Lorg/partiql/ast/TableDefinition;
 	public final fun getName ()Lorg/partiql/ast/Identifier;
+	public final fun getPartitionBy ()Lorg/partiql/ast/PartitionBy;
+	public final fun getTableProperties ()Ljava/util/List;
 	public final fun name (Lorg/partiql/ast/Identifier;)Lorg/partiql/ast/builder/DdlOpCreateTableBuilder;
+	public final fun partitionBy (Lorg/partiql/ast/PartitionBy;)Lorg/partiql/ast/builder/DdlOpCreateTableBuilder;
 	public final fun setDefinition (Lorg/partiql/ast/TableDefinition;)V
 	public final fun setName (Lorg/partiql/ast/Identifier;)V
+	public final fun setPartitionBy (Lorg/partiql/ast/PartitionBy;)V
+	public final fun setTableProperties (Ljava/util/List;)V
+	public final fun tableProperties (Ljava/util/List;)Lorg/partiql/ast/builder/DdlOpCreateTableBuilder;
 }
 
 public final class org/partiql/ast/builder/DdlOpDropIndexBuilder {
@@ -5408,6 +5476,16 @@ public final class org/partiql/ast/builder/OrderByBuilder {
 	public final fun sorts (Ljava/util/List;)Lorg/partiql/ast/builder/OrderByBuilder;
 }
 
+public final class org/partiql/ast/builder/PartitionByAttrListBuilder {
+	public fun <init> ()V
+	public fun <init> (Ljava/util/List;)V
+	public synthetic fun <init> (Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/ast/PartitionBy$AttrList;
+	public final fun getList ()Ljava/util/List;
+	public final fun list (Ljava/util/List;)Lorg/partiql/ast/builder/PartitionByAttrListBuilder;
+	public final fun setList (Ljava/util/List;)V
+}
+
 public final class org/partiql/ast/builder/PathBuilder {
 	public fun <init> ()V
 	public fun <init> (Lorg/partiql/ast/Identifier$Symbol;Ljava/util/List;)V
@@ -5867,16 +5945,22 @@ public final class org/partiql/ast/builder/StatementQueryBuilder {
 
 public final class org/partiql/ast/builder/TableDefinitionAttributeBuilder {
 	public fun <init> ()V
-	public fun <init> (Lorg/partiql/ast/Identifier$Symbol;Lorg/partiql/ast/Type;Ljava/util/List;)V
-	public synthetic fun <init> (Lorg/partiql/ast/Identifier$Symbol;Lorg/partiql/ast/Type;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lorg/partiql/ast/Identifier$Symbol;Lorg/partiql/ast/Type;Ljava/util/List;Ljava/lang/Boolean;Ljava/lang/String;)V
+	public synthetic fun <init> (Lorg/partiql/ast/Identifier$Symbol;Lorg/partiql/ast/Type;Ljava/util/List;Ljava/lang/Boolean;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun build ()Lorg/partiql/ast/TableDefinition$Attribute;
+	public final fun comment (Ljava/lang/String;)Lorg/partiql/ast/builder/TableDefinitionAttributeBuilder;
 	public final fun constraints (Ljava/util/List;)Lorg/partiql/ast/builder/TableDefinitionAttributeBuilder;
+	public final fun getComment ()Ljava/lang/String;
 	public final fun getConstraints ()Ljava/util/List;
 	public final fun getName ()Lorg/partiql/ast/Identifier$Symbol;
 	public final fun getType ()Lorg/partiql/ast/Type;
+	public final fun isOptional ()Ljava/lang/Boolean;
+	public final fun isOptional (Ljava/lang/Boolean;)Lorg/partiql/ast/builder/TableDefinitionAttributeBuilder;
 	public final fun name (Lorg/partiql/ast/Identifier$Symbol;)Lorg/partiql/ast/builder/TableDefinitionAttributeBuilder;
+	public final fun setComment (Ljava/lang/String;)V
 	public final fun setConstraints (Ljava/util/List;)V
 	public final fun setName (Lorg/partiql/ast/Identifier$Symbol;)V
+	public final fun setOptional (Ljava/lang/Boolean;)V
 	public final fun setType (Lorg/partiql/ast/Type;)V
 	public final fun type (Lorg/partiql/ast/Type;)Lorg/partiql/ast/builder/TableDefinitionAttributeBuilder;
 }
@@ -5892,6 +5976,19 @@ public final class org/partiql/ast/builder/TableDefinitionBuilder {
 	public final fun getConstraints ()Ljava/util/List;
 	public final fun setAttributes (Ljava/util/List;)V
 	public final fun setConstraints (Ljava/util/List;)V
+}
+
+public final class org/partiql/ast/builder/TablePropertyBuilder {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Lorg/partiql/value/PartiQLValue;)V
+	public synthetic fun <init> (Ljava/lang/String;Lorg/partiql/value/PartiQLValue;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/ast/TableProperty;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getValue ()Lorg/partiql/value/PartiQLValue;
+	public final fun name (Ljava/lang/String;)Lorg/partiql/ast/builder/TablePropertyBuilder;
+	public final fun setName (Ljava/lang/String;)V
+	public final fun setValue (Lorg/partiql/value/PartiQLValue;)V
+	public final fun value (Lorg/partiql/value/PartiQLValue;)Lorg/partiql/ast/builder/TablePropertyBuilder;
 }
 
 public final class org/partiql/ast/builder/TypeAnyBuilder {
@@ -6117,16 +6214,22 @@ public final class org/partiql/ast/builder/TypeStructBuilder {
 
 public final class org/partiql/ast/builder/TypeStructFieldBuilder {
 	public fun <init> ()V
-	public fun <init> (Lorg/partiql/ast/Identifier$Symbol;Lorg/partiql/ast/Type;Ljava/util/List;)V
-	public synthetic fun <init> (Lorg/partiql/ast/Identifier$Symbol;Lorg/partiql/ast/Type;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lorg/partiql/ast/Identifier$Symbol;Lorg/partiql/ast/Type;Ljava/util/List;Ljava/lang/Boolean;Ljava/lang/String;)V
+	public synthetic fun <init> (Lorg/partiql/ast/Identifier$Symbol;Lorg/partiql/ast/Type;Ljava/util/List;Ljava/lang/Boolean;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun build ()Lorg/partiql/ast/Type$Struct$Field;
+	public final fun comment (Ljava/lang/String;)Lorg/partiql/ast/builder/TypeStructFieldBuilder;
 	public final fun constraints (Ljava/util/List;)Lorg/partiql/ast/builder/TypeStructFieldBuilder;
+	public final fun getComment ()Ljava/lang/String;
 	public final fun getConstraints ()Ljava/util/List;
 	public final fun getName ()Lorg/partiql/ast/Identifier$Symbol;
 	public final fun getType ()Lorg/partiql/ast/Type;
+	public final fun isOptional ()Ljava/lang/Boolean;
+	public final fun isOptional (Ljava/lang/Boolean;)Lorg/partiql/ast/builder/TypeStructFieldBuilder;
 	public final fun name (Lorg/partiql/ast/Identifier$Symbol;)Lorg/partiql/ast/builder/TypeStructFieldBuilder;
+	public final fun setComment (Ljava/lang/String;)V
 	public final fun setConstraints (Ljava/util/List;)V
 	public final fun setName (Lorg/partiql/ast/Identifier$Symbol;)V
+	public final fun setOptional (Ljava/lang/Boolean;)V
 	public final fun setType (Lorg/partiql/ast/Type;)V
 	public final fun type (Lorg/partiql/ast/Type;)Lorg/partiql/ast/builder/TypeStructFieldBuilder;
 }
@@ -6728,6 +6831,8 @@ public abstract class org/partiql/ast/util/AstRewriter : org/partiql/ast/visitor
 	public fun visitOnConflictTargetSymbols (Lorg/partiql/ast/OnConflict$Target$Symbols;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitOrderBy (Lorg/partiql/ast/OrderBy;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitOrderBy (Lorg/partiql/ast/OrderBy;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitPartitionByAttrList (Lorg/partiql/ast/PartitionBy$AttrList;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitPartitionByAttrList (Lorg/partiql/ast/PartitionBy$AttrList;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitPath (Lorg/partiql/ast/Path;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitPath (Lorg/partiql/ast/Path;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitPathStepIndex (Lorg/partiql/ast/Path$Step$Index;Ljava/lang/Object;)Ljava/lang/Object;
@@ -6802,6 +6907,8 @@ public abstract class org/partiql/ast/util/AstRewriter : org/partiql/ast/visitor
 	public fun visitTableDefinition (Lorg/partiql/ast/TableDefinition;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitTableDefinitionAttribute (Lorg/partiql/ast/TableDefinition$Attribute;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitTableDefinitionAttribute (Lorg/partiql/ast/TableDefinition$Attribute;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
+	public synthetic fun visitTableProperty (Lorg/partiql/ast/TableProperty;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitTableProperty (Lorg/partiql/ast/TableProperty;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitTypeAny (Lorg/partiql/ast/Type$Any;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitTypeAny (Lorg/partiql/ast/Type$Any;Ljava/lang/Object;)Lorg/partiql/ast/AstNode;
 	public synthetic fun visitTypeArray (Lorg/partiql/ast/Type$Array;Ljava/lang/Object;)Ljava/lang/Object;
@@ -6989,6 +7096,8 @@ public abstract class org/partiql/ast/visitor/AstBaseVisitor : org/partiql/ast/v
 	public fun visitOnConflictTargetConstraint (Lorg/partiql/ast/OnConflict$Target$Constraint;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitOnConflictTargetSymbols (Lorg/partiql/ast/OnConflict$Target$Symbols;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitOrderBy (Lorg/partiql/ast/OrderBy;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitPartitionBy (Lorg/partiql/ast/PartitionBy;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitPartitionByAttrList (Lorg/partiql/ast/PartitionBy$AttrList;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitPath (Lorg/partiql/ast/Path;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitPathStep (Lorg/partiql/ast/Path$Step;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitPathStepIndex (Lorg/partiql/ast/Path$Step$Index;Ljava/lang/Object;)Ljava/lang/Object;
@@ -7034,6 +7143,7 @@ public abstract class org/partiql/ast/visitor/AstBaseVisitor : org/partiql/ast/v
 	public fun visitStatementQuery (Lorg/partiql/ast/Statement$Query;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitTableDefinition (Lorg/partiql/ast/TableDefinition;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitTableDefinitionAttribute (Lorg/partiql/ast/TableDefinition$Attribute;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitTableProperty (Lorg/partiql/ast/TableProperty;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitType (Lorg/partiql/ast/Type;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitTypeAny (Lorg/partiql/ast/Type$Any;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitTypeArray (Lorg/partiql/ast/Type$Array;Ljava/lang/Object;)Ljava/lang/Object;
@@ -7180,6 +7290,8 @@ public abstract interface class org/partiql/ast/visitor/AstVisitor {
 	public abstract fun visitOnConflictTargetConstraint (Lorg/partiql/ast/OnConflict$Target$Constraint;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitOnConflictTargetSymbols (Lorg/partiql/ast/OnConflict$Target$Symbols;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitOrderBy (Lorg/partiql/ast/OrderBy;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitPartitionBy (Lorg/partiql/ast/PartitionBy;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitPartitionByAttrList (Lorg/partiql/ast/PartitionBy$AttrList;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitPath (Lorg/partiql/ast/Path;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitPathStep (Lorg/partiql/ast/Path$Step;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitPathStepIndex (Lorg/partiql/ast/Path$Step$Index;Ljava/lang/Object;)Ljava/lang/Object;
@@ -7225,6 +7337,7 @@ public abstract interface class org/partiql/ast/visitor/AstVisitor {
 	public abstract fun visitStatementQuery (Lorg/partiql/ast/Statement$Query;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitTableDefinition (Lorg/partiql/ast/TableDefinition;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitTableDefinitionAttribute (Lorg/partiql/ast/TableDefinition$Attribute;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitTableProperty (Lorg/partiql/ast/TableProperty;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitType (Lorg/partiql/ast/Type;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitTypeAny (Lorg/partiql/ast/Type$Any;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitTypeArray (Lorg/partiql/ast/Type$Array;Ljava/lang/Object;)Ljava/lang/Object;
