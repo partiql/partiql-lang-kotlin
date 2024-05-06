@@ -15,6 +15,7 @@
 package org.partiql.lang.errors
 
 import com.amazon.ion.Timestamp
+import org.junit.Ignore
 import org.junit.Test
 import org.partiql.errors.ErrorCode
 import org.partiql.errors.Property
@@ -655,6 +656,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
     }
 
     @Test
+    @Ignore("No longer a parser error; evaluation error")
     fun callTrimNoArgs() {
         checkInputThrowingParserException(
             "trim()",
@@ -683,6 +685,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
     }
 
     @Test
+    @Ignore("No longer a parser error; evaluation error")
     fun callTrimZeroArguments() {
         checkInputThrowingParserException(
             "trim()",
@@ -795,6 +798,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
     }
 
     @Test
+    @Ignore("No longer a parser error; evaluation error")
     fun aggregateWithNoArgs() {
         checkInputThrowingParserException(
             "SUM()",
@@ -809,6 +813,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
     }
 
     @Test
+    @Ignore("No longer a parser error; evaluation error")
     fun aggregateWithTooManyArgs() {
         checkInputThrowingParserException(
             "SUM(a, b)",
@@ -1672,6 +1677,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
     }
 
     @Test
+    @Ignore("No longer a parser error; evaluation error")
     fun callExtractMissingFromWithComma() {
         checkInputThrowingParserException(
             "extract(year, b)",
@@ -1717,6 +1723,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
     }
 
     @Test
+    @Ignore("No longer a parser error; evaluation error")
     fun callExtractOnlySecondArgument() {
         checkInputThrowingParserException(
             "extract(b)",
@@ -1746,6 +1753,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
     }
 
     @Test
+    @Ignore("No longer a parser error; evaluation error")
     fun callExtractOnlyDateTimePart() {
         checkInputThrowingParserException(
             "extract(year)",

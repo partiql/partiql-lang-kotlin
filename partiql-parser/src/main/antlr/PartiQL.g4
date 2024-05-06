@@ -40,7 +40,9 @@ byIdent
     : BY symbolPrimitive;
 
 symbolPrimitive
-    : ident=( IDENTIFIER | IDENTIFIER_QUOTED )
+    : IDENTIFIER            # UnquotedIdentifier
+    | IDENTIFIER_QUOTED     # QuotedIdentifier
+    | nonReserved           # UnquotedIdentifier
     ;
 
 /**
@@ -653,8 +655,8 @@ exprPrimary
     | dateFunction               # ExprPrimaryBase
     | aggregate                  # ExprPrimaryBase
     | trimFunction               # ExprPrimaryBase
-    | functionCall               # ExprPrimaryBase
     | nullIf                     # ExprPrimaryBase
+    | functionCall               # ExprPrimaryBase
     | exprPrimary pathStep+      # ExprPrimaryPath
     | exprGraphMatchMany         # ExprPrimaryBase
     | caseExpr                   # ExprPrimaryBase
@@ -766,8 +768,7 @@ functionCall
 
 // SQL-99 10.4 — <routine name> ::= [ <schema name> <period> ] <qualified identifier>
 functionName
-    : (qualifier+=symbolPrimitive PERIOD)* name=( CHAR_LENGTH | CHARACTER_LENGTH | OCTET_LENGTH | BIT_LENGTH | UPPER | LOWER | SIZE | EXISTS | COUNT | MOD )  # FunctionNameReserved
-    | (qualifier+=symbolPrimitive PERIOD)* name=symbolPrimitive                                                                                         # FunctionNameSymbol
+    : (qualifier+=symbolPrimitive PERIOD)* name=symbolPrimitive
     ;
 
 pathStep
@@ -789,11 +790,52 @@ parameter
 
 varRefExpr
     : qualifier=AT_SIGN? ident=(IDENTIFIER|IDENTIFIER_QUOTED)   # VariableIdentifier
-    | qualifier=AT_SIGN? key=nonReservedKeywords                # VariableKeyword
+    | qualifier=AT_SIGN? key=nonReserved                # VariableKeyword
     ;
 
-nonReservedKeywords
-    : EXCLUDED
+nonReserved
+    : /* From SQL99 <non-reserved word> https://ronsavage.github.io/SQL/sql-99.bnf.html#non-reserved%20word */
+    ABS | ADA | ADMIN | ASENSITIVE | ASSIGNMENT | ASYMMETRIC | ATOMIC
+    | ATTRIBUTE | AVG
+    | BIT_LENGTH
+    | C | CALLED | CARDINALITY | CATALOG_NAME | CHAIN | CHAR_LENGTH
+    | CHARACTERISTICS | CHARACTER_LENGTH | CHARACTER_SET_CATALOG
+    | CHARACTER_SET_NAME | CHARACTER_SET_SCHEMA | CHECKED | CLASS_ORIGIN
+    | COALESCE | COBOL | COLLATION_CATALOG | COLLATION_NAME | COLLATION_SCHEMA
+    | COLUMN_NAME | COMMAND_FUNCTION | COMMAND_FUNCTION_CODE | COMMITTED
+    | CONDITION_IDENTIFIER | CONDITION_NUMBER | CONNECTION_NAME
+    | CONSTRAINT_CATALOG | CONSTRAINT_NAME | CONSTRAINT_SCHEMA | CONTAINS
+    | CONVERT | COUNT | CURSOR_NAME
+    | DATETIME_INTERVAL_CODE | DATETIME_INTERVAL_PRECISION | DEFINED
+    | DEFINER | DEGREE | DERIVED | DISPATCH
+    | EVERY | EXTRACT
+    | FINAL | FORTRAN
+    | G | GENERATED | GRANTED
+    | HIERARCHY
+    | IMPLEMENTATION | INSENSITIVE | INSTANCE | INSTANTIABLE | INVOKER
+    | K | KEY_MEMBER | KEY_TYPE
+    | LENGTH | LOWER
+    | M | MAX | MIN | MESSAGE_LENGTH | MESSAGE_OCTET_LENGTH | MESSAGE_TEXT
+    | MOD | MORE | MUMPS
+    | NAME | NULLABLE | NUMBER | NULLIF
+    | OCTET_LENGTH | ORDERING | OPTIONS | OVERLAY | OVERRIDING
+    | PASCAL | PARAMETER_MODE | PARAMETER_NAME
+    | PARAMETER_ORDINAL_POSITION | PARAMETER_SPECIFIC_CATALOG
+    | PARAMETER_SPECIFIC_NAME | PARAMETER_SPECIFIC_SCHEMA | PLI | POSITION
+    | REPEATABLE | RETURNED_CARDINALITY | RETURNED_LENGTH
+    | RETURNED_OCTET_LENGTH | RETURNED_SQLSTATE | ROUTINE_CATALOG
+    | ROUTINE_NAME | ROUTINE_SCHEMA | ROW_COUNT
+    | SCALE | SCHEMA_NAME | SCOPE | SECURITY | SELF | SENSITIVE | SERIALIZABLE
+    | SERVER_NAME | SIMPLE | SOURCE | SPECIFIC_NAME | STATEMENT | STRUCTURE
+    | STYLE | SUBCLASS_ORIGIN | SUBSTRING | SUM | SYMMETRIC | SYSTEM
+    | TABLE_NAME | TOP_LEVEL_COUNT | TRANSACTIONS_COMMITTED
+    | TRANSACTIONS_ROLLED_BACK | TRANSACTION_ACTIVE | TRANSFORM
+    | TRANSFORMS | TRANSLATE | TRIGGER_CATALOG | TRIGGER_SCHEMA
+    | TRIGGER_NAME | TRIM | TYPE
+    | UNCOMMITTED | UNNAMED | UPPER
+    /* PartiQL */
+    | EXCLUDED | EXISTS
+    | SIZE
     ;
 
 /**
