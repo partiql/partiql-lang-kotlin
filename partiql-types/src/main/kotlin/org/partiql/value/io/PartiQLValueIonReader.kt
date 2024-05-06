@@ -626,9 +626,8 @@ public class PartiQLValueIonReaderBuilder private constructor(
 
     public fun build(ionElement: IonElement): PartiQLValueReader {
         val out = ByteArrayOutputStream()
-        val reader = IonReaderBuilder.standard().build(ionElement.toIonValue(IonSystemBuilder.standard().build()))
         val writer = IonTextWriterBuilder.standard().build(out)
-        writer.writeValues(reader)
+        ionElement.writeTo(writer)
         val input = ByteArrayInputStream(out.toByteArray())
         return build(input)
     }
