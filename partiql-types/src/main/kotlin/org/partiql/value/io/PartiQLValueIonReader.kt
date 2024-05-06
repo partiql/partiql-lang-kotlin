@@ -3,7 +3,6 @@ package org.partiql.value.io
 import com.amazon.ion.IonReader
 import com.amazon.ion.IonType
 import com.amazon.ion.system.IonReaderBuilder
-import com.amazon.ion.system.IonSystemBuilder
 import com.amazon.ion.system.IonTextWriterBuilder
 import com.amazon.ionelement.api.IonElement
 import com.amazon.ionelement.api.toIonValue
