@@ -40,9 +40,9 @@ byIdent
     : BY symbolPrimitive;
 
 symbolPrimitive
-    : IDENTIFIER            # UnquotedIdentifier
-    | IDENTIFIER_QUOTED     # QuotedIdentifier
-    | nonReserved           # UnquotedIdentifier
+    : IDENTIFIER            # IdentifierUnquoted
+    | IDENTIFIER_QUOTED     # IdentifierQuoted
+    | nonReserved           # IdentifierUnquoted
     ;
 
 /**

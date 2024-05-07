@@ -48,7 +48,6 @@ import org.partiql.lang.ast.IsValuesExprMeta
 import org.partiql.lang.ast.LegacyLogicalNotMeta
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.domains.PartiqlAst
-import org.partiql.lang.domains.PartiqlAst.PartiqlAstNode
 import org.partiql.lang.domains.metaContainerOf
 import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.time.MAX_PRECISION_FOR_TIME
@@ -193,13 +192,20 @@ internal class PartiQLPigVisitor(
      *
      */
 
-    override fun visitAsIdent(ctx: PartiQLParser.AsIdentContext) = visitAs<PartiqlAst.Expr.Id> (ctx.symbolPrimitive())
+    override fun visitAsIdent(ctx: PartiQLParser.AsIdentContext) = visitSymbolPrimitive(ctx.symbolPrimitive())
 
-    override fun visitAtIdent(ctx: PartiQLParser.AtIdentContext) = visitAs<PartiqlAst.Expr.Id> (ctx.symbolPrimitive())
+    override fun visitAtIdent(ctx: PartiQLParser.AtIdentContext) = visitSymbolPrimitive(ctx.symbolPrimitive())
 
-    override fun visitByIdent(ctx: PartiQLParser.ByIdentContext) = visitAs<PartiqlAst.Expr.Id> (ctx.symbolPrimitive())
+    override fun visitByIdent(ctx: PartiQLParser.ByIdentContext) = visitSymbolPrimitive(ctx.symbolPrimitive())
 
-    override fun visitQuotedIdentifier(ctx: PartiQLParser.QuotedIdentifierContext): PartiqlAst.Expr.Id = PartiqlAst.build {
+    private fun visitSymbolPrimitive(ctx: PartiQLParser.SymbolPrimitiveContext): PartiqlAst.Expr.Id =
+        when (ctx) {
+            is PartiQLParser.IdentifierQuotedContext -> visitIdentifierQuoted(ctx)
+            is PartiQLParser.IdentifierUnquotedContext -> visitIdentifierUnquoted(ctx)
+            else -> throw ParserException("Invalid symbol reference.", ErrorCode.PARSE_INVALID_QUERY)
+        }
+
+    override fun visitIdentifierQuoted(ctx: PartiQLParser.IdentifierQuotedContext): PartiqlAst.Expr.Id = PartiqlAst.build {
         id(
             ctx.IDENTIFIER_QUOTED().getStringValue(),
             caseSensitive(),
@@ -208,7 +214,7 @@ internal class PartiQLPigVisitor(
         )
     }
 
-    override fun visitUnquotedIdentifier(ctx: PartiQLParser.UnquotedIdentifierContext): PartiqlAst.Expr.Id = PartiqlAst.build {
+    override fun visitIdentifierUnquoted(ctx: PartiQLParser.IdentifierUnquotedContext): PartiqlAst.Expr.Id = PartiqlAst.build {
         id(
             ctx.text,
             caseInsensitive(),
@@ -230,7 +236,7 @@ internal class PartiQLPigVisitor(
 
     override fun visitDropTable(ctx: PartiQLParser.DropTableContext) = PartiqlAst.build {
         val id = if (ctx.qualifiedName().qualifier.isEmpty()) {
-            visitAs<PartiqlAst.Expr.Id> (ctx.qualifiedName().name)
+            visitSymbolPrimitive(ctx.qualifiedName().name)
         } else {
             throw ParserException("PIG Parser does not support qualified name as table name", ErrorCode.PARSE_UNEXPECTED_TOKEN)
         }
@@ -238,14 +244,14 @@ internal class PartiQLPigVisitor(
     }
 
     override fun visitDropIndex(ctx: PartiQLParser.DropIndexContext) = PartiqlAst.build {
-        val id = visitAs<PartiqlAst.Expr.Id> (ctx.target)
-        val key = visitAs<PartiqlAst.Expr.Id> (ctx.on)
+        val id = visitSymbolPrimitive(ctx.target)
+        val key = visitSymbolPrimitive(ctx.on)
         dropIndex(key.toIdentifier(), id.toIdentifier(), ctx.DROP().getSourceMetaContainer())
     }
 
     override fun visitCreateTable(ctx: PartiQLParser.CreateTableContext) = PartiqlAst.build {
         val name = if (ctx.qualifiedName().qualifier.isEmpty()) {
-            visitAs<PartiqlAst.Expr.Id> (ctx.qualifiedName().name).name
+            visitSymbolPrimitive(ctx.qualifiedName().name).name
         } else {
             throw ParserException("PIG Parser does not support qualified name as table name", ErrorCode.PARSE_UNEXPECTED_TOKEN)
         }
@@ -255,7 +261,7 @@ internal class PartiQLPigVisitor(
     }
 
     override fun visitCreateIndex(ctx: PartiQLParser.CreateIndexContext) = PartiqlAst.build {
-        val id = visitAs<PartiqlAst.Expr.Id> (ctx.symbolPrimitive())
+        val id = visitSymbolPrimitive(ctx.symbolPrimitive())
         val fields = ctx.pathSimple().map { path -> visitPathSimple(path) }
         createIndex(id.toIdentifier(), fields, ctx.CREATE().getSourceMetaContainer())
     }
@@ -266,7 +272,7 @@ internal class PartiQLPigVisitor(
     }
 
     override fun visitColumnDeclaration(ctx: PartiQLParser.ColumnDeclarationContext) = PartiqlAst.build {
-        val name = visitAs<PartiqlAst.Expr.Id> (ctx.columnName().symbolPrimitive()).name.text
+        val name = visitSymbolPrimitive(ctx.columnName().symbolPrimitive()).name.text
         val type = visit(ctx.type()) as PartiqlAst.Type
         val constrs = ctx.columnConstraint().map { visitColumnConstraint(it) }
         if (ctx.OPTIONAL() != null) {
@@ -279,7 +285,7 @@ internal class PartiQLPigVisitor(
     }
 
     override fun visitColumnConstraint(ctx: PartiQLParser.ColumnConstraintContext) = PartiqlAst.build {
-        val name = ctx.constraintName()?.let { visitAs<PartiqlAst.Expr.Id> (it.symbolPrimitive()).name.text }
+        val name = ctx.constraintName()?.let { visitSymbolPrimitive(it.symbolPrimitive()).name.text }
         val def = visit(ctx.columnConstraintDef()) as PartiqlAst.ColumnConstraintDef
         columnConstraint(name, def)
     }
@@ -376,7 +382,7 @@ internal class PartiQLPigVisitor(
 
     override fun visitInsertStatement(ctx: PartiQLParser.InsertStatementContext) = PartiqlAst.build {
         insert(
-            target = visitAs<PartiqlAst.Expr.Id> (ctx.symbolPrimitive()),
+            target = visitSymbolPrimitive(ctx.symbolPrimitive()),
             asAlias = ctx.asIdent()?.let { visitAsIdent(it).name.text },
             values = visitExpr(ctx.value),
             conflictAction = ctx.onConflict()?.let { visitOnConflict(it) },
@@ -386,7 +392,7 @@ internal class PartiQLPigVisitor(
 
     override fun visitReplaceCommand(ctx: PartiQLParser.ReplaceCommandContext) = PartiqlAst.build {
         insert(
-            target = visitAs<PartiqlAst.Expr.Id> (ctx.symbolPrimitive()),
+            target = visitSymbolPrimitive(ctx.symbolPrimitive()),
             asAlias = ctx.asIdent()?.let { visitAsIdent(it).name.text },
             values = visitExpr(ctx.value),
             conflictAction = doReplace(excluded()),
@@ -397,7 +403,7 @@ internal class PartiQLPigVisitor(
     // Based on https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md
     override fun visitUpsertCommand(ctx: PartiQLParser.UpsertCommandContext) = PartiqlAst.build {
         insert(
-            target = visitAs<PartiqlAst.Expr.Id> (ctx.symbolPrimitive()),
+            target = visitSymbolPrimitive(ctx.symbolPrimitive()),
             asAlias = ctx.asIdent()?.let { visitAsIdent(it).name.text },
             values = visitExpr(ctx.value),
             conflictAction = doUpdate(excluded()),
@@ -491,7 +497,7 @@ internal class PartiQLPigVisitor(
     }
 
     override fun visitPathSimple(ctx: PartiQLParser.PathSimpleContext) = PartiqlAst.build {
-        val root = visitAs<PartiqlAst.Expr.Id> (ctx.symbolPrimitive())
+        val root = visitSymbolPrimitive(ctx.symbolPrimitive())
         if (ctx.pathSimpleSteps().isEmpty()) return@build root
         val steps = ctx.pathSimpleSteps().map { visit(it) as PartiqlAst.PathStep }
         path(root, steps, root.metas)
@@ -502,7 +508,7 @@ internal class PartiQLPigVisitor(
     }
 
     override fun visitPathSimpleSymbol(ctx: PartiQLParser.PathSimpleSymbolContext) = PartiqlAst.build {
-        pathExpr(visitAs<PartiqlAst.Expr.Id> (ctx.symbolPrimitive()), caseSensitive())
+        pathExpr(visitSymbolPrimitive(ctx.symbolPrimitive()), caseSensitive())
     }
 
     override fun visitPathSimpleDotSymbol(ctx: PartiQLParser.PathSimpleDotSymbolContext) =
@@ -598,7 +604,7 @@ internal class PartiQLPigVisitor(
 
     override fun visitProjectionItem(ctx: PartiQLParser.ProjectionItemContext) = PartiqlAst.build {
         val expr = visitExpr(ctx.expr())
-        val alias = ctx.symbolPrimitive()?.let { visitAs<PartiqlAst.Expr.Id> (it).name }
+        val alias = ctx.symbolPrimitive()?.let { visitSymbolPrimitive(it).name }
         if (expr is PartiqlAst.Expr.Path) convertPathToProjectionItem(expr, alias)
         else projectExpr_(expr, asAlias = alias, expr.metas)
     }
@@ -657,7 +663,7 @@ internal class PartiQLPigVisitor(
     }
 
     override fun visitExcludeExpr(ctx: PartiQLParser.ExcludeExprContext) = PartiqlAst.build {
-        val root = visitAs<PartiqlAst.Expr.Id> (ctx.symbolPrimitive()).toIdentifier()
+        val root = visitSymbolPrimitive(ctx.symbolPrimitive()).toIdentifier()
         val steps = ctx.excludeExprSteps().map { visit(it) as PartiqlAst.ExcludeStep }
         excludeExpr(root, steps)
     }
@@ -665,8 +671,8 @@ internal class PartiQLPigVisitor(
     override fun visitExcludeExprTupleAttr(ctx: PartiQLParser.ExcludeExprTupleAttrContext) = PartiqlAst.build {
         val attr = ctx.symbolPrimitive().getString()
         val caseSensitivity = when (ctx.symbolPrimitive()) {
-            is PartiQLParser.QuotedIdentifierContext -> caseSensitive()
-            is PartiQLParser.UnquotedIdentifierContext -> caseInsensitive()
+            is PartiQLParser.IdentifierQuotedContext -> caseSensitive()
+            is PartiQLParser.IdentifierUnquotedContext -> caseInsensitive()
             else -> throw ParserException("Invalid symbol reference.", ErrorCode.PARSE_INVALID_QUERY)
         }
         excludeTupleAttr(identifier(attr, caseSensitivity))
@@ -736,7 +742,7 @@ internal class PartiQLPigVisitor(
         groupBy_(strategy, keyList = keyList, groupAsAlias = alias, ctx.GROUP().getSourceMetaContainer())
     }
 
-    override fun visitGroupAlias(ctx: PartiQLParser.GroupAliasContext) = visitAs<PartiqlAst.Expr.Id> (ctx.symbolPrimitive())
+    override fun visitGroupAlias(ctx: PartiQLParser.GroupAliasContext) = visitSymbolPrimitive(ctx.symbolPrimitive())
 
     /**
      * Returns a GROUP BY key
@@ -759,7 +765,7 @@ internal class PartiQLPigVisitor(
                 ErrorCode.PARSE_UNSUPPORTED_LITERALS_GROUPBY
             )
         }
-        val alias = ctx.symbolPrimitive()?.let { visitAs<PartiqlAst.Expr.Id> (it).toPigSymbolPrimitive() }
+        val alias = ctx.symbolPrimitive()?.let { visitSymbolPrimitive(it).toPigSymbolPrimitive() }
         groupKey_(expr, asAlias = alias, expr.metas)
     }
 
@@ -828,7 +834,7 @@ internal class PartiQLPigVisitor(
     }
 
     override fun visitPatternPathVariable(ctx: PartiQLParser.PatternPathVariableContext) =
-        visitAs<PartiqlAst.Expr.Id> (ctx.symbolPrimitive())
+        visitSymbolPrimitive(ctx.symbolPrimitive())
 
     override fun visitSelectorBasic(ctx: PartiQLParser.SelectorBasicContext) = PartiqlAst.build {
         val metas = ctx.mod.getSourceMetaContainer()
@@ -876,7 +882,7 @@ internal class PartiQLPigVisitor(
     }
 
     override fun visitLabelPrimaryName(ctx: PartiQLParser.LabelPrimaryNameContext) = PartiqlAst.build {
-        val x = visitAs<PartiqlAst.Expr.Id> (ctx.symbolPrimitive())
+        val x = visitSymbolPrimitive(ctx.symbolPrimitive())
         graphLabelName_(x.name, x.metas)
     }
 
@@ -918,7 +924,7 @@ internal class PartiQLPigVisitor(
 
     override fun visitEdgeSpec(ctx: PartiQLParser.EdgeSpecContext) = PartiqlAst.build {
         val placeholderDirection = edgeRight()
-        val variable = ctx.symbolPrimitive()?.let { visitAs<PartiqlAst.Expr.Id> (it).name }
+        val variable = ctx.symbolPrimitive()?.let { visitSymbolPrimitive(it).name }
         val prefilter = ctx.whereClause()?.let { visitWhereClause(it) }
         val label = ctx.labelSpec()?.let { visit(it) as PartiqlAst.GraphLabelSpec }
         edge_(direction = placeholderDirection, variable = variable, prefilter = prefilter, label = label)
@@ -983,7 +989,7 @@ internal class PartiQLPigVisitor(
     }
 
     override fun visitNode(ctx: PartiQLParser.NodeContext) = PartiqlAst.build {
-        val variable = ctx.symbolPrimitive()?.let { visitAs<PartiqlAst.Expr.Id> (it).name }
+        val variable = ctx.symbolPrimitive()?.let { visitSymbolPrimitive(it).name }
         val prefilter = ctx.whereClause()?.let { visitWhereClause(it) }
         val label = ctx.labelSpec()?.let { visit(it) as PartiqlAst.GraphLabelSpec }
         node_(variable = variable, prefilter = prefilter, label = label)
@@ -1071,13 +1077,13 @@ internal class PartiQLPigVisitor(
 
     override fun visitTableBaseRefSymbol(ctx: PartiQLParser.TableBaseRefSymbolContext) = PartiqlAst.build {
         val expr = visit(ctx.source) as PartiqlAst.Expr
-        val name = ctx.symbolPrimitive()?.let { visitAs<PartiqlAst.Expr.Id> (it).toPigSymbolPrimitive() }
+        val name = ctx.symbolPrimitive()?.let { visitSymbolPrimitive(it).toPigSymbolPrimitive() }
         scan_(expr, name, metas = expr.metas)
     }
 
     override fun visitFromClauseSimpleImplicit(ctx: PartiQLParser.FromClauseSimpleImplicitContext) = PartiqlAst.build {
         val path = visitPathSimple(ctx.pathSimple())
-        val name = ctx.symbolPrimitive()?.let { visitAs<PartiqlAst.Expr.Id> (it).name }
+        val name = ctx.symbolPrimitive()?.let { visitSymbolPrimitive(it).name }
         scan_(path, name, metas = path.metas)
     }
 
@@ -1819,8 +1825,8 @@ internal class PartiQLPigVisitor(
         }
 
     private fun PartiQLParser.SymbolPrimitiveContext.getSourceMetaContainer() = when (this) {
-        is PartiQLParser.QuotedIdentifierContext -> this.IDENTIFIER_QUOTED().getSourceMetaContainer()
-        is PartiQLParser.UnquotedIdentifierContext -> this.start.getSourceMetaContainer()
+        is PartiQLParser.IdentifierQuotedContext -> this.IDENTIFIER_QUOTED().getSourceMetaContainer()
+        is PartiQLParser.IdentifierUnquotedContext -> this.start.getSourceMetaContainer()
         else -> throw ParserException(
             "Unable to get identifier's source meta-container.",
             ErrorCode.PARSE_INVALID_QUERY
@@ -2125,27 +2131,25 @@ internal class PartiQLPigVisitor(
 
     private fun PartiQLParser.SymbolPrimitiveContext.getString(): String {
         return when (this) {
-            is PartiQLParser.QuotedIdentifierContext -> this.IDENTIFIER_QUOTED().getStringValue()
-            is PartiQLParser.UnquotedIdentifierContext -> this.text
+            is PartiQLParser.IdentifierQuotedContext -> this.IDENTIFIER_QUOTED().getStringValue()
+            is PartiQLParser.IdentifierUnquotedContext -> this.text
             else -> throw ParserException("Unable to get symbol's text.", ErrorCode.PARSE_INVALID_QUERY)
         }
     }
 
     private fun getSymbolPathExpr(ctx: PartiQLParser.SymbolPrimitiveContext) = PartiqlAst.build {
         when (ctx) {
-            is PartiQLParser.QuotedIdentifierContext -> pathExpr(
+            is PartiQLParser.IdentifierQuotedContext -> pathExpr(
                 lit(ionString(ctx.IDENTIFIER_QUOTED().getStringValue())), caseSensitive(),
                 metas = ctx.getSourceMetaContainer()
             )
-            is PartiQLParser.UnquotedIdentifierContext -> pathExpr(
+            is PartiQLParser.IdentifierUnquotedContext -> pathExpr(
                 lit(ionString(ctx.text)), caseInsensitive(),
                 metas = ctx.getSourceMetaContainer()
             )
             else -> throw ParserException("Unable to get symbol's text.", ErrorCode.PARSE_INVALID_QUERY)
         }
     }
-
-    private inline fun <reified T : PartiqlAstNode> visitAs(ctx: ParserRuleContext): T = visit(ctx) as T
 
     private fun String.toInteger() = BigInteger(this, 10)
 
