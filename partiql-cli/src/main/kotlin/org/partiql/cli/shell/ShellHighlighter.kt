@@ -28,35 +28,24 @@ import org.partiql.parser.internal.antlr.PartiQLTokens
 import java.nio.charset.StandardCharsets
 import java.util.regex.Pattern
 
-internal class ShellHighlighter : Highlighter {
+internal object ShellHighlighter : Highlighter {
 
-    companion object {
-        private const val ADD_TO_GLOBAL_ENV_STR = "!add_to_global_env"
-        private val ALLOWED_SUFFIXES = setOf("!!")
+    private val ALLOWED_SUFFIXES = setOf<String>()
 
-        private val STYLE_COMMAND = AttributedStyle.DEFAULT.foreground(AttributedStyle.CYAN)
-        private val STYLE_KEYWORD = AttributedStyle.BOLD.foreground(AttributedStyle.CYAN).bold()
-        private val STYLE_DATATYPE = AttributedStyle.DEFAULT.foreground(AttributedStyle.GREEN)
-        private val STYLE_IDENTIFIER = AttributedStyle.DEFAULT.foreground(AttributedStyle.BRIGHT)
-        private val STYLE_STRING = AttributedStyle.DEFAULT.foreground(AttributedStyle.YELLOW)
-        private val STYLE_NUMBER = AttributedStyle.DEFAULT.foreground(AttributedStyle.BLUE)
-        private val STYLE_COMMENT = AttributedStyle.DEFAULT.foreground(AttributedStyle.BRIGHT).italic()
-        private val STYLE_ERROR = AttributedStyle.DEFAULT.foreground(AttributedStyle.RED)
-    }
+    private val STYLE_COMMAND = AttributedStyle.DEFAULT.foreground(AttributedStyle.CYAN)
+    private val STYLE_KEYWORD = AttributedStyle.BOLD.foreground(AttributedStyle.CYAN).bold()
+    private val STYLE_DATATYPE = AttributedStyle.DEFAULT.foreground(AttributedStyle.GREEN)
+    private val STYLE_IDENTIFIER = AttributedStyle.DEFAULT.foreground(AttributedStyle.BRIGHT)
+    private val STYLE_STRING = AttributedStyle.DEFAULT.foreground(AttributedStyle.YELLOW)
+    private val STYLE_NUMBER = AttributedStyle.DEFAULT.foreground(AttributedStyle.BLUE)
+    private val STYLE_COMMENT = AttributedStyle.DEFAULT.foreground(AttributedStyle.BRIGHT).italic()
+    private val STYLE_ERROR = AttributedStyle.DEFAULT.foreground(AttributedStyle.RED)
 
     override fun highlight(reader: LineReader, line: String): AttributedString {
-
-        val hasAddToGlobalEnv = line.lowercase().startsWith(ADD_TO_GLOBAL_ENV_STR)
-        val input = when (hasAddToGlobalEnv) {
-            true -> line.substring(ADD_TO_GLOBAL_ENV_STR.length, line.length)
-            false -> line
-        }
-
-        if (input.isBlank()) {
-            return when (hasAddToGlobalEnv) {
-                true -> AttributedString(line, AttributedStyle.DEFAULT.foreground(AttributedStyle.CYAN))
-                false -> AttributedString(line)
-            }
+        val input = line
+        if (input.isBlank() || input.startsWith(".")) {
+            // short-circuit for command
+            return AttributedString(line)
         }
 
         // Temporarily Remove Allowed Suffix from Input
@@ -113,15 +102,7 @@ internal class ShellHighlighter : Highlighter {
             builder = replacementBuilder
         }
 
-        return if (hasAddToGlobalEnv) {
-            with(AttributedStringBuilder()) {
-                append(AttributedString(ADD_TO_GLOBAL_ENV_STR, STYLE_COMMAND))
-                append(builder.toAttributedString())
-                toAttributedString()
-            }
-        } else {
-            builder.toAttributedString()
-        }
+        return builder.toAttributedString()
     }
 
     override fun setErrorPattern(errorPattern: Pattern?) {}

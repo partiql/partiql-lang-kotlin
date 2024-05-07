@@ -19,24 +19,26 @@ import org.jline.reader.impl.completer.AggregateCompleter
 import org.jline.reader.impl.completer.ArgumentCompleter
 import org.jline.reader.impl.completer.NullCompleter
 import org.jline.reader.impl.completer.StringsCompleter
+import org.partiql.cli.shell.ShellCompleter.getAllCommands
 
-internal class CompleterDefault : AggregateCompleter(getAllCommands()) {
-    companion object {
-        private fun getAllCommands(): List<Completer> = listOf(
-            buildCompoundCommand("SELECT"),
-            buildCompoundCommand("REMOVE"),
-            buildCompoundCommand("UPSERT"),
-            buildCompoundCommand("REPLACE"),
-            buildCompoundCommand("EXEC"),
-            buildCompoundCommand("CREATE", listOf("INDEX", "TABLE")),
-            buildCompoundCommand("DROP", listOf("INDEX", "TABLE")),
-            buildCompoundCommand("INSERT", listOf("INTO")),
-        )
+internal object ShellCompleter : AggregateCompleter(getAllCommands()) {
 
-        private fun buildCompoundCommand(primary: String, targets: List<String> = emptyList()) = ArgumentCompleter(
-            StringsCompleter(primary),
-            StringsCompleter(targets),
-            NullCompleter.INSTANCE
-        )
-    }
+    @JvmStatic
+    private fun getAllCommands(): List<Completer> = listOf(
+        buildCompoundCommand("SELECT"),
+        buildCompoundCommand("REMOVE"),
+        buildCompoundCommand("UPSERT"),
+        buildCompoundCommand("REPLACE"),
+        buildCompoundCommand("EXEC"),
+        buildCompoundCommand("CREATE", listOf("INDEX", "TABLE")),
+        buildCompoundCommand("DROP", listOf("INDEX", "TABLE")),
+        buildCompoundCommand("INSERT", listOf("INTO")),
+    )
+
+    @JvmStatic
+    private fun buildCompoundCommand(primary: String, targets: List<String> = emptyList()) = ArgumentCompleter(
+        StringsCompleter(primary),
+        StringsCompleter(targets),
+        NullCompleter.INSTANCE
+    )
 }
