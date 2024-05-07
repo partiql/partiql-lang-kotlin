@@ -1,0 +1,85 @@
+= PartiQL CLI
+
+Command Line Interface for executing PartiQL queries. For more information, please see the CLI tutorials on our xref:https://github.com/partiql/partiql-lang-kotlin/wiki[wiki].
+
+== Usage
+
+This section shows how the _**partiql**_ utility can be used as both a command-line tool and interactive shell.
+
+[source,shell]
+----
+# interactive shell
+partiql                     # No arguments
+partiql -d=/path/to/db      # Launch an interactive shell for the database in /path/to/db
+partiql sample.ion    # Load sample.ion into the database environment as the binding `stdin`
+partiql sample.csv    # '' format derived from extension
+
+# stdin
+cat sample.ion | partiql -f ion    # Load from stdin with the specified input format (-f) Ion.
+
+# program string
+partiql 'SELECT * FROM stdin' sample.ion
+cat sample.ion | partiql -f ion 'SELECT * FROM stdin'
+
+# program script
+#   > cat script.sql
+#   > SELECT * FROM stdin
+partiql -q script.sql sample.ion
+cat sample.ion | partiql -f ion 'SELECT * FROM stdin'
+----
+
+[source,shell,subs=normal]
+----
+man partiql
+
+**NAME**
+    **partiql** -- PartiQL command-line utility
+
+**SYNOPSIS**
+    **partiql** [options] ['statement'|-i file] [file ...]
+
+**DESCRIPTION**
+    The **partiql** command-line utility executes queries against the given input files.
+    Execute **partiql** without a query to launch the database shell.
+    The following options are available:
+
+**OPTIONS**
+    -d file, --dir=file
+        The database directory.
+
+    -f format, --format=format
+        Specify the input:output data format.
+
+    -i file, --include=file
+        Reads input from the file and executes it.
+
+    --strict
+        Strict mode (type-checking) throws runtime exceptions on mistyped operations.
+----
+
+
+== Debugging
+
+You can attach a JDWP debugger to the shell by running with JAVA_OPTS set.
+
+.Debugging
+[source, shell]
+----
+JAVA_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=localhost:5050
+----
+
+=== Formats
+
+The input format is derived from the extension, or can be explicitly specified with the `-f <format>` option.
+
+.Formats
+[cols="1,2m"]
+|===
+| Format | Extensions
+
+| CSV | .csv
+| TSV | .tsv
+| JSON | .json
+| Ion | .ion .10n
+|===
+
