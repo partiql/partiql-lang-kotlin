@@ -563,18 +563,25 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitByIdent(ctx: GeneratedParser.ByIdentContext) = visitSymbolPrimitive(ctx.symbolPrimitive())
 
-        override fun visitSymbolPrimitive(ctx: GeneratedParser.SymbolPrimitiveContext) = translate(ctx) {
-            when (ctx.ident.type) {
-                GeneratedParser.IDENTIFIER_QUOTED -> identifierSymbol(
-                    ctx.IDENTIFIER_QUOTED().getStringValue(),
-                    Identifier.CaseSensitivity.SENSITIVE,
-                )
-                GeneratedParser.IDENTIFIER -> identifierSymbol(
-                    ctx.IDENTIFIER().getStringValue(),
-                    Identifier.CaseSensitivity.INSENSITIVE,
-                )
+        private fun visitSymbolPrimitive(ctx: GeneratedParser.SymbolPrimitiveContext): Identifier.Symbol =
+            when (ctx) {
+                is GeneratedParser.IdentifierQuotedContext -> visitIdentifierQuoted(ctx)
+                is GeneratedParser.IdentifierUnquotedContext -> visitIdentifierUnquoted(ctx)
                 else -> throw error(ctx, "Invalid symbol reference.")
             }
+
+        override fun visitIdentifierQuoted(ctx: GeneratedParser.IdentifierQuotedContext): Identifier.Symbol = translate(ctx) {
+            identifierSymbol(
+                ctx.IDENTIFIER_QUOTED().getStringValue(),
+                Identifier.CaseSensitivity.SENSITIVE
+            )
+        }
+
+        override fun visitIdentifierUnquoted(ctx: GeneratedParser.IdentifierUnquotedContext): Identifier.Symbol = translate(ctx) {
+            identifierSymbol(
+                ctx.text,
+                Identifier.CaseSensitivity.INSENSITIVE
+            )
         }
 
         override fun visitQualifiedName(ctx: GeneratedParser.QualifiedNameContext) = translate(ctx) {
@@ -657,7 +664,7 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitColumnDeclaration(ctx: GeneratedParser.ColumnDeclarationContext) = translate(ctx) {
-            val name = visitAs<Identifier.Symbol> (ctx.columnName().symbolPrimitive())
+            val name = visitSymbolPrimitive(ctx.columnName().symbolPrimitive())
             val type = (visit(ctx.type()) as Type).also {
                 isValidTypeDeclarationOrThrow(it, ctx.type())
             }
@@ -727,7 +734,7 @@ internal class PartiQLParserDefault : PartiQLParser {
                 is GeneratedParser.UniqueContext -> false
                 else -> throw error(ctx, "Expect UNIQUE or PRIMARY KEY")
             }
-            val columns = ctx.columnName().map { visitAs<Identifier.Symbol> (it.symbolPrimitive()) }
+            val columns = ctx.columnName().map { visitSymbolPrimitive(it.symbolPrimitive()) }
             constraintDefinitionUnique(columns, isPrimaryKey)
         }
 
@@ -741,7 +748,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             ctx.partitionBy().accept(this) as PartitionBy
 
         override fun visitPartitionColList(ctx: GeneratedParser.PartitionColListContext) = translate(ctx) {
-            partitionByAttrList(ctx.columnName().map { visitAs<Identifier.Symbol> (it.symbolPrimitive()) })
+            partitionByAttrList(ctx.columnName().map { visitSymbolPrimitive(it.symbolPrimitive()) })
         }
 
         /**
@@ -1850,10 +1857,21 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitFunctionCall(ctx: GeneratedParser.FunctionCallContext) = translate(ctx) {
             val args = visitOrEmpty<Expr>(ctx.expr())
-            when (val funcName = ctx.functionName()) {
-                is GeneratedParser.FunctionNameReservedContext -> {
-                    when (funcName.name.type) {
+            when (val funcName = ctx.qualifiedName()) {
+                is GeneratedParser.QualifiedNameContext -> {
+                    when (funcName.name.start.type) {
                         GeneratedParser.MOD -> exprBinary(Expr.Binary.Op.MODULO, args[0], args[1])
+                        GeneratedParser.CHARACTER_LENGTH, GeneratedParser.CHAR_LENGTH -> {
+                            val path = ctx.qualifiedName().qualifier.map { visitSymbolPrimitive(it) }
+                            val name = identifierSymbol("char_length", Identifier.CaseSensitivity.INSENSITIVE)
+                            if (path.isEmpty()) {
+                                exprCall(name, args)
+                            } else {
+                                val root = path.first()
+                                val steps = path.drop(1) + listOf(name)
+                                exprCall(identifierQualified(root, steps), args)
+                            }
+                        }
                         else -> visitNonReservedFunctionCall(ctx, args)
                     }
                 }
@@ -1861,37 +1879,8 @@ internal class PartiQLParserDefault : PartiQLParser {
             }
         }
         private fun visitNonReservedFunctionCall(ctx: GeneratedParser.FunctionCallContext, args: List<Expr>): Expr.Call {
-            val function = visit(ctx.functionName()) as Identifier
+            val function = visitQualifiedName(ctx.qualifiedName())
             return exprCall(function, args)
-        }
-
-        override fun visitFunctionNameReserved(ctx: GeneratedParser.FunctionNameReservedContext): Identifier {
-            val path = ctx.qualifier.map { visitSymbolPrimitive(it) }
-            val name = when (ctx.name.type) {
-                GeneratedParser.CHARACTER_LENGTH, GeneratedParser.CHAR_LENGTH ->
-                    identifierSymbol("char_length", Identifier.CaseSensitivity.INSENSITIVE)
-                else ->
-                    identifierSymbol(ctx.name.text, Identifier.CaseSensitivity.INSENSITIVE)
-            }
-            return if (path.isEmpty()) {
-                name
-            } else {
-                val root = path.first()
-                val steps = path.drop(1) + listOf(name)
-                identifierQualified(root, steps)
-            }
-        }
-
-        override fun visitFunctionNameSymbol(ctx: GeneratedParser.FunctionNameSymbolContext): Identifier {
-            val path = ctx.qualifier.map { visitSymbolPrimitive(it) }
-            val name = visitSymbolPrimitive(ctx.name)
-            return if (path.isEmpty()) {
-                name
-            } else {
-                val root = path.first()
-                val steps = path.drop(1) + listOf(name)
-                identifierQualified(root, steps)
-            }
         }
 
         /**
@@ -2278,7 +2267,7 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitTypeStruct(ctx: GeneratedParser.TypeStructContext) = translate(ctx) {
             val fields = ctx.structField().map { structFieldCtx ->
-                val name = visitAs<Identifier.Symbol> (structFieldCtx.columnName())
+                val name = visitSymbolPrimitive(structFieldCtx.columnName().symbolPrimitive())
                 val type = visitAs<Type>(structFieldCtx.type())
                     .also { isValidTypeDeclarationOrThrow(it, structFieldCtx.type()) }
 
@@ -2313,9 +2302,9 @@ internal class PartiQLParserDefault : PartiQLParser {
         /**
          * Visiting a symbol to get a string, skip the wrapping, unwrapping, and location tracking.
          */
-        private fun symbolToString(ctx: GeneratedParser.SymbolPrimitiveContext) = when (ctx.ident.type) {
-            GeneratedParser.IDENTIFIER_QUOTED -> ctx.IDENTIFIER_QUOTED().getStringValue()
-            GeneratedParser.IDENTIFIER -> ctx.IDENTIFIER().getStringValue()
+        private fun symbolToString(ctx: GeneratedParser.SymbolPrimitiveContext) = when (ctx) {
+            is GeneratedParser.IdentifierQuotedContext -> ctx.IDENTIFIER_QUOTED().getStringValue()
+            is GeneratedParser.IdentifierUnquotedContext -> ctx.text
             else -> throw error(ctx, "Invalid symbol reference.")
         }
 

@@ -198,19 +198,29 @@ internal class PartiQLPigVisitor(
 
     override fun visitByIdent(ctx: PartiQLParser.ByIdentContext) = visitSymbolPrimitive(ctx.symbolPrimitive())
 
-    override fun visitSymbolPrimitive(ctx: PartiQLParser.SymbolPrimitiveContext) = PartiqlAst.build {
-        val metas = ctx.ident.getSourceMetaContainer()
-        when (ctx.ident.type) {
-            PartiQLParser.IDENTIFIER_QUOTED -> id(
-                ctx.IDENTIFIER_QUOTED().getStringValue(),
-                caseSensitive(),
-                unqualified(),
-                metas
-            )
-
-            PartiQLParser.IDENTIFIER -> id(ctx.IDENTIFIER().getStringValue(), caseInsensitive(), unqualified(), metas)
+    private fun visitSymbolPrimitive(ctx: PartiQLParser.SymbolPrimitiveContext): PartiqlAst.Expr.Id =
+        when (ctx) {
+            is PartiQLParser.IdentifierQuotedContext -> visitIdentifierQuoted(ctx)
+            is PartiQLParser.IdentifierUnquotedContext -> visitIdentifierUnquoted(ctx)
             else -> throw ParserException("Invalid symbol reference.", ErrorCode.PARSE_INVALID_QUERY)
         }
+
+    override fun visitIdentifierQuoted(ctx: PartiQLParser.IdentifierQuotedContext): PartiqlAst.Expr.Id = PartiqlAst.build {
+        id(
+            ctx.IDENTIFIER_QUOTED().getStringValue(),
+            caseSensitive(),
+            unqualified(),
+            ctx.IDENTIFIER_QUOTED().getSourceMetaContainer()
+        )
+    }
+
+    override fun visitIdentifierUnquoted(ctx: PartiQLParser.IdentifierUnquotedContext): PartiqlAst.Expr.Id = PartiqlAst.build {
+        id(
+            ctx.text,
+            caseInsensitive(),
+            unqualified(),
+            ctx.IDENTIFIER().getSourceMetaContainer()
+        )
     }
 
     /**
@@ -660,9 +670,9 @@ internal class PartiQLPigVisitor(
 
     override fun visitExcludeExprTupleAttr(ctx: PartiQLParser.ExcludeExprTupleAttrContext) = PartiqlAst.build {
         val attr = ctx.symbolPrimitive().getString()
-        val caseSensitivity = when (ctx.symbolPrimitive().ident.type) {
-            PartiQLParser.IDENTIFIER_QUOTED -> caseSensitive()
-            PartiQLParser.IDENTIFIER -> caseInsensitive()
+        val caseSensitivity = when (ctx.symbolPrimitive()) {
+            is PartiQLParser.IdentifierQuotedContext -> caseSensitive()
+            is PartiQLParser.IdentifierUnquotedContext -> caseInsensitive()
             else -> throw ParserException("Invalid symbol reference.", ErrorCode.PARSE_INVALID_QUERY)
         }
         excludeTupleAttr(identifier(attr, caseSensitivity))
@@ -1192,7 +1202,7 @@ internal class PartiQLPigVisitor(
 
     override fun visitVariableKeyword(ctx: PartiQLParser.VariableKeywordContext): PartiqlAst.PartiqlAstNode =
         PartiqlAst.build {
-            val keyword = ctx.nonReservedKeywords().start.text
+            val keyword = ctx.nonReserved().start.text
             val metas = ctx.start.getSourceMetaContainer()
             val qualifier = ctx.qualifier?.let { localsFirst() } ?: unqualified()
             id(keyword, caseInsensitive(), qualifier, metas)
@@ -1316,16 +1326,11 @@ internal class PartiQLPigVisitor(
     }
 
     override fun visitFunctionCall(ctx: PartiQLParser.FunctionCallContext) = PartiqlAst.build {
-        val name = when (val nameCtx = ctx.functionName()) {
-            is PartiQLParser.FunctionNameReservedContext -> {
-                if (nameCtx.qualifier.isNotEmpty()) error("Legacy AST does not support qualified function names")
-                nameCtx.name.text.lowercase()
-            }
-            is PartiQLParser.FunctionNameSymbolContext -> {
-                if (nameCtx.qualifier.isNotEmpty()) error("Legacy AST does not support qualified function names")
-                nameCtx.name.getString().lowercase()
-            }
-            else -> error("Expected context FunctionNameReserved or FunctionNameSymbol")
+        val nameCtx = ctx.qualifiedName()
+        val name = if (nameCtx.qualifier.isNotEmpty()) {
+            error("Legacy AST does not support qualified function names")
+        } else {
+            nameCtx.name.getString().lowercase()
         }
         val args = ctx.expr().map { visitExpr(it) }
         val metas = ctx.start.getSourceMetaContainer()
@@ -1819,9 +1824,9 @@ internal class PartiQLPigVisitor(
             }
         }
 
-    private fun PartiQLParser.SymbolPrimitiveContext.getSourceMetaContainer() = when (this.ident.type) {
-        PartiQLParser.IDENTIFIER -> this.IDENTIFIER().getSourceMetaContainer()
-        PartiQLParser.IDENTIFIER_QUOTED -> this.IDENTIFIER_QUOTED().getSourceMetaContainer()
+    private fun PartiQLParser.SymbolPrimitiveContext.getSourceMetaContainer() = when (this) {
+        is PartiQLParser.IdentifierQuotedContext -> this.IDENTIFIER_QUOTED().getSourceMetaContainer()
+        is PartiQLParser.IdentifierUnquotedContext -> this.start.getSourceMetaContainer()
         else -> throw ParserException(
             "Unable to get identifier's source meta-container.",
             ErrorCode.PARSE_INVALID_QUERY
@@ -2125,25 +2130,23 @@ internal class PartiQLPigVisitor(
     }
 
     private fun PartiQLParser.SymbolPrimitiveContext.getString(): String {
-        return when {
-            this.IDENTIFIER_QUOTED() != null -> this.IDENTIFIER_QUOTED().getStringValue()
-            this.IDENTIFIER() != null -> this.IDENTIFIER().text
+        return when (this) {
+            is PartiQLParser.IdentifierQuotedContext -> this.IDENTIFIER_QUOTED().getStringValue()
+            is PartiQLParser.IdentifierUnquotedContext -> this.text
             else -> throw ParserException("Unable to get symbol's text.", ErrorCode.PARSE_INVALID_QUERY)
         }
     }
 
     private fun getSymbolPathExpr(ctx: PartiQLParser.SymbolPrimitiveContext) = PartiqlAst.build {
-        when {
-            ctx.IDENTIFIER_QUOTED() != null -> pathExpr(
+        when (ctx) {
+            is PartiQLParser.IdentifierQuotedContext -> pathExpr(
                 lit(ionString(ctx.IDENTIFIER_QUOTED().getStringValue())), caseSensitive(),
-                metas = ctx.IDENTIFIER_QUOTED().getSourceMetaContainer()
+                metas = ctx.getSourceMetaContainer()
             )
-
-            ctx.IDENTIFIER() != null -> pathExpr(
-                lit(ionString(ctx.IDENTIFIER().text)), caseInsensitive(),
-                metas = ctx.IDENTIFIER().getSourceMetaContainer()
+            is PartiQLParser.IdentifierUnquotedContext -> pathExpr(
+                lit(ionString(ctx.text)), caseInsensitive(),
+                metas = ctx.getSourceMetaContainer()
             )
-
             else -> throw ParserException("Unable to get symbol's text.", ErrorCode.PARSE_INVALID_QUERY)
         }
     }
