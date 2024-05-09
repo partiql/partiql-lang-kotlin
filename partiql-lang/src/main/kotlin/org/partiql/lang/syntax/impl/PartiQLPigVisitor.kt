@@ -1326,7 +1326,7 @@ internal class PartiQLPigVisitor(
     }
 
     override fun visitFunctionCall(ctx: PartiQLParser.FunctionCallContext) = PartiqlAst.build {
-        val nameCtx = ctx.functionName()
+        val nameCtx = ctx.qualifiedName()
         val name = if (nameCtx.qualifier.isNotEmpty()) {
             error("Legacy AST does not support qualified function names")
         } else {

@@ -763,12 +763,7 @@ dateFunction
 
 // SQL-99 10.4 — <routine invocation> ::= <routine name> <SQL argument list>
 functionCall
-    : functionName PAREN_LEFT ( expr ( COMMA expr )* )? PAREN_RIGHT
-    ;
-
-// SQL-99 10.4 — <routine name> ::= [ <schema name> <period> ] <qualified identifier>
-functionName
-    : (qualifier+=symbolPrimitive PERIOD)* name=symbolPrimitive
+    : qualifiedName PAREN_LEFT ( expr ( COMMA expr )* )? PAREN_RIGHT
     ;
 
 pathStep

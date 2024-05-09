@@ -1857,10 +1857,21 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitFunctionCall(ctx: GeneratedParser.FunctionCallContext) = translate(ctx) {
             val args = visitOrEmpty<Expr>(ctx.expr())
-            when (val funcName = ctx.functionName()) {
-                is GeneratedParser.FunctionNameContext -> {
+            when (val funcName = ctx.qualifiedName()) {
+                is GeneratedParser.QualifiedNameContext -> {
                     when (funcName.name.start.type) {
                         GeneratedParser.MOD -> exprBinary(Expr.Binary.Op.MODULO, args[0], args[1])
+                        GeneratedParser.CHARACTER_LENGTH, GeneratedParser.CHAR_LENGTH -> {
+                            val path = ctx.qualifiedName().qualifier.map { visitSymbolPrimitive(it) }
+                            val name = identifierSymbol("char_length", Identifier.CaseSensitivity.INSENSITIVE)
+                            if (path.isEmpty()) {
+                                exprCall(name, args)
+                            } else {
+                                val root = path.first()
+                                val steps = path.drop(1) + listOf(name)
+                                exprCall(identifierQualified(root, steps), args)
+                            }
+                        }
                         else -> visitNonReservedFunctionCall(ctx, args)
                     }
                 }
@@ -1868,24 +1879,8 @@ internal class PartiQLParserDefault : PartiQLParser {
             }
         }
         private fun visitNonReservedFunctionCall(ctx: GeneratedParser.FunctionCallContext, args: List<Expr>): Expr.Call {
-            val function = visit(ctx.functionName()) as Identifier
+            val function = visitQualifiedName(ctx.qualifiedName())
             return exprCall(function, args)
-        }
-
-        override fun visitFunctionName(ctx: GeneratedParser.FunctionNameContext): Identifier {
-            val path = ctx.qualifier.map { visitSymbolPrimitive(it) }
-            val name = when (ctx.name.start.type) {
-                GeneratedParser.CHARACTER_LENGTH, GeneratedParser.CHAR_LENGTH ->
-                    identifierSymbol("char_length", Identifier.CaseSensitivity.INSENSITIVE)
-                else -> visitSymbolPrimitive(ctx.name)
-            }
-            return if (path.isEmpty()) {
-                name
-            } else {
-                val root = path.first()
-                val steps = path.drop(1) + listOf(name)
-                identifierQualified(root, steps)
-            }
         }
 
         /**
