@@ -54,7 +54,166 @@ statement::[
   query::{
     root: rex,
   },
+  d_d_l::{
+    shape: static_type,
+    op: ddl_op,
+  },
 ]
+
+ddl_op::[
+  // create table is a syntax sugar for creating a bag of struct
+  // that is a named collection of records/structs/tuples
+  //  One challenge is that SQL syntax mixes
+  //  collection constraint, tuple constraint, and attribute constraints
+  //  By the end of planning, we attempts to rearrange the constriants in the right place
+  // Consider:
+  // QUERY:
+  //  CREATE TABLE tbl (
+  //      a INT2 NOT NULL
+  //  )
+  // Plan:
+  //  create_table::{
+  //     name: tbl,
+  //     record: struct (field(name: a, type: int2, attribute_constraint: not null)), struct_constraint: []
+  //     constraint: []
+  // }
+  // Static Type:
+  //  bag(struct(a: int2)))
+  //
+  // Query:
+  // CREATE TABLE tbl (
+  //   a INT2 UNIQUE
+  // )
+  // Plan:
+  //  create_table::{
+  //     name: tbl,
+  //     record: struct (field(name: a, type: int2, attribute_constraint:[])), struct_constraint: []
+  //     constraint: [UNIQUE(a)]
+  // }
+  // Static Type:
+  //   bag(struct(a: unionOf(int2, null)), collection_constraint: <unique_constraint(a))>)
+
+  // It is worth to call out that constraint may have multiple side effects
+  // For example:
+  // CREATE TABLE tbl (
+  //   a INT2 PRIMARY KEY
+  // )
+
+  // Plan:
+  //  create_table::{
+  //     name: tbl,
+  //     record: struct (field(name: a, type: int2, attribute_constraint:[])), struct_constraint: []
+  //     constraint: [PRIMARY_KEY(a)]
+  // }
+  // Static Type:
+  //   bag(struct(a: int2), collection_constraint: <primary_key(a))>)
+  // Notice that in the above case, the static type associated with field a is INT2
+  //  comparing with the UNIQUE example,
+  // in which the static type associcated with field a is unionOf(int2, null)
+
+  // One caveat is the check constraint
+  // At the moment, all check constraint will be stored at tuple level.
+  // regardless of whether it is a tuple level check constraint or a attribute level check constraint
+  create_table::{
+    // Table Name, unresolved
+    name: identifier,
+    shape: '.type.collection',
+//    constraints: list::[constraint],
+    partition_by: optional::partition_by,
+    // table proproties:
+    table_properties: list::[table_property],
+  },
+]
+
+type::[
+  atomic::[
+    bool::{},                                                    // BOOL
+    int2::{},                                                    // INT2 | INTEGER2
+    int4::{},                                                    // INT4 | INTEGER4
+    int8::{},                                                    // INT8
+    int::{},                                                     // INTEGER
+    float32::{},                                                 // FLOAT
+    float64::{},                                                 // DOUBLE PRECISION
+    decimal::{                                                   // DECIMAL [([<int> [,<int>])]
+      precision:  optional::int,
+      scale:      optional::int,
+    },
+    char::{ length: optional::int },                             // CHARACTER [(<int>)] | CHAR [(<int>)]
+    varchar::{ length: optional::int },                          // CHARACTER VARYING [(<int>)] | VARCHAR [(<int>)]
+    date::{},                                                    // DATE
+    time::{ precision: optional::int },                          // TIME [(<int>)] [WITHOUT TIMEZONE]
+    time_with_tz::{ precision: optional::int },                  // TIME [(<int>)] WITH TIMEZONE
+    timestamp::{ precision: optional::int },                     // TIMESTAMP [(<int>)] [WITHOUT TIMEZONE]
+    timestamp_with_tz::{ precision: optional::int },             // TIMESTAMP [(<int>)] WITH TIMEZONE
+  ],
+//  collection::[
+//    bag::{},                                                     // BAG
+//    array::{ type: optional::type },                             // ARRAY [<type>]
+//  ],
+
+
+  // record is a thin wrapper over struct
+  // the primary purporse was to add the support for adding struct level constraints
+  // Consider if we have
+  //  CREATE TABLE tbl (
+  //    a STRUCT(b INT2)
+  //  )
+  //  create_table:: (
+  //    name : tbl,
+  //    record: {type: struct(...), constraints: []}
+  //  )
+  //
+  record::{
+    fields: list::[field],
+    constraints: list::[constraint],
+    _:[
+      field::{
+        name: '.identifier.symbol',
+        type: type,
+        constraints: list::[constraint],
+        is_optional: bool,
+        comment: optional::string,
+      }
+    ]
+  },
+  // Similar to the above, the collection type is a thin wrapper over bag/struct
+  // which allows us to hold constraints over collection type.
+  collection::{
+    type: optional::type,
+    is_ordered: bool,
+    constraints: list::[constraint]
+  },
+]
+
+// Constraints
+// needed for DDL and DML.
+constraint::{
+  // Keep this optional at the internal plan node so it is easier to sanitize...
+  name: optional::string,
+  definition: [
+    check::{
+      lowered: rex, // check expression in rex
+      sql: string, // check expression in sql text
+    },
+    unique::{
+      attributes: list::['.identifier.symbol'],
+      is_primary_key: bool,
+    },
+    not_null::{},
+    nullable::{},
+  ],
+}
+
+partition_by::[
+  attr_list::{
+    attrs: list::['.identifier.symbol']
+  }
+]
+
+table_property::{
+  name: string,
+  value: partiql_value,
+}
 
 // Identifiers
 

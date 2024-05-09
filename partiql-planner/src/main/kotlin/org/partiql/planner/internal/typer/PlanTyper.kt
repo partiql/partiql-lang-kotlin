@@ -19,12 +19,18 @@ package org.partiql.planner.internal.typer
 import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.ProblemGenerator
 import org.partiql.planner.internal.exclude.ExcludeRepr
+import org.partiql.planner.internal.ir.Constraint
+import org.partiql.planner.internal.ir.DdlOp
 import org.partiql.planner.internal.ir.Identifier
 import org.partiql.planner.internal.ir.PlanNode
 import org.partiql.planner.internal.ir.Ref.Cast.Safety.UNSAFE
 import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.Statement
+import org.partiql.planner.internal.ir.Type
+import org.partiql.planner.internal.ir.constraintDefinitionCheck
+import org.partiql.planner.internal.ir.constraintDefinitionUnique
+import org.partiql.planner.internal.ir.ddlOpCreateTable
 import org.partiql.planner.internal.ir.identifierSymbol
 import org.partiql.planner.internal.ir.rel
 import org.partiql.planner.internal.ir.relBinding
@@ -59,6 +65,9 @@ import org.partiql.planner.internal.ir.rexOpStructField
 import org.partiql.planner.internal.ir.rexOpSubquery
 import org.partiql.planner.internal.ir.rexOpTupleUnion
 import org.partiql.planner.internal.ir.statementQuery
+import org.partiql.planner.internal.ir.typeCollection
+import org.partiql.planner.internal.ir.typeRecord
+import org.partiql.planner.internal.ir.typeRecordField
 import org.partiql.planner.internal.ir.util.PlanRewriter
 import org.partiql.planner.internal.utils.PlanUtils
 import org.partiql.spi.BindingCase
@@ -71,23 +80,38 @@ import org.partiql.types.AnyType
 import org.partiql.types.BagType
 import org.partiql.types.BoolType
 import org.partiql.types.CollectionType
+import org.partiql.types.DecimalType
 import org.partiql.types.IntType
 import org.partiql.types.ListType
 import org.partiql.types.MissingType
 import org.partiql.types.NullType
+import org.partiql.types.NumberConstraint
 import org.partiql.types.SexpType
 import org.partiql.types.StaticType
 import org.partiql.types.StaticType.Companion.ANY
+import org.partiql.types.StaticType.Companion.BAG
 import org.partiql.types.StaticType.Companion.BOOL
+import org.partiql.types.StaticType.Companion.DATE
+import org.partiql.types.StaticType.Companion.DECIMAL
+import org.partiql.types.StaticType.Companion.FLOAT
+import org.partiql.types.StaticType.Companion.INT
+import org.partiql.types.StaticType.Companion.INT2
+import org.partiql.types.StaticType.Companion.INT4
+import org.partiql.types.StaticType.Companion.INT8
 import org.partiql.types.StaticType.Companion.MISSING
 import org.partiql.types.StaticType.Companion.NULL
+import org.partiql.types.StaticType.Companion.SEXP
 import org.partiql.types.StaticType.Companion.STRING
 import org.partiql.types.StaticType.Companion.unionOf
 import org.partiql.types.StringType
 import org.partiql.types.StructType
+import org.partiql.types.TimeType
+import org.partiql.types.TimestampType
 import org.partiql.types.TupleConstraint
 import org.partiql.value.BoolValue
+import org.partiql.value.PartiQLTimestampExperimental
 import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.PartiQLValueType
 import org.partiql.value.TextValue
 import org.partiql.value.boolValue
 import org.partiql.value.stringValue
@@ -104,11 +128,18 @@ internal class PlanTyper(private val env: Env) {
     /**
      * Rewrite the statement with inferred types and resolved variables
      */
-    fun resolve(statement: Statement): Statement {
-        if (statement !is Statement.Query) {
-            throw IllegalArgumentException("PartiQLPlanner only supports Query statements")
+    fun resolve(statement: Statement): Statement =
+        when (statement) {
+            is Statement.DDL -> resolveDdl(statement)
+            is Statement.Query -> resolveQuery(statement)
         }
-        // root TypeEnv has no bindings
+
+    fun resolveDdl(statement: Statement.DDL): Statement {
+        val statement = statement.type()
+        return statement
+    }
+
+    fun resolveQuery(statement: Statement.Query): Statement.Query {
         val root = statement.root.type(emptyList(), emptyList(), Scope.GLOBAL)
         return statementQuery(root)
     }
@@ -1442,6 +1473,141 @@ internal class PlanTyper(private val env: Env) {
         }
     }
 
+    /**
+     * Types a DDL statement.
+     */
+
+    private inner class DdlTyper() : PlanRewriter<List<Type.Record.Field>>() {
+        override fun visitStatementDDL(node: Statement.DDL, ctx: List<Type.Record.Field>): Statement.DDL {
+            when (node.op) {
+                is DdlOp.CreateTable -> {
+                    val op = visitDdlOpCreateTable(node.op, ctx)
+                    val shape = op.shape
+                }
+            }
+        }
+
+        override fun visitDdlOpCreateTable(node: DdlOp.CreateTable, ctx: List<Type.Record.Field>): DdlOp.CreateTable {
+            val shape = visitTypeCollection(node.shape, ctx)
+            val normalizedShape = ShapeNormalizer().normalize(shape, node.name.debug())
+
+            return ddlOpCreateTable(
+                node.name, normalizedShape, node.partitionBy, node.tableProperties
+            )
+        }
+
+        override fun visitTypeRecord(node: Type.Record, ctx: List<Type.Record.Field>): Type.Record {
+            val fields = node.fields.map { field ->
+                val constraints = field.constraints.map { constr ->
+                    visitConstraint(constr, listOf(field))
+                }
+                val type = visitType(field.type, ctx)
+                typeRecordField(field.name, type, constraints, field.isOptional, field.comment)
+            }
+            return typeRecord(
+                fields,
+                emptyList()
+            )
+        }
+
+        override fun visitTypeCollection(node: Type.Collection, ctx: List<Type.Record.Field>): Type.Collection {
+            val elementType = node.type?.let { visitType(it, ctx) }
+            val constraints = node.constraints.map { constr ->
+                when (elementType) {
+                    is Type.Record -> visitConstraint(constr, elementType.fields)
+                    else -> visitConstraint(constr, ctx)
+                }
+            }
+            return typeCollection(elementType, node.isOrdered, constraints)
+        }
+
+        override fun visitConstraint(node: Constraint, ctx: List<Type.Record.Field>) =
+            super.visitConstraint(node, ctx) as Constraint
+
+        override fun visitConstraintDefinitionCheck(node: Constraint.Definition.Check, ctx: List<Type.Record.Field>): Constraint.Definition.Check {
+            val binding = ctx.map {
+                Rel.Binding(
+                    it.name.toBindingName().name,
+                    it.type.toStaticType()
+                )
+            }
+            val typedCheckExpr = node.lowered.type(binding, emptyList())
+            if (typedCheckExpr.type.toRuntimeType() != PartiQLValueType.BOOL) TODO("throw")
+            // the sql parts needs to be normalized
+            return constraintDefinitionCheck(typedCheckExpr, node.sql)
+        }
+
+        override fun visitConstraintDefinitionUnique(node: Constraint.Definition.Unique, ctx: List<Type.Record.Field>): Constraint.Definition.Unique {
+            return if (node.attributes.isEmpty()) {
+                constraintDefinitionUnique(listOf(ctx.first().name), node.isPrimaryKey)
+            } else {
+                // instead of invoking the rex typer, we manually check if the attribtue are in the scope
+                node.attributes.forEach { attr ->
+                    val fields = ctx.filter {
+                        it.name.toBindingName().name == attr.toBindingName().name
+                    }
+                    when (fields.size) {
+                        0 -> TODO("THROW : Non existing binding")
+                        // check the type
+                        1 -> when (fields.first().type) {
+                            is Type.Collection -> TODO("THROW: UNIQUE Constraints on Collection Type")
+                            else -> Unit
+                        }
+                        else -> TODO("THROW: UNIQUE Constraint on ambiguous binding")
+                    }
+                }
+                node
+            }
+        }
+
+        override fun visitType(node: Type, ctx: List<Type.Record.Field>): Type = when (node) {
+            is Type.Atomic -> node
+            is Type.Collection -> {
+                typeCollection(node.type?.let { visitType(it, ctx) }, node.isOrdered, node.constraints)
+            }
+            is Type.Record -> visitTypeRecord(node, ctx)
+        }
+
+        @OptIn(PartiQLTimestampExperimental::class)
+        private fun Type.toStaticType(): StaticType = when (this) {
+            is Type.Collection ->
+                if (this.isOrdered) ListType(this.type?.toStaticType() ?: ANY)
+                else BagType(this.type?.toStaticType() ?: ANY)
+
+            is Type.Record -> StructType(
+                this.fields.map {
+                    StructType.Field(
+                        it.name.toBindingName().name,
+                        it.type.toStaticType()
+                    )
+                }
+            )
+
+            is Type.Atomic.Bool -> BOOL
+
+            is Type.Atomic.Int2 -> INT2
+            is Type.Atomic.Int4 -> INT4
+            is Type.Atomic.Int8 -> INT8
+            is Type.Atomic.Int -> INT
+            is Type.Atomic.Decimal -> if (this.precision != null)
+                DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(this.precision, this.scale!!))
+            else DECIMAL
+            is Type.Atomic.Float32 -> TODO("DELETE THIS ")
+            is Type.Atomic.Float64 -> FLOAT
+
+            is Type.Atomic.Char -> StringType(StringType.StringLengthConstraint.Constrained(NumberConstraint.Equals(this.length ?: 1)))
+            is Type.Atomic.Varchar ->
+                this.length?.let {
+                    StringType(StringType.StringLengthConstraint.Constrained(NumberConstraint.UpTo(it)))
+                } ?: STRING
+
+            is Type.Atomic.Date -> DATE
+            is Type.Atomic.Time -> TimeType(precision, false)
+            is Type.Atomic.TimeWithTz -> TimeType(precision, true)
+            is Type.Atomic.Timestamp -> TimestampType(precision ?: 6, false)
+            is Type.Atomic.TimestampWithTz -> TimestampType(precision ?: 6, true)
+        }.also { it.asNullable() }
+    }
     // HELPERS
 
     private fun Rel.type(stack: List<TypeEnv>, strategy: Scope = Scope.LOCAL): Rel =
@@ -1459,6 +1625,9 @@ internal class PlanTyper(private val env: Env) {
      */
     private fun Rex.type(typeEnv: TypeEnv, strategy: Scope = Scope.LOCAL) =
         RexTyper(typeEnv, strategy).visitRex(this, this.type)
+
+    private fun Statement.DDL.type() =
+        DdlTyper().visitStatementDDL(this, emptyList())
 
     /**
      * I found decorating the tree with the binding names (for resolution) was easier than associating introduced

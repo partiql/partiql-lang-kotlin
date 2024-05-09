@@ -6,77 +6,105 @@
 package org.partiql.planner.`internal`.ir
 
 import org.partiql.errors.Problem
-import org.partiql.planner.internal.ir.builder.IdentifierQualifiedBuilder
-import org.partiql.planner.internal.ir.builder.IdentifierSymbolBuilder
-import org.partiql.planner.internal.ir.builder.PartiQlPlanBuilder
-import org.partiql.planner.internal.ir.builder.RefAggBuilder
-import org.partiql.planner.internal.ir.builder.RefCastBuilder
-import org.partiql.planner.internal.ir.builder.RefFnBuilder
-import org.partiql.planner.internal.ir.builder.RefObjBuilder
-import org.partiql.planner.internal.ir.builder.RelBindingBuilder
-import org.partiql.planner.internal.ir.builder.RelBuilder
-import org.partiql.planner.internal.ir.builder.RelOpAggregateBuilder
-import org.partiql.planner.internal.ir.builder.RelOpAggregateCallResolvedBuilder
-import org.partiql.planner.internal.ir.builder.RelOpAggregateCallUnresolvedBuilder
-import org.partiql.planner.internal.ir.builder.RelOpDistinctBuilder
-import org.partiql.planner.internal.ir.builder.RelOpErrBuilder
-import org.partiql.planner.internal.ir.builder.RelOpExcludeBuilder
-import org.partiql.planner.internal.ir.builder.RelOpExcludePathBuilder
-import org.partiql.planner.internal.ir.builder.RelOpExcludeStepBuilder
-import org.partiql.planner.internal.ir.builder.RelOpExcludeTypeCollIndexBuilder
-import org.partiql.planner.internal.ir.builder.RelOpExcludeTypeCollWildcardBuilder
-import org.partiql.planner.internal.ir.builder.RelOpExcludeTypeStructKeyBuilder
-import org.partiql.planner.internal.ir.builder.RelOpExcludeTypeStructSymbolBuilder
-import org.partiql.planner.internal.ir.builder.RelOpExcludeTypeStructWildcardBuilder
-import org.partiql.planner.internal.ir.builder.RelOpFilterBuilder
-import org.partiql.planner.internal.ir.builder.RelOpJoinBuilder
-import org.partiql.planner.internal.ir.builder.RelOpLimitBuilder
-import org.partiql.planner.internal.ir.builder.RelOpOffsetBuilder
-import org.partiql.planner.internal.ir.builder.RelOpProjectBuilder
-import org.partiql.planner.internal.ir.builder.RelOpScanBuilder
-import org.partiql.planner.internal.ir.builder.RelOpScanIndexedBuilder
-import org.partiql.planner.internal.ir.builder.RelOpSetExceptBuilder
-import org.partiql.planner.internal.ir.builder.RelOpSetIntersectBuilder
-import org.partiql.planner.internal.ir.builder.RelOpSetUnionBuilder
-import org.partiql.planner.internal.ir.builder.RelOpSortBuilder
-import org.partiql.planner.internal.ir.builder.RelOpSortSpecBuilder
-import org.partiql.planner.internal.ir.builder.RelOpUnpivotBuilder
-import org.partiql.planner.internal.ir.builder.RelTypeBuilder
-import org.partiql.planner.internal.ir.builder.RexBuilder
-import org.partiql.planner.internal.ir.builder.RexOpCallDynamicBuilder
-import org.partiql.planner.internal.ir.builder.RexOpCallDynamicCandidateBuilder
-import org.partiql.planner.internal.ir.builder.RexOpCallStaticBuilder
-import org.partiql.planner.internal.ir.builder.RexOpCallUnresolvedBuilder
-import org.partiql.planner.internal.ir.builder.RexOpCaseBranchBuilder
-import org.partiql.planner.internal.ir.builder.RexOpCaseBuilder
-import org.partiql.planner.internal.ir.builder.RexOpCastResolvedBuilder
-import org.partiql.planner.internal.ir.builder.RexOpCastUnresolvedBuilder
-import org.partiql.planner.internal.ir.builder.RexOpCoalesceBuilder
-import org.partiql.planner.internal.ir.builder.RexOpCollectionBuilder
-import org.partiql.planner.internal.ir.builder.RexOpErrBuilder
-import org.partiql.planner.internal.ir.builder.RexOpLitBuilder
-import org.partiql.planner.internal.ir.builder.RexOpNullifBuilder
-import org.partiql.planner.internal.ir.builder.RexOpPathIndexBuilder
-import org.partiql.planner.internal.ir.builder.RexOpPathKeyBuilder
-import org.partiql.planner.internal.ir.builder.RexOpPathSymbolBuilder
-import org.partiql.planner.internal.ir.builder.RexOpPivotBuilder
-import org.partiql.planner.internal.ir.builder.RexOpSelectBuilder
-import org.partiql.planner.internal.ir.builder.RexOpStructBuilder
-import org.partiql.planner.internal.ir.builder.RexOpStructFieldBuilder
-import org.partiql.planner.internal.ir.builder.RexOpSubqueryBuilder
-import org.partiql.planner.internal.ir.builder.RexOpTupleUnionBuilder
-import org.partiql.planner.internal.ir.builder.RexOpVarGlobalBuilder
-import org.partiql.planner.internal.ir.builder.RexOpVarLocalBuilder
-import org.partiql.planner.internal.ir.builder.RexOpVarUnresolvedBuilder
-import org.partiql.planner.internal.ir.builder.StatementQueryBuilder
-import org.partiql.planner.internal.ir.visitor.PlanVisitor
+import org.partiql.planner.`internal`.ir.builder.ConstraintBuilder
+import org.partiql.planner.`internal`.ir.builder.ConstraintDefinitionCheckBuilder
+import org.partiql.planner.`internal`.ir.builder.ConstraintDefinitionNotNullBuilder
+import org.partiql.planner.`internal`.ir.builder.ConstraintDefinitionNullableBuilder
+import org.partiql.planner.`internal`.ir.builder.ConstraintDefinitionUniqueBuilder
+import org.partiql.planner.`internal`.ir.builder.DdlOpCreateTableBuilder
+import org.partiql.planner.`internal`.ir.builder.IdentifierQualifiedBuilder
+import org.partiql.planner.`internal`.ir.builder.IdentifierSymbolBuilder
+import org.partiql.planner.`internal`.ir.builder.PartiQlPlanBuilder
+import org.partiql.planner.`internal`.ir.builder.PartitionByAttrListBuilder
+import org.partiql.planner.`internal`.ir.builder.RefAggBuilder
+import org.partiql.planner.`internal`.ir.builder.RefCastBuilder
+import org.partiql.planner.`internal`.ir.builder.RefFnBuilder
+import org.partiql.planner.`internal`.ir.builder.RefObjBuilder
+import org.partiql.planner.`internal`.ir.builder.RelBindingBuilder
+import org.partiql.planner.`internal`.ir.builder.RelBuilder
+import org.partiql.planner.`internal`.ir.builder.RelOpAggregateBuilder
+import org.partiql.planner.`internal`.ir.builder.RelOpAggregateCallResolvedBuilder
+import org.partiql.planner.`internal`.ir.builder.RelOpAggregateCallUnresolvedBuilder
+import org.partiql.planner.`internal`.ir.builder.RelOpDistinctBuilder
+import org.partiql.planner.`internal`.ir.builder.RelOpErrBuilder
+import org.partiql.planner.`internal`.ir.builder.RelOpExcludeBuilder
+import org.partiql.planner.`internal`.ir.builder.RelOpExcludePathBuilder
+import org.partiql.planner.`internal`.ir.builder.RelOpExcludeStepBuilder
+import org.partiql.planner.`internal`.ir.builder.RelOpExcludeTypeCollIndexBuilder
+import org.partiql.planner.`internal`.ir.builder.RelOpExcludeTypeCollWildcardBuilder
+import org.partiql.planner.`internal`.ir.builder.RelOpExcludeTypeStructKeyBuilder
+import org.partiql.planner.`internal`.ir.builder.RelOpExcludeTypeStructSymbolBuilder
+import org.partiql.planner.`internal`.ir.builder.RelOpExcludeTypeStructWildcardBuilder
+import org.partiql.planner.`internal`.ir.builder.RelOpFilterBuilder
+import org.partiql.planner.`internal`.ir.builder.RelOpJoinBuilder
+import org.partiql.planner.`internal`.ir.builder.RelOpLimitBuilder
+import org.partiql.planner.`internal`.ir.builder.RelOpOffsetBuilder
+import org.partiql.planner.`internal`.ir.builder.RelOpProjectBuilder
+import org.partiql.planner.`internal`.ir.builder.RelOpScanBuilder
+import org.partiql.planner.`internal`.ir.builder.RelOpScanIndexedBuilder
+import org.partiql.planner.`internal`.ir.builder.RelOpSetExceptBuilder
+import org.partiql.planner.`internal`.ir.builder.RelOpSetIntersectBuilder
+import org.partiql.planner.`internal`.ir.builder.RelOpSetUnionBuilder
+import org.partiql.planner.`internal`.ir.builder.RelOpSortBuilder
+import org.partiql.planner.`internal`.ir.builder.RelOpSortSpecBuilder
+import org.partiql.planner.`internal`.ir.builder.RelOpUnpivotBuilder
+import org.partiql.planner.`internal`.ir.builder.RelTypeBuilder
+import org.partiql.planner.`internal`.ir.builder.RexBuilder
+import org.partiql.planner.`internal`.ir.builder.RexOpCallDynamicBuilder
+import org.partiql.planner.`internal`.ir.builder.RexOpCallDynamicCandidateBuilder
+import org.partiql.planner.`internal`.ir.builder.RexOpCallStaticBuilder
+import org.partiql.planner.`internal`.ir.builder.RexOpCallUnresolvedBuilder
+import org.partiql.planner.`internal`.ir.builder.RexOpCaseBranchBuilder
+import org.partiql.planner.`internal`.ir.builder.RexOpCaseBuilder
+import org.partiql.planner.`internal`.ir.builder.RexOpCastResolvedBuilder
+import org.partiql.planner.`internal`.ir.builder.RexOpCastUnresolvedBuilder
+import org.partiql.planner.`internal`.ir.builder.RexOpCoalesceBuilder
+import org.partiql.planner.`internal`.ir.builder.RexOpCollectionBuilder
+import org.partiql.planner.`internal`.ir.builder.RexOpErrBuilder
+import org.partiql.planner.`internal`.ir.builder.RexOpLitBuilder
+import org.partiql.planner.`internal`.ir.builder.RexOpMissingBuilder
+import org.partiql.planner.`internal`.ir.builder.RexOpNullifBuilder
+import org.partiql.planner.`internal`.ir.builder.RexOpPathIndexBuilder
+import org.partiql.planner.`internal`.ir.builder.RexOpPathKeyBuilder
+import org.partiql.planner.`internal`.ir.builder.RexOpPathSymbolBuilder
+import org.partiql.planner.`internal`.ir.builder.RexOpPivotBuilder
+import org.partiql.planner.`internal`.ir.builder.RexOpSelectBuilder
+import org.partiql.planner.`internal`.ir.builder.RexOpStructBuilder
+import org.partiql.planner.`internal`.ir.builder.RexOpStructFieldBuilder
+import org.partiql.planner.`internal`.ir.builder.RexOpSubqueryBuilder
+import org.partiql.planner.`internal`.ir.builder.RexOpTupleUnionBuilder
+import org.partiql.planner.`internal`.ir.builder.RexOpVarGlobalBuilder
+import org.partiql.planner.`internal`.ir.builder.RexOpVarLocalBuilder
+import org.partiql.planner.`internal`.ir.builder.RexOpVarUnresolvedBuilder
+import org.partiql.planner.`internal`.ir.builder.StatementDdlBuilder
+import org.partiql.planner.`internal`.ir.builder.StatementQueryBuilder
+import org.partiql.planner.`internal`.ir.builder.TablePropertyBuilder
+import org.partiql.planner.`internal`.ir.builder.TypeAtomicBoolBuilder
+import org.partiql.planner.`internal`.ir.builder.TypeAtomicCharBuilder
+import org.partiql.planner.`internal`.ir.builder.TypeAtomicDateBuilder
+import org.partiql.planner.`internal`.ir.builder.TypeAtomicDecimalBuilder
+import org.partiql.planner.`internal`.ir.builder.TypeAtomicFloat32Builder
+import org.partiql.planner.`internal`.ir.builder.TypeAtomicFloat64Builder
+import org.partiql.planner.`internal`.ir.builder.TypeAtomicInt2Builder
+import org.partiql.planner.`internal`.ir.builder.TypeAtomicInt4Builder
+import org.partiql.planner.`internal`.ir.builder.TypeAtomicInt8Builder
+import org.partiql.planner.`internal`.ir.builder.TypeAtomicIntBuilder
+import org.partiql.planner.`internal`.ir.builder.TypeAtomicTimeBuilder
+import org.partiql.planner.`internal`.ir.builder.TypeAtomicTimeWithTzBuilder
+import org.partiql.planner.`internal`.ir.builder.TypeAtomicTimestampBuilder
+import org.partiql.planner.`internal`.ir.builder.TypeAtomicTimestampWithTzBuilder
+import org.partiql.planner.`internal`.ir.builder.TypeAtomicVarcharBuilder
+import org.partiql.planner.`internal`.ir.builder.TypeCollectionBuilder
+import org.partiql.planner.`internal`.ir.builder.TypeRecordBuilder
+import org.partiql.planner.`internal`.ir.builder.TypeRecordFieldBuilder
+import org.partiql.planner.`internal`.ir.visitor.PlanVisitor
 import org.partiql.spi.fn.AggSignature
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnSignature
 import org.partiql.types.StaticType
-import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType
+import org.partiql.`value`.PartiQLValue
+import org.partiql.`value`.PartiQLValueExperimental
+import org.partiql.`value`.PartiQLValueType
 import kotlin.Boolean
 import kotlin.Char
 import kotlin.Int
@@ -89,8 +117,7 @@ import kotlin.jvm.JvmStatic
 import kotlin.random.Random
 
 internal abstract class PlanNode {
-    @JvmField
-    internal var tag: String = "Plan-${"%06x".format(Random.nextInt())}"
+    @JvmField internal var tag: String = "Plan-${"%06x".format(Random.nextInt())}"
 
     internal abstract val children: List<PlanNode>
 
@@ -106,7 +133,8 @@ internal data class PartiQLPlan(
         kids.filterNotNull()
     }
 
-    public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitPartiQLPlan(this, ctx)
+    public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+        visitor.visitPartiQLPlan(this, ctx)
 
     internal companion object {
         @JvmStatic
@@ -128,7 +156,8 @@ internal sealed class Ref : PlanNode() {
     ) : Ref() {
         public override val children: List<PlanNode> = emptyList()
 
-        public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitRefObj(this, ctx)
+        public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+            visitor.visitRefObj(this, ctx)
 
         internal companion object {
             @JvmStatic
@@ -143,7 +172,8 @@ internal sealed class Ref : PlanNode() {
     ) : Ref() {
         public override val children: List<PlanNode> = emptyList()
 
-        public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitRefFn(this, ctx)
+        public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+            visitor.visitRefFn(this, ctx)
 
         internal companion object {
             @JvmStatic
@@ -158,7 +188,8 @@ internal sealed class Ref : PlanNode() {
     ) : Ref() {
         public override val children: List<PlanNode> = emptyList()
 
-        public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitRefAgg(this, ctx)
+        public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+            visitor.visitRefAgg(this, ctx)
 
         internal companion object {
             @JvmStatic
@@ -174,10 +205,13 @@ internal sealed class Ref : PlanNode() {
     ) : PlanNode() {
         public override val children: List<PlanNode> = emptyList()
 
-        public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitRefCast(this, ctx)
+        public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+            visitor.visitRefCast(this, ctx)
 
         internal enum class Safety {
-            COERCION, EXPLICIT, UNSAFE,
+            COERCION,
+            EXPLICIT,
+            UNSAFE,
         }
 
         internal companion object {
@@ -190,6 +224,7 @@ internal sealed class Ref : PlanNode() {
 internal sealed class Statement : PlanNode() {
     public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = when (this) {
         is Query -> visitor.visitStatementQuery(this, ctx)
+        is DDL -> visitor.visitStatementDDL(this, ctx)
     }
 
     internal data class Query(
@@ -209,6 +244,495 @@ internal sealed class Statement : PlanNode() {
             internal fun builder(): StatementQueryBuilder = StatementQueryBuilder()
         }
     }
+
+    internal data class DDL(
+        @JvmField internal val shape: StaticType,
+        @JvmField internal val op: DdlOp,
+    ) : Statement() {
+        public override val children: List<PlanNode> by lazy {
+            val kids = mutableListOf<PlanNode?>()
+            kids.add(op)
+            kids.filterNotNull()
+        }
+
+        public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+            visitor.visitStatementDDL(this, ctx)
+
+        internal companion object {
+            @JvmStatic
+            internal fun builder(): StatementDdlBuilder = StatementDdlBuilder()
+        }
+    }
+}
+
+internal sealed class DdlOp : PlanNode() {
+    public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = when (this) {
+        is CreateTable -> visitor.visitDdlOpCreateTable(this, ctx)
+    }
+
+    internal data class CreateTable(
+        @JvmField internal val name: Identifier,
+        @JvmField internal val shape: Type.Collection,
+        @JvmField internal val partitionBy: PartitionBy?,
+        @JvmField internal val tableProperties: List<TableProperty>,
+    ) : DdlOp() {
+        public override val children: List<PlanNode> by lazy {
+            val kids = mutableListOf<PlanNode?>()
+            kids.add(name)
+            kids.add(shape)
+            partitionBy?.let { kids.add(it) }
+            kids.addAll(tableProperties)
+            kids.filterNotNull()
+        }
+
+        public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+            visitor.visitDdlOpCreateTable(this, ctx)
+
+        internal companion object {
+            @JvmStatic
+            internal fun builder(): DdlOpCreateTableBuilder = DdlOpCreateTableBuilder()
+        }
+    }
+}
+
+internal sealed class Type : PlanNode() {
+    public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = when (this) {
+        is Atomic -> visitor.visitTypeAtomic(this, ctx)
+        is Record -> visitor.visitTypeRecord(this, ctx)
+        is Collection -> visitor.visitTypeCollection(this, ctx)
+    }
+
+    internal sealed class Atomic : Type() {
+        public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = when (this) {
+            is Bool -> visitor.visitTypeAtomicBool(this, ctx)
+            is Int2 -> visitor.visitTypeAtomicInt2(this, ctx)
+            is Int4 -> visitor.visitTypeAtomicInt4(this, ctx)
+            is Int8 -> visitor.visitTypeAtomicInt8(this, ctx)
+            is Int -> visitor.visitTypeAtomicInt(this, ctx)
+            is Float32 -> visitor.visitTypeAtomicFloat32(this, ctx)
+            is Float64 -> visitor.visitTypeAtomicFloat64(this, ctx)
+            is Decimal -> visitor.visitTypeAtomicDecimal(this, ctx)
+            is Char -> visitor.visitTypeAtomicChar(this, ctx)
+            is Varchar -> visitor.visitTypeAtomicVarchar(this, ctx)
+            is Date -> visitor.visitTypeAtomicDate(this, ctx)
+            is Time -> visitor.visitTypeAtomicTime(this, ctx)
+            is TimeWithTz -> visitor.visitTypeAtomicTimeWithTz(this, ctx)
+            is Timestamp -> visitor.visitTypeAtomicTimestamp(this, ctx)
+            is TimestampWithTz -> visitor.visitTypeAtomicTimestampWithTz(this, ctx)
+        }
+
+        internal data class Bool(
+            @JvmField internal val ` `: kotlin.Char = ' ',
+        ) : Atomic() {
+            public override val children: List<PlanNode> = emptyList()
+
+            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitTypeAtomicBool(this, ctx)
+
+            internal companion object {
+                @JvmStatic
+                internal fun builder(): TypeAtomicBoolBuilder = TypeAtomicBoolBuilder()
+            }
+        }
+
+        internal data class Int2(
+            @JvmField internal val ` `: kotlin.Char = ' ',
+        ) : Atomic() {
+            public override val children: List<PlanNode> = emptyList()
+
+            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitTypeAtomicInt2(this, ctx)
+
+            internal companion object {
+                @JvmStatic
+                internal fun builder(): TypeAtomicInt2Builder = TypeAtomicInt2Builder()
+            }
+        }
+
+        internal data class Int4(
+            @JvmField internal val ` `: kotlin.Char = ' ',
+        ) : Atomic() {
+            public override val children: List<PlanNode> = emptyList()
+
+            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitTypeAtomicInt4(this, ctx)
+
+            internal companion object {
+                @JvmStatic
+                internal fun builder(): TypeAtomicInt4Builder = TypeAtomicInt4Builder()
+            }
+        }
+
+        internal data class Int8(
+            @JvmField internal val ` `: kotlin.Char = ' ',
+        ) : Atomic() {
+            public override val children: List<PlanNode> = emptyList()
+
+            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitTypeAtomicInt8(this, ctx)
+
+            internal companion object {
+                @JvmStatic
+                internal fun builder(): TypeAtomicInt8Builder = TypeAtomicInt8Builder()
+            }
+        }
+
+        internal data class Int(
+            @JvmField internal val ` `: kotlin.Char = ' ',
+        ) : Atomic() {
+            public override val children: List<PlanNode> = emptyList()
+
+            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitTypeAtomicInt(this, ctx)
+
+            internal companion object {
+                @JvmStatic
+                internal fun builder(): TypeAtomicIntBuilder = TypeAtomicIntBuilder()
+            }
+        }
+
+        internal data class Float32(
+            @JvmField internal val ` `: kotlin.Char = ' ',
+        ) : Atomic() {
+            public override val children: List<PlanNode> = emptyList()
+
+            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitTypeAtomicFloat32(this, ctx)
+
+            internal companion object {
+                @JvmStatic
+                internal fun builder(): TypeAtomicFloat32Builder = TypeAtomicFloat32Builder()
+            }
+        }
+
+        internal data class Float64(
+            @JvmField internal val ` `: kotlin.Char = ' ',
+        ) : Atomic() {
+            public override val children: List<PlanNode> = emptyList()
+
+            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitTypeAtomicFloat64(this, ctx)
+
+            internal companion object {
+                @JvmStatic
+                internal fun builder(): TypeAtomicFloat64Builder = TypeAtomicFloat64Builder()
+            }
+        }
+
+        internal data class Decimal(
+            @JvmField internal val precision: kotlin.Int?,
+            @JvmField internal val scale: kotlin.Int?,
+        ) : Atomic() {
+            public override val children: List<PlanNode> = emptyList()
+
+            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitTypeAtomicDecimal(this, ctx)
+
+            internal companion object {
+                @JvmStatic
+                internal fun builder(): TypeAtomicDecimalBuilder = TypeAtomicDecimalBuilder()
+            }
+        }
+
+        internal data class Char(
+            @JvmField internal val length: kotlin.Int?,
+        ) : Atomic() {
+            public override val children: List<PlanNode> = emptyList()
+
+            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitTypeAtomicChar(this, ctx)
+
+            internal companion object {
+                @JvmStatic
+                internal fun builder(): TypeAtomicCharBuilder = TypeAtomicCharBuilder()
+            }
+        }
+
+        internal data class Varchar(
+            @JvmField internal val length: kotlin.Int?,
+        ) : Atomic() {
+            public override val children: List<PlanNode> = emptyList()
+
+            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitTypeAtomicVarchar(this, ctx)
+
+            internal companion object {
+                @JvmStatic
+                internal fun builder(): TypeAtomicVarcharBuilder = TypeAtomicVarcharBuilder()
+            }
+        }
+
+        internal data class Date(
+            @JvmField internal val ` `: kotlin.Char = ' ',
+        ) : Atomic() {
+            public override val children: List<PlanNode> = emptyList()
+
+            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitTypeAtomicDate(this, ctx)
+
+            internal companion object {
+                @JvmStatic
+                internal fun builder(): TypeAtomicDateBuilder = TypeAtomicDateBuilder()
+            }
+        }
+
+        internal data class Time(
+            @JvmField internal val precision: kotlin.Int?,
+        ) : Atomic() {
+            public override val children: List<PlanNode> = emptyList()
+
+            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitTypeAtomicTime(this, ctx)
+
+            internal companion object {
+                @JvmStatic
+                internal fun builder(): TypeAtomicTimeBuilder = TypeAtomicTimeBuilder()
+            }
+        }
+
+        internal data class TimeWithTz(
+            @JvmField internal val precision: kotlin.Int?,
+        ) : Atomic() {
+            public override val children: List<PlanNode> = emptyList()
+
+            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitTypeAtomicTimeWithTz(this, ctx)
+
+            internal companion object {
+                @JvmStatic
+                internal fun builder(): TypeAtomicTimeWithTzBuilder = TypeAtomicTimeWithTzBuilder()
+            }
+        }
+
+        internal data class Timestamp(
+            @JvmField internal val precision: kotlin.Int?,
+        ) : Atomic() {
+            public override val children: List<PlanNode> = emptyList()
+
+            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitTypeAtomicTimestamp(this, ctx)
+
+            internal companion object {
+                @JvmStatic
+                internal fun builder(): TypeAtomicTimestampBuilder = TypeAtomicTimestampBuilder()
+            }
+        }
+
+        internal data class TimestampWithTz(
+            @JvmField internal val precision: kotlin.Int?,
+        ) : Atomic() {
+            public override val children: List<PlanNode> = emptyList()
+
+            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitTypeAtomicTimestampWithTz(this, ctx)
+
+            internal companion object {
+                @JvmStatic
+                internal fun builder(): TypeAtomicTimestampWithTzBuilder = TypeAtomicTimestampWithTzBuilder()
+            }
+        }
+    }
+
+    internal data class Record(
+        @JvmField internal val fields: List<Field>,
+        @JvmField internal val constraints: List<Constraint>,
+    ) : Type() {
+        public override val children: List<PlanNode> by lazy {
+            val kids = mutableListOf<PlanNode?>()
+            kids.addAll(fields)
+            kids.addAll(constraints)
+            kids.filterNotNull()
+        }
+
+        public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+            visitor.visitTypeRecord(this, ctx)
+
+        internal data class Field(
+            @JvmField internal val name: Identifier.Symbol,
+            @JvmField internal val type: Type,
+            @JvmField internal val constraints: List<Constraint>,
+            @JvmField internal val isOptional: Boolean,
+            @JvmField internal val comment: String?,
+        ) : PlanNode() {
+            public override val children: List<PlanNode> by lazy {
+                val kids = mutableListOf<PlanNode?>()
+                kids.add(name)
+                kids.add(type)
+                kids.addAll(constraints)
+                kids.filterNotNull()
+            }
+
+            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitTypeRecordField(this, ctx)
+
+            internal companion object {
+                @JvmStatic
+                internal fun builder(): TypeRecordFieldBuilder = TypeRecordFieldBuilder()
+            }
+        }
+
+        internal companion object {
+            @JvmStatic
+            internal fun builder(): TypeRecordBuilder = TypeRecordBuilder()
+        }
+    }
+
+    internal data class Collection(
+        @JvmField internal val type: Type?,
+        @JvmField internal val isOrdered: Boolean,
+        @JvmField internal val constraints: List<Constraint>,
+    ) : Type() {
+        public override val children: List<PlanNode> by lazy {
+            val kids = mutableListOf<PlanNode?>()
+            type?.let { kids.add(it) }
+            kids.addAll(constraints)
+            kids.filterNotNull()
+        }
+
+        public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+            visitor.visitTypeCollection(this, ctx)
+
+        internal companion object {
+            @JvmStatic
+            internal fun builder(): TypeCollectionBuilder = TypeCollectionBuilder()
+        }
+    }
+}
+
+internal data class Constraint(
+    @JvmField internal val name: String?,
+    @JvmField internal val definition: Definition,
+) : PlanNode() {
+    public override val children: List<PlanNode> by lazy {
+        val kids = mutableListOf<PlanNode?>()
+        kids.add(definition)
+        kids.filterNotNull()
+    }
+
+    public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+        visitor.visitConstraint(this, ctx)
+
+    internal sealed class Definition : PlanNode() {
+        public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = when (this) {
+            is Check -> visitor.visitConstraintDefinitionCheck(this, ctx)
+            is Unique -> visitor.visitConstraintDefinitionUnique(this, ctx)
+            is NotNull -> visitor.visitConstraintDefinitionNotNull(this, ctx)
+            is Nullable -> visitor.visitConstraintDefinitionNullable(this, ctx)
+        }
+
+        internal data class Check(
+            @JvmField internal val lowered: Rex,
+            @JvmField internal val sql: String,
+        ) : Definition() {
+            public override val children: List<PlanNode> by lazy {
+                val kids = mutableListOf<PlanNode?>()
+                kids.add(lowered)
+                kids.filterNotNull()
+            }
+
+            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitConstraintDefinitionCheck(this, ctx)
+
+            internal companion object {
+                @JvmStatic
+                internal fun builder(): ConstraintDefinitionCheckBuilder = ConstraintDefinitionCheckBuilder()
+            }
+        }
+
+        internal data class Unique(
+            @JvmField internal val attributes: List<Identifier.Symbol>,
+            @JvmField internal val isPrimaryKey: Boolean,
+        ) : Definition() {
+            public override val children: List<PlanNode> by lazy {
+                val kids = mutableListOf<PlanNode?>()
+                kids.addAll(attributes)
+                kids.filterNotNull()
+            }
+
+            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitConstraintDefinitionUnique(this, ctx)
+
+            internal companion object {
+                @JvmStatic
+                internal fun builder(): ConstraintDefinitionUniqueBuilder =
+                    ConstraintDefinitionUniqueBuilder()
+            }
+        }
+
+        internal data class NotNull(
+            @JvmField internal val ` `: Char = ' ',
+        ) : Definition() {
+            public override val children: List<PlanNode> = emptyList()
+
+            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitConstraintDefinitionNotNull(this, ctx)
+
+            internal companion object {
+                @JvmStatic
+                internal fun builder(): ConstraintDefinitionNotNullBuilder =
+                    ConstraintDefinitionNotNullBuilder()
+            }
+        }
+
+        internal data class Nullable(
+            @JvmField internal val ` `: Char = ' ',
+        ) : Definition() {
+            public override val children: List<PlanNode> = emptyList()
+
+            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitConstraintDefinitionNullable(this, ctx)
+
+            internal companion object {
+                @JvmStatic
+                internal fun builder(): ConstraintDefinitionNullableBuilder =
+                    ConstraintDefinitionNullableBuilder()
+            }
+        }
+    }
+
+    internal companion object {
+        @JvmStatic
+        internal fun builder(): ConstraintBuilder = ConstraintBuilder()
+    }
+}
+
+internal sealed class PartitionBy : PlanNode() {
+    public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = when (this) {
+        is AttrList -> visitor.visitPartitionByAttrList(this, ctx)
+    }
+
+    internal data class AttrList(
+        @JvmField internal val attrs: List<Identifier.Symbol>,
+    ) : PartitionBy() {
+        public override val children: List<PlanNode> by lazy {
+            val kids = mutableListOf<PlanNode?>()
+            kids.addAll(attrs)
+            kids.filterNotNull()
+        }
+
+        public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+            visitor.visitPartitionByAttrList(this, ctx)
+
+        internal companion object {
+            @JvmStatic
+            internal fun builder(): PartitionByAttrListBuilder = PartitionByAttrListBuilder()
+        }
+    }
+}
+
+internal data class TableProperty(
+    @JvmField internal val name: String,
+    @JvmField internal val `value`: PartiQLValue,
+) : PlanNode() {
+    public override val children: List<PlanNode> = emptyList()
+
+    public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+        visitor.visitTableProperty(this, ctx)
+
+    internal companion object {
+        @JvmStatic
+        internal fun builder(): TablePropertyBuilder = TablePropertyBuilder()
+    }
 }
 
 internal sealed class Identifier : PlanNode() {
@@ -218,7 +742,8 @@ internal sealed class Identifier : PlanNode() {
     }
 
     internal enum class CaseSensitivity {
-        SENSITIVE, INSENSITIVE,
+        SENSITIVE,
+        INSENSITIVE,
     }
 
     internal data class Symbol(
@@ -268,7 +793,8 @@ internal data class Rex(
     }
 
     public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitRex(
-        this, ctx
+        this,
+        ctx
     )
 
     internal sealed class Op : PlanNode() {
@@ -296,7 +822,8 @@ internal data class Rex(
         ) : Op() {
             public override val children: List<PlanNode> = emptyList()
 
-            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitRexOpLit(this, ctx)
+            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitRexOpLit(this, ctx)
 
             internal companion object {
                 @JvmStatic
@@ -312,7 +839,8 @@ internal data class Rex(
             }
 
             internal enum class Scope {
-                DEFAULT, LOCAL,
+                DEFAULT,
+                LOCAL,
             }
 
             internal data class Local(
@@ -559,7 +1087,8 @@ internal data class Rex(
 
                     internal companion object {
                         @JvmStatic
-                        internal fun builder(): RexOpCallDynamicCandidateBuilder = RexOpCallDynamicCandidateBuilder()
+                        internal fun builder(): RexOpCallDynamicCandidateBuilder =
+                            RexOpCallDynamicCandidateBuilder()
                     }
                 }
 
@@ -581,7 +1110,8 @@ internal data class Rex(
                 kids.filterNotNull()
             }
 
-            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitRexOpCase(this, ctx)
+            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitRexOpCase(this, ctx)
 
             internal data class Branch(
                 @JvmField internal val condition: Rex,
@@ -741,7 +1271,8 @@ internal data class Rex(
                 visitor.visitRexOpSubquery(this, ctx)
 
             internal enum class Coercion {
-                SCALAR, ROW,
+                SCALAR,
+                ROW,
             }
 
             internal companion object {
@@ -798,7 +1329,8 @@ internal data class Rex(
                 kids.filterNotNull()
             }
 
-            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitRexOpErr(this, ctx)
+            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitRexOpErr(this, ctx)
 
             internal companion object {
                 @JvmStatic
@@ -816,11 +1348,12 @@ internal data class Rex(
                 kids.filterNotNull()
             }
 
-            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitRexOpMissing(this, ctx)
+            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitRexOpMissing(this, ctx)
 
             internal companion object {
                 @JvmStatic
-                internal fun builder(): RexOpErrBuilder = RexOpErrBuilder()
+                internal fun builder(): RexOpMissingBuilder = RexOpMissingBuilder()
             }
         }
     }
@@ -843,7 +1376,8 @@ internal data class Rel(
     }
 
     public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitRel(
-        this, ctx
+        this,
+        ctx
     )
 
     internal enum class Prop {
@@ -860,7 +1394,8 @@ internal data class Rel(
             kids.filterNotNull()
         }
 
-        public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitRelType(this, ctx)
+        public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+            visitor.visitRelType(this, ctx)
 
         internal companion object {
             @JvmStatic
@@ -895,7 +1430,8 @@ internal data class Rel(
                 kids.filterNotNull()
             }
 
-            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitRelOpScan(this, ctx)
+            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitRelOpScan(this, ctx)
 
             internal companion object {
                 @JvmStatic
@@ -988,10 +1524,14 @@ internal data class Rel(
                 kids.filterNotNull()
             }
 
-            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitRelOpSort(this, ctx)
+            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitRelOpSort(this, ctx)
 
             internal enum class Order {
-                ASC_NULLS_LAST, ASC_NULLS_FIRST, DESC_NULLS_LAST, DESC_NULLS_FIRST,
+                ASC_NULLS_LAST,
+                ASC_NULLS_FIRST,
+                DESC_NULLS_LAST,
+                DESC_NULLS_FIRST,
             }
 
             internal data class Spec(
@@ -1018,12 +1558,17 @@ internal data class Rel(
                 internal fun builder(): RelOpSortBuilder = RelOpSortBuilder()
             }
         }
-        internal sealed class Set : Op() {
 
+        internal sealed class Set : Op() {
             public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = when (this) {
                 is Union -> visitor.visitRelOpSetUnion(this, ctx)
                 is Intersect -> visitor.visitRelOpSetIntersect(this, ctx)
                 is Except -> visitor.visitRelOpSetExcept(this, ctx)
+            }
+
+            internal enum class Quantifier {
+                ALL,
+                DISTINCT,
             }
 
             internal data class Union(
@@ -1090,10 +1635,6 @@ internal data class Rel(
                     @JvmStatic
                     internal fun builder(): RelOpSetExceptBuilder = RelOpSetExceptBuilder()
                 }
-            }
-
-            internal enum class Quantifier {
-                ALL, DISTINCT
             }
         }
 
@@ -1171,10 +1712,14 @@ internal data class Rel(
                 kids.filterNotNull()
             }
 
-            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitRelOpJoin(this, ctx)
+            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitRelOpJoin(this, ctx)
 
             internal enum class Type {
-                INNER, LEFT, RIGHT, FULL,
+                INNER,
+                LEFT,
+                RIGHT,
+                FULL,
             }
 
             internal companion object {
@@ -1201,11 +1746,13 @@ internal data class Rel(
                 visitor.visitRelOpAggregate(this, ctx)
 
             internal enum class Strategy {
-                FULL, PARTIAL,
+                FULL,
+                PARTIAL,
             }
 
             internal enum class SetQuantifier {
-                ALL, DISTINCT,
+                ALL,
+                DISTINCT,
             }
 
             internal sealed class Call : PlanNode() {
@@ -1252,7 +1799,8 @@ internal data class Rel(
 
                     internal companion object {
                         @JvmStatic
-                        internal fun builder(): RelOpAggregateCallResolvedBuilder = RelOpAggregateCallResolvedBuilder()
+                        internal fun builder(): RelOpAggregateCallResolvedBuilder =
+                            RelOpAggregateCallResolvedBuilder()
                     }
                 }
             }
@@ -1339,23 +1887,6 @@ internal data class Rel(
                         internal fun builder(): RelOpExcludeTypeStructSymbolBuilder =
                             RelOpExcludeTypeStructSymbolBuilder()
                     }
-
-                    // Explicitly override `equals` and `hashcode` for case-insensitivity
-                    override fun equals(other: Any?): Boolean {
-                        if (this === other) return true
-                        if (javaClass != other?.javaClass) return false
-
-                        other as StructSymbol
-
-                        if (!symbol.equals(other.symbol, ignoreCase = true)) return false
-                        if (children != other.children) return false
-
-                        return true
-                    }
-
-                    override fun hashCode(): Int {
-                        return symbol.lowercase().hashCode()
-                    }
                 }
 
                 internal data class StructKey(
@@ -1368,7 +1899,8 @@ internal data class Rel(
 
                     internal companion object {
                         @JvmStatic
-                        internal fun builder(): RelOpExcludeTypeStructKeyBuilder = RelOpExcludeTypeStructKeyBuilder()
+                        internal fun builder(): RelOpExcludeTypeStructKeyBuilder =
+                            RelOpExcludeTypeStructKeyBuilder()
                     }
                 }
 
@@ -1382,7 +1914,8 @@ internal data class Rel(
 
                     internal companion object {
                         @JvmStatic
-                        internal fun builder(): RelOpExcludeTypeCollIndexBuilder = RelOpExcludeTypeCollIndexBuilder()
+                        internal fun builder(): RelOpExcludeTypeCollIndexBuilder =
+                            RelOpExcludeTypeCollIndexBuilder()
                     }
                 }
 
@@ -1428,7 +1961,8 @@ internal data class Rel(
         ) : Op() {
             public override val children: List<PlanNode> = emptyList()
 
-            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitRelOpErr(this, ctx)
+            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+                visitor.visitRelOpErr(this, ctx)
 
             internal companion object {
                 @JvmStatic
@@ -1443,7 +1977,8 @@ internal data class Rel(
     ) : PlanNode() {
         public override val children: List<PlanNode> = emptyList()
 
-        public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitRelBinding(this, ctx)
+        public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+            visitor.visitRelBinding(this, ctx)
 
         internal companion object {
             @JvmStatic

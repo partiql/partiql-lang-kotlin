@@ -702,6 +702,7 @@ public interface TupleCollectionConstraint
 public sealed class CollectionConstraint {
     public data class PrimaryKey(val keys: Set<String>) : TupleCollectionConstraint, CollectionConstraint()
     public data class PartitionKey(val keys: Set<String>) : TupleCollectionConstraint, CollectionConstraint()
+    public data class UniqueKey(val keys: Set<String>) : TupleCollectionConstraint, CollectionConstraint()
 }
 
 internal fun StaticType.isNullOrMissing(): Boolean = (this is NullType || this is MissingType)
