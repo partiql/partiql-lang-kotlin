@@ -24,10 +24,10 @@ plugins {
 }
 
 dependencies {
-    api(project(":partiql-plan", configuration = "shadow"))
-    api(project(":partiql-types", configuration = "shadow"))
-    implementation(project(":partiql-ast", configuration = "shadow"))
-    implementation(project(":partiql-spi", configuration = "shadow"))
+    api(project(":partiql-plan"))
+    api(project(":partiql-types"))
+    implementation(project(":partiql-ast"))
+    implementation(project(":partiql-spi"))
     implementation(Deps.dotlin)
     implementation(Deps.ionElement)
     // Test

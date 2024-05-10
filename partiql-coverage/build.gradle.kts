@@ -21,7 +21,7 @@ plugins {
 }
 
 dependencies {
-    api(project(":partiql-lang", configuration = "shadow"))
+    api(project(":partiql-lang"))
     implementation(Deps.junitApi)
     implementation(Deps.junitParams)
     implementation(Deps.junitPlatformLauncher)

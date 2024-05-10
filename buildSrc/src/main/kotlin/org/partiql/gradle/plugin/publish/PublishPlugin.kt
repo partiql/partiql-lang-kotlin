@@ -94,8 +94,8 @@ abstract class PublishPlugin : Plugin<Project> {
         }
 
         tasks.getByName<Jar>("jar") {
-            // Do not create the normal `jar`; use the generated shadow jar instead
-            enabled = false
+            // Rename jar for `project` dependencies; not published to Maven
+            archiveClassifier.set("original")
         }
 
         // Setup Maven Central Publishing

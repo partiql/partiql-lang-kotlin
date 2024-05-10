@@ -22,7 +22,7 @@ plugins {
 dependencies {
     api(Deps.pigRuntime)
     api(Deps.ionElement)
-    api(project(":partiql-types", configuration = "shadow"))
+    api(project(":partiql-types"))
 }
 
 publish {

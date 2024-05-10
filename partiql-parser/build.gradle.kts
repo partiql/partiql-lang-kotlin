@@ -20,8 +20,8 @@ plugins {
 
 dependencies {
     antlr(Deps.antlr)
-    api(project(":partiql-ast", configuration = "shadow"))
-    api(project(":partiql-types", configuration = "shadow"))
+    api(project(":partiql-ast"))
+    api(project(":partiql-types"))
     implementation(Deps.ionElement)
     shadow(Deps.antlrRuntime)
 }

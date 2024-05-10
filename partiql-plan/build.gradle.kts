@@ -21,7 +21,7 @@ plugins {
 }
 
 dependencies {
-    api(project(":partiql-types", configuration = "shadow"))
+    api(project(":partiql-types"))
     implementation(Deps.ionElement)
     implementation(Deps.kotlinReflect)
 }
