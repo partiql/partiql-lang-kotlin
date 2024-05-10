@@ -2,6 +2,7 @@ package org.partiql.planner.internal.typer
 
 import com.amazon.ionelement.api.field
 import com.amazon.ionelement.api.ionString
+import com.amazon.ionelement.api.ionStructOf
 import org.partiql.planner.internal.ir.Constraint
 import org.partiql.planner.internal.ir.Identifier
 import org.partiql.planner.internal.ir.PlanNode
@@ -15,6 +16,7 @@ import org.partiql.types.BagType
 import org.partiql.types.CollectionConstraint
 import org.partiql.types.DecimalType
 import org.partiql.types.ListType
+import org.partiql.types.NullType
 import org.partiql.types.NumberConstraint
 import org.partiql.types.StaticType
 import org.partiql.types.StaticType.Companion.BOOL
@@ -27,8 +29,10 @@ import org.partiql.types.StaticType.Companion.INT4
 import org.partiql.types.StaticType.Companion.INT8
 import org.partiql.types.StaticType.Companion.STRING
 import org.partiql.types.StringType
+import org.partiql.types.StructType
 import org.partiql.types.TimeType
 import org.partiql.types.TimestampType
+import org.partiql.types.TupleConstraint
 import org.partiql.value.PartiQLTimestampExperimental
 
 internal class ShapeNormalizer() {
@@ -128,9 +132,14 @@ internal class ShapeNormalizer() {
     }
 }
 
-internal class ConstraintResolver() {
-    fun resolve() {
+internal object ConstraintResolver {
+    fun resolveTable(type: Type.Collection): BagType {
+        val type = Visitor.visitTypeCollection(type, Ctx(emptyList())).removeNull() as BagType
+        return type.copy(type.elementType.removeNull(), type.metas, type.constraints)
     }
+
+    private fun StaticType.removeNull() =
+        this.allTypes.filterNot { it is NullType }.toSet().let { StaticType.unionOf(it).flatten() }
 
     data class Ctx(
         val primaryKey: List<Identifier.Symbol>
@@ -141,8 +150,11 @@ internal class ConstraintResolver() {
             TODO("Not yet implemented")
         }
 
+        override fun visitTypeAtomic(node: Type.Atomic, ctx: Ctx): StaticType =
+            node.toStaticType()
+
         override fun visitTypeCollection(node: Type.Collection, ctx: Ctx): StaticType {
-            val elementType = node.type ?: return if (node.isOrdered) StaticType.LIST else StaticType.BAG
+            val elementType = node.type ?: return if (node.isOrdered) StaticType.LIST.asNullable() else StaticType.BAG.asNullable()
             // only one pk constraint
             val pkConstr = node.constraints.first() {
                 val def = it.definition
@@ -151,7 +163,7 @@ internal class ConstraintResolver() {
                 } else false
             }
             val pkAttr = (pkConstr.definition as Constraint.Definition.Unique).attributes
-            val resolvedElementType = visitType(node.type, Ctx(pkAttr))
+            val resolvedElementType = visitType(elementType, Ctx(pkAttr))
             val collectionConstraint = node.constraints.mapNotNull { contr ->
                 val def = contr.definition
                 if (def is Constraint.Definition.Unique) {
@@ -161,9 +173,9 @@ internal class ConstraintResolver() {
                 } else null
             }.toSet()
             return if (node.isOrdered) {
-                ListType(resolvedElementType, mapOf(), collectionConstraint)
+                ListType(resolvedElementType, mapOf(), collectionConstraint).asNullable()
             } else {
-                BagType(resolvedElementType, mapOf(), collectionConstraint)
+                BagType(resolvedElementType, mapOf(), collectionConstraint).asNullable()
             }
         }
 
@@ -175,21 +187,33 @@ internal class ConstraintResolver() {
                 if (constr.definition is Constraint.Definition.Check) {
                     field(constr.name!!, ionString(constr.definition.sql))
                 } else null
+            }.let { mapOf("check_constraints" to ionStructOf(it)) }
+            val resolvedField = node.fields.map {
+                StructType.Field(
+                    it.name.normalize(),
+                    visitTypeRecordField(it, ctx)
+                )
             }
-            val resolvedField = node.fields.map { visitTypeRecordField(it, ctx) }
-            TODO()
+
+            return StructType(
+                resolvedField,
+                true,
+                listOf(),
+                setOf(
+                    TupleConstraint.Open(false),
+                    TupleConstraint.UniqueAttrs(true)
+                ),
+                constraintMeta
+            ).asNullable()
         }
 
         override fun visitTypeRecordField(node: Type.Record.Field, ctx: Ctx): StaticType {
             val notNullable =
                 (node.constraints.any { it.definition is Constraint.Definition.Nullable }) ||
                     ctx.primaryKey.contains(node.name)
-            when (val type = node.type) {
-                is Type.Atomic -> type.toStaticType().let { if (notNullable) it else it.asNullable() }
-                is Type.Collection -> visitTypeCollection(type, Ctx(emptyList()))
-                is Type.Record -> visitTypeRecord(type, Ctx(emptyList()))
-            }
-            TODO()
+            val type = visitType(node.type, ctx).let { if (notNullable) it.removeNull() else it }
+
+            return if (node.isOptional) type.asOptional() else type
         }
 
         @OptIn(PartiQLTimestampExperimental::class)
@@ -217,7 +241,7 @@ internal class ConstraintResolver() {
             is Type.Atomic.TimeWithTz -> TimeType(precision, true)
             is Type.Atomic.Timestamp -> TimestampType(precision ?: 6, false)
             is Type.Atomic.TimestampWithTz -> TimestampType(precision ?: 6, true)
-        }
+        }.asNullable()
 
         private fun Identifier.Symbol.normalize() =
             when (this.caseSensitivity) {

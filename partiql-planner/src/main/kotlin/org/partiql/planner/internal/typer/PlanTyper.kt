@@ -64,6 +64,7 @@ import org.partiql.planner.internal.ir.rexOpStruct
 import org.partiql.planner.internal.ir.rexOpStructField
 import org.partiql.planner.internal.ir.rexOpSubquery
 import org.partiql.planner.internal.ir.rexOpTupleUnion
+import org.partiql.planner.internal.ir.statementDDL
 import org.partiql.planner.internal.ir.statementQuery
 import org.partiql.planner.internal.ir.typeCollection
 import org.partiql.planner.internal.ir.typeRecord
@@ -1482,7 +1483,8 @@ internal class PlanTyper(private val env: Env) {
             when (node.op) {
                 is DdlOp.CreateTable -> {
                     val op = visitDdlOpCreateTable(node.op, ctx)
-                    val shape = op.shape
+                    val shape = ConstraintResolver.resolveTable(op.shape)
+                    return statementDDL(shape, op)
                 }
             }
         }
