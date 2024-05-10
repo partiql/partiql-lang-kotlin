@@ -20,7 +20,7 @@ plugins {
 
 dependencies {
     api(Deps.ionElement)
-    api(project(":partiql-types"))
+    api(project(":partiql-types", configuration = "shadow"))
 }
 
 publish {

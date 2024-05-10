@@ -16,6 +16,7 @@
 package org.partiql.gradle.plugin.publish
 
 import com.github.jengelman.gradle.plugins.shadow.ShadowPlugin
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPlugin
@@ -87,6 +88,16 @@ abstract class PublishPlugin : Plugin<Project> {
             from(tasks.named("dokkaHtml"))
         }
 
+        tasks.getByName<ShadowJar>("shadowJar") {
+            // Use the default name for published shadow jar
+            archiveClassifier.set("")
+        }
+
+        tasks.getByName<Jar>("jar") {
+            // Do not create the normal `jar`; use the generated shadow jar instead
+            enabled = false
+        }
+
         // Setup Maven Central Publishing
         afterEvaluate {
             val publishing = extensions.getByType(PublishingExtension::class.java).apply {
@@ -95,6 +106,8 @@ abstract class PublishPlugin : Plugin<Project> {
                         // Publish the shadow jar; create dependencies separately since `ShadowExtension.component`
                         // does not include non-shadowed in POM dependencies
                         artifact(tasks["shadowJar"])
+                        artifact(tasks["sourcesJar"])
+                        artifact(tasks["javadocJar"])
                         artifactId = ext.artifactId
                         pom {
                             packaging = "jar"

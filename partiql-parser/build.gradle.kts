@@ -20,8 +20,8 @@ plugins {
 
 dependencies {
     antlr(Deps.antlr)
-    api(project(":partiql-ast"))
-    api(project(":partiql-types"))
+    api(project(":partiql-ast", configuration = "shadow"))
+    api(project(":partiql-types", configuration = "shadow"))
     implementation(Deps.ionElement)
     shadow(Deps.antlrRuntime)
 }
@@ -33,7 +33,6 @@ val relocations = mapOf(
 tasks.shadowJar {
     dependsOn(tasks.named("generateGrammarSource"))
     configurations = listOf(project.configurations.shadow.get())
-    archiveClassifier.set("shaded")
     for ((from, to) in relocations) {
         relocate(from, to)
     }
