@@ -102,7 +102,7 @@ internal class ShapeNormalizer() {
 
         private fun Constraint.addNameIfNotExists(ctx: Ctx): Constraint {
             val named =
-                if (this.name == null) constraint("${ctx.prefix}_${ctx.count}", this.definition)
+                if (this.name == null) constraint("\$_${ctx.prefix}_${ctx.count}", this.definition)
                 else this
             ctx.count += 1
             return named
@@ -156,14 +156,20 @@ internal object ConstraintResolver {
         override fun visitTypeCollection(node: Type.Collection, ctx: Ctx): StaticType {
             val elementType = node.type ?: return if (node.isOrdered) StaticType.LIST.asNullable() else StaticType.BAG.asNullable()
             // only one pk constraint
-            val pkConstr = node.constraints.first() {
+            val pkConstr = node.constraints.firstOrNull {
                 val def = it.definition
                 if (def is Constraint.Definition.Unique) {
                     def.isPrimaryKey
                 } else false
             }
-            val pkAttr = (pkConstr.definition as Constraint.Definition.Unique).attributes
-            val resolvedElementType = visitType(elementType, Ctx(pkAttr))
+            val pkAttr = pkConstr?.let { (it.definition as Constraint.Definition.Unique).attributes } ?: emptyList()
+            // if associated with PK
+            // the underlying type must be a non null struct
+            val resolvedElementType = visitType(elementType, Ctx(pkAttr)).let {
+                if (pkAttr.isNotEmpty()) {
+                    it.removeNull()
+                } else it
+            }
             val collectionConstraint = node.constraints.mapNotNull { contr ->
                 val def = contr.definition
                 if (def is Constraint.Definition.Unique) {
@@ -250,48 +256,3 @@ internal object ConstraintResolver {
             }
     }
 }
-
-// internal object ConstraintResolver {
-//    fun resolveRecord(record: Type.Record) : StructType {
-//        val field = record.fields.map {
-//
-//        }
-//    }
-//
-//    fun resolveField(field: Type.Record.Field) : StructType.Field {
-//        when (val type = field.type) {
-//            is Type.Atomic -> {
-//                val staticType = type.toStaticType()
-//                if ( field.constraints.any() { it.definition is Constraint.Definition.NotNull } ) {
-//                    staticType.allTypes.filter { it is NullType }.let { unionOf(it.toSet()).flatten() }
-//                }
-//            }
-//            //
-//            is Type.Record -> {
-//                val staticType = resolveRecord(type)
-//                if ( field.constraints.any() { it.definition is Constraint.Definition.NotNull } ) {
-//                    staticType.allTypes.filter { it is NullType }.let { unionOf(it.toSet()).flatten() }
-//                }
-//            }
-//        }
-//    }
-//
-//    @OptIn(PartiQLTimestampExperimental::class)
-//    private fun Type.toStaticType(): StaticType = when (this) {
-//        is Type.Collection.Array -> ListType(this.type?.toStaticType() ?: ANY)
-//        is Type.Collection.Bag -> BAG
-//
-//        is Type.Record -> StructType(
-//            this.fields.map {
-//                StructType.Field(
-//                    it.name.normalize(),
-//                    it.type.toStaticType()
-//                )
-//            }
-//        )
-//
-
-//    }.also { it.asNullable() }
-//
-
-// }

@@ -86,6 +86,35 @@ public final class org/partiql/plan/Catalog$Item$Value$Companion {
 	public final fun builder ()Lorg/partiql/plan/builder/CatalogItemValueBuilder;
 }
 
+public abstract class org/partiql/plan/DdlOp : org/partiql/plan/PlanNode {
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class org/partiql/plan/DdlOp$CreateTable : org/partiql/plan/DdlOp {
+	public static final field Companion Lorg/partiql/plan/DdlOp$CreateTable$Companion;
+	public final field name Lorg/partiql/plan/Identifier;
+	public final field partitionBy Lorg/partiql/plan/PartitionBy;
+	public final field shape Lorg/partiql/types/StaticType;
+	public final field tableProperties Ljava/util/List;
+	public fun <init> (Lorg/partiql/plan/Identifier;Lorg/partiql/types/StaticType;Lorg/partiql/plan/PartitionBy;Ljava/util/List;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/DdlOpCreateTableBuilder;
+	public final fun component1 ()Lorg/partiql/plan/Identifier;
+	public final fun component2 ()Lorg/partiql/types/StaticType;
+	public final fun component3 ()Lorg/partiql/plan/PartitionBy;
+	public final fun component4 ()Ljava/util/List;
+	public final fun copy (Lorg/partiql/plan/Identifier;Lorg/partiql/types/StaticType;Lorg/partiql/plan/PartitionBy;Ljava/util/List;)Lorg/partiql/plan/DdlOp$CreateTable;
+	public static synthetic fun copy$default (Lorg/partiql/plan/DdlOp$CreateTable;Lorg/partiql/plan/Identifier;Lorg/partiql/types/StaticType;Lorg/partiql/plan/PartitionBy;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/plan/DdlOp$CreateTable;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/DdlOp$CreateTable$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/DdlOpCreateTableBuilder;
+}
+
 public abstract class org/partiql/plan/Identifier : org/partiql/plan/PlanNode {
 	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 }
@@ -160,14 +189,39 @@ public final class org/partiql/plan/PartiQLPlan$Companion {
 	public final fun builder ()Lorg/partiql/plan/builder/PartiQlPlanBuilder;
 }
 
+public abstract class org/partiql/plan/PartitionBy : org/partiql/plan/PlanNode {
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class org/partiql/plan/PartitionBy$AttrList : org/partiql/plan/PartitionBy {
+	public static final field Companion Lorg/partiql/plan/PartitionBy$AttrList$Companion;
+	public final field attrs Ljava/util/List;
+	public fun <init> (Ljava/util/List;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/PartitionByAttrListBuilder;
+	public final fun component1 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;)Lorg/partiql/plan/PartitionBy$AttrList;
+	public static synthetic fun copy$default (Lorg/partiql/plan/PartitionBy$AttrList;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/plan/PartitionBy$AttrList;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/PartitionBy$AttrList$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/PartitionByAttrListBuilder;
+}
+
 public final class org/partiql/plan/Plan {
 	public static final fun catalog (Ljava/lang/String;Ljava/util/List;)Lorg/partiql/plan/Catalog;
 	public static final fun catalogItemAgg (Ljava/util/List;Ljava/lang/String;)Lorg/partiql/plan/Catalog$Item$Agg;
 	public static final fun catalogItemFn (Ljava/util/List;Ljava/lang/String;)Lorg/partiql/plan/Catalog$Item$Fn;
 	public static final fun catalogItemValue (Ljava/util/List;Lorg/partiql/types/StaticType;)Lorg/partiql/plan/Catalog$Item$Value;
+	public static final fun ddlOpCreateTable (Lorg/partiql/plan/Identifier;Lorg/partiql/types/StaticType;Lorg/partiql/plan/PartitionBy;Ljava/util/List;)Lorg/partiql/plan/DdlOp$CreateTable;
 	public static final fun identifierQualified (Lorg/partiql/plan/Identifier$Symbol;Ljava/util/List;)Lorg/partiql/plan/Identifier$Qualified;
 	public static final fun identifierSymbol (Ljava/lang/String;Lorg/partiql/plan/Identifier$CaseSensitivity;)Lorg/partiql/plan/Identifier$Symbol;
 	public static final fun partiQLPlan (Ljava/util/List;Lorg/partiql/plan/Statement;)Lorg/partiql/plan/PartiQLPlan;
+	public static final fun partitionByAttrList (Ljava/util/List;)Lorg/partiql/plan/PartitionBy$AttrList;
 	public static final fun ref (II)Lorg/partiql/plan/Ref;
 	public static final fun refCast (Lorg/partiql/value/PartiQLValueType;Lorg/partiql/value/PartiQLValueType;Z)Lorg/partiql/plan/Ref$Cast;
 	public static final fun rel (Lorg/partiql/plan/Rel$Type;Lorg/partiql/plan/Rel$Op;)Lorg/partiql/plan/Rel;
@@ -222,7 +276,9 @@ public final class org/partiql/plan/Plan {
 	public static final fun rexOpSubquery (Lorg/partiql/plan/Rex;Lorg/partiql/plan/Rel;Lorg/partiql/plan/Rex$Op$Subquery$Coercion;)Lorg/partiql/plan/Rex$Op$Subquery;
 	public static final fun rexOpTupleUnion (Ljava/util/List;)Lorg/partiql/plan/Rex$Op$TupleUnion;
 	public static final fun rexOpVar (II)Lorg/partiql/plan/Rex$Op$Var;
+	public static final fun statementDDL (Lorg/partiql/plan/DdlOp;)Lorg/partiql/plan/Statement$DDL;
 	public static final fun statementQuery (Lorg/partiql/plan/Rex;)Lorg/partiql/plan/Statement$Query;
+	public static final fun tableProperty (Ljava/lang/String;Lorg/partiql/value/PartiQLValue;)Lorg/partiql/plan/TableProperty;
 }
 
 public abstract class org/partiql/plan/PlanNode {
@@ -1440,6 +1496,25 @@ public abstract class org/partiql/plan/Statement : org/partiql/plan/PlanNode {
 	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
 }
 
+public final class org/partiql/plan/Statement$DDL : org/partiql/plan/Statement {
+	public static final field Companion Lorg/partiql/plan/Statement$DDL$Companion;
+	public final field op Lorg/partiql/plan/DdlOp;
+	public fun <init> (Lorg/partiql/plan/DdlOp;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/StatementDdlBuilder;
+	public final fun component1 ()Lorg/partiql/plan/DdlOp;
+	public final fun copy (Lorg/partiql/plan/DdlOp;)Lorg/partiql/plan/Statement$DDL;
+	public static synthetic fun copy$default (Lorg/partiql/plan/Statement$DDL;Lorg/partiql/plan/DdlOp;ILjava/lang/Object;)Lorg/partiql/plan/Statement$DDL;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/Statement$DDL$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/StatementDdlBuilder;
+}
+
 public final class org/partiql/plan/Statement$Query : org/partiql/plan/Statement {
 	public static final field Companion Lorg/partiql/plan/Statement$Query$Companion;
 	public final field root Lorg/partiql/plan/Rex;
@@ -1457,6 +1532,27 @@ public final class org/partiql/plan/Statement$Query : org/partiql/plan/Statement
 
 public final class org/partiql/plan/Statement$Query$Companion {
 	public final fun builder ()Lorg/partiql/plan/builder/StatementQueryBuilder;
+}
+
+public final class org/partiql/plan/TableProperty : org/partiql/plan/PlanNode {
+	public static final field Companion Lorg/partiql/plan/TableProperty$Companion;
+	public final field name Ljava/lang/String;
+	public final field value Lorg/partiql/value/PartiQLValue;
+	public fun <init> (Ljava/lang/String;Lorg/partiql/value/PartiQLValue;)V
+	public fun accept (Lorg/partiql/plan/visitor/PlanVisitor;Ljava/lang/Object;)Ljava/lang/Object;
+	public static final fun builder ()Lorg/partiql/plan/builder/TablePropertyBuilder;
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lorg/partiql/value/PartiQLValue;
+	public final fun copy (Ljava/lang/String;Lorg/partiql/value/PartiQLValue;)Lorg/partiql/plan/TableProperty;
+	public static synthetic fun copy$default (Lorg/partiql/plan/TableProperty;Ljava/lang/String;Lorg/partiql/value/PartiQLValue;ILjava/lang/Object;)Lorg/partiql/plan/TableProperty;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getChildren ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/partiql/plan/TableProperty$Companion {
+	public final fun builder ()Lorg/partiql/plan/builder/TablePropertyBuilder;
 }
 
 public final class org/partiql/plan/builder/CatalogBuilder {
@@ -1511,6 +1607,25 @@ public final class org/partiql/plan/builder/CatalogItemValueBuilder {
 	public final fun type (Lorg/partiql/types/StaticType;)Lorg/partiql/plan/builder/CatalogItemValueBuilder;
 }
 
+public final class org/partiql/plan/builder/DdlOpCreateTableBuilder {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/plan/Identifier;Lorg/partiql/types/StaticType;Lorg/partiql/plan/PartitionBy;Ljava/util/List;)V
+	public synthetic fun <init> (Lorg/partiql/plan/Identifier;Lorg/partiql/types/StaticType;Lorg/partiql/plan/PartitionBy;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/plan/DdlOp$CreateTable;
+	public final fun getName ()Lorg/partiql/plan/Identifier;
+	public final fun getPartitionBy ()Lorg/partiql/plan/PartitionBy;
+	public final fun getShape ()Lorg/partiql/types/StaticType;
+	public final fun getTableProperties ()Ljava/util/List;
+	public final fun name (Lorg/partiql/plan/Identifier;)Lorg/partiql/plan/builder/DdlOpCreateTableBuilder;
+	public final fun partitionBy (Lorg/partiql/plan/PartitionBy;)Lorg/partiql/plan/builder/DdlOpCreateTableBuilder;
+	public final fun setName (Lorg/partiql/plan/Identifier;)V
+	public final fun setPartitionBy (Lorg/partiql/plan/PartitionBy;)V
+	public final fun setShape (Lorg/partiql/types/StaticType;)V
+	public final fun setTableProperties (Ljava/util/List;)V
+	public final fun shape (Lorg/partiql/types/StaticType;)Lorg/partiql/plan/builder/DdlOpCreateTableBuilder;
+	public final fun tableProperties (Ljava/util/List;)Lorg/partiql/plan/builder/DdlOpCreateTableBuilder;
+}
+
 public final class org/partiql/plan/builder/IdentifierQualifiedBuilder {
 	public fun <init> ()V
 	public fun <init> (Lorg/partiql/plan/Identifier$Symbol;Ljava/util/List;)V
@@ -1550,6 +1665,16 @@ public final class org/partiql/plan/builder/PartiQlPlanBuilder {
 	public final fun statement (Lorg/partiql/plan/Statement;)Lorg/partiql/plan/builder/PartiQlPlanBuilder;
 }
 
+public final class org/partiql/plan/builder/PartitionByAttrListBuilder {
+	public fun <init> ()V
+	public fun <init> (Ljava/util/List;)V
+	public synthetic fun <init> (Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun attrs (Ljava/util/List;)Lorg/partiql/plan/builder/PartitionByAttrListBuilder;
+	public final fun build ()Lorg/partiql/plan/PartitionBy$AttrList;
+	public final fun getAttrs ()Ljava/util/List;
+	public final fun setAttrs (Ljava/util/List;)V
+}
+
 public final class org/partiql/plan/builder/PlanBuilder {
 	public fun <init> ()V
 	public final fun catalog (Ljava/lang/String;Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Catalog;
@@ -1560,12 +1685,16 @@ public final class org/partiql/plan/builder/PlanBuilder {
 	public static synthetic fun catalogItemFn$default (Lorg/partiql/plan/builder/PlanBuilder;Ljava/util/List;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Catalog$Item$Fn;
 	public final fun catalogItemValue (Ljava/util/List;Lorg/partiql/types/StaticType;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Catalog$Item$Value;
 	public static synthetic fun catalogItemValue$default (Lorg/partiql/plan/builder/PlanBuilder;Ljava/util/List;Lorg/partiql/types/StaticType;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Catalog$Item$Value;
+	public final fun ddlOpCreateTable (Lorg/partiql/plan/Identifier;Lorg/partiql/types/StaticType;Lorg/partiql/plan/PartitionBy;Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/DdlOp$CreateTable;
+	public static synthetic fun ddlOpCreateTable$default (Lorg/partiql/plan/builder/PlanBuilder;Lorg/partiql/plan/Identifier;Lorg/partiql/types/StaticType;Lorg/partiql/plan/PartitionBy;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/DdlOp$CreateTable;
 	public final fun identifierQualified (Lorg/partiql/plan/Identifier$Symbol;Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Identifier$Qualified;
 	public static synthetic fun identifierQualified$default (Lorg/partiql/plan/builder/PlanBuilder;Lorg/partiql/plan/Identifier$Symbol;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Identifier$Qualified;
 	public final fun identifierSymbol (Ljava/lang/String;Lorg/partiql/plan/Identifier$CaseSensitivity;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Identifier$Symbol;
 	public static synthetic fun identifierSymbol$default (Lorg/partiql/plan/builder/PlanBuilder;Ljava/lang/String;Lorg/partiql/plan/Identifier$CaseSensitivity;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Identifier$Symbol;
 	public final fun partiQLPlan (Ljava/util/List;Lorg/partiql/plan/Statement;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/PartiQLPlan;
 	public static synthetic fun partiQLPlan$default (Lorg/partiql/plan/builder/PlanBuilder;Ljava/util/List;Lorg/partiql/plan/Statement;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/PartiQLPlan;
+	public final fun partitionByAttrList (Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/PartitionBy$AttrList;
+	public static synthetic fun partitionByAttrList$default (Lorg/partiql/plan/builder/PlanBuilder;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/PartitionBy$AttrList;
 	public final fun ref (Ljava/lang/Integer;Ljava/lang/Integer;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Ref;
 	public static synthetic fun ref$default (Lorg/partiql/plan/builder/PlanBuilder;Ljava/lang/Integer;Ljava/lang/Integer;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Ref;
 	public final fun refCast (Lorg/partiql/value/PartiQLValueType;Lorg/partiql/value/PartiQLValueType;Ljava/lang/Boolean;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Ref$Cast;
@@ -1674,8 +1803,12 @@ public final class org/partiql/plan/builder/PlanBuilder {
 	public static synthetic fun rexOpTupleUnion$default (Lorg/partiql/plan/builder/PlanBuilder;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Rex$Op$TupleUnion;
 	public final fun rexOpVar (Ljava/lang/Integer;Ljava/lang/Integer;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Rex$Op$Var;
 	public static synthetic fun rexOpVar$default (Lorg/partiql/plan/builder/PlanBuilder;Ljava/lang/Integer;Ljava/lang/Integer;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Rex$Op$Var;
+	public final fun statementDDL (Lorg/partiql/plan/DdlOp;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Statement$DDL;
+	public static synthetic fun statementDDL$default (Lorg/partiql/plan/builder/PlanBuilder;Lorg/partiql/plan/DdlOp;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Statement$DDL;
 	public final fun statementQuery (Lorg/partiql/plan/Rex;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/Statement$Query;
 	public static synthetic fun statementQuery$default (Lorg/partiql/plan/builder/PlanBuilder;Lorg/partiql/plan/Rex;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/Statement$Query;
+	public final fun tableProperty (Ljava/lang/String;Lorg/partiql/value/PartiQLValue;Lkotlin/jvm/functions/Function1;)Lorg/partiql/plan/TableProperty;
+	public static synthetic fun tableProperty$default (Lorg/partiql/plan/builder/PlanBuilder;Ljava/lang/String;Lorg/partiql/value/PartiQLValue;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lorg/partiql/plan/TableProperty;
 }
 
 public final class org/partiql/plan/builder/PlanBuilderKt {
@@ -2359,6 +2492,16 @@ public final class org/partiql/plan/builder/RexOpVarBuilder {
 	public final fun setRef (Ljava/lang/Integer;)V
 }
 
+public final class org/partiql/plan/builder/StatementDdlBuilder {
+	public fun <init> ()V
+	public fun <init> (Lorg/partiql/plan/DdlOp;)V
+	public synthetic fun <init> (Lorg/partiql/plan/DdlOp;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/plan/Statement$DDL;
+	public final fun getOp ()Lorg/partiql/plan/DdlOp;
+	public final fun op (Lorg/partiql/plan/DdlOp;)Lorg/partiql/plan/builder/StatementDdlBuilder;
+	public final fun setOp (Lorg/partiql/plan/DdlOp;)V
+}
+
 public final class org/partiql/plan/builder/StatementQueryBuilder {
 	public fun <init> ()V
 	public fun <init> (Lorg/partiql/plan/Rex;)V
@@ -2367,6 +2510,19 @@ public final class org/partiql/plan/builder/StatementQueryBuilder {
 	public final fun getRoot ()Lorg/partiql/plan/Rex;
 	public final fun root (Lorg/partiql/plan/Rex;)Lorg/partiql/plan/builder/StatementQueryBuilder;
 	public final fun setRoot (Lorg/partiql/plan/Rex;)V
+}
+
+public final class org/partiql/plan/builder/TablePropertyBuilder {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Lorg/partiql/value/PartiQLValue;)V
+	public synthetic fun <init> (Ljava/lang/String;Lorg/partiql/value/PartiQLValue;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build ()Lorg/partiql/plan/TableProperty;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getValue ()Lorg/partiql/value/PartiQLValue;
+	public final fun name (Ljava/lang/String;)Lorg/partiql/plan/builder/TablePropertyBuilder;
+	public final fun setName (Ljava/lang/String;)V
+	public final fun setValue (Lorg/partiql/value/PartiQLValue;)V
+	public final fun value (Lorg/partiql/value/PartiQLValue;)Lorg/partiql/plan/builder/TablePropertyBuilder;
 }
 
 public final class org/partiql/plan/debug/PlanPrinter {
@@ -2387,12 +2543,16 @@ public abstract class org/partiql/plan/util/PlanRewriter : org/partiql/plan/visi
 	public fun visitCatalogItemFn (Lorg/partiql/plan/Catalog$Item$Fn;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
 	public synthetic fun visitCatalogItemValue (Lorg/partiql/plan/Catalog$Item$Value;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitCatalogItemValue (Lorg/partiql/plan/Catalog$Item$Value;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitDdlOpCreateTable (Lorg/partiql/plan/DdlOp$CreateTable;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitDdlOpCreateTable (Lorg/partiql/plan/DdlOp$CreateTable;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
 	public synthetic fun visitIdentifierQualified (Lorg/partiql/plan/Identifier$Qualified;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitIdentifierQualified (Lorg/partiql/plan/Identifier$Qualified;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
 	public synthetic fun visitIdentifierSymbol (Lorg/partiql/plan/Identifier$Symbol;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitIdentifierSymbol (Lorg/partiql/plan/Identifier$Symbol;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
 	public synthetic fun visitPartiQLPlan (Lorg/partiql/plan/PartiQLPlan;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitPartiQLPlan (Lorg/partiql/plan/PartiQLPlan;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitPartitionByAttrList (Lorg/partiql/plan/PartitionBy$AttrList;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitPartitionByAttrList (Lorg/partiql/plan/PartitionBy$AttrList;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
 	public synthetic fun visitRef (Lorg/partiql/plan/Ref;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitRef (Lorg/partiql/plan/Ref;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
 	public synthetic fun visitRefCast (Lorg/partiql/plan/Ref$Cast;Ljava/lang/Object;)Ljava/lang/Object;
@@ -2501,8 +2661,12 @@ public abstract class org/partiql/plan/util/PlanRewriter : org/partiql/plan/visi
 	public fun visitRexOpTupleUnion (Lorg/partiql/plan/Rex$Op$TupleUnion;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
 	public synthetic fun visitRexOpVar (Lorg/partiql/plan/Rex$Op$Var;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitRexOpVar (Lorg/partiql/plan/Rex$Op$Var;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitStatementDDL (Lorg/partiql/plan/Statement$DDL;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitStatementDDL (Lorg/partiql/plan/Statement$DDL;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
 	public synthetic fun visitStatementQuery (Lorg/partiql/plan/Statement$Query;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitStatementQuery (Lorg/partiql/plan/Statement$Query;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
+	public synthetic fun visitTableProperty (Lorg/partiql/plan/TableProperty;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitTableProperty (Lorg/partiql/plan/TableProperty;Ljava/lang/Object;)Lorg/partiql/plan/PlanNode;
 }
 
 public abstract class org/partiql/plan/visitor/PlanBaseVisitor : org/partiql/plan/visitor/PlanVisitor {
@@ -2515,10 +2679,14 @@ public abstract class org/partiql/plan/visitor/PlanBaseVisitor : org/partiql/pla
 	public fun visitCatalogItemAgg (Lorg/partiql/plan/Catalog$Item$Agg;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitCatalogItemFn (Lorg/partiql/plan/Catalog$Item$Fn;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitCatalogItemValue (Lorg/partiql/plan/Catalog$Item$Value;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitDdlOp (Lorg/partiql/plan/DdlOp;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitDdlOpCreateTable (Lorg/partiql/plan/DdlOp$CreateTable;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitIdentifier (Lorg/partiql/plan/Identifier;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitIdentifierQualified (Lorg/partiql/plan/Identifier$Qualified;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitIdentifierSymbol (Lorg/partiql/plan/Identifier$Symbol;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitPartiQLPlan (Lorg/partiql/plan/PartiQLPlan;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitPartitionBy (Lorg/partiql/plan/PartitionBy;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitPartitionByAttrList (Lorg/partiql/plan/PartitionBy$AttrList;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitRef (Lorg/partiql/plan/Ref;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitRefCast (Lorg/partiql/plan/Ref$Cast;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitRel (Lorg/partiql/plan/Rel;Ljava/lang/Object;)Ljava/lang/Object;
@@ -2580,7 +2748,9 @@ public abstract class org/partiql/plan/visitor/PlanBaseVisitor : org/partiql/pla
 	public fun visitRexOpTupleUnion (Lorg/partiql/plan/Rex$Op$TupleUnion;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitRexOpVar (Lorg/partiql/plan/Rex$Op$Var;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitStatement (Lorg/partiql/plan/Statement;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitStatementDDL (Lorg/partiql/plan/Statement$DDL;Ljava/lang/Object;)Ljava/lang/Object;
 	public fun visitStatementQuery (Lorg/partiql/plan/Statement$Query;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun visitTableProperty (Lorg/partiql/plan/TableProperty;Ljava/lang/Object;)Ljava/lang/Object;
 }
 
 public abstract interface class org/partiql/plan/visitor/PlanVisitor {
@@ -2590,10 +2760,14 @@ public abstract interface class org/partiql/plan/visitor/PlanVisitor {
 	public abstract fun visitCatalogItemAgg (Lorg/partiql/plan/Catalog$Item$Agg;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitCatalogItemFn (Lorg/partiql/plan/Catalog$Item$Fn;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitCatalogItemValue (Lorg/partiql/plan/Catalog$Item$Value;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitDdlOp (Lorg/partiql/plan/DdlOp;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitDdlOpCreateTable (Lorg/partiql/plan/DdlOp$CreateTable;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitIdentifier (Lorg/partiql/plan/Identifier;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitIdentifierQualified (Lorg/partiql/plan/Identifier$Qualified;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitIdentifierSymbol (Lorg/partiql/plan/Identifier$Symbol;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitPartiQLPlan (Lorg/partiql/plan/PartiQLPlan;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitPartitionBy (Lorg/partiql/plan/PartitionBy;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitPartitionByAttrList (Lorg/partiql/plan/PartitionBy$AttrList;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitRef (Lorg/partiql/plan/Ref;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitRefCast (Lorg/partiql/plan/Ref$Cast;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitRel (Lorg/partiql/plan/Rel;Ljava/lang/Object;)Ljava/lang/Object;
@@ -2655,6 +2829,8 @@ public abstract interface class org/partiql/plan/visitor/PlanVisitor {
 	public abstract fun visitRexOpTupleUnion (Lorg/partiql/plan/Rex$Op$TupleUnion;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitRexOpVar (Lorg/partiql/plan/Rex$Op$Var;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitStatement (Lorg/partiql/plan/Statement;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitStatementDDL (Lorg/partiql/plan/Statement$DDL;Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun visitStatementQuery (Lorg/partiql/plan/Statement$Query;Ljava/lang/Object;)Ljava/lang/Object;
+	public abstract fun visitTableProperty (Lorg/partiql/plan/TableProperty;Ljava/lang/Object;)Ljava/lang/Object;
 }
 

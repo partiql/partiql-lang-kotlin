@@ -207,4 +207,10 @@ internal open class PlanningProblemDetails(
             ProblemSeverity.ERROR,
             { "Exclude expression given an unresolvable root '$root'" }
         )
+
+    data class ExperimentalFeature(val featureName: String) :
+        PlanningProblemDetails(
+            ProblemSeverity.WARNING,
+            { "`$featureName` Feature is experimental. It may change in the feature." }
+        )
 }

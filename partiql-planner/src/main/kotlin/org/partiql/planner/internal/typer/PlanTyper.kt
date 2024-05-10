@@ -1506,9 +1506,12 @@ internal class PlanTyper(private val env: Env) {
                 val type = visitType(field.type, ctx)
                 typeRecordField(field.name, type, constraints, field.isOptional, field.comment)
             }
+            val constraints = node.constraints.map { constr ->
+                visitConstraint(constr, fields)
+            }
             return typeRecord(
                 fields,
-                emptyList()
+                constraints
             )
         }
 
