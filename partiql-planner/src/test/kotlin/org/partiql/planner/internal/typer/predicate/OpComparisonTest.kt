@@ -7,8 +7,6 @@ import org.partiql.planner.internal.typer.accumulateSuccess
 import org.partiql.planner.internal.typer.accumulateSuccessNullCall
 import org.partiql.planner.util.allSupportedType
 import org.partiql.planner.util.cartesianProduct
-import org.partiql.types.MissingType
-import org.partiql.types.NullType
 import org.partiql.types.StaticType
 import java.util.stream.Stream
 
