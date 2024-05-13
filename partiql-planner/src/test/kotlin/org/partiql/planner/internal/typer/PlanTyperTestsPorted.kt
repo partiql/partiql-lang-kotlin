@@ -3606,7 +3606,7 @@ class PlanTyperTestsPorted {
                 name = "Subquery scalar coercion",
                 catalog = "subqueries",
                 key = PartiQLTest.Key("subquery", "subquery-03"),
-                expected = StaticType.BOOL,
+                expected = StaticType.BOOL.asNullable(),
             ),
         )
 
@@ -4117,14 +4117,14 @@ class PlanTyperTestsPorted {
                 catalog = CATALOG_DB,
                 catalogPath = DB_SCHEMA_MARKETS,
                 query = "order_info.customer_id = 1",
-                expected = TYPE_BOOL
+                expected = TYPE_BOOL.asNullable()
             ),
             SuccessTestCase(
                 name = "NEQ",
                 catalog = CATALOG_DB,
                 catalogPath = DB_SCHEMA_MARKETS,
                 query = "order_info.customer_id <> 1",
-                expected = TYPE_BOOL
+                expected = TYPE_BOOL.asNullable()
             ),
             SuccessTestCase(
                 name = "GEQ",
@@ -4223,7 +4223,7 @@ class PlanTyperTestsPorted {
                 catalog = CATALOG_DB,
                 catalogPath = DB_SCHEMA_MARKETS,
                 query = "order_info.CUSTOMER_ID = 1",
-                expected = TYPE_BOOL
+                expected = TYPE_BOOL.asNullable()
             ),
             // MISSING = 1
             // TODO: Semantic not finalized
@@ -4232,14 +4232,14 @@ class PlanTyperTestsPorted {
                 catalog = CATALOG_DB,
                 catalogPath = DB_SCHEMA_MARKETS,
                 query = "order_info.\"CUSTOMER_ID\" = 1",
-                expected = TYPE_BOOL
+                expected = TYPE_BOOL.asNullable()
             ),
             SuccessTestCase(
                 name = "Case Sensitive success",
                 catalog = CATALOG_DB,
                 catalogPath = DB_SCHEMA_MARKETS,
                 query = "order_info.\"customer_id\" = 1",
-                expected = TYPE_BOOL
+                expected = TYPE_BOOL.asNullable()
             ),
             SuccessTestCase(
                 name = "1-Level Junction",
@@ -4260,7 +4260,7 @@ class PlanTyperTestsPorted {
                 catalog = CATALOG_DB,
                 catalogPath = DB_SCHEMA_MARKETS,
                 query = "order_info.customer_id = 'something'",
-                expected = TYPE_BOOL,
+                expected = TYPE_BOOL.asNullable(),
             ),
             ErrorTestCase(
                 name = "Nonexisting Comparison",
@@ -4270,7 +4270,7 @@ class PlanTyperTestsPorted {
                 // non_existing_column get typed as missing
                 // Function resolves to EQ__ANY_ANY__BOOL
                 // Which can return BOOL Or NULL
-                expected = TYPE_BOOL,
+                expected = TYPE_BOOL.asNullable(),
                 problemHandler = assertProblemExists(
                     ProblemGenerator.undefinedVariable(insensitive("non_existing_column"))
                 )
@@ -4283,7 +4283,7 @@ class PlanTyperTestsPorted {
                 expected = StaticType.MISSING,
                 problemHandler = assertProblemExists(
                     ProblemGenerator.incompatibleTypesForOp(
-                        listOf(StaticType.BOOL, StaticType.INT4),
+                        listOf(StaticType.BOOL.asNullable(), StaticType.INT4),
                         "AND",
                     )
                 )
@@ -4296,7 +4296,7 @@ class PlanTyperTestsPorted {
                 expected = StaticType.MISSING,
                 problemHandler = assertProblemExists(
                     ProblemGenerator.incompatibleTypesForOp(
-                        listOf(StaticType.INT4, StaticType.BOOL),
+                        listOf(StaticType.INT4, StaticType.BOOL.asNullable()),
                         "AND",
                     )
                 )

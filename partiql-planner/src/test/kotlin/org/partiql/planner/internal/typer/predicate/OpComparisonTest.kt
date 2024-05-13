@@ -26,8 +26,17 @@ class OpComparisonTest : PartiQLTyperTestBase() {
             val successArgs = cartesianProduct(allSupportedType, allSupportedType)
             successArgs.forEach { args: List<StaticType> ->
                 when {
-                    args.any { it is MissingType } && args.any { it is NullType } -> accumulateSuccess(StaticType.BOOL, args)
-                    args.any { it is MissingType } && args.any { it is NullType } -> accumulateSuccess(StaticType.BOOL, args)
+                    // We currently do not have a nullable boolean type.
+                    args.any { it is NullType } -> accumulateSuccess(
+                        // StaticType.NULL,
+                        StaticType.unionOf(StaticType.BOOL, StaticType.NULL),
+                        args
+                    )
+                    args.any { it is MissingType } -> accumulateSuccess(
+                        StaticType.unionOf(StaticType.BOOL, StaticType.NULL),
+                        args
+                    )
+                    else -> accumulateSuccess(StaticType.unionOf(StaticType.BOOL, StaticType.NULL), args)
                 }
             }
         }
