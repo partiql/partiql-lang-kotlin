@@ -193,7 +193,7 @@ internal object ConstraintResolver {
                 if (constr.definition is Constraint.Definition.Check) {
                     field(constr.name!!, ionString(constr.definition.sql))
                 } else null
-            }.let { mapOf("check_constraints" to ionStructOf(it)) }
+            }.let { if (it.isNotEmpty()) { mapOf("check_constraints" to ionStructOf(it)) } else emptyMap() }
             val resolvedField = node.fields.map {
                 StructType.Field(
                     it.name.normalize(),
@@ -215,7 +215,7 @@ internal object ConstraintResolver {
 
         override fun visitTypeRecordField(node: Type.Record.Field, ctx: Ctx): StaticType {
             val notNullable =
-                (node.constraints.any { it.definition is Constraint.Definition.Nullable }) ||
+                (node.constraints.any { it.definition is Constraint.Definition.NotNull }) ||
                     ctx.primaryKey.contains(node.name)
             val type = visitType(node.type, ctx).let { if (notNullable) it.removeNull() else it }
 

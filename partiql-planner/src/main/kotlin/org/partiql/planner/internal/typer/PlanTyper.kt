@@ -135,10 +135,7 @@ internal class PlanTyper(private val env: Env) {
             is Statement.Query -> resolveQuery(statement)
         }
 
-    fun resolveDdl(statement: Statement.DDL): Statement {
-        val statement = statement.type()
-        return statement
-    }
+    fun resolveDdl(statement: Statement.DDL): Statement.DDL = statement.type()
 
     fun resolveQuery(statement: Statement.Query): Statement.Query {
         val root = statement.root.type(emptyList(), emptyList(), Scope.GLOBAL)
