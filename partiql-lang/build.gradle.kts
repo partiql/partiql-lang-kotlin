@@ -36,7 +36,7 @@ dependencies {
     api(Deps.ionElement)
     api(Deps.ionJava)
     api(Deps.ionSchema)
-    implementation(Deps.antlrRuntime)
+    shadow(Deps.antlrRuntime)
     implementation(Deps.csv)
     implementation(Deps.kotlinReflect)
     implementation(Deps.kotlinxCoroutines)
@@ -61,6 +61,24 @@ dependencies {
         jmh(Deps.jmhCore)
         jmh(Deps.jmhGeneratorAnnprocess)
         jmh(Deps.jmhGeneratorBytecode)
+    }
+}
+
+val relocations = mapOf(
+    "org.antlr" to "org.partiql.lang.thirdparty.antlr"
+)
+
+tasks.shadowJar {
+    configurations = listOf(project.configurations.shadow.get())
+    for ((from, to) in relocations) {
+        relocate(from, to)
+    }
+}
+
+// Workaround for https://github.com/johnrengelman/shadow/issues/651
+components.withType(AdhocComponentWithVariants::class.java).forEach { c ->
+    c.withVariantsFromConfiguration(project.configurations.shadowRuntimeElements.get()) {
+        skip()
     }
 }
 
