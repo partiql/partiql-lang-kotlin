@@ -27,7 +27,7 @@ dependencies {
 }
 
 val relocations = mapOf(
-    "org.antlr" to "org.partiql.thirdparty.antlr"
+    "org.antlr" to "org.partiql.parser.thirdparty.antlr"
 )
 
 tasks.shadowJar {
