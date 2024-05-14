@@ -36,7 +36,7 @@ object Versions {
     const val jansi = "2.4.0"
     const val jgenhtml = "1.6"
     const val jline = "3.21.0"
-    const val jmhGradlePlugin = "0.5.3"
+    const val jmhGradlePlugin = "0.7.2"
     const val jmhCore = "1.37"
     const val jmhGeneratorAnnprocess = "1.37"
     const val jmhGeneratorBytecode = "1.37"
@@ -108,11 +108,6 @@ object Deps {
     const val mockk = "io.mockk:mockk:${Versions.mockk}"
     const val kotlinxCoroutinesTest = "org.jetbrains.kotlinx:kotlinx-coroutines-test:${Versions.kotlinxCoroutinesTest}"
     const val ktlintTest = "com.pinterest.ktlint:ktlint-test:${Versions.ktlint}"
-
-    // JMH Benchmarking
-    const val jmhCore = "org.openjdk.jmh:jmh-core:${Versions.jmhCore}"
-    const val jmhGeneratorAnnprocess = "org.openjdk.jmh:jmh-core:${Versions.jmhGeneratorAnnprocess}"
-    const val jmhGeneratorBytecode = "org.openjdk.jmh:jmh-core:${Versions.jmhGeneratorBytecode}"
 }
 
 object Plugins {
@@ -126,7 +121,7 @@ object Plugins {
     const val application = "org.gradle.application"
     const val detekt = "io.gitlab.arturbosch.detekt"
     const val dokka = "org.jetbrains.dokka"
-    const val jmh = "me.champeau.gradle.jmh"
+    const val jmh = "me.champeau.jmh"
     const val library = "org.gradle.java-library"
     const val testFixtures = "org.gradle.java-test-fixtures"
 }
