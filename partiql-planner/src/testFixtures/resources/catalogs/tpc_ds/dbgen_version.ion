@@ -5,31 +5,19 @@ dbgen_version::{
     fields: [
       {
         name: "dv_version",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "dv_create_date",
-        type: [
-          "int64",
-          "null"
-        ]
+        type: "int64"
       },
       {
         name: "dv_create_time",
-        type: [
-          "int64",
-          "null"
-        ]
+        type: "int64"
       },
       {
         name: "dv_cmdline_args",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       }
     ]
   }

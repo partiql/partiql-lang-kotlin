@@ -5,101 +5,59 @@ warehouse::{
     fields: [
       {
         name: "w_warehouse_sk",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "w_warehouse_id",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "w_warehouse_name",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "w_warehouse_sq_ft",
-        type: [
-          "int32",
-          "null"
-        ]
+        type: "int32"
       },
       {
         name: "w_street_number",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "w_street_name",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "w_street_type",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "w_suite_number",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "w_city",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "w_county",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "w_state",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "w_zip",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "w_country",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "w_gmt_offset",
-        type: [
-          "float64",
-          "null"
-        ]
+        type: "float64"
       }
     ]
   }

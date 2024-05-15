@@ -5,17 +5,11 @@
   fields: [
     {
       name: "i_item_sk",
-      type: [
-        "string",
-        "null"
-      ]
+      type: "string"
     },
     {
       name: "i_item_id",
-      type: [
-        "string",
-        "null"
-      ]
+      type: "string"
     },
     {
       name: "i_rec",
@@ -25,27 +19,18 @@
         fields: [
           {
             name: "i_rec_start_date",
-            type: [
-              "int64",
-              "null"
-            ]
+            type: "int64"
           },
           {
             name: "i_rec_end_date",
-            type: [
-              "int64",
-              "null"
-            ]
+            type: "int64"
           },
         ]
       },
     },
     {
       name: "i_item_desc",
-      type: [
-        "string",
-        "null"
-      ]
+      type: "string"
     },
     {
       name: "pricing",
@@ -54,111 +39,66 @@
         fields: [
           {
             name: "i_current_price",
-            type: [
-              "float64",
-              "null"
-            ]
+            type: "float64"
           },
           {
             name: "i_wholesale_cost",
-            type: [
-              "float64",
-              "null"
-            ]
+            type: "float64"
           },
         ]
       },
     },
     {
       name: "i_brand_id",
-      type: [
-        "int32",
-        "null"
-      ]
+      type: "int32"
     },
     {
       name: "i_brand",
-      type: [
-        "string",
-        "null"
-      ]
+      type: "string"
     },
     {
       name: "i_class_id",
-      type: [
-        "int32",
-        "null"
-      ]
+      type: "int32"
     },
     {
       name: "i_class",
-      type: [
-        "string",
-        "null"
-      ]
+      type: "string"
     },
     {
       name: "i_category_id",
-      type: [
-        "int32",
-        "null"
-      ]
+      type: "int32"
     },
     {
       name: "i_category",
-      type: [
-        "string",
-        "null"
-      ]
+      type: "string"
     },
     {
       name: "i_manufact_id",
-      type: [
-        "int32",
-        "null"
-      ]
+      type: "int32"
     },
     {
       name: "i_manufact",
-      type: [
-        "string",
-        "null"
-      ]
+      type: "string"
     },
     {
       name: "i_size",
-      type: [
-        "string",
-        "null"
-      ]
+      type: "string"
     },
     {
       name: "i_formulation",
-      type: [
-        "string",
-        "null"
-      ]
+      type: "string"
     },
     {
       name: "i_color",
-      type: [
-        "string",
-        "null"
-      ]
+      type: "string"
     },
     {
       name: "i_units",
-      type: [
-        "string",
-        "null"
-      ]
+      type: "string"
     },
     {
       name: "i_container",
-      type: [
-        "string",
-        "null"
-      ]
+      type: "string"
     },
     {
       name: "manager_info",
@@ -174,12 +114,11 @@
           },
           {
             name: "manager_name",
-            type: ["string", "null"]
+            type: "string"
           },
           {
             name: "manager_address",
             type: [
-              "null",
               {
                 type: "struct",
                 constraints: [ closed, unique, ordered ],
@@ -190,7 +129,7 @@
                   },
                   {
                     name: "house_number",
-                    type: ["int32", "null"]
+                    type: "int32"
                   }
                 ]
               }
@@ -201,10 +140,7 @@
     },
     {
       name: "i_product_name",
-      type: [
-        "string",
-        "null"
-      ]
+      type: "string"
     }
   ]
 }

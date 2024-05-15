@@ -22,18 +22,8 @@ class OpComparisonTest : PartiQLTyperTestBase() {
             val successArgs = cartesianProduct(allSupportedType, allSupportedType)
 
             successArgs.forEach { args: List<StaticType> ->
-                if (args.contains(StaticType.MISSING)) {
-                    (this[TestResult.Success(StaticType.NULL)] ?: setOf(args)).let {
-                        put(TestResult.Success(StaticType.NULL), it + setOf(args))
-                    }
-                } else if (args.contains(StaticType.NULL)) {
-                    (this[TestResult.Success(StaticType.NULL)] ?: setOf(args)).let {
-                        put(TestResult.Success(StaticType.NULL), it + setOf(args))
-                    }
-                } else {
-                    (this[TestResult.Success(StaticType.BOOL)] ?: setOf(args)).let {
-                        put(TestResult.Success(StaticType.BOOL), it + setOf(args))
-                    }
+                (this[TestResult.Success(StaticType.BOOL)] ?: setOf(args)).let {
+                    put(TestResult.Success(StaticType.BOOL), it + setOf(args))
                 }
                 put(TestResult.Failure, emptySet<List<StaticType>>())
             }
@@ -55,23 +45,23 @@ class OpComparisonTest : PartiQLTyperTestBase() {
         val argsMap = buildMap {
             val successArgs =
                 cartesianProduct(
-                    StaticType.NUMERIC.allTypes + listOf(StaticType.NULL),
-                    StaticType.NUMERIC.allTypes + listOf(StaticType.NULL)
+                    StaticType.NUMERIC.allTypes,
+                    StaticType.NUMERIC.allTypes
                 ) + cartesianProduct(
-                    StaticType.TEXT.allTypes + listOf(StaticType.CLOB, StaticType.NULL),
-                    StaticType.TEXT.allTypes + listOf(StaticType.CLOB, StaticType.NULL)
+                    StaticType.TEXT.allTypes + listOf(StaticType.CLOB),
+                    StaticType.TEXT.allTypes + listOf(StaticType.CLOB)
                 ) + cartesianProduct(
-                    listOf(StaticType.BOOL, StaticType.NULL),
-                    listOf(StaticType.BOOL, StaticType.NULL)
+                    listOf(StaticType.BOOL),
+                    listOf(StaticType.BOOL)
                 ) + cartesianProduct(
-                    listOf(StaticType.DATE, StaticType.NULL),
-                    listOf(StaticType.DATE, StaticType.NULL)
+                    listOf(StaticType.DATE),
+                    listOf(StaticType.DATE)
                 ) + cartesianProduct(
-                    listOf(StaticType.TIME, StaticType.NULL),
-                    listOf(StaticType.TIME, StaticType.NULL)
+                    listOf(StaticType.TIME),
+                    listOf(StaticType.TIME)
                 ) + cartesianProduct(
-                    listOf(StaticType.TIMESTAMP, StaticType.NULL),
-                    listOf(StaticType.TIMESTAMP, StaticType.NULL)
+                    listOf(StaticType.TIMESTAMP),
+                    listOf(StaticType.TIMESTAMP)
                 )
 
             val failureArgs = cartesianProduct(
@@ -82,14 +72,8 @@ class OpComparisonTest : PartiQLTyperTestBase() {
             }.toSet()
 
             successArgs.forEach { args: List<StaticType> ->
-                if (args.contains(StaticType.NULL)) {
-                    (this[TestResult.Success(StaticType.NULL)] ?: setOf(args)).let {
-                        put(TestResult.Success(StaticType.NULL), it + setOf(args))
-                    }
-                } else {
-                    (this[TestResult.Success(StaticType.BOOL)] ?: setOf(args)).let {
-                        put(TestResult.Success(StaticType.BOOL), it + setOf(args))
-                    }
+                (this[TestResult.Success(StaticType.BOOL)] ?: setOf(args)).let {
+                    put(TestResult.Success(StaticType.BOOL), it + setOf(args))
                 }
                 Unit
             }

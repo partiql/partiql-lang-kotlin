@@ -5,199 +5,115 @@ date_dim::{
     fields: [
       {
         name: "d_date_sk",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "d_date_id",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "d_date",
-        type: [
-          "int64",
-          "null"
-        ]
+        type: "int64"
       },
       {
         name: "d_month_seq",
-        type: [
-          "int32",
-          "null"
-        ]
+        type: "int32"
       },
       {
         name: "d_week_seq",
-        type: [
-          "int32",
-          "null"
-        ]
+        type: "int32"
       },
       {
         name: "d_quarter_seq",
-        type: [
-          "int32",
-          "null"
-        ]
+        type: "int32"
       },
       {
         name: "d_year",
-        type: [
-          "int32",
-          "null"
-        ]
+        type: "int32"
       },
       {
         name: "d_dow",
-        type: [
-          "int32",
-          "null"
-        ]
+        type: "int32"
       },
       {
         name: "d_moy",
-        type: [
-          "int32",
-          "null"
-        ]
+        type: "int32"
       },
       {
         name: "d_dom",
-        type: [
-          "int32",
-          "null"
-        ]
+        type: "int32"
       },
       {
         name: "d_qoy",
-        type: [
-          "int32",
-          "null"
-        ]
+        type: "int32"
       },
       {
         name: "d_fy_year",
-        type: [
-          "int32",
-          "null"
-        ]
+        type: "int32"
       },
       {
         name: "d_fy_quarter_seq",
-        type: [
-          "int32",
-          "null"
-        ]
+        type: "int32"
       },
       {
         name: "d_fy_week_seq",
-        type: [
-          "int32",
-          "null"
-        ]
+        type: "int32"
       },
       {
         name: "d_day_name",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "d_quarter_name",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "d_holiday",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "d_weekend",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "d_following_holiday",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "d_first_dom",
-        type: [
-          "int32",
-          "null"
-        ]
+        type: "int32"
       },
       {
         name: "d_last_dom",
-        type: [
-          "int32",
-          "null"
-        ]
+        type: "int32"
       },
       {
         name: "d_same_day_ly",
-        type: [
-          "int32",
-          "null"
-        ]
+        type: "int32"
       },
       {
         name: "d_same_day_lq",
-        type: [
-          "int32",
-          "null"
-        ]
+        type: "int32"
       },
       {
         name: "d_current_day",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "d_current_week",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "d_current_month",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "d_current_quarter",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "d_current_year",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       }
     ]
   }

@@ -5,136 +5,79 @@ promotion::{
     fields: [
       {
         name: "p_promo_sk",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "p_promo_id",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "p_start_date_sk",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "p_end_date_sk",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "p_item_sk",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "p_cost",
-        type: [
-          "float64",
-          "null"
-        ]
+        type: "float64"
       },
       {
         name: "p_response_targe",
-        type: [
-          "int32",
-          "null"
-        ]
+        type: "int32"
       },
       {
         name: "p_promo_name",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "p_channel_dmail",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "p_channel_email",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "p_channel_catalog",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "p_channel_tv",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "p_channel_radio",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "p_channel_press",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "p_channel_event",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "p_channel_demo",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "p_channel_details",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "p_purpose",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "p_discount_active",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       }
     ]
   }

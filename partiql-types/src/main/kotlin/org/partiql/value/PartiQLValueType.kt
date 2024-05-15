@@ -45,6 +45,16 @@ public enum class PartiQLValueType {
     LIST,
     SEXP,
     STRUCT,
+
+    @Deprecated(
+        message = "This will be removed in a future major-version bump.",
+        replaceWith = ReplaceWith("ANY")
+    )
     NULL,
+
+    @Deprecated(
+        message = "This will be removed in a future major-version bump.",
+        replaceWith = ReplaceWith("ANY")
+    )
     MISSING,
 }

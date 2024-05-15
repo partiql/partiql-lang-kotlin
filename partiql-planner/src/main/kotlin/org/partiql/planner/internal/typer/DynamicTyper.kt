@@ -2,8 +2,7 @@
 
 package org.partiql.planner.internal.typer
 
-import org.partiql.types.MissingType
-import org.partiql.types.NullType
+import org.partiql.planner.internal.ir.Rex
 import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
@@ -27,8 +26,6 @@ import org.partiql.value.PartiQLValueType.INT64
 import org.partiql.value.PartiQLValueType.INT8
 import org.partiql.value.PartiQLValueType.INTERVAL
 import org.partiql.value.PartiQLValueType.LIST
-import org.partiql.value.PartiQLValueType.MISSING
-import org.partiql.value.PartiQLValueType.NULL
 import org.partiql.value.PartiQLValueType.SEXP
 import org.partiql.value.PartiQLValueType.STRING
 import org.partiql.value.PartiQLValueType.STRUCT
@@ -57,51 +54,55 @@ internal class DynamicTyper {
     private var supertype: PartiQLValueType? = null
     private var args = mutableListOf<PartiQLValueType>()
 
-    private var nullable = false
-    private var missable = false
     private val types = mutableSetOf<StaticType>()
 
     /**
-     * This primarily unpacks a StaticType because of NULL, MISSING.
-     *
-     *  - T
-     *  - NULL
-     *  - MISSING
-     *  - (NULL)
-     *  - (MISSING)
-     *  - (T..)
-     *  - (T..|NULL)
-     *  - (T..|MISSING)
-     *  - (T..|NULL|MISSING)
-     *  - (NULL|MISSING)
-     *
+     * Adds the [rex]'s [Rex.type] to the typing accumulator (if the [rex] is not a literal NULL/MISSING).
+     */
+    fun accumulate(rex: Rex) {
+        when (rex.isLiteralAbsent()) {
+            true -> accumulateUnknown()
+            false -> accumulate(rex.type)
+        }
+    }
+
+    /**
+     * Checks for literal NULL or MISSING.
+     */
+    private fun Rex.isLiteralAbsent(): Boolean {
+        val op = this.op
+        return op is Rex.Op.Lit && (op.value.type == PartiQLValueType.MISSING || op.value.type == PartiQLValueType.NULL)
+    }
+
+    /**
+     * When a literal null or missing value is present in the query, its type is unknown. Therefore, its type must be
+     * inferred. This function ignores literal null/missing values, yet adds their indices to know how to return the
+     * mapping.
+     */
+    private fun accumulateUnknown() {
+        args.add(ANY)
+    }
+
+    /**
+     * This adds non-unknown types (aka not NULL / MISSING literals) to the typing accumulator.
      * @param type
      */
-    fun accumulate(type: StaticType) {
-        val nonAbsentTypes = mutableSetOf<StaticType>()
+    private fun accumulate(type: StaticType) {
         val flatType = type.flatten()
         if (flatType == StaticType.ANY) {
-            // Use ANY runtime; do not expand ANY
             types.add(flatType)
             args.add(ANY)
             calculate(ANY)
             return
         }
-        for (t in flatType.allTypes) {
-            when (t) {
-                is NullType -> nullable = true
-                is MissingType -> missable = true
-                else -> nonAbsentTypes.add(t)
-            }
-        }
-        when (nonAbsentTypes.size) {
+        val allTypes = flatType.allTypes
+        when (allTypes.size) {
             0 -> {
-                // Ignore in calculating supertype.
-                args.add(NULL)
+                error("This should not have happened.")
             }
             1 -> {
                 // Had single type
-                val single = nonAbsentTypes.first()
+                val single = allTypes.first()
                 val singleRuntime = single.toRuntimeType()
                 types.add(single)
                 args.add(singleRuntime)
@@ -109,7 +110,7 @@ internal class DynamicTyper {
             }
             else -> {
                 // Had a union; use ANY runtime
-                types.addAll(nonAbsentTypes)
+                types.addAll(allTypes)
                 args.add(ANY)
                 calculate(ANY)
             }
@@ -124,31 +125,20 @@ internal class DynamicTyper {
      * @return
      */
     fun mapping(): Pair<StaticType, List<Pair<PartiQLValueType, PartiQLValueType>>?> {
-        val modifiers = mutableSetOf<StaticType>()
-        if (nullable) modifiers.add(StaticType.NULL)
-        if (missable) modifiers.add(StaticType.MISSING)
         // If at top supertype, then return union of all accumulated types
         if (supertype == ANY) {
-            return StaticType.unionOf(types + modifiers).flatten() to null
+            return StaticType.unionOf(types).flatten() to null
         }
         // If a collection, then return union of all accumulated types as these coercion rules are not defined by SQL.
         if (supertype == STRUCT || supertype == BAG || supertype == LIST || supertype == SEXP) {
-            return StaticType.unionOf(types + modifiers) to null
+            return StaticType.unionOf(types) to null
         }
         // If not initialized, then return null, missing, or null|missing.
-        val s = supertype
-        if (s == null) {
-            val t = if (modifiers.isEmpty()) StaticType.MISSING else StaticType.unionOf(modifiers).flatten()
-            return t to null
-        }
+        val s = supertype ?: return StaticType.ANY to null
         // Otherwise, return the supertype along with the coercion mapping
-        val type = s.toNonNullStaticType()
+        val type = s.toStaticType()
         val mapping = args.map { it to s }
-        return if (modifiers.isEmpty()) {
-            type to mapping
-        } else {
-            StaticType.unionOf(setOf(type) + modifiers).flatten() to mapping
-        }
+        return type to mapping
     }
 
     private fun calculate(type: PartiQLValueType) {
@@ -163,7 +153,7 @@ internal class DynamicTyper {
         // Lookup and set the new minimum common supertype
         supertype = when {
             type == ANY -> type
-            type == NULL || type == MISSING || s == type -> return // skip
+            s == type -> return // skip
             else -> graph[s][type] ?: ANY // lookup, if missing then go to top.
         }
     }
@@ -206,8 +196,6 @@ internal class DynamicTyper {
                 graph[type] = arrayOfNulls(N)
             }
             graph[ANY] = edges()
-            graph[NULL] = edges()
-            graph[MISSING] = edges()
             graph[BOOL] = edges(
                 BOOL to BOOL
             )

@@ -30,7 +30,7 @@ class NullIfTest : PartiQLTyperTestBase() {
 
         // Generate all success cases
         cartesianProduct(allSupportedType, allSupportedType).forEach { args ->
-            val expected = StaticType.unionOf(args[0], StaticType.NULL).flatten()
+            val expected = args[0]
             val result = TestResult.Success(expected)
             argsMap[result] = setOf(args)
         }

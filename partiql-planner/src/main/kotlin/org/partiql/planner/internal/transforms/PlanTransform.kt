@@ -365,7 +365,7 @@ internal object PlanTransform : PlanBaseVisitor<PlanNode, ProblemCallback>() {
                     org.partiql.plan.Agg(
                         FunctionSignature.Aggregation(
                             "UNKNOWN_AGG::$name",
-                            returns = PartiQLValueType.MISSING,
+                            returns = PartiQLValueType.ANY,
                             parameters = emptyList()
                         )
                     )
