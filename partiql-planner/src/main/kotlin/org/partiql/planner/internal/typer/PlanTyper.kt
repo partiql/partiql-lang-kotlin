@@ -1475,7 +1475,7 @@ internal class PlanTyper(private val env: Env) {
      * Types a DDL statement.
      */
 
-    private inner class DdlTyper() : PlanRewriter<List<Type.Record.Field>>() {
+    internal inner class DdlTyper : PlanRewriter<List<Type.Record.Field>>() {
         override fun visitStatementDDL(node: Statement.DDL, ctx: List<Type.Record.Field>): Statement.DDL {
             when (node.op) {
                 is DdlOp.CreateTable -> {

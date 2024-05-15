@@ -186,7 +186,7 @@ internal object ConstraintResolver {
         }
 
         override fun visitTypeRecord(node: Type.Record, ctx: Ctx): StaticType {
-            // TODO: For struct level constraint are only check
+            // TODO: For now struct level constraint are only check
             //  and struct by default is closed and unique
             //  For now we dump check constraint in struct meta
             val constraintMeta = node.constraints.mapNotNull { constr ->
@@ -194,11 +194,12 @@ internal object ConstraintResolver {
                     field(constr.name!!, ionString(constr.definition.sql))
                 } else null
             }.let { if (it.isNotEmpty()) { mapOf("check_constraints" to ionStructOf(it)) } else emptyMap() }
+            val seen = mutableSetOf<String>()
             val resolvedField = node.fields.map {
                 StructType.Field(
                     it.name.normalize(),
                     visitTypeRecordField(it, ctx)
-                )
+                ).also { field -> if (!seen.add(field.key)) TODO("Throw duplicated binding") }
             }
 
             return StructType(

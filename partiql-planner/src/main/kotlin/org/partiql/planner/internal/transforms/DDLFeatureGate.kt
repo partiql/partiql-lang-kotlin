@@ -24,13 +24,11 @@ internal object DDLFeatureGate {
         override fun visitTypeCollection(node: Type.Collection, ctx: Unit) {
             when (val type = node.type) {
                 is Type.Collection -> {
-                    val elementType = type.type ?: return
+                    val elementType = type.type ?: return super.visitTypeCollection(node, ctx)
                     if (elementType is Type.Collection) {
                         if (elementType.constraints.isNotEmpty()) {
-                            throw IllegalArgumentException(
-                                "Unsupported Feature - nested Collection Constraint"
-                            )
-                        }
+                            TODO("Unsupported Feature - nested Collection Constraint")
+                        } else super.visitTypeCollection(node, ctx)
                     }
                 }
                 else -> super.visitTypeCollection(node, ctx)
@@ -41,19 +39,15 @@ internal object DDLFeatureGate {
             val fieldType = node.type
             if (fieldType is Type.Record) {
                 if (fieldType.constraints.isNotEmpty()) {
-                    throw IllegalArgumentException(
-                        "Unsupported Feature - Check constraint on Struct Field"
-                    )
-                }
-            }
+                    TODO("Unsupported Feature - Check constraint on Struct Field")
+                } else super.visitTypeRecordField(node, ctx)
+            } else super.visitTypeRecordField(node, ctx)
         }
 
         override fun visitConstraint(node: Constraint, ctx: Unit) {
             val name = node.name ?: return
             if (!name.startsWith("$"))
-                throw IllegalArgumentException(
-                    "Unsupported Feature - Named constraint"
-                )
+                TODO("Unsupported Feature - Named constraint")
         }
     }
 }
