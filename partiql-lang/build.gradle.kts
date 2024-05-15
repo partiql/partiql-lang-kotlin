@@ -50,18 +50,6 @@ dependencies {
     testImplementation(Deps.junitVintage) // Enables JUnit4
     testImplementation(Deps.mockk)
     testImplementation(Deps.kotlinxCoroutinesTest)
-
-    // The JMH gradle plugin that we currently use is 0.5.3, which uses JMH version 1.25. The JMH gradle plugin has a
-    // newer version (see https://github.com/melix/jmh-gradle-plugin/releases) which upgrades the JMH version. We can't
-    // use that newer plugin version until we upgrade our gradle version to 8.0+. JMH version 1.25 does not support
-    // creating CPU flamegraphs using the JMH benchmarks, hence why the newer version dependency is specified here.
-    //
-    // When we upgrade gradle to 8.0+, we can upgrade the gradle plugin to the latest and remove this dependency block
-    dependencies {
-        jmh(Deps.jmhCore)
-        jmh(Deps.jmhGeneratorAnnprocess)
-        jmh(Deps.jmhGeneratorBytecode)
-    }
 }
 
 val relocations = mapOf(
@@ -91,7 +79,7 @@ publish {
 jmh {
     resultFormat = properties["resultFormat"] as String? ?: "json"
     resultsFile = project.file(properties["resultsFile"] as String? ?: "$buildDir/reports/jmh/results.json")
-    include = listOfNotNull(properties["include"] as String?)
+    includes = listOfNotNull(properties["include"] as String?)
     properties["warmupIterations"]?.let { it -> warmupIterations = Integer.parseInt(it as String) }
     properties["iterations"]?.let { it -> iterations = Integer.parseInt(it as String) }
     properties["fork"]?.let { it -> fork = Integer.parseInt(it as String) }
