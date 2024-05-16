@@ -23,12 +23,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Thank you to all who have contributed!
 -->
 
-## [Unreleased]
+## [0.14.6]
 
 ### Added
 
 ### Changed
-
+- Improved performance for conversion between in PartiQLValueIonReaderBuilder
+- Shade Antlr Dependency for PartiQL-Parser and PartiQL-Lang
+- Delete duplicated `StaticTypeMeta` class in PartiQL-Lang package.
 ### Deprecated
 
 ### Fixed
@@ -39,6 +41,9 @@ Thank you to all who have contributed!
 
 ### Contributors
 Thank you to all who have contributed!
+- @alancai98
+- @popematt
+- @yliuuuu
 
 ## [0.14.5]
 
