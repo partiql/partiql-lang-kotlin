@@ -28,8 +28,9 @@ internal object DDLFeatureGate {
                     if (elementType is Type.Collection) {
                         if (elementType.constraints.isNotEmpty()) {
                             TODO("Unsupported Feature - nested Collection Constraint")
-                        } else super.visitTypeCollection(node, ctx)
+                        }
                     }
+                    super.visitTypeCollection(node, ctx)
                 }
                 else -> super.visitTypeCollection(node, ctx)
             }
@@ -40,8 +41,9 @@ internal object DDLFeatureGate {
             if (fieldType is Type.Record) {
                 if (fieldType.constraints.isNotEmpty()) {
                     TODO("Unsupported Feature - Check constraint on Struct Field")
-                } else super.visitTypeRecordField(node, ctx)
-            } else super.visitTypeRecordField(node, ctx)
+                }
+            }
+            super.visitTypeRecordField(node, ctx)
         }
 
         override fun visitConstraint(node: Constraint, ctx: Unit) {

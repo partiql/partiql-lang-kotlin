@@ -569,6 +569,62 @@ internal class DDLTestBase {
                     )
                 ),
             ),
+
+            // BAG Notice that the following does not have syntax support
+            TestCase.failedConversion(
+                """
+                    CREATE TABLE tbl (
+                       tbl2 BAG(STRUCT(a : INT2))
+                    )
+                    This syntax is for demostration only, 
+                    Purpose is to explore how we model create a bag(struct(bag(struct)))
+                """.trimIndent(),
+                ddlOpCreateTable(
+                    id(tableName),
+                    tableInternal(
+                        typeRecordField(
+                            id("tbl2"),
+                            typeCollection(
+                                typeRecord(
+                                    listOf(FIELD_A_INT4.first),
+                                    emptyList()
+                                ),
+                                false,
+                                emptyList()
+                            ),
+                            emptyList(),
+                            false,
+                            null,
+                        )
+                    ),
+                    null,
+                    emptyList()
+                ),
+                tableInternal(
+                    typeRecordField(
+                        id("tbl2"),
+                        typeCollection(
+                            typeRecord(
+                                listOf(FIELD_A_INT4.first),
+                                emptyList()
+                            ),
+                            false,
+                            emptyList()
+                        ),
+                        emptyList(),
+                        false,
+                        null,
+                    )
+                ),
+                table(
+                    StructType.Field(
+                        "TBL2",
+                        BagType(
+                            struct(FIELD_A_INT4.second).asNullable()
+                        ).asNullable()
+                    ),
+                )
+            )
         )
 
         private fun struct(vararg fields: StructType.Field, structMeta: Map<String, Any> = emptyMap()) =
