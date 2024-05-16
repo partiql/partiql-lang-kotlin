@@ -265,14 +265,8 @@ public final class org/partiql/spi/connector/sql/builtins/Agg_AVG__INT__INT : or
 	public fun getSignature ()Lorg/partiql/spi/fn/AggSignature;
 }
 
-public final class org/partiql/spi/connector/sql/builtins/Agg_COUNT_STAR____INT32 : org/partiql/spi/fn/Agg {
-	public static final field INSTANCE Lorg/partiql/spi/connector/sql/builtins/Agg_COUNT_STAR____INT32;
-	public fun accumulator ()Lorg/partiql/spi/fn/Agg$Accumulator;
-	public fun getSignature ()Lorg/partiql/spi/fn/AggSignature;
-}
-
-public final class org/partiql/spi/connector/sql/builtins/Agg_COUNT__ANY__INT32 : org/partiql/spi/fn/Agg {
-	public static final field INSTANCE Lorg/partiql/spi/connector/sql/builtins/Agg_COUNT__ANY__INT32;
+public final class org/partiql/spi/connector/sql/builtins/Agg_COUNT__ANY__INT64 : org/partiql/spi/fn/Agg {
+	public static final field INSTANCE Lorg/partiql/spi/connector/sql/builtins/Agg_COUNT__ANY__INT64;
 	public fun accumulator ()Lorg/partiql/spi/fn/Agg$Accumulator;
 	public fun getSignature ()Lorg/partiql/spi/fn/AggSignature;
 }

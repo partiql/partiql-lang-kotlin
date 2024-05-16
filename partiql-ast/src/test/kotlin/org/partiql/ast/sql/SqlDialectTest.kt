@@ -599,34 +599,34 @@ class SqlDialectTest {
         @JvmStatic
         fun exprAggCases() = listOf(
             expect("FOO(x)") {
-                exprAgg {
+                exprCall {
                     function = id("FOO")
                     args += exprVar(id("x"), Expr.Var.Scope.DEFAULT)
                 }
             },
             expect("FOO(ALL x)") {
-                exprAgg {
+                exprCall {
                     function = id("FOO")
                     setq = SetQuantifier.ALL
                     args += exprVar(id("x"), Expr.Var.Scope.DEFAULT)
                 }
             },
             expect("FOO(DISTINCT x)") {
-                exprAgg {
+                exprCall {
                     function = id("FOO")
                     setq = SetQuantifier.DISTINCT
                     args += exprVar(id("x"), Expr.Var.Scope.DEFAULT)
                 }
             },
             expect("FOO(x, y)") {
-                exprAgg {
+                exprCall {
                     function = id("FOO")
                     args += exprVar(id("x"), Expr.Var.Scope.DEFAULT)
                     args += exprVar(id("y"), Expr.Var.Scope.DEFAULT)
                 }
             },
             expect("FOO(ALL x, y)") {
-                exprAgg {
+                exprCall {
                     function = id("FOO")
                     setq = SetQuantifier.ALL
                     args += exprVar(id("x"), Expr.Var.Scope.DEFAULT)
@@ -634,7 +634,7 @@ class SqlDialectTest {
                 }
             },
             expect("FOO(DISTINCT x, y)") {
-                exprAgg {
+                exprCall {
                     function = id("FOO")
                     setq = SetQuantifier.DISTINCT
                     args += exprVar(id("x"), Expr.Var.Scope.DEFAULT)
@@ -642,8 +642,8 @@ class SqlDialectTest {
                 }
             },
             expect("COUNT(*)") {
-                exprAgg {
-                    function = id("COUNT_STAR")
+                exprCall {
+                    function = id("COUNT") // AST representation for COUNT w/ no args maps to COUNT(*)
                 }
             }
         )

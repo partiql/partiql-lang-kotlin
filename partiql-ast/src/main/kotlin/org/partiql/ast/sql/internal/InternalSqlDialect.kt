@@ -331,19 +331,12 @@ internal abstract class InternalSqlDialect : AstBaseVisitor<InternalSqlBlock, In
 
     override fun visitExprCall(node: Expr.Call, tail: InternalSqlBlock): InternalSqlBlock {
         var t = tail
-        t = visitIdentifier(node.function, t)
-        t = t concat list { node.args }
-        return t
-    }
-
-    override fun visitExprAgg(node: Expr.Agg, tail: InternalSqlBlock): InternalSqlBlock {
-        var t = tail
         val f = node.function
-        // Special case
-        if (f is Identifier.Symbol && f.symbol == "COUNT_STAR") {
+        // Special case -- COUNT() maps to COUNT(*)
+        if (f is Identifier.Symbol && f.symbol == "COUNT" && node.args.isEmpty()) {
             return t concat "COUNT(*)"
         }
-        val start = if (node.setq != null) "(${node.setq!!.name} " else "("
+        val start = if (node.setq != null) "(${node.setq.name} " else "("
         t = visitIdentifier(f, t)
         t = t concat list(start) { node.args }
         return t

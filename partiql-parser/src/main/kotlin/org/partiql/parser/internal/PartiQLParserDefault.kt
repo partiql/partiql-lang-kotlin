@@ -68,7 +68,6 @@ import org.partiql.ast.excludeStepCollIndex
 import org.partiql.ast.excludeStepCollWildcard
 import org.partiql.ast.excludeStepStructField
 import org.partiql.ast.excludeStepStructWildcard
-import org.partiql.ast.exprAgg
 import org.partiql.ast.exprBagOp
 import org.partiql.ast.exprBetween
 import org.partiql.ast.exprBinary
@@ -1865,11 +1864,11 @@ internal class PartiQLParserDefault : PartiQLParser {
                             val path = ctx.qualifiedName().qualifier.map { visitSymbolPrimitive(it) }
                             val name = identifierSymbol("char_length", Identifier.CaseSensitivity.INSENSITIVE)
                             if (path.isEmpty()) {
-                                exprCall(name, args)
+                                exprCall(name, args, setq = null) // setq = null for scalar fn
                             } else {
                                 val root = path.first()
                                 val steps = path.drop(1) + listOf(name)
-                                exprCall(identifierQualified(root, steps), args)
+                                exprCall(identifierQualified(root, steps), args, setq = null)
                             }
                         }
                         else -> visitNonReservedFunctionCall(ctx, args)
@@ -1880,7 +1879,7 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
         private fun visitNonReservedFunctionCall(ctx: GeneratedParser.FunctionCallContext, args: List<Expr>): Expr.Call {
             val function = visitQualifiedName(ctx.qualifiedName())
-            return exprCall(function, args)
+            return exprCall(function, args, convertSetQuantifier(ctx.setQuantifierStrategy()))
         }
 
         /**
@@ -1912,7 +1911,7 @@ internal class PartiQLParserDefault : PartiQLParser {
                 // normal form
                 val function = "SUBSTRING".toIdentifier()
                 val args = visitOrEmpty<Expr>(ctx.expr())
-                exprCall(function, args)
+                exprCall(function, args, setq = null) // setq = null for scalar fn
             } else {
                 // special form
                 val value = visitExpr(ctx.expr(0))
@@ -1930,7 +1929,7 @@ internal class PartiQLParserDefault : PartiQLParser {
                 // normal form
                 val function = "POSITION".toIdentifier()
                 val args = visitOrEmpty<Expr>(ctx.expr())
-                exprCall(function, args)
+                exprCall(function, args, setq = null) // setq = null for scalar fn
             } else {
                 // special form
                 val lhs = visitExpr(ctx.expr(0))
@@ -1965,14 +1964,6 @@ internal class PartiQLParserDefault : PartiQLParser {
             }
         }
 
-        /**
-         * COUNT(*)
-         */
-        override fun visitCountAll(ctx: GeneratedParser.CountAllContext) = translate(ctx) {
-            val function = "COUNT_STAR".toIdentifier()
-            exprAgg(function, emptyList(), SetQuantifier.ALL)
-        }
-
         override fun visitExtract(ctx: GeneratedParser.ExtractContext) = translate(ctx) {
             val field = try {
                 DatetimeField.valueOf(ctx.IDENTIFIER().text.uppercase())
@@ -1997,13 +1988,6 @@ internal class PartiQLParserDefault : PartiQLParser {
                 else -> throw error(ctx, "Expected one or two TRIM expression arguments")
             }
             exprTrim(value, chars, spec)
-        }
-
-        override fun visitAggregateBase(ctx: GeneratedParser.AggregateBaseContext) = translate(ctx) {
-            val function = ctx.func.text.toIdentifier()
-            val args = listOf(visitExpr(ctx.expr()))
-            val setq = convertSetQuantifier(ctx.setQuantifierStrategy())
-            exprAgg(function, args, setq)
         }
 
         /**

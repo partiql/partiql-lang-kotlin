@@ -34,6 +34,8 @@ import org.partiql.value.PartiQLValueType
  *
  * See TypeEnv for the variables type environment.
  *
+ * TODO: function resolution between scalar functions and aggregations.
+ *
  * @property session
  */
 internal class Env(private val session: PartiQLPlanner.Session) {

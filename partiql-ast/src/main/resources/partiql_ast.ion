@@ -342,17 +342,11 @@ expr::[
     ],
   },
 
-  // Scalar Function Call
+  // Function Call (both scalar + aggregate)
   call::{
     function: identifier,
     args:     list::[expr],
-  },
-
-  // Aggregate Function Call
-  agg::{
-    function: identifier,
-    args:     list::[expr],
-    setq:     optional::set_quantifier,
+    setq:     optional::set_quantifier
   },
 
   // Parameter `?`

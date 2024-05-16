@@ -216,7 +216,8 @@ internal object NormalizeSelect {
             return selectValue(
                 constructor = exprCall(
                     function = identifierSymbol("TUPLEUNION", Identifier.CaseSensitivity.SENSITIVE),
-                    args = tupleUnionArgs
+                    args = tupleUnionArgs,
+                    setq = null // setq = null for scalar fn
                 ),
                 setq = select.setq
             )
@@ -256,7 +257,8 @@ internal object NormalizeSelect {
                 setq = node.setq,
                 constructor = exprCall(
                     function = identifierSymbol("TUPLEUNION", Identifier.CaseSensitivity.SENSITIVE),
-                    args = tupleUnionArgs
+                    args = tupleUnionArgs,
+                    setq = null // setq = null for scalar fn
                 )
             )
         }
