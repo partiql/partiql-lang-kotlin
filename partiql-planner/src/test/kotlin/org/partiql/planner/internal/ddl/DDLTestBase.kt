@@ -15,6 +15,7 @@ import org.partiql.planner.internal.ir.Type
 import org.partiql.planner.internal.ir.constraint
 import org.partiql.planner.internal.ir.constraintDefinitionCheck
 import org.partiql.planner.internal.ir.constraintDefinitionNotNull
+import org.partiql.planner.internal.ir.constraintDefinitionUnique
 import org.partiql.planner.internal.ir.ddlOpCreateTable
 import org.partiql.planner.internal.ir.identifierSymbol
 import org.partiql.planner.internal.ir.partitionByAttrList
@@ -39,6 +40,8 @@ import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
 import org.partiql.types.BagType
+import org.partiql.types.CollectionConstraint
+import org.partiql.types.ListType
 import org.partiql.types.NumberConstraint
 import org.partiql.types.StaticType
 import org.partiql.types.StringType
@@ -236,7 +239,7 @@ internal class DDLTestBase {
         @JvmStatic
         fun testCases() = listOf(
             TestCase.success(
-                "CREATE TABLE tbl (a INT2)",
+                "CREATE TABLE tbl (a INT4)",
                 ddlOpCreateTable(
                     id(tableName),
                     tableInternal(FIELD_A_INT4.first),
@@ -248,7 +251,7 @@ internal class DDLTestBase {
             ),
 
             TestCase.success(
-                "CREATE TABLE tbl(a INT2 NOT NULL)",
+                "CREATE TABLE tbl(a INT4 NOT NULL)",
                 ddlOpCreateTable(
                     id(tableName),
                     tableInternal(FIELD_A_INT4.first.withConstraints(listOf(nonNullConstraint(null)),)),
@@ -262,7 +265,7 @@ internal class DDLTestBase {
             TestCase.failedConversion(
                 """
                     CREATE TABLE tbl(
-                       a INT2 CONSTRAINT a_not_null NOT NULL
+                       a INT4 CONSTRAINT a_not_null NOT NULL
                     )
                     The constraint name is not exposed to public plan
                 """.trimIndent(),
@@ -280,7 +283,7 @@ internal class DDLTestBase {
             TestCase.success(
                 """
                     CREATE TABLE tbl(
-                        a INT2 CHECK(a < 0)
+                        a INT4 CHECK(a < 0)
                     )
                     Note that the CHECK Constraint is set to attribute level, 
                     but will be normalized to struct level.
@@ -309,7 +312,7 @@ internal class DDLTestBase {
             TestCase.success(
                 """
                     CREATE TABLE tbl(
-                        a INT2, 
+                        a INT4, 
                         CHECK(a < 0)
                     )
                     Note that the CHECK Constraint is set to tuple level
@@ -338,8 +341,8 @@ internal class DDLTestBase {
             TestCase.success(
                 """
                     CREATE TABLE tbl (
-                        a INT2,
-                        b INT2,
+                        a INT4,
+                        b INT4,
                         CHECK(a < b) 
                     )
                     Note that the CHECK Constraint refers to multiple attribute in declared.
@@ -380,10 +383,83 @@ internal class DDLTestBase {
                 )
             ),
 
+            TestCase.success(
+                """
+                    CREATE TABLE tbl (
+                        a INT4,
+                        b INT4,
+                        PRIMARY KEY(a, b)
+                    )
+                    Primary key as tuple level constraint
+                """.trimIndent(),
+                ddlOpCreateTable(
+                    id(tableName),
+                    tableInternal(
+                        FIELD_A_INT4.first,
+                        FIELD_B_INT4.first,
+                        structConstraints = listOf(constraint(null, constraintDefinitionUnique(listOf(id("a"), id("b")), true)))
+                    ),
+                    null,
+                    emptyList()
+                ),
+                tableInternal(
+                    FIELD_A_INT4.first,
+                    FIELD_B_INT4.first,
+                    collectionConstraint = listOf(constraint("\$_${tableName}_0", constraintDefinitionUnique(listOf(id("a"), id("b")), true)))
+                ),
+                table(
+                    StructType.Field("A", StaticType.INT4),
+                    StructType.Field("B", StaticType.INT4),
+                    tableConstraint = setOf(CollectionConstraint.PrimaryKey(setOf("A", "B")))
+                )
+            ),
+
             TestCase.failedValidation(
                 """
                     CREATE TABLE tbl (
-                        a INT2 CHECK(b < 0), 
+                        a INT4,
+                        b INT4,
+                        PRIMARY KEY(a, a)
+                    )
+                    Primary key contains duplicated attributes
+                """.trimIndent(),
+                ddlOpCreateTable(
+                    id(tableName),
+                    tableInternal(
+                        FIELD_A_INT4.first,
+                        FIELD_B_INT4.first,
+                        structConstraints = listOf(constraint(null, constraintDefinitionUnique(listOf(id("c")), true)))
+                    ),
+                    null,
+                    emptyList()
+                ),
+            ),
+
+            TestCase.failedValidation(
+                """
+                    CREATE TABLE tbl (
+                        a INT4,
+                        b INT4,
+                        PRIMARY KEY(c)
+                    )
+                    Primary key contains non-existing attributes
+                """.trimIndent(),
+                ddlOpCreateTable(
+                    id(tableName),
+                    tableInternal(
+                        FIELD_A_INT4.first,
+                        FIELD_B_INT4.first,
+                        structConstraints = listOf(constraint(null, constraintDefinitionUnique(listOf(id("c")), true)))
+                    ),
+                    null,
+                    emptyList()
+                ),
+            ),
+
+            TestCase.failedValidation(
+                """
+                    CREATE TABLE tbl (
+                        a INT4 CHECK(b < 0), 
                     )
                     Note that the check constraint refers to an attribute that is not the attribute being declared
                 """.trimIndent(),
@@ -400,8 +476,8 @@ internal class DDLTestBase {
             TestCase.failedValidation(
                 """
                     CREATE TABLE tbl (
-                        a INT2 CHECK(b < 0), 
-                        b INT2,
+                        a INT4 CHECK(b < 0), 
+                        b INT4,
                     )
                     Note that the check constraint refers to an attribute that is not the attribute being declared
                     Even though "b" is declared in "tbl", attribute level check constraint can only refer to 
@@ -420,8 +496,8 @@ internal class DDLTestBase {
             TestCase.failedResolution(
                 """
                     CREATE TABLE tbl (
-                        a INT2,
-                        a INT2
+                        a INT4,
+                        a INT4
                     )
                     Duplicated Binding at the same level
                 """.trimIndent(),
@@ -438,7 +514,7 @@ internal class DDLTestBase {
             TestCase.success(
                 """
                     CREATE TABLE tbl (
-                        nested STRUCT <a : INT2>
+                        nested STRUCT <a : INT4>
                     )
                 """.trimIndent(),
                 ddlOpCreateTable(
@@ -478,6 +554,76 @@ internal class DDLTestBase {
                         )
                     )
                 )
+            ),
+
+            TestCase.success(
+                """
+                    CREATE TABLE tbl (
+                        nested STRUCT <a : INT4 NOT NULL>
+                    )
+                """.trimIndent(),
+                ddlOpCreateTable(
+                    id(tableName),
+                    tableInternal(
+                        typeRecordField(
+                            id("nested"),
+                            typeRecord(
+                                listOf(FIELD_A_INT4.first.withConstraints(listOf(nonNullConstraint(null)))),
+                                emptyList()
+                            ),
+                            emptyList(),
+                            false,
+                            null,
+                        )
+                    ),
+                    null,
+                    emptyList()
+                ),
+                tableInternal(
+                    typeRecordField(
+                        id("nested"),
+                        typeRecord(
+                            listOf(FIELD_A_INT4.first.withConstraints(listOf(nonNullConstraint("\$_tbl_0")))),
+                            emptyList()
+                        ),
+                        emptyList(),
+                        false,
+                        null,
+                    )
+                ),
+                table(
+                    StructType.Field(
+                        "NESTED",
+                        StaticType.unionOf(
+                            struct(StructType.Field("A", StaticType.INT4)), StaticType.NULL
+                        )
+                    )
+                )
+            ),
+
+            TestCase.failedValidation(
+                """
+                    CREATE TABLE tbl (
+                        nested STRUCT <a : INT4> PRIMARY KEY
+                    )
+                """.trimIndent(),
+                ddlOpCreateTable(
+                    id(tableName),
+                    tableInternal(
+                        typeRecordField(
+                            id("nested"),
+                            typeRecord(
+                                listOf(FIELD_A_INT4.first),
+                                emptyList()
+                            ),
+                            listOf(inlinePK(null)),
+                            false,
+                            null,
+                        )
+                    ),
+                    null,
+                    emptyList()
+                ),
             ),
 
             TestCase.success(
@@ -533,8 +679,8 @@ internal class DDLTestBase {
                 """
                     CREATE TABLE tbl (
                         nested STRUCT <
-                                   a : INT2, 
-                                   a : INT2,
+                                   a : INT4, 
+                                   a : INT4,
                                >
                     )
                     Duplicated binding in nested scope
@@ -570,13 +716,103 @@ internal class DDLTestBase {
                 ),
             ),
 
+            // List
+            TestCase.success(
+                """
+                    CREATE TABLE tbl (
+                        a LIST<INT4> 
+                    )
+                """.trimIndent(),
+                ddlOpCreateTable(
+                    id(tableName),
+                    tableInternal(
+                        Type.Record.Field(
+                            id("a"), typeCollection(typeAtomicInt4(), true, emptyList()),
+                            emptyList(),
+                            false, null,
+                        ),
+                        structConstraints = emptyList()
+                    ),
+                    null,
+                    emptyList()
+                ),
+                tableInternal(
+                    Type.Record.Field(
+                        id("a"), typeCollection(typeAtomicInt4(), true, emptyList()),
+                        emptyList(),
+                        false, null,
+                    ),
+                    structConstraints = emptyList()
+                ),
+                table(
+                    StructType.Field("A", ListType(StaticType.INT4.asNullable()).asNullable()),
+                    structMeta = emptyMap()
+                )
+            ),
+
+            TestCase.failedValidation(
+                """
+                    CREATE TABLE tbl (
+                        a LIST<INT4> PRIMARY KEY
+                    )
+                    This should fail as currently we do not allow setting attribute whose type is collection as primary key
+                """.trimIndent(),
+                ddlOpCreateTable(
+                    id(tableName),
+                    tableInternal(
+                        Type.Record.Field(
+                            id("a"), typeCollection(typeAtomicInt4(), true, emptyList()),
+                            listOf(inlinePK(null)),
+                            false, null,
+                        ),
+                        structConstraints = emptyList()
+                    ),
+                    null,
+                    emptyList()
+                ),
+            ),
+
+            TestCase.failedConversion(
+                """
+                    CREATE TABLE tbl (
+                        a LIST<LIST<INT4>> 
+                    )
+                    COLLECTION OF COLLECTION, this should failed the conversion. 
+                """.trimIndent(),
+                ddlOpCreateTable(
+                    id(tableName),
+                    tableInternal(
+                        Type.Record.Field(
+                            id("a"), typeCollection(typeCollection(typeAtomicInt4(), true, emptyList()), true, emptyList()),
+                            emptyList(),
+                            false, null,
+                        ),
+                        structConstraints = emptyList()
+                    ),
+                    null,
+                    emptyList()
+                ),
+                tableInternal(
+                    Type.Record.Field(
+                        id("a"), typeCollection(typeCollection(typeAtomicInt4(), true, emptyList()), true, emptyList()),
+                        emptyList(),
+                        false, null,
+                    ),
+                    structConstraints = emptyList()
+                ),
+                table(
+                    StructType.Field("A", ListType(ListType(StaticType.INT4.asNullable()).asNullable()).asNullable()),
+                    structMeta = emptyMap()
+                )
+            ),
+
             // BAG Notice that the following does not have syntax support
             TestCase.failedConversion(
                 """
                     CREATE TABLE tbl (
-                       tbl2 BAG(STRUCT(a : INT2))
+                       tbl2 BAG(STRUCT(a : INT4))
                     )
-                    This syntax is for demostration only, 
+                    This syntax is for demonstration only, 
                     Purpose is to explore how we model create a bag(struct(bag(struct)))
                 """.trimIndent(),
                 ddlOpCreateTable(
@@ -624,7 +860,91 @@ internal class DDLTestBase {
                         ).asNullable()
                     ),
                 )
-            )
+            ),
+
+            TestCase.failedConversion(
+                """
+                    CREATE TABLE tbl (
+                       tbl2 BAG(STRUCT(a : INT4 PRIMARY KEY))
+                    )
+                    This syntax is for demonstration only, 
+                    Purpose is to explore how we model create a bag(struct(bag(struct)))
+                    The interesting part is: could we attempts to set up a primary key or other collection constraint associated with the inner bag? 
+                    How do we model this?
+                """.trimIndent(),
+                ddlOpCreateTable(
+                    id(tableName),
+                    tableInternal(
+                        typeRecordField(
+                            id("tbl2"),
+                            typeCollection(
+                                typeRecord(
+                                    listOf(FIELD_A_INT4.first.withConstraints(listOf(inlinePK(null)))),
+                                    emptyList()
+                                ),
+                                false,
+                                emptyList()
+                            ),
+                            emptyList(),
+                            false,
+                            null,
+                        )
+                    ),
+                    null,
+                    emptyList()
+                ),
+                tableInternal(
+                    typeRecordField(
+                        id("tbl2"),
+                        typeCollection(
+                            typeRecord(
+                                listOf(FIELD_A_INT4.first),
+                                emptyList()
+                            ),
+                            false,
+                            listOf(constraint("\$_tbl_0", constraintDefinitionUnique(listOf(id("a")), true)))
+                        ),
+                        emptyList(),
+                        false,
+                        null,
+                    )
+                ),
+                table(
+                    StructType.Field(
+                        "TBL2",
+                        BagType(
+                            // notice hre the struct itself is not nullable.
+                            struct(StructType.Field("A", StaticType.INT4)),
+                            emptyMap(),
+                            setOf(CollectionConstraint.PrimaryKey(setOf("A")))
+                        ).asNullable()
+                    ),
+                )
+            ),
+
+            // Partition Key
+            TestCase.success(
+                "CREATE TABLE tbl (a INT4) PARTITION BY (a)",
+                ddlOpCreateTable(
+                    id(tableName),
+                    tableInternal(FIELD_A_INT4.first),
+                    partitionByAttrList(listOf(id("a"))),
+                    emptyList()
+                ),
+                tableInternal(FIELD_A_INT4.first),
+                table(FIELD_A_INT4.second),
+            ),
+
+            TestCase.failedValidation(
+                "CREATE TABLE tbl (a INT4) PARTITION BY (b)",
+                ddlOpCreateTable(
+                    id(tableName),
+                    tableInternal(FIELD_A_INT4.first),
+                    partitionByAttrList(listOf(id("b"))),
+                    emptyList()
+                ),
+            ),
+
         )
 
         private fun struct(vararg fields: StructType.Field, structMeta: Map<String, Any> = emptyMap()) =
@@ -636,8 +956,10 @@ internal class DDLTestBase {
                 metas = structMeta
             )
 
-        private fun table(vararg fields: StructType.Field, structMeta: Map<String, Any> = emptyMap()) = BagType(
-            struct(*fields, structMeta = structMeta)
+        private fun table(vararg fields: StructType.Field, structMeta: Map<String, Any> = emptyMap(), tableConstraint: Set<CollectionConstraint> = emptySet()) = BagType(
+            struct(*fields, structMeta = structMeta),
+            metas = emptyMap(),
+            tableConstraint
         )
 
         private fun tableInternal(vararg fields: Type.Record.Field, structConstraints: List<Constraint> = emptyList(), collectionConstraint: List<Constraint> = emptyList()) = typeCollection(
@@ -708,5 +1030,7 @@ internal class DDLTestBase {
 
         private fun Type.Record.Field.withConstraints(constraints: List<Constraint>) =
             this.copy(name, type, constraints, isOptional, comment)
+
+        private fun inlinePK(name: String?) = constraint(name, constraintDefinitionUnique(emptyList(), true))
     }
 }

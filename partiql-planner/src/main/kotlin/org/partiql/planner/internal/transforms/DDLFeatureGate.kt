@@ -15,28 +15,35 @@ import org.partiql.planner.internal.ir.visitor.PlanBaseVisitor
 internal object DDLFeatureGate {
 
     fun gate(node: Statement.DDL) {
-        Visitor.visitStatementDDL(node, Unit)
+        Visitor.visitStatementDDL(node, Visitor.Ctx(0))
     }
 
-    internal object Visitor : PlanBaseVisitor<Unit, Unit>() {
-        override fun defaultReturn(node: PlanNode, ctx: Unit) = Unit
+    internal object Visitor : PlanBaseVisitor<Unit, Visitor.Ctx>() {
+        // For blocking nested collection
+        data class Ctx(
+            val level: Int
+        )
+        override fun defaultReturn(node: PlanNode, ctx: Ctx) = Unit
 
-        override fun visitTypeCollection(node: Type.Collection, ctx: Unit) {
-            when (val type = node.type) {
+        override fun visitTypeCollection(node: Type.Collection, ctx: Ctx) {
+            if (!node.isOrdered && ctx.level != 0) TODO("UNSUPPORTED Features, using Bag type as attribute type is not supported yet")
+            if (node.isOrdered && ctx.level != 1) TODO("UNSUPPORTED Features, using the collection type as element of collection type is not supported yet")
+            val nextLevel = Ctx(ctx.level + 1)
+            when (val collectionElementType = node.type) {
                 is Type.Collection -> {
-                    val elementType = type.type ?: return super.visitTypeCollection(node, ctx)
+                    val elementType = collectionElementType.type ?: return super.visitTypeCollection(node, nextLevel)
                     if (elementType is Type.Collection) {
                         if (elementType.constraints.isNotEmpty()) {
                             TODO("Unsupported Feature - nested Collection Constraint")
                         }
                     }
-                    super.visitTypeCollection(node, ctx)
+                    super.visitTypeCollection(node, nextLevel)
                 }
-                else -> super.visitTypeCollection(node, ctx)
+                else -> super.visitTypeCollection(node, nextLevel)
             }
         }
 
-        override fun visitTypeRecordField(node: Type.Record.Field, ctx: Unit) {
+        override fun visitTypeRecordField(node: Type.Record.Field, ctx: Ctx) {
             val fieldType = node.type
             if (fieldType is Type.Record) {
                 if (fieldType.constraints.isNotEmpty()) {
@@ -46,7 +53,7 @@ internal object DDLFeatureGate {
             super.visitTypeRecordField(node, ctx)
         }
 
-        override fun visitConstraint(node: Constraint, ctx: Unit) {
+        override fun visitConstraint(node: Constraint, ctx: Ctx) {
             val name = node.name ?: return
             if (!name.startsWith("$"))
                 TODO("Unsupported Feature - Named constraint")

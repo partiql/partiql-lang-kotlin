@@ -215,6 +215,10 @@ internal object ConstraintResolver {
         }
 
         override fun visitTypeRecordField(node: Type.Record.Field, ctx: Ctx): StaticType {
+//            val isPrimaryKey = ctx.primaryKey.contains(node.name)
+//            if (isPrimaryKey && node.type !is Type.Atomic) {
+//                TODO("Setting Primary key on attribute with non-atomic type is not allowed")
+//            }
             val notNullable =
                 (node.constraints.any { it.definition is Constraint.Definition.NotNull }) ||
                     ctx.primaryKey.contains(node.name)
@@ -250,7 +254,7 @@ internal object ConstraintResolver {
             is Type.Atomic.TimestampWithTz -> TimestampType(precision ?: 6, true)
         }.asNullable()
 
-        private fun Identifier.Symbol.normalize() =
+        internal fun Identifier.Symbol.normalize() =
             when (this.caseSensitivity) {
                 Identifier.CaseSensitivity.SENSITIVE -> this.symbol
                 Identifier.CaseSensitivity.INSENSITIVE -> this.symbol.uppercase()

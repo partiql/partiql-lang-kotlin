@@ -22,6 +22,7 @@ import org.partiql.planner.internal.exclude.ExcludeRepr
 import org.partiql.planner.internal.ir.Constraint
 import org.partiql.planner.internal.ir.DdlOp
 import org.partiql.planner.internal.ir.Identifier
+import org.partiql.planner.internal.ir.PartitionBy
 import org.partiql.planner.internal.ir.PlanNode
 import org.partiql.planner.internal.ir.Ref.Cast.Safety.UNSAFE
 import org.partiql.planner.internal.ir.Rel
@@ -70,6 +71,7 @@ import org.partiql.planner.internal.ir.typeCollection
 import org.partiql.planner.internal.ir.typeRecord
 import org.partiql.planner.internal.ir.typeRecordField
 import org.partiql.planner.internal.ir.util.PlanRewriter
+import org.partiql.planner.internal.typer.ConstraintResolver.Visitor.normalize
 import org.partiql.planner.internal.utils.PlanUtils
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
@@ -1489,9 +1491,10 @@ internal class PlanTyper(private val env: Env) {
         override fun visitDdlOpCreateTable(node: DdlOp.CreateTable, ctx: List<Type.Record.Field>): DdlOp.CreateTable {
             val shape = visitTypeCollection(node.shape, ctx)
             val normalizedShape = ShapeNormalizer().normalize(shape, node.name.debug())
+            val partitionBy = node.partitionBy?.let { visitPartitionBy(it, (shape.type as Type.Record).fields) }
 
             return ddlOpCreateTable(
-                node.name, normalizedShape, node.partitionBy, node.tableProperties
+                node.name, normalizedShape, partitionBy, node.tableProperties
             )
         }
 
@@ -1540,9 +1543,13 @@ internal class PlanTyper(private val env: Env) {
         }
 
         override fun visitConstraintDefinitionUnique(node: Constraint.Definition.Unique, ctx: List<Type.Record.Field>): Constraint.Definition.Unique {
+            // inline primary key
             return if (node.attributes.isEmpty()) {
+                val attr = ctx.first()
+                if (attr.type !is Type.Atomic) TODO("Setting Primary key on attribute with non-atomic type is not allowed")
                 constraintDefinitionUnique(listOf(ctx.first().name), node.isPrimaryKey)
             } else {
+                val seen = mutableSetOf<String>()
                 // instead of invoking the rex typer, we manually check if the attribtue are in the scope
                 node.attributes.forEach { attr ->
                     val fields = ctx.filter {
@@ -1551,12 +1558,13 @@ internal class PlanTyper(private val env: Env) {
                     when (fields.size) {
                         0 -> TODO("THROW : Non existing binding")
                         // check the type
-                        1 -> when (fields.first().type) {
-                            is Type.Collection -> TODO("THROW: UNIQUE Constraints on Collection Type")
-                            else -> Unit
+                        1 -> {
+                            val type = fields.first().type
+                            if (type !is Type.Atomic) TODO("Setting Primary key on attribute with non-atomic type is not allowed")
                         }
                         else -> TODO("THROW: UNIQUE Constraint on ambiguous binding")
                     }
+                    if (!seen.add(attr.normalize())) TODO("Duplicated declaration in primary key")
                 }
                 node
             }
@@ -1609,6 +1617,29 @@ internal class PlanTyper(private val env: Env) {
             is Type.Atomic.Timestamp -> TimestampType(precision ?: 6, false)
             is Type.Atomic.TimestampWithTz -> TimestampType(precision ?: 6, true)
         }.also { it.asNullable() }
+
+        override fun visitPartitionBy(node: PartitionBy, ctx: List<Type.Record.Field>) =
+            super.visitPartitionBy(node, ctx) as PartitionBy
+
+        override fun visitPartitionByAttrList(node: PartitionBy.AttrList, ctx: List<Type.Record.Field>): PartitionBy.AttrList {
+            val seen = mutableSetOf<String>()
+            node.attrs.forEach { attr ->
+                val fields = ctx.filter {
+                    it.name.toBindingName().name == attr.toBindingName().name
+                }
+                when (fields.size) {
+                    0 -> TODO("THROW : Non existing binding")
+                    // check the type
+                    1 -> {
+                        val type = fields.first().type
+                        if (type !is Type.Atomic) TODO("Setting Primary key on attribute with non-atomic type is not allowed")
+                    }
+                    else -> TODO("THROW: Partition BY on ambiguous binding")
+                }
+                if (!seen.add(attr.normalize())) TODO("Duplicated declaration in Partition Bu")
+            }
+            return node
+        }
     }
     // HELPERS
 
