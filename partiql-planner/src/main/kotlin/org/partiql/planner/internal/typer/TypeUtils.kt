@@ -28,21 +28,7 @@ import org.partiql.types.TimestampType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
 
-@Suppress("DEPRECATION")
-@Deprecated(
-    message = "This will be removed in a future major-version bump.",
-    replaceWith = ReplaceWith("ANY")
-)
-internal fun StaticType.isNullOrMissing(): Boolean = (this is NullType || this is MissingType)
-
 internal fun StaticType.isText(): Boolean = (this is SymbolType || this is StringType)
-
-@Suppress("DEPRECATION")
-@Deprecated(
-    message = "This will be removed in a future major-version bump.",
-    replaceWith = ReplaceWith("ANY")
-)
-internal fun StaticType.isUnknown(): Boolean = (this.isNullOrMissing() || this == StaticType.NULL_OR_MISSING)
 
 /**
  * Returns whether [this] *may* be of a specific type. AKA: is it the type? Is it a union that holds the type?
@@ -52,16 +38,16 @@ internal inline fun <reified T> StaticType.mayBeType(): Boolean {
 }
 
 /**
- * For each type in [this] [StaticType.allTypes], the [block] will be invoked. Non-null outputs to the [block] will be
- * returned.
+ * For each type in [this] type's [StaticType.allTypes], the [block] will be invoked. Non-null outputs of the [block]'s
+ * invocation will be returned.
  */
 internal fun StaticType.inferListNotNull(block: (StaticType) -> StaticType?): List<StaticType> {
     return this.flatten().allTypes.mapNotNull { type -> block(type) }
 }
 
 /**
- * For each type in [this] [StaticType.allTypes], the [block] will be invoked. Non-null outputs to the [block] will be
- * returned.
+ * For each type in [this] type's [StaticType.allTypes], the [block] will be invoked. Non-null outputs of the [block]'s
+ * invocation will be returned.
  */
 internal fun StaticType.inferRexListNotNull(block: (StaticType) -> Rex?): List<Rex> {
     return this.flatten().allTypes.mapNotNull { type -> block(type) }
@@ -195,7 +181,7 @@ internal fun StructType.exclude(steps: List<Rel.Op.Exclude.Step>, lastStepOption
     val output = fields.map { field ->
         val newField = if (steps.size == 1) {
             if (lastStepOptional) {
-                StructType.Field(field.key, field.value) // TODO: double check this
+                StructType.Field(field.key, field.value)
             } else {
                 null
             }

@@ -4,6 +4,8 @@ package org.partiql.planner.internal.typer
 
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.types.StaticType
+import org.partiql.value.MissingValue
+import org.partiql.value.NullValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
 import org.partiql.value.PartiQLValueType.ANY
@@ -71,7 +73,7 @@ internal class DynamicTyper {
      */
     private fun Rex.isLiteralAbsent(): Boolean {
         val op = this.op
-        return op is Rex.Op.Lit && (op.value.type == PartiQLValueType.MISSING || op.value.type == PartiQLValueType.NULL)
+        return op is Rex.Op.Lit && (op.value is MissingValue || op.value is NullValue)
     }
 
     /**

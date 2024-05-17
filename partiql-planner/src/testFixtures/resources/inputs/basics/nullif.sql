@@ -22,11 +22,11 @@ NULLIF(t_item.t_int64, t_item.t_int32);
 
 --#[nullif-05]
 -- type: (int32 | null)
-NULLIF(t_item.t_int32, t_item.t_null);
+NULLIF(t_item.t_int32, NULL);
 
 --#[nullif-06]
 -- type: (null)
-NULLIF(t_item.t_null, t_item.t_int32);
+NULLIF(NULL, t_item.t_int32);
 
 --#[nullif-07]
 -- type: (int32 | null)

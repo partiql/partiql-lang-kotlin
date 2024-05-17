@@ -182,21 +182,6 @@ CASE t_item.t_string
     WHEN 'a' THEN 'ok!'
 END;
 
---#[case-when-22]
--- type: (null|missing|int32)
-CASE t_item.t_string
-    WHEN 'a' THEN t_item.t_absent
-    ELSE -1
-END;
-
---#[case-when-23]
--- type: int32
--- false branch is pruned
-CASE
-    WHEN false THEN t_item.t_absent
-    ELSE -1
-END;
-
 -- -----------------------------
 --  Heterogeneous Branches
 -- -----------------------------

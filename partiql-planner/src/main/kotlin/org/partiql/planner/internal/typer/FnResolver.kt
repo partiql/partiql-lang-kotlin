@@ -408,9 +408,9 @@ internal class FnResolver(private val header: Header) {
         // This does not imply the ability to CAST; this defines function resolution behavior.
         private val precedence: Map<PartiQLValueType, Int> = listOf(
             @Suppress("DEPRECATION")
-            PartiQLValueType.NULL, // TODO: Remove
+            PartiQLValueType.NULL, // TODO: Remove once functions no longer specify parameter/return types with the NULL type.
             @Suppress("DEPRECATION")
-            PartiQLValueType.MISSING, // TODO: Remove
+            PartiQLValueType.MISSING, // TODO: Remove once functions no longer specify parameter/return types with the MISSING type.
             BOOL,
             INT8,
             INT16,

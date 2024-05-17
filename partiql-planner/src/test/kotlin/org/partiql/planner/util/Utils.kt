@@ -29,11 +29,7 @@ fun <T> cartesianProduct(a: List<T>, b: List<T>, vararg lists: List<T>): Set<Lis
         }.toSet()
 
 val allSupportedType = StaticType.ALL_TYPES.filterNot {
-    it == StaticType.GRAPH
-}.filterNot {
-    it is NullType
-}.filterNot {
-    it is MissingType
+    it == StaticType.GRAPH || it is NullType || it is MissingType
 }
 
 val allSupportedTypeNotUnknown = allSupportedType.filterNot { it == StaticType.MISSING || it == StaticType.NULL }

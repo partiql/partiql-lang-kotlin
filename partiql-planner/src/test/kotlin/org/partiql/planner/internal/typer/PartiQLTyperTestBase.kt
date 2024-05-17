@@ -101,7 +101,7 @@ abstract class PartiQLTyperTestBase {
                             val actualType = root.type
                             assert(actualType == StaticType.ANY) {
                                 buildString {
-                                    this.appendLine(" expected Type is : MISSING")
+                                    this.appendLine(" expected Type is : ANY")
                                     this.appendLine("actual Type is : $actualType")
                                     PlanPrinter.append(this, result.plan)
                                 }

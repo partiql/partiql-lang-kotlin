@@ -91,8 +91,8 @@ import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
 import org.partiql.types.function.FunctionSignature
 import org.partiql.value.BoolValue
+import org.partiql.value.MissingValue
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType
 import org.partiql.value.TextValue
 import org.partiql.value.boolValue
 import org.partiql.value.stringValue
@@ -475,8 +475,8 @@ internal class PlanTyper(
                 }
                 (type as CollectionType).elementType
             }.toSet()
-            val finalType = unionOf(elementTypes).flatten()
-            return rex(finalType.swallowAny(), rexOpPathIndex(root, key))
+            val finalType = unionOf(elementTypes)
+            return rex(finalType, rexOpPathIndex(root, key))
         }
 
         override fun visitRexOpPathKey(node: Rex.Op.Path.Key, ctx: StaticType?): Rex {
@@ -516,8 +516,7 @@ internal class PlanTyper(
                 handleAlwaysMissing()
                 return rex(ANY, rexOpPathKey(root, key))
             }
-            // TODO: SwallowAny should happen by default
-            return rex(unionOf(elementType).swallowAny(), rexOpPathKey(root, key))
+            return rex(unionOf(elementType), rexOpPathKey(root, key))
         }
 
         override fun visitRexOpPathSymbol(node: Rex.Op.Path.Symbol, ctx: StaticType?): Rex {
@@ -551,8 +550,7 @@ internal class PlanTyper(
                     handleAlwaysMissing()
                     return rex(ANY, Rex.Op.Path.Symbol(root, node.key))
                 }
-                // TODO: Flatten() should occur by default
-                else -> unionOf(paths.map { it.type }.toSet()).flatten()
+                else -> unionOf(paths.map { it.type }.toSet())
             }
 
             // replace step only if all are disambiguated
@@ -562,19 +560,7 @@ internal class PlanTyper(
                 true -> firstPathOp
                 false -> rexOpPathSymbol(root, node.key)
             }
-            return rex(type.swallowAny(), replacementOp)
-        }
-
-        /**
-         * "Swallows" ANY. If ANY is one of the types in the UNION type, we return ANY. If not, we flatten and return
-         * the [type].
-         */
-        private fun StaticType.swallowAny(): StaticType {
-            val flattened = this.flatten()
-            return when (flattened.allTypes.any { it is AnyType }) {
-                true -> ANY
-                false -> flattened
-            }
+            return rex(type, replacementOp)
         }
 
         private fun rexString(str: String) = rex(STRING, rexOpLit(stringValue(str)))
@@ -633,13 +619,13 @@ internal class PlanTyper(
             // Check literal missing inputs
             val argAlwaysMissing = args.any {
                 val op = it.op as? Rex.Op.Lit ?: return@any false
-                op.value.type == PartiQLValueType.MISSING
+                op.value is MissingValue
             }
             if (argAlwaysMissing) {
                 // TODO: The V1 branch has support for isMissable and isMissingCall. This codebase, however, does not
                 //  have support for these concepts yet. This specific commit (see Git blame) does not seek to add this
                 //  functionality. Below is a work-around for the lack of "isMissable" and "isMissingCall"
-                if (match.signature.name !in listOf("is_null", "is_missing", "eq")) {
+                if (match.signature.name !in listOf("is_null", "is_missing", "eq", "and", "or", "not")) {
                     handleAlwaysMissing()
                 }
             }
@@ -1163,9 +1149,7 @@ internal class PlanTyper(
                 isClosed && isOrdered -> {
                     struct.fields.firstOrNull { entry -> binding.isEquivalentTo(entry.key) }?.let {
                         (sensitive(it.key) to it.value)
-                    } ?: run {
-                        return null
-                    }
+                    } ?: return null
                 }
                 // 2. Struct is closed
                 isClosed -> {

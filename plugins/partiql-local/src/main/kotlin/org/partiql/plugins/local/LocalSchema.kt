@@ -82,6 +82,7 @@ public fun StringElement.toStaticType(): StaticType = when (textValue) {
     "list" -> error("`list` is not an atomic type")
     "sexp" -> error("`sexp` is not an atomic type")
     "struct" -> error("`struct` is not an atomic type")
+    "null", "missing" -> error("Absent values ($textValue) do not have a corresponding type.")
     else -> error("Invalid type `$textValue`")
 }
 

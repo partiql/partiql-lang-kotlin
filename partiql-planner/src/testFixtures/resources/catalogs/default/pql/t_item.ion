@@ -95,19 +95,6 @@
       name: "t_clob_null",
       type: "clob",
     },
-    // potentially absent
-    {
-      name: "t_null",
-      type: "any",
-    },
-    {
-      name: "t_missing",
-      type: "any",
-    },
-    {
-      name: "t_absent",
-      type: "any",
-    },
     // collections
     {
       name: "t_bag",

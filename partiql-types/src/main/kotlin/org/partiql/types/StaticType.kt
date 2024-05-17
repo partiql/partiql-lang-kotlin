@@ -16,15 +16,16 @@ public sealed class StaticType {
 
         /**
          * varargs variant, folds [types] into a [Set]
-         * The usage of LinkedHashSet is to preserve the order of `types` to ensure behavior is consistent in our tests
+         * The usage of LinkedHashSet is to preserve the order of `types` to ensure behavior is consistent in our tests.
+         * The returned type is flattened.
          */
         @JvmStatic
         public fun unionOf(vararg types: StaticType, metas: Map<String, Any> = mapOf()): StaticType =
-            unionOf(types.toSet(), metas).flatten()
+            unionOf(types.toSet(), metas)
 
         /**
          * Creates a new [StaticType] as a union of the passed [types]. The values typed by the returned type
-         * are defined as the union of all values typed as [types]
+         * are defined as the union of all values typed as [types]. The returned type is flattened.
          *
          * @param types [StaticType] to be unioned.
          * @return [StaticType] representing the union of [types]
@@ -33,12 +34,8 @@ public sealed class StaticType {
         @Suppress("DEPRECATION")
         public fun unionOf(
             types: Set<StaticType>,
-            metas: Map<String, Any> = mapOf(),
-            errorOnEmptyTypes: Boolean = false
+            metas: Map<String, Any> = mapOf()
         ): StaticType {
-            if (errorOnEmptyTypes && types.isEmpty()) {
-                throw IllegalStateException("Cannot make a union of zero types.")
-            }
             return when (types.isEmpty()) {
                 true -> ANY
                 false -> AnyOfType(types, metas).flatten()
@@ -47,7 +44,7 @@ public sealed class StaticType {
 
         /**
          * Creates a new [StaticType] as a union of the passed [types]. The values typed by the returned type
-         * are defined as the union of all values typed as [types]
+         * are defined as the union of all values typed as [types]. The returned type is flattened.
          *
          * @param types [StaticType] to be unioned.
          * @return [StaticType] representing the union of [types]
@@ -151,7 +148,8 @@ public sealed class StaticType {
      */
     @Suppress("DEPRECATION")
     @Deprecated(
-        message = "This will be removed in a future major-version bump.",
+        message = "This will be removed in a future major-version bump. All types include the null value. Therefore," +
+            " this method is redundant.",
         replaceWith = ReplaceWith("")
     )
     public fun asNullable(): StaticType =
@@ -168,7 +166,8 @@ public sealed class StaticType {
      */
     @Suppress("DEPRECATION")
     @Deprecated(
-        message = "This will be removed in a future major-version bump.",
+        message = "This will be removed in a future major-version bump. All types include the missing value." +
+            " Therefore, this method is redundant.",
         replaceWith = ReplaceWith("")
     )
     public fun asOptional(): StaticType =
@@ -214,7 +213,8 @@ public sealed class StaticType {
      */
     @Suppress("DEPRECATION")
     @Deprecated(
-        message = "This will be removed in a future major-version bump.",
+        message = "This will be removed in a future major-version bump. All types are considered nullable. Therefore" +
+            " this method is redundant.",
         replaceWith = ReplaceWith("true")
     )
     public fun isNullable(): Boolean =
@@ -231,7 +231,8 @@ public sealed class StaticType {
      */
     @Suppress("DEPRECATION")
     @Deprecated(
-        message = "This will be removed in a future major-version bump.",
+        message = "This will be removed in a future major-version bump. All types are considered missable. Therefore," +
+            " this method is redundant.",
         replaceWith = ReplaceWith("true")
     )
     public fun isMissable(): Boolean =
@@ -245,10 +246,6 @@ public sealed class StaticType {
      * Type is optional if it is Any, or Missing, or an AnyOfType that contains Any or Missing type
      */
     @Suppress("DEPRECATION")
-    @Deprecated(
-        message = "This will be removed in a future major-version bump.",
-        replaceWith = ReplaceWith("true")
-    )
     private fun isOptional(): Boolean =
         when (this) {
             is AnyType, MissingType -> true // Any includes Missing type
