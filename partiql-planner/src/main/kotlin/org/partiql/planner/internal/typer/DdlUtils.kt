@@ -214,9 +214,12 @@ internal object ConstraintResolver {
         }
 
         override fun visitTypeRecordField(node: Type.Record.Field, ctx: Ctx): StaticType {
+            val isPK = ctx.primaryKey.contains(node.name)
+
+            if (node.isOptional && isPK) throw IllegalArgumentException("Primary key attribute cannot be optional")
+
             val notNullable =
-                (node.constraints.any { it.definition is Constraint.Definition.NotNull }) ||
-                    ctx.primaryKey.contains(node.name)
+                (node.constraints.any { it.definition is Constraint.Definition.NotNull }) || isPK
             val type = visitType(node.type, ctx).let { if (notNullable) it.removeNull() else it }
 
             return if (node.isOptional) type.asOptional() else type

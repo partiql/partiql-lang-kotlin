@@ -210,6 +210,8 @@ internal class DDLTestBase {
             StructType.Field("C", StaticType.unionOf(StringType(StringType.StringLengthConstraint.Constrained(NumberConstraint.UpTo(10))), StaticType.NULL))
         )
 
+        val COMMENT_META = mapOf("comment" to "this is a comment")
+
         @OptIn(PartiQLValueExperimental::class)
         val CONSTRA_A_LT_ZERO = Pair(
             checkConstraintUnresolved(
@@ -251,6 +253,49 @@ internal class DDLTestBase {
             ),
 
             TestCase.success(
+                "CREATE TABLE tbl (a INT4 PRIMARY KEY)",
+                ddlOpCreateTable(
+                    id(tableName),
+                    tableInternal(FIELD_A_INT4.first.withConstraints(listOf(inlinePK(null)))),
+                    null,
+                    emptyList()
+                ),
+                tableInternal(
+                    FIELD_A_INT4.first,
+                    collectionConstraint = listOf(tuplePk("\$_tbl_0", listOf("a")))
+                ),
+                table(StructType.Field("A", StaticType.INT4), tableConstraint = setOf(CollectionConstraint.PrimaryKey(setOf("A")))),
+            ),
+
+            TestCase.success(
+                "CREATE TABLE tbl (a OPTIONAL INT4)",
+                ddlOpCreateTable(
+                    id(tableName),
+                    tableInternal(FIELD_A_INT4.first.asOptional()),
+                    null,
+                    emptyList()
+                ),
+                tableInternal(FIELD_A_INT4.first.asOptional()),
+                table(StructType.Field("A", StaticType.INT4.asNullable().asOptional())),
+            ),
+
+            TestCase.failedResolution(
+                """CREATE TABLE tbl (a OPTIONAL INT4 PRIMARY KEY) 
+                    PRIMARY KEY cannot be optional 
+                """.trimMargin(),
+                ddlOpCreateTable(
+                    id(tableName),
+                    tableInternal(FIELD_A_INT4.first.withConstraints(listOf(inlinePK(null))).asOptional()),
+                    null,
+                    emptyList()
+                ),
+                tableInternal(
+                    FIELD_A_INT4.first.asOptional(),
+                    collectionConstraint = listOf(tuplePk("\$_tbl_0", listOf("a")))
+                ),
+            ),
+
+            TestCase.success(
                 "CREATE TABLE tbl(a INT4 NOT NULL)",
                 ddlOpCreateTable(
                     id(tableName),
@@ -260,6 +305,30 @@ internal class DDLTestBase {
                 ),
                 tableInternal(FIELD_A_INT4.first.withConstraints(listOf(nonNullConstraint("\$_${tableName}_0")),)),
                 table(StructType.Field("A", StaticType.INT4))
+            ),
+
+            TestCase.success(
+                "CREATE TABLE tbl(a OPTIONAL INT4 NOT NULL)",
+                ddlOpCreateTable(
+                    id(tableName),
+                    tableInternal(FIELD_A_INT4.first.withConstraints(listOf(nonNullConstraint(null))).asOptional()),
+                    null,
+                    emptyList()
+                ),
+                tableInternal(FIELD_A_INT4.first.withConstraints(listOf(nonNullConstraint("\$_${tableName}_0"))).asOptional()),
+                table(StructType.Field("A", StaticType.INT4.asOptional()))
+            ),
+
+            TestCase.success(
+                "CREATE TABLE tbl (a INT4 COMMENT 'this is a comment')",
+                ddlOpCreateTable(
+                    id(tableName),
+                    tableInternal(FIELD_A_INT4.first.withComment("this is a comment")),
+                    null,
+                    emptyList()
+                ),
+                tableInternal(FIELD_A_INT4.first.withComment("this is a comment")),
+                table(FIELD_A_INT4.second.withMeta(COMMENT_META)),
             ),
 
             TestCase.failedConversion(
@@ -397,7 +466,7 @@ internal class DDLTestBase {
                     tableInternal(
                         FIELD_A_INT4.first,
                         FIELD_B_INT4.first,
-                        structConstraints = listOf(constraint(null, constraintDefinitionUnique(listOf(id("a"), id("b")), true)))
+                        structConstraints = listOf(tuplePk(null, listOf("a", "b")))
                     ),
                     null,
                     emptyList()
@@ -405,7 +474,7 @@ internal class DDLTestBase {
                 tableInternal(
                     FIELD_A_INT4.first,
                     FIELD_B_INT4.first,
-                    collectionConstraint = listOf(constraint("\$_${tableName}_0", constraintDefinitionUnique(listOf(id("a"), id("b")), true)))
+                    collectionConstraint = listOf(tuplePk("\$_tbl_0", listOf("a", "b")))
                 ),
                 table(
                     StructType.Field("A", StaticType.INT4),
@@ -428,7 +497,7 @@ internal class DDLTestBase {
                     tableInternal(
                         FIELD_A_INT4.first,
                         FIELD_B_INT4.first,
-                        structConstraints = listOf(constraint(null, constraintDefinitionUnique(listOf(id("c")), true)))
+                        structConstraints = listOf(tuplePk("\$_tbl_0", listOf("a", "a")))
                     ),
                     null,
                     emptyList()
@@ -449,7 +518,7 @@ internal class DDLTestBase {
                     tableInternal(
                         FIELD_A_INT4.first,
                         FIELD_B_INT4.first,
-                        structConstraints = listOf(constraint(null, constraintDefinitionUnique(listOf(id("c")), true)))
+                        structConstraints = listOf(tuplePk(null, listOf("c")))
                     ),
                     null,
                     emptyList()
@@ -597,6 +666,94 @@ internal class DDLTestBase {
                         StaticType.unionOf(
                             struct(StructType.Field("A", StaticType.INT4)), StaticType.NULL
                         )
+                    )
+                )
+            ),
+
+            TestCase.success(
+                """
+                    CREATE TABLE tbl (
+                        nested STRUCT <a OPTIONAL : INT4>
+                    )
+                """.trimIndent(),
+                ddlOpCreateTable(
+                    id(tableName),
+                    tableInternal(
+                        typeRecordField(
+                            id("nested"),
+                            typeRecord(
+                                listOf(FIELD_A_INT4.first.asOptional()),
+                                emptyList()
+                            ),
+                            emptyList(),
+                            false,
+                            null,
+                        )
+                    ),
+                    null,
+                    emptyList()
+                ),
+                tableInternal(
+                    typeRecordField(
+                        id("nested"),
+                        typeRecord(
+                            listOf(FIELD_A_INT4.first.asOptional()),
+                            emptyList()
+                        ),
+                        emptyList(),
+                        false,
+                        null,
+                    )
+                ),
+                table(
+                    StructType.Field(
+                        "NESTED",
+                        StaticType.unionOf(
+                            struct(StructType.Field("A", StaticType.INT4.asNullable().asOptional())), StaticType.NULL
+                        )
+                    )
+                )
+            ),
+
+            TestCase.success(
+                """
+                    CREATE TABLE tbl (
+                        nested STRUCT <a : INT4 COMMENT 'this is a comment'>
+                    )
+                """.trimIndent(),
+                ddlOpCreateTable(
+                    id(tableName),
+                    tableInternal(
+                        typeRecordField(
+                            id("nested"),
+                            typeRecord(
+                                listOf(FIELD_A_INT4.first.withComment("this is a comment")),
+                                emptyList()
+                            ),
+                            emptyList(),
+                            false,
+                            null,
+                        )
+                    ),
+                    null,
+                    emptyList()
+                ),
+                tableInternal(
+                    typeRecordField(
+                        id("nested"),
+                        typeRecord(
+                            listOf(FIELD_A_INT4.first.withComment("this is a comment")),
+                            emptyList()
+                        ),
+                        emptyList(),
+                        false,
+                        null,
+                    )
+                ),
+                table(
+                    StructType.Field(
+                        "NESTED",
+                        struct(FIELD_A_INT4.second.withMeta(COMMENT_META)).asNullable()
                     )
                 )
             ),
@@ -902,7 +1059,7 @@ internal class DDLTestBase {
                                 emptyList()
                             ),
                             false,
-                            listOf(constraint("\$_tbl_0", constraintDefinitionUnique(listOf(id("a")), true)))
+                            listOf(tuplePk("\$_tbl_0", listOf("a")))
                         ),
                         emptyList(),
                         false,
@@ -1032,6 +1189,14 @@ internal class DDLTestBase {
         private fun Type.Record.Field.withConstraints(constraints: List<Constraint>) =
             this.copy(name, type, constraints, isOptional, comment)
 
+        private fun Type.Record.Field.asOptional() = this.copy(name, type, constraints, true, comment)
+
+        private fun Type.Record.Field.withComment(comment: String) = this.copy(name, type, constraints, isOptional, comment)
+
+        private fun StructType.Field.withMeta(meta: Map<String, Any>) = StructType.Field(this.key, this.value, meta)
+
         private fun inlinePK(name: String?) = constraint(name, constraintDefinitionUnique(emptyList(), true))
+
+        private fun tuplePk(name: String?, attrs: List<String>) = constraint(name, constraintDefinitionUnique(attrs.map { id(it) }, true))
     }
 }
