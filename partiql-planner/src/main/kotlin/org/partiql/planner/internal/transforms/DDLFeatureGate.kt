@@ -26,16 +26,14 @@ internal object DDLFeatureGate {
         override fun defaultReturn(node: PlanNode, ctx: Ctx) = Unit
 
         override fun visitTypeCollection(node: Type.Collection, ctx: Ctx) {
-            if (!node.isOrdered && ctx.level != 0) TODO("UNSUPPORTED Features, using Bag type as attribute type is not supported yet")
-            if (node.isOrdered && ctx.level != 1) TODO("UNSUPPORTED Features, using the collection type as element of collection type is not supported yet")
+            if (!node.isOrdered && ctx.level != 0) throw IllegalArgumentException("Unsupported Feature - Bag type as attribute type")
+            if (node.isOrdered && ctx.level != 1) throw IllegalArgumentException("Unsupported Feature - Collection of collection as attribute type")
             val nextLevel = Ctx(ctx.level + 1)
             when (val collectionElementType = node.type) {
                 is Type.Collection -> {
                     val elementType = collectionElementType.type ?: return super.visitTypeCollection(node, nextLevel)
                     if (elementType is Type.Collection) {
-                        if (elementType.constraints.isNotEmpty()) {
-                            TODO("Unsupported Feature - nested Collection Constraint")
-                        }
+                        if (elementType.constraints.isNotEmpty()) throw IllegalArgumentException("Unsupported Feature - Nested collection constraint")
                     }
                     super.visitTypeCollection(node, nextLevel)
                 }
@@ -46,17 +44,14 @@ internal object DDLFeatureGate {
         override fun visitTypeRecordField(node: Type.Record.Field, ctx: Ctx) {
             val fieldType = node.type
             if (fieldType is Type.Record) {
-                if (fieldType.constraints.isNotEmpty()) {
-                    TODO("Unsupported Feature - Check constraint on Struct Field")
-                }
+                if (fieldType.constraints.isNotEmpty()) throw IllegalArgumentException("Unsupported Feature - Check constraint on struct field")
             }
             super.visitTypeRecordField(node, ctx)
         }
 
         override fun visitConstraint(node: Constraint, ctx: Ctx) {
             val name = node.name ?: return
-            if (!name.startsWith("$"))
-                TODO("Unsupported Feature - Named constraint")
+            if (!name.startsWith("$")) throw IllegalArgumentException("Unsupported Feature - Constraint name")
         }
     }
 }

@@ -27,7 +27,6 @@ import org.partiql.planner.internal.ir.typeAtomicBool
 import org.partiql.planner.internal.ir.typeAtomicChar
 import org.partiql.planner.internal.ir.typeAtomicDate
 import org.partiql.planner.internal.ir.typeAtomicDecimal
-import org.partiql.planner.internal.ir.typeAtomicFloat32
 import org.partiql.planner.internal.ir.typeAtomicFloat64
 import org.partiql.planner.internal.ir.typeAtomicInt
 import org.partiql.planner.internal.ir.typeAtomicInt2
@@ -117,7 +116,7 @@ internal object DDLConverter {
                 is Type.Int -> typeAtomicInt()
                 is Type.Decimal -> typeAtomicDecimal(node.precision, node.scale)
                 is Type.Numeric -> typeAtomicDecimal(node.precision, node.scale)
-                is Type.Float32 -> typeAtomicFloat32()
+                is Type.Float32 -> TODO("Type Float32 not supported in DDL Yet")
                 is Type.Float64, is Type.Real -> typeAtomicFloat64()
 
                 // Text

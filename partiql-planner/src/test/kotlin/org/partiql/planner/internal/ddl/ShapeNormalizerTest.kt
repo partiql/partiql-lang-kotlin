@@ -19,7 +19,7 @@ internal class ShapeNormalizerTest {
                 typer.visitDdlOpCreateTable(tc.untyped as DdlOp.CreateTable, emptyList())
             )
         } else {
-            assertThrows<NotImplementedError> {
+            assertThrows<IllegalArgumentException> {
                 typer.visitDdlOpCreateTable(tc.untyped as DdlOp.CreateTable, emptyList())
             }
         }

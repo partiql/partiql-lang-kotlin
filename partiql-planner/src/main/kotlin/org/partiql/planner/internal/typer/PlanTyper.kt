@@ -1537,7 +1537,7 @@ internal class PlanTyper(private val env: Env) {
                 )
             }
             val typedCheckExpr = node.lowered.type(binding, emptyList())
-            if (typedCheckExpr.type.toRuntimeType() != PartiQLValueType.BOOL) TODO("throw")
+            if (typedCheckExpr.type.toRuntimeType() != PartiQLValueType.BOOL) throw IllegalArgumentException("Check Constraint - Search condition inferred as a non-boolean type")
             // the sql parts needs to be normalized
             return constraintDefinitionCheck(typedCheckExpr, node.sql)
         }
@@ -1546,7 +1546,7 @@ internal class PlanTyper(private val env: Env) {
             // inline primary key
             return if (node.attributes.isEmpty()) {
                 val attr = ctx.first()
-                if (attr.type !is Type.Atomic) TODO("Setting Primary key on attribute with non-atomic type is not allowed")
+                if (attr.type !is Type.Atomic) throw IllegalArgumentException("Primary Key contains attribute whose type is a complex type:  ${attr.name.symbol}")
                 constraintDefinitionUnique(listOf(ctx.first().name), node.isPrimaryKey)
             } else {
                 val seen = mutableSetOf<String>()
@@ -1556,15 +1556,15 @@ internal class PlanTyper(private val env: Env) {
                         it.name.toBindingName().name == attr.toBindingName().name
                     }
                     when (fields.size) {
-                        0 -> TODO("THROW : Non existing binding")
+                        0 -> throw IllegalArgumentException("Primary Key contains non-existing attribute - ${attr.symbol}")
                         // check the type
                         1 -> {
                             val type = fields.first().type
-                            if (type !is Type.Atomic) TODO("Setting Primary key on attribute with non-atomic type is not allowed")
+                            if (type !is Type.Atomic) throw IllegalArgumentException("Primary Key contains attribute whose type is a complex type:  ${attr.symbol}")
                         }
-                        else -> TODO("THROW: UNIQUE Constraint on ambiguous binding")
+                        else -> throw IllegalArgumentException("Primary Key contains duplicated attribute:  ${attr.symbol}")
                     }
-                    if (!seen.add(attr.normalize())) TODO("Duplicated declaration in primary key")
+                    if (!seen.add(attr.normalize())) throw IllegalArgumentException("Primary Key Clause contains duplicated attribute:  ${attr.symbol}")
                 }
                 node
             }
@@ -1602,7 +1602,6 @@ internal class PlanTyper(private val env: Env) {
             is Type.Atomic.Decimal -> if (this.precision != null)
                 DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(this.precision, this.scale!!))
             else DECIMAL
-            is Type.Atomic.Float32 -> TODO("DELETE THIS ")
             is Type.Atomic.Float64 -> FLOAT
 
             is Type.Atomic.Char -> StringType(StringType.StringLengthConstraint.Constrained(NumberConstraint.Equals(this.length ?: 1)))
@@ -1628,15 +1627,15 @@ internal class PlanTyper(private val env: Env) {
                     it.name.toBindingName().name == attr.toBindingName().name
                 }
                 when (fields.size) {
-                    0 -> TODO("THROW : Non existing binding")
+                    0 -> throw IllegalArgumentException("Partition By Clause contains non-existing attribute - ${attr.symbol}")
                     // check the type
                     1 -> {
                         val type = fields.first().type
-                        if (type !is Type.Atomic) TODO("Setting Primary key on attribute with non-atomic type is not allowed")
+                        if (type !is Type.Atomic) throw IllegalArgumentException("Partition By Clause contains attribute whose type is a complex type:  ${attr.symbol}")
                     }
-                    else -> TODO("THROW: Partition BY on ambiguous binding")
+                    else -> throw IllegalArgumentException("Partition By Clause contains ambiguous binding: ${attr.symbol}")
                 }
-                if (!seen.add(attr.normalize())) TODO("Duplicated declaration in Partition Bu")
+                if (!seen.add(attr.normalize())) throw IllegalArgumentException("Partition By Clause contains duplicated attribute:  ${attr.symbol}")
             }
             return node
         }

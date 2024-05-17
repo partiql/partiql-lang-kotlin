@@ -83,7 +83,6 @@ import org.partiql.planner.`internal`.ir.builder.TypeAtomicBoolBuilder
 import org.partiql.planner.`internal`.ir.builder.TypeAtomicCharBuilder
 import org.partiql.planner.`internal`.ir.builder.TypeAtomicDateBuilder
 import org.partiql.planner.`internal`.ir.builder.TypeAtomicDecimalBuilder
-import org.partiql.planner.`internal`.ir.builder.TypeAtomicFloat32Builder
 import org.partiql.planner.`internal`.ir.builder.TypeAtomicFloat64Builder
 import org.partiql.planner.`internal`.ir.builder.TypeAtomicInt2Builder
 import org.partiql.planner.`internal`.ir.builder.TypeAtomicInt4Builder
@@ -309,7 +308,6 @@ internal sealed class Type : PlanNode() {
             is Int4 -> visitor.visitTypeAtomicInt4(this, ctx)
             is Int8 -> visitor.visitTypeAtomicInt8(this, ctx)
             is Int -> visitor.visitTypeAtomicInt(this, ctx)
-            is Float32 -> visitor.visitTypeAtomicFloat32(this, ctx)
             is Float64 -> visitor.visitTypeAtomicFloat64(this, ctx)
             is Decimal -> visitor.visitTypeAtomicDecimal(this, ctx)
             is Char -> visitor.visitTypeAtomicChar(this, ctx)
@@ -388,20 +386,6 @@ internal sealed class Type : PlanNode() {
             internal companion object {
                 @JvmStatic
                 internal fun builder(): TypeAtomicIntBuilder = TypeAtomicIntBuilder()
-            }
-        }
-
-        internal data class Float32(
-            @JvmField internal val ` `: kotlin.Char = ' ',
-        ) : Atomic() {
-            public override val children: List<PlanNode> = emptyList()
-
-            public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
-                visitor.visitTypeAtomicFloat32(this, ctx)
-
-            internal companion object {
-                @JvmStatic
-                internal fun builder(): TypeAtomicFloat32Builder = TypeAtomicFloat32Builder()
             }
         }
 

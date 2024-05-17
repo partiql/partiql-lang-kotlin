@@ -933,6 +933,7 @@ internal class DDLTestBase {
                 ),
                 tableInternal(FIELD_A_INT4.first),
                 table(FIELD_A_INT4.second),
+                listOf("a")
             ),
 
             TestCase.failedValidation(

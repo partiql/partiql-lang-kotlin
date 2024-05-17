@@ -132,7 +132,6 @@ type::[
     int4::{},                                                    // INT4 | INTEGER4
     int8::{},                                                    // INT8
     int::{},                                                     // INTEGER
-    float32::{},                                                 // FLOAT
     float64::{},                                                 // DOUBLE PRECISION
     decimal::{                                                   // DECIMAL [([<int> [,<int>])]
       precision:  optional::int,

@@ -49,9 +49,7 @@ internal class ShapeNormalizer() {
     // this is cause the nature of a struct or collection constraint might be declared at attribute level,
     // but an attribute level constraint will never be declared at struct/collection level.
     private object Normalizer : PlanBaseVisitor<Pair<PlanNode, List<Constraint>>, Ctx>() {
-        override fun defaultReturn(node: PlanNode, ctx: Ctx): Pair<PlanNode, List<Constraint>> {
-            TODO("Not yet implemented")
-        }
+        override fun defaultReturn(node: PlanNode, ctx: Ctx): Pair<PlanNode, List<Constraint>> = throw IllegalArgumentException("Unsupported feature during shape normalization")
 
         override fun visitType(node: Type, ctx: Ctx): Pair<Type, List<Constraint>> =
             when (node) {
@@ -146,9 +144,7 @@ internal object ConstraintResolver {
     )
 
     object Visitor : PlanBaseVisitor<StaticType, Ctx>() {
-        override fun defaultReturn(node: PlanNode, ctx: Ctx): StaticType {
-            TODO("Not yet implemented")
-        }
+        override fun defaultReturn(node: PlanNode, ctx: Ctx): StaticType = throw IllegalArgumentException("Unsupported Feature during constraint resolution")
 
         override fun visitTypeAtomic(node: Type.Atomic, ctx: Ctx): StaticType =
             node.toStaticType()
@@ -198,8 +194,11 @@ internal object ConstraintResolver {
             val resolvedField = node.fields.map {
                 StructType.Field(
                     it.name.normalize(),
-                    visitTypeRecordField(it, ctx)
-                ).also { field -> if (!seen.add(field.key)) TODO("Throw duplicated binding") }
+                    visitTypeRecordField(it, ctx),
+                    it.comment?.let { mapOf("comment" to it) } ?: emptyMap()
+                ).also { field ->
+                    if (!seen.add(field.key)) throw IllegalArgumentException("Duplicated binding name ${field.key}")
+                }
             }
 
             return StructType(
@@ -215,10 +214,6 @@ internal object ConstraintResolver {
         }
 
         override fun visitTypeRecordField(node: Type.Record.Field, ctx: Ctx): StaticType {
-//            val isPrimaryKey = ctx.primaryKey.contains(node.name)
-//            if (isPrimaryKey && node.type !is Type.Atomic) {
-//                TODO("Setting Primary key on attribute with non-atomic type is not allowed")
-//            }
             val notNullable =
                 (node.constraints.any { it.definition is Constraint.Definition.NotNull }) ||
                     ctx.primaryKey.contains(node.name)
@@ -238,7 +233,6 @@ internal object ConstraintResolver {
                 if (this.precision != null)
                     DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(this.precision, this.scale!!))
                 else DECIMAL
-            is Type.Atomic.Float32 -> TODO("DELETE THIS ")
             is Type.Atomic.Float64 -> FLOAT
 
             is Type.Atomic.Char -> StringType(StringType.StringLengthConstraint.Constrained(NumberConstraint.Equals(this.length ?: 1)))

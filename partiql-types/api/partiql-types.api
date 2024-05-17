@@ -717,12 +717,14 @@ public final class org/partiql/types/StructType : org/partiql/types/SingleType {
 
 public final class org/partiql/types/StructType$Field {
 	public fun <init> (Ljava/lang/String;Lorg/partiql/types/StaticType;)V
+	public fun <init> (Ljava/lang/String;Lorg/partiql/types/StaticType;Ljava/util/Map;)V
 	public final fun component1 ()Ljava/lang/String;
 	public final fun component2 ()Lorg/partiql/types/StaticType;
 	public final fun copy (Ljava/lang/String;Lorg/partiql/types/StaticType;)Lorg/partiql/types/StructType$Field;
 	public static synthetic fun copy$default (Lorg/partiql/types/StructType$Field;Ljava/lang/String;Lorg/partiql/types/StaticType;ILjava/lang/Object;)Lorg/partiql/types/StructType$Field;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getKey ()Ljava/lang/String;
+	public final fun getMeta ()Ljava/util/Map;
 	public final fun getValue ()Lorg/partiql/types/StaticType;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;

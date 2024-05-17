@@ -18,7 +18,7 @@ internal class DDLPlanTests {
             val internal = PartiQLPlan(typed)
             assertEquals(tc.publicPlan, transform.transform(internal, {}).statement)
         } else {
-            assertThrows<NotImplementedError> {
+            assertThrows<IllegalArgumentException> {
                 val typed = typer.resolve(statementDDL(StaticType.ANY, tc.untyped))
                 val internal = PartiQLPlan(typed)
                 transform.transform(internal, {})

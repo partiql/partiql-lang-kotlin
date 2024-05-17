@@ -13,7 +13,7 @@ internal class DDLTyperTests {
         if (tc.resolved != null) {
             assertEquals(tc.resolved.shape, typer.resolveDdl(statementDDL(StaticType.ANY, tc.untyped)).shape)
         } else {
-            assertThrows<NotImplementedError> {
+            assertThrows<IllegalArgumentException> {
                 typer.resolveDdl(statementDDL(StaticType.ANY, tc.untyped))
             }
         }
