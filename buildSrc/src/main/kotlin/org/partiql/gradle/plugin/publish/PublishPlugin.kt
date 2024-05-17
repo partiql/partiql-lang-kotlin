@@ -15,6 +15,8 @@
 
 package org.partiql.gradle.plugin.publish
 
+import com.github.jengelman.gradle.plugins.shadow.ShadowPlugin
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPlugin
@@ -39,7 +41,7 @@ import java.io.File
 
 /**
  * Gradle plugin to consolidates the following publishing logic
- * - Maven Publising
+ * - Maven Publishing
  * - Signing
  * - SourcesJar
  * - Dokka + JavadocJar
@@ -58,6 +60,7 @@ abstract class PublishPlugin : Plugin<Project> {
         // to update these .api files and commit the changes.
         // See https://github.com/Kotlin/binary-compatibility-validator#optional-parameters for additional configuration.
         pluginManager.apply(BinaryCompatibilityValidatorPlugin::class.java)
+        pluginManager.apply(ShadowPlugin::class.java)
         extensions.getByType(KotlinJvmProjectExtension::class.java).explicitApi = ExplicitApiMode.Strict
         val ext = extensions.create("publish", PublishExtension::class.java)
         target.afterEvaluate { publish(ext) }
@@ -92,58 +95,98 @@ abstract class PublishPlugin : Plugin<Project> {
             from(tasks.named("dokkaHtml"))
         }
 
-        // Setup Maven Central Publishing
-        val publishing = extensions.getByType(PublishingExtension::class.java).apply {
-            publications {
-                create<MavenPublication>("maven") {
-                    artifactId = ext.artifactId
-                    from(components["java"])
-                    pom {
-                        packaging = "jar"
-                        name.set(ext.name)
-                        description.set(ext.description)
-                        url.set(ext.url)
-                        scm {
-                            connection.set("scm:git@github.com:partiql/partiql-lang-kotlin.git")
-                            developerConnection.set("scm:git@github.com:partiql/partiql-lang-kotlin.git")
-                            url.set("git@github.com:partiql/partiql-lang-kotlin.git")
-                        }
-                        licenses {
-                            license {
-                                name.set("The Apache License, Version 2.0")
-                                url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
-                            }
-                        }
-                        developers {
-                            developer {
-                                name.set("PartiQL Team")
-                                email.set("partiql-dev@amazon.com")
-                                organization.set("PartiQL")
-                                organizationUrl.set("https://github.com/partiql")
-                            }
-                        }
-                    }
-                }
-            }
-            repositories {
-                maven {
-                    url = uri("https://aws.oss.sonatype.org/service/local/staging/deploy/maven2")
-                    credentials {
-                        val ossrhUsername: String by rootProject
-                        val ossrhPassword: String by rootProject
-                        username = ossrhUsername
-                        password = ossrhPassword
-                    }
-                }
-            }
+        tasks.getByName<ShadowJar>("shadowJar") {
+            // Use the default name for published shadow jar
+            archiveClassifier.set("")
         }
 
-        // Sign only if publishing to Maven Central
-        extensions.getByType(SigningExtension::class.java).run {
-            setRequired {
-                releaseVersion && gradle.taskGraph.allTasks.any { it is PublishToMavenRepository }
+        tasks.getByName<Jar>("jar") {
+            // Rename jar for `project` dependencies; not published to Maven
+            archiveClassifier.set("original")
+        }
+
+        // Setup Maven Central Publishing
+        afterEvaluate {
+            val publishing = extensions.getByType(PublishingExtension::class.java).apply {
+                publications {
+                    create<MavenPublication>("maven") {
+                        // Publish the shadow jar; create dependencies separately since `ShadowExtension.component`
+                        // does not include non-shadowed in POM dependencies
+                        artifact(tasks["shadowJar"])
+                        artifact(tasks["sourcesJar"])
+                        artifact(tasks["javadocJar"])
+                        artifactId = ext.artifactId
+                        pom {
+                            packaging = "jar"
+                            name.set(ext.name)
+                            description.set(ext.description)
+                            url.set(ext.url)
+                            scm {
+                                connection.set("scm:git@github.com:partiql/partiql-lang-kotlin.git")
+                                developerConnection.set("scm:git@github.com:partiql/partiql-lang-kotlin.git")
+                                url.set("git@github.com:partiql/partiql-lang-kotlin.git")
+                            }
+                            licenses {
+                                license {
+                                    name.set("The Apache License, Version 2.0")
+                                    url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
+                                }
+                            }
+                            developers {
+                                developer {
+                                    name.set("PartiQL Team")
+                                    email.set("partiql-dev@amazon.com")
+                                    organization.set("PartiQL")
+                                    organizationUrl.set("https://github.com/partiql")
+                                }
+                            }
+                            // Publish the dependencies
+                            withXml {
+                                val dependenciesNode = asNode().appendNode("dependencies")
+                                val apiDeps = project.configurations["api"].allDependencies
+                                    .filter { it.name !in ext.excludedDependencies }
+                                val implDeps = project.configurations["implementation"].allDependencies
+                                    .filter { it !in apiDeps && it.name !in ext.excludedDependencies }
+                                // Add Gradle 'api' dependencies; mapped to Maven 'compile'
+                                apiDeps.forEach { dependency ->
+                                    val dependencyNode = dependenciesNode.appendNode("dependency")
+                                    dependencyNode.appendNode("groupId", dependency.group)
+                                    dependencyNode.appendNode("artifactId", dependency.name)
+                                    dependencyNode.appendNode("version", dependency.version)
+                                    dependencyNode.appendNode("scope", "compile")
+                                }
+                                // Add Gradle 'implementation' dependencies; mapped to Maven 'runtime'
+                                implDeps.forEach { dependency ->
+                                    val dependencyNode = dependenciesNode.appendNode("dependency")
+                                    dependencyNode.appendNode("groupId", dependency.group)
+                                    dependencyNode.appendNode("artifactId", dependency.name)
+                                    dependencyNode.appendNode("version", dependency.version)
+                                    dependencyNode.appendNode("scope", "runtime")
+                                }
+                            }
+                        }
+                    }
+                }
+                repositories {
+                    maven {
+                        url = uri("https://aws.oss.sonatype.org/service/local/staging/deploy/maven2")
+                        credentials {
+                            val ossrhUsername: String by rootProject
+                            val ossrhPassword: String by rootProject
+                            username = ossrhUsername
+                            password = ossrhPassword
+                        }
+                    }
+                }
             }
-            sign(publishing.publications["maven"])
+
+            // Sign only if publishing to Maven Central
+            extensions.getByType(SigningExtension::class.java).run {
+                setRequired {
+                    releaseVersion && gradle.taskGraph.allTasks.any { it is PublishToMavenRepository }
+                }
+                sign(publishing.publications["maven"])
+            }
         }
     }
 }
@@ -153,6 +196,7 @@ abstract class PublishExtension {
     var name: String = ""
     var description: String = ""
     var url: String = "https://github.com/partiql/partiql-lang-kotlin"
+    var excludedDependencies: Set<String> = setOf()
     override fun toString(): String {
         return "PublishExtension(artifactId='$artifactId', name='$name', description='$description', url='$url')"
     }
