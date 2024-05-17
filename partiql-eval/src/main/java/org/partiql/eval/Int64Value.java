@@ -8,7 +8,7 @@ import org.partiql.value.PartiQLValueType;
  */
 class Int64Value implements PQLValue {
 
-    final long _value;
+    private final long _value;
 
     Int64Value(long value) {
         _value = value;

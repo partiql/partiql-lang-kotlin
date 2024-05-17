@@ -16,7 +16,7 @@ import java.util.Iterator;
 class NullValue implements PQLValue {
 
     @NotNull
-    final PartiQLValueType _type;
+    private final PartiQLValueType _type;
 
     NullValue() {
         this._type = PartiQLValueType.NULL;

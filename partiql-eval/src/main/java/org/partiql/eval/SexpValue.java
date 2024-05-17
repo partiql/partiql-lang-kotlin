@@ -12,7 +12,7 @@ import java.util.Iterator;
 class SexpValue implements PQLValue {
 
     @NotNull
-    final Iterable<PQLValue> _value;
+    private final Iterable<PQLValue> _value;
 
     SexpValue(@NotNull Iterable<PQLValue> value) {
         _value = value;

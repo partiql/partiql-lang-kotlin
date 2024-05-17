@@ -11,7 +11,7 @@ import java.math.BigInteger;
 class CharValue implements PQLValue {
 
     @NotNull
-    final String _value;
+    private final String _value;
 
     CharValue(@NotNull String value) {
         _value = value;

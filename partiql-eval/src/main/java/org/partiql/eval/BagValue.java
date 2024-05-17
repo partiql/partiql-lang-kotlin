@@ -3,7 +3,6 @@ package org.partiql.eval;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.value.PartiQLValueType;
 
-import java.util.Collections;
 import java.util.Iterator;
 
 /**
@@ -12,7 +11,7 @@ import java.util.Iterator;
 class BagValue implements PQLValue {
 
     @NotNull
-    final Iterable<PQLValue> _value;
+    private final Iterable<PQLValue> _value;
 
     BagValue(@NotNull Iterable<PQLValue> value) {
         _value = value;

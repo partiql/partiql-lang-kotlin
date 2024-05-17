@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 class DecimalValue implements PQLValue {
 
     @NotNull
-    final BigDecimal _value;
+    private final BigDecimal _value;
 
     DecimalValue(@NotNull BigDecimal value) {
         _value = value;

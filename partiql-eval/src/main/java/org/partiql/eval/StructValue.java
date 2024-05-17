@@ -3,7 +3,6 @@ package org.partiql.eval;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.value.PartiQLValueType;
 
-import java.util.Collections;
 import java.util.Iterator;
 
 /**
@@ -12,7 +11,7 @@ import java.util.Iterator;
 class StructValue implements PQLValue {
 
     @NotNull
-    final Iterable<StructField> _value;
+    private final Iterable<StructField> _value;
 
     StructValue(@NotNull Iterable<StructField> value) {
         _value = value;

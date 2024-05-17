@@ -7,7 +7,7 @@ import java.util.function.Supplier;
 
 class IterableFromIteratorSupplier<T> implements Iterable<T>{
     @NotNull
-    final Supplier<Iterator<T>> _supplier;
+    private final Supplier<Iterator<T>> _supplier;
 
     public IterableFromIteratorSupplier(@NotNull Supplier<Iterator<T>> supplier) {
         _supplier = supplier;

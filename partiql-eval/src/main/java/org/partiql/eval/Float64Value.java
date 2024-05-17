@@ -8,7 +8,7 @@ import org.partiql.value.PartiQLValueType;
  */
 class Float64Value implements PQLValue {
 
-    final double _value;
+    private final double _value;
 
     Float64Value(double value) {
         _value = value;

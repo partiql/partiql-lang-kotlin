@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 class DecimalArbitraryValue implements PQLValue {
 
     @NotNull
-    final BigDecimal _value;
+    private final BigDecimal _value;
 
     DecimalArbitraryValue(@NotNull BigDecimal value) {
         _value = value;

@@ -13,7 +13,7 @@ import java.util.Objects;
 class TimestampValue implements PQLValue {
 
     @NotNull
-    final Timestamp _value;
+    private final Timestamp _value;
 
     TimestampValue(@NotNull Timestamp value) {
         _value = value;

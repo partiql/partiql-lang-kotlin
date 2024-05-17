@@ -8,7 +8,7 @@ import org.partiql.value.PartiQLValueType;
  */
 class Int16Value implements PQLValue {
 
-    final short _value;
+    private final short _value;
 
     Int16Value(short value) {
         _value = value;

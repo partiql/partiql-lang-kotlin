@@ -8,7 +8,7 @@ import org.partiql.value.PartiQLValueType;
  */
 class Int8Value implements PQLValue {
 
-    final byte _value;
+    private final byte _value;
 
     Int8Value(byte value) {
         _value = value;

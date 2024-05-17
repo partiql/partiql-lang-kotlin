@@ -9,7 +9,7 @@ import org.partiql.value.PartiQLValueType;
 class BinaryValue implements PQLValue {
 
     @NotNull
-    final byte[] _value;
+    private final byte[] _value;
 
     BinaryValue(@NotNull byte[] value) {
         _value = value;

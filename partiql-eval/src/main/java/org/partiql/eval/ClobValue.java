@@ -9,7 +9,7 @@ import org.partiql.value.PartiQLValueType;
 class ClobValue implements PQLValue {
 
     @NotNull
-    final byte[] _value;
+    private final byte[] _value;
 
     ClobValue(@NotNull byte[] value) {
         _value = value;

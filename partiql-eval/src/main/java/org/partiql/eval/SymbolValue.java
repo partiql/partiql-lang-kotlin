@@ -9,7 +9,7 @@ import org.partiql.value.PartiQLValueType;
 class SymbolValue implements PQLValue {
 
     @NotNull
-    final String _value;
+    private final String _value;
 
     SymbolValue(@NotNull String value) {
         _value = value;

@@ -11,7 +11,7 @@ import java.math.BigInteger;
 class IntValue implements PQLValue {
 
     @NotNull
-    final BigInteger _value;
+    private final BigInteger _value;
 
     IntValue(@NotNull BigInteger value) {
         _value = value;

@@ -8,7 +8,7 @@ import org.partiql.value.PartiQLValueType;
  */
 class BoolValue implements PQLValue {
 
-    final boolean _value;
+    private final boolean _value;
 
     BoolValue(boolean value) {
         _value = value;

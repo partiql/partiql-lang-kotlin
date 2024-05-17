@@ -8,7 +8,7 @@ import java.util.Iterator;
 class PQLToPartiQLIterator implements Iterator<PartiQLValue> {
 
     @NotNull
-    final Iterator<PQLValue> pqlValues;
+    private final Iterator<PQLValue> pqlValues;
 
     PQLToPartiQLIterator(@NotNull Iterator<PQLValue> pqlValues) {
         this.pqlValues = pqlValues;

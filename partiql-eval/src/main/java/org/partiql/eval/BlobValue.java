@@ -9,7 +9,7 @@ import org.partiql.value.PartiQLValueType;
 class BlobValue implements PQLValue {
 
     @NotNull
-    final byte[] _value;
+    private final byte[] _value;
 
     BlobValue(@NotNull byte[] value) {
         _value = value;

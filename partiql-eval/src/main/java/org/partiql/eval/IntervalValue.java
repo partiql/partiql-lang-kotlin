@@ -8,7 +8,7 @@ import org.partiql.value.PartiQLValueType;
  */
 class IntervalValue implements PQLValue {
 
-    final long _value;
+    private final long _value;
 
     IntervalValue(long value) {
         _value = value;

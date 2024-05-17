@@ -12,7 +12,7 @@ import java.util.Objects;
 class TimeValue implements PQLValue {
 
     @NotNull
-    final Time _value;
+    private final Time _value;
 
     TimeValue(@NotNull Time value) {
         _value = value;

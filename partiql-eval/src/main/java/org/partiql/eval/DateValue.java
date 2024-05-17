@@ -3,9 +3,6 @@ package org.partiql.eval;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.value.PartiQLValueType;
 import org.partiql.value.datetime.Date;
-import org.partiql.value.datetime.Time;
-
-import java.util.Objects;
 
 /**
  * This shall always be package-private (internal).
@@ -13,7 +10,7 @@ import java.util.Objects;
 class DateValue implements PQLValue {
 
     @NotNull
-    final Date _value;
+    private final Date _value;
 
     DateValue(@NotNull Date value) {
         _value = value;

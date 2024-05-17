@@ -12,7 +12,7 @@ import java.util.Iterator;
 class ListValue implements PQLValue {
 
     @NotNull
-    final Iterable<PQLValue> _value;
+    private final Iterable<PQLValue> _value;
 
     ListValue(@NotNull Iterable<PQLValue> value) {
         _value = value;
