@@ -210,7 +210,11 @@ internal class DDLTestBase {
             StructType.Field("C", StaticType.unionOf(StringType(StringType.StringLengthConstraint.Constrained(NumberConstraint.UpTo(10))), StaticType.NULL))
         )
 
-        val COMMENT_META = mapOf("comment" to "this is a comment")
+        val CONSTR_NAME_ZERO = "\$_${tableName}_0"
+
+        val COMMENT = "this is a comment"
+
+        val COMMENT_META = mapOf("comment" to COMMENT)
 
         @OptIn(PartiQLValueExperimental::class)
         val CONSTRA_A_LT_ZERO = Pair(
@@ -221,7 +225,7 @@ internal class DDLTestBase {
                 "a < 0"
             ),
             checkConstraintResolved(
-                "\$_${tableName}_0", rex(StaticType.INT4, rexOpVarLocal(0, 0)), rex(StaticType.INT4, rexOpLit(int32Value(0))), "a < 0"
+                CONSTR_NAME_ZERO, rex(StaticType.INT4, rexOpVarLocal(0, 0)), rex(StaticType.INT4, rexOpLit(int32Value(0))), "a < 0"
             )
         )
 
@@ -303,7 +307,7 @@ internal class DDLTestBase {
                     null,
                     emptyList()
                 ),
-                tableInternal(FIELD_A_INT4.first.withConstraints(listOf(nonNullConstraint("\$_${tableName}_0")),)),
+                tableInternal(FIELD_A_INT4.first.withConstraints(listOf(nonNullConstraint(CONSTR_NAME_ZERO)),)),
                 table(StructType.Field("A", StaticType.INT4))
             ),
 
@@ -315,7 +319,7 @@ internal class DDLTestBase {
                     null,
                     emptyList()
                 ),
-                tableInternal(FIELD_A_INT4.first.withConstraints(listOf(nonNullConstraint("\$_${tableName}_0"))).asOptional()),
+                tableInternal(FIELD_A_INT4.first.withConstraints(listOf(nonNullConstraint(CONSTR_NAME_ZERO))).asOptional()),
                 table(StructType.Field("A", StaticType.INT4.asOptional()))
             ),
 
@@ -323,11 +327,11 @@ internal class DDLTestBase {
                 "CREATE TABLE tbl (a INT4 COMMENT 'this is a comment')",
                 ddlOpCreateTable(
                     id(tableName),
-                    tableInternal(FIELD_A_INT4.first.withComment("this is a comment")),
+                    tableInternal(FIELD_A_INT4.first.withComment(COMMENT)),
                     null,
                     emptyList()
                 ),
-                tableInternal(FIELD_A_INT4.first.withComment("this is a comment")),
+                tableInternal(FIELD_A_INT4.first.withComment(COMMENT)),
                 table(FIELD_A_INT4.second.withMeta(COMMENT_META)),
             ),
 
@@ -373,7 +377,7 @@ internal class DDLTestBase {
                 ),
                 table(
                     FIELD_A_INT4.second,
-                    structMeta = mapOf("check_constraints" to ionStructOf(field("\$_${tableName}_0", ionString("a < 0"))),)
+                    structMeta = mapOf("check_constraints" to ionStructOf(field(CONSTR_NAME_ZERO, ionString("a < 0"))),)
                 )
             ),
 
@@ -403,7 +407,7 @@ internal class DDLTestBase {
                 ),
                 table(
                     FIELD_A_INT4.second,
-                    structMeta = mapOf("check_constraints" to ionStructOf(field("\$_${tableName}_0", ionString("a < 0"))),)
+                    structMeta = mapOf("check_constraints" to ionStructOf(field(CONSTR_NAME_ZERO, ionString("a < 0"))),)
                 )
             ),
 
@@ -438,7 +442,7 @@ internal class DDLTestBase {
                     FIELD_B_INT4.first,
                     structConstraints = listOf(
                         checkConstraintResolved(
-                            "\$_${tableName}_0",
+                            CONSTR_NAME_ZERO,
                             rex(StaticType.INT4, rexOpVarLocal(0, 0)),
                             rex(StaticType.INT4, rexOpVarLocal(0, 1)),
                             "a < b"
@@ -448,7 +452,7 @@ internal class DDLTestBase {
                 table(
                     FIELD_A_INT4.second,
                     FIELD_B_INT4.second,
-                    structMeta = mapOf("check_constraints" to ionStructOf(field("\$_${tableName}_0", ionString("a < b"))),)
+                    structMeta = mapOf("check_constraints" to ionStructOf(field(CONSTR_NAME_ZERO, ionString("a < b"))),)
                 )
             ),
 
@@ -727,7 +731,7 @@ internal class DDLTestBase {
                         typeRecordField(
                             id("nested"),
                             typeRecord(
-                                listOf(FIELD_A_INT4.first.withComment("this is a comment")),
+                                listOf(FIELD_A_INT4.first.withComment(COMMENT)),
                                 emptyList()
                             ),
                             emptyList(),
@@ -742,7 +746,7 @@ internal class DDLTestBase {
                     typeRecordField(
                         id("nested"),
                         typeRecord(
-                            listOf(FIELD_A_INT4.first.withComment("this is a comment")),
+                            listOf(FIELD_A_INT4.first.withComment(COMMENT)),
                             emptyList()
                         ),
                         emptyList(),
