@@ -24,11 +24,12 @@ repositories {
 
 object Versions {
     const val binaryCompatibilityValidator = "0.14.0"
-    const val detekt = "1.20.0-RC1"
+    const val detekt = "1.20.0-RC2"
     const val dokka = "1.6.10"
     const val kotlin = "1.6.20"
-    const val ktlint = "10.2.1"
+    const val ktlintGradle = "10.2.1"
     const val pig = "0.6.1"
+    const val shadow = "8.1.1"
 }
 
 object Plugins {
@@ -36,17 +37,19 @@ object Plugins {
     const val detekt = "io.gitlab.arturbosch.detekt:detekt-gradle-plugin:${Versions.detekt}"
     const val dokka = "org.jetbrains.dokka:dokka-gradle-plugin:${Versions.dokka}"
     const val kotlinGradle = "org.jetbrains.kotlin:kotlin-gradle-plugin:${Versions.kotlin}"
-    const val ktlint = "org.jlleitschuh.gradle:ktlint-gradle:${Versions.ktlint}"
+    const val ktlintGradle = "org.jlleitschuh.gradle:ktlint-gradle:${Versions.ktlintGradle}"
     const val pig = "org.partiql:pig-gradle-plugin:${Versions.pig}"
+    const val shadow = "com.github.johnrengelman:shadow:${Versions.shadow}"
 }
 
 dependencies {
     implementation(Plugins.detekt)
     implementation(Plugins.dokka)
     implementation(Plugins.kotlinGradle)
-    implementation(Plugins.ktlint)
+    implementation(Plugins.ktlintGradle)
     implementation(Plugins.pig)
     implementation(Plugins.binaryCompatibilityValidator)
+    implementation(Plugins.shadow)
 }
 
 allprojects {

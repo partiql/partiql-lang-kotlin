@@ -23,7 +23,26 @@ dependencies {
     api(project(":partiql-ast"))
     api(project(":partiql-types"))
     implementation(Deps.ionElement)
-    implementation(Deps.antlrRuntime)
+    shadow(Deps.antlrRuntime)
+}
+
+val relocations = mapOf(
+    "org.antlr" to "org.partiql.parser.thirdparty.antlr"
+)
+
+tasks.shadowJar {
+    dependsOn(tasks.named("generateGrammarSource"))
+    configurations = listOf(project.configurations.shadow.get())
+    for ((from, to) in relocations) {
+        relocate(from, to)
+    }
+}
+
+// Workaround for https://github.com/johnrengelman/shadow/issues/651
+components.withType(AdhocComponentWithVariants::class.java).forEach { c ->
+    c.withVariantsFromConfiguration(project.configurations.shadowRuntimeElements.get()) {
+        skip()
+    }
 }
 
 tasks.generateGrammarSource {
@@ -50,8 +69,21 @@ tasks.compileKotlin {
     dependsOn(tasks.generateGrammarSource)
 }
 
-tasks.findByName("sourcesJar")?.apply {
-    dependsOn(tasks.generateGrammarSource)
+tasks.compileTestKotlin {
+    dependsOn(tasks.withType<AntlrTask>())
+}
+
+tasks.withType<Jar>().configureEach {
+    // ensure "generateGrammarSource" is called before "sourcesJar".
+    dependsOn(tasks.withType<AntlrTask>())
+}
+
+tasks.withType<org.jetbrains.dokka.gradle.DokkaTask>().configureEach {
+    dependsOn(tasks.withType<AntlrTask>())
+}
+
+tasks.runKtlintCheckOverTestSourceSet {
+    dependsOn(tasks.withType<AntlrTask>())
 }
 
 tasks.processResources {
@@ -64,4 +96,9 @@ publish {
     artifactId = "partiql-parser"
     name = "PartiQL Parser"
     description = "PartiQL's experimental Parser"
+    // `antlr` dependency configuration adds the ANTLR API configuration (and Maven `compile` dependency scope on
+    // publish). It's a known issue w/ the ANTLR gradle plugin. Follow https://github.com/gradle/gradle/issues/820
+    // for context. In the maven publishing step, any API or IMPLEMENTATION dependencies w/ "antlr4" non-runtime
+    // dependency will be omitted from the created Maven POM.
+    excludedDependencies = setOf("antlr4")
 }

@@ -36,7 +36,7 @@ object Versions {
     const val jansi = "2.4.0"
     const val jgenhtml = "1.6"
     const val jline = "3.21.0"
-    const val jmhGradlePlugin = "0.5.3"
+    const val jmhGradlePlugin = "0.7.2"
     const val jmhCore = "1.37"
     const val jmhGeneratorAnnprocess = "1.37"
     const val jmhGeneratorBytecode = "1.37"
@@ -45,14 +45,14 @@ object Versions {
     const val kotlinxCollections = "0.3.5"
     const val picoCli = "4.7.0"
     const val kasechange = "1.3.0"
-    const val ktlint = "11.6.0"
     const val pig = "0.6.2"
     const val kotlinxCoroutines = "1.6.0"
     const val kotlinxCoroutinesJdk8 = "1.6.0"
+    const val ktlint = "0.42.1" // we're on an old version of ktlint. TODO upgrade https://github.com/partiql/partiql-lang-kotlin/issues/1418
 
     // Testing
     const val assertj = "3.11.0"
-    const val jacoco = "0.8.8"
+    const val jacoco = "0.8.11"
     const val junit5 = "5.9.3"
     const val junit5PlatformLauncher = "1.9.3"
     const val junit4 = "4.12"
@@ -92,6 +92,7 @@ object Deps {
     const val pigRuntime = "org.partiql:partiql-ir-generator-runtime:${Versions.pig}"
     const val kotlinxCoroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-core:${Versions.kotlinxCoroutines}"
     const val kotlinxCoroutinesJdk8 = "org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:${Versions.kotlinxCoroutinesJdk8}"
+    const val ktlint = "com.pinterest.ktlint:ktlint-core:${Versions.ktlint}"
 
     // Testing
     const val assertj = "org.assertj:assertj-core:${Versions.assertj}"
@@ -106,11 +107,7 @@ object Deps {
     const val mockito = "org.mockito:mockito-junit-jupiter:${Versions.mockito}"
     const val mockk = "io.mockk:mockk:${Versions.mockk}"
     const val kotlinxCoroutinesTest = "org.jetbrains.kotlinx:kotlinx-coroutines-test:${Versions.kotlinxCoroutinesTest}"
-
-    // JMH Benchmarking
-    const val jmhCore = "org.openjdk.jmh:jmh-core:${Versions.jmhCore}"
-    const val jmhGeneratorAnnprocess = "org.openjdk.jmh:jmh-core:${Versions.jmhGeneratorAnnprocess}"
-    const val jmhGeneratorBytecode = "org.openjdk.jmh:jmh-core:${Versions.jmhGeneratorBytecode}"
+    const val ktlintTest = "com.pinterest.ktlint:ktlint-test:${Versions.ktlint}"
 }
 
 object Plugins {
@@ -124,8 +121,7 @@ object Plugins {
     const val application = "org.gradle.application"
     const val detekt = "io.gitlab.arturbosch.detekt"
     const val dokka = "org.jetbrains.dokka"
-    const val jmh = "me.champeau.gradle.jmh"
-    const val ktlint = "org.jlleitschuh.gradle.ktlint"
+    const val jmh = "me.champeau.jmh"
     const val library = "org.gradle.java-library"
     const val testFixtures = "org.gradle.java-test-fixtures"
 }

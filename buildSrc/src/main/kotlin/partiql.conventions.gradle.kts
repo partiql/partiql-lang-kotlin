@@ -40,6 +40,12 @@ dependencies {
     testImplementation(Deps.kotlinTest)
     testImplementation(Deps.kotlinTestJunit)
     testImplementation(Deps.junitParams)
+    // Custom ktlint rules are added by adding to the `dependencies` block: https://github.com/JLLeitschuh/ktlint-gradle/tree/v10.2.0?tab=readme-ov-file#configuration
+    // Currently, we only run the rules when the `custom-ktlint-rules` property is set.
+    // Once we enable the custom rules to run by default, this conditional can be removed.
+    if (hasProperty("custom-ktlint-rules")) {
+        ktlintRuleset(project(":custom-ktlint-rules"))
+    }
 }
 
 java {
@@ -49,8 +55,10 @@ java {
 
 tasks.test {
     useJUnitPlatform() // Enable JUnit5
-    jvmArgs.addAll(listOf("-Duser.language=en", "-Duser.country=US"))
-    jvmArgs.add("-Djunit.jupiter.execution.timeout.mode=disabled_on_debug")
+    jvmArgs(
+        "-Duser.language=en",
+        "-Duser.country=US"
+    )
     maxHeapSize = "4g"
     testLogging {
         events.add(TestLogEvent.FAILED)
@@ -73,6 +81,13 @@ tasks.compileTestKotlin {
 }
 
 configure<KtlintExtension> {
+    version.set(Versions.ktlint)
+    // Currently set `ktlintCheck` to not fail on the custom rules.
+    // Once we enable the custom rules to run by default, this conditional can be removed.
+    if (hasProperty("custom-ktlint-rules")) {
+        ignoreFailures.set(true)
+    }
+    outputToConsole.set(true)
     filter {
         exclude { it.file.path.contains(generatedSrc) }
     }

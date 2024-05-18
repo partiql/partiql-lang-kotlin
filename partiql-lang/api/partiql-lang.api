@@ -67,25 +67,6 @@ public final class org/partiql/lang/StepContext {
 	public fun toString ()Ljava/lang/String;
 }
 
-public final class org/partiql/lang/ast/StaticTypeMeta : org/partiql/lang/ast/Meta {
-	public static final field Companion Lorg/partiql/lang/ast/StaticTypeMeta$Companion;
-	public static final field TAG Ljava/lang/String;
-	public fun <init> (Lorg/partiql/types/StaticType;)V
-	public final fun component1 ()Lorg/partiql/types/StaticType;
-	public final fun copy (Lorg/partiql/types/StaticType;)Lorg/partiql/lang/ast/StaticTypeMeta;
-	public static synthetic fun copy$default (Lorg/partiql/lang/ast/StaticTypeMeta;Lorg/partiql/types/StaticType;ILjava/lang/Object;)Lorg/partiql/lang/ast/StaticTypeMeta;
-	public fun equals (Ljava/lang/Object;)Z
-	public fun getShouldSerialize ()Z
-	public fun getTag ()Ljava/lang/String;
-	public final fun getType ()Lorg/partiql/types/StaticType;
-	public fun hashCode ()I
-	public fun serialize (Lcom/amazon/ion/IonWriter;)V
-	public fun toString ()Ljava/lang/String;
-}
-
-public final class org/partiql/lang/ast/StaticTypeMeta$Companion {
-}
-
 public final class org/partiql/lang/ast/passes/SemanticException : org/partiql/lang/SqlException {
 	public fun <init> (Ljava/lang/String;Lorg/partiql/errors/ErrorCode;Lorg/partiql/errors/PropertyValueMap;Ljava/lang/Throwable;)V
 	public synthetic fun <init> (Ljava/lang/String;Lorg/partiql/errors/ErrorCode;Lorg/partiql/errors/PropertyValueMap;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V

@@ -3,10 +3,8 @@ package org.partiql.value.io
 import com.amazon.ion.IonReader
 import com.amazon.ion.IonType
 import com.amazon.ion.system.IonReaderBuilder
-import com.amazon.ion.system.IonSystemBuilder
 import com.amazon.ion.system.IonTextWriterBuilder
 import com.amazon.ionelement.api.IonElement
-import com.amazon.ionelement.api.toIonValue
 import org.partiql.value.DecimalValue
 import org.partiql.value.IntValue
 import org.partiql.value.PartiQLValue
@@ -626,9 +624,8 @@ public class PartiQLValueIonReaderBuilder private constructor(
 
     public fun build(ionElement: IonElement): PartiQLValueReader {
         val out = ByteArrayOutputStream()
-        val reader = IonReaderBuilder.standard().build(ionElement.toIonValue(IonSystemBuilder.standard().build()))
         val writer = IonTextWriterBuilder.standard().build(out)
-        writer.writeValues(reader)
+        ionElement.writeTo(writer)
         val input = ByteArrayInputStream(out.toByteArray())
         return build(input)
     }
