@@ -8,7 +8,7 @@ suite::{
     vars: {},
   },
   tests: {
-    'avg(int32|null)': {
+    'avg(int32)': {
       statement: '''
         SELECT AVG(n) as "avg" FROM numbers.nullable_int32s AS n
       ''',
@@ -25,7 +25,7 @@ suite::{
         },
       },
     },
-    'count(int32|null)': {
+    'count(int32)': {
       statement: '''
         SELECT COUNT(n) as "count" FROM numbers.nullable_int32s AS n
       ''',
@@ -42,7 +42,7 @@ suite::{
         },
       },
     },
-    'min(int32|null)': {
+    'min(int32)': {
       statement: '''
         SELECT MIN(n) as "min" FROM numbers.nullable_int32s AS n
       ''',
@@ -59,7 +59,7 @@ suite::{
         },
       },
     },
-    'max(int32|null)': {
+    'max(int32)': {
       statement: '''
         SELECT MAX(n) as "max" FROM numbers.nullable_int32s AS n
       ''',
@@ -76,7 +76,7 @@ suite::{
         },
       },
     },
-    'sum(int32|null)': {
+    'sum(int32)': {
       statement: '''
         SELECT SUM(n) as "sum" FROM numbers.nullable_int32s AS n
       ''',

@@ -2447,11 +2447,6 @@ class PlanTyperTestsPorted {
                 expected = StaticType.INT8
             ),
             SuccessTestCase(
-                key = PartiQLTest.Key("basics", "case-when-08"),
-                catalog = "pql",
-                expected = StaticType.INT,
-            ),
-            SuccessTestCase(
                 key = PartiQLTest.Key("basics", "case-when-09"),
                 catalog = "pql",
                 expected = StaticType.INT,
@@ -2635,11 +2630,6 @@ class PlanTyperTestsPorted {
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "nullif-09"),
-                catalog = "pql",
-                expected = StaticType.INT4
-            ),
-            SuccessTestCase(
-                key = PartiQLTest.Key("basics", "nullif-10"),
                 catalog = "pql",
                 expected = StaticType.INT4
             ),

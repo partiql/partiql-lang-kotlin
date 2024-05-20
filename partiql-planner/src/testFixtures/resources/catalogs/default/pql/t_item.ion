@@ -8,17 +8,9 @@
       name: "t_bool",
       type: "bool",
     },
-    {
-      name: "t_bool_nul",
-      type: "bool",
-    },
     // Exact Numeric
 //    {
 //      name: "t_int8",
-//      type: "int8",
-//    },
-//    {
-//      name: "t_int8_null",
 //      type: "int8",
 //    },
     {
@@ -26,15 +18,7 @@
       type: "int16",
     },
     {
-      name: "t_int16_null",
-      type: "int16",
-    },
-    {
       name: "t_int32",
-      type: "int32",
-    },
-    {
-      name: "t_int32_null",
       type: "int32",
     },
     {
@@ -42,23 +26,11 @@
       type: "int64",
     },
     {
-      name: "t_int64_null",
-      type: "int64",
-    },
-    {
       name: "t_int",
       type: "int",
     },
     {
-      name: "t_int_null",
-      type: "int",
-    },
-    {
       name: "t_decimal",
-      type: "decimal",
-    },
-    {
-      name: "t_decimal_null",
       type: "decimal",
     },
     // Approximate Numeric
@@ -67,15 +39,7 @@
       type: "float32",
     },
     {
-      name: "t_float32_null",
-      type: "float32",
-    },
-    {
       name: "t_float64",
-      type: "float64",
-    },
-    {
-      name: "t_float64_null",
       type: "float64",
     },
     // Strings
@@ -84,15 +48,7 @@
       type: "string",
     },
     {
-      name: "t_string_null",
-      type: "string",
-    },
-    {
       name: "t_clob",
-      type: "clob",
-    },
-    {
-      name: "t_clob_null",
       type: "clob",
     },
     // collections
@@ -157,10 +113,6 @@
     // unions
     {
       name: "t_num_exact",
-      type: [ "int16", "int32", "int64", "int", "decimal" ],
-    },
-    {
-      name: "t_num_exact_null",
       type: [ "int16", "int32", "int64", "int", "decimal" ],
     },
     {
