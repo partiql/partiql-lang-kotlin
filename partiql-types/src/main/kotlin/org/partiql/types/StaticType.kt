@@ -115,10 +115,6 @@ public sealed class StaticType {
         @OptIn(PartiQLTimestampExperimental::class)
         @JvmStatic
         public val ALL_TYPES: List<SingleType> = listOf(
-            @Suppress("DEPRECATION")
-            MISSING,
-            @Suppress("DEPRECATION")
-            NULL,
             BOOL,
             INT2,
             INT4,
