@@ -1,7 +1,6 @@
 package org.partiql.eval.internal
 
-import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
+import org.partiql.eval.PQLValue
 
 /**
  * This class represents the Variables Environment defined in the PartiQL Specification.
@@ -16,13 +15,15 @@ internal class Environment(
         val empty: Environment = Environment(Record.empty, null)
     }
 
-    @OptIn(PartiQLValueExperimental::class)
-    operator fun get(index: Int): PartiQLValue {
-        return this.bindings[index]
+    operator fun get(index: Int): PQLValue {
+        try {
+            return this.bindings[index]
+        } catch (_: Throwable) {
+            throw IllegalStateException("Received error when searching for binding at index $index. Current bindings are: $this.")
+        }
     }
 
-    @OptIn(PartiQLValueExperimental::class)
-    fun getOrNull(index: Int): PartiQLValue? {
+    fun getOrNull(index: Int): PQLValue? {
         return this.bindings.values.getOrNull(index)
     }
 

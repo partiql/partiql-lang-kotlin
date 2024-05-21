@@ -2,7 +2,10 @@ package org.partiql.eval.internal.operator.rel
 
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
+import org.partiql.eval.internal.helpers.RecordUtility.toPartiQLValueList
 import org.partiql.eval.internal.operator.Operator
+import org.partiql.value.PartiQLValue
+import org.partiql.value.PartiQLValueExperimental
 
 /**
  * Non-communicative, this performs better when [lhs] is larger than [rhs].
@@ -15,9 +18,12 @@ internal class RelExceptDistinct(
     private val rhs: Operator.Relation,
 ) : RelPeeking() {
 
-    private var seen: MutableSet<Record> = mutableSetOf()
+    // TODO: Add support for equals/hashcode in PQLValue
+    @OptIn(PartiQLValueExperimental::class)
+    private var seen: MutableSet<List<PartiQLValue>> = mutableSetOf()
     private var init: Boolean = false
 
+    @OptIn(PartiQLValueExperimental::class)
     override fun openPeeking(env: Environment) {
         lhs.open(env)
         rhs.open(env)
@@ -25,18 +31,21 @@ internal class RelExceptDistinct(
         seen = mutableSetOf()
     }
 
+    @OptIn(PartiQLValueExperimental::class)
     override fun peek(): Record? {
         if (!init) {
             seed()
         }
         for (row in lhs) {
-            if (!seen.contains(row)) {
+            val partiqlRow = row.toPartiQLValueList()
+            if (!seen.contains(partiqlRow)) {
                 return row
             }
         }
         return null
     }
 
+    @OptIn(PartiQLValueExperimental::class)
     override fun closePeeking() {
         lhs.close()
         rhs.close()
@@ -46,14 +55,12 @@ internal class RelExceptDistinct(
     /**
      * Read the entire right-hand-side into our search structure.
      */
+    @OptIn(PartiQLValueExperimental::class)
     private fun seed() {
         init = true
-        while (true) {
-            if (rhs.hasNext().not()) {
-                break
-            }
-            val row = rhs.next()
-            seen.add(row)
+        for (row in rhs) {
+            val partiqlRow = row.toPartiQLValueList()
+            seen.add(partiqlRow)
         }
     }
 }

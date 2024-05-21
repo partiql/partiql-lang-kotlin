@@ -19,7 +19,7 @@ internal class PartiQLEngineDefault : PartiQLEngine {
             val expression = compiler.compile()
             return object : PartiQLStatement.Query {
                 override fun execute(): PartiQLValue {
-                    return expression.eval(Environment.empty)
+                    return expression.eval(Environment.empty).toPartiQLValue()
                 }
             }
         } catch (ex: Exception) {

@@ -677,6 +677,16 @@ internal class PlanTyper(private val env: Env) {
 
         private fun rexString(str: String) = rex(STRING, rexOpLit(stringValue(str)))
 
+        /**
+         * This is overridden to narrow down the return type.
+         */
+        override fun visitRexOpCast(node: Rex.Op.Cast, ctx: StaticType?): Rex {
+            return when (node) {
+                is Rex.Op.Cast.Resolved -> visitRexOpCastResolved(node, ctx)
+                is Rex.Op.Cast.Unresolved -> visitRexOpCastUnresolved(node, ctx)
+            }
+        }
+
         override fun visitRexOpCastUnresolved(node: Rex.Op.Cast.Unresolved, ctx: StaticType?): Rex {
             val arg = visitRex(node.arg, null)
             val cast = env.resolveCast(arg, node.target) ?: return ProblemGenerator.errorRex(
@@ -728,7 +738,7 @@ internal class PlanTyper(private val env: Env) {
             val args: List<Rex> = node.args.map {
                 // Type the coercions
                 when (val op = it.op) {
-                    is Rex.Op.Cast.Resolved -> visitRexOpCastResolved(op, null)
+                    is Rex.Op.Cast -> visitRexOpCast(op, it.type)
                     else -> it
                 }
             }

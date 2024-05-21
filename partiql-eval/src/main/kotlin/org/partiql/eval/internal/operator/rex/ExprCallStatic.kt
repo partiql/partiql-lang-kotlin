@@ -1,11 +1,11 @@
 package org.partiql.eval.internal.operator.rex
 
+import org.partiql.eval.PQLValue
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.helpers.toNull
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnExperimental
-import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 
 @OptIn(FnExperimental::class, PartiQLValueExperimental::class)
@@ -19,13 +19,13 @@ internal class ExprCallStatic(
      */
     private val nil = fn.signature.returns.toNull()
 
-    override fun eval(env: Environment): PartiQLValue {
+    override fun eval(env: Environment): PQLValue {
         // Evaluate arguments
         val args = inputs.map { input ->
             val r = input.eval(env)
-            if (r.isNull && fn.signature.isNullCall) return nil()
-            r
+            if (r.isNull && fn.signature.isNullCall) return PQLValue.of(nil())
+            r.toPartiQLValue()
         }.toTypedArray()
-        return fn.invoke(args)
+        return PQLValue.of(fn.invoke(args))
     }
 }

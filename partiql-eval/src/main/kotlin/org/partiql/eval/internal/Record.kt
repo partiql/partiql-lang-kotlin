@@ -1,14 +1,12 @@
 package org.partiql.eval.internal
 
-import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueExperimental
+import org.partiql.eval.PQLValue
 
-@OptIn(PartiQLValueExperimental::class)
-internal data class Record(val values: Array<PartiQLValue>) {
+internal data class Record(val values: Array<PQLValue>) {
 
     companion object {
         val empty = Record(emptyArray())
-        fun of(vararg values: PartiQLValue) = Record(arrayOf(*(values)))
+        fun of(vararg values: PQLValue) = Record(arrayOf(*(values)))
     }
 
     override fun equals(other: Any?): Boolean {
@@ -30,7 +28,7 @@ internal data class Record(val values: Array<PartiQLValue>) {
         return Record(this.values.copyOf())
     }
 
-    public operator fun get(index: Int): PartiQLValue {
+    public operator fun get(index: Int): PQLValue {
         return this.values[index]
     }
 

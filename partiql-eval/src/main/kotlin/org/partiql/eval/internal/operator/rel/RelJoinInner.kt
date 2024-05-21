@@ -1,17 +1,64 @@
 package org.partiql.eval.internal.operator.rel
 
+import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
+import org.partiql.eval.internal.helpers.ValueUtility.isTrue
 import org.partiql.eval.internal.operator.Operator
+import org.partiql.value.PartiQLValueExperimental
 
 internal class RelJoinInner(
-    override val lhs: Operator.Relation,
-    override val rhs: Operator.Relation,
-    override val condition: Operator.Expr,
-) : RelJoinNestedLoop() {
-    override fun join(condition: Boolean, lhs: Record, rhs: Record): Record? {
-        return when (condition) {
-            true -> lhs + rhs
+    private val lhs: Operator.Relation,
+    private val rhs: Operator.Relation,
+    private val condition: Operator.Expr,
+) : RelPeeking() {
+
+    private lateinit var env: Environment
+    private lateinit var iterator: Iterator<Record>
+
+    override fun openPeeking(env: Environment) {
+        this.env = env
+        lhs.open(env)
+        iterator = implementation()
+    }
+
+    override fun peek(): Record? {
+        return when (iterator.hasNext()) {
+            true -> iterator.next()
             false -> null
+        }
+    }
+
+    override fun closePeeking() {
+        lhs.close()
+        rhs.close()
+        iterator = emptyList<Record>().iterator()
+    }
+
+    /**
+     * INNER JOIN (LATERAL)
+     *
+     * Algorithm:
+     * ```
+     * for lhsRecord in lhs:
+     *   for rhsRecord in rhs(lhsRecord):
+     *     if (condition matches):
+     *       conditionMatched = true
+     *       yield(lhsRecord + rhsRecord)
+     * ```
+     *
+     * Development Note: The non-lateral version wouldn't need to push to the current environment.
+     */
+    @OptIn(PartiQLValueExperimental::class)
+    private fun implementation() = iterator {
+        for (lhsRecord in lhs) {
+            rhs.open(env.push(lhsRecord))
+            for (rhsRecord in rhs) {
+                val input = lhsRecord + rhsRecord
+                val result = condition.eval(env.push(input))
+                if (result.isTrue()) {
+                    yield(lhsRecord + rhsRecord)
+                }
+            }
         }
     }
 }

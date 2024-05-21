@@ -1,3 +1,46 @@
+public abstract interface class org/partiql/eval/PQLValue {
+	public static fun bagValue (Ljava/lang/Iterable;)Lorg/partiql/eval/PQLValue;
+	public static fun boolValue (Z)Lorg/partiql/eval/PQLValue;
+	public fun getBagValues ()Ljava/util/Iterator;
+	public fun getBinaryValue ()[B
+	public fun getBlobValue ()[B
+	public fun getBoolValue ()Z
+	public fun getByteValue ()B
+	public fun getCharValue ()Ljava/lang/String;
+	public fun getClobValue ()[B
+	public fun getDateValue ()Lorg/partiql/value/datetime/Date;
+	public fun getDecimalArbitraryValue ()Ljava/math/BigDecimal;
+	public fun getDecimalValue ()Ljava/math/BigDecimal;
+	public fun getFloat32Value ()F
+	public fun getFloat64Value ()D
+	public fun getInt16Value ()S
+	public fun getInt32Value ()I
+	public fun getInt64Value ()J
+	public fun getInt8Value ()B
+	public fun getIntValue ()Ljava/math/BigInteger;
+	public fun getIntervalValue ()J
+	public fun getListValues ()Ljava/util/Iterator;
+	public fun getSexpValues ()Ljava/util/Iterator;
+	public fun getStringValue ()Ljava/lang/String;
+	public fun getStructFields ()Ljava/util/Iterator;
+	public fun getSymbolValue ()Ljava/lang/String;
+	public fun getTimeValue ()Lorg/partiql/value/datetime/Time;
+	public fun getTimestampValue ()Lorg/partiql/value/datetime/Timestamp;
+	public abstract fun getType ()Lorg/partiql/value/PartiQLValueType;
+	public static fun int32Value (I)Lorg/partiql/eval/PQLValue;
+	public static fun int64Value (J)Lorg/partiql/eval/PQLValue;
+	public abstract fun isNull ()Z
+	public static fun listValue (Ljava/lang/Iterable;)Lorg/partiql/eval/PQLValue;
+	public static fun missingValue ()Lorg/partiql/eval/PQLValue;
+	public static fun nullValue ()Lorg/partiql/eval/PQLValue;
+	public static fun nullValue (Lorg/partiql/value/PartiQLValueType;)Lorg/partiql/eval/PQLValue;
+	public static fun of (Lorg/partiql/value/PartiQLValue;)Lorg/partiql/eval/PQLValue;
+	public static fun sexpValue (Ljava/lang/Iterable;)Lorg/partiql/eval/PQLValue;
+	public static fun stringValue (Ljava/lang/String;)Lorg/partiql/eval/PQLValue;
+	public static fun structValue (Ljava/lang/Iterable;)Lorg/partiql/eval/PQLValue;
+	public fun toPartiQLValue ()Lorg/partiql/value/PartiQLValue;
+}
+
 public abstract interface class org/partiql/eval/PartiQLEngine {
 	public static final field Companion Lorg/partiql/eval/PartiQLEngine$Companion;
 	public static fun builder ()Lorg/partiql/eval/PartiQLEngineBuilder;
@@ -61,5 +104,11 @@ public abstract interface class org/partiql/eval/PartiQLStatement {
 }
 
 public abstract interface class org/partiql/eval/PartiQLStatement$Query : org/partiql/eval/PartiQLStatement {
+}
+
+public abstract interface class org/partiql/eval/StructField {
+	public abstract fun getName ()Ljava/lang/String;
+	public abstract fun getValue ()Lorg/partiql/eval/PQLValue;
+	public static fun of (Ljava/lang/String;Lorg/partiql/eval/PQLValue;)Lorg/partiql/eval/StructField;
 }
 

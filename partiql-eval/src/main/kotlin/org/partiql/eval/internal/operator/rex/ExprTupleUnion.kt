@@ -1,39 +1,29 @@
 package org.partiql.eval.internal.operator.rex
 
+import org.partiql.eval.PQLValue
 import org.partiql.eval.internal.Environment
+import org.partiql.eval.internal.helpers.ValueUtility.check
 import org.partiql.eval.internal.operator.Operator
-import org.partiql.value.NullValue
-import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.StructValue
-import org.partiql.value.missingValue
-import org.partiql.value.structValue
+import org.partiql.value.PartiQLValueType
 
 internal class ExprTupleUnion(
     val args: Array<Operator.Expr>
 ) : Operator.Expr {
 
     @OptIn(PartiQLValueExperimental::class)
-    override fun eval(env: Environment): PartiQLValue {
-        // Return MISSING on Mistyping Case
+    override fun eval(env: Environment): PQLValue {
         val tuples = args.map {
-            when (val arg = it.eval(env)) {
-                is StructValue<*> -> arg
-                is NullValue -> structValue(null)
-                else -> when (arg.isNull) {
-                    true -> structValue<PartiQLValue>(null)
-                    false -> return missingValue()
-                }
-            }
+            it.eval(env).check(PartiQLValueType.STRUCT)
         }
 
         // Return NULL if any arguments are NULL
         tuples.forEach {
             if (it.isNull) {
-                return structValue<PartiQLValue>(null)
+                return PQLValue.nullValue(PartiQLValueType.STRUCT)
             }
         }
 
-        return structValue(tuples.flatMap { it.entries })
+        return PQLValue.structValue(tuples.flatMap { it.structFields.asSequence() })
     }
 }

@@ -2,16 +2,22 @@ package org.partiql.eval.internal.operator.rel
 
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
+import org.partiql.eval.internal.helpers.RecordUtility.toPartiQLValueList
 import org.partiql.eval.internal.operator.Operator
+import org.partiql.value.PartiQLValue
+import org.partiql.value.PartiQLValueExperimental
 
 internal class RelIntersectAll(
     private val lhs: Operator.Relation,
     private val rhs: Operator.Relation,
 ) : RelPeeking() {
 
-    private val seen: MutableMap<Record, Int> = mutableMapOf()
+    // TODO: Add support for equals/hashcode in PQLValue
+    @OptIn(PartiQLValueExperimental::class)
+    private val seen: MutableMap<List<PartiQLValue>, Int> = mutableMapOf()
     private var init: Boolean = false
 
+    @OptIn(PartiQLValueExperimental::class)
     override fun openPeeking(env: Environment) {
         lhs.open(env)
         rhs.open(env)
@@ -19,21 +25,23 @@ internal class RelIntersectAll(
         seen.clear()
     }
 
+    @OptIn(PartiQLValueExperimental::class)
     override fun peek(): Record? {
         if (!init) {
             seed()
         }
         for (row in rhs) {
-            seen.computeIfPresent(row) { _, y ->
-                when (y) {
-                    0 -> null
-                    else -> y - 1
-                }
-            }?.let { return row }
+            val partiqlRow = row.toPartiQLValueList()
+            val remaining = seen[partiqlRow] ?: 0
+            if (remaining > 0) {
+                seen[partiqlRow] = remaining - 1
+                return row
+            }
         }
         return null
     }
 
+    @OptIn(PartiQLValueExperimental::class)
     override fun closePeeking() {
         lhs.close()
         rhs.close()
@@ -43,12 +51,13 @@ internal class RelIntersectAll(
     /**
      * Read the entire left-hand-side into our search structure.
      */
+    @OptIn(PartiQLValueExperimental::class)
     private fun seed() {
         init = true
         for (row in lhs) {
-            seen.computeIfPresent(row) { _, y ->
-                y + 1
-            } ?: seen.put(row, 1)
+            val partiqlRow = row.toPartiQLValueList()
+            val alreadySeen = seen[partiqlRow] ?: 0
+            seen[partiqlRow] = alreadySeen + 1
         }
     }
 }
