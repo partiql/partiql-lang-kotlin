@@ -21,7 +21,7 @@ internal class ExprPathKey(
             return PQLValue.nullValue()
         }
         val keyString = keyEvaluated.stringValue
-        for (entry in rootEvaluated.structFields) {
+        for (entry in rootEvaluated.fields) {
             if (entry.name == keyString) {
                 return entry.value
             }

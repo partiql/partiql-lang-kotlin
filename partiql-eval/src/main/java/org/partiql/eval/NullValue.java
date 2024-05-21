@@ -211,7 +211,7 @@ class NullValue implements PQLValue {
 
     @NotNull
     @Override
-    public Iterator<StructField> getStructFields() {
+    public Iterator<StructField> getFields() {
         if (_type == PartiQLValueType.STRUCT) {
             throw new NullPointerException();
         } else {

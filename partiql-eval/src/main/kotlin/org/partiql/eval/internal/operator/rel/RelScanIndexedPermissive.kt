@@ -22,10 +22,9 @@ internal class RelScanIndexedPermissive(
         iterator = when (r.type) {
             PartiQLValueType.BAG -> {
                 isIndexable = false
-                r.bagValues
+                r.iterator()
             }
-            PartiQLValueType.LIST -> r.listValues
-            PartiQLValueType.SEXP -> r.sexpValues
+            PartiQLValueType.LIST, PartiQLValueType.SEXP -> r.iterator()
             else -> {
                 isIndexable = false
                 iterator { yield(r) }

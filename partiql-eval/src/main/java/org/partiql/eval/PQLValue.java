@@ -3,6 +3,7 @@ package org.partiql.eval;
 import kotlin.NotImplementedError;
 import kotlin.Pair;
 import org.jetbrains.annotations.NotNull;
+import org.partiql.spi.BindingName;
 import org.partiql.value.PartiQL;
 import org.partiql.value.PartiQLValue;
 import org.partiql.value.PartiQLValueType;
@@ -31,7 +32,7 @@ import java.util.Objects;
  * - The comparator for ordering and aggregations
  * - Adding support for annotations
  */
-public interface PQLValue {
+public interface PQLValue extends Iterable<PQLValue> {
 
     /**
      * Determines whether the current value is a null value of any type (for example, null or null.int). It should be
@@ -311,20 +312,20 @@ public interface PQLValue {
     }
 
     /**
-     * @return the underlying value applicable to the type {@link PartiQLValueType#BAG}.
-     * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
-     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PartiQLValueType#INT}, then this method
-     *                                       will throw this exception upon invocation.
+     * @return the elements of either bags, lists, or sexps; returns the fields' values if the type is a struct.
+     * @throws UnsupportedOperationException if this operation is invoked on a value that is not of the following
+     *                                       types: {@link PartiQLValueType#BAG}, {@link PartiQLValueType#LIST}, {@link PartiQLValueType#SEXP}, and
+     *                                       {@link PartiQLValueType#STRUCT}.
      * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
      *                                       {@link #isNull()} returns false before attempting to invoke this method.
      */
-    @NotNull
-    default Iterator<PQLValue> getBagValues() {
+    @Override
+    default Iterator<PQLValue> iterator() {
         throw new UnsupportedOperationException();
     }
 
     /**
-     * @return the underlying value applicable to the type {@link PartiQLValueType#LIST}.
+     * @return the underlying values applicable to the type {@link PartiQLValueType#STRUCT}.
      * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
      *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PartiQLValueType#INT}, then this method
      *                                       will throw this exception upon invocation.
@@ -332,12 +333,13 @@ public interface PQLValue {
      *                                       {@link #isNull()} returns false before attempting to invoke this method.
      */
     @NotNull
-    default Iterator<PQLValue> getListValues() {
+    default Iterator<StructField> getFields() {
         throw new UnsupportedOperationException();
     }
 
     /**
-     * @return the underlying value applicable to the type {@link PartiQLValueType#STRUCT}.
+     * @return the underlying value applicable to the type {@link PartiQLValueType#STRUCT} and requested field name. This
+     * is a case-sensitive lookup.
      * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
      *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PartiQLValueType#INT}, then this method
      *                                       will throw this exception upon invocation.
@@ -345,12 +347,13 @@ public interface PQLValue {
      *                                       {@link #isNull()} returns false before attempting to invoke this method.
      */
     @NotNull
-    default Iterator<StructField> getStructFields() {
+    default Iterable<StructField> get(@NotNull String name) {
         throw new UnsupportedOperationException();
     }
 
     /**
-     * @return the underlying value applicable to the type {@link PartiQLValueType#SEXP}.
+     * @return the underlying value applicable to the type {@link PartiQLValueType#STRUCT} and requested field name. This
+     * is a case-insensitive lookup.
      * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
      *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PartiQLValueType#INT}, then this method
      *                                       will throw this exception upon invocation.
@@ -358,7 +361,7 @@ public interface PQLValue {
      *                                       {@link #isNull()} returns false before attempting to invoke this method.
      */
     @NotNull
-    default Iterator<PQLValue> getSexpValues() {
+    default Iterable<StructField> getInsensitive(@NotNull String name) {
         throw new UnsupportedOperationException();
     }
 
@@ -418,20 +421,20 @@ public interface PQLValue {
                 return this.isNull() ? PartiQL.intervalValue(null) : PartiQL.intervalValue(this.getIntervalValue());
             case BAG:
                 return this.isNull() ? PartiQL.bagValue((Iterable<? extends PartiQLValue>) null) : PartiQL.bagValue(
-                        new IterableFromIteratorSupplier<>(() -> new PQLToPartiQLIterator(this.getBagValues()))
+                        new IterableFromIteratorSupplier<>(() -> new PQLToPartiQLIterator(this.iterator()))
                 );
             case LIST:
                 return this.isNull() ? PartiQL.listValue((Iterable<? extends PartiQLValue>) null) : PartiQL.listValue(
-                        new IterableFromIteratorSupplier<>(() -> new PQLToPartiQLIterator(this.getListValues()))
+                        new IterableFromIteratorSupplier<>(() -> new PQLToPartiQLIterator(this.iterator()))
                 );
             case SEXP:
                 return this.isNull() ? PartiQL.sexpValue((Iterable<? extends PartiQLValue>) null) : PartiQL.sexpValue(
-                        new IterableFromIteratorSupplier<>(() -> new PQLToPartiQLIterator(this.getSexpValues()))
+                        new IterableFromIteratorSupplier<>(() -> new PQLToPartiQLIterator(this.iterator()))
                 );
             case STRUCT:
                 return this.isNull() ? PartiQL.structValue((Iterable<? extends Pair<String, ? extends PartiQLValue>>) null) : PartiQL.structValue(
                         new IterableFromIteratorSupplier<>(() -> {
-                            Iterator<StructField> _fields = this.getStructFields();
+                            Iterator<StructField> _fields = this.getFields();
                             return new Iterator<Pair<String, PartiQLValue>>() {
                                 @Override
                                 public boolean hasNext() {

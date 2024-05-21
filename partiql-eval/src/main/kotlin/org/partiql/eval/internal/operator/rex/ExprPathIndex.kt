@@ -17,9 +17,7 @@ internal class ExprPathIndex(
     override fun eval(env: Environment): PQLValue {
         val input = root.eval(env)
         val iterator = when (input.type) {
-            PartiQLValueType.BAG -> input.bagValues
-            PartiQLValueType.LIST -> input.listValues
-            PartiQLValueType.SEXP -> input.sexpValues
+            PartiQLValueType.BAG, PartiQLValueType.LIST, PartiQLValueType.SEXP -> input.iterator()
             else -> throw TypeCheckException()
         }
 

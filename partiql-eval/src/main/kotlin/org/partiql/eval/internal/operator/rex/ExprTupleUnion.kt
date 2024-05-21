@@ -24,6 +24,6 @@ internal class ExprTupleUnion(
             }
         }
 
-        return PQLValue.structValue(tuples.flatMap { it.structFields.asSequence() })
+        return PQLValue.structValue(tuples.flatMap { it.fields.asSequence() })
     }
 }

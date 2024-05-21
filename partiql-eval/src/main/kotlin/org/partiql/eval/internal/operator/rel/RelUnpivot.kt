@@ -35,7 +35,7 @@ internal sealed class RelUnpivot : Operator.Relation {
      */
     override fun open(env: Environment) {
         this.env = env
-        _iterator = struct().structFields
+        _iterator = struct().fields
     }
 
     override fun hasNext(): Boolean {

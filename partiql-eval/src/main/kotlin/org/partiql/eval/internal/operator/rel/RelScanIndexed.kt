@@ -24,8 +24,7 @@ internal class RelScanIndexed(
                 close()
                 throw TypeCheckException()
             }
-            PartiQLValueType.LIST -> r.listValues
-            PartiQLValueType.SEXP -> r.sexpValues
+            PartiQLValueType.LIST, PartiQLValueType.SEXP -> r.iterator()
             else -> {
                 close()
                 throw TypeCheckException()

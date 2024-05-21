@@ -30,7 +30,7 @@ internal abstract class ExprSubquery : Operator.Expr {
         @PartiQLValueExperimental
         override fun eval(env: Environment): PQLValue {
             val tuple = getFirst(env) ?: return PQLValue.nullValue()
-            val values = IteratorSupplier { tuple.structFields }.map { it.value }
+            val values = IteratorSupplier { tuple.fields }.map { it.value }
             return PQLValue.listValue(values)
         }
     }
@@ -43,7 +43,7 @@ internal abstract class ExprSubquery : Operator.Expr {
         @PartiQLValueExperimental
         override fun eval(env: Environment): PQLValue {
             val tuple = getFirst(env) ?: return PQLValue.nullValue()
-            val values = tuple.structFields.asSequence().map { it.value }.iterator()
+            val values = tuple.fields.asSequence().map { it.value }.iterator()
             if (values.hasNext().not()) {
                 throw TypeCheckException()
             }

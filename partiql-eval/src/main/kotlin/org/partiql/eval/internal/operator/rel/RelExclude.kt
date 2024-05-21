@@ -73,7 +73,7 @@ internal class RelExclude(
                 }
             }
         }
-        val structSupplier = IteratorSupplier { structValue.structFields }
+        val structSupplier = IteratorSupplier { structValue.fields }
         val finalStruct = structSupplier.mapNotNull { structField ->
             if (structSymbolsToRemove.contains(structField.name) || structKeysToRemove.contains(structField.name.lowercase())) {
                 // struct attr is to be removed at current level
@@ -177,9 +177,11 @@ internal class RelExclude(
     private fun excludeValue(initialPartiQLValue: PQLValue, exclusions: List<Rel.Op.Exclude.Step>): PQLValue {
         return when (initialPartiQLValue.type) {
             PartiQLValueType.STRUCT -> excludeStruct(initialPartiQLValue, exclusions)
-            PartiQLValueType.BAG -> excludeCollection(IteratorSupplier { initialPartiQLValue.bagValues }, initialPartiQLValue.type, exclusions)
-            PartiQLValueType.LIST -> excludeCollection(IteratorSupplier { initialPartiQLValue.listValues }, initialPartiQLValue.type, exclusions)
-            PartiQLValueType.SEXP -> excludeCollection(IteratorSupplier { initialPartiQLValue.sexpValues }, initialPartiQLValue.type, exclusions)
+            PartiQLValueType.BAG, PartiQLValueType.LIST, PartiQLValueType.SEXP -> excludeCollection(
+                initialPartiQLValue,
+                initialPartiQLValue.type,
+                exclusions
+            )
             else -> {
                 initialPartiQLValue
             }

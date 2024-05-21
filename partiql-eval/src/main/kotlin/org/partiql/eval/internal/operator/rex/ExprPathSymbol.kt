@@ -19,7 +19,7 @@ internal class ExprPathSymbol(
         if (struct.isNull) {
             return PQLValue.nullValue()
         }
-        for (entry in struct.structFields) {
+        for (entry in struct.fields) {
             if (entry.name.equals(symbol, ignoreCase = true)) {
                 return entry.value
             }
