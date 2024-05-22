@@ -64,7 +64,12 @@ class EvalExecutor(
         if (actual is PartiQLResult.Value && expect is PartiQLResult.Value) {
             return valueComparison(actual.value, expect.value)
         }
-        error("Cannot compare different types of PartiQLResult")
+        val errorMessage = buildString {
+            appendLine("Cannot compare different types of PartiQLResult.")
+            appendLine(" - Expected : $expect")
+            appendLine(" - Actual   : $actual")
+        }
+        error(errorMessage)
     }
 
     // Value comparison of PartiQL Value that utilized Ion Hashcode.
