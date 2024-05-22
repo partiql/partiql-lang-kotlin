@@ -86,7 +86,7 @@ internal class DynamicTyper {
     }
 
     /**
-     * This adds non-unknown types (aka not NULL / MISSING literals) to the typing accumulator.
+     * This adds non-absent types (aka not NULL / MISSING literals) to the typing accumulator.
      * @param type
      */
     private fun accumulate(type: StaticType) {

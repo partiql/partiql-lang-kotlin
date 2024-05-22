@@ -122,6 +122,10 @@ internal class PlanTyper(
         return statementQuery(root)
     }
 
+    private companion object {
+        private val FUNCTIONS_HANDLING_MISSING = setOf<String>("is_null", "is_missing", "eq", "and", "or", "not")
+    }
+
     /**
      * Types the relational operators of a query expression.
      *
@@ -462,21 +466,21 @@ internal class PlanTyper(
                 return rex(ANY, rexOpErr("Collections must be indexed with integers, found ${key.type}"))
             }
 
-            // Check Root Type
-            if (!root.type.mayBeType<ListType>() && !root.type.mayBeType<SexpType>()) {
+            // Get Element Type(s)
+            val elementTypes = root.type.allTypes.mapNotNull { type ->
+                when (type) {
+                    is ListType -> type.elementType
+                    is SexpType -> type.elementType
+                    else -> null
+                }
+            }
+
+            // Check that Root was LIST or SEXP by checking accumuated element types
+            if (elementTypes.isEmpty()) {
                 handleAlwaysMissing()
                 return rex(ANY, rexOpErr("Only lists and s-expressions can be indexed with integers, found ${root.type}"))
             }
-
-            // Get Element Type
-            val elementTypes = root.type.allTypes.mapNotNull { type ->
-                if (type !is ListType && type !is SexpType) {
-                    return@mapNotNull null
-                }
-                (type as CollectionType).elementType
-            }.toSet()
-            val finalType = unionOf(elementTypes)
-            return rex(finalType, rexOpPathIndex(root, key))
+            return rex(unionOf(elementTypes), rexOpPathIndex(root, key))
         }
 
         override fun visitRexOpPathKey(node: Rex.Op.Path.Key, ctx: StaticType?): Rex {
@@ -625,7 +629,7 @@ internal class PlanTyper(
                 // TODO: The V1 branch has support for isMissable and isMissingCall. This codebase, however, does not
                 //  have support for these concepts yet. This specific commit (see Git blame) does not seek to add this
                 //  functionality. Below is a work-around for the lack of "isMissable" and "isMissingCall"
-                if (match.signature.name !in listOf("is_null", "is_missing", "eq", "and", "or", "not")) {
+                if (match.signature.name !in FUNCTIONS_HANDLING_MISSING) {
                     handleAlwaysMissing()
                 }
             }
