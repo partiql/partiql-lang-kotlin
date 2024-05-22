@@ -1177,7 +1177,7 @@ class PartiQLEngineDefaultTest {
                     throw returned.cause
                 }
             }
-            val output = PartiQLValueLoader.standard().load(result.value)
+            val output = PartiQLValueLoader.standard().load(result.cursor)
             assert(expected == output) {
                 comparisonString(expected, output, plan.plan)
             }
@@ -1246,7 +1246,7 @@ class PartiQLEngineDefaultTest {
             val plan = planner.plan(statement, session)
             val prepared = engine.prepare(plan.plan, PartiQLEngine.Session(mapOf("memory" to connector), mode = mode))
             when (val result = engine.execute(prepared)) {
-                is PartiQLResult.Value -> return PartiQLValueLoader.standard().load(result.value) to plan.plan
+                is PartiQLResult.Value -> return PartiQLValueLoader.standard().load(result.cursor) to plan.plan
                 is PartiQLResult.Error -> throw result.cause
             }
         }

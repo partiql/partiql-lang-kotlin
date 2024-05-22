@@ -57,7 +57,7 @@ class EvalExecutor(
 
     override fun toIon(value: PartiQLResult): IonValue {
         if (value is PartiQLResult.Value) {
-            val actualValue = PartiQLValueLoader.standard().load(value.value)
+            val actualValue = PartiQLValueLoader.standard().load(value.cursor)
             return actualValue.toIon().toIonValue(ION)
         }
         error("PartiQLResult cannot be converted to Ion")
@@ -65,8 +65,8 @@ class EvalExecutor(
 
     override fun compare(actual: PartiQLResult, expect: PartiQLResult): Boolean {
         if (actual is PartiQLResult.Value && expect is PartiQLResult.Value) {
-            val value = PartiQLValueLoader.standard().load(actual.value)
-            val expectedValue = PartiQLValueLoader.standard().load(expect.value)
+            val value = PartiQLValueLoader.standard().load(actual.cursor)
+            val expectedValue = PartiQLValueLoader.standard().load(expect.cursor)
             return valueComparison(value, expectedValue)
         }
         error("Cannot compare different types of PartiQLResult")
