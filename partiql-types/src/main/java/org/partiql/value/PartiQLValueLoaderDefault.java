@@ -4,6 +4,9 @@ import kotlin.Pair;
 import kotlin.jvm.functions.Function1;
 import org.jetbrains.annotations.NotNull;
 
+import java.sql.Blob;
+import java.sql.Clob;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
@@ -13,7 +16,7 @@ import static org.partiql.value.PartiQL.*;
 class PartiQLValueLoaderDefault implements PartiQLValueLoader {
     @NotNull
     @Override
-    public PartiQLValue load(@NotNull PartiQLCursor data) {
+    public PartiQLValue load(@NotNull PartiQLCursor data) throws UnsupportedOperationException {
         data.next();
         return _loadSingleValue(data);
     }
@@ -25,21 +28,22 @@ class PartiQLValueLoaderDefault implements PartiQLValueLoader {
      * @return a materialized PartiQL Value
      */
     @NotNull
-    private PartiQLValue _loadSingleValue(@NotNull PartiQLCursor data) {
+    @SuppressWarnings("deprecation")
+    private PartiQLValue _loadSingleValue(@NotNull PartiQLCursor data) throws UnsupportedOperationException {
         PartiQLValueType type = data.getType();
         switch (type) {
             case BOOL:
-                return boolValue(orNull(data, PartiQLCursor::getBoolValue));
+                return boolValue(orNull(data, PartiQLCursor::getBoolean));
             case INT8:
-                return int8Value(orNull(data, PartiQLCursor::getInt8Value));
+                return int8Value(orNull(data, PartiQLCursor::getByte));
             case INT16:
-                return int16Value(orNull(data, PartiQLCursor::getInt16Value));
+                return int16Value(orNull(data, PartiQLCursor::getShort));
             case INT32:
-                return int32Value(orNull(data, PartiQLCursor::getInt32Value));
+                return int32Value(orNull(data, PartiQLCursor::getInt));
             case INT64:
-                return int64Value(orNull(data, PartiQLCursor::getInt64Value));
+                return int64Value(orNull(data, PartiQLCursor::getLong));
             case INT:
-                return intValue(orNull(data, PartiQLCursor::getIntValue));
+                return intValue(orNull(data, PartiQLCursor::getBigInteger));
             case LIST:
                 return collectionValue(data, PartiQL::listValue);
             case BAG:
@@ -51,12 +55,12 @@ class PartiQLValueLoaderDefault implements PartiQLValueLoader {
             case NULL:
                 return nullValue();
             case STRING:
-                return stringValue(orNull(data, PartiQLCursor::getStringValue));
+                return stringValue(orNull(data, PartiQLCursor::getString));
             case SYMBOL:
-                return symbolValue(orNull(data, PartiQLCursor::getSymbolValue));
+                return symbolValue(orNull(data, PartiQLCursor::getString));
             case CHAR:
                 // TODO: The implementation of CHAR VALUE is wrong.
-                String val = orNull(data, PartiQLCursor::getCharValue);
+                String val = orNull(data, PartiQLCursor::getString);
                 if (val == null) {
                     return charValue(null);
                 }
@@ -64,45 +68,79 @@ class PartiQLValueLoaderDefault implements PartiQLValueLoader {
             case MISSING:
                 return missingValue();
             case DECIMAL_ARBITRARY:
-                return decimalValue(orNull(data, PartiQLCursor::getDecimalArbitraryValue));
+                return decimalValue(orNull(data, PartiQLCursor::getBigDecimal));
             case DECIMAL:
-                return decimalValue(orNull(data, PartiQLCursor::getDecimalValue));
+                return decimalValue(orNull(data, PartiQLCursor::getBigDecimal));
             case INTERVAL:
-                return intervalValue(orNull(data, PartiQLCursor::getIntervalValue));
+                return intervalValue(orNull(data, PartiQLCursor::getLong));
             case TIMESTAMP:
-                return timestampValue(orNull(data, PartiQLCursor::getTimestampValue));
+                return timestampValue(orNull(data, PartiQLCursor::getTimestamp));
             case DATE:
-                return dateValue(orNull(data, PartiQLCursor::getDateValue));
+                return dateValue(orNull(data, PartiQLCursor::getDate));
             case CLOB:
-                return clobValue(orNull(data, PartiQLCursor::getClobValue));
+                // TODO: The implementation of PartiQLValue's ClobValue can be better modeled.
+                Clob clob = orNull(data, PartiQLCursor::getClob);
+                if (clob == null) {
+                    return clobValue(null);
+                }
+                int clobLength;
+                try {
+                    clobLength = (int) clob.length();
+                } catch (SQLException ex) {
+                    throw new UnsupportedOperationException();
+                }
+                String clobData;
+                try {
+                    clobData = clob.getSubString(0, clobLength);
+                } catch (SQLException ex) {
+                    throw new UnsupportedOperationException();
+                }
+                return clobValue(clobData.getBytes());
             case BLOB:
-                return blobValue(orNull(data, PartiQLCursor::getBlobValue));
+                // TODO: The implementation of PartiQLValue's BlobValue can be better modeled.
+                Blob blob = orNull(data, PartiQLCursor::getBlob);
+                long blobLength;
+                if (blob == null) {
+                    return blobValue(null);
+                }
+                try {
+                    blobLength = blob.length();
+                } catch (SQLException ex) {
+                    throw new UnsupportedOperationException();
+                }
+                byte[] blobData;
+                try {
+                    blobData = blob.getBytes(0L, (int) blobLength);
+                } catch (SQLException ex) {
+                    throw new UnsupportedOperationException();
+                }
+                return blobValue(blobData);
             case BINARY:
-                byte[] bytes = orNull(data, PartiQLCursor::getBinaryValue);
+                byte[] bytes = orNull(data, PartiQLCursor::getBytes);
                 if (bytes == null) {
                     return binaryValue(null);
                 }
                 return binaryValue(BitSet.valueOf(bytes));
             case BYTE:
-                return byteValue(orNull(data, PartiQLCursor::getByteValue));
+                return byteValue(orNull(data, PartiQLCursor::getByte));
             case TIME:
-                return timeValue(orNull(data, PartiQLCursor::getTimeValue));
+                return timeValue(orNull(data, PartiQLCursor::getTime));
             case FLOAT32:
-                return float32Value(orNull(data, PartiQLCursor::getFloat32Value));
+                return float32Value(orNull(data, PartiQLCursor::getFloat));
             case FLOAT64:
-                return float64Value(orNull(data, PartiQLCursor::getFloat64Value));
+                return float64Value(orNull(data, PartiQLCursor::getDouble));
             case ANY:
             default:
-                throw new IllegalStateException("Cannot load data of type: " + type);
+                throw new UnsupportedOperationException("Cannot load data of type: " + type);
         }
     }
 
     private <R> R orNull(PartiQLCursor data, Function1<PartiQLCursor, R> result) {
-        return data.isNullValue() ? null : result.invoke(data);
+        return data.isNull() ? null : result.invoke(data);
     }
 
     private PartiQLValue collectionValue(PartiQLCursor data, Function1<Iterable<PartiQLValue>, PartiQLValue> collectionConstructor) {
-        if (data.isNullValue()) {
+        if (data.isNull()) {
             return collectionConstructor.invoke(null);
         }
         data.stepIn();
@@ -117,7 +155,7 @@ class PartiQLValueLoaderDefault implements PartiQLValueLoader {
     }
 
     private PartiQLValue createStructValue(PartiQLCursor data) {
-        if (data.isNullValue()) {
+        if (data.isNull()) {
             return structValue((Iterable<? extends Pair<String, ? extends PartiQLValue>>) null);
         }
         data.stepIn();

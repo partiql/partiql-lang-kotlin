@@ -5,8 +5,14 @@ import org.jetbrains.annotations.NotNull;
 import org.partiql.value.datetime.Date;
 import org.partiql.value.datetime.Time;
 import org.partiql.value.datetime.Timestamp;
+
+import javax.sql.rowset.serial.SerialBlob;
+import javax.sql.rowset.serial.SerialClob;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.sql.Blob;
+import java.sql.Clob;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -79,7 +85,7 @@ class PartiQLCursorDefault implements PartiQLCursor {
                 children = named(struct.getEntries());
                 break;
             default:
-                throw new IllegalStateException();
+                throw new UnsupportedOperationException();
         }
         iteratorStack.push(children);
         currentValue = null;
@@ -94,12 +100,12 @@ class PartiQLCursorDefault implements PartiQLCursor {
     }
 
     @Override
-    public boolean isNullValue() {
+    public boolean isNull() {
         return currentValue.value.isNull();
     }
 
     @Override
-    public boolean isMissingValue() {
+    public boolean isMissing() {
         return currentValue.value.getType() == PartiQLValueType.MISSING;
     }
 
@@ -116,217 +122,200 @@ class PartiQLCursorDefault implements PartiQLCursor {
 
     @NotNull
     @Override
-    public String getStringValue() {
+    public String getString() {
         if (currentValue.value.getType() == PartiQLValueType.STRING) {
             return Objects.requireNonNull(((StringValue) currentValue.value).getValue());
-        }
-        throw new IllegalStateException();
-    }
-
-    @NotNull
-    @Override
-    public String getCharValue() {
-        if (currentValue.value.getType() == PartiQLValueType.CHAR) {
+        } else if (currentValue.value.getType() == PartiQLValueType.CHAR) {
             return Objects.requireNonNull((Objects.requireNonNull(((CharValue) currentValue.value).getValue()).toString()));
-        }
-        throw new IllegalStateException();
-    }
-
-    @NotNull
-    @Override
-    public String getSymbolValue() {
-        if (currentValue.value.getType() == PartiQLValueType.SYMBOL) {
+        } else if (currentValue.value.getType() == PartiQLValueType.SYMBOL) {
             return Objects.requireNonNull(((SymbolValue) currentValue.value).getValue());
         }
-        throw new IllegalStateException();
+        throw new UnsupportedOperationException();
     }
 
     @Override
-    public boolean getBoolValue() {
+    public boolean getBoolean() {
         PartiQLValueType type = currentValue.value.getType();
         if (type == PartiQLValueType.BOOL) {
             BoolValue value = (BoolValue) (currentValue.value);
             return Boolean.TRUE.equals(value.getValue());
         } else {
-            throw new IllegalStateException();
+            throw new UnsupportedOperationException();
         }
     }
 
+    @NotNull
     @Override
-    public byte[] getBinaryValue() {
+    public byte[] getBytes() {
         PartiQLValueType type = currentValue.value.getType();
         if (type == PartiQLValueType.BINARY) {
             BinaryValue binaryValue = (BinaryValue) (currentValue.value);
             return Objects.requireNonNull(binaryValue.getValue()).toByteArray();
         }
-        throw new IllegalStateException();
+        throw new UnsupportedOperationException();
     }
 
+    @NotNull
     @Override
-    public byte[] getBlobValue() {
+    public Blob getBlob() {
         PartiQLValueType type = currentValue.value.getType();
         if (type == PartiQLValueType.BLOB) {
             BlobValue blobValue = (BlobValue) (currentValue.value);
-            return Objects.requireNonNull(blobValue.getValue());
+            Blob blob;
+            try {
+                blob = new SerialBlob(Objects.requireNonNull(blobValue.getValue()));
+            } catch (SQLException ex) {
+                throw new UnsupportedOperationException();
+            }
+            return blob;
         }
-        throw new IllegalStateException();
+        throw new UnsupportedOperationException();
     }
 
+    @NotNull
     @Override
-    public byte[] getClobValue() {
+    public Clob getClob() {
         PartiQLValueType type = currentValue.value.getType();
         if (type == PartiQLValueType.CLOB) {
             ClobValue clobValue = (ClobValue) (currentValue.value);
-            return Objects.requireNonNull(clobValue.getValue());
+            Clob clob;
+            try {
+                byte[] bytes = Objects.requireNonNull(clobValue.getValue());
+                char[] characters = new char[bytes.length];
+                for (int i = 0; i < bytes.length; i++) {
+                    characters[i] = (char) bytes[i]; // TODO: This shouldn't be necessary. PartiQLValue should update its public API.
+                }
+                clob = new SerialClob(characters);
+            } catch (SQLException ex) {
+                throw new UnsupportedOperationException();
+            }
+            return clob;
         }
-        throw new IllegalStateException();
+        throw new UnsupportedOperationException();
     }
 
     @Override
-    public byte getByteValue() {
+    public byte getByte() {
         PartiQLValueType type = currentValue.value.getType();
         if (type == PartiQLValueType.BYTE) {
             ByteValue byteValue = (ByteValue) (currentValue.value);
             return Objects.requireNonNull(byteValue.getValue());
+        } else if (type == PartiQLValueType.INT8) {
+            Int8Value value = (Int8Value) (currentValue.value);
+            return Objects.requireNonNull(value.getValue());
         }
-        throw new IllegalStateException();
+        throw new UnsupportedOperationException();
     }
 
     @Override
 	@NotNull
-	public Date getDateValue() {
+	public Date getDate() {
         PartiQLValueType type = currentValue.value.getType();
         if (type == PartiQLValueType.DATE) {
             DateValue value = (DateValue) (currentValue.value);
             return Objects.requireNonNull(value.getValue());
         }
-        throw new IllegalStateException();
+        throw new UnsupportedOperationException();
     }
 
     @Override
 	@NotNull
-	public Time getTimeValue() {
+	public Time getTime() {
         PartiQLValueType type = currentValue.value.getType();
         if (type == PartiQLValueType.TIME) {
             TimeValue value = (TimeValue) (currentValue.value);
             return Objects.requireNonNull(value.getValue());
         }
-        throw new IllegalStateException();
+        throw new UnsupportedOperationException();
     }
 
     @Override
 	@NotNull
-	public Timestamp getTimestampValue() {
+	public Timestamp getTimestamp() {
         PartiQLValueType type = currentValue.value.getType();
         if (type == PartiQLValueType.TIMESTAMP) {
             TimestampValue value = (TimestampValue) (currentValue.value);
             return Objects.requireNonNull(value.getValue());
         }
-        throw new IllegalStateException();
-    }
-
-    @Deprecated
-    @Override
-	public long getIntervalValue() {
-        PartiQLValueType type = currentValue.value.getType();
-        if (type == PartiQLValueType.INTERVAL) {
-            IntervalValue value = (IntervalValue) (currentValue.value);
-            return Objects.requireNonNull(value.getValue());
-        }
-        throw new IllegalStateException();
+        throw new UnsupportedOperationException();
     }
 
     @Override
-    public byte getInt8Value() {
-        PartiQLValueType type = currentValue.value.getType();
-        if (type == PartiQLValueType.INT8) {
-            Int8Value value = (Int8Value) (currentValue.value);
-            return Objects.requireNonNull(value.getValue());
-        }
-        throw new IllegalStateException();
-    }
-
-    @Override
-	public short getInt16Value() {
+	public short getShort() {
         PartiQLValueType type = currentValue.value.getType();
         if (type == PartiQLValueType.INT16) {
             Int16Value value = (Int16Value) (currentValue.value);
             return Objects.requireNonNull(value.getValue());
         }
-        throw new IllegalStateException();
+        throw new UnsupportedOperationException();
     }
 
     @Override
-	public int getInt32Value() {
+	public int getInt() {
         PartiQLValueType type = currentValue.value.getType();
         if (type == PartiQLValueType.INT32) {
             Int32Value value = (Int32Value) (currentValue.value);
             return Objects.requireNonNull(value.getValue());
         }
-        throw new IllegalStateException();
+        throw new UnsupportedOperationException();
     }
 
     @Override
-	public long getInt64Value() {
+	public long getLong() {
         PartiQLValueType type = currentValue.value.getType();
         if (type == PartiQLValueType.INT64) {
             Int64Value value = (Int64Value) (currentValue.value);
             return Objects.requireNonNull(value.getValue());
+        } else if (type == PartiQLValueType.INTERVAL) {
+            IntervalValue value = (IntervalValue) (currentValue.value);
+            return Objects.requireNonNull(value.getValue());
         }
-        throw new IllegalStateException();
+        throw new UnsupportedOperationException();
     }
 
     @Override
 	@NotNull
-	public BigInteger getIntValue() {
+	public BigInteger getBigInteger() {
         PartiQLValueType type = currentValue.value.getType();
         if (type == PartiQLValueType.INT) {
             IntValue value = (IntValue) (currentValue.value);
             return Objects.requireNonNull(value.getValue());
         }
-        throw new IllegalStateException();
+        throw new UnsupportedOperationException();
     }
 
     @Override
-	public float getFloat32Value() {
+	public float getFloat() {
         PartiQLValueType type = currentValue.value.getType();
         if (type == PartiQLValueType.FLOAT32) {
             Float32Value value = (Float32Value) (currentValue.value);
             return Objects.requireNonNull(value.getValue());
         }
-        throw new IllegalStateException();
+        throw new UnsupportedOperationException();
     }
 
     @Override
-	public double getFloat64Value() {
+	public double getDouble() {
         PartiQLValueType type = currentValue.value.getType();
         if (type == PartiQLValueType.FLOAT64) {
             Float64Value value = (Float64Value) (currentValue.value);
             return Objects.requireNonNull(value.getValue());
         }
-        throw new IllegalStateException();
+        throw new UnsupportedOperationException();
     }
 
     @Override
 	@NotNull
-	public BigDecimal getDecimalValue() {
+	public BigDecimal getBigDecimal() {
         PartiQLValueType type = currentValue.value.getType();
         if (type == PartiQLValueType.DECIMAL) {
             DecimalValue value = (DecimalValue) (currentValue.value);
             return Objects.requireNonNull(value.getValue());
-        }
-        throw new IllegalStateException();
-    }
-
-    @NotNull
-    @Override
-    public BigDecimal getDecimalArbitraryValue() {
-        PartiQLValueType type = currentValue.value.getType();
-        if (type == PartiQLValueType.DECIMAL_ARBITRARY) {
+        } else if (type == PartiQLValueType.DECIMAL_ARBITRARY) {
             DecimalValue value = (DecimalValue) (currentValue.value);
             return Objects.requireNonNull(value.getValue());
         }
-        throw new IllegalStateException();
+        throw new UnsupportedOperationException();
     }
 
     private NamedIterator named(Iterable<Pair<String, PartiQLValue>> values) {

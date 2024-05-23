@@ -1109,31 +1109,26 @@ public final class org/partiql/value/PartiQL {
 }
 
 public abstract interface class org/partiql/value/PartiQLCursor : java/lang/AutoCloseable, java/util/Iterator {
-	public abstract fun getBinaryValue ()[B
-	public abstract fun getBlobValue ()[B
-	public abstract fun getBoolValue ()Z
-	public abstract fun getByteValue ()B
-	public abstract fun getCharValue ()Ljava/lang/String;
-	public abstract fun getClobValue ()[B
-	public abstract fun getDateValue ()Lorg/partiql/value/datetime/Date;
-	public abstract fun getDecimalArbitraryValue ()Ljava/math/BigDecimal;
-	public abstract fun getDecimalValue ()Ljava/math/BigDecimal;
+	public abstract fun getBigDecimal ()Ljava/math/BigDecimal;
+	public abstract fun getBigInteger ()Ljava/math/BigInteger;
+	public abstract fun getBlob ()Ljava/sql/Blob;
+	public abstract fun getBoolean ()Z
+	public abstract fun getByte ()B
+	public abstract fun getBytes ()[B
+	public abstract fun getClob ()Ljava/sql/Clob;
+	public abstract fun getDate ()Lorg/partiql/value/datetime/Date;
+	public abstract fun getDouble ()D
 	public abstract fun getFieldName ()Ljava/lang/String;
-	public abstract fun getFloat32Value ()F
-	public abstract fun getFloat64Value ()D
-	public abstract fun getInt16Value ()S
-	public abstract fun getInt32Value ()I
-	public abstract fun getInt64Value ()J
-	public abstract fun getInt8Value ()B
-	public abstract fun getIntValue ()Ljava/math/BigInteger;
-	public abstract fun getIntervalValue ()J
-	public abstract fun getStringValue ()Ljava/lang/String;
-	public abstract fun getSymbolValue ()Ljava/lang/String;
-	public abstract fun getTimeValue ()Lorg/partiql/value/datetime/Time;
-	public abstract fun getTimestampValue ()Lorg/partiql/value/datetime/Timestamp;
+	public abstract fun getFloat ()F
+	public abstract fun getInt ()I
+	public abstract fun getLong ()J
+	public abstract fun getShort ()S
+	public abstract fun getString ()Ljava/lang/String;
+	public abstract fun getTime ()Lorg/partiql/value/datetime/Time;
+	public abstract fun getTimestamp ()Lorg/partiql/value/datetime/Timestamp;
 	public abstract fun getType ()Lorg/partiql/value/PartiQLValueType;
-	public abstract fun isMissingValue ()Z
-	public abstract fun isNullValue ()Z
+	public abstract fun isMissing ()Z
+	public abstract fun isNull ()Z
 	public static fun of (Lorg/partiql/value/PartiQLValue;)Lorg/partiql/value/PartiQLCursor;
 	public abstract fun stepIn ()V
 	public abstract fun stepOut ()V

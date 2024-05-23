@@ -2,6 +2,8 @@ package org.partiql.value;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.sql.Blob;
+import java.sql.Clob;
 import java.util.Iterator;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.value.datetime.Date;
@@ -25,31 +27,31 @@ public interface PartiQLCursor extends AutoCloseable, Iterator<PartiQLValueType>
      * sexp, or struct). There's no current value immediately after stepping in, so the next thing you'll want to do is call
      * {@link #hasNext()} and {@link #next()} to move onto the first child value.
      * <p>
-     * If the container itself is the null value, stepIn() shall fail. Please use {@link #isNullValue()} before
+     * If the container itself is the null value, stepIn() shall fail. Please use {@link #isNull()} before
      * invoking this.
      * <p>
      * At any time {@link #stepOut()} may be called to move the cursor back to (just after) the parent value, even if
      * there are more children remaining.
      */
-    public void stepIn();
+    public void stepIn() throws UnsupportedOperationException, NullPointerException;
 
     /**
      * Positions the iterator after the current parent's value, moving up one level in the data hierarchy. There's no
      * current value immediately after stepping out, so the next thing you'll want to do is call {@link #hasNext()} and
      * {@link #next()} to move onto the following value.
      */
-    public void stepOut();
+    public void stepOut() throws UnsupportedOperationException, NullPointerException;
 
     /**
      * Determines whether the current value is a null value of any type (for example, null or null.int). It should be
      * called before calling getters that return value types (int, long, boolean, double).
      */
-    public boolean isNullValue();
+    public boolean isNull();
 
     /**
      * Determines whether the current value is the missing value. Similarly, one can invoke {@link #getType()}.
      */
-    public boolean isMissingValue();
+    public boolean isMissing();
 
     /**
      * @return the type of the data at the cursor.
@@ -64,119 +66,180 @@ public interface PartiQLCursor extends AutoCloseable, Iterator<PartiQLValueType>
     public String getFieldName();
 
     /**
-     * This is only applicable when the current value's type is {@link PartiQLValueType#STRING}.
+     * This is applicable to the following types:
+     * {@link PartiQLValueType#STRING},
+     * {@link PartiQLValueType#SYMBOL},
+     * {@link PartiQLValueType#CHAR}
+     * @return a value representing the applicable PartiQL value
+     * @throws UnsupportedOperationException when this method is not applicable to the type returned by {@link PartiQLCursor#getType()}
+     * @throws NullPointerException if this method is invoked when {@link PartiQLCursor#isNull()} returns true
      */
     @NotNull
-    String getStringValue();
+    String getString() throws UnsupportedOperationException, NullPointerException;
 
     /**
-     * This is only applicable when the current value's type is {@link PartiQLValueType#CHAR}.
+     * This is applicable to the following types:
+     * {@link PartiQLValueType#BOOL}
+     * @return a value representing the applicable PartiQL value
+     * @throws UnsupportedOperationException when this method is not applicable to the type returned by {@link PartiQLCursor#getType()}
+     * @throws NullPointerException if this method is invoked when {@link PartiQLCursor#isNull()} returns true
      */
-    @NotNull
-    String getCharValue();
+    public boolean getBoolean() throws UnsupportedOperationException, NullPointerException;
 
     /**
-     * This is only applicable when the current value's type is {@link PartiQLValueType#SYMBOL}.
-     */
-    @NotNull
-    String getSymbolValue();
-
-    /**
-     * This is only applicable when the current value's type is {@link PartiQLValueType#BOOL}.
-     */
-    public boolean getBoolValue();
-
-    /**
-     * This is only applicable when the current value's type is {@link PartiQLValueType#BINARY}.
-     */
-    public byte[] getBinaryValue();
-
-    /**
-     * This is only applicable when the current value's type is {@link PartiQLValueType#BLOB}.
-     */
-    public byte[] getBlobValue();
-
-    /**
-     * This is only applicable when the current value's type is {@link PartiQLValueType#CLOB}.
-     */
-    public byte[] getClobValue();
-
-    /**
-     * This is only applicable when the current value's type is {@link PartiQLValueType#BYTE}.
-     */
-    public byte getByteValue();
-
-    /**
-     * This is only applicable when the current value's type is {@link PartiQLValueType#DATE}.
-     */
-    @NotNull
-    public Date getDateValue();
-
-    /**
-     * This is only applicable when the current value's type is {@link PartiQLValueType#TIME}.
-     */
-    @NotNull
-    public Time getTimeValue();
-
-    /**
-     * This is only applicable when the current value's type is {@link PartiQLValueType#TIMESTAMP}.
-     */
-    @NotNull
-    public Timestamp getTimestampValue();
-
-    /**
-     * This is only applicable when the current value's type is {@link PartiQLValueType#INTERVAL}.
+     * This is applicable to the following types:
+     * {@link PartiQLValueType#BINARY}
+     * @return a value representing the applicable PartiQL value
+     * @throws UnsupportedOperationException when this method is not applicable to the type returned by {@link PartiQLCursor#getType()}
+     * @throws NullPointerException if this method is invoked when {@link PartiQLCursor#isNull()} returns true
+     * @apiNote <b>! ! ! EXPERIMENTAL ! ! !</b> This is an experimental API under development by the PartiQL maintainers.
+     * Please abstain from using this API until given notice otherwise. This may break between iterations without prior notice.
+     * @deprecated BINARY doesn't exist in SQL or Ion. This is subject to deletion.
      */
     @Deprecated
-    public long getIntervalValue();
+    @NotNull
+    public byte[] getBytes() throws UnsupportedOperationException, NullPointerException;
 
     /**
-     * This is only applicable when the current value's type is {@link PartiQLValueType#INT8}.
-     */
-    public byte getInt8Value();
-
-    /**
-     * This is only applicable when the current value's type is {@link PartiQLValueType#INT16}.
-     */
-    public short getInt16Value();
-
-    /**
-     * This is only applicable when the current value's type is {@link PartiQLValueType#INT32}.
-     */
-    public int getInt32Value();
-
-    /**
-     * This is only applicable when the current value's type is {@link PartiQLValueType#INT64}.
-     */
-    public long getInt64Value();
-
-    /**
-     * This is only applicable when the current value's type is {@link PartiQLValueType#INT}.
+     * This is applicable to the following types:
+     * {@link PartiQLValueType#BLOB}
+     * @return a value representing the applicable PartiQL value
+     * @throws UnsupportedOperationException when this method is not applicable to the type returned by {@link PartiQLCursor#getType()}
+     * @throws NullPointerException if this method is invoked when {@link PartiQLCursor#isNull()} returns true
+     * @apiNote <b>! ! ! EXPERIMENTAL ! ! !</b> This is an experimental API under development by the PartiQL maintainers.
+     * Please abstain from using this API until given notice otherwise. This may break between iterations without prior notice.
      */
     @NotNull
-    public BigInteger getIntValue();
+    public Blob getBlob() throws UnsupportedOperationException, NullPointerException;
 
     /**
-     * This is only applicable when the current value's type is {@link PartiQLValueType#FLOAT32}.
-     */
-    public float getFloat32Value();
-
-    /**
-     * This is only applicable when the current value's type is {@link PartiQLValueType#FLOAT64}.
-     */
-    public double getFloat64Value();
-
-    /**
-     * This is only applicable when the current value's type is {@link PartiQLValueType#DECIMAL}.
+     * This is applicable to the following types:
+     * {@link PartiQLValueType#CLOB}
+     * @return a value representing the applicable PartiQL value
+     * @throws UnsupportedOperationException when this method is not applicable to the type returned by {@link PartiQLCursor#getType()}
+     * @throws NullPointerException if this method is invoked when {@link PartiQLCursor#isNull()} returns true
+     * @apiNote <b>! ! ! EXPERIMENTAL ! ! !</b> This is an experimental API under development by the PartiQL maintainers.
+     * Please abstain from using this API until given notice otherwise. This may break between iterations without prior notice.
      */
     @NotNull
-    public BigDecimal getDecimalValue();
+    public Clob getClob() throws UnsupportedOperationException, NullPointerException;
 
     /**
-     * This is only applicable when the current value's type is {@link PartiQLValueType#DECIMAL_ARBITRARY}.
+     * This is applicable to the following types:
+     * {@link PartiQLValueType#BYTE},
+     * {@link PartiQLValueType#INT8}
+     * @return a value representing the applicable PartiQL value
+     * @throws UnsupportedOperationException when this method is not applicable to the type returned by {@link PartiQLCursor#getType()}
+     * @throws NullPointerException if this method is invoked when {@link PartiQLCursor#isNull()} returns true
+     * @apiNote <b>! ! ! EXPERIMENTAL ! ! !</b> This is an experimental API under development by the PartiQL maintainers.
+     * Please abstain from using this API until given notice otherwise. This may break between iterations without prior notice.
+     * @deprecated BYTE is not present in SQL or Ion. This is subject to deletion.
+     */
+    @Deprecated
+    public byte getByte() throws UnsupportedOperationException, NullPointerException;
+
+    /**
+     * This is applicable to the following types:
+     * {@link PartiQLValueType#DATE}
+     * @return a value representing the applicable PartiQL value
+     * @throws UnsupportedOperationException when this method is not applicable to the type returned by {@link PartiQLCursor#getType()}
+     * @throws NullPointerException if this method is invoked when {@link PartiQLCursor#isNull()} returns true
      */
     @NotNull
-    public BigDecimal getDecimalArbitraryValue();
+    public Date getDate() throws UnsupportedOperationException, NullPointerException;
+
+    /**
+     * This is applicable to the following types:
+     * {@link PartiQLValueType#TIME}
+     * @return a value representing the applicable PartiQL value
+     * @throws UnsupportedOperationException when this method is not applicable to the type returned by {@link PartiQLCursor#getType()}
+     * @throws NullPointerException if this method is invoked when {@link PartiQLCursor#isNull()} returns true
+     */
+    @NotNull
+    public Time getTime() throws UnsupportedOperationException, NullPointerException;
+
+    /**
+     * This is applicable to the following types:
+     * {@link PartiQLValueType#TIMESTAMP}
+     * @return a value representing the applicable PartiQL value
+     * @throws UnsupportedOperationException when this method is not applicable to the type returned by {@link PartiQLCursor#getType()}
+     * @throws NullPointerException if this method is invoked when {@link PartiQLCursor#isNull()} returns true
+     */
+    @NotNull
+    public Timestamp getTimestamp() throws UnsupportedOperationException, NullPointerException;
+
+    /**
+     * This is applicable to the following types:
+     * {@link PartiQLValueType#INT16}
+     * @return a value representing the applicable PartiQL value
+     * @throws UnsupportedOperationException when this method is not applicable to the type returned by {@link PartiQLCursor#getType()}
+     * @throws NullPointerException if this method is invoked when {@link PartiQLCursor#isNull()} returns true
+     */
+    public short getShort() throws UnsupportedOperationException, NullPointerException;
+
+    /**
+     * This is applicable to the following types:
+     * {@link PartiQLValueType#INT32}
+     * @return a value representing the applicable PartiQL value
+     * @throws UnsupportedOperationException when this method is not applicable to the type returned by {@link PartiQLCursor#getType()}
+     * @throws NullPointerException if this method is invoked when {@link PartiQLCursor#isNull()} returns true
+     */
+    public int getInt() throws UnsupportedOperationException, NullPointerException;
+
+    /**
+     * This is applicable to the following types:
+     * {@link PartiQLValueType#INT64},
+     * {@link PartiQLValueType#INTERVAL}
+     * @return a value representing the applicable PartiQL value
+     * @throws UnsupportedOperationException when this method is not applicable to the type returned by {@link PartiQLCursor#getType()}
+     * @throws NullPointerException if this method is invoked when {@link PartiQLCursor#isNull()} returns true
+     * @apiNote <b>! ! ! EXPERIMENTAL ! ! !</b> This is an experimental API under development by the PartiQL maintainers.
+     * Please abstain from using this API until given notice otherwise. This may break between iterations without prior notice.
+     */
+    // TODO: Internal note: This is WRONG for INTERVAL. Though, it already exists as such, therefore, this propagates
+    //  this weird behavior. Eventually, we'll need to add real support for INTERVAL.
+    public long getLong() throws UnsupportedOperationException, NullPointerException;
+
+    /**
+     * This is applicable to the following types:
+     * {@link PartiQLValueType#INT}
+     * @return a value representing the applicable PartiQL value
+     * @throws UnsupportedOperationException when this method is not applicable to the type returned by {@link PartiQLCursor#getType()}
+     * @throws NullPointerException if this method is invoked when {@link PartiQLCursor#isNull()} returns true
+     * @apiNote <b>! ! ! EXPERIMENTAL ! ! !</b> This is an experimental API under development by the PartiQL maintainers.
+     * Please abstain from using this API until given notice otherwise. This may break between iterations without prior notice.
+     */
+    @NotNull
+    public BigInteger getBigInteger() throws UnsupportedOperationException, NullPointerException;
+
+    /**
+     * This is applicable to the following types:
+     * {@link PartiQLValueType#FLOAT32}
+     * @return a value representing the applicable PartiQL value
+     * @throws UnsupportedOperationException when this method is not applicable to the type returned by {@link PartiQLCursor#getType()}
+     * @throws NullPointerException if this method is invoked when {@link PartiQLCursor#isNull()} returns true
+     */
+    public float getFloat() throws UnsupportedOperationException, NullPointerException;
+
+    /**
+     * This is applicable to the following types:
+     * {@link PartiQLValueType#FLOAT64}
+     * @return a value representing the applicable PartiQL value
+     * @throws UnsupportedOperationException when this method is not applicable to the type returned by {@link PartiQLCursor#getType()}
+     * @throws NullPointerException if this method is invoked when {@link PartiQLCursor#isNull()} returns true
+     */
+    public double getDouble() throws UnsupportedOperationException, NullPointerException;
+
+    /**
+     * This is applicable to the following types:
+     * {@link PartiQLValueType#DECIMAL},
+     * {@link PartiQLValueType#DECIMAL_ARBITRARY}
+     * @return a value representing the applicable PartiQL value
+     * @throws UnsupportedOperationException when this method is not applicable to the type returned by {@link PartiQLCursor#getType()}
+     * @throws NullPointerException if this method is invoked when {@link PartiQLCursor#isNull()} returns true
+     */
+    @NotNull
+    public BigDecimal getBigDecimal() throws UnsupportedOperationException, NullPointerException;
 
     /**
      * Converts a {@link PartiQLValue} into {@link PartiQLCursor}.
