@@ -16,6 +16,12 @@ import org.partiql.types.StaticType
 import java.util.Random
 import java.util.stream.Stream
 
+/**
+ * Usage Notes:
+ *
+ *      You can create typing tests by
+ *
+ */
 abstract class PartiQLTyperTestBase {
     sealed class TestResult {
         data class Success(val expectedType: StaticType) : TestResult() {
