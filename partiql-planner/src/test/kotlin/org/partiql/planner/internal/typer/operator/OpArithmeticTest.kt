@@ -23,8 +23,7 @@ class OpArithmeticTest : PartiQLTyperTestBase() {
         ).map { inputs.get("basics", it)!! }
 
         val argsMap: Map<TestResult, Set<List<StaticType>>> = buildMap {
-            val successArgs = (allNumberType + listOf(StaticType.NULL))
-                .let { cartesianProduct(it, it) }
+            val successArgs = allNumberType.let { cartesianProduct(it, it) }
             val failureArgs = cartesianProduct(
                 allSupportedType,
                 allSupportedType
@@ -35,11 +34,7 @@ class OpArithmeticTest : PartiQLTyperTestBase() {
             successArgs.forEach { args: List<StaticType> ->
                 val arg0 = args.first()
                 val arg1 = args[1]
-                if (args.contains(StaticType.NULL)) {
-                    (this[TestResult.Success(StaticType.NULL)] ?: setOf(args)).let {
-                        put(TestResult.Success(StaticType.NULL), it + setOf(args))
-                    }
-                } else if (arg0 == arg1) {
+                if (arg0 == arg1) {
                     (this[TestResult.Success(arg1)] ?: setOf(args)).let {
                         put(TestResult.Success(arg1), it + setOf(args))
                     }

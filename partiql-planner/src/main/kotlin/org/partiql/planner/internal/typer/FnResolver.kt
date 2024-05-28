@@ -5,9 +5,6 @@ import org.partiql.planner.internal.ir.Agg
 import org.partiql.planner.internal.ir.Fn
 import org.partiql.planner.internal.ir.Identifier
 import org.partiql.planner.internal.ir.Rex
-import org.partiql.planner.internal.typer.FnResolver.Companion.compareTo
-import org.partiql.types.AnyOfType
-import org.partiql.types.NullType
 import org.partiql.types.StaticType
 import org.partiql.types.function.FunctionParameter
 import org.partiql.types.function.FunctionSignature
@@ -33,8 +30,6 @@ import org.partiql.value.PartiQLValueType.INT64
 import org.partiql.value.PartiQLValueType.INT8
 import org.partiql.value.PartiQLValueType.INTERVAL
 import org.partiql.value.PartiQLValueType.LIST
-import org.partiql.value.PartiQLValueType.MISSING
-import org.partiql.value.PartiQLValueType.NULL
 import org.partiql.value.PartiQLValueType.SEXP
 import org.partiql.value.PartiQLValueType.STRING
 import org.partiql.value.PartiQLValueType.STRUCT
@@ -76,27 +71,19 @@ internal sealed class FnMatch<T : FunctionSignature> {
      *
      * @property signature
      * @property mapping
-     * @property isMissable TRUE when anyone of the arguments _could_ be MISSING. We *always* propagate MISSING.
      */
     public data class Ok<T : FunctionSignature>(
         public val signature: T,
         public val mapping: Mapping,
-        public val isMissable: Boolean,
     ) : FnMatch<T>()
 
     /**
      * This represents dynamic dispatch.
      *
      * @property candidates an ordered list of potentially applicable functions to dispatch dynamically.
-     * @property isMissable TRUE when the argument permutations may not definitively invoke one of the candidates. You
-     * can think of [isMissable] as being the same as "not exhaustive". For example, if we have ABS(INT | STRING), then
-     * this function call [isMissable] because there isn't an `ABS(STRING)` function signature AKA we haven't exhausted
-     * all the arguments. On the other hand, take an "exhaustive" scenario: ABS(INT | DEC). In this case, [isMissable]
-     * is false because we have functions for each potential argument AKA we have exhausted the arguments.
      */
     public data class Dynamic<T : FunctionSignature>(
-        public val candidates: List<Ok<T>>,
-        public val isMissable: Boolean
+        public val candidates: List<Ok<T>>
     ) : FnMatch<T>()
 
     public data class Error<T : FunctionSignature>(
@@ -162,12 +149,8 @@ internal class FnResolver(private val header: Header) {
      */
     public fun resolveFn(fn: Fn.Unresolved, args: List<Rex>): FnMatch<FunctionSignature.Scalar> {
         val candidates = lookup(fn)
-        var canReturnMissing = false
         val parameterPermutations = buildArgumentPermutations(args.map { it.type }).mapNotNull { argList ->
             argList.mapIndexed { i, arg ->
-                if (arg.isMissable()) {
-                    canReturnMissing = true
-                }
                 // Skip over if we cannot convert type to runtime type.
                 val argType = arg.toRuntimeTypeOrNull() ?: return@mapNotNull null
                 FunctionParameter("arg-$i", argType)
@@ -176,12 +159,10 @@ internal class FnResolver(private val header: Header) {
         val potentialFunctions = parameterPermutations.mapNotNull { parameters ->
             when (val match = match(candidates, parameters)) {
                 null -> {
-                    canReturnMissing = true
                     null
                 }
                 else -> {
-                    val isMissable = canReturnMissing || isUnsafeCast(match.signature.specific)
-                    FnMatch.Ok(match.signature, match.mapping, isMissable)
+                    FnMatch.Ok(match.signature, match.mapping)
                 }
             }
         }
@@ -190,18 +171,12 @@ internal class FnResolver(private val header: Header) {
         return when (orderedUniqueFunctions.size) {
             0 -> FnMatch.Error(fn.identifier, args, candidates)
             1 -> orderedUniqueFunctions.first()
-            else -> FnMatch.Dynamic(orderedUniqueFunctions, canReturnMissing)
+            else -> FnMatch.Dynamic(orderedUniqueFunctions)
         }
     }
 
     private fun buildArgumentPermutations(args: List<StaticType>): List<List<StaticType>> {
-        val flattenedArgs = args.map {
-            if (it is AnyOfType) {
-                it.flatten().allTypes.filter { it !is NullType }
-            } else {
-                it.flatten().allTypes
-            }
-        }
+        val flattenedArgs = args.map { it.flatten().allTypes }
         return buildArgumentPermutations(flattenedArgs, accumulator = emptyList())
     }
 
@@ -229,19 +204,13 @@ internal class FnResolver(private val header: Header) {
      */
     public fun resolveAgg(agg: Agg.Unresolved, args: List<Rex>): FnMatch<FunctionSignature.Aggregation> {
         val candidates = lookup(agg)
-        var hadMissingArg = false
         val parameters = args.mapIndexed { i, arg ->
-            if (!hadMissingArg && arg.type.isMissable()) {
-                hadMissingArg = true
-            }
             FunctionParameter("arg-$i", arg.type.toRuntimeType())
         }
-        val match = match(candidates, parameters)
-        return when (match) {
+        return when (val match = match(candidates, parameters)) {
             null -> FnMatch.Error(agg.identifier, args, candidates)
             else -> {
-                val isMissable = hadMissingArg || isUnsafeCast(match.signature.specific)
-                FnMatch.Ok(match.signature, match.mapping, isMissable)
+                FnMatch.Ok(match.signature, match.mapping)
             }
         }
     }
@@ -290,9 +259,7 @@ internal class FnResolver(private val header: Header) {
                 a.type == p.type -> mapping.add(null)
                 // 2. Match ANY, no coercion needed
                 p.type == ANY -> mapping.add(null)
-                // 3. Match NULL argument
-                a.type == NULL -> mapping.add(null)
-                // 4. Check for a coercion
+                // 3. Check for a coercion
                 else -> {
                     val coercion = lookupCoercion(a.type, p.type)
                     when (coercion) {
@@ -440,8 +407,10 @@ internal class FnResolver(private val header: Header) {
         // This is not explicitly defined in the PartiQL Specification!!
         // This does not imply the ability to CAST; this defines function resolution behavior.
         private val precedence: Map<PartiQLValueType, Int> = listOf(
-            NULL,
-            MISSING,
+            @Suppress("DEPRECATION")
+            PartiQLValueType.NULL, // TODO: Remove once functions no longer specify parameter/return types with the NULL type.
+            @Suppress("DEPRECATION")
+            PartiQLValueType.MISSING, // TODO: Remove once functions no longer specify parameter/return types with the MISSING type.
             BOOL,
             INT8,
             INT16,

@@ -13,192 +13,111 @@ store::{
       },
       {
         name: "s_rec_start_date",
-        type: [
-          "date",
-          "null"
-        ]
+        type: "date"
       },
       {
         name: "s_rec_end_date",
-        type: [
-          "date",
-          "null"
-        ]
+        type: "date"
       },
       {
         name: "s_closed_date_sk",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "s_store_name",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "s_number_employees",
-        type: [
-          "int32",
-          "null"
-        ]
+        type: "int32"
       },
       {
         name: "s_floor_space",
-        type: [
-          "int32",
-          "null"
-        ]
+        type: "int32"
       },
       {
         name: "s_hours",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "s_manager",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "s_market_id",
-        type: [
-          "int32",
-          "null"
-        ]
+        type: "int32"
       },
       {
         name: "s_geography_class",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "s_market_desc",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "s_market_manager",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "s_division_id",
-        type: [
-          "int32",
-          "null"
-        ]
+        type: "int32"
       },
       {
         name: "s_division_name",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "s_company_id",
-        type: [
-          "int32",
-          "null"
-        ]
+        type: "int32"
       },
       {
         name: "s_company_name",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "s_street_number",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "s_street_name",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "s_street_type",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "s_suite_number",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "s_city",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "s_county",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "s_state",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "s_zip",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "s_country",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "s_gmt_offset",
-        type: [
-          "float64",
-          "null"
-        ]
+        type: "float64"
       },
       {
         name: "s_tax_precentage",
-        type: [
-          "float64",
-          "null"
-        ]
+        type: "float64"
       }
     ]
   }

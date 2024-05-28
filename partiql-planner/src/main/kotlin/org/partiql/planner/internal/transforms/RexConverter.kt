@@ -42,7 +42,6 @@ import org.partiql.planner.internal.ir.rexOpStructField
 import org.partiql.planner.internal.ir.rexOpSubquery
 import org.partiql.planner.internal.ir.rexOpTupleUnion
 import org.partiql.planner.internal.ir.rexOpVarUnresolved
-import org.partiql.planner.internal.typer.toNonNullStaticType
 import org.partiql.planner.internal.typer.toStaticType
 import org.partiql.types.StaticType
 import org.partiql.types.TimeType
@@ -70,10 +69,7 @@ internal object RexConverter {
             throw IllegalArgumentException("unsupported rex $node")
 
         override fun visitExprLit(node: Expr.Lit, context: Env): Rex {
-            val type = when (node.value.isNull) {
-                true -> node.value.type.toStaticType()
-                else -> node.value.type.toNonNullStaticType()
-            }
+            val type = node.value.type.toStaticType()
             val op = rexOpLit(node.value)
             return rex(type, op)
         }
@@ -82,10 +78,7 @@ internal object RexConverter {
             val value =
                 PartiQLValueIonReaderBuilder
                     .standard().build(node.value).read()
-            val type = when (value.isNull) {
-                true -> value.type.toStaticType()
-                else -> value.type.toNonNullStaticType()
-            }
+            val type = value.type.toStaticType()
             return rex(type, rexOpLit(value))
         }
 
@@ -287,7 +280,7 @@ internal object RexConverter {
             }.toMutableList()
 
             val defaultRex = when (val default = node.default) {
-                null -> rex(type = StaticType.NULL, op = rexOpLit(value = nullValue()))
+                null -> rex(type = StaticType.ANY, op = rexOpLit(value = nullValue()))
                 else -> visitExprCoerce(default, context)
             }
             val op = rexOpCase(branches = branches, default = defaultRex)
@@ -528,8 +521,8 @@ internal object RexConverter {
             val type = node.asType
             val arg0 = visitExprCoerce(node.value, ctx)
             return when (type) {
-                is Type.NullType -> rex(StaticType.NULL, call("cast_null", arg0))
-                is Type.Missing -> rex(StaticType.MISSING, call("cast_missing", arg0))
+                is Type.NullType -> error("Cannot cast any value to NULL")
+                is Type.Missing -> error("Cannot cast any value to MISSING")
                 is Type.Bool -> rex(StaticType.BOOL, call("cast_bool", arg0))
                 is Type.Tinyint -> TODO("Static Type does not have TINYINT type")
                 is Type.Smallint, is Type.Int2 -> rex(StaticType.INT2, call("cast_int16", arg0))

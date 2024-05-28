@@ -17,7 +17,7 @@ class OpLikeTest : PartiQLTyperTestBase() {
         ).map { inputs.get("basics", it)!! }
 
         val argsMap = buildMap {
-            val successArgs = (allTextType + listOf(StaticType.NULL))
+            val successArgs = (allTextType)
                 .let { cartesianProduct(it, it) }
             val failureArgs = cartesianProduct(
                 allSupportedType,
@@ -27,14 +27,8 @@ class OpLikeTest : PartiQLTyperTestBase() {
             }.toSet()
 
             successArgs.forEach { args: List<StaticType> ->
-                if (args.contains(StaticType.NULL)) {
-                    (this[TestResult.Success(StaticType.NULL)] ?: setOf(args)).let {
-                        put(TestResult.Success(StaticType.NULL), it + setOf(args))
-                    }
-                } else {
-                    (this[TestResult.Success(StaticType.BOOL)] ?: setOf(args)).let {
-                        put(TestResult.Success(StaticType.BOOL), it + setOf(args))
-                    }
+                (this[TestResult.Success(StaticType.BOOL)] ?: setOf(args)).let {
+                    put(TestResult.Success(StaticType.BOOL), it + setOf(args))
                 }
                 Unit
             }
@@ -51,7 +45,7 @@ class OpLikeTest : PartiQLTyperTestBase() {
         ).map { inputs.get("basics", it)!! }
 
         val argsMap = buildMap {
-            val successArgs = (allTextType + listOf(StaticType.NULL))
+            val successArgs = (allTextType)
                 .let { cartesianProduct(it, it, it) }
             val failureArgs = cartesianProduct(
                 allSupportedType,
@@ -62,14 +56,8 @@ class OpLikeTest : PartiQLTyperTestBase() {
             }.toSet()
 
             successArgs.forEach { args: List<StaticType> ->
-                if (args.contains(StaticType.NULL)) {
-                    (this[TestResult.Success(StaticType.NULL)] ?: setOf(args)).let {
-                        put(TestResult.Success(StaticType.NULL), it + setOf(args))
-                    }
-                } else {
-                    (this[TestResult.Success(StaticType.BOOL)] ?: setOf(args)).let {
-                        put(TestResult.Success(StaticType.BOOL), it + setOf(args))
-                    }
+                (this[TestResult.Success(StaticType.BOOL)] ?: setOf(args)).let {
+                    put(TestResult.Success(StaticType.BOOL), it + setOf(args))
                 }
                 Unit
             }

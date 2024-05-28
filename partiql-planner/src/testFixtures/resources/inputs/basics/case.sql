@@ -1,3 +1,7 @@
+-- noinspection SqlDialectInspectionForFile
+
+-- noinspection SqlNoDataSourceInspectionForFile
+
 -- -----------------------------
 --  Exact Numeric
 -- -----------------------------
@@ -58,25 +62,16 @@ CASE t_item.t_string
     ELSE t_item.t_int16           -- cast(.. AS INT8)
 END;
 
---#[case-when-08]
--- type: (int|null)
--- nullable default
-CASE t_item.t_string
-    WHEN 'a' THEN t_item.t_int16  -- cast(.. AS INT)
-    WHEN 'b' THEN t_item.t_int32  -- cast(.. AS INT)
-    ELSE t_item.t_int_null        -- INT
-END;
-
 --#[case-when-09]
--- type: (int|null)
+-- type: (int)
 CASE t_item.t_string
-    WHEN 'a' THEN t_item.t_int16_null -- cast(.. AS INT)
+    WHEN 'a' THEN t_item.t_int16      -- cast(.. AS INT)
     WHEN 'b' THEN t_item.t_int32      -- cast(.. AS INT)
     ELSE t_item.t_int
 END;
 
 --#[case-when-10]
--- type: (decimal|null)
+-- type: (decimal)
 -- nullable branch
 CASE t_item.t_string
     WHEN 'a' THEN t_item.t_decimal
@@ -103,7 +98,7 @@ CASE t_item.t_string
 END;
 
 --#[case-when-13]
--- type: (float64|null)
+-- type: (float64)
 -- nullable branch
 CASE t_item.t_string
     WHEN 'a' THEN t_item.t_int
@@ -123,7 +118,7 @@ CASE t_item.t_string
 END;
 
 --#[case-when-15]
--- type: (string|null)
+-- type: (string)
 -- null default
 CASE t_item.t_string
     WHEN 'a' THEN t_item.t_string
@@ -139,7 +134,7 @@ CASE t_item.t_string
 END;
 
 --#[case-when-17]
--- type: (clob|null)
+-- type: (clob)
 -- null default
 CASE t_item.t_string
     WHEN 'a' THEN t_item.t_string
@@ -152,14 +147,14 @@ END;
 -- ----------------------------------
 
 --#[case-when-18]
--- type: (string|null)
+-- type: (string)
 CASE t_item.t_string
     WHEN 'a' THEN NULL
     ELSE 'default'
 END;
 
 --#[case-when-19]
--- type: (string|null)
+-- type: (string)
 CASE t_item.t_string
     WHEN 'a' THEN NULL
     WHEN 'b' THEN NULL
@@ -169,32 +164,17 @@ CASE t_item.t_string
 END;
 
 --#[case-when-20]
--- type: null
+-- type: any
 -- no default, null anyways
 CASE t_item.t_string
     WHEN 'a' THEN NULL
 END;
 
 --#[case-when-21]
--- type: (string|null)
+-- type: (string)
 -- no default
 CASE t_item.t_string
     WHEN 'a' THEN 'ok!'
-END;
-
---#[case-when-22]
--- type: (null|missing|int32)
-CASE t_item.t_string
-    WHEN 'a' THEN t_item.t_absent
-    ELSE -1
-END;
-
---#[case-when-23]
--- type: int32
--- false branch is pruned
-CASE
-    WHEN false THEN t_item.t_absent
-    ELSE -1
 END;
 
 -- -----------------------------
@@ -210,7 +190,7 @@ CASE t_item.t_string
 END;
 
 --#[case-when-25]
--- type: (int32|int64|string|null)
+-- type: (int32|int64|string)
 CASE t_item.t_string
     WHEN 'a' THEN t_item.t_int32
     WHEN 'b' THEN t_item.t_int64
@@ -219,10 +199,10 @@ CASE t_item.t_string
 END;
 
 --#[case-when-26]
--- type: (int32|int64|string|null)
+-- type: (int32|int64|string)
 CASE t_item.t_string
     WHEN 'a' THEN t_item.t_int32
-    WHEN 'b' THEN t_item.t_int64_null
+    WHEN 'b' THEN t_item.t_int64
     ELSE 'default'
 END;
 
@@ -235,21 +215,21 @@ CASE t_item.t_string
 END;
 
 --#[case-when-28]
--- type: (int16|int32|int64|int|decimal|string|clob|null)
+-- type: (int16|int32|int64|int|decimal|string|clob)
 CASE t_item.t_string
     WHEN 'a' THEN t_item.t_num_exact
     WHEN 'b' THEN t_item.t_str
 END;
 
 --#[case-when-29]
--- type: (struct_a|struct_b|null)
+-- type: (struct_a|struct_b)
 CASE t_item.t_string
     WHEN 'a' THEN t_item.t_struct_a
     WHEN 'b' THEN t_item.t_struct_b
 END;
 
 --#[case-when-30]
--- type: missing
+-- type: any
 CASE t_item.t_string
     WHEN 'a' THEN MISSING
     WHEN 'b' THEN MISSING
@@ -287,7 +267,7 @@ END;
 --#[case-when-34]
 -- type: (any)
 CASE t_item.t_string
-    WHEN 'a' THEN t_item.t_int32_null
+    WHEN 'a' THEN t_item.t_int32
     WHEN 'b' THEN t_item.t_any
     ELSE t_item.t_any
 END;

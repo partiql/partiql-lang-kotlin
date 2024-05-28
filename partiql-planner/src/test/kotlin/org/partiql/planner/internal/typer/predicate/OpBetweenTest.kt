@@ -21,25 +21,25 @@ class OpBetweenTest : PartiQLTyperTestBase() {
         val argsMap = buildMap {
             val successArgs =
                 cartesianProduct(
-                    allNumberType + listOf(StaticType.NULL),
-                    allNumberType + listOf(StaticType.NULL),
-                    allNumberType + listOf(StaticType.NULL),
+                    allNumberType,
+                    allNumberType,
+                    allNumberType,
                 ) + cartesianProduct(
-                    StaticType.TEXT.allTypes + listOf(StaticType.CLOB, StaticType.NULL),
-                    StaticType.TEXT.allTypes + listOf(StaticType.CLOB, StaticType.NULL),
-                    StaticType.TEXT.allTypes + listOf(StaticType.CLOB, StaticType.NULL)
+                    StaticType.TEXT.allTypes + listOf(StaticType.CLOB),
+                    StaticType.TEXT.allTypes + listOf(StaticType.CLOB),
+                    StaticType.TEXT.allTypes + listOf(StaticType.CLOB)
                 ) + cartesianProduct(
-                    listOf(StaticType.DATE, StaticType.NULL),
-                    listOf(StaticType.DATE, StaticType.NULL),
-                    listOf(StaticType.DATE, StaticType.NULL)
+                    listOf(StaticType.DATE),
+                    listOf(StaticType.DATE),
+                    listOf(StaticType.DATE)
                 ) + cartesianProduct(
-                    listOf(StaticType.TIME, StaticType.NULL),
-                    listOf(StaticType.TIME, StaticType.NULL),
-                    listOf(StaticType.TIME, StaticType.NULL)
+                    listOf(StaticType.TIME),
+                    listOf(StaticType.TIME),
+                    listOf(StaticType.TIME)
                 ) + cartesianProduct(
-                    listOf(StaticType.TIMESTAMP, StaticType.NULL),
-                    listOf(StaticType.TIMESTAMP, StaticType.NULL),
-                    listOf(StaticType.TIMESTAMP, StaticType.NULL)
+                    listOf(StaticType.TIMESTAMP),
+                    listOf(StaticType.TIMESTAMP),
+                    listOf(StaticType.TIMESTAMP)
                 )
 
             val failureArgs = cartesianProduct(
@@ -51,17 +51,8 @@ class OpBetweenTest : PartiQLTyperTestBase() {
             }.toSet()
 
             successArgs.forEach { args: List<StaticType> ->
-                val arg0 = args.first()
-                val arg1 = args[1]
-                val arg2 = args[2]
-                if (args.contains(StaticType.NULL)) {
-                    (this[TestResult.Success(StaticType.NULL)] ?: setOf(args)).let {
-                        put(TestResult.Success(StaticType.NULL), it + setOf(args))
-                    }
-                } else {
-                    (this[TestResult.Success(StaticType.BOOL)] ?: setOf(args)).let {
-                        put(TestResult.Success(StaticType.BOOL), it + setOf(args))
-                    }
+                (this[TestResult.Success(StaticType.BOOL)] ?: setOf(args)).let {
+                    put(TestResult.Success(StaticType.BOOL), it + setOf(args))
                 }
                 Unit
             }

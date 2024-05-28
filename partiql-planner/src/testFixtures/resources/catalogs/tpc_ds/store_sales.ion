@@ -5,17 +5,11 @@ store_sales::{
     fields: [
       {
         name: "ss_sold_date_sk",
-        type: [
-          "date",
-          "null"
-        ]
+        type: "date"
       },
       {
         name: "ss_sold_time_sk",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "ss_item_sk",
@@ -23,45 +17,27 @@ store_sales::{
       },
       {
         name: "ss_customer_sk",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "ss_cdemo_sk",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "ss_hdemo_sk",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "ss_addr_sk",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "ss_store_sk",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "ss_promo_sk",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "ss_ticket_number",
@@ -69,94 +45,55 @@ store_sales::{
       },
       {
         name: "ss_quantity",
-        type: [
-          "int32",
-          "null"
-        ]
+        type: "int32"
       },
       {
         name: "ss_wholesale_cost",
-        type: [
-          "float64",
-          "null"
-        ]
+        type: "float64"
       },
       {
         name: "ss_list_price",
-        type: [
-          "float64",
-          "null"
-        ]
+        type: "float64"
       },
       {
         name: "ss_sales_price",
-        type: [
-          "float64",
-          "null"
-        ]
+        type: "float64"
       },
       {
         name: "ss_ext_discount_amt",
-        type: [
-          "float64",
-          "null"
-        ]
+        type: "float64"
       },
       {
         name: "ss_ext_sales_price",
-        type: [
-          "float64",
-          "null"
-        ]
+        type: "float64"
       },
       {
         name: "ss_ext_wholesale_cost",
-        type: [
-          "float64",
-          "null"
-        ]
+        type: "float64"
       },
       {
         name: "ss_ext_list_price",
-        type: [
-          "float64",
-          "null"
-        ]
+        type: "float64"
       },
       {
         name: "ss_ext_tax",
-        type: [
-          "float64",
-          "null"
-        ]
+        type: "float64"
       },
       {
         name: "ss_coupon_amt",
-        type: [
-          "float64",
-          "null"
-        ]
+        type: "float64"
       },
       {
         name: "ss_net_paid",
-        type: [
-          "float64",
-          "null"
-        ]
+        type: "float64"
       },
       {
         name: "ss_net_paid_inc_tax",
-        type: [
-          "float64",
-          "null"
-        ]
+        type: "float64"
       },
       {
         name: "ss_net_profit",
-        type: [
-          "float64",
-          "null"
-        ]
+        type: "float64"
       }
     ]
   }

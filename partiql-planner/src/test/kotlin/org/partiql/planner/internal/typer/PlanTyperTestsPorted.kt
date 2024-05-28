@@ -30,13 +30,15 @@ import org.partiql.planner.util.ProblemCollector
 import org.partiql.plugins.local.toStaticType
 import org.partiql.plugins.memory.MemoryConnector
 import org.partiql.spi.connector.ConnectorMetadata
-import org.partiql.types.AnyOfType
 import org.partiql.types.AnyType
 import org.partiql.types.BagType
 import org.partiql.types.ListType
 import org.partiql.types.SexpType
 import org.partiql.types.StaticType
-import org.partiql.types.StaticType.Companion.MISSING
+import org.partiql.types.StaticType.Companion.ANY
+import org.partiql.types.StaticType.Companion.INT
+import org.partiql.types.StaticType.Companion.INT4
+import org.partiql.types.StaticType.Companion.INT8
 import org.partiql.types.StaticType.Companion.unionOf
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
@@ -328,7 +330,7 @@ class PlanTyperTestsPorted {
                                 )
                             ),
                             StructType.Field("ssn", StaticType.STRING),
-                            StructType.Field("employer", StaticType.STRING.asNullable()),
+                            StructType.Field("employer", StaticType.STRING),
                             StructType.Field("name", StaticType.STRING),
                             StructType.Field("tax_id", StaticType.INT8),
                             StructType.Field(
@@ -515,12 +517,12 @@ class PlanTyperTestsPorted {
             SuccessTestCase(
                 name = "Current User",
                 query = "CURRENT_USER",
-                expected = StaticType.unionOf(StaticType.STRING, StaticType.NULL)
+                expected = StaticType.STRING
             ),
             SuccessTestCase(
                 name = "Current User Concat",
                 query = "CURRENT_USER || 'hello'",
-                expected = StaticType.unionOf(StaticType.STRING, StaticType.NULL)
+                expected = StaticType.STRING
             ),
             SuccessTestCase(
                 name = "Current User in WHERE",
@@ -546,11 +548,11 @@ class PlanTyperTestsPorted {
                 expected = BagType(
                     StructType(
                         fields = listOf(
-                            StructType.Field("CURRENT_USER", StaticType.STRING.asNullable()),
+                            StructType.Field("CURRENT_USER", StaticType.STRING),
                             StructType.Field("CURRENT_DATE", StaticType.DATE),
-                            StructType.Field("curr_user", StaticType.STRING.asNullable()),
+                            StructType.Field("curr_user", StaticType.STRING),
                             StructType.Field("curr_date", StaticType.DATE),
-                            StructType.Field("name_desc", StaticType.STRING.asNullable()),
+                            StructType.Field("name_desc", StaticType.STRING),
                         ),
                         contentClosed = true,
                         constraints = setOf(
@@ -564,14 +566,14 @@ class PlanTyperTestsPorted {
             ErrorTestCase(
                 name = "Current User (String) PLUS String",
                 query = "CURRENT_USER + 'hello'",
-                expected = StaticType.MISSING,
+                expected = ANY,
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
                         PlanningProblemDetails.UnknownFunction(
                             "plus",
                             listOf(
-                                StaticType.unionOf(StaticType.STRING, StaticType.NULL),
+                                StaticType.STRING,
                                 StaticType.STRING,
                             ),
                         )
@@ -590,7 +592,7 @@ class PlanTyperTestsPorted {
             SuccessTestCase(
                 name = "BITWISE_AND_2",
                 query = "CAST(1 AS INT2) & CAST(2 AS INT2)",
-                expected = StaticType.unionOf(StaticType.INT2, StaticType.MISSING)
+                expected = StaticType.INT2
             ),
             SuccessTestCase(
                 name = "BITWISE_AND_3",
@@ -605,17 +607,17 @@ class PlanTyperTestsPorted {
             SuccessTestCase(
                 name = "BITWISE_AND_5",
                 query = "CAST(1 AS INT2) & 2",
-                expected = StaticType.unionOf(StaticType.INT4, StaticType.MISSING)
+                expected = StaticType.INT4
             ),
             SuccessTestCase(
                 name = "BITWISE_AND_6",
                 query = "CAST(1 AS INT2) & CAST(2 AS INT8)",
-                expected = StaticType.unionOf(StaticType.INT8, StaticType.MISSING)
+                expected = StaticType.INT8
             ),
             SuccessTestCase(
                 name = "BITWISE_AND_7",
                 query = "CAST(1 AS INT2) & 2",
-                expected = StaticType.unionOf(StaticType.INT4, StaticType.MISSING)
+                expected = StaticType.INT4
             ),
             SuccessTestCase(
                 name = "BITWISE_AND_8",
@@ -635,26 +637,23 @@ class PlanTyperTestsPorted {
             SuccessTestCase(
                 name = "BITWISE_AND_NULL_OPERAND",
                 query = "1 & NULL",
-                expected = StaticType.NULL,
+                expected = unionOf(INT4, INT8, INT),
             ),
             ErrorTestCase(
                 name = "BITWISE_AND_MISSING_OPERAND",
                 query = "1 & MISSING",
-                expected = StaticType.MISSING,
+                expected = unionOf(INT4, INT8, INT),
                 problemHandler = assertProblemExists {
                     Problem(
                         sourceLocation = UNKNOWN_PROBLEM_LOCATION,
-                        details = PlanningProblemDetails.UnknownFunction(
-                            "bitwise_and",
-                            listOf(StaticType.INT4, StaticType.MISSING)
-                        )
+                        details = PlanningProblemDetails.ExpressionAlwaysReturnsNullOrMissing
                     )
                 }
             ),
             ErrorTestCase(
                 name = "BITWISE_AND_NON_INT_OPERAND",
                 query = "1 & 'NOT AN INT'",
-                expected = StaticType.MISSING,
+                expected = StaticType.ANY,
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
@@ -703,7 +702,7 @@ class PlanTyperTestsPorted {
                     StructType(
                         fields = mapOf(
                             "a" to StaticType.INT4,
-                            "b" to StaticType.unionOf(StaticType.NULL, StaticType.DECIMAL),
+                            "b" to StaticType.DECIMAL,
                         ),
                         contentClosed = true,
                         constraints = setOf(
@@ -720,7 +719,7 @@ class PlanTyperTestsPorted {
                 expected = BagType(
                     StructType(
                         fields = listOf(
-                            StructType.Field("b", StaticType.unionOf(StaticType.NULL, StaticType.DECIMAL)),
+                            StructType.Field("b", StaticType.DECIMAL),
                             StructType.Field("a", StaticType.INT4),
                         ),
                         contentClosed = true,
@@ -739,7 +738,7 @@ class PlanTyperTestsPorted {
                     StructType(
                         fields = listOf(
                             StructType.Field("a", StaticType.INT4),
-                            StructType.Field("a", StaticType.unionOf(StaticType.NULL, StaticType.DECIMAL)),
+                            StructType.Field("a", StaticType.DECIMAL),
                         ),
                         contentClosed = true,
                         constraints = setOf(
@@ -757,7 +756,7 @@ class PlanTyperTestsPorted {
                     StructType(
                         fields = listOf(
                             StructType.Field("a", StaticType.INT4),
-                            StructType.Field("a", StaticType.unionOf(StaticType.NULL, StaticType.DECIMAL)),
+                            StructType.Field("a", StaticType.DECIMAL),
                         ),
                         contentClosed = true,
                         constraints = setOf(
@@ -785,8 +784,8 @@ class PlanTyperTestsPorted {
                     StructType(
                         fields = listOf(
                             StructType.Field("a", StaticType.INT4),
-                            StructType.Field("a", StaticType.unionOf(StaticType.DECIMAL, StaticType.NULL)),
-                            StructType.Field("a", StaticType.unionOf(StaticType.STRING, StaticType.NULL)),
+                            StructType.Field("a", StaticType.DECIMAL),
+                            StructType.Field("a", StaticType.STRING),
                         ),
                         contentClosed = true,
                         constraints = setOf(
@@ -804,7 +803,7 @@ class PlanTyperTestsPorted {
                     StructType(
                         fields = listOf(
                             StructType.Field("a", StaticType.INT4),
-                            StructType.Field("a", StaticType.unionOf(StaticType.DECIMAL, StaticType.NULL)),
+                            StructType.Field("a", StaticType.DECIMAL),
                         ),
                         contentClosed = true,
                         constraints = setOf(
@@ -891,12 +890,7 @@ class PlanTyperTestsPorted {
                                             "c" to ListType(
                                                 elementType = StructType(
                                                     fields = mapOf(
-                                                        "field" to AnyOfType(
-                                                            setOf(
-                                                                StaticType.INT4,
-                                                                StaticType.MISSING // c[1]'s `field` was excluded
-                                                            )
-                                                        )
+                                                        "field" to INT4
                                                     ),
                                                     contentClosed = true,
                                                     constraints = setOf(
@@ -1226,7 +1220,7 @@ class PlanTyperTestsPorted {
                                     fields = mapOf(
                                         "b" to StructType(
                                             fields = mapOf(
-                                                "c" to StaticType.INT4.asOptional(),
+                                                "c" to StaticType.INT4,
                                                 "d" to StaticType.STRING
                                             ),
                                             contentClosed = true,
@@ -1293,8 +1287,8 @@ class PlanTyperTestsPorted {
                                     fields = mapOf(
                                         "b" to StructType(
                                             fields = mapOf( // all fields of b optional
-                                                "c" to StaticType.INT4.asOptional(),
-                                                "d" to StaticType.STRING.asOptional()
+                                                "c" to StaticType.INT4,
+                                                "d" to StaticType.STRING
                                             ),
                                             contentClosed = true,
                                             constraints = setOf(
@@ -1378,7 +1372,7 @@ class PlanTyperTestsPorted {
                                                 "d" to ListType(
                                                     elementType = StructType(
                                                         fields = mapOf(
-                                                            "e" to StaticType.STRING.asOptional(), // last step is optional since only a[1]... is excluded
+                                                            "e" to StaticType.STRING, // last step is optional since only a[1]... is excluded
                                                             "f" to StaticType.BOOL
                                                         ),
                                                         contentClosed = true,
@@ -1425,7 +1419,7 @@ class PlanTyperTestsPorted {
                                                 "d" to ListType(
                                                     elementType = StructType(
                                                         fields = mapOf( // same as above
-                                                            "e" to StaticType.STRING.asOptional(),
+                                                            "e" to StaticType.STRING,
                                                             "f" to StaticType.BOOL
                                                         ),
                                                         contentClosed = true,
@@ -1649,7 +1643,7 @@ class PlanTyperTestsPorted {
                                 ),
                                 StructType(
                                     fields = mapOf(
-                                        "a" to StaticType.NULL
+                                        "a" to ANY
                                     ),
                                     contentClosed = true,
                                     constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
@@ -1692,7 +1686,7 @@ class PlanTyperTestsPorted {
                                     fields = mapOf(
                                         "a" to StructType(
                                             fields = mapOf(
-                                                "c" to StaticType.NULL
+                                                "c" to ANY
                                             ),
                                             contentClosed = true,
                                             constraints = setOf(
@@ -1937,7 +1931,7 @@ class PlanTyperTestsPorted {
                                     StructType(
                                         fields = mapOf(
                                             "b" to StaticType.INT4,
-                                            "c" to StaticType.INT4.asOptional()
+                                            "c" to StaticType.INT4
                                         ),
                                         contentClosed = true,
                                         constraints = setOf(
@@ -1948,7 +1942,7 @@ class PlanTyperTestsPorted {
                                     StructType(
                                         fields = mapOf(
                                             "b" to StaticType.INT4,
-                                            "c" to StaticType.NULL.asOptional()
+                                            "c" to ANY
                                         ),
                                         contentClosed = true,
                                         constraints = setOf(
@@ -1959,7 +1953,7 @@ class PlanTyperTestsPorted {
                                     StructType(
                                         fields = mapOf(
                                             "b" to StaticType.INT4,
-                                            "c" to StaticType.DECIMAL.asOptional()
+                                            "c" to StaticType.DECIMAL
                                         ),
                                         contentClosed = true,
                                         constraints = setOf(
@@ -2121,17 +2115,15 @@ class PlanTyperTestsPorted {
                     >> AS t
                 """,
                 expected = BagType(
-                    StaticType.unionOf(
-                        StaticType.MISSING,
-                        StructType(
-                            fields = listOf(
-                                StructType.Field("b", StaticType.INT4),
-                            ),
-                            contentClosed = true,
-                            constraints = setOf(
-                                TupleConstraint.Open(false),
-                                TupleConstraint.UniqueAttrs(true),
-                            )
+                    StructType(
+                        fields = listOf(
+                            StructType.Field("b", INT4),
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
                         )
                     )
                 ),
@@ -2144,15 +2136,13 @@ class PlanTyperTestsPorted {
                     ) FROM <<
                         { 'a': { 'b': 1 } },
                         { 'a': { 'b': 'hello' } },
-                        { 'a': NULL },
+                        { 'a': 'world' },
                         { 'a': 4.5 },
                         { }
                     >> AS t
                 """,
                 expected = BagType(
                     StaticType.unionOf(
-                        StaticType.NULL,
-                        StaticType.MISSING,
                         StructType(
                             fields = listOf(
                                 StructType.Field("b", StaticType.INT4),
@@ -2185,7 +2175,6 @@ class PlanTyperTestsPorted {
                 """,
                 expected = BagType(
                     StaticType.unionOf(
-                        StaticType.MISSING,
                         StructType(
                             fields = listOf(
                                 StructType.Field("first", StaticType.STRING),
@@ -2221,7 +2210,6 @@ class PlanTyperTestsPorted {
                 """,
                 expected = BagType(
                     StaticType.unionOf(
-                        StaticType.MISSING,
                         StructType(
                             fields = listOf(
                                 StructType.Field("first", StaticType.STRING),
@@ -2297,7 +2285,7 @@ class PlanTyperTestsPorted {
                         WHEN TRUE THEN 'hello'
                     END;
                 """,
-                expected = StaticType.STRING
+                expected = unionOf(INT4, StaticType.STRING)
             ),
             SuccessTestCase(
                 name = "Boolean case when",
@@ -2310,14 +2298,14 @@ class PlanTyperTestsPorted {
                 expected = StaticType.BOOL
             ),
             SuccessTestCase(
-                name = "Folded out false",
+                name = "Typing even with false condition",
                 query = """
                     CASE
                         WHEN FALSE THEN 'IMPOSSIBLE TO GET'
                         ELSE TRUE
                     END;
                 """,
-                expected = StaticType.BOOL
+                expected = unionOf(StaticType.STRING, StaticType.BOOL)
             ),
             SuccessTestCase(
                 name = "Folded out false without default",
@@ -2326,7 +2314,7 @@ class PlanTyperTestsPorted {
                         WHEN FALSE THEN 'IMPOSSIBLE TO GET'
                     END;
                 """,
-                expected = StaticType.NULL
+                expected = StaticType.STRING
             ),
             SuccessTestCase(
                 name = "Not folded gives us a nullable without default",
@@ -2336,7 +2324,7 @@ class PlanTyperTestsPorted {
                         WHEN 2 THEN FALSE
                     END;
                 """,
-                expected = StaticType.BOOL.asNullable()
+                expected = StaticType.BOOL
             ),
             SuccessTestCase(
                 name = "Not folded gives us a nullable without default for query",
@@ -2353,7 +2341,7 @@ class PlanTyperTestsPorted {
                 expected = BagType(
                     StructType(
                         fields = mapOf(
-                            "breed_descriptor" to StaticType.STRING.asNullable(),
+                            "breed_descriptor" to StaticType.STRING,
                         ),
                         contentClosed = true,
                         constraints = setOf(
@@ -2459,24 +2447,19 @@ class PlanTyperTestsPorted {
                 expected = StaticType.INT8
             ),
             SuccessTestCase(
-                key = PartiQLTest.Key("basics", "case-when-08"),
-                catalog = "pql",
-                expected = unionOf(StaticType.INT, StaticType.NULL),
-            ),
-            SuccessTestCase(
                 key = PartiQLTest.Key("basics", "case-when-09"),
                 catalog = "pql",
-                expected = unionOf(StaticType.INT, StaticType.NULL),
+                expected = StaticType.INT,
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "case-when-10"),
                 catalog = "pql",
-                expected = unionOf(StaticType.DECIMAL, StaticType.NULL),
+                expected = StaticType.DECIMAL,
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "case-when-11"),
                 catalog = "pql",
-                expected = unionOf(StaticType.INT, StaticType.MISSING),
+                expected = StaticType.INT,
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "case-when-12"),
@@ -2486,7 +2469,7 @@ class PlanTyperTestsPorted {
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "case-when-13"),
                 catalog = "pql",
-                expected = unionOf(StaticType.FLOAT, StaticType.NULL),
+                expected = StaticType.FLOAT,
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "case-when-14"),
@@ -2496,7 +2479,7 @@ class PlanTyperTestsPorted {
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "case-when-15"),
                 catalog = "pql",
-                expected = unionOf(StaticType.STRING, StaticType.NULL),
+                expected = StaticType.STRING,
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "case-when-16"),
@@ -2506,37 +2489,27 @@ class PlanTyperTestsPorted {
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "case-when-17"),
                 catalog = "pql",
-                expected = unionOf(StaticType.CLOB, StaticType.NULL),
+                expected = StaticType.CLOB,
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "case-when-18"),
                 catalog = "pql",
-                expected = unionOf(StaticType.STRING, StaticType.NULL),
+                expected = StaticType.STRING,
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "case-when-19"),
                 catalog = "pql",
-                expected = unionOf(StaticType.STRING, StaticType.NULL),
+                expected = StaticType.STRING,
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "case-when-20"),
                 catalog = "pql",
-                expected = StaticType.NULL,
+                expected = StaticType.ANY,
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "case-when-21"),
                 catalog = "pql",
-                expected = unionOf(StaticType.STRING, StaticType.NULL),
-            ),
-            SuccessTestCase(
-                key = PartiQLTest.Key("basics", "case-when-22"),
-                catalog = "pql",
-                expected = unionOf(StaticType.INT4, StaticType.NULL, StaticType.MISSING),
-            ),
-            SuccessTestCase(
-                key = PartiQLTest.Key("basics", "case-when-23"),
-                catalog = "pql",
-                expected = StaticType.INT4,
+                expected = StaticType.STRING,
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "case-when-24"),
@@ -2546,12 +2519,12 @@ class PlanTyperTestsPorted {
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "case-when-25"),
                 catalog = "pql",
-                expected = unionOf(StaticType.INT4, StaticType.INT8, StaticType.STRING, StaticType.NULL),
+                expected = unionOf(StaticType.INT4, StaticType.INT8, StaticType.STRING),
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "case-when-26"),
                 catalog = "pql",
-                expected = unionOf(StaticType.INT4, StaticType.INT8, StaticType.STRING, StaticType.NULL),
+                expected = unionOf(StaticType.INT4, StaticType.INT8, StaticType.STRING),
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "case-when-27"),
@@ -2561,7 +2534,7 @@ class PlanTyperTestsPorted {
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "case-when-28"),
                 catalog = "pql",
-                expected = unionOf(StaticType.INT2, StaticType.INT4, StaticType.INT8, StaticType.INT, StaticType.DECIMAL, StaticType.STRING, StaticType.CLOB, StaticType.NULL),
+                expected = unionOf(StaticType.INT2, StaticType.INT4, StaticType.INT8, StaticType.INT, StaticType.DECIMAL, StaticType.STRING, StaticType.CLOB),
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "case-when-29"),
@@ -2579,13 +2552,12 @@ class PlanTyperTestsPorted {
                             StructType.Field("y", StaticType.INT8),
                         ),
                     ),
-                    StaticType.NULL,
                 ),
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "case-when-30"),
                 catalog = "pql",
-                expected = MISSING
+                expected = ANY
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "case-when-31"),
@@ -2614,92 +2586,87 @@ class PlanTyperTestsPorted {
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "nullif-00"),
                 catalog = "pql",
-                expected = StaticType.INT4.asNullable()
+                expected = StaticType.INT4
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "nullif-01"),
                 catalog = "pql",
-                expected = StaticType.INT4.asNullable()
+                expected = StaticType.INT4
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "nullif-02"),
                 catalog = "pql",
-                expected = StaticType.INT4.asNullable()
+                expected = StaticType.INT4
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "nullif-03"),
                 catalog = "pql",
-                expected = StaticType.INT4.asNullable()
+                expected = StaticType.INT4
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "nullif-04"),
                 catalog = "pql",
-                expected = StaticType.INT8.asNullable()
+                expected = StaticType.INT8
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "nullif-05"),
                 catalog = "pql",
-                expected = StaticType.INT4.asNullable()
+                expected = StaticType.INT4
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "nullif-06"),
                 catalog = "pql",
-                expected = StaticType.NULL
+                expected = ANY
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "nullif-07"),
                 catalog = "pql",
-                expected = StaticType.INT4.asNullable()
+                expected = StaticType.INT4
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "nullif-08"),
                 catalog = "pql",
-                expected = StaticType.NULL_OR_MISSING
+                expected = ANY
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "nullif-09"),
                 catalog = "pql",
-                expected = StaticType.INT4.asNullable()
-            ),
-            SuccessTestCase(
-                key = PartiQLTest.Key("basics", "nullif-10"),
-                catalog = "pql",
-                expected = StaticType.INT4.asNullable()
+                expected = StaticType.INT4
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "nullif-11"),
                 catalog = "pql",
-                expected = StaticType.INT4.asNullable()
+                expected = StaticType.INT4
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "nullif-12"),
                 catalog = "pql",
-                expected = StaticType.INT8.asNullable()
+                expected = StaticType.INT8
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "nullif-13"),
                 catalog = "pql",
-                expected = StaticType.INT4.asNullable()
+                expected = StaticType.INT4
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "nullif-14"),
                 catalog = "pql",
-                expected = StaticType.STRING.asNullable()
+                expected = StaticType.STRING
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "nullif-15"),
                 catalog = "pql",
-                expected = StaticType.INT4.asNullable()
+                expected = StaticType.INT4
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "nullif-16"),
                 catalog = "pql",
-                expected = unionOf(StaticType.INT2, StaticType.INT4, StaticType.INT8, StaticType.INT, StaticType.DECIMAL, StaticType.NULL)
+                expected = unionOf(StaticType.INT2, StaticType.INT4, StaticType.INT8, StaticType.INT, StaticType.DECIMAL)
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "nullif-17"),
                 catalog = "pql",
-                expected = StaticType.INT4.asNullable()
+                expected = StaticType.INT4
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "nullif-18"),
@@ -2728,17 +2695,17 @@ class PlanTyperTestsPorted {
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "coalesce-03"),
                 catalog = "pql",
-                expected = unionOf(StaticType.NULL, StaticType.DECIMAL)
+                expected = StaticType.DECIMAL
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "coalesce-04"),
                 catalog = "pql",
-                expected = unionOf(StaticType.NULL, StaticType.MISSING, StaticType.DECIMAL)
+                expected = StaticType.DECIMAL
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "coalesce-05"),
                 catalog = "pql",
-                expected = unionOf(StaticType.NULL, StaticType.MISSING, StaticType.DECIMAL)
+                expected = StaticType.DECIMAL
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "coalesce-06"),
@@ -2758,12 +2725,12 @@ class PlanTyperTestsPorted {
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "coalesce-09"),
                 catalog = "pql",
-                expected = StaticType.INT8.asNullable()
+                expected = StaticType.INT8
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "coalesce-10"),
                 catalog = "pql",
-                expected = unionOf(StaticType.INT8, StaticType.NULL, StaticType.MISSING)
+                expected = INT8
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "coalesce-11"),
@@ -2773,7 +2740,7 @@ class PlanTyperTestsPorted {
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "coalesce-12"),
                 catalog = "pql",
-                expected = unionOf(StaticType.INT8, StaticType.NULL, StaticType.STRING)
+                expected = unionOf(StaticType.INT8, StaticType.STRING)
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "coalesce-13"),
@@ -2788,7 +2755,7 @@ class PlanTyperTestsPorted {
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "coalesce-15"),
                 catalog = "pql",
-                expected = unionOf(StaticType.INT2, StaticType.INT4, StaticType.INT8, StaticType.INT, StaticType.DECIMAL, StaticType.STRING, StaticType.NULL)
+                expected = unionOf(StaticType.INT2, StaticType.INT4, StaticType.INT8, StaticType.INT, StaticType.DECIMAL, StaticType.STRING)
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "coalesce-16"),
@@ -2962,7 +2929,7 @@ class PlanTyperTestsPorted {
                 query = """
                     { 'aBc': 1, 'AbC': 2.0 }['Ab' || 'C'];
                 """,
-                expected = StaticType.MISSING,
+                expected = ANY,
                 problemHandler = assertProblemExists {
                     Problem(
                         sourceLocation = UNKNOWN_PROBLEM_LOCATION,
@@ -3085,9 +3052,9 @@ class PlanTyperTestsPorted {
                             "a" to StaticType.INT4,
                             "_1" to StaticType.INT8,
                             "_2" to StaticType.INT8,
-                            "_3" to StaticType.INT4.asNullable(),
-                            "_4" to StaticType.INT4.asNullable(),
-                            "_5" to StaticType.INT4.asNullable(),
+                            "_3" to StaticType.INT4,
+                            "_4" to StaticType.INT4,
+                            "_5" to StaticType.INT4,
                         ),
                         contentClosed = true,
                         constraints = setOf(
@@ -3107,8 +3074,8 @@ class PlanTyperTestsPorted {
                             "a" to StaticType.INT4,
                             "c_s" to StaticType.INT8,
                             "c" to StaticType.INT8,
-                            "s" to StaticType.INT4.asNullable(),
-                            "m" to StaticType.INT4.asNullable(),
+                            "s" to StaticType.INT4,
+                            "m" to StaticType.INT4,
                         ),
                         contentClosed = true,
                         constraints = setOf(
@@ -3127,55 +3094,8 @@ class PlanTyperTestsPorted {
                         fields = mapOf(
                             "a" to StaticType.DECIMAL,
                             "c" to StaticType.INT8,
-                            "s" to StaticType.DECIMAL.asNullable(),
-                            "m" to StaticType.DECIMAL.asNullable(),
-                        ),
-                        contentClosed = true,
-                        constraints = setOf(
-                            TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(true),
-                            TupleConstraint.Ordered
-                        )
-                    )
-                )
-            ),
-            SuccessTestCase(
-                name = "AGGREGATE over nullable integers",
-                query = """
-                    SELECT
-                        a AS a,
-                        COUNT(*) AS count_star,
-                        COUNT(a) AS count_a,
-                        COUNT(b) AS count_b,
-                        SUM(a) AS sum_a,
-                        SUM(b) AS sum_b,
-                        MIN(a) AS min_a,
-                        MIN(b) AS min_b,
-                        MAX(a) AS max_a,
-                        MAX(b) AS max_b,
-                        AVG(a) AS avg_a,
-                        AVG(b) AS avg_b
-                    FROM <<
-                        { 'a': 1, 'b': 2 },
-                        { 'a': 3, 'b': 4 },
-                        { 'a': 5, 'b': NULL }
-                    >> GROUP BY a
-                """.trimIndent(),
-                expected = BagType(
-                    StructType(
-                        fields = mapOf(
-                            "a" to StaticType.INT4,
-                            "count_star" to StaticType.INT8,
-                            "count_a" to StaticType.INT8,
-                            "count_b" to StaticType.INT8,
-                            "sum_a" to StaticType.INT4.asNullable(),
-                            "sum_b" to StaticType.INT4.asNullable(),
-                            "min_a" to StaticType.INT4.asNullable(),
-                            "min_b" to StaticType.INT4.asNullable(),
-                            "max_a" to StaticType.INT4.asNullable(),
-                            "max_b" to StaticType.INT4.asNullable(),
-                            "avg_a" to StaticType.INT4.asNullable(),
-                            "avg_b" to StaticType.INT4.asNullable(),
+                            "s" to StaticType.DECIMAL,
+                            "m" to StaticType.DECIMAL,
                         ),
                         contentClosed = true,
                         constraints = setOf(
@@ -3262,7 +3182,7 @@ class PlanTyperTestsPorted {
                 expected = BagType(
                     StructType(
                         fields = mapOf(
-                            "a" to StaticType.unionOf(StaticType.INT4, StaticType.INT8, StaticType.MISSING),
+                            "a" to StaticType.unionOf(StaticType.INT4, StaticType.INT8),
                         ),
                         contentClosed = true,
                         constraints = setOf(
@@ -3286,7 +3206,7 @@ class PlanTyperTestsPorted {
                 expected = BagType(
                     StructType(
                         fields = mapOf(
-                            "a" to StaticType.unionOf(StaticType.INT4, StaticType.INT8, StaticType.MISSING),
+                            "a" to StaticType.unionOf(StaticType.INT4, StaticType.INT8),
                         ),
                         contentClosed = true,
                         constraints = setOf(
@@ -3310,7 +3230,7 @@ class PlanTyperTestsPorted {
                 expected = BagType(
                     StructType(
                         fields = mapOf(
-                            "c" to StaticType.unionOf(StaticType.MISSING, StaticType.DECIMAL),
+                            "c" to StaticType.DECIMAL,
                         ),
                         contentClosed = true,
                         constraints = setOf(
@@ -3332,7 +3252,7 @@ class PlanTyperTestsPorted {
                         { 'a': 'hello world!'  }
                     >> AS t
                 """.trimIndent(),
-                expected = BagType(StaticType.MISSING),
+                expected = BagType(ANY),
                 problemHandler = assertProblemExists {
                     Problem(
                         sourceLocation = UNKNOWN_PROBLEM_LOCATION,
@@ -3355,7 +3275,7 @@ class PlanTyperTestsPorted {
                         { 'a': <<>> }
                     >> AS t
                 """.trimIndent(),
-                expected = BagType(StaticType.MISSING),
+                expected = BagType(ANY),
                 problemHandler = assertProblemExists {
                     Problem(
                         sourceLocation = UNKNOWN_PROBLEM_LOCATION,
@@ -3377,14 +3297,11 @@ class PlanTyperTestsPorted {
                         { 'NOT_A': 1 }
                     >> AS t
                 """.trimIndent(),
-                expected = BagType(StaticType.MISSING),
+                expected = BagType(unionOf(StaticType.INT2, INT4, INT8, INT, StaticType.FLOAT, StaticType.DECIMAL)),
                 problemHandler = assertProblemExists {
                     Problem(
                         sourceLocation = UNKNOWN_PROBLEM_LOCATION,
-                        details = PlanningProblemDetails.UnknownFunction(
-                            "pos",
-                            listOf(StaticType.MISSING)
-                        )
+                        details = PlanningProblemDetails.ExpressionAlwaysReturnsNullOrMissing
                     )
                 }
             ),
@@ -3505,14 +3422,14 @@ class PlanTyperTestsPorted {
                         "count_star" to StaticType.INT8,
                         "count_a" to StaticType.INT8,
                         "count_b" to StaticType.INT8,
-                        "sum_a" to StaticType.DECIMAL.asNullable(),
-                        "sum_b" to StaticType.DECIMAL.asNullable(),
-                        "min_a" to StaticType.DECIMAL.asNullable(),
-                        "min_b" to StaticType.DECIMAL.asNullable(),
-                        "max_a" to StaticType.DECIMAL.asNullable(),
-                        "max_b" to StaticType.DECIMAL.asNullable(),
-                        "avg_a" to StaticType.DECIMAL.asNullable(),
-                        "avg_b" to StaticType.DECIMAL.asNullable(),
+                        "sum_a" to StaticType.DECIMAL,
+                        "sum_b" to StaticType.DECIMAL,
+                        "min_a" to StaticType.DECIMAL,
+                        "min_b" to StaticType.DECIMAL,
+                        "max_a" to StaticType.DECIMAL,
+                        "max_b" to StaticType.DECIMAL,
+                        "avg_a" to StaticType.DECIMAL,
+                        "avg_b" to StaticType.DECIMAL,
                     ),
                     contentClosed = true,
                     constraints = setOf(
@@ -4052,7 +3969,7 @@ class PlanTyperTestsPorted {
                 catalog = CATALOG_DB,
                 catalogPath = DB_SCHEMA_MARKETS,
                 query = "order_info.customer_id IN 'hello'",
-                expected = StaticType.MISSING,
+                expected = ANY,
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
@@ -4075,7 +3992,7 @@ class PlanTyperTestsPorted {
                 catalog = CATALOG_DB,
                 catalogPath = DB_SCHEMA_MARKETS,
                 query = "order_info.customer_id BETWEEN 1 AND 'a'",
-                expected = StaticType.MISSING,
+                expected = ANY,
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
@@ -4102,7 +4019,7 @@ class PlanTyperTestsPorted {
                 catalog = CATALOG_DB,
                 catalogPath = DB_SCHEMA_MARKETS,
                 query = "order_info.ship_option LIKE 3",
-                expected = StaticType.MISSING,
+                expected = ANY,
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
@@ -4126,7 +4043,7 @@ class PlanTyperTestsPorted {
                 catalog = CATALOG_DB,
                 catalogPath = DB_SCHEMA_MARKETS,
                 query = "order_info.\"CUSTOMER_ID\" = 1",
-                expected = StaticType.NULL
+                expected = StaticType.BOOL
             ),
             SuccessTestCase(
                 name = "Case Sensitive success",
@@ -4140,14 +4057,14 @@ class PlanTyperTestsPorted {
                 catalog = CATALOG_DB,
                 catalogPath = DB_SCHEMA_MARKETS,
                 query = "(order_info.customer_id = 1) AND (order_info.marketplace_id = 2)",
-                expected = StaticType.unionOf(StaticType.BOOL, StaticType.NULL)
+                expected = StaticType.BOOL
             ),
             SuccessTestCase(
                 name = "2-Level Junction",
                 catalog = CATALOG_DB,
                 catalogPath = DB_SCHEMA_MARKETS,
                 query = "(order_info.customer_id = 1) AND (order_info.marketplace_id = 2) OR (order_info.customer_id = 3) AND (order_info.marketplace_id = 4)",
-                expected = StaticType.unionOf(StaticType.BOOL, StaticType.NULL)
+                expected = StaticType.BOOL
             ),
             SuccessTestCase(
                 name = "INT and STR Comparison",
@@ -4163,7 +4080,7 @@ class PlanTyperTestsPorted {
                 query = "non_existing_column = 1",
                 // Function resolves to EQ__ANY_ANY__BOOL
                 // Which can return BOOL Or NULL
-                expected = StaticType.unionOf(StaticType.BOOL, StaticType.NULL),
+                expected = StaticType.BOOL,
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
@@ -4176,7 +4093,7 @@ class PlanTyperTestsPorted {
                 catalog = CATALOG_DB,
                 catalogPath = DB_SCHEMA_MARKETS,
                 query = "order_info.customer_id = 1 AND 1",
-                expected = StaticType.MISSING,
+                expected = ANY,
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
@@ -4192,7 +4109,7 @@ class PlanTyperTestsPorted {
                 catalog = CATALOG_DB,
                 catalogPath = DB_SCHEMA_MARKETS,
                 query = "1 AND order_info.customer_id = 1",
-                expected = StaticType.MISSING,
+                expected = ANY,
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,
@@ -4273,7 +4190,7 @@ class PlanTyperTestsPorted {
                 query = "SELECT CAST(breed AS INT) AS cast_breed FROM pets",
                 expected = BagType(
                     StructType(
-                        fields = mapOf("cast_breed" to StaticType.unionOf(StaticType.INT, StaticType.MISSING)),
+                        fields = mapOf("cast_breed" to StaticType.INT),
                         contentClosed = true,
                         constraints = setOf(
                             TupleConstraint.Open(false),
@@ -4394,7 +4311,7 @@ class PlanTyperTestsPorted {
             SuccessTestCase(
                 name = "Current User",
                 query = "CURRENT_USER",
-                expected = StaticType.unionOf(StaticType.STRING, StaticType.NULL)
+                expected = StaticType.STRING
             ),
             SuccessTestCase(
                 name = "Trim",
@@ -4404,7 +4321,7 @@ class PlanTyperTestsPorted {
             SuccessTestCase(
                 name = "Current User Concat",
                 query = "CURRENT_USER || 'hello'",
-                expected = StaticType.unionOf(StaticType.STRING, StaticType.NULL)
+                expected = StaticType.STRING
             ),
             SuccessTestCase(
                 name = "Current User Concat in WHERE",
@@ -4429,7 +4346,7 @@ class PlanTyperTestsPorted {
             ErrorTestCase(
                 name = "TRIM_2_error",
                 query = "trim(2 FROM ' Hello, World! ')",
-                expected = StaticType.MISSING,
+                expected = ANY,
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_PROBLEM_LOCATION,

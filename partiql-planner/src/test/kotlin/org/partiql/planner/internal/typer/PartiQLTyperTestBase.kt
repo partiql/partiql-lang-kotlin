@@ -99,9 +99,9 @@ abstract class PartiQLTyperTestBase {
                             val result = testingPipeline(statement, testName, metadata, pc)
                             val root = (result.plan.statement as Statement.Query).root
                             val actualType = root.type
-                            assert(actualType == StaticType.MISSING) {
+                            assert(actualType == StaticType.ANY) {
                                 buildString {
-                                    this.appendLine(" expected Type is : MISSING")
+                                    this.appendLine(" expected Type is : ANY")
                                     this.appendLine("actual Type is : $actualType")
                                     PlanPrinter.append(this, result.plan)
                                 }

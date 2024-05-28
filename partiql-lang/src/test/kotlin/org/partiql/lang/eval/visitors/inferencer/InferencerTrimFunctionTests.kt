@@ -1,5 +1,6 @@
 package org.partiql.lang.eval.visitors.inferencer
 
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.lang.eval.visitors.inferencer.InferencerTestUtil.TestCase
@@ -10,6 +11,7 @@ import org.partiql.types.StaticType
 class InferencerTrimFunctionTests {
     @ParameterizedTest
     @MethodSource("parametersForTrimFunctionTests")
+    @Disabled("StaticType.ALL_TYPES no longer supports NULL/MISSING")
     fun trimFunctionTests(tc: TestCase) = runTest(tc)
 
     companion object {
