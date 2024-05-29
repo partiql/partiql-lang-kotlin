@@ -74,6 +74,8 @@ private class Ctx
 private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisitor<PartiqlAst.PartiqlAstNode, Ctx>() {
 
     private val pig = PartiqlAst.BUILDER()
+    // Currently hard-coded in legacy code
+    private val aggregates = setOf("count", "avg", "sum", "min", "max", "any", "some", "every")
 
     override fun defaultReturn(node: AstNode, ctx: Ctx): Nothing {
         val fromClass = node::class.qualifiedName
@@ -331,7 +333,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
     private fun String.isAggregateCall(): Boolean {
         // like PartiQLPigVisitor, keep legacy behavior the same as before
         // since it is legacy, hard-coded aggregation logic
-        return listOf("count", "avg", "sum", "min", "max", "any", "some", "every").contains(this)
+        return aggregates.contains(this)
     }
 
     override fun visitExprUnary(node: Expr.Unary, ctx: Ctx) = translate(node) { metas ->

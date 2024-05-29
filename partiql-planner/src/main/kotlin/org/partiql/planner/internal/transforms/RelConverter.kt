@@ -592,6 +592,9 @@ internal object RelConverter {
      * Rewrites a SELECT node replacing (and extracting) each aggregation `i` with a synthetic field name `$agg_i`.
      */
     private object AggregationTransform : AstRewriter<AggregationTransform.Context>() {
+        // currently hard-coded
+        @JvmStatic
+        private val aggregates = setOf("count", "avg", "sum", "min", "max", "any", "some", "every")
 
         private data class Context(
             val aggregations: MutableList<Expr.Call>,
@@ -634,8 +637,7 @@ internal object RelConverter {
         }
 
         private fun String.isAggregateCall(): Boolean {
-            // currently hard-coded
-            return listOf("count", "avg", "sum", "min", "max", "any", "some", "every").contains(this)
+            return aggregates.contains(this)
         }
 
         private fun Identifier.isAggregateCall(): Boolean {
