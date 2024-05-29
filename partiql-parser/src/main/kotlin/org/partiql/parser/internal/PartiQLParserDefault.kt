@@ -183,7 +183,6 @@ import org.partiql.ast.typeDate
 import org.partiql.ast.typeDecimal
 import org.partiql.ast.typeFloat32
 import org.partiql.ast.typeFloat64
-import org.partiql.ast.typeInt
 import org.partiql.ast.typeInt2
 import org.partiql.ast.typeInt4
 import org.partiql.ast.typeInt8
@@ -2051,9 +2050,10 @@ internal class PartiQLParserDefault : PartiQLParser {
                 GeneratedParser.NULL -> typeNullType()
                 GeneratedParser.BOOL, GeneratedParser.BOOLEAN -> typeBool()
                 GeneratedParser.SMALLINT, GeneratedParser.INT2, GeneratedParser.INTEGER2 -> typeInt2()
+                // TODO, we have INT aliased to INT4 when it should be visa-versa.
                 GeneratedParser.INT4, GeneratedParser.INTEGER4 -> typeInt4()
+                GeneratedParser.INT, GeneratedParser.INTEGER -> typeInt4()
                 GeneratedParser.BIGINT, GeneratedParser.INT8, GeneratedParser.INTEGER8 -> typeInt8()
-                GeneratedParser.INT, GeneratedParser.INTEGER -> typeInt()
                 GeneratedParser.FLOAT -> typeFloat32()
                 GeneratedParser.DOUBLE -> typeFloat64()
                 GeneratedParser.REAL -> typeReal()

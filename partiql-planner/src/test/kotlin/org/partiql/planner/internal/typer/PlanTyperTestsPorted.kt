@@ -496,7 +496,7 @@ class PlanTyperTestsPorted {
                 name = "DECIMAL AS INT",
                 key = key("cast-03"),
                 catalog = "pql",
-                expected = StaticType.INT,
+                expected = StaticType.INT4,
             ),
             SuccessTestCase(
                 name = "DECIMAL AS BIGINT",
@@ -2459,7 +2459,7 @@ class PlanTyperTestsPorted {
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "case-when-11"),
                 catalog = "pql",
-                expected = StaticType.INT,
+                expected = StaticType.INT4,
             ),
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "case-when-12"),
@@ -4190,7 +4190,7 @@ class PlanTyperTestsPorted {
                 query = "SELECT CAST(breed AS INT) AS cast_breed FROM pets",
                 expected = BagType(
                     StructType(
-                        fields = mapOf("cast_breed" to StaticType.INT),
+                        fields = mapOf("cast_breed" to StaticType.INT4),
                         contentClosed = true,
                         constraints = setOf(
                             TupleConstraint.Open(false),
