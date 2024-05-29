@@ -208,7 +208,7 @@ import org.partiql.parser.PartiQLParserException
 import org.partiql.parser.PartiQLSyntaxException
 import org.partiql.parser.SourceLocation
 import org.partiql.parser.SourceLocations
-import org.partiql.parser.antlr.PartiQLBaseVisitor
+import org.partiql.parser.antlr.PartiQLParserBaseVisitor
 import org.partiql.parser.internal.util.DateTimeUtils
 import org.partiql.value.NumericValue
 import org.partiql.value.PartiQLValueExperimental
@@ -422,7 +422,7 @@ internal class PartiQLParserDefault : PartiQLParser {
     private class Visitor(
         private val locations: SourceLocations.Mutable,
         private val parameters: Map<Int, Int> = mapOf(),
-    ) : PartiQLBaseVisitor<AstNode>() {
+    ) : PartiQLParserBaseVisitor<AstNode>() {
 
         companion object {
 
