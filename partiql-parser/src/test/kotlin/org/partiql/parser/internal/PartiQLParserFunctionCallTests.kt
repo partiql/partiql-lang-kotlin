@@ -22,7 +22,8 @@ class PartiQLParserFunctionCallTests {
         query {
             exprCall(
                 function = identifierSymbol("foo", Identifier.CaseSensitivity.INSENSITIVE),
-                args = emptyList()
+                args = emptyList(),
+                setq = null
             )
         }
     )
@@ -33,7 +34,8 @@ class PartiQLParserFunctionCallTests {
         query {
             exprCall(
                 function = identifierSymbol("foo", Identifier.CaseSensitivity.SENSITIVE),
-                args = emptyList()
+                args = emptyList(),
+                setq = null
             )
         }
     )
@@ -44,7 +46,8 @@ class PartiQLParserFunctionCallTests {
         query {
             exprCall(
                 function = identifierSymbol("upper", Identifier.CaseSensitivity.INSENSITIVE),
-                args = emptyList()
+                args = emptyList(),
+                setq = null
             )
         }
     )
@@ -55,7 +58,8 @@ class PartiQLParserFunctionCallTests {
         query {
             exprCall(
                 function = identifierSymbol("upper", Identifier.CaseSensitivity.SENSITIVE),
-                args = emptyList()
+                args = emptyList(),
+                setq = null
             )
         }
     )
@@ -72,7 +76,8 @@ class PartiQLParserFunctionCallTests {
                         identifierSymbol("foo", Identifier.CaseSensitivity.INSENSITIVE),
                     )
                 ),
-                args = emptyList()
+                args = emptyList(),
+                setq = null
             )
         }
     )
@@ -89,7 +94,8 @@ class PartiQLParserFunctionCallTests {
                         identifierSymbol("foo", Identifier.CaseSensitivity.SENSITIVE),
                     )
                 ),
-                args = emptyList()
+                args = emptyList(),
+                setq = null
             )
         }
     )
@@ -106,7 +112,8 @@ class PartiQLParserFunctionCallTests {
                         identifierSymbol("upper", Identifier.CaseSensitivity.INSENSITIVE),
                     )
                 ),
-                args = emptyList()
+                args = emptyList(),
+                setq = null
             )
         }
     )
@@ -123,7 +130,8 @@ class PartiQLParserFunctionCallTests {
                         identifierSymbol("upper", Identifier.CaseSensitivity.SENSITIVE),
                     )
                 ),
-                args = emptyList()
+                args = emptyList(),
+                setq = null
             )
         }
     )

@@ -305,16 +305,9 @@ public abstract class SqlDialect : AstBaseVisitor<SqlBlock, SqlBlock>() {
 
     override fun visitExprCall(node: Expr.Call, head: SqlBlock): SqlBlock {
         var h = head
-        h = visitIdentifier(node.function, h)
-        h = h concat list { node.args }
-        return h
-    }
-
-    override fun visitExprAgg(node: Expr.Agg, head: SqlBlock): SqlBlock {
-        var h = head
         val f = node.function
-        // Special case
-        if (f is Identifier.Symbol && f.symbol == "COUNT_STAR") {
+        // Special case -- COUNT() maps to COUNT(*)
+        if (f is Identifier.Symbol && f.symbol == "COUNT" && node.args.isEmpty()) {
             return h concat r("COUNT(*)")
         }
         val start = if (node.setq != null) "(${node.setq.name} " else "("

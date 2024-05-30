@@ -1325,16 +1325,48 @@ internal class PartiQLPigVisitor(
         canLosslessCast(expr, type, metas)
     }
 
-    override fun visitFunctionCall(ctx: PartiQLParser.FunctionCallContext) = PartiqlAst.build {
+    override fun visitFunctionCall(ctx: PartiQLParser.FunctionCallContext): PartiqlAst.Expr = PartiqlAst.build {
         val nameCtx = ctx.qualifiedName()
         val name = if (nameCtx.qualifier.isNotEmpty()) {
             error("Legacy AST does not support qualified function names")
         } else {
             nameCtx.name.getString().lowercase()
         }
-        val args = ctx.expr().map { visitExpr(it) }
-        val metas = ctx.start.getSourceMetaContainer()
-        call(name, args = args, metas = metas)
+        // COUNT(*) turns into COUNT(1) in legacy PIG AST
+        if (ctx.ASTERISK() != null) {
+            if (name == "count") {
+                return@build callAgg(
+                    all(),
+                    name,
+                    lit(ionInt(1)),
+                    nameCtx.name.getSourceMetaContainer() + metaContainerOf(IsCountStarMeta.instance)
+                )
+            } else {
+                // Do not permit wildcard for other functions; matches existing behavior
+                error("Given wildcard as argument for non-COUNT function")
+            }
+        }
+        if (!name.isAggregateCall()) {
+            // Scalar fn call
+            val args = ctx.expr().map { visitExpr(it) }
+            val metas = ctx.start.getSourceMetaContainer()
+            return@build call(name, args = args, metas = metas)
+        }
+        // Aggregate fn call
+        val strategy = getStrategy(ctx.setQuantifierStrategy(), default = all())
+        val args = ctx.expr()
+        if (args.size != 1) {
+            error("expect only one argument to aggregate function call")
+        }
+        val arg = visitExpr(args.first())
+        val metas = nameCtx.name.getSourceMetaContainer()
+        return@build callAgg(strategy, name, arg, metas)
+    }
+
+    private fun String.isAggregateCall(): Boolean {
+        // keep legacy PIG parser behavior + PIG AST the same as before
+        // since it is legacy, we will keep this hard-coded aggregation logic
+        return listOf("count", "avg", "sum", "min", "max", "any", "some", "every").contains(this)
     }
 
     override fun visitDateFunction(ctx: PartiQLParser.DateFunctionContext) = PartiqlAst.build {
@@ -1364,15 +1396,6 @@ internal class PartiQLPigVisitor(
         val args = ctx.expr().map { visitExpr(it) }
         val metas = ctx.OVERLAY().getSourceMetaContainer()
         call(ctx.OVERLAY().text.lowercase(), args, metas)
-    }
-
-    override fun visitCountAll(ctx: PartiQLParser.CountAllContext) = PartiqlAst.build {
-        callAgg(
-            all(),
-            ctx.func.text.lowercase(),
-            lit(ionInt(1)),
-            ctx.COUNT().getSourceMetaContainer() + metaContainerOf(IsCountStarMeta.instance)
-        )
     }
 
     override fun visitExtract(ctx: PartiQLParser.ExtractContext) = PartiqlAst.build {
@@ -1430,13 +1453,6 @@ internal class PartiQLPigVisitor(
         val args = listOfNotNull(modifier, substring, target)
         val metas = ctx.func.getSourceMetaContainer()
         call(ctx.func.text.lowercase(), args, metas)
-    }
-
-    override fun visitAggregateBase(ctx: PartiQLParser.AggregateBaseContext) = PartiqlAst.build {
-        val strategy = getStrategy(ctx.setQuantifierStrategy(), default = all())
-        val arg = visitExpr(ctx.expr())
-        val metas = ctx.func.getSourceMetaContainer()
-        callAgg(strategy, ctx.func.text.lowercase(), arg, metas)
     }
 
     /**

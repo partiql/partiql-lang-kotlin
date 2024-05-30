@@ -13,7 +13,7 @@ import org.partiql.value.PartiQLValueType.ANY
 import org.partiql.value.PartiQLValueType.INT64
 
 @OptIn(PartiQLValueExperimental::class, FnExperimental::class)
-public object Agg_COUNT__ANY__INT32 : Agg {
+public object Agg_COUNT__ANY__INT64 : Agg {
 
     override val signature: AggSignature = AggSignature(
         name = "count",

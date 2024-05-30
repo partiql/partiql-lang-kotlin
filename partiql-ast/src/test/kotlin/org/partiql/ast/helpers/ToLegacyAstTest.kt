@@ -254,29 +254,30 @@ class ToLegacyAstTest {
                     args += NULL
                 }
             },
-            expect("(call_agg (all) 'a' (lit null))") {
-                exprAgg {
+            expect("(call 'a' (lit null))") {
+                exprCall {
                     function = id("a")
                     args += NULL
                 }
             },
             expect("(call_agg (all) 'a' (lit null))") {
-                exprAgg {
+                exprCall {
                     setq = SetQuantifier.ALL
                     function = id("a")
                     args += NULL
                 }
             },
             expect("(call_agg (distinct) 'a' (lit null))") {
-                exprAgg {
+                exprCall {
                     setq = SetQuantifier.DISTINCT
                     function = id("a")
                     args += NULL
                 }
             },
             fail("Cannot translate `call_agg` with more than one argument") {
-                exprAgg {
+                exprCall {
                     function = id("a")
+                    setq = SetQuantifier.DISTINCT // define a setq for legacy ast test to force `call_agg` logic
                     args += listOf(NULL, NULL)
                 }
             },

@@ -74,6 +74,8 @@ private class Ctx
 private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisitor<PartiqlAst.PartiqlAstNode, Ctx>() {
 
     private val pig = PartiqlAst.BUILDER()
+    // Currently hard-coded in legacy code
+    private val aggregates = setOf("count", "avg", "sum", "min", "max", "any", "some", "every")
 
     override fun defaultReturn(node: AstNode, ctx: Ctx): Nothing {
         val fromClass = node::class.qualifiedName
@@ -309,26 +311,29 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
         }
         val funcName = (node.function as Identifier.Symbol).symbol.lowercase()
         val args = node.args.translate<PartiqlAst.Expr>(ctx)
-        call(funcName, args, metas)
+        when (funcName.isAggregateCall() || node.setq != null) { // Use existing assumption that function call with set quantifier is an aggregation function
+            true -> {
+                val setq = node.setq?.toLegacySetQuantifier() ?: all()
+                // COUNT(*) is represented as COUNT() in default AST
+                // Legacy AST translates COUNT(*) to COUNT(1)
+                if (funcName == "count" && args.isEmpty()) {
+                    return callAgg(setq, "count", lit(ionInt(1)), metas)
+                }
+                // Default Case
+                if (node.args.size != 1) {
+                    error("Cannot translate `call_agg` with more than one argument")
+                }
+                val arg = visitExpr(node.args[0], ctx)
+                callAgg(setq, funcName, arg, metas)
+            }
+            false -> call(funcName, args, metas)
+        }
     }
 
-    override fun visitExprAgg(node: Expr.Agg, ctx: Ctx) = translate(node) { metas ->
-        val setq = node.setq?.toLegacySetQuantifier() ?: all()
-        // Legacy AST translates COUNT(*) to COUNT(1)
-        if (node.function is Identifier.Symbol && (node.function as Identifier.Symbol).symbol == "COUNT_STAR") {
-            return callAgg(setq, "count", lit(ionInt(1)), metas)
-        }
-        // Default Case
-        if (node.args.size != 1) {
-            error("Legacy `call_agg` must have exactly one argument")
-        }
-        if (node.function is Identifier.Qualified) {
-            error("Qualified identifiers are not allowed in legacy AST `call_agg` function identifiers")
-        }
-        // Legacy parser/ast always inserts ALL quantifier
-        val funcName = (node.function as Identifier.Symbol).symbol.lowercase()
-        val arg = visitExpr(node.args[0], ctx)
-        callAgg(setq, funcName, arg, metas)
+    private fun String.isAggregateCall(): Boolean {
+        // like PartiQLPigVisitor, keep legacy behavior the same as before
+        // since it is legacy, hard-coded aggregation logic
+        return aggregates.contains(this)
     }
 
     override fun visitExprUnary(node: Expr.Unary, ctx: Ctx) = translate(node) { metas ->

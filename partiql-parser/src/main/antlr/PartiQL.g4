@@ -653,7 +653,6 @@ exprPrimary
     | extract                    # ExprPrimaryBase
     | coalesce                   # ExprPrimaryBase
     | dateFunction               # ExprPrimaryBase
-    | aggregate                  # ExprPrimaryBase
     | trimFunction               # ExprPrimaryBase
     | nullIf                     # ExprPrimaryBase
     | functionCall               # ExprPrimaryBase
@@ -726,11 +725,6 @@ overlay
     | OVERLAY PAREN_LEFT expr PLACING expr FROM expr (FOR expr)? PAREN_RIGHT
     ;
 
-aggregate
-    : func=COUNT PAREN_LEFT ASTERISK PAREN_RIGHT                                        # CountAll
-    | func=(COUNT|MAX|MIN|SUM|AVG|EVERY|ANY|SOME) PAREN_LEFT setQuantifierStrategy? expr PAREN_RIGHT   # AggregateBase
-    ;
-
 // TODO: Remove from experimental once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
 /**
 *
@@ -763,7 +757,8 @@ dateFunction
 
 // SQL-99 10.4 — <routine invocation> ::= <routine name> <SQL argument list>
 functionCall
-    : qualifiedName PAREN_LEFT ( expr ( COMMA expr )* )? PAREN_RIGHT
+    : qualifiedName PAREN_LEFT ASTERISK PAREN_RIGHT
+    | qualifiedName PAREN_LEFT ( setQuantifierStrategy? expr ( COMMA expr )* )? PAREN_RIGHT
     ;
 
 pathStep
@@ -831,6 +826,8 @@ nonReserved
     /* PartiQL */
     | EXCLUDED | EXISTS
     | SIZE
+    /* Other words not in above */
+    | ANY | SOME
     ;
 
 /**

@@ -28,6 +28,7 @@ import org.partiql.ast.SetOp
 import org.partiql.ast.SetQuantifier
 import org.partiql.ast.Sort
 import org.partiql.ast.builder.ast
+import org.partiql.ast.exprLit
 import org.partiql.ast.exprVar
 import org.partiql.ast.helpers.toBinder
 import org.partiql.ast.identifierSymbol
@@ -71,6 +72,7 @@ import org.partiql.planner.internal.ir.rexOpVarLocal
 import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.boolValue
+import org.partiql.value.int32Value
 import org.partiql.value.stringValue
 import org.partiql.planner.internal.ir.Identifier as InternalId
 
@@ -367,12 +369,20 @@ internal object RelConverter {
                     is InternalId.Qualified -> error("Qualified aggregation calls are not supported.")
                     is InternalId.Symbol -> id.symbol.lowercase()
                 }
-                val setq = when (expr.setq) {
-                    null -> Rel.Op.Aggregate.SetQuantifier.ALL
-                    SetQuantifier.ALL -> Rel.Op.Aggregate.SetQuantifier.ALL
-                    SetQuantifier.DISTINCT -> Rel.Op.Aggregate.SetQuantifier.DISTINCT
+                if (name == "count" && expr.args.isEmpty()) {
+                    relOpAggregateCallUnresolved(
+                        name,
+                        Rel.Op.Aggregate.SetQuantifier.ALL,
+                        args = listOf(exprLit(int32Value(1)).toRex(env))
+                    )
+                } else {
+                    val setq = when (expr.setq) {
+                        null -> Rel.Op.Aggregate.SetQuantifier.ALL
+                        SetQuantifier.ALL -> Rel.Op.Aggregate.SetQuantifier.ALL
+                        SetQuantifier.DISTINCT -> Rel.Op.Aggregate.SetQuantifier.DISTINCT
+                    }
+                    relOpAggregateCallUnresolved(name, setq, args)
                 }
-                relOpAggregateCallUnresolved(name, setq, args)
             }.toMutableList()
 
             // Add GROUP_AS aggregation
@@ -582,14 +592,17 @@ internal object RelConverter {
      * Rewrites a SELECT node replacing (and extracting) each aggregation `i` with a synthetic field name `$agg_i`.
      */
     private object AggregationTransform : AstRewriter<AggregationTransform.Context>() {
+        // currently hard-coded
+        @JvmStatic
+        private val aggregates = setOf("count", "avg", "sum", "min", "max", "any", "some", "every")
 
         private data class Context(
-            val aggregations: MutableList<Expr.Agg>,
+            val aggregations: MutableList<Expr.Call>,
             val keys: List<GroupBy.Key>
         )
 
-        fun apply(node: Expr.SFW): Pair<Expr.SFW, List<Expr.Agg>> {
-            val aggs = mutableListOf<Expr.Agg>()
+        fun apply(node: Expr.SFW): Pair<Expr.SFW, List<Expr.Call>> {
+            val aggs = mutableListOf<Expr.Call>()
             val keys = node.groupBy?.keys ?: emptyList()
             val context = Context(aggs, keys)
             val select = super.visitExprSFW(node, context) as Expr.SFW
@@ -607,13 +620,31 @@ internal object RelConverter {
         // only rewrite top-level SFW
         override fun visitExprSFW(node: Expr.SFW, ctx: Context): AstNode = node
 
-        override fun visitExprAgg(node: Expr.Agg, ctx: Context) = ast {
-            val id = identifierSymbol {
-                symbol = syntheticAgg(ctx.aggregations.size)
-                caseSensitivity = org.partiql.ast.Identifier.CaseSensitivity.INSENSITIVE
+        override fun visitExprCall(node: Expr.Call, ctx: Context) = ast {
+            // TODO replace w/ proper function resolution to determine whether a function call is a scalar or aggregate.
+            //  may require further modification of SPI interfaces to support
+            when (node.function.isAggregateCall()) {
+                true -> {
+                    val id = identifierSymbol {
+                        symbol = syntheticAgg(ctx.aggregations.size)
+                        caseSensitivity = org.partiql.ast.Identifier.CaseSensitivity.INSENSITIVE
+                    }
+                    ctx.aggregations += node
+                    exprVar(id, Expr.Var.Scope.DEFAULT)
+                }
+                else -> node
             }
-            ctx.aggregations += node
-            exprVar(id, Expr.Var.Scope.DEFAULT)
+        }
+
+        private fun String.isAggregateCall(): Boolean {
+            return aggregates.contains(this)
+        }
+
+        private fun Identifier.isAggregateCall(): Boolean {
+            return when (this) {
+                is Identifier.Symbol -> this.symbol.lowercase().isAggregateCall()
+                is Identifier.Qualified -> this.steps.last().symbol.lowercase().isAggregateCall()
+            }
         }
     }
 
