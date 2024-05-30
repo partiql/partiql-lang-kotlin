@@ -80,7 +80,7 @@ CASE t_item.t_string
 END;
 
 --#[case-when-11]
--- type: (int|missing)
+-- type: (int4|missing)
 COALESCE(CAST(t_item.t_string AS INT), 1);
 
 -- -----------------------------
