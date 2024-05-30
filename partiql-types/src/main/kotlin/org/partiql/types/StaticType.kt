@@ -691,7 +691,7 @@ public data class StructType(
             return key == other.key && value == other.value && metas == other.metas
         }
 
-        public fun copyWithMetas(key: String = this.key, value: StaticType = this.value, metas: Map<String, Any> = this.metas.toMap()) : Field =
+        public fun copyWithMetas(key: String = this.key, value: StaticType = this.value, metas: Map<String, Any> = this.metas.toMap()): Field =
             Field(key, value, metas)
     }
 
