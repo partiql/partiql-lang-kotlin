@@ -23,8 +23,7 @@ class BagValue implements PQLValue {
     }
 
     @Override
-    @NotNull
-    public Iterator<PQLValue> getBagValues() {
+    public Iterator<PQLValue> iterator() {
         return _value.iterator();
     }
 

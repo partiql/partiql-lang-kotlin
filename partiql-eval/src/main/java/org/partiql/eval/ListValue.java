@@ -3,7 +3,6 @@ package org.partiql.eval;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.value.PartiQLValueType;
 
-import java.util.Collections;
 import java.util.Iterator;
 
 /**
@@ -25,7 +24,7 @@ class ListValue implements PQLValue {
 
     @Override
     @NotNull
-    public Iterator<PQLValue> getListValues() {
+    public Iterator<PQLValue> iterator() {
         return _value.iterator();
     }
 

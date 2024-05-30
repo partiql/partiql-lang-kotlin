@@ -3,7 +3,6 @@ package org.partiql.eval;
 import kotlin.NotImplementedError;
 import kotlin.Pair;
 import org.jetbrains.annotations.NotNull;
-import org.partiql.spi.BindingName;
 import org.partiql.value.PartiQL;
 import org.partiql.value.PartiQLValue;
 import org.partiql.value.PartiQLValueType;
@@ -347,7 +346,7 @@ public interface PQLValue extends Iterable<PQLValue> {
      *                                       {@link #isNull()} returns false before attempting to invoke this method.
      */
     @NotNull
-    default Iterable<StructField> get(@NotNull String name) {
+    default PQLValue get(@NotNull String name) {
         throw new UnsupportedOperationException();
     }
 
@@ -361,7 +360,7 @@ public interface PQLValue extends Iterable<PQLValue> {
      *                                       {@link #isNull()} returns false before attempting to invoke this method.
      */
     @NotNull
-    default Iterable<StructField> getInsensitive(@NotNull String name) {
+    default PQLValue getInsensitive(@NotNull String name) {
         throw new UnsupportedOperationException();
     }
 
@@ -420,35 +419,13 @@ public interface PQLValue extends Iterable<PQLValue> {
             case INTERVAL:
                 return this.isNull() ? PartiQL.intervalValue(null) : PartiQL.intervalValue(this.getIntervalValue());
             case BAG:
-                return this.isNull() ? PartiQL.bagValue((Iterable<? extends PartiQLValue>) null) : PartiQL.bagValue(
-                        new IterableFromIteratorSupplier<>(() -> new PQLToPartiQLIterator(this.iterator()))
-                );
+                return this.isNull() ? PartiQL.bagValue((Iterable<? extends PartiQLValue>) null) : PartiQL.bagValue(new PQLToPartiQLIterable(this));
             case LIST:
-                return this.isNull() ? PartiQL.listValue((Iterable<? extends PartiQLValue>) null) : PartiQL.listValue(
-                        new IterableFromIteratorSupplier<>(() -> new PQLToPartiQLIterator(this.iterator()))
-                );
+                return this.isNull() ? PartiQL.listValue((Iterable<? extends PartiQLValue>) null) : PartiQL.listValue(new PQLToPartiQLIterable(this));
             case SEXP:
-                return this.isNull() ? PartiQL.sexpValue((Iterable<? extends PartiQLValue>) null) : PartiQL.sexpValue(
-                        new IterableFromIteratorSupplier<>(() -> new PQLToPartiQLIterator(this.iterator()))
-                );
+                return this.isNull() ? PartiQL.sexpValue((Iterable<? extends PartiQLValue>) null) : PartiQL.sexpValue(new PQLToPartiQLIterable(this));
             case STRUCT:
-                return this.isNull() ? PartiQL.structValue((Iterable<? extends Pair<String, ? extends PartiQLValue>>) null) : PartiQL.structValue(
-                        new IterableFromIteratorSupplier<>(() -> {
-                            Iterator<StructField> _fields = this.getFields();
-                            return new Iterator<Pair<String, PartiQLValue>>() {
-                                @Override
-                                public boolean hasNext() {
-                                    return _fields.hasNext();
-                                }
-
-                                @Override
-                                public Pair<String, PartiQLValue> next() {
-                                    StructField field = _fields.next();
-                                    return new Pair<>(field.getName(), field.getValue().toPartiQLValue());
-                                }
-                            };
-                        })
-                );
+                return this.isNull() ? PartiQL.structValue((Iterable<? extends Pair<String, ? extends PartiQLValue>>) null) : PartiQL.structValue(new PQLToPartiQLStruct(this));
             case NULL:
                 return PartiQL.nullValue();
             case MISSING:
@@ -480,9 +457,8 @@ public interface PQLValue extends Iterable<PQLValue> {
                 org.partiql.value.Int8Value int8Value = (org.partiql.value.Int8Value) value;
                 return new Int8Value(Objects.requireNonNull(int8Value.getValue()));
             case STRUCT:
-                @SuppressWarnings("unchecked")
-                org.partiql.value.StructValue<PartiQLValue> STRUCTValue = (org.partiql.value.StructValue<PartiQLValue>) value;
-                return new StructValue(new StructFieldIterableWrapper(Objects.requireNonNull(STRUCTValue.getEntries())));
+                @SuppressWarnings("unchecked") org.partiql.value.StructValue<PartiQLValue> STRUCTValue = (org.partiql.value.StructValue<PartiQLValue>) value;
+                return new StructValue(new PartiQLToPQLStruct(Objects.requireNonNull(STRUCTValue)));
             case STRING:
                 org.partiql.value.StringValue STRINGValue = (org.partiql.value.StringValue) value;
                 return new StringValue(Objects.requireNonNull(STRINGValue.getValue()));
@@ -496,13 +472,11 @@ public interface PQLValue extends Iterable<PQLValue> {
                 org.partiql.value.Int16Value INT16Value = (org.partiql.value.Int16Value) value;
                 return new Int16Value(Objects.requireNonNull(INT16Value.getValue()));
             case SEXP:
-                @SuppressWarnings("unchecked")
-                org.partiql.value.SexpValue<PartiQLValue> sexpValue = (org.partiql.value.SexpValue<PartiQLValue>) value;
-                return new SexpValue(new PartiQLValueIterableWrapper(Objects.requireNonNull(sexpValue)));
+                @SuppressWarnings("unchecked") org.partiql.value.SexpValue<PartiQLValue> sexpValue = (org.partiql.value.SexpValue<PartiQLValue>) value;
+                return new SexpValue(new PartiQLToPQLIterable(Objects.requireNonNull(sexpValue)));
             case LIST:
-                @SuppressWarnings("unchecked")
-                org.partiql.value.ListValue<PartiQLValue> LISTValue = (org.partiql.value.ListValue<PartiQLValue>) value;
-                return new ListValue(new PartiQLValueIterableWrapper(Objects.requireNonNull(LISTValue)));
+                @SuppressWarnings("unchecked") org.partiql.value.ListValue<PartiQLValue> LISTValue = (org.partiql.value.ListValue<PartiQLValue>) value;
+                return new ListValue(new PartiQLToPQLIterable(Objects.requireNonNull(LISTValue)));
             case BOOL:
                 org.partiql.value.BoolValue BOOLValue = (org.partiql.value.BoolValue) value;
                 return new BoolValue(Objects.requireNonNull(BOOLValue.getValue()));
@@ -510,12 +484,11 @@ public interface PQLValue extends Iterable<PQLValue> {
                 org.partiql.value.IntValue INTValue = (org.partiql.value.IntValue) value;
                 return new IntValue(Objects.requireNonNull(INTValue.getValue()));
             case BAG:
-                @SuppressWarnings("unchecked")
-                org.partiql.value.BagValue<PartiQLValue> BAGValue = (org.partiql.value.BagValue<PartiQLValue>) value;
-                return new BagValue(new PartiQLValueIterableWrapper(Objects.requireNonNull(BAGValue)));
+                @SuppressWarnings("unchecked") org.partiql.value.BagValue<PartiQLValue> BAGValue = (org.partiql.value.BagValue<PartiQLValue>) value;
+                return new BagValue(new PartiQLToPQLIterable(Objects.requireNonNull(BAGValue)));
             case BINARY:
                 org.partiql.value.BinaryValue BINARYValue = (org.partiql.value.BinaryValue) value;
-                return new BinaryValue(Objects.requireNonNull(BINARYValue.getValue().toByteArray()));
+                return new BinaryValue(Objects.requireNonNull(Objects.requireNonNull(BINARYValue.getValue()).toByteArray()));
             case DATE:
                 org.partiql.value.DateValue DATEValue = (org.partiql.value.DateValue) value;
                 return new DateValue(Objects.requireNonNull(DATEValue.getValue()));

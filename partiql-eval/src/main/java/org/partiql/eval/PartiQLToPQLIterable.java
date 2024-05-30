@@ -3,11 +3,11 @@ package org.partiql.eval;
 import org.partiql.value.CollectionValue;
 import org.partiql.value.PartiQLValue;
 
-class PartiQLValueIterableWrapper implements Iterable<PQLValue> {
+class PartiQLToPQLIterable implements Iterable<PQLValue> {
 
     private final CollectionValue<PartiQLValue> _value;
 
-    PartiQLValueIterableWrapper(CollectionValue<PartiQLValue> value) {
+    PartiQLToPQLIterable(CollectionValue<PartiQLValue> value) {
         _value = value;
     }
 

@@ -179,30 +179,9 @@ class NullValue implements PQLValue {
         }
     }
 
-    @NotNull
     @Override
-    public Iterator<PQLValue> getBagValues() {
-        if (_type == PartiQLValueType.BAG) {
-            throw new NullPointerException();
-        } else {
-            throw new UnsupportedOperationException();
-        }
-    }
-
-    @NotNull
-    @Override
-    public Iterator<PQLValue> getListValues() {
-        if (_type == PartiQLValueType.LIST) {
-            throw new NullPointerException();
-        } else {
-            throw new UnsupportedOperationException();
-        }
-    }
-
-    @NotNull
-    @Override
-    public Iterator<PQLValue> getSexpValues() {
-        if (_type == PartiQLValueType.SEXP) {
+    public Iterator<PQLValue> iterator() {
+        if (_type == PartiQLValueType.BAG || _type == PartiQLValueType.LIST || _type == PartiQLValueType.SEXP) {
             throw new NullPointerException();
         } else {
             throw new UnsupportedOperationException();

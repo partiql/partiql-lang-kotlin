@@ -4,12 +4,12 @@ import kotlin.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.value.PartiQLValue;
 
-class StructFieldIterableWrapper implements Iterable<StructField> {
+class PartiQLToPQLStruct implements Iterable<StructField> {
 
     private final Iterable<Pair<String, PartiQLValue>> _value;
 
-    StructFieldIterableWrapper(Iterable<Pair<String, PartiQLValue>> value) {
-        _value = value;
+    PartiQLToPQLStruct(org.partiql.value.StructValue<PartiQLValue> value) {
+        _value = value.getEntries();
     }
 
     @Override

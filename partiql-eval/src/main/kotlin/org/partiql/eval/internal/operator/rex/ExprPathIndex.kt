@@ -22,6 +22,8 @@ internal class ExprPathIndex(
         }
 
         // Calculate index
+        // TODO: The PLANNER should be in charge of adding a necessary coercion for the index. AKA, getInt32Coerced()
+        //  should never need to be called.
         val k = key.eval(env)
         val index = k.getInt32Coerced()
 

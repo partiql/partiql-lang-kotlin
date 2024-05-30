@@ -80,6 +80,9 @@ internal object ValueUtility {
      * [PartiQLValueType.INT8], [PartiQLValueType.INT8], [PartiQLValueType.INT8]) and returns the [Int] (potentially
      * coerced) that represents the integer.
      *
+     * INTERNAL NOTE: This should NOT exist. The PLANNER should be in charge of making sure that the appropriate type is
+     * present.
+     *
      * @throws NullPointerException if the value is null
      * @throws TypeCheckException if type is not an integer type
      */

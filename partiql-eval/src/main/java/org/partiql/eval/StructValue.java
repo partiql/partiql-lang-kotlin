@@ -3,12 +3,11 @@ package org.partiql.eval;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.value.PartiQLValueType;
 
-import java.util.Collection;
-import java.util.Collections;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * This shall always be package-private (internal).
@@ -16,11 +15,27 @@ import java.util.Set;
 class StructValue implements PQLValue {
 
     @NotNull
-    private final Iterable<StructField> _value;
-    MultiMap map;
+    private final Map<String, List<PQLValue>> _delegate;
 
-    StructValue(@NotNull Iterable<StructField> value) {
-        _value = value;
+    @NotNull
+    private final Map<String, List<PQLValue>> _delegateNormalized;
+
+    StructValue(@NotNull Iterable<StructField> fields) {
+        _delegate = new HashMap<>();
+        _delegateNormalized = new HashMap<>();
+        for (StructField field : fields) {
+            String key = field.getName();
+            String keyNormalized = field.getName().toLowerCase();
+            PQLValue value = field.getValue();
+            addFieldToStruct(_delegate, key, value);
+            addFieldToStruct(_delegateNormalized, keyNormalized, value);
+        }
+    }
+
+    private void addFieldToStruct(Map<String, List<PQLValue>> struct, String key, PQLValue value) {
+        List<PQLValue> values = struct.getOrDefault(key, new ArrayList<>());
+        values.add(value);
+        struct.put(key, values);
     }
 
     @Override
@@ -31,101 +46,36 @@ class StructValue implements PQLValue {
     @Override
     @NotNull
     public Iterator<StructField> getFields() {
-        return _value.iterator();
+        return _delegate.entrySet().stream().flatMap(
+                entry -> entry.getValue().stream().map(
+                        value -> StructField.of(entry.getKey(), value)
+                )
+        ).iterator();
     }
 
     @NotNull
     @Override
-    public Iterable<StructField> get(@NotNull String name) {
-        return map.get(name);
+    public PQLValue get(@NotNull String name) {
+        try {
+            return _delegate.get(name).get(0);
+        } catch (IndexOutOfBoundsException ex) {
+            throw new NullPointerException("Could not find struct key: " + name);
+        }
     }
 
     @NotNull
     @Override
-    public Iterable<StructField> getInsensitive(@NotNull String name) {
-        return map.get()
-        return PQLValue.super.getInsensitive(name);
+    public PQLValue getInsensitive(@NotNull String name) {
+        try {
+            return _delegateNormalized.get(name).get(0);
+        } catch (IndexOutOfBoundsException ex) {
+            throw new NullPointerException("Could not find struct key: " + name);
+        }
     }
 
     @NotNull
     @Override
     public PartiQLValueType getType() {
         return PartiQLValueType.STRUCT;
-    }
-
-    private class MultiMap implements Map<String, List<PQLValue>> {
-
-        @NotNull
-        private final Map<String, List<PQLValue>> _delegate;
-
-        @NotNull
-        private final Map<String, List<PQLValue>> _delegateNormalized;
-
-        private MultiMap(@NotNull Map<String, List<PQLValue>> delegate) {
-            _delegate = delegate;
-            _delegateNormalized = Collections.emptyMap();
-            delegate.forEach((key1, value) -> {
-                String key = key1.toLowerCase();
-                List<PQLValue> fields = _delegateNormalized.getOrDefault(key, Collections.emptyList());
-                fields.addAll(value);
-                _delegateNormalized.put(key, fields);
-            });
-        }
-
-        private MultiMap(@NotNull Iterable<StructField> _value) {
-            _delegate = Collections.emptyMap();
-            _delegateNormalized = Collections.emptyMap();
-            for (StructField field : _value) {
-                // Add to delegate
-                List<PQLValue> fields = _delegate.getOrDefault(field.getName(), Collections.emptyList());
-                fields.add(field.getValue());
-                _delegate.put(field.getName(), fields);
-                // Add to normalized delegate
-                String keyNormalized = field.getName().toLowerCase();
-                List<PQLValue> fieldsNormalized = _delegateNormalized.getOrDefault(keyNormalized, Collections.emptyList());
-                fieldsNormalized.add(field.getValue());
-                _delegateNormalized.put(keyNormalized, fields);
-            }
-        }
-
-        @Override
-        public int size() {
-            return _delegate.size();
-        }
-
-        @Override
-        public boolean isEmpty() {
-            return _delegate.isEmpty();
-        }
-
-        @Override
-        public boolean containsKey(Object key) {
-            return _delegate.containsKey(key);
-        }
-
-        @Override
-        public boolean containsValue(Object value) {
-            return _delegate.containsValue(value);
-        }
-
-        @Override
-        public List<PQLValue> get(Object key) {
-            return _delegate.get(key);
-        }
-
-        @Override
-        public List<StructField> put(String key, List<StructField> value) {
-            return null;
-        }
-
-        @Override
-        public List<StructField> remove(Object key) {
-            return null;
-        }
-
-        @Override
-        public Collection<List<StructField>> values() {
-            return null;
-        }
     }
 }
