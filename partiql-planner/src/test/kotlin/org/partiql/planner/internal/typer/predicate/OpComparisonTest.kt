@@ -7,8 +7,6 @@ import org.partiql.planner.internal.typer.accumulateSuccess
 import org.partiql.planner.internal.typer.accumulateSuccessNullCall
 import org.partiql.planner.util.allSupportedType
 import org.partiql.planner.util.cartesianProduct
-import org.partiql.types.MissingType
-import org.partiql.types.NullType
 import org.partiql.types.StaticType
 import java.util.stream.Stream
 
@@ -25,10 +23,7 @@ class OpComparisonTest : PartiQLTyperTestBase() {
         val argsMap: Map<TestResult, Set<List<StaticType>>> = buildMap {
             val successArgs = cartesianProduct(allSupportedType, allSupportedType)
             successArgs.forEach { args: List<StaticType> ->
-                when {
-                    args.any { it is MissingType } && args.any { it is NullType } -> accumulateSuccess(StaticType.BOOL, args)
-                    args.any { it is MissingType } && args.any { it is NullType } -> accumulateSuccess(StaticType.BOOL, args)
-                }
+                accumulateSuccess(StaticType.unionOf(StaticType.BOOL, StaticType.NULL), args)
             }
         }
 
