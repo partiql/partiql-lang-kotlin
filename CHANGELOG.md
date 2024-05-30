@@ -28,6 +28,11 @@ Thank you to all who have contributed!
 ### Added
 
 ### Changed
+- **Behavioral change**: The `INTEGER/INT` type is now an alias to the `INT4` type. Previously the INTEGER type was
+unconstrained which is not SQL-conformant and is causing issues in integrating with other systems. This release makes
+INTEGER an alias for INT4 which is the internal type name. In a later release, we will make INTEGER the default 32-bit
+integer with INT/INT4/INTEGER4 being aliases per other systems. This change only applies to
+org.partiql.parser.PartiQLParser, not the org.partiql.lang.syntax.PartiQLParser.
 
 ### Deprecated
 
