@@ -4,9 +4,6 @@ import kotlin.Pair;
 import kotlin.jvm.functions.Function1;
 import org.jetbrains.annotations.NotNull;
 
-import java.sql.Blob;
-import java.sql.Clob;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
@@ -77,44 +74,12 @@ class PartiQLValueLoaderDefault implements PartiQLValueLoader {
                 return timestampValue(orNull(data, PartiQLCursor::getTimestamp));
             case DATE:
                 return dateValue(orNull(data, PartiQLCursor::getDate));
-            case CLOB:
-                // TODO: The implementation of PartiQLValue's ClobValue can be better modeled.
-                Clob clob = orNull(data, PartiQLCursor::getClob);
-                if (clob == null) {
-                    return clobValue(null);
-                }
-                int clobLength;
-                try {
-                    clobLength = (int) clob.length();
-                } catch (SQLException ex) {
-                    throw new UnsupportedOperationException();
-                }
-                String clobData;
-                try {
-                    clobData = clob.getSubString(0, clobLength);
-                } catch (SQLException ex) {
-                    throw new UnsupportedOperationException();
-                }
-                return clobValue(clobData.getBytes());
             case BLOB:
-                // TODO: The implementation of PartiQLValue's BlobValue can be better modeled.
-                Blob blob = orNull(data, PartiQLCursor::getBlob);
-                long blobLength;
-                if (blob == null) {
-                    return blobValue(null);
-                }
-                try {
-                    blobLength = blob.length();
-                } catch (SQLException ex) {
-                    throw new UnsupportedOperationException();
-                }
-                byte[] blobData;
-                try {
-                    blobData = blob.getBytes(0L, (int) blobLength);
-                } catch (SQLException ex) {
-                    throw new UnsupportedOperationException();
-                }
-                return blobValue(blobData);
+                byte[] blobBytes = orNull(data, PartiQLCursor::getBytes);
+                return blobValue(blobBytes);
+            case CLOB:
+                byte[] clobBytes = orNull(data, PartiQLCursor::getBytes);
+                return clobValue(clobBytes);
             case BINARY:
                 byte[] bytes = orNull(data, PartiQLCursor::getBytes);
                 if (bytes == null) {

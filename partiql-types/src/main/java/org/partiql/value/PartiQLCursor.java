@@ -2,8 +2,6 @@ package org.partiql.value;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.sql.Blob;
-import java.sql.Clob;
 import java.util.Iterator;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.value.datetime.Date;
@@ -88,41 +86,20 @@ public interface PartiQLCursor extends AutoCloseable, Iterator<PartiQLValueType>
 
     /**
      * This is applicable to the following types:
-     * {@link PartiQLValueType#BINARY}
-     * @return a value representing the applicable PartiQL value
-     * @throws UnsupportedOperationException when this method is not applicable to the type returned by {@link PartiQLCursor#getType()}
-     * @throws NullPointerException if this method is invoked when {@link PartiQLCursor#isNull()} returns true
-     * @apiNote <b>! ! ! EXPERIMENTAL ! ! !</b> This is an experimental API under development by the PartiQL maintainers.
-     * Please abstain from using this API until given notice otherwise. This may break between iterations without prior notice.
-     * @deprecated BINARY doesn't exist in SQL or Ion. This is subject to deletion.
-     */
-    @Deprecated
-    @NotNull
-    public byte[] getBytes() throws UnsupportedOperationException, NullPointerException;
-
-    /**
-     * This is applicable to the following types:
-     * {@link PartiQLValueType#BLOB}
-     * @return a value representing the applicable PartiQL value
-     * @throws UnsupportedOperationException when this method is not applicable to the type returned by {@link PartiQLCursor#getType()}
-     * @throws NullPointerException if this method is invoked when {@link PartiQLCursor#isNull()} returns true
-     * @apiNote <b>! ! ! EXPERIMENTAL ! ! !</b> This is an experimental API under development by the PartiQL maintainers.
-     * Please abstain from using this API until given notice otherwise. This may break between iterations without prior notice.
-     */
-    @NotNull
-    public Blob getBlob() throws UnsupportedOperationException, NullPointerException;
-
-    /**
-     * This is applicable to the following types:
+     * {@link PartiQLValueType#BINARY},
+     * {@link PartiQLValueType#BLOB},
      * {@link PartiQLValueType#CLOB}
      * @return a value representing the applicable PartiQL value
      * @throws UnsupportedOperationException when this method is not applicable to the type returned by {@link PartiQLCursor#getType()}
      * @throws NullPointerException if this method is invoked when {@link PartiQLCursor#isNull()} returns true
      * @apiNote <b>! ! ! EXPERIMENTAL ! ! !</b> This is an experimental API under development by the PartiQL maintainers.
      * Please abstain from using this API until given notice otherwise. This may break between iterations without prior notice.
+     * @deprecated BINARY doesn't exist in SQL or Ion. This is subject to deletion. BLOB and CLOB are typically represented
+     * in a fashion that can support much larger values -- this may be modified at any time.
      */
+    @Deprecated
     @NotNull
-    public Clob getClob() throws UnsupportedOperationException, NullPointerException;
+    public byte[] getBytes() throws UnsupportedOperationException, NullPointerException;
 
     /**
      * This is applicable to the following types:

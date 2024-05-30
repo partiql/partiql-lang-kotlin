@@ -1111,11 +1111,9 @@ public final class org/partiql/value/PartiQL {
 public abstract interface class org/partiql/value/PartiQLCursor : java/lang/AutoCloseable, java/util/Iterator {
 	public abstract fun getBigDecimal ()Ljava/math/BigDecimal;
 	public abstract fun getBigInteger ()Ljava/math/BigInteger;
-	public abstract fun getBlob ()Ljava/sql/Blob;
 	public abstract fun getBoolean ()Z
 	public abstract fun getByte ()B
 	public abstract fun getBytes ()[B
-	public abstract fun getClob ()Ljava/sql/Clob;
 	public abstract fun getDate ()Lorg/partiql/value/datetime/Date;
 	public abstract fun getDouble ()D
 	public abstract fun getFieldName ()Ljava/lang/String;

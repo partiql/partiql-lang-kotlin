@@ -6,13 +6,8 @@ import org.partiql.value.datetime.Date;
 import org.partiql.value.datetime.Time;
 import org.partiql.value.datetime.Timestamp;
 
-import javax.sql.rowset.serial.SerialBlob;
-import javax.sql.rowset.serial.SerialClob;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.sql.Blob;
-import java.sql.Clob;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -151,45 +146,12 @@ class PartiQLCursorDefault implements PartiQLCursor {
         if (type == PartiQLValueType.BINARY) {
             BinaryValue binaryValue = (BinaryValue) (currentValue.value);
             return Objects.requireNonNull(binaryValue.getValue()).toByteArray();
-        }
-        throw new UnsupportedOperationException();
-    }
-
-    @NotNull
-    @Override
-    public Blob getBlob() {
-        PartiQLValueType type = currentValue.value.getType();
-        if (type == PartiQLValueType.BLOB) {
+        } else if (type == PartiQLValueType.BLOB) {
             BlobValue blobValue = (BlobValue) (currentValue.value);
-            Blob blob;
-            try {
-                blob = new SerialBlob(Objects.requireNonNull(blobValue.getValue()));
-            } catch (SQLException ex) {
-                throw new UnsupportedOperationException();
-            }
-            return blob;
-        }
-        throw new UnsupportedOperationException();
-    }
-
-    @NotNull
-    @Override
-    public Clob getClob() {
-        PartiQLValueType type = currentValue.value.getType();
-        if (type == PartiQLValueType.CLOB) {
+            return Objects.requireNonNull(blobValue.getValue());
+        } else if (type == PartiQLValueType.CLOB) {
             ClobValue clobValue = (ClobValue) (currentValue.value);
-            Clob clob;
-            try {
-                byte[] bytes = Objects.requireNonNull(clobValue.getValue());
-                char[] characters = new char[bytes.length];
-                for (int i = 0; i < bytes.length; i++) {
-                    characters[i] = (char) bytes[i]; // TODO: This shouldn't be necessary. PartiQLValue should update its public API.
-                }
-                clob = new SerialClob(characters);
-            } catch (SQLException ex) {
-                throw new UnsupportedOperationException();
-            }
-            return clob;
+            return Objects.requireNonNull(clobValue.getValue());
         }
         throw new UnsupportedOperationException();
     }
