@@ -671,7 +671,29 @@ public data class StructType(
     public data class Field(
         val key: String,
         val value: StaticType
-    )
+    ) {
+        // for backward compatible reason, we do not put metas into the data class constructor
+        val metas: MutableMap<String, Any> = mutableMapOf()
+
+        public constructor(key: String, value: StaticType, metas: Map<String, Any>) : this(key, value) {
+            this.metas.putAll(metas)
+        }
+
+        override fun hashCode(): Int {
+            var hc = key.hashCode()
+            hc = 31 * hc + value.hashCode()
+            hc = 31 * hc + metas.hashCode()
+            return hc
+        }
+
+        override fun equals(other: Any?): Boolean {
+            if (other !is Field) return false
+            return key == other.key && value == other.value && metas == other.metas
+        }
+
+        public fun copyWithMetas(key: String = this.key, value: StaticType = this.value, metas: Map<String, Any> = this.metas.toMap()) : Field =
+            Field(key, value, metas)
+    }
 
     override fun flatten(): StaticType = this
 

@@ -26,7 +26,7 @@ Thank you to all who have contributed!
 ## [Unreleased]
 
 ### Added
-
+- Ability to append Meta in Field of Struct Type. 
 ### Changed
 - **Behavioral change**: The planner now does NOT support the NullType and MissingType variants of StaticType. The logic
 is that the null and missing values are part of *all* data types. Therefore, one must assume that the types returned by
