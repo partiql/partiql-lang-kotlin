@@ -1,4 +1,4 @@
-grammar PartiQL;
+parser grammar PartiQLParser;
 
 options {
     tokenVocab=PartiQLTokens;

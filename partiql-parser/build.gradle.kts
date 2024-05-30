@@ -82,6 +82,8 @@ tasks.processResources {
     from("src/main/antlr") {
         include("**/*.g4")
     }
+    // TODO remove in next major version release.
+    rename("PartiQLParser.g4", "PartiQL.g4")
 }
 
 publish {
