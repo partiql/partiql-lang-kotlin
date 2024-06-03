@@ -5,24 +5,15 @@ reason::{
     fields: [
       {
         name: "r_reason_sk",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "r_reason_id",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "r_reason_desc",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       }
     ]
   }

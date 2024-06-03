@@ -40,16 +40,16 @@ internal object ProblemGenerator {
     }
 
     fun missingRex(causes: List<Rex.Op>, problem: Problem): Rex =
-        rex(StaticType.MISSING, rexOpMissing(problem, causes))
+        rex(StaticType.ANY, rexOpMissing(problem, causes))
 
     fun missingRex(causes: Rex.Op, problem: Problem): Rex =
-        rex(StaticType.MISSING, rexOpMissing(problem, listOf(causes)))
+        rex(StaticType.ANY, rexOpMissing(problem, listOf(causes)))
 
     fun errorRex(causes: List<Rex.Op>, problem: Problem): Rex =
-        rex(StaticType.MISSING, rexOpErr(problem, causes))
+        rex(StaticType.ANY, rexOpErr(problem, causes))
 
     fun errorRex(trace: Rex.Op, problem: Problem): Rex =
-        rex(StaticType.MISSING, rexOpErr(problem, listOf(trace)))
+        rex(StaticType.ANY, rexOpErr(problem, listOf(trace)))
 
     private fun InternalIdentifier.debug(): String = when (this) {
         is InternalIdentifier.Qualified -> (listOf(root.debug()) + steps.map { it.debug() }).joinToString(".")

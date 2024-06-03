@@ -5,66 +5,39 @@ catalog_page::{
     fields: [
       {
         name: "cp_catalog_page_sk",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "cp_catalog_page_id",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "cp_start_date_sk",
-        type: [
-          "int32",
-          "null"
-        ]
+        type: "int32"
       },
       {
         name: "cp_end_date_sk",
-        type: [
-          "int32",
-          "null"
-        ]
+        type: "int32"
       },
       {
         name: "cp_department",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "cp_catalog_number",
-        type: [
-          "int32",
-          "null"
-        ]
+        type: "int32"
       },
       {
         name: "cp_catalog_page_number",
-        type: [
-          "int32",
-          "null"
-        ]
+        type: "int32"
       },
       {
         name: "cp_description",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "cp_type",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       }
     ]
   }

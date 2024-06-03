@@ -7,7 +7,6 @@ import org.partiql.planner.internal.typer.accumulateSuccessNullCall
 import org.partiql.planner.util.allCollectionType
 import org.partiql.planner.util.allSupportedType
 import org.partiql.planner.util.cartesianProduct
-import org.partiql.types.MissingType
 import org.partiql.types.StaticType
 import java.util.stream.Stream
 
@@ -22,7 +21,6 @@ class OpInTest : PartiQLTyperTestBase() {
         val argsMap = buildMap {
             val successArgs =
                 allSupportedType
-                    .filterNot { it is MissingType }
                     .map { t -> listOf(t) }
                     .toSet()
 
@@ -43,8 +41,8 @@ class OpInTest : PartiQLTyperTestBase() {
 
         val argsMap = buildMap {
             val successArgs = cartesianProduct(
-                allSupportedType.filterNot { it is MissingType },
-                (allCollectionType + listOf(StaticType.NULL))
+                allSupportedType,
+                allCollectionType
             )
             val failureArgs = cartesianProduct(
                 allSupportedType,

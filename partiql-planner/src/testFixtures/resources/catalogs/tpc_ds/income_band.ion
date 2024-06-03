@@ -5,24 +5,15 @@ income_band::{
     fields: [
       {
         name: "ib_income_band_sk",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "ib_lower_bound",
-        type: [
-          "int32",
-          "null"
-        ]
+        type: "int32"
       },
       {
         name: "ib_upper_bound",
-        type: [
-          "int32",
-          "null"
-        ]
+        type: "int32"
       }
     ]
   }

@@ -28,8 +28,30 @@ Thank you to all who have contributed!
 ### Added
 
 ### Changed
+- **Behavioral change**: The planner now does NOT support the NullType and MissingType variants of StaticType. The logic
+is that the null and missing values are part of *all* data types. Therefore, one must assume that the types returned by
+the planner allow for NULL and MISSING values. Similarly, the testFixtures Ion-encoded test resources
+representing the catalog do not use "null" or "missing".
+- **Behavioral change**: The `INTEGER/INT` type is now an alias to the `INT4` type. Previously the INTEGER type was
+unconstrained which is not SQL-conformant and is causing issues in integrating with other systems. This release makes
+INTEGER an alias for INT4 which is the internal type name. In a later release, we will make INTEGER the default 32-bit
+integer with INT/INT4/INTEGER4 being aliases per other systems. This change only applies to
+org.partiql.parser.PartiQLParser, not the org.partiql.lang.syntax.PartiQLParser.
 
 ### Deprecated
+- We have deprecated `org.partiql.type.NullType` and `org.partiql.type.MissingType`. Please see the corresponding
+information in the "Changed" section. In relation to the deprecation of the above, the following APIs have also
+been deprecated:
+  - `org.partiql.type.StaticType.MISSING`
+  - `org.partiql.type.StaticType.NULL`
+  - `org.partiql.type.StaticType.NULL_OR_MISSING`
+  - `org.partiql.type.StaticType.asNullable()`
+  - `org.partiql.type.StaticType.isNullable()`
+  - `org.partiql.type.StaticType.isMissable()`
+  - `org.partiql.type.StaticType.asOptional()`
+  - `org.partiql.type.AnyOfType()`
+  - `org.partiql.value.PartiQLValueType.NULL`
+  - `org.partiql.value.PartiQLValueType.MISSING`
 
 ### Fixed
 

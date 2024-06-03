@@ -3,12 +3,9 @@ package org.partiql.planner.internal.typer.predicate
 import org.junit.jupiter.api.DynamicContainer
 import org.junit.jupiter.api.TestFactory
 import org.partiql.planner.internal.typer.PartiQLTyperTestBase
-import org.partiql.planner.internal.typer.accumulateSuccess
 import org.partiql.planner.internal.typer.accumulateSuccessNullCall
 import org.partiql.planner.util.allSupportedType
 import org.partiql.planner.util.cartesianProduct
-import org.partiql.types.MissingType
-import org.partiql.types.NullType
 import org.partiql.types.StaticType
 import java.util.stream.Stream
 
@@ -25,10 +22,7 @@ class OpComparisonTest : PartiQLTyperTestBase() {
         val argsMap: Map<TestResult, Set<List<StaticType>>> = buildMap {
             val successArgs = cartesianProduct(allSupportedType, allSupportedType)
             successArgs.forEach { args: List<StaticType> ->
-                when {
-                    args.any { it is MissingType } && args.any { it is NullType } -> accumulateSuccess(StaticType.BOOL, args)
-                    args.any { it is MissingType } && args.any { it is NullType } -> accumulateSuccess(StaticType.BOOL, args)
-                }
+                accumulateSuccessNullCall(StaticType.BOOL, args)
             }
         }
 
@@ -51,23 +45,23 @@ class OpComparisonTest : PartiQLTyperTestBase() {
         val argsMap = buildMap {
             val successArgs =
                 cartesianProduct(
-                    StaticType.NUMERIC.allTypes + listOf(StaticType.NULL),
-                    StaticType.NUMERIC.allTypes + listOf(StaticType.NULL)
+                    StaticType.NUMERIC.allTypes,
+                    StaticType.NUMERIC.allTypes
                 ) + cartesianProduct(
-                    StaticType.TEXT.allTypes + listOf(StaticType.NULL),
-                    StaticType.TEXT.allTypes + listOf(StaticType.NULL)
+                    StaticType.TEXT.allTypes,
+                    StaticType.TEXT.allTypes
                 ) + cartesianProduct(
-                    listOf(StaticType.BOOL, StaticType.NULL),
-                    listOf(StaticType.BOOL, StaticType.NULL)
+                    listOf(StaticType.BOOL),
+                    listOf(StaticType.BOOL)
                 ) + cartesianProduct(
-                    listOf(StaticType.DATE, StaticType.NULL),
-                    listOf(StaticType.DATE, StaticType.NULL)
+                    listOf(StaticType.DATE),
+                    listOf(StaticType.DATE)
                 ) + cartesianProduct(
-                    listOf(StaticType.TIME, StaticType.NULL),
-                    listOf(StaticType.TIME, StaticType.NULL)
+                    listOf(StaticType.TIME),
+                    listOf(StaticType.TIME)
                 ) + cartesianProduct(
-                    listOf(StaticType.TIMESTAMP, StaticType.NULL),
-                    listOf(StaticType.TIMESTAMP, StaticType.NULL)
+                    listOf(StaticType.TIMESTAMP),
+                    listOf(StaticType.TIMESTAMP)
                 )
 
             val failureArgs = cartesianProduct(

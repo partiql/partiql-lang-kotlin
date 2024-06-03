@@ -16,7 +16,8 @@ public sealed class StaticType {
 
         /**
          * varargs variant, folds [types] into a [Set]
-         * The usage of LinkedHashSet is to preserve the order of `types` to ensure behavior is consistent in our tests
+         * The usage of LinkedHashSet is to preserve the order of `types` to ensure behavior is consistent in our tests.
+         * The returned type is flattened.
          */
         @JvmStatic
         public fun unionOf(vararg types: StaticType, metas: Map<String, Any> = mapOf()): StaticType =
@@ -24,21 +25,67 @@ public sealed class StaticType {
 
         /**
          * Creates a new [StaticType] as a union of the passed [types]. The values typed by the returned type
-         * are defined as the union of all values typed as [types]
+         * are defined as the union of all values typed as [types]. The returned type is flattened.
          *
          * @param types [StaticType] to be unioned.
          * @return [StaticType] representing the union of [types]
          */
         @JvmStatic
-        public fun unionOf(types: Set<StaticType>, metas: Map<String, Any> = mapOf()): StaticType = AnyOfType(types, metas)
+        @Suppress("DEPRECATION")
+        public fun unionOf(
+            types: Set<StaticType>,
+            metas: Map<String, Any> = mapOf()
+        ): StaticType {
+            return when (types.isEmpty()) {
+                true -> ANY
+                false -> AnyOfType(types, metas).flatten()
+            }
+        }
+
+        /**
+         * Creates a new [StaticType] as a union of the passed [types]. The values typed by the returned type
+         * are defined as the union of all values typed as [types]. The returned type is flattened.
+         *
+         * @param types [StaticType] to be unioned.
+         * @return [StaticType] representing the union of [types]
+         */
+        @JvmStatic
+        @Suppress("DEPRECATION")
+        public fun unionOf(
+            types: Collection<StaticType>,
+            metas: Map<String, Any> = mapOf(),
+        ): StaticType {
+            return when (types.isEmpty()) {
+                true -> ANY
+                false -> AnyOfType(types.toSet(), metas).flatten()
+            }
+        }
 
         // TODO consider making these into an enumeration...
 
         // Convenient enums to create a bare bones instance of StaticType
+        @Suppress("DEPRECATION")
+        @Deprecated(
+            message = "This will be removed in a future major-version bump.",
+            replaceWith = ReplaceWith("ANY")
+        )
         @JvmField public val MISSING: MissingType = MissingType
+
+        @Suppress("DEPRECATION")
+        @Deprecated(
+            message = "This will be removed in a future major-version bump.",
+            replaceWith = ReplaceWith("ANY")
+        )
         @JvmField public val NULL: NullType = NullType()
-        @JvmField public val ANY: AnyType = AnyType()
+
+        @Suppress("DEPRECATION")
+        @Deprecated(
+            message = "This will be removed in a future major-version bump.",
+            replaceWith = ReplaceWith("ANY")
+        )
         @JvmField public val NULL_OR_MISSING: StaticType = unionOf(NULL, MISSING)
+
+        @JvmField public val ANY: AnyType = AnyType()
         @JvmField public val BOOL: BoolType = BoolType()
         @JvmField public val INT2: IntType = IntType(IntType.IntRangeConstraint.SHORT)
         @JvmField public val INT4: IntType = IntType(IntType.IntRangeConstraint.INT4)
@@ -68,8 +115,6 @@ public sealed class StaticType {
         @OptIn(PartiQLTimestampExperimental::class)
         @JvmStatic
         public val ALL_TYPES: List<SingleType> = listOf(
-            MISSING,
-            NULL,
             BOOL,
             INT2,
             INT4,
@@ -97,8 +142,15 @@ public sealed class StaticType {
      *
      *  If it already nullable, returns the original type.
      */
+    @Suppress("DEPRECATION")
+    @Deprecated(
+        message = "This will be removed in a future major-version bump. All types include the null value. Therefore," +
+            " this method is redundant.",
+        replaceWith = ReplaceWith("")
+    )
     public fun asNullable(): StaticType =
         when {
+            @Suppress("DEPRECATION")
             this.isNullable() -> this
             else -> unionOf(this, NULL).flatten()
         }
@@ -108,6 +160,12 @@ public sealed class StaticType {
      *
      *  If it already optional, returns the original type.
      */
+    @Suppress("DEPRECATION")
+    @Deprecated(
+        message = "This will be removed in a future major-version bump. All types include the missing value." +
+            " Therefore, this method is redundant.",
+        replaceWith = ReplaceWith("")
+    )
     public fun asOptional(): StaticType =
         when {
             this.isOptional() -> this
@@ -121,6 +179,7 @@ public sealed class StaticType {
      * MissingType is a singleton and there can only be one representation for it
      * i.e. you cannot have two instances of MissingType with different metas.
      */
+    @Suppress("DEPRECATION")
     public fun withMetas(metas: Map<String, Any>): StaticType =
         when (this) {
             is AnyType -> copy(metas = metas)
@@ -148,6 +207,12 @@ public sealed class StaticType {
     /**
      * Type is nullable if it is of Null type or is an AnyOfType that contains a Null type
      */
+    @Suppress("DEPRECATION")
+    @Deprecated(
+        message = "This will be removed in a future major-version bump. All types are considered nullable. Therefore" +
+            " this method is redundant.",
+        replaceWith = ReplaceWith("true")
+    )
     public fun isNullable(): Boolean =
         when (this) {
             is AnyOfType -> types.any { it.isNullable() }
@@ -160,6 +225,12 @@ public sealed class StaticType {
      *
      * @return
      */
+    @Suppress("DEPRECATION")
+    @Deprecated(
+        message = "This will be removed in a future major-version bump. All types are considered missable. Therefore," +
+            " this method is redundant.",
+        replaceWith = ReplaceWith("true")
+    )
     public fun isMissable(): Boolean =
         when (this) {
             is AnyOfType -> types.any { it.isMissable() }
@@ -170,6 +241,7 @@ public sealed class StaticType {
     /**
      * Type is optional if it is Any, or Missing, or an AnyOfType that contains Any or Missing type
      */
+    @Suppress("DEPRECATION")
     private fun isOptional(): Boolean =
         when (this) {
             is AnyType, MissingType -> true // Any includes Missing type
@@ -198,7 +270,7 @@ public data class AnyType(override val metas: Map<String, Any> = mapOf()) : Stat
      * Converts this into an [AnyOfType] representation. This method is helpful in inference when
      * it wants to iterate over all possible types of an expression.
      */
-    public fun toAnyOfType(): AnyOfType = AnyOfType(ALL_TYPES.toSet())
+    public fun toAnyOfType(): AnyOfType = unionOf(ALL_TYPES.toSet()) as AnyOfType
 
     override fun flatten(): StaticType = this
 
@@ -250,6 +322,10 @@ public class UnsupportedTypeConstraint(message: String) : Exception(message)
  *
  * This is not a singleton since there may be more that one representation of a Null type (each with different metas)
  */
+@Deprecated(
+    message = "This will be removed in a future major-version bump.",
+    replaceWith = ReplaceWith("AnyType")
+)
 public data class NullType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
     override val allTypes: List<StaticType>
         get() = listOf(this)
@@ -263,6 +339,10 @@ public data class NullType(override val metas: Map<String, Any> = mapOf()) : Sin
  * This is a singleton unlike the rest of the types as there cannot be
  * more that one representations of a missing type.
  */
+@Deprecated(
+    message = "This will be removed in a future major-version bump.",
+    replaceWith = ReplaceWith("AnyType")
+)
 public object MissingType : SingleType() {
     override val metas: Map<String, Any> = mapOf()
 
@@ -621,7 +701,14 @@ public data class GraphType(
 /**
  * Represents a [StaticType] that's defined by the union of multiple [StaticType]s.
  */
-public data class AnyOfType(val types: Set<StaticType>, override val metas: Map<String, Any> = mapOf()) : StaticType() {
+public data class AnyOfType @Deprecated(
+    message = "This will be removed in a future major-version bump.",
+    replaceWith = ReplaceWith("StaticType.unionOf(types)")
+) public constructor(
+    val types: Set<StaticType>,
+    override val metas: Map<String, Any> = mapOf()
+) : StaticType() {
+
     /**
      * Flattens a union type by traversing the types and recursively bubbling up the underlying union types.
      *
@@ -704,7 +791,9 @@ public sealed class CollectionConstraint {
     public data class PartitionKey(val keys: Set<String>) : TupleCollectionConstraint, CollectionConstraint()
 }
 
+@Suppress("DEPRECATION")
 internal fun StaticType.isNullOrMissing(): Boolean = (this is NullType || this is MissingType)
 internal fun StaticType.isNumeric(): Boolean = (this is IntType || this is FloatType || this is DecimalType)
 internal fun StaticType.isText(): Boolean = (this is SymbolType || this is StringType)
+@Suppress("DEPRECATION")
 internal fun StaticType.isUnknown(): Boolean = (this.isNullOrMissing() || this == StaticType.NULL_OR_MISSING)

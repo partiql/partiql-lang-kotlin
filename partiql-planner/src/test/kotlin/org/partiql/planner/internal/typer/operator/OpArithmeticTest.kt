@@ -9,7 +9,6 @@ import org.partiql.planner.util.allNumberType
 import org.partiql.planner.util.allSupportedType
 import org.partiql.planner.util.cartesianProduct
 import org.partiql.planner.util.castTable
-import org.partiql.types.NullType
 import org.partiql.types.StaticType
 import java.util.stream.Stream
 
@@ -25,8 +24,7 @@ class OpArithmeticTest : PartiQLTyperTestBase() {
         ).map { inputs.get("basics", it)!! }
 
         val argsMap: Map<TestResult, Set<List<StaticType>>> = buildMap {
-            val successArgs = (allNumberType + listOf(StaticType.NULL))
-                .let { cartesianProduct(it, it) }
+            val successArgs = allNumberType.let { cartesianProduct(it, it) }
             val failureArgs = cartesianProduct(
                 allSupportedType,
                 allSupportedType
@@ -38,7 +36,6 @@ class OpArithmeticTest : PartiQLTyperTestBase() {
                 val arg0 = args.first()
                 val arg1 = args[1]
                 val output = when {
-                    arg0 is NullType && arg1 is NullType -> StaticType.INT2
                     arg0 == arg1 -> arg1
                     castTable(arg1, arg0) == CastType.COERCION -> arg0
                     castTable(arg0, arg1) == CastType.COERCION -> arg1

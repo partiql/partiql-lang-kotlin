@@ -1,6 +1,7 @@
 package org.partiql.planner.internal.typer
 
 import org.partiql.planner.internal.ir.Rel
+import org.partiql.planner.internal.ir.Rex
 import org.partiql.types.AnyOfType
 import org.partiql.types.AnyType
 import org.partiql.types.BagType
@@ -26,36 +27,39 @@ import org.partiql.types.TimestampType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
 
-internal fun StaticType.isNullOrMissing(): Boolean = (this is NullType || this is MissingType)
-
 internal fun StaticType.isNumeric(): Boolean = (this is IntType || this is FloatType || this is DecimalType)
-
-internal fun StaticType.isExactNumeric(): Boolean = (this is IntType || this is DecimalType)
-
-internal fun StaticType.isApproxNumeric(): Boolean = (this is FloatType)
 
 internal fun StaticType.isText(): Boolean = (this is SymbolType || this is StringType)
 
-internal fun StaticType.isUnknown(): Boolean = (this.isNullOrMissing() || this == StaticType.NULL_OR_MISSING)
+/**
+ * Returns whether [this] *may* be of a specific type. AKA: is it the type? Is it a union that holds the type?
+ */
+internal inline fun <reified T> StaticType.mayBeType(): Boolean {
+    return this.allTypes.any { it is T }
+}
 
-internal fun StaticType.isOptional(): Boolean = when (this) {
-    is AnyType, MissingType -> true // Any includes Missing type
-    is AnyOfType -> types.any { it.isOptional() }
-    else -> false
+/**
+ * For each type in [this] type's [StaticType.allTypes], the [block] will be invoked. Non-null outputs of the [block]'s
+ * invocation will be returned.
+ */
+internal fun StaticType.inferListNotNull(block: (StaticType) -> StaticType?): List<StaticType> {
+    return this.flatten().allTypes.mapNotNull { type -> block(type) }
+}
+
+/**
+ * For each type in [this] type's [StaticType.allTypes], the [block] will be invoked. Non-null outputs of the [block]'s
+ * invocation will be returned.
+ */
+internal fun StaticType.inferRexListNotNull(block: (StaticType) -> Rex?): List<Rex> {
+    return this.flatten().allTypes.mapNotNull { type -> block(type) }
 }
 
 /**
  * Per SQL, runtime types are always nullable
  */
 @OptIn(PartiQLValueExperimental::class)
+@Suppress("DEPRECATION")
 internal fun PartiQLValueType.toStaticType(): StaticType = when (this) {
-    PartiQLValueType.NULL -> StaticType.NULL
-    PartiQLValueType.MISSING -> StaticType.MISSING
-    else -> toNonNullStaticType().asNullable()
-}
-
-@OptIn(PartiQLValueExperimental::class)
-internal fun PartiQLValueType.toNonNullStaticType(): StaticType = when (this) {
     PartiQLValueType.ANY -> StaticType.ANY
     PartiQLValueType.BOOL -> StaticType.BOOL
     PartiQLValueType.INT8 -> StaticType.INT2
@@ -82,11 +86,12 @@ internal fun PartiQLValueType.toNonNullStaticType(): StaticType = when (this) {
     PartiQLValueType.LIST -> StaticType.LIST
     PartiQLValueType.SEXP -> StaticType.SEXP
     PartiQLValueType.STRUCT -> StaticType.STRUCT
-    PartiQLValueType.NULL -> StaticType.NULL
-    PartiQLValueType.MISSING -> StaticType.MISSING
+    PartiQLValueType.NULL -> StaticType.ANY
+    PartiQLValueType.MISSING -> StaticType.ANY
 }
 
 @OptIn(PartiQLValueExperimental::class)
+@Suppress("DEPRECATION")
 internal fun StaticType.toRuntimeType(): PartiQLValueType {
     if (this is AnyOfType) {
         // handle anyOf(null, T) cases
@@ -109,6 +114,7 @@ internal fun StaticType.toRuntimeTypeOrNull(): PartiQLValueType? {
     }
 }
 
+@Suppress("DEPRECATION")
 @OptIn(PartiQLValueExperimental::class)
 private fun StaticType.asRuntimeType(): PartiQLValueType = when (this) {
     is AnyOfType -> PartiQLValueType.ANY
@@ -138,8 +144,8 @@ private fun StaticType.asRuntimeType(): PartiQLValueType = when (this) {
         IntType.IntRangeConstraint.LONG -> PartiQLValueType.INT64
         IntType.IntRangeConstraint.UNCONSTRAINED -> PartiQLValueType.INT
     }
-    MissingType -> PartiQLValueType.MISSING
-    is NullType -> PartiQLValueType.NULL
+    MissingType -> PartiQLValueType.ANY
+    is NullType -> PartiQLValueType.ANY
     is StringType -> PartiQLValueType.STRING
     is StructType -> PartiQLValueType.STRUCT
     is SymbolType -> PartiQLValueType.SYMBOL
@@ -186,7 +192,7 @@ internal fun StructType.exclude(step: Rel.Op.Exclude.Step, lastStepOptional: Boo
     val output = fields.mapNotNull { field ->
         val newField = if (substeps.isEmpty()) {
             if (lastStepOptional) {
-                StructType.Field(field.key, field.value.asOptional())
+                StructType.Field(field.key, field.value)
             } else {
                 null
             }
