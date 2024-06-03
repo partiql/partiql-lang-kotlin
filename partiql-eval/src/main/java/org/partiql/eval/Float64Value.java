@@ -20,7 +20,7 @@ class Float64Value implements PQLValue {
     }
 
     @Override
-    public double getFloat64Value() {
+    public double getDouble() {
         return _value;
     }
 

@@ -20,7 +20,7 @@ class IntervalValue implements PQLValue {
     }
 
     @Override
-    public long getIntervalValue() {
+    public long getInterval() {
         return _value;
     }
 

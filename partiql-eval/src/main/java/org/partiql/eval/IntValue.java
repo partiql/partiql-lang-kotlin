@@ -24,7 +24,7 @@ class IntValue implements PQLValue {
 
     @Override
     @NotNull
-    public BigInteger getIntValue() {
+    public BigInteger getBigInteger() {
         return _value;
     }
 

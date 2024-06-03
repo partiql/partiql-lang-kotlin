@@ -20,7 +20,7 @@ internal class ExprPathKey(
         if (rootEvaluated.isNull || keyEvaluated.isNull) {
             return PQLValue.nullValue()
         }
-        val keyString = keyEvaluated.stringValue
+        val keyString = keyEvaluated.string
         for (entry in rootEvaluated.fields) {
             if (entry.name == keyString) {
                 return entry.value

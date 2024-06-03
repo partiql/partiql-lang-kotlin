@@ -26,7 +26,7 @@ class TimestampValue implements PQLValue {
 
     @Override
     @NotNull
-    public Timestamp getTimestampValue() {
+    public Timestamp getTimestamp() {
         return _value;
     }
 

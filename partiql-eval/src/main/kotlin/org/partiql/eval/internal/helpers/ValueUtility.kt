@@ -18,7 +18,7 @@ internal object ValueUtility {
     @OptIn(PartiQLValueExperimental::class)
     @JvmStatic
     fun PQLValue.isTrue(): Boolean {
-        return this.type == PartiQLValueType.BOOL && !this.isNull && this.boolValue
+        return this.type == PartiQLValueType.BOOL && !this.isNull && this.boolean
     }
 
     /**
@@ -48,9 +48,7 @@ internal object ValueUtility {
     @OptIn(PartiQLValueExperimental::class)
     fun PQLValue.getText(): String {
         return when (this.type) {
-            PartiQLValueType.STRING -> this.stringValue
-            PartiQLValueType.SYMBOL -> this.symbolValue
-            PartiQLValueType.CHAR -> this.charValue
+            PartiQLValueType.STRING, PartiQLValueType.SYMBOL, PartiQLValueType.CHAR -> this.string
             else -> throw TypeCheckException("Expected text, but received ${this.type}.")
         }
     }
@@ -60,17 +58,19 @@ internal object ValueUtility {
      * [PartiQLValueType.INT8], [PartiQLValueType.INT8], [PartiQLValueType.INT8]) and returns the [BigInteger] (potentially
      * coerced) that represents the integer.
      *
+     * INTERNAL NOTE: The PLANNER should be handling the coercion. This function should not be necessary.
+     *
      * @throws NullPointerException if the value is null
      * @throws TypeCheckException if type is not an integer type
      */
     @OptIn(PartiQLValueExperimental::class)
     fun PQLValue.getBigIntCoerced(): BigInteger {
         return when (this.type) {
-            PartiQLValueType.INT8 -> this.int8Value.toInt().toBigInteger()
-            PartiQLValueType.INT16 -> this.int16Value.toInt().toBigInteger()
-            PartiQLValueType.INT32 -> this.int32Value.toBigInteger()
-            PartiQLValueType.INT64 -> this.int64Value.toBigInteger()
-            PartiQLValueType.INT -> this.intValue
+            PartiQLValueType.INT8 -> this.byte.toInt().toBigInteger()
+            PartiQLValueType.INT16 -> this.short.toInt().toBigInteger()
+            PartiQLValueType.INT32 -> this.int.toBigInteger()
+            PartiQLValueType.INT64 -> this.long.toBigInteger()
+            PartiQLValueType.INT -> this.bigInteger
             else -> throw TypeCheckException()
         }
     }
@@ -89,11 +89,11 @@ internal object ValueUtility {
     @OptIn(PartiQLValueExperimental::class)
     fun PQLValue.getInt32Coerced(): Int {
         return when (this.type) {
-            PartiQLValueType.INT8 -> this.int8Value.toInt()
-            PartiQLValueType.INT16 -> this.int16Value.toInt()
-            PartiQLValueType.INT32 -> this.int32Value
-            PartiQLValueType.INT64 -> this.int64Value.toInt()
-            PartiQLValueType.INT -> this.intValue.toInt()
+            PartiQLValueType.INT8 -> this.byte.toInt()
+            PartiQLValueType.INT16 -> this.short.toInt()
+            PartiQLValueType.INT32 -> this.int
+            PartiQLValueType.INT64 -> this.long.toInt()
+            PartiQLValueType.INT -> this.bigInteger.toInt()
             else -> throw TypeCheckException()
         }
     }

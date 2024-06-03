@@ -20,7 +20,7 @@ class Int64Value implements PQLValue {
     }
 
     @Override
-    public long getInt64Value() {
+    public long getLong() {
         return _value;
     }
 

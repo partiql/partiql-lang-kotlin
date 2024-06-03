@@ -21,7 +21,7 @@ internal class RelLimit(
         _seen = BigInteger.ZERO
 
         val l = limit.eval(env.push(Record.empty))
-        _limit = l.getBigIntCoerced()
+        _limit = l.getBigIntCoerced() // TODO: The planner should handle the coercion
     }
 
     override fun hasNext(): Boolean {

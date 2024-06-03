@@ -20,7 +20,7 @@ class Float32Value implements PQLValue {
     }
 
     @Override
-    public float getFloat32Value() {
+    public float getFloat() {
         return _value;
     }
 

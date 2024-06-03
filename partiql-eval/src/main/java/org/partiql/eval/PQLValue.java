@@ -46,7 +46,10 @@ public interface PQLValue extends Iterable<PQLValue> {
     PartiQLValueType getType();
 
     /**
-     * @return the underlying value applicable to the type {@link PartiQLValueType#STRING}.
+     * @return the underlying value applicable to the types:
+     * {@link PartiQLValueType#STRING},
+     * {@link PartiQLValueType#SYMBOL},
+     * {@link PartiQLValueType#CHAR}
      * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
      *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PartiQLValueType#INT}, then this method
      *                                       will throw this exception upon invocation.
@@ -54,201 +57,64 @@ public interface PQLValue extends Iterable<PQLValue> {
      *                                       {@link #isNull()} returns false before attempting to invoke this method.
      */
     @NotNull
-    default String getStringValue() {
+    default String getString() {
         throw new UnsupportedOperationException();
     }
 
     /**
-     * @return the underlying value applicable to the type {@link PartiQLValueType#CHAR}.
+     * @return the underlying value applicable to the types:
+     * {@link PartiQLValueType#BOOL}
      * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
      *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PartiQLValueType#INT}, then this method
      *                                       will throw this exception upon invocation.
      * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
      *                                       {@link #isNull()} returns false before attempting to invoke this method.
+     */
+    default boolean getBoolean() {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * @return the underlying value applicable to the types:
+     * {@link PartiQLValueType#BINARY},
+     * {@link PartiQLValueType#BLOB},
+     * {@link PartiQLValueType#CLOB}
+     * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
+     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PartiQLValueType#INT}, then this method
+     *                                       will throw this exception upon invocation.
+     * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
+     *                                       {@link #isNull()} returns false before attempting to invoke this method.
+     * @apiNote <b>! ! ! EXPERIMENTAL ! ! !</b> This is an experimental API under development by the PartiQL maintainers.
+     * Please abstain from using this API until given notice otherwise. This may break between iterations without prior notice.
+     * @deprecated BINARY doesn't exist in SQL or Ion. This is subject to deletion. BLOB and CLOB are typically represented
+     * in a fashion that can support much larger values -- this may be modified at any time.
      */
     @NotNull
-    default String getCharValue() {
+    default byte[] getBytes() {
         throw new UnsupportedOperationException();
     }
 
     /**
-     * @return the underlying value applicable to the type {@link PartiQLValueType#SYMBOL}.
+     * @return the underlying value applicable to the types:
+     * {@link PartiQLValueType#BYTE},
+     * {@link PartiQLValueType#INT8}
      * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
      *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PartiQLValueType#INT}, then this method
      *                                       will throw this exception upon invocation.
      * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
      *                                       {@link #isNull()} returns false before attempting to invoke this method.
-     */
-    @NotNull
-    default String getSymbolValue() {
-        throw new UnsupportedOperationException();
-    }
-
-    /**
-     * @return the underlying value applicable to the type {@link PartiQLValueType#BOOL}.
-     * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
-     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PartiQLValueType#INT}, then this method
-     *                                       will throw this exception upon invocation.
-     * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
-     *                                       {@link #isNull()} returns false before attempting to invoke this method.
-     */
-    default boolean getBoolValue() {
-        throw new UnsupportedOperationException();
-    }
-
-    /**
-     * @return the underlying value applicable to the type {@link PartiQLValueType#BINARY}.
-     * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
-     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PartiQLValueType#INT}, then this method
-     *                                       will throw this exception upon invocation.
-     * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
-     *                                       {@link #isNull()} returns false before attempting to invoke this method.
-     */
-    @NotNull
-    default byte[] getBinaryValue() {
-        throw new UnsupportedOperationException();
-    }
-
-    /**
-     * @return the underlying value applicable to the type {@link PartiQLValueType#BLOB}.
-     * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
-     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PartiQLValueType#INT}, then this method
-     *                                       will throw this exception upon invocation.
-     * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
-     *                                       {@link #isNull()} returns false before attempting to invoke this method.
-     */
-    @NotNull
-    default byte[] getBlobValue() {
-        throw new UnsupportedOperationException();
-    }
-
-    /**
-     * @return the underlying value applicable to the type {@link PartiQLValueType#CLOB}.
-     * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
-     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PartiQLValueType#INT}, then this method
-     *                                       will throw this exception upon invocation.
-     * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
-     *                                       {@link #isNull()} returns false before attempting to invoke this method.
-     */
-    @NotNull
-    default byte[] getClobValue() {
-        throw new UnsupportedOperationException();
-    }
-
-    /**
-     * @return the underlying value applicable to the type {@link PartiQLValueType#BYTE}.
-     * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
-     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PartiQLValueType#INT}, then this method
-     *                                       will throw this exception upon invocation.
-     * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
-     *                                       {@link #isNull()} returns false before attempting to invoke this method.
-     */
-    default byte getByteValue() {
-        throw new UnsupportedOperationException();
-    }
-
-    /**
-     * @return the underlying value applicable to the type {@link PartiQLValueType#DATE}.
-     * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
-     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PartiQLValueType#INT}, then this method
-     *                                       will throw this exception upon invocation.
-     * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
-     *                                       {@link #isNull()} returns false before attempting to invoke this method.
-     */
-    @NotNull
-    default Date getDateValue() {
-        throw new UnsupportedOperationException();
-    }
-
-    /**
-     * @return the underlying value applicable to the type {@link PartiQLValueType#TIME}.
-     * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
-     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PartiQLValueType#INT}, then this method
-     *                                       will throw this exception upon invocation.
-     * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
-     *                                       {@link #isNull()} returns false before attempting to invoke this method.
-     */
-    @NotNull
-    default Time getTimeValue() {
-        throw new UnsupportedOperationException();
-    }
-
-    /**
-     * @return the underlying value applicable to the type {@link PartiQLValueType#TIMESTAMP}.
-     * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
-     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PartiQLValueType#INT}, then this method
-     *                                       will throw this exception upon invocation.
-     * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
-     *                                       {@link #isNull()} returns false before attempting to invoke this method.
-     */
-    @NotNull
-    default Timestamp getTimestampValue() {
-        throw new UnsupportedOperationException();
-    }
-
-    /**
-     * @return the underlying value applicable to the type {@link PartiQLValueType#INTERVAL}.
-     * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
-     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PartiQLValueType#INT}, then this method
-     *                                       will throw this exception upon invocation.
-     * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
-     *                                       {@link #isNull()} returns false before attempting to invoke this method.
+     * @apiNote <b>! ! ! EXPERIMENTAL ! ! !</b> This is an experimental API under development by the PartiQL maintainers.
+     * Please abstain from using this API until given notice otherwise. This may break between iterations without prior notice.
+     * @deprecated BYTE is not present in SQL or Ion. This is subject to deletion.
      */
     @Deprecated
-    default long getIntervalValue() {
+    default byte getByte() {
         throw new UnsupportedOperationException();
     }
 
     /**
-     * @return the underlying value applicable to the type {@link PartiQLValueType#INT8}.
-     * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
-     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PartiQLValueType#INT}, then this method
-     *                                       will throw this exception upon invocation.
-     * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
-     *                                       {@link #isNull()} returns false before attempting to invoke this method.
-     */
-    default byte getInt8Value() {
-        throw new UnsupportedOperationException();
-    }
-
-    /**
-     * @return the underlying value applicable to the type {@link PartiQLValueType#INT16}.
-     * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
-     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PartiQLValueType#INT}, then this method
-     *                                       will throw this exception upon invocation.
-     * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
-     *                                       {@link #isNull()} returns false before attempting to invoke this method.
-     */
-    default short getInt16Value() {
-        throw new UnsupportedOperationException();
-    }
-
-    /**
-     * @return the underlying value applicable to the type {@link PartiQLValueType#INT32}.
-     * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
-     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PartiQLValueType#INT}, then this method
-     *                                       will throw this exception upon invocation.
-     * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
-     *                                       {@link #isNull()} returns false before attempting to invoke this method.
-     */
-    default int getInt32Value() {
-        throw new UnsupportedOperationException();
-    }
-
-    /**
-     * @return the underlying value applicable to the type {@link PartiQLValueType#INT64}.
-     * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
-     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PartiQLValueType#INT}, then this method
-     *                                       will throw this exception upon invocation.
-     * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
-     *                                       {@link #isNull()} returns false before attempting to invoke this method.
-     */
-    default long getInt64Value() {
-        throw new UnsupportedOperationException();
-    }
-
-    /**
-     * @return the underlying value applicable to the type {@link PartiQLValueType#INT}.
+     * @return the underlying value applicable to the types:
+     * {@link PartiQLValueType#DATE}.
      * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
      *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PartiQLValueType#INT}, then this method
      *                                       will throw this exception upon invocation.
@@ -256,36 +122,13 @@ public interface PQLValue extends Iterable<PQLValue> {
      *                                       {@link #isNull()} returns false before attempting to invoke this method.
      */
     @NotNull
-    default BigInteger getIntValue() {
+    default Date getDate() {
         throw new UnsupportedOperationException();
     }
 
     /**
-     * @return the underlying value applicable to the type {@link PartiQLValueType#FLOAT32}.
-     * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
-     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PartiQLValueType#INT}, then this method
-     *                                       will throw this exception upon invocation.
-     * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
-     *                                       {@link #isNull()} returns false before attempting to invoke this method.
-     */
-    default float getFloat32Value() {
-        throw new UnsupportedOperationException();
-    }
-
-    /**
-     * @return the underlying value applicable to the type {@link PartiQLValueType#FLOAT64}.
-     * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
-     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PartiQLValueType#INT}, then this method
-     *                                       will throw this exception upon invocation.
-     * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
-     *                                       {@link #isNull()} returns false before attempting to invoke this method.
-     */
-    default double getFloat64Value() {
-        throw new UnsupportedOperationException();
-    }
-
-    /**
-     * @return the underlying value applicable to the type {@link PartiQLValueType#DECIMAL}.
+     * @return the underlying value applicable to the types:
+     * {@link PartiQLValueType#TIME}
      * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
      *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PartiQLValueType#INT}, then this method
      *                                       will throw this exception upon invocation.
@@ -293,12 +136,13 @@ public interface PQLValue extends Iterable<PQLValue> {
      *                                       {@link #isNull()} returns false before attempting to invoke this method.
      */
     @NotNull
-    default BigDecimal getDecimalValue() {
+    default Time getTime() {
         throw new UnsupportedOperationException();
     }
 
     /**
-     * @return the underlying value applicable to the type {@link PartiQLValueType#DECIMAL_ARBITRARY}.
+     * @return the underlying value applicable to the types:
+     * {@link PartiQLValueType#TIMESTAMP}.
      * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
      *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PartiQLValueType#INT}, then this method
      *                                       will throw this exception upon invocation.
@@ -306,7 +150,118 @@ public interface PQLValue extends Iterable<PQLValue> {
      *                                       {@link #isNull()} returns false before attempting to invoke this method.
      */
     @NotNull
-    default BigDecimal getDecimalArbitraryValue() {
+    default Timestamp getTimestamp() {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * @return the underlying value applicable to the types:
+     * {@link PartiQLValueType#INTERVAL}.
+     * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
+     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PartiQLValueType#INT}, then this method
+     *                                       will throw this exception upon invocation.
+     * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
+     *                                       {@link #isNull()} returns false before attempting to invoke this method.
+     * @apiNote <b>! ! ! EXPERIMENTAL ! ! !</b> This is an experimental API under development by the PartiQL maintainers.
+     * Please abstain from using this API until given notice otherwise. This may break between iterations without prior notice.
+     * @deprecated This implementation is likely wrong and is not recommended for use.
+     */
+    @Deprecated
+    default long getInterval() {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * @return the underlying value applicable to the types:
+     * {@link PartiQLValueType#INT16}
+     * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
+     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PartiQLValueType#INT}, then this method
+     *                                       will throw this exception upon invocation.
+     * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
+     *                                       {@link #isNull()} returns false before attempting to invoke this method.
+     */
+    default short getShort() {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * @return the underlying value applicable to the types:
+     * {@link PartiQLValueType#INT32}
+     * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
+     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PartiQLValueType#INT}, then this method
+     *                                       will throw this exception upon invocation.
+     * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
+     *                                       {@link #isNull()} returns false before attempting to invoke this method.
+     */
+    default int getInt() {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * @return the underlying value applicable to the types:
+     * {@link PartiQLValueType#INT64}
+     * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
+     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PartiQLValueType#INT}, then this method
+     *                                       will throw this exception upon invocation.
+     * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
+     *                                       {@link #isNull()} returns false before attempting to invoke this method.
+     */
+    default long getLong() {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * @return the underlying value applicable to the types:
+     * {@link PartiQLValueType#INT}
+     * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
+     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PartiQLValueType#INT}, then this method
+     *                                       will throw this exception upon invocation.
+     * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
+     *                                       {@link #isNull()} returns false before attempting to invoke this method.
+     */
+    @NotNull
+    default BigInteger getBigInteger() {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * @return the underlying value applicable to the types:
+     * {@link PartiQLValueType#FLOAT32}
+     * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
+     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PartiQLValueType#INT}, then this method
+     *                                       will throw this exception upon invocation.
+     * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
+     *                                       {@link #isNull()} returns false before attempting to invoke this method.
+     */
+    default float getFloat() {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * @return the underlying value applicable to the types:
+     * {@link PartiQLValueType#FLOAT64}
+     * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
+     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PartiQLValueType#INT}, then this method
+     *                                       will throw this exception upon invocation.
+     * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
+     *                                       {@link #isNull()} returns false before attempting to invoke this method.
+     */
+    default double getDouble() {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * @return the underlying value applicable to the types:
+     * {@link PartiQLValueType#DECIMAL},
+     * {@link PartiQLValueType#DECIMAL_ARBITRARY}
+     * @throws UnsupportedOperationException if the operation is not applicable to the type returned from
+     *                                       {@link #getType()}; for example, if {@link #getType()} returns a {@link PartiQLValueType#INT}, then this method
+     *                                       will throw this exception upon invocation.
+     * @throws NullPointerException          if this instance also returns true on {@link #isNull()}; callers should check that
+     *                                       {@link #isNull()} returns false before attempting to invoke this method.
+     */
+    @NotNull
+    default BigDecimal getBigDecimal() {
         throw new UnsupportedOperationException();
     }
 
@@ -377,47 +332,47 @@ public interface PQLValue extends Iterable<PQLValue> {
         PartiQLValueType type = this.getType();
         switch (type) {
             case BOOL:
-                return this.isNull() ? PartiQL.boolValue(null) : PartiQL.boolValue(this.getBoolValue());
+                return this.isNull() ? PartiQL.boolValue(null) : PartiQL.boolValue(this.getBoolean());
             case INT8:
-                return this.isNull() ? PartiQL.int8Value(null) : PartiQL.int8Value(this.getInt8Value());
+                return this.isNull() ? PartiQL.int8Value(null) : PartiQL.int8Value(this.getByte());
             case INT16:
-                return this.isNull() ? PartiQL.int16Value(null) : PartiQL.int16Value(this.getInt16Value());
+                return this.isNull() ? PartiQL.int16Value(null) : PartiQL.int16Value(this.getShort());
             case INT32:
-                return this.isNull() ? PartiQL.int32Value(null) : PartiQL.int32Value(this.getInt32Value());
+                return this.isNull() ? PartiQL.int32Value(null) : PartiQL.int32Value(this.getInt());
             case INT64:
-                return this.isNull() ? PartiQL.int64Value(null) : PartiQL.int64Value(this.getInt64Value());
+                return this.isNull() ? PartiQL.int64Value(null) : PartiQL.int64Value(this.getLong());
             case INT:
-                return this.isNull() ? PartiQL.intValue(null) : PartiQL.intValue(this.getIntValue());
+                return this.isNull() ? PartiQL.intValue(null) : PartiQL.intValue(this.getBigInteger());
             case DECIMAL:
-                return this.isNull() ? PartiQL.decimalValue(null) : PartiQL.decimalValue(this.getDecimalValue());
+                return this.isNull() ? PartiQL.decimalValue(null) : PartiQL.decimalValue(this.getBigDecimal());
             case DECIMAL_ARBITRARY:
-                return this.isNull() ? PartiQL.decimalValue(null) : PartiQL.decimalValue(this.getDecimalArbitraryValue());
+                return this.isNull() ? PartiQL.decimalValue(null) : PartiQL.decimalValue(this.getBigDecimal());
             case FLOAT32:
-                return this.isNull() ? PartiQL.float32Value(null) : PartiQL.float32Value(this.getFloat32Value());
+                return this.isNull() ? PartiQL.float32Value(null) : PartiQL.float32Value(this.getFloat());
             case FLOAT64:
-                return this.isNull() ? PartiQL.float64Value(null) : PartiQL.float64Value(this.getFloat64Value());
+                return this.isNull() ? PartiQL.float64Value(null) : PartiQL.float64Value(this.getDouble());
             case CHAR:
-                return this.isNull() ? PartiQL.charValue(null) : PartiQL.charValue(this.getCharValue().charAt(0));
+                return this.isNull() ? PartiQL.charValue(null) : PartiQL.charValue(this.getString().charAt(0));
             case STRING:
-                return this.isNull() ? PartiQL.stringValue(null) : PartiQL.stringValue(this.getStringValue());
+                return this.isNull() ? PartiQL.stringValue(null) : PartiQL.stringValue(this.getString());
             case SYMBOL:
-                return this.isNull() ? PartiQL.symbolValue(null) : PartiQL.symbolValue(this.getSymbolValue());
+                return this.isNull() ? PartiQL.symbolValue(null) : PartiQL.symbolValue(this.getString());
             case BINARY:
-                return this.isNull() ? PartiQL.binaryValue(null) : PartiQL.binaryValue(BitSet.valueOf(this.getBinaryValue()));
+                return this.isNull() ? PartiQL.binaryValue(null) : PartiQL.binaryValue(BitSet.valueOf(this.getBytes()));
             case BYTE:
-                return this.isNull() ? PartiQL.byteValue(null) : PartiQL.byteValue(this.getByteValue());
+                return this.isNull() ? PartiQL.byteValue(null) : PartiQL.byteValue(this.getByte());
             case BLOB:
-                return this.isNull() ? PartiQL.blobValue(null) : PartiQL.blobValue(this.getBlobValue());
+                return this.isNull() ? PartiQL.blobValue(null) : PartiQL.blobValue(this.getBytes());
             case CLOB:
-                return this.isNull() ? PartiQL.clobValue(null) : PartiQL.clobValue(this.getClobValue());
+                return this.isNull() ? PartiQL.clobValue(null) : PartiQL.clobValue(this.getBytes());
             case DATE:
-                return this.isNull() ? PartiQL.dateValue(null) : PartiQL.dateValue(this.getDateValue());
+                return this.isNull() ? PartiQL.dateValue(null) : PartiQL.dateValue(this.getDate());
             case TIME:
-                return this.isNull() ? PartiQL.timeValue(null) : PartiQL.timeValue(this.getTimeValue());
+                return this.isNull() ? PartiQL.timeValue(null) : PartiQL.timeValue(this.getTime());
             case TIMESTAMP:
-                return this.isNull() ? PartiQL.timestampValue(null) : PartiQL.timestampValue(this.getTimestampValue());
+                return this.isNull() ? PartiQL.timestampValue(null) : PartiQL.timestampValue(this.getTimestamp());
             case INTERVAL:
-                return this.isNull() ? PartiQL.intervalValue(null) : PartiQL.intervalValue(this.getIntervalValue());
+                return this.isNull() ? PartiQL.intervalValue(null) : PartiQL.intervalValue(this.getInterval());
             case BAG:
                 return this.isNull() ? PartiQL.bagValue((Iterable<? extends PartiQLValue>) null) : PartiQL.bagValue(new PQLToPartiQLIterable(this));
             case LIST:

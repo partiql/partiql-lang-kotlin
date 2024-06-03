@@ -19,7 +19,7 @@ class Int32Value implements PQLValue {
     }
 
     @Override
-    public int getInt32Value() {
+    public int getInt() {
         return _value;
     }
 

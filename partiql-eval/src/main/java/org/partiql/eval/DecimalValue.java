@@ -24,7 +24,7 @@ class DecimalValue implements PQLValue {
 
     @Override
     @NotNull
-    public BigDecimal getDecimalValue() {
+    public BigDecimal getBigDecimal() {
         return _value;
     }
 

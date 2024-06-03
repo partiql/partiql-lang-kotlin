@@ -20,7 +20,7 @@ class ByteValue implements PQLValue {
     }
 
     @Override
-    public byte getByteValue() {
+    public byte getByte() {
         return _value;
     }
 

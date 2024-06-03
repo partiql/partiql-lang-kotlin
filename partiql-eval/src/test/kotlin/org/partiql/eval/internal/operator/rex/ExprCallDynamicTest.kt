@@ -42,7 +42,7 @@ class ExprCallDynamicTest {
                 args = arrayOf(ExprLiteral(lhs), ExprLiteral(rhs)),
             )
             val result = expr.eval(Environment.empty).check(PartiQLValueType.INT32)
-            assertEquals(expectedIndex, result.int32Value)
+            assertEquals(expectedIndex, result.int)
         }
 
         companion object {

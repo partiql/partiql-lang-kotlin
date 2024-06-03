@@ -22,7 +22,7 @@ class BinaryValue implements PQLValue {
 
     @Override
     @NotNull
-    public byte[] getBinaryValue() {
+    public byte[] getBytes() {
         return _value;
     }
 

@@ -38,7 +38,7 @@ class NullValue implements PQLValue {
     }
 
     @Override
-    public boolean getBoolValue() {
+    public boolean getBoolean() {
         if (_type == PartiQLValueType.BOOL) {
             throw new NullPointerException();
         } else {
@@ -47,16 +47,7 @@ class NullValue implements PQLValue {
     }
 
     @Override
-    public byte getInt8Value() {
-        if (_type == PartiQLValueType.INT8) {
-            throw new NullPointerException();
-        } else {
-            throw new UnsupportedOperationException();
-        }
-    }
-
-    @Override
-    public short getInt16Value() {
+    public short getShort() {
         if (_type == PartiQLValueType.INT16) {
             throw new NullPointerException();
         } else {
@@ -65,7 +56,7 @@ class NullValue implements PQLValue {
     }
 
     @Override
-    public int getInt32Value() {
+    public int getInt() {
         if (_type == PartiQLValueType.INT32) {
             throw new NullPointerException();
         } else {
@@ -74,7 +65,7 @@ class NullValue implements PQLValue {
     }
 
     @Override
-    public long getInt64Value() {
+    public long getLong() {
         if (_type == PartiQLValueType.INT64) {
             throw new NullPointerException();
         } else {
@@ -84,7 +75,7 @@ class NullValue implements PQLValue {
 
     @NotNull
     @Override
-    public BigInteger getIntValue() {
+    public BigInteger getBigInteger() {
         if (_type == PartiQLValueType.INT) {
             throw new NullPointerException();
         } else {
@@ -94,8 +85,17 @@ class NullValue implements PQLValue {
 
     @NotNull
     @Override
-    public BigDecimal getDecimalValue() {
-        if (_type == PartiQLValueType.DECIMAL) {
+    public BigDecimal getBigDecimal() {
+        if (_type == PartiQLValueType.DECIMAL || _type == PartiQLValueType.DECIMAL_ARBITRARY) {
+            throw new NullPointerException();
+        } else {
+            throw new UnsupportedOperationException();
+        }
+    }
+
+    @Override
+    public byte getByte() {
+        if (_type == PartiQLValueType.BYTE || _type == PartiQLValueType.INT8) {
             throw new NullPointerException();
         } else {
             throw new UnsupportedOperationException();
@@ -104,17 +104,8 @@ class NullValue implements PQLValue {
 
     @NotNull
     @Override
-    public BigDecimal getDecimalArbitraryValue() {
-        if (_type == PartiQLValueType.DECIMAL_ARBITRARY) {
-            throw new NullPointerException();
-        } else {
-            throw new UnsupportedOperationException();
-        }
-    }
-
-    @Override
-    public byte getByteValue() {
-        if (_type == PartiQLValueType.BYTE) {
+    public byte[] getBytes() {
+        if (_type == PartiQLValueType.BINARY || _type == PartiQLValueType.BLOB || _type == PartiQLValueType.CLOB) {
             throw new NullPointerException();
         } else {
             throw new UnsupportedOperationException();
@@ -123,37 +114,7 @@ class NullValue implements PQLValue {
 
     @NotNull
     @Override
-    public byte[] getBinaryValue() {
-        if (_type == PartiQLValueType.BINARY) {
-            throw new NullPointerException();
-        } else {
-            throw new UnsupportedOperationException();
-        }
-    }
-
-    @NotNull
-    @Override
-    public byte[] getBlobValue() {
-        if (_type == PartiQLValueType.BLOB) {
-            throw new NullPointerException();
-        } else {
-            throw new UnsupportedOperationException();
-        }
-    }
-
-    @NotNull
-    @Override
-    public byte[] getClobValue() {
-        if (_type == PartiQLValueType.CLOB) {
-            throw new NullPointerException();
-        } else {
-            throw new UnsupportedOperationException();
-        }
-    }
-
-    @NotNull
-    @Override
-    public Date getDateValue() {
+    public Date getDate() {
         if (_type == PartiQLValueType.DATE) {
             throw new NullPointerException();
         } else {
@@ -162,7 +123,7 @@ class NullValue implements PQLValue {
     }
 
     @Override
-    public double getFloat64Value() {
+    public double getDouble() {
         if (_type == PartiQLValueType.FLOAT64) {
             throw new NullPointerException();
         } else {
@@ -171,7 +132,7 @@ class NullValue implements PQLValue {
     }
 
     @Override
-    public float getFloat32Value() {
+    public float getFloat() {
         if (_type == PartiQLValueType.FLOAT32) {
             throw new NullPointerException();
         } else {
@@ -200,8 +161,8 @@ class NullValue implements PQLValue {
 
     @NotNull
     @Override
-    public String getCharValue() {
-        if (_type == PartiQLValueType.CHAR) {
+    public String getString() {
+        if (_type == PartiQLValueType.STRING || _type == PartiQLValueType.CHAR || _type == PartiQLValueType.SYMBOL) {
             throw new NullPointerException();
         } else {
             throw new UnsupportedOperationException();
@@ -210,27 +171,7 @@ class NullValue implements PQLValue {
 
     @NotNull
     @Override
-    public String getStringValue() {
-        if (_type == PartiQLValueType.STRING) {
-            throw new NullPointerException();
-        } else {
-            throw new UnsupportedOperationException();
-        }
-    }
-
-    @NotNull
-    @Override
-    public String getSymbolValue() {
-        if (_type == PartiQLValueType.SYMBOL) {
-            throw new NullPointerException();
-        } else {
-            throw new UnsupportedOperationException();
-        }
-    }
-
-    @NotNull
-    @Override
-    public Time getTimeValue() {
+    public Time getTime() {
         if (_type == PartiQLValueType.TIME) {
             throw new NullPointerException();
         } else {
@@ -240,7 +181,7 @@ class NullValue implements PQLValue {
 
     @NotNull
     @Override
-    public Timestamp getTimestampValue() {
+    public Timestamp getTimestamp() {
         if (_type == PartiQLValueType.TIMESTAMP) {
             throw new NullPointerException();
         } else {
@@ -249,7 +190,7 @@ class NullValue implements PQLValue {
     }
 
     @Override
-    public long getIntervalValue() {
+    public long getInterval() {
         if (_type == PartiQLValueType.INTERVAL) {
             throw new NullPointerException();
         } else {

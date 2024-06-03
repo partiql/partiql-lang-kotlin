@@ -23,7 +23,7 @@ class DateValue implements PQLValue {
 
     @Override
     @NotNull
-    public Date getDateValue() {
+    public Date getDate() {
         return _value;
     }
 

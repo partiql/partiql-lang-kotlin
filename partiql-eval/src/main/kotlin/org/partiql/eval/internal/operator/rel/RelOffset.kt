@@ -23,7 +23,7 @@ internal class RelOffset(
         _seen = BigInteger.ZERO
 
         val o = offset.eval(env.push(Record.empty))
-        _offset = o.getBigIntCoerced()
+        _offset = o.getBigIntCoerced() // TODO: The planner should handle the coercion
     }
 
     override fun hasNext(): Boolean {

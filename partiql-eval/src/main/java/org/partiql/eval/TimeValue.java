@@ -25,7 +25,7 @@ class TimeValue implements PQLValue {
 
     @Override
     @NotNull
-    public Time getTimeValue() {
+    public Time getTime() {
         return _value;
     }
 

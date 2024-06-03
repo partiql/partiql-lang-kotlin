@@ -24,6 +24,6 @@ internal class ExprCase(
 
     @OptIn(PartiQLValueExperimental::class)
     private fun PQLValue.isTrue(): Boolean {
-        return this.type == PartiQLValueType.BOOL && !this.isNull && this.boolValue
+        return this.type == PartiQLValueType.BOOL && !this.isNull && this.boolean
     }
 }

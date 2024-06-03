@@ -22,7 +22,7 @@ class ClobValue implements PQLValue {
 
     @Override
     @NotNull
-    public byte[] getClobValue() {
+    public byte[] getBytes() {
         return _value;
     }
 

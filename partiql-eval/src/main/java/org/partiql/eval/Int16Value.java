@@ -20,7 +20,7 @@ class Int16Value implements PQLValue {
     }
 
     @Override
-    public short getInt16Value() {
+    public short getShort() {
         return _value;
     }
 

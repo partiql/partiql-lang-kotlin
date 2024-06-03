@@ -22,7 +22,7 @@ class BlobValue implements PQLValue {
 
     @Override
     @NotNull
-    public byte[] getBlobValue() {
+    public byte[] getBytes() {
         return _value;
     }
 

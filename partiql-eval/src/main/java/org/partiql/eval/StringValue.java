@@ -22,7 +22,7 @@ class StringValue implements PQLValue {
 
     @Override
     @NotNull
-    public String getStringValue() {
+    public String getString() {
         return _value;
     }
 

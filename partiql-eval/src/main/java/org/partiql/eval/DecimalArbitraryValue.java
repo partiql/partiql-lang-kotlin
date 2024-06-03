@@ -24,7 +24,7 @@ class DecimalArbitraryValue implements PQLValue {
 
     @Override
     @NotNull
-    public BigDecimal getDecimalArbitraryValue() {
+    public BigDecimal getBigDecimal() {
         return _value;
     }
 

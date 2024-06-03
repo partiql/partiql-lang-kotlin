@@ -20,7 +20,7 @@ class BoolValue implements PQLValue {
     }
 
     @Override
-    public boolean getBoolValue() {
+    public boolean getBoolean() {
         return _value;
     }
 

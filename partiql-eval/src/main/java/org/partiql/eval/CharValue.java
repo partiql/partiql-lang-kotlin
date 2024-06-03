@@ -24,7 +24,7 @@ class CharValue implements PQLValue {
 
     @Override
     @NotNull
-    public String getCharValue() {
+    public String getString() {
         return _value;
     }
 

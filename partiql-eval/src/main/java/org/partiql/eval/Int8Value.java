@@ -20,7 +20,7 @@ class Int8Value implements PQLValue {
     }
 
     @Override
-    public byte getInt8Value() {
+    public byte getByte() {
         return _value;
     }
 

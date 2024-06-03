@@ -22,7 +22,7 @@ class SymbolValue implements PQLValue {
 
     @Override
     @NotNull
-    public String getSymbolValue() {
+    public String getString() {
         return _value;
     }
 
