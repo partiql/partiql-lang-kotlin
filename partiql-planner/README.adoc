@@ -1,0 +1,90 @@
+= PartiQL-System PR
+
+This document follows along with the _PartiQL-system_ implementation; it will be upstreamed to the specification once the PR is completed.
+
+== Definitions
+
+This list is incomplete because this document is a PR guide and will be merged with link:https://github.com/partiql/partiql-lang/blob/system/RFCs/drafts/partiql-system-DRAFT.adoc[PartiQL-system].
+
+- **root**: The top-level namespace which has no names and contains catalogs.
+- **catalog**: A _namespace_ which appears at the root.
+- **namespace**: A namespace for objects.
+- **object**: A named database object such as tables and routines.
+- **name**: One or more symbols used to reference a database object.
+
+== Classes
+
+The _metadata_ package contains the interfaces for PartiQL's system
+which enables developers to leverage the planner across diverse backends.
+
+[cols="1e,4"]
+|===
+| Class | Description
+
+| Context | The main planner context.
+| Function | A _Function_ is a PartiQL-routine which can be invoked from an expression context. A _Function_ is unique within a namespace by its name and formal arguments (parameters); therefore its name may be overloaded like in SQL.
+| Namespace | A _Namespace_ is a namespace for tables and routines. It may contain nested namespaces, and a top-level namespace is called a _Catalog_. The initial _Namespace_ interface provides methods for table, function, and sub-namespace lookup.
+| Session | The _Session_ holds the current namespace and PATH for name resolution.
+| Statistics | A _Statistics_ object is used by the query planner for table statistics and metadata such as available keys and indexes. This is currently a placeholder.
+| Table | A _Table_ can be either a base table, view, or index. Every table has a _Shape_ and a _Statistic_.
+
+|===
+
+== Implementation TODOs
+
+- [ ] Internal IR should all be mutable fields.
+- [ ] Use SFWD style internal IR rather than Rel.Type
+
+== Name Resolution
+
+The following section gives a high-level description of the name resolution rules for tables and routines. Names are resolved using the current namespace _S_ and the session path _PATH_.
+
+Names are either absolute or relative. An absolute name is always resolved from the root, and a relative name is resolved by prepending the current namespace to the relative name to form an absolute name.
+
+.Name Syntax
+[source]
+----
+name
+ :     id ('.' id)*  # relative name
+ | '.' id ('.' id)*  # absolute name
+ ;
+
+id
+ : '"' symbol '"' # quoted identifier
+ |     symbol     # symbol identifier
+ ;
+
+symbol: ...;
+----
+
+[cols="1e,1,2"]
+|===
+| Type | Form | Example
+
+| Relative Name | `n~1~.---.n~n~` | `hello.world`
+| Absolute Name | `.n~1~.---.n~n~` | `.goodnight.moon`
+
+|===
+
+=== Table Resolution
+
+Let _N_ be a name (relative or absolute) with symbols _n~1~ , ... , n~i~_ and _S_ be the session namespace with name _. s~1~_ . s~2~ ... _s~j~_
+
+. Let _T_ be the absolute table name.
+.. If _N_ is relative, then _T = S + N = . s~1~ . s~2~ ... s~j~ . n~1~ . n~2~ ... n~i~_
+.. If _N_ is absolute, then _T = N = . n~1~ . n~2~ ... n~i~_
+. Let _n_ be the number of symbols in _T = . t~1~ . t~2~ ... t~n~_
+. Find the largest _m ≤ n_ such that _t~1~ . t~2~ ... t~m~_ is a database name.
+. Any remaining _t~m+1~ ...t~n~_ are path navigations.
+
+=== Routine Resolution
+
+// SQL 10.4
+
+Let _N_ be a routine name with symbols _n~1~ , ... , n~i~_ and _S_ be the session namespace with name _. s~1~_ . s~2~ ... _s~j~_
+
+. If n = 1 then the session path _PATH_ is searched left-to-right.
+. Else let _R_ be the absolute routine name.
+.. If _N_ is relative, then _R = S + N = . s~1~ . s~2~ ... s~j~ . n~1~ . n~2~. ... n~i~_ .
+.. If _N_ is absolute, then _R = N = . n~1~ . n~2~ ... n~i~_
+. Return all routines matching absolute name _R_.

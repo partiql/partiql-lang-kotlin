@@ -43,11 +43,8 @@ public abstract interface class org/partiql/spi/connector/Connector {
 
 public abstract interface class org/partiql/spi/connector/Connector$Factory {
 	public abstract fun create (Ljava/lang/String;Lcom/amazon/ionelement/api/StructElement;)Lorg/partiql/spi/connector/Connector;
-	public abstract fun getName ()Ljava/lang/String;
-}
-
-public final class org/partiql/spi/connector/Connector$Factory$DefaultImpls {
 	public static synthetic fun create$default (Lorg/partiql/spi/connector/Connector$Factory;Ljava/lang/String;Lcom/amazon/ionelement/api/StructElement;ILjava/lang/Object;)Lorg/partiql/spi/connector/Connector;
+	public abstract fun getName ()Ljava/lang/String;
 }
 
 public abstract interface class org/partiql/spi/connector/ConnectorAgg {

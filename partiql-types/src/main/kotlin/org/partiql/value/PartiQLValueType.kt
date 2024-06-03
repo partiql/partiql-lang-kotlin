@@ -16,7 +16,6 @@ package org.partiql.value
 /**
  * PartiQL Type Names
  */
-@PartiQLValueExperimental
 public enum class PartiQLValueType {
     ANY,
     BOOL,

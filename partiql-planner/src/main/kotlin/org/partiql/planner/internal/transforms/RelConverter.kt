@@ -34,7 +34,6 @@ import org.partiql.ast.helpers.toBinder
 import org.partiql.ast.identifierSymbol
 import org.partiql.ast.util.AstRewriter
 import org.partiql.ast.visitor.AstBaseVisitor
-import org.partiql.planner.internal.Env
 import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.rel
@@ -87,14 +86,14 @@ internal object RelConverter {
     /**
      * Here we convert an SFW to composed [Rel]s, then apply the appropriate relation-value projection to get a [Rex].
      */
-    internal fun apply(sfw: Expr.SFW, env: Env): Rex {
+    internal fun apply(sfw: Expr.SFW): Rex {
         val normalizedSfw = NormalizeSelect.normalize(sfw)
-        val rel = normalizedSfw.accept(ToRel(env), nil)
+        val rel = normalizedSfw.accept(ToRel, nil)
         val rex = when (val projection = normalizedSfw.select) {
             // PIVOT ... FROM
             is Select.Pivot -> {
-                val key = projection.key.toRex(env)
-                val value = projection.value.toRex(env)
+                val key = projection.key.toRex()
+                val value = projection.value.toRex()
                 val type = (StaticType.STRUCT)
                 val op = rexOpPivot(key, value, rel)
                 rex(type, op)
@@ -128,10 +127,13 @@ internal object RelConverter {
     /**
      * Syntax sugar for converting an [Expr] tree to a [Rex] tree.
      */
-    private fun Expr.toRex(env: Env): Rex = RexConverter.apply(this, env)
+    private fun Expr.toRex(): Rex = RexConverter.apply(this)
 
-    @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE", "LocalVariableName")
-    private class ToRel(private val env: Env) : AstBaseVisitor<Rel, Rel>() {
+    /**
+     * We use the "input" as the function context.
+     */
+    @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
+    private object ToRel : AstBaseVisitor<Rel, Rel>() {
 
         override fun defaultReturn(node: AstNode, input: Rel): Rel =
             throw IllegalArgumentException("unsupported rel $node")
@@ -198,7 +200,7 @@ internal object RelConverter {
 
         override fun visitSelectValue(node: Select.Value, input: Rel): Rel {
             val name = node.constructor.toBinder(1).symbol
-            val rex = RexConverter.apply(node.constructor, env)
+            val rex = RexConverter.apply(node.constructor)
             val schema = listOf(relBinding(name, rex.type))
             val props = input.type.props
             val type = relType(schema, props)
@@ -207,7 +209,7 @@ internal object RelConverter {
         }
 
         override fun visitFromValue(node: From.Value, nil: Rel): Rel {
-            val rex = RexConverter.applyRel(node.expr, env)
+            val rex = RexConverter.applyRel(node.expr)
             val binding = when (val a = node.asAlias) {
                 null -> error("AST not normalized, missing AS alias on $node")
                 else -> relBinding(
@@ -250,16 +252,19 @@ internal object RelConverter {
         override fun visitFromJoin(node: From.Join, nil: Rel): Rel {
             val lhs = visitFrom(node.lhs, nil)
             val rhs = visitFrom(node.rhs, nil)
-            val schema = lhs.type.schema + rhs.type.schema // Note: This gets more specific in PlanTyper. It is only used to find binding names here.
+            val schema =
+                lhs.type.schema + rhs.type.schema // Note: This gets more specific in PlanTyper. It is only used to find binding names here.
             val props = emptySet<Rel.Prop>()
-            val condition = node.condition?.let { RexConverter.apply(it, env) } ?: rex(StaticType.BOOL, rexOpLit(boolValue(true)))
+            val condition =
+                node.condition?.let { RexConverter.apply(it) } ?: rex(StaticType.BOOL, rexOpLit(boolValue(true)))
             val joinType = when (node.type) {
                 From.Join.Type.LEFT_OUTER, From.Join.Type.LEFT -> Rel.Op.Join.Type.LEFT
                 From.Join.Type.RIGHT_OUTER, From.Join.Type.RIGHT -> Rel.Op.Join.Type.RIGHT
                 From.Join.Type.FULL_OUTER, From.Join.Type.FULL -> Rel.Op.Join.Type.FULL
                 From.Join.Type.COMMA,
                 From.Join.Type.INNER,
-                From.Join.Type.CROSS -> Rel.Op.Join.Type.INNER // Cross Joins are just INNER JOIN ON TRUE
+                From.Join.Type.CROSS,
+                -> Rel.Op.Join.Type.INNER // Cross Joins are just INNER JOIN ON TRUE
                 null -> Rel.Op.Join.Type.INNER // a JOIN b ON a.id = b.id <--> a INNER JOIN b ON a.id = b.id
             }
             val type = relType(schema, props)
@@ -313,7 +318,7 @@ internal object RelConverter {
                 null -> error("AST not normalized, missing AS alias on projection item $item")
                 else -> a.symbol
             }
-            val rex = RexConverter.apply(item.expr, env)
+            val rex = RexConverter.apply(item.expr)
             val binding = relBinding(name, rex.type)
             return binding to rex
         }
@@ -326,7 +331,7 @@ internal object RelConverter {
                 return input
             }
             val type = input.type
-            val predicate = expr.toRex(env)
+            val predicate = expr.toRex()
             val op = relOpFilter(input, predicate)
             return rel(type, op)
         }
@@ -363,7 +368,7 @@ internal object RelConverter {
                     type = (StaticType.ANY),
                 )
                 schema.add(binding)
-                val args = expr.args.map { arg -> arg.toRex(env) }
+                val args = expr.args.map { arg -> arg.toRex() }
                 val id = AstToPlan.convert(expr.function)
                 val name = when (id) {
                     is InternalId.Qualified -> error("Qualified aggregation calls are not supported.")
@@ -373,7 +378,7 @@ internal object RelConverter {
                     relOpAggregateCallUnresolved(
                         name,
                         Rel.Op.Aggregate.SetQuantifier.ALL,
-                        args = listOf(exprLit(int32Value(1)).toRex(env))
+                        args = listOf(exprLit(int32Value(1)).toRex())
                     )
                 } else {
                     val setq = when (expr.setq) {
@@ -411,7 +416,7 @@ internal object RelConverter {
                         type = (StaticType.ANY)
                     )
                     schema.add(binding)
-                    it.expr.toRex(env)
+                    it.expr.toRex()
                 }
                 strategy = when (groupBy.strategy) {
                     GroupBy.Strategy.FULL -> Rel.Op.Aggregate.Strategy.FULL
@@ -435,7 +440,7 @@ internal object RelConverter {
                 return input
             }
             val type = input.type
-            val predicate = expr.toRex(env)
+            val predicate = expr.toRex()
             val op = relOpFilter(input, predicate)
             return rel(type, op)
         }
@@ -471,7 +476,7 @@ internal object RelConverter {
             }
             val type = input.type.copy(props = setOf(Rel.Prop.ORDERED))
             val specs = orderBy.sorts.map {
-                val rex = it.expr.toRex(env)
+                val rex = it.expr.toRex()
                 val order = when (it.dir) {
                     Sort.Dir.DESC -> when (it.nulls) {
                         Sort.Nulls.LAST -> Rel.Op.Sort.Order.DESC_NULLS_LAST
@@ -496,7 +501,7 @@ internal object RelConverter {
                 return input
             }
             val type = input.type
-            val rex = RexConverter.apply(limit, env)
+            val rex = RexConverter.apply(limit)
             val op = relOpLimit(input, rex)
             return rel(type, op)
         }
@@ -509,7 +514,7 @@ internal object RelConverter {
                 return input
             }
             val type = input.type
-            val rex = RexConverter.apply(offset, env)
+            val rex = RexConverter.apply(offset)
             val op = relOpOffset(input, rex)
             return rel(type, op)
         }
@@ -522,7 +527,7 @@ internal object RelConverter {
             val paths = exclude.items
                 .groupBy(keySelector = { it.root }, valueTransform = { it.steps })
                 .map { (root, exclusions) ->
-                    val rootVar = (root.toRex(env)).op as Rex.Op.Var
+                    val rootVar = (root.toRex()).op as Rex.Op.Var
                     val steps = exclusionsToSteps(exclusions)
                     relOpExcludePath(rootVar, steps)
                 }
@@ -598,7 +603,7 @@ internal object RelConverter {
 
         private data class Context(
             val aggregations: MutableList<Expr.Call>,
-            val keys: List<GroupBy.Key>
+            val keys: List<GroupBy.Key>,
         )
 
         fun apply(node: Expr.SFW): Pair<Expr.SFW, List<Expr.Call>> {
@@ -612,7 +617,10 @@ internal object RelConverter {
         override fun visitSelectValue(node: Select.Value, ctx: Context): AstNode {
             val visited = super.visitSelectValue(node, ctx)
             val substitutions = ctx.keys.associate {
-                it.expr to exprVar(identifierSymbol(it.asAlias!!.symbol, Identifier.CaseSensitivity.SENSITIVE), Expr.Var.Scope.DEFAULT)
+                it.expr to exprVar(
+                    identifierSymbol(it.asAlias!!.symbol, Identifier.CaseSensitivity.SENSITIVE),
+                    Expr.Var.Scope.DEFAULT
+                )
             }
             return SubstitutionVisitor.visit(visited, substitutions)
         }

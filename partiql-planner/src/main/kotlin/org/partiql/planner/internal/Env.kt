@@ -29,6 +29,16 @@ import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
 
 /**
+ * Temporary interface while lookups are being changed to using PartiQL-system and PATH.
+ */
+internal interface Env {
+    fun resolveObj(path: BindingPath): Rex?
+    fun resolveFn(path: BindingPath, args: List<Rex>): Rex?
+    fun resolveAgg(name: String, setQuantifier: Rel.Op.Aggregate.SetQuantifier, args: List<Rex>): Rel.Op.Aggregate.Call.Resolved?
+    fun resolveCast(input: Rex, target: PartiQLValueType): Rex.Op.Cast.Resolved?
+}
+
+/**
  * [Env] is similar to the database type environment from the PartiQL Specification. This includes resolution of
  * database binding values and scoped functions.
  *
@@ -38,7 +48,7 @@ import org.partiql.value.PartiQLValueType
  *
  * @property session
  */
-internal class Env(private val session: PartiQLPlanner.Session) {
+internal class EnvDefault(private val session: PartiQLPlanner.Session) : Env {
 
     /**
      * Cast table used for coercion and explicit cast resolution.
@@ -74,7 +84,7 @@ internal class Env(private val session: PartiQLPlanner.Session) {
      * @param path
      * @return
      */
-    fun resolveObj(path: BindingPath): Rex? {
+    override fun resolveObj(path: BindingPath): Rex? {
         val item = objects.lookup(path) ?: return null
         // Create an internal typed reference
         val ref = refObj(
@@ -90,7 +100,7 @@ internal class Env(private val session: PartiQLPlanner.Session) {
     }
 
     @OptIn(FnExperimental::class, PartiQLValueExperimental::class)
-    fun resolveFn(path: BindingPath, args: List<Rex>): Rex? {
+    override fun resolveFn(path: BindingPath, args: List<Rex>): Rex? {
         val item = fns.lookup(path) ?: return null
         // Invoke FnResolver to determine if we made a match
         val variants = item.handle.entity.getVariants()
@@ -149,7 +159,7 @@ internal class Env(private val session: PartiQLPlanner.Session) {
     }
 
     @OptIn(FnExperimental::class, PartiQLValueExperimental::class)
-    fun resolveAgg(name: String, setQuantifier: Rel.Op.Aggregate.SetQuantifier, args: List<Rex>): Rel.Op.Aggregate.Call.Resolved? {
+    override fun resolveAgg(name: String, setQuantifier: Rel.Op.Aggregate.SetQuantifier, args: List<Rex>): Rel.Op.Aggregate.Call.Resolved? {
         // TODO: Eventually, do we want to support sensitive lookup? With a path?
         val path = BindingPath(listOf(BindingName(name, BindingCase.INSENSITIVE)))
         val item = aggs.lookup(path) ?: return null
@@ -177,7 +187,7 @@ internal class Env(private val session: PartiQLPlanner.Session) {
     }
 
     @OptIn(PartiQLValueExperimental::class)
-    fun resolveCast(input: Rex, target: PartiQLValueType): Rex.Op.Cast.Resolved? {
+    override fun resolveCast(input: Rex, target: PartiQLValueType): Rex.Op.Cast.Resolved? {
         val operand = input.type.toRuntimeType()
         val cast = casts.get(operand, target) ?: return null
         return rexOpCastResolved(cast, input)

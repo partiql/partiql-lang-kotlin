@@ -827,7 +827,6 @@ public abstract class org/partiql/value/BinaryValue : org/partiql/value/ScalarVa
 	public fun <init> ()V
 	public abstract fun copy (Ljava/util/List;)Lorg/partiql/value/BinaryValue;
 	public fun getType ()Lorg/partiql/value/PartiQLValueType;
-	public fun isNull ()Z
 	public abstract fun withAnnotations (Ljava/util/List;)Lorg/partiql/value/BinaryValue;
 	public abstract fun withoutAnnotations ()Lorg/partiql/value/BinaryValue;
 }
@@ -836,7 +835,6 @@ public abstract class org/partiql/value/BlobValue : org/partiql/value/ScalarValu
 	public fun <init> ()V
 	public abstract fun copy (Ljava/util/List;)Lorg/partiql/value/BlobValue;
 	public fun getType ()Lorg/partiql/value/PartiQLValueType;
-	public fun isNull ()Z
 	public abstract fun withAnnotations (Ljava/util/List;)Lorg/partiql/value/BlobValue;
 	public abstract fun withoutAnnotations ()Lorg/partiql/value/BlobValue;
 }
@@ -845,7 +843,6 @@ public abstract class org/partiql/value/BoolValue : org/partiql/value/ScalarValu
 	public fun <init> ()V
 	public abstract fun copy (Ljava/util/List;)Lorg/partiql/value/BoolValue;
 	public fun getType ()Lorg/partiql/value/PartiQLValueType;
-	public fun isNull ()Z
 	public abstract fun withAnnotations (Ljava/util/List;)Lorg/partiql/value/BoolValue;
 	public abstract fun withoutAnnotations ()Lorg/partiql/value/BoolValue;
 }
@@ -854,7 +851,6 @@ public abstract class org/partiql/value/ByteValue : org/partiql/value/ScalarValu
 	public fun <init> ()V
 	public abstract fun copy (Ljava/util/List;)Lorg/partiql/value/ByteValue;
 	public fun getType ()Lorg/partiql/value/PartiQLValueType;
-	public fun isNull ()Z
 	public abstract fun withAnnotations (Ljava/util/List;)Lorg/partiql/value/ByteValue;
 	public abstract fun withoutAnnotations ()Lorg/partiql/value/ByteValue;
 }
@@ -872,7 +868,6 @@ public abstract class org/partiql/value/ClobValue : org/partiql/value/ScalarValu
 	public fun <init> ()V
 	public abstract fun copy (Ljava/util/List;)Lorg/partiql/value/ClobValue;
 	public fun getType ()Lorg/partiql/value/PartiQLValueType;
-	public fun isNull ()Z
 	public abstract fun withAnnotations (Ljava/util/List;)Lorg/partiql/value/ClobValue;
 	public abstract fun withoutAnnotations ()Lorg/partiql/value/ClobValue;
 }
@@ -889,7 +884,6 @@ public abstract class org/partiql/value/DateValue : org/partiql/value/ScalarValu
 	public fun <init> ()V
 	public abstract fun copy (Ljava/util/List;)Lorg/partiql/value/DateValue;
 	public fun getType ()Lorg/partiql/value/PartiQLValueType;
-	public fun isNull ()Z
 	public abstract fun withAnnotations (Ljava/util/List;)Lorg/partiql/value/DateValue;
 	public abstract fun withoutAnnotations ()Lorg/partiql/value/DateValue;
 }
@@ -962,7 +956,6 @@ public abstract class org/partiql/value/IntervalValue : org/partiql/value/Scalar
 	public fun <init> ()V
 	public abstract fun copy (Ljava/util/List;)Lorg/partiql/value/IntervalValue;
 	public fun getType ()Lorg/partiql/value/PartiQLValueType;
-	public fun isNull ()Z
 	public abstract fun withAnnotations (Ljava/util/List;)Lorg/partiql/value/IntervalValue;
 	public abstract fun withoutAnnotations ()Lorg/partiql/value/IntervalValue;
 }
@@ -999,7 +992,6 @@ public abstract class org/partiql/value/NullValue : org/partiql/value/PartiQLVal
 
 public abstract class org/partiql/value/NumericValue : org/partiql/value/ScalarValue {
 	public abstract fun copy (Ljava/util/List;)Lorg/partiql/value/NumericValue;
-	public fun isNull ()Z
 	public abstract fun toDecimal ()Lorg/partiql/value/DecimalValue;
 	public abstract fun toFloat32 ()Lorg/partiql/value/Float32Value;
 	public abstract fun toFloat64 ()Lorg/partiql/value/Float64Value;
@@ -1120,6 +1112,7 @@ public abstract interface class org/partiql/value/PartiQLValue {
 	public static fun comparator ()Ljava/util/Comparator;
 	public static fun comparator (Z)Ljava/util/Comparator;
 	public abstract fun copy (Ljava/util/List;)Lorg/partiql/value/PartiQLValue;
+	public static synthetic fun copy$default (Lorg/partiql/value/PartiQLValue;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/value/PartiQLValue;
 	public abstract fun getAnnotations ()Ljava/util/List;
 	public abstract fun getType ()Lorg/partiql/value/PartiQLValueType;
 	public abstract fun isNull ()Z
@@ -1131,10 +1124,6 @@ public final class org/partiql/value/PartiQLValue$Companion {
 	public final fun comparator ()Ljava/util/Comparator;
 	public final fun comparator (Z)Ljava/util/Comparator;
 	public static synthetic fun comparator$default (Lorg/partiql/value/PartiQLValue$Companion;ZILjava/lang/Object;)Ljava/util/Comparator;
-}
-
-public final class org/partiql/value/PartiQLValue$DefaultImpls {
-	public static synthetic fun copy$default (Lorg/partiql/value/PartiQLValue;Ljava/util/List;ILjava/lang/Object;)Lorg/partiql/value/PartiQLValue;
 }
 
 public abstract interface annotation class org/partiql/value/PartiQLValueExperimental : java/lang/annotation/Annotation {
@@ -1180,13 +1169,9 @@ public final class org/partiql/value/PartiQLValueType : java/lang/Enum {
 public abstract interface class org/partiql/value/ScalarValue : org/partiql/value/PartiQLValue {
 	public abstract fun copy (Ljava/util/List;)Lorg/partiql/value/ScalarValue;
 	public abstract fun getValue ()Ljava/lang/Object;
-	public abstract fun isNull ()Z
+	public fun isNull ()Z
 	public abstract fun withAnnotations (Ljava/util/List;)Lorg/partiql/value/ScalarValue;
 	public abstract fun withoutAnnotations ()Lorg/partiql/value/ScalarValue;
-}
-
-public final class org/partiql/value/ScalarValue$DefaultImpls {
-	public static fun isNull (Lorg/partiql/value/ScalarValue;)Z
 }
 
 public abstract class org/partiql/value/SexpValue : org/partiql/value/CollectionValue {
@@ -1237,7 +1222,6 @@ public abstract class org/partiql/value/SymbolValue : org/partiql/value/TextValu
 public abstract class org/partiql/value/TextValue : org/partiql/value/ScalarValue {
 	public abstract fun copy (Ljava/util/List;)Lorg/partiql/value/TextValue;
 	public abstract fun getString ()Ljava/lang/String;
-	public fun isNull ()Z
 	public abstract fun withAnnotations (Ljava/util/List;)Lorg/partiql/value/TextValue;
 	public abstract fun withoutAnnotations ()Lorg/partiql/value/TextValue;
 }
@@ -1246,7 +1230,6 @@ public abstract class org/partiql/value/TimeValue : org/partiql/value/ScalarValu
 	public fun <init> ()V
 	public abstract fun copy (Ljava/util/List;)Lorg/partiql/value/TimeValue;
 	public fun getType ()Lorg/partiql/value/PartiQLValueType;
-	public fun isNull ()Z
 	public abstract fun withAnnotations (Ljava/util/List;)Lorg/partiql/value/TimeValue;
 	public abstract fun withoutAnnotations ()Lorg/partiql/value/TimeValue;
 }
@@ -1255,43 +1238,29 @@ public abstract class org/partiql/value/TimestampValue : org/partiql/value/Scala
 	public fun <init> ()V
 	public abstract fun copy (Ljava/util/List;)Lorg/partiql/value/TimestampValue;
 	public fun getType ()Lorg/partiql/value/PartiQLValueType;
-	public fun isNull ()Z
 	public abstract fun withAnnotations (Ljava/util/List;)Lorg/partiql/value/TimestampValue;
 	public abstract fun withoutAnnotations ()Lorg/partiql/value/TimestampValue;
 }
 
 public abstract interface class org/partiql/value/datetime/Date : java/lang/Comparable, org/partiql/value/datetime/DateTime {
 	public abstract fun atTime (Lorg/partiql/value/datetime/Time;)Lorg/partiql/value/datetime/Timestamp;
-	public abstract fun compareTo (Lorg/partiql/value/datetime/Date;)I
+	public synthetic fun compareTo (Ljava/lang/Object;)I
+	public fun compareTo (Lorg/partiql/value/datetime/Date;)I
 	public abstract fun getDay ()Ljava/lang/Integer;
-	public abstract fun getDecimalSecond ()Ljava/math/BigDecimal;
-	public abstract fun getHour ()Ljava/lang/Integer;
-	public abstract fun getMinute ()Ljava/lang/Integer;
+	public fun getDecimalSecond ()Ljava/math/BigDecimal;
+	public fun getHour ()Ljava/lang/Integer;
+	public fun getMinute ()Ljava/lang/Integer;
 	public abstract fun getMonth ()Ljava/lang/Integer;
-	public abstract fun getTimeZone ()Lorg/partiql/value/datetime/TimeZone;
+	public fun getTimeZone ()Lorg/partiql/value/datetime/TimeZone;
 	public abstract fun getYear ()Ljava/lang/Integer;
 	public abstract fun plusDays (J)Lorg/partiql/value/datetime/Date;
 	public abstract fun plusMonths (J)Lorg/partiql/value/datetime/Date;
 	public abstract fun plusYears (J)Lorg/partiql/value/datetime/Date;
 }
 
-public final class org/partiql/value/datetime/Date$DefaultImpls {
-	public static fun compareTo (Lorg/partiql/value/datetime/Date;Lorg/partiql/value/datetime/Date;)I
-	public static fun getDecimalSecond (Lorg/partiql/value/datetime/Date;)Ljava/math/BigDecimal;
-	public static fun getHour (Lorg/partiql/value/datetime/Date;)Ljava/lang/Integer;
-	public static fun getMinute (Lorg/partiql/value/datetime/Date;)Ljava/lang/Integer;
-	public static fun getTimeZone (Lorg/partiql/value/datetime/Date;)Lorg/partiql/value/datetime/TimeZone;
-}
-
 public abstract class org/partiql/value/datetime/DateImpl : java/lang/Comparable, org/partiql/value/datetime/Date {
 	public fun <init> ()V
-	public synthetic fun compareTo (Ljava/lang/Object;)I
-	public fun compareTo (Lorg/partiql/value/datetime/Date;)I
 	public final fun equals (Ljava/lang/Object;)Z
-	public fun getDecimalSecond ()Ljava/math/BigDecimal;
-	public fun getHour ()Ljava/lang/Integer;
-	public fun getMinute ()Ljava/lang/Integer;
-	public fun getTimeZone ()Lorg/partiql/value/datetime/TimeZone;
 	public final fun hashCode ()I
 	public final fun toString ()Ljava/lang/String;
 }
@@ -1347,15 +1316,16 @@ public final class org/partiql/value/datetime/DateTimeValue {
 
 public abstract interface class org/partiql/value/datetime/Time : java/lang/Comparable, org/partiql/value/datetime/DateTime {
 	public abstract fun atDate (Lorg/partiql/value/datetime/Date;)Lorg/partiql/value/datetime/Timestamp;
-	public abstract fun compareTo (Lorg/partiql/value/datetime/Time;)I
-	public abstract fun getDay ()Ljava/lang/Integer;
+	public synthetic fun compareTo (Ljava/lang/Object;)I
+	public fun compareTo (Lorg/partiql/value/datetime/Time;)I
+	public fun getDay ()Ljava/lang/Integer;
 	public abstract fun getDecimalSecond ()Ljava/math/BigDecimal;
 	public abstract fun getElapsedSecond ()Ljava/math/BigDecimal;
 	public abstract fun getHour ()Ljava/lang/Integer;
 	public abstract fun getMinute ()Ljava/lang/Integer;
-	public abstract fun getMonth ()Ljava/lang/Integer;
+	public fun getMonth ()Ljava/lang/Integer;
 	public abstract fun getTimeZone ()Lorg/partiql/value/datetime/TimeZone;
-	public abstract fun getYear ()Ljava/lang/Integer;
+	public fun getYear ()Ljava/lang/Integer;
 	public abstract fun plusHours (J)Lorg/partiql/value/datetime/Time;
 	public abstract fun plusMinutes (J)Lorg/partiql/value/datetime/Time;
 	public abstract fun plusSeconds (J)Lorg/partiql/value/datetime/Time;
@@ -1363,24 +1333,12 @@ public abstract interface class org/partiql/value/datetime/Time : java/lang/Comp
 	public abstract fun toPrecision (I)Lorg/partiql/value/datetime/Time;
 }
 
-public final class org/partiql/value/datetime/Time$DefaultImpls {
-	public static fun compareTo (Lorg/partiql/value/datetime/Time;Lorg/partiql/value/datetime/Time;)I
-	public static fun getDay (Lorg/partiql/value/datetime/Time;)Ljava/lang/Integer;
-	public static fun getMonth (Lorg/partiql/value/datetime/Time;)Ljava/lang/Integer;
-	public static fun getYear (Lorg/partiql/value/datetime/Time;)Ljava/lang/Integer;
-}
-
 public abstract class org/partiql/value/datetime/TimeWithTimeZone : org/partiql/value/datetime/Time {
 	public fun <init> ()V
 	public abstract fun atDate (Lorg/partiql/value/datetime/Date;)Lorg/partiql/value/datetime/TimestampWithTimeZone;
 	public abstract fun atTimeZone (Lorg/partiql/value/datetime/TimeZone;)Lorg/partiql/value/datetime/TimeWithTimeZone;
-	public synthetic fun compareTo (Ljava/lang/Object;)I
-	public fun compareTo (Lorg/partiql/value/datetime/Time;)I
 	public final fun equals (Ljava/lang/Object;)Z
-	public fun getDay ()Ljava/lang/Integer;
-	public fun getMonth ()Ljava/lang/Integer;
 	public abstract fun getTimeZone ()Lorg/partiql/value/datetime/TimeZone;
-	public fun getYear ()Ljava/lang/Integer;
 	public final fun hashCode ()I
 	public abstract fun plusHours (J)Lorg/partiql/value/datetime/TimeWithTimeZone;
 	public abstract fun plusMinutes (J)Lorg/partiql/value/datetime/TimeWithTimeZone;
@@ -1395,13 +1353,8 @@ public abstract class org/partiql/value/datetime/TimeWithTimeZone : org/partiql/
 public abstract class org/partiql/value/datetime/TimeWithoutTimeZone : org/partiql/value/datetime/Time {
 	public fun <init> ()V
 	public abstract fun atDate (Lorg/partiql/value/datetime/Date;)Lorg/partiql/value/datetime/TimestampWithoutTimeZone;
-	public synthetic fun compareTo (Ljava/lang/Object;)I
-	public fun compareTo (Lorg/partiql/value/datetime/Time;)I
 	public final fun equals (Ljava/lang/Object;)Z
-	public fun getDay ()Ljava/lang/Integer;
-	public fun getMonth ()Ljava/lang/Integer;
 	public final fun getTimeZone ()Lorg/partiql/value/datetime/TimeZone;
-	public fun getYear ()Ljava/lang/Integer;
 	public final fun hashCode ()I
 	public abstract fun plusHours (J)Lorg/partiql/value/datetime/TimeWithoutTimeZone;
 	public abstract fun plusMinutes (J)Lorg/partiql/value/datetime/TimeWithoutTimeZone;
@@ -1442,7 +1395,8 @@ public final class org/partiql/value/datetime/TimeZone$UtcOffset$Companion {
 }
 
 public abstract interface class org/partiql/value/datetime/Timestamp : java/lang/Comparable, org/partiql/value/datetime/DateTime {
-	public abstract fun compareTo (Lorg/partiql/value/datetime/Timestamp;)I
+	public synthetic fun compareTo (Ljava/lang/Object;)I
+	public fun compareTo (Lorg/partiql/value/datetime/Timestamp;)I
 	public abstract fun getDay ()Ljava/lang/Integer;
 	public abstract fun getDecimalSecond ()Ljava/math/BigDecimal;
 	public abstract fun getHour ()Ljava/lang/Integer;
@@ -1457,22 +1411,15 @@ public abstract interface class org/partiql/value/datetime/Timestamp : java/lang
 	public abstract fun plusSeconds (J)Lorg/partiql/value/datetime/Timestamp;
 	public abstract fun plusSeconds (Ljava/math/BigDecimal;)Lorg/partiql/value/datetime/Timestamp;
 	public abstract fun plusYears (J)Lorg/partiql/value/datetime/Timestamp;
-	public abstract fun toDate ()Lorg/partiql/value/datetime/Date;
+	public fun toDate ()Lorg/partiql/value/datetime/Date;
 	public abstract fun toPrecision (I)Lorg/partiql/value/datetime/Timestamp;
 	public abstract fun toTime ()Lorg/partiql/value/datetime/Time;
-}
-
-public final class org/partiql/value/datetime/Timestamp$DefaultImpls {
-	public static fun compareTo (Lorg/partiql/value/datetime/Timestamp;Lorg/partiql/value/datetime/Timestamp;)I
-	public static fun toDate (Lorg/partiql/value/datetime/Timestamp;)Lorg/partiql/value/datetime/Date;
 }
 
 public abstract class org/partiql/value/datetime/TimestampWithTimeZone : org/partiql/value/datetime/Timestamp {
 	public static final field Companion Lorg/partiql/value/datetime/TimestampWithTimeZone$Companion;
 	public fun <init> ()V
 	public abstract fun atTimeZone (Lorg/partiql/value/datetime/TimeZone;)Lorg/partiql/value/datetime/TimestampWithTimeZone;
-	public synthetic fun compareTo (Ljava/lang/Object;)I
-	public fun compareTo (Lorg/partiql/value/datetime/Timestamp;)I
 	public final fun equals (Ljava/lang/Object;)Z
 	public final fun getEpochMillis ()Ljava/math/BigDecimal;
 	public abstract fun getEpochSecond ()Ljava/math/BigDecimal;
@@ -1489,7 +1436,6 @@ public abstract class org/partiql/value/datetime/TimestampWithTimeZone : org/par
 	public final fun plusSeconds (J)Lorg/partiql/value/datetime/TimestampWithTimeZone;
 	public abstract fun plusSeconds (Ljava/math/BigDecimal;)Lorg/partiql/value/datetime/TimestampWithTimeZone;
 	public abstract fun plusYears (J)Lorg/partiql/value/datetime/TimestampWithTimeZone;
-	public fun toDate ()Lorg/partiql/value/datetime/Date;
 	public synthetic fun toPrecision (I)Lorg/partiql/value/datetime/Timestamp;
 	public final fun toPrecision (I)Lorg/partiql/value/datetime/TimestampWithTimeZone;
 	public final fun toString ()Ljava/lang/String;
@@ -1504,8 +1450,6 @@ public final class org/partiql/value/datetime/TimestampWithTimeZone$Companion {
 
 public abstract class org/partiql/value/datetime/TimestampWithoutTimeZone : org/partiql/value/datetime/Timestamp {
 	public fun <init> ()V
-	public synthetic fun compareTo (Ljava/lang/Object;)I
-	public fun compareTo (Lorg/partiql/value/datetime/Timestamp;)I
 	public final fun equals (Ljava/lang/Object;)Z
 	public fun getTimeZone ()Lorg/partiql/value/datetime/TimeZone;
 	public final fun hashCode ()I
@@ -1517,7 +1461,6 @@ public abstract class org/partiql/value/datetime/TimestampWithoutTimeZone : org/
 	public fun plusSeconds (J)Lorg/partiql/value/datetime/TimestampWithoutTimeZone;
 	public abstract fun plusSeconds (Ljava/math/BigDecimal;)Lorg/partiql/value/datetime/TimestampWithoutTimeZone;
 	public abstract fun plusYears (J)Lorg/partiql/value/datetime/TimestampWithoutTimeZone;
-	public fun toDate ()Lorg/partiql/value/datetime/Date;
 	public synthetic fun toPrecision (I)Lorg/partiql/value/datetime/Timestamp;
 	public final fun toPrecision (I)Lorg/partiql/value/datetime/TimestampWithoutTimeZone;
 	public final fun toString ()Ljava/lang/String;

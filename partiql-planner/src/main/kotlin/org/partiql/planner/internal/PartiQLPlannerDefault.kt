@@ -23,16 +23,14 @@ internal class PartiQLPlannerDefault(
         onProblem: ProblemCallback,
     ): PartiQLPlanner.Result {
 
-        // 0. Initialize the planning environment
-        val env = Env(session)
-
         // 1. Normalize
         val ast = statement.normalize()
 
         // 2. AST to Rel/Rex
-        val root = AstToPlan.apply(ast, env)
+        val root = AstToPlan.apply(ast)
 
         // 3. Resolve variables
+        val env = EnvDefault(session)
         val typer = PlanTyper(env)
         val typed = typer.resolve(root)
         val internal = org.partiql.planner.internal.ir.PartiQLPlan(typed)

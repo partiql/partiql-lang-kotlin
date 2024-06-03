@@ -15,6 +15,7 @@
 
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
+import org.gradle.kotlin.dsl.support.kotlinCompilerOptions
 import org.jlleitschuh.gradle.ktlint.KtlintExtension
 import java.io.ByteArrayOutputStream
 import java.io.FileOutputStream
@@ -72,12 +73,14 @@ tasks.compileKotlin {
     kotlinOptions.jvmTarget = Versions.jvmTarget
     kotlinOptions.apiVersion = Versions.kotlinApi
     kotlinOptions.languageVersion = Versions.kotlinLanguage
+    kotlinOptions.freeCompilerArgs += "-Xjvm-default=all"
 }
 
 tasks.compileTestKotlin {
     kotlinOptions.jvmTarget = Versions.jvmTarget
     kotlinOptions.apiVersion = Versions.kotlinApi
     kotlinOptions.languageVersion = Versions.kotlinLanguage
+    kotlinOptions.freeCompilerArgs += "-Xjvm-default=all"
 }
 
 configure<KtlintExtension> {
