@@ -657,16 +657,10 @@ public final class org/partiql/lang/eval/ExceptionsKt {
 }
 
 public abstract interface class org/partiql/lang/eval/ExprFunction {
-	public abstract fun callWithOptional (Lorg/partiql/lang/eval/EvaluationSession;Ljava/util/List;Lorg/partiql/lang/eval/ExprValue;)Lorg/partiql/lang/eval/ExprValue;
-	public abstract fun callWithRequired (Lorg/partiql/lang/eval/EvaluationSession;Ljava/util/List;)Lorg/partiql/lang/eval/ExprValue;
-	public abstract fun callWithVariadic (Lorg/partiql/lang/eval/EvaluationSession;Ljava/util/List;Ljava/util/List;)Lorg/partiql/lang/eval/ExprValue;
+	public fun callWithOptional (Lorg/partiql/lang/eval/EvaluationSession;Ljava/util/List;Lorg/partiql/lang/eval/ExprValue;)Lorg/partiql/lang/eval/ExprValue;
+	public fun callWithRequired (Lorg/partiql/lang/eval/EvaluationSession;Ljava/util/List;)Lorg/partiql/lang/eval/ExprValue;
+	public fun callWithVariadic (Lorg/partiql/lang/eval/EvaluationSession;Ljava/util/List;Ljava/util/List;)Lorg/partiql/lang/eval/ExprValue;
 	public abstract fun getSignature ()Lorg/partiql/lang/types/FunctionSignature;
-}
-
-public final class org/partiql/lang/eval/ExprFunction$DefaultImpls {
-	public static fun callWithOptional (Lorg/partiql/lang/eval/ExprFunction;Lorg/partiql/lang/eval/EvaluationSession;Ljava/util/List;Lorg/partiql/lang/eval/ExprValue;)Lorg/partiql/lang/eval/ExprValue;
-	public static fun callWithRequired (Lorg/partiql/lang/eval/ExprFunction;Lorg/partiql/lang/eval/EvaluationSession;Ljava/util/List;)Lorg/partiql/lang/eval/ExprValue;
-	public static fun callWithVariadic (Lorg/partiql/lang/eval/ExprFunction;Lorg/partiql/lang/eval/EvaluationSession;Ljava/util/List;Ljava/util/List;)Lorg/partiql/lang/eval/ExprValue;
 }
 
 public final class org/partiql/lang/eval/ExprFunctionKt {
@@ -758,15 +752,11 @@ public final class org/partiql/lang/eval/ExprValue$Companion {
 public abstract interface class org/partiql/lang/eval/ExprValueBagOp {
 	public static final field Companion Lorg/partiql/lang/eval/ExprValueBagOp$Companion;
 	public abstract fun eval (Lkotlin/sequences/Sequence;Lkotlin/sequences/Sequence;)Lkotlin/sequences/Sequence;
-	public abstract fun eval (Lorg/partiql/lang/eval/ExprValue;Lorg/partiql/lang/eval/ExprValue;)Lkotlin/sequences/Sequence;
+	public fun eval (Lorg/partiql/lang/eval/ExprValue;Lorg/partiql/lang/eval/ExprValue;)Lkotlin/sequences/Sequence;
 }
 
 public final class org/partiql/lang/eval/ExprValueBagOp$Companion {
 	public final fun create (Lorg/partiql/pig/runtime/DomainNode;Ljava/util/Map;)Lorg/partiql/lang/eval/ExprValueBagOp;
-}
-
-public final class org/partiql/lang/eval/ExprValueBagOp$DefaultImpls {
-	public static fun eval (Lorg/partiql/lang/eval/ExprValueBagOp;Lorg/partiql/lang/eval/ExprValue;Lorg/partiql/lang/eval/ExprValue;)Lkotlin/sequences/Sequence;
 }
 
 public final class org/partiql/lang/eval/ExprValueExtensionsKt {
@@ -1008,26 +998,16 @@ public final class org/partiql/lang/eval/RequiredWithVariadic : org/partiql/lang
 public abstract interface class org/partiql/lang/eval/Scalar {
 	public static final field Companion Lorg/partiql/lang/eval/Scalar$Companion;
 	public static final field EMPTY Lorg/partiql/lang/eval/Scalar;
-	public abstract fun booleanValue ()Ljava/lang/Boolean;
-	public abstract fun bytesValue ()[B
-	public abstract fun dateValue ()Ljava/time/LocalDate;
-	public abstract fun numberValue ()Ljava/lang/Number;
-	public abstract fun stringValue ()Ljava/lang/String;
-	public abstract fun timeValue ()Lorg/partiql/lang/eval/time/Time;
-	public abstract fun timestampValue ()Lcom/amazon/ion/Timestamp;
+	public fun booleanValue ()Ljava/lang/Boolean;
+	public fun bytesValue ()[B
+	public fun dateValue ()Ljava/time/LocalDate;
+	public fun numberValue ()Ljava/lang/Number;
+	public fun stringValue ()Ljava/lang/String;
+	public fun timeValue ()Lorg/partiql/lang/eval/time/Time;
+	public fun timestampValue ()Lcom/amazon/ion/Timestamp;
 }
 
 public final class org/partiql/lang/eval/Scalar$Companion {
-}
-
-public final class org/partiql/lang/eval/Scalar$DefaultImpls {
-	public static fun booleanValue (Lorg/partiql/lang/eval/Scalar;)Ljava/lang/Boolean;
-	public static fun bytesValue (Lorg/partiql/lang/eval/Scalar;)[B
-	public static fun dateValue (Lorg/partiql/lang/eval/Scalar;)Ljava/time/LocalDate;
-	public static fun numberValue (Lorg/partiql/lang/eval/Scalar;)Ljava/lang/Number;
-	public static fun stringValue (Lorg/partiql/lang/eval/Scalar;)Ljava/lang/String;
-	public static fun timeValue (Lorg/partiql/lang/eval/Scalar;)Lorg/partiql/lang/eval/time/Time;
-	public static fun timestampValue (Lorg/partiql/lang/eval/Scalar;)Lcom/amazon/ion/Timestamp;
 }
 
 public final class org/partiql/lang/eval/StandardNamesKt {
@@ -1134,9 +1114,7 @@ public final class org/partiql/lang/eval/binding/LocalsBinderKt {
 
 public final class org/partiql/lang/eval/builtins/DynamicLookupExprFunction : org/partiql/lang/eval/ExprFunction {
 	public fun <init> ()V
-	public fun callWithOptional (Lorg/partiql/lang/eval/EvaluationSession;Ljava/util/List;Lorg/partiql/lang/eval/ExprValue;)Lorg/partiql/lang/eval/ExprValue;
 	public fun callWithRequired (Lorg/partiql/lang/eval/EvaluationSession;Ljava/util/List;)Lorg/partiql/lang/eval/ExprValue;
-	public fun callWithVariadic (Lorg/partiql/lang/eval/EvaluationSession;Ljava/util/List;Ljava/util/List;)Lorg/partiql/lang/eval/ExprValue;
 	public fun getSignature ()Lorg/partiql/lang/types/FunctionSignature;
 }
 
@@ -2464,7 +2442,6 @@ public final class org/partiql/lang/util/CollectionExtensionsKt {
 public final class org/partiql/lang/util/ConfigurableExprValueFormatter : org/partiql/lang/util/ExprValueFormatter {
 	public static final field Companion Lorg/partiql/lang/util/ConfigurableExprValueFormatter$Companion;
 	public fun <init> (Lorg/partiql/lang/util/ConfigurableExprValueFormatter$Configuration;)V
-	public fun format (Lorg/partiql/lang/eval/ExprValue;)Ljava/lang/String;
 	public fun formatTo (Lorg/partiql/lang/eval/ExprValue;Ljava/lang/Appendable;)V
 	public static final fun getPretty ()Lorg/partiql/lang/util/ConfigurableExprValueFormatter;
 	public static final fun getStandard ()Lorg/partiql/lang/util/ConfigurableExprValueFormatter;
@@ -2489,12 +2466,8 @@ public final class org/partiql/lang/util/ConfigurableExprValueFormatter$Configur
 }
 
 public abstract interface class org/partiql/lang/util/ExprValueFormatter {
-	public abstract fun format (Lorg/partiql/lang/eval/ExprValue;)Ljava/lang/String;
+	public fun format (Lorg/partiql/lang/eval/ExprValue;)Ljava/lang/String;
 	public abstract fun formatTo (Lorg/partiql/lang/eval/ExprValue;Ljava/lang/Appendable;)V
-}
-
-public final class org/partiql/lang/util/ExprValueFormatter$DefaultImpls {
-	public static fun format (Lorg/partiql/lang/util/ExprValueFormatter;Lorg/partiql/lang/eval/ExprValue;)Ljava/lang/String;
 }
 
 public final class org/partiql/lang/util/FacetExtensionsKt {

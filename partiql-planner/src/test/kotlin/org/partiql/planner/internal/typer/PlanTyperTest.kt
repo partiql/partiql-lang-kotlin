@@ -3,7 +3,7 @@ package org.partiql.planner.internal.typer
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.partiql.planner.PartiQLPlanner
-import org.partiql.planner.internal.Env
+import org.partiql.planner.internal.EnvDefault
 import org.partiql.planner.internal.ir.Identifier
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.Statement
@@ -118,7 +118,7 @@ class PlanTyperTest {
 
         private fun getTyper(): PlanTyperWrapper {
             ProblemCollector()
-            val env = Env(
+            val env = EnvDefault(
                 PartiQLPlanner.Session(
                     queryId = Random().nextInt().toString(),
                     userId = "test-user",
