@@ -1,10 +1,10 @@
 package org.partiql.eval.internal.operator.rex
 
-import org.partiql.eval.PQLValue
-import org.partiql.eval.StructField
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.helpers.ValueUtility.getText
 import org.partiql.eval.internal.operator.Operator
+import org.partiql.eval.value.PQLValue
+import org.partiql.eval.value.StructField
 
 internal class ExprPivot(
     private val input: Operator.Relation,

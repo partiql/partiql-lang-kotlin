@@ -1,8 +1,8 @@
 package org.partiql.eval.internal.operator.rex
 
-import org.partiql.eval.PQLValue
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.operator.Operator
+import org.partiql.eval.value.PQLValue
 import org.partiql.spi.connector.ConnectorBindings
 import org.partiql.spi.connector.ConnectorPath
 import org.partiql.value.PartiQLValueExperimental

@@ -1,6 +1,5 @@
 package org.partiql.eval.internal
 
-import org.partiql.eval.PQLValue
 import org.partiql.eval.PartiQLEngine
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.eval.internal.operator.rel.RelAggregate
@@ -47,6 +46,7 @@ import org.partiql.eval.internal.operator.rex.ExprSubquery
 import org.partiql.eval.internal.operator.rex.ExprTupleUnion
 import org.partiql.eval.internal.operator.rex.ExprVarLocal
 import org.partiql.eval.internal.operator.rex.ExprVarOuter
+import org.partiql.eval.value.PQLValue
 import org.partiql.plan.Catalog
 import org.partiql.plan.PartiQLPlan
 import org.partiql.plan.PlanNode

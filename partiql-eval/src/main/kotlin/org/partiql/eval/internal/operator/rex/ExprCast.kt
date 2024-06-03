@@ -6,9 +6,9 @@ import com.amazon.ionelement.api.IonElementException
 import com.amazon.ionelement.api.createIonElementLoader
 import org.partiql.errors.DataException
 import org.partiql.errors.TypeCheckException
-import org.partiql.eval.PQLValue
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.operator.Operator
+import org.partiql.eval.value.PQLValue
 import org.partiql.plan.Ref
 import org.partiql.value.BagValue
 import org.partiql.value.BoolValue

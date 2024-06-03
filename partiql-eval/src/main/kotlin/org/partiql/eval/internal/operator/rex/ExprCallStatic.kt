@@ -1,9 +1,9 @@
 package org.partiql.eval.internal.operator.rex
 
-import org.partiql.eval.PQLValue
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.helpers.toNull
 import org.partiql.eval.internal.operator.Operator
+import org.partiql.eval.value.PQLValue
 import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.value.PartiQLValueExperimental

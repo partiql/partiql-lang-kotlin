@@ -1,7 +1,7 @@
 package org.partiql.eval.internal.helpers
 
-import org.partiql.eval.PQLValue
 import org.partiql.eval.internal.Record
+import org.partiql.eval.value.PQLValue
 
 /**
  * An [Iterator] over an [Iterator] lazily producing [Record]s as you call [next].

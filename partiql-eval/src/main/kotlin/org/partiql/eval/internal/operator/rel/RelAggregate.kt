@@ -1,9 +1,9 @@
 package org.partiql.eval.internal.operator.rel
 
-import org.partiql.eval.PQLValue
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
+import org.partiql.eval.value.PQLValue
 import org.partiql.spi.fn.Agg
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.value.PartiQLValue

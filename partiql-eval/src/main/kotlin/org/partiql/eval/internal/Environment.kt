@@ -1,6 +1,6 @@
 package org.partiql.eval.internal
 
-import org.partiql.eval.PQLValue
+import org.partiql.eval.value.PQLValue
 
 /**
  * This class represents the Variables Environment defined in the PartiQL Specification.

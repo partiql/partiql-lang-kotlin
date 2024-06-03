@@ -1,6 +1,6 @@
 package org.partiql.eval.internal
 
-import org.partiql.eval.PQLValue
+import org.partiql.eval.value.PQLValue
 
 internal data class Record(val values: Array<PQLValue>) {
 

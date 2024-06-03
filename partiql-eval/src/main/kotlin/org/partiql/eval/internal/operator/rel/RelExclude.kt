@@ -1,11 +1,11 @@
 package org.partiql.eval.internal.operator.rel
 
-import org.partiql.eval.PQLValue
-import org.partiql.eval.StructField
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.helpers.IteratorSupplier
 import org.partiql.eval.internal.operator.Operator
+import org.partiql.eval.value.PQLValue
+import org.partiql.eval.value.StructField
 import org.partiql.plan.Rel
 import org.partiql.plan.relOpExcludeTypeCollIndex
 import org.partiql.plan.relOpExcludeTypeCollWildcard
