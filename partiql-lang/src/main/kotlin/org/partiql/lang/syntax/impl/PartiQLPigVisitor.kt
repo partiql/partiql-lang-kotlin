@@ -60,9 +60,8 @@ import org.partiql.lang.util.checkThreadInterrupted
 import org.partiql.lang.util.error
 import org.partiql.lang.util.getPrecisionFromTimeString
 import org.partiql.lang.util.unaryMinus
-import org.partiql.parser.antlr.PartiQLParser
-import org.partiql.parser.antlr.PartiQLParserBaseVisitor
 import org.partiql.parser.internal.antlr.PartiQLParser
+import org.partiql.parser.internal.antlr.PartiQLParserBaseVisitor
 import org.partiql.pig.runtime.SymbolPrimitive
 import org.partiql.value.datetime.DateTimeException
 import org.partiql.value.datetime.TimeZone

@@ -148,7 +148,6 @@ rex::{
       dynamic::{
         args: list::[rex],
         candidates: list::[candidate],
-        exhaustive: bool,
         _: [
           candidate::{
             fn: '.ref.fn',

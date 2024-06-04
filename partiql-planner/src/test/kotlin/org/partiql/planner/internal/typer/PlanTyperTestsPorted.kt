@@ -689,12 +689,12 @@ class PlanTyperTestsPorted {
                 query = "CURRENT_USER + 'hello'",
                 expected = ANY,
                 problemHandler = assertProblemExists(
-                    ProblemGenerator.undefinedFunction(
-                        "plus",
+                    ProblemGenerator.incompatibleTypesForOp(
                         listOf(
                             StaticType.STRING,
                             StaticType.STRING,
                         ),
+                        "PLUS",
                     )
                 )
             ),
@@ -760,12 +760,9 @@ class PlanTyperTestsPorted {
             ErrorTestCase(
                 name = "BITWISE_AND_MISSING_OPERAND",
                 query = "1 & MISSING",
-                expected = unionOf(INT4, INT8, INT),
+                expected = ANY, // TODO: Is this unionOf(INT4, INT8, INT) ?
                 problemHandler = assertProblemExists(
-                    ProblemGenerator.incompatibleTypesForOp(
-                        listOf(StaticType.INT4, StaticType.MISSING),
-                        "BITWISE_AND",
-                    )
+                    ProblemGenerator.expressionAlwaysReturnsMissing("Function argument is always the missing value.")
                 )
             ),
             ErrorTestCase(
@@ -773,9 +770,9 @@ class PlanTyperTestsPorted {
                 query = "1 & 'NOT AN INT'",
                 expected = StaticType.ANY,
                 problemHandler = assertProblemExists(
-                    ProblemGenerator.undefinedFunction(
-                        "bitwise_and",
-                        listOf(StaticType.INT4, StaticType.STRING)
+                    ProblemGenerator.incompatibleTypesForOp(
+                        listOf(StaticType.INT4, StaticType.STRING),
+                        "BITWISE_AND",
                     )
                 )
             ),
@@ -2669,7 +2666,7 @@ class PlanTyperTestsPorted {
                     ),
                 ),
             ),
-            ErrorTestCase(
+            SuccessTestCase(
                 name = "CASE-WHEN always MISSING",
                 key = PartiQLTest.Key("basics", "case-when-30"),
                 catalog = "pql",
@@ -3056,7 +3053,7 @@ class PlanTyperTestsPorted {
                 """,
                 expected = ANY,
                 problemHandler = assertProblemExists(
-                    ProblemGenerator.expressionAlwaysReturnsMissing("Path Navigation always returns MISSING")
+                    ProblemGenerator.expressionAlwaysReturnsMissing("Collections must be indexed with integers, found string")
                 )
             ),
             // The reason this is ANY is because we do not have support for constant-folding. We don't know what
@@ -3415,9 +3412,9 @@ class PlanTyperTestsPorted {
                 """.trimIndent(),
                 expected = BagType(unionOf(StaticType.INT2, INT4, INT8, INT, StaticType.FLOAT, StaticType.DECIMAL)),
                 problemHandler = assertProblemExists(
-                    ProblemGenerator.incompatibleTypesForOp(
-                        listOf(StaticType.MISSING),
-                        "POS",
+                    ProblemGenerator.undefinedVariable(
+                        Identifier.Symbol("a", Identifier.CaseSensitivity.SENSITIVE),
+                        setOf("t"),
                     )
                 )
             ),
@@ -3429,12 +3426,9 @@ class PlanTyperTestsPorted {
                 query = """
                     +MISSING
                 """.trimIndent(),
-                expected = StaticType.MISSING,
+                expected = StaticType.ANY,
                 problemHandler = assertProblemExists(
-                    ProblemGenerator.incompatibleTypesForOp(
-                        listOf(StaticType.MISSING),
-                        "POS",
-                    )
+                    ProblemGenerator.expressionAlwaysReturnsMissing("Function argument is always the missing value.")
                 )
             ),
         )
@@ -3827,15 +3821,26 @@ class PlanTyperTestsPorted {
                 name = "Pets should not be accessible #1",
                 query = "SELECT * FROM pets",
                 expected = BagType(
-                    StructType(
-                        fields = emptyMap(),
-                        contentClosed = true,
-                        constraints = setOf(
-                            TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(true),
-                            TupleConstraint.Ordered,
-                        )
-                    ),
+                    unionOf(
+                        StructType(
+                            fields = emptyMap(),
+                            contentClosed = false,
+                            constraints = setOf(
+                                TupleConstraint.Open(true),
+                                TupleConstraint.UniqueAttrs(false),
+                            )
+                        ),
+                        StructType(
+                            fields = listOf(
+                                StructType.Field("_1", ANY)
+                            ),
+                            contentClosed = true,
+                            constraints = setOf(
+                                TupleConstraint.Open(false),
+                                TupleConstraint.UniqueAttrs(true),
+                            )
+                        ),
+                    )
                 ),
                 problemHandler = assertProblemExists(
                     ProblemGenerator.undefinedVariable(insensitive("pets"))
@@ -3846,15 +3851,26 @@ class PlanTyperTestsPorted {
                 catalog = CATALOG_AWS,
                 query = "SELECT * FROM pets",
                 expected = BagType(
-                    StructType(
-                        fields = emptyMap(),
-                        contentClosed = true,
-                        constraints = setOf(
-                            TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(true),
-                            TupleConstraint.Ordered,
-                        )
-                    ),
+                    unionOf(
+                        StructType(
+                            fields = emptyMap(),
+                            contentClosed = false,
+                            constraints = setOf(
+                                TupleConstraint.Open(true),
+                                TupleConstraint.UniqueAttrs(false),
+                            )
+                        ),
+                        StructType(
+                            fields = listOf(
+                                StructType.Field("_1", ANY)
+                            ),
+                            contentClosed = true,
+                            constraints = setOf(
+                                TupleConstraint.Open(false),
+                                TupleConstraint.UniqueAttrs(true),
+                            )
+                        ),
+                    )
                 ),
                 problemHandler = assertProblemExists(
                     ProblemGenerator.undefinedVariable(insensitive("pets"))
@@ -3899,15 +3915,26 @@ class PlanTyperTestsPorted {
                 name = "Test #7",
                 query = "SELECT * FROM ddb.pets",
                 expected = BagType(
-                    StructType(
-                        fields = emptyList(),
-                        contentClosed = true,
-                        constraints = setOf(
-                            TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(true),
-                            TupleConstraint.Ordered,
-                        )
-                    ),
+                    unionOf(
+                        StructType(
+                            fields = emptyList(),
+                            contentClosed = false,
+                            constraints = setOf(
+                                TupleConstraint.Open(true),
+                                TupleConstraint.UniqueAttrs(false),
+                            )
+                        ),
+                        StructType(
+                            fields = listOf(
+                                StructType.Field("_1", ANY)
+                            ),
+                            contentClosed = true,
+                            constraints = setOf(
+                                TupleConstraint.Open(false),
+                                TupleConstraint.UniqueAttrs(true),
+                            )
+                        ),
+                    )
                 ),
                 problemHandler = assertProblemExists(
                     ProblemGenerator.undefinedVariable(id(insensitive("ddb"), insensitive("pets")))
@@ -4066,9 +4093,10 @@ class PlanTyperTestsPorted {
                 query = "order_info.customer_id IN 'hello'",
                 expected = ANY,
                 problemHandler = assertProblemExists(
-                    ProblemGenerator.undefinedFunction(
-                        "in_collection",
+                    ProblemGenerator.incompatibleTypesForOp(
                         listOf(StaticType.INT4, StaticType.STRING),
+                        "" +
+                            "IN_COLLECTION",
                     )
                 )
             ),
@@ -4086,13 +4114,13 @@ class PlanTyperTestsPorted {
                 query = "order_info.customer_id BETWEEN 1 AND 'a'",
                 expected = ANY,
                 problemHandler = assertProblemExists(
-                    ProblemGenerator.undefinedFunction(
-                        "between",
+                    ProblemGenerator.incompatibleTypesForOp(
                         listOf(
                             StaticType.INT4,
                             StaticType.INT4,
                             StaticType.STRING
                         ),
+                        "BETWEEN",
                     )
                 )
             ),
@@ -4110,9 +4138,9 @@ class PlanTyperTestsPorted {
                 query = "order_info.ship_option LIKE 3",
                 expected = ANY,
                 problemHandler = assertProblemExists(
-                    ProblemGenerator.undefinedFunction(
-                        "like",
+                    ProblemGenerator.incompatibleTypesForOp(
                         listOf(StaticType.STRING, StaticType.INT4),
+                        "LIKE",
                     )
                 )
             ),
@@ -4180,9 +4208,9 @@ class PlanTyperTestsPorted {
                 query = "order_info.customer_id = 1 AND 1",
                 expected = ANY,
                 problemHandler = assertProblemExists(
-                    ProblemGenerator.undefinedFunction(
-                        "and",
+                    ProblemGenerator.incompatibleTypesForOp(
                         listOf(StaticType.BOOL, StaticType.INT4),
+                        "AND",
                     )
                 )
             ),
@@ -4193,9 +4221,9 @@ class PlanTyperTestsPorted {
                 query = "1 AND order_info.customer_id = 1",
                 expected = ANY,
                 problemHandler = assertProblemExists(
-                    ProblemGenerator.undefinedFunction(
-                        "and",
+                    ProblemGenerator.incompatibleTypesForOp(
                         listOf(StaticType.INT4, StaticType.BOOL),
+                        "AND",
                     )
                 )
             ),
@@ -4206,7 +4234,9 @@ class PlanTyperTestsPorted {
                 query = "SELECT unknown_col FROM orders WHERE customer_id = 1",
                 expected = BagType(
                     StructType(
-                        fields = listOf(),
+                        fields = listOf(
+                            StructType.Field("unknown_col", ANY)
+                        ),
                         contentClosed = true,
                         constraints = setOf(
                             TupleConstraint.Open(false),

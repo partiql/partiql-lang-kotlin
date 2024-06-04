@@ -108,7 +108,7 @@ internal class Env(private val session: PartiQLPlanner.Session) {
                 )
             }
             return ProblemGenerator.missingRex(
-                rexOpCallDynamic(args, candidates, false),
+                rexOpCallDynamic(args, candidates),
                 ProblemGenerator.incompatibleTypesForOp(args.map { it.type }, path.normalized.joinToString("."))
             )
         }
@@ -126,7 +126,7 @@ internal class Env(private val session: PartiQLPlanner.Session) {
                     )
                 }
                 // Rewrite as a dynamic call to be typed by PlanTyper
-                rex(StaticType.ANY, rexOpCallDynamic(args, candidates, match.exhaustive))
+                rex(StaticType.ANY, rexOpCallDynamic(args, candidates))
             }
             is FnMatch.Static -> {
                 // Create an internal typed reference

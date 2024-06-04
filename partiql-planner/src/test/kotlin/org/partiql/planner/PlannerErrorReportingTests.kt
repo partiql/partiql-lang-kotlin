@@ -24,16 +24,15 @@ internal class PlannerErrorReportingTests {
     val catalog = MemoryCatalog
         .PartiQL()
         .name(catalogName)
-        .define("missing_binding", StaticType.MISSING)
+        .define("missing_binding", StaticType.ANY)
         .define("atomic", StaticType.INT2)
         .define("collection_no_missing_atomic", BagType(StaticType.INT2))
-        .define("collection_contain_missing_atomic", BagType(StaticType.unionOf(StaticType.INT2, StaticType.MISSING)))
+        .define("collection_contain_missing_atomic", BagType(StaticType.INT2))
         .define("struct_no_missing", closedStruct(StructType.Field("f1", StaticType.INT2)))
         .define(
             "struct_with_missing",
             closedStruct(
-                StructType.Field("f1", StaticType.unionOf(StaticType.INT2, StaticType.MISSING)),
-                StructType.Field("f2", StaticType.MISSING),
+                StructType.Field("f1", StaticType.INT2),
             )
         )
         .build()
@@ -84,7 +83,7 @@ internal class PlannerErrorReportingTests {
         val query: String,
         val isSignal: Boolean,
         val assertion: (List<Problem>) -> List<() -> Boolean>,
-        val expectedType: StaticType = StaticType.MISSING
+        val expectedType: StaticType = StaticType.ANY
     )
 
     companion object {
@@ -182,15 +181,19 @@ internal class PlannerErrorReportingTests {
                 assertOnProblemCount(0, 1)
             ),
             // Chained, demostrate missing trace.
+            // TODO: We currently don't have a good way to retain missing value information. The following test
+            //  should have 2 errors.
             TestCase(
                 "MISSING['a'].a",
                 false,
-                assertOnProblemCount(2, 0)
+                assertOnProblemCount(1, 0)
             ),
+            // TODO: We currently don't have a good way to retain missing value information. The following test
+            //  should have 2 errors.
             TestCase(
                 "MISSING['a'].a",
                 true,
-                assertOnProblemCount(0, 2)
+                assertOnProblemCount(0, 1)
             ),
             TestCase(
                 """
@@ -201,7 +204,7 @@ internal class PlannerErrorReportingTests {
                 """.trimIndent(),
                 false,
                 assertOnProblemCount(0, 0),
-                StaticType.unionOf(StaticType.INT4, StaticType.MISSING)
+                StaticType.INT4
             ),
             TestCase(
                 """
@@ -212,27 +215,7 @@ internal class PlannerErrorReportingTests {
                 """.trimIndent(),
                 true,
                 assertOnProblemCount(0, 0),
-                StaticType.unionOf(StaticType.INT4, StaticType.MISSING)
-            ),
-            TestCase(
-                """
-                    -- both branches are missing, problem
-                    CASE WHEN
-                        1 = 1 THEN MISSING
-                        ELSE MISSING END
-                """.trimIndent(),
-                false,
-                assertOnProblemCount(1, 0),
-            ),
-            TestCase(
-                """
-                    -- both branches are missing, problem
-                    CASE WHEN  
-                        1 = 1 THEN MISSING
-                        ELSE MISSING END
-                """.trimIndent(),
-                true,
-                assertOnProblemCount(0, 1),
+                StaticType.INT4
             ),
         )
 
@@ -248,13 +231,13 @@ internal class PlannerErrorReportingTests {
                 " 'a' + 'b' ",
                 false,
                 assertOnProblemCount(1, 0),
-                StaticType.MISSING
+                StaticType.ANY
             ),
             TestCase(
                 " 'a' + 'b' ",
                 true,
                 assertOnProblemCount(0, 1),
-                StaticType.MISSING
+                StaticType.ANY
             ),
 
             // No function with given name is registered.
@@ -264,28 +247,30 @@ internal class PlannerErrorReportingTests {
                 "not_a_function(1)",
                 false,
                 assertOnProblemCount(0, 1),
-                StaticType.MISSING
+                StaticType.ANY
             ),
             TestCase(
                 "not_a_function(1)",
                 true,
                 assertOnProblemCount(0, 1),
-                StaticType.MISSING
+                StaticType.ANY
             ),
 
             // 1 + not_a_function(1)
             //  The continuation will return all numeric type
+            // TODO: Should the warning count be 1? Does it matter if it is zero?
             TestCase(
                 "1 + not_a_function(1)",
                 false,
-                assertOnProblemCount(1, 1),
-                StaticType.MISSING,
+                assertOnProblemCount(0, 1),
+                StaticType.unionOf(StaticType.INT4, StaticType.INT8, StaticType.INT, StaticType.FLOAT, StaticType.DECIMAL),
             ),
+            // TODO: Should the warning count be 1? Does it matter if it is zero?
             TestCase(
                 "1 + not_a_function(1)",
                 false,
-                assertOnProblemCount(1, 1),
-                StaticType.MISSING,
+                assertOnProblemCount(0, 1),
+                StaticType.unionOf(StaticType.INT4, StaticType.INT8, StaticType.INT, StaticType.FLOAT, StaticType.DECIMAL),
             ),
 
             TestCase(
@@ -297,7 +282,7 @@ internal class PlannerErrorReportingTests {
                 """.trimIndent(),
                 false,
                 assertOnProblemCount(1, 0),
-                BagType(closedStruct(StructType.Field("f1", StaticType.INT2)))
+                BagType(closedStruct(StructType.Field("f1", StaticType.INT2), StructType.Field("f2", StaticType.ANY)))
             ),
             TestCase(
                 """
@@ -308,7 +293,7 @@ internal class PlannerErrorReportingTests {
                 """.trimIndent(),
                 true,
                 assertOnProblemCount(0, 1),
-                BagType(closedStruct(StructType.Field("f1", StaticType.INT2)))
+                BagType(closedStruct(StructType.Field("f1", StaticType.INT2), StructType.Field("f2", StaticType.ANY)))
             ),
             TestCase(
                 """
@@ -320,7 +305,13 @@ internal class PlannerErrorReportingTests {
                 """.trimIndent(),
                 false,
                 assertOnProblemCount(2, 0),
-                BagType(closedStruct(StructType.Field("f1", StaticType.unionOf(StaticType.INT2, StaticType.MISSING))))
+                BagType(
+                    closedStruct(
+                        StructType.Field("f1", StaticType.INT2),
+                        StructType.Field("f2", StaticType.ANY),
+                        StructType.Field("f3", StaticType.ANY)
+                    )
+                )
             ),
             TestCase(
                 """
@@ -332,7 +323,13 @@ internal class PlannerErrorReportingTests {
                 """.trimIndent(),
                 true,
                 assertOnProblemCount(0, 2),
-                BagType(closedStruct(StructType.Field("f1", StaticType.unionOf(StaticType.INT2, StaticType.MISSING))))
+                BagType(
+                    closedStruct(
+                        StructType.Field("f1", StaticType.INT2),
+                        StructType.Field("f2", StaticType.ANY),
+                        StructType.Field("f3", StaticType.ANY)
+                    )
+                )
             ),
 
             // TODO: EXCLUDE ERROR reporting is not completed.

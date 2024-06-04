@@ -631,6 +631,7 @@ public abstract class org/partiql/types/StaticType {
 	public abstract fun getMetas ()Ljava/util/Map;
 	public final fun isMissable ()Z
 	public final fun isNullable ()Z
+	public static final fun unionOf (Ljava/util/Collection;Ljava/util/Map;)Lorg/partiql/types/StaticType;
 	public static final fun unionOf (Ljava/util/Set;Ljava/util/Map;)Lorg/partiql/types/StaticType;
 	public static final fun unionOf ([Lorg/partiql/types/StaticType;Ljava/util/Map;)Lorg/partiql/types/StaticType;
 	public final fun withMetas (Ljava/util/Map;)Lorg/partiql/types/StaticType;
@@ -638,8 +639,10 @@ public abstract class org/partiql/types/StaticType {
 
 public final class org/partiql/types/StaticType$Companion {
 	public final fun getALL_TYPES ()Ljava/util/List;
+	public final fun unionOf (Ljava/util/Collection;Ljava/util/Map;)Lorg/partiql/types/StaticType;
 	public final fun unionOf (Ljava/util/Set;Ljava/util/Map;)Lorg/partiql/types/StaticType;
 	public final fun unionOf ([Lorg/partiql/types/StaticType;Ljava/util/Map;)Lorg/partiql/types/StaticType;
+	public static synthetic fun unionOf$default (Lorg/partiql/types/StaticType$Companion;Ljava/util/Collection;Ljava/util/Map;ILjava/lang/Object;)Lorg/partiql/types/StaticType;
 	public static synthetic fun unionOf$default (Lorg/partiql/types/StaticType$Companion;Ljava/util/Set;Ljava/util/Map;ILjava/lang/Object;)Lorg/partiql/types/StaticType;
 	public static synthetic fun unionOf$default (Lorg/partiql/types/StaticType$Companion;[Lorg/partiql/types/StaticType;Ljava/util/Map;ILjava/lang/Object;)Lorg/partiql/types/StaticType;
 }

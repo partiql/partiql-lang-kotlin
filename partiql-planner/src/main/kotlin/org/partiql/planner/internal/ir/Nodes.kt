@@ -531,7 +531,6 @@ internal data class Rex(
             internal data class Dynamic(
                 @JvmField internal val args: List<Rex>,
                 @JvmField internal val candidates: List<Candidate>,
-                @JvmField internal val exhaustive: Boolean,
             ) : Call() {
                 public override val children: List<PlanNode> by lazy {
                     val kids = mutableListOf<PlanNode?>()

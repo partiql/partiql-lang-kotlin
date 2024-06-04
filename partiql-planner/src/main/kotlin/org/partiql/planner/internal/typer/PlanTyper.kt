@@ -87,6 +87,7 @@ import org.partiql.value.MissingValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.TextValue
 import org.partiql.value.boolValue
+import org.partiql.value.missingValue
 import org.partiql.value.stringValue
 import kotlin.math.max
 
@@ -578,6 +579,14 @@ internal class PlanTyper(private val env: Env) {
                 }
             }
 
+            // Check that root is not literal missing
+            if (root.isLiteralMissing()) {
+                return ProblemGenerator.missingRex(
+                    rexOpPathIndex(root, key),
+                    ProblemGenerator.expressionAlwaysReturnsMissing()
+                )
+            }
+
             // Check that Root was LIST or SEXP by checking accumuated element types
             if (elementTypes.isEmpty()) {
                 return ProblemGenerator.missingRex(
@@ -587,6 +596,8 @@ internal class PlanTyper(private val env: Env) {
             }
             return rex(unionOf(elementTypes), rexOpPathIndex(root, key))
         }
+
+        private fun Rex.isLiteralMissing(): Boolean = this.op is Rex.Op.Lit && this.op.value.withoutAnnotations() == missingValue()
 
         override fun visitRexOpPathKey(node: Rex.Op.Path.Key, ctx: StaticType?): Rex {
             val root = visitRex(node.root, node.root.type)
@@ -605,6 +616,14 @@ internal class PlanTyper(private val env: Env) {
                 return ProblemGenerator.missingRex(
                     rexOpPathKey(root, key),
                     ProblemGenerator.expressionAlwaysReturnsMissing("Key lookup may only occur on structs, not ${root.type}.")
+                )
+            }
+
+            // Check that root is not literal missing
+            if (root.isLiteralMissing()) {
+                return ProblemGenerator.missingRex(
+                    rexOpPathKey(root, key),
+                    ProblemGenerator.expressionAlwaysReturnsMissing()
                 )
             }
 
@@ -645,6 +664,14 @@ internal class PlanTyper(private val env: Env) {
                 )
             }
 
+            // Check that root is not literal missing
+            if (root.isLiteralMissing()) {
+                return ProblemGenerator.missingRex(
+                    rexOpPathSymbol(root, node.key),
+                    ProblemGenerator.expressionAlwaysReturnsMissing()
+                )
+            }
+
             // Get Element Types
             val paths = root.type.inferRexListNotNull { type ->
                 val struct = type as? StructType ?: return@inferRexListNotNull null
@@ -663,9 +690,11 @@ internal class PlanTyper(private val env: Env) {
             val type = when (paths.size) {
                 // Escape early since no inference could be made
                 0 -> {
+                    val key = org.partiql.plan.Identifier.Symbol(node.key, org.partiql.plan.Identifier.CaseSensitivity.SENSITIVE)
+                    val inScopeVariables = locals.schema.map { it.name }.toSet()
                     return ProblemGenerator.missingRex(
                         rexOpPathSymbol(root, node.key),
-                        ProblemGenerator.expressionAlwaysReturnsMissing("No output types could be gathered.")
+                        ProblemGenerator.undefinedVariable(key, inScopeVariables)
                     )
                 }
                 else -> unionOf(paths.map { it.type }.toSet())
@@ -740,13 +769,6 @@ internal class PlanTyper(private val env: Env) {
         /**
          * Typing of a dynamic function call.
          *
-         * isMissable TRUE when the argument permutations may not definitively invoke one of the candidates.
-         * You can think of [isMissable] as being the same as "not exhaustive". For example, if we have ABS(INT | STRING), then
-         * this function call [isMissable] because there isn't an `ABS(STRING)` function signature AKA we haven't exhausted
-         * all the arguments. On the other hand, take an "exhaustive" scenario: ABS(INT | DEC). In this case, [isMissable]
-         * is false because we have functions for each potential argument AKA we have exhausted the arguments.
-         *
-         *
          * @param node
          * @param ctx
          * @return
@@ -760,8 +782,8 @@ internal class PlanTyper(private val env: Env) {
             }.toMutableSet()
             if (types.isEmpty()) {
                 return ProblemGenerator.missingRex(
-                    rexOpCallDynamic(node.args, node.candidates, exhaustive = true), // TODO: Remove exhaustive
-                    ProblemGenerator.expressionAlwaysReturnsMissing("Function is always passed MISSING values.")
+                    rexOpCallDynamic(node.args, node.candidates),
+                    ProblemGenerator.expressionAlwaysReturnsMissing("Function argument is always the missing value.")
                 )
             }
             return rex(type = unionOf(types).flatten(), op = node)
