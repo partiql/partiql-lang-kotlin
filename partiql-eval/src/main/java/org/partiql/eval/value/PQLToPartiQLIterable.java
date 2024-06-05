@@ -8,15 +8,15 @@ import java.util.Iterator;
 class PQLToPartiQLIterable implements Iterable<PartiQLValue> {
 
     @NotNull
-    private final Iterable<PQLValue> _values;
+    private final Iterable<Datum> _values;
 
-    PQLToPartiQLIterable(@NotNull PQLValue value) {
+    PQLToPartiQLIterable(@NotNull Datum value) {
         this._values = value;
     }
 
     @Override
     public Iterator<PartiQLValue> iterator() {
-        Iterator<PQLValue> iter = _values.iterator();
+        Iterator<Datum> iter = _values.iterator();
         return new Iterator<PartiQLValue>() {
 
             @Override

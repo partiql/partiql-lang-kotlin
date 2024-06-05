@@ -6,18 +6,18 @@ import org.partiql.value.PartiQLValueType;
 /**
  * This shall always be package-private (internal).
  */
-class SymbolValue implements PQLValue {
+class DatumString implements Datum {
 
     @NotNull
     private final String _value;
 
-    SymbolValue(@NotNull String value) {
-        _value = value;
-    }
+    @NotNull
+    private final PartiQLValueType _type;
 
-    @Override
-    public boolean isNull() {
-        return false;
+    DatumString(@NotNull String value, @NotNull PartiQLValueType type) {
+        assert(type == PartiQLValueType.STRING || type == PartiQLValueType.SYMBOL);
+        _value = value;
+        _type = type;
     }
 
     @Override
@@ -29,6 +29,6 @@ class SymbolValue implements PQLValue {
     @NotNull
     @Override
     public PartiQLValueType getType() {
-        return PartiQLValueType.SYMBOL;
+        return _type;
     }
 }

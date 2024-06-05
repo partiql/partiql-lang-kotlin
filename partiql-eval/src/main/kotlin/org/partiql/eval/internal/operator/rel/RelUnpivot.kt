@@ -4,8 +4,8 @@ import org.partiql.errors.TypeCheckException
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
-import org.partiql.eval.value.PQLValue
-import org.partiql.eval.value.StructField
+import org.partiql.eval.value.Datum
+import org.partiql.eval.value.Field
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
 
@@ -21,14 +21,14 @@ internal sealed class RelUnpivot : Operator.Relation {
     /**
      * Iterator of the struct fields.
      */
-    private lateinit var _iterator: Iterator<StructField>
+    private lateinit var _iterator: Iterator<Field>
 
     internal lateinit var env: Environment
 
     /**
      * Each mode overrides.
      */
-    abstract fun struct(): PQLValue
+    abstract fun struct(): Datum
 
     /**
      * Initialize the _iterator from the concrete implementation's struct()
@@ -44,7 +44,7 @@ internal sealed class RelUnpivot : Operator.Relation {
 
     override fun next(): Record {
         val f = _iterator.next()
-        val k = PQLValue.stringValue(f.name)
+        val k = Datum.stringValue(f.name)
         val v = f.value
         return Record.of(k, v)
     }
@@ -58,7 +58,7 @@ internal sealed class RelUnpivot : Operator.Relation {
      */
     class Strict(private val expr: Operator.Expr) : RelUnpivot() {
 
-        override fun struct(): PQLValue {
+        override fun struct(): Datum {
             val v = expr.eval(env.push(Record.empty))
             if (v.type != PartiQLValueType.STRUCT) {
                 throw TypeCheckException()
@@ -78,12 +78,12 @@ internal sealed class RelUnpivot : Operator.Relation {
      */
     class Permissive(private val expr: Operator.Expr) : RelUnpivot() {
 
-        override fun struct(): PQLValue {
+        override fun struct(): Datum {
             val v = expr.eval(env.push(Record.empty))
             return when (v.type) {
                 PartiQLValueType.STRUCT -> v
-                PartiQLValueType.MISSING -> PQLValue.structValue(emptyList())
-                else -> PQLValue.structValue(listOf(StructField.of("_1", v)))
+                PartiQLValueType.MISSING -> Datum.structValue(emptyList())
+                else -> Datum.structValue(listOf(Field.of("_1", v)))
             }
         }
     }

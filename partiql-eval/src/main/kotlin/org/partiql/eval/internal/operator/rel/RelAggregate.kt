@@ -3,7 +3,7 @@ package org.partiql.eval.internal.operator.rel
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
-import org.partiql.eval.value.PQLValue
+import org.partiql.eval.value.Datum
 import org.partiql.spi.fn.Agg
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.value.PartiQLValue
@@ -100,10 +100,10 @@ internal class RelAggregate(
 
         // No Aggregations Created
         if (keys.isEmpty() && aggregationMap.isEmpty()) {
-            val record = mutableListOf<PQLValue>()
+            val record = mutableListOf<Datum>()
             functions.forEach { function ->
                 val accumulator = function.delegate.accumulator()
-                record.add(PQLValue.of(accumulator.value()))
+                record.add(Datum.of(accumulator.value()))
             }
             records = iterator { yield(Record.of(*record.toTypedArray())) }
             return
@@ -111,7 +111,7 @@ internal class RelAggregate(
 
         records = iterator {
             aggregationMap.forEach { (keysEvaluated, accumulators) ->
-                val recordValues = accumulators.map { acc -> PQLValue.of(acc.delegate.value()) } + keysEvaluated.map { value -> PQLValue.of(value) }
+                val recordValues = accumulators.map { acc -> Datum.of(acc.delegate.value()) } + keysEvaluated.map { value -> Datum.of(value) }
                 yield(Record.of(*recordValues.toTypedArray()))
             }
         }

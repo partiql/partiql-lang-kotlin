@@ -2,7 +2,7 @@ package org.partiql.eval.internal.operator.rex
 
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.operator.Operator
-import org.partiql.eval.value.PQLValue
+import org.partiql.eval.value.Datum
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
 
@@ -11,13 +11,13 @@ internal class ExprCoalesce(
 ) : Operator.Expr {
 
     @PartiQLValueExperimental
-    override fun eval(env: Environment): PQLValue {
+    override fun eval(env: Environment): Datum {
         for (arg in args) {
             val result = arg.eval(env)
             if (!result.isNull && result.type != PartiQLValueType.MISSING) {
                 return result
             }
         }
-        return PQLValue.nullValue()
+        return Datum.nullValue()
     }
 }

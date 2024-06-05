@@ -2,7 +2,7 @@ package org.partiql.eval.internal.operator
 
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
-import org.partiql.eval.value.PQLValue
+import org.partiql.eval.value.Datum
 import org.partiql.spi.fn.Agg
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.value.PartiQLValueExperimental
@@ -15,7 +15,7 @@ internal sealed interface Operator {
     interface Expr : Operator {
 
         @OptIn(PartiQLValueExperimental::class)
-        fun eval(env: Environment): PQLValue
+        fun eval(env: Environment): Datum
     }
 
     /**

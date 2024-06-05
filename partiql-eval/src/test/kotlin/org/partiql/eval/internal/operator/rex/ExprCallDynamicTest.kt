@@ -7,12 +7,12 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.helpers.ValueUtility.check
-import org.partiql.eval.value.PQLValue
-import org.partiql.eval.value.PQLValue.bagValue
-import org.partiql.eval.value.PQLValue.boolValue
-import org.partiql.eval.value.PQLValue.int32Value
-import org.partiql.eval.value.PQLValue.listValue
-import org.partiql.eval.value.PQLValue.stringValue
+import org.partiql.eval.value.Datum
+import org.partiql.eval.value.Datum.bagValue
+import org.partiql.eval.value.Datum.boolValue
+import org.partiql.eval.value.Datum.int32Value
+import org.partiql.eval.value.Datum.listValue
+import org.partiql.eval.value.Datum.stringValue
 import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnParameter
@@ -29,8 +29,8 @@ class ExprCallDynamicTest {
     fun sanityTests(tc: DynamicTestCase) = tc.assert()
 
     public class DynamicTestCase @OptIn(PartiQLValueExperimental::class) constructor(
-        val lhs: PQLValue,
-        val rhs: PQLValue,
+        val lhs: Datum,
+        val rhs: Datum,
         val expectedIndex: Int,
     ) {
 

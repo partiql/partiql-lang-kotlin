@@ -2,35 +2,29 @@ package org.partiql.eval.value;
 
 import org.jetbrains.annotations.NotNull;
 import org.partiql.value.PartiQLValueType;
-
-import java.math.BigDecimal;
+import org.partiql.value.datetime.Timestamp;
 
 /**
  * This shall always be package-private (internal).
  */
-class DecimalArbitraryValue implements PQLValue {
+class DatumTimestamp implements Datum {
 
     @NotNull
-    private final BigDecimal _value;
+    private final Timestamp _value;
 
-    DecimalArbitraryValue(@NotNull BigDecimal value) {
+    DatumTimestamp(@NotNull Timestamp value) {
         _value = value;
     }
 
     @Override
-    public boolean isNull() {
-        return false;
-    }
-
-    @Override
     @NotNull
-    public BigDecimal getBigDecimal() {
+    public Timestamp getTimestamp() {
         return _value;
     }
 
     @NotNull
     @Override
     public PartiQLValueType getType() {
-        return PartiQLValueType.DECIMAL_ARBITRARY;
+        return PartiQLValueType.TIMESTAMP;
     }
 }

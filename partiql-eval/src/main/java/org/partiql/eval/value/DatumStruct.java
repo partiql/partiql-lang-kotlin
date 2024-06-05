@@ -12,50 +12,45 @@ import java.util.Map;
 /**
  * This shall always be package-private (internal).
  */
-class StructValue implements PQLValue {
+class DatumStruct implements Datum {
 
     @NotNull
-    private final Map<String, List<PQLValue>> _delegate;
+    private final Map<String, List<Datum>> _delegate;
 
     @NotNull
-    private final Map<String, List<PQLValue>> _delegateNormalized;
+    private final Map<String, List<Datum>> _delegateNormalized;
 
-    StructValue(@NotNull Iterable<StructField> fields) {
+    DatumStruct(@NotNull Iterable<Field> fields) {
         _delegate = new HashMap<>();
         _delegateNormalized = new HashMap<>();
-        for (StructField field : fields) {
+        for (Field field : fields) {
             String key = field.getName();
             String keyNormalized = field.getName().toLowerCase();
-            PQLValue value = field.getValue();
+            Datum value = field.getValue();
             addFieldToStruct(_delegate, key, value);
             addFieldToStruct(_delegateNormalized, keyNormalized, value);
         }
     }
 
-    private void addFieldToStruct(Map<String, List<PQLValue>> struct, String key, PQLValue value) {
-        List<PQLValue> values = struct.getOrDefault(key, new ArrayList<>());
+    private void addFieldToStruct(Map<String, List<Datum>> struct, String key, Datum value) {
+        List<Datum> values = struct.getOrDefault(key, new ArrayList<>());
         values.add(value);
         struct.put(key, values);
     }
 
     @Override
-    public boolean isNull() {
-        return false;
-    }
-
-    @Override
     @NotNull
-    public Iterator<StructField> getFields() {
+    public Iterator<Field> getFields() {
         return _delegate.entrySet().stream().flatMap(
                 entry -> entry.getValue().stream().map(
-                        value -> StructField.of(entry.getKey(), value)
+                        value -> Field.of(entry.getKey(), value)
                 )
         ).iterator();
     }
 
     @NotNull
     @Override
-    public PQLValue get(@NotNull String name) {
+    public Datum get(@NotNull String name) {
         try {
             return _delegate.get(name).get(0);
         } catch (IndexOutOfBoundsException ex) {
@@ -65,7 +60,7 @@ class StructValue implements PQLValue {
 
     @NotNull
     @Override
-    public PQLValue getInsensitive(@NotNull String name) {
+    public Datum getInsensitive(@NotNull String name) {
         try {
             return _delegateNormalized.get(name).get(0);
         } catch (IndexOutOfBoundsException ex) {

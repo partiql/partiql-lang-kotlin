@@ -2,7 +2,7 @@ package org.partiql.eval.internal.operator.rex
 
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.operator.Operator
-import org.partiql.eval.value.PQLValue
+import org.partiql.eval.value.Datum
 import org.partiql.value.PartiQLValueExperimental
 
 /**
@@ -14,7 +14,7 @@ internal class ExprVarOuter(
 ) : Operator.Expr {
 
     @PartiQLValueExperimental
-    override fun eval(env: Environment): PQLValue {
+    override fun eval(env: Environment): Datum {
         var current = env
         repeat(depth) {
             current = current.next() ?: error("We ran out of environments for depth ($depth) and env: $env.")

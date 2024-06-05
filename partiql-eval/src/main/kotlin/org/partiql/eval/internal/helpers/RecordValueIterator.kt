@@ -1,13 +1,13 @@
 package org.partiql.eval.internal.helpers
 
 import org.partiql.eval.internal.Record
-import org.partiql.eval.value.PQLValue
+import org.partiql.eval.value.Datum
 
 /**
  * An [Iterator] over an [Iterator] lazily producing [Record]s as you call [next].
  */
 internal class RecordValueIterator(
-    collectionValue: Iterator<PQLValue>
+    collectionValue: Iterator<Datum>
 ) : Iterator<Record> {
 
     private val collectionIter = collectionValue.iterator()

@@ -3,7 +3,7 @@ package org.partiql.eval.value;
 import org.partiql.value.CollectionValue;
 import org.partiql.value.PartiQLValue;
 
-class PartiQLToPQLIterable implements Iterable<PQLValue> {
+class PartiQLToPQLIterable implements Iterable<Datum> {
 
     private final CollectionValue<PartiQLValue> _value;
 
@@ -16,7 +16,7 @@ class PartiQLToPQLIterable implements Iterable<PQLValue> {
         return new Iterator(_value.iterator());
     }
 
-    static class Iterator implements java.util.Iterator<PQLValue> {
+    static class Iterator implements java.util.Iterator<Datum> {
         private final java.util.Iterator<PartiQLValue> _value;
 
         private Iterator(java.util.Iterator<PartiQLValue> value) {
@@ -29,9 +29,9 @@ class PartiQLToPQLIterable implements Iterable<PQLValue> {
         }
 
         @Override
-        public PQLValue next() {
+        public Datum next() {
             PartiQLValue value = _value.next();
-            return PQLValue.of(value);
+            return Datum.of(value);
         }
     }
 }

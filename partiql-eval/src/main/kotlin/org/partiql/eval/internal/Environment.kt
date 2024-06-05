@@ -1,6 +1,6 @@
 package org.partiql.eval.internal
 
-import org.partiql.eval.value.PQLValue
+import org.partiql.eval.value.Datum
 
 /**
  * This class represents the Variables Environment defined in the PartiQL Specification.
@@ -15,7 +15,7 @@ internal class Environment(
         val empty: Environment = Environment(Record.empty, null)
     }
 
-    operator fun get(index: Int): PQLValue {
+    operator fun get(index: Int): Datum {
         try {
             return this.bindings[index]
         } catch (_: Throwable) {
@@ -23,7 +23,7 @@ internal class Environment(
         }
     }
 
-    fun getOrNull(index: Int): PQLValue? {
+    fun getOrNull(index: Int): Datum? {
         return this.bindings.values.getOrNull(index)
     }
 

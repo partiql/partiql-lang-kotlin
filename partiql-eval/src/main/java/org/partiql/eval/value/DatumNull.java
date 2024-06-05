@@ -13,16 +13,16 @@ import java.util.Iterator;
 /**
  * This shall always be package-private (internal).
  */
-class NullValue implements PQLValue {
+class DatumNull implements Datum {
 
     @NotNull
     private final PartiQLValueType _type;
 
-    NullValue() {
-        this._type = PartiQLValueType.NULL;
+    DatumNull() {
+        this._type = PartiQLValueType.NULL; // TODO: This might eventually be UNKNOWN like PostgreSQL's unknown type.
     }
 
-    NullValue(@NotNull PartiQLValueType type) {
+    DatumNull(@NotNull PartiQLValueType type) {
         this._type = type;
     }
 
@@ -141,7 +141,7 @@ class NullValue implements PQLValue {
     }
 
     @Override
-    public Iterator<PQLValue> iterator() {
+    public Iterator<Datum> iterator() {
         if (_type == PartiQLValueType.BAG || _type == PartiQLValueType.LIST || _type == PartiQLValueType.SEXP) {
             throw new NullPointerException();
         } else {
@@ -151,7 +151,7 @@ class NullValue implements PQLValue {
 
     @NotNull
     @Override
-    public Iterator<StructField> getFields() {
+    public Iterator<Field> getFields() {
         if (_type == PartiQLValueType.STRUCT) {
             throw new NullPointerException();
         } else {

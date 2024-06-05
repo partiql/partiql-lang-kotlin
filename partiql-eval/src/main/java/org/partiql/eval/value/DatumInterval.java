@@ -6,27 +6,22 @@ import org.partiql.value.PartiQLValueType;
 /**
  * This shall always be package-private (internal).
  */
-class Float64Value implements PQLValue {
+class DatumInterval implements Datum {
 
-    private final double _value;
+    private final long _value;
 
-    Float64Value(double value) {
+    DatumInterval(long value) {
         _value = value;
     }
 
     @Override
-    public boolean isNull() {
-        return false;
-    }
-
-    @Override
-    public double getDouble() {
+    public long getInterval() {
         return _value;
     }
 
     @NotNull
     @Override
     public PartiQLValueType getType() {
-        return PartiQLValueType.FLOAT64;
+        return PartiQLValueType.INTERVAL;
     }
 }

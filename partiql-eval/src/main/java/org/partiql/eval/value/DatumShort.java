@@ -6,27 +6,22 @@ import org.partiql.value.PartiQLValueType;
 /**
  * This shall always be package-private (internal).
  */
-class Int64Value implements PQLValue {
+class DatumShort implements Datum {
 
-    private final long _value;
+    private final short _value;
 
-    Int64Value(long value) {
+    DatumShort(short value) {
         _value = value;
     }
 
     @Override
-    public boolean isNull() {
-        return false;
-    }
-
-    @Override
-    public long getLong() {
+    public short getShort() {
         return _value;
     }
 
     @NotNull
     @Override
     public PartiQLValueType getType() {
-        return PartiQLValueType.INT64;
+        return PartiQLValueType.INT16;
     }
 }

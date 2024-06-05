@@ -4,8 +4,8 @@ import org.partiql.errors.TypeCheckException
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.helpers.ValueUtility.getText
 import org.partiql.eval.internal.operator.Operator
-import org.partiql.eval.value.PQLValue
-import org.partiql.eval.value.StructField
+import org.partiql.eval.value.Datum
+import org.partiql.eval.value.Field
 
 internal class ExprPivotPermissive(
     private val input: Operator.Relation,
@@ -13,9 +13,9 @@ internal class ExprPivotPermissive(
     private val value: Operator.Expr,
 ) : Operator.Expr {
 
-    override fun eval(env: Environment): PQLValue {
+    override fun eval(env: Environment): Datum {
         input.open(env)
-        val fields = mutableListOf<StructField>()
+        val fields = mutableListOf<Field>()
         while (input.hasNext()) {
             val row = input.next()
             val newEnv = env.push(row)
@@ -26,9 +26,9 @@ internal class ExprPivotPermissive(
                 continue
             }
             val v = value.eval(newEnv)
-            fields.add(StructField.of(keyString, v))
+            fields.add(Field.of(keyString, v))
         }
         input.close()
-        return PQLValue.structValue(fields)
+        return Datum.structValue(fields)
     }
 }

@@ -1,7 +1,7 @@
 package org.partiql.eval.internal.helpers
 
 import org.partiql.errors.TypeCheckException
-import org.partiql.eval.value.PQLValue
+import org.partiql.eval.value.Datum
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
@@ -17,26 +17,26 @@ internal object ValueUtility {
      */
     @OptIn(PartiQLValueExperimental::class)
     @JvmStatic
-    fun PQLValue.isTrue(): Boolean {
+    fun Datum.isTrue(): Boolean {
         return this.type == PartiQLValueType.BOOL && !this.isNull && this.boolean
     }
 
     /**
-     * Asserts that [this] is of a specific type. Note that, if [this] value is null ([PQLValue.isNull]), then the null
+     * Asserts that [this] is of a specific type. Note that, if [this] value is null ([Datum.isNull]), then the null
      * value is coerced to the expected type.
      * @throws TypeCheckException when the input value is a non-null value of the wrong type.
-     * @return a [PQLValue] corresponding to the expected type; this will either be the input value if the value is
+     * @return a [Datum] corresponding to the expected type; this will either be the input value if the value is
      * already of the expected type, or it will be a null value of the expected type.
      */
     @OptIn(PartiQLValueExperimental::class)
-    fun PQLValue.check(type: PartiQLValueType): PQLValue {
+    fun Datum.check(type: PartiQLValueType): Datum {
         if (this.type == type) {
             return this
         }
         if (!this.isNull) {
             throw TypeCheckException("Expected type $type but received ${this.type}.")
         }
-        return PQLValue.nullValue(type)
+        return Datum.nullValue(type)
     }
 
     /**
@@ -46,7 +46,7 @@ internal object ValueUtility {
      * @throws TypeCheckException if the value's type is not a text type (string, symbol, char)
      */
     @OptIn(PartiQLValueExperimental::class)
-    fun PQLValue.getText(): String {
+    fun Datum.getText(): String {
         return when (this.type) {
             PartiQLValueType.STRING, PartiQLValueType.SYMBOL, PartiQLValueType.CHAR -> this.string
             else -> throw TypeCheckException("Expected text, but received ${this.type}.")
@@ -54,7 +54,7 @@ internal object ValueUtility {
     }
 
     /**
-     * Takes in a [PQLValue] that is any integer type ([PartiQLValueType.INT8], [PartiQLValueType.INT8],
+     * Takes in a [Datum] that is any integer type ([PartiQLValueType.INT8], [PartiQLValueType.INT8],
      * [PartiQLValueType.INT8], [PartiQLValueType.INT8], [PartiQLValueType.INT8]) and returns the [BigInteger] (potentially
      * coerced) that represents the integer.
      *
@@ -64,7 +64,7 @@ internal object ValueUtility {
      * @throws TypeCheckException if type is not an integer type
      */
     @OptIn(PartiQLValueExperimental::class)
-    fun PQLValue.getBigIntCoerced(): BigInteger {
+    fun Datum.getBigIntCoerced(): BigInteger {
         return when (this.type) {
             PartiQLValueType.INT8 -> this.byte.toInt().toBigInteger()
             PartiQLValueType.INT16 -> this.short.toInt().toBigInteger()
@@ -76,7 +76,7 @@ internal object ValueUtility {
     }
 
     /**
-     * Takes in a [PQLValue] that is any integer type ([PartiQLValueType.INT8], [PartiQLValueType.INT8],
+     * Takes in a [Datum] that is any integer type ([PartiQLValueType.INT8], [PartiQLValueType.INT8],
      * [PartiQLValueType.INT8], [PartiQLValueType.INT8], [PartiQLValueType.INT8]) and returns the [Int] (potentially
      * coerced) that represents the integer.
      *
@@ -87,7 +87,7 @@ internal object ValueUtility {
      * @throws TypeCheckException if type is not an integer type
      */
     @OptIn(PartiQLValueExperimental::class)
-    fun PQLValue.getInt32Coerced(): Int {
+    fun Datum.getInt32Coerced(): Int {
         return when (this.type) {
             PartiQLValueType.INT8 -> this.byte.toInt()
             PartiQLValueType.INT16 -> this.short.toInt()

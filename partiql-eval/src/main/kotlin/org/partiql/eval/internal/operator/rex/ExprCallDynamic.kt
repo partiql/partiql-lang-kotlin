@@ -4,7 +4,7 @@ import org.partiql.errors.TypeCheckException
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.helpers.toNull
 import org.partiql.eval.internal.operator.Operator
-import org.partiql.eval.value.PQLValue
+import org.partiql.eval.value.Datum
 import org.partiql.plan.Ref
 import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnExperimental
@@ -29,7 +29,7 @@ internal class ExprCallDynamic(
 
     private val candidateIndex = CandidateIndex.All(candidates)
 
-    override fun eval(env: Environment): PQLValue {
+    override fun eval(env: Environment): Datum {
         val actualArgs = args.map { it.eval(env) }.toTypedArray()
         val actualTypes = actualArgs.map { it.type }
         candidateIndex.get(actualTypes)?.let {
@@ -63,17 +63,17 @@ internal class ExprCallDynamic(
          */
         private val nil = fn.signature.returns.toNull()
 
-        fun eval(originalArgs: Array<PartiQLValue>, env: Environment): PQLValue {
+        fun eval(originalArgs: Array<PartiQLValue>, env: Environment): Datum {
             val args = originalArgs.mapIndexed { i, arg ->
                 if (arg.isNull && fn.signature.isNullCall) {
-                    return PQLValue.of(nil())
+                    return Datum.of(nil())
                 }
                 when (val c = coercions[i]) {
                     null -> arg
-                    else -> ExprCast(ExprLiteral(PQLValue.of(arg)), c).eval(env).toPartiQLValue()
+                    else -> ExprCast(ExprLiteral(Datum.of(arg)), c).eval(env).toPartiQLValue()
                 }
             }.toTypedArray()
-            return PQLValue.of(fn.invoke(args))
+            return Datum.of(fn.invoke(args))
         }
     }
 

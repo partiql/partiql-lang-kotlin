@@ -3,7 +3,7 @@ package org.partiql.eval.internal.operator.rel
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
-import org.partiql.eval.value.PQLValue
+import org.partiql.eval.value.Datum
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
 
@@ -12,7 +12,7 @@ internal class RelScanIndexedPermissive(
     private val expr: Operator.Expr
 ) : Operator.Relation {
 
-    private lateinit var iterator: Iterator<PQLValue>
+    private lateinit var iterator: Iterator<Datum>
     private var index: Long = 0
     private var isIndexable: Boolean = true
 
@@ -42,9 +42,9 @@ internal class RelScanIndexedPermissive(
             true -> {
                 val i = index
                 index += 1
-                Record.of(v, PQLValue.int64Value(i))
+                Record.of(v, Datum.int64Value(i))
             }
-            false -> Record.of(v, PQLValue.missingValue())
+            false -> Record.of(v, Datum.missingValue())
         }
     }
 

@@ -5,8 +5,8 @@ import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.helpers.IteratorSupplier
 import org.partiql.eval.internal.helpers.ValueUtility.isTrue
 import org.partiql.eval.internal.operator.Operator
-import org.partiql.eval.value.PQLValue
-import org.partiql.eval.value.StructField
+import org.partiql.eval.value.Datum
+import org.partiql.eval.value.Field
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
 
@@ -80,15 +80,15 @@ internal abstract class RelJoinNestedLoop : RelPeeking() {
     }
 
     @OptIn(PartiQLValueExperimental::class)
-    private fun PQLValue.padNull(): PQLValue {
+    private fun Datum.padNull(): Datum {
         return when (this.type) {
             PartiQLValueType.STRUCT -> {
                 val newFields = IteratorSupplier { this.fields }.map {
-                    StructField.of(it.name, PQLValue.nullValue())
+                    Field.of(it.name, Datum.nullValue())
                 }
-                PQLValue.structValue(newFields)
+                Datum.structValue(newFields)
             }
-            else -> PQLValue.nullValue()
+            else -> Datum.nullValue()
         }
     }
 }

@@ -6,29 +6,22 @@ import org.partiql.value.PartiQLValueType;
 /**
  * This shall always be package-private (internal).
  */
-class BlobValue implements PQLValue {
+class DatumDouble implements Datum {
 
-    @NotNull
-    private final byte[] _value;
+    private final double _value;
 
-    BlobValue(@NotNull byte[] value) {
+    DatumDouble(double value) {
         _value = value;
     }
 
     @Override
-    public boolean isNull() {
-        return false;
-    }
-
-    @Override
-    @NotNull
-    public byte[] getBytes() {
+    public double getDouble() {
         return _value;
     }
 
     @NotNull
     @Override
     public PartiQLValueType getType() {
-        return PartiQLValueType.BLOB;
+        return PartiQLValueType.FLOAT64;
     }
 }

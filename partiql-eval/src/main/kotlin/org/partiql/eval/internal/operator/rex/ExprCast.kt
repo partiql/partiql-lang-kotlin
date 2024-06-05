@@ -8,7 +8,7 @@ import org.partiql.errors.DataException
 import org.partiql.errors.TypeCheckException
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.operator.Operator
-import org.partiql.eval.value.PQLValue
+import org.partiql.eval.value.Datum
 import org.partiql.plan.Ref
 import org.partiql.value.BagValue
 import org.partiql.value.BoolValue
@@ -61,7 +61,7 @@ import java.math.BigInteger
 // TODO: This is incomplete
 internal class ExprCast(val arg: Operator.Expr, val cast: Ref.Cast) : Operator.Expr {
     @OptIn(PartiQLValueExperimental::class)
-    override fun eval(env: Environment): PQLValue {
+    override fun eval(env: Environment): Datum {
         val arg = arg.eval(env).toPartiQLValue()
         try {
             val partiqlValue = when (arg.type) {
@@ -94,7 +94,7 @@ internal class ExprCast(val arg: Operator.Expr, val cast: Ref.Cast) : Operator.E
                 PartiQLValueType.NULL -> castFromNull(arg as NullValue, cast.target)
                 PartiQLValueType.MISSING -> error("cast from MISSING should be handled by Typer")
             }
-            return PQLValue.of(partiqlValue)
+            return Datum.of(partiqlValue)
         } catch (e: DataException) {
             throw TypeCheckException()
         }

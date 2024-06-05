@@ -4,7 +4,7 @@ import kotlin.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.value.PartiQLValue;
 
-class PartiQLToPQLStruct implements Iterable<StructField> {
+class PartiQLToPQLStruct implements Iterable<Field> {
 
     private final Iterable<Pair<String, PartiQLValue>> _value;
 
@@ -17,7 +17,7 @@ class PartiQLToPQLStruct implements Iterable<StructField> {
         return new Iterator(_value.iterator());
     }
 
-    static class Iterator implements java.util.Iterator<StructField> {
+    static class Iterator implements java.util.Iterator<Field> {
         private final java.util.Iterator<Pair<String, PartiQLValue>> _value;
 
         private Iterator(java.util.Iterator<Pair<String, PartiQLValue>> value) {
@@ -30,9 +30,9 @@ class PartiQLToPQLStruct implements Iterable<StructField> {
         }
 
         @Override
-        public StructField next() {
+        public Field next() {
             Pair<String, PartiQLValue> value = _value.next();
-            return new StructField() {
+            return new Field() {
                 @NotNull
                 @Override
                 public String getName() {
@@ -41,8 +41,8 @@ class PartiQLToPQLStruct implements Iterable<StructField> {
 
                 @NotNull
                 @Override
-                public PQLValue getValue() {
-                    return PQLValue.of(value.getSecond());
+                public Datum getValue() {
+                    return Datum.of(value.getSecond());
                 }
             };
         }

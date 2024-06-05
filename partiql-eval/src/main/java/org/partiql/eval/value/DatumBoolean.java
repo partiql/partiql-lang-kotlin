@@ -6,27 +6,22 @@ import org.partiql.value.PartiQLValueType;
 /**
  * This shall always be package-private (internal).
  */
-class Int8Value implements PQLValue {
+class DatumBoolean implements Datum {
 
-    private final byte _value;
+    private final boolean _value;
 
-    Int8Value(byte value) {
+    DatumBoolean(boolean value) {
         _value = value;
     }
 
     @Override
-    public boolean isNull() {
-        return false;
-    }
-
-    @Override
-    public byte getByte() {
+    public boolean getBoolean() {
         return _value;
     }
 
     @NotNull
     @Override
     public PartiQLValueType getType() {
-        return PartiQLValueType.BYTE;
+        return PartiQLValueType.BOOL;
     }
 }

@@ -2,7 +2,7 @@ package org.partiql.eval.internal.operator.rex
 
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.operator.Operator
-import org.partiql.eval.value.PQLValue
+import org.partiql.eval.value.Datum
 import org.partiql.value.PartiQLValueExperimental
 
 /**
@@ -22,10 +22,10 @@ internal class ExprSelect(
         private val input: Operator.Relation,
         private val constructor: Operator.Expr,
         private val env: Environment,
-    ) : Iterable<PQLValue> {
+    ) : Iterable<Datum> {
 
-        override fun iterator(): Iterator<PQLValue> {
-            return object : Iterator<PQLValue> {
+        override fun iterator(): Iterator<Datum> {
+            return object : Iterator<Datum> {
                 private var _init = false
 
                 override fun hasNext(): Boolean {
@@ -40,7 +40,7 @@ internal class ExprSelect(
                     return hasNext
                 }
 
-                override fun next(): PQLValue {
+                override fun next(): Datum {
                     val r = input.next()
                     return constructor.eval(env.push(r))
                 }
@@ -49,11 +49,11 @@ internal class ExprSelect(
     }
 
     @PartiQLValueExperimental
-    override fun eval(env: Environment): PQLValue {
+    override fun eval(env: Environment): Datum {
         val elements = Elements(input, constructor, env)
         return when (ordered) {
-            true -> PQLValue.listValue(elements)
-            false -> PQLValue.bagValue(elements)
+            true -> Datum.listValue(elements)
+            false -> Datum.bagValue(elements)
         }
     }
 }

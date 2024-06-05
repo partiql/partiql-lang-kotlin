@@ -2,7 +2,7 @@ package org.partiql.eval.internal.operator.rex
 
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.operator.Operator
-import org.partiql.eval.value.PQLValue
+import org.partiql.eval.value.Datum
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
 
@@ -12,7 +12,7 @@ internal class ExprCase(
 ) : Operator.Expr {
 
     @OptIn(PartiQLValueExperimental::class)
-    override fun eval(env: Environment): PQLValue {
+    override fun eval(env: Environment): Datum {
         branches.forEach { branch ->
             val condition = branch.first.eval(env)
             if (condition.isTrue()) {
@@ -23,7 +23,7 @@ internal class ExprCase(
     }
 
     @OptIn(PartiQLValueExperimental::class)
-    private fun PQLValue.isTrue(): Boolean {
+    private fun Datum.isTrue(): Boolean {
         return this.type == PartiQLValueType.BOOL && !this.isNull && this.boolean
     }
 }

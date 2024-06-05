@@ -4,7 +4,7 @@ import org.partiql.errors.TypeCheckException
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.helpers.ValueUtility.getInt32Coerced
 import org.partiql.eval.internal.operator.Operator
-import org.partiql.eval.value.PQLValue
+import org.partiql.eval.value.Datum
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
 
@@ -14,7 +14,7 @@ internal class ExprPathIndex(
 ) : Operator.Expr {
 
     @OptIn(PartiQLValueExperimental::class)
-    override fun eval(env: Environment): PQLValue {
+    override fun eval(env: Environment): Datum {
         val input = root.eval(env)
         val iterator = when (input.type) {
             PartiQLValueType.BAG, PartiQLValueType.LIST, PartiQLValueType.SEXP -> input.iterator()

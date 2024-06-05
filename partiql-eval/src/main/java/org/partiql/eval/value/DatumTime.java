@@ -2,35 +2,29 @@ package org.partiql.eval.value;
 
 import org.jetbrains.annotations.NotNull;
 import org.partiql.value.PartiQLValueType;
-
-import java.math.BigDecimal;
+import org.partiql.value.datetime.Time;
 
 /**
  * This shall always be package-private (internal).
  */
-class DecimalValue implements PQLValue {
+class DatumTime implements Datum {
 
     @NotNull
-    private final BigDecimal _value;
+    private final Time _value;
 
-    DecimalValue(@NotNull BigDecimal value) {
+    DatumTime(@NotNull Time value) {
         _value = value;
     }
 
     @Override
-    public boolean isNull() {
-        return false;
-    }
-
-    @Override
     @NotNull
-    public BigDecimal getBigDecimal() {
+    public Time getTime() {
         return _value;
     }
 
     @NotNull
     @Override
     public PartiQLValueType getType() {
-        return PartiQLValueType.DECIMAL;
+        return PartiQLValueType.TIME;
     }
 }

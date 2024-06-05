@@ -3,17 +3,15 @@ package org.partiql.eval.value;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.value.PartiQLValueType;
 
-import java.util.Iterator;
-
 /**
  * This shall always be package-private (internal).
  */
-class BagValue implements PQLValue {
+class DatumDate implements Datum {
 
     @NotNull
-    private final Iterable<PQLValue> _value;
+    private final org.partiql.value.datetime.Date _value;
 
-    BagValue(@NotNull Iterable<PQLValue> value) {
+    DatumDate(@NotNull org.partiql.value.datetime.Date value) {
         _value = value;
     }
 
@@ -23,13 +21,14 @@ class BagValue implements PQLValue {
     }
 
     @Override
-    public Iterator<PQLValue> iterator() {
-        return _value.iterator();
+    @NotNull
+    public org.partiql.value.datetime.Date getDate() {
+        return _value;
     }
 
     @NotNull
     @Override
     public PartiQLValueType getType() {
-        return PartiQLValueType.BAG;
+        return PartiQLValueType.DATE;
     }
 }

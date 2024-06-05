@@ -4,7 +4,7 @@ import org.partiql.errors.TypeCheckException
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.helpers.ValueUtility.check
 import org.partiql.eval.internal.operator.Operator
-import org.partiql.eval.value.PQLValue
+import org.partiql.eval.value.Datum
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
 
@@ -14,10 +14,10 @@ internal class ExprPathSymbol(
 ) : Operator.Expr {
 
     @OptIn(PartiQLValueExperimental::class)
-    override fun eval(env: Environment): PQLValue {
+    override fun eval(env: Environment): Datum {
         val struct = root.eval(env).check(PartiQLValueType.STRUCT)
         if (struct.isNull) {
-            return PQLValue.nullValue()
+            return Datum.nullValue()
         }
         for (entry in struct.fields) {
             if (entry.name.equals(symbol, ignoreCase = true)) {

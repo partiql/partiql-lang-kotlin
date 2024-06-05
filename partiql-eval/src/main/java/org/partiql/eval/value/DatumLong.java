@@ -6,27 +6,22 @@ import org.partiql.value.PartiQLValueType;
 /**
  * This shall always be package-private (internal).
  */
-class IntervalValue implements PQLValue {
+class DatumLong implements Datum {
 
     private final long _value;
 
-    IntervalValue(long value) {
+    DatumLong(long value) {
         _value = value;
     }
 
     @Override
-    public boolean isNull() {
-        return false;
-    }
-
-    @Override
-    public long getInterval() {
+    public long getLong() {
         return _value;
     }
 
     @NotNull
     @Override
     public PartiQLValueType getType() {
-        return PartiQLValueType.INTERVAL;
+        return PartiQLValueType.INT64;
     }
 }

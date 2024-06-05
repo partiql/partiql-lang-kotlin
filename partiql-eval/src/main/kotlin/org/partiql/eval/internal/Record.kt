@@ -1,12 +1,12 @@
 package org.partiql.eval.internal
 
-import org.partiql.eval.value.PQLValue
+import org.partiql.eval.value.Datum
 
-internal data class Record(val values: Array<PQLValue>) {
+internal data class Record(val values: Array<Datum>) {
 
     companion object {
         val empty = Record(emptyArray())
-        fun of(vararg values: PQLValue) = Record(arrayOf(*(values)))
+        fun of(vararg values: Datum) = Record(arrayOf(*(values)))
     }
 
     override fun equals(other: Any?): Boolean {
@@ -28,7 +28,7 @@ internal data class Record(val values: Array<PQLValue>) {
         return Record(this.values.copyOf())
     }
 
-    public operator fun get(index: Int): PQLValue {
+    public operator fun get(index: Int): Datum {
         return this.values[index]
     }
 

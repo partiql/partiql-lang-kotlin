@@ -6,16 +6,11 @@ import org.partiql.value.PartiQLValueType;
 /**
  * This shall always be package-private (internal).
  */
-class Int32Value implements PQLValue {
+class DatumInt implements Datum {
 
     private final int _value;
-    Int32Value(int value) {
+    DatumInt(int value) {
         _value = value;
-    }
-
-    @Override
-    public boolean isNull() {
-        return false;
     }
 
     @Override

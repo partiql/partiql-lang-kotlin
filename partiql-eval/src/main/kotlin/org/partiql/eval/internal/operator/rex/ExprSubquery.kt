@@ -6,7 +6,7 @@ import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.helpers.IteratorSupplier
 import org.partiql.eval.internal.helpers.ValueUtility.check
 import org.partiql.eval.internal.operator.Operator
-import org.partiql.eval.value.PQLValue
+import org.partiql.eval.value.Datum
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
 
@@ -28,10 +28,10 @@ internal abstract class ExprSubquery : Operator.Expr {
     ) : ExprSubquery() {
 
         @PartiQLValueExperimental
-        override fun eval(env: Environment): PQLValue {
-            val tuple = getFirst(env) ?: return PQLValue.nullValue()
+        override fun eval(env: Environment): Datum {
+            val tuple = getFirst(env) ?: return Datum.nullValue()
             val values = IteratorSupplier { tuple.fields }.map { it.value }
-            return PQLValue.listValue(values)
+            return Datum.listValue(values)
         }
     }
 
@@ -41,8 +41,8 @@ internal abstract class ExprSubquery : Operator.Expr {
     ) : ExprSubquery() {
 
         @PartiQLValueExperimental
-        override fun eval(env: Environment): PQLValue {
-            val tuple = getFirst(env) ?: return PQLValue.nullValue()
+        override fun eval(env: Environment): Datum {
+            val tuple = getFirst(env) ?: return Datum.nullValue()
             val values = tuple.fields.asSequence().map { it.value }.iterator()
             if (values.hasNext().not()) {
                 throw TypeCheckException()
@@ -64,7 +64,7 @@ internal abstract class ExprSubquery : Operator.Expr {
      * @throws TypeCheckException when the constructor is not a [PartiQLValueType.STRUCT].
      */
     @OptIn(PartiQLValueExperimental::class)
-    fun getFirst(env: Environment): PQLValue? {
+    fun getFirst(env: Environment): Datum? {
         input.open(env)
         if (input.hasNext().not()) {
             input.close()
