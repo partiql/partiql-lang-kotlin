@@ -9,9 +9,14 @@ import org.partiql.value.PartiQLValueType.BOOL
 import org.partiql.value.PartiQLValueType.CHAR
 import org.partiql.value.PartiQLValueType.DATE
 import org.partiql.value.PartiQLValueType.DECIMAL
+import org.partiql.value.PartiQLValueType.DECIMAL_ARBITRARY
+import org.partiql.value.PartiQLValueType.FLOAT32
+import org.partiql.value.PartiQLValueType.FLOAT64
 import org.partiql.value.PartiQLValueType.INT
+import org.partiql.value.PartiQLValueType.INT16
 import org.partiql.value.PartiQLValueType.INT32
 import org.partiql.value.PartiQLValueType.INT64
+import org.partiql.value.PartiQLValueType.INT8
 import org.partiql.value.PartiQLValueType.MISSING
 import org.partiql.value.PartiQLValueType.NULL
 import org.partiql.value.PartiQLValueType.STRING
@@ -63,6 +68,7 @@ internal object PartiQLHeader : Header() {
         mod(),
         concat(),
         bitwiseAnd(),
+        castAsParameterizedDecimal(), // explicit casts (aka NOT coercions from TypeLattice).
     ).flatten()
 
     /**
@@ -457,6 +463,32 @@ internal object PartiQLHeader : Header() {
             ),
             isNullable = false,
             isNullCall = false
+        )
+    }
+
+    private fun castAsParameterizedDecimal(): List<FunctionSignature.Scalar> = listOf(
+        BOOL,
+        INT8,
+        INT16,
+        INT32,
+        INT64,
+        INT,
+        DECIMAL,
+        DECIMAL_ARBITRARY,
+        FLOAT32,
+        FLOAT64,
+        STRING,
+    ).map { value ->
+        FunctionSignature.Scalar(
+            name = "cast_decimal",
+            returns = DECIMAL,
+            parameters = listOf(
+                FunctionParameter("value", value),
+                FunctionParameter("precision", INT32),
+                FunctionParameter("scale", INT32),
+            ),
+            isNullable = false,
+            isNullCall = true,
         )
     }
 

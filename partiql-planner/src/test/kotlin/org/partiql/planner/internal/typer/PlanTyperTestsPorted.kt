@@ -32,10 +32,12 @@ import org.partiql.plugins.memory.MemoryConnector
 import org.partiql.spi.connector.ConnectorMetadata
 import org.partiql.types.AnyType
 import org.partiql.types.BagType
+import org.partiql.types.DecimalType
 import org.partiql.types.ListType
 import org.partiql.types.SexpType
 import org.partiql.types.StaticType
 import org.partiql.types.StaticType.Companion.ANY
+import org.partiql.types.StaticType.Companion.DECIMAL
 import org.partiql.types.StaticType.Companion.INT
 import org.partiql.types.StaticType.Companion.INT4
 import org.partiql.types.StaticType.Companion.INT8
@@ -286,6 +288,80 @@ class PlanTyperTestsPorted {
 
         @JvmStatic
         fun structs() = listOf<TestCase>()
+
+        @JvmStatic
+        fun decimalCastCases() = listOf<TestCase>(
+            SuccessTestCase(
+                name = "cast decimal",
+                query = "CAST(1 AS DECIMAL)",
+                expected = StaticType.DECIMAL,
+            ),
+            SuccessTestCase(
+                name = "cast decimal(1)",
+                query = "CAST(1 AS DECIMAL(1))",
+                expected = DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(1, 0)),
+            ),
+            SuccessTestCase(
+                name = "cast decimal(1,0)",
+                query = "CAST(1 AS DECIMAL(1,0))",
+                expected = DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(1, 0)),
+            ),
+            SuccessTestCase(
+                name = "cast decimal(1,1)",
+                query = "CAST(1 AS DECIMAL(1,1))",
+                expected = DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(1, 1)),
+            ),
+            SuccessTestCase(
+                name = "cast decimal(38)",
+                query = "CAST(1 AS DECIMAL(38))",
+                expected = DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(38, 0)),
+            ),
+            SuccessTestCase(
+                name = "cast decimal(38,0)",
+                query = "CAST(1 AS DECIMAL(38,0))",
+                expected = DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(38, 0)),
+            ),
+            SuccessTestCase(
+                name = "cast decimal(38,38)",
+                query = "CAST(1 AS DECIMAL(38,38))",
+                expected = DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(38, 38)),
+            ),
+            SuccessTestCase(
+                name = "cast decimal string",
+                query = "CAST('1' AS DECIMAL)",
+                expected = StaticType.DECIMAL,
+            ),
+            SuccessTestCase(
+                name = "cast decimal(1) string",
+                query = "CAST('1' AS DECIMAL(1))",
+                expected = DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(1, 0)),
+            ),
+            SuccessTestCase(
+                name = "cast decimal(1,0) string",
+                query = "CAST('1' AS DECIMAL(1,0))",
+                expected = DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(1, 0)),
+            ),
+            SuccessTestCase(
+                name = "cast decimal(1,1) string",
+                query = "CAST('1' AS DECIMAL(1,1))",
+                expected = DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(1, 1)),
+            ),
+            SuccessTestCase(
+                name = "cast decimal(38) string",
+                query = "CAST('1' AS DECIMAL(38))",
+                expected = DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(38, 0)),
+            ),
+            SuccessTestCase(
+                name = "cast decimal(38,0) string",
+                query = "CAST('1' AS DECIMAL(38,0))",
+                expected = DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(38, 0)),
+            ),
+            SuccessTestCase(
+                name = "cast decimal(38,38) string",
+                query = "CAST('1' AS DECIMAL(38,38))",
+                expected = DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(38, 38)),
+            ),
+        )
 
         @JvmStatic
         fun selectStar() = listOf<TestCase>(
@@ -3451,6 +3527,11 @@ class PlanTyperTestsPorted {
     @MethodSource("collections")
     @Execution(ExecutionMode.CONCURRENT)
     fun testCollections(tc: TestCase) = runTest(tc)
+
+    @ParameterizedTest
+    @MethodSource("decimalCastCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun testDecimalCast(tc: TestCase) = runTest(tc)
 
     @ParameterizedTest
     @MethodSource("selectStar")
