@@ -1553,7 +1553,7 @@ internal class PlanTyper(private val env: Env) {
                 // instead of invoking the rex typer, we manually check if the attribtue are in the scope
                 node.attributes.forEach { attr ->
                     val fields = ctx.filter {
-                        it.name.toBindingName().name == attr.toBindingName().name
+                        it.name.normalize() == attr.normalize()
                     }
                     when (fields.size) {
                         0 -> throw IllegalArgumentException("Primary Key contains non-existing attribute - ${attr.symbol}")
@@ -1624,14 +1624,16 @@ internal class PlanTyper(private val env: Env) {
             val seen = mutableSetOf<String>()
             node.attrs.forEach { attr ->
                 val fields = ctx.filter {
-                    it.name.toBindingName().name == attr.toBindingName().name
+                    it.name.normalize() == attr.normalize()
                 }
                 when (fields.size) {
                     0 -> throw IllegalArgumentException("Partition By Clause contains non-existing attribute - ${attr.symbol}")
                     // check the type
                     1 -> {
-                        val type = fields.first().type
-                        if (type !is Type.Atomic) throw IllegalArgumentException("Partition By Clause contains attribute whose type is a complex type:  ${attr.symbol}")
+                        val field = fields.first()
+                        val type = field.type
+                        if (type !is Type.Atomic) throw IllegalArgumentException("Partition By Clause contains attribute whose type is a complex type:  ${attr.symbol} : $type")
+                        if (field.isOptional) throw IllegalArgumentException("Partition By Clause contains optional attributes:  ${attr.symbol}")
                     }
                     else -> throw IllegalArgumentException("Partition By Clause contains ambiguous binding: ${attr.symbol}")
                 }

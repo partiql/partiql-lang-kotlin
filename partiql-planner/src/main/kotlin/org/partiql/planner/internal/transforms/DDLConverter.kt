@@ -43,6 +43,7 @@ import org.partiql.planner.internal.ir.typeRecordField
 import org.partiql.planner.internal.transforms.AstToPlan.convert
 import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValueExperimental
+import org.partiql.planner.internal.ir.Type as PlanType
 
 internal object DDLConverter {
     internal fun apply(statement: Statement.DDL, env: Env): DDL = ToDdl.visitStatementDDL(statement, Ctx(env, null))
@@ -114,16 +115,16 @@ internal object DDLConverter {
                 is Type.Int4 -> typeAtomicInt4()
                 is Type.Int8, is Type.Bigint -> typeAtomicInt8()
                 is Type.Int -> typeAtomicInt()
-                is Type.Decimal -> typeAtomicDecimal(node.precision, node.scale)
-                is Type.Numeric -> typeAtomicDecimal(node.precision, node.scale)
+                is Type.Decimal -> typeAtomicDecimal(node.precision, node.scale).also { checkDecimalTypeOrThrow(it) }
+                is Type.Numeric -> typeAtomicDecimal(node.precision, node.scale).also { checkDecimalTypeOrThrow(it) }
                 is Type.Float32 -> TODO("Type Float32 not supported in DDL Yet")
                 is Type.Float64, is Type.Real -> typeAtomicFloat64()
 
                 // Text
                 is Type.Symbol -> TODO("Type SYMBOL not supported in DDL Yet")
-                is Type.Char -> typeAtomicChar(node.length)
-                is Type.String -> typeAtomicVarchar(node.length)
-                is Type.Varchar -> typeAtomicVarchar(node.length)
+                is Type.Char -> typeAtomicChar(node.length).also { checkCharTypeOrThrow(it) }
+                is Type.String -> typeAtomicVarchar(node.length).also { checkVarcharTypeOrThrow(it) }
+                is Type.Varchar -> typeAtomicVarchar(node.length).also { checkVarcharTypeOrThrow(it) }
 
                 // Bit
                 is Type.Bit -> TODO("Type BIT not supported in DDL Yet")
@@ -132,10 +133,10 @@ internal object DDLConverter {
 
                 // Date Time
                 is Type.Date -> typeAtomicDate()
-                is Type.Time -> typeAtomicTime(node.precision)
-                is Type.TimeWithTz -> typeAtomicTimeWithTz(node.precision)
-                is Type.Timestamp -> typeAtomicTimestamp(node.precision)
-                is Type.TimestampWithTz -> typeAtomicTimestampWithTz(node.precision)
+                is Type.Time -> typeAtomicTime(node.precision).also { checkTimeTypeOrThrow(it) }
+                is Type.TimeWithTz -> typeAtomicTimeWithTz(node.precision).also { checkTimeTzTypeOrThrow(it) }
+                is Type.Timestamp -> typeAtomicTimestamp(node.precision).also { checkTimestampTypeOrThrow(it) }
+                is Type.TimestampWithTz -> typeAtomicTimestampWithTz(node.precision).also { checkTimestampTzTypeOrThrow(it) }
                 is Type.Interval -> TODO("Type INTERVAL not supported in DDL Yet")
 
                 // Lob
@@ -181,5 +182,47 @@ internal object DDLConverter {
         @OptIn(PartiQLValueExperimental::class)
         override fun visitTableProperty(node: TableProperty, ctx: Ctx) =
             tableProperty(node.name, node.value)
+
+        private fun checkDecimalTypeOrThrow(dec: PlanType.Atomic.Decimal) {
+            require(dec.precision != null) {
+                "Un-parameterized decimal type not supported in DDL yet"
+            }
+            val scale = dec.scale ?: 0
+            require(dec.precision >= scale) {
+                "Require Decimal Precision P to be greater than or equal to Decimal Scale S"
+            }
+        }
+
+        private fun checkVarcharTypeOrThrow(varchar: PlanType.Atomic.Varchar) = varchar.length?.let {
+            require(it >= 1) {
+                "length for type varchar must be at least 1"
+            }
+        }
+
+        private fun checkCharTypeOrThrow(char: PlanType.Atomic.Char) = char.length?.let {
+            require(it >= 1) {
+                "length for type char must be at least 1"
+            }
+        }
+
+        private fun checkTimeTypeOrThrow(time: PlanType.Atomic.Time) {
+            require(time.precision != null) { "Un-parameterized time type not supported in DDL yet" }
+            require(time.precision >= 0) { "Precision for type time must be at least 0" }
+        }
+
+        private fun checkTimeTzTypeOrThrow(timetz: PlanType.Atomic.TimeWithTz) {
+            require(timetz.precision != null) { "Un-parameterized time with time zone type not supported in DDL yet" }
+            require(timetz.precision >= 0) { "Precision for type time with time zone must be at least 0" }
+        }
+
+        private fun checkTimestampTypeOrThrow(ts: PlanType.Atomic.Timestamp) {
+            require(ts.precision != null) { "Un-parameterized timestamp type not supported in DDL yet" }
+            require(ts.precision >= 0) { "Precision for type timestamp must be at least 0" }
+        }
+
+        private fun checkTimestampTzTypeOrThrow(tstz: PlanType.Atomic.TimestampWithTz) {
+            require(tstz.precision != null) { "Un-parameterized timestamp with time zone type not supported in DDL yet" }
+            require(tstz.precision >= 0) { "Precision for type timestamp with time zone must be at least 0" }
+        }
     }
 }

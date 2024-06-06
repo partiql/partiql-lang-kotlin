@@ -152,11 +152,16 @@ internal object ConstraintResolver {
         override fun visitTypeCollection(node: Type.Collection, ctx: Ctx): StaticType {
             val elementType = node.type ?: return if (node.isOrdered) StaticType.LIST.asNullable() else StaticType.BAG.asNullable()
             // only one pk constraint
-            val pkConstr = node.constraints.firstOrNull {
+            val pkConstrs = node.constraints.filter {
                 val def = it.definition
                 if (def is Constraint.Definition.Unique) {
                     def.isPrimaryKey
                 } else false
+            }
+            val pkConstr = when (pkConstrs.size) {
+                0 -> null
+                1 -> pkConstrs.first()
+                else -> throw IllegalArgumentException("Only one primary key constraint is allowed")
             }
             val pkAttr = pkConstr?.let { (it.definition as Constraint.Definition.Unique).attributes } ?: emptyList()
             // if associated with PK
