@@ -42,6 +42,10 @@ internal object AstToPlan {
 
         override fun defaultReturn(node: AstNode, env: Env) = throw IllegalArgumentException("Unsupported statement")
 
+        override fun visitStatementDDL(node: AstStatement.DDL, ctx: Env): PlanStatement {
+            return DDLConverter.apply(node, ctx)
+        }
+
         override fun visitStatementQuery(node: AstStatement.Query, env: Env): PlanStatement {
             val rex = when (val expr = node.expr) {
                 is Expr.SFW -> RelConverter.apply(expr, env)

@@ -85,4 +85,7 @@ internal object ProblemGenerator {
 
     fun compilerError(message: String, location: ProblemLocation = UNKNOWN_PROBLEM_LOCATION): Problem =
         problem(location, PlanningProblemDetails.CompileError(message))
+
+    fun experiementalFeature(feature: String, location: ProblemLocation = UNKNOWN_PROBLEM_LOCATION): Problem =
+        problem(location, PlanningProblemDetails.ExperimentalFeature(feature))
 }

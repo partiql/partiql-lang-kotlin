@@ -52,7 +52,36 @@ statement::[
   query::{
     root: rex,
   },
+  d_d_l::{
+    op: ddl_op,
+  },
 ]
+
+// DDL is an experimental feature.
+// We are actively working on finializing the semantics of DDL operation.
+// As of today,
+// the public plan aims to expose as minium implementation details as possible to avoid breaking changes in the feature.
+ddl_op::[
+  create_table::{
+    // Table Name, unresolved
+    name: identifier,
+    shape: 'static_type',
+    partition_by: optional::partition_by,
+    // table proproties:
+    table_properties: list::[table_property],
+  },
+]
+
+partition_by::[
+  attr_list::{
+    attrs: list::['.identifier.symbol']
+  }
+]
+
+table_property::{
+  name: string,
+  value: partiql_value,
+}
 
 // Identifiers
 

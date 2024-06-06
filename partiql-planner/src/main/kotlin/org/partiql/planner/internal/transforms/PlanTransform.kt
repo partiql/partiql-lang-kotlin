@@ -2,18 +2,27 @@ package org.partiql.planner.internal.transforms
 
 import org.partiql.errors.ProblemCallback
 import org.partiql.plan.PlanNode
+import org.partiql.plan.TableProperty
+import org.partiql.plan.ddlOpCreateTable
 import org.partiql.plan.partiQLPlan
+import org.partiql.plan.partitionByAttrList
 import org.partiql.plan.rexOpCast
 import org.partiql.plan.rexOpErr
+import org.partiql.plan.statementDDL
+import org.partiql.plan.tableProperty
 import org.partiql.planner.internal.PlannerFlag
 import org.partiql.planner.internal.ProblemGenerator
+import org.partiql.planner.internal.ir.DdlOp
 import org.partiql.planner.internal.ir.Identifier
 import org.partiql.planner.internal.ir.PartiQLPlan
+import org.partiql.planner.internal.ir.PartitionBy
 import org.partiql.planner.internal.ir.Ref
 import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.Statement
+import org.partiql.planner.internal.ir.Type
 import org.partiql.planner.internal.ir.visitor.PlanBaseVisitor
+import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValueExperimental
 
 /**
@@ -84,6 +93,44 @@ internal class PlanTransform(
 
         override fun visitStatement(node: Statement, ctx: Unit) =
             super.visitStatement(node, ctx) as org.partiql.plan.Statement
+
+        //
+        // DDL
+        //
+        override fun visitStatementDDL(node: Statement.DDL, ctx: Unit): org.partiql.plan.Statement.DDL {
+            // some features are kept internal during development process
+            DDLFeatureGate.gate(node)
+            onProblem.invoke(ProblemGenerator.experiementalFeature("DDL"))
+            val op = visitDdlOp(node.op, ctx)
+            return statementDDL(
+                op = op.copy(op.name, node.shape, op.partitionBy, op.tableProperties)
+            )
+        }
+
+        override fun visitDdlOp(node: DdlOp, ctx: Unit) =
+            when (node) {
+                is DdlOp.CreateTable -> visitDdlOpCreateTable(node, ctx)
+            }
+
+        override fun visitDdlOpCreateTable(node: DdlOp.CreateTable, ctx: Unit): org.partiql.plan.DdlOp.CreateTable {
+            return ddlOpCreateTable(
+                visitIdentifier(node.name, ctx),
+                StaticType.ANY,
+                node.partitionBy?.let { visitPartitionBy(it, ctx) },
+                node.tableProperties.map { visitTableProperty(it, ctx) }
+            )
+        }
+
+        override fun visitPartitionBy(node: PartitionBy, ctx: Unit) = when (node) {
+            is PartitionBy.AttrList -> visitPartitionByAttrList(node, ctx)
+        }
+
+        override fun visitPartitionByAttrList(node: PartitionBy.AttrList, ctx: Unit) =
+            partitionByAttrList(node.attrs.map { visitIdentifierSymbol(it, ctx) })
+
+        @OptIn(PartiQLValueExperimental::class)
+        override fun visitTableProperty(node: org.partiql.planner.internal.ir.TableProperty, ctx: Unit) =
+            tableProperty(node.name, node.value)
 
         override fun visitStatementQuery(node: Statement.Query, ctx: Unit): org.partiql.plan.Statement.Query {
             val root = visitRex(node.root, ctx)
