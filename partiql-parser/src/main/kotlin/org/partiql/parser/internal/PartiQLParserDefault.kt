@@ -209,6 +209,14 @@ import org.partiql.parser.SourceLocation
 import org.partiql.parser.SourceLocations
 import org.partiql.parser.antlr.PartiQLParserBaseVisitor
 import org.partiql.parser.internal.util.DateTimeUtils
+import org.partiql.value.DecimalValue
+import org.partiql.value.Float32Value
+import org.partiql.value.Float64Value
+import org.partiql.value.Int16Value
+import org.partiql.value.Int32Value
+import org.partiql.value.Int64Value
+import org.partiql.value.Int8Value
+import org.partiql.value.IntValue
 import org.partiql.value.NumericValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.StringValue
@@ -217,8 +225,12 @@ import org.partiql.value.dateValue
 import org.partiql.value.datetime.DateTimeException
 import org.partiql.value.datetime.DateTimeValue
 import org.partiql.value.decimalValue
+import org.partiql.value.float32Value
+import org.partiql.value.float64Value
+import org.partiql.value.int16Value
 import org.partiql.value.int32Value
 import org.partiql.value.int64Value
+import org.partiql.value.int8Value
 import org.partiql.value.intValue
 import org.partiql.value.missingValue
 import org.partiql.value.nullValue
@@ -569,17 +581,18 @@ internal class PartiQLParserDefault : PartiQLParser {
             }
         }
 
-        override fun visitQualifiedName(ctx: org.partiql.parser.antlr.PartiQLParser.QualifiedNameContext) = translate(ctx) {
-            val qualifier = ctx.qualifier.map { visitSymbolPrimitive(it) }
-            val name = visitSymbolPrimitive(ctx.name)
-            if (qualifier.isEmpty()) {
-                name
-            } else {
-                val root = qualifier.first()
-                val steps = qualifier.drop(1) + listOf(name)
-                identifierQualified(root, steps)
+        override fun visitQualifiedName(ctx: org.partiql.parser.antlr.PartiQLParser.QualifiedNameContext) =
+            translate(ctx) {
+                val qualifier = ctx.qualifier.map { visitSymbolPrimitive(it) }
+                val name = visitSymbolPrimitive(ctx.name)
+                if (qualifier.isEmpty()) {
+                    name
+                } else {
+                    val root = qualifier.first()
+                    val steps = qualifier.drop(1) + listOf(name)
+                    identifierQualified(root, steps)
+                }
             }
-        }
 
         /**
          *
@@ -1488,9 +1501,48 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitValueExpr(ctx: GeneratedParser.ValueExprContext) = translate(ctx) {
-            if (ctx.parent != null) return@translate visit(ctx.parent)
-            val expr = visit(ctx.rhs) as Expr
-            exprUnary(convertUnaryOp(ctx.sign), expr)
+            // expression
+            if (ctx.parent != null) {
+                return@translate visit(ctx.parent)
+            }
+            // unary expression
+            val op = when (ctx.sign.type) {
+                GeneratedParser.NOT -> Expr.Unary.Op.NOT
+                GeneratedParser.PLUS -> Expr.Unary.Op.POS
+                GeneratedParser.MINUS -> Expr.Unary.Op.NEG
+                else -> throw error(ctx.sign, "Invalid unary operator")
+            }
+            // If argument is not a literal, then return the op.
+            val arg = visit(ctx.rhs) as Expr
+            return when (arg) {
+                is Expr.Lit -> arg.negate(op)
+                // TODO should we unwrap and negate Ion values for -`-1`? I don't think so..
+                is Expr.Ion -> exprUnary(op, arg)
+                else -> exprUnary(op, arg)
+            }
+        }
+
+        private fun Expr.Lit.negate(op: Expr.Unary.Op): Expr {
+            val v = this.value
+            return when {
+                op == Expr.Unary.Op.POS && v is NumericValue<*> -> exprLit(v)
+                op == Expr.Unary.Op.NEG && v is NumericValue<*> -> exprLit(v.negate())
+                else -> exprUnary(op, exprLit(v))
+            }
+        }
+
+        /**
+         * We might consider a `negate` method on the NumericValue but this is fine for now and is private.
+         */
+        private fun NumericValue<*>.negate(): NumericValue<*> = when (this) {
+            is DecimalValue -> decimalValue(value?.negate())
+            is Float32Value -> float32Value(value?.let { it * -1 })
+            is Float64Value -> float64Value(value?.let { it * -1 })
+            is Int8Value -> int8Value(value?.let { (it.toInt() * -1).toByte() })
+            is Int16Value -> int16Value(value?.let { (it.toInt() * -1).toShort() })
+            is Int32Value -> int32Value(value?.let { it * -1 })
+            is Int64Value -> int64Value(value?.let { it * -1 })
+            is IntValue -> intValue(value?.negate())
         }
 
         private fun convertBinaryExpr(lhs: ParserRuleContext, rhs: ParserRuleContext, op: Expr.Binary.Op): Expr {
