@@ -79,6 +79,7 @@ import org.partiql.types.AnyType
 import org.partiql.types.BagType
 import org.partiql.types.BoolType
 import org.partiql.types.CollectionType
+import org.partiql.types.DecimalType
 import org.partiql.types.IntType
 import org.partiql.types.ListType
 import org.partiql.types.MissingType
@@ -96,6 +97,11 @@ import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
 import org.partiql.types.function.FunctionSignature
 import org.partiql.value.BoolValue
+<<<<<<< HEAD
+=======
+import org.partiql.value.Int32Value
+import org.partiql.value.MissingValue
+>>>>>>> a02ecdee (Adds support for parameterized decimal cast (#1483))
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.TextValue
 import org.partiql.value.boolValue
@@ -684,8 +690,34 @@ internal class PlanTyper(
             }
 
             // Finally, rewrite this node
+            // TODO we have to pull out decimal type parameters here because V0 drops the type in CAST.
+            if (newFn.signature.name == "cast_decimal" && newFn.signature.parameters.size == 3) {
+                val p = getIntOrErr(newArgs[1].op)
+                val s = getIntOrErr(newArgs[2].op)
+                val returns = DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(p, s))
+                val op = rexOpCallStatic(newFn, newArgs)
+                return rex(returns, op)
+            }
+
+            // Type return
             val op = rexOpCallStatic(newFn, newArgs)
             return rex(type.flatten(), op)
+        }
+
+        /**
+         * For `cast_decimal(v, precision, scale)` we make the precision and scale literal 32-bit integers.
+         */
+        private fun getIntOrErr(op: Rex.Op): Int {
+            if (op !is Rex.Op.Lit) {
+                error("Unrecoverable, expected Rex.Op.Lit found ${op::class}. This should be unreachable.")
+            }
+            if (op.value !is Int32Value) {
+                error("Unrecoverable, expected Int32Value found ${op.value::class}. This should be unreachable.")
+            }
+            if (op.value.value == null) {
+                error("Int32Value cannot be null. This should be unreachable.")
+            }
+            return op.value.value!!
         }
 
         override fun visitRexOpCase(node: Rex.Op.Case, ctx: StaticType?): Rex {
