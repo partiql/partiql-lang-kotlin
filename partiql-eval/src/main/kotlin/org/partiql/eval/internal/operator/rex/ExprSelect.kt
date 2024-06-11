@@ -2,10 +2,8 @@ package org.partiql.eval.internal.operator.rex
 
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.operator.Operator
-import org.partiql.value.PartiQLValue
+import org.partiql.eval.value.Datum
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.bagValue
-import org.partiql.value.listValue
 
 /**
  * Invoke the constructor over all inputs.
@@ -24,10 +22,10 @@ internal class ExprSelect(
         private val input: Operator.Relation,
         private val constructor: Operator.Expr,
         private val env: Environment,
-    ) : Iterable<PartiQLValue> {
+    ) : Iterable<Datum> {
 
-        override fun iterator(): Iterator<PartiQLValue> {
-            return object : Iterator<PartiQLValue> {
+        override fun iterator(): Iterator<Datum> {
+            return object : Iterator<Datum> {
                 private var _init = false
 
                 override fun hasNext(): Boolean {
@@ -42,21 +40,20 @@ internal class ExprSelect(
                     return hasNext
                 }
 
-                override fun next(): PartiQLValue {
+                override fun next(): Datum {
                     val r = input.next()
-                    val result = constructor.eval(env.push(r))
-                    return result
+                    return constructor.eval(env.push(r))
                 }
             }
         }
     }
 
     @PartiQLValueExperimental
-    override fun eval(env: Environment): PartiQLValue {
+    override fun eval(env: Environment): Datum {
         val elements = Elements(input, constructor, env)
         return when (ordered) {
-            true -> listValue(elements)
-            false -> bagValue(elements)
+            true -> Datum.listValue(elements)
+            false -> Datum.bagValue(elements)
         }
     }
 }

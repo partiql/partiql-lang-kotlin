@@ -4,6 +4,7 @@ import org.partiql.errors.TypeCheckException
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.helpers.toNull
 import org.partiql.eval.internal.operator.Operator
+import org.partiql.eval.value.Datum
 import org.partiql.plan.Ref
 import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnExperimental
@@ -28,11 +29,14 @@ internal class ExprCallDynamic(
 
     private val candidateIndex = CandidateIndex.All(candidates)
 
-    override fun eval(env: Environment): PartiQLValue {
+    override fun eval(env: Environment): Datum {
         val actualArgs = args.map { it.eval(env) }.toTypedArray()
         val actualTypes = actualArgs.map { it.type }
         candidateIndex.get(actualTypes)?.let {
-            return it.eval(actualArgs, env)
+            val transformedArgs = Array(actualArgs.size) {
+                actualArgs[it].toPartiQLValue()
+            }
+            return it.eval(transformedArgs, env)
         }
         val errorString = buildString {
             val argString = actualArgs.joinToString(", ")
@@ -59,17 +63,17 @@ internal class ExprCallDynamic(
          */
         private val nil = fn.signature.returns.toNull()
 
-        fun eval(originalArgs: Array<PartiQLValue>, env: Environment): PartiQLValue {
+        fun eval(originalArgs: Array<PartiQLValue>, env: Environment): Datum {
             val args = originalArgs.mapIndexed { i, arg ->
                 if (arg.isNull && fn.signature.isNullCall) {
-                    return nil()
+                    return Datum.of(nil())
                 }
                 when (val c = coercions[i]) {
                     null -> arg
-                    else -> ExprCast(ExprLiteral(arg), c).eval(env)
+                    else -> ExprCast(ExprLiteral(Datum.of(arg)), c).eval(env).toPartiQLValue()
                 }
             }.toTypedArray()
-            return fn.invoke(args)
+            return Datum.of(fn.invoke(args))
         }
     }
 

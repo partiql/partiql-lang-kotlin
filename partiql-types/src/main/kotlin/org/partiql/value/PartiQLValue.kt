@@ -429,7 +429,8 @@ public abstract class BagValue<T : PartiQLValue> : CollectionValue<T> {
         val lhs = this.toList()
         val rhs = other.toList()
         // this is incorrect as it assumes ordered-ness, but we don't have a sort or hash yet
-        return lhs == rhs
+        val result = lhs == rhs
+        return result
     }
 
     override fun hashCode(): Int {
@@ -548,14 +549,17 @@ public abstract class StructValue<T : PartiQLValue> : PartiQLValue {
         lhs.entries.forEach { (key, values) ->
             val lGroup: Map<PartiQLValue, Int> = values.groupingBy { it }.eachCount()
             val rGroup: Map<PartiQLValue, Int> = rhs[key]!!.groupingBy { it }.eachCount()
-            if (lGroup != rGroup) return false
+            val matches = lGroup == rGroup
+            if (!matches) {
+                return false
+            }
         }
         return true
     }
 
     override fun hashCode(): Int {
         // TODO
-        return entries.hashCode()
+        return entries.toList().hashCode()
     }
 
     override fun toString(): String {

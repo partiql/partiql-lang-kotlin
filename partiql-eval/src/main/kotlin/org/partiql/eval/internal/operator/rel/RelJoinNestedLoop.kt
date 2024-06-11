@@ -2,13 +2,13 @@ package org.partiql.eval.internal.operator.rel
 
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
+import org.partiql.eval.internal.helpers.IteratorSupplier
+import org.partiql.eval.internal.helpers.ValueUtility.isTrue
 import org.partiql.eval.internal.operator.Operator
-import org.partiql.value.BoolValue
-import org.partiql.value.PartiQLValue
+import org.partiql.eval.value.Datum
+import org.partiql.eval.value.Field
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.StructValue
-import org.partiql.value.nullValue
-import org.partiql.value.structValue
+import org.partiql.value.PartiQLValueType
 
 internal abstract class RelJoinNestedLoop : RelPeeking() {
 
@@ -73,12 +73,6 @@ internal abstract class RelJoinNestedLoop : RelPeeking() {
         rhs.close()
     }
 
-    @OptIn(PartiQLValueExperimental::class)
-    private fun PartiQLValue.isTrue(): Boolean {
-        return this is BoolValue && this.value == true
-    }
-
-    @OptIn(PartiQLValueExperimental::class)
     internal fun Record.padNull() {
         this.values.indices.forEach { index ->
             this.values[index] = values[index].padNull()
@@ -86,13 +80,15 @@ internal abstract class RelJoinNestedLoop : RelPeeking() {
     }
 
     @OptIn(PartiQLValueExperimental::class)
-    private fun PartiQLValue.padNull(): PartiQLValue {
-        return when (this) {
-            is StructValue<*> -> {
-                val newFields = this.entries.map { it.first to nullValue() }
-                structValue(newFields)
+    private fun Datum.padNull(): Datum {
+        return when (this.type) {
+            PartiQLValueType.STRUCT -> {
+                val newFields = IteratorSupplier { this.fields }.map {
+                    Field.of(it.name, Datum.nullValue())
+                }
+                Datum.structValue(newFields)
             }
-            else -> nullValue()
+            else -> Datum.nullValue()
         }
     }
 }

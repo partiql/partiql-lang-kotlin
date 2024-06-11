@@ -46,6 +46,7 @@ import org.partiql.eval.internal.operator.rex.ExprSubquery
 import org.partiql.eval.internal.operator.rex.ExprTupleUnion
 import org.partiql.eval.internal.operator.rex.ExprVarLocal
 import org.partiql.eval.internal.operator.rex.ExprVarOuter
+import org.partiql.eval.value.Datum
 import org.partiql.plan.Catalog
 import org.partiql.plan.PartiQLPlan
 import org.partiql.plan.PlanNode
@@ -380,7 +381,7 @@ internal class Compiler(
 
     @OptIn(PartiQLValueExperimental::class)
     override fun visitRexOpLit(node: Rex.Op.Lit, ctx: StaticType?): Operator {
-        return ExprLiteral(node.value)
+        return ExprLiteral(Datum.of(node.value))
     }
 
     override fun visitRelOpDistinct(node: Rel.Op.Distinct, ctx: StaticType?): Operator {

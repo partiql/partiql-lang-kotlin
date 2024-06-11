@@ -2,9 +2,9 @@ package org.partiql.eval.internal.operator.rex
 
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.operator.Operator
+import org.partiql.eval.value.Datum
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.nullValue
 
 internal class ExprNullIf(
     private val valueExpr: Operator.Expr,
@@ -15,11 +15,11 @@ internal class ExprNullIf(
     private val comparator = PartiQLValue.comparator()
 
     @PartiQLValueExperimental
-    override fun eval(env: Environment): PartiQLValue {
+    override fun eval(env: Environment): Datum {
         val value = valueExpr.eval(env)
         val nullifier = nullifierExpr.eval(env)
-        return when (comparator.compare(value, nullifier)) {
-            0 -> nullValue()
+        return when (comparator.compare(value.toPartiQLValue(), nullifier.toPartiQLValue())) {
+            0 -> Datum.nullValue()
             else -> value
         }
     }

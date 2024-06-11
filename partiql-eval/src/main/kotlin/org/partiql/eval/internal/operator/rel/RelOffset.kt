@@ -1,10 +1,9 @@
 package org.partiql.eval.internal.operator.rel
 
-import org.partiql.errors.TypeCheckException
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
+import org.partiql.eval.internal.helpers.ValueUtility.getBigIntCoerced
 import org.partiql.eval.internal.operator.Operator
-import org.partiql.value.NumericValue
 import org.partiql.value.PartiQLValueExperimental
 import java.math.BigInteger
 
@@ -24,11 +23,7 @@ internal class RelOffset(
         _seen = BigInteger.ZERO
 
         val o = offset.eval(env.push(Record.empty))
-        if (o is NumericValue<*>) {
-            _offset = o.toInt().value!!
-        } else {
-            throw TypeCheckException()
-        }
+        _offset = o.getBigIntCoerced() // TODO: The planner should handle the coercion
     }
 
     override fun hasNext(): Boolean {

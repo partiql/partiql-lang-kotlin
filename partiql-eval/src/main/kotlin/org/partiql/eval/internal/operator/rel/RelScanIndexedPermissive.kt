@@ -3,31 +3,28 @@ package org.partiql.eval.internal.operator.rel
 import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
-import org.partiql.value.BagValue
-import org.partiql.value.CollectionValue
-import org.partiql.value.PartiQLValue
+import org.partiql.eval.value.Datum
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.int64Value
-import org.partiql.value.missingValue
+import org.partiql.value.PartiQLValueType
 
 @OptIn(PartiQLValueExperimental::class)
 internal class RelScanIndexedPermissive(
     private val expr: Operator.Expr
 ) : Operator.Relation {
 
-    private lateinit var iterator: Iterator<PartiQLValue>
+    private lateinit var iterator: Iterator<Datum>
     private var index: Long = 0
     private var isIndexable: Boolean = true
 
     override fun open(env: Environment) {
         val r = expr.eval(env.push(Record.empty))
         index = 0
-        iterator = when (r) {
-            is BagValue<*> -> {
+        iterator = when (r.type) {
+            PartiQLValueType.BAG -> {
                 isIndexable = false
                 r.iterator()
             }
-            is CollectionValue<*> -> r.iterator()
+            PartiQLValueType.LIST, PartiQLValueType.SEXP -> r.iterator()
             else -> {
                 isIndexable = false
                 iterator { yield(r) }
@@ -45,9 +42,9 @@ internal class RelScanIndexedPermissive(
             true -> {
                 val i = index
                 index += 1
-                Record.of(v, int64Value(i))
+                Record.of(v, Datum.int64Value(i))
             }
-            false -> Record.of(v, missingValue())
+            false -> Record.of(v, Datum.missingValue())
         }
     }
 
