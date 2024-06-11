@@ -5,38 +5,23 @@ household_demographics::{
     fields: [
       {
         name: "hd_demo_sk",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "hd_income_band_sk",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "hd_buy_potential",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "hd_dep_count",
-        type: [
-          "int32",
-          "null"
-        ]
+        type: "int32"
       },
       {
         name: "hd_vehicle_count",
-        type: [
-          "int32",
-          "null"
-        ]
+        type: "int32"
       }
     ]
   }

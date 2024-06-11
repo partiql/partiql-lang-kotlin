@@ -13,206 +13,119 @@ call_center::{
       },
       {
         name: "cc_rec_start_date",
-        type: [
-          "int64",
-          "null"
-        ]
+        type: "int64"
       },
       {
         name: "cc_rec_end_date",
-        type: [
-          "int64",
-          "null"
-        ]
+        type: "int64"
       },
       {
         name: "cc_closed_date_sk",
-        type: [
-          "int32",
-          "null"
-        ]
+        type: "int32"
       },
       {
         name: "cc_open_date_sk",
-        type: [
-          "int32",
-          "null"
-        ]
+        type: "int32"
       },
       {
         name: "cc_name",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "cc_class",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "cc_employees",
-        type: [
-          "int32",
-          "null"
-        ]
+        type: "int32"
       },
       {
         name: "cc_sq_ft",
-        type: [
-          "int32",
-          "null"
-        ]
+        type: "int32"
       },
       {
         name: "cc_hours",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "cc_manager",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "cc_mkt_id",
-        type: [
-          "int32",
-          "null"
-        ]
+        type: "int32"
       },
       {
         name: "cc_mkt_class",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "cc_mkt_desc",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "cc_market_manager",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "cc_division",
-        type: [
-          "int32",
-          "null"
-        ]
+        type: "int32"
       },
       {
         name: "cc_division_name",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "cc_company",
-        type: [
-          "int32",
-          "null"
-        ]
+        type: "int32"
       },
       {
         name: "cc_company_name",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "cc_street_number",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "cc_street_name",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "cc_street_type",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "cc_suite_number",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "cc_city",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "cc_county",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "cc_state",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "cc_zip",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "cc_country",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "cc_gmt_offset",
-        type: [
-          "float64",
-          "null"
-        ]
+        type: "float64"
       },
       {
         name: "cc_tax_percentage",
-        type: [
-          "float64",
-          "null"
-        ]
+        type: "float64"
       }
     ]
   }

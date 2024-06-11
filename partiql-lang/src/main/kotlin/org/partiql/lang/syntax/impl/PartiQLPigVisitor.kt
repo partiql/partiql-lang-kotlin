@@ -60,8 +60,8 @@ import org.partiql.lang.util.checkThreadInterrupted
 import org.partiql.lang.util.error
 import org.partiql.lang.util.getPrecisionFromTimeString
 import org.partiql.lang.util.unaryMinus
-import org.partiql.parser.internal.antlr.PartiQLBaseVisitor
 import org.partiql.parser.internal.antlr.PartiQLParser
+import org.partiql.parser.internal.antlr.PartiQLParserBaseVisitor
 import org.partiql.pig.runtime.SymbolPrimitive
 import org.partiql.value.datetime.DateTimeException
 import org.partiql.value.datetime.TimeZone
@@ -73,12 +73,12 @@ import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 
 /**
- * Extends ANTLR's generated [PartiQLBaseVisitor] to visit an ANTLR ParseTree and convert it into a PartiQL AST. This
+ * Extends ANTLR's generated [PartiQLParserBaseVisitor] to visit an ANTLR ParseTree and convert it into a PartiQL AST. This
  * class uses the [PartiqlAst.PartiqlAstNode] to represent all nodes within the new AST.
  *
  * When the grammar in PartiQL.g4 is extended with a new rule, one needs to override corresponding visitor methods
  * in this class, in order to extend the transformation from an ANTLR parse tree into a [PartqlAst] tree.
- * (Trivial implementations of these methods are generated into [PartiQLBaseVisitor].)
+ * (Trivial implementations of these methods are generated into [PartiQLParserBaseVisitor].)
  *
  * For a rule of the form
  * ```
@@ -119,7 +119,7 @@ internal class PartiQLPigVisitor(
     val customTypes: List<CustomType> = listOf(),
     private val parameterIndexes: Map<Int, Int> = mapOf(),
 ) :
-    PartiQLBaseVisitor<PartiqlAst.PartiqlAstNode>() {
+    PartiQLParserBaseVisitor<PartiqlAst.PartiqlAstNode>() {
 
     companion object {
         internal val TRIM_SPECIFICATION_KEYWORDS = setOf("both", "leading", "trailing")

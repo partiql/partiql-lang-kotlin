@@ -5,45 +5,27 @@ ship_mode::{
     fields: [
       {
         name: "sm_ship_mode_sk",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "sm_ship_mode_id",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "sm_type",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "sm_code",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "sm_carrier",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "sm_contract",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       }
     ]
   }

@@ -5,8 +5,6 @@ import org.partiql.planner.internal.ir.Ref
 import org.partiql.planner.internal.typer.toRuntimeTypeOrNull
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnSignature
-import org.partiql.types.AnyOfType
-import org.partiql.types.NullType
 import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
@@ -55,15 +53,7 @@ internal object FnResolver {
         }
 
         // Match candidates on all argument permutations
-        var exhaustive = true
-        val matches = argPermutations.mapNotNull {
-            val m = match(candidates, it)
-            if (m == null) {
-                // we had a branch whose arguments did not match a static call
-                exhaustive = false
-            }
-            m
-        }
+        val matches = argPermutations.mapNotNull { match(candidates, it) }
 
         // Order based on original candidate function ordering
         val orderedUniqueMatches = matches.toSet().toList()
@@ -73,10 +63,10 @@ internal object FnResolver {
 
         // Static call iff only one match for every branch
         val n = orderedCandidates.size
-        return when {
-            n == 0 -> null
-            n == 1 && exhaustive -> orderedCandidates.first()
-            else -> FnMatch.Dynamic(orderedCandidates, exhaustive)
+        return when (n) {
+            0 -> null
+            1 -> orderedCandidates.first()
+            else -> FnMatch.Dynamic(orderedCandidates)
         }
     }
 
@@ -149,13 +139,7 @@ internal object FnResolver {
     }
 
     private fun buildArgumentPermutations(args: List<StaticType>): List<List<StaticType>> {
-        val flattenedArgs = args.map {
-            if (it is AnyOfType) {
-                it.flatten().allTypes.filter { it !is NullType }
-            } else {
-                it.flatten().allTypes
-            }
-        }
+        val flattenedArgs = args.map { it.flatten().allTypes }
         return buildArgumentPermutations(flattenedArgs, accumulator = emptyList())
     }
 

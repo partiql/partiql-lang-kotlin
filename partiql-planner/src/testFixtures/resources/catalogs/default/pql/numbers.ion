@@ -6,40 +6,28 @@
       name: "nullable_int16s",
       type: {
         type: "list",
-        items: [
-          "int16",
-          "null"
-        ]
+        items: "int16"
       }
     },
     {
       name: "nullable_int32s",
       type: {
         type: "list",
-        items: [
-          "int32",
-          "null"
-        ]
+        items: "int32"
       }
     },
     {
       name: "nullable_int64s",
       type: {
         type: "list",
-        items: [
-          "int64",
-          "null"
-        ]
+        items: "int64"
       }
     },
     {
       name: "nullable_ints",
       type: {
         type: "list",
-        items: [
-          "int",
-          "null"
-        ]
+        items: "int"
       }
     },
     {
@@ -85,20 +73,14 @@
       name: "nullable_float32s",
       type: {
         type: "list",
-        items: [
-          "float32",
-          "null"
-        ]
+        items: "float32"
       }
     },
     {
       name: "nullable_float64s",
       type: {
         type: "list",
-        items: [
-          "float64",
-          "null"
-        ]
+        items: "float64"
       }
     },
     {

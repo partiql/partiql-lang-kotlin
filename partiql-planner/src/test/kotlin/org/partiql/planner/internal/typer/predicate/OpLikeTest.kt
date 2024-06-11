@@ -18,7 +18,7 @@ class OpLikeTest : PartiQLTyperTestBase() {
         ).map { inputs.get("basics", it)!! }
 
         val argsMap = buildMap {
-            val successArgs = (allTextType + listOf(StaticType.NULL))
+            val successArgs = (allTextType)
                 .let { cartesianProduct(it, it) }
             val failureArgs = cartesianProduct(
                 allSupportedType,
@@ -43,7 +43,7 @@ class OpLikeTest : PartiQLTyperTestBase() {
         ).map { inputs.get("basics", it)!! }
 
         val argsMap = buildMap {
-            val successArgs = (allTextType + listOf(StaticType.NULL))
+            val successArgs = (allTextType)
                 .let { cartesianProduct(it, it, it) }
             val failureArgs = cartesianProduct(
                 allSupportedType,

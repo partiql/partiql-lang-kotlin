@@ -5,31 +5,19 @@ inventory::{
     fields: [
       {
         name: "inv_date_sk",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "inv_item_sk",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "inv_warehouse_sk",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "inv_quantity_on_hand",
-        type: [
-          "int32",
-          "null"
-        ]
+        type: "int32"
       }
     ]
   }

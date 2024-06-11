@@ -5,101 +5,59 @@ web_page::{
     fields: [
       {
         name: "wp_web_page_sk",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "wp_web_page_id",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "wp_rec_start_date",
-        type: [
-          "int64",
-          "null"
-        ]
+        type: "int64"
       },
       {
         name: "wp_rec_end_date",
-        type: [
-          "int64",
-          "null"
-        ]
+        type: "int64"
       },
       {
         name: "wp_creation_date_sk",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "wp_access_date_sk",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "wp_autogen_flag",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "wp_customer_sk",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "wp_url",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "wp_type",
-        type: [
-          "string",
-          "null"
-        ]
+        type: "string"
       },
       {
         name: "wp_char_count",
-        type: [
-          "int32",
-          "null"
-        ]
+        type: "int32"
       },
       {
         name: "wp_link_count",
-        type: [
-          "int32",
-          "null"
-        ]
+        type: "int32"
       },
       {
         name: "wp_image_count",
-        type: [
-          "int32",
-          "null"
-        ]
+        type: "int32"
       },
       {
         name: "wp_max_ad_count",
-        type: [
-          "int32",
-          "null"
-        ]
+        type: "int32"
       }
     ]
   }

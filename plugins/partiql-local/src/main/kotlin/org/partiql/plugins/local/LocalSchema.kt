@@ -96,8 +96,7 @@ public fun StringElement.toStaticType(): StaticType = when (textValue) {
     "list" -> error("`list` is not an atomic type")
     "sexp" -> error("`sexp` is not an atomic type")
     "struct" -> error("`struct` is not an atomic type")
-    "null" -> StaticType.NULL
-    "missing" -> StaticType.MISSING
+    "null", "missing" -> error("Absent values ($textValue) do not have a corresponding type.")
     else -> error("Invalid type `$textValue`")
 }
 
@@ -182,13 +181,12 @@ public fun StaticType.toIon(): IonElement = when (this) {
         IntType.IntRangeConstraint.LONG -> ionString("int64")
         IntType.IntRangeConstraint.UNCONSTRAINED -> ionString("int")
     }
-    MissingType -> ionString("missing")
-    is NullType -> ionString("null")
     is StringType -> ionString("string") // TODO char
     is StructType -> this.toIon()
     is SymbolType -> ionString("symbol")
     is TimeType -> ionString("time")
     is TimestampType -> ionString("timestamp")
+    is MissingType, is NullType -> error("Cannot output absent type ($this) to Ion.")
 }
 
 private fun AnyOfType.toIon(): IonElement {

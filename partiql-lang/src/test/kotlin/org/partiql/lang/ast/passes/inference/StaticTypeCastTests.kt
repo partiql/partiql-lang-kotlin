@@ -3,6 +3,7 @@ package org.partiql.lang.ast.passes.inference
 import junitparams.JUnitParamsRunner
 import junitparams.Parameters
 import org.junit.Assert.assertEquals
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.partiql.types.DecimalType
@@ -85,6 +86,7 @@ class StaticTypeCastTests {
 
     @Test
     @Parameters
+    @Ignore("StaticType.ALL_TYPES no longer supports NULL/MISSING") // @Test comes from JUnit4, and therefore we must use @Ignore.
     fun unionTypeCastTests(tc: TestCase) = runTest(tc)
 
     @Test

@@ -28,7 +28,9 @@ fun <T> cartesianProduct(a: List<T>, b: List<T>, vararg lists: List<T>): Set<Lis
             acc.flatMap { list -> set.map { element -> list + element } }
         }.toSet()
 
-val allSupportedType = StaticType.ALL_TYPES.filterNot { it == StaticType.GRAPH }
+val allSupportedType = StaticType.ALL_TYPES.filterNot {
+    it == StaticType.GRAPH || it is NullType || it is MissingType
+}
 
 val allSupportedTypeNotUnknown = allSupportedType.filterNot { it == StaticType.MISSING || it == StaticType.NULL }
 

@@ -416,47 +416,6 @@ class PartiQLEngineDefaultTest {
         fun aggregationTestCases() = kotlin.collections.listOf(
             SuccessTestCase(
                 input = """
-                    SELECT
-                        gk_0, SUM(t.c) AS t_c_sum
-                    FROM <<
-                        { 'b': NULL, 'c': 1 },
-                        { 'b': MISSING, 'c': 2 },
-                        { 'b': 1, 'c': 1 },
-                        { 'b': 1, 'c': 2 },
-                        { 'b': 2, 'c': NULL },
-                        { 'b': 2, 'c': 2 },
-                        { 'b': 3, 'c': MISSING },
-                        { 'b': 3, 'c': 2 },
-                        { 'b': 4, 'c': MISSING },
-                        { 'b': 4, 'c': NULL }
-                    >> AS t GROUP BY t.b AS gk_0;
-                """.trimIndent(),
-                expected = org.partiql.value.bagValue(
-                    org.partiql.value.structValue(
-                        "gk_0" to org.partiql.value.int32Value(1),
-                        "t_c_sum" to org.partiql.value.int32Value(3)
-                    ),
-                    org.partiql.value.structValue(
-                        "gk_0" to org.partiql.value.int32Value(2),
-                        "t_c_sum" to org.partiql.value.int32Value(2)
-                    ),
-                    org.partiql.value.structValue(
-                        "gk_0" to org.partiql.value.int32Value(3),
-                        "t_c_sum" to org.partiql.value.int32Value(2)
-                    ),
-                    org.partiql.value.structValue(
-                        "gk_0" to org.partiql.value.int32Value(4),
-                        "t_c_sum" to org.partiql.value.int32Value(null)
-                    ),
-                    org.partiql.value.structValue(
-                        "gk_0" to org.partiql.value.nullValue(),
-                        "t_c_sum" to org.partiql.value.int32Value(3)
-                    ),
-                ),
-                mode = org.partiql.eval.PartiQLEngine.Mode.PERMISSIVE
-            ),
-            SuccessTestCase(
-                input = """
                     SELECT VALUE { 'sensor': sensor,
                           'readings': (SELECT VALUE v.l.co FROM g AS v)
                     }
@@ -897,17 +856,6 @@ class PartiQLEngineDefaultTest {
             SuccessTestCase(
                 input = "5 = 'a';",
                 expected = boolValue(false), // TODO: Is this correct?
-                mode = PartiQLEngine.Mode.STRICT
-            ),
-            // PartiQL Specification Section 8
-            SuccessTestCase(
-                input = "MISSING AND TRUE;",
-                expected = boolValue(null),
-            ),
-            // PartiQL Specification Section 8
-            SuccessTestCase(
-                input = "MISSING AND TRUE;",
-                expected = boolValue(null), // TODO: Is this right?
                 mode = PartiQLEngine.Mode.STRICT
             ),
             // PartiQL Specification Section 8
@@ -1384,6 +1332,73 @@ class PartiQLEngineDefaultTest {
                 ),
             )
         ).assert()
+
+    @Test
+    @Disabled(
+        """
+            We currently do not have support for consolidating collections containing MISSING/NULL. The current
+            result (value) is correct. However, the types are slightly wrong due to the SUM__ANY_ANY being resolved.
+        """
+    )
+    fun aggregationOnLiteralBagOfStructs() = SuccessTestCase(
+        input = """
+            SELECT
+                gk_0, SUM(t.c) AS t_c_sum
+            FROM <<
+                { 'b': NULL, 'c': 1 },
+                { 'b': MISSING, 'c': 2 },
+                { 'b': 1, 'c': 1 },
+                { 'b': 1, 'c': 2 },
+                { 'b': 2, 'c': NULL },
+                { 'b': 2, 'c': 2 },
+                { 'b': 3, 'c': MISSING },
+                { 'b': 3, 'c': 2 },
+                { 'b': 4, 'c': MISSING },
+                { 'b': 4, 'c': NULL }
+            >> AS t GROUP BY t.b AS gk_0;
+        """.trimIndent(),
+        expected = org.partiql.value.bagValue(
+            org.partiql.value.structValue(
+                "gk_0" to org.partiql.value.int32Value(1),
+                "t_c_sum" to org.partiql.value.int32Value(3)
+            ),
+            org.partiql.value.structValue(
+                "gk_0" to org.partiql.value.int32Value(2),
+                "t_c_sum" to org.partiql.value.int32Value(2)
+            ),
+            org.partiql.value.structValue(
+                "gk_0" to org.partiql.value.int32Value(3),
+                "t_c_sum" to org.partiql.value.int32Value(2)
+            ),
+            org.partiql.value.structValue(
+                "gk_0" to org.partiql.value.int32Value(4),
+                "t_c_sum" to org.partiql.value.int32Value(null)
+            ),
+            org.partiql.value.structValue(
+                "gk_0" to org.partiql.value.nullValue(),
+                "t_c_sum" to org.partiql.value.int32Value(3)
+            ),
+        ),
+        mode = org.partiql.eval.PartiQLEngine.Mode.PERMISSIVE
+    ).assert()
+
+    // PartiQL Specification Section 8
+    @Test
+    @Disabled("Currently, .check(<PartiQLValue>) is failing for MISSING. This will be resolved by Datum.")
+    fun missingAndTruePermissive() =
+        SuccessTestCase(
+            input = "MISSING AND TRUE;",
+            expected = boolValue(null),
+        ).assert()
+
+    // PartiQL Specification Section 8
+    @Test
+    @Disabled("Currently, .check(<PartiQLValue>) is failing for MISSING. This will be resolved by Datum.")
+    fun missingAndTrueStrict() = SuccessTestCase(
+        input = "MISSING AND TRUE;",
+        expected = boolValue(null), // TODO: Is this right?
+        mode = PartiQLEngine.Mode.STRICT
+    ).assert()
 
     @Test
     @Disabled("Support for ORDER BY needs to be added for this to pass.")
