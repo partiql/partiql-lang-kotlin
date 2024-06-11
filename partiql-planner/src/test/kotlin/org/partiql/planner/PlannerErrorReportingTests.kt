@@ -182,14 +182,16 @@ internal class PlannerErrorReportingTests {
             ),
             // Chained, demostrate missing trace.
             // TODO: We currently don't have a good way to retain missing value information. The following test
-            //  should have 2 errors.
+            //  could have 2 warnings. One for executing a path operation on a literal missing. And one for
+            //  executing a path operation on an expression that is known to result in the missing value.
             TestCase(
                 "MISSING['a'].a",
                 false,
                 assertOnProblemCount(1, 0)
             ),
             // TODO: We currently don't have a good way to retain missing value information. The following test
-            //  should have 2 errors.
+            //  could have 2 errors. One for executing a path operation on a literal missing. And one for
+            //  executing a path operation on an expression that is known to result in the missing value.
             TestCase(
                 "MISSING['a'].a",
                 true,
@@ -258,17 +260,15 @@ internal class PlannerErrorReportingTests {
 
             // 1 + not_a_function(1)
             //  The continuation will return all numeric type
-            // TODO: Should the warning count be 1? Does it matter if it is zero?
             TestCase(
                 "1 + not_a_function(1)",
                 false,
                 assertOnProblemCount(0, 1),
                 StaticType.unionOf(StaticType.INT4, StaticType.INT8, StaticType.INT, StaticType.FLOAT, StaticType.DECIMAL),
             ),
-            // TODO: Should the warning count be 1? Does it matter if it is zero?
             TestCase(
                 "1 + not_a_function(1)",
-                false,
+                true,
                 assertOnProblemCount(0, 1),
                 StaticType.unionOf(StaticType.INT4, StaticType.INT8, StaticType.INT, StaticType.FLOAT, StaticType.DECIMAL),
             ),

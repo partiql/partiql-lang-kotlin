@@ -87,7 +87,6 @@ import org.partiql.value.MissingValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.TextValue
 import org.partiql.value.boolValue
-import org.partiql.value.missingValue
 import org.partiql.value.stringValue
 import kotlin.math.max
 
@@ -597,7 +596,7 @@ internal class PlanTyper(private val env: Env) {
             return rex(unionOf(elementTypes), rexOpPathIndex(root, key))
         }
 
-        private fun Rex.isLiteralMissing(): Boolean = this.op is Rex.Op.Lit && this.op.value.withoutAnnotations() == missingValue()
+        private fun Rex.isLiteralMissing(): Boolean = this.op is Rex.Op.Lit && this.op.value is MissingValue
 
         override fun visitRexOpPathKey(node: Rex.Op.Path.Key, ctx: StaticType?): Rex {
             val root = visitRex(node.root, node.root.type)
