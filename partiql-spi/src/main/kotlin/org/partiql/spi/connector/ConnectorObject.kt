@@ -14,6 +14,7 @@
 
 package org.partiql.spi.connector
 
+import org.partiql.types.PType
 import org.partiql.types.StaticType
 
 /**
@@ -30,5 +31,14 @@ public interface ConnectorObject {
      *
      * @return
      */
+    @Deprecated("This is subject to removal in a future release.")
     public fun getType(): StaticType
+
+    /**
+     * @return the type of the object in a catalog.
+     */
+    public fun getPType(): PType {
+        // TODO: Remove the default prior to release
+        return PType.fromStaticType(getType())
+    }
 }

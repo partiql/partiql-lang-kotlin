@@ -84,7 +84,7 @@ public abstract interface class org/partiql/eval/value/Datum : java/lang/Iterabl
 	public fun getString ()Ljava/lang/String;
 	public fun getTime ()Lorg/partiql/value/datetime/Time;
 	public fun getTimestamp ()Lorg/partiql/value/datetime/Timestamp;
-	public abstract fun getType ()Lorg/partiql/value/PartiQLValueType;
+	public abstract fun getType ()Lorg/partiql/types/PType;
 	public static fun int32Value (I)Lorg/partiql/eval/value/Datum;
 	public static fun int64Value (J)Lorg/partiql/eval/value/Datum;
 	public fun isMissing ()Z
@@ -92,9 +92,9 @@ public abstract interface class org/partiql/eval/value/Datum : java/lang/Iterabl
 	public fun iterator ()Ljava/util/Iterator;
 	public static fun listValue (Ljava/lang/Iterable;)Lorg/partiql/eval/value/Datum;
 	public static fun missingValue ()Lorg/partiql/eval/value/Datum;
-	public static fun missingValue (Lorg/partiql/value/PartiQLValueType;)Lorg/partiql/eval/value/Datum;
+	public static fun missingValue (Lorg/partiql/types/PType;)Lorg/partiql/eval/value/Datum;
 	public static fun nullValue ()Lorg/partiql/eval/value/Datum;
-	public static fun nullValue (Lorg/partiql/value/PartiQLValueType;)Lorg/partiql/eval/value/Datum;
+	public static fun nullValue (Lorg/partiql/types/PType;)Lorg/partiql/eval/value/Datum;
 	public static fun of (Lorg/partiql/value/PartiQLValue;)Lorg/partiql/eval/value/Datum;
 	public static fun sexpValue (Ljava/lang/Iterable;)Lorg/partiql/eval/value/Datum;
 	public static fun stringValue (Ljava/lang/String;)Lorg/partiql/eval/value/Datum;

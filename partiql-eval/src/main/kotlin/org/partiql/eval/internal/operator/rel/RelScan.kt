@@ -5,10 +5,8 @@ import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.helpers.RecordValueIterator
 import org.partiql.eval.internal.operator.Operator
-import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType
+import org.partiql.types.PType
 
-@OptIn(PartiQLValueExperimental::class)
 internal class RelScan(
     private val expr: Operator.Expr
 ) : Operator.Relation {
@@ -17,8 +15,8 @@ internal class RelScan(
 
     override fun open(env: Environment) {
         val r = expr.eval(env.push(Record.empty))
-        records = when (r.type) {
-            PartiQLValueType.LIST, PartiQLValueType.BAG, PartiQLValueType.SEXP -> RecordValueIterator(r.iterator())
+        records = when (r.type.kind) {
+            PType.Kind.LIST, PType.Kind.BAG, PType.Kind.SEXP -> RecordValueIterator(r.iterator())
             else -> {
                 close()
                 throw TypeCheckException()

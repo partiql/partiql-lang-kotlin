@@ -2,6 +2,7 @@ package org.partiql.eval.internal.helpers
 
 import org.partiql.errors.TypeCheckException
 import org.partiql.eval.value.Datum
+import org.partiql.types.PType
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
@@ -15,10 +16,14 @@ internal object ValueUtility {
     /**
      * @return whether the value is a boolean and the value itself is not-null and true.
      */
-    @OptIn(PartiQLValueExperimental::class)
     @JvmStatic
     fun Datum.isTrue(): Boolean {
-        return this.type == PartiQLValueType.BOOL && !this.isNull && this.boolean
+        return this.type.kind == PType.Kind.BOOL && !this.isNull && this.boolean
+    }
+
+    @OptIn(PartiQLValueExperimental::class)
+    fun Datum.check(type: PartiQLValueType): Datum {
+        return this.check(PType.fromPartiQLValueType(type))
     }
 
     /**
@@ -28,8 +33,7 @@ internal object ValueUtility {
      * @return a [Datum] corresponding to the expected type; this will either be the input value if the value is
      * already of the expected type, or it will be a null value of the expected type.
      */
-    @OptIn(PartiQLValueExperimental::class)
-    fun Datum.check(type: PartiQLValueType): Datum {
+    fun Datum.check(type: PType): Datum {
         if (this.type == type) {
             return this
         }
@@ -47,8 +51,8 @@ internal object ValueUtility {
      */
     @OptIn(PartiQLValueExperimental::class)
     fun Datum.getText(): String {
-        return when (this.type) {
-            PartiQLValueType.STRING, PartiQLValueType.SYMBOL, PartiQLValueType.CHAR -> this.string
+        return when (this.type.kind) {
+            PType.Kind.STRING, PType.Kind.SYMBOL, PType.Kind.CHAR -> this.string
             else -> throw TypeCheckException("Expected text, but received ${this.type}.")
         }
     }
@@ -65,12 +69,12 @@ internal object ValueUtility {
      */
     @OptIn(PartiQLValueExperimental::class)
     fun Datum.getBigIntCoerced(): BigInteger {
-        return when (this.type) {
-            PartiQLValueType.INT8 -> this.byte.toInt().toBigInteger()
-            PartiQLValueType.INT16 -> this.short.toInt().toBigInteger()
-            PartiQLValueType.INT32 -> this.int.toBigInteger()
-            PartiQLValueType.INT64 -> this.long.toBigInteger()
-            PartiQLValueType.INT -> this.bigInteger
+        return when (this.type.kind) {
+            PType.Kind.TINYINT -> this.byte.toInt().toBigInteger()
+            PType.Kind.SMALLINT -> this.short.toInt().toBigInteger()
+            PType.Kind.INT -> this.int.toBigInteger()
+            PType.Kind.BIGINT -> this.long.toBigInteger()
+            PType.Kind.INT_ARBITRARY -> this.bigInteger
             else -> throw TypeCheckException()
         }
     }
@@ -88,12 +92,12 @@ internal object ValueUtility {
      */
     @OptIn(PartiQLValueExperimental::class)
     fun Datum.getInt32Coerced(): Int {
-        return when (this.type) {
-            PartiQLValueType.INT8 -> this.byte.toInt()
-            PartiQLValueType.INT16 -> this.short.toInt()
-            PartiQLValueType.INT32 -> this.int
-            PartiQLValueType.INT64 -> this.long.toInt()
-            PartiQLValueType.INT -> this.bigInteger.toInt()
+        return when (this.type.kind) {
+            PType.Kind.TINYINT -> this.byte.toInt()
+            PType.Kind.SMALLINT -> this.short.toInt()
+            PType.Kind.INT -> this.int
+            PType.Kind.BIGINT -> this.long.toInt()
+            PType.Kind.INT_ARBITRARY -> this.bigInteger.toInt()
             else -> throw TypeCheckException()
         }
     }

@@ -4,7 +4,6 @@ import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.eval.value.Datum
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType
 
 internal class ExprCoalesce(
     private val args: Array<Operator.Expr>
@@ -14,7 +13,7 @@ internal class ExprCoalesce(
     override fun eval(env: Environment): Datum {
         for (arg in args) {
             val result = arg.eval(env)
-            if (!result.isNull && result.type != PartiQLValueType.MISSING) {
+            if (!result.isNull && !result.isMissing) {
                 return result
             }
         }

@@ -1,7 +1,7 @@
 package org.partiql.eval.value;
 
 import org.jetbrains.annotations.NotNull;
-import org.partiql.value.PartiQLValueType;
+import org.partiql.types.PType;
 import org.partiql.value.datetime.Date;
 import org.partiql.value.datetime.Time;
 import org.partiql.value.datetime.Timestamp;
@@ -16,13 +16,13 @@ import java.util.Iterator;
 class DatumNull implements Datum {
 
     @NotNull
-    private final PartiQLValueType _type;
+    private final PType _type;
 
     DatumNull() {
-        this._type = PartiQLValueType.NULL; // TODO: This might eventually be UNKNOWN like PostgreSQL's unknown type.
+        this._type = PType.typeUnknown();
     }
 
-    DatumNull(@NotNull PartiQLValueType type) {
+    DatumNull(@NotNull PType type) {
         this._type = type;
     }
 
@@ -33,13 +33,13 @@ class DatumNull implements Datum {
 
     @NotNull
     @Override
-    public PartiQLValueType getType() {
+    public PType getType() {
         return _type;
     }
 
     @Override
     public boolean getBoolean() {
-        if (_type == PartiQLValueType.BOOL) {
+        if (_type.getKind() == PType.Kind.BOOL) {
             throw new NullPointerException();
         } else {
             throw new UnsupportedOperationException();
@@ -48,7 +48,7 @@ class DatumNull implements Datum {
 
     @Override
     public short getShort() {
-        if (_type == PartiQLValueType.INT16) {
+        if (_type.getKind() == PType.Kind.SMALLINT) {
             throw new NullPointerException();
         } else {
             throw new UnsupportedOperationException();
@@ -57,7 +57,7 @@ class DatumNull implements Datum {
 
     @Override
     public int getInt() {
-        if (_type == PartiQLValueType.INT32) {
+        if (_type.getKind() == PType.Kind.INT) {
             throw new NullPointerException();
         } else {
             throw new UnsupportedOperationException();
@@ -66,7 +66,7 @@ class DatumNull implements Datum {
 
     @Override
     public long getLong() {
-        if (_type == PartiQLValueType.INT64) {
+        if (_type.getKind() == PType.Kind.BIGINT) {
             throw new NullPointerException();
         } else {
             throw new UnsupportedOperationException();
@@ -76,7 +76,7 @@ class DatumNull implements Datum {
     @NotNull
     @Override
     public BigInteger getBigInteger() {
-        if (_type == PartiQLValueType.INT) {
+        if (_type.getKind() == PType.Kind.INT_ARBITRARY) {
             throw new NullPointerException();
         } else {
             throw new UnsupportedOperationException();
@@ -86,7 +86,7 @@ class DatumNull implements Datum {
     @NotNull
     @Override
     public BigDecimal getBigDecimal() {
-        if (_type == PartiQLValueType.DECIMAL || _type == PartiQLValueType.DECIMAL_ARBITRARY) {
+        if (_type.getKind() == PType.Kind.DECIMAL || _type.getKind() == PType.Kind.DECIMAL_ARBITRARY) {
             throw new NullPointerException();
         } else {
             throw new UnsupportedOperationException();
@@ -95,7 +95,7 @@ class DatumNull implements Datum {
 
     @Override
     public byte getByte() {
-        if (_type == PartiQLValueType.BYTE || _type == PartiQLValueType.INT8) {
+        if (_type.getKind() == PType.Kind.TINYINT) {
             throw new NullPointerException();
         } else {
             throw new UnsupportedOperationException();
@@ -105,7 +105,7 @@ class DatumNull implements Datum {
     @NotNull
     @Override
     public byte[] getBytes() {
-        if (_type == PartiQLValueType.BINARY || _type == PartiQLValueType.BLOB || _type == PartiQLValueType.CLOB) {
+        if (_type.getKind() == PType.Kind.BLOB || _type.getKind() == PType.Kind.CLOB) {
             throw new NullPointerException();
         } else {
             throw new UnsupportedOperationException();
@@ -115,7 +115,7 @@ class DatumNull implements Datum {
     @NotNull
     @Override
     public Date getDate() {
-        if (_type == PartiQLValueType.DATE) {
+        if (_type.getKind() == PType.Kind.DATE) {
             throw new NullPointerException();
         } else {
             throw new UnsupportedOperationException();
@@ -124,7 +124,7 @@ class DatumNull implements Datum {
 
     @Override
     public double getDouble() {
-        if (_type == PartiQLValueType.FLOAT64) {
+        if (_type.getKind() == PType.Kind.DOUBLE_PRECISION) {
             throw new NullPointerException();
         } else {
             throw new UnsupportedOperationException();
@@ -133,7 +133,7 @@ class DatumNull implements Datum {
 
     @Override
     public float getFloat() {
-        if (_type == PartiQLValueType.FLOAT32) {
+        if (_type.getKind() == PType.Kind.REAL) {
             throw new NullPointerException();
         } else {
             throw new UnsupportedOperationException();
@@ -142,7 +142,7 @@ class DatumNull implements Datum {
 
     @Override
     public Iterator<Datum> iterator() {
-        if (_type == PartiQLValueType.BAG || _type == PartiQLValueType.LIST || _type == PartiQLValueType.SEXP) {
+        if (_type.getKind() == PType.Kind.BAG || _type.getKind() == PType.Kind.LIST || _type.getKind() == PType.Kind.SEXP) {
             throw new NullPointerException();
         } else {
             throw new UnsupportedOperationException();
@@ -152,7 +152,7 @@ class DatumNull implements Datum {
     @NotNull
     @Override
     public Iterator<Field> getFields() {
-        if (_type == PartiQLValueType.STRUCT) {
+        if (_type.getKind() == PType.Kind.STRUCT) {
             throw new NullPointerException();
         } else {
             throw new UnsupportedOperationException();
@@ -162,7 +162,7 @@ class DatumNull implements Datum {
     @NotNull
     @Override
     public String getString() {
-        if (_type == PartiQLValueType.STRING || _type == PartiQLValueType.CHAR || _type == PartiQLValueType.SYMBOL) {
+        if (_type.getKind() == PType.Kind.STRING || _type.getKind() == PType.Kind.CHAR || _type.getKind() == PType.Kind.SYMBOL) {
             throw new NullPointerException();
         } else {
             throw new UnsupportedOperationException();
@@ -172,7 +172,7 @@ class DatumNull implements Datum {
     @NotNull
     @Override
     public Time getTime() {
-        if (_type == PartiQLValueType.TIME) {
+        if (_type.getKind() == PType.Kind.TIME_WITH_TZ || _type.getKind() == PType.Kind.TIME_WITHOUT_TZ) {
             throw new NullPointerException();
         } else {
             throw new UnsupportedOperationException();
@@ -182,7 +182,7 @@ class DatumNull implements Datum {
     @NotNull
     @Override
     public Timestamp getTimestamp() {
-        if (_type == PartiQLValueType.TIMESTAMP) {
+        if (_type.getKind() == PType.Kind.TIMESTAMP_WITH_TZ || _type.getKind() == PType.Kind.TIMESTAMP_WITHOUT_TZ) {
             throw new NullPointerException();
         } else {
             throw new UnsupportedOperationException();
@@ -191,10 +191,6 @@ class DatumNull implements Datum {
 
     @Override
     public long getInterval() {
-        if (_type == PartiQLValueType.INTERVAL) {
-            throw new NullPointerException();
-        } else {
-            throw new UnsupportedOperationException();
-        }
+        throw new UnsupportedOperationException();
     }
 }

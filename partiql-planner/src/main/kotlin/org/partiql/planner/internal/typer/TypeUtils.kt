@@ -2,13 +2,13 @@ package org.partiql.planner.internal.typer
 
 import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
+import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.types.AnyOfType
 import org.partiql.types.AnyType
 import org.partiql.types.BagType
 import org.partiql.types.BlobType
 import org.partiql.types.BoolType
 import org.partiql.types.ClobType
-import org.partiql.types.CollectionType
 import org.partiql.types.DateType
 import org.partiql.types.DecimalType
 import org.partiql.types.FloatType
@@ -17,6 +17,8 @@ import org.partiql.types.IntType
 import org.partiql.types.ListType
 import org.partiql.types.MissingType
 import org.partiql.types.NullType
+import org.partiql.types.PType
+import org.partiql.types.PType.Kind
 import org.partiql.types.SexpType
 import org.partiql.types.StaticType
 import org.partiql.types.StringType
@@ -165,17 +167,15 @@ private fun StaticType.asRuntimeType(): PartiQLValueType = when (this) {
  * @param lastStepOptional
  * @return
  */
-internal fun StaticType.exclude(steps: List<Rel.Op.Exclude.Step>, lastStepOptional: Boolean = false): StaticType {
+internal fun CompilerType.exclude(steps: List<Rel.Op.Exclude.Step>, lastStepOptional: Boolean = false): CompilerType {
     val type = this
     return steps.fold(type) { acc, step ->
-        when (acc) {
-            is StructType -> acc.exclude(step, lastStepOptional)
-            is CollectionType -> acc.exclude(step, lastStepOptional)
-            is AnyOfType -> StaticType.unionOf(
-                acc.types.map { it.exclude(steps, lastStepOptional) }.toSet()
-            )
+        when (acc.kind) {
+            Kind.DYNAMIC -> CompilerType(PType.typeDynamic())
+            Kind.STRUCT -> acc.excludeStruct(step, lastStepOptional)
+            Kind.LIST, Kind.BAG, Kind.SEXP -> acc.excludeCollection(step, lastStepOptional)
             else -> acc
-        }.flatten()
+        }
     }
 }
 
@@ -186,24 +186,24 @@ internal fun StaticType.exclude(steps: List<Rel.Op.Exclude.Step>, lastStepOption
  * @param lastStepOptional
  * @return
  */
-internal fun StructType.exclude(step: Rel.Op.Exclude.Step, lastStepOptional: Boolean = false): StaticType {
+internal fun CompilerType.excludeStruct(step: Rel.Op.Exclude.Step, lastStepOptional: Boolean = false): CompilerType {
     val type = step.type
     val substeps = step.substeps
-    val output = fields.mapNotNull { field ->
+    val output = fields?.mapNotNull { field ->
         val newField = if (substeps.isEmpty()) {
             if (lastStepOptional) {
-                StructType.Field(field.key, field.value)
+                CompilerType.Field(field.name, field.type)
             } else {
                 null
             }
         } else {
-            val k = field.key
-            val v = field.value.exclude(substeps, lastStepOptional)
-            StructType.Field(k, v)
+            val k = field.name
+            val v = field.type.exclude(substeps, lastStepOptional)
+            CompilerType.Field(k, v)
         }
         when (type) {
             is Rel.Op.Exclude.Type.StructSymbol -> {
-                if (type.symbol.equals(field.key, ignoreCase = true)) {
+                if (type.symbol.equals(field.name, ignoreCase = true)) {
                     newField
                 } else {
                     field
@@ -211,7 +211,7 @@ internal fun StructType.exclude(step: Rel.Op.Exclude.Step, lastStepOptional: Boo
             }
 
             is Rel.Op.Exclude.Type.StructKey -> {
-                if (type.key == field.key) {
+                if (type.key == field.name) {
                     newField
                 } else {
                     field
@@ -220,8 +220,8 @@ internal fun StructType.exclude(step: Rel.Op.Exclude.Step, lastStepOptional: Boo
             is Rel.Op.Exclude.Type.StructWildcard -> newField
             else -> field
         }
-    }
-    return this.copy(fields = output)
+    } ?: return CompilerType(PType.typeStruct())
+    return CompilerType(PType.typeStruct(output))
 }
 
 /**
@@ -231,8 +231,8 @@ internal fun StructType.exclude(step: Rel.Op.Exclude.Step, lastStepOptional: Boo
  * @param lastStepOptional
  * @return
  */
-internal fun CollectionType.exclude(step: Rel.Op.Exclude.Step, lastStepOptional: Boolean = false): StaticType {
-    var e = this.elementType
+internal fun CompilerType.excludeCollection(step: Rel.Op.Exclude.Step, lastStepOptional: Boolean = false): CompilerType {
+    var e = this.typeParameter
     val substeps = step.substeps
     when (step.type) {
         is Rel.Op.Exclude.Type.CollIndex -> {
@@ -240,6 +240,7 @@ internal fun CollectionType.exclude(step: Rel.Op.Exclude.Step, lastStepOptional:
                 e = e.exclude(substeps, lastStepOptional = true)
             }
         }
+
         is Rel.Op.Exclude.Type.CollWildcard -> {
             if (substeps.isNotEmpty()) {
                 e = e.exclude(substeps, lastStepOptional)
@@ -247,14 +248,16 @@ internal fun CollectionType.exclude(step: Rel.Op.Exclude.Step, lastStepOptional:
             // currently no change to elementType if collection wildcard is last element; this behavior could
             // change based on RFC definition
         }
+
         else -> {
             // currently no change to elementType and no error thrown; could consider an error/warning in
             // the future
         }
     }
-    return when (this) {
-        is BagType -> this.copy(e)
-        is ListType -> this.copy(e)
-        is SexpType -> this.copy(e)
+    return when (this.kind) {
+        Kind.LIST -> PType.typeList(e).toCType()
+        Kind.BAG -> PType.typeBag(e).toCType()
+        Kind.SEXP -> PType.typeSexp(e).toCType()
+        else -> throw IllegalStateException()
     }
 }

@@ -1,6 +1,7 @@
 package org.partiql.eval.value;
 
 import org.jetbrains.annotations.NotNull;
+import org.partiql.types.PType;
 import org.partiql.value.PartiQLValueType;
 
 import java.util.Iterator;
@@ -19,10 +20,10 @@ class DatumCollection implements Datum {
     private final Iterable<Datum> _value;
 
     @NotNull
-    private final PartiQLValueType _type;
+    private final PType _type;
 
-    DatumCollection(@NotNull Iterable<Datum> value, @NotNull PartiQLValueType type) {
-        assert(type == PartiQLValueType.LIST || type == PartiQLValueType.BAG || type == PartiQLValueType.SEXP);
+    DatumCollection(@NotNull Iterable<Datum> value, @NotNull PType type) {
+        assert(type.getKind() == PType.Kind.LIST || type.getKind() == PType.Kind.BAG || type.getKind() == PType.Kind.SEXP);
         _value = value;
         _type = type;
     }
@@ -34,7 +35,7 @@ class DatumCollection implements Datum {
 
     @NotNull
     @Override
-    public PartiQLValueType getType() {
+    public PType getType() {
         return _type;
     }
 }

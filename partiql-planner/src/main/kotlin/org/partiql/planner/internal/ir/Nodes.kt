@@ -70,13 +70,12 @@ import org.partiql.planner.internal.ir.builder.RexOpVarLocalBuilder
 import org.partiql.planner.internal.ir.builder.RexOpVarUnresolvedBuilder
 import org.partiql.planner.internal.ir.builder.StatementQueryBuilder
 import org.partiql.planner.internal.ir.visitor.PlanVisitor
+import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.spi.fn.AggSignature
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnSignature
-import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType
 import kotlin.Boolean
 import kotlin.Char
 import kotlin.Int
@@ -124,7 +123,7 @@ internal sealed class Ref : PlanNode() {
     internal data class Obj(
         @JvmField internal val catalog: String,
         @JvmField internal val path: List<String>,
-        @JvmField internal val type: StaticType,
+        @JvmField internal val type: CompilerType,
     ) : Ref() {
         public override val children: List<PlanNode> = emptyList()
 
@@ -167,8 +166,8 @@ internal sealed class Ref : PlanNode() {
     }
 
     internal data class Cast(
-        @JvmField internal val input: PartiQLValueType,
-        @JvmField internal val target: PartiQLValueType,
+        @JvmField internal val input: CompilerType,
+        @JvmField internal val target: CompilerType,
         @JvmField internal val safety: Safety,
         @JvmField internal val isNullable: Boolean,
     ) : PlanNode() {
@@ -258,7 +257,7 @@ internal sealed class Identifier : PlanNode() {
 }
 
 internal data class Rex(
-    @JvmField internal val type: StaticType,
+    @JvmField internal val type: CompilerType,
     @JvmField internal val op: Op,
 ) : PlanNode() {
     public override val children: List<PlanNode> by lazy {
@@ -442,7 +441,7 @@ internal data class Rex(
             }
 
             internal data class Unresolved(
-                @JvmField internal val target: PartiQLValueType,
+                @JvmField internal val target: CompilerType,
                 @JvmField internal val arg: Rex,
             ) : Cast() {
                 public override val children: List<PlanNode> by lazy {
@@ -1438,7 +1437,7 @@ internal data class Rel(
 
     internal data class Binding(
         @JvmField internal val name: String,
-        @JvmField internal val type: StaticType,
+        @JvmField internal val type: CompilerType,
     ) : PlanNode() {
         public override val children: List<PlanNode> = emptyList()
 

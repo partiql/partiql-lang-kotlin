@@ -2,6 +2,7 @@ package org.partiql.planner.internal
 
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.internal.casts.CastTable
+import org.partiql.planner.internal.casts.Coercions
 import org.partiql.planner.internal.ir.Ref
 import org.partiql.planner.internal.ir.Rel
 import org.partiql.planner.internal.ir.Rex
@@ -12,21 +13,19 @@ import org.partiql.planner.internal.ir.relOpAggregateCallResolved
 import org.partiql.planner.internal.ir.rex
 import org.partiql.planner.internal.ir.rexOpCallDynamic
 import org.partiql.planner.internal.ir.rexOpCallDynamicCandidate
-import org.partiql.planner.internal.ir.rexOpCallStatic
 import org.partiql.planner.internal.ir.rexOpCastResolved
 import org.partiql.planner.internal.ir.rexOpVarGlobal
+import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.planner.internal.typer.TypeEnv.Companion.toPath
-import org.partiql.planner.internal.typer.toRuntimeType
-import org.partiql.planner.internal.typer.toStaticType
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
 import org.partiql.spi.connector.ConnectorMetadata
 import org.partiql.spi.fn.AggSignature
 import org.partiql.spi.fn.FnExperimental
-import org.partiql.types.StaticType
+import org.partiql.types.PType
+import org.partiql.types.PType.Kind
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType
 
 /**
  * [Env] is similar to the database type environment from the PartiQL Specification. This includes resolution of
@@ -39,11 +38,6 @@ import org.partiql.value.PartiQLValueType
  * @property session
  */
 internal class Env(private val session: PartiQLPlanner.Session) {
-
-    /**
-     * Cast table used for coercion and explicit cast resolution.
-     */
-    private val casts = CastTable.partiql
 
     /**
      * Current catalog [ConnectorMetadata]. Error if missing from the session.
@@ -80,7 +74,7 @@ internal class Env(private val session: PartiQLPlanner.Session) {
         val ref = refObj(
             catalog = item.catalog,
             path = item.handle.path.steps,
-            type = item.handle.entity.getType(),
+            type = CompilerType(item.handle.entity.getPType()),
         )
         // Rewrite as a path expression.
         val root = rex(ref.type, rexOpVarGlobal(ref))
@@ -109,7 +103,7 @@ internal class Env(private val session: PartiQLPlanner.Session) {
             }
             return ProblemGenerator.missingRex(
                 rexOpCallDynamic(args, candidates),
-                ProblemGenerator.incompatibleTypesForOp(args.map { it.type }, path.normalized.joinToString("."))
+                ProblemGenerator.incompatibleTypesForOp(path.normalized.joinToString("."), args.map { it.type })
             )
         }
         return when (match) {
@@ -126,7 +120,7 @@ internal class Env(private val session: PartiQLPlanner.Session) {
                     )
                 }
                 // Rewrite as a dynamic call to be typed by PlanTyper
-                rex(StaticType.ANY, rexOpCallDynamic(args, candidates))
+                Rex(CompilerType(PType.typeDynamic()), Rex.Op.Call.Dynamic(args, candidates))
             }
             is FnMatch.Static -> {
                 // Create an internal typed reference
@@ -139,11 +133,11 @@ internal class Env(private val session: PartiQLPlanner.Session) {
                 val coercions: List<Rex> = args.mapIndexed { i, arg ->
                     when (val cast = match.mapping[i]) {
                         null -> arg
-                        else -> rex(StaticType.ANY, rexOpCastResolved(cast, arg))
+                        else -> Rex(CompilerType(PType.typeDynamic()), Rex.Op.Cast.Resolved(cast, arg))
                     }
                 }
                 // Rewrite as a static call to be typed by PlanTyper
-                rex(StaticType.ANY, rexOpCallStatic(ref, coercions))
+                Rex(CompilerType(PType.typeDynamic()), Rex.Op.Call.Static(ref, coercions))
             }
         }
     }
@@ -154,13 +148,7 @@ internal class Env(private val session: PartiQLPlanner.Session) {
         val path = BindingPath(listOf(BindingName(name, BindingCase.INSENSITIVE)))
         val item = aggs.lookup(path) ?: return null
         val candidates = item.handle.entity.getVariants()
-        var hadMissingArg = false
-        val parameters = args.mapIndexed { i, arg ->
-            if (!hadMissingArg && arg.type.isMissable()) {
-                hadMissingArg = true
-            }
-            arg.type.toRuntimeType()
-        }
+        val parameters = args.mapIndexed { i, arg -> arg.type }
         val match = match(candidates, parameters) ?: return null
         val agg = match.first
         val mapping = match.second
@@ -170,16 +158,15 @@ internal class Env(private val session: PartiQLPlanner.Session) {
         val coercions: List<Rex> = args.mapIndexed { i, arg ->
             when (val cast = mapping[i]) {
                 null -> arg
-                else -> rex(cast.target.toStaticType(), rexOpCastResolved(cast, arg))
+                else -> rex(cast.target, rexOpCastResolved(cast, arg))
             }
         }
         return relOpAggregateCallResolved(ref, setQuantifier, coercions)
     }
 
-    @OptIn(PartiQLValueExperimental::class)
-    fun resolveCast(input: Rex, target: PartiQLValueType): Rex.Op.Cast.Resolved? {
-        val operand = input.type.toRuntimeType()
-        val cast = casts.get(operand, target) ?: return null
+    fun resolveCast(input: Rex, target: CompilerType): Rex.Op.Cast.Resolved? {
+        val operand = input.type
+        val cast = CastTable.partiql.get(operand, target) ?: return null
         return rexOpCastResolved(cast, input)
     }
 
@@ -229,7 +216,7 @@ internal class Env(private val session: PartiQLPlanner.Session) {
     }
 
     @OptIn(FnExperimental::class, PartiQLValueExperimental::class)
-    private fun match(candidates: List<AggSignature>, args: List<PartiQLValueType>): Pair<AggSignature, Array<Ref.Cast?>>? {
+    private fun match(candidates: List<AggSignature>, args: List<PType>): Pair<AggSignature, Array<Ref.Cast?>>? {
         // 1. Check for an exact match
         for (candidate in candidates) {
             if (candidate.matches(args)) {
@@ -255,11 +242,11 @@ internal class Env(private val session: PartiQLPlanner.Session) {
      * Check if this function accepts the exact input argument types. Assume same arity.
      */
     @OptIn(FnExperimental::class, PartiQLValueExperimental::class)
-    private fun AggSignature.matches(args: List<PartiQLValueType>): Boolean {
+    private fun AggSignature.matches(args: List<PType>): Boolean {
         for (i in args.indices) {
             val a = args[i]
             val p = parameters[i]
-            if (p.type != PartiQLValueType.ANY && a != p.type) return false
+            if (p.type.kind != Kind.DYNAMIC && a != p.type) return false
         }
         return true
     }
@@ -271,7 +258,7 @@ internal class Env(private val session: PartiQLPlanner.Session) {
      * @return
      */
     @OptIn(FnExperimental::class, PartiQLValueExperimental::class)
-    private fun AggSignature.match(args: List<PartiQLValueType>): Pair<AggSignature, Array<Ref.Cast?>>? {
+    private fun AggSignature.match(args: List<PType>): Pair<AggSignature, Array<Ref.Cast?>>? {
         val mapping = arrayOfNulls<Ref.Cast?>(args.size)
         for (i in args.indices) {
             val arg = args[i]
@@ -280,11 +267,9 @@ internal class Env(private val session: PartiQLPlanner.Session) {
                 // 1. Exact match
                 arg == p.type -> continue
                 // 2. Match ANY, no coercion needed
-                p.type == PartiQLValueType.ANY -> continue
-                // 3. Match NULL argument
-                arg == PartiQLValueType.NULL -> continue
-                // 4. Check for a coercion
-                else -> when (val coercion = PathResolverAgg.casts.lookupCoercion(arg, p.type)) {
+                p.type.kind == Kind.DYNAMIC -> continue
+                // 3. Check for a coercion
+                else -> when (val coercion = Coercions.get(arg, p.type)) {
                     null -> return null // short-circuit
                     else -> mapping[i] = coercion
                 }

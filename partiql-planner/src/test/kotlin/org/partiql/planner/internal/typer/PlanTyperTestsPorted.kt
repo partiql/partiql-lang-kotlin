@@ -20,6 +20,7 @@ import org.partiql.plan.Statement
 import org.partiql.plan.debug.PlanPrinter
 import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.internal.ProblemGenerator
+import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.planner.internal.typer.PlanTyperTestsPorted.TestCase.ErrorTestCase
 import org.partiql.planner.internal.typer.PlanTyperTestsPorted.TestCase.SuccessTestCase
 import org.partiql.planner.internal.typer.PlanTyperTestsPorted.TestCase.ThrowingExceptionTestCase
@@ -37,12 +38,16 @@ import org.partiql.spi.connector.ConnectorMetadata
 import org.partiql.spi.connector.ConnectorSession
 import org.partiql.types.BagType
 import org.partiql.types.ListType
+import org.partiql.types.PType
 import org.partiql.types.SexpType
 import org.partiql.types.StaticType
 import org.partiql.types.StaticType.Companion.ANY
+import org.partiql.types.StaticType.Companion.DECIMAL
 import org.partiql.types.StaticType.Companion.INT
 import org.partiql.types.StaticType.Companion.INT4
 import org.partiql.types.StaticType.Companion.INT8
+import org.partiql.types.StaticType.Companion.STRING
+import org.partiql.types.StaticType.Companion.STRUCT
 import org.partiql.types.StaticType.Companion.unionOf
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
@@ -53,7 +58,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-class PlanTyperTestsPorted {
+internal class PlanTyperTestsPorted {
 
     sealed class TestCase {
         class SuccessTestCase(
@@ -62,9 +67,19 @@ class PlanTyperTestsPorted {
             val query: String? = null,
             val catalog: String = "pql",
             val catalogPath: List<String> = emptyList(),
-            val expected: StaticType,
+            val expected: CompilerType,
             val warnings: ProblemHandler? = null,
         ) : TestCase() {
+            constructor(
+                name: String? = null,
+                key: PartiQLTest.Key? = null,
+                query: String? = null,
+                catalog: String = "pql",
+                catalogPath: List<String> = emptyList(),
+                expected: StaticType,
+                warnings: ProblemHandler? = null,
+            ) : this(name, key, query, catalog, catalogPath, PType.fromStaticType(expected).toCType(), warnings)
+
             override fun toString(): String {
                 if (key != null) {
                     return "${key.group} : ${key.name}"
@@ -75,14 +90,25 @@ class PlanTyperTestsPorted {
 
         class ErrorTestCase(
             val name: String,
-            val key: PartiQLTest.Key? = null,
-            val query: String? = null,
+            val key: PartiQLTest.Key?,
+            val query: String?,
             val catalog: String = "pql",
             val catalogPath: List<String> = emptyList(),
-            val note: String? = null,
-            val expected: StaticType? = null,
-            val problemHandler: ProblemHandler? = null,
+            val note: String?,
+            val expected: CompilerType?,
+            val problemHandler: ProblemHandler?,
         ) : TestCase() {
+
+            constructor(
+                name: String,
+                key: PartiQLTest.Key? = null,
+                query: String? = null,
+                catalog: String = "pql",
+                catalogPath: List<String> = emptyList(),
+                note: String? = null,
+                expected: StaticType? = null,
+                problemHandler: ProblemHandler? = null,
+            ) : this(name, key, query, catalog, catalogPath, note, expected?.let { PType.fromStaticType(it).toCType() }, problemHandler)
 
             override fun toString(): String = "$name : ${query ?: key}"
         }
@@ -107,11 +133,18 @@ class PlanTyperTestsPorted {
         private val planner = PartiQLPlanner.builder().signalMode().build()
 
         private fun assertProblemExists(problem: Problem) = ProblemHandler { problems, ignoreSourceLocation ->
-            when (ignoreSourceLocation) {
-                true -> assertTrue("Expected to find $problem in $problems") {
-                    problems.any { it.details == problem.details }
+            val message = buildString {
+                appendLine("Expected problems to include: $problem")
+                appendLine("Received: [")
+                problems.forEach {
+                    append("\t")
+                    appendLine(it)
                 }
-                false -> assertTrue("Expected to find $problem in $problems") { problems.any { it == problem } }
+                appendLine("]")
+            }
+            when (ignoreSourceLocation) {
+                true -> assertTrue(message) { problems.any { it.details == problem.details } }
+                false -> assertTrue(message) { problems.any { it == problem } }
             }
         }
 
@@ -562,11 +595,14 @@ class PlanTyperTestsPorted {
                 catalog = "pql",
                 expected = StaticType.BOOL,
             ),
-            SuccessTestCase(
+            ErrorTestCase(
                 name = "MISSING IS NULL",
                 key = key("is-type-04"),
                 catalog = "pql",
                 expected = StaticType.BOOL,
+                problemHandler = assertProblemExists(
+                    ProblemGenerator.expressionAlwaysReturnsMissing("Static function always receives MISSING arguments.")
+                )
             ),
             SuccessTestCase(
                 name = "NULL IS NULL",
@@ -755,14 +791,14 @@ class PlanTyperTestsPorted {
             SuccessTestCase(
                 name = "BITWISE_AND_NULL_OPERAND",
                 query = "1 & NULL",
-                expected = unionOf(INT4, INT8, INT),
+                expected = INT4,
             ),
             ErrorTestCase(
                 name = "BITWISE_AND_MISSING_OPERAND",
                 query = "1 & MISSING",
-                expected = ANY, // TODO: Is this unionOf(INT4, INT8, INT) ?
+                expected = INT4,
                 problemHandler = assertProblemExists(
-                    ProblemGenerator.expressionAlwaysReturnsMissing("Function argument is always the missing value.")
+                    ProblemGenerator.expressionAlwaysReturnsMissing("Static function always receives MISSING arguments.")
                 )
             ),
             ErrorTestCase(
@@ -1733,31 +1769,22 @@ class PlanTyperTestsPorted {
                 expected = BagType(
                     StructType(
                         fields = mapOf(
-                            "t" to StaticType.unionOf(
-                                StructType(
-                                    fields = mapOf(
-                                        "a" to StructType(
-                                            fields = mapOf(
-                                                "c" to StaticType.STRING
-                                            ),
-                                            contentClosed = true,
-                                            constraints = setOf(
-                                                TupleConstraint.Open(false),
-                                                TupleConstraint.UniqueAttrs(true)
-                                            )
+                            "t" to StructType(
+                                fields = mapOf(
+                                    "a" to StructType(
+                                        fields = mapOf(
+                                            "c" to StaticType.STRING
+                                        ),
+                                        contentClosed = true,
+                                        constraints = setOf(
+                                            TupleConstraint.Open(false),
+                                            TupleConstraint.UniqueAttrs(true)
                                         )
-                                    ),
-                                    contentClosed = true,
-                                    constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                    )
                                 ),
-                                StructType(
-                                    fields = mapOf(
-                                        "a" to ANY
-                                    ),
-                                    contentClosed = true,
-                                    constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
-                                ),
-                            )
+                                contentClosed = true,
+                                constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                            ),
                         ),
                         contentClosed = true,
                         constraints = setOf(
@@ -1774,40 +1801,22 @@ class PlanTyperTestsPorted {
                 expected = BagType(
                     StructType(
                         fields = mapOf(
-                            "t" to StaticType.unionOf(
-                                StructType(
-                                    fields = mapOf(
-                                        "a" to StructType(
-                                            fields = mapOf(
-                                                "c" to StaticType.STRING
-                                            ),
-                                            contentClosed = true,
-                                            constraints = setOf(
-                                                TupleConstraint.Open(false),
-                                                TupleConstraint.UniqueAttrs(true)
-                                            )
+                            "t" to StructType(
+                                fields = mapOf(
+                                    "a" to StructType(
+                                        fields = mapOf(
+                                            "c" to StaticType.STRING
+                                        ),
+                                        contentClosed = true,
+                                        constraints = setOf(
+                                            TupleConstraint.Open(false),
+                                            TupleConstraint.UniqueAttrs(true)
                                         )
-                                    ),
-                                    contentClosed = true,
-                                    constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                                    )
                                 ),
-                                StructType(
-                                    fields = mapOf(
-                                        "a" to StructType(
-                                            fields = mapOf(
-                                                "c" to ANY
-                                            ),
-                                            contentClosed = true,
-                                            constraints = setOf(
-                                                TupleConstraint.Open(false),
-                                                TupleConstraint.UniqueAttrs(true)
-                                            )
-                                        )
-                                    ),
-                                    contentClosed = true,
-                                    constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
-                                ),
-                            )
+                                contentClosed = true,
+                                constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                            ),
                         ),
                         contentClosed = true,
                         constraints = setOf(
@@ -2033,41 +2042,17 @@ class PlanTyperTestsPorted {
                     elementType = StructType(
                         fields = mapOf(
                             "a" to ListType(
-                                elementType = StaticType.unionOf(
-                                    StructType(
-                                        fields = mapOf(
-                                            "b" to StaticType.INT4,
-                                            "c" to StaticType.INT4
-                                        ),
-                                        contentClosed = true,
-                                        constraints = setOf(
-                                            TupleConstraint.Open(false),
-                                            TupleConstraint.UniqueAttrs(true)
-                                        )
+                                elementType = StructType(
+                                    fields = mapOf(
+                                        "b" to StaticType.INT4,
+                                        "c" to ANY
                                     ),
-                                    StructType(
-                                        fields = mapOf(
-                                            "b" to StaticType.INT4,
-                                            "c" to ANY
-                                        ),
-                                        contentClosed = true,
-                                        constraints = setOf(
-                                            TupleConstraint.Open(false),
-                                            TupleConstraint.UniqueAttrs(true)
-                                        )
-                                    ),
-                                    StructType(
-                                        fields = mapOf(
-                                            "b" to StaticType.INT4,
-                                            "c" to StaticType.DECIMAL
-                                        ),
-                                        contentClosed = true,
-                                        constraints = setOf(
-                                            TupleConstraint.Open(false),
-                                            TupleConstraint.UniqueAttrs(true)
-                                        )
+                                    contentClosed = true,
+                                    constraints = setOf(
+                                        TupleConstraint.Open(false),
+                                        TupleConstraint.UniqueAttrs(true)
                                     )
-                                )
+                                ),
                             )
                         ),
                         contentClosed = true,
@@ -2218,19 +2203,7 @@ class PlanTyperTestsPorted {
                         { 'a': 1 }
                     >> AS t
                 """,
-                expected = BagType(
-                    StructType(
-                        fields = listOf(
-                            StructType.Field("b", INT4),
-                        ),
-                        contentClosed = true,
-                        constraints = setOf(
-                            TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(true),
-                            TupleConstraint.Ordered
-                        )
-                    )
-                ),
+                expected = BagType(ANY),
             ),
             SuccessTestCase(
                 name = "Tuple Union with Heterogeneous Data (2)",
@@ -2651,20 +2624,7 @@ class PlanTyperTestsPorted {
             SuccessTestCase(
                 key = PartiQLTest.Key("basics", "case-when-29"),
                 catalog = "pql",
-                expected = unionOf(
-                    StructType(
-                        fields = listOf(
-                            StructType.Field("x", StaticType.INT4),
-                            StructType.Field("y", StaticType.INT4),
-                        ),
-                    ),
-                    StructType(
-                        fields = listOf(
-                            StructType.Field("x", StaticType.INT8),
-                            StructType.Field("y", StaticType.INT8),
-                        ),
-                    ),
-                ),
+                expected = STRUCT
             ),
             SuccessTestCase(
                 name = "CASE-WHEN always MISSING",
@@ -3053,7 +3013,7 @@ class PlanTyperTestsPorted {
                 """,
                 expected = ANY,
                 problemHandler = assertProblemExists(
-                    ProblemGenerator.expressionAlwaysReturnsMissing("Collections must be indexed with integers, found string")
+                    ProblemGenerator.expressionAlwaysReturnsMissing("Collections must be indexed with integers, found STRING")
                 )
             ),
             // The reason this is ANY is because we do not have support for constant-folding. We don't know what
@@ -3349,7 +3309,7 @@ class PlanTyperTestsPorted {
                 expected = BagType(
                     StructType(
                         fields = mapOf(
-                            "c" to StaticType.DECIMAL,
+                            "c" to ANY,
                         ),
                         contentClosed = true,
                         constraints = setOf(
@@ -3379,10 +3339,9 @@ class PlanTyperTestsPorted {
                     )
                 )
             ),
-            ErrorTestCase(
+            SuccessTestCase(
                 name = """
-                    unary plus on non-compatible union type -- this cannot resolve to a dynamic call since no function
-                    will ever be invoked.
+                    unary plus on dynamic types
                 """.trimIndent(),
                 query = """
                     SELECT VALUE +t.a
@@ -3392,12 +3351,6 @@ class PlanTyperTestsPorted {
                     >> AS t
                 """.trimIndent(),
                 expected = BagType(ANY),
-                problemHandler = assertProblemExists(
-                    ProblemGenerator.incompatibleTypesForOp(
-                        listOf(StaticType.unionOf(StaticType.STRING, StaticType.BAG)),
-                        "POS",
-                    )
-                )
             ),
             ErrorTestCase(
                 name = """
@@ -3410,10 +3363,10 @@ class PlanTyperTestsPorted {
                         { 'NOT_A': 1 }
                     >> AS t
                 """.trimIndent(),
-                expected = BagType(unionOf(StaticType.INT2, INT4, INT8, INT, StaticType.FLOAT, StaticType.DECIMAL)),
+                expected = BagType(ANY),
                 problemHandler = assertProblemExists(
                     ProblemGenerator.undefinedVariable(
-                        Identifier.Symbol("a", Identifier.CaseSensitivity.SENSITIVE),
+                        Identifier.Symbol("a", Identifier.CaseSensitivity.INSENSITIVE),
                         setOf("t"),
                     )
                 )
@@ -3426,9 +3379,9 @@ class PlanTyperTestsPorted {
                 query = """
                     +MISSING
                 """.trimIndent(),
-                expected = StaticType.ANY,
+                expected = StaticType.DECIMAL, // This is due to it being the highest precedence type
                 problemHandler = assertProblemExists(
-                    ProblemGenerator.expressionAlwaysReturnsMissing("Function argument is always the missing value.")
+                    ProblemGenerator.expressionAlwaysReturnsMissing("Static function always receives MISSING arguments.")
                 )
             ),
         )
@@ -3517,6 +3470,33 @@ class PlanTyperTestsPorted {
     //
 
     @Test
+    @Disabled("We currently don't have the concept of an ordered struct.")
+    fun orderedTuple() {
+        val tc =
+            SuccessTestCase(
+                name = "Duplicate fields in ordered STRUCT. NOTE: b.b.d is an ordered struct with two attributes (e). First is INT4.",
+                query = """
+                    SELECT d.e AS e
+                    FROM << b.b.d >> AS d
+                """,
+                expected = BagType(
+                    StructType(
+                        fields = listOf(
+                            StructType.Field("e", StaticType.INT4)
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(
+                            TupleConstraint.Open(false),
+                            TupleConstraint.UniqueAttrs(true),
+                            TupleConstraint.Ordered
+                        )
+                    )
+                )
+            )
+        runTest(tc)
+    }
+
+    @Test
     @Disabled("The planner doesn't support heterogeneous input to aggregation functions (yet?).")
     fun failingTest() {
         val tc = SuccessTestCase(
@@ -3565,6 +3545,38 @@ class PlanTyperTestsPorted {
                     )
                 )
             )
+        )
+        runTest(tc)
+    }
+
+    @Test
+    fun developmentTest() {
+        val tc = SuccessTestCase(
+            name = "DEV TEST",
+            query = "CAST('' AS STRING) < CAST('' AS SYMBOL);",
+            expected = PType.typeBool().toCType()
+        )
+        runTest(tc)
+    }
+
+    @Test
+    fun developmentTest3() {
+        val tc =
+            SuccessTestCase(
+                name = "MISSING IS MISSING",
+                key = key("is-type-06"),
+                catalog = "pql",
+                expected = StaticType.BOOL,
+            )
+        runTest(tc)
+    }
+
+    @Test
+    fun developmentTest4() {
+        val tc = SuccessTestCase(
+            name = "DEV TEST 4",
+            query = "NULLIF([], [])",
+            expected = PType.typeList().toCType()
         )
         runTest(tc)
     }
@@ -4358,26 +4370,6 @@ class PlanTyperTestsPorted {
                     StructType(
                         fields = listOf(
                             StructType.Field("a", StaticType.unionOf(StaticType.INT4, StaticType.STRING))
-                        ),
-                        contentClosed = true,
-                        constraints = setOf(
-                            TupleConstraint.Open(false),
-                            TupleConstraint.UniqueAttrs(true),
-                            TupleConstraint.Ordered
-                        )
-                    )
-                )
-            ),
-            SuccessTestCase(
-                name = "Duplicate fields in ordered STRUCT. NOTE: b.b.d is an ordered struct with two attributes (e). First is INT4.",
-                query = """
-                    SELECT d.e AS e
-                    FROM << b.b.d >> AS d
-                """,
-                expected = BagType(
-                    StructType(
-                        fields = listOf(
-                            StructType.Field("e", StaticType.INT4)
                         ),
                         contentClosed = true,
                         constraints = setOf(

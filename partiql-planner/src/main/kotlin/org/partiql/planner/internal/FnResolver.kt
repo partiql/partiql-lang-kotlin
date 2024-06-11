@@ -1,14 +1,11 @@
 package org.partiql.planner.internal
 
-import org.partiql.planner.internal.casts.CastTable
+import org.partiql.planner.internal.casts.Coercions
 import org.partiql.planner.internal.ir.Ref
-import org.partiql.planner.internal.typer.toRuntimeTypeOrNull
+import org.partiql.planner.internal.typer.CompilerType
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnSignature
-import org.partiql.types.StaticType
-import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType
-import org.partiql.value.PartiQLValueType.ANY
+import org.partiql.types.PType.Kind
 
 /**
  *
@@ -25,49 +22,62 @@ import org.partiql.value.PartiQLValueType.ANY
  *
  * Reference https://www.postgresql.org/docs/current/typeconv-func.html
  */
-@OptIn(FnExperimental::class, PartiQLValueExperimental::class)
+@OptIn(FnExperimental::class)
 internal object FnResolver {
-
-    @JvmStatic
-    private val casts = CastTable.partiql
 
     /**
      * Resolution of either a static or dynamic function.
+     *
+     * TODO: How do we handle DYNAMIC?
      *
      * @param variants
      * @param args
      * @return
      */
-    fun resolve(variants: List<FnSignature>, args: List<StaticType>): FnMatch? {
-
+    fun resolve(variants: List<FnSignature>, args: List<CompilerType>): FnMatch? {
         val candidates = variants
             .filter { it.parameters.size == args.size }
-            .sortedWith(FnComparator)
             .ifEmpty { return null }
 
-        val argPermutations = buildArgumentPermutations(args).mapNotNull { argList ->
-            argList.map { arg ->
-                // Skip over if we cannot convert type to runtime type.
-                arg.toRuntimeTypeOrNull() ?: return@mapNotNull null
+        // 1. Look for exact match
+        for (candidate in candidates) {
+            if (candidate.matchesExactly(args)) {
+                return FnMatch.Static(candidate, arrayOfNulls(args.size))
             }
         }
 
-        // Match candidates on all argument permutations
-        val matches = argPermutations.mapNotNull { match(candidates, it) }
-
-        // Order based on original candidate function ordering
-        val orderedUniqueMatches = matches.toSet().toList()
-        val orderedCandidates = candidates.flatMap { candidate ->
-            orderedUniqueMatches.filter { it.signature == candidate }
+        // 2. Discard functions that cannot be matched (via implicit coercion or exact matches)
+        var matches = match(candidates, args).ifEmpty { return null }
+        if (matches.size == 1) {
+            return matches.first().match
         }
 
-        // Static call iff only one match for every branch
-        val n = orderedCandidates.size
-        return when (n) {
-            0 -> null
-            1 -> orderedCandidates.first()
-            else -> FnMatch.Dynamic(orderedCandidates)
+        // 3. Run through all candidates and keep those with the most exact matches on input types.
+        matches = matchOn(matches) { it.numberOfExactInputTypes }
+        if (matches.size == 1) {
+            return matches.first().match
         }
+
+        // TODO: Do we care about preferred types? This is a PostgreSQL concept.
+        // 4. Run through all candidates and keep those that accept preferred types (of the input data type's type category) at the most positions where type conversion will be required.
+
+        // 5. If there are DYNAMIC nodes, return all candidates
+        var isDynamic = false
+        for (match in matches) {
+            val params = match.match.signature.parameters
+            for (index in params.indices) {
+                if ((args[index].kind == Kind.DYNAMIC) && params[index].type.kind != Kind.DYNAMIC) {
+                    isDynamic = true
+                }
+            }
+        }
+        if (isDynamic) {
+            return FnMatch.Dynamic(matches.map { it.match })
+        }
+
+        // 6. Find the highest precedence one. NOTE: This is a remnant of the previous implementation. Whether we want
+        //  to keep this is up to us.
+        return matches.sortedWith(MatchResultComparator).first().match
     }
 
     /**
@@ -77,33 +87,37 @@ internal object FnResolver {
      * @param args
      * @return
      */
-    private fun match(candidates: List<FnSignature>, args: List<PartiQLValueType>): FnMatch.Static? {
-        // 1. Check for an exact match
+    private fun match(candidates: List<FnSignature>, args: List<CompilerType>): List<MatchResult> {
+        val matches = mutableSetOf<MatchResult>()
         for (candidate in candidates) {
-            if (candidate.matches(args)) {
-                return FnMatch.Static(candidate, arrayOfNulls(args.size))
+            val m = candidate.match(args) ?: continue
+            matches.add(m)
+        }
+        return matches.toList()
+    }
+
+    private fun matchOn(candidates: List<MatchResult>, toCompare: (MatchResult) -> Int): List<MatchResult> {
+        var mostExactMatches = 0
+        val matches = mutableSetOf<MatchResult>()
+        for (candidate in candidates) {
+            when (toCompare(candidate).compareTo(mostExactMatches)) {
+                -1 -> continue
+                0 -> matches.add(candidate)
+                1 -> {
+                    mostExactMatches = toCompare(candidate)
+                    matches.clear()
+                    matches.add(candidate)
+                }
+                else -> error("CompareTo should never return outside of range [-1, 1]")
             }
         }
-        // 2. Look for best match (for now, first match).
-        for (candidate in candidates) {
-            val m = candidate.match(args)
-            if (m != null) {
-                return m
-            }
-            // if (match != null && m.exact < match.exact) {
-            //     // already had a better match.
-            //     continue
-            // }
-            // match = m
-        }
-        // 3. No match, return null
-        return null
+        return matches.toList()
     }
 
     /**
      * Check if this function accepts the exact input argument types. Assume same arity.
      */
-    private fun FnSignature.matches(args: List<PartiQLValueType>): Boolean {
+    private fun FnSignature.matchesExactly(args: List<CompilerType>): Boolean {
         for (i in args.indices) {
             val a = args[i]
             val p = parameters[i]
@@ -118,47 +132,42 @@ internal object FnResolver {
      * @param args
      * @return
      */
-    private fun FnSignature.match(args: List<PartiQLValueType>): FnMatch.Static? {
+    private fun FnSignature.match(args: List<CompilerType>): MatchResult? {
         val mapping = arrayOfNulls<Ref.Cast?>(args.size)
+        var exactInputTypes: Int = 0
         for (i in args.indices) {
             val arg = args[i]
             val p = parameters[i]
             when {
                 // 1. Exact match
-                arg == p.type -> continue
+                arg == p.type -> {
+                    exactInputTypes++
+                    continue
+                }
                 // 2. Match ANY, no coercion needed
-                p.type == ANY -> continue
+                // TODO: Rewrite args in this scenario
+                arg.kind == Kind.UNKNOWN || p.type.kind == Kind.DYNAMIC || arg.kind == Kind.DYNAMIC -> continue
                 // 3. Check for a coercion
-                else -> when (val coercion = casts.lookupCoercion(arg, p.type)) {
+                else -> when (val coercion = Coercions.get(arg, p.type)) {
                     null -> return null // short-circuit
                     else -> mapping[i] = coercion
                 }
             }
         }
-        return FnMatch.Static(this, mapping)
+        return MatchResult(
+            FnMatch.Static(this, mapping),
+            exactInputTypes,
+        )
     }
 
-    private fun buildArgumentPermutations(args: List<StaticType>): List<List<StaticType>> {
-        val flattenedArgs = args.map { it.flatten().allTypes }
-        return buildArgumentPermutations(flattenedArgs, accumulator = emptyList())
-    }
+    private class MatchResult(
+        val match: FnMatch.Static,
+        val numberOfExactInputTypes: Int,
+    )
 
-    private fun buildArgumentPermutations(
-        args: List<List<StaticType>>,
-        accumulator: List<StaticType>,
-    ): List<List<StaticType>> {
-        if (args.isEmpty()) {
-            return listOf(accumulator)
-        }
-        val first = args.first()
-        val rest = when (args.size) {
-            1 -> emptyList()
-            else -> args.subList(1, args.size)
-        }
-        return buildList {
-            first.forEach { argSubType ->
-                addAll(buildArgumentPermutations(rest, accumulator + listOf(argSubType)))
-            }
+    private object MatchResultComparator : Comparator<MatchResult> {
+        override fun compare(o1: MatchResult, o2: MatchResult): Int {
+            return FnComparator.reversed().compare(o1.match.signature, o2.match.signature)
         }
     }
 }

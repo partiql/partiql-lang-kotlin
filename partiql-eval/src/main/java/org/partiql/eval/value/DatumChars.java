@@ -1,6 +1,7 @@
 package org.partiql.eval.value;
 
 import org.jetbrains.annotations.NotNull;
+import org.partiql.types.PType;
 import org.partiql.value.PartiQLValueType;
 
 /**
@@ -23,7 +24,7 @@ class DatumChars implements Datum {
 
     @NotNull
     @Override
-    public PartiQLValueType getType() {
-        return PartiQLValueType.CHAR;
+    public PType getType() {
+        return PType.typeChar(255); // TODO: Figure out max length
     }
 }

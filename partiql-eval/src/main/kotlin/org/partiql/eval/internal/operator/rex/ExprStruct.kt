@@ -4,11 +4,8 @@ import org.partiql.eval.internal.Environment
 import org.partiql.eval.internal.helpers.ValueUtility.getText
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.eval.value.Datum
-import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType
 
 internal class ExprStruct(private val fields: List<Field>) : Operator.Expr {
-    @OptIn(PartiQLValueExperimental::class)
     override fun eval(env: Environment): Datum {
         val fields = fields.mapNotNull {
             val key = it.key.eval(env)
@@ -17,9 +14,9 @@ internal class ExprStruct(private val fields: List<Field>) : Operator.Expr {
             }
             val keyString = key.getText()
             val value = it.value.eval(env)
-            when (value.type) {
-                PartiQLValueType.MISSING -> null
-                else -> org.partiql.eval.value.Field.of(keyString, value)
+            when (value.isMissing) {
+                true -> null
+                false -> org.partiql.eval.value.Field.of(keyString, value)
             }
         }
         return Datum.structValue(fields)

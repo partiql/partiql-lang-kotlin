@@ -1,6 +1,7 @@
 package org.partiql.eval.value;
 
 import org.jetbrains.annotations.NotNull;
+import org.partiql.types.PType;
 import org.partiql.value.PartiQLValueType;
 
 /**
@@ -9,14 +10,13 @@ import org.partiql.value.PartiQLValueType;
 class DatumMissing implements Datum {
 
     @NotNull
-    private final PartiQLValueType _type;
+    private final PType _type;
 
     DatumMissing() {
-        // TODO: This will likely be UNKNOWN in the future. Potentially something like PostgreSQL's unknown type.
-        _type = PartiQLValueType.MISSING;
+        _type = PType.typeUnknown();
     }
 
-    DatumMissing(@NotNull PartiQLValueType type) {
+    DatumMissing(@NotNull PType type) {
         _type = type;
     }
 
@@ -27,7 +27,7 @@ class DatumMissing implements Datum {
 
     @NotNull
     @Override
-    public PartiQLValueType getType() {
+    public PType getType() {
         return _type;
     }
 }

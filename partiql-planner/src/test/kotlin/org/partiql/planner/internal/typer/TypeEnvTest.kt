@@ -6,13 +6,11 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.planner.internal.ir.Rex
 import org.partiql.planner.internal.ir.relBinding
+import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
-import org.partiql.types.BoolType
-import org.partiql.types.StaticType
-import org.partiql.types.StructType
-import org.partiql.types.TupleConstraint
+import org.partiql.types.PType
 import kotlin.test.assertEquals
 import kotlin.test.fail
 
@@ -33,21 +31,21 @@ internal class TypeEnvTest {
         @JvmStatic
         val locals = TypeEnv(
             listOf(
-                relBinding("A", struct("B" to BoolType())),
-                relBinding("a", struct("b" to BoolType())),
+                relBinding("A", struct("B" to PType.typeBool().toCType())),
+                relBinding("a", struct("b" to PType.typeBool().toCType())),
                 relBinding("X", struct(open = true)),
-                relBinding("x", struct("Y" to BoolType(), open = true)),
+                relBinding("x", struct("Y" to PType.typeBool().toCType(), open = false)), // We currently don't allow for partial schema structs
                 relBinding("y", struct(open = true)),
-                relBinding("T", struct("x" to BoolType(), "x" to BoolType())),
+                relBinding("T", struct("x" to PType.typeBool().toCType(), "x" to PType.typeBool().toCType())),
             ),
             outer = emptyList()
         )
 
-        private fun struct(vararg fields: Pair<String, StaticType>, open: Boolean = false): StructType {
-            return StructType(
-                fields = fields.map { StructType.Field(it.first, it.second) },
-                constraints = setOf(TupleConstraint.Open(open)),
-            )
+        private fun struct(vararg fields: Pair<String, CompilerType>, open: Boolean = false): CompilerType {
+            return when (open) {
+                true -> PType.typeStruct().toCType()
+                false -> PType.typeStruct(fields.map { CompilerType.Field(it.first, it.second) }).toCType()
+            }
         }
 
         @JvmStatic

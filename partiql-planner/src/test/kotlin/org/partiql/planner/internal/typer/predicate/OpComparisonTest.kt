@@ -48,8 +48,8 @@ class OpComparisonTest : PartiQLTyperTestBase() {
                     StaticType.NUMERIC.allTypes,
                     StaticType.NUMERIC.allTypes
                 ) + cartesianProduct(
-                    StaticType.TEXT.allTypes,
-                    StaticType.TEXT.allTypes
+                    StaticType.TEXT.allTypes + listOf(StaticType.CLOB),
+                    StaticType.TEXT.allTypes + listOf(StaticType.CLOB)
                 ) + cartesianProduct(
                     listOf(StaticType.BOOL),
                     listOf(StaticType.BOOL)

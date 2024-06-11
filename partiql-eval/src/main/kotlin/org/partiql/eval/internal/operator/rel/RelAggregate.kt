@@ -64,7 +64,7 @@ internal class RelAggregate(
             // Initialize the AggregationMap
             val evaluatedGroupByKeys = keys.map {
                 val key = it.eval(env.push(inputRecord))
-                when (key.type == PartiQLValueType.MISSING) {
+                when (key.isMissing) {
                     true -> nullValue()
                     false -> key.toPartiQLValue()
                 }

@@ -4,6 +4,7 @@ import org.partiql.errors.ProblemDetails
 import org.partiql.errors.ProblemSeverity
 import org.partiql.plan.Identifier
 import org.partiql.planner.internal.utils.PlanUtils
+import org.partiql.types.PType
 import org.partiql.types.StaticType
 
 /**
@@ -151,15 +152,15 @@ internal open class PlanningProblemDetails(
         )
 
     data class UnexpectedType(
-        val actualType: StaticType,
-        val expectedTypes: Set<StaticType>,
+        val actualType: PType,
+        val expectedTypes: Set<PType>,
     ) : PlanningProblemDetails(ProblemSeverity.ERROR, {
-        "Unexpected type $actualType, expected one of ${expectedTypes.joinToString()}"
+        "Unexpected type $actualType, expected one of ${expectedTypes.joinToString { it.toString() }}"
     })
 
     data class UnknownFunction(
         val identifier: String,
-        val args: List<StaticType>,
+        val args: List<PType>,
     ) : PlanningProblemDetails(ProblemSeverity.ERROR, {
         val types = args.joinToString { "<${it.toString().lowercase()}>" }
         "Unknown function `$identifier($types)"
@@ -194,12 +195,12 @@ internal open class PlanningProblemDetails(
         )
 
     data class IncompatibleTypesForOp(
-        val actualTypes: List<StaticType>,
+        val actualTypes: List<PType>,
         val operator: String,
     ) :
         PlanningProblemDetails(
             severity = ProblemSeverity.ERROR,
-            messageFormatter = { "${actualTypes.joinToString()} is/are incompatible data types for the '$operator' operator." }
+            messageFormatter = { "${actualTypes.joinToString { it.toString() }} is/are incompatible data types for the '$operator' operator." }
         )
 
     data class UnresolvedExcludeExprRoot(val root: String) :

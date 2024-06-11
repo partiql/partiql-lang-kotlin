@@ -4,10 +4,11 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.fail
 import org.partiql.planner.internal.FnMatch
 import org.partiql.planner.internal.FnResolver
+import org.partiql.planner.internal.typer.PlanTyper.Companion.toCType
 import org.partiql.spi.fn.FnExperimental
 import org.partiql.spi.fn.FnParameter
 import org.partiql.spi.fn.FnSignature
-import org.partiql.types.StaticType
+import org.partiql.types.PType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
 
@@ -32,7 +33,7 @@ class FnResolverTest {
                 ),
             )
         )
-        val args = listOf(StaticType.INT4, StaticType.FLOAT)
+        val args = listOf(PType.typeInt().toCType(), PType.typeDoublePrecision().toCType())
         val expectedImplicitCasts = listOf(true, false)
         val case = Case.Success(variants, args, expectedImplicitCasts)
         case.assert()
@@ -51,7 +52,7 @@ class FnResolverTest {
                 isNullable = false,
             )
         )
-        val args = listOf(StaticType.STRING, StaticType.STRING)
+        val args = listOf(PType.typeString().toCType(), PType.typeString().toCType())
         val expectedImplicitCasts = listOf(false, false)
         val case = Case.Success(variants, args, expectedImplicitCasts)
         case.assert()
@@ -63,7 +64,7 @@ class FnResolverTest {
 
         class Success(
             private val variants: List<FnSignature>,
-            private val inputs: List<StaticType>,
+            private val inputs: List<CompilerType>,
             private val expectedImplicitCast: List<Boolean>,
         ) : Case() {
 

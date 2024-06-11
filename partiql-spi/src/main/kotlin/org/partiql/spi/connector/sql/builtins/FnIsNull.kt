@@ -23,7 +23,7 @@ internal object Fn_IS_NULL__ANY__BOOL : Fn {
         isNullable = false,
         isNullCall = false,
         isMissable = false,
-        isMissingCall = false,
+        isMissingCall = true,
     )
 
     override fun invoke(args: Array<PartiQLValue>): PartiQLValue {

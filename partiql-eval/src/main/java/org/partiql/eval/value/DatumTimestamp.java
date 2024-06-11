@@ -1,6 +1,7 @@
 package org.partiql.eval.value;
 
 import org.jetbrains.annotations.NotNull;
+import org.partiql.types.PType;
 import org.partiql.value.PartiQLValueType;
 import org.partiql.value.datetime.Timestamp;
 
@@ -24,7 +25,7 @@ class DatumTimestamp implements Datum {
 
     @NotNull
     @Override
-    public PartiQLValueType getType() {
-        return PartiQLValueType.TIMESTAMP;
+    public PType getType() {
+        return PType.typeTimestampWithTZ(6); // TODO: Without TZ
     }
 }

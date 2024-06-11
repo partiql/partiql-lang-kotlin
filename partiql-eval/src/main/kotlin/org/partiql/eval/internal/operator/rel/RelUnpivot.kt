@@ -6,8 +6,8 @@ import org.partiql.eval.internal.Record
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.eval.value.Datum
 import org.partiql.eval.value.Field
+import org.partiql.types.PType
 import org.partiql.value.PartiQLValueExperimental
-import org.partiql.value.PartiQLValueType
 
 /**
  * The unpivot operator produces a bag of records from a struct.
@@ -60,7 +60,7 @@ internal sealed class RelUnpivot : Operator.Relation {
 
         override fun struct(): Datum {
             val v = expr.eval(env.push(Record.empty))
-            if (v.type != PartiQLValueType.STRUCT) {
+            if (v.type.kind != PType.Kind.STRUCT) {
                 throw TypeCheckException()
             }
             return v
@@ -80,9 +80,11 @@ internal sealed class RelUnpivot : Operator.Relation {
 
         override fun struct(): Datum {
             val v = expr.eval(env.push(Record.empty))
-            return when (v.type) {
-                PartiQLValueType.STRUCT -> v
-                PartiQLValueType.MISSING -> Datum.structValue(emptyList())
+            if (v.isMissing) {
+                return Datum.structValue(emptyList())
+            }
+            return when (v.type.kind) {
+                PType.Kind.STRUCT -> v
                 else -> Datum.structValue(listOf(Field.of("_1", v)))
             }
         }

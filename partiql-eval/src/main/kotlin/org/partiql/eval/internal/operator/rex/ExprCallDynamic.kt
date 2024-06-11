@@ -2,12 +2,12 @@ package org.partiql.eval.internal.operator.rex
 
 import org.partiql.errors.TypeCheckException
 import org.partiql.eval.internal.Environment
-import org.partiql.eval.internal.helpers.toNull
 import org.partiql.eval.internal.operator.Operator
 import org.partiql.eval.value.Datum
 import org.partiql.plan.Ref
 import org.partiql.spi.fn.Fn
 import org.partiql.spi.fn.FnExperimental
+import org.partiql.types.PType
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
@@ -61,12 +61,12 @@ internal class ExprCallDynamic(
         /**
          * Memoize creation of nulls
          */
-        private val nil = fn.signature.returns.toNull()
+        private val nil = { Datum.nullValue(fn.signature.returns) }
 
         fun eval(originalArgs: Array<PartiQLValue>, env: Environment): Datum {
             val args = originalArgs.mapIndexed { i, arg ->
                 if (arg.isNull && fn.signature.isNullCall) {
-                    return Datum.of(nil())
+                    return nil.invoke()
                 }
                 when (val c = coercions[i]) {
                     null -> arg
@@ -79,7 +79,7 @@ internal class ExprCallDynamic(
 
     private sealed interface CandidateIndex {
 
-        public fun get(args: List<PartiQLValueType>): Candidate?
+        public fun get(args: List<PType>): Candidate?
 
         /**
          * Preserves the original ordering of the passed-in candidates while making it faster to lookup matching
@@ -130,7 +130,7 @@ internal class ExprCallDynamic(
 
             init {
                 val lookupsMutable = mutableListOf<CandidateIndex>()
-                val accumulator = mutableListOf<Pair<List<PartiQLValueType>, Candidate>>()
+                val accumulator = mutableListOf<Pair<List<PType>, Candidate>>()
 
                 // Indicates that we are currently processing dynamic candidates that accept ANY.
                 var activelyProcessingAny = true
@@ -143,7 +143,7 @@ internal class ExprCallDynamic(
                             else -> cast.input
                         }
                     }
-                    val parametersIncludeAny = lookupTypes.any { it == PartiQLValueType.ANY }
+                    val parametersIncludeAny = lookupTypes.any { it.kind == PType.Kind.DYNAMIC }
                     // A way to simplify logic further below. If it's empty, add something and set the processing type.
                     if (accumulator.isEmpty()) {
                         activelyProcessingAny = parametersIncludeAny
@@ -182,7 +182,7 @@ internal class ExprCallDynamic(
                 this.lookups = lookupsMutable
             }
 
-            override fun get(args: List<PartiQLValueType>): Candidate? {
+            override fun get(args: List<PType>): Candidate? {
                 return this.lookups.firstNotNullOfOrNull { it.get(args) }
             }
         }
@@ -191,17 +191,17 @@ internal class ExprCallDynamic(
          * An O(1) structure to quickly find directly matching dynamic candidates. This is specifically used for runtime
          * types that can be matched directly. AKA int32, int64, etc. This does NOT include [PartiQLValueType.ANY].
          */
-        data class Direct private constructor(val directCandidates: HashMap<List<PartiQLValueType>, Candidate>) : CandidateIndex {
+        data class Direct private constructor(val directCandidates: HashMap<List<PType>, Candidate>) : CandidateIndex {
 
             companion object {
-                internal fun of(candidates: List<Pair<List<PartiQLValueType>, Candidate>>): Direct {
-                    val candidateMap = java.util.HashMap<List<PartiQLValueType>, Candidate>()
+                internal fun of(candidates: List<Pair<List<PType>, Candidate>>): Direct {
+                    val candidateMap = java.util.HashMap<List<PType>, Candidate>()
                     candidateMap.putAll(candidates)
                     return Direct(candidateMap)
                 }
             }
 
-            override fun get(args: List<PartiQLValueType>): Candidate? {
+            override fun get(args: List<PType>): Candidate? {
                 return directCandidates[args]
             }
         }
@@ -210,11 +210,11 @@ internal class ExprCallDynamic(
          * Holds all candidates that expect a [PartiQLValueType.ANY] on input. This maintains the original
          * precedence order.
          */
-        data class Indirect(private val candidates: List<Pair<List<PartiQLValueType>, Candidate>>) : CandidateIndex {
-            override fun get(args: List<PartiQLValueType>): Candidate? {
+        data class Indirect(private val candidates: List<Pair<List<PType>, Candidate>>) : CandidateIndex {
+            override fun get(args: List<PType>): Candidate? {
                 candidates.forEach { (types, candidate) ->
                     for (i in args.indices) {
-                        if (args[i] != types[i] && types[i] != PartiQLValueType.ANY) {
+                        if (args[i] != types[i] && types[i].kind != PType.Kind.DYNAMIC) {
                             return@forEach
                         }
                     }

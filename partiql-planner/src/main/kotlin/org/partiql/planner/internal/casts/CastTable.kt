@@ -2,36 +2,11 @@ package org.partiql.planner.internal.casts
 
 import org.partiql.planner.internal.ir.Ref
 import org.partiql.planner.internal.ir.Ref.Cast
+import org.partiql.planner.internal.typer.CompilerType
+import org.partiql.types.PType
+import org.partiql.types.PType.Kind
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.PartiQLValueType
-import org.partiql.value.PartiQLValueType.ANY
-import org.partiql.value.PartiQLValueType.BAG
-import org.partiql.value.PartiQLValueType.BINARY
-import org.partiql.value.PartiQLValueType.BLOB
-import org.partiql.value.PartiQLValueType.BOOL
-import org.partiql.value.PartiQLValueType.BYTE
-import org.partiql.value.PartiQLValueType.CHAR
-import org.partiql.value.PartiQLValueType.CLOB
-import org.partiql.value.PartiQLValueType.DATE
-import org.partiql.value.PartiQLValueType.DECIMAL
-import org.partiql.value.PartiQLValueType.DECIMAL_ARBITRARY
-import org.partiql.value.PartiQLValueType.FLOAT32
-import org.partiql.value.PartiQLValueType.FLOAT64
-import org.partiql.value.PartiQLValueType.INT
-import org.partiql.value.PartiQLValueType.INT16
-import org.partiql.value.PartiQLValueType.INT32
-import org.partiql.value.PartiQLValueType.INT64
-import org.partiql.value.PartiQLValueType.INT8
-import org.partiql.value.PartiQLValueType.INTERVAL
-import org.partiql.value.PartiQLValueType.LIST
-import org.partiql.value.PartiQLValueType.MISSING
-import org.partiql.value.PartiQLValueType.NULL
-import org.partiql.value.PartiQLValueType.SEXP
-import org.partiql.value.PartiQLValueType.STRING
-import org.partiql.value.PartiQLValueType.STRUCT
-import org.partiql.value.PartiQLValueType.SYMBOL
-import org.partiql.value.PartiQLValueType.TIME
-import org.partiql.value.PartiQLValueType.TIMESTAMP
 
 /**
  * A place to model type relationships (for now this is to answer CAST inquiries).
@@ -41,47 +16,38 @@ import org.partiql.value.PartiQLValueType.TIMESTAMP
  */
 @OptIn(PartiQLValueExperimental::class)
 internal class CastTable private constructor(
-    private val types: Array<PartiQLValueType>,
-    private val graph: Array<Array<Cast?>>,
+    private val types: Array<Kind>,
+    private val graph: Array<Array<Status>>,
 ) {
 
-    private fun relationships(): Sequence<Cast> = sequence {
-        for (t1 in types) {
-            for (t2 in types) {
-                val r = graph[t1][t2]
-                if (r != null) {
-                    yield(r)
-                }
-            }
+    fun get(operand: PType, target: PType): Cast? {
+        val i = operand.kind.ordinal
+        val j = target.kind.ordinal
+        return when (graph[i][j]) {
+            Status.YES, Status.MODIFIED -> Cast(CompilerType(operand), CompilerType(target), Ref.Cast.Safety.COERCION, isNullable = true)
+            Status.NO -> null
         }
-    }
-
-    fun get(operand: PartiQLValueType, target: PartiQLValueType): Cast? {
-        val i = operand.ordinal
-        val j = target.ordinal
-        return graph[i][j]
-    }
-
-    /**
-     * Returns the CAST function if exists, else null.
-     */
-    fun lookupCoercion(operand: PartiQLValueType, target: PartiQLValueType): Cast? {
-        val i = operand.ordinal
-        val j = target.ordinal
-        val cast = graph[i][j] ?: return null
-        return if (cast.safety == Cast.Safety.COERCION) cast else null
     }
 
     private operator fun <T> Array<T>.get(t: PartiQLValueType): T = get(t.ordinal)
 
+    /**
+     * This represents the Y, M, and N in the table listed in SQL:1999 Section 6.22.
+     */
+    internal enum class Status {
+        YES,
+        NO,
+        MODIFIED
+    }
+
     companion object {
 
-        private val N = PartiQLValueType.values().size
+        private val N = Kind.values().size
 
         private operator fun <T> Array<T>.set(t: PartiQLValueType, value: T): Unit = this.set(t.ordinal, value)
 
-        private fun PartiQLValueType.relationships(block: RelationshipBuilder.() -> Unit): Array<Cast?> {
-            return with(RelationshipBuilder(this)) {
+        private fun relationships(block: RelationshipBuilder.() -> Unit): Array<Status> {
+            return with(RelationshipBuilder()) {
                 block()
                 build()
             }
@@ -94,236 +60,222 @@ internal class CastTable private constructor(
          */
         @JvmStatic
         val partiql: CastTable = run {
-            val types = PartiQLValueType.values()
-            val graph = arrayOfNulls<Array<Cast?>>(N)
+            val types = Kind.values()
+            val graph = arrayOfNulls<Array<Status>>(N)
             for (type in types) {
                 // initialize all with empty relationships
-                graph[type] = arrayOfNulls(N)
+                graph[type.ordinal] = Array(N) { Status.NO }
             }
-            graph[ANY] = ANY.relationships {
-                coercion(ANY)
-                PartiQLValueType.values().filterNot { it == ANY }.forEach {
-                    unsafe(it)
+            graph[Kind.DYNAMIC.ordinal] = relationships {
+                cast(Kind.DYNAMIC)
+                Kind.values().filterNot { it == Kind.DYNAMIC }.forEach {
+                    cast(it)
                 }
             }
-            graph[NULL] = NULL.relationships {
-                PartiQLValueType.values().filterNot { it == ANY || it == MISSING }.forEach {
-                    coercion(it, isNullable = true)
-                }
+            graph[Kind.BOOL.ordinal] = relationships {
+                cast(Kind.BOOL)
+                cast(Kind.TINYINT)
+                cast(Kind.SMALLINT)
+                cast(Kind.INT)
+                cast(Kind.BIGINT)
+                cast(Kind.INT_ARBITRARY)
+                cast(Kind.DECIMAL)
+                cast(Kind.DECIMAL_ARBITRARY)
+                cast(Kind.REAL)
+                cast(Kind.DOUBLE_PRECISION)
+                cast(Kind.CHAR)
+                cast(Kind.STRING)
+                cast(Kind.SYMBOL)
             }
-            graph[MISSING] = MISSING.relationships {
-                coercion(MISSING)
+            graph[Kind.TINYINT.ordinal] = relationships {
+                cast(Kind.BOOL)
+                cast(Kind.TINYINT)
+                cast(Kind.SMALLINT)
+                cast(Kind.INT)
+                cast(Kind.BIGINT)
+                cast(Kind.INT_ARBITRARY)
+                cast(Kind.DECIMAL)
+                cast(Kind.DECIMAL_ARBITRARY)
+                cast(Kind.REAL)
+                cast(Kind.DOUBLE_PRECISION)
+                cast(Kind.STRING)
+                cast(Kind.SYMBOL)
             }
-            graph[BOOL] = BOOL.relationships {
-                coercion(BOOL)
-                explicit(INT8)
-                explicit(INT16)
-                explicit(INT32)
-                explicit(INT64)
-                explicit(INT)
-                explicit(DECIMAL)
-                explicit(DECIMAL_ARBITRARY)
-                explicit(FLOAT32)
-                explicit(FLOAT64)
-                explicit(CHAR)
-                explicit(STRING)
-                explicit(SYMBOL)
+            graph[Kind.SMALLINT.ordinal] = relationships {
+                cast(Kind.BOOL)
+                cast(Kind.TINYINT)
+                cast(Kind.SMALLINT)
+                cast(Kind.INT)
+                cast(Kind.BIGINT)
+                cast(Kind.INT_ARBITRARY)
+                cast(Kind.DECIMAL)
+                cast(Kind.DECIMAL_ARBITRARY)
+                cast(Kind.REAL)
+                cast(Kind.DOUBLE_PRECISION)
+                cast(Kind.STRING)
+                cast(Kind.SYMBOL)
             }
-            graph[INT8] = INT8.relationships {
-                explicit(BOOL)
-                coercion(INT8)
-                coercion(INT16)
-                coercion(INT32)
-                coercion(INT64)
-                coercion(INT)
-                explicit(DECIMAL)
-                coercion(DECIMAL_ARBITRARY)
-                coercion(FLOAT32)
-                coercion(FLOAT64)
-                explicit(STRING)
-                explicit(SYMBOL)
+            graph[Kind.INT.ordinal] = relationships {
+                cast(Kind.BOOL)
+                cast(Kind.TINYINT)
+                cast(Kind.SMALLINT)
+                cast(Kind.INT)
+                cast(Kind.BIGINT)
+                cast(Kind.INT_ARBITRARY)
+                cast(Kind.DECIMAL)
+                cast(Kind.DECIMAL_ARBITRARY)
+                cast(Kind.REAL)
+                cast(Kind.DOUBLE_PRECISION)
+                cast(Kind.STRING)
+                cast(Kind.SYMBOL)
             }
-            graph[INT16] = INT16.relationships {
-                explicit(BOOL)
-                unsafe(INT8)
-                coercion(INT16)
-                coercion(INT32)
-                coercion(INT64)
-                coercion(INT)
-                explicit(DECIMAL)
-                coercion(DECIMAL_ARBITRARY)
-                coercion(FLOAT32)
-                coercion(FLOAT64)
-                explicit(STRING)
-                explicit(SYMBOL)
+            graph[Kind.BIGINT.ordinal] = relationships {
+                cast(Kind.BOOL)
+                cast(Kind.TINYINT)
+                cast(Kind.SMALLINT)
+                cast(Kind.INT)
+                cast(Kind.BIGINT)
+                cast(Kind.INT_ARBITRARY)
+                cast(Kind.DECIMAL)
+                cast(Kind.DECIMAL_ARBITRARY)
+                cast(Kind.REAL)
+                cast(Kind.DOUBLE_PRECISION)
+                cast(Kind.STRING)
+                cast(Kind.SYMBOL)
             }
-            graph[INT32] = INT32.relationships {
-                explicit(BOOL)
-                unsafe(INT8)
-                unsafe(INT16)
-                coercion(INT32)
-                coercion(INT64)
-                coercion(INT)
-                explicit(DECIMAL)
-                coercion(DECIMAL_ARBITRARY)
-                coercion(FLOAT32)
-                coercion(FLOAT64)
-                explicit(STRING)
-                explicit(SYMBOL)
+            graph[Kind.INT_ARBITRARY.ordinal] = relationships {
+                cast(Kind.BOOL)
+                cast(Kind.TINYINT)
+                cast(Kind.SMALLINT)
+                cast(Kind.INT)
+                cast(Kind.BIGINT)
+                cast(Kind.INT_ARBITRARY)
+                cast(Kind.DECIMAL)
+                cast(Kind.DECIMAL_ARBITRARY)
+                cast(Kind.REAL)
+                cast(Kind.DOUBLE_PRECISION)
+                cast(Kind.STRING)
+                cast(Kind.SYMBOL)
             }
-            graph[INT64] = INT64.relationships {
-                explicit(BOOL)
-                unsafe(INT8)
-                unsafe(INT16)
-                unsafe(INT32)
-                coercion(INT64)
-                coercion(INT)
-                explicit(DECIMAL)
-                coercion(DECIMAL_ARBITRARY)
-                coercion(FLOAT32)
-                coercion(FLOAT64)
-                explicit(STRING)
-                explicit(SYMBOL)
+            graph[Kind.DECIMAL.ordinal] = relationships {
+                cast(Kind.BOOL)
+                cast(Kind.TINYINT)
+                cast(Kind.SMALLINT)
+                cast(Kind.INT)
+                cast(Kind.BIGINT)
+                cast(Kind.INT_ARBITRARY)
+                cast(Kind.DECIMAL)
+                cast(Kind.DECIMAL_ARBITRARY)
+                cast(Kind.REAL)
+                cast(Kind.DOUBLE_PRECISION)
+                cast(Kind.STRING)
+                cast(Kind.SYMBOL)
             }
-            graph[INT] = INT.relationships {
-                explicit(BOOL)
-                unsafe(INT8)
-                unsafe(INT16)
-                unsafe(INT32)
-                unsafe(INT64)
-                coercion(INT)
-                explicit(DECIMAL)
-                coercion(DECIMAL_ARBITRARY)
-                coercion(FLOAT32)
-                coercion(FLOAT64)
-                explicit(STRING)
-                explicit(SYMBOL)
+            graph[Kind.DECIMAL_ARBITRARY.ordinal] = relationships {
+                cast(Kind.BOOL)
+                cast(Kind.TINYINT)
+                cast(Kind.SMALLINT)
+                cast(Kind.INT)
+                cast(Kind.BIGINT)
+                cast(Kind.INT_ARBITRARY)
+                cast(Kind.DECIMAL)
+                cast(Kind.DECIMAL_ARBITRARY)
+                cast(Kind.REAL)
+                cast(Kind.DOUBLE_PRECISION)
+                cast(Kind.STRING)
+                cast(Kind.SYMBOL)
             }
-            graph[DECIMAL] = DECIMAL.relationships {
-                explicit(BOOL)
-                unsafe(INT8)
-                unsafe(INT16)
-                unsafe(INT32)
-                unsafe(INT64)
-                unsafe(INT)
-                coercion(DECIMAL)
-                coercion(DECIMAL_ARBITRARY)
-                explicit(FLOAT32)
-                explicit(FLOAT64)
-                explicit(STRING)
-                explicit(SYMBOL)
+            graph[Kind.REAL.ordinal] = relationships {
+                cast(Kind.BOOL)
+                cast(Kind.TINYINT)
+                cast(Kind.SMALLINT)
+                cast(Kind.INT)
+                cast(Kind.BIGINT)
+                cast(Kind.INT_ARBITRARY)
+                cast(Kind.DECIMAL)
+                cast(Kind.DECIMAL_ARBITRARY)
+                cast(Kind.REAL)
+                cast(Kind.DOUBLE_PRECISION)
+                cast(Kind.STRING)
+                cast(Kind.SYMBOL)
             }
-            graph[DECIMAL_ARBITRARY] = DECIMAL_ARBITRARY.relationships {
-                explicit(BOOL)
-                unsafe(INT8)
-                unsafe(INT16)
-                unsafe(INT32)
-                unsafe(INT64)
-                unsafe(INT)
-                coercion(DECIMAL)
-                coercion(DECIMAL_ARBITRARY)
-                explicit(FLOAT32)
-                explicit(FLOAT64)
-                explicit(STRING)
-                explicit(SYMBOL)
+            graph[Kind.DOUBLE_PRECISION.ordinal] = relationships {
+                cast(Kind.BOOL)
+                cast(Kind.TINYINT)
+                cast(Kind.SMALLINT)
+                cast(Kind.INT)
+                cast(Kind.BIGINT)
+                cast(Kind.INT_ARBITRARY)
+                cast(Kind.DECIMAL)
+                cast(Kind.DECIMAL_ARBITRARY)
+                cast(Kind.REAL)
+                cast(Kind.DOUBLE_PRECISION)
+                cast(Kind.STRING)
+                cast(Kind.SYMBOL)
             }
-            graph[FLOAT32] = FLOAT32.relationships {
-                explicit(BOOL)
-                unsafe(INT8)
-                unsafe(INT16)
-                unsafe(INT32)
-                unsafe(INT64)
-                unsafe(INT)
-                unsafe(DECIMAL)
-                coercion(DECIMAL_ARBITRARY)
-                coercion(FLOAT32)
-                coercion(FLOAT64)
-                explicit(STRING)
-                explicit(SYMBOL)
+            graph[Kind.CHAR.ordinal] = relationships {
+                cast(Kind.BOOL)
+                cast(Kind.CHAR)
+                cast(Kind.STRING)
+                cast(Kind.SYMBOL)
             }
-            graph[FLOAT64] = FLOAT64.relationships {
-                explicit(BOOL)
-                unsafe(INT8)
-                unsafe(INT16)
-                unsafe(INT32)
-                unsafe(INT64)
-                unsafe(INT)
-                unsafe(DECIMAL)
-                coercion(DECIMAL_ARBITRARY)
-                unsafe(FLOAT32)
-                coercion(FLOAT64)
-                explicit(STRING)
-                explicit(SYMBOL)
+            graph[Kind.STRING.ordinal] = relationships {
+                cast(Kind.BOOL)
+                cast(Kind.TINYINT)
+                cast(Kind.SMALLINT)
+                cast(Kind.INT)
+                cast(Kind.BIGINT)
+                cast(Kind.INT_ARBITRARY)
+                cast(Kind.STRING)
+                cast(Kind.SYMBOL)
+                cast(Kind.CLOB)
             }
-            graph[CHAR] = CHAR.relationships {
-                explicit(BOOL)
-                coercion(CHAR)
-                coercion(STRING)
-                coercion(SYMBOL)
+            graph[Kind.SYMBOL.ordinal] = relationships {
+                cast(Kind.BOOL)
+                cast(Kind.STRING)
+                cast(Kind.SYMBOL)
+                cast(Kind.CLOB)
             }
-            graph[STRING] = STRING.relationships {
-                explicit(BOOL)
-                unsafe(INT8)
-                unsafe(INT16)
-                unsafe(INT32)
-                unsafe(INT64)
-                unsafe(INT)
-                coercion(STRING)
-                explicit(SYMBOL)
-                coercion(CLOB)
+            graph[Kind.CLOB.ordinal] = relationships {
+                cast(Kind.CLOB)
             }
-            graph[SYMBOL] = SYMBOL.relationships {
-                explicit(BOOL)
-                coercion(STRING)
-                coercion(SYMBOL)
-                coercion(CLOB)
+            graph[Kind.BLOB.ordinal] = Array(N) { Status.NO }
+            graph[Kind.DATE.ordinal] = Array(N) { Status.NO }
+            graph[Kind.TIME_WITH_TZ.ordinal] = Array(N) { Status.NO }
+            graph[Kind.TIME_WITHOUT_TZ.ordinal] = Array(N) { Status.NO }
+            graph[Kind.TIMESTAMP_WITH_TZ.ordinal] = Array(N) { Status.NO }
+            graph[Kind.TIMESTAMP_WITHOUT_TZ.ordinal] = Array(N) { Status.NO }
+            graph[Kind.BAG.ordinal] = relationships {
+                cast(Kind.BAG)
             }
-            graph[CLOB] = CLOB.relationships {
-                coercion(CLOB)
+            graph[Kind.LIST.ordinal] = relationships {
+                cast(Kind.BAG)
+                cast(Kind.SEXP)
+                cast(Kind.LIST)
             }
-            graph[BINARY] = arrayOfNulls(N)
-            graph[BYTE] = arrayOfNulls(N)
-            graph[BLOB] = arrayOfNulls(N)
-            graph[DATE] = arrayOfNulls(N)
-            graph[TIME] = arrayOfNulls(N)
-            graph[TIMESTAMP] = arrayOfNulls(N)
-            graph[INTERVAL] = arrayOfNulls(N)
-            graph[BAG] = BAG.relationships {
-                coercion(BAG)
+            graph[Kind.SEXP.ordinal] = relationships {
+                cast(Kind.BAG)
+                cast(Kind.SEXP)
+                cast(Kind.LIST)
             }
-            graph[LIST] = LIST.relationships {
-                coercion(BAG)
-                coercion(SEXP)
-                coercion(LIST)
-            }
-            graph[SEXP] = SEXP.relationships {
-                coercion(BAG)
-                coercion(SEXP)
-                coercion(LIST)
-            }
-            graph[STRUCT] = STRUCT.relationships {
-                coercion(STRUCT)
+            graph[Kind.STRUCT.ordinal] = relationships {
+                cast(Kind.STRUCT)
             }
             CastTable(types, graph.requireNoNulls())
         }
     }
 
-    private class RelationshipBuilder(val operand: PartiQLValueType) {
+    /**
+     * TODO: Add another method to support [Status.MODIFIED]. See the cast table at SQL:1999 Section 6.22
+     */
+    private class RelationshipBuilder {
 
-        private val relationships = arrayOfNulls<Cast?>(N)
+        private val relationships = Array(N) { Status.NO }
 
         fun build() = relationships
 
-        fun coercion(target: PartiQLValueType, isNullable: Boolean = false) {
-            relationships[target] = Cast(operand, target, Ref.Cast.Safety.COERCION, isNullable)
-        }
-
-        fun explicit(target: PartiQLValueType, isNullable: Boolean = false) {
-            relationships[target] = Cast(operand, target, Ref.Cast.Safety.EXPLICIT, isNullable)
-        }
-
-        fun unsafe(target: PartiQLValueType, isNullable: Boolean = false) {
-            relationships[target] = Cast(operand, target, Ref.Cast.Safety.UNSAFE, isNullable)
+        fun cast(target: Kind) {
+            relationships[target.ordinal] = Status.YES
         }
     }
 }

@@ -1,6 +1,7 @@
 package org.partiql.eval.value;
 
 import org.jetbrains.annotations.NotNull;
+import org.partiql.types.PType;
 import org.partiql.value.PartiQLValueType;
 
 import java.util.ArrayList;
@@ -70,7 +71,7 @@ class DatumStruct implements Datum {
 
     @NotNull
     @Override
-    public PartiQLValueType getType() {
-        return PartiQLValueType.STRUCT;
+    public PType getType() {
+        return PType.typeStruct(); // TODO: Closed struct
     }
 }
