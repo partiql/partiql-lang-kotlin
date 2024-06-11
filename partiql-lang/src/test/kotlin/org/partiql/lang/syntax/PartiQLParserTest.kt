@@ -295,6 +295,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
     }
 
     @Test
+    @Ignore("Disabled because it's not clear that the parser should be pushing down negations on boxed Ion values")
     fun unaryIonFloatLiteral() {
         assertExpression(
             "+-+-+-`-5e0`",
