@@ -27,7 +27,7 @@ internal object DDLFeatureGate {
 
         override fun visitTypeCollection(node: Type.Collection, ctx: Ctx) {
             if (!node.isOrdered && ctx.level != 0) throw IllegalArgumentException("Unsupported Feature - Bag type as attribute type")
-            if (node.isOrdered && ctx.level != 1) throw IllegalArgumentException("Unsupported Feature - Collection of collection as attribute type")
+//            if (node.isOrdered && ctx.level != 1) throw IllegalArgumentException("Unsupported Feature - Collection of collection as attribute type")
             val nextLevel = Ctx(ctx.level + 1)
             when (val collectionElementType = node.type) {
                 is Type.Collection -> {
@@ -41,13 +41,13 @@ internal object DDLFeatureGate {
             }
         }
 
-        override fun visitTypeRecordField(node: Type.Record.Field, ctx: Ctx) {
-            val fieldType = node.type
-            if (fieldType is Type.Record) {
-                if (fieldType.constraints.isNotEmpty()) throw IllegalArgumentException("Unsupported Feature - Check constraint on struct field")
-            }
-            super.visitTypeRecordField(node, ctx)
-        }
+//        override fun visitTypeRecordField(node: Type.Record.Field, ctx: Ctx) {
+//            val fieldType = node.type
+//            if (fieldType is Type.Record) {
+//                if (fieldType.constraints.isNotEmpty()) throw IllegalArgumentException("Unsupported Feature - Check constraint on struct field")
+//            }
+//            super.visitTypeRecordField(node, ctx)
+//        }
 
         override fun visitConstraint(node: Constraint, ctx: Ctx) {
             val name = node.name ?: return

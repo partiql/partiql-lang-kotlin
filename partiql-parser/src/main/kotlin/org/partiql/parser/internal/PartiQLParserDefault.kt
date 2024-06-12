@@ -2258,8 +2258,9 @@ internal class PartiQLParserDefault : PartiQLParser {
                 val constraints = structFieldCtx.columnConstraint().map {
                     when (it.columnConstraintDef()) {
                         is GeneratedParser.ColConstrNullContext,
-                        is GeneratedParser.ColConstrNotNullContext -> visitColumnConstraint(it)
-                        else -> throw error(it, "Only NULL Constraint and NOT NULL Constraint are allowed in Struct field")
+                        is GeneratedParser.ColConstrNotNullContext,
+                        is GeneratedParser.ColConstrCheckContext -> visitColumnConstraint(it)
+                        else -> throw error(it, "Only NULL, NOT NULL, CHECK Constraint are allowed in Struct field")
                     }
                 }
                 val optional = when (structFieldCtx.OPTIONAL()) {
