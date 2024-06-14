@@ -4,13 +4,13 @@ import org.partiql.ast.normalize.normalize
 import org.partiql.errors.Problem
 import org.partiql.errors.ProblemCallback
 import org.partiql.planner.PartiQLPlanner
-import org.partiql.planner.intern.validate.SqlAnalyzer
+import org.partiql.planner.intern.validate.SqlValidator
 import org.partiql.planner.internal.PlannerFlag
 import org.partiql.planner.internal.transforms.AstToPlan
 import org.partiql.planner.internal.transforms.PlanTransform
-import org.partiql.planner.metadata.Context
 import org.partiql.planner.metadata.Namespace
 import org.partiql.planner.metadata.Session
+import org.partiql.planner.metadata.System
 import org.partiql.types.StaticType
 import org.partiql.ast.Statement as AST
 import org.partiql.plan.PartiQLPlan as PLAN
@@ -26,7 +26,7 @@ import org.partiql.planner.internal.ir.Statement as IR
  *  - PLAN  -> The public-facing PartiQLPlan                public
  */
 internal class SqlPlanner(
-    private val context: Context,
+    private val system: System,
     private val types: SqlTypes<StaticType>,
 ) : PartiQLPlanner {
 
@@ -44,7 +44,7 @@ internal class SqlPlanner(
         onProblem: ProblemCallback,
     ): PartiQLPlanner.Result {
         var ir = normalize(statement)
-        ir = analyze(ir, session())
+        ir = validate(ir, session())
         ir = factorize(ir)
         // Translate to the external plan.
         val plan = translate(ir)
@@ -69,7 +69,7 @@ internal class SqlPlanner(
      *
      * This phase types all IR nodes and resolves names (tables, variables, routines).
      */
-    private fun analyze(ir: IR, session: Session): IR = SqlAnalyzer(context, session, types).analyze(ir)
+    private fun validate(ir: IR, session: Session): IR = SqlValidator(system, session, types).validate(ir)
 
     /**
      * Phase 3.

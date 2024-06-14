@@ -1,5 +1,6 @@
 package org.partiql.planner.intern
 
+import org.partiql.planner.intern.ptype.PType
 import org.partiql.value.PartiQLValueType
 
 /**
@@ -241,4 +242,16 @@ internal interface SqlTypes<T> {
      * Unordered collection of name-value pairs with some known fields; always open.
      */
     fun struct(vararg attributes: Pair<String, T>): T = row(attributes.toList())
+
+    // TODO add these families elsewhere
+
+    companion object {
+
+        @JvmStatic
+        val strings: Collection<PType.Kind> = listOf(
+            PType.Kind.CHAR,
+            PType.Kind.VARCHAR,
+            PType.Kind.STRING,
+        )
+    }
 }

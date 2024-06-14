@@ -33,10 +33,10 @@ public interface Namespace {
     /**
      * Get a function's variants by name.
      *
-     * @param name  The case-sensitive [Function] name.
-     * @return A collection of all [Function]s in the current namespace with this name.
+     * @param name  The case-sensitive [Fn] name.
+     * @return A collection of all [Fn]s in the current namespace with this name.
      */
-    public fun getFunctions(name: String): Collection<Function> = DEFAULT_FUNCTIONS
+    public fun getFunctions(name: String): Collection<Fn> = DEFAULT_FUNCTIONS
 
     /**
      * Get a sub-namespace by name.
@@ -55,7 +55,7 @@ public interface Namespace {
      * Memoized defaults.
      */
     private companion object {
-        val DEFAULT_FUNCTIONS = emptyList<Function>()
+        val DEFAULT_FUNCTIONS = emptyList<Fn>()
         val DEFAULT_SCOPES = emptyList<Namespace>()
     }
 }
