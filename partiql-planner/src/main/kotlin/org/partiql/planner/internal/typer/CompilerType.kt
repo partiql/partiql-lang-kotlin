@@ -19,13 +19,13 @@ internal class CompilerType(
     internal val isMissingValue: Boolean = false
 ) : PType {
     override fun getKind(): Kind = _delegate.kind
-    override fun getFields(): MutableCollection<Field>? {
-        return _delegate.fields?.map { field ->
+    override fun getFields(): MutableCollection<Field> {
+        return _delegate.fields.map { field ->
             when (field) {
                 is Field -> field
                 else -> Field(field.name, CompilerType(field.type))
             }
-        }?.toMutableList()
+        }.toMutableList()
     }
 
     override fun getMaxLength(): Int {

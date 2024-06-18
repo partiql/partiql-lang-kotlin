@@ -44,7 +44,7 @@ internal class TypeEnvTest {
         private fun struct(vararg fields: Pair<String, CompilerType>, open: Boolean = false): CompilerType {
             return when (open) {
                 true -> PType.typeStruct().toCType()
-                false -> PType.typeStruct(fields.map { CompilerType.Field(it.first, it.second) }).toCType()
+                false -> PType.typeRow(fields.map { CompilerType.Field(it.first, it.second) }).toCType()
             }
         }
 

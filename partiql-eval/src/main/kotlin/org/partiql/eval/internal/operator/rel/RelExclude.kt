@@ -45,7 +45,7 @@ internal class RelExclude(
         input.close()
     }
 
-    private fun excludeStruct(
+    private fun excludeFields(
         structValue: Datum,
         exclusions: List<Rel.Op.Exclude.Step>
     ): Datum {
@@ -174,7 +174,7 @@ internal class RelExclude(
 
     private fun excludeValue(initialPartiQLValue: Datum, exclusions: List<Rel.Op.Exclude.Step>): Datum {
         return when (initialPartiQLValue.type.kind) {
-            PType.Kind.STRUCT -> excludeStruct(initialPartiQLValue, exclusions)
+            PType.Kind.ROW, PType.Kind.STRUCT -> excludeFields(initialPartiQLValue, exclusions)
             PType.Kind.BAG, PType.Kind.LIST, PType.Kind.SEXP -> excludeCollection(
                 initialPartiQLValue,
                 initialPartiQLValue.type,

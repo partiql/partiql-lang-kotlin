@@ -60,7 +60,7 @@ internal sealed class RelUnpivot : Operator.Relation {
 
         override fun struct(): Datum {
             val v = expr.eval(env.push(Record.empty))
-            if (v.type.kind != PType.Kind.STRUCT) {
+            if (v.type.kind != PType.Kind.STRUCT && v.type.kind != PType.Kind.ROW) {
                 throw TypeCheckException()
             }
             return v
@@ -84,7 +84,7 @@ internal sealed class RelUnpivot : Operator.Relation {
                 return Datum.structValue(emptyList())
             }
             return when (v.type.kind) {
-                PType.Kind.STRUCT -> v
+                PType.Kind.STRUCT, PType.Kind.ROW -> v
                 else -> Datum.structValue(listOf(Field.of("_1", v)))
             }
         }

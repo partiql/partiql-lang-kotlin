@@ -72,6 +72,7 @@ internal object FnComparator : Comparator<FnSignature> {
         Kind.LIST,
         Kind.SEXP,
         Kind.BAG,
+        Kind.ROW,
         Kind.STRUCT,
         Kind.DYNAMIC,
     ).mapIndexed { precedence, type -> type to precedence }.toMap()

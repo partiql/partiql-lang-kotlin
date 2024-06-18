@@ -392,6 +392,7 @@ public interface Datum extends Iterable<Datum> {
             case SEXP:
                 return this.isNull() ? PartiQL.sexpValue((Iterable<? extends PartiQLValue>) null) : PartiQL.sexpValue(new PQLToPartiQLIterable(this));
             case STRUCT:
+            case ROW:
                 return this.isNull() ? PartiQL.structValue((Iterable<? extends Pair<String, ? extends PartiQLValue>>) null) : PartiQL.structValue(new PQLToPartiQLStruct(this));
             case DYNAMIC:
             case UNKNOWN:

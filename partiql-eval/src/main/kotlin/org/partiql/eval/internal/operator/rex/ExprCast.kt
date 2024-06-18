@@ -87,7 +87,7 @@ internal class ExprCast(val arg: Operator.Expr, val cast: Ref.Cast) : Operator.E
                 PType.Kind.LIST -> castFromCollection(arg as ListValue<*>, cast.target)
                 PType.Kind.SEXP -> castFromCollection(arg as SexpValue<*>, cast.target)
                 PType.Kind.STRUCT -> TODO("CAST FROM STRUCT not yet implemented")
-                PType.Kind.ROW -> TODO()
+                PType.Kind.ROW -> TODO("CAST FROM ROW not yet implemented")
                 PType.Kind.UNKNOWN -> TODO()
             }
             return Datum.of(partiqlValue)
@@ -124,7 +124,7 @@ internal class ExprCast(val arg: Operator.Expr, val cast: Ref.Cast) : Operator.E
             PType.Kind.DECIMAL_ARBITRARY -> decimalValue(null)
             PType.Kind.REAL -> float32Value(null)
             PType.Kind.DOUBLE_PRECISION -> float64Value(null)
-            PType.Kind.ROW -> TODO()
+            PType.Kind.ROW -> structValue<PartiQLValue>(null) // TODO. PartiQLValue doesn't have rows.
             PType.Kind.UNKNOWN -> TODO()
         }
     }
@@ -192,8 +192,8 @@ internal class ExprCast(val arg: Operator.Expr, val cast: Ref.Cast) : Operator.E
             PType.Kind.DATE, PType.Kind.TIMESTAMP_WITH_TZ, PType.Kind.TIMESTAMP_WITHOUT_TZ, PType.Kind.TIME_WITH_TZ,
             PType.Kind.TIME_WITHOUT_TZ, PType.Kind.BAG, PType.Kind.LIST,
             PType.Kind.SEXP,
+            PType.Kind.ROW,
             PType.Kind.STRUCT -> error("can not perform cast from $value to $t")
-            PType.Kind.ROW -> TODO()
             PType.Kind.UNKNOWN -> TODO()
         }
     }
@@ -225,8 +225,7 @@ internal class ExprCast(val arg: Operator.Expr, val cast: Ref.Cast) : Operator.E
             PType.Kind.BAG, PType.Kind.LIST,
             PType.Kind.SEXP,
             PType.Kind.STRUCT -> error("can not perform cast from $value to $t")
-
-            PType.Kind.ROW -> TODO()
+            PType.Kind.ROW -> error("can not perform cast from $value to $t")
             PType.Kind.UNKNOWN -> TODO()
         }
     }
@@ -313,8 +312,7 @@ internal class ExprCast(val arg: Operator.Expr, val cast: Ref.Cast) : Operator.E
             PType.Kind.BAG, PType.Kind.LIST,
             PType.Kind.SEXP,
             PType.Kind.STRUCT -> error("can not perform cast from struct to $t")
-
-            PType.Kind.ROW -> TODO()
+            PType.Kind.ROW -> error("can not perform cast from $value to $t")
             PType.Kind.UNKNOWN -> TODO()
         }
     }

@@ -127,8 +127,8 @@ internal class PlanTyper(private val env: Env) {
                 return collapseCollection(unique, unique.first().kind)
             }
             // Collapse Structs
-            if (unique.all { it.kind == Kind.STRUCT }) {
-                return collapseStructs(unique)
+            if (unique.all { it.kind == Kind.ROW }) {
+                return collapseRows(unique)
             }
             return PType.typeDynamic()
         }
@@ -143,19 +143,19 @@ internal class PlanTyper(private val env: Env) {
             }
         }
 
-        private fun collapseStructs(structs: Iterable<PType>): PType {
-            val firstFields = structs.first().fields ?: return PType.typeStruct()
+        private fun collapseRows(rows: Iterable<PType>): PType {
+            val firstFields = rows.first().fields!!
             val fieldNames = firstFields.map { it.name }
             val fieldTypes = firstFields.map { mutableListOf(it.type) }
-            structs.map { struct ->
-                val fields = struct.fields ?: return PType.typeStruct()
+            rows.map { struct ->
+                val fields = struct.fields!!
                 if (fields.map { it.name } != fieldNames) {
                     return PType.typeStruct()
                 }
                 fields.forEachIndexed { index, field -> fieldTypes[index].add(field.type) }
             }
             val newFields = fieldTypes.mapIndexed { i, types -> Field.of(fieldNames[i], anyOfLiterals(types)!!) }
-            return PType.typeStruct(newFields)
+            return PType.typeRow(newFields)
         }
 
         fun anyOf(vararg types: PType): PType? {
@@ -239,9 +239,10 @@ internal class PlanTyper(private val env: Env) {
             }
 
             // Check Root
-            val vType = when (rex.type.kind == Kind.STRUCT) {
-                true -> anyOf(rex.type.fields?.map { it.type } ?: emptyList()) ?: PType.typeDynamic()
-                false -> rex.type
+            val vType = when (rex.type.kind) {
+                Kind.ROW -> anyOf(rex.type.fields!!.map { it.type }) ?: PType.typeDynamic()
+                Kind.STRUCT -> PType.typeDynamic()
+                else -> rex.type
             }
 
             // rewrite
@@ -682,7 +683,7 @@ internal class PlanTyper(private val env: Env) {
             }
 
             // Check Root Type (STRUCT)
-            if (root.type.kind != Kind.STRUCT) {
+            if (root.type.kind != Kind.STRUCT && root.type.kind != Kind.ROW) {
                 return ProblemGenerator.missingRex(
                     rexOpPathKey(root, key),
                     ProblemGenerator.expressionAlwaysReturnsMissing("Key lookup may only occur on structs, not ${root.type}.")
@@ -714,7 +715,7 @@ internal class PlanTyper(private val env: Env) {
             }
 
             // Check Root Type (STRUCT)
-            if (root.type.kind != Kind.STRUCT) {
+            if (root.type.kind != Kind.STRUCT && root.type.kind != Kind.ROW) {
                 return ProblemGenerator.missingRex(
                     Rex.Op.Path.Symbol(root, node.key),
                     ProblemGenerator.expressionAlwaysReturnsMissing("Symbol lookup may only occur on structs, not ${root.type}.")
@@ -747,12 +748,15 @@ internal class PlanTyper(private val env: Env) {
         }
 
         /**
+         * Assumes that the type is either a struct of row.
          * @return null when the field definitely does not exist; dynamic when the type cannot be determined
          */
         private fun CompilerType.getField(field: String, ignoreCase: Boolean): CompilerType? {
-            val fields = this.fields?.filter { it.name.equals(field, ignoreCase) }?.map { it.type }?.toSet()
-            return when (fields?.size) {
-                null -> CompilerType(PType.typeDynamic())
+            if (this.kind == Kind.STRUCT) {
+                return CompilerType(PType.typeDynamic())
+            }
+            val fields = this.fields!!.filter { it.name.equals(field, ignoreCase) }.map { it.type }.toSet()
+            return when (fields.size) {
                 0 -> return null
                 1 -> fields.first()
                 else -> CompilerType(PType.typeDynamic())
@@ -762,10 +766,11 @@ internal class PlanTyper(private val env: Env) {
         private fun rexString(str: String) = rex(CompilerType(PType.typeString()), Rex.Op.Lit(stringValue(str)))
 
         /**
+         * Assumes that the type is either a struct or row.
          * @return null when the field definitely does not exist; dynamic when the type cannot be determined
          */
         private fun CompilerType.getSymbol(field: String): Pair<Identifier.Symbol, CompilerType>? {
-            if (this.fields == null) {
+            if (this.kind == Kind.STRUCT) {
                 return Identifier.Symbol(field, Identifier.CaseSensitivity.INSENSITIVE) to CompilerType(PType.typeDynamic())
             }
             val fields = this.fields!!.mapNotNull {
@@ -1048,7 +1053,7 @@ internal class PlanTyper(private val env: Env) {
                 structTypeFields.add(CompilerType.Field(keyOp.value.string!!, field.v.type))
             }
             val type = when (structIsClosed) {
-                true -> CompilerType(PType.typeStruct(structTypeFields as Collection<Field>))
+                true -> CompilerType(PType.typeRow(structTypeFields as Collection<Field>))
                 false -> CompilerType(PType.typeStruct())
             }
             return rex(type, rexOpStruct(fields))
@@ -1080,7 +1085,7 @@ internal class PlanTyper(private val env: Env) {
          * Calculate output type of a row-value subquery.
          */
         private fun visitRexOpSubqueryRow(subquery: Rex.Op.Subquery, cons: CompilerType): Rex {
-            if (cons.kind != Kind.STRUCT) {
+            if (cons.kind != Kind.ROW) {
                 error("Subquery with non-SQL SELECT cannot be coerced to a row-value expression. Found constructor type: $cons")
             }
             // Do a simple cardinality check for the moment.
@@ -1099,11 +1104,11 @@ internal class PlanTyper(private val env: Env) {
          * Calculate output type of a scalar subquery.
          */
         private fun visitRexOpSubqueryScalar(subquery: Rex.Op.Subquery, cons: CompilerType): Rex {
-            if (cons.kind != Kind.STRUCT) {
+            if (cons.kind != Kind.ROW) {
                 error("Subquery with non-SQL SELECT cannot be coerced to a scalar. Found constructor type: $cons")
             }
-            val n = cons.fields?.size
-            if (n == null || n != 1) {
+            val n = cons.fields!!.size
+            if (n != 1) {
                 error("SELECT constructor with $n attributes cannot be coerced to a scalar. Found constructor type: $cons")
             }
             // If we made it this far, then we can coerce this subquery to a scalar
@@ -1133,7 +1138,7 @@ internal class PlanTyper(private val env: Env) {
 
             // Calculate Type
             val type = when (args.size) {
-                0 -> CompilerType(PType.typeStruct(emptyList()))
+                0 -> CompilerType(PType.typeRow(emptyList()))
                 else -> {
                     val argTypes = args.map { it.type }
                     calculateTupleUnionOutputType(argTypes) ?: return ProblemGenerator.missingRex(
@@ -1160,13 +1165,13 @@ internal class PlanTyper(private val env: Env) {
                 return null
             }
             // Infer Type
-            val type = PType.typeStruct(args.flatMap { it!!.type.fields!! })
+            val type = PType.typeRow(args.flatMap { it!!.type.fields })
             val fields = args.flatMap { arg ->
                 val op = arg!!.op
                 when (op is Rex.Op.Struct) {
                     true -> op.fields
                     false -> {
-                        arg.type.fields!!.map {
+                        arg.type.fields.map {
                             Rex.Op.Struct.Field(
                                 rexString(it.name),
                                 Rex(it.type, Rex.Op.Path.Key(arg, rexString(it.name)))
@@ -1181,7 +1186,7 @@ internal class PlanTyper(private val env: Env) {
 
         @OptIn(FnExperimental::class)
         private fun replaceGeneratedTupleUnionArg(node: Rex): Rex? {
-            if (node.op is Rex.Op.Struct && node.type.kind == Kind.STRUCT && node.type.fields != null) {
+            if (node.op is Rex.Op.Struct && node.type.kind == Kind.ROW) {
                 return node
             }
             val case = node.op as? Rex.Op.Case ?: return null
@@ -1197,7 +1202,7 @@ internal class PlanTyper(private val env: Env) {
                 return null
             }
             val firstBranchResultType = firstBranch.rex.type
-            if (firstBranchResultType.kind != Kind.STRUCT || firstBranchResultType.fields == null) {
+            if (firstBranchResultType.kind != Kind.ROW) {
                 return null
             }
             return Rex(firstBranchResultType, firstBranch.rex.op)
@@ -1238,18 +1243,19 @@ internal class PlanTyper(private val env: Env) {
                 if (arg.kind == Kind.UNKNOWN) {
                     return@forEach
                 }
-                containsDynamic = containsDynamic || arg.kind == Kind.DYNAMIC
-                containsNonStruct = containsNonStruct || arg.kind != Kind.DYNAMIC && arg.kind != Kind.STRUCT
-                when (arg.kind == Kind.STRUCT && arg.fields != null) {
-                    true -> fields.addAll(arg.fields!!)
-                    false -> structIsOpen = true
+                when (arg.kind) {
+                    Kind.ROW -> fields.addAll(arg.fields!!)
+                    Kind.STRUCT -> structIsOpen = true
+                    Kind.DYNAMIC -> containsDynamic = true
+                    Kind.UNKNOWN -> structIsOpen = true
+                    else -> containsNonStruct = true
                 }
             }
             return when {
                 containsNonStruct -> null
                 containsDynamic -> CompilerType(PType.typeDynamic())
                 structIsOpen -> CompilerType(PType.typeStruct())
-                else -> CompilerType(PType.typeStruct(fields as Collection<Field>))
+                else -> CompilerType(PType.typeRow(fields as Collection<Field>))
             }
         }
 

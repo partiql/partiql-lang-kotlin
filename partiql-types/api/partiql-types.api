@@ -610,7 +610,6 @@ public abstract interface class org/partiql/types/PType {
 	public static fun typeSmallInt ()Lorg/partiql/types/PType;
 	public static fun typeString ()Lorg/partiql/types/PType;
 	public static fun typeStruct ()Lorg/partiql/types/PType;
-	public static fun typeStruct (Ljava/util/Collection;)Lorg/partiql/types/PType;
 	public static fun typeSymbol ()Lorg/partiql/types/PType;
 	public static fun typeTimeWithTZ (I)Lorg/partiql/types/PType;
 	public static fun typeTimeWithoutTZ (I)Lorg/partiql/types/PType;

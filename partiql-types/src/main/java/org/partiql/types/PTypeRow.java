@@ -7,31 +7,24 @@ import java.util.Iterator;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-class PTypeStructure implements PType {
-
-    @NotNull
-    final Kind _kind;
+/**
+ * Applicable to {@link PType.Kind#ROW}.
+ */
+class PTypeRow implements PType {
 
     final Collection<Field> _fields;
 
-    PTypeStructure(@NotNull Kind type, @NotNull Collection<Field> fields) {
-        assert(type == Kind.STRUCT || type == Kind.ROW);
-        _kind = type;
+    PTypeRow(@NotNull Collection<Field> fields) {
         _fields = fields;
-    }
-
-    PTypeStructure(@NotNull Kind type) {
-        assert(type == Kind.STRUCT || type == Kind.ROW);
-        _kind = type;
-        _fields = null;
     }
 
     @NotNull
     @Override
     public Kind getKind() {
-        return _kind;
+        return Kind.ROW;
     }
 
+    @NotNull
     @Override
     public Collection<Field> getFields() {
         return _fields;
@@ -41,16 +34,10 @@ class PTypeStructure implements PType {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof PType)) return false;
-        if (_kind != ((PType) o).getKind()) {
+        if (Kind.ROW != ((PType) o).getKind()) {
             return false;
         }
         Collection<Field> otherFields = ((PType) o).getFields();
-        if (otherFields == null && _fields == null) {
-            return true;
-        }
-        if (otherFields == null || _fields == null) {
-            return false;
-        }
         int size = _fields.size();
         if (size != otherFields.size()) {
             return false;
@@ -69,17 +56,13 @@ class PTypeStructure implements PType {
 
     @Override
     public String toString() {
-        if (_fields == null) {
-            return _kind.name();
-        } else {
-            Collection<String> fieldStringList = _fields.stream().map((f) -> f.getName() + ": " + f.getType()).collect(Collectors.toList());
-            String fieldStrings = String.join(", ", fieldStringList);
-            return _kind.name() + "(" + fieldStrings + ")";
-        }
+        Collection<String> fieldStringList = _fields.stream().map((f) -> f.getName() + ": " + f.getType()).collect(Collectors.toList());
+        String fieldStrings = String.join(", ", fieldStringList);
+        return Kind.ROW.name() + "(" + fieldStrings + ")";
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(_kind, _fields);
+        return Objects.hash(Kind.ROW, _fields);
     }
 }

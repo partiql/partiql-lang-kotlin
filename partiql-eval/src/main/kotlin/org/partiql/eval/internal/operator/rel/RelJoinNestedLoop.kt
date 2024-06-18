@@ -79,7 +79,7 @@ internal abstract class RelJoinNestedLoop : RelPeeking() {
 
     private fun Datum.padNull(): Datum {
         return when (this.type.kind) {
-            PType.Kind.STRUCT -> {
+            PType.Kind.STRUCT, PType.Kind.ROW -> {
                 val newFields = IteratorSupplier { this.fields }.map {
                     Field.of(it.name, Datum.nullValue())
                 }

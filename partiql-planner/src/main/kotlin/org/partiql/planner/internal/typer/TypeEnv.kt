@@ -143,7 +143,8 @@ internal data class TypeEnv(
      */
     private fun CompilerType.containsKey(name: BindingName): Boolean? {
         return when (this.kind) {
-            Kind.STRUCT, Kind.ROW -> this.fields?.any { name.matches(it.name) }
+            Kind.ROW -> this.fields!!.any { name.matches(it.name) }
+            Kind.STRUCT -> null
             Kind.DYNAMIC -> null
             else -> false
         }

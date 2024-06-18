@@ -47,11 +47,10 @@ public interface PType {
 
     /**
      * The fields of the type
-     * @return null when the structure is open; fields when struct is closed
      * @throws UnsupportedOperationException if this is called on a type whose {@link Kind} is not:
-     * {@link Kind#STRUCT}, {@link Kind#ROW}
+     * {@link Kind#ROW}
      */
-    // TODO: Do we support NULL here?
+    @NotNull
     default Collection<Field> getFields() throws UnsupportedOperationException {
         throw new UnsupportedOperationException();
     }
@@ -276,17 +275,12 @@ public interface PType {
 
     @NotNull
     static PType typeRow(@NotNull Collection<Field> fields) {
-        return new PTypeStructure(Kind.ROW, fields);
-    }
-
-    @NotNull
-    static PType typeStruct(@NotNull Collection<Field> fields) {
-        return new PTypeStructure(Kind.STRUCT, fields);
+        return new PTypeRow(fields);
     }
 
     @NotNull
     static PType typeStruct() {
-        return new PTypeStructure(Kind.STRUCT);
+        return new PTypePrimitive(Kind.STRUCT);
     }
 
     @NotNull
@@ -473,9 +467,9 @@ public interface PType {
             boolean isClosed = ((StructType) type).getContentClosed();
             List<Field> fields = ((StructType) type).getFields().stream().map((field) -> Field.of(field.getKey(), PType.fromStaticType(field.getValue()))).collect(Collectors.toList());
             if (isClosed && isOrdered) {
-                return PType.typeStruct(fields); // TODO: Type ROW?
+                return PType.typeRow(fields); // TODO: Type ROW?
             } else if (isClosed) {
-                return PType.typeStruct(fields);
+                return PType.typeRow(fields);
             } else {
                 return PType.typeStruct();
             }

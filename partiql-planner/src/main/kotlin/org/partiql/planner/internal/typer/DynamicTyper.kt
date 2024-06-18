@@ -116,7 +116,7 @@ internal class DynamicTyper {
             return anyOf(types)!!.toCType() to null
         }
         // If a collection, then return union of all accumulated types as these coercion rules are not defined by SQL.
-        if (superTypeBase in setOf(Kind.STRUCT, Kind.BAG, Kind.LIST, Kind.SEXP)) {
+        if (superTypeBase in setOf(Kind.ROW, Kind.STRUCT, Kind.BAG, Kind.LIST, Kind.SEXP)) {
             return anyOf(types)!!.toCType() to null
         }
         // If not initialized, then return null, missing, or null|missing.
@@ -349,6 +349,9 @@ internal class DynamicTyper {
             )
             graph[Kind.STRUCT.ordinal] = edges(
                 Kind.STRUCT to Kind.STRUCT,
+            )
+            graph[Kind.ROW.ordinal] = edges(
+                Kind.ROW to Kind.ROW,
             )
             graph.requireNoNulls()
         }

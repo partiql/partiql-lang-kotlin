@@ -152,7 +152,7 @@ class DatumNull implements Datum {
     @NotNull
     @Override
     public Iterator<Field> getFields() {
-        if (_type.getKind() == PType.Kind.STRUCT) {
+        if (_type.getKind() == PType.Kind.STRUCT || _type.getKind() == PType.Kind.ROW) {
             throw new NullPointerException();
         } else {
             throw new UnsupportedOperationException();

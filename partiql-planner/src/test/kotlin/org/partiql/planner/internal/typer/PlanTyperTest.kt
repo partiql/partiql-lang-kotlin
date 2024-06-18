@@ -63,14 +63,14 @@ class PlanTyperTest {
             )
         )
 
-        private val LITERAL_STRUCT_1_FIRST_KEY_TYPE = PType.typeStruct(
+        private val LITERAL_STRUCT_1_FIRST_KEY_TYPE = PType.typeRow(
             listOf(CompilerType.Field("sEcoNd_KEY", INT4)),
         ).toCType()
 
         @OptIn(PartiQLValueExperimental::class)
         private val LITERAL_STRUCT_1_TYPED: Rex
             get() {
-                val topLevelStruct = PType.typeStruct(
+                val topLevelStruct = PType.typeRow(
                     listOf(CompilerType.Field("FiRsT_KeY", LITERAL_STRUCT_1_FIRST_KEY_TYPE)),
                 ).toCType()
                 return rex(
@@ -104,7 +104,7 @@ class PlanTyperTest {
             ),
         ).toCType()
 
-        private val DUPLICATES_STRUCT = PType.typeStruct(
+        private val DUPLICATES_STRUCT = PType.typeRow(
             listOf(
                 CompilerType.Field("definition", STRING),
                 CompilerType.Field("definition", DOUBLE_PRECISION),
