@@ -157,6 +157,12 @@ rex::{
       },
     ],
 
+// TODO
+//    is_type::{
+//      arg: rex,
+//      type: static_type,
+//    },
+
     case::{
       branches: list::[branch],
       default: rex,

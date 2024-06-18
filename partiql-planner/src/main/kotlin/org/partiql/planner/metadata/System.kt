@@ -16,12 +16,7 @@ public interface System {
     public fun listCatalogs(): Collection<String>
 
     /**
-     * Get a system operator's variants by symbol.
-     */
-    public fun getOperators(symbol: String): List<Operator>
-
-    /**
      * Get a system function's variants by name.
      */
-    public fun getFunctions(name: String): List<Fn>
+    public fun getRoutines(name: String): List<Routine>
 }

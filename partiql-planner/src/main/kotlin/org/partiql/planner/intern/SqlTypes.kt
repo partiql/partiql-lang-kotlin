@@ -1,6 +1,6 @@
 package org.partiql.planner.intern
 
-import org.partiql.planner.intern.ptype.PType
+import org.partiql.types.PType
 import org.partiql.value.PartiQLValueType
 
 /**
@@ -83,14 +83,14 @@ internal interface SqlTypes<T> {
      *
      * Aliases: NUMERIC(p), DECIMAL(p).
      */
-    fun numeric(precision: Int): T
+    fun decimal(precision: Int): T
 
     /**
      * Numeric value with the given decimal precision and scale.
      *
      * Aliases: NUMERIC(p, s), DECIMAL(p, s).
      */
-    fun numeric(precision: Int, scale: Int): T
+    fun decimal(precision: Int, scale: Int): T
 
     /**
      * Exact numeric type with arbitrary precision and scale.
@@ -242,16 +242,4 @@ internal interface SqlTypes<T> {
      * Unordered collection of name-value pairs with some known fields; always open.
      */
     fun struct(vararg attributes: Pair<String, T>): T = row(attributes.toList())
-
-    // TODO add these families elsewhere
-
-    companion object {
-
-        @JvmStatic
-        val strings: Collection<PType.Kind> = listOf(
-            PType.Kind.CHAR,
-            PType.Kind.VARCHAR,
-            PType.Kind.STRING,
-        )
-    }
 }

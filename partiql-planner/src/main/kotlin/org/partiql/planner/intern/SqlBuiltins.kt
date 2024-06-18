@@ -1,27 +1,19 @@
 package org.partiql.planner.intern
 
-import org.partiql.planner.intern.builtins.SqlDefinition
+import org.partiql.planner.intern.builtins.SqlOp
+import org.partiql.planner.intern.builtins.SqlOpConcat
 import org.partiql.planner.intern.builtins.SqlStringBuiltins
-import org.partiql.planner.metadata.Fn
-import org.partiql.planner.metadata.Operator
+import org.partiql.planner.metadata.Routine
 
 /**
  * These are the system-level definitions; that is, these are ALWAYS on the PATH.
+ *
+ * See https://github.com/apache/calcite/blob/main/core/src/main/java/org/apache/calcite/sql/fun/SqlLibraryOperators.java
  */
 internal class SqlBuiltins private constructor(
-    private val operators: Map<String, List<Operator>>,
-    private val functions: Map<String, List<Fn>>,
+    private val operators: Map<String, List<SqlOp>>,
+    private val functions: Map<String, List<Routine>>,
 ) {
-
-    /**
-     * Lookup an operator by its symbol.
-     */
-    internal fun getOperators(symbol: String): List<Operator> = operators[symbol] ?: emptyList()
-
-    /**
-     * Lookup functions by name.
-     */
-    internal fun getFunctions(name: String): List<Fn> = functions[name] ?: emptyList()
 
     companion object {
 
@@ -33,8 +25,8 @@ internal class SqlBuiltins private constructor(
 
     class Builder {
 
-        private val operators = mutableMapOf<String, List<Operator>>()
-        private val functions = mutableMapOf<String, List<Fn>>()
+        private val operators = mutableMapOf<String, List<SqlOp>>()
+        private val functions = mutableMapOf<String, List<Routine>>()
 
         /**
          * Helper function to add all definitions.
@@ -42,7 +34,7 @@ internal class SqlBuiltins private constructor(
         fun define(definitions: List<SqlDefinition>): Builder {
             for (definition in definitions) {
                 when (definition) {
-                    is SqlDefinition.Operator -> define(definition)
+                    is SqlDefinition.SqlOp -> define(definition)
                     is SqlDefinition.Fn -> define(definition)
                 }
             }
@@ -52,7 +44,7 @@ internal class SqlBuiltins private constructor(
         /**
          * Define an operator.
          */
-        fun define(definition: SqlDefinition.Operator): Builder {
+        fun define(definition: SqlDefinition.SqlOp): Builder {
             val variants = definition.getVariants().associateBy { it.getSymbol() }
             for (v in variants) {
                 val symbol = v.key

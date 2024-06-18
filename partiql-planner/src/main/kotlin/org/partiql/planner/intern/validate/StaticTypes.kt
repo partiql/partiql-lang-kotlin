@@ -44,7 +44,7 @@ internal object StaticTypes : SqlTypes<StaticType> {
 
     override fun numeric(): StaticType = StaticType.INT
 
-    override fun numeric(precision: Int): StaticType {
+    override fun decimal(precision: Int): StaticType {
         return DecimalType(
             DecimalType.PrecisionScaleConstraint.Constrained(
                 precision = precision,
@@ -53,7 +53,7 @@ internal object StaticTypes : SqlTypes<StaticType> {
         )
     }
 
-    override fun numeric(precision: Int, scale: Int): StaticType {
+    override fun decimal(precision: Int, scale: Int): StaticType {
         return DecimalType(
             DecimalType.PrecisionScaleConstraint.Constrained(
                 precision = precision,
