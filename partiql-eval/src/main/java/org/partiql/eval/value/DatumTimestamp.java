@@ -2,7 +2,6 @@ package org.partiql.eval.value;
 
 import org.jetbrains.annotations.NotNull;
 import org.partiql.types.PType;
-import org.partiql.value.PartiQLValueType;
 import org.partiql.value.datetime.Timestamp;
 
 /**

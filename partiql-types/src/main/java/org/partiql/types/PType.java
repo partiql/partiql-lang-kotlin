@@ -60,7 +60,7 @@ public interface PType {
      * @return decimal precision
      * @throws UnsupportedOperationException if this is called on a type whose {@link Kind} is not:
      * {@link Kind#DECIMAL}, {@link Kind#TIMESTAMP_WITH_TZ}, {@link Kind#TIMESTAMP_WITHOUT_TZ}, {@link Kind#TIME_WITH_TZ},
-     * {@link Kind#TIME_WITHOUT_TZ}
+     * {@link Kind#TIME_WITHOUT_TZ}, {@link Kind#REAL}, {@link Kind#DOUBLE_PRECISION}
      */
     default int getPrecision() throws UnsupportedOperationException {
         throw new UnsupportedOperationException();
@@ -71,9 +71,8 @@ public interface PType {
      * @return max length of a type
      * @throws UnsupportedOperationException if this is called on a type whose {@link Kind} is not:
      * {@link Kind#CHAR}, {@link Kind#CLOB}, {@link Kind#BLOB}
-     * @deprecated EXPERIMENTAL ! Internal: Should this be larger than an int?
      */
-    default int getMaxLength() throws UnsupportedOperationException {
+    default int getLength() throws UnsupportedOperationException {
         throw new UnsupportedOperationException();
     }
 
@@ -213,7 +212,7 @@ public interface PType {
          * <br>
          * <b>Type Syntax</b>: <code>REAL</code>
          * <br>
-         * <b>Applicable methods</b>: {@link PType#getPrecision()} // TODO: getPrecisionBinary?
+         * <b>Applicable methods</b>: {@link PType#getPrecision()}
          */
         REAL,
 
@@ -223,7 +222,7 @@ public interface PType {
          * <br>
          * <b>Type Syntax</b>: <code>DOUBLE PRECISION</code>
          * <br>
-         * <b>Applicable methods</b>: {@link PType#getPrecision()} // TODO: getPrecisionBinary?
+         * <b>Applicable methods</b>: {@link PType#getPrecision()}
          */
         DOUBLE_PRECISION,
 
@@ -233,7 +232,7 @@ public interface PType {
          * <br>
          * <b>Type Syntax</b>: <code>CHAR(&lt;length&gt;)</code>, <code>CHARACTER(&lt;length&gt;)</code>, <code>CHAR</code>, <code>CHARACTER</code>
          * <br>
-         * <b>Applicable methods</b>: {@link PType#getMaxLength()}
+         * <b>Applicable methods</b>: {@link PType#getLength()}
          */
         CHAR,
 
@@ -266,7 +265,7 @@ public interface PType {
          * <b>Type Syntax</b>: <code>BLOB</code>, <code>BLOB(&lt;large object length&gt;)</code>,
          * <code>BINARY LARGE OBJECT</code>, <code>BINARY LARGE OBJECT(&lt;large object length&gt;)</code>
          * <br>
-         * <b>Applicable methods</b>: {@link PType#getMaxLength()} // TODO: Large object length
+         * <b>Applicable methods</b>: {@link PType#getLength()}
          * @deprecated this is an experimental API and is subject to modification/deletion without prior notice.
          */
         @Deprecated
@@ -279,7 +278,7 @@ public interface PType {
          * <b>Type Syntax</b>: <code>CLOB</code>, <code>CLOB(&lt;large object length&gt;)</code>,
          * <code>CHARACTER LARGE OBJECT</code>, <code>CHARACTER LARGE OBJECT(&lt;large object length&gt;)</code>
          * <br>
-         * <b>Applicable methods</b>: {@link PType#getMaxLength()} // TODO: Large object length
+         * <b>Applicable methods</b>: {@link PType#getLength()}
          * @deprecated this is an experimental API and is subject to modification/deletion without prior notice.
          */
         @Deprecated

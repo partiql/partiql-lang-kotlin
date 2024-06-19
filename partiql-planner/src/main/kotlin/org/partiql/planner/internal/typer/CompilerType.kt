@@ -28,8 +28,8 @@ internal class CompilerType(
         }.toMutableList()
     }
 
-    override fun getMaxLength(): Int {
-        return _delegate.maxLength
+    override fun getLength(): Int {
+        return _delegate.length
     }
 
     override fun getPrecision(): Int = _delegate.precision

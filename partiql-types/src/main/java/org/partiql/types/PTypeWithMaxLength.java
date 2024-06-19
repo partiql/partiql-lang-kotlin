@@ -22,7 +22,7 @@ class PTypeWithMaxLength implements PType {
     }
 
     @Override
-    public int getMaxLength() {
+    public int getLength() {
         return _maxLength;
     }
 
@@ -30,7 +30,7 @@ class PTypeWithMaxLength implements PType {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof PType)) return false;
-        return _kind == ((PType) o).getKind() && _maxLength == ((PType) o).getMaxLength();
+        return _kind == ((PType) o).getKind() && _maxLength == ((PType) o).getLength();
     }
 
     @Override

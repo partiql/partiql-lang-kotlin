@@ -2,13 +2,12 @@ package org.partiql.eval.value;
 
 import org.jetbrains.annotations.NotNull;
 import org.partiql.types.PType;
-import org.partiql.value.PartiQLValueType;
 
 /**
  * This shall always be package-private (internal).
  * <p></p>
  * This is specifically for:
- * {@link PartiQLValueType#INT8}
+ * {@link PType.Kind#TINYINT}
  */
 class DatumByte implements Datum {
 
