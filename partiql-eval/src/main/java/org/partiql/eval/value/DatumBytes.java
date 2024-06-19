@@ -8,9 +8,8 @@ import org.partiql.value.PartiQLValueType;
  * This shall always be package-private (internal).
  * <p></p>
  * This is specifically for:
- * {@link PartiQLValueType#BINARY},
- * {@link PartiQLValueType#BLOB},
- * {@link PartiQLValueType#CLOB}
+ * {@link PType.Kind#BLOB},
+ * {@link PType.Kind#CLOB}
  */
 class DatumBytes implements Datum {
 
@@ -21,7 +20,6 @@ class DatumBytes implements Datum {
     private final PType _type;
 
     DatumBytes(@NotNull byte[] value, @NotNull PType type) {
-        assert(type.getKind() == PType.Kind.BLOB || type.getKind() == PType.Kind.CLOB);
         _value = value;
         _type = type;
     }

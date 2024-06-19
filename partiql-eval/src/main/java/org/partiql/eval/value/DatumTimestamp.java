@@ -13,6 +13,10 @@ class DatumTimestamp implements Datum {
     @NotNull
     private final Timestamp _value;
 
+    // TODO: Pass precision to constructor.
+    // TODO: Create a variant specifically for without TZ
+    private final static PType _type = PType.typeTimeWithTZ(6);
+
     DatumTimestamp(@NotNull Timestamp value) {
         _value = value;
     }
@@ -26,6 +30,6 @@ class DatumTimestamp implements Datum {
     @NotNull
     @Override
     public PType getType() {
-        return PType.typeTimestampWithTZ(6); // TODO: Without TZ
+        return _type;
     }
 }

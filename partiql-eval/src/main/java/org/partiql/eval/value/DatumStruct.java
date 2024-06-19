@@ -21,6 +21,8 @@ class DatumStruct implements Datum {
     @NotNull
     private final Map<String, List<Datum>> _delegateNormalized;
 
+    private final static PType _type = PType.typeStruct();
+
     DatumStruct(@NotNull Iterable<Field> fields) {
         _delegate = new HashMap<>();
         _delegateNormalized = new HashMap<>();
@@ -72,6 +74,6 @@ class DatumStruct implements Datum {
     @NotNull
     @Override
     public PType getType() {
-        return PType.typeStruct(); // TODO: Closed struct
+        return _type;
     }
 }

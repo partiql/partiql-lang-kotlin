@@ -11,6 +11,8 @@ class DatumShort implements Datum {
 
     private final short _value;
 
+    private final static PType _type = PType.typeSmallInt();
+
     DatumShort(short value) {
         _value = value;
     }
@@ -23,6 +25,6 @@ class DatumShort implements Datum {
     @NotNull
     @Override
     public PType getType() {
-        return PType.typeSmallInt();
+        return _type;
     }
 }

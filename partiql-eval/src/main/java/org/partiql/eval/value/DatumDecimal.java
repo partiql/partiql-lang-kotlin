@@ -10,8 +10,8 @@ import java.math.BigDecimal;
  * This shall always be package-private (internal).
  * <p></p>
  * This is specifically for:
- * {@link PartiQLValueType#DECIMAL},
- * {@link PartiQLValueType#DECIMAL_ARBITRARY}
+ * {@link PType.Kind#DECIMAL},
+ * {@link PType.Kind#DECIMAL_ARBITRARY}
  */
 class DatumDecimal implements Datum {
 
@@ -22,7 +22,6 @@ class DatumDecimal implements Datum {
     private final PType _type;
 
     DatumDecimal(@NotNull BigDecimal value, @NotNull PType type) {
-        assert(type.getKind() == PType.Kind.DECIMAL || type.getKind() == PType.Kind.DECIMAL_ARBITRARY);
         _value = value;
         _type = type;
     }

@@ -10,6 +10,9 @@ import org.partiql.value.PartiQLValueType;
 class DatumInt implements Datum {
 
     private final int _value;
+
+    private final static PType _type = PType.typeInt();
+
     DatumInt(int value) {
         _value = value;
     }
@@ -22,6 +25,6 @@ class DatumInt implements Datum {
     @NotNull
     @Override
     public PType getType() {
-        return PType.typeInt();
+        return _type;
     }
 }

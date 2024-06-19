@@ -10,9 +10,9 @@ import java.util.Iterator;
  * This shall always be package-private (internal).
  * <p></p>
  * This is specifically for:
- * {@link PartiQLValueType#LIST},
- * {@link PartiQLValueType#BAG},
- * {@link PartiQLValueType#SEXP}
+ * {@link PType.Kind#LIST},
+ * {@link PType.Kind#BAG},
+ * {@link PType.Kind#SEXP}
  */
 class DatumCollection implements Datum {
 
@@ -23,7 +23,6 @@ class DatumCollection implements Datum {
     private final PType _type;
 
     DatumCollection(@NotNull Iterable<Datum> value, @NotNull PType type) {
-        assert(type.getKind() == PType.Kind.LIST || type.getKind() == PType.Kind.BAG || type.getKind() == PType.Kind.SEXP);
         _value = value;
         _type = type;
     }

@@ -18,7 +18,6 @@ class DatumByte implements Datum {
     private final PType _type;
 
     DatumByte(byte value, @NotNull PType type) {
-        assert(type.getKind() == PType.Kind.TINYINT);
         _value = value;
         _type = type;
     }

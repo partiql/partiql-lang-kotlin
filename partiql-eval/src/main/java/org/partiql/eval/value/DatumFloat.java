@@ -11,6 +11,8 @@ class DatumFloat implements Datum {
 
     private final float _value;
 
+    private final static PType _type = PType.typeReal();
+
     DatumFloat(float value) {
         _value = value;
     }
@@ -23,6 +25,6 @@ class DatumFloat implements Datum {
     @NotNull
     @Override
     public PType getType() {
-        return PType.typeReal();
+        return _type;
     }
 }

@@ -16,7 +16,6 @@ class DatumString implements Datum {
     private final PType _type;
 
     DatumString(@NotNull String value, @NotNull PType type) {
-        assert(type.getKind() == PType.Kind.STRING || type.getKind() == PType.Kind.SYMBOL);
         _value = value;
         _type = type;
     }

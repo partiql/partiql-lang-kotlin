@@ -11,6 +11,8 @@ class DatumBoolean implements Datum {
 
     private final boolean _value;
 
+    private final static PType _type = PType.typeBool();
+
     DatumBoolean(boolean value) {
         _value = value;
     }
@@ -23,6 +25,6 @@ class DatumBoolean implements Datum {
     @NotNull
     @Override
     public PType getType() {
-        return PType.typeBool();
+        return _type;
     }
 }
