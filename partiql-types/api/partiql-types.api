@@ -583,7 +583,7 @@ public abstract interface class org/partiql/types/PType {
 	public static fun fromStaticType (Lorg/partiql/types/StaticType;)Lorg/partiql/types/PType;
 	public fun getFields ()Ljava/util/Collection;
 	public abstract fun getKind ()Lorg/partiql/types/PType$Kind;
-	public fun getMaxLength ()I
+	public fun getLength ()I
 	public fun getPrecision ()I
 	public fun getScale ()I
 	public fun getTypeParameter ()Lorg/partiql/types/PType;

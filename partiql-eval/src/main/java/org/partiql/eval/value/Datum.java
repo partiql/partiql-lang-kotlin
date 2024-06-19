@@ -481,7 +481,8 @@ public interface Datum extends Iterable<Datum> {
                 return new DatumDecimal(Objects.requireNonNull(DECIMALValue.getValue()), PType.typeDecimalArbitrary());
             case CHAR:
                 org.partiql.value.CharValue CHARValue = (org.partiql.value.CharValue) value;
-                return new DatumChars(Objects.requireNonNull(Objects.requireNonNull(CHARValue.getValue()).toString()));
+                String charString = Objects.requireNonNull(CHARValue.getValue()).toString();
+                return new DatumChars(charString, charString.length());
             case SYMBOL:
                 org.partiql.value.SymbolValue SYMBOLValue = (org.partiql.value.SymbolValue) value;
                 return new DatumString(Objects.requireNonNull(SYMBOLValue.getValue()), PType.typeSymbol());

@@ -11,8 +11,12 @@ class DatumChars implements Datum {
     @NotNull
     private final String _value;
 
-    DatumChars(@NotNull String value) {
+    @NotNull
+    private final PType _type;
+
+    DatumChars(@NotNull String value, int length) {
         _value = value;
+        _type = PType.typeChar(length);
     }
 
     @Override
@@ -24,6 +28,6 @@ class DatumChars implements Datum {
     @NotNull
     @Override
     public PType getType() {
-        return PType.typeChar(255); // TODO: Figure out max length
+        return _type;
     }
 }

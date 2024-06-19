@@ -625,8 +625,8 @@ public interface PType {
      * @deprecated this API is experimental and is subject to modification/deletion without prior notice.
      */
     @NotNull
-    static PType typeBlob(int maxLength) {
-        return new PTypeWithMaxLength(Kind.BLOB, maxLength);
+    static PType typeBlob(int length) {
+        return new PTypeWithMaxLength(Kind.BLOB, length);
     }
 
     /**
@@ -634,16 +634,16 @@ public interface PType {
      * @deprecated this API is experimental and is subject to modification/deletion without prior notice.
      */
     @NotNull
-    static PType typeClob(int maxLength) {
-        return new PTypeWithMaxLength(Kind.CLOB, maxLength);
+    static PType typeClob(int length) {
+        return new PTypeWithMaxLength(Kind.CLOB, length);
     }
 
     /**
      * @return a PartiQL char type
      */
     @NotNull
-    static PType typeChar(int maxLength) {
-        return new PTypeWithMaxLength(Kind.CHAR, maxLength);
+    static PType typeChar(int length) {
+        return new PTypeWithMaxLength(Kind.CHAR, length);
     }
 
     /**
