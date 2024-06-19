@@ -48,6 +48,7 @@ internal object Coercions {
 
     private val TYPES_TEXT = setOf(
         Kind.CHAR,
+        Kind.VARCHAR,
         Kind.STRING,
         Kind.CLOB,
         Kind.SYMBOL

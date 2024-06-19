@@ -60,6 +60,7 @@ internal object FnComparator : Comparator<FnSignature> {
         Kind.DOUBLE_PRECISION,
         Kind.DECIMAL_ARBITRARY, // Arbitrary precision decimal has a higher precedence than FLOAT
         Kind.CHAR,
+        Kind.VARCHAR,
         Kind.SYMBOL,
         Kind.STRING,
         Kind.CLOB,

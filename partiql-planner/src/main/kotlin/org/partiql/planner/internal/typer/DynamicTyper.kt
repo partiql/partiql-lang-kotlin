@@ -293,18 +293,28 @@ internal class DynamicTyper {
             graph[Kind.CHAR.ordinal] = edges(
                 Kind.CHAR to Kind.CHAR,
                 Kind.STRING to Kind.STRING,
+                Kind.VARCHAR to Kind.STRING,
                 Kind.SYMBOL to Kind.STRING,
                 Kind.CLOB to Kind.CLOB,
             )
             graph[Kind.STRING.ordinal] = edges(
                 Kind.CHAR to Kind.STRING,
                 Kind.STRING to Kind.STRING,
+                Kind.VARCHAR to Kind.STRING,
+                Kind.SYMBOL to Kind.STRING,
+                Kind.CLOB to Kind.CLOB,
+            )
+            graph[Kind.VARCHAR.ordinal] = edges(
+                Kind.CHAR to Kind.VARCHAR,
+                Kind.STRING to Kind.STRING,
+                Kind.VARCHAR to Kind.VARCHAR,
                 Kind.SYMBOL to Kind.STRING,
                 Kind.CLOB to Kind.CLOB,
             )
             graph[Kind.SYMBOL.ordinal] = edges(
                 Kind.CHAR to Kind.SYMBOL,
                 Kind.STRING to Kind.STRING,
+                Kind.VARCHAR to Kind.STRING,
                 Kind.SYMBOL to Kind.SYMBOL,
                 Kind.CLOB to Kind.CLOB,
             )
@@ -317,6 +327,7 @@ internal class DynamicTyper {
             graph[Kind.CLOB.ordinal] = edges(
                 Kind.CHAR to Kind.CLOB,
                 Kind.STRING to Kind.CLOB,
+                Kind.VARCHAR to Kind.CLOB,
                 Kind.SYMBOL to Kind.CLOB,
                 Kind.CLOB to Kind.CLOB,
             )
@@ -373,6 +384,7 @@ internal class DynamicTyper {
             Kind.REAL -> PType.typeReal()
             Kind.DOUBLE_PRECISION -> PType.typeDoublePrecision()
             Kind.CHAR -> PType.typeChar(255) // TODO: To be updated
+            Kind.VARCHAR -> PType.typeVarChar(255) // TODO: To be updated
             Kind.STRING -> PType.typeString()
             Kind.SYMBOL -> PType.typeSymbol()
             Kind.BLOB -> PType.typeBlob(Int.MAX_VALUE) // TODO: To be updated
@@ -405,6 +417,7 @@ internal class DynamicTyper {
                 Kind.REAL -> float32Value(null)
                 Kind.DOUBLE_PRECISION -> float64Value(null)
                 Kind.CHAR -> charValue(null)
+                Kind.VARCHAR -> TODO("No implementation of VAR CHAR")
                 Kind.STRING -> stringValue(null)
                 Kind.SYMBOL -> symbolValue(null)
                 Kind.BLOB -> blobValue(null)

@@ -617,6 +617,7 @@ public abstract interface class org/partiql/types/PType {
 	public static fun typeTimestampWithoutTZ (I)Lorg/partiql/types/PType;
 	public static fun typeTinyInt ()Lorg/partiql/types/PType;
 	public static fun typeUnknown ()Lorg/partiql/types/PType;
+	public static fun typeVarChar (I)Lorg/partiql/types/PType;
 }
 
 public final class org/partiql/types/PType$Kind : java/lang/Enum {
@@ -647,6 +648,7 @@ public final class org/partiql/types/PType$Kind : java/lang/Enum {
 	public static final field TIME_WITH_TZ Lorg/partiql/types/PType$Kind;
 	public static final field TINYINT Lorg/partiql/types/PType$Kind;
 	public static final field UNKNOWN Lorg/partiql/types/PType$Kind;
+	public static final field VARCHAR Lorg/partiql/types/PType$Kind;
 	public static fun valueOf (Ljava/lang/String;)Lorg/partiql/types/PType$Kind;
 	public static fun values ()[Lorg/partiql/types/PType$Kind;
 }

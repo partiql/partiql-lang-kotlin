@@ -85,6 +85,7 @@ internal class CastTable private constructor(
                 cast(Kind.DOUBLE_PRECISION)
                 cast(Kind.CHAR)
                 cast(Kind.STRING)
+                cast(Kind.VARCHAR)
                 cast(Kind.SYMBOL)
             }
             graph[Kind.TINYINT.ordinal] = relationships {
@@ -99,6 +100,7 @@ internal class CastTable private constructor(
                 cast(Kind.REAL)
                 cast(Kind.DOUBLE_PRECISION)
                 cast(Kind.STRING)
+                cast(Kind.VARCHAR)
                 cast(Kind.SYMBOL)
             }
             graph[Kind.SMALLINT.ordinal] = relationships {
@@ -113,6 +115,7 @@ internal class CastTable private constructor(
                 cast(Kind.REAL)
                 cast(Kind.DOUBLE_PRECISION)
                 cast(Kind.STRING)
+                cast(Kind.VARCHAR)
                 cast(Kind.SYMBOL)
             }
             graph[Kind.INT.ordinal] = relationships {
@@ -127,6 +130,7 @@ internal class CastTable private constructor(
                 cast(Kind.REAL)
                 cast(Kind.DOUBLE_PRECISION)
                 cast(Kind.STRING)
+                cast(Kind.VARCHAR)
                 cast(Kind.SYMBOL)
             }
             graph[Kind.BIGINT.ordinal] = relationships {
@@ -141,6 +145,7 @@ internal class CastTable private constructor(
                 cast(Kind.REAL)
                 cast(Kind.DOUBLE_PRECISION)
                 cast(Kind.STRING)
+                cast(Kind.VARCHAR)
                 cast(Kind.SYMBOL)
             }
             graph[Kind.INT_ARBITRARY.ordinal] = relationships {
@@ -155,6 +160,7 @@ internal class CastTable private constructor(
                 cast(Kind.REAL)
                 cast(Kind.DOUBLE_PRECISION)
                 cast(Kind.STRING)
+                cast(Kind.VARCHAR)
                 cast(Kind.SYMBOL)
             }
             graph[Kind.DECIMAL.ordinal] = relationships {
@@ -169,6 +175,7 @@ internal class CastTable private constructor(
                 cast(Kind.REAL)
                 cast(Kind.DOUBLE_PRECISION)
                 cast(Kind.STRING)
+                cast(Kind.VARCHAR)
                 cast(Kind.SYMBOL)
             }
             graph[Kind.DECIMAL_ARBITRARY.ordinal] = relationships {
@@ -183,6 +190,7 @@ internal class CastTable private constructor(
                 cast(Kind.REAL)
                 cast(Kind.DOUBLE_PRECISION)
                 cast(Kind.STRING)
+                cast(Kind.VARCHAR)
                 cast(Kind.SYMBOL)
             }
             graph[Kind.REAL.ordinal] = relationships {
@@ -197,6 +205,7 @@ internal class CastTable private constructor(
                 cast(Kind.REAL)
                 cast(Kind.DOUBLE_PRECISION)
                 cast(Kind.STRING)
+                cast(Kind.VARCHAR)
                 cast(Kind.SYMBOL)
             }
             graph[Kind.DOUBLE_PRECISION.ordinal] = relationships {
@@ -211,12 +220,14 @@ internal class CastTable private constructor(
                 cast(Kind.REAL)
                 cast(Kind.DOUBLE_PRECISION)
                 cast(Kind.STRING)
+                cast(Kind.VARCHAR)
                 cast(Kind.SYMBOL)
             }
             graph[Kind.CHAR.ordinal] = relationships {
                 cast(Kind.BOOL)
                 cast(Kind.CHAR)
                 cast(Kind.STRING)
+                cast(Kind.VARCHAR)
                 cast(Kind.SYMBOL)
             }
             graph[Kind.STRING.ordinal] = relationships {
@@ -227,12 +238,26 @@ internal class CastTable private constructor(
                 cast(Kind.BIGINT)
                 cast(Kind.INT_ARBITRARY)
                 cast(Kind.STRING)
+                cast(Kind.VARCHAR)
+                cast(Kind.SYMBOL)
+                cast(Kind.CLOB)
+            }
+            graph[Kind.VARCHAR.ordinal] = relationships {
+                cast(Kind.BOOL)
+                cast(Kind.TINYINT)
+                cast(Kind.SMALLINT)
+                cast(Kind.INT)
+                cast(Kind.BIGINT)
+                cast(Kind.INT_ARBITRARY)
+                cast(Kind.STRING)
+                cast(Kind.VARCHAR)
                 cast(Kind.SYMBOL)
                 cast(Kind.CLOB)
             }
             graph[Kind.SYMBOL.ordinal] = relationships {
                 cast(Kind.BOOL)
                 cast(Kind.STRING)
+                cast(Kind.VARCHAR)
                 cast(Kind.SYMBOL)
                 cast(Kind.CLOB)
             }

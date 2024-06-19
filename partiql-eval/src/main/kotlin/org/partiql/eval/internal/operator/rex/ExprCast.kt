@@ -88,7 +88,8 @@ internal class ExprCast(val arg: Operator.Expr, val cast: Ref.Cast) : Operator.E
                 PType.Kind.SEXP -> castFromCollection(arg as SexpValue<*>, cast.target)
                 PType.Kind.STRUCT -> TODO("CAST FROM STRUCT not yet implemented")
                 PType.Kind.ROW -> TODO("CAST FROM ROW not yet implemented")
-                PType.Kind.UNKNOWN -> TODO()
+                PType.Kind.UNKNOWN -> TODO("CAST FROM UNKNOWN not yet implemented")
+                PType.Kind.VARCHAR -> TODO("CAST FROM VARCHAR not yet implemented")
             }
             return Datum.of(partiqlValue)
         } catch (e: DataException) {
@@ -102,6 +103,7 @@ internal class ExprCast(val arg: Operator.Expr, val cast: Ref.Cast) : Operator.E
             PType.Kind.DYNAMIC -> value
             PType.Kind.BOOL -> boolValue(null)
             PType.Kind.CHAR -> charValue(null)
+            PType.Kind.VARCHAR -> TODO("There is no VAR CHAR implementation")
             PType.Kind.STRING -> stringValue(null)
             PType.Kind.SYMBOL -> symbolValue(null)
             PType.Kind.BLOB -> blobValue(null)
@@ -186,6 +188,7 @@ internal class ExprCast(val arg: Operator.Expr, val cast: Ref.Cast) : Operator.E
             }
 
             PType.Kind.CHAR -> TODO("Char value implementation is wrong")
+            PType.Kind.VARCHAR -> TODO("There is no VAR CHAR implementation")
             PType.Kind.STRING -> stringValue(v?.toString())
             PType.Kind.SYMBOL -> symbolValue(v?.toString())
             PType.Kind.BLOB, PType.Kind.CLOB,
@@ -217,6 +220,7 @@ internal class ExprCast(val arg: Operator.Expr, val cast: Ref.Cast) : Operator.E
             PType.Kind.REAL -> value.toFloat32()
             PType.Kind.DOUBLE_PRECISION -> value.toFloat64()
             PType.Kind.CHAR -> TODO("Char value implementation is wrong")
+            PType.Kind.VARCHAR -> TODO("There is no VAR CHAR implementation")
             PType.Kind.STRING -> stringValue(v?.toString(), value.annotations)
             PType.Kind.SYMBOL -> symbolValue(v?.toString(), value.annotations)
             PType.Kind.BLOB, PType.Kind.CLOB,
@@ -303,7 +307,8 @@ internal class ExprCast(val arg: Operator.Expr, val cast: Ref.Cast) : Operator.E
                     else -> throw TypeCheckException()
                 }
             }
-            PType.Kind.CHAR -> TODO("Char value implementation is wrong")
+            PType.Kind.CHAR -> TODO("CHAR implementation is wrong.")
+            PType.Kind.VARCHAR -> TODO("There is no VAR CHAR implementation")
             PType.Kind.STRING -> stringValue(value.value, value.annotations)
             PType.Kind.SYMBOL -> symbolValue(value.value, value.annotations)
             PType.Kind.BLOB, PType.Kind.CLOB,
@@ -313,7 +318,7 @@ internal class ExprCast(val arg: Operator.Expr, val cast: Ref.Cast) : Operator.E
             PType.Kind.SEXP,
             PType.Kind.STRUCT -> error("can not perform cast from struct to $t")
             PType.Kind.ROW -> error("can not perform cast from $value to $t")
-            PType.Kind.UNKNOWN -> TODO()
+            PType.Kind.UNKNOWN -> error("can not perform cast from $value to $t")
         }
     }
 

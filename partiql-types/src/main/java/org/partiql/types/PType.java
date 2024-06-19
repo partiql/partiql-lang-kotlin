@@ -227,7 +227,7 @@ public interface PType {
         DOUBLE_PRECISION,
 
         /**
-         * SQL's char type.
+         * SQL's character type.
          * <br>
          * <br>
          * <b>Type Syntax</b>: <code>CHAR(&lt;length&gt;)</code>, <code>CHARACTER(&lt;length&gt;)</code>, <code>CHAR</code>, <code>CHARACTER</code>
@@ -235,6 +235,18 @@ public interface PType {
          * <b>Applicable methods</b>: {@link PType#getLength()}
          */
         CHAR,
+
+        /**
+         * SQL's character varying type.
+         * <br>
+         * <br>
+         * <b>Type Syntax</b>: <code>VARCHAR(&lt;length&gt;)</code>, <code>CHAR VARYING(&lt;length&gt;)</code>,
+         * <code>CHARACTER VARYING(&lt;length&gt;)</code>,
+         * <code>VARCHAR</code>, <code>CHAR VARYING</code>, <code>CHARACTER VARYING</code>
+         * <br>
+         * <b>Applicable methods</b>: {@link PType#getLength()}
+         */
+        VARCHAR,
 
         /**
          * PartiQL's string type.
@@ -276,6 +288,7 @@ public interface PType {
          * <br>
          * <br>
          * <b>Type Syntax</b>: <code>CLOB</code>, <code>CLOB(&lt;large object length&gt;)</code>,
+         * <code>CHAR LARGE OBJECT</code>, <code>CHAR LARGE OBJECT(&lt;large object length&gt;)</code>
          * <code>CHARACTER LARGE OBJECT</code>, <code>CHARACTER LARGE OBJECT(&lt;large object length&gt;)</code>
          * <br>
          * <b>Applicable methods</b>: {@link PType#getLength()}
@@ -643,6 +656,14 @@ public interface PType {
      */
     @NotNull
     static PType typeChar(int length) {
+        return new PTypeWithMaxLength(Kind.CHAR, length);
+    }
+
+    /**
+     * @return a PartiQL char type
+     */
+    @NotNull
+    static PType typeVarChar(int length) {
         return new PTypeWithMaxLength(Kind.CHAR, length);
     }
 
