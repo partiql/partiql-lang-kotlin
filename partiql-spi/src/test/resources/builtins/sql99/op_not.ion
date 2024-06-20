@@ -1,0 +1,12 @@
+{
+  name: not,
+  type: op,
+  symbol: "!",
+  description:'''
+    Placeholder for `not` description
+  ''',
+  properties: [],
+  impls: [
+    (op rhs::bool -> bool)
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  name: coll_min,
+  type: fn,
+  description:'''
+    Placeholder for `coll_min` description
+  ''',
+  properties: [],
+  impls: [
+    (fn value::bag -> dynamic),
+    (fn value::list -> dynamic),
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  name: upper,
+  type: fn,
+  description:'''
+    Placeholder for `upper` description
+  ''',
+  properties: [],
+  impls: [
+    (fn string::char -> char),
+    (fn string::varchar -> varchar),
+    (fn string::string -> string),
+  ]
+}

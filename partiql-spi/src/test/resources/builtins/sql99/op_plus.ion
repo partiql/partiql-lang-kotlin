@@ -1,0 +1,19 @@
+{
+  name: minus,
+  type: op,
+  symbol: "+",
+  description:'''
+    Placeholder for `plus` description
+  ''',
+  properties: [],
+  impls: [
+    (op lhs::tinyint rhs::tinyint -> tinyint),
+    (op lhs::smallint rhs::smallint -> smallint),
+    (op lhs::int rhs::int -> int),
+    (op lhs::bigint rhs::bigint -> bigint),
+    (op lhs::numeric rhs::numeric -> numeric),
+    (op lhs::decimal rhs::decimal -> decimal),
+    (op lhs::real rhs::real -> real),
+    (op lhs::double rhs::double -> double),
+  ]
+}

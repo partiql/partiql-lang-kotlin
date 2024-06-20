@@ -1,0 +1,18 @@
+{
+  name: substring,
+  type: fn,
+  description:'''
+    Placeholder for `substring` description
+  ''',
+  properties: [],
+  impls: [
+    // 2-arity
+    (fn string::char start::int -> char),
+    (fn string::varchar start::int -> varchar),
+    (fn string::string start::int -> string),
+    // 3-arity
+    (fn string::char start::int end::int -> char),
+    (fn string::string start::int end::int -> string),
+    (fn string::varchar start::int end::int -> varchar),
+  ]
+}

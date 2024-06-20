@@ -1,0 +1,19 @@
+{
+  name: like,
+  type: fn,
+  description:'''
+Placeholder for `like` description
+''',
+  properties: [],
+  impls: [
+    // character strings
+    (fn string::char pattern::char -> bool),
+    (fn string::varchar pattern::string -> bool),
+    (fn string::string pattern::string -> bool),
+    (fn string::char pattern::string escape::char -> bool),
+    (fn string::varchar pattern::string escape::char -> bool),
+    (fn string::string pattern::string escape::char -> bool),
+    // bit strings
+    // ...
+  ]
+}

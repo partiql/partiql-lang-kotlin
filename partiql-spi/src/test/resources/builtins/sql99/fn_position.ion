@@ -1,0 +1,13 @@
+{
+  name: position,
+  type: fn,
+  description:'''
+    Placeholder for `position` description
+  ''',
+  properties: [],
+  impls: [
+    (fn probe::char value::char -> int),
+    (fn probe::varchar value::varchar -> int),
+    (fn probe::string value::string -> int),
+  ]
+}

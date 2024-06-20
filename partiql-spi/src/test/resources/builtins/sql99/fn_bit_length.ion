@@ -1,0 +1,13 @@
+{
+  name: bit_length,
+  type: fn,
+  description:'''
+    Placeholder for `bit_length` description
+  ''',
+  properties: [],
+  impls: [
+    (fn value::string -> int),
+    (fn lhs::clob -> int),
+    (fn lhs::symbol -> int)
+  ]
+}

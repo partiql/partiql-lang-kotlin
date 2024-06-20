@@ -1,0 +1,42 @@
+{
+  name: eq,
+  type: op,
+  symbol: "=",
+  description:'''
+    Placeholder for `eq` description
+  ''',
+  properties: [],
+  impls: [
+    // boolean
+    (op lhs::bool rhs::bool -> bool),
+    // exact numeric
+    (op lhs::tinyint rhs::tinyint -> bool),
+    (op lhs::smallint rhs::smallint -> bool),
+    (op lhs::int rhs::int -> bool),
+    (op lhs::bigint rhs::bigint -> bool),
+    (op lhs::numeric rhs::numeric -> bool),
+    (op lhs::decimal rhs::decimal -> bool),
+    // approximate numeric
+    (op lhs::real rhs::real -> bool),
+    (op lhs::double rhs::double -> bool),
+    // character strings
+    (op lhs::char rhs::char -> bool),
+    (op lhs::varchar rhs::varchar -> bool),
+    (op lhs::symbol rhs::symbol -> bool),
+    (op lhs::string rhs::string -> bool),
+    // lob
+    (op lhs::blob rhs::blob -> bool),
+    (op lhs::clob rhs::clob -> bool),
+    // datetime
+    (op lhs::date rhs::date -> bool),
+    (op lhs::time rhs::time -> bool),
+    (op lhs::timestamp rhs::timestamp -> bool),
+    // collections
+    (op lhs::bag rhs::bag -> bool),
+    (op lhs::list rhs::list -> bool),
+    (op lhs::sexp rhs::sexp -> bool),
+    (op lhs::struct rhs::struct -> bool),
+    // dynamic
+    (op lhs::dynamic rhs::dynamic -> bool),
+  ]
+}

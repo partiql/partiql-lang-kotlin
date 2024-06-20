@@ -1,0 +1,13 @@
+{
+  name: lower,
+  type: fn,
+  description:'''
+    Placeholder for `lower` description
+  ''',
+  properties: [],
+  impls: [
+    (fn string::char -> char),
+    (fn string::varchar -> varchar),
+    (fn string::string -> string),
+  ]
+}

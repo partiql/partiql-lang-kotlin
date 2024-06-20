@@ -1,0 +1,32 @@
+{
+  name: gt,
+  type: op,
+  symbol: ">",
+  description:'''
+    Placeholder for `gt` description
+  ''',
+  properties: [],
+  impls: [
+    // boolean
+    (op lhs::bool rhs::bool -> bool),
+    // exact numeric
+    (op lhs::tinyint rhs::tinyint -> bool),
+    (op lhs::smallint rhs::smallint -> bool),
+    (op lhs::int rhs::int -> bool),
+    (op lhs::bigint rhs::bigint -> bool),
+    (op lhs::numeric rhs::numeric -> bool),
+    (op lhs::decimal rhs::decimal -> bool),
+    // approximate numeric
+    (op lhs::real rhs::real -> bool),
+    (op lhs::double rhs::double -> bool),
+    // character strings
+    (op lhs::char rhs::char -> bool),
+    (op lhs::varchar rhs::varchar -> bool),
+    (op lhs::string rhs::string -> bool),
+    (op lhs::symbol rhs::symbol -> bool),
+    // datetime types
+    (op lhs::date rhs::date -> bool),
+    (op lhs::time rhs::time -> bool),
+    (op lhs::timestamp rhs::timestamp -> bool),
+  ]
+}

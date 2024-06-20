@@ -1,0 +1,12 @@
+{
+  name: or,
+  type: op,
+  symbol: "or",
+  description:'''
+    Placeholder for `or` description
+  ''',
+  properties: [],
+  impls: [
+    (op lhs::bool rhs::bool -> bool)
+  ]
+}

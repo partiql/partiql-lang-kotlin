@@ -1,0 +1,15 @@
+{
+  name: bitwise_and,
+  type: op,
+  symbol: "&",
+  description:'''
+    Placeholder for `bitwise_and` description
+  ''',
+  properties: [],
+  impls: [
+    (op lhs::tinyint rhs::tinyint -> tinyint),
+    (op lhs::smallint rhs::smallint -> smallint),
+    (op lhs::int rhs::int -> int),
+    (op lhs::bigint rhs::bigint -> bigint),
+  ]
+}
